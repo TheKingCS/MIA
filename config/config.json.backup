@@ -1,0 +1,19 @@
+{
+    "gui": {
+        "show_character_panel": true,
+        "theme": "dark_field",
+        "window_height": 700,
+        "window_width": 1100
+    },
+    "system": {
+        "app_name": "M.I.A.",
+        "kiosk_mode": false,
+        "setup_complete": true,
+        "version": "0.2.0"
+    },
+    "user": {
+        "name": "Creator Zac",
+        "setup_date": "2026-07-10",
+        "setup_time": "14:17"
+    }
+}
