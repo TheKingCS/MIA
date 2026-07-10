@@ -1,0 +1,85 @@
+# Adding a New Module to M.I.A.
+
+Modules are discovered automatically — there is no registry file to
+edit. Follow these steps and your module will appear on the main menu
+the next time M.I.A. starts.
+
+## 1. Create the folder
+
+```
+modules/your_module_name/
+    __init__.py      (can be empty)
+    module.py
+```
+
+The folder name should be a valid Python identifier (snake_case). It
+does not have to match `module_id`, but it's good practice to keep them
+similar.
+
+## 2. Write `module.py`
+
+Exactly one class in this file must subclass `ModuleBase`:
+
+```python
+from __future__ import annotations
+
+from PySide6.QtWidgets import QLabel, QWidget
+
+from modules.module_base import ModuleBase
+
+
+class YourModule(ModuleBase):
+    module_id = "your_module_name"      # unique, stable, snake_case
+    display_name = "Your Module"        # shown on its button
+    description = "One-line description shown as a tooltip."
+    icon = "\u2728"                     # placeholder emoji/glyph
+    version = "0.1.0"
+
+    def get_widget(self) -> QWidget:
+        # Build and return whatever widget represents your module's screen.
+        return QLabel("Hello from Your Module!")
+```
+
+That's it. `core/module_manager.py` will find it, instantiate it with
+the shared `AppContext`, and it will show up on the main menu grid,
+sorted alphabetically by `display_name`.
+
+## 3. Test it in isolation (without booting the whole app)
+
+Use the module test harness so you don't have to click through the
+splash screen and setup wizard every time you tweak your module:
+
+```bash
+python tests/run_module.py your_module_name
+```
+
+This boots a minimal Qt application, constructs a real `AppContext`
+(backed by your actual `config/config.json`), instantiates only your
+module, and shows its widget in a plain window. It's the fastest
+feedback loop for module development.
+
+## 4. Conventions to follow
+
+- **Don't import other modules directly.** If your module needs to
+  react to something happening in another module, use the event bus:
+  `self.context.events.subscribe("some.event", self._handler)`. See
+  `core/event_bus.py` for details.
+- **Keep GUI-building code out of your logic.** If your module grows
+  beyond a trivial widget, consider splitting internal logic (data
+  access, computation) into a separate file inside your module's
+  folder, and keep `module.py` focused on wiring `ModuleBase` to that
+  logic plus building the widget.
+- **Use `self.context.config`** for any settings your module needs,
+  under a namespaced key, e.g. `self.context.config.get("modules.notes.font_size")`.
+  Don't invent a separate config file for your module.
+- **Log through `core.logger.get_logger(__name__)`**, not `print()`.
+- **`get_widget()` is called lazily** — the first time the user opens
+  your module, not at startup. Don't do expensive work in `__init__`;
+  do it in `on_load()` or inside `get_widget()` itself if it only
+  needs to happen once the user actually opens the module.
+
+## 5. Removing a module
+
+Delete its folder. Nothing else references it by import, so there's
+nothing else to clean up (aside from any config keys you may have
+added under its namespace, if you want a full cleanup).

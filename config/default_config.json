@@ -1,0 +1,19 @@
+{
+    "system": {
+        "setup_complete": false,
+        "app_name": "M.I.A.",
+        "version": "0.2.0",
+        "kiosk_mode": false
+    },
+    "user": {
+        "name": "",
+        "setup_date": "",
+        "setup_time": ""
+    },
+    "gui": {
+        "theme": "dark_field",
+        "window_width": 1100,
+        "window_height": 700,
+        "show_character_panel": true
+    }
+}

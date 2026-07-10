@@ -1,0 +1,36 @@
+# deploy/mia.service
+#
+# Systemd USER service (not a system-level service) — it runs inside the
+# logged-in user's graphical session, which is what a Qt/PySide6 GUI
+# app needs (access to the Wayland/X display). It's installed to
+# ~/.config/systemd/user/ by deploy/install_kiosk.sh, not /etc/systemd/system/.
+#
+# Why systemd here instead of an XDG autostart .desktop entry: systemd
+# gives us Restart=always with real supervision and logs queryable via
+# `journalctl --user -u mia -f`, which matters for debugging a headless
+# field device you can't easily attach a monitor to.
+#
+# This file is a TEMPLATE. install_kiosk.sh fills in the actual paths
+# for the target machine — don't hand-edit the placeholders below,
+# edit install_kiosk.sh instead so re-running it stays reproducible.
+
+[Unit]
+Description=M.I.A. — Multifunctional Intelligent Assistant
+# Wait for the graphical session (display) to be ready before starting.
+After=graphical-session.target
+Wants=graphical-session.target
+# Cap restart attempts so a persistent crash-loop doesn't spin forever
+# unnoticed; after this many failures within the interval, systemd
+# stops trying and the failure will show clearly in `systemctl status`.
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Service]
+Type=simple
+WorkingDirectory=__MIA_INSTALL_DIR__
+ExecStart=__MIA_VENV_PYTHON__ __MIA_INSTALL_DIR__/main.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
