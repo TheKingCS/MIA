@@ -1,37 +1,37 @@
-# Known Issues (open, not yet fixed)
+# Known Issues
 
-Tracked here so nothing gets lost between sessions.
+## 1. Easter egg dialog — button text / clipped name (fix attempted, needs real-machine confirmation)
 
-## 1. Easter egg dialog — button text still not appearing, name still clipped
+**Root cause found this time, not just guessed:** `EasterEggDialog` was
+the only dialog in the project calling `layout.setAlignment(Qt.AlignmentFlag.AlignCenter)`
+on its top-level `QVBoxLayout`. `AddProfileDialog` and `PasswordPromptDialog`
+don't do this, and both are confirmed working on the real device. The
+dialog has been rebuilt to match that proven pattern — no top-level
+layout alignment, each label centers its own text individually, spacing
+via `addStretch()`/`addSpacing()` instead.
 
-Reported after the sizing fix in `gui/easter_egg.py` (switched from
-`setFixedSize` to `setMinimumWidth` + layout-driven sizing). The fix
-was incomplete — the "Nice." button still shows no text, and the
-credit line ("Zachary Taylar Rhodes") is still getting cut off at the
-bottom of the dialog. Since the sizing fix should have addressed this
-in theory but clearly didn't, next session should actually inspect
-this on the real machine (screenshot or exact dimensions) rather than
-guessing again — likely something more specific than dialog height,
-possibly the QVBoxLayout's alignment flag fighting with auto-sizing,
-or the multi-line credit label needing explicit wrapping/height.
+**Status: fix applied, not yet confirmed on real hardware** (this
+sandbox has no PySide6/display access, so this could only be verified
+by code-pattern comparison, not by actually rendering it). If this
+still doesn't look right after testing, the next step should be a
+screenshot or exact pixel dimensions from the real machine rather than
+a third structural guess.
 
-## 2. Kiosk fullscreen doesn't persist through the lock screen -> main window transition
+## 2. Kiosk fullscreen not persisting through screen transitions — FIXED
 
-If fullscreen (kiosk_mode) is active on the lock screen, signing in
-drops back to a normal window instead of staying fullscreen. Root
-cause: `MainWindow`'s fullscreen behavior is applied in its own
-`showEvent()` (see `gui/main_window.py`), but `LockScreen` and
-`ProfileSelectScreen` don't currently apply the same kiosk fullscreen
-behavior themselves — so the transition from lock screen to main
-window isn't preserving a "we're in kiosk mode" state consistently.
-Fix likely belongs in `core/application.py`: every top-level screen
-`MIAApplication` shows (splash, wizard, profile select, lock screen,
-main window) should check `kiosk_mode` and go fullscreen the same way,
-rather than only `MainWindow` handling it. Worth designing as one
-shared helper rather than patching each screen individually.
+**Root cause:** fullscreen was only ever applied inside `MainWindow`'s
+own `showEvent`. Every other top-level screen (`LockScreen`,
+`ProfileSelectScreen`, `SetupWizard`) called plain `.show()` with no
+kiosk awareness, so fullscreen silently dropped the moment you left
+`MainWindow`.
 
-## Next session — start here
-1. Fix #2 first — it's the clearer/simpler root cause of the two.
-2. For #1, get a screenshot or exact widget dimensions from the real
-   machine before attempting another fix; two guesses in a row missed,
-   so verify the actual failure mode this time before patching again.
+**Fix:** added `MIAApplication._display(widget)` in `core/application.py`
+— the single place that now decides fullscreen vs. normal show for
+every screen transition in the app. Removed the redundant per-window
+logic from `MainWindow` (its `showEvent` override is gone entirely) so
+there's exactly one source of truth for kiosk display behavior.
+
+**Status: needs a real-machine kiosk test to confirm**, but this is a
+structural fix (all 6 `.show()` call sites for top-level screens now
+route through the same helper), not a patch — high confidence this
+resolves it.

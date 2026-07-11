@@ -27,6 +27,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.logger import get_logger
 from core.module_manager import ModuleManager
+from core.notification_manager import NotificationManager
 from core.profile_manager import ProfileManager
 from gui.lock_screen import LockScreen
 from gui.main_window import MainWindow
@@ -53,6 +54,7 @@ class MIAApplication:
         # Its __init__ also runs the legacy-user migration — see
         # core/profile_manager.py.
         self.context.profiles = ProfileManager(self.context)
+        self.context.notifications = NotificationManager(self.context)
         self.module_manager = ModuleManager(self.context)
 
         self.splash: SplashScreen | None = None
@@ -60,6 +62,24 @@ class MIAApplication:
         self.setup_wizard: SetupWizard | None = None
         self.profile_select: ProfileSelectScreen | None = None
         self.lock_screen: LockScreen | None = None
+
+    def _display(self, widget) -> None:
+        """
+        Show a top-level screen, going fullscreen if kiosk_mode is on.
+
+        This is the single place kiosk-mode display behavior lives.
+        Previously, only MainWindow applied fullscreen (in its own
+        showEvent), which meant kiosk mode silently dropped the moment
+        you left MainWindow — the lock screen, profile selector, and
+        setup wizard all just called plain .show(). Routing every
+        screen transition through this one method is what makes
+        fullscreen actually persist across the whole boot/switch flow,
+        not just within MainWindow.
+        """
+        if self.config.get("system.kiosk_mode", False):
+            widget.showFullScreen()
+        else:
+            widget.show()
 
     def run(self) -> int:
         """Start the boot sequence and enter the Qt event loop."""
@@ -102,7 +122,7 @@ class MIAApplication:
             self.setup_wizard = SetupWizard(self.context)
             self.setup_wizard.finished.connect(self._on_setup_finished)
             self.splash.close()
-            self.setup_wizard.show()
+            self._display(self.setup_wizard)
             return
 
         profiles = self.context.profiles
@@ -114,7 +134,7 @@ class MIAApplication:
             self.setup_wizard = SetupWizard(self.context)
             self.setup_wizard.finished.connect(self._on_setup_finished)
             self.splash.close()
-            self.setup_wizard.show()
+            self._display(self.setup_wizard)
             return
 
         if profiles.needs_profile_selection():
@@ -122,7 +142,7 @@ class MIAApplication:
             self.profile_select = ProfileSelectScreen(self.context)
             self.profile_select.profile_selected.connect(self._on_profile_selected)
             self.splash.close()
-            self.profile_select.show()
+            self._display(self.profile_select)
             return
 
         # Exactly one profile — auto-activate it if it isn't already
@@ -143,7 +163,7 @@ class MIAApplication:
             self.lock_screen = LockScreen(self.context, active_profile)
             self.lock_screen.unlocked.connect(self._on_lock_screen_unlocked)
             self.splash.close()
-            self.lock_screen.show()
+            self._display(self.lock_screen)
             return
 
         self._show_main_window()
@@ -177,14 +197,14 @@ class MIAApplication:
 
         self.profile_select = ProfileSelectScreen(self.context)
         self.profile_select.profile_selected.connect(self._on_profile_selected)
-        self.profile_select.show()
+        self._display(self.profile_select)
 
     def _show_main_window(self) -> None:
         if self.splash is not None:
             self.splash.close()
         self.main_window = MainWindow(self.context, self.module_manager)
         self.main_window.switch_profile_requested.connect(self._on_switch_profile_requested)
-        self.main_window.show()
+        self._display(self.main_window)
 
     @staticmethod
     def _noop() -> None:

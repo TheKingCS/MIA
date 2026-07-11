@@ -35,6 +35,8 @@ from core.logger import get_logger
 from core.module_manager import ModuleManager
 from gui.character_panel import CharacterPanel
 from gui.easter_egg import EasterEggDialog
+from gui.notification_center import NotificationCenterDialog
+from gui.notification_toast import NotificationToast
 from gui.styles import DARK_FIELD_THEME
 from gui.widgets.module_button import ModuleButton
 
@@ -70,20 +72,50 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._setup_kiosk_exit_shortcut()
         self._setup_easter_egg_shortcut()
+        self._setup_notifications()
         self.statusBar().showMessage("M.I.A. core online.")
 
-        self._kiosk_mode = context.config.get("system.kiosk_mode", False)
+    def _setup_notifications(self) -> None:
+        """
+        Subscribe to the notification events raised by any module via
+        context.notifications.notify(). Kept as bound methods stored on
+        self so closeEvent() can unsubscribe the exact same callables —
+        see the comment there for why that matters.
+        """
+        self.context.events.subscribe("notification.created", self._on_notification_created)
+        self.context.events.subscribe("notification.updated", self._on_notification_updated)
+        self._update_notification_badge()
 
-    def showEvent(self, event) -> None:
+    def _on_notification_created(self, notification) -> None:
+        self._update_notification_badge()
+        toast = NotificationToast(self, notification)
+        toast.show_in_corner()
+
+    def _on_notification_updated(self, **kwargs) -> None:
+        self._update_notification_badge()
+
+    def _update_notification_badge(self) -> None:
+        count = self.context.notifications.unread_count()
+        label = f"\U0001F514 {count}" if count else "\U0001F514"
+        self._notification_button.setText(label)
+
+    def _open_notification_center(self) -> None:
+        dialog = NotificationCenterDialog(self.context, parent=self)
+        dialog.exec()
+        self._update_notification_badge()
+
+    def closeEvent(self, event) -> None:
         """
-        Enter fullscreen on first show if kiosk_mode is enabled. Done in
-        showEvent (rather than __init__) because showFullScreen() needs
-        the window to already be shown/mapped by the window manager to
-        behave correctly on all platforms.
+        Unsubscribe from the event bus before this window is destroyed.
+        Without this, EventBus would keep a reference to these bound
+        methods after "Switch User" rebuilds MainWindow — the next
+        notification would then try to call into a deleted Qt widget.
+        EventBus.publish() catches and logs that as an error rather than
+        crashing, but it's still a real leak worth closing properly.
         """
-        super().showEvent(event)
-        if getattr(self, "_kiosk_mode", False) and not self.isFullScreen():
-            self.showFullScreen()
+        self.context.events.unsubscribe("notification.created", self._on_notification_created)
+        self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
+        super().closeEvent(event)
 
     def _setup_kiosk_exit_shortcut(self) -> None:
         """
@@ -181,12 +213,16 @@ class MainWindow(QMainWindow):
         self._switch_user_button = QPushButton("\u21C4 Switch User")
         self._switch_user_button.clicked.connect(self.switch_profile_requested.emit)
 
+        self._notification_button = QPushButton("\U0001F514")
+        self._notification_button.clicked.connect(self._open_notification_center)
+
         layout.addWidget(title)
         layout.addWidget(greeting)
         layout.addStretch()
         layout.addWidget(self._back_button)
         layout.addWidget(self._home_button)
         layout.addWidget(self._switch_user_button)
+        layout.addWidget(self._notification_button)
 
         return header
 

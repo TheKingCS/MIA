@@ -4,9 +4,14 @@ gui.easter_egg
 
 A hidden credits screen, triggered by Ctrl+Shift+Z from anywhere in the
 main window. Purely cosmetic — no config, no logic, nothing else in the
-system depends on this file existing. Kept as its own module (rather
-than inlined in main_window.py) so it stays trivially easy to find and
-customize without wading through navigation code.
+system depends on this file existing.
+
+Layout note: this dialog previously used layout.setAlignment(AlignCenter)
+on its top-level QVBoxLayout, which AddProfileDialog and
+PasswordPromptDialog do not do — and those two dialogs render correctly.
+Removing that top-level alignment (centering each label individually
+instead, and using addStretch() for spacing) matches the pattern that's
+actually confirmed working, rather than guessing at dialog sizing again.
 """
 
 from __future__ import annotations
@@ -26,8 +31,9 @@ class EasterEggDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(10)
+        # Deliberately no layout.setAlignment(...) here — see module
+        # docstring. Each label centers its own text instead.
 
         icon = QLabel("\U0001F916")
         icon.setStyleSheet("font-size: 48px;")
@@ -40,9 +46,11 @@ class EasterEggDialog(QDialog):
         subtitle = QLabel("Multifunctional Intelligent Assistant")
         subtitle.setObjectName("SubtitleLabel")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        subtitle.setWordWrap(True)
 
         credit = QLabel("Built by\nZachary Taylar Rhodes")
         credit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        credit.setWordWrap(True)
         credit.setStyleSheet("font-weight: 600; font-size: 16px; margin-top: 8px;")
 
         wink = QLabel("You found the secret. Stay safe out there. \U0001F6E0\uFE0F")
@@ -60,4 +68,5 @@ class EasterEggDialog(QDialog):
         layout.addWidget(subtitle)
         layout.addWidget(credit)
         layout.addWidget(wink)
+        layout.addSpacing(6)
         layout.addWidget(close_button)
