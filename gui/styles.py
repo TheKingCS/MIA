@@ -18,6 +18,10 @@ QMainWindow, QWidget {
     font-size: 14px;
 }
 
+QLabel {
+    background: transparent;
+}
+
 QLabel#TitleLabel {
     font-size: 26px;
     font-weight: 600;
