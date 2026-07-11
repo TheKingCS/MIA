@@ -78,7 +78,40 @@ feedback loop for module development.
   do it in `on_load()` or inside `get_widget()` itself if it only
   needs to happen once the user actually opens the module.
 
-## 5. Removing a module
+## 5. Making your module searchable (optional)
+
+Once your module has real content worth finding (notes, files,
+reference articles, etc.), you can register a search provider so
+Ctrl+K / the search button can find it, without any changes to core
+code:
+
+```python
+def on_load(self) -> None:
+    self.context.search.register_provider("your_module_id", self._search)
+
+def _search(self, query: str):
+    from core.search_manager import SearchResult
+    query_lower = query.lower()
+    results = []
+    for item in self._my_searchable_items():
+        if query_lower in item.title.lower():
+            results.append(SearchResult(
+                title=item.title,
+                description=item.summary,
+                source=self.display_name,
+                action_type="open_module",       # or a custom action_type
+                action_target=self.module_id,     # see note below
+            ))
+    return results
+```
+
+If your module needs a more specific action than "just open the
+module" (e.g. "open this specific note"), you'll need a new
+`action_type` your module recognizes, and `MainWindow._on_search_result_activated`
+will need a branch for it — see `gui/main_window.py` for the existing
+`"open_module"` / `"switch_profile"` cases as a model.
+
+## 6. Removing a module
 
 Delete its folder. Nothing else references it by import, so there's
 nothing else to clean up (aside from any config keys you may have

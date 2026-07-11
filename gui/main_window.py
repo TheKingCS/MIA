@@ -37,6 +37,7 @@ from gui.character_panel import CharacterPanel
 from gui.easter_egg import EasterEggDialog
 from gui.notification_center import NotificationCenterDialog
 from gui.notification_toast import NotificationToast
+from gui.search_dialog import SearchDialog
 from gui.styles import DARK_FIELD_THEME
 from gui.widgets.module_button import ModuleButton
 
@@ -72,8 +73,37 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._setup_kiosk_exit_shortcut()
         self._setup_easter_egg_shortcut()
+        self._setup_search_shortcut()
         self._setup_notifications()
         self.statusBar().showMessage("M.I.A. core online.")
+
+    def _setup_search_shortcut(self) -> None:
+        """Ctrl+K opens search from anywhere in the app — matches the
+        common command-palette convention (VS Code, Slack, etc.)."""
+        shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
+        shortcut.activated.connect(self._open_search)
+
+    def _open_search(self) -> None:
+        dialog = SearchDialog(self.context, parent=self)
+        dialog.result_activated.connect(self._on_search_result_activated)
+        dialog.exec()
+
+    def _on_search_result_activated(self, result) -> None:
+        """
+        Interpret a SearchResult's action_type. "switch_profile" opens
+        the full profile selector rather than switching directly — that
+        screen already handles password-protected profiles correctly,
+        and duplicating that check here would mean two places to keep
+        in sync. A future improvement could deep-link straight to that
+        profile's password prompt, but reusing the proven flow is the
+        safer default for now.
+        """
+        if result.action_type == "open_module":
+            self.open_module(result.action_target)
+        elif result.action_type == "switch_profile":
+            self.switch_profile_requested.emit()
+        else:
+            log.warning("Unknown search result action_type '%s'", result.action_type)
 
     def _setup_notifications(self) -> None:
         """
@@ -216,12 +246,16 @@ class MainWindow(QMainWindow):
         self._notification_button = QPushButton("\U0001F514")
         self._notification_button.clicked.connect(self._open_notification_center)
 
+        self._search_button = QPushButton("\U0001F50D Search")
+        self._search_button.clicked.connect(self._open_search)
+
         layout.addWidget(title)
         layout.addWidget(greeting)
         layout.addStretch()
         layout.addWidget(self._back_button)
         layout.addWidget(self._home_button)
         layout.addWidget(self._switch_user_button)
+        layout.addWidget(self._search_button)
         layout.addWidget(self._notification_button)
 
         return header

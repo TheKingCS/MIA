@@ -139,7 +139,7 @@ Splitting the System layer into small, independently testable milestones:
       fullscreen launch, crash-restart behavior
 - [ ] **2.2 User profiles** — multi-user support, per-user config/data
       separation, profile switcher on the setup/login flow
-- [ ] **2.3 Notification Center** — core service + UI (toast/banner +
+- [x] **2.3 Notification Center** — core service + UI (toast/banner +
       a persistent notification list), any module can raise one
 - [ ] **2.4 Global Search** — index across config, notes, files,
       module metadata; search bar accessible from anywhere

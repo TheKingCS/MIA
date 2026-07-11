@@ -30,6 +30,7 @@ from core.event_bus import EventBus
 if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.profile_manager import ProfileManager
+    from core.search_manager import SearchManager
 
 
 @dataclass
@@ -38,9 +39,10 @@ class AppContext:
 
     config: ConfigManager
     events: EventBus
-    # Assigned by MIAApplication right after construction (both take an
-    # AppContext, so neither can be created in the same dataclass
-    # __init__ call — see core/application.py). Optional here so
-    # AppContext remains constructible on its own for tests.
+    # Assigned by MIAApplication right after construction (each of
+    # these takes an AppContext, so none can be created in the same
+    # dataclass __init__ call — see core/application.py). Optional here
+    # so AppContext remains constructible on its own for tests.
     profiles: Optional["ProfileManager"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)
+    search: Optional["SearchManager"] = field(default=None, repr=False)

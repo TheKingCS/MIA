@@ -29,6 +29,7 @@ from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.profile_manager import ProfileManager
+from core.search_manager import SearchManager, SearchResult
 from gui.lock_screen import LockScreen
 from gui.main_window import MainWindow
 from gui.profile_select import ProfileSelectScreen
@@ -56,6 +57,8 @@ class MIAApplication:
         self.context.profiles = ProfileManager(self.context)
         self.context.notifications = NotificationManager(self.context)
         self.module_manager = ModuleManager(self.context)
+        self.context.search = SearchManager(self.context)
+        self._register_search_providers()
 
         self.splash: SplashScreen | None = None
         self.main_window: MainWindow | None = None
@@ -80,6 +83,48 @@ class MIAApplication:
             widget.showFullScreen()
         else:
             widget.show()
+
+    def _register_search_providers(self) -> None:
+        """
+        Register the two search providers available from day one:
+        modules (so typing "map" finds and opens the Maps module) and
+        profiles (so typing a name finds that profile to switch to).
+        Both are registered here, in the orchestrator, rather than
+        inside ModuleManager/ProfileManager themselves — those services
+        shouldn't need to know search exists at all; this is the one
+        place that wires independent core services together.
+        """
+        self.context.search.register_provider("modules", self._search_modules)
+        self.context.search.register_provider("profiles", self._search_profiles)
+
+    def _search_modules(self, query: str) -> list[SearchResult]:
+        query_lower = query.lower()
+        results = []
+        for module in self.module_manager.all():
+            haystack = f"{module.display_name} {module.description} {module.module_id}".lower()
+            if query_lower in haystack:
+                results.append(SearchResult(
+                    title=module.display_name,
+                    description=module.description or "Open this module",
+                    source="Modules",
+                    action_type="open_module",
+                    action_target=module.module_id,
+                ))
+        return results
+
+    def _search_profiles(self, query: str) -> list[SearchResult]:
+        query_lower = query.lower()
+        results = []
+        for profile in self.context.profiles.list_profiles():
+            if query_lower in profile.name.lower():
+                results.append(SearchResult(
+                    title=profile.name,
+                    description="Switch to this profile",
+                    source="Profiles",
+                    action_type="switch_profile",
+                    action_target=profile.profile_id,
+                ))
+        return results
 
     def run(self) -> int:
         """Start the boot sequence and enter the Qt event loop."""
