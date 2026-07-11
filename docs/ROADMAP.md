@@ -150,11 +150,10 @@ Splitting the System layer into small, independently testable milestones:
 - [x] **2.7 Backup/Restore** — export/import config + data directory
 - [ ] **2.8 Update Manager (local)** — apply an update package from a
       USB drive/local file, no internet required
-- [ ] **2.9 Boot animation** — replace the current plain splash-screen
-      text steps (`gui/splash_screen.py`) with a more cinematic,
-      "Jarvis-style" boot sequence — an animated core/HUD graphic and
-      voice-line-style status text — running before the setup wizard /
-      profile selector / lock screen is shown. Idea captured
-      2026-07-11 from conversation; not yet scoped or designed.
+- [x] **2.9 Boot animation** — replaced the plain splash-screen text
+      steps with a fullscreen "Jarvis-style" boot sequence: a pulsing
+      glow core (`gui/boot_core_widget.py`) with "M.I.A." rendered in
+      its center, HUD-style status text, running before the setup
+      wizard / profile selector / lock screen is shown.
 
 Each will land as its own milestone with a short manual test checklist.

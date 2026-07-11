@@ -131,17 +131,17 @@ class MIAApplication:
         log.info("M.I.A. starting up (version %s)", self.config.get("system.version"))
 
         self.splash = SplashScreen()
-        self.splash.show()
+        self._display(self.splash)
 
         # The splash screen steps through a short sequence of boot
         # messages before handing off to the wizard or main window. Using
         # a QTimer chain (rather than time.sleep) keeps the GUI responsive
         # during startup instead of freezing.
         boot_steps = [
-            ("Initializing Core...", self._noop),
-            ("Loading Configuration...", self._noop),
-            ("Discovering Modules...", self.module_manager.discover),
-            ("Starting Interface...", self._noop),
+            ("INITIALIZING CORE SYSTEMS...", self._noop),
+            ("SYNCING CONFIGURATION MATRIX...", self._noop),
+            ("SCANNING MODULE ARRAY...", self.module_manager.discover),
+            ("ENGAGING INTERFACE...", self._noop),
         ]
         self._run_boot_steps(boot_steps, index=0)
 
@@ -159,7 +159,11 @@ class MIAApplication:
         except Exception:
             log.exception("Error during boot step: %s", message)
 
-        QTimer.singleShot(350, lambda: self._run_boot_steps(steps, index + 1))
+        # 1400ms/step (5.6s total for the 4 steps below) — gives the
+        # splash's pulsing core (gui/boot_core_widget.py) a couple of
+        # full breathing cycles per step; the original 350ms made the
+        # animation flash by too fast to register.
+        QTimer.singleShot(1400, lambda: self._run_boot_steps(steps, index + 1))
 
     def _finish_boot(self) -> None:
         if self.config.is_first_run:

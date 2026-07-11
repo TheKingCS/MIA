@@ -34,6 +34,19 @@ QLabel#SubtitleLabel {
     color: #7a8a99;
 }
 
+QLabel#BootSubtitleLabel {
+    font-size: 20px;
+    letter-spacing: 1px;
+    color: #7a8a99;
+}
+
+QLabel#BootStatusLabel {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #4fd1c5;
+}
+
 QFrame#HeaderBar {
     background-color: #161b22;
     border-bottom: 1px solid #232b34;

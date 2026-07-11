@@ -21,7 +21,8 @@ architecture that every future feature will plug into.
 
 ## What's in v0.1
 
-- Application startup sequence with a splash screen ("Initializing Core...")
+- Application startup sequence with an animated splash screen (pulsing
+  core graphic, "INITIALIZING CORE SYSTEMS..." status text)
 - First-time setup wizard (name, date, time confirmation)
 - Persistent configuration (`config/config.json`, seeded from `config/default_config.json`)
 - Main menu with placeholder module buttons: Assistant, Files, Knowledge,
