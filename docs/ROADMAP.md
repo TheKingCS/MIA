@@ -131,7 +131,7 @@ independent of the AI ever touching it, is the single highest-value
 habit to start immediately.
 
 
-## v0.2 breakdown (current phase — in progress)
+## v0.2 breakdown (complete)
 
 Splitting the System layer into small, independently testable milestones:
 
@@ -157,3 +157,25 @@ Splitting the System layer into small, independently testable milestones:
       wizard / profile selector / lock screen is shown.
 
 Each will land as its own milestone with a short manual test checklist.
+
+## v0.3 breakdown (current phase — in progress)
+
+Splitting the Toolbox phase into small, independently testable milestones,
+same pattern as v0.2:
+
+- [x] **3.1 Calculator Engine** — pluggable formula registry
+      (`core/calculator_engine.py`, `AppContext.calculators`) with one
+      shared browsing UI (new `Toolbox` module); shipped with two
+      calculators proving the two calculator shapes this needs to
+      support — Unit Converter ("convert A to B": length, weight,
+      temperature) and Ohm's Law ("solve for any one of several
+      related values" given the others). Future calculator-shaped
+      tools (wire gauge, voltage divider, antenna calculator, fuel
+      estimates, coordinate conversion, ...) are just new plugins
+      registered into the same engine, not new top-level modules.
+- [ ] **3.2 Calendar**
+- [ ] **3.3 Alarm / Stopwatch**
+- [ ] **3.4 Journal** — dated, searchable, taggable notes (upgrades
+      the Notes module placeholder)
+- [ ] **3.5 Inventory**
+- [ ] **3.6 Real File Manager** — replaces the Files module placeholder

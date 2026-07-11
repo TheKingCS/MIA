@@ -59,6 +59,7 @@ class MIAApplication:
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()
+        self._register_calculators()
 
         self.splash: SplashScreen | None = None
         self.main_window: MainWindow | None = None
@@ -96,6 +97,22 @@ class MIAApplication:
         """
         self.context.search.register_provider("modules", self._search_modules)
         self.context.search.register_provider("profiles", self._search_profiles)
+
+    def _register_calculators(self) -> None:
+        """
+        Register the general-purpose calculators that ship with core
+        (Unit Converter, Ohm's Law) — they have no single obvious
+        module home, so they're registered here rather than inside a
+        specific module's on_load(). A domain-specific module (e.g. a
+        future Electronics module) can register its own calculators
+        into the same self.context.calculators from its own on_load()
+        without needing any change here.
+        """
+        from modules.toolbox.calculators.ohms_law import OhmsLawCalculator
+        from modules.toolbox.calculators.unit_converter import UnitConverterCalculator
+
+        self.context.calculators.register(UnitConverterCalculator())
+        self.context.calculators.register(OhmsLawCalculator())
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

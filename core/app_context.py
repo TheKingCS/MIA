@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
+from core.calculator_engine import CalculatorEngine
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 
@@ -46,3 +47,6 @@ class AppContext:
     profiles: Optional["ProfileManager"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)
     search: Optional["SearchManager"] = field(default=None, repr=False)
+    # CalculatorEngine takes no AppContext dependency, so — unlike the
+    # services above — it can just be constructed directly here.
+    calculators: CalculatorEngine = field(default_factory=CalculatorEngine, repr=False)

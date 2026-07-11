@@ -42,6 +42,7 @@ EXPECTED_MODULE_IDS = {
     "diagnostics",
     "settings",
     "module_browser",
+    "toolbox",
 }
 
 

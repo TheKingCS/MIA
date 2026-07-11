@@ -47,6 +47,16 @@ QLabel#BootStatusLabel {
     color: #4fd1c5;
 }
 
+QLabel#ReadoutLabel {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 16px;
+    color: #4fd1c5;
+    padding: 10px;
+    background-color: #161b22;
+    border: 1px solid #232b34;
+    border-radius: 6px;
+}
+
 QFrame#HeaderBar {
     background-color: #161b22;
     border-bottom: 1px solid #232b34;
