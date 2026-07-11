@@ -7,5 +7,12 @@
 
 PySide6>=6.6,<7.0
 
+# Backup/restore encryption (core/secrets_manager.py). Unlike profile
+# password hashing (core/profile_manager.py), which stdlib's hashlib
+# covers with no extra dependency, actual data confidentiality has no
+# safe stdlib equivalent to reach for — this is the one real exception
+# to "keep this list minimal." Has prebuilt wheels for aarch64 (Pi 5).
+cryptography>=42,<43
+
 # Testing
 pytest>=7.4

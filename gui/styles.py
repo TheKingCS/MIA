@@ -125,4 +125,38 @@ QPlainTextEdit#LogView {
     font-family: "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 12px;
 }
+
+/*
+Unstyled, QCheckBox's indicator box falls back to the native OS/platform
+style rather than this theme — under the dark background here, that
+rendered as a dark-on-dark box that was effectively invisible (found via
+gui/backup_dialog.py's "Encrypt this backup" checkbox, but this affects
+every checkbox in the app, including AddProfileDialog's).
+*/
+QCheckBox {
+    color: #d8e0e8;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #4fd1c5;
+    border-radius: 3px;
+    background-color: #161b22;
+}
+
+QCheckBox::indicator:hover {
+    border: 1px solid #6fe3d8;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #4fd1c5;
+    border: 1px solid #4fd1c5;
+}
+
+QCheckBox::indicator:disabled {
+    border: 1px solid #2c3742;
+    background-color: #10141a;
+}
 """
