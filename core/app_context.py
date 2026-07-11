@@ -21,10 +21,14 @@ and constructed in core/application.py, not scattered as ad-hoc imports.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Optional
 
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+
+if TYPE_CHECKING:
+    from core.profile_manager import ProfileManager
 
 
 @dataclass
@@ -33,3 +37,8 @@ class AppContext:
 
     config: ConfigManager
     events: EventBus
+    # Assigned by MIAApplication right after construction (ProfileManager
+    # itself takes an AppContext, so it can't be created in the same
+    # dataclass __init__ call — see core/application.py). Optional here
+    # so AppContext remains constructible on its own for tests.
+    profiles: Optional["ProfileManager"] = field(default=None, repr=False)

@@ -3,13 +3,12 @@
         "setup_complete": false,
         "app_name": "M.I.A.",
         "version": "0.2.0",
-        "kiosk_mode": false
-    },
-    "user": {
-        "name": "",
+        "kiosk_mode": false,
         "setup_date": "",
-        "setup_time": ""
+        "setup_time": "",
+        "active_profile_id": null
     },
+    "profiles": {},
     "gui": {
         "theme": "dark_field",
         "window_width": 1100,

@@ -87,11 +87,49 @@ testing guide accompanies each milestone as it's built — see
 | **v0.8** | Workshop & Electronics + The Lab (shared Data Logger) |
 | **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Navigation, Agriculture, Medical, Smart Home, Media, Project Manager, Memories AI-query — added incrementally as real hardware for each is acquired |
 
+## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
+
+A specific, explicit goal for M.I.A.: an assistant that can eventually
+help maintain and extend its own codebase. This is the highest-risk
+capability on the entire roadmap — for a kiosk-mode offline device with
+no easy remote access, "the AI broke its own boot sequence" is close to
+the worst possible failure mode. It is staged deliberately, and each
+stage requires the previous one to be trusted in practice before moving on:
+
+1. **Read & explain (safe).** The assistant can read the codebase and
+   docs and explain what something does or suggest a fix in
+   conversation. No file writes at all. Buildable cheaply once the
+   Assistant module (v0.5) exists, since it's retrieval + explanation
+   over the project's own docs/code.
+2. **Propose, don't apply.** The assistant can draft a patch, but it is
+   written to a review queue — never applied automatically. The user
+   reviews and explicitly approves or rejects it, like a pull request.
+3. **Sandboxed self-testing.** An approved patch is applied to an
+   isolated copy of the codebase, the existing automated test suite
+   runs against it, and only a passing result is promoted to the real
+   install — still gated on explicit user confirmation. This is
+   exactly why `tests/` and the module test harness were built early
+   rather than deferred.
+4. **Scoped autonomy (later, optional).** Even at this stage, hard
+   scope limits apply: the assistant may create/edit files inside a
+   *new* module folder (a broken new module can't take down the rest
+   of the system, by the same isolation `ModuleManager` already
+   provides for load failures) but should never modify `core/` or
+   `deploy/` (boot infrastructure) without the user physically present.
+
+**Supporting infrastructure that should exist regardless of when the AI
+part is built:** every change — AI-authored or human-authored — should
+go through git, so any regression has a one-command rollback
+(`git revert`). Adopting real version control for this project now,
+independent of the AI ever touching it, is the single highest-value
+habit to start immediately.
+
+
 ## v0.2 breakdown (current phase — in progress)
 
 Splitting the System layer into small, independently testable milestones:
 
-- [ ] **2.1 Kiosk boot infrastructure** — systemd service, autologin,
+- [x] **2.1 Kiosk boot infrastructure** — systemd service, autologin,
       fullscreen launch, crash-restart behavior
 - [ ] **2.2 User profiles** — multi-user support, per-user config/data
       separation, profile switcher on the setup/login flow

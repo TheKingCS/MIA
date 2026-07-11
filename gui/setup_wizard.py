@@ -101,10 +101,14 @@ class SetupWizard(QWizard):
         time_str = self._datetime_page.time_edit.time().toString("HH:mm")
 
         config = self.context.config
-        config.set("user.name", name)
-        config.set("user.setup_date", date_str)
-        config.set("user.setup_time", time_str)
+        config.set("system.setup_date", date_str)
+        config.set("system.setup_time", time_str)
+
+        # Creating the first profile also activates it and saves config,
+        # so no separate config.save() call is needed here — see
+        # core/profile_manager.py's create_profile().
+        self.context.profiles.create_profile(name, make_active=True)
         config.mark_setup_complete()  # also saves
 
-        log.info("Setup complete for user '%s' at %s %s", name, date_str, time_str)
+        log.info("First-time setup complete for '%s' at %s %s", name, date_str, time_str)
         self.context.events.publish("user.setup_complete", name=name)
