@@ -143,7 +143,7 @@ Splitting the System layer into small, independently testable milestones:
       a persistent notification list), any module can raise one
 - [x] **2.4 Global Search** — index across config, notes, files,
       module metadata; search bar accessible from anywhere
-- [ ] **2.5 Module Manager UI upgrade** — enable/disable modules,
+- [x] **2.5 Module Manager UI upgrade** — enable/disable modules,
       reload without full restart
 - [ ] **2.6 System Logs viewer** — read `logs/mia.log` in-app
       (Diagnostics module's first real feature)
