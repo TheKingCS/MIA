@@ -182,7 +182,14 @@ same pattern as v0.2:
       `data/calendar_events.json`, same durability pattern as
       notifications). Toolbox now shows a Tools section above
       Calculators.
-- [ ] **3.3 Alarm / Stopwatch**
+- [x] **3.3 Alarm / Stopwatch** — two more `ToolboxTool`s. Alarm
+      (`core/alarm_manager.py`, persisted to `data/alarms.json`) fires
+      through the existing Notification Center via a periodic
+      `QTimer` owned by `MIAApplication`, so it works regardless of
+      which screen is active — no bespoke alert UI needed. Stopwatch
+      is purely in-memory (no persistence rationale, unlike
+      Calendar/Alarm), but keeps ticking in the background across
+      navigation thanks to Toolbox's existing tool-widget caching.
 - [ ] **3.4 Journal** — dated, searchable, taggable notes (upgrades
       the Notes module placeholder)
 - [ ] **3.5 Inventory**

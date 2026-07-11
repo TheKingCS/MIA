@@ -18,10 +18,12 @@ startup logic — it only constructs and runs MIAApplication.
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
+from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
@@ -58,6 +60,7 @@ class MIAApplication:
         self.context.profiles = ProfileManager(self.context)
         self.context.notifications = NotificationManager(self.context)
         self.context.calendar = CalendarManager(self.context)
+        self.context.alarms = AlarmManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()
@@ -68,6 +71,19 @@ class MIAApplication:
         self.setup_wizard: SetupWizard | None = None
         self.profile_select: ProfileSelectScreen | None = None
         self.lock_screen: LockScreen | None = None
+
+        # Alarms need to fire regardless of which module is currently on
+        # screen, so this timer lives here (the one place that's always
+        # alive for the whole app session) rather than inside the Alarm
+        # tool's widget, which only exists while that screen is open.
+        # 20s is frequent enough that no HH:MM minute window is ever
+        # skipped between polls.
+        self._alarm_check_timer = QTimer()
+        self._alarm_check_timer.timeout.connect(self._check_alarms)
+        self._alarm_check_timer.start(20_000)
+
+    def _check_alarms(self) -> None:
+        self.context.alarms.check_due(datetime.now())
 
     def _display(self, widget) -> None:
         """
