@@ -145,10 +145,16 @@ Splitting the System layer into small, independently testable milestones:
       module metadata; search bar accessible from anywhere
 - [x] **2.5 Module Manager UI upgrade** — enable/disable modules,
       reload without full restart
-- [ ] **2.6 System Logs viewer** — read `logs/mia.log` in-app
+- [x] **2.6 System Logs viewer** — read `logs/mia.log` in-app
       (Diagnostics module's first real feature)
 - [ ] **2.7 Backup/Restore** — export/import config + data directory
 - [ ] **2.8 Update Manager (local)** — apply an update package from a
       USB drive/local file, no internet required
+- [ ] **2.9 Boot animation** — replace the current plain splash-screen
+      text steps (`gui/splash_screen.py`) with a more cinematic,
+      "Jarvis-style" boot sequence — an animated core/HUD graphic and
+      voice-line-style status text — running before the setup wizard /
+      profile selector / lock screen is shown. Idea captured
+      2026-07-11 from conversation; not yet scoped or designed.
 
 Each will land as its own milestone with a short manual test checklist.

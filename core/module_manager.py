@@ -45,20 +45,33 @@ class ModuleManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._modules: dict[str, ModuleBase] = {}
+        # Package (folder) names already successfully loaded — lets
+        # discover() be called again (via rescan()) without re-importing
+        # and re-flagging every already-known module as a "duplicate".
+        # See discover()'s docstring for why this matters.
+        self._discovered_package_names: set[str] = set()
 
     def discover(self) -> None:
         """
         Scan modules/ for module.py files and instantiate any ModuleBase
-        subclasses found. Safe to call once at startup. Errors in one
-        module (bad import, missing class) are logged and skipped rather
-        than crashing the whole application — a broken module should
-        never take down the rest of the system.
+        subclasses found. Safe to call more than once (rescan() relies on
+        this) — a package name already successfully loaded by a previous
+        call is skipped rather than re-imported, so re-scanning doesn't
+        spuriously log every already-known module as a "duplicate
+        module_id". A real duplicate (two different package names
+        claiming the same module_id) is still caught and warned about.
+        Errors in one module (bad import, missing class) are logged and
+        skipped rather than crashing the whole application — a broken
+        module should never take down the rest of the system.
         """
         modules_path = Path(modules.__file__).parent
 
         for finder, name, is_pkg in pkgutil.iter_modules([str(modules_path)]):
             if not is_pkg:
                 continue  # skip loose .py files like module_base.py
+
+            if name in self._discovered_package_names:
+                continue  # already loaded by a previous discover()/rescan() call
 
             module_py_path = modules_path / name / "module.py"
             if not module_py_path.exists():
@@ -93,6 +106,7 @@ class ModuleManager:
                 continue
 
             self._modules[instance.module_id] = instance
+            self._discovered_package_names.add(name)
             log.info("Discovered module: %s (%s)", instance.display_name, instance.module_id)
 
     @staticmethod

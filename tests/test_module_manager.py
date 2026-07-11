@@ -187,3 +187,21 @@ def test_rescan_detects_newly_added_module_folder(isolated_config):
 def test_rescan_finds_nothing_when_no_new_folders(isolated_config):
     manager = _build_manager()
     assert manager.rescan() == 0
+
+
+def test_rescan_does_not_flag_already_known_modules_as_duplicates(isolated_config, caplog):
+    """
+    Regression test: discover() used to be re-run wholesale on every
+    rescan(), which re-imported every already-known module and logged a
+    false "Duplicate module_id" warning for each one — every single
+    time a user clicked "Rescan Modules", even when nothing had
+    changed. See core/module_manager.py's discover() docstring.
+    """
+    manager = _build_manager()
+    known_count = len(manager.all())
+
+    with caplog.at_level("WARNING"):
+        manager.rescan()
+
+    assert len(manager.all()) == known_count
+    assert "Duplicate module_id" not in caplog.text

@@ -91,11 +91,38 @@ QWizard {
     background-color: #10141a;
 }
 
-QLineEdit, QDateEdit, QTimeEdit {
+QLineEdit, QDateEdit, QTimeEdit, QComboBox {
     background-color: #161b22;
     border: 1px solid #232b34;
     border-radius: 4px;
     padding: 6px;
     color: #d8e0e8;
+}
+
+/*
+QComboBox's popup list is a separate top-level widget (QAbstractItemView)
+that does NOT inherit the QComboBox rule above. Left unstyled, it falls
+back to a default view that (at least under this custom stylesheet)
+doesn't register a click on an item until the mouse first moves —
+selecting an item and immediately clicking again elsewhere needs a
+mouse-move in between to "wake up" the popup's hit-testing. Styling it
+explicitly, including a real selection color, fixes this.
+*/
+QComboBox QAbstractItemView {
+    background-color: #161b22;
+    border: 1px solid #232b34;
+    color: #d8e0e8;
+    selection-background-color: #1c2530;
+    selection-color: #4fd1c5;
+    outline: none;
+}
+
+QPlainTextEdit#LogView {
+    background-color: #0d1116;
+    border: 1px solid #232b34;
+    border-radius: 6px;
+    color: #9fb0bf;
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 12px;
 }
 """
