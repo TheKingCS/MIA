@@ -1,49 +1,33 @@
 # Known Issues
 
-## 1. Easter egg dialog — button text / clipped name (fix applied, not yet tested)
+No open issues at the moment. Closed items are kept below for history —
+each links back to its root cause and fix, in case something similar
+resurfaces later.
 
-**Root cause found by comparison, not guessing:** `EasterEggDialog` was
-the only dialog in the project calling `layout.setAlignment(Qt.AlignmentFlag.AlignCenter)`
-on its top-level `QVBoxLayout`. `AddProfileDialog` and `PasswordPromptDialog`
-don't do this, and both are confirmed working on the real device. The
-dialog has been rebuilt to match that proven pattern.
+## Closed: Easter egg dialog — button text / clipped name
 
-**Status: fix applied, still needs a real-machine test** (Ctrl+Shift+Z
-in the running app). Not yet confirmed.
+Root cause: `EasterEggDialog` was the only dialog using
+`layout.setAlignment(Qt.AlignmentFlag.AlignCenter)` on its top-level
+layout, unlike the working `AddProfileDialog`/`PasswordPromptDialog`.
+Fixed by matching their layout pattern (no top-level alignment, each
+label centers its own text, spacing via `addStretch()`/`addSpacing()`).
+**Confirmed fixed on real hardware.**
 
-## 2. Kiosk fullscreen not persisting through screen transitions — CONFIRMED FIXED
+## Closed: Kiosk fullscreen not persisting through screen transitions
 
-**Root cause:** fullscreen was only ever applied inside `MainWindow`'s
-own `showEvent`. Every other top-level screen (`LockScreen`,
+Root cause: fullscreen was only applied inside `MainWindow`'s own
+`showEvent` — every other top-level screen (`LockScreen`,
 `ProfileSelectScreen`, `SetupWizard`) called plain `.show()` with no
-kiosk awareness.
+kiosk awareness. Fixed by centralizing display logic in
+`MIAApplication._display(widget)`, the single place that now decides
+fullscreen vs. normal show for every screen transition.
+**Confirmed fixed on real hardware** (Lock Screen -> Main Window,
+tested with kiosk_mode on).
 
-**Fix:** centralized in `MIAApplication._display(widget)` — the one
-place that now decides fullscreen vs. normal show for every screen
-transition.
+## Closed: Header labels showing a mismatched background "box"
 
-**Status: confirmed working on real hardware** — tested Lock Screen ->
-Main Window transition with kiosk_mode on; fullscreen persisted
-correctly through the whole flow.
-
-## 3. Header labels showing a mismatched background "box" — FIXED, pending confirmation
-
-**Reported:** the "M.I.A." title and "Welcome back, `<name>`" greeting
-in the header appeared to have an out-of-place box/background behind
-the text.
-
-**Root cause:** `gui/styles.py`'s global theme sets a background color
-on the broad selector `QMainWindow, QWidget` — and `QLabel` is a
-`QWidget`, so every label was painting its own solid background box,
-which didn't quite match whatever frame it visually sat on top of
-(e.g. the header bar's slightly different background color). This same
-issue was already worked around locally inside `gui/notification_toast.py`
-(which explicitly sets `QLabel { background: transparent; }`) but that
-fix was never applied globally.
-
-**Fix:** added `QLabel { background: transparent; }` to the shared
-theme in `gui/styles.py`, so this is fixed everywhere at once — header,
-lock screen, profile selector, easter egg, notification center, etc. —
-rather than needing a per-widget workaround each time it shows up.
-
-**Status: fix applied, needs visual confirmation on real hardware.**
+Root cause: the global theme's `QMainWindow, QWidget` selector set a
+background color that every `QLabel` inherited, painting its own solid
+box that didn't match whatever frame it visually sat on top of. Fixed
+by adding `QLabel { background: transparent; }` to the shared theme in
+`gui/styles.py`. **Confirmed fixed on real hardware.**
