@@ -178,4 +178,11 @@ same pattern as v0.2:
 - [ ] **3.4 Journal** — dated, searchable, taggable notes (upgrades
       the Notes module placeholder)
 - [ ] **3.5 Inventory**
-- [ ] **3.6 Real File Manager** — replaces the Files module placeholder
+- [x] **3.6 Real File Manager** — replaces the Files module placeholder.
+      Browse/navigate (starts at home, goes anywhere the OS permits),
+      create/rename/delete (permanent — no trash/recycle bin, gated
+      behind a typed-name confirmation), text/image preview, and a
+      live filename filter. Not yet wired into Global Search — a
+      filesystem-wide search has real scope questions (how deep to
+      recurse, which drives) worth designing deliberately rather than
+      bolting on here.
