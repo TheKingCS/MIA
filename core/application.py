@@ -28,6 +28,7 @@ from core.app_context import AppContext
 from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.logger import get_logger
 from core.module_manager import ModuleManager
@@ -63,6 +64,7 @@ class MIAApplication:
         self.context.calendar = CalendarManager(self.context)
         self.context.alarms = AlarmManager(self.context)
         self.context.journal = JournalManager(self.context)
+        self.context.inventory = InventoryManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()

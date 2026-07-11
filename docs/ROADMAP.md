@@ -158,7 +158,7 @@ Splitting the System layer into small, independently testable milestones:
 
 Each will land as its own milestone with a short manual test checklist.
 
-## v0.3 breakdown (current phase — in progress)
+## v0.3 breakdown (complete)
 
 Splitting the Toolbox phase into small, independently testable milestones,
 same pattern as v0.2:
@@ -199,7 +199,13 @@ same pattern as v0.2:
       pattern `docs/ADDING_MODULES.md` documents but no module had
       used yet), resolving to `action_type="open_module"` rather than
       a deep link into a specific entry.
-- [ ] **3.5 Inventory**
+- [x] **3.5 Inventory** — final `ToolboxTool` of the v0.3 breakdown.
+      `core/inventory_manager.py` (persisted to
+      `data/inventory_items.json`) tracks name/quantity/category/
+      location/notes; the tool adds quick **+1**/**−1** buttons on top
+      of the usual Add/Edit/Delete for the common case of adjusting a
+      count without opening the full dialog. v0.3 (Toolbox) is now
+      complete.
 - [x] **3.6 Real File Manager** — replaces the Files module placeholder.
       Browse/navigate (starts at home, goes anywhere the OS permits),
       create/rename/delete (permanent — no trash/recycle bin, gated

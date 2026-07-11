@@ -31,6 +31,7 @@ from core.event_bus import EventBus
 if TYPE_CHECKING:
     from core.alarm_manager import AlarmManager
     from core.calendar_manager import CalendarManager
+    from core.inventory_manager import InventoryManager
     from core.journal_manager import JournalManager
     from core.notification_manager import NotificationManager
     from core.profile_manager import ProfileManager
@@ -53,6 +54,7 @@ class AppContext:
     calendar: Optional["CalendarManager"] = field(default=None, repr=False)
     alarms: Optional["AlarmManager"] = field(default=None, repr=False)
     journal: Optional["JournalManager"] = field(default=None, repr=False)
+    inventory: Optional["InventoryManager"] = field(default=None, repr=False)
     # CalculatorEngine takes no AppContext dependency, so — unlike the
     # services above — it can just be constructed directly here.
     calculators: CalculatorEngine = field(default_factory=CalculatorEngine, repr=False)

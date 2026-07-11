@@ -6,7 +6,7 @@ Toolbox: the shared home for every calculator registered with
 core.calculator_engine.CalculatorEngine (self.context.calculators),
 per docs/ROADMAP.md's Calculator Engine shared service, plus the small
 set of built-in ToolboxTools (modules/toolbox/tool_base.py) — Calendar,
-Alarm, and Stopwatch today, Inventory planned per the v0.3 roadmap
+Alarm, Stopwatch, and Inventory, completing the v0.3 roadmap
 breakdown. Lists both, grouped into a "Tools" section and a
 "Calculators" section (further grouped by category); picking one shows
 its own widget. Adding a new calculator anywhere in the app never
@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
 from modules.module_base import ModuleBase
 from modules.toolbox.tools.alarm_tool import AlarmTool
 from modules.toolbox.tools.calendar_tool import CalendarTool
+from modules.toolbox.tools.inventory_tool import InventoryTool
 from modules.toolbox.tools.stopwatch_tool import StopwatchTool
 
 
@@ -59,6 +60,7 @@ class ToolboxModule(ModuleBase):
             CalendarTool(self.context),
             AlarmTool(self.context),
             StopwatchTool(self.context),
+            InventoryTool(self.context),
         ]
 
     def get_widget(self) -> QWidget:
