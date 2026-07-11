@@ -137,7 +137,7 @@ Splitting the System layer into small, independently testable milestones:
 
 - [x] **2.1 Kiosk boot infrastructure** — systemd service, autologin,
       fullscreen launch, crash-restart behavior
-- [ ] **2.2 User profiles** — multi-user support, per-user config/data
+- [x] **2.2 User profiles** — multi-user support, per-user config/data
       separation, profile switcher on the setup/login flow
 - [x] **2.3 Notification Center** — core service + UI (toast/banner +
       a persistent notification list), any module can raise one
