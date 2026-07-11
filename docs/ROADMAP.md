@@ -141,7 +141,7 @@ Splitting the System layer into small, independently testable milestones:
       separation, profile switcher on the setup/login flow
 - [x] **2.3 Notification Center** — core service + UI (toast/banner +
       a persistent notification list), any module can raise one
-- [ ] **2.4 Global Search** — index across config, notes, files,
+- [x] **2.4 Global Search** — index across config, notes, files,
       module metadata; search bar accessible from anywhere
 - [ ] **2.5 Module Manager UI upgrade** — enable/disable modules,
       reload without full restart
