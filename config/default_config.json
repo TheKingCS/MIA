@@ -9,6 +9,9 @@
         "active_profile_id": null
     },
     "profiles": {},
+    "modules": {
+        "disabled": []
+    },
     "gui": {
         "theme": "dark_field",
         "window_width": 1100,

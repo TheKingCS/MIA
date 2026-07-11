@@ -25,6 +25,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
+import shutil
 from pathlib import Path
 
 import modules
@@ -109,3 +110,119 @@ class ModuleManager:
     def all(self) -> list[ModuleBase]:
         """Return all discovered modules, sorted by display name for stable menu order."""
         return sorted(self._modules.values(), key=lambda m: m.display_name)
+
+    def enabled_modules(self) -> list[ModuleBase]:
+        """Return only the modules that are currently enabled — what the main menu grid should show."""
+        return [m for m in self.all() if self.is_enabled(m.module_id)]
+
+    # ------------------------------------------------------------------
+    # Enable / disable
+    # ------------------------------------------------------------------
+
+    def is_enabled(self, module_id: str) -> bool:
+        disabled_ids = self.context.config.get("modules.disabled", [])
+        return module_id not in disabled_ids
+
+    def set_enabled(self, module_id: str, enabled: bool) -> bool:
+        """
+        Enable or disable a module. The Modules screen itself
+        (module_id "module_browser") can never be disabled — doing so
+        would leave no way back in without hand-editing config.json.
+        Returns False if the request was refused for that reason.
+        """
+        if module_id == "module_browser" and not enabled:
+            log.warning("Refusing to disable 'module_browser' — it's the only way to re-enable modules.")
+            return False
+
+        disabled_ids = list(self.context.config.get("modules.disabled", []))
+        if enabled:
+            if module_id in disabled_ids:
+                disabled_ids.remove(module_id)
+        else:
+            if module_id not in disabled_ids:
+                disabled_ids.append(module_id)
+
+        self.context.config.set("modules.disabled", disabled_ids)
+        self.context.config.save()
+        self.context.events.publish("modules.enabled_changed", module_id=module_id, enabled=enabled)
+        log.info("Module '%s' %s", module_id, "enabled" if enabled else "disabled")
+        return True
+
+    # ------------------------------------------------------------------
+    # Rescan (detect new module folders without a full restart)
+    # ------------------------------------------------------------------
+
+    def rescan(self) -> int:
+        """
+        Re-scan modules/ for module folders added since the last
+        discover() call, without restarting the app.
+
+        Scope, deliberately: this does NOT reload changed code in an
+        already-loaded module. That would mean re-importing a module
+        whose class Python has already cached, swapping it under a
+        widget that might already be on screen, with no guarantee the
+        old and new versions agree on state — a real correctness risk
+        for very little benefit at this stage. Detecting brand-new
+        module folders is safe (nothing references them yet) and covers
+        the actual common case: a developer adds a new module while the
+        kiosk app is already running and wants it to show up without a
+        full restart.
+
+        Returns the number of newly discovered modules.
+        """
+        before = set(self._modules.keys())
+        self.discover()
+        new_ids = set(self._modules.keys()) - before
+
+        if new_ids:
+            log.info("Rescan found %d new module(s): %s", len(new_ids), ", ".join(sorted(new_ids)))
+        else:
+            log.info("Rescan found no new modules.")
+
+        self.context.events.publish("modules.rescanned", new_module_ids=list(new_ids))
+        return len(new_ids)
+
+    # ------------------------------------------------------------------
+    # Installing new modules (from the "Add Module" UI)
+    # ------------------------------------------------------------------
+
+    def install_module_from_folder(self, source_path: Path):
+        """
+        Validate and install a module from an external folder (e.g. a
+        USB drive, or a zip extracted by the GUI layer) into modules/.
+        See core/module_validator.py and docs/MODULE_SPEC.md for
+        exactly what's checked and why.
+
+        On success: copies the folder into modules/<module_id>/ and
+        calls rescan() so it appears immediately, no restart needed.
+        On failure: nothing is copied; the returned ValidationResult's
+        `errors` explain exactly why.
+        """
+        from core.module_validator import validate_module_folder
+
+        source_path = Path(source_path)
+        existing_ids = set(self._modules.keys())
+        result = validate_module_folder(source_path, existing_ids, self.context)
+
+        if not result.passed:
+            log.warning("Module install rejected for '%s': %s", source_path, "; ".join(result.errors))
+            return result
+
+        modules_dir = Path(modules.__file__).parent
+        destination_path = modules_dir / result.module_id
+
+        if destination_path.exists():
+            result.passed = False
+            result.errors.append(f"A folder named '{result.module_id}' already exists in modules/.")
+            return result
+
+        try:
+            shutil.copytree(source_path, destination_path)
+        except Exception as exc:
+            result.passed = False
+            result.errors.append(f"Validation passed, but copying the module failed: {exc}")
+            return result
+
+        log.info("Installed new module '%s' from %s", result.module_id, source_path)
+        self.rescan()
+        return result

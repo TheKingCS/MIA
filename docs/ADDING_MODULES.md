@@ -111,7 +111,26 @@ module" (e.g. "open this specific note"), you'll need a new
 will need a branch for it — see `gui/main_window.py` for the existing
 `"open_module"` / `"switch_profile"` cases as a model.
 
-## 6. Removing a module
+## 6. Enabling, disabling, and rescanning
+
+Every module can be turned off from the **Modules** screen without
+uninstalling it — useful for a module that isn't relevant to a
+particular deployment, or one that's mid-development and not ready to
+show up on the main menu yet. Disabled state is stored in
+`config.json` under `modules.disabled` and persists across restarts.
+The **Modules** screen itself can never be disabled — that's enforced
+in `core/module_manager.py`, not just a UI restriction — since
+disabling it would leave no way back in without hand-editing config.
+
+**"Rescan Modules"** (also on that screen) detects module folders added
+*while the app is already running*, without needing a restart. Scope
+note: this does not reload changed code in a module that's already
+loaded — only brand-new folders are picked up. If you're actively
+iterating on an existing module's code, `tests/run_module.py` (see
+above) is still the right tool; restart the full app to pick up code
+changes to a module you already had running.
+
+## 7. Removing a module
 
 Delete its folder. Nothing else references it by import, so there's
 nothing else to clean up (aside from any config keys you may have

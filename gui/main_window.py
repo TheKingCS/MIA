@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         self._setup_easter_egg_shortcut()
         self._setup_search_shortcut()
         self._setup_notifications()
+        self._setup_module_events()
         self.statusBar().showMessage("M.I.A. core online.")
 
     def _setup_search_shortcut(self) -> None:
@@ -104,6 +105,35 @@ class MainWindow(QMainWindow):
             self.switch_profile_requested.emit()
         else:
             log.warning("Unknown search result action_type '%s'", result.action_type)
+
+    def _setup_module_events(self) -> None:
+        """
+        Subscribe so enabling/disabling a module or rescanning for new
+        ones updates the main menu grid immediately, without requiring
+        a restart. Bound methods stored on self so closeEvent() can
+        unsubscribe the exact same callables — same reasoning as
+        _setup_notifications() above.
+        """
+        self.context.events.subscribe("modules.enabled_changed", self._on_modules_changed)
+        self.context.events.subscribe("modules.rescanned", self._on_modules_changed)
+
+    def _on_modules_changed(self, **kwargs) -> None:
+        self._rebuild_menu()
+
+    def _rebuild_menu(self) -> None:
+        """Rebuild the main menu grid in place, preserving which screen is currently visible."""
+        was_showing_menu = self._stack.currentWidget() is self._menu_widget
+        old_menu = self._menu_widget
+        new_menu = self._build_menu()
+
+        index = self._stack.indexOf(old_menu)
+        self._stack.insertWidget(index, new_menu)
+        self._stack.removeWidget(old_menu)
+        old_menu.deleteLater()
+        self._menu_widget = new_menu
+
+        if was_showing_menu:
+            self._stack.setCurrentWidget(new_menu)
 
     def _setup_notifications(self) -> None:
         """
@@ -145,6 +175,8 @@ class MainWindow(QMainWindow):
         """
         self.context.events.unsubscribe("notification.created", self._on_notification_created)
         self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
+        self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
+        self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
         super().closeEvent(event)
 
     def _setup_kiosk_exit_shortcut(self) -> None:
@@ -187,6 +219,7 @@ class MainWindow(QMainWindow):
         browser = self.module_manager.get("module_browser")
         if browser is not None:
             browser.known_modules = self.module_manager.all()
+            browser.module_manager = self.module_manager
 
     # ------------------------------------------------------------------
     # UI construction
@@ -269,7 +302,7 @@ class MainWindow(QMainWindow):
         grid = QGridLayout(container)
         grid.setSpacing(16)
 
-        modules = self.module_manager.all()
+        modules = self.module_manager.enabled_modules()
         columns = 3
         for index, module in enumerate(modules):
             button = ModuleButton(module)
