@@ -3,14 +3,17 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
-## Open: Diagnostics Level dropdown needs a re-click to select a new value
+## Open: QComboBox popups don't close/reset properly until the mouse moves
 
-Symptom: in the Diagnostics log viewer's Level filter (`QComboBox` in
-`modules/diagnostics/module.py`), after selecting a value, the *next*
-click on the dropdown to pick a different value doesn't register —
-moving the mouse away and clicking again does. This is the first
-`QComboBox` this app has ever used, so there's no earlier baseline to
-compare against.
+Symptom: any `QComboBox` in the app — first seen in the Diagnostics log
+viewer's Level filter (`modules/diagnostics/module.py`), now also
+confirmed on all three dropdowns in Unit Converter
+(`modules/toolbox/calculators/unit_converter.py`) — leaves its popup
+list visually stuck open / doesn't register the next click correctly
+after a selection, until the mouse is moved away and back. Since this
+reproduces identically across every `QComboBox` this app has, on
+different screens, with different item counts and different signal
+wiring, it's very unlikely to be something in any one screen's code.
 
 Suspected root cause: not application QSS (adding explicit
 `QComboBox QAbstractItemView` styling in `gui/styles.py` did not fix
@@ -19,7 +22,9 @@ setting that widget's own stylesheet to `""`, so that avenue is likely
 a dead end). More likely a WSL/WSLg popup mouse-grab timing quirk —
 this was observed running under WSL2, which is explicitly a dev-only
 platform per `README.md`; the real deployment target is a Pi 5 kiosk
-session on native Linux, not WSLg's Wayland-to-Windows bridge.
+session on native Linux, not WSLg's Wayland-to-Windows bridge. The
+fact that it now reproduces identically across multiple independent
+screens strengthens this theory rather than pointing at app code.
 
 **Not yet confirmed either way.** Re-test on real Pi/native-Linux
 hardware before spending more effort chasing an app-level fix — if it

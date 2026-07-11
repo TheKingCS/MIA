@@ -86,3 +86,160 @@ def test_fahrenheit_to_kelvin_round_trip():
 
 def test_negative_value_converts_correctly():
     assert convert("Length", "Meters (m)", "Feet (ft)", -10.0) == pytest.approx(-32.8084, rel=1e-4)
+
+
+# ----------------------------------------------------------------------
+# Area
+# ----------------------------------------------------------------------
+
+def test_square_feet_to_square_meters():
+    assert convert("Area", "Square Feet (ft²)", "Square Meters (m²)", 1.0) == pytest.approx(0.09290304)
+
+
+def test_acres_to_square_meters():
+    assert convert("Area", "Acres", "Square Meters (m²)", 1.0) == pytest.approx(4046.8564224)
+
+
+def test_hectares_to_square_meters():
+    assert convert("Area", "Hectares", "Square Meters (m²)", 1.0) == pytest.approx(10000.0)
+
+
+def test_square_kilometers_to_hectares():
+    assert convert("Area", "Square Kilometers (km²)", "Hectares", 1.0) == pytest.approx(100.0)
+
+
+# ----------------------------------------------------------------------
+# Speed
+# ----------------------------------------------------------------------
+
+def test_km_per_hour_to_m_per_s():
+    assert convert("Speed", "Kilometers/Hour (km/h)", "Meters/Second (m/s)", 36.0) == pytest.approx(10.0)
+
+
+def test_mph_to_m_per_s():
+    assert convert("Speed", "Miles/Hour (mph)", "Meters/Second (m/s)", 1.0) == pytest.approx(0.44704)
+
+
+def test_knots_to_km_per_hour():
+    assert convert("Speed", "Knots (kn)", "Kilometers/Hour (km/h)", 1.0) == pytest.approx(1.852)
+
+
+# ----------------------------------------------------------------------
+# Pressure
+# ----------------------------------------------------------------------
+
+def test_bar_to_pascals():
+    assert convert("Pressure", "Bar", "Pascals (Pa)", 1.0) == pytest.approx(100_000.0)
+
+
+def test_kpa_to_pascals():
+    assert convert("Pressure", "Kilopascals (kPa)", "Pascals (Pa)", 1.0) == pytest.approx(1000.0)
+
+
+def test_atm_to_psi():
+    assert convert("Pressure", "Atmospheres (atm)", "PSI", 1.0) == pytest.approx(14.6959, rel=1e-4)
+
+
+# ----------------------------------------------------------------------
+# Energy
+# ----------------------------------------------------------------------
+
+def test_kilocalories_to_joules():
+    assert convert("Energy", "Kilocalories (kcal)", "Joules (J)", 1.0) == pytest.approx(4184.0)
+
+
+def test_kwh_to_joules():
+    assert convert("Energy", "Kilowatt-hours (kWh)", "Joules (J)", 1.0) == pytest.approx(3_600_000.0)
+
+
+def test_btu_to_joules():
+    assert convert("Energy", "BTU", "Joules (J)", 1.0) == pytest.approx(1055.05585262)
+
+
+# ----------------------------------------------------------------------
+# Power
+# ----------------------------------------------------------------------
+
+def test_horsepower_to_watts():
+    assert convert("Power", "Horsepower (hp)", "Watts (W)", 1.0) == pytest.approx(745.6998716, rel=1e-6)
+
+
+def test_kilowatts_to_watts():
+    assert convert("Power", "Kilowatts (kW)", "Watts (W)", 1.0) == pytest.approx(1000.0)
+
+
+# ----------------------------------------------------------------------
+# Time
+# ----------------------------------------------------------------------
+
+def test_hours_to_minutes():
+    assert convert("Time", "Hours (hr)", "Minutes (min)", 1.0) == pytest.approx(60.0)
+
+
+def test_days_to_hours():
+    assert convert("Time", "Days", "Hours (hr)", 1.0) == pytest.approx(24.0)
+
+
+def test_weeks_to_days():
+    assert convert("Time", "Weeks", "Days", 1.0) == pytest.approx(7.0)
+
+
+# ----------------------------------------------------------------------
+# Data Storage
+# ----------------------------------------------------------------------
+
+def test_kilobytes_to_bytes():
+    assert convert("Data Storage", "Kilobytes (KB)", "Bytes (B)", 1.0) == pytest.approx(1024.0)
+
+
+def test_megabytes_to_kilobytes():
+    assert convert("Data Storage", "Megabytes (MB)", "Kilobytes (KB)", 1.0) == pytest.approx(1024.0)
+
+
+def test_gigabytes_to_megabytes():
+    assert convert("Data Storage", "Gigabytes (GB)", "Megabytes (MB)", 1.0) == pytest.approx(1024.0)
+
+
+def test_terabytes_to_gigabytes():
+    assert convert("Data Storage", "Terabytes (TB)", "Gigabytes (GB)", 1.0) == pytest.approx(1024.0)
+
+
+# ----------------------------------------------------------------------
+# Angle
+# ----------------------------------------------------------------------
+
+def test_degrees_to_radians():
+    assert convert("Angle", "Degrees (°)", "Radians (rad)", 180.0) == pytest.approx(3.14159265358979, rel=1e-9)
+
+
+def test_gradians_to_degrees():
+    assert convert("Angle", "Gradians (grad)", "Degrees (°)", 100.0) == pytest.approx(90.0)
+
+
+# ----------------------------------------------------------------------
+# Fuel Economy (reciprocal relationship, not a linear ratio)
+# ----------------------------------------------------------------------
+
+def test_km_per_l_to_l_per_100km_self_reciprocal_at_10():
+    # A clean case: at exactly 10 km/L, L/100km is also exactly 10 —
+    # a convenient sanity check for the reciprocal math.
+    assert convert("Fuel Economy", "Kilometers/Liter (km/L)", "Liters/100km (L/100km)", 10.0) == pytest.approx(10.0)
+
+
+def test_l_per_100km_round_trip():
+    km_per_l = convert("Fuel Economy", "Liters/100km (L/100km)", "Kilometers/Liter (km/L)", 7.5)
+    back = convert("Fuel Economy", "Kilometers/Liter (km/L)", "Liters/100km (L/100km)", km_per_l)
+    assert back == pytest.approx(7.5, rel=1e-9)
+
+
+def test_mpg_to_km_per_l():
+    # 1 mile / 1 US gallon, expressed in km / L.
+    assert convert("Fuel Economy", "Miles/Gallon (mpg)", "Kilometers/Liter (km/L)", 1.0) == pytest.approx(
+        1.609344 / 3.785411784, rel=1e-9
+    )
+
+
+def test_mpg_round_trip_through_l_per_100km():
+    l_per_100km = convert("Fuel Economy", "Miles/Gallon (mpg)", "Liters/100km (L/100km)", 25.0)
+    back_to_mpg = convert("Fuel Economy", "Liters/100km (L/100km)", "Miles/Gallon (mpg)", l_per_100km)
+    assert back_to_mpg == pytest.approx(25.0, rel=1e-9)
