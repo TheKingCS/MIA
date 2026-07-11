@@ -190,8 +190,15 @@ same pattern as v0.2:
       is purely in-memory (no persistence rationale, unlike
       Calendar/Alarm), but keeps ticking in the background across
       navigation thanks to Toolbox's existing tool-widget caching.
-- [ ] **3.4 Journal** — dated, searchable, taggable notes (upgrades
-      the Notes module placeholder)
+- [x] **3.4 Journal** — dated, searchable, taggable notes (upgrades
+      the Notes module placeholder). `core/journal_manager.py` is a
+      `core/`-level shared service (per the "Notes/Journal Engine"
+      row), not module-local, so future modules (Project Manager, Lab
+      notes, vehicle notes) can reuse it directly. Notes is also the
+      first module to register its own Global Search provider (the
+      pattern `docs/ADDING_MODULES.md` documents but no module had
+      used yet), resolving to `action_type="open_module"` rather than
+      a deep link into a specific entry.
 - [ ] **3.5 Inventory**
 - [x] **3.6 Real File Manager** — replaces the Files module placeholder.
       Browse/navigate (starts at home, goes anywhere the OS permits),
