@@ -148,7 +148,7 @@ Splitting the System layer into small, independently testable milestones:
 - [x] **2.6 System Logs viewer** — read `logs/mia.log` in-app
       (Diagnostics module's first real feature)
 - [x] **2.7 Backup/Restore** — export/import config + data directory
-- [ ] **2.8 Update Manager (local)** — apply an update package from a
+- [x] **2.8 Update Manager (local)** — apply an update package from a
       USB drive/local file, no internet required
 - [x] **2.9 Boot animation** — replaced the plain splash-screen text
       steps with a fullscreen "Jarvis-style" boot sequence: a pulsing

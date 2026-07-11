@@ -2,12 +2,13 @@
 modules.settings.module
 =========================
 
-Settings: Backup/Restore is the module's first real feature (see
-docs/ROADMAP.md milestone 2.7) — export/import config + the data
-directory (profiles, notifications, etc.), optionally
-passphrase-encrypted via core/secrets_manager.py. Editing settings
-live (theme, user info, module toggles — the rest of what "Settings"
-implies) remains a placeholder for a future milestone.
+Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export/
+import config + the data directory (profiles, notifications, etc.),
+optionally passphrase-encrypted via core/secrets_manager.py — and
+Update Manager (milestone 2.8) — apply an offline update package onto
+the running installation, see docs/UPDATE_PACKAGE_SPEC.md. Editing
+settings live (theme, user info, module toggles — the rest of what
+"Settings" implies) remains a placeholder for a future milestone.
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from PySide6.QtWidgets import (
 
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.logger import get_logger
+from core.update_manager import apply_update_package, peek_update_manifest
 from gui.backup_dialog import BackupPassphraseDialog
 from gui.password_dialog import PasswordPromptDialog
 from modules.module_base import ModuleBase
@@ -82,6 +84,24 @@ class SettingsModule(ModuleBase):
         button_row.addWidget(restore_button)
 
         outer.addLayout(button_row)
+
+        update_section = QLabel("Update Manager")
+        update_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        outer.addWidget(update_section)
+
+        update_desc = QLabel(
+            "Apply an offline update package (e.g. from a USB drive). "
+            "This modifies M.I.A.'s own application files directly — "
+            "see docs/UPDATE_PACKAGE_SPEC.md before building one."
+        )
+        update_desc.setObjectName("SubtitleLabel")
+        update_desc.setWordWrap(True)
+        outer.addWidget(update_desc)
+
+        update_button = QPushButton("⬆ Apply Update Package...")
+        update_button.setObjectName("ModuleButton")
+        update_button.clicked.connect(self._on_apply_update_clicked)
+        outer.addWidget(update_button)
 
         self._status_label = QLabel("")
         self._status_label.setObjectName("SubtitleLabel")
@@ -165,3 +185,52 @@ class SettingsModule(ModuleBase):
     def _set_status(self, text: str) -> None:
         if self._status_label is not None:
             self._status_label.setText(text)
+
+    # ------------------------------------------------------------------
+    # Update Manager
+    # ------------------------------------------------------------------
+
+    def _on_apply_update_clicked(self) -> None:
+        source, _ = QFileDialog.getOpenFileName(
+            None, "Select Update Package", "", "M.I.A. Update Package (*.zip);;All Files (*)"
+        )
+        if not source:
+            return
+        source_path = Path(source)
+
+        manifest = peek_update_manifest(source_path)
+        if manifest is not None:
+            details = f"Target version: {manifest.target_version}\n\n{manifest.description}".strip()
+        else:
+            details = "(Could not read update details — proceeding will attempt full validation.)"
+
+        confirm = QMessageBox.warning(
+            None,
+            "Confirm Update",
+            f"{details}\n\n"
+            "Applying this update will overwrite M.I.A.'s own application "
+            "files — including core system files — with no code review "
+            "performed. Only proceed if you built this package yourself "
+            "or have reviewed and trust it.\n\nContinue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        result = apply_update_package(source_path)
+        if result.passed:
+            rollback_note = (
+                "A git commit was created for easy rollback (git revert)."
+                if result.committed
+                else f"No automatic rollback commit was created: {result.warnings[0] if result.warnings else 'unknown reason'}"
+            )
+            QMessageBox.information(
+                None, "Update Applied",
+                f"Applied {len(result.applied_files)} file(s).\n\n{rollback_note}\n\n"
+                "Please restart M.I.A. for the changes to take effect."
+            )
+            self._set_status(f"Update applied ({len(result.applied_files)} file(s)) — restart M.I.A. to apply.")
+        else:
+            QMessageBox.warning(None, "Update Failed", "\n".join(result.errors))
+            self._set_status("Update failed — see error dialog.")
