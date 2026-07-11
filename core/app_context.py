@@ -29,6 +29,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 
 if TYPE_CHECKING:
+    from core.calendar_manager import CalendarManager
     from core.notification_manager import NotificationManager
     from core.profile_manager import ProfileManager
     from core.search_manager import SearchManager
@@ -47,6 +48,7 @@ class AppContext:
     profiles: Optional["ProfileManager"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)
     search: Optional["SearchManager"] = field(default=None, repr=False)
+    calendar: Optional["CalendarManager"] = field(default=None, repr=False)
     # CalculatorEngine takes no AppContext dependency, so — unlike the
     # services above — it can just be constructed directly here.
     calculators: CalculatorEngine = field(default_factory=CalculatorEngine, repr=False)

@@ -23,6 +23,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
 from core.app_context import AppContext
+from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.logger import get_logger
@@ -56,6 +57,7 @@ class MIAApplication:
         # core/profile_manager.py.
         self.context.profiles = ProfileManager(self.context)
         self.context.notifications = NotificationManager(self.context)
+        self.context.calendar = CalendarManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()

@@ -173,7 +173,15 @@ same pattern as v0.2:
       tools (wire gauge, voltage divider, antenna calculator, fuel
       estimates, coordinate conversion, ...) are just new plugins
       registered into the same engine, not new top-level modules.
-- [ ] **3.2 Calendar**
+- [x] **3.2 Calendar** — new `ToolboxTool` concept
+      (`modules/toolbox/tool_base.py`), parallel to `CalculatorPlugin`
+      for built-in Toolbox features that aren't calculator-shaped.
+      Ships with the Calendar tool: a `QCalendarWidget` month grid
+      (marked dates) + an agenda panel (Add/Edit/Delete), backed by
+      `core/calendar_manager.py` (persisted to
+      `data/calendar_events.json`, same durability pattern as
+      notifications). Toolbox now shows a Tools section above
+      Calculators.
 - [ ] **3.3 Alarm / Stopwatch**
 - [ ] **3.4 Journal** — dated, searchable, taggable notes (upgrades
       the Notes module placeholder)
