@@ -1,5 +1,11 @@
 # M.I.A. Roadmap
 
+**See also: `docs/VISION.md`** — the long-term, four-project mission
+behind M.I.A. (this device is "Project 1: The Brain" of that larger
+picture). This document is the near-term execution plan; VISION.md is
+the North Star. Keep them separate — see VISION.md's "why this is a
+separate document" section for why that distinction matters.
+
 This is the living plan for M.I.A. beyond v0.1. It exists so scope
 decisions made in conversation don't get lost — update it whenever the
 plan changes.
