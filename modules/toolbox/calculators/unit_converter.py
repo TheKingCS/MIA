@@ -32,6 +32,7 @@ def _linear(factor: float):
 LENGTH_UNITS = {
     "Meters (m)": _linear(1.0),
     "Feet (ft)": _linear(0.3048),
+    "Yards (yd)": _linear(0.9144),
     "Inches (in)": _linear(0.0254),
     "Kilometers (km)": _linear(1000.0),
     "Miles (mi)": _linear(1609.344),
@@ -44,6 +45,24 @@ WEIGHT_UNITS = {
     "Ounces (oz)": _linear(0.028349523125),
 }
 
+# US customary volume/cooking measurements. Base unit is liters. All
+# factors derive from the exact US gallon <-> liter conversion (1 gal
+# = 3.785411784 L, NIST Handbook 44) down through the standard US
+# liquid-volume hierarchy (1 gal = 4 qt = 8 pt = 16 cup = 128 fl oz =
+# 256 tbsp = 768 tsp), so every unit here stays exactly consistent
+# with every other, not just with liters.
+VOLUME_UNITS = {
+    "Liters (L)": _linear(1.0),
+    "Milliliters (mL)": _linear(0.001),
+    "US Gallons (gal)": _linear(3.785411784),
+    "US Quarts (qt)": _linear(0.946352946),
+    "US Pints (pt)": _linear(0.473176473),
+    "US Cups (cup)": _linear(0.2365882365),
+    "US Fluid Ounces (fl oz)": _linear(0.0295735295625),
+    "US Tablespoons (tbsp)": _linear(0.01478676478125),
+    "US Teaspoons (tsp)": _linear(0.00492892159375),
+}
+
 TEMPERATURE_UNITS = {
     "Celsius (°C)": (lambda c: c, lambda c: c),
     "Fahrenheit (°F)": (lambda f: (f - 32) * 5 / 9, lambda c: c * 9 / 5 + 32),
@@ -52,6 +71,7 @@ TEMPERATURE_UNITS = {
 
 UNIT_CATEGORIES = {
     "Length": LENGTH_UNITS,
+    "Volume": VOLUME_UNITS,
     "Weight": WEIGHT_UNITS,
     "Temperature": TEMPERATURE_UNITS,
 }
