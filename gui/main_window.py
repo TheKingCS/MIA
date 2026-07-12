@@ -14,6 +14,8 @@ character rather than a modal dialog.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
@@ -177,6 +179,8 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
+        if self._character_panel is not None:
+            self._character_panel.unsubscribe()
         super().closeEvent(event)
 
     def _setup_kiosk_exit_shortcut(self) -> None:
@@ -244,8 +248,10 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._menu_widget)
         body_layout.addWidget(self._stack, stretch=3)
 
+        self._character_panel: Optional[CharacterPanel] = None
         if self.context.config.get("gui.show_character_panel", True):
-            body_layout.addWidget(CharacterPanel(), stretch=1)
+            self._character_panel = CharacterPanel(self.context)
+            body_layout.addWidget(self._character_panel, stretch=1)
 
         root_layout.addWidget(body)
 

@@ -379,7 +379,7 @@ phase.
       subscribes yet; this milestone is done when a test's own
       subscriber observes the right event firing for every navigation
       action (open a module, go back, go home).
-- [ ] **6.2 Reactive Character Panel** — `gui/character_panel.py`
+- [x] **6.2 Reactive Character Panel** — `gui/character_panel.py`
       stops being a static "(coming soon)" placeholder: it accepts
       `context` (already anticipated in its own docstring), subscribes
       to `"module.opened"`/`"menu.shown"` (6.1) and the existing
