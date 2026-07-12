@@ -27,6 +27,7 @@ from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
+from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
@@ -73,6 +74,12 @@ class MIAApplication:
         self.context.voice = VoiceManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
+        self.context.device_help = DeviceHelpManager(self.context)
+        # module_manager.all is stored as a callable, not called now — it's
+        # still empty until self.module_manager.discover() runs later in
+        # the boot sequence (run()'s boot_steps), and device_help only
+        # invokes it lazily on its own first retrieve() call anyway.
+        self.context.device_help.register_module_lister(self.module_manager.all)
         self._register_search_providers()
         self._register_calculators()
 

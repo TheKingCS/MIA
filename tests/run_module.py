@@ -35,6 +35,7 @@ from core.alarm_manager import AlarmManager  # noqa: E402
 from core.app_context import AppContext  # noqa: E402
 from core.calendar_manager import CalendarManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
+from core.device_help_manager import DeviceHelpManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
@@ -69,8 +70,10 @@ def main() -> int:
     context.llm = LLMManager(context)
     context.voice = VoiceManager(context)
     context.search = SearchManager(context)
+    context.device_help = DeviceHelpManager(context)
     manager = ModuleManager(context)
     manager.discover()
+    context.device_help.register_module_lister(manager.all)
 
     if args.list or not args.module_id:
         print("Discovered modules:")

@@ -2,10 +2,21 @@
 modules.assistant.module
 =========================
 
-Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat) and 5.3
-(voice). A chat screen (scrollback + input box) wired to `AppContext.llm`
-(core/llm_manager.py), plus a push-to-talk "Hold to Talk" button wired to
-`AppContext.voice` (core/voice_manager.py) for speech in, speech out.
+Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3
+(voice), and 5.4 (device-help grounding). A chat screen (scrollback +
+input box) wired to `AppContext.llm` (core/llm_manager.py), plus a
+push-to-talk "Hold to Talk" button wired to `AppContext.voice`
+(core/voice_manager.py) for speech in, speech out.
+
+Every prompt is run through `AppContext.device_help.build_grounded_prompt()`
+(core/device_help_manager.py) before it reaches the LLM — the actual text
+sent to `LLMWorker` is the retrieval-grounded version (M.I.A.'s own docs +
+module metadata as context), not the user's raw words, though the chat
+log still displays what the user actually typed/said. This is
+deliberate scope, not an accident: docs/HARDWARE.md's hardware note
+says the realistic on-device model size (1-7B params) should be aimed
+at "device help, structured Q&A" rather than open-ended conversation,
+and grounding is milestone 5.4's explicit job.
 
 Two blocking operations each get their own scoped `QThread` rather than
 running on the GUI thread:
@@ -157,7 +168,11 @@ class AssistantModule(ModuleBase):
         self._input.clear()
         self._set_busy(True)
 
-        self._worker = LLMWorker(self.context.llm, prompt)
+        llm_prompt = prompt
+        if self.context.device_help is not None:
+            llm_prompt = self.context.device_help.build_grounded_prompt(prompt)
+
+        self._worker = LLMWorker(self.context.llm, llm_prompt)
         self._worker.result_ready.connect(self._on_reply)
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()

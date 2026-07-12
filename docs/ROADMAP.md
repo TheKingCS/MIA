@@ -335,7 +335,7 @@ boot never depends on an LLM server being up.
       graceful degradation, not exercised for real. Exact mic/speaker
       part choice remains open per `docs/HARDWARE.md`'s "Open
       questions" section.
-- [ ] **5.4 Device-help grounding** — the Assistant answers "what does
+- [x] **5.4 Device-help grounding** — the Assistant answers "what does
       this do / how do I use this device" questions grounded in
       M.I.A.'s own docs (`docs/*.md`) and module metadata via
       retrieval, not open-ended chat. This is explicitly **stage 1
@@ -343,3 +343,19 @@ boot never depends on an LLM server being up.
       plan above — read-only, no file writes, and stays that way until
       stage 1 is trusted in practice. Do not let this milestone grow
       into stage 2 (propose-a-patch) scope creep.
+      `core/device_help_manager.py` (`AppContext.device_help`) does
+      simple keyword-overlap retrieval (not embeddings — deliberately,
+      see that module's docstring) over markdown-heading chunks of
+      `docs/*.md` plus module metadata, and every Assistant prompt is
+      run through `build_grounded_prompt()` before reaching the LLM.
+      Found and fixed a real ranking bug during manual verification
+      against the actual corpus: naive substring matching let short
+      query words false-match inside unrelated words (`"do"` inside
+      `"random"`/`"wisdom"`), and even after switching to whole-word
+      matching, `docs/ADDING_MODULES.md` (every heading contains the
+      word "module") still buried a named module's own description —
+      fixed with a name-match bonus when the query names a module
+      directly, verified with a real end-to-end query against the
+      actual docs/modules and a headless smoke test of the full chat
+      flow confirming the LLM receives the grounded prompt while the
+      chat log still shows the user's original question.

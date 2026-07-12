@@ -1,0 +1,231 @@
+"""
+core.device_help_manager
+==========================
+
+Retrieval-grounded "what does this do / how do I use this device"
+answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1
+("Read & explain")** of the Self-Modification / Dev Mode staged plan in
+docs/ROADMAP.md: read-only retrieval over `docs/*.md` and module
+metadata, never a file write or code execution. Do not grow this into
+stage 2 (propose-a-patch) without a deliberate, separate decision.
+
+Retrieval is deliberately simple keyword overlap, not embeddings/vector
+search — the whole corpus here is a handful of markdown docs (a few
+dozen section headings total) plus a dozen or so module descriptions,
+small enough that a heavier retrieval stack would be solving a problem
+this project doesn't have, and would spend real dependencies/CPU on Pi
+5 hardware whose AI HAT+2 budget is already earmarked for the LLM
+itself (docs/HARDWARE.md). Same "don't over-engineer" spirit as
+core/search_manager.py's substring matching.
+
+Module metadata comes from a lazily-invoked callable
+(`register_module_lister`), not a direct ModuleManager import — same
+registration-callback shape as core/search_manager.py's
+`register_provider`, so this module doesn't need to know about module
+internals. core/application.py wires the real `ModuleManager.all` in,
+mirroring its own `_register_search_providers`.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Optional
+
+from core.app_context import AppContext
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_DOCS_DIR = _PROJECT_ROOT / "docs"
+
+_WORD_RE = re.compile(r"[a-z0-9]+")
+
+# Filtered out of the *query* only (not chunk text) before scoring — these
+# are common enough that substring-free, whole-word matches on them still
+# carry no real signal about which chunk is relevant (e.g. "do" legitimately
+# appears as a whole word all over technical prose: "how do I...", "to do
+# this"). Chunk-side matching is unaffected; this only trims what a query
+# is scored against.
+_STOPWORDS = {
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "do", "does", "did",
+    "what", "which", "who", "whom", "how", "why", "when", "where",
+    "i", "you", "it", "this", "that", "these", "those", "to", "of", "in", "on",
+    "and", "or", "for", "with", "about", "my", "me", "can", "should", "would",
+}
+
+_MODULE_NAME_MATCH_BONUS = 10
+
+_SYSTEM_PREAMBLE = (
+    "You are M.I.A.'s built-in device-help assistant. Answer the user's "
+    "question using ONLY the reference material below. If the answer "
+    "isn't contained in it, say you don't know rather than guessing — "
+    "do not use outside knowledge."
+)
+
+
+@dataclass
+class HelpChunk:
+    source: str  # e.g. "docs/ARCHITECTURE.md" or "Module: Notes"
+    heading: str
+    text: str  # full chunk text, including its own heading line
+
+
+def split_into_chunks(markdown_text: str, source: str) -> list[HelpChunk]:
+    """
+    Split a markdown doc into chunks at each ## or ### heading. Pure
+    logic — testable without touching the filesystem (see
+    tests/test_device_help_manager.py).
+    """
+    current_heading = "Introduction"
+    current_lines: list[str] = []
+    chunks: list[HelpChunk] = []
+
+    def flush() -> None:
+        body = "\n".join(current_lines).strip()
+        if body:
+            chunks.append(HelpChunk(source=source, heading=current_heading, text=body))
+
+    for line in markdown_text.splitlines():
+        if line.startswith("## ") or line.startswith("### "):
+            flush()
+            current_heading = line.lstrip("#").strip()
+            current_lines = [line]
+        else:
+            current_lines.append(line)
+    flush()
+    return chunks
+
+
+def score_chunk(query_words: set[str], chunk: HelpChunk) -> int:
+    """
+    Count of query words appearing in the chunk, weighted double for a
+    heading match. Matches whole words (via _tokenize), not substrings
+    — a naive `word in text` substring check would let a short word
+    like "do" false-match inside unrelated words ("random", "wisdom",
+    "kingdom"), which is exactly the bug that motivated this.
+    """
+    heading_words = _tokenize(chunk.heading)
+    body_words = _tokenize(chunk.text)
+    score = 0
+    for word in query_words:
+        if word in heading_words:
+            score += 2
+        elif word in body_words:
+            score += 1
+    return score
+
+
+def _tokenize(text: str) -> set[str]:
+    return set(_WORD_RE.findall(text.lower()))
+
+
+def _query_words(query: str) -> set[str]:
+    """Tokenize a query and drop stopwords — falls back to the raw token set if that empties it out."""
+    words = _tokenize(query)
+    meaningful = words - _STOPWORDS
+    return meaningful or words
+
+
+class DeviceHelpManager:
+    """Core-level device-help retrieval service (`AppContext.device_help`)."""
+
+    def __init__(self, context: AppContext) -> None:
+        self.context = context
+        self._doc_chunks: Optional[list[HelpChunk]] = None
+        self._module_lister: Optional[Callable[[], list]] = None
+
+    def register_module_lister(self, lister: Callable[[], list]) -> None:
+        """`lister` returns the currently discovered modules (duck-typed: needs .display_name/.description)."""
+        self._module_lister = lister
+
+    def _ensure_docs_loaded(self) -> None:
+        """Reading a handful of small markdown files is cheap — unlike core/voice_manager.py's
+        model loads, this doesn't need deferring past construction, but IS deferred to first
+        use anyway so an app boot that never opens the Assistant never touches the filesystem
+        for this at all."""
+        if self._doc_chunks is not None:
+            return
+
+        chunks: list[HelpChunk] = []
+        if _DOCS_DIR.exists():
+            for doc_path in sorted(_DOCS_DIR.glob("*.md")):
+                try:
+                    text = doc_path.read_text(encoding="utf-8")
+                except OSError as exc:
+                    log.warning("Could not read doc %s: %s", doc_path, exc)
+                    continue
+                chunks.extend(split_into_chunks(text, source=f"docs/{doc_path.name}"))
+        self._doc_chunks = chunks
+
+    def _module_chunks(self) -> list[HelpChunk]:
+        if self._module_lister is None:
+            return []
+        try:
+            modules = self._module_lister()
+        except Exception:
+            log.exception("Module lister raised an error — skipping module metadata for device-help.")
+            return []
+
+        chunks = []
+        for module in modules:
+            text = f"## {module.display_name}\n{module.description}"
+            chunks.append(HelpChunk(source=f"Module: {module.display_name}", heading=module.display_name, text=text))
+        return chunks
+
+    def retrieve(self, query: str, limit: int = 5) -> list[HelpChunk]:
+        """Return the top `limit` chunks (docs + module metadata) ranked by keyword overlap with `query`."""
+        query = query.strip()
+        if not query:
+            return []
+
+        query_words = _query_words(query)
+        if not query_words:
+            return []
+
+        self._ensure_docs_loaded()
+        query_lower = query.lower()
+
+        scored = [(score_chunk(query_words, chunk), chunk) for chunk in self._doc_chunks]
+        for chunk in self._module_chunks():
+            score = score_chunk(query_words, chunk)
+            if chunk.heading.lower() in query_lower:
+                # A module's own name appearing in the query is a much
+                # stronger signal than generic keyword overlap — without
+                # this, a question like "what does the notes module do"
+                # loses to docs/ADDING_MODULES.md, whose every heading
+                # contains the word "module" (it's a guide about modules
+                # the concept), pushing the actual Notes description out
+                # of the results entirely. This is the same "match by
+                # name" idea core/search_manager.py's module search
+                # already uses, layered on top of the generic scoring.
+                score += _MODULE_NAME_MATCH_BONUS
+            scored.append((score, chunk))
+
+        scored = [(score, chunk) for score, chunk in scored if score > 0]
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        return [chunk for _, chunk in scored[:limit]]
+
+    def build_grounded_prompt(self, query: str, limit: int = 5) -> str:
+        """
+        Build a prompt instructing the LLM to answer `query` using only
+        retrieved M.I.A. documentation/module metadata — the actual
+        "grounding." Falls back to a "nothing matched" instruction
+        (still read-only, still no outside-topic license) if nothing
+        relevant is indexed, rather than silently falling through to
+        open-ended chat.
+        """
+        chunks = self.retrieve(query, limit=limit)
+        if not chunks:
+            return (
+                f"{_SYSTEM_PREAMBLE}\n\nNo reference material matched this question. Say that you "
+                f"don't have information about this in M.I.A.'s documentation.\n\nQuestion: {query}"
+            )
+
+        material = "\n\n".join(f"[{chunk.source} — {chunk.heading}]\n{chunk.text}" for chunk in chunks)
+        return (
+            f"{_SYSTEM_PREAMBLE}\n\n--- Reference material ---\n{material}\n--- End reference material ---"
+            f"\n\nQuestion: {query}"
+        )
