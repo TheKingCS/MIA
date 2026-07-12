@@ -444,3 +444,44 @@ milestone pattern as v0.2–v0.6.
       reading, no real hardware or waiting required, same reasoning as
       `AlarmManager.check_due()` taking `now` as a parameter instead of
       calling `datetime.now()` itself.
+
+## v0.8 breakdown (planned)
+
+Workshop & Electronics + The Lab (shared Data Logger). Same
+small-independently-testable-milestone pattern as v0.2–v0.7.
+
+- [ ] **8.1 Data Logger core service** — `core/data_logger_manager.py`
+      (`AppContext.data_logger`) adds timestamped-reading storage keyed
+      by a named series (e.g. "multimeter_voltage", "soil_moisture") —
+      same persisted-JSON-manager pattern as `core/inventory_manager.py`
+      (`data/data_logger_readings.json`, a dataclass with
+      to_dict/from_dict). `add_reading()`/`readings_for()`/
+      `list_series()`/`delete_reading()`. This is the shared service
+      the "Shared core services" table calls out (used by Multimeter
+      logging, soil moisture, power usage, Lab experiments/calibration,
+      sensor testing, vehicle diagnostics) — no hardware-specific
+      producer exists yet; any future real-sensor integration just
+      calls `add_reading()` like a manual entry would.
+- [ ] **8.2 The Lab module** — `modules/lab/module.py`, the UI home of
+      the Data Logger (top-level module section 14 in this doc): pick
+      or create a series, a manual reading-entry form (value/unit/
+      note), a line chart of that series over time via `QtCharts`
+      (bundled with PySide6 already — no new dependency), and the raw
+      reading list below it. Manual entry only for now — no real
+      sensor/multimeter hardware exists to auto-log from yet, same
+      "software now, hardware producer later" shape as other phases,
+      except there's no backend to swap here: a future real-sensor
+      integration is just another caller of `add_reading()`.
+- [ ] **8.3 Workshop & Electronics: Component DB** —
+      `core/component_manager.py` (`AppContext.components`) +
+      `modules/workshop/module.py` (top-level module section 5): a
+      dedicated electronics-parts inventory (name, category, value,
+      package, quantity, location, notes) — deliberately a separate
+      manager/dataset from `core/inventory_manager.py`'s general
+      household Inventory tool (mixing "kitchen supplies" and "resistor
+      stock" into one list serves neither well), same
+      list+add/edit/delete CRUD shape as Notes/Inventory. This is the
+      one slice of Workshop & Electronics's broad scope (component DB,
+      MCU flashing, PCB viewer, soldering notes, 3D printer/CNC/laser,
+      STL/CAD library) buildable with zero real hardware/files right
+      now; the rest waits for that hardware/tooling to exist.
