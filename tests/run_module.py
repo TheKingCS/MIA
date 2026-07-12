@@ -33,6 +33,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow  # noqa: E402
 
 from core.alarm_manager import AlarmManager  # noqa: E402
 from core.app_context import AppContext  # noqa: E402
+from core.activity_log_manager import ActivityLogManager  # noqa: E402
 from core.calendar_manager import CalendarManager  # noqa: E402
 from core.component_manager import ComponentManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
@@ -77,9 +78,11 @@ def main() -> int:
     context.power = PowerManager(context)
     context.search = SearchManager(context)
     context.device_help = DeviceHelpManager(context)
+    context.activity_log = ActivityLogManager(context)
     manager = ModuleManager(context)
     manager.discover()
     context.device_help.register_module_lister(manager.all)
+    context.activity_log.register_module_lister(manager.all)
 
     if args.list or not args.module_id:
         print("Discovered modules:")

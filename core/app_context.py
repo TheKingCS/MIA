@@ -30,6 +30,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 
 if TYPE_CHECKING:
+    from core.activity_log_manager import ActivityLogManager
     from core.alarm_manager import AlarmManager
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
@@ -70,6 +71,7 @@ class AppContext:
     power: Optional["PowerManager"] = field(default=None, repr=False)
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
+    activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

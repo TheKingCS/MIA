@@ -23,6 +23,7 @@ from datetime import datetime
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
+from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
@@ -82,11 +83,13 @@ class MIAApplication:
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
+        self.context.activity_log = ActivityLogManager(self.context)
         # module_manager.all is stored as a callable, not called now — it's
         # still empty until self.module_manager.discover() runs later in
-        # the boot sequence (run()'s boot_steps), and device_help only
-        # invokes it lazily on its own first retrieve() call anyway.
+        # the boot sequence (run()'s boot_steps), and device_help/
+        # activity_log only invoke it lazily on their own first use anyway.
         self.context.device_help.register_module_lister(self.module_manager.all)
+        self.context.activity_log.register_module_lister(self.module_manager.all)
         self._register_search_providers()
         self._register_calculators()
         self._register_assistant_actions()
@@ -233,6 +236,30 @@ class MIAApplication:
             },
             handler=self._action_add_inventory_item,
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="recall_recent_activity",
+            description=(
+                "Look up what the user has recently done in M.I.A. (modules opened, "
+                "notifications, profile switches), optionally filtered by a keyword. "
+                "Use this for questions like 'what have I been doing' or 'what did I do "
+                "with notes recently'."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "description": "Optional keyword to filter activity by (e.g. a module or project name). Leave empty for everything recent.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "How many recent entries to look at, default 20.",
+                    },
+                },
+                "required": [],
+            },
+            handler=self._action_recall_recent_activity,
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -276,6 +303,29 @@ class MIAApplication:
             quantity = 0
         item = context.inventory.add_item(name=name, quantity=quantity)
         return f"Added {item.quantity}x '{item.name}' to inventory."
+
+    @staticmethod
+    def _action_recall_recent_activity(context: AppContext, arguments: dict) -> str:
+        """
+        Fetches raw recent activity log entries as plain text — no
+        attempt at natural-language date parsing ("yesterday", "last
+        week") here. Letting the LLM read the raw entries (each already
+        timestamped) and phrase its own answer keeps this simple and
+        testable, same reasoning as core/device_help_manager.py's
+        retrieval-then-let-the-LLM-answer shape.
+        """
+        keyword = str(arguments.get("keyword", "") or "").strip()
+        try:
+            limit = int(arguments.get("limit", 20) or 20)
+        except (TypeError, ValueError):
+            limit = 20
+
+        entries = context.activity_log.search(keyword, limit=limit) if keyword else context.activity_log.recent(limit)
+        if not entries:
+            return "No matching recent activity found." if keyword else "No recent activity recorded yet."
+
+        lines = [f"{e.timestamp.replace('T', ' ')} — {e.summary}" for e in entries]
+        return "\n".join(lines)
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

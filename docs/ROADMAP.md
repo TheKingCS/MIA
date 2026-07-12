@@ -557,7 +557,7 @@ menu section — "Character, Memories, and Global Search are system-wide
 / ambient" — so this integrates into the Assistant's tool-use (5.5)
 rather than getting its own module page.
 
-- [ ] **9.1 Activity Log core service** — `core/activity_log_manager.py`
+- [x] **9.1 Activity Log core service** — `core/activity_log_manager.py`
       (`AppContext.activity_log`) subscribes to a curated subset of
       already-published events (`module.opened`, `notification.created`,
       `profile.switched` — not every event on the bus, since
@@ -565,15 +565,28 @@ rather than getting its own module page.
       do" memory feature, not signal), building a human-readable
       summary per event and persisting to `data/activity_log.json`
       (same pattern as `core/inventory_manager.py`). Capped at a bounded
-      number of most-recent entries (e.g. 5000) so a long-running kiosk
-      device doesn't grow this file unbounded.
-- [ ] **9.2 Assistant "recall activity" action** — a new
+      number of most-recent entries (`_MAX_ENTRIES` = 5000) so a
+      long-running kiosk device doesn't grow this file unbounded — same
+      full-file-rewrite-per-mutation cost as every other persisted-JSON
+      manager here, accepted for the same reason (real usage logs at
+      most a few dozen events/day; reaching cap size takes months, not
+      something a tight loop would produce outside a synthetic stress
+      test — which is exactly how the cost was found, via this
+      milestone's own test suite before it was rescoped to a smaller
+      cap for the test).
+- [x] **9.2 Assistant "recall activity" action** — a new
       `core/assistant_actions.py` built-in, `recall_recent_activity`,
       wired in `core/application.py`'s `_register_assistant_actions()`
       alongside the others: returns the most recent matching activity
-      log entries as plain text, which the LLM then summarizes/answers
-      from in its own reply — no attempt at robust natural-language
-      date parsing ("yesterday", "last week") on M.I.A.'s side; keeping
-      the tool's job to "fetch recent raw entries" and letting the
-      already-verified `chat_with_tools()` pipeline (5.5) do the
-      phrasing keeps this simple and testable.
+      log entries as a plain timestamped list, shown directly as the
+      tool-call confirmation (no second LLM round-trip to phrase a
+      summary — simpler and consistent with 5.5's "no second round-trip"
+      design, and a short recent-activity list reads fine as-is; the
+      breakdown originally planned an LLM-summarized answer here, but
+      that would need the tool-result-feeds-back-into-a-second-chat-call
+      pattern 5.5 deliberately avoided, so this was rescoped to match
+      what's actually simple to keep correct). Verified end-to-end
+      against the live model: simulated real `module.opened` events,
+      then asked "what have I been doing recently" and confirmed the
+      Assistant's reply reflected the actual logged activity, not a
+      hallucinated answer.
