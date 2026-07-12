@@ -391,7 +391,7 @@ phase.
       module without a specific one, so adding a new module never
       requires touching this file. Still no animation/sprite assets —
       text + emoji only, matching this phase's stated scope.
-- [ ] **6.3 Idle ambient behavior** — when no relevant event has fired
+- [x] **6.3 Idle ambient behavior** — when no relevant event has fired
       recently, the panel rotates through a small set of idle lines on
       a timer (same `QTimer`-in-the-owning-widget pattern as
       `core/application.py`'s alarm-check timer), so the panel doesn't

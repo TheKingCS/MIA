@@ -11,7 +11,7 @@ tests/test_assistant_module.py's docstring for the same reasoning).
 
 from __future__ import annotations
 
-from gui.character_panel import MODULE_REACTIONS, reaction_for_module
+from gui.character_panel import _IDLE_LINES, MODULE_REACTIONS, idle_line, reaction_for_module
 
 
 def test_known_module_returns_its_specific_reaction():
@@ -28,3 +28,12 @@ def test_every_known_module_reaction_has_nonempty_icon_and_line():
     for module_id, (icon, line) in MODULE_REACTIONS.items():
         assert icon, f"{module_id} has an empty icon"
         assert line, f"{module_id} has an empty line"
+
+
+def test_idle_line_cycles_in_order():
+    assert [idle_line(i) for i in range(len(_IDLE_LINES))] == _IDLE_LINES
+
+
+def test_idle_line_wraps_around():
+    assert idle_line(len(_IDLE_LINES)) == _IDLE_LINES[0]
+    assert idle_line(len(_IDLE_LINES) + 1) == _IDLE_LINES[1]
