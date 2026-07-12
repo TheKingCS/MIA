@@ -404,7 +404,7 @@ phase.
 Diagnostics + Power monitoring. Same small-independently-testable-
 milestone pattern as v0.2–v0.6.
 
-- [ ] **7.1 System Health panel (Diagnostics)** —
+- [x] **7.1 System Health panel (Diagnostics)** —
       `modules/diagnostics/module.py` gains a live CPU/RAM/disk/network/
       temperature panel alongside its existing log viewer, via `psutil`
       (cross-platform, well-established — "don't reinvent the wheel").
