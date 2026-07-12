@@ -215,7 +215,7 @@ same pattern as v0.2:
       recurse, which drives) worth designing deliberately rather than
       bolting on here.
 
-## v0.4 breakdown (in progress)
+## v0.4 breakdown (complete)
 
 Reference Library engine (Kiwix ZIM integration), same
 small-independently-testable-milestone pattern as v0.2/v0.3. Renderer
@@ -267,7 +267,9 @@ must-have content pack turns out to need it.
       results (3 hits/pack, 15 total) — `gui/search_dialog.py` renders
       every result from every provider with no cap of its own, and a
       single installed pack can have hundreds of thousands of articles.
-- [ ] **4.4 Install content pack** — a UI flow to point at a `.zim`
+- [x] **4.4 Install content pack** — a UI flow to point at a `.zim`
       file and add it to the library, validated the same way
       `core/module_validator.py` gates module installs before
-      anything is copied in.
+      anything is copied in. Synchronous copy, no worker thread — see
+      `docs/testing/4.4_install_content_pack.md` for why that's
+      consistent with the rest of the codebase rather than a shortcut.

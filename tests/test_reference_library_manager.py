@@ -259,6 +259,70 @@ def test_search_on_unknown_pack_returns_nothing(isolated_root):
     assert manager.search("does_not_exist", "anything") == []
 
 
+def test_install_pack_from_file_copies_and_lists_immediately(isolated_root, tmp_path):
+    source = tmp_path / "external_drive" / "incoming.zim"
+    source.parent.mkdir(parents=True)
+    _build_zim(source, title="Incoming Pack")
+
+    manager = _make_manager()
+    result = manager.install_pack_from_file(source)
+
+    assert result.passed
+    assert result.pack_id == "incoming"
+    assert result.title == "Incoming Pack"
+    assert (isolated_root / "incoming.zim").exists()
+
+    # Should be listed right away, not stuck behind the mid-copy
+    # quiet-period guard — we just wrote this file ourselves.
+    packs = manager.list_packs()
+    assert len(packs) == 1
+    assert packs[0].title == "Incoming Pack"
+
+
+def test_install_pack_from_file_rejects_missing_file(isolated_root, tmp_path):
+    manager = _make_manager()
+    result = manager.install_pack_from_file(tmp_path / "does_not_exist.zim")
+
+    assert not result.passed
+    assert "not a file" in result.errors[0].lower()
+
+
+def test_install_pack_from_file_rejects_non_zim_extension(isolated_root, tmp_path):
+    source = tmp_path / "notes.txt"
+    source.write_text("hello")
+
+    manager = _make_manager()
+    result = manager.install_pack_from_file(source)
+
+    assert not result.passed
+    assert ".zim" in result.errors[0]
+
+
+def test_install_pack_from_file_rejects_invalid_zim_content(isolated_root, tmp_path):
+    source = tmp_path / "fake.zim"
+    source.write_bytes(b"not a real zim file")
+
+    manager = _make_manager()
+    result = manager.install_pack_from_file(source)
+
+    assert not result.passed
+    assert not (isolated_root / "fake.zim").exists()
+
+
+def test_install_pack_from_file_rejects_duplicate_pack(isolated_root, tmp_path):
+    isolated_root.mkdir(parents=True)
+    _build_zim(isolated_root / "demo.zim", title="Existing Pack")
+
+    source = tmp_path / "demo.zim"
+    _build_zim(source, title="Different Content, Same Filename")
+
+    manager = _make_manager()
+    result = manager.install_pack_from_file(source)
+
+    assert not result.passed
+    assert "already installed" in result.errors[0]
+
+
 def test_root_path_config_override_is_used(tmp_path):
     custom_root = tmp_path / "external_ssd" / "reference_library"
     custom_root.mkdir(parents=True)

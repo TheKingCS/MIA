@@ -29,20 +29,33 @@ every SearchResult from every provider with no cap of its own, and a
 single installed pack can have hundreds of thousands of articles —
 without a per-pack and total cap here, one keystroke in Ctrl+K could
 try to build hundreds of result rows.
+
+The pack list's "Install Content Pack" button (docs/ROADMAP.md
+milestone 4.4) is a thin wrapper around
+core.reference_library_manager.ReferenceLibraryManager.
+install_pack_from_file — same validate-before-copy shape as
+modules/module_browser/module.py's module installer, just without a
+worker thread: this codebase's other large-file copies
+(core/backup_manager.py's restore) are synchronous too, so a install
+click blocking the UI for as long as the copy takes is consistent with
+existing behavior, not a new tradeoff.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -116,6 +129,10 @@ class KnowledgeModule(ModuleBase):
         header.setObjectName("TitleLabel")
         header_row.addWidget(header, stretch=1)
 
+        install_button = QPushButton("Install Content Pack")
+        install_button.clicked.connect(self._on_install_pack_clicked)
+        header_row.addWidget(install_button)
+
         refresh_button = QPushButton("Refresh")
         refresh_button.clicked.connect(self._populate_pack_rows)
         header_row.addWidget(refresh_button)
@@ -160,6 +177,21 @@ class KnowledgeModule(ModuleBase):
 
         for pack in packs:
             layout.addWidget(self._build_pack_row(pack))
+
+    def _on_install_pack_clicked(self) -> None:
+        file_path, _ = QFileDialog.getOpenFileName(None, "Select Content Pack", "", "ZIM files (*.zim)")
+        if not file_path:
+            return
+
+        result = self.context.reference_library.install_pack_from_file(Path(file_path))
+
+        if result.passed:
+            QMessageBox.information(None, "Pack Installed", f"Installed '{result.title}' successfully.")
+        else:
+            message = "Could not install this pack:\n\n" + "\n".join(f"• {e}" for e in result.errors)
+            QMessageBox.warning(None, "Install Failed", message)
+
+        self._populate_pack_rows()
 
     def _build_pack_row(self, pack: ReferencePack) -> QFrame:
         row = QFrame()

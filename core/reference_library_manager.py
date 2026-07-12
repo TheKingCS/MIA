@@ -6,8 +6,9 @@ The ZIM engine behind the Reference Library — docs/ROADMAP.md milestone
 4.1, the "Reference Library" row of the shared core services table
 (indexed/searchable document + PDF + Kiwix ZIM viewer). This milestone
 is the engine only: pack discovery, reading, and search. The
-`knowledge` module's UI (milestone 4.2) and Global Search integration
-(4.3) build on top of this.
+`knowledge` module's UI (milestone 4.2), Global Search integration
+(4.3), and install-a-pack-from-the-UI flow (4.4, `install_pack_from_file`)
+build on top of this.
 
 Wraps the `libzim` package (Kiwix's own Python bindings for the ZIM
 file format — see docs/ROADMAP.md's "don't reinvent the wheel"
@@ -28,8 +29,9 @@ drive that can be absent, still copying, or damaged.
 
 from __future__ import annotations
 
+import shutil
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -69,6 +71,14 @@ class ReferencePack:
 class ReferenceSearchHit:
     path: str
     title: str
+
+
+@dataclass
+class PackInstallResult:
+    passed: bool
+    errors: list[str] = field(default_factory=list)
+    pack_id: Optional[str] = None
+    title: Optional[str] = None
 
 
 class ReferenceLibraryManager:
@@ -129,6 +139,51 @@ class ReferenceLibraryManager:
             if pack.pack_id == pack_id:
                 return pack
         return None
+
+    def install_pack_from_file(self, source_path: Path) -> PackInstallResult:
+        """
+        Validate and copy an external .zim file into root_path — the
+        same validate-before-copy shape as
+        core/module_validator.py's module installs (docs/ROADMAP.md
+        milestone 4.4). On success the new pack is cached immediately
+        (bypassing the mid-copy quiet-period guard in _get_archive,
+        which doesn't apply here since we just wrote this file
+        ourselves and know it's complete) so it shows up in the very
+        next list_packs() call without waiting out that window.
+        """
+        source_path = Path(source_path)
+
+        if not source_path.is_file():
+            return PackInstallResult(passed=False, errors=[f"'{source_path}' is not a file."])
+        if source_path.suffix.lower() != ".zim":
+            return PackInstallResult(passed=False, errors=["Not a .zim file — pick a file with a .zim extension."])
+
+        destination_path = self._root_path / source_path.name
+        if destination_path.exists():
+            return PackInstallResult(
+                passed=False, errors=[f"A pack named '{source_path.name}' is already installed."]
+            )
+
+        try:
+            Archive(str(source_path))  # cheap open, just to validate before copying a possibly-huge file
+        except Exception as exc:
+            return PackInstallResult(passed=False, errors=[f"Not a valid ZIM file: {exc}"])
+
+        try:
+            self._root_path.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, destination_path)
+        except OSError as exc:
+            return PackInstallResult(passed=False, errors=[f"Validation passed, but copying the file failed: {exc}"])
+
+        pack_id = destination_path.stem
+        archive = Archive(str(destination_path))
+        self._archives[pack_id] = archive
+        self._failed_stat.pop(pack_id, None)
+
+        log.info("Installed new content pack '%s' from %s", pack_id, source_path)
+        return PackInstallResult(
+            passed=True, pack_id=pack_id, title=self._get_metadata(archive, "Title", default=pack_id)
+        )
 
     def _get_archive(self, pack_id: str, file_path: Path) -> Optional[Archive]:
         if pack_id in self._archives:
