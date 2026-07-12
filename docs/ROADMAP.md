@@ -359,3 +359,42 @@ boot never depends on an LLM server being up.
       actual docs/modules and a headless smoke test of the full chat
       flow confirming the LLM receives the grounded prompt while the
       chat log still shows the user's original question.
+
+## v0.6 breakdown (planned)
+
+Character/companion system — event bus driven, reacts to whatever
+module is active. Same small-independently-testable-milestone pattern
+as v0.2–v0.5. This phase is UI/personality only — no animation assets,
+sprite work, or a dedicated rendering engine; `gui/character_panel.py`'s
+own "likely future implementation notes" already scoped a
+QMovie/QOpenGL upgrade as a later, separate concern, not part of this
+phase.
+
+- [ ] **6.1 Module-activity events** — `gui/main_window.py`'s
+      `open_module()`/`show_main_menu()`/`go_back()` publish
+      `"module.opened"` (with `module_id`) and `"menu.shown"` on
+      `context.events`, the same event-bus mechanism every other
+      cross-component reaction in this app already uses (see
+      `core/event_bus.py`). Foundational plumbing only — nothing
+      subscribes yet; this milestone is done when a test's own
+      subscriber observes the right event firing for every navigation
+      action (open a module, go back, go home).
+- [ ] **6.2 Reactive Character Panel** — `gui/character_panel.py`
+      stops being a static "(coming soon)" placeholder: it accepts
+      `context` (already anticipated in its own docstring), subscribes
+      to `"module.opened"`/`"menu.shown"` (6.1) and the existing
+      `"notification.created"` event, and updates its displayed
+      text/icon to react to whichever module is currently active or a
+      just-fired notification. A small per-module flavor-line mapping
+      lives in this file (not spread across every module), falling
+      back to a generic "watching over `<display_name>`" line for any
+      module without a specific one, so adding a new module never
+      requires touching this file. Still no animation/sprite assets —
+      text + emoji only, matching this phase's stated scope.
+- [ ] **6.3 Idle ambient behavior** — when no relevant event has fired
+      recently, the panel rotates through a small set of idle lines on
+      a timer (same `QTimer`-in-the-owning-widget pattern as
+      `core/application.py`'s alarm-check timer), so the panel doesn't
+      look frozen during long stretches on one screen. Purely
+      cosmetic; skip entirely (don't even start the timer) if
+      `gui.show_character_panel` is off.
