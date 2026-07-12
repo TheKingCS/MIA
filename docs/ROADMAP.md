@@ -604,14 +604,14 @@ system package, same "no sudo" wall as `sounddevice`/PortAudio in
 milestone 5.3) — confirmed blocked, not just deferred, so nothing in
 that section can be verified here right now.
 
-- [ ] **10.1 Waypoints core service** — `core/waypoint_manager.py`
+- [x] **10.1 Waypoints core service** — `core/waypoint_manager.py`
       (`AppContext.waypoints`): named locations (name, latitude,
       longitude, notes), same persisted-JSON-manager pattern as
       `core/inventory_manager.py`. `distance_and_bearing()` (haversine
       formula, pure math) between two waypoints — genuinely useful even
       without real GPS hardware (e.g. entering known coordinates from
       a paper map or another GPS device by hand).
-- [ ] **10.2 Navigation module** — `modules/navigation/module.py`:
+- [x] **10.2 Navigation module** — `modules/navigation/module.py`:
       waypoint list UI (add/edit/delete, same CRUD shape as
       Notes/Inventory/Components) plus a Sun/Moon panel (sunrise/
       sunset + moon phase for a given lat/lon, defaulting to a selected

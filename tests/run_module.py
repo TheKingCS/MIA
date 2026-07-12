@@ -48,6 +48,7 @@ from core.power_manager import PowerManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
 from core.voice_manager import VoiceManager  # noqa: E402
+from core.waypoint_manager import WaypointManager  # noqa: E402
 from gui.styles import DARK_FIELD_THEME  # noqa: E402
 
 
@@ -75,6 +76,7 @@ def main() -> int:
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.voice = VoiceManager(context)
+    context.waypoints = WaypointManager(context)
     context.power = PowerManager(context)
     context.search = SearchManager(context)
     context.device_help = DeviceHelpManager(context)

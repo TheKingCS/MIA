@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from core.reference_library_manager import ReferenceLibraryManager
     from core.search_manager import SearchManager
     from core.voice_manager import VoiceManager
+    from core.waypoint_manager import WaypointManager
 
 
 @dataclass
@@ -72,6 +73,7 @@ class AppContext:
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
     activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
+    waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.
