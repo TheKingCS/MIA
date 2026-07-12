@@ -370,7 +370,7 @@ own "likely future implementation notes" already scoped a
 QMovie/QOpenGL upgrade as a later, separate concern, not part of this
 phase.
 
-- [ ] **6.1 Module-activity events** — `gui/main_window.py`'s
+- [x] **6.1 Module-activity events** — `gui/main_window.py`'s
       `open_module()`/`show_main_menu()`/`go_back()` publish
       `"module.opened"` (with `module_id`) and `"menu.shown"` on
       `context.events`, the same event-bus mechanism every other

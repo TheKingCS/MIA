@@ -332,6 +332,10 @@ class MainWindow(QMainWindow):
 
         self._navigate_to(self._module_widgets[module_id])
         self.statusBar().showMessage(f"Viewing: {module_id}")
+        # docs/ROADMAP.md milestone 6.1 — lets gui/character_panel.py (or
+        # any future subscriber) react to whichever module is active
+        # without MainWindow needing to know who's listening.
+        self.context.events.publish("module.opened", module_id=module_id)
 
     def show_main_menu(self) -> None:
         """
@@ -342,6 +346,7 @@ class MainWindow(QMainWindow):
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._menu_widget)
         self.statusBar().showMessage("M.I.A. core online.")
+        self.context.events.publish("menu.shown")
 
     def go_back(self) -> None:
         """Return to the previously viewed screen, if any."""
@@ -351,6 +356,22 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(previous_widget)
         self._back_button.setEnabled(bool(self._history))
         self.statusBar().showMessage("M.I.A. core online." if previous_widget is self._menu_widget else "Viewing previous screen")
+        self._publish_navigation_event_for_widget(previous_widget)
+
+    def _publish_navigation_event_for_widget(self, widget: QWidget) -> None:
+        """
+        go_back() can land on either the menu or some previously-opened
+        module's widget — figure out which and publish the matching
+        event (same events open_module()/show_main_menu() publish),
+        so a subscriber never needs its own copy of this widget lookup.
+        """
+        if widget is self._menu_widget:
+            self.context.events.publish("menu.shown")
+            return
+        for module_id, module_widget in self._module_widgets.items():
+            if module_widget is widget:
+                self.context.events.publish("module.opened", module_id=module_id)
+                return
 
     def _navigate_to(self, widget: QWidget) -> None:
         """
