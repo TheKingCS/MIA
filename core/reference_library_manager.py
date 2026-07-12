@@ -28,6 +28,7 @@ drive that can be absent, still copying, or damaged.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -42,6 +43,14 @@ log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_ROOT = _PROJECT_ROOT / "reference_library"
+
+# A multi-gigabyte pack being copied into root_path keeps growing for
+# minutes; opening it mid-copy via libzim can hang rather than raise
+# (it's a truncated/still-changing file, not a cleanly corrupt one).
+# Skip anything touched more recently than this and let a later
+# list_packs() call (the next keystroke in search, or the next time the
+# library screen is shown) pick it up once it's gone quiet.
+_MIN_QUIET_SECONDS = 5.0
 
 
 @dataclass
@@ -67,6 +76,10 @@ class ReferenceLibraryManager:
         self.context = context
         self._root_path = self._resolve_root_path()
         self._archives: dict[str, Archive] = {}
+        # (size, mtime) at the moment a pack failed to open, so a genuinely
+        # broken file isn't retried every keystroke, but a since-replaced
+        # or since-finished-copying file is.
+        self._failed_stat: dict[str, tuple[int, float]] = {}
 
         try:
             self._root_path.mkdir(parents=True, exist_ok=True)
@@ -120,12 +133,29 @@ class ReferenceLibraryManager:
     def _get_archive(self, pack_id: str, file_path: Path) -> Optional[Archive]:
         if pack_id in self._archives:
             return self._archives[pack_id]
+
+        try:
+            stat = file_path.stat()
+        except OSError:
+            return None
+
+        if time.time() - stat.st_mtime < _MIN_QUIET_SECONDS:
+            log.debug("Skipping recently-modified ZIM file (likely still copying): %s", file_path)
+            return None
+
+        state = (stat.st_size, stat.st_mtime)
+        if self._failed_stat.get(pack_id) == state:
+            return None
+
         try:
             archive = Archive(str(file_path))
-        except RuntimeError:
+        except Exception:
             log.warning("Skipping unreadable ZIM file: %s", file_path)
+            self._failed_stat[pack_id] = state
             return None
+
         self._archives[pack_id] = archive
+        self._failed_stat.pop(pack_id, None)
         return archive
 
     @staticmethod

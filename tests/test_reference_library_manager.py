@@ -12,6 +12,8 @@ both would sit oddly in an offline-first project's own test suite.
 
 from __future__ import annotations
 
+import os
+import time
 from pathlib import Path
 
 import pytest
@@ -87,6 +89,16 @@ def isolated_root(tmp_path, monkeypatch):
     return root
 
 
+@pytest.fixture(autouse=True)
+def _no_quiet_period(monkeypatch):
+    """
+    Most tests build a .zim fixture and expect it discoverable
+    immediately; only the dedicated quiet-period test below needs the
+    real still-copying guard, so it re-overrides this per-test.
+    """
+    monkeypatch.setattr(reference_library_manager_module, "_MIN_QUIET_SECONDS", 0)
+
+
 def _make_manager() -> ReferenceLibraryManager:
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ReferenceLibraryManager(context)
@@ -125,6 +137,43 @@ def test_corrupt_zim_file_is_skipped_not_crashed(isolated_root):
     manager = _make_manager()
 
     assert manager.list_packs() == []
+
+
+def test_recently_written_zim_is_skipped_until_quiet(isolated_root, monkeypatch):
+    # A pack still mid-copy keeps its mtime moving; opening it via
+    # libzim while it's still being written is what caused the hang
+    # this guard exists to prevent (see reference_library_manager's
+    # module docstring).
+    monkeypatch.setattr(reference_library_manager_module, "_MIN_QUIET_SECONDS", 60)
+    isolated_root.mkdir(parents=True)
+    path = isolated_root / "demo.zim"
+    _build_zim(path, title="Demo Pack")
+
+    manager = _make_manager()
+    assert manager.list_packs() == []
+
+    old = time.time() - 120
+    os.utime(path, (old, old))
+    packs = manager.list_packs()
+    assert len(packs) == 1
+    assert packs[0].title == "Demo Pack"
+
+
+def test_broken_zim_recovers_once_replaced(isolated_root):
+    # A pack that failed to open (e.g. caught mid-copy before this guard
+    # existed, or genuinely corrupt) shouldn't be stuck failed forever —
+    # once the file on disk actually changes, it should be retried.
+    isolated_root.mkdir(parents=True)
+    path = isolated_root / "pack.zim"
+    path.write_bytes(b"not a real zim file")
+
+    manager = _make_manager()
+    assert manager.list_packs() == []
+
+    _build_zim(path, title="Recovered Pack")
+    packs = manager.list_packs()
+    assert len(packs) == 1
+    assert packs[0].title == "Recovered Pack"
 
 
 def test_valid_and_corrupt_packs_coexist(isolated_root):

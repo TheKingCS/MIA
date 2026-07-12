@@ -3,6 +3,38 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Closed: App hang while copying large content packs into reference_library/
+
+Symptom: during 4.3 manual testing, `python main.py` stopped logging
+entirely mid-session (no shutdown, no traceback) while several
+multi-gigabyte Kiwix packs (`ifixit_en_all`, `wikibooks_en_all_nopic`,
+plus a few `wikipedia_en_*_mini` packs) were still being copied into
+`reference_library/` in the background — forcing a terminal restart.
+
+Root cause: `ReferenceLibraryManager.list_packs()` globs every `.zim`
+in `reference_library/` and opens any not-yet-cached file via
+`Archive()` — and this runs on *every keystroke* in Ctrl+K search
+(`modules/knowledge/module.py`'s search provider calls `list_packs()`
+per query). A pack still mid-copy is a truncated/growing file on disk;
+opening it with libzim can hang rather than raise, and since a failed
+open was never cached, a bad file was retried every keystroke, so
+typing while a copy was in flight compounded into what looked like a
+dead process. `_get_archive()` also only caught `RuntimeError`, so a
+corrupt (not just partial) file could raise something else uncaught.
+
+Fixed by adding a quiet-period guard in `_get_archive()` — skip any
+`.zim` file modified more recently than `_MIN_QUIET_SECONDS` (5s)
+rather than attempting to open it — plus broadening the open's
+exception catch to `Exception`, and caching failures keyed by
+`(size, mtime)` so a genuinely broken file isn't retried every call
+but a since-replaced/since-finished one is. **Not reproduced under a
+controlled repro** — root-caused from `logs/mia.log`'s timestamp
+against the packs' file mtimes plus code inspection, not an isolated
+crash test; covered going forward by
+`tests/test_reference_library_manager.py`'s quiet-period and
+recovers-once-replaced tests. Re-confirm if a similar hang resurfaces
+during real content-pack installs on the Pi.
+
 ## Open: QComboBox popups don't close/reset properly until the mouse moves
 
 Symptom: any `QComboBox` in the app — first seen in the Diagnostics log
