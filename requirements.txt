@@ -40,5 +40,11 @@ piper-tts>=1.4,<2.0
 sounddevice>=0.5,<0.6
 numpy>=1.26,<3.0
 
+# Diagnostics System Health panel + Power monitoring (v0.7 milestones
+# 7.1/7.2) — cross-platform CPU/RAM/disk/network/battery stats. No
+# stdlib equivalent gives this in a cross-platform way; has prebuilt
+# wheels for aarch64 (Pi 5).
+psutil>=6.0,<8.0
+
 # Testing
 pytest>=7.4

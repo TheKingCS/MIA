@@ -398,3 +398,49 @@ phase.
       look frozen during long stretches on one screen. Purely
       cosmetic; skip entirely (don't even start the timer) if
       `gui.show_character_panel` is off.
+
+## v0.7 breakdown (planned)
+
+Diagnostics + Power monitoring. Same small-independently-testable-
+milestone pattern as v0.2–v0.6.
+
+- [ ] **7.1 System Health panel (Diagnostics)** —
+      `modules/diagnostics/module.py` gains a live CPU/RAM/disk/network/
+      temperature panel alongside its existing log viewer, via `psutil`
+      (cross-platform, well-established — "don't reinvent the wheel").
+      Stats-reading is pure functions in this module (same shape as its
+      existing `tail_lines()`/`filter_lines()`), not a new `core/`
+      service — this data is Diagnostics' own exclusive concern, not
+      shared across sections the way Calculator Engine/Reference
+      Library are, and it's stateless point-in-time reads with no
+      persistence, so a core manager would be pure ceremony. A
+      widget-owned `QTimer` refreshes the panel periodically while it's
+      on screen — same timer-owned-by-the-widget pattern as
+      `gui/character_panel.py`'s idle timer. A sensor that isn't
+      exposed on a given system (e.g. no thermal zone, true in this dev
+      sandbox/WSL2) degrades to a clear "not available on this system"
+      state, never a crash.
+- [ ] **7.2 Power monitoring core service + module** —
+      `core/power_manager.py` (`AppContext.power`) adds a
+      backend-agnostic interface (same shape as
+      `core/llm_manager.py`'s `LLMBackend` / `core/voice_manager.py`'s
+      `STTBackend`/`TTSBackend`), with one concrete backend using
+      `psutil`'s cross-platform battery reporting (percent/plugged/
+      time-remaining) — the generic software-level backend available
+      today. The real UPS HAT's voltage/current telemetry
+      (`docs/HARDWARE.md`'s still-open "Battery/UPS HAT choice"
+      question) needs a documented I2C interface not yet chosen — a
+      second, hardware-specific backend is future work once that part
+      is picked, same "engine decided now, exact part later" split as
+      `core/voice_manager.py`'s STT/TTS engine choice. Degrades to a
+      clear "no battery/UPS detected" state when `psutil` reports none
+      (the expected case on a bare Pi 5 with no UPS HAT installed). A
+      new `modules/power/module.py` (top-level module section 9 in this
+      doc) surfaces current status; `MIAApplication` gains a periodic
+      low-battery check (same `QTimer`-in-`core/application.py` +
+      `check_due()`-style pattern as `AlarmManager`) that raises a real
+      notification via the existing `NotificationManager` when battery
+      drops below a threshold while unplugged — testable with a fixed
+      reading, no real hardware or waiting required, same reasoning as
+      `AlarmManager.check_due()` taking `now` as a parameter instead of
+      calling `datetime.now()` itself.
