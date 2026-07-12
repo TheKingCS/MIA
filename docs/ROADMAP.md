@@ -91,7 +91,8 @@ testing guide accompanies each milestone as it's built — see
 | **v0.6** | Character/companion system — event bus driven, reacts to whatever module is active |
 | **v0.7** | Diagnostics + Power monitoring |
 | **v0.8** | Workshop & Electronics + The Lab (shared Data Logger) |
-| **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Navigation, Agriculture, Medical, Smart Home, Media, Project Manager, Memories AI-query — added incrementally as real hardware for each is acquired |
+| **v0.9** | Activity/Memory Log (shared service) + Memories AI-query — the first v1.0+-bucket slice buildable with zero real hardware |
+| **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Navigation, Agriculture, Medical, Smart Home, Media, Project Manager — added incrementally as real hardware for each is acquired |
 
 ## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
 
@@ -546,3 +547,33 @@ small-independently-testable-milestone pattern as v0.2–v0.7.
       MCU flashing, PCB viewer, soldering notes, 3D printer/CNC/laser,
       STL/CAD library) buildable with zero real hardware/files right
       now; the rest waits for that hardware/tooling to exist.
+
+## v0.9 breakdown (planned)
+
+Activity/Memory Log (shared service) + Memories AI-query — the first
+v1.0+-bucket slice buildable with zero real hardware. Per this doc's
+own "Top-level module sections" note, Memories is explicitly **not** a
+menu section — "Character, Memories, and Global Search are system-wide
+/ ambient" — so this integrates into the Assistant's tool-use (5.5)
+rather than getting its own module page.
+
+- [ ] **9.1 Activity Log core service** — `core/activity_log_manager.py`
+      (`AppContext.activity_log`) subscribes to a curated subset of
+      already-published events (`module.opened`, `notification.created`,
+      `profile.switched` — not every event on the bus, since
+      `menu.shown`/`modules.rescanned`/etc. are noise for a "what did I
+      do" memory feature, not signal), building a human-readable
+      summary per event and persisting to `data/activity_log.json`
+      (same pattern as `core/inventory_manager.py`). Capped at a bounded
+      number of most-recent entries (e.g. 5000) so a long-running kiosk
+      device doesn't grow this file unbounded.
+- [ ] **9.2 Assistant "recall activity" action** — a new
+      `core/assistant_actions.py` built-in, `recall_recent_activity`,
+      wired in `core/application.py`'s `_register_assistant_actions()`
+      alongside the others: returns the most recent matching activity
+      log entries as plain text, which the LLM then summarizes/answers
+      from in its own reply — no attempt at robust natural-language
+      date parsing ("yesterday", "last week") on M.I.A.'s side; keeping
+      the tool's job to "fetch recent raw entries" and letting the
+      already-verified `chat_with_tools()` pipeline (5.5) do the
+      phrasing keeps this simple and testable.
