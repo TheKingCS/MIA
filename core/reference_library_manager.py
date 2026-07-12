@@ -84,6 +84,11 @@ class ReferenceLibraryManager:
             return Path(configured).expanduser()
         return _DEFAULT_ROOT
 
+    @property
+    def root_path(self) -> Path:
+        """Where to point a user at when telling them where to copy .zim files — used by the 4.2 UI's empty state."""
+        return self._root_path
+
     # ------------------------------------------------------------------
     # Discovery
     # ------------------------------------------------------------------

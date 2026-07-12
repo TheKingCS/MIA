@@ -31,10 +31,16 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from PySide6.QtWidgets import QApplication, QMainWindow  # noqa: E402
 
+from core.alarm_manager import AlarmManager  # noqa: E402
 from core.app_context import AppContext  # noqa: E402
+from core.calendar_manager import CalendarManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
+from core.inventory_manager import InventoryManager  # noqa: E402
+from core.journal_manager import JournalManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
+from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
+from core.search_manager import SearchManager  # noqa: E402
 from gui.styles import DARK_FIELD_THEME  # noqa: E402
 
 
@@ -44,7 +50,21 @@ def main() -> int:
     parser.add_argument("--list", action="store_true", help="List all discovered module ids and exit.")
     args = parser.parse_args()
 
+    # Wires the same data-manager services core/application.py constructs
+    # at real boot (minus profiles/notifications, which no module reads
+    # from get_widget()/on_load() today and which carry side effects —
+    # ProfileManager's legacy-user migration, NotificationManager's
+    # QTimer — this harness has no business triggering). Add a manager
+    # here if a new module's get_widget()/on_load() starts needing one
+    # and this script starts crashing the same way it used to for Notes'
+    # context.search before this fix.
     context = AppContext(config=ConfigManager(), events=EventBus())
+    context.calendar = CalendarManager(context)
+    context.alarms = AlarmManager(context)
+    context.journal = JournalManager(context)
+    context.inventory = InventoryManager(context)
+    context.reference_library = ReferenceLibraryManager(context)
+    context.search = SearchManager(context)
     manager = ModuleManager(context)
     manager.discover()
 

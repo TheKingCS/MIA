@@ -242,9 +242,24 @@ must-have content pack turns out to need it.
       pack discovery, main-page/entry content retrieval (for both
       articles and inline resources like images), and in-pack search.
       No UI yet — that's 4.2.
-- [ ] **4.2 Reference Library UI** — upgrades the `knowledge` module
-      placeholder: a pack list, a `QTextBrowser` article viewer wired
-      to resolve ZIM-internal resource paths, and an in-pack search box.
+- [x] **4.2 Reference Library UI** — upgrades the `knowledge` module
+      placeholder: a pack list (`modules/knowledge/module.py`) and,
+      per pack, a reader screen with an in-pack search box and a
+      `modules.knowledge.zim_text_browser.ZimTextBrowser`. That class
+      resolves a custom `zim://<pack_id>/<entry_path>` URL scheme
+      (`modules/knowledge/zim_url.py`) against
+      `ReferenceLibraryManager.get_entry_content()` via
+      `QTextBrowser.loadResource()` — relative links/images within a
+      page (including `../`-style backreferences) resolve for free via
+      `QUrl`'s own RFC 3986 resolution, the same mechanism
+      `QTextBrowser.setSource()` already uses internally, so no
+      ZIM-namespace-aware path logic was needed here. Back/forward
+      history comes from `QTextBrowser`'s own built-in tracking. Also
+      fixed a pre-existing bug in `tests/run_module.py` (it never wired
+      `AppContext.search`/`.calendar`/etc., so running the Notes or
+      Toolbox modules through it already crashed on `on_load()`/
+      `get_widget()` before this milestone touched it) — needed to
+      actually dev-loop on this module's widget.
 - [ ] **4.3 Global Search integration** — the Knowledge module
       registers a search provider (per `docs/ADDING_MODULES.md`'s
       pattern) so ZIM content is reachable from Ctrl+K, same as Notes.
