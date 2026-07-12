@@ -401,6 +401,26 @@ boot never depends on an LLM server being up.
       `MIAApplication`/`MainWindow` wiring (not a hand-copied test
       double) with the live model.
 
+      **Follow-up performance fix (same day):** a real response
+      measured at ~25s turned out to be almost entirely Ollama
+      re-loading the model from disk, not inference — Ollama unloads a
+      model after 5 minutes idle by default (`OLLAMA_KEEP_ALIVE`), so
+      any real conversation with a pause longer than that pays this
+      cold-load cost on the next message, which reads as "the
+      Assistant is really slow" even though a warm request completes
+      in under 2s. Fixed by sending `keep_alive` on every request
+      (`core/llm_manager.py`, config key `llm.keep_alive`, default
+      `-1` = never unload) rather than relying on server-side env
+      config, so the fix travels with the app regardless of Ollama
+      deployment. Hit a second real issue getting this right: Ollama's
+      API rejects `keep_alive` as the *string* `"-1"` with HTTP 400
+      ("missing unit in duration") — it must be a bare JSON integer for
+      a seconds value, while a duration string like `"30m"` is only
+      valid as an actual string. `OllamaBackend` normalizes this once
+      (numeric-looking config values become a real int). Verified by
+      force-unloading the model against the real server and confirming
+      the next request no longer cold-loads.
+
 ## v0.6 breakdown (planned)
 
 Character/companion system — event bus driven, reacts to whatever

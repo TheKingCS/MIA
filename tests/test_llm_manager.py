@@ -118,12 +118,60 @@ def test_manager_reads_base_url_and_model_from_config(monkeypatch):
     assert seen["body"]["model"] == "custom-model"
 
 
+def test_generate_sends_keep_alive_default_as_bare_int(monkeypatch):
+    """
+    Regression test: a real ~25s response on this dev machine turned
+    out to be Ollama re-loading the model after its default 5-minute
+    idle unload — keep_alive must be sent on every request so the
+    model stays loaded, see this module's docstring. Also regression
+    for a real HTTP 400 hit when this was sent as the string "-1"
+    instead of the bare int -1 Ollama's Go duration parser requires.
+    """
+    seen = {}
+
+    def fake_urlopen(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _FakeResponse(json.dumps({"response": "ok"}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    manager.generate("hi")
+    assert seen["body"]["keep_alive"] == -1
+    assert isinstance(seen["body"]["keep_alive"], int)
+
+
+def test_generate_sends_configured_keep_alive_duration_string(monkeypatch):
+    """A non-numeric keep_alive (e.g. "10m") must stay a string — only numeric-looking values become an int."""
+    seen = {}
+
+    def fake_urlopen(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _FakeResponse(json.dumps({"response": "ok"}).encode("utf-8"))
+
+    monkeypatch.setattr("core.llm_manager.urllib.request.urlopen", fake_urlopen)
+    context = AppContext(config=_FakeConfig({"llm.keep_alive": "10m"}), events=None)
+    manager = LLMManager(context)
+    manager.generate("hi")
+    assert seen["body"]["keep_alive"] == "10m"
+
+
+def test_chat_with_tools_sends_keep_alive(monkeypatch):
+    seen = {}
+
+    def fake_urlopen(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _FakeResponse(json.dumps({"message": {"role": "assistant", "content": "ok"}}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    manager.chat_with_tools([{"role": "user", "content": "hi"}], tools=[])
+    assert seen["body"]["keep_alive"] == -1
+
+
 def test_ollama_backend_raises_llm_unavailable_on_connection_error(monkeypatch):
     def fake_urlopen(request, timeout):
         raise OSError("network down")
 
     monkeypatch.setattr("core.llm_manager.urllib.request.urlopen", fake_urlopen)
-    backend = OllamaBackend(base_url="http://localhost:11434", model="llama3.2")
+    backend = OllamaBackend(base_url="http://localhost:11434", model="llama3.2", keep_alive="-1")
 
     with pytest.raises(LLMUnavailableError):
         backend.generate("hi", timeout=5.0)

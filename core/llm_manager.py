@@ -38,6 +38,23 @@ retries once without tools to get a clean textual answer instead.
 model-load request (first request after the model goes idle) exceeded
 30s on this CPU-only dev machine — worth remembering if the Assistant
 seems to "hang" right after Ollama restarts or an idle period.
+
+`keep_alive` (docs/ROADMAP.md milestone 5.5 follow-up): measured a
+real ~25s response on this CPU-only dev machine that turned out to be
+almost entirely Ollama re-loading the model from disk, not inference —
+by default Ollama unloads a model after 5 minutes idle
+(`OLLAMA_KEEP_ALIVE`), so any real conversation with pauses longer than
+that pays this cold-load cost on every next message, which reads as
+"the Assistant is really slow" even though a warm request completes in
+under 2s. Sent on every request here (config key `llm.keep_alive`,
+default `"-1"` = keep loaded indefinitely) rather than relying on the
+Ollama server's own environment config, so this fix travels with the
+app regardless of how/where Ollama is deployed. `"-1"` is a reasonable
+default specifically because this is a dedicated single-purpose kiosk
+device, not a shared multi-model workstation — the ~2GB held for
+llama3.2 isn't competing with anything else that needs it, and the AI
+HAT+2's dedicated onboard RAM (docs/HARDWARE.md) means this doesn't
+even compete with the Pi's own system RAM on the real target hardware.
 """
 
 from __future__ import annotations
@@ -56,6 +73,7 @@ log = get_logger(__name__)
 _DEFAULT_BASE_URL = "http://localhost:11434"
 _DEFAULT_MODEL = "llama3.2"
 _DEFAULT_TIMEOUT_SECONDS = 60.0
+_DEFAULT_KEEP_ALIVE = "-1"
 
 
 class LLMUnavailableError(RuntimeError):
@@ -93,15 +111,27 @@ class LLMBackend(Protocol):
 class OllamaBackend:
     """LLMBackend implementation for a local Ollama server."""
 
-    def __init__(self, base_url: str, model: str) -> None:
+    def __init__(self, base_url: str, model: str, keep_alive: str) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
+        # Ollama's keep_alive must be a bare JSON number of seconds
+        # (e.g. -1 to never unload) OR a Go duration *string* with a
+        # unit suffix (e.g. "30m") — a quoted "-1" is rejected with
+        # HTTP 400 ("missing unit in duration"), confirmed against the
+        # real server. Config stores this as a string either way
+        # (JSON has no bare-int-or-string union type), so normalize
+        # once here: numeric-looking strings become a real int.
+        try:
+            self._keep_alive: object = int(keep_alive)
+        except (TypeError, ValueError):
+            self._keep_alive = keep_alive
 
     def generate(self, prompt: str, timeout: float) -> str:
         payload = json.dumps({
             "model": self._model,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": self._keep_alive,
         }).encode("utf-8")
         request = urllib.request.Request(
             f"{self._base_url}/api/generate",
@@ -129,6 +159,7 @@ class OllamaBackend:
             "model": self._model,
             "messages": messages,
             "stream": False,
+            "keep_alive": self._keep_alive,
         }
         if tools:
             payload_dict["tools"] = tools
@@ -173,9 +204,9 @@ class OllamaBackend:
 class LLMManager:
     """
     Core-level Assistant LLM service (`AppContext.llm`). Config-driven
-    via `llm.base_url` / `llm.model` / `llm.timeout_seconds`, following
-    the `modules.<id>.*` / top-level-service config convention
-    CLAUDE.md documents.
+    via `llm.base_url` / `llm.model` / `llm.timeout_seconds` /
+    `llm.keep_alive`, following the `modules.<id>.*` /
+    top-level-service config convention CLAUDE.md documents.
     """
 
     def __init__(self, context: AppContext) -> None:
@@ -183,8 +214,9 @@ class LLMManager:
         base_url = context.config.get("llm.base_url", _DEFAULT_BASE_URL)
         model = context.config.get("llm.model", _DEFAULT_MODEL)
         timeout = context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS)
+        keep_alive = context.config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE)
         self._timeout = float(timeout)
-        self._backend: LLMBackend = OllamaBackend(base_url, model)
+        self._backend: LLMBackend = OllamaBackend(base_url, model, keep_alive)
 
     def is_available(self) -> bool:
         """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises."""
