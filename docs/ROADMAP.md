@@ -420,7 +420,7 @@ milestone pattern as v0.2–v0.6.
       exposed on a given system (e.g. no thermal zone, true in this dev
       sandbox/WSL2) degrades to a clear "not available on this system"
       state, never a crash.
-- [ ] **7.2 Power monitoring core service + module** —
+- [x] **7.2 Power monitoring core service + module** —
       `core/power_manager.py` (`AppContext.power`) adds a
       backend-agnostic interface (same shape as
       `core/llm_manager.py`'s `LLMBackend` / `core/voice_manager.py`'s

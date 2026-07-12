@@ -41,6 +41,7 @@ from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
 from core.llm_manager import LLMManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
+from core.power_manager import PowerManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
 from core.voice_manager import VoiceManager  # noqa: E402
@@ -69,6 +70,7 @@ def main() -> int:
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.voice = VoiceManager(context)
+    context.power = PowerManager(context)
     context.search = SearchManager(context)
     context.device_help = DeviceHelpManager(context)
     manager = ModuleManager(context)

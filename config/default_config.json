@@ -26,6 +26,9 @@
         "sample_rate": 16000,
         "push_to_talk_gpio_pin": null
     },
+    "power": {
+        "low_battery_threshold_percent": 20
+    },
     "gui": {
         "theme": "dark_field",
         "window_width": 1100,

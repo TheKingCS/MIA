@@ -35,6 +35,7 @@ from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
+from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.search_manager import SearchManager, SearchResult
@@ -72,6 +73,7 @@ class MIAApplication:
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         self.context.voice = VoiceManager(self.context)
+        self.context.power = PowerManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -99,8 +101,20 @@ class MIAApplication:
         self._alarm_check_timer.timeout.connect(self._check_alarms)
         self._alarm_check_timer.start(20_000)
 
+        # Same reasoning as the alarm timer above — a low-battery
+        # warning must fire regardless of which module is on screen,
+        # not just while the Power module happens to be open. 30s is
+        # frequent enough for a warning to matter without polling
+        # psutil needlessly often (battery percentage changes slowly).
+        self._power_check_timer = QTimer()
+        self._power_check_timer.timeout.connect(self._check_power)
+        self._power_check_timer.start(30_000)
+
     def _check_alarms(self) -> None:
         self.context.alarms.check_due(datetime.now())
+
+    def _check_power(self) -> None:
+        self.context.power.check_low_battery()
 
     def _display(self, widget) -> None:
         """

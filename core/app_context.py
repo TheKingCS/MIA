@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from core.journal_manager import JournalManager
     from core.llm_manager import LLMManager
     from core.notification_manager import NotificationManager
+    from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
     from core.reference_library_manager import ReferenceLibraryManager
     from core.search_manager import SearchManager
@@ -63,6 +64,7 @@ class AppContext:
     llm: Optional["LLMManager"] = field(default=None, repr=False)
     voice: Optional["VoiceManager"] = field(default=None, repr=False)
     device_help: Optional["DeviceHelpManager"] = field(default=None, repr=False)
+    power: Optional["PowerManager"] = field(default=None, repr=False)
     # CalculatorEngine takes no AppContext dependency, so — unlike the
     # services above — it can just be constructed directly here.
     calculators: CalculatorEngine = field(default_factory=CalculatorEngine, repr=False)
