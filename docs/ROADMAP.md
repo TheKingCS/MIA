@@ -472,7 +472,7 @@ small-independently-testable-milestone pattern as v0.2–v0.7.
       "software now, hardware producer later" shape as other phases,
       except there's no backend to swap here: a future real-sensor
       integration is just another caller of `add_reading()`.
-- [ ] **8.3 Workshop & Electronics: Component DB** —
+- [x] **8.3 Workshop & Electronics: Component DB** —
       `core/component_manager.py` (`AppContext.components`) +
       `modules/workshop/module.py` (top-level module section 5): a
       dedicated electronics-parts inventory (name, category, value,

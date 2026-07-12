@@ -26,6 +26,7 @@ from PySide6.QtWidgets import QApplication
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.calendar_manager import CalendarManager
+from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
 from core.data_logger_manager import DataLoggerManager
 from core.device_help_manager import DeviceHelpManager
@@ -72,6 +73,7 @@ class MIAApplication:
         self.context.journal = JournalManager(self.context)
         self.context.inventory = InventoryManager(self.context)
         self.context.data_logger = DataLoggerManager(self.context)
+        self.context.components = ComponentManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         self.context.voice = VoiceManager(self.context)

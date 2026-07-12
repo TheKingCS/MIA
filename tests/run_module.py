@@ -34,6 +34,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow  # noqa: E402
 from core.alarm_manager import AlarmManager  # noqa: E402
 from core.app_context import AppContext  # noqa: E402
 from core.calendar_manager import CalendarManager  # noqa: E402
+from core.component_manager import ComponentManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
 from core.data_logger_manager import DataLoggerManager  # noqa: E402
 from core.device_help_manager import DeviceHelpManager  # noqa: E402
@@ -69,6 +70,7 @@ def main() -> int:
     context.journal = JournalManager(context)
     context.inventory = InventoryManager(context)
     context.data_logger = DataLoggerManager(context)
+    context.components = ComponentManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.voice = VoiceManager(context)
