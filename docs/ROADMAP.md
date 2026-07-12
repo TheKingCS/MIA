@@ -273,3 +273,69 @@ must-have content pack turns out to need it.
       anything is copied in. Synchronous copy, no worker thread — see
       `docs/testing/4.4_install_content_pack.md` for why that's
       consistent with the rest of the codebase rather than a shortcut.
+
+## v0.5 breakdown (planned)
+
+Assistant phase — offline LLM chat + push-to-talk voice interface, same
+small-independently-testable-milestone pattern as v0.2–v0.4. This is
+**only** the conversational Assistant module; the separate
+"Self-Modification / Dev Mode" staged plan above (read-only explain →
+propose-not-apply → sandboxed test → scoped autonomy) is deliberately
+out of scope except where 5.4 explicitly opens stage 1 of it.
+
+Backend decision: dev/test targets **Ollama's local HTTP API**
+(`http://localhost:11434`), not `llama-cpp-python` or an in-process
+runtime — this matches Hailo's own `hailo-ollama` runtime that the real
+Pi 5 + AI HAT+2 deployment will run per `docs/HARDWARE.md`, so moving
+from dev (WSL2, no Hailo hardware) to the real device is a config
+change (base URL / model name) rather than a backend rewrite. The
+client is built on stdlib `urllib.request`, not the `requests` package
+— keeps `requirements.txt` light per this doc's design principles, and
+a local single-endpoint JSON API doesn't need more than stdlib gives.
+Neither `ollama` itself nor a model pull is assumed to exist in this
+dev environment yet — 5.1 must degrade gracefully (logged, non-fatal)
+when the backend isn't reachable, same defensive pattern as a
+broken/corrupt `.zim` in `core/reference_library_manager.py`, so app
+boot never depends on an LLM server being up.
+
+- [ ] **5.1 LLM backend core service** — `core/llm_manager.py`
+      (`AppContext.llm`) defines a small backend-agnostic interface
+      (e.g. `generate(prompt, ...) -> str`) with one concrete
+      implementation, an Ollama HTTP client. Config-driven
+      (`llm.base_url`, `llm.model`, following the `modules.<id>.*` /
+      top-level-service config convention `CLAUDE.md` documents).
+      Connection failures and missing models are logged and surfaced
+      as a clear "assistant unavailable" state, never a crash or a
+      hang at boot. No UI yet — a manual smoke test script or
+      `tests/run_module.py`-style check is enough to prove it works
+      against a real local Ollama instance.
+- [ ] **5.2 Assistant Chat UI** — upgrades the `modules/assistant`
+      placeholder to a real chat screen (scrollback + input box) wired
+      to `AppContext.llm`. A blocking HTTP call on the GUI thread would
+      freeze the UI for the duration of every reply, so this is the
+      first module to need the scoped worker-thread pattern
+      `CLAUDE.md`'s "no async/threading anywhere in core" note
+      explicitly carves out an exception for ("introduce a scoped
+      worker-thread pattern in the specific module that needs it when
+      that need actually arrives") — a `QThread`/`QRunnable` local to
+      `modules/assistant`, not a change to `core/event_bus.py` or any
+      other core service.
+- [ ] **5.3 Voice interface (STT/TTS + push-to-talk)** — core service
+      for speech-to-text and text-to-speech, plus a push-to-talk
+      trigger abstraction: a real GPIO button interrupt in kiosk
+      deployment per `docs/HARDWARE.md`, a keybinding/on-screen button
+      in dev — same dev/prod split already established for
+      `kiosk_mode` fullscreen behavior. STT/TTS engine choice
+      (candidates: whisper.cpp/vosk for STT, piper/espeak for TTS) is
+      an open question, deliberately not decided as part of this
+      breakdown — revisit with real mic/speaker hardware in hand per
+      `docs/HARDWARE.md`'s "Open questions" section, not from a dev-only
+      guess.
+- [ ] **5.4 Device-help grounding** — the Assistant answers "what does
+      this do / how do I use this device" questions grounded in
+      M.I.A.'s own docs (`docs/*.md`) and module metadata via
+      retrieval, not open-ended chat. This is explicitly **stage 1
+      ("Read & explain")** of the Self-Modification / Dev Mode staged
+      plan above — read-only, no file writes, and stays that way until
+      stage 1 is trusted in practice. Do not let this milestone grow
+      into stage 2 (propose-a-patch) scope creep.
