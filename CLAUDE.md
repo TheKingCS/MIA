@@ -165,3 +165,8 @@ Don't hand-edit the `__MIA_*__` placeholders in that template — edit the
 install script instead so re-running it stays reproducible. See
 `docs/HARDWARE.md` for the target hardware assumptions (Pi 5, AI HAT+ 2,
 storage split) this software is being built against.
+
+The repo has a private GitHub remote (`github.com/TheKingCS/MIA`). This
+checkout's `.git/hooks/post-commit` auto-pushes every commit on the
+current branch to `origin` — since git hooks aren't version-controlled,
+a fresh clone won't have this behavior until the hook is recreated.
