@@ -92,7 +92,8 @@ testing guide accompanies each milestone as it's built — see
 | **v0.7** | Diagnostics + Power monitoring |
 | **v0.8** | Workshop & Electronics + The Lab (shared Data Logger) |
 | **v0.9** | Activity/Memory Log (shared service) + Memories AI-query — the first v1.0+-bucket slice buildable with zero real hardware |
-| **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Navigation, Agriculture, Medical, Smart Home, Media, Project Manager — added incrementally as real hardware for each is acquired |
+| **v0.10** | Navigation: Waypoints + Sun/Moon calculator — the second v1.0+-bucket slice buildable with zero real hardware (offline maps/trails/elevation wait for real GPS/mapping data) |
+| **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Agriculture, Medical, Smart Home, Media, Project Manager — added incrementally as real hardware for each is acquired (Media/Music specifically also needs `libpulse`, a system package not installable without sudo in this dev sandbox — confirmed blocked, not just deferred) |
 
 ## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
 
@@ -590,3 +591,33 @@ rather than getting its own module page.
       then asked "what have I been doing recently" and confirmed the
       Assistant's reply reflected the actual logged activity, not a
       hallucinated answer.
+
+## v0.10 breakdown (planned)
+
+Navigation: Waypoints + Sun/Moon calculator — the second
+v1.0+-bucket slice buildable with zero real hardware (no GPS chip
+needed for either piece; "offline maps, trails, elevation" wait for
+real GPS/mapping hardware/data this project doesn't have yet). Media/
+Music was considered first but is blocked here: `PySide6.QtMultimedia`
+fails to import in this dev sandbox at all (missing `libpulse.so.0`, a
+system package, same "no sudo" wall as `sounddevice`/PortAudio in
+milestone 5.3) — confirmed blocked, not just deferred, so nothing in
+that section can be verified here right now.
+
+- [ ] **10.1 Waypoints core service** — `core/waypoint_manager.py`
+      (`AppContext.waypoints`): named locations (name, latitude,
+      longitude, notes), same persisted-JSON-manager pattern as
+      `core/inventory_manager.py`. `distance_and_bearing()` (haversine
+      formula, pure math) between two waypoints — genuinely useful even
+      without real GPS hardware (e.g. entering known coordinates from
+      a paper map or another GPS device by hand).
+- [ ] **10.2 Navigation module** — `modules/navigation/module.py`:
+      waypoint list UI (add/edit/delete, same CRUD shape as
+      Notes/Inventory/Components) plus a Sun/Moon panel (sunrise/
+      sunset + moon phase for a given lat/lon, defaulting to a selected
+      waypoint) via the `astral` package (pure Python, no network
+      calls, no heavy dependency — "don't reinvent the wheel" per this
+      doc's design principles). Only needs latitude/longitude, not a
+      separate timezone configuration — `astral`'s `Observer` computes
+      in UTC and `datetime.astimezone()` converts to the system's local
+      time automatically, verified directly against real coordinates.

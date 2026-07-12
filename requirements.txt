@@ -46,5 +46,11 @@ numpy>=1.26,<3.0
 # wheels for aarch64 (Pi 5).
 psutil>=6.0,<8.0
 
+# Navigation module's Sun/Moon calculator (v0.10 milestone 10.2) —
+# sunrise/sunset/moon-phase astronomical calculations. Pure Python, no
+# network calls, no C extensions — "don't reinvent the wheel" rather
+# than hand-rolling potentially-buggy astronomical math.
+astral>=3.2,<4.0
+
 # Testing
 pytest>=7.4
