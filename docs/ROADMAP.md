@@ -359,6 +359,38 @@ boot never depends on an LLM server being up.
       actual docs/modules and a headless smoke test of the full chat
       flow confirming the LLM receives the grounded prompt while the
       chat log still shows the user's original question.
+- [ ] **5.5 Assistant tool use / action execution** — the Assistant
+      can perform ordinary app actions (open a module, add an alarm, a
+      note, an inventory item), not just answer questions, via Ollama's
+      structured tool-calling API (`/api/chat` + a `tools` schema).
+      This is explicitly **not** the Self-Modification / Dev Mode
+      staged plan above — that's specifically about the assistant
+      editing M.I.A.'s own source code, gated behind a cautious
+      multi-stage rollout; actions here are just normal, everyday app
+      operations any user could already do by hand through the UI.
+      `core/assistant_actions.py`'s `AssistantActionRegistry` is a
+      pluggable registry (same shape as `core/calculator_engine.py`),
+      with built-ins wired in `core/application.py`
+      (`_register_assistant_actions()`, mirroring
+      `_register_calculators()`): `open_module`, `add_alarm`,
+      `add_note`, `add_inventory_item`. A tool call that needs to
+      touch the GUI (`open_module`) goes through a new
+      `"assistant.open_module_requested"` event
+      (`gui/main_window.py` subscribes and navigates) rather than
+      calling into Qt directly from off the GUI thread.
+      `core/llm_manager.py` gains `chat_with_tools()`
+      (Ollama's `/api/chat`, not `/api/generate`) with a `ToolCall`/
+      `ChatReply` shape. Found and fixed a real quality issue during
+      manual verification against the live model (llama3.2:3b): when
+      tools are available but the query doesn't need one, the model
+      sometimes emits a malformed tool-call-looking JSON string as
+      plain `content` instead of either answering normally or
+      correctly declining to call a tool — `chat_with_tools()`
+      detects this shape and retries once without tools to get a
+      clean textual answer, verified against the real Ollama server,
+      not just a mocked test. Also bumped `llm.timeout_seconds`
+      default 30 -> 60 after a real cold-model-load request exceeded
+      30s on this CPU-only dev machine.
 
 ## v0.6 breakdown (planned)
 
