@@ -462,7 +462,7 @@ small-independently-testable-milestone pattern as v0.2–v0.7.
       sensor testing, vehicle diagnostics) — no hardware-specific
       producer exists yet; any future real-sensor integration just
       calls `add_reading()` like a manual entry would.
-- [ ] **8.2 The Lab module** — `modules/lab/module.py`, the UI home of
+- [x] **8.2 The Lab module** — `modules/lab/module.py`, the UI home of
       the Data Logger (top-level module section 14 in this doc): pick
       or create a series, a manual reading-entry form (value/unit/
       note), a line chart of that series over time via `QtCharts`
