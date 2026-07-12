@@ -298,7 +298,7 @@ when the backend isn't reachable, same defensive pattern as a
 broken/corrupt `.zim` in `core/reference_library_manager.py`, so app
 boot never depends on an LLM server being up.
 
-- [ ] **5.1 LLM backend core service** — `core/llm_manager.py`
+- [x] **5.1 LLM backend core service** — `core/llm_manager.py`
       (`AppContext.llm`) defines a small backend-agnostic interface
       (e.g. `generate(prompt, ...) -> str`) with one concrete
       implementation, an Ollama HTTP client. Config-driven

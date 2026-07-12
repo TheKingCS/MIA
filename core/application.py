@@ -30,6 +30,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
+from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
@@ -67,6 +68,7 @@ class MIAApplication:
         self.context.journal = JournalManager(self.context)
         self.context.inventory = InventoryManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
+        self.context.llm = LLMManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()

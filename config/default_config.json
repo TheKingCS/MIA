@@ -15,6 +15,11 @@
     "reference_library": {
         "root_path": ""
     },
+    "llm": {
+        "base_url": "http://localhost:11434",
+        "model": "llama3.2",
+        "timeout_seconds": 30
+    },
     "gui": {
         "theme": "dark_field",
         "window_width": 1100,
