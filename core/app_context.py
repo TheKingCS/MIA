@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from core.profile_manager import ProfileManager
     from core.reference_library_manager import ReferenceLibraryManager
     from core.search_manager import SearchManager
+    from core.voice_manager import VoiceManager
 
 
 @dataclass
@@ -59,6 +60,7 @@ class AppContext:
     inventory: Optional["InventoryManager"] = field(default=None, repr=False)
     reference_library: Optional["ReferenceLibraryManager"] = field(default=None, repr=False)
     llm: Optional["LLMManager"] = field(default=None, repr=False)
+    voice: Optional["VoiceManager"] = field(default=None, repr=False)
     # CalculatorEngine takes no AppContext dependency, so — unlike the
     # services above — it can just be constructed directly here.
     calculators: CalculatorEngine = field(default_factory=CalculatorEngine, repr=False)

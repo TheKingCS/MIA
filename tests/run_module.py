@@ -42,6 +42,7 @@ from core.llm_manager import LLMManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
+from core.voice_manager import VoiceManager  # noqa: E402
 from gui.styles import DARK_FIELD_THEME  # noqa: E402
 
 
@@ -66,6 +67,7 @@ def main() -> int:
     context.inventory = InventoryManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
+    context.voice = VoiceManager(context)
     context.search = SearchManager(context)
     manager = ModuleManager(context)
     manager.discover()

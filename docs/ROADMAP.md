@@ -320,17 +320,21 @@ boot never depends on an LLM server being up.
       that need actually arrives") — a `QThread`/`QRunnable` local to
       `modules/assistant`, not a change to `core/event_bus.py` or any
       other core service.
-- [ ] **5.3 Voice interface (STT/TTS + push-to-talk)** — core service
+- [x] **5.3 Voice interface (STT/TTS + push-to-talk)** — core service
       for speech-to-text and text-to-speech, plus a push-to-talk
       trigger abstraction: a real GPIO button interrupt in kiosk
       deployment per `docs/HARDWARE.md`, a keybinding/on-screen button
       in dev — same dev/prod split already established for
-      `kiosk_mode` fullscreen behavior. STT/TTS engine choice
-      (candidates: whisper.cpp/vosk for STT, piper/espeak for TTS) is
-      an open question, deliberately not decided as part of this
-      breakdown — revisit with real mic/speaker hardware in hand per
-      `docs/HARDWARE.md`'s "Open questions" section, not from a dev-only
-      guess.
+      `kiosk_mode` fullscreen behavior. STT/TTS engine choice: Vosk +
+      Piper (`core/voice_manager.py`) — decided ahead of real
+      mic/speaker hardware being in hand, at the user's request, since
+      both are offline/CPU-only and known to work on Pi-class hardware;
+      verified here with a real Piper->Vosk round trip (no hardware
+      needed for that part) and a real "no PortAudio" degrade check,
+      with live mic capture/playback itself only smoke-tested for
+      graceful degradation, not exercised for real. Exact mic/speaker
+      part choice remains open per `docs/HARDWARE.md`'s "Open
+      questions" section.
 - [ ] **5.4 Device-help grounding** — the Assistant answers "what does
       this do / how do I use this device" questions grounded in
       M.I.A.'s own docs (`docs/*.md`) and module metadata via

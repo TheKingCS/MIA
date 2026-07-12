@@ -73,6 +73,17 @@ which is reinstallable from the M.I.A. repo.
 - Pairs a basic USB or I2S microphone with the Pi 5's headphone jack or
   a small I2S DAC/amp for TTS output
 
+**STT/TTS engine (decided, docs/ROADMAP.md milestone 5.3):** Vosk
+(speech-to-text) + Piper (text-to-speech), both offline and CPU-only —
+see core/voice_manager.py's docstring for why over whisper.cpp/other
+alternatives. Requires the system `libportaudio2` package (via apt or
+equivalent) on the actual device for mic capture/playback
+(`sounddevice`'s Linux wheel does not bundle PortAudio, unlike its
+Windows/macOS wheels) — add this to the Pi image setup steps, since
+`deploy/install_kiosk.sh` deliberately doesn't install system packages.
+Model files themselves are fetched by `deploy/download_voice_models.sh`
+into `voice_models/` (gitignored).
+
 ## Boot & kiosk
 
 - Autologin + a systemd service launching M.I.A. directly in a minimal

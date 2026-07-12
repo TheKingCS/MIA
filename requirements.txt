@@ -21,5 +21,24 @@ cryptography>=42,<43
 # wheel" integration decisions). Has prebuilt wheels for aarch64 (Pi 5).
 libzim>=3.7,<4.0
 
+# Voice interface (core/voice_manager.py, v0.5 milestone 5.3) — offline
+# STT/TTS, no stdlib equivalent. Vosk (Kaldi-based) and Piper (ONNX-based,
+# developed by the Rhasspy project specifically targeting Raspberry Pi)
+# were chosen over heavier alternatives (e.g. whisper.cpp) because both
+# ship prebuilt aarch64 wheels and run on the Pi 5's CPU alone — the AI
+# HAT+2's Hailo NPU is an LLM/VLM runtime (hailo-ollama), not a general
+# STT/TTS accelerator, per docs/HARDWARE.md.
+vosk>=0.3.45,<0.4
+piper-tts>=1.4,<2.0
+
+# Mic capture / speaker playback for the Voice interface. Wraps the
+# system PortAudio library rather than bundling it on Linux — install
+# libportaudio2 via apt (or equivalent) on the target device; see
+# core/voice_manager.py's docstring. Not needed for STT/TTS themselves
+# (those work from/to .wav files with no audio hardware), only for live
+# push-to-talk recording and reply playback.
+sounddevice>=0.5,<0.6
+numpy>=1.26,<3.0
+
 # Testing
 pytest>=7.4

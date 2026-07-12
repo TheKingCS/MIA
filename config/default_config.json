@@ -20,6 +20,12 @@
         "model": "llama3.2",
         "timeout_seconds": 30
     },
+    "voice": {
+        "stt_model_path": "",
+        "tts_model_path": "",
+        "sample_rate": 16000,
+        "push_to_talk_gpio_pin": null
+    },
     "gui": {
         "theme": "dark_field",
         "window_width": 1100,

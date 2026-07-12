@@ -37,6 +37,7 @@ from core.notification_manager import NotificationManager
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.search_manager import SearchManager, SearchResult
+from core.voice_manager import VoiceManager
 from gui.lock_screen import LockScreen
 from gui.main_window import MainWindow
 from gui.profile_select import ProfileSelectScreen
@@ -69,6 +70,7 @@ class MIAApplication:
         self.context.inventory = InventoryManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
+        self.context.voice = VoiceManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()

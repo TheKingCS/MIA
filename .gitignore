@@ -25,6 +25,13 @@ logs/*
 reference_library/*
 !reference_library/.gitkeep
 
+# Voice interface models (Vosk STT + Piper TTS, docs/ROADMAP.md milestone
+# 5.3) — large binary model files, fetched by deploy/download_voice_models.sh
+# rather than committed. Same "not under data/" reasoning as the Reference
+# Library above.
+voice_models/*
+!voice_models/.gitkeep
+
 # --- Editors / OS ---
 .vscode/
 .idea/
