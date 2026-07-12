@@ -182,4 +182,12 @@ QCheckBox::indicator:disabled {
     border: 1px solid #2c3742;
     background-color: #10141a;
 }
+
+QPlainTextEdit#ChatLog {
+    background-color: #161b22;
+    border: 1px solid #232b34;
+    border-radius: 6px;
+    padding: 10px;
+    color: #d8e0e8;
+}
 """

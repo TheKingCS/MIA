@@ -309,7 +309,7 @@ boot never depends on an LLM server being up.
       hang at boot. No UI yet — a manual smoke test script or
       `tests/run_module.py`-style check is enough to prove it works
       against a real local Ollama instance.
-- [ ] **5.2 Assistant Chat UI** — upgrades the `modules/assistant`
+- [x] **5.2 Assistant Chat UI** — upgrades the `modules/assistant`
       placeholder to a real chat screen (scrollback + input box) wired
       to `AppContext.llm`. A blocking HTTP call on the GUI thread would
       freeze the UI for the duration of every reply, so this is the

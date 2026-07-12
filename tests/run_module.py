@@ -38,6 +38,7 @@ from core.config_manager import ConfigManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
+from core.llm_manager import LLMManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
@@ -64,6 +65,7 @@ def main() -> int:
     context.journal = JournalManager(context)
     context.inventory = InventoryManager(context)
     context.reference_library = ReferenceLibraryManager(context)
+    context.llm = LLMManager(context)
     context.search = SearchManager(context)
     manager = ModuleManager(context)
     manager.discover()
