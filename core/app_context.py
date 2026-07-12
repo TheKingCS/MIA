@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
+from core.assistant_actions import AssistantActionRegistry
 from core.calculator_engine import CalculatorEngine
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
@@ -69,6 +70,8 @@ class AppContext:
     power: Optional["PowerManager"] = field(default=None, repr=False)
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
-    # CalculatorEngine takes no AppContext dependency, so — unlike the
-    # services above — it can just be constructed directly here.
+    # CalculatorEngine/AssistantActionRegistry take no AppContext
+    # dependency, so — unlike the services above — they can just be
+    # constructed directly here.
     calculators: CalculatorEngine = field(default_factory=CalculatorEngine, repr=False)
+    assistant_actions: AssistantActionRegistry = field(default_factory=AssistantActionRegistry, repr=False)

@@ -90,6 +90,33 @@ def test_get_returns_none_for_unknown_id():
     assert manager.get("does_not_exist") is None
 
 
+def test_resolve_matches_exact_module_id():
+    manager = _build_manager()
+    assert manager.resolve("notes").module_id == "notes"
+
+
+def test_resolve_matches_module_id_case_insensitively():
+    manager = _build_manager()
+    assert manager.resolve("NOTES").module_id == "notes"
+
+
+def test_resolve_matches_display_name_case_insensitively():
+    manager = _build_manager()
+    assert manager.resolve("notes").display_name == "Notes"
+    assert manager.resolve("Notes").module_id == "notes"
+
+
+def test_resolve_returns_none_for_unknown_name():
+    manager = _build_manager()
+    assert manager.resolve("does_not_exist") is None
+
+
+def test_resolve_returns_none_for_blank_input():
+    manager = _build_manager()
+    assert manager.resolve("") is None
+    assert manager.resolve("   ") is None
+
+
 def test_all_returns_modules_sorted_by_display_name():
     manager = _build_manager()
     names = [m.display_name for m in manager.all()]

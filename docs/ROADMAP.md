@@ -359,7 +359,7 @@ boot never depends on an LLM server being up.
       actual docs/modules and a headless smoke test of the full chat
       flow confirming the LLM receives the grounded prompt while the
       chat log still shows the user's original question.
-- [ ] **5.5 Assistant tool use / action execution** — the Assistant
+- [x] **5.5 Assistant tool use / action execution** — the Assistant
       can perform ordinary app actions (open a module, add an alarm, a
       note, an inventory item), not just answer questions, via Ollama's
       structured tool-calling API (`/api/chat` + a `tools` schema).
@@ -390,7 +390,16 @@ boot never depends on an LLM server being up.
       clean textual answer, verified against the real Ollama server,
       not just a mocked test. Also bumped `llm.timeout_seconds`
       default 30 -> 60 after a real cold-model-load request exceeded
-      30s on this CPU-only dev machine.
+      30s on this CPU-only dev machine. Found and fixed a second real
+      issue the same way: the model naturally says a module's
+      human-readable name ("Notes") rather than its internal
+      snake_case `module_id` ("notes") when asked to open it — a
+      strict `ModuleManager.get()` lookup rejected a perfectly clear,
+      valid request. Fixed with `ModuleManager.resolve()`, a
+      case-insensitive fallback match on `module_id` or
+      `display_name`, verified end-to-end through the real
+      `MIAApplication`/`MainWindow` wiring (not a hand-copied test
+      double) with the live model.
 
 ## v0.6 breakdown (planned)
 

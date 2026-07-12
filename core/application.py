@@ -25,6 +25,7 @@ from PySide6.QtWidgets import QApplication
 
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
+from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
@@ -88,6 +89,7 @@ class MIAApplication:
         self.context.device_help.register_module_lister(self.module_manager.all)
         self._register_search_providers()
         self._register_calculators()
+        self._register_assistant_actions()
 
         self.splash: SplashScreen | None = None
         self.main_window: MainWindow | None = None
@@ -166,6 +168,114 @@ class MIAApplication:
 
         self.context.calculators.register(UnitConverterCalculator())
         self.context.calculators.register(OhmsLawCalculator())
+
+    def _register_assistant_actions(self) -> None:
+        """
+        Register the built-in actions the Assistant can invoke via
+        core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
+        milestone 5.5. Registered here (not in modules/assistant/) for
+        the same reason search providers and calculators are: this is
+        the one place independent core services get wired together,
+        and open_module's handler needs self.module_manager to
+        validate the target actually exists.
+        """
+        self.context.assistant_actions.register(AssistantAction(
+            name="open_module",
+            description="Open/navigate to a M.I.A. module by its module_id.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "module_id": {
+                        "type": "string",
+                        "description": "The module_id to open, e.g. 'notes', 'toolbox', 'settings'.",
+                    },
+                },
+                "required": ["module_id"],
+            },
+            handler=self._action_open_module,
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_alarm",
+            description="Create a new alarm in M.I.A.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "label": {"type": "string", "description": "A short name for the alarm."},
+                    "time": {"type": "string", "description": "Time in 24-hour HH:MM format, e.g. '07:00'."},
+                },
+                "required": ["label", "time"],
+            },
+            handler=self._action_add_alarm,
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_note",
+            description="Add a new journal/note entry in M.I.A.'s Notes module.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The note's title."},
+                    "body": {"type": "string", "description": "The note's body text."},
+                },
+                "required": ["title"],
+            },
+            handler=self._action_add_note,
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_inventory_item",
+            description="Add a new item to M.I.A.'s general Inventory tool.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The item's name."},
+                    "quantity": {"type": "integer", "description": "How many to add."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_inventory_item,
+        ))
+
+    def _action_open_module(self, context: AppContext, arguments: dict) -> str:
+        requested = str(arguments.get("module_id", "")).strip()
+        module = self.module_manager.resolve(requested)
+        if module is None:
+            return f"There's no module called '{requested}'."
+        # Published rather than calling MainWindow directly — this
+        # handler can be invoked from any thread the LLM's reply
+        # arrives on (see modules/assistant/module.py's docstring), and
+        # MainWindow (a Qt widget) must only ever be touched from the
+        # GUI thread.
+        context.events.publish("assistant.open_module_requested", module_id=module.module_id)
+        return f"Opening {module.display_name}."
+
+    @staticmethod
+    def _action_add_alarm(context: AppContext, arguments: dict) -> str:
+        label = str(arguments.get("label", "") or "Alarm").strip() or "Alarm"
+        time_str = str(arguments.get("time", "")).strip()
+        if not time_str:
+            return "I need a time (HH:MM) to set an alarm."
+        alarm = context.alarms.add_alarm(label=label, time=time_str)
+        return f"Alarm '{alarm.label}' set for {alarm.time}."
+
+    @staticmethod
+    def _action_add_note(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a title to add a note."
+        body = str(arguments.get("body", ""))
+        entry = context.journal.add_entry(title=title, body=body)
+        return f"Note '{entry.title}' added."
+
+    @staticmethod
+    def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need an item name to add to inventory."
+        try:
+            quantity = int(arguments.get("quantity", 0) or 0)
+        except (TypeError, ValueError):
+            quantity = 0
+        item = context.inventory.add_item(name=name, quantity=quantity)
+        return f"Added {item.quantity}x '{item.name}' to inventory."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

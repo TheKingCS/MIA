@@ -22,6 +22,22 @@ failure or missing model crash the caller. Every public method here
 catches `LLMUnavailableError` and returns None/False, logging instead.
 Same defensive-degrade pattern as a missing/corrupt `.zim` pack in
 core/reference_library_manager.py.
+
+`chat_with_tools()` (docs/ROADMAP.md milestone 5.5) is the tool-calling
+half — Ollama's `/api/chat` endpoint, not `/api/generate` — used by
+core/assistant_actions.py's action registry so the Assistant can
+perform ordinary app actions, not just answer questions. Verified
+against the real Ollama server (llama3.2:3b) that this model sometimes
+emits a malformed tool-call-shaped JSON string as plain `content`
+instead of either calling a tool or answering normally, when tools are
+available but the query doesn't actually need one —
+`_looks_like_malformed_tool_call()` detects this and `chat_with_tools()`
+retries once without tools to get a clean textual answer instead.
+
+`_DEFAULT_TIMEOUT_SECONDS` was bumped 30 -> 60 after a real cold
+model-load request (first request after the model goes idle) exceeded
+30s on this CPU-only dev machine — worth remembering if the Assistant
+seems to "hang" right after Ollama restarts or an idle period.
 """
 
 from __future__ import annotations
@@ -29,6 +45,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from dataclasses import dataclass, field
 from typing import Optional, Protocol
 
 from core.app_context import AppContext
@@ -38,11 +55,23 @@ log = get_logger(__name__)
 
 _DEFAULT_BASE_URL = "http://localhost:11434"
 _DEFAULT_MODEL = "llama3.2"
-_DEFAULT_TIMEOUT_SECONDS = 30.0
+_DEFAULT_TIMEOUT_SECONDS = 60.0
 
 
 class LLMUnavailableError(RuntimeError):
     """Raised by a backend when the LLM server can't be reached or errors."""
+
+
+@dataclass
+class ToolCall:
+    name: str
+    arguments: dict
+
+
+@dataclass
+class ChatReply:
+    content: str
+    tool_calls: list[ToolCall] = field(default_factory=list)
 
 
 class LLMBackend(Protocol):
@@ -50,6 +79,10 @@ class LLMBackend(Protocol):
 
     def generate(self, prompt: str, timeout: float) -> str:
         """Return the model's full reply, or raise LLMUnavailableError."""
+        ...
+
+    def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
+        """Return a ChatReply (content and/or tool_calls), or raise LLMUnavailableError."""
         ...
 
     def is_available(self, timeout: float) -> bool:
@@ -91,6 +124,43 @@ class OllamaBackend:
         except KeyError as exc:
             raise LLMUnavailableError(f"Ollama response missing 'response' field: {body}") from exc
 
+    def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
+        payload_dict = {
+            "model": self._model,
+            "messages": messages,
+            "stream": False,
+        }
+        if tools:
+            payload_dict["tools"] = tools
+        payload = json.dumps(payload_dict).encode("utf-8")
+
+        request = urllib.request.Request(
+            f"{self._base_url}/api/chat",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                body = json.loads(response.read().decode("utf-8"))
+        except (urllib.error.URLError, OSError) as exc:
+            raise LLMUnavailableError(f"Could not reach Ollama at {self._base_url}: {exc}") from exc
+        except json.JSONDecodeError as exc:
+            raise LLMUnavailableError(f"Ollama returned malformed JSON: {exc}") from exc
+
+        if "error" in body:
+            raise LLMUnavailableError(f"Ollama returned an error: {body['error']}")
+        try:
+            message = body["message"]
+        except KeyError as exc:
+            raise LLMUnavailableError(f"Ollama response missing 'message' field: {body}") from exc
+
+        tool_calls = [
+            ToolCall(name=call["function"]["name"], arguments=call["function"].get("arguments", {}))
+            for call in message.get("tool_calls", []) or []
+        ]
+        return ChatReply(content=message.get("content", ""), tool_calls=tool_calls)
+
     def is_available(self, timeout: float) -> bool:
         request = urllib.request.Request(f"{self._base_url}/api/tags", method="GET")
         try:
@@ -127,3 +197,37 @@ class LLMManager:
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
             return None
+
+    def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> Optional[ChatReply]:
+        """
+        Return a ChatReply (content and/or tool_calls), or None (logged)
+        if the backend can't be reached. See this module's docstring
+        for why a malformed tool-call-shaped `content` triggers one
+        retry without tools.
+        """
+        try:
+            reply = self._backend.chat(messages, tools, timeout=self._timeout)
+        except LLMUnavailableError as exc:
+            log.warning("Assistant unavailable: %s", exc)
+            return None
+
+        if not reply.tool_calls and _looks_like_malformed_tool_call(reply.content):
+            log.info("Model emitted a malformed tool-call-shaped response; retrying without tools.")
+            try:
+                reply = self._backend.chat(messages, tools=[], timeout=self._timeout)
+            except LLMUnavailableError as exc:
+                log.warning("Assistant unavailable on retry: %s", exc)
+                return None
+        return reply
+
+
+def _looks_like_malformed_tool_call(content: str) -> bool:
+    """True if `content` looks like a hallucinated tool-call JSON blob rather than a real answer."""
+    content = content.strip()
+    if not content.startswith("{"):
+        return False
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        return False
+    return isinstance(parsed, dict) and "name" in parsed

@@ -17,7 +17,7 @@ import urllib.error
 import pytest
 
 from core.app_context import AppContext
-from core.llm_manager import LLMManager, LLMUnavailableError, OllamaBackend
+from core.llm_manager import ChatReply, LLMManager, LLMUnavailableError, OllamaBackend, ToolCall
 
 
 class _FakeConfig:
@@ -127,3 +127,101 @@ def test_ollama_backend_raises_llm_unavailable_on_connection_error(monkeypatch):
 
     with pytest.raises(LLMUnavailableError):
         backend.generate("hi", timeout=5.0)
+
+
+# ----------------------------------------------------------------------
+# chat_with_tools / ToolCall / ChatReply
+# ----------------------------------------------------------------------
+
+def test_chat_with_tools_returns_plain_content_when_no_tool_called(monkeypatch):
+    def fake_urlopen(request, timeout):
+        return _FakeResponse(json.dumps({"message": {"role": "assistant", "content": "hello there"}}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    reply = manager.chat_with_tools([{"role": "user", "content": "hi"}], tools=[])
+    assert reply == ChatReply(content="hello there", tool_calls=[])
+
+
+def test_chat_with_tools_parses_tool_calls(monkeypatch):
+    def fake_urlopen(request, timeout):
+        body = {
+            "message": {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {"function": {"name": "add_alarm", "arguments": {"label": "Wake Up", "time": "07:00"}}}
+                ],
+            }
+        }
+        return _FakeResponse(json.dumps(body).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    reply = manager.chat_with_tools([{"role": "user", "content": "set an alarm"}], tools=[{"type": "function"}])
+    assert reply.tool_calls == [ToolCall(name="add_alarm", arguments={"label": "Wake Up", "time": "07:00"})]
+
+
+def test_chat_with_tools_returns_none_when_server_unreachable(monkeypatch):
+    def fake_urlopen(request, timeout):
+        raise urllib.error.URLError("connection refused")
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    assert manager.chat_with_tools([{"role": "user", "content": "hi"}], tools=[]) is None
+
+
+def test_chat_with_tools_retries_without_tools_on_malformed_content(monkeypatch):
+    """
+    Regression test: verified against the real Ollama server that
+    llama3.2:3b sometimes emits a malformed tool-call-shaped JSON
+    string as plain `content` instead of answering normally when tools
+    are available but unneeded — chat_with_tools() must retry once
+    without tools to recover a clean answer.
+    """
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        payload = json.loads(request.data.decode("utf-8"))
+        calls.append(payload)
+        if payload.get("tools"):
+            return _FakeResponse(
+                json.dumps({"message": {"role": "assistant", "content": '{"name": "notes", "parameters": {}}'}}).encode(
+                    "utf-8"
+                )
+            )
+        return _FakeResponse(json.dumps({"message": {"role": "assistant", "content": "Notes stores journal entries."}}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    reply = manager.chat_with_tools([{"role": "user", "content": "what does notes do"}], tools=[{"type": "function"}])
+
+    assert reply.content == "Notes stores journal entries."
+    assert len(calls) == 2
+    assert "tools" in calls[0]
+    assert "tools" not in calls[1]
+
+
+def test_chat_with_tools_does_not_retry_when_content_is_normal_prose(monkeypatch):
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        calls.append(1)
+        return _FakeResponse(json.dumps({"message": {"role": "assistant", "content": "Just a normal answer."}}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    reply = manager.chat_with_tools([{"role": "user", "content": "hi"}], tools=[{"type": "function"}])
+
+    assert reply.content == "Just a normal answer."
+    assert len(calls) == 1
+
+
+def test_chat_with_tools_does_not_retry_when_json_content_has_no_name_key(monkeypatch):
+    """A JSON-shaped answer without a "name" key isn't a hallucinated tool call — don't retry."""
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        calls.append(1)
+        return _FakeResponse(json.dumps({"message": {"role": "assistant", "content": '{"result": 42}'}}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    reply = manager.chat_with_tools([{"role": "user", "content": "hi"}], tools=[{"type": "function"}])
+
+    assert reply.content == '{"result": 42}'
+    assert len(calls) == 1

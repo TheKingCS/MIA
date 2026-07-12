@@ -3,24 +3,37 @@ modules.assistant.module
 =========================
 
 Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3
-(voice), and 5.4 (device-help grounding). A chat screen (scrollback +
-input box) wired to `AppContext.llm` (core/llm_manager.py), plus a
-push-to-talk "Hold to Talk" button wired to `AppContext.voice`
-(core/voice_manager.py) for speech in, speech out.
+(voice), 5.4 (device-help grounding), and 5.5 (tool use / action
+execution). A chat screen (scrollback + input box) wired to
+`AppContext.llm` (core/llm_manager.py), plus a push-to-talk "Hold to
+Talk" button wired to `AppContext.voice` (core/voice_manager.py) for
+speech in, speech out.
 
 Every prompt is run through `AppContext.device_help.build_grounded_prompt()`
 (core/device_help_manager.py) before it reaches the LLM — the actual text
-sent to `LLMWorker` is the retrieval-grounded version (M.I.A.'s own docs +
-module metadata as context), not the user's raw words, though the chat
-log still displays what the user actually typed/said. This is
+sent as the chat message is the retrieval-grounded version (M.I.A.'s own
+docs + module metadata as context), not the user's raw words, though the
+chat log still displays what the user actually typed/said. This is
 deliberate scope, not an accident: docs/HARDWARE.md's hardware note
 says the realistic on-device model size (1-7B params) should be aimed
-at "device help, structured Q&A" rather than open-ended conversation,
-and grounding is milestone 5.4's explicit job.
+at "device help, structured Q&A" rather than open-ended conversation.
+
+Every prompt is also sent with `AppContext.assistant_actions`
+(core/assistant_actions.py)'s registered tools attached, so the model
+can choose to perform an action (open a module, add an alarm/note/
+inventory item) instead of just answering. Tool calls are executed
+here, in `_on_reply()` — which Qt's queued-connection signal delivery
+guarantees runs on the GUI thread (see `ChatWorker`'s docstring) — not
+inside the worker thread, since an action like `open_module` needs to
+touch the GUI. This is **not** the Self-Modification / Dev Mode staged
+plan in docs/ROADMAP.md (that's specifically about the assistant
+editing M.I.A.'s own source code); these are just ordinary app actions
+a user could already do by hand.
 
 Two blocking operations each get their own scoped `QThread` rather than
 running on the GUI thread:
-  - `context.llm.generate()` runs on `modules.assistant.llm_worker.LLMWorker`.
+  - `context.llm.chat_with_tools()` runs on
+    `modules.assistant.llm_worker.ChatWorker`.
   - `context.voice.synthesize()` + `.play()` run on
     `modules.assistant.tts_worker.TTSWorker` (playback duration scales
     with reply length).
@@ -33,9 +46,9 @@ that.
 Only one LLM reply can be in flight at a time; input/send/mic are
 disabled for that duration and re-enabled in `_on_worker_finished`,
 which always runs (success or "unavailable"), so the UI can never get
-stuck disabled. `context.llm.generate()` / `context.voice.*` returning
-`None`/`False` means the backend logged a warning and couldn't be
-reached — surfaced here as a status line, never a crash.
+stuck disabled. `context.llm.chat_with_tools()` / `context.voice.*`
+returning `None`/`False` means the backend logged a warning and
+couldn't be reached — surfaced here as a status line, never a crash.
 
 Push-to-talk itself can be triggered two ways, unified by
 `core.push_to_talk_trigger.PushToTalkTrigger`: the on-screen "Hold to
@@ -61,8 +74,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.llm_manager import ChatReply
 from core.push_to_talk_trigger import PushToTalkTrigger
-from modules.assistant.llm_worker import LLMWorker
+from modules.assistant.llm_worker import ChatWorker
 from modules.assistant.tts_worker import TTSWorker
 from modules.module_base import ModuleBase
 
@@ -89,7 +103,7 @@ class AssistantModule(ModuleBase):
         self._send_button: Optional[QPushButton] = None
         self._talk_button: Optional[QPushButton] = None
         self._status_label: Optional[QLabel] = None
-        self._worker: Optional[LLMWorker] = None
+        self._worker: Optional[ChatWorker] = None
         self._tts_worker: Optional[TTSWorker] = None
         self._ptt_trigger: Optional[PushToTalkTrigger] = None
         self._recording = False
@@ -172,18 +186,35 @@ class AssistantModule(ModuleBase):
         if self.context.device_help is not None:
             llm_prompt = self.context.device_help.build_grounded_prompt(prompt)
 
-        self._worker = LLMWorker(self.context.llm, llm_prompt)
+        messages = [{"role": "user", "content": llm_prompt}]
+        tools = self.context.assistant_actions.to_ollama_tools() if self.context.assistant_actions else []
+
+        self._worker = ChatWorker(self.context.llm, messages, tools)
         self._worker.result_ready.connect(self._on_reply)
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()
 
-    def _on_reply(self, reply: Optional[str]) -> None:
+    def _on_reply(self, reply: Optional[ChatReply]) -> None:
         if reply is None:
             self._status_label.setText(_LLM_UNAVAILABLE_STATUS)
-        else:
-            self._log.appendPlainText(format_chat_line(self.display_name, reply))
+            return
+
+        if reply.tool_calls:
+            # Executed here, not inside ChatWorker — see this module's
+            # docstring and ChatWorker's for why tool execution needs
+            # the GUI thread.
+            for tool_call in reply.tool_calls:
+                confirmation = self.context.assistant_actions.execute(
+                    self.context, tool_call.name, tool_call.arguments
+                )
+                self._log.appendPlainText(format_chat_line(self.display_name, confirmation))
+                self._speak(confirmation)
             self._status_label.setText("")
-            self._speak(reply)
+            return
+
+        self._log.appendPlainText(format_chat_line(self.display_name, reply.content))
+        self._status_label.setText("")
+        self._speak(reply.content)
 
     def _on_worker_finished(self) -> None:
         self._set_busy(False)

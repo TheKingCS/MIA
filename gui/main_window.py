@@ -118,9 +118,18 @@ class MainWindow(QMainWindow):
         """
         self.context.events.subscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.subscribe("modules.rescanned", self._on_modules_changed)
+        # docs/ROADMAP.md milestone 5.5 — the Assistant's "open_module"
+        # action (core/application.py's _action_open_module) publishes
+        # this rather than ever touching MainWindow directly, since a
+        # Qt widget must only be touched from the GUI thread and the
+        # action handler can't assume it's already on it.
+        self.context.events.subscribe("assistant.open_module_requested", self._on_assistant_open_module_requested)
 
     def _on_modules_changed(self, **kwargs) -> None:
         self._rebuild_menu()
+
+    def _on_assistant_open_module_requested(self, module_id: str) -> None:
+        self.open_module(module_id)
 
     def _rebuild_menu(self) -> None:
         """Rebuild the main menu grid in place, preserving which screen is currently visible."""
@@ -179,6 +188,9 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
+        self.context.events.unsubscribe(
+            "assistant.open_module_requested", self._on_assistant_open_module_requested
+        )
         if self._character_panel is not None:
             self._character_panel.unsubscribe()
         super().closeEvent(event)

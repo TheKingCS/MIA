@@ -121,6 +121,28 @@ class ModuleManager:
     def get(self, module_id: str) -> ModuleBase | None:
         return self._modules.get(module_id)
 
+    def resolve(self, requested: str) -> ModuleBase | None:
+        """
+        Like get(), but falls back to a case-insensitive match on
+        module_id or display_name if the exact module_id lookup misses.
+        Added for docs/ROADMAP.md milestone 5.5's `open_module` assistant
+        action — verified against a real Ollama server that the model
+        naturally tends to say the human-readable name ("Notes") rather
+        than the internal snake_case module_id ("notes"), so a strict
+        get() rejected a perfectly clear, valid request.
+        """
+        exact = self.get(requested)
+        if exact is not None:
+            return exact
+
+        requested_lower = requested.strip().lower()
+        if not requested_lower:
+            return None
+        for module in self._modules.values():
+            if module.module_id.lower() == requested_lower or module.display_name.lower() == requested_lower:
+                return module
+        return None
+
     def all(self) -> list[ModuleBase]:
         """Return all discovered modules, sorted by display name for stable menu order."""
         return sorted(self._modules.values(), key=lambda m: m.display_name)
