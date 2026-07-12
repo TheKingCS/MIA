@@ -18,7 +18,17 @@ modules/toolbox/module.py's QStackedWidget + cache-built-pages pattern
 the same reasoning: reopening a pack shouldn't rebuild its reader or
 lose its scroll position/history.
 
-Not wired into Global Search yet — that's milestone 4.3.
+Registers a Global Search provider in on_load() (docs/ROADMAP.md
+milestone 4.3), same action_type="open_module" pattern as
+modules/notes/module.py — landing on the pack list rather than the
+exact matched article, for the same reason Notes' own docstring gives
+(a deep-link would need a new action_type and a gui/main_window.py
+branch; not worth it for this milestone). Unlike Notes, this provider
+deliberately caps its own result count: gui/search_dialog.py renders
+every SearchResult from every provider with no cap of its own, and a
+single installed pack can have hundreds of thousands of articles —
+without a per-pack and total cap here, one keystroke in Ctrl+K could
+try to build hundreds of result rows.
 """
 
 from __future__ import annotations
@@ -41,8 +51,14 @@ from PySide6.QtWidgets import (
 )
 
 from core.reference_library_manager import ReferencePack
+from core.search_manager import SearchResult
 from modules.knowledge.zim_text_browser import ZimTextBrowser
 from modules.module_base import ModuleBase
+
+# Per-pack and total caps for the Global Search provider — see the
+# module docstring for why these exist at all.
+_SEARCH_HITS_PER_PACK = 3
+_SEARCH_RESULTS_TOTAL = 15
 
 
 class KnowledgeModule(ModuleBase):
@@ -57,6 +73,26 @@ class KnowledgeModule(ModuleBase):
         self._list_page: Optional[QWidget] = None
         self._pack_list_layout: Optional[QVBoxLayout] = None
         self._pack_pages: dict[str, QWidget] = {}
+
+    def on_load(self) -> None:
+        super().on_load()
+        self.context.search.register_provider("knowledge", self._search)
+
+    def _search(self, query: str) -> list[SearchResult]:
+        results = []
+        for pack in self.context.reference_library.list_packs():
+            hits = self.context.reference_library.search(pack.pack_id, query, limit=_SEARCH_HITS_PER_PACK)
+            for hit in hits:
+                results.append(SearchResult(
+                    title=hit.title,
+                    description=pack.title,
+                    source=self.display_name,
+                    action_type="open_module",
+                    action_target=self.module_id,
+                ))
+            if len(results) >= _SEARCH_RESULTS_TOTAL:
+                break
+        return results[:_SEARCH_RESULTS_TOTAL]
 
     def get_widget(self) -> QWidget:
         self._stack = QStackedWidget()

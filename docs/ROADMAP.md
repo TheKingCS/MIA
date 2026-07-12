@@ -260,9 +260,13 @@ must-have content pack turns out to need it.
       Toolbox modules through it already crashed on `on_load()`/
       `get_widget()` before this milestone touched it) — needed to
       actually dev-loop on this module's widget.
-- [ ] **4.3 Global Search integration** — the Knowledge module
+- [x] **4.3 Global Search integration** — the Knowledge module
       registers a search provider (per `docs/ADDING_MODULES.md`'s
-      pattern) so ZIM content is reachable from Ctrl+K, same as Notes.
+      pattern) so ZIM content is reachable from Ctrl+K, same
+      `action_type="open_module"` pattern as Notes. Deliberately caps
+      results (3 hits/pack, 15 total) — `gui/search_dialog.py` renders
+      every result from every provider with no cap of its own, and a
+      single installed pack can have hundreds of thousands of articles.
 - [ ] **4.4 Install content pack** — a UI flow to point at a `.zim`
       file and add it to the library, validated the same way
       `core/module_validator.py` gates module installs before
