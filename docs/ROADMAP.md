@@ -214,3 +214,41 @@ same pattern as v0.2:
       filesystem-wide search has real scope questions (how deep to
       recurse, which drives) worth designing deliberately rather than
       bolting on here.
+
+## v0.4 breakdown (in progress)
+
+Reference Library engine (Kiwix ZIM integration), same
+small-independently-testable-milestone pattern as v0.2/v0.3. Renderer
+decision: article HTML is shown in a plain `QTextBrowser` (ships with
+PySide6 already, no JS) rather than `QtWebEngine` (full Chromium) — a
+deliberate call to keep `requirements.txt` light and stay inside the
+Pi 5 resource budget per this doc's design principles, at the cost of
+imperfect fidelity on JS-heavy ZIM content. Revisit only if a
+must-have content pack turns out to need it.
+
+- [x] **4.1 ZIM engine core service** — `core/reference_library_manager.py`
+      (`AppContext.reference_library`) wraps the `libzim` package
+      (confirmed prebuilt aarch64 wheels exist, so it's safe for Pi 5).
+      Discovers `.zim` files in a configurable library folder
+      (`reference_library.root_path` config key, defaults to
+      `reference_library/` at the repo root — deliberately a sibling
+      of `data/`, not inside it, so `core/backup_manager.py`'s
+      full-`data/`-directory backup never tries to sweep multi-gigabyte
+      content packs into a config/data backup; per `docs/HARDWARE.md`
+      a real deployment points this at the separately-mounted bulk USB
+      SSD instead, not the boot microSD). A broken/corrupt `.zim` is
+      logged and skipped, never crashes the app — same defensive
+      pattern as `ModuleManager`'s broken-module handling. Exposes
+      pack discovery, main-page/entry content retrieval (for both
+      articles and inline resources like images), and in-pack search.
+      No UI yet — that's 4.2.
+- [ ] **4.2 Reference Library UI** — upgrades the `knowledge` module
+      placeholder: a pack list, a `QTextBrowser` article viewer wired
+      to resolve ZIM-internal resource paths, and an in-pack search box.
+- [ ] **4.3 Global Search integration** — the Knowledge module
+      registers a search provider (per `docs/ADDING_MODULES.md`'s
+      pattern) so ZIM content is reachable from Ctrl+K, same as Notes.
+- [ ] **4.4 Install content pack** — a UI flow to point at a `.zim`
+      file and add it to the library, validated the same way
+      `core/module_validator.py` gates module installs before
+      anything is copied in.

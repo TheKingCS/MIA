@@ -16,6 +16,15 @@ data/*
 logs/*
 !logs/.gitkeep
 
+# Reference Library content packs (.zim files) — deliberately NOT under
+# data/, so core/backup_manager.py's data/ rglob never tries to sweep
+# multi-gigabyte content packs into a config/data backup. See
+# docs/HARDWARE.md's storage-split reasoning and docs/ROADMAP.md
+# milestone 4.1. Default dev location only; a real deployment points
+# reference_library.root_path at the separately-mounted bulk USB SSD.
+reference_library/*
+!reference_library/.gitkeep
+
 # --- Editors / OS ---
 .vscode/
 .idea/

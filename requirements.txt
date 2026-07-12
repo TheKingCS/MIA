@@ -14,5 +14,12 @@ PySide6>=6.6,<7.0
 # to "keep this list minimal." Has prebuilt wheels for aarch64 (Pi 5).
 cryptography>=42,<43
 
+# Reference Library engine (core/reference_library_manager.py, v0.4
+# milestone 4.1) — Kiwix's own Python bindings for reading .zim files.
+# No equivalent exists in the stdlib and the ZIM format is intentionally
+# not reimplemented here (see docs/ROADMAP.md's "don't reinvent the
+# wheel" integration decisions). Has prebuilt wheels for aarch64 (Pi 5).
+libzim>=3.7,<4.0
+
 # Testing
 pytest>=7.4

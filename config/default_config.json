@@ -12,6 +12,9 @@
     "modules": {
         "disabled": []
     },
+    "reference_library": {
+        "root_path": ""
+    },
     "gui": {
         "theme": "dark_field",
         "window_width": 1100,

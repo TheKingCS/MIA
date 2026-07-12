@@ -34,6 +34,7 @@ from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.profile_manager import ProfileManager
+from core.reference_library_manager import ReferenceLibraryManager
 from core.search_manager import SearchManager, SearchResult
 from gui.lock_screen import LockScreen
 from gui.main_window import MainWindow
@@ -65,6 +66,7 @@ class MIAApplication:
         self.context.alarms = AlarmManager(self.context)
         self.context.journal = JournalManager(self.context)
         self.context.inventory = InventoryManager(self.context)
+        self.context.reference_library = ReferenceLibraryManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self._register_search_providers()
