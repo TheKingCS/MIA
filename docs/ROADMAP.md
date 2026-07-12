@@ -422,6 +422,73 @@ boot never depends on an LLM server being up.
       (numeric-looking config values become a real int). Verified by
       force-unloading the model against the real server and confirming
       the next request no longer cold-loads.
+- [x] **5.6 Assistant + Reference Library grounding** — the Assistant's
+      grounding (5.4) previously only ever searched `docs/*.md`
+      (M.I.A.'s own self-documentation), completely separate from the
+      actual Reference Library content (Wikipedia/iFixit/Wikibooks/
+      Appropedia packs) the Knowledge module manages — asked at the
+      user's request, after using the app in practice: "I want to be
+      able to ask the assistant about anything that may be in the
+      knowledge base and it be able to access it." `core/reference
+      _library_manager.py` gains `search_all_packs()` (fans a query out
+      across every installed pack's own full-text search, using
+      libzim's relevance ranking as-is rather than re-scoring, and
+      reduces each hit to a short plain-text snippet via a small
+      stdlib-only `HTMLParser` subclass — deliberately not a full HTML
+      renderer, that's `modules/knowledge/zim_text_browser.py`'s job).
+      `core/device_help_manager.py` gains `register_reference_library()`
+      (same registration-callback shape as `register_module_lister()`)
+      and `build_grounded_prompt()` now blends reference-library
+      snippets in alongside `docs/*.md`/module chunks.
+
+      This milestone took much more real-model iteration than any
+      previous one — five distinct, genuine bugs found only by testing
+      against the real installed packs and the live model, not mocks:
+      1. **Corrupt data**: `wikibooks_en_all_nopic_2026-04.zim` failed
+         to open (libzim: "Zim file(s) is of bad size or corrupted") —
+         re-downloaded from `download.kiwix.org` (truncated at roughly
+         half its real 3.5GB size) and verified openable before
+         replacing the broken copy.
+      2. **Cross-pack crowding**: `search_all_packs()` originally
+         stopped as soon as it hit its total limit, so an alphabetically
+         early pack's several weak hits could crowd out a later pack's
+         single much-more-relevant hit ("hypothermia symptoms" got
+         Appropedia's general cold-weather article, never even reaching
+         WikiMed's actual "Hypothermia" article). Fixed: one hit per
+         pack, every pack tried before capping the total.
+      3. **Un-stripped queries confuse libzim's own ranking**: passing
+         the raw question ("What are the symptoms of hypothermia?")
+         instead of stopword-stripped keywords ("symptoms hypothermia")
+         made libzim's full-text search rank an unrelated article
+         first ("Pulseless electrical activity") — filler words diluted
+         its relevance scoring. Fixed by reusing `_query_words()`.
+      4. **Dilution from low-relevance results**: even with (2)/(3)
+         fixed, a query with a strong, confident match (e.g. a module
+         named directly, scoring >= `_MODULE_NAME_MATCH_BONUS`) got
+         "I don't know" once several more tangentially-matching
+         chunks/snippets were piled on alongside the one correct
+         chunk — despite the model's own reasoning quoting the correct
+         text verbatim. Fixed: a confident match now includes only
+         that one chunk and skips Reference Library entirely, rather
+         than always filling out to `limit`.
+      5. **Sampling variance**: the exact same prompt, byte-for-byte,
+         gave a correct answer on one live call and "I don't know" on
+         another — Ollama's default temperature isn't 0. Fixed:
+         `core/llm_manager.py` now sends `options.temperature: 0` by
+         default (config `llm.temperature`) for deterministic,
+         repeatable grounding/tool-calling answers, verified directly
+         against the server that this stabilized the flip-flopping.
+      Also found the module-metadata chunk template itself mattered:
+      changed from a bare `"## {name}"` heading to explicitly saying
+      `"The {name} module: {description}"` in the body text — the
+      small model reliably needed the literal word "module" tied to
+      the name in the passage, not just implied by a heading/label.
+
+      Verified end-to-end with real questions whose answers only exist
+      in Reference Library content (not `docs/*.md`), a real
+      device-help question, and a real out-of-scope question (correctly
+      declined, no hallucination) — all against the live Ollama server,
+      not mocks.
 
 ## v0.6 breakdown (planned)
 

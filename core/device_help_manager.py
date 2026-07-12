@@ -24,6 +24,18 @@ registration-callback shape as core/search_manager.py's
 `register_provider`, so this module doesn't need to know about module
 internals. core/application.py wires the real `ModuleManager.all` in,
 mirroring its own `_register_search_providers`.
+
+`register_reference_library()` (docs/ROADMAP.md milestone 5.6, added
+at the user's request after using the app) is the same shape again:
+`build_grounded_prompt()` blends in short plain-text snippets from
+`core/reference_library_manager.py`'s `search_all_packs()` — the
+actual installed Reference Library content (Wikipedia/iFixit/
+Wikibooks/etc.), not just this app's own `docs/*.md`. Unlike the
+`docs/*.md` retrieval above, reference-library hits are NOT re-scored
+by `score_chunk()` — libzim's own full-text search relevance ranking
+is used as-is, since it's a real information-retrieval engine and this
+module's crude keyword-overlap heuristic would only make ranking
+worse, not better, for that content.
 """
 
 from __future__ import annotations
@@ -59,11 +71,28 @@ _STOPWORDS = {
 _MODULE_NAME_MATCH_BONUS = 10
 
 _SYSTEM_PREAMBLE = (
-    "You are M.I.A.'s built-in device-help assistant. Answer the user's "
-    "question using ONLY the reference material below. If the answer "
-    "isn't contained in it, say you don't know rather than guessing — "
-    "do not use outside knowledge."
+    "You are M.I.A.'s built-in assistant. Answer the user's question using "
+    "ONLY the reference material below. If the answer isn't contained in "
+    "it, say you don't know rather than guessing — do not use outside "
+    "knowledge."
 )
+# A longer version of this preamble (explicitly describing the material as
+# possibly including "reference library... encyclopedia articles, repair/
+# how-to guides") was tried first and found, via real testing against the
+# live model, to make llama3.2:3b MORE likely to falsely say "I don't
+# know" even when the answer was clearly present in a single short
+# reference chunk — some extra qualifying clause about what "counts"
+# seems to make this small model more conservative, not more capable.
+# Keep this preamble short; if it needs editing again, re-verify against
+# the real model with a case like "what does the notes module do" before
+# assuming a wording tweak is harmless.
+
+# One hit per installed pack (search_all_packs()'s own shape), capped
+# high enough to comfortably cover every pack a real device has
+# installed (a handful in practice) rather than tuned as a performance
+# knob — see that method's docstring for the real crowding bug this
+# avoids.
+_REFERENCE_LIBRARY_SNIPPET_LIMIT = 10
 
 
 @dataclass
@@ -136,10 +165,15 @@ class DeviceHelpManager:
         self.context = context
         self._doc_chunks: Optional[list[HelpChunk]] = None
         self._module_lister: Optional[Callable[[], list]] = None
+        self._reference_library = None
 
     def register_module_lister(self, lister: Callable[[], list]) -> None:
         """`lister` returns the currently discovered modules (duck-typed: needs .display_name/.description)."""
         self._module_lister = lister
+
+    def register_reference_library(self, reference_library) -> None:
+        """`reference_library` is a core.reference_library_manager.ReferenceLibraryManager (duck-typed: needs .search_all_packs())."""
+        self._reference_library = reference_library
 
     def _ensure_docs_loaded(self) -> None:
         """Reading a handful of small markdown files is cheap — unlike core/voice_manager.py's
@@ -171,12 +205,22 @@ class DeviceHelpManager:
 
         chunks = []
         for module in modules:
-            text = f"## {module.display_name}\n{module.description}"
+            # Explicitly says "The <Name> module" in the body text, not
+            # just a "## <Name>" heading — verified against the live
+            # model that this matters a lot: llama3.2:3b reliably
+            # answered "what does the notes module do" once the chunk
+            # literally said "The Notes module: ...", but said "I don't
+            # know" for the exact same information under a bare "##
+            # Notes" heading (with or without the strict "say you don't
+            # know" instruction, so it wasn't the instruction wording —
+            # the model needed the literal word "module" connected to
+            # the name in the passage itself, not just implied.
+            text = f"The {module.display_name} module: {module.description}"
             chunks.append(HelpChunk(source=f"Module: {module.display_name}", heading=module.display_name, text=text))
         return chunks
 
-    def retrieve(self, query: str, limit: int = 5) -> list[HelpChunk]:
-        """Return the top `limit` chunks (docs + module metadata) ranked by keyword overlap with `query`."""
+    def _scored_doc_and_module_chunks(self, query: str) -> list[tuple[int, HelpChunk]]:
+        """(score, chunk) pairs for docs/*.md + module metadata only (not Reference Library), sorted descending."""
         query = query.strip()
         if not query:
             return []
@@ -206,22 +250,83 @@ class DeviceHelpManager:
 
         scored = [(score, chunk) for score, chunk in scored if score > 0]
         scored.sort(key=lambda pair: pair[0], reverse=True)
-        return [chunk for _, chunk in scored[:limit]]
+        return scored
+
+    def retrieve(self, query: str, limit: int = 5) -> list[HelpChunk]:
+        """Return the top `limit` chunks (docs + module metadata) ranked by keyword overlap with `query`."""
+        return [chunk for _, chunk in self._scored_doc_and_module_chunks(query)[:limit]]
+
+    def _reference_library_chunks(self, query: str, limit: int = _REFERENCE_LIBRARY_SNIPPET_LIMIT) -> list[HelpChunk]:
+        """
+        Snippets from the actual installed Reference Library content
+        (docs/ROADMAP.md milestone 5.6), not re-scored by score_chunk()
+        — see this module's docstring for why libzim's own relevance
+        ranking is used as-is.
+
+        Passes stopword-stripped keywords (_query_words(), the same
+        extraction the docs/*.md scorer uses), not the raw question —
+        verified against the real medicine pack that this matters a lot:
+        "What are the symptoms of hypothermia?" ranked "Pulseless
+        electrical activity" first (filler words like "what"/"are"/"the"
+        diluted libzim's own relevance ranking), while "symptoms
+        hypothermia" correctly ranked the actual "Hypothermia" article
+        first.
+        """
+        if self._reference_library is None:
+            return []
+        keywords = " ".join(_query_words(query))
+        try:
+            snippets = self._reference_library.search_all_packs(keywords, limit=limit)
+        except Exception:
+            log.exception("Reference Library search raised an error — skipping it for device-help.")
+            return []
+        return [
+            HelpChunk(source=f"Reference Library: {s.pack_title}", heading=s.article_title, text=s.snippet)
+            for s in snippets
+        ]
 
     def build_grounded_prompt(self, query: str, limit: int = 5) -> str:
         """
         Build a prompt instructing the LLM to answer `query` using only
-        retrieved M.I.A. documentation/module metadata — the actual
-        "grounding." Falls back to a "nothing matched" instruction
-        (still read-only, still no outside-topic license) if nothing
-        relevant is indexed, rather than silently falling through to
-        open-ended chat.
+        retrieved M.I.A. documentation/module metadata plus any
+        matching Reference Library content — the actual "grounding."
+        Falls back to a "nothing matched" instruction (still read-only,
+        still no outside-topic license) if nothing relevant is indexed
+        anywhere, rather than silently falling through to open-ended
+        chat.
+
+        When there's already a strong, confident match (score >=
+        _MODULE_NAME_MATCH_BONUS — a module named directly in the
+        query), only that top chunk is included, and Reference Library
+        snippets are skipped entirely. Verified against the real
+        installed packs that including the rest is actively harmful,
+        not just unhelpful padding: "what does the notes module do"
+        already has the exact right answer (the Notes module's own
+        description scores a confident module-name-match hit as chunk
+        #1), but (a) docs/ADDING_MODULES.md's several large, verbose
+        "how to write a module" code chunks also rank as lower partial
+        matches, and (b) every one of the 8 installed Reference Library
+        packs has *some* weak stemmed match on "module"/"modulator"/
+        "note" (e.g. iFixit's "Loudspeaker Modules Replacement",
+        Physics's "Electro-optic modulator") — piling either of those
+        in alongside the one correct chunk made the LLM answer "I don't
+        know" even while its own reasoning quoted the correct text
+        verbatim. A confident, specific match doesn't need or benefit
+        from extra "maybe related" context; a small model finds it
+        actively distracting.
         """
-        chunks = self.retrieve(query, limit=limit)
+        scored = self._scored_doc_and_module_chunks(query)
+        top_score = scored[0][0] if scored else 0
+        is_confident_match = top_score >= _MODULE_NAME_MATCH_BONUS
+
+        doc_chunks = [chunk for _, chunk in scored[:1]] if is_confident_match else [chunk for _, chunk in scored[:limit]]
+        reference_chunks = [] if is_confident_match else self._reference_library_chunks(query)
+        chunks = doc_chunks + reference_chunks
         if not chunks:
             return (
                 f"{_SYSTEM_PREAMBLE}\n\nNo reference material matched this question. Say that you "
-                f"don't have information about this in M.I.A.'s documentation.\n\nQuestion: {query}"
+                f"don't have information about this in M.I.A.'s documentation or reference library."
+                f"\n\nQuestion: {query}"
             )
 
         material = "\n\n".join(f"[{chunk.source} — {chunk.heading}]\n{chunk.text}" for chunk in chunks)

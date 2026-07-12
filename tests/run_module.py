@@ -85,6 +85,7 @@ def main() -> int:
     manager.discover()
     context.device_help.register_module_lister(manager.all)
     context.activity_log.register_module_lister(manager.all)
+    context.device_help.register_reference_library(context.reference_library)
 
     if args.list or not args.module_id:
         print("Discovered modules:")

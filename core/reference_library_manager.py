@@ -32,6 +32,7 @@ from __future__ import annotations
 import shutil
 import time
 from dataclasses import dataclass, field
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Optional
 
@@ -79,6 +80,62 @@ class PackInstallResult:
     errors: list[str] = field(default_factory=list)
     pack_id: Optional[str] = None
     title: Optional[str] = None
+
+
+@dataclass
+class ReferenceSnippet:
+    """One search_all_packs() result — a short plain-text excerpt, not the full article."""
+
+    pack_id: str
+    pack_title: str
+    article_title: str
+    snippet: str
+
+
+_SNIPPET_MAX_CHARS = 500
+
+
+class _HTMLTextExtractor(HTMLParser):
+    """
+    Minimal HTML-to-plain-text extractor for building a short
+    Assistant-grounding snippet (core/device_help_manager.py) — stdlib
+    only, no new dependency for what's just "strip tags, skip
+    script/style content, collapse whitespace."  Not a general-purpose
+    HTML-to-text tool; good enough for a short excerpt, not for
+    rendering (that's modules/knowledge/zim_text_browser.py's job).
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._parts: list[str] = []
+        self._skip_depth = 0
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag in ("script", "style"):
+            self._skip_depth += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("script", "style") and self._skip_depth > 0:
+            self._skip_depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self._skip_depth == 0:
+            self._parts.append(data)
+
+    def get_text(self) -> str:
+        return " ".join(" ".join(self._parts).split())
+
+
+def _html_to_snippet(html_bytes: bytes, max_chars: int = _SNIPPET_MAX_CHARS) -> str:
+    extractor = _HTMLTextExtractor()
+    try:
+        extractor.feed(html_bytes.decode("utf-8", errors="replace"))
+    except Exception:
+        return ""
+    text = extractor.get_text()
+    if len(text) > max_chars:
+        return text[:max_chars] + "…"
+    return text
 
 
 class ReferenceLibraryManager:
@@ -295,3 +352,60 @@ class ReferenceLibraryManager:
                 continue
             hits.append(ReferenceSearchHit(path=path, title=title))
         return hits
+
+    def search_all_packs(self, query: str, limit: int = 5) -> list[ReferenceSnippet]:
+        """
+        Fan `query` out across every installed pack's full-text search
+        and return up to `limit` short plain-text snippets total —
+        used by core/device_help_manager.py to ground Assistant answers
+        in the actual installed reference content (Wikipedia/iFixit/
+        etc.), not just M.I.A.'s own docs/*.md. Similar cross-pack
+        fan-out shape to modules/knowledge/module.py's Global Search
+        provider, but returns grounding snippets, not SearchResult UI
+        objects, and doesn't re-rank hits — libzim's own full-text
+        search relevance ordering is used as-is *within* a pack.
+
+        Takes at most one hit per pack, and tries every installed pack
+        before capping the total at `limit` — NOT "stop as soon as
+        `limit` hits are found." Found via a real query
+        ("hypothermia symptoms" against 8 real installed packs): a
+        general cold-weather Appropedia article alphabetically before
+        the medicine pack supplied several hits that exhausted a
+        break-early total cap, so the medicine pack's much more
+        directly relevant "Hypothermia" Wikipedia article never even
+        got searched. One-hit-per-pack across every pack, capped only
+        at the end, means `limit` should comfortably cover however many
+        packs are installed (a handful in practice) rather than being
+        tuned as a performance knob — letting the LLM itself weigh
+        several candidate packs' evidence, which it's better suited for
+        than any cross-pack scoring this class could cheaply build.
+
+        Deliberately not the full article: each hit's content is
+        fetched and reduced to a short plain-text excerpt
+        (_html_to_snippet) so a handful of matches across several packs
+        stays cheap to include in an LLM prompt.
+        """
+        query = query.strip()
+        if not query:
+            return []
+
+        snippets: list[ReferenceSnippet] = []
+        for pack in self.list_packs():
+            hits = self.search(pack.pack_id, query, limit=1)
+            for hit in hits:
+                content = self.get_entry_content(pack.pack_id, hit.path)
+                if content is None:
+                    continue
+                content_bytes, mimetype = content
+                if not mimetype.startswith("text/html"):
+                    continue
+                snippet_text = _html_to_snippet(content_bytes)
+                if not snippet_text:
+                    continue
+                snippets.append(ReferenceSnippet(
+                    pack_id=pack.pack_id,
+                    pack_title=pack.title,
+                    article_title=hit.title,
+                    snippet=snippet_text,
+                ))
+        return snippets[:limit]

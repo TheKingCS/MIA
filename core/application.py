@@ -92,6 +92,7 @@ class MIAApplication:
         # activity_log only invoke it lazily on their own first use anyway.
         self.context.device_help.register_module_lister(self.module_manager.all)
         self.context.activity_log.register_module_lister(self.module_manager.all)
+        self.context.device_help.register_reference_library(self.context.reference_library)
         self._register_search_providers()
         self._register_calculators()
         self._register_assistant_actions()

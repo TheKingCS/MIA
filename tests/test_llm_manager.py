@@ -139,6 +139,53 @@ def test_generate_sends_keep_alive_default_as_bare_int(monkeypatch):
     assert isinstance(seen["body"]["keep_alive"], int)
 
 
+def test_generate_sends_temperature_zero_by_default(monkeypatch):
+    """
+    Regression test: the exact same grounding prompt, byte-for-byte,
+    gave a correct answer on one real call and "I don't know" on
+    another — Ollama's default temperature isn't 0, so identical
+    prompts can genuinely sample different completions. Pinned to 0 by
+    default for deterministic, repeatable grounding/tool-calling
+    answers; verified against the real server that this actually fixes
+    the flip-flopping.
+    """
+    seen = {}
+
+    def fake_urlopen(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _FakeResponse(json.dumps({"response": "ok"}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    manager.generate("hi")
+    assert seen["body"]["options"]["temperature"] == 0.0
+
+
+def test_generate_sends_configured_temperature(monkeypatch):
+    seen = {}
+
+    def fake_urlopen(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _FakeResponse(json.dumps({"response": "ok"}).encode("utf-8"))
+
+    monkeypatch.setattr("core.llm_manager.urllib.request.urlopen", fake_urlopen)
+    context = AppContext(config=_FakeConfig({"llm.temperature": 0.7}), events=None)
+    manager = LLMManager(context)
+    manager.generate("hi")
+    assert seen["body"]["options"]["temperature"] == 0.7
+
+
+def test_chat_with_tools_sends_temperature(monkeypatch):
+    seen = {}
+
+    def fake_urlopen(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _FakeResponse(json.dumps({"message": {"role": "assistant", "content": "ok"}}).encode("utf-8"))
+
+    manager = _make_manager(monkeypatch, fake_urlopen)
+    manager.chat_with_tools([{"role": "user", "content": "hi"}], tools=[])
+    assert seen["body"]["options"]["temperature"] == 0.0
+
+
 def test_generate_sends_configured_keep_alive_duration_string(monkeypatch):
     """A non-numeric keep_alive (e.g. "10m") must stay a string — only numeric-looking values become an int."""
     seen = {}

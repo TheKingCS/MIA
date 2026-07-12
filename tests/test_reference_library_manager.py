@@ -24,7 +24,7 @@ import core.reference_library_manager as reference_library_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
-from core.reference_library_manager import ReferenceLibraryManager
+from core.reference_library_manager import ReferenceLibraryManager, _html_to_snippet
 
 
 class _FakeConfig:
@@ -335,3 +335,120 @@ def test_root_path_config_override_is_used(tmp_path):
     manager = ReferenceLibraryManager(context)
 
     assert [p.pack_id for p in manager.list_packs()] == ["demo"]
+
+
+# ----------------------------------------------------------------------
+# _html_to_snippet (pure function, no ZIM involved)
+# ----------------------------------------------------------------------
+
+def test_html_to_snippet_strips_tags_and_collapses_whitespace():
+    html = b"<html><body><h1>Title</h1>\n\n<p>Some   text  here.</p></body></html>"
+    assert _html_to_snippet(html) == "Title Some text here."
+
+
+def test_html_to_snippet_skips_script_and_style_content():
+    html = b"<html><head><style>.x{color:red}</style></head><body><script>alert('hi')</script><p>Real content.</p></body></html>"
+    assert _html_to_snippet(html) == "Real content."
+
+
+def test_html_to_snippet_truncates_long_text():
+    long_text = "word " * 200
+    html = f"<p>{long_text}</p>".encode("utf-8")
+    snippet = _html_to_snippet(html, max_chars=50)
+    assert len(snippet) == 51  # 50 chars + the "…" marker
+    assert snippet.endswith("…")
+
+
+def test_html_to_snippet_handles_malformed_html_gracefully():
+    assert _html_to_snippet(b"<p>unclosed tag") == "unclosed tag"
+
+
+# ----------------------------------------------------------------------
+# search_all_packs
+# ----------------------------------------------------------------------
+
+def test_search_all_packs_returns_snippet_from_matching_pack(isolated_root):
+    isolated_root.mkdir(parents=True)
+    _build_zim(
+        isolated_root / "demo.zim",
+        title="Demo Pack",
+        pages={
+            "home": ("Home Page", "<html><body>Nothing relevant here.</body></html>"),
+            "hypothermia": ("Hypothermia", "<html><body>Symptoms include shivering and confusion.</body></html>"),
+        },
+    )
+
+    manager = _make_manager()
+    snippets = manager.search_all_packs("hypothermia")
+
+    assert len(snippets) == 1
+    assert snippets[0].pack_id == "demo"
+    assert snippets[0].pack_title == "Demo Pack"
+    assert snippets[0].article_title == "Hypothermia"
+    assert "shivering" in snippets[0].snippet
+
+
+def test_search_all_packs_fans_out_across_multiple_packs(isolated_root):
+    isolated_root.mkdir(parents=True)
+    _build_zim(
+        isolated_root / "medical.zim",
+        title="Medical Pack",
+        pages={"hypothermia": ("Hypothermia", "<html><body>Cold exposure symptoms.</body></html>")},
+    )
+    _build_zim(
+        isolated_root / "survival.zim",
+        title="Survival Pack",
+        pages={"hypothermia_treatment": ("Treating Hypothermia", "<html><body>Warm the person slowly.</body></html>")},
+    )
+
+    manager = _make_manager()
+    snippets = manager.search_all_packs("hypothermia", limit=10)
+
+    pack_ids = {s.pack_id for s in snippets}
+    assert pack_ids == {"medical", "survival"}
+
+
+def test_search_all_packs_takes_only_one_hit_per_pack(isolated_root):
+    # Regression test for the real crowding bug this method's docstring
+    # describes: a single pack must never supply more than one hit,
+    # even if it has several matches, so it can't crowd out a later
+    # pack's more relevant single hit.
+    isolated_root.mkdir(parents=True)
+    _build_zim(
+        isolated_root / "demo.zim",
+        pages={
+            "a": ("Article A", "<html><body>banana one</body></html>"),
+            "b": ("Article B", "<html><body>banana two</body></html>"),
+            "c": ("Article C", "<html><body>banana three</body></html>"),
+        },
+    )
+
+    manager = _make_manager()
+    snippets = manager.search_all_packs("banana", limit=10)
+    assert len(snippets) == 1
+
+
+def test_search_all_packs_respects_total_limit_across_packs(isolated_root):
+    isolated_root.mkdir(parents=True)
+    for name in ("pack_a", "pack_b", "pack_c"):
+        _build_zim(
+            isolated_root / f"{name}.zim",
+            title=name,
+            pages={"home": ("Home", "<html><body>banana content</body></html>")},
+        )
+
+    manager = _make_manager()
+    snippets = manager.search_all_packs("banana", limit=2)
+    assert len(snippets) == 2
+
+
+def test_search_all_packs_blank_query_returns_nothing(isolated_root):
+    isolated_root.mkdir(parents=True)
+    _build_zim(isolated_root / "demo.zim")
+    manager = _make_manager()
+    assert manager.search_all_packs("   ") == []
+
+
+def test_search_all_packs_no_packs_installed_returns_nothing(isolated_root):
+    manager = _make_manager()
+    assert manager.search_all_packs("anything") == []

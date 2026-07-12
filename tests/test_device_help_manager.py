@@ -15,6 +15,7 @@ from pathlib import Path
 
 from core.app_context import AppContext
 from core.device_help_manager import DeviceHelpManager, HelpChunk, score_chunk, split_into_chunks
+from core.reference_library_manager import ReferenceSnippet
 
 
 class _FakeConfig:
@@ -26,6 +27,21 @@ class _FakeModule:
     def __init__(self, display_name: str, description: str) -> None:
         self.display_name = display_name
         self.description = description
+
+
+class _FakeReferenceLibrary:
+    def __init__(self, snippets=None, error: bool = False) -> None:
+        self._snippets = snippets or []
+        self._error = error
+        self.last_query = None
+        self.last_limit = None
+
+    def search_all_packs(self, query, limit=3):
+        self.last_query = query
+        self.last_limit = limit
+        if self._error:
+            raise RuntimeError("boom")
+        return self._snippets
 
 
 def _make_manager() -> DeviceHelpManager:
@@ -173,3 +189,146 @@ def test_ensure_docs_loaded_reads_markdown_files_from_docs_dir(tmp_path, monkeyp
     assert len(results) == 1
     assert results[0].source == "docs/example.md"
     assert results[0].heading == "Test Heading"
+
+
+# ----------------------------------------------------------------------
+# Reference Library integration (5.6)
+# ----------------------------------------------------------------------
+
+def test_reference_library_chunks_empty_when_not_registered():
+    manager = _make_manager()
+    assert manager._reference_library_chunks("hypothermia") == []
+
+
+def test_reference_library_chunks_converts_snippets_to_help_chunks():
+    manager = _make_manager()
+    fake_library = _FakeReferenceLibrary(snippets=[
+        ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure symptoms."),
+    ])
+    manager.register_reference_library(fake_library)
+
+    chunks = manager._reference_library_chunks("hypothermia symptoms")
+    assert len(chunks) == 1
+    assert chunks[0].source == "Reference Library: WikiMed"
+    assert chunks[0].heading == "Hypothermia"
+    assert chunks[0].text == "Cold exposure symptoms."
+    # Order isn't guaranteed (_query_words returns a set), just that both
+    # meaningful words made it through.
+    assert set(fake_library.last_query.split()) == {"hypothermia", "symptoms"}
+
+
+def test_reference_library_chunks_strips_stopwords_before_searching():
+    """
+    Regression test: verified against the real medicine pack that
+    passing the raw natural-language question instead of stripped
+    keywords ranks the wrong article first ("Pulseless electrical
+    activity" instead of "Hypothermia" for "What are the symptoms of
+    hypothermia?") — filler words dilute libzim's own relevance
+    ranking. _reference_library_chunks() must pass keywords, not the
+    raw question.
+    """
+    manager = _make_manager()
+    fake_library = _FakeReferenceLibrary(snippets=[])
+    manager.register_reference_library(fake_library)
+
+    manager._reference_library_chunks("What are the symptoms of hypothermia?")
+    query_words = set(fake_library.last_query.split())
+    assert query_words == {"hypothermia", "symptoms"}
+    assert "what" not in query_words
+    assert "are" not in query_words
+    assert "the" not in query_words
+    assert "of" not in query_words
+
+
+def test_reference_library_chunks_error_does_not_crash():
+    manager = _make_manager()
+    manager.register_reference_library(_FakeReferenceLibrary(error=True))
+    assert manager._reference_library_chunks("anything") == []
+
+
+def test_build_grounded_prompt_skips_reference_library_when_module_name_matches():
+    """
+    Regression test: verified against the real installed packs that
+    NOT gating this is actively harmful — "what does the notes module
+    do" already has the exact right answer via the module-name-match
+    bonus, but every installed pack had some weak stemmed match on
+    "module"/"note" (e.g. "Loudspeaker Modules Replacement"), and
+    piling all of those in overloaded the LLM into answering "I don't
+    know" despite the right answer being right there.
+    """
+    manager = _make_manager()
+    manager._doc_chunks = []
+    manager.register_module_lister(lambda: [_FakeModule("Notes", "Dated, searchable, taggable journal entries.")])
+    fake_library = _FakeReferenceLibrary(snippets=[
+        ReferenceSnippet(pack_id="ifixit", pack_title="iFixit", article_title="Unrelated Modules Replacement", snippet="irrelevant"),
+    ])
+    manager.register_reference_library(fake_library)
+
+    prompt = manager.build_grounded_prompt("what does the notes module do")
+    assert "Module: Notes" in prompt
+    assert "Reference Library" not in prompt
+
+
+def test_build_grounded_prompt_includes_only_top_chunk_when_confident_match():
+    """
+    Regression test: verified against the real live model that a
+    confident module-name match plus several extra lower-scored docs
+    chunks (even when the confident match still ranks #1) made the LLM
+    answer "I don't know" despite its own reasoning quoting the correct
+    text verbatim — a small model finds "maybe related" extra context
+    actively distracting, not just unhelpful padding.
+    """
+    manager = _make_manager()
+    manager._doc_chunks = [
+        HelpChunk(source="docs/ADDING_MODULES.md", heading="1. Create a module folder", text="## 1. Create a module folder\nmodule module module"),
+        HelpChunk(source="docs/ADDING_MODULES.md", heading="2. Write module.py", text="## 2. Write module.py\nmodule module module"),
+    ]
+    manager.register_module_lister(lambda: [_FakeModule("Notes", "Dated, searchable, taggable journal entries.")])
+
+    prompt = manager.build_grounded_prompt("what does the notes module do", limit=5)
+    assert "Module: Notes" in prompt
+    assert "docs/ADDING_MODULES.md" not in prompt
+
+
+def test_build_grounded_prompt_includes_reference_library_when_no_strong_doc_match():
+    manager = _make_manager()
+    manager._doc_chunks = [HelpChunk(source="a", heading="Unrelated", text="## Unrelated\nsomething else entirely")]
+    manager.register_reference_library(_FakeReferenceLibrary(snippets=[
+        ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure symptoms."),
+    ]))
+
+    prompt = manager.build_grounded_prompt("what are the symptoms of hypothermia")
+    assert "Reference Library: WikiMed" in prompt
+
+
+def test_build_grounded_prompt_includes_reference_library_snippets():
+    manager = _make_manager()
+    manager._doc_chunks = []
+    manager.register_reference_library(_FakeReferenceLibrary(snippets=[
+        ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure symptoms include shivering."),
+    ]))
+
+    prompt = manager.build_grounded_prompt("what are the symptoms of hypothermia")
+    assert "Reference Library: WikiMed" in prompt
+    assert "shivering" in prompt
+
+
+def test_build_grounded_prompt_combines_docs_and_reference_library():
+    manager = _make_manager()
+    manager._doc_chunks = [HelpChunk(source="docs/HARDWARE.md", heading="Storage", text="## Storage\nUSB SSD setup")]
+    manager.register_reference_library(_FakeReferenceLibrary(snippets=[
+        ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure symptoms."),
+    ]))
+
+    prompt = manager.build_grounded_prompt("storage")
+    assert "docs/HARDWARE.md" in prompt
+    assert "Reference Library: WikiMed" in prompt
+
+
+def test_build_grounded_prompt_falls_back_when_neither_source_matches():
+    manager = _make_manager()
+    manager._doc_chunks = []
+    manager.register_reference_library(_FakeReferenceLibrary(snippets=[]))
+
+    prompt = manager.build_grounded_prompt("zzz_no_match_zzz")
+    assert "No reference material matched" in prompt

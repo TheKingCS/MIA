@@ -55,6 +55,19 @@ device, not a shared multi-model workstation — the ~2GB held for
 llama3.2 isn't competing with anything else that needs it, and the AI
 HAT+2's dedicated onboard RAM (docs/HARDWARE.md) means this doesn't
 even compete with the Pi's own system RAM on the real target hardware.
+
+`temperature` (docs/ROADMAP.md milestone 5.6 follow-up): default 0.0,
+sent as `options.temperature` on every request. Found by chasing what
+looked like a wording/dilution bug in device_help_manager.py's
+grounding — the exact same prompt, byte-for-byte, gave a correct answer
+on one run and "I don't know" on another. Ollama's default temperature
+isn't 0, so identical prompts can genuinely sample different completions;
+for a grounding/factual-QA/tool-calling assistant, deterministic,
+repeatable answers matter far more than creative variation, so this is
+pinned to 0 rather than left at Ollama's default. Verified directly
+against the real server: the exact prompt that flip-flopped between
+correct and "I don't know" across separate calls became reliably
+correct, identically, across repeated calls once temperature was 0.
 """
 
 from __future__ import annotations
@@ -74,6 +87,7 @@ _DEFAULT_BASE_URL = "http://localhost:11434"
 _DEFAULT_MODEL = "llama3.2"
 _DEFAULT_TIMEOUT_SECONDS = 60.0
 _DEFAULT_KEEP_ALIVE = "-1"
+_DEFAULT_TEMPERATURE = 0.0
 
 
 class LLMUnavailableError(RuntimeError):
@@ -111,9 +125,10 @@ class LLMBackend(Protocol):
 class OllamaBackend:
     """LLMBackend implementation for a local Ollama server."""
 
-    def __init__(self, base_url: str, model: str, keep_alive: str) -> None:
+    def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
+        self._temperature = temperature
         # Ollama's keep_alive must be a bare JSON number of seconds
         # (e.g. -1 to never unload) OR a Go duration *string* with a
         # unit suffix (e.g. "30m") — a quoted "-1" is rejected with
@@ -132,6 +147,7 @@ class OllamaBackend:
             "prompt": prompt,
             "stream": False,
             "keep_alive": self._keep_alive,
+            "options": {"temperature": self._temperature},
         }).encode("utf-8")
         request = urllib.request.Request(
             f"{self._base_url}/api/generate",
@@ -160,6 +176,7 @@ class OllamaBackend:
             "messages": messages,
             "stream": False,
             "keep_alive": self._keep_alive,
+            "options": {"temperature": self._temperature},
         }
         if tools:
             payload_dict["tools"] = tools
@@ -205,8 +222,9 @@ class LLMManager:
     """
     Core-level Assistant LLM service (`AppContext.llm`). Config-driven
     via `llm.base_url` / `llm.model` / `llm.timeout_seconds` /
-    `llm.keep_alive`, following the `modules.<id>.*` /
-    top-level-service config convention CLAUDE.md documents.
+    `llm.keep_alive` / `llm.temperature`, following the
+    `modules.<id>.*` / top-level-service config convention CLAUDE.md
+    documents.
     """
 
     def __init__(self, context: AppContext) -> None:
@@ -215,8 +233,9 @@ class LLMManager:
         model = context.config.get("llm.model", _DEFAULT_MODEL)
         timeout = context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS)
         keep_alive = context.config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE)
+        temperature = context.config.get("llm.temperature", _DEFAULT_TEMPERATURE)
         self._timeout = float(timeout)
-        self._backend: LLMBackend = OllamaBackend(base_url, model, keep_alive)
+        self._backend: LLMBackend = OllamaBackend(base_url, model, keep_alive, float(temperature))
 
     def is_available(self) -> bool:
         """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises."""
