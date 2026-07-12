@@ -450,7 +450,7 @@ milestone pattern as v0.2–v0.6.
 Workshop & Electronics + The Lab (shared Data Logger). Same
 small-independently-testable-milestone pattern as v0.2–v0.7.
 
-- [ ] **8.1 Data Logger core service** — `core/data_logger_manager.py`
+- [x] **8.1 Data Logger core service** — `core/data_logger_manager.py`
       (`AppContext.data_logger`) adds timestamped-reading storage keyed
       by a named series (e.g. "multimeter_voltage", "soil_moisture") —
       same persisted-JSON-manager pattern as `core/inventory_manager.py`

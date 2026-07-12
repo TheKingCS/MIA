@@ -35,6 +35,7 @@ from core.alarm_manager import AlarmManager  # noqa: E402
 from core.app_context import AppContext  # noqa: E402
 from core.calendar_manager import CalendarManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
+from core.data_logger_manager import DataLoggerManager  # noqa: E402
 from core.device_help_manager import DeviceHelpManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
@@ -67,6 +68,7 @@ def main() -> int:
     context.alarms = AlarmManager(context)
     context.journal = JournalManager(context)
     context.inventory = InventoryManager(context)
+    context.data_logger = DataLoggerManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.voice = VoiceManager(context)

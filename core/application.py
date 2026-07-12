@@ -27,6 +27,7 @@ from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
+from core.data_logger_manager import DataLoggerManager
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.inventory_manager import InventoryManager
@@ -70,6 +71,7 @@ class MIAApplication:
         self.context.alarms = AlarmManager(self.context)
         self.context.journal = JournalManager(self.context)
         self.context.inventory = InventoryManager(self.context)
+        self.context.data_logger = DataLoggerManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         self.context.voice = VoiceManager(self.context)
