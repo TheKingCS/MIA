@@ -4,7 +4,7 @@ gui.add_edit_inventory_item_dialog
 
 Small dialog for creating or editing a single inventory item, used by
 modules/toolbox/tools/inventory_tool.py. Same shape as
-gui/add_edit_journal_entry_dialog.py (QDialog + DARK_FIELD_THEME +
+gui/add_edit_journal_entry_dialog.py (QDialog + the shared app-level theme +
 QDialogButtonBox, validate-then-expose-via-properties on accept) —
 name/quantity/category/location/notes instead of title/tags/body.
 """
@@ -24,14 +24,12 @@ from PySide6.QtWidgets import (
 )
 
 from core.inventory_manager import InventoryItem
-from gui.styles import DARK_FIELD_THEME
 
 
 class AddEditInventoryItemDialog(QDialog):
     def __init__(self, parent=None, item: Optional[InventoryItem] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Item" if item is not None else "New Item")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(360, 460)
 
         layout = QVBoxLayout(self)

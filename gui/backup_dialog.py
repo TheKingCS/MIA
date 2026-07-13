@@ -21,14 +21,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from gui.styles import DARK_FIELD_THEME
 
 
 class BackupPassphraseDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Backup Options")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(380, 260)
 
         layout = QVBoxLayout(self)

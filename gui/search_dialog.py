@@ -34,7 +34,6 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
-from gui.styles import DARK_FIELD_THEME
 
 
 class _ResultRow(QFrame):
@@ -77,7 +76,6 @@ class SearchDialog(QDialog):
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Search M.I.A.")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.resize(440, 480)
         self._build_ui()
 

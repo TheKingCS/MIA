@@ -4,7 +4,7 @@ gui.add_edit_journal_entry_dialog
 
 Small dialog for creating or editing a single journal entry, used by
 modules/notes/module.py. Same shape as gui/add_edit_event_dialog.py
-(QDialog + DARK_FIELD_THEME + QDialogButtonBox, validate-then-expose-
+(QDialog + the shared app-level theme + QDialogButtonBox, validate-then-expose-
 via-properties on accept) — title/tags/body instead of
 title/date/time/notes.
 
@@ -29,7 +29,6 @@ from PySide6.QtWidgets import (
 )
 
 from core.journal_manager import JournalEntry
-from gui.styles import DARK_FIELD_THEME
 
 
 def _parse_tags(raw: str) -> list[str]:
@@ -40,7 +39,6 @@ class AddEditJournalEntryDialog(QDialog):
     def __init__(self, parent=None, entry: Optional[JournalEntry] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Entry" if entry is not None else "New Entry")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(420, 480)
 
         layout = QVBoxLayout(self)

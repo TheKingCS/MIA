@@ -19,14 +19,12 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
 
-from gui.styles import DARK_FIELD_THEME
 
 
 class EasterEggDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("???")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setMinimumWidth(380)
 
         layout = QVBoxLayout(self)

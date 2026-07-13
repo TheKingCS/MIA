@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from core.data_logger_manager import DataLoggerManager
     from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
+    from core.expedition_manager import ExpeditionManager
     from core.inventory_manager import InventoryManager
     from core.journal_manager import JournalManager
     from core.llm_manager import LLMManager
@@ -46,6 +47,7 @@ if TYPE_CHECKING:
     from core.reference_library_manager import ReferenceLibraryManager
     from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
+    from core.trip_manager import TripManager
     from core.voice_manager import VoiceManager
     from core.waypoint_manager import WaypointManager
 
@@ -78,6 +80,8 @@ class AppContext:
     waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
     devices: Optional["DeviceFramework"] = field(default=None, repr=False)
     scripts: Optional["ScriptLibraryManager"] = field(default=None, repr=False)
+    expeditions: Optional["ExpeditionManager"] = field(default=None, repr=False)
+    trips: Optional["TripManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

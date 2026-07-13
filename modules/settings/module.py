@@ -4,11 +4,14 @@ modules.settings.module
 
 Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export/
 import config + the data directory (profiles, notifications, etc.),
-optionally passphrase-encrypted via core/secrets_manager.py — and
-Update Manager (milestone 2.8) — apply an offline update package onto
-the running installation, see docs/UPDATE_PACKAGE_SPEC.md. Editing
-settings live (theme, user info, module toggles — the rest of what
-"Settings" implies) remains a placeholder for a future milestone.
+optionally passphrase-encrypted via core/secrets_manager.py — Update
+Manager (milestone 2.8) — apply an offline update package onto the
+running installation, see docs/UPDATE_PACKAGE_SPEC.md — and Appearance &
+Device Profile (milestone 13.1/13.2): live theme switching
+(gui/theme_manager.py) and viewing/changing which edition
+(Core/Pi5+HAT vs. Home/desktop, core/device_profile.py) this install is.
+User info and module toggles remain a placeholder for a future
+milestone.
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtWidgets import (
+    QComboBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -26,13 +30,17 @@ from PySide6.QtWidgets import (
 )
 
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
+from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
 from core.update_manager import apply_update_package, peek_update_manifest
 from gui.backup_dialog import BackupPassphraseDialog
 from gui.password_dialog import PasswordPromptDialog
+from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES
 from modules.module_base import ModuleBase
 
 log = get_logger(__name__)
+
+_PROFILE_DISPLAY_NAMES = {CORE: "Core (Pi 5 + AI HAT+ 2)", HOME: "Home (desktop workstation)"}
 
 
 class SettingsModule(ModuleBase):
@@ -58,6 +66,43 @@ class SettingsModule(ModuleBase):
         subtitle = QLabel(self.description)
         subtitle.setObjectName("SubtitleLabel")
         outer.addWidget(subtitle)
+
+        appearance_section = QLabel("Appearance & Device Profile")
+        appearance_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        outer.addWidget(appearance_section)
+
+        theme_row = QHBoxLayout()
+        theme_row.addWidget(QLabel("Theme:"))
+        self._theme_combo = QComboBox()
+        for theme_id in THEMES:
+            self._theme_combo.addItem(THEME_DISPLAY_NAMES[theme_id], theme_id)
+        current_theme = self.context.config.get("gui.theme", "dark_field")
+        index = self._theme_combo.findData(current_theme)
+        if index != -1:
+            self._theme_combo.setCurrentIndex(index)
+        self._theme_combo.currentIndexChanged.connect(self._on_theme_changed)
+        theme_row.addWidget(self._theme_combo, stretch=1)
+        outer.addLayout(theme_row)
+
+        profile_row = QHBoxLayout()
+        profile_row.addWidget(QLabel("Device Profile:"))
+        self._profile_combo = QComboBox()
+        for profile_id, display_name in _PROFILE_DISPLAY_NAMES.items():
+            self._profile_combo.addItem(display_name, profile_id)
+        index = self._profile_combo.findData(get_device_profile(self.context))
+        if index != -1:
+            self._profile_combo.setCurrentIndex(index)
+        self._profile_combo.currentIndexChanged.connect(self._on_device_profile_changed)
+        profile_row.addWidget(self._profile_combo, stretch=1)
+        outer.addLayout(profile_row)
+
+        profile_desc = QLabel(
+            "Core is the resource-constrained field edition (Pi 5 + AI HAT+ 2); "
+            "Home is the desktop workstation edition with more storage/resources."
+        )
+        profile_desc.setObjectName("SubtitleLabel")
+        profile_desc.setWordWrap(True)
+        outer.addWidget(profile_desc)
 
         backup_section = QLabel("Backup & Restore")
         backup_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
@@ -114,6 +159,30 @@ class SettingsModule(ModuleBase):
     # ------------------------------------------------------------------
     # Backup
     # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # Appearance & Device Profile
+    # ------------------------------------------------------------------
+
+    def _on_theme_changed(self) -> None:
+        theme_id = self._theme_combo.currentData()
+        if theme_id is None:
+            return
+        self.context.config.set("gui.theme", theme_id)
+        self.context.config.save()
+        # Re-applied live at the QApplication level by
+        # core.application.MIAApplication._on_theme_changed — no
+        # restart required.
+        self.context.events.publish("theme.changed", theme_id=theme_id)
+        self._set_status(f"Theme changed to {THEME_DISPLAY_NAMES[theme_id]}.")
+
+    def _on_device_profile_changed(self) -> None:
+        profile_id = self._profile_combo.currentData()
+        if profile_id is None:
+            return
+        self.context.config.set("system.device_profile", profile_id)
+        self.context.config.save()
+        self._set_status(f"Device profile changed to {_PROFILE_DISPLAY_NAMES[profile_id]}.")
 
     def _on_backup_clicked(self) -> None:
         dialog = BackupPassphraseDialog(None)

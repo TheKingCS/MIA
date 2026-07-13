@@ -137,6 +137,28 @@ def test_delete_waypoint_removes_it_and_is_idempotent(isolated_paths):
     manager.delete_waypoint(waypoint.waypoint_id)  # already gone — must not raise
 
 
+def test_add_waypoint_category_defaults_to_uncategorized(isolated_paths):
+    manager = _make_manager()
+    waypoint = manager.add_waypoint(name="X", latitude=0.0, longitude=0.0)
+    assert waypoint.category == ""
+
+
+def test_add_waypoint_category_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    added = manager.add_waypoint(name="Ridge Camp", latitude=1.0, longitude=2.0, category="Campsite")
+
+    reloaded = _make_manager()
+    waypoint = reloaded.get_waypoint(added.waypoint_id)
+    assert waypoint.category == "Campsite"
+
+
+def test_update_waypoint_category(isolated_paths):
+    manager = _make_manager()
+    waypoint = manager.add_waypoint(name="X", latitude=0.0, longitude=0.0)
+    manager.update_waypoint(waypoint.waypoint_id, category="Water Source")
+    assert waypoint.category == "Water Source"
+
+
 def test_all_waypoints_sorted_alphabetically(isolated_paths):
     manager = _make_manager()
     manager.add_waypoint(name="Zebra Point", latitude=0.0, longitude=0.0)

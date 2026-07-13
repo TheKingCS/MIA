@@ -20,7 +20,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QProgressBar, QVBoxLayout, QWidget
 
 from gui.boot_core_widget import PulsingCoreWidget
-from gui.styles import DARK_FIELD_THEME
 
 
 class SplashScreen(QWidget):
@@ -33,7 +32,6 @@ class SplashScreen(QWidget):
         # the window at 480x380 even in fullscreen state, leaving most
         # of the screen blank instead of actually filling it.
         self.resize(480, 380)
-        self.setStyleSheet(DARK_FIELD_THEME)
         self._build_ui()
         self._center_on_screen()
 

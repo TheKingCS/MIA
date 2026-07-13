@@ -151,6 +151,45 @@ def test_search_blank_query_returns_empty_list(isolated_paths):
     assert manager.search("   ") == []
 
 
+def test_add_entry_trip_id_and_conditions_default(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_entry(title="Untagged")
+    assert entry.trip_id is None
+    assert entry.conditions == ""
+
+
+def test_add_entry_trip_id_and_conditions_persist_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    added = manager.add_entry(
+        title="Day 1", body="Reached camp.", trip_id="trip1", conditions="Clear, ~15C, light wind"
+    )
+
+    reloaded = _make_manager()
+    entry = reloaded.get_entry(added.entry_id)
+    assert entry.trip_id == "trip1"
+    assert entry.conditions == "Clear, ~15C, light wind"
+
+
+def test_entries_for_trip_filters_and_sorts(isolated_paths):
+    manager = _make_manager()
+    other_trip = manager.add_entry(title="Other Trip", trip_id="trip2")
+    later = manager.add_entry(title="Later", trip_id="trip1")
+    earlier = manager.add_entry(title="Earlier", trip_id="trip1")
+    manager.add_entry(title="Untagged")
+    earlier.updated_at = "2020-01-01T00:00:00"
+    later.updated_at = "2030-01-01T00:00:00"
+
+    results = manager.entries_for_trip("trip1")
+    assert [e.entry_id for e in results] == [later.entry_id, earlier.entry_id]
+    assert other_trip.entry_id not in [e.entry_id for e in results]
+
+
+def test_entries_for_trip_returns_empty_for_unknown_trip(isolated_paths):
+    manager = _make_manager()
+    manager.add_entry(title="X", trip_id="trip1")
+    assert manager.entries_for_trip("does-not-exist") == []
+
+
 def test_load_handles_corrupt_json_gracefully(isolated_paths):
     data_dir, entries_file = isolated_paths
     data_dir.mkdir(parents=True)

@@ -21,14 +21,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from gui.styles import DARK_FIELD_THEME
 
 
 class DeleteConfirmDialog(QDialog):
     def __init__(self, item_name: str, is_directory: bool, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Confirm Delete")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(420, 220)
 
         self._item_name = item_name

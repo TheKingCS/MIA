@@ -4,7 +4,7 @@ gui.add_edit_event_dialog
 
 Small dialog for creating or editing a single calendar event, used by
 modules/toolbox/tools/calendar_tool.py. Structured the same way as
-gui/add_profile_dialog.py (QDialog + DARK_FIELD_THEME +
+gui/add_profile_dialog.py (QDialog + the shared app-level theme +
 QDialogButtonBox, validate-then-expose-via-properties on accept) —
 same shape, different fields.
 """
@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
 )
 
 from core.calendar_manager import CalendarEvent
-from gui.styles import DARK_FIELD_THEME
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 _TIME_FORMAT = "HH:mm"
@@ -42,7 +41,6 @@ class AddEditEventDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Event" if event is not None else "New Event")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(360, 400)
 
         layout = QVBoxLayout(self)

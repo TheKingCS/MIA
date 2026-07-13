@@ -29,7 +29,6 @@ from core.app_context import AppContext
 from core.logger import get_logger
 from gui.add_profile_dialog import AddProfileDialog
 from gui.password_dialog import prompt_for_password
-from gui.styles import DARK_FIELD_THEME
 
 log = get_logger(__name__)
 
@@ -43,7 +42,6 @@ class ProfileSelectScreen(QWidget):
         super().__init__()
         self.context = context
         self.setWindowTitle("M.I.A. — Select Profile")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.resize(440, 520)
         self._build_ui()
 

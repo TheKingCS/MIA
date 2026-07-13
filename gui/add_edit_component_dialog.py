@@ -4,7 +4,7 @@ gui.add_edit_component_dialog
 
 Small dialog for creating or editing a single electronics component,
 used by modules/workshop/module.py. Same shape as
-gui/add_edit_inventory_item_dialog.py (QDialog + DARK_FIELD_THEME +
+gui/add_edit_inventory_item_dialog.py (QDialog + the shared app-level theme +
 QDialogButtonBox, validate-then-expose-via-properties on accept) —
 name/category/value/package/quantity/location/notes instead of
 name/quantity/category/location/notes.
@@ -25,14 +25,12 @@ from PySide6.QtWidgets import (
 )
 
 from core.component_manager import Component
-from gui.styles import DARK_FIELD_THEME
 
 
 class AddEditComponentDialog(QDialog):
     def __init__(self, parent=None, component: Optional[Component] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Component" if component is not None else "New Component")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(360, 560)
 
         layout = QVBoxLayout(self)

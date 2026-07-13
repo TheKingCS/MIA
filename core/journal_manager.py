@@ -19,6 +19,14 @@ scope — no STT exists anywhere in the app yet; that's an Assistant
 Same persisted-JSON pattern as core.calendar_manager.CalendarManager:
 data/journal_entries.json, a dataclass with to_dict/from_dict, a
 manager class wrapping load/save.
+
+`trip_id`/`conditions` (docs/ROADMAP.md milestone 12.4, Trip Log) are
+additive, optional fields: an entry with neither set behaves exactly as
+before. `trip_id` links an entry to a core.trip_manager.Trip (surfaced
+in that trip's detail view via `entries_for_trip()`); `conditions` is a
+first-class weather/conditions field, not folded into `body`, so a
+trip's logged weather stays queryable/structured rather than buried in
+free text.
 """
 
 from __future__ import annotations
@@ -45,6 +53,8 @@ class JournalEntry:
     title: str
     body: str = ""
     tags: list[str] = field(default_factory=list)
+    trip_id: Optional[str] = None
+    conditions: str = ""  # weather/conditions, e.g. "Clear, ~15C, light wind"
     created_at: str = ""  # ISO datetime
     updated_at: str = ""  # ISO datetime
 
@@ -54,6 +64,8 @@ class JournalEntry:
             "title": self.title,
             "body": self.body,
             "tags": self.tags,
+            "trip_id": self.trip_id,
+            "conditions": self.conditions,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -65,6 +77,8 @@ class JournalEntry:
             title=data.get("title", ""),
             body=data.get("body", ""),
             tags=list(data.get("tags", [])),
+            trip_id=data.get("trip_id"),
+            conditions=data.get("conditions", ""),
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
         )
@@ -102,13 +116,22 @@ class JournalManager:
     # Writing
     # ------------------------------------------------------------------
 
-    def add_entry(self, title: str, body: str = "", tags: Optional[list[str]] = None) -> JournalEntry:
+    def add_entry(
+        self,
+        title: str,
+        body: str = "",
+        tags: Optional[list[str]] = None,
+        trip_id: Optional[str] = None,
+        conditions: str = "",
+    ) -> JournalEntry:
         now = datetime.now().isoformat(timespec="seconds")
         entry = JournalEntry(
             entry_id=uuid.uuid4().hex[:10],
             title=title,
             body=body,
             tags=list(tags) if tags else [],
+            trip_id=trip_id,
+            conditions=conditions,
             created_at=now,
             updated_at=now,
         )
@@ -155,6 +178,14 @@ class JournalManager:
     def all_entries(self) -> list[JournalEntry]:
         """Newest-updated first — matches how a journal is naturally browsed."""
         return sorted(self._entries, key=lambda e: e.updated_at, reverse=True)
+
+    def entries_for_trip(self, trip_id: str) -> list[JournalEntry]:
+        """Newest-updated first, same ordering as all_entries()."""
+        return sorted(
+            (e for e in self._entries if e.trip_id == trip_id),
+            key=lambda e: e.updated_at,
+            reverse=True,
+        )
 
     def search(self, query: str) -> list[JournalEntry]:
         """Case-insensitive substring match over title, body, and tags."""

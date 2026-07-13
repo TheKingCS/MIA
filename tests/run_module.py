@@ -41,6 +41,7 @@ from core.data_logger_manager import DataLoggerManager  # noqa: E402
 from core.device_framework import DeviceFramework  # noqa: E402
 from core.device_help_manager import DeviceHelpManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
+from core.expedition_manager import ExpeditionManager  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
 from core.llm_manager import LLMManager  # noqa: E402
@@ -49,9 +50,10 @@ from core.power_manager import PowerManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.script_library_manager import ScriptLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
+from core.trip_manager import TripManager  # noqa: E402
 from core.voice_manager import VoiceManager  # noqa: E402
 from core.waypoint_manager import WaypointManager  # noqa: E402
-from gui.styles import DARK_FIELD_THEME  # noqa: E402
+from gui.theme_manager import get_theme_stylesheet  # noqa: E402
 
 
 def main() -> int:
@@ -82,6 +84,8 @@ def main() -> int:
     context.power = PowerManager(context)
     context.devices = DeviceFramework(context)
     context.scripts = ScriptLibraryManager(context)
+    context.expeditions = ExpeditionManager(context)
+    context.trips = TripManager(context)
     context.search = SearchManager(context)
     context.device_help = DeviceHelpManager(context)
     context.activity_log = ActivityLogManager(context)
@@ -106,11 +110,11 @@ def main() -> int:
         return 1
 
     app = QApplication(sys.argv)
+    app.setStyleSheet(get_theme_stylesheet(context.config.get("gui.theme", "dark_field")))
     module.on_load()
 
     window = QMainWindow()
     window.setWindowTitle(f"M.I.A. Module Test — {module.display_name}")
-    window.setStyleSheet(DARK_FIELD_THEME)
     window.resize(700, 500)
     window.setCentralWidget(module.get_widget())
     window.show()

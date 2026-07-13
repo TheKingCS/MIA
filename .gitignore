@@ -32,6 +32,12 @@ reference_library/*
 voice_models/*
 !voice_models/.gitkeep
 
+# Trip photos (docs/ROADMAP.md milestone 12.7, Trip Log) — imported image
+# files copied per-trip by core/trip_manager.py. Same "large binary, not
+# under data/" reasoning as Reference Library/voice models above.
+trip_photos/*
+!trip_photos/.gitkeep
+
 # --- Editors / OS ---
 .vscode/
 .idea/

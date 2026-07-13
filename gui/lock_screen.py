@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.profile_manager import Profile
-from gui.styles import DARK_FIELD_THEME
 
 log = get_logger(__name__)
 
@@ -39,7 +38,6 @@ class LockScreen(QWidget):
         self.context = context
         self.profile = profile
         self.setWindowTitle("M.I.A. — Locked")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.resize(380, 280)
         self._build_ui()
 

@@ -20,14 +20,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from gui.styles import DARK_FIELD_THEME
 
 
 class AddProfileDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("New Profile")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(340, 220)
 
         layout = QVBoxLayout(self)

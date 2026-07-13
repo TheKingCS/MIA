@@ -41,7 +41,6 @@ from gui.easter_egg import EasterEggDialog
 from gui.notification_center import NotificationCenterDialog
 from gui.notification_toast import NotificationToast
 from gui.search_dialog import SearchDialog
-from gui.styles import DARK_FIELD_THEME
 from gui.widgets.module_button import ModuleButton
 
 log = get_logger(__name__)
@@ -66,7 +65,6 @@ class MainWindow(QMainWindow):
         self._history: list[QWidget] = []
 
         self.setWindowTitle("M.I.A. — Multifunctional Intelligent Assistant")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.resize(
             context.config.get("gui.window_width", 1100),
             context.config.get("gui.window_height", 700),

@@ -23,12 +23,16 @@ Clicking a link therefore needs no code here beyond loadResource() —
 QTextBrowser's default openLinks behavior already calls setSource()
 for us, which is also what gives history/back/forward for free.
 
-Deliberately renders on a plain white background rather than pulling
-in gui.styles.DARK_FIELD_THEME: ZIM content is arbitrary third-party
-HTML authored assuming a normal light document background, and the
-app's dark theme cascading onto it (the same trap
-docs/KNOWN_ISSUES.md's closed "Header labels" bug hit) would make most
-real content unreadable.
+Deliberately forces its own plain white background (`setStyleSheet()`
+on this widget itself) rather than inheriting whichever app-level theme
+is active (gui/theme_manager.py, docs/ROADMAP.md milestone 13.2): ZIM
+content is arbitrary third-party HTML authored assuming a normal light
+document background, and any of the app's themes cascading onto it (the
+same trap docs/KNOWN_ISSUES.md's closed "Header labels" bug hit) would
+make most real content unreadable — this is the one deliberate exception
+to "widgets don't set their own stylesheet" that milestone 13.2's
+cleanup left in place, precisely because it needs to *not* inherit the
+app-level theme.
 """
 
 from __future__ import annotations

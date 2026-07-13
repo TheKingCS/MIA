@@ -43,14 +43,12 @@ from PySide6.QtWidgets import (
 )
 
 from core.device_framework import BlockDevice, flash_confirmation_matches
-from gui.styles import DARK_FIELD_THEME
 
 
 class FlashConfirmDialog(QDialog):
     def __init__(self, device: BlockDevice, image_path: str, image_size_display: str, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Confirm Flash — This Cannot Be Undone")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setMinimumSize(480, 320)
 
         self._device = device

@@ -6,7 +6,8 @@
         "kiosk_mode": false,
         "setup_date": "",
         "setup_time": "",
-        "active_profile_id": null
+        "active_profile_id": null,
+        "device_profile": "core"
     },
     "profiles": {},
     "modules": {
@@ -14,6 +15,9 @@
     },
     "reference_library": {
         "root_path": ""
+    },
+    "trips": {
+        "photo_root_path": ""
     },
     "llm": {
         "base_url": "http://localhost:11434",

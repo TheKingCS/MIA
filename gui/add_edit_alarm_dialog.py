@@ -4,7 +4,7 @@ gui.add_edit_alarm_dialog
 
 Small dialog for creating or editing a single alarm, used by
 modules/toolbox/tools/alarm_tool.py. Same shape as
-gui/add_edit_event_dialog.py (QDialog + DARK_FIELD_THEME +
+gui/add_edit_event_dialog.py (QDialog + the shared app-level theme +
 QDialogButtonBox, expose entered values via properties on accept).
 
 No validation gate on accept, unlike the event dialog's non-empty-
@@ -31,7 +31,6 @@ from PySide6.QtWidgets import (
 )
 
 from core.alarm_manager import Alarm
-from gui.styles import DARK_FIELD_THEME
 
 _TIME_FORMAT = "HH:mm"
 _DAY_LABELS = ("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
@@ -41,7 +40,6 @@ class AddEditAlarmDialog(QDialog):
     def __init__(self, parent=None, alarm: Optional[Alarm] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Alarm" if alarm is not None else "New Alarm")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(340, 300)
 
         layout = QVBoxLayout(self)

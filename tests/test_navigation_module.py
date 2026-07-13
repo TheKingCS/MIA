@@ -25,6 +25,17 @@ def test_format_waypoint_row():
     assert format_waypoint_row(waypoint) == "Base Camp  (40.1235, -105.6789)"
 
 
+def test_format_waypoint_row_with_category():
+    waypoint = Waypoint(
+        waypoint_id="abc123",
+        name="Ridge Camp",
+        latitude=40.12349,
+        longitude=-105.6789,
+        category="Campsite",
+    )
+    assert format_waypoint_row(waypoint) == "[Campsite] Ridge Camp  (40.1235, -105.6789)"
+
+
 def test_moon_phase_name_boundaries():
     # Exact boundaries per astral's own documented scale.
     assert format_moon_phase_name(0.0) == "New Moon"

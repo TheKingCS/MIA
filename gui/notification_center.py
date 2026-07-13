@@ -29,7 +29,6 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
-from gui.styles import DARK_FIELD_THEME
 
 _LEVEL_COLORS = {
     "info": "#4fd1c5",
@@ -43,7 +42,6 @@ class NotificationCenterDialog(QDialog):
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Notifications")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.resize(420, 480)
 
         self._build_ui()

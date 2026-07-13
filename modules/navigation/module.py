@@ -48,7 +48,8 @@ from modules.module_base import ModuleBase
 
 def format_waypoint_row(waypoint: Waypoint) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_navigation_module.py)."""
-    return f"{waypoint.name}  ({waypoint.latitude:.4f}, {waypoint.longitude:.4f})"
+    category = f"[{waypoint.category}] " if waypoint.category else ""
+    return f"{category}{waypoint.name}  ({waypoint.latitude:.4f}, {waypoint.longitude:.4f})"
 
 
 def format_moon_phase_name(phase: float) -> str:
@@ -204,6 +205,7 @@ class NavigationModule(ModuleBase):
             latitude=dialog.entered_latitude,
             longitude=dialog.entered_longitude,
             notes=dialog.entered_notes,
+            category=dialog.entered_category,
         )
         self._refresh_list()
 
@@ -224,6 +226,7 @@ class NavigationModule(ModuleBase):
             latitude=dialog.entered_latitude,
             longitude=dialog.entered_longitude,
             notes=dialog.entered_notes,
+            category=dialog.entered_category,
         )
         self._refresh_list()
 

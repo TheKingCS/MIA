@@ -1,0 +1,497 @@
+"""
+gui.theme_manager
+====================
+
+Theme registry and selection — docs/ROADMAP.md milestone 13.2. Nothing
+like this existed before this milestone: every dialog/screen hardcoded
+`gui.styles.DARK_FIELD_THEME` directly, and `config.gui.theme` sat
+unread in `config/default_config.json`.
+
+All four themes below reuse the exact same object-name selectors
+`gui/styles.py`'s `DARK_FIELD_THEME` already defined (`#TitleLabel`,
+`#SubtitleLabel`, `#ReadoutLabel`, `#ModuleButton`, `#HeaderBar`, etc.)
+— only which QSS string gets applied changes; no widget code needs new
+object names.
+
+The selected theme is applied exactly once, at the `QApplication`
+level, in `core/application.py` (`self.qt_app.setStyleSheet(...)`). Qt's
+stylesheet cascade means every widget/dialog inherits it automatically
+— this is why individual dialogs must NOT also call their own
+`setStyleSheet()` (a widget's own stylesheet call overrides inherited
+cascade for itself and its children), which is why the old per-widget
+`self.setStyleSheet(DARK_FIELD_THEME)` calls were removed from every
+dialog/screen as part of this same milestone.
+"""
+
+from __future__ import annotations
+
+from gui.styles import DARK_FIELD_THEME
+
+DEFAULT_THEME_ID = "dark_field"
+
+_LOW_ENERGY_THEME = """
+QMainWindow, QWidget {
+    background-color: #f2f2f0;
+    color: #1a1a1a;
+    font-family: "Segoe UI", "DejaVu Sans", sans-serif;
+    font-size: 14px;
+}
+
+QLabel {
+    background: transparent;
+}
+
+QLabel#TitleLabel {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+QLabel#SubtitleLabel, QLabel#BootSubtitleLabel {
+    font-size: 13px;
+    color: #4a4a4a;
+}
+
+QLabel#BootStatusLabel, QLabel#ReadoutLabel {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 15px;
+    color: #1a1a1a;
+    padding: 8px;
+    background-color: #e6e6e2;
+    border: 1px solid #b8b8b2;
+}
+
+QFrame#HeaderBar {
+    background-color: #e6e6e2;
+    border-bottom: 1px solid #b8b8b2;
+}
+
+QFrame#CharacterPanel {
+    background-color: #e6e6e2;
+    border: 1px solid #b8b8b2;
+}
+
+QLabel#CharacterPlaceholderText {
+    color: #4a4a4a;
+    font-size: 13px;
+}
+
+QPushButton#ModuleButton {
+    background-color: #e6e6e2;
+    border: 1px solid #b8b8b2;
+    padding: 16px;
+    text-align: left;
+    font-size: 15px;
+    color: #1a1a1a;
+}
+
+QPushButton#ModuleButton:hover {
+    border: 1px solid #1a1a1a;
+}
+
+QPushButton#ModuleButton:pressed {
+    background-color: #d8d8d2;
+}
+
+QProgressBar {
+    background-color: #e6e6e2;
+    border: 1px solid #b8b8b2;
+    text-align: center;
+    color: #1a1a1a;
+}
+
+QProgressBar::chunk {
+    background-color: #4a4a4a;
+}
+
+QStatusBar {
+    background-color: #e6e6e2;
+    color: #4a4a4a;
+}
+
+QWizard {
+    background-color: #f2f2f0;
+}
+
+QLineEdit, QDateEdit, QTimeEdit, QComboBox {
+    background-color: #ffffff;
+    border: 1px solid #b8b8b2;
+    padding: 6px;
+    color: #1a1a1a;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #ffffff;
+    border: 1px solid #b8b8b2;
+    color: #1a1a1a;
+    selection-background-color: #d8d8d2;
+    selection-color: #1a1a1a;
+    outline: none;
+}
+
+QPlainTextEdit#LogView {
+    background-color: #ffffff;
+    border: 1px solid #b8b8b2;
+    color: #1a1a1a;
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 12px;
+}
+
+QCheckBox {
+    color: #1a1a1a;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #1a1a1a;
+    background-color: #ffffff;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #1a1a1a;
+    border: 1px solid #1a1a1a;
+}
+
+QCheckBox::indicator:disabled {
+    border: 1px solid #b8b8b2;
+    background-color: #e6e6e2;
+}
+
+QPlainTextEdit#ChatLog {
+    background-color: #ffffff;
+    border: 1px solid #b8b8b2;
+    padding: 10px;
+    color: #1a1a1a;
+}
+"""
+
+_COLORED_THEME = """
+QMainWindow, QWidget {
+    background-color: #1b1030;
+    color: #f1e9ff;
+    font-family: "Segoe UI", "DejaVu Sans", sans-serif;
+    font-size: 14px;
+}
+
+QLabel {
+    background: transparent;
+}
+
+QLabel#TitleLabel {
+    font-size: 26px;
+    font-weight: 600;
+    color: #ff6b6b;
+    letter-spacing: 2px;
+}
+
+QLabel#SubtitleLabel, QLabel#BootSubtitleLabel {
+    font-size: 13px;
+    color: #c9b8e8;
+}
+
+QLabel#BootStatusLabel, QLabel#ReadoutLabel {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 16px;
+    color: #ffd166;
+    padding: 10px;
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 8px;
+}
+
+QFrame#HeaderBar {
+    background-color: #2a1b47;
+    border-bottom: 1px solid #4a2f78;
+}
+
+QFrame#CharacterPanel {
+    background-color: #2a1b47;
+    border: 1px dashed #06d6a0;
+    border-radius: 10px;
+}
+
+QLabel#CharacterPlaceholderText {
+    color: #06d6a0;
+    font-size: 13px;
+}
+
+QPushButton#ModuleButton {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: left;
+    font-size: 15px;
+    color: #f1e9ff;
+}
+
+QPushButton#ModuleButton:hover {
+    background-color: #3a2560;
+    border: 1px solid #ff6b6b;
+}
+
+QPushButton#ModuleButton:pressed {
+    background-color: #150a26;
+}
+
+QProgressBar {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 4px;
+    text-align: center;
+    color: #f1e9ff;
+}
+
+QProgressBar::chunk {
+    background-color: #06d6a0;
+    border-radius: 4px;
+}
+
+QStatusBar {
+    background-color: #2a1b47;
+    color: #c9b8e8;
+}
+
+QWizard {
+    background-color: #1b1030;
+}
+
+QLineEdit, QDateEdit, QTimeEdit, QComboBox {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 4px;
+    padding: 6px;
+    color: #f1e9ff;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    color: #f1e9ff;
+    selection-background-color: #3a2560;
+    selection-color: #ff6b6b;
+    outline: none;
+}
+
+QPlainTextEdit#LogView {
+    background-color: #150a26;
+    border: 1px solid #4a2f78;
+    border-radius: 6px;
+    color: #c9b8e8;
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 12px;
+}
+
+QCheckBox {
+    color: #f1e9ff;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ff6b6b;
+    border-radius: 3px;
+    background-color: #2a1b47;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+}
+
+QCheckBox::indicator:disabled {
+    border: 1px solid #4a2f78;
+    background-color: #1b1030;
+}
+
+QPlainTextEdit#ChatLog {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 6px;
+    padding: 10px;
+    color: #f1e9ff;
+}
+"""
+
+_ANIME_MONOCHROME_THEME = """
+QMainWindow, QWidget {
+    background-color: #ffffff;
+    color: #000000;
+    font-family: "Segoe UI", "DejaVu Sans", sans-serif;
+    font-size: 14px;
+}
+
+QLabel {
+    background: transparent;
+}
+
+QLabel#TitleLabel {
+    font-size: 28px;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 3px;
+}
+
+QLabel#SubtitleLabel, QLabel#BootSubtitleLabel {
+    font-size: 13px;
+    color: #444444;
+}
+
+QLabel#BootStatusLabel, QLabel#ReadoutLabel {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 16px;
+    color: #ffffff;
+    padding: 10px;
+    background-color: #000000;
+    border: 2px solid #000000;
+}
+
+QFrame#HeaderBar {
+    background-color: #000000;
+    border-bottom: 3px solid #000000;
+}
+
+/*
+#TitleLabel/#SubtitleLabel default to black text for contrast against
+this theme's white body background (used as a module page's own
+header, e.g. modules/expeditions/module.py) — but gui/main_window.py
+also places both inside #HeaderBar, which is solid black here. Without
+this override, black-on-black made the app's own top bar title
+unreadable (found by actually rendering this theme and looking, not
+just checking stylesheet-string equality).
+*/
+QFrame#HeaderBar QLabel#TitleLabel,
+QFrame#HeaderBar QLabel#SubtitleLabel {
+    color: #ffffff;
+}
+
+QFrame#CharacterPanel {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+}
+
+QLabel#CharacterPlaceholderText {
+    color: #000000;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#ModuleButton {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    padding: 18px;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 600;
+    color: #000000;
+}
+
+QPushButton#ModuleButton:hover {
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #000000;
+}
+
+QPushButton#ModuleButton:pressed {
+    background-color: #444444;
+    color: #ffffff;
+}
+
+QProgressBar {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    text-align: center;
+    color: #000000;
+}
+
+QProgressBar::chunk {
+    background-color: #000000;
+}
+
+QStatusBar {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+QWizard {
+    background-color: #ffffff;
+}
+
+QLineEdit, QDateEdit, QTimeEdit, QComboBox {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    padding: 6px;
+    color: #000000;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    color: #000000;
+    selection-background-color: #000000;
+    selection-color: #ffffff;
+    outline: none;
+}
+
+QPlainTextEdit#LogView {
+    background-color: #000000;
+    border: 2px solid #000000;
+    color: #ffffff;
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 12px;
+}
+
+QCheckBox {
+    color: #000000;
+    spacing: 8px;
+    font-weight: 600;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #000000;
+    background-color: #ffffff;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #000000;
+    border: 2px solid #000000;
+}
+
+QCheckBox::indicator:disabled {
+    border: 2px solid #888888;
+    background-color: #ffffff;
+}
+
+QPlainTextEdit#ChatLog {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    padding: 10px;
+    color: #000000;
+}
+"""
+
+#: theme_id -> QSS. Surfaced in modules/settings/module.py's Theme
+#: dropdown as: Dark Field / Low Energy / Colored / Anime Monochrome.
+THEMES: dict[str, str] = {
+    "dark_field": DARK_FIELD_THEME,
+    "low_energy": _LOW_ENERGY_THEME,
+    "colored": _COLORED_THEME,
+    "anime_monochrome": _ANIME_MONOCHROME_THEME,
+}
+
+THEME_DISPLAY_NAMES: dict[str, str] = {
+    "dark_field": "Dark Field",
+    "low_energy": "Low Energy",
+    "colored": "Colored",
+    "anime_monochrome": "Anime Monochrome",
+}
+
+
+def get_theme_stylesheet(theme_id: str) -> str:
+    """Falls back to DEFAULT_THEME_ID for an unrecognized id (e.g. after a config downgrade)."""
+    return THEMES.get(theme_id, THEMES[DEFAULT_THEME_ID])

@@ -34,6 +34,7 @@ from core.data_logger_manager import DataLoggerManager
 from core.device_framework import DeviceFramework
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
+from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
@@ -46,6 +47,7 @@ from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
+from core.trip_manager import TripManager
 from core.voice_manager import VoiceManager
 from core.waypoint_manager import WaypointManager
 from gui.lock_screen import LockScreen
@@ -53,6 +55,7 @@ from gui.main_window import MainWindow
 from gui.profile_select import ProfileSelectScreen
 from gui.setup_wizard import SetupWizard
 from gui.splash_screen import SplashScreen
+from gui.theme_manager import get_theme_stylesheet
 
 log = get_logger(__name__)
 
@@ -67,6 +70,16 @@ class MIAApplication:
         self.config = ConfigManager()
         self.events = EventBus()
         self.context = AppContext(config=self.config, events=self.events)
+
+        # Applied once, at the QApplication level — Qt's stylesheet
+        # cascade means every widget/dialog inherits this automatically,
+        # which is why individual dialogs no longer call their own
+        # setStyleSheet() (gui/theme_manager.py, docs/ROADMAP.md
+        # milestone 13.2). "theme.changed" (published by
+        # modules/settings/module.py's Theme dropdown) re-applies this
+        # live, no restart required.
+        self.qt_app.setStyleSheet(get_theme_stylesheet(self.config.get("gui.theme", "dark_field")))
+        self.events.subscribe("theme.changed", self._on_theme_changed)
         # ProfileManager needs the context to already exist (it reads/
         # writes config through it), so it's attached right after
         # construction rather than passed into AppContext's constructor.
@@ -87,6 +100,10 @@ class MIAApplication:
         self.context.power = PowerManager(self.context)
         self.context.devices = DeviceFramework(self.context)
         self.context.scripts = ScriptLibraryManager(self.context)
+        # Trips references waypoints/inventory/journal, so it's
+        # constructed after all three are already on the context.
+        self.context.expeditions = ExpeditionManager(self.context)
+        self.context.trips = TripManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -150,6 +167,10 @@ class MIAApplication:
             widget.showFullScreen()
         else:
             widget.show()
+
+    def _on_theme_changed(self, theme_id: str, **_kwargs) -> None:
+        """Live theme swap — published by modules/settings/module.py's Theme dropdown. No restart required."""
+        self.qt_app.setStyleSheet(get_theme_stylesheet(theme_id))
 
     def _register_search_providers(self) -> None:
         """

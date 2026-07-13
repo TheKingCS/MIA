@@ -37,6 +37,20 @@ _WAYPOINTS_FILE = _DATA_DIR / "waypoints.json"
 _EARTH_RADIUS_KM = 6371.0088
 
 
+#: Suggested vocabulary for Waypoint.category, surfaced as a QComboBox in
+#: gui/add_edit_waypoint_dialog.py — docs/ROADMAP.md milestone 12.2, Trip
+#: Log. Stored as a plain str, not an enum: an unrecognized/blank value
+#: (e.g. from an older waypoints.json predating this field) just means
+#: "uncategorized", never an error.
+WAYPOINT_CATEGORIES: tuple[str, ...] = (
+    "Campsite",
+    "Trailhead",
+    "Water Source",
+    "Viewpoint",
+    "Other",
+)
+
+
 @dataclass
 class Waypoint:
     waypoint_id: str
@@ -44,6 +58,7 @@ class Waypoint:
     latitude: float
     longitude: float
     notes: str = ""
+    category: str = ""  # one of WAYPOINT_CATEGORIES, or "" for uncategorized
     created_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
@@ -53,6 +68,7 @@ class Waypoint:
             "latitude": self.latitude,
             "longitude": self.longitude,
             "notes": self.notes,
+            "category": self.category,
             "created_at": self.created_at,
         }
 
@@ -64,6 +80,7 @@ class Waypoint:
             latitude=data.get("latitude", 0.0),
             longitude=data.get("longitude", 0.0),
             notes=data.get("notes", ""),
+            category=data.get("category", ""),
             created_at=data.get("created_at", ""),
         )
 
@@ -122,13 +139,16 @@ class WaypointManager:
     # Writing
     # ------------------------------------------------------------------
 
-    def add_waypoint(self, name: str, latitude: float, longitude: float, notes: str = "") -> Waypoint:
+    def add_waypoint(
+        self, name: str, latitude: float, longitude: float, notes: str = "", category: str = ""
+    ) -> Waypoint:
         waypoint = Waypoint(
             waypoint_id=uuid.uuid4().hex[:10],
             name=name,
             latitude=latitude,
             longitude=longitude,
             notes=notes,
+            category=category,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
         self._waypoints.append(waypoint)

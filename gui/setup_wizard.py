@@ -28,7 +28,6 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 from core.logger import get_logger
-from gui.styles import DARK_FIELD_THEME
 
 log = get_logger(__name__)
 
@@ -84,7 +83,6 @@ class SetupWizard(QWizard):
         super().__init__()
         self.context = context
         self.setWindowTitle("M.I.A. — First-Time Setup")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(480, 320)
 
         self._welcome_page = _WelcomePage()

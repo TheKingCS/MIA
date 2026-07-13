@@ -4,7 +4,7 @@ gui.add_edit_script_dialog
 
 Small dialog for creating or editing a single Field Kit script, used by
 modules/field_kit/module.py. Same shape as
-gui/add_edit_journal_entry_dialog.py (QDialog + DARK_FIELD_THEME +
+gui/add_edit_journal_entry_dialog.py (QDialog + the shared app-level theme +
 QDialogButtonBox, validate-then-expose-via-properties on accept) —
 name/category/interpreter/content instead of title/tags/body.
 """
@@ -24,14 +24,12 @@ from PySide6.QtWidgets import (
 )
 
 from core.script_library_manager import INTERPRETERS, Script
-from gui.styles import DARK_FIELD_THEME
 
 
 class AddEditScriptDialog(QDialog):
     def __init__(self, parent=None, script: Optional[Script] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Script" if script is not None else "New Script")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(480, 520)
 
         layout = QVBoxLayout(self)

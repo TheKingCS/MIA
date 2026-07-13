@@ -21,14 +21,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from gui.styles import DARK_FIELD_THEME
 
 
 class PasswordPromptDialog(QDialog):
     def __init__(self, profile_name: str, prompt: str = "Enter password for", parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Password Required")
-        self.setStyleSheet(DARK_FIELD_THEME)
         self.setFixedSize(340, 150)
 
         layout = QVBoxLayout(self)
