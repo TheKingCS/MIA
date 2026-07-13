@@ -79,3 +79,50 @@ def test_unrelated_how_many_question_does_not_gate_open():
     """
     keywords = _real_gating_keywords()
     assert looks_like_action_request("How many people live in Ohio?", keywords) is False
+
+
+# ----------------------------------------------------------------------
+# milestone 5.10 — delete/adjust actions
+# ----------------------------------------------------------------------
+
+def test_delete_alarm_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete my Wake Up alarm", keywords) is True
+
+
+def test_delete_note_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete the note called Groceries", keywords) is True
+
+
+def test_delete_inventory_item_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Remove M3 bolts from inventory", keywords) is True
+
+
+def test_adjust_inventory_quantity_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("I used 5 M3 bolts", keywords) is True
+
+
+def test_delete_waypoint_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete the Cabin waypoint", keywords) is True
+
+
+def test_used_to_phrasing_gates_open_as_a_known_accepted_tradeoff():
+    """
+    "I used to live in Ohio" gates open (contains "i used",
+    adjust_inventory_quantity's trigger for "I used 5 M3 bolts") even
+    though it's unrelated to inventory — a known, deliberately accepted
+    trade-off (see docs/ROADMAP.md's 5.10 writeup), not a bug being
+    tracked for a fix. Verified against the live model that the worst
+    case observed is a harmless read-only recall_recent_activity call,
+    never a destructive one: every delete/adjust handler in
+    core/application.py does an exact-match name lookup and fails
+    closed with a clear "I don't have a/an X called '...'" message when
+    nothing matches, so a stray tool call from this false positive
+    can't actually delete or change real data.
+    """
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("I used to live in Ohio", keywords) is True

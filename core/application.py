@@ -224,6 +224,24 @@ class MIAApplication:
             trigger_phrases=("list my alarms", "list alarms", "what alarms", "show my alarms", "do i have any alarms"),
         ))
         self.context.assistant_actions.register(AssistantAction(
+            name="delete_alarm",
+            description="Delete an existing alarm in M.I.A. by its label.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "label": {"type": "string", "description": "The label of the alarm to delete, e.g. 'Wake Up'."},
+                },
+                "required": ["label"],
+            },
+            handler=self._action_delete_alarm,
+            # Bare "alarm " (trailing space, so it doesn't match inside
+            # "alarming") is needed alongside the combo phrases because
+            # a real label sits between the verb and the noun in
+            # natural phrasing ("delete my Wake Up alarm") — no fixed
+            # combo phrase can match an arbitrary inserted name.
+            trigger_phrases=("delete an alarm", "delete alarm", "remove an alarm", "remove alarm", "cancel my alarm", "cancel the alarm", "alarm "),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
             name="add_note",
             description="Add a new journal/note entry in M.I.A.'s Notes module.",
             parameters={
@@ -255,6 +273,26 @@ class MIAApplication:
                 "show me my notes", "show my notes", "list my notes", "list notes",
                 "search my notes", "search notes", "find a note", "read my notes", "what notes do i have",
             ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_note",
+            description="Delete an existing journal/note entry in M.I.A.'s Notes module by its title.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The title of the note to delete."},
+                },
+                "required": ["title"],
+            },
+            handler=self._action_delete_note,
+            # No bare "note " trigger (unlike delete_alarm's bare
+            # "alarm ") — "note" collides with extremely common
+            # unrelated phrases ("please note that...", "of note"),
+            # so only combo phrases are used here; this means a
+            # "delete my [title] note" construction (name inserted
+            # before the noun) won't gate open, a known, deliberate
+            # trade-off, not an oversight.
+            trigger_phrases=("delete a note", "delete the note", "delete note", "delete my note", "remove a note", "remove the note", "remove note"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_inventory_item",
@@ -293,6 +331,37 @@ class MIAApplication:
             trigger_phrases=("inventory", "do i have"),
         ))
         self.context.assistant_actions.register(AssistantAction(
+            name="delete_inventory_item",
+            description="Remove an item entirely from M.I.A.'s Inventory tool by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the item to remove."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_inventory_item,
+            trigger_phrases=("delete from inventory", "delete an inventory item", "remove from inventory", "remove an inventory item"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="adjust_inventory_quantity",
+            description=(
+                "Change the quantity of an existing inventory item by an amount (positive to add "
+                "more, negative to use/remove some), e.g. 'I used 5 M3 bolts' -> delta -5. "
+                "Quantity never goes below zero. Use add_inventory_item instead for a brand-new item."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the existing item."},
+                    "delta": {"type": "integer", "description": "Amount to change the quantity by. Negative to subtract."},
+                },
+                "required": ["name", "delta"],
+            },
+            handler=self._action_adjust_inventory_quantity,
+            trigger_phrases=("i used", "used up", "use up", "got more", "received more"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
             name="list_waypoints",
             description="List or search the user's saved waypoints (named locations) in M.I.A.'s Navigation module.",
             parameters={
@@ -318,6 +387,19 @@ class MIAApplication:
             },
             handler=self._action_waypoint_distance,
             trigger_phrases=("distance to", "distance from", "how far is", "how far apart", "bearing to", "bearing from"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_waypoint",
+            description="Delete an existing saved waypoint in M.I.A.'s Navigation module by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the waypoint to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_waypoint,
+            trigger_phrases=("delete a waypoint", "delete waypoint", "remove a waypoint", "remove waypoint"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_system_health",
@@ -386,6 +468,15 @@ class MIAApplication:
         return "Your alarms:\n" + "\n".join(lines)
 
     @staticmethod
+    def _action_delete_alarm(context: AppContext, arguments: dict) -> str:
+        label = str(arguments.get("label", "")).strip().lower()
+        match = next((a for a in context.alarms.all_alarms() if a.label.lower() == label), None)
+        if match is None:
+            return f"I don't have an alarm called '{arguments.get('label', '')}'."
+        context.alarms.delete_alarm(match.alarm_id)
+        return f"Deleted the alarm '{match.label}'."
+
+    @staticmethod
     def _action_add_note(context: AppContext, arguments: dict) -> str:
         title = str(arguments.get("title", "")).strip()
         if not title:
@@ -408,6 +499,15 @@ class MIAApplication:
         return "Your notes:\n" + "\n".join(lines)
 
     @staticmethod
+    def _action_delete_note(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip().lower()
+        match = next((e for e in context.journal.all_entries() if e.title.lower() == title), None)
+        if match is None:
+            return f"I don't have a note titled '{arguments.get('title', '')}'."
+        context.journal.delete_entry(match.entry_id)
+        return f"Deleted the note '{match.title}'."
+
+    @staticmethod
     def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
         name = str(arguments.get("name", "")).strip()
         if not name:
@@ -427,6 +527,28 @@ class MIAApplication:
             return "No matching inventory items found." if query else "Your inventory is empty."
         lines = [f"- {i.quantity}x '{i.name}'" for i in items]
         return "Your inventory:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_delete_inventory_item(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((i for i in context.inventory.all_items() if i.name.lower() == name), None)
+        if match is None:
+            return f"I don't have an inventory item called '{arguments.get('name', '')}'."
+        context.inventory.delete_item(match.item_id)
+        return f"Removed '{match.name}' from inventory."
+
+    @staticmethod
+    def _action_adjust_inventory_quantity(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        try:
+            delta = int(arguments.get("delta", 0) or 0)
+        except (TypeError, ValueError):
+            return "I need a whole number to adjust the quantity by."
+        match = next((i for i in context.inventory.all_items() if i.name.lower() == name), None)
+        if match is None:
+            return f"I don't have an inventory item called '{arguments.get('name', '')}'."
+        updated = context.inventory.adjust_quantity(match.item_id, delta)
+        return f"'{updated.name}' is now {updated.quantity}."
 
     @staticmethod
     def _action_list_waypoints(context: AppContext, arguments: dict) -> str:
@@ -455,6 +577,15 @@ class MIAApplication:
             return f"Couldn't compute a distance between '{from_wp.name}' and '{to_wp.name}'."
         distance_km, bearing = result
         return f"'{from_wp.name}' to '{to_wp.name}': {distance_km:.1f} km, bearing {bearing:.0f}°."
+
+    @staticmethod
+    def _action_delete_waypoint(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a waypoint called '{arguments.get('name', '')}'."
+        context.waypoints.delete_waypoint(match.waypoint_id)
+        return f"Deleted the waypoint '{match.name}'."
 
     @staticmethod
     def _action_get_system_health(context: AppContext, arguments: dict) -> str:

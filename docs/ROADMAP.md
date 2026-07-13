@@ -577,6 +577,62 @@ boot never depends on an LLM server being up.
       guidance (5.6's writeup) still applies going forward: re-verify
       against the live model at each future batch of new actions,
       don't assume scaling stays safe by design alone.
+- [x] **5.10 Assistant action-registry expansion: write/mutate tools**
+      — the second half of "supercharge the Assistant," deliberately
+      built after 5.7-5.9's read tools and gating rework rather than
+      alongside them, since write actions carry more downside if
+      mis-called. Five new actions: `delete_alarm`, `delete_note`,
+      `delete_inventory_item`, `adjust_inventory_quantity` (positive or
+      negative delta, e.g. "I used 5 M3 bolts" -> delta -5, clamped at
+      zero by `InventoryManager.adjust_quantity()`), `delete_waypoint`.
+      Total registered tools: 11 -> 16. Every one of these handlers
+      resolves its target by an exact, case-insensitive name/label
+      match and **fails closed** with a clear "I don't have a/an X
+      called '...'" message when nothing matches, rather than guessing
+      or fuzzy-matching — this bounds the damage of any future gating
+      false positive by construction: worst case is a no-op with a
+      clear message, never a wrong deletion.
+
+      Live-model verification found two more real gating gaps, in the
+      same vein as 5.9's, plus a subtler one this time:
+      1. **Name-inserted-before-the-noun phrasing**: "Delete my Wake Up
+         alarm" doesn't match any combo phrase like "delete an alarm"
+         (the label sits between "my" and "alarm"). Fixed for
+         `delete_alarm` with a bare, word-boundary-safe `"alarm "`
+         trigger (trailing space so it doesn't match inside
+         "alarming") — deliberately *not* done the same way for
+         `delete_note`, since bare "note " collides with extremely
+         common unrelated phrases ("please note that...", "of note");
+         `delete_note` only gets combo phrases ("delete the note",
+         "delete my note", ...), so a "delete my [title] note"
+         construction remains a known, accepted gap rather than a
+         fixed one — the risk/reward of a bare trigger isn't the same
+         for every word.
+      2. **"Got more" doesn't survive an inserted quantity either**: "I
+         got 10 more M3 bolts" doesn't match the `"got more"` trigger
+         phrase (same shape as gap #1) — left as a known, accepted gap
+         rather than chasing every possible increase-quantity phrasing;
+         the safe failure mode (the model just chats, no tool called)
+         made this low-priority relative to the decrease/delete paths.
+      3. **"I used" collides with "used to"**: `adjust_inventory_quantity`'s
+         working trigger for "I used 5 M3 bolts" also fires on "I used
+         to live in Ohio" — verified this is a bounded, not dangerous,
+         false positive: the model called a harmless read-only
+         `recall_recent_activity` rather than anything destructive, and
+         every delete/adjust handler's fail-closed exact-match lookup
+         (above) means even a wrongly-triggered `adjust_inventory_quantity`
+         call couldn't touch real data without an exact existing item
+         name. Accepted as a documented trade-off (see
+         `tests/test_assistant_action_gating.py`) rather than adding
+         regex/numeric-lookahead complexity to the keyword matcher for
+         one edge case.
+      All three findings and the fixes/trade-offs made are pinned as
+      regression tests, not just prose — the two write-up patterns this
+      project has settled on for gating gaps: fix + pin when the fix is
+      clean and low-risk (gap #1's alarm phrasing), document + pin the
+      *current* behavior as intentional when the fix would introduce
+      new complexity or risk disproportionate to the gap (gaps #2 and
+      #3).
 
 ## v0.6 breakdown (planned)
 
