@@ -789,6 +789,57 @@ boot never depends on an LLM server being up.
       physical device path), Data Logger (niche/config-heavy, not a
       natural conversational fit). Not every module needs an Assistant
       hook; these were considered and skipped, not overlooked.
+- [x] **5.14 Assistant action-registry expansion: Profiles (read-only)**
+      — registry grows 34 -> 35, adding only `list_profiles`.
+      **Deliberately no `switch_profile`**: `gui/profile_select.py`
+      requires `verify_password()` to succeed *before*
+      `set_active_profile()` for any password-protected profile — an
+      Assistant action calling `set_active_profile()` directly would
+      bypass that check entirely (a real security hole), and the
+      alternative (accepting a password argument from the LLM) would
+      mean a spoken/typed password sits in plaintext chat history,
+      worse than a masked password field. Excluded outright, same
+      "flag it, don't silently omit it" treatment as 5.13's `run_script`
+      exclusion — this one for security reasons rather than execution-
+      risk reasons.
+
+      **Found a real naming collision via live-model testing**: `"profile"`
+      is overloaded in this app (user Profiles vs. the Core/Home
+      `device_profile` edition setting). Since gating is all-or-nothing
+      (once *any* trigger phrase matches, *all* registered tools attach,
+      not just the one whose phrase matched), the model had to
+      semantically distinguish `list_profiles` from the pre-existing
+      `get_device_profile` — and initially picked the wrong one for
+      "What profiles are set up on this device?". Fixed by sharpening
+      both tools' descriptions to explicitly cross-reference and rule
+      each other out ("this is about user accounts, NOT the device's
+      Core/Home edition — use get_device_profile for that", and vice
+      versa) rather than adjusting trigger phrases, since the collision
+      was semantic (tool selection among an attached set), not a gating
+      problem. A second collision-risk golden-set case was itself
+      initially miswritten (didn't actually contain any registered
+      trigger phrase, so nothing gated open at all — a test-authoring
+      mistake, not a model failure); corrected, then passed 44/44 on
+      two consecutive runs.
+
+      **Found and fixed a real data-pollution bug while investigating**,
+      unrelated to the collision above: `tests/test_assistant_action_handlers.py`'s
+      `context` fixture never isolated `core.config_manager._CONFIG_FILE`
+      the way every manager's own `_DATA_DIR`/`_XXX_FILE` already was —
+      harmless until 5.12 added `_action_set_theme` (the first handler
+      in this fixture to call a real `context.config.save()`), at which
+      point that one test's `.save()` call landed in the *actual*
+      `config/config.json`, not a throwaway file. Caught by noticing an
+      actual pytest tmp-path string sitting in that real file's
+      `trips.photo_root_path` key. Fixed at the root (isolated
+      `_CONFIG_FILE` in the fixture, so any current or future handler
+      test is safe by construction, not by which handler happens to get
+      exercised) and the same latent gap was found and fixed in
+      `tests/live_model_check.py` *before* it could bite there too
+      (adding `ProfileManager` there meant `create_profile()`'s own
+      internal `.save()` call would have hit the same real file).
+      `config/config.json` is gitignored/never committed, so the
+      already-leaked test artifact was cleaned up locally, not via git.
 
 ## v0.6 breakdown (planned)
 

@@ -20,6 +20,7 @@ import pytest
 import core.alarm_manager as alarm_manager_module
 import core.calendar_manager as calendar_manager_module
 import core.component_manager as component_manager_module
+import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
@@ -36,6 +37,7 @@ from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
+from core.profile_manager import ProfileManager
 from core.script_library_manager import ScriptLibraryManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
@@ -44,6 +46,12 @@ from core.waypoint_manager import WaypointManager
 @pytest.fixture
 def context(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
+    # _action_set_theme() calls context.config.save() for real — without
+    # this, that write would land in the actual config/config.json, not
+    # a throwaway file (found by discovering an actual pytest tmp_path
+    # value sitting in the real config.json's trips.photo_root_path key
+    # after an earlier test run — see docs/ROADMAP.md milestone 5.14).
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(alarm_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(alarm_manager_module, "_ALARMS_FILE", data_dir / "alarms.json")
     monkeypatch.setattr(journal_manager_module, "_DATA_DIR", data_dir)
@@ -74,6 +82,7 @@ def context(tmp_path, monkeypatch):
     ctx.calendar = CalendarManager(ctx)
     ctx.components = ComponentManager(ctx)
     ctx.scripts = ScriptLibraryManager(ctx)
+    ctx.profiles = ProfileManager(ctx)
     return ctx
 
 
@@ -721,3 +730,35 @@ def test_list_scripts_query_filters(context):
     result = MIAApplication._action_list_scripts(context, {"query": "backup"})
     assert "Backup" in result
     assert "Deploy" not in result
+
+
+# ----------------------------------------------------------------------
+# Profiles (list only — no switch_profile, see core/application.py's
+# _register_assistant_actions() docstring comment on why)
+# ----------------------------------------------------------------------
+
+def test_list_profiles_empty(context):
+    assert "no profiles" in MIAApplication._action_list_profiles(context, {}).lower()
+
+
+def test_list_profiles_returns_all(context):
+    context.profiles.create_profile(name="Zac", make_active=True)
+    context.profiles.create_profile(name="Guest", make_active=False)
+    result = MIAApplication._action_list_profiles(context, {})
+    assert "Zac" in result and "Guest" in result
+
+
+def test_list_profiles_marks_active_profile(context):
+    context.profiles.create_profile(name="Zac", make_active=True)
+    context.profiles.create_profile(name="Guest", make_active=False)
+    result = MIAApplication._action_list_profiles(context, {})
+    zac_line = next(line for line in result.splitlines() if "Zac" in line)
+    guest_line = next(line for line in result.splitlines() if "Guest" in line)
+    assert "active" in zac_line.lower()
+    assert "active" not in guest_line.lower()
+
+
+def test_list_profiles_shows_password_lock_marker(context):
+    context.profiles.create_profile(name="Zac", password="secret123")
+    result = MIAApplication._action_list_profiles(context, {})
+    assert "\U0001F512" in result

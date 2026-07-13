@@ -250,3 +250,12 @@ def test_list_connected_devices_phrasing_gates_open():
 def test_list_scripts_phrasing_gates_open():
     keywords = _real_gating_keywords()
     assert looks_like_action_request("List my scripts", keywords) is True
+
+
+# ----------------------------------------------------------------------
+# milestone 5.14 — Profiles (list only)
+# ----------------------------------------------------------------------
+
+def test_list_profiles_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What profiles are set up on this device?", keywords) is True

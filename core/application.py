@@ -588,8 +588,11 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="get_device_profile",
             description=(
-                "Tell the user which M.I.A. edition this device is running: Core "
-                "(Pi 5 + AI HAT+ 2 field edition) or Home (desktop workstation edition)."
+                "Tell the user which M.I.A. EDITION (hardware/software variant) this "
+                "device is running: Core (Pi 5 + AI HAT+ 2 field edition) or Home "
+                "(desktop workstation edition). This is about the device/installation "
+                "itself, NOT about user accounts — use list_profiles for the people "
+                "set up on this device."
             ),
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_get_device_profile,
@@ -724,6 +727,27 @@ class MIAApplication:
             handler=self._action_list_scripts,
             trigger_phrases=("list my scripts", "list scripts", "what scripts", "show my scripts"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_profiles",
+            description=(
+                "List the user ACCOUNTS/PEOPLE set up on this M.I.A. device (e.g. "
+                "'Zac', 'Guest'). This is about user accounts, NOT the device's "
+                "Core/Home edition setting — use get_device_profile for that."
+            ),
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_profiles,
+            trigger_phrases=("list my profiles", "list profiles", "what profiles", "show my profiles", "who's set up"),
+        ))
+        # Deliberately NOT registering a "switch_profile" action:
+        # gui/profile_select.py requires verify_password() to succeed
+        # BEFORE set_active_profile() for any password-protected
+        # profile — an Assistant action calling set_active_profile()
+        # directly would bypass that check entirely (a real security
+        # hole), and the alternative (accepting a password argument from
+        # the LLM) would mean a spoken/typed password sits in plaintext
+        # chat history, which is worse than a masked password field, not
+        # just a different capability class. Same "exclude, don't
+        # silently omit" treatment as run_script above.
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1120,6 +1144,19 @@ class MIAApplication:
             return "No matching scripts found." if query else "You have no saved scripts."
         lines = [f"- '{s.name}'" + (f" [{s.category}]" if s.category else "") + f" ({s.interpreter})" for s in scripts]
         return "Your scripts:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_list_profiles(context: AppContext, arguments: dict) -> str:
+        profiles = context.profiles.list_profiles()
+        if not profiles:
+            return "No profiles are set up on this device."
+        active = context.profiles.get_active_profile()
+        lines = []
+        for profile in profiles:
+            marker = " (active)" if active is not None and profile.profile_id == active.profile_id else ""
+            lock = " \U0001F512" if profile.has_password else ""
+            lines.append(f"- '{profile.name}'{marker}{lock}")
+        return "Profiles on this device:\n" + "\n".join(lines)
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

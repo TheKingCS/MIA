@@ -42,12 +42,21 @@ _TEMP_DATA_DIR = Path(tempfile.mkdtemp(prefix="mia_live_model_check_"))
 import core.alarm_manager as alarm_manager_module
 import core.calendar_manager as calendar_manager_module
 import core.component_manager as component_manager_module
+import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
+
+# ProfileManager.create_profile()/set_active_profile() persist via
+# context.config.save() (not their own data file) — without this, that
+# write would land in the real config/config.json, not a throwaway
+# file. Found the hard way once already in this project (see
+# docs/ROADMAP.md milestone 5.14); isolated here before ANY ConfigManager
+# is ever constructed, same as every manager's own _DATA_DIR below.
+config_manager_module._CONFIG_FILE = _TEMP_DATA_DIR / "config.json"
 
 alarm_manager_module._DATA_DIR = _TEMP_DATA_DIR
 alarm_manager_module._ALARMS_FILE = _TEMP_DATA_DIR / "alarms.json"
@@ -83,6 +92,7 @@ from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.module_manager import ModuleManager
+from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.trip_manager import TripManager
@@ -162,6 +172,13 @@ GOLDEN_CASES = [
     ("list connected devices", "What devices are connected right now?", "list_connected_devices"),
     ("list scripts", "List my scripts", "list_scripts"),
     ("false-positive sanity: 'eventful' is not 'event '", "This was an eventful week at work", None),
+    # --- milestone 5.14: Profiles (list only, no switch_profile) ---
+    ("list profiles", "What user profiles do I have set up?", "list_profiles"),
+    (
+        "collision risk: 'profile' is overloaded (user profiles vs. device_profile edition)",
+        "Show my profiles on this M.I.A. device",
+        "list_profiles",
+    ),
 ]
 
 
@@ -192,6 +209,7 @@ def _build_context() -> AppContext:
     context.calendar = CalendarManager(context)
     context.components = ComponentManager(context)
     context.scripts = ScriptLibraryManager(context)
+    context.profiles = ProfileManager(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
     # over lsblk/psutil with no JSON file of their own, so no isolation
     # is needed the way every other manager above requires.
@@ -222,6 +240,7 @@ def _seed_fixtures(context: AppContext) -> None:
     context.calendar.add_event(title="Doctor Appointment", date="2026-08-14", time="09:00")
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
     context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
+    context.profiles.create_profile(name="Zac", make_active=True)
 
 
 def main() -> int:
