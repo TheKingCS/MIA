@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
     from core.reference_library_manager import ReferenceLibraryManager
+    from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
     from core.voice_manager import VoiceManager
     from core.waypoint_manager import WaypointManager
@@ -76,6 +77,7 @@ class AppContext:
     activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
     waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
     devices: Optional["DeviceFramework"] = field(default=None, repr=False)
+    scripts: Optional["ScriptLibraryManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

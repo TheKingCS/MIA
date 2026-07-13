@@ -1035,11 +1035,51 @@ pentesting toolkit assumes of its operator.
       real safety infrastructure regardless of how 11.3b resolves these
       questions, which is why they were built and shipped now instead
       of waiting for the whole feature to be ready at once.
-- [ ] **11.4 Useful Scripts library** — a categorized library of
+- [x] **11.4 Useful Scripts library** — a categorized library of
       user-authored shell/Python scripts with a run-and-view-output
-      pane. No sandboxing (matches this project's existing stance:
-      single-user offline tool, no plugin sandboxing already accepted
-      elsewhere) — these are the user's own trusted scripts.
+      pane, added as a "Scripts" tab in `modules/field_kit/module.py`
+      alongside 11.2's Device Manager (`docs/MODULE_SPEC.md` allows
+      only one `ModuleBase` subclass per module folder, so this is the
+      first module in the app to need a `QTabWidget`). No sandboxing
+      (matches this project's existing stance: single-user offline
+      tool, no plugin sandboxing already accepted elsewhere) — these
+      are the user's own trusted scripts.
+
+      `core/script_library_manager.py` is the same persisted-JSON CRUD
+      pattern as `JournalManager` (script content stored inline, not as
+      a path to an external file — one JSON blob to back up, no
+      scripts/ directory to keep in sync). `core/script_runner.py`
+      starts a script as a real subprocess (stdout+stderr merged,
+      line-buffered) and `modules/field_kit/script_worker.py`'s
+      `ScriptWorker` streams its output back line-by-line via Qt
+      signals, same scoped `QThread`-per-run pattern as
+      `modules/assistant/llm_worker.py`'s `ChatWorker` — a script can
+      run indefinitely, so reading it on the GUI thread would freeze
+      the whole app. `gui/add_edit_script_dialog.py` (name/category/
+      interpreter/content) and reusing the existing
+      `gui/delete_confirm_dialog.py` for deletion round out the CRUD
+      UI, same shape as Notes/Inventory/Waypoints.
+
+      **Unlike this milestone's flashing-engine/serial-monitor siblings
+      (11.2/11.3b), a script's execution needs no special hardware or
+      permissions this dev sandbox lacks — so this was verified with
+      genuine subprocess runs and a real, running Qt event loop, not
+      mocks or a "can't test this here" deferral.** That real testing
+      caught an actual bug: a "Stop" button click
+      (`process.terminate()`) killed only the directly-started `bash`
+      process, not a *child* process the script itself spawned (e.g.
+      `sleep 30`) — that orphaned child kept the merged stdout pipe
+      open, so `ScriptWorker`'s output-reading loop blocked for the
+      rest of the script's runtime (measured at the full ~30s) instead
+      of stopping promptly. Root-caused with a series of direct
+      reproductions (bypassing Qt entirely to isolate the process
+      layer), then fixed: `start_script_process()` now starts the
+      script in its own process group (`start_new_session=True`), and
+      a new `terminate_process_tree()` signals that whole group
+      (`os.killpg`), not just the one PID Python knows about — verified
+      the fix drops stop time from ~30s to under 1ms, and re-verified
+      through the actual GUI (`ScriptWorker`/"Stop" button), not just
+      the isolated process-management function.
 - [ ] **11.5 Security/Network Toolkit** — recon tools (port scanner,
       wifi/network analyzer, hash identifier, subnet calculator) plus
       active tooling (hash cracking, packet crafting, exploit-framework

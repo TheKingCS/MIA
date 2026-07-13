@@ -43,6 +43,7 @@ from core.notification_manager import NotificationManager
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
+from core.script_library_manager import ScriptLibraryManager
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
 from core.voice_manager import VoiceManager
@@ -85,6 +86,7 @@ class MIAApplication:
         self.context.waypoints = WaypointManager(self.context)
         self.context.power = PowerManager(self.context)
         self.context.devices = DeviceFramework(self.context)
+        self.context.scripts = ScriptLibraryManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
