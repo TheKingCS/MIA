@@ -894,20 +894,41 @@ this document frames throughout as testing devices/networks the user
 owns or is explicitly authorized to test — same standard any real
 pentesting toolkit assumes of its operator.
 
-- [ ] **11.1 Connected Device Framework (core service)** —
-      `core/device_framework.py` (`AppContext.devices`): polls `lsblk
-      -J` for block/storage devices (USB drives, SD cards, other Pis in
-      USB mass-storage mode) and `pyserial`'s `serial.tools.list_ports`
-      for serial devices (MCU boards) on a timer, diffs snapshots
-      against the previous poll, and publishes `"device.attached"` /
-      `"device.detached"` on the existing event bus — same
-      cross-component reaction mechanism every other module already
-      uses, no new plumbing invented. Identifies storage devices via
-      `lsblk`'s MODEL/TRAN/SIZE/FSTYPE fields and serial devices via a
-      small built-in VID:PID table for common boards (FTDI/CH340 →
-      Arduino-family, CP210x → ESP32, etc. — good-enough identification,
-      not a exhaustive hardware database). Detection only in this
-      milestone — no actions yet.
+- [x] **11.1 Connected Device Framework (core service)** —
+      `core/device_framework.py` (`AppContext.devices`): `list_block_devices()`
+      shells out to `lsblk -J` for storage devices (USB drives, SD
+      cards, other Pis in USB mass-storage mode) and `list_serial_devices()`
+      uses `pyserial`'s `serial.tools.list_ports.comports()` for serial
+      devices (MCU boards) — both filtered to *external* devices only
+      (`BlockDevice.is_external`/`SerialDevice.is_external`), identified
+      via `lsblk`'s MODEL/TRAN/SIZE/FSTYPE fields and a small built-in
+      VID:PID table for common boards (FTDI/CH340 → Arduino-family,
+      CP210x → ESP32 — good-enough identification, not an exhaustive
+      hardware database) respectively. `DeviceFramework.refresh()`
+      diffs the current poll against the previous one and publishes
+      `"device.attached"`/`"device.detached"` on the existing event
+      bus — same cross-component mechanism every other module already
+      uses. `DeviceFramework` owns no timer itself (core/ services
+      don't do async/threading); `refresh()` is meant to be called from
+      a widget-owned `QTimer` once Field Kit's Device Manager (11.2)
+      exists. Detection only in this milestone — no actions yet.
+
+      Real integration testing (not mocked) against this dev sandbox
+      found two real "internal noise" categories that would have made
+      every device look permanently "attached" if not filtered:
+      1. **WSL2's virtual disks** report as ordinary `disk` entries in
+         `lsblk` with no transport and `rm: false` — `is_external`
+         (removable flag or `tran == "usb"`) excludes these and the
+         Pi's own boot media the same way.
+      2. **WSL2's virtual legacy COM ports** (`/dev/ttyS0`-`/dev/ttyS7`)
+         are *always* reported by `pyserial`, whether or not anything
+         is plugged in, with no vid/pid at all — without a filter,
+         "no serial devices attached" could never actually happen in
+         this dev sandbox. `SerialDevice.is_external` (vid is not
+         `None` — a real USB-attached board always has one from its
+         USB descriptor, a native/virtual UART never does) fixes this,
+         verified against the real environment: both device lists
+         correctly return empty with nothing plugged in.
 - [ ] **11.2 Device Manager module + actions menu** —
       `modules/field_kit/module.py`: live list of currently-attached
       devices (name, type, identification) sourced from 11.1, with a

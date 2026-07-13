@@ -52,5 +52,11 @@ psutil>=6.0,<8.0
 # than hand-rolling potentially-buggy astronomical math.
 astral>=3.2,<4.0
 
+# Field Kit's Connected Device Framework (v0.11 milestone 11.1) — serial
+# port enumeration (USB-attached MCU boards) for detection/identification.
+# Storage/block device detection instead shells out to lsblk directly
+# (already present on any Linux target, no Python binding needed).
+pyserial>=3.5,<4.0
+
 # Testing
 pytest>=7.4

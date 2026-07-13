@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
     from core.data_logger_manager import DataLoggerManager
+    from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
     from core.inventory_manager import InventoryManager
     from core.journal_manager import JournalManager
@@ -74,6 +75,7 @@ class AppContext:
     components: Optional["ComponentManager"] = field(default=None, repr=False)
     activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
     waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
+    devices: Optional["DeviceFramework"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

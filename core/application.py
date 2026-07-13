@@ -31,6 +31,7 @@ from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
 from core.data_logger_manager import DataLoggerManager
+from core.device_framework import DeviceFramework
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.inventory_manager import InventoryManager
@@ -83,6 +84,7 @@ class MIAApplication:
         self.context.voice = VoiceManager(self.context)
         self.context.waypoints = WaypointManager(self.context)
         self.context.power = PowerManager(self.context)
+        self.context.devices = DeviceFramework(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
