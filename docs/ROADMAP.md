@@ -35,7 +35,7 @@ keeps the module count manageable as the feature list grows:
 | **Reference Library** (indexed/searchable document + PDF + Kiwix ZIM viewer) | Wiki, manuals, first aid, electronics datasheets, schematics, repair manuals, species ID, knot guide, mechanical references, programming docs, man pages, Bible, ham cheat sheets |
 | **Calculator Engine** (pluggable formula registry, one UI) | Unit converter, calculator, resistor/Ohm's Law/voltage divider/wire gauge, antenna calculator, fuel estimates, coordinate conversion |
 | **Data Logger + Charts** (timestamped readings → graphs) | Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics |
-| **Connected Device Framework** (discover/pair/telemetry/control) | Robots, Drones, Smart Home, Vehicle OBD, Power monitoring |
+| **Connected Device Framework** (discover/identify/pair/telemetry/control) | Robots, Drones, Smart Home, Vehicle OBD, Power monitoring, Field Kit's Connected Device Manager. Starts with physically-attached USB/serial devices (v0.11); wifi/Bluetooth discovery is a planned later extension of the same framework, not a separate one — added when that transport is actually built rather than speculatively now |
 | **Notes/Journal Engine** (dated, searchable, taggable rich text + voice memo transcription) | Daily journal, Project Manager notes, Lab notes, vehicle notes |
 | **Activity/Memory Log** (system-wide event history via the event bus) | Memories section, "what did I do on Project X" queries, Diagnostics history |
 | **Global Search** | One search bar over docs, notes, files, inventory, settings, everything |
@@ -63,6 +63,7 @@ sections themselves — everything below is a menu section:
 14. **The Lab** — sensor testing, experiments, calibration, graphs (UI home of the Data Logger service)
 15. **Diagnostics** — CPU/RAM/storage/temp/network/UPS/sensors, always accessible
 16. **System** — settings, user profiles, module manager, notifications, backup/restore, update manager
+17. **Field Kit** — connected device detection/identification (USB/serial now, wifi/BT planned), per-device actions (browse files, eject, flash OS + auto-install MIA), useful scripts library, security/network recon + active toolkit, MCU firmware flashing (ties into Workshop & Electronics' own planned "MCU flashing" bullet rather than duplicating it)
 
 ## Integration decisions (don't reinvent the wheel)
 
@@ -93,6 +94,7 @@ testing guide accompanies each milestone as it's built — see
 | **v0.8** | Workshop & Electronics + The Lab (shared Data Logger) |
 | **v0.9** | Activity/Memory Log (shared service) + Memories AI-query — the first v1.0+-bucket slice buildable with zero real hardware |
 | **v0.10** | Navigation: Waypoints + Sun/Moon calculator — the second v1.0+-bucket slice buildable with zero real hardware (offline maps/trails/elevation wait for real GPS/mapping data) |
+| **v0.11** | Field Kit — Connected Device Framework (core service, USB/serial detection+identification) + Device Manager UI, OS/MIA flashing+provisioning, useful scripts library, security/network toolkit, MCU firmware flashing tie-in — the third v1.0+-bucket slice buildable with zero real hardware beyond a spare USB drive/SD card, at the user's explicit request to turn M.I.A. into a field engineering/programming tool |
 | **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Agriculture, Medical, Smart Home, Media, Project Manager — added incrementally as real hardware for each is acquired (Media/Music specifically also needs `libpulse`, a system package not installable without sudo in this dev sandbox — confirmed blocked, not just deferred) |
 
 ## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
@@ -715,3 +717,81 @@ that section can be verified here right now.
       separate timezone configuration — `astral`'s `Observer` computes
       in UTC and `datetime.astimezone()` converts to the system's local
       time automatically, verified directly against real coordinates.
+
+## v0.11 breakdown (planned)
+
+**Field Kit** — requested directly by the user to turn M.I.A. into "the
+most useful offline engineering and field programming tool": detect and
+identify devices physically plugged into the Pi, act on them (browse
+files, flash an OS + auto-install M.I.A., flash MCU firmware), plus a
+useful-scripts library and a security/network toolkit. This is the
+third v1.0+-bucket slice buildable with zero hardware this project
+doesn't already have (just a spare USB drive/SD card for real-world
+verification) — same "software-buildable now" reasoning as v0.9/v0.10.
+Scope decisions made with the user before writing this breakdown:
+device detection starts with physically-attached USB/serial devices
+only (wifi/Bluetooth discovery is an explicit planned extension of the
+same Connected Device Framework, not a separate mechanism, added when
+that transport is actually built rather than speculatively now); the
+security/network toolkit is scoped to both recon *and* active tooling
+(hash cracking, packet crafting, exploit-framework launching), which
+this document frames throughout as testing devices/networks the user
+owns or is explicitly authorized to test — same standard any real
+pentesting toolkit assumes of its operator.
+
+- [ ] **11.1 Connected Device Framework (core service)** —
+      `core/device_framework.py` (`AppContext.devices`): polls `lsblk
+      -J` for block/storage devices (USB drives, SD cards, other Pis in
+      USB mass-storage mode) and `pyserial`'s `serial.tools.list_ports`
+      for serial devices (MCU boards) on a timer, diffs snapshots
+      against the previous poll, and publishes `"device.attached"` /
+      `"device.detached"` on the existing event bus — same
+      cross-component reaction mechanism every other module already
+      uses, no new plumbing invented. Identifies storage devices via
+      `lsblk`'s MODEL/TRAN/SIZE/FSTYPE fields and serial devices via a
+      small built-in VID:PID table for common boards (FTDI/CH340 →
+      Arduino-family, CP210x → ESP32, etc. — good-enough identification,
+      not a exhaustive hardware database). Detection only in this
+      milestone — no actions yet.
+- [ ] **11.2 Device Manager module + actions menu** —
+      `modules/field_kit/module.py`: live list of currently-attached
+      devices (name, type, identification) sourced from 11.1, with a
+      per-device actions menu. Storage devices: "Browse Files" (opens
+      the Files module rooted at that device's mount point — Files
+      already supports browsing arbitrary mounted filesystems per its
+      own docstring, this just gives it a device-aware entry point
+      instead of requiring the user to know the mount path) and "Eject
+      Safely". Serial devices: "Open Serial Monitor" (raw read/write
+      console, useful on its own for any MCU regardless of 11.5's
+      flashing support).
+- [ ] **11.3 OS + M.I.A. flashing/provisioning** — write a Raspberry Pi
+      OS image plus a first-boot script that auto-installs M.I.A. to a
+      selected storage device, turning this Pi into a field
+      provisioning station for a fleet of others. This is the one
+      genuinely destructive operation in Field Kit (writing to the
+      wrong device destroys its data with no undo), so the safety UX
+      matters as much as the write itself: show the exact
+      model/size/current-contents of the selected target before
+      committing, require typing the device's identifier to confirm
+      (not just a Yes/No dialog), and run the write on a worker thread
+      with progress reporting (images are multi-gigabyte).
+- [ ] **11.4 Useful Scripts library** — a categorized library of
+      user-authored shell/Python scripts with a run-and-view-output
+      pane. No sandboxing (matches this project's existing stance:
+      single-user offline tool, no plugin sandboxing already accepted
+      elsewhere) — these are the user's own trusted scripts.
+- [ ] **11.5 Security/Network Toolkit** — recon tools (port scanner,
+      wifi/network analyzer, hash identifier, subnet calculator) plus
+      active tooling (hash cracking, packet crafting, exploit-framework
+      launching) wrapping already-installed system tools (nmap, John/
+      Hashcat, etc.) rather than reimplementing them — M.I.A. provides
+      the offline-friendly UI/launcher, not the underlying capability.
+      Network-facing recon (packet sniffer, wifi/BT scanning) is
+      reconciled with, not duplicated from, the still-unbuilt
+      Communications section (`docs/ROADMAP.md`'s v1.0+ bucket) when
+      that section is eventually built.
+- [ ] **11.6 MCU firmware flashing** — ties Workshop & Electronics'
+      already-planned (but unbuilt) "MCU flashing" bullet to 11.1's
+      serial-device detection: flash firmware via `esptool`/`avrdude`
+      wrappers to an identified, currently-attached board, rather than
+      inventing a second, separate device-detection mechanism for it.
