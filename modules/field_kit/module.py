@@ -43,12 +43,15 @@ module installation.
 
 from __future__ import annotations
 
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -64,6 +67,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.device_framework import BlockDevice, SerialDevice, eject_storage_device
+from core.expedition_sync import export_expedition_data, import_expedition_data
 from core.logger import get_logger
 from core.script_library_manager import Script
 from gui.add_edit_script_dialog import AddEditScriptDialog
@@ -188,6 +192,14 @@ class FieldKitModule(ModuleBase):
         eject_button.clicked.connect(lambda: self._on_eject_clicked(device))
         layout.addWidget(eject_button)
 
+        export_button = QPushButton("Export Expedition Data Here")
+        export_button.clicked.connect(lambda: self._on_export_expedition_data_clicked(device))
+        layout.addWidget(export_button)
+
+        import_button = QPushButton("Import Expedition Data From Here")
+        import_button.clicked.connect(lambda: self._on_import_expedition_data_clicked(device))
+        layout.addWidget(import_button)
+
         return row
 
     def _build_serial_row(self, device: SerialDevice) -> QWidget:
@@ -216,6 +228,45 @@ class FieldKitModule(ModuleBase):
         else:
             QMessageBox.warning(None, "Eject failed", message)
         self._refresh_devices()
+
+    def _on_export_expedition_data_clicked(self, device: BlockDevice) -> None:
+        if not device.mountpoint:
+            QMessageBox.information(
+                None, "Not mounted", f"'{device.display_name}' has no mounted filesystem to export to."
+            )
+            return
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        destination = Path(device.mountpoint) / f"mia_expedition_export_{timestamp}.zip"
+        result = export_expedition_data(destination)
+        if result.passed:
+            QMessageBox.information(None, "Export Complete", f"Expedition data exported to:\n{result.destination}")
+        else:
+            QMessageBox.warning(None, "Export Failed", "\n".join(result.errors))
+
+    def _on_import_expedition_data_clicked(self, device: BlockDevice) -> None:
+        if not device.mountpoint:
+            QMessageBox.information(
+                None, "Not mounted", f"'{device.display_name}' has no mounted filesystem to import from."
+            )
+            return
+
+        source, _ = QFileDialog.getOpenFileName(
+            None, "Select Expedition Data Export", device.mountpoint, "M.I.A. Expedition Export (*.zip)"
+        )
+        if not source:
+            return
+
+        result = import_expedition_data(Path(source))
+        if result.passed:
+            summary = "\n".join(f"{name}: +{count}" for name, count in result.counts.items() if count)
+            if not summary:
+                summary = "No new records or photos — everything in this export was already present."
+            QMessageBox.information(
+                None, "Import Complete", f"{summary}\n\nRestart M.I.A. for imported data to appear."
+            )
+        else:
+            QMessageBox.warning(None, "Import Failed", "\n".join(result.errors))
 
     # ------------------------------------------------------------------
     # Scripts tab

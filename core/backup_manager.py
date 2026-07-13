@@ -179,7 +179,7 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None) -> Resto
     staging_dir = Path(tempfile.mkdtemp(prefix="mia_restore_staging_"))
     try:
         try:
-            _safe_extract_all(zf, staging_dir)
+            safe_extract_zip(zf, staging_dir)
         except BackupError as exc:
             return RestoreResult(passed=False, errors=[str(exc)])
 
@@ -213,16 +213,20 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None) -> Resto
     return RestoreResult(passed=True)
 
 
-def _safe_extract_all(zf: zipfile.ZipFile, target_dir: Path) -> None:
+def safe_extract_zip(zf: zipfile.ZipFile, target_dir: Path) -> None:
     """
     Extract every member of `zf` into `target_dir`, refusing to write
     outside it. zipfile has sanitized path traversal since Python 3.6,
     but this is cheap, explicit, and matches the same defense-in-depth
     core/module_validator.py already applies to untrusted archives.
+
+    Public (not module-private) because core/expedition_sync.py reuses
+    it verbatim for the same "extract an untrusted zip safely" need —
+    one implementation, not two.
     """
     target_dir = target_dir.resolve()
     for member in zf.namelist():
         member_path = (target_dir / member).resolve()
         if member_path != target_dir and target_dir not in member_path.parents:
-            raise BackupError(f"Refusing to extract unsafe path in backup: {member}")
+            raise BackupError(f"Refusing to extract unsafe path in archive: {member}")
     zf.extractall(target_dir)

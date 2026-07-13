@@ -95,6 +95,10 @@ testing guide accompanies each milestone as it's built — see
 | **v0.9** | Activity/Memory Log (shared service) + Memories AI-query — the first v1.0+-bucket slice buildable with zero real hardware |
 | **v0.10** | Navigation: Waypoints + Sun/Moon calculator — the second v1.0+-bucket slice buildable with zero real hardware (offline maps/trails/elevation wait for real GPS/mapping data) |
 | **v0.11** | Field Kit — Connected Device Framework (core service, USB/serial detection+identification) + Device Manager UI, OS/MIA flashing+provisioning, useful scripts library, security/network toolkit, MCU firmware flashing tie-in — the third v1.0+-bucket slice buildable with zero real hardware beyond a spare USB drive/SD card, at the user's explicit request to turn M.I.A. into a field engineering/programming tool |
+| **v0.12** | Expedition Mode — Expedition + Trip core/CRUD with a Trip activity type (hiking, camping, fishing, kayaking, biking, etc.), campsite/waypoint categories, gear checklist (Inventory-linked or freeform), trip journal with an explicit weather/conditions field, speed & distance from logged checkpoints, a schematic (non-tiled) route map, and trip photos — the fourth v1.0+-bucket slice buildable with zero real hardware, at the user's explicit request for field-ready outing tracking across activity types (live GPS, elevation, automated weather, and real map tiles all explicitly deferred — see the v0.12 breakdown) |
+| **v0.13** | Device Profile + Theme System — one codebase, config-driven Core (Pi 5 + AI HAT+ 2) vs. Home (desktop) editions, plus a selectable theme system (Dark Field, Low Energy, Colored, Anime Monochrome) applied at the QApplication level so it can differ in weight between editions |
+| **v0.14** | Pi 5 + AI HAT+ 2 deployment readiness — documentation/code-audit pass only (no physical hardware yet): deploy script review, flagged the open AI-HAT-inference-path question and polling-interval power budget as real unknowns to revisit once real hardware exists |
+| **v0.15** | Expedition data sync — Pi ("Core") exports Expedition Mode data (expeditions/trips/waypoints/journal/inventory/photos) to a docked USB drive via the Field Kit's existing device detection; Home merges it in by record id (no duplication on re-import) |
 | **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Agriculture, Medical, Smart Home, Media, Project Manager — added incrementally as real hardware for each is acquired (Media/Music specifically also needs `libpulse`, a system package not installable without sudo in this dev sandbox — confirmed blocked, not just deferred) |
 
 ## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
@@ -1095,3 +1099,302 @@ pentesting toolkit assumes of its operator.
       serial-device detection: flash firmware via `esptool`/`avrdude`
       wrappers to an identified, currently-attached board, rather than
       inventing a second, separate device-detection mechanism for it.
+
+## v0.12 breakdown (planned)
+
+Expedition Mode: field-ready outing tracking — hiking, camping, fishing,
+kayaking, biking, and more (`core/trip_manager.py`'s `ACTIVITY_TYPES`) —
+at the user's explicit request. An **Expedition**
+(`core/expedition_manager.py`) is the top-level dated outing container;
+it can hold multiple **Trips** (`core/trip_manager.py`, one activity/leg
+each, e.g. a weekend Expedition with a Saturday hike and a Sunday
+fishing trip as two separate Trips). Everything buildable
+with zero extra hardware/data landed this pass — live GPS position/
+speed, an elevation profile, automated weather fetch, and real tiled
+offline maps did **not**, and are called out explicitly below rather
+than half-built, same reasoning as 10.x's "offline maps, trails,
+elevation... wait for real GPS/mapping hardware/data" and 11.3b's
+deliberately-deferred disk-write engine.
+
+- [x] **12.1 Expedition + Trip Manager core, module CRUD** —
+      `core/expedition_manager.py` (`Expedition` dataclass + manager,
+      `AppContext.expeditions`) and `core/trip_manager.py` (`Trip`
+      dataclass + manager, `AppContext.trips`; `expedition_id` is a
+      required FK, and `activity_type` is a fixed-vocabulary field —
+      Hiking/Camping/Fishing/Kayaking/Biking/Other, same "plain str, not
+      an enum" reasoning as `Waypoint.category` below), same
+      persisted-JSON pattern as `core/waypoint_manager.py`
+      (`data/expeditions.json`/`data/trips.json`). New
+      `modules/expeditions/module.py`: an Expeditions list at the top,
+      the selected Expedition's Trips below it, same CRUD shape as
+      Notes/Inventory/Waypoints
+      (`gui/add_edit_expedition_dialog.py`/`gui/add_edit_trip_dialog.py`,
+      reusing `gui/delete_confirm_dialog.py` as-is). Selecting a Trip
+      opens `gui/trip_detail_dialog.py`, which every later 12.x
+      milestone below adds its own section to rather than spawning a
+      separate screen. This milestone's slice of that dialog is just
+      the Route section: pick an existing Waypoint, add it to the
+      trip's ordered planned route, remove one,
+      `TripManager.planned_route_distance_km()` (reuses
+      `haversine_distance_km()`, doesn't reinvent it) shows the
+      upfront-estimate distance. Deleting an Expedition unlinks, not
+      cascade-deletes, its Trips (confirmed via an in-app warning
+      dialog before delete) — consistent with this project's
+      non-destructive bias elsewhere (delete/adjust actions in
+      `core/inventory_manager.py`).
+- [x] **12.2 Campsite/waypoint categories** — additive `category: str
+      = ""` field on `Waypoint` (backward-compatible default for
+      existing `waypoints.json` entries missing the key), a fixed
+      suggested vocabulary (Campsite, Trailhead, Water Source,
+      Viewpoint, Other) via a `QComboBox` in
+      `gui/add_edit_waypoint_dialog.py` — stored as plain `str`, not an
+      enum, so an unrecognized/blank value just means "uncategorized."
+      `modules/navigation/module.py`'s `format_waypoint_row()` shows
+      the category when set.
+- [x] **12.3 Gear checklist per trip** — `GearItem` (label, optional
+      `item_id` linking to `core/inventory_manager.py`, `packed: bool`)
+      embedded on `Trip`. `add_gear_item()`/`toggle_gear_packed()`/
+      `remove_gear_item()` on `TripManager`. The Trip detail dialog's
+      Gear Checklist section supports both "Add From Inventory" (a
+      picker over `context.inventory.all_items()`) and a freeform
+      custom item not tracked in Inventory at all. Packing/unpacking a
+      gear item deliberately does **not** adjust the linked Inventory
+      item's quantity — packing a listed item isn't "consuming" it,
+      unlike the M3-bolts use case `adjust_inventory_quantity()` was
+      built for in milestone 5.10.
+- [x] **12.4 Trip journal integration with explicit weather field** —
+      additive `trip_id: Optional[str] = None` and `conditions: str =
+      ""` fields on the existing `JournalEntry`
+      (`core/journal_manager.py`), both backward-compatible defaults.
+      `conditions` is a first-class, structured field — not folded into
+      `body` — per the user's explicit call-out that weather should be
+      trackable on its own. New `JournalManager.entries_for_trip()`
+      filters/sorts the same way `all_entries()` already does. The Trip
+      detail dialog's Journal / Weather Log section lists linked
+      entries and adds new ones via a title/body/conditions form,
+      calling the *existing* `context.journal.add_entry()` (extended
+      with `trip_id`/`conditions` kwargs) rather than an add-then-update
+      round trip.
+- [x] **12.5 Speed & distance via logged checkpoints** — `Split`
+      (waypoint_id, `logged_at` ISO datetime) embedded on `Trip`.
+      `TripManager.record_split()` is a one-tap "arrived at this
+      waypoint now" log — the field-buildable stand-in for live GPS
+      tracking: the user checks in at each waypoint as they reach it,
+      same mental model as a compass-and-map hiker logging times at
+      trail junctions. `leg_summaries()` derives distance (haversine)
+      and elapsed time between consecutive logged splits, guarding the
+      same-second/out-of-order edge case by returning `speed_kmh=None`
+      rather than dividing by zero or a negative number;
+      `total_distance_km()`/`average_speed_kmh()` aggregate across all
+      legs. Kept distinct from 12.1's **planned** route distance (an
+      upfront estimate from the route alone, independent of whether/
+      when it's actually walked) — the Trip detail dialog's Speed &
+      Distance section shows both.
+- [x] **12.6 Schematic trip map view** — `gui/trip_map_view.py`:
+      `QGraphicsView`/`QGraphicsScene` plot of a trip's route
+      waypoints, positioned by plain equirectangular projection
+      (`project_to_scene_xy()`, a free function — testable without Qt),
+      connected in route order, each pin labeled with its name and
+      colored by category (12.2). Embedded directly under the Trip
+      detail dialog's Route section; wheel-to-zoom + click-drag pan via
+      a small `QGraphicsView` subclass. Deliberately **not** a real
+      tiled basemap — no bundled offline map imagery exists in this
+      project (same gap `modules/navigation/module.py`'s own docstring
+      already flagged) — so this is a visualization of already-entered
+      coordinates, not click-to-place: a click on blank schematic space
+      has no real-world meaning without underlying map imagery to
+      anchor it. Verified with a real headless-Qt (offscreen QPA)
+      smoke test exercising the actual dialog/widgets end to end, not
+      just the pure-function unit tests.
+- [x] **12.7 Trip photos** — new top-level `trip_photos/` directory
+      (config key `trips.photo_root_path`, `_resolve_photo_root_path()`
+      mirroring `core/reference_library_manager.py`'s
+      `_resolve_root_path()` exactly), kept out of `data/` entirely so
+      `core/backup_manager.py`'s `data/` rglob never sweeps binary
+      photo files alongside small JSON documents (same reasoning as the
+      Reference Library/voice models gitignore entries).
+      `TripManager.add_photo()` copies an existing image file in (via
+      `QFileDialog.getOpenFileNames` — import-only, no camera capture,
+      that needs real Pi camera hardware this dev sandbox doesn't
+      have); `remove_photo()` deletes the stored copy (not the user's
+      original) and unlists it. Trip detail dialog shows a thumbnail
+      grid (`QListWidget` in icon mode), double-click to preview at
+      full size in a plain `QDialog`.
+
+**Explicitly deferred, not half-built (flagging so it isn't mistaken for
+an oversight later):**
+- **Live GPS position/speed** — no GPS receiver in this dev sandbox, and
+  `docs/HARDWARE.md` itself still lists GPS module choice as an open
+  decision for the Pi 5 target. 12.5's logged-checkpoint speed/distance
+  is the buildable-now substitute; swapping in live GPS later is an
+  additive follow-up (auto-log a split instead of a manual tap), not a
+  redesign.
+- **Elevation profile** — needs a bundled offline DEM/elevation
+  dataset; none chosen. `astral` (already a dependency) has no
+  elevation data.
+- **Automated weather fetch** — needs either a live API call (in
+  tension with offline-first) or a bundled/cached-forecast design.
+  12.4's manual `conditions` field ships now; automated fetch is a
+  separate future pass.
+- **Real offline map tiles / trail rendering** — a standalone GIS
+  subsystem (bundled map data + a tile-rendering widget). 12.6's
+  schematic plot covers "labeled points on a map" without this.
+
+## v0.13 breakdown (planned)
+
+Device Profile + Theme System, at the user's explicit request to
+prepare M.I.A. for its real target hardware (a Pi 5 + AI HAT+ 2, which
+"this AI is going to live on") as one codebase serving two editions —
+**Core** (the Pi, resource-constrained, a field data-gathering tool)
+and **Home** (a desktop workstation, more storage/resources) — rather
+than two separate packages, plus a selectable theme system that can
+differ in weight between the two editions.
+
+- [x] **13.1 Device Profile** — `"device_profile": "core"` added under
+      `config/default_config.json`'s existing `"system"` block (values
+      `"core"`/`"home"`; confirmed the merge is safe for existing users
+      via `tests/test_config_manager.py`'s existing new-default-key
+      coverage). New `core/device_profile.py` — a thin helper (no state
+      of its own beyond the one config value, so plain functions, not a
+      manager class): `get_device_profile()`/`is_core_profile()`/
+      `is_home_profile()`. Deliberately **not** auto-detected from
+      hardware (e.g. `platform.machine()`) — explicit config is more
+      robust and matches this project's existing preference for
+      explicit config over inference. Viewable/changeable via a new
+      "Device Profile" dropdown in `modules/settings/module.py`;
+      `deploy/install_kiosk.sh` sets it to `"core"` (alongside
+      `kiosk_mode`) in its existing templated-config-writing step.
+- [x] **13.2 Theme system** — nothing like this existed before this
+      milestone: every dialog/screen (24+ call sites) hardcoded
+      `gui.styles.DARK_FIELD_THEME` directly, and `config.gui.theme` sat
+      completely unread. New `gui/theme_manager.py`: a `THEMES` registry
+      (`dark_field` — the pre-existing theme, kept as-is; `low_energy` —
+      minimal flat styling for Core/Pi's constrained hardware;
+      `colored` — a brighter saturated accent variant; `anime_monochrome`
+      — black-and-white, high-contrast, stylized borders, the user's
+      explicit "anime style" ask) plus `get_theme_stylesheet()`
+      (falls back to `dark_field` for an unrecognized id). Applied
+      **once, at the `QApplication` level** in
+      `core/application.py`(`self.qt_app.setStyleSheet(...)`) — Qt's
+      stylesheet cascade means every widget/dialog inherits it
+      automatically, which is why the ~24 old per-widget
+      `self.setStyleSheet(DARK_FIELD_THEME)` calls (and their now-unused
+      imports) were removed from every dialog/screen across `gui/*.py`
+      and `tests/run_module.py` as part of this same milestone — leaving
+      them would have silently frozen every dialog on the old theme
+      regardless of what's selected, since a widget's own stylesheet
+      call overrides inherited cascade. The one deliberate exception:
+      `modules/knowledge/zim_text_browser.py` still forces its own
+      plain white background, since ZIM content is third-party HTML
+      that assumes a light background — documented in its own docstring
+      as the one intentional case that must *not* inherit the app-level
+      theme. New "Theme" dropdown in `modules/settings/module.py`
+      publishes `"theme.changed"` on the existing event bus;
+      `MIAApplication` subscribes and re-applies the stylesheet live, no
+      restart required. Verified with a real headless-Qt (offscreen
+      QPA) smoke test: booted a real `MIAApplication`, cycled all four
+      themes via the event, and confirmed both that the QApplication-
+      level stylesheet actually changed each time and that a
+      freshly-opened dialog (`AddEditTripDialog`) no longer sets its
+      own competing stylesheet — the concrete regression this
+      milestone's cleanup step exists to prevent.
+
+      **A real visual check (not just the stylesheet-string-equality
+      smoke test above) caught a genuine bug the string checks
+      couldn't:** rendering each theme against a sample window built
+      from the exact widget/object-name structure `gui/main_window.py`
+      actually uses (`QLabel#TitleLabel`/`QLabel#SubtitleLabel` both
+      nested inside `QFrame#HeaderBar`) and grabbing a real `QPixmap`
+      via Qt's offscreen platform showed `anime_monochrome`'s app
+      title/greeting rendering as **black text on that theme's solid
+      black header bar — completely invisible** (both defaulted to
+      black for contrast against this theme's white body background
+      elsewhere, e.g. a module's own page header; nothing wrong when
+      not nested inside `#HeaderBar`). Fixed with a descendant selector
+      (`QFrame#HeaderBar QLabel#TitleLabel, QFrame#HeaderBar
+      QLabel#SubtitleLabel { color: #ffffff; }`) scoped to just that
+      nesting case. **Lesson reinforced**: this project's own established
+      pattern (5.6's grounding bugs, 11.4's Stop-button bug) held again
+      here — a mocked/string-equality check proved the *mechanism*
+      works, but only looking at actual rendered pixels caught a real
+      user-facing defect the mechanism-level check was blind to.
+
+**Profile <-> theme relationship kept as a deploy-time convention, not
+runtime magic**: `gui.theme`'s unconditional JSON default stays
+`dark_field` (no conditional-default-based-on-another-key logic to
+maintain); `deploy/install_kiosk.sh` sets both `device_profile="core"`
+and `theme="low_energy"` together for real Core deployments. A user can
+always override either independently via Settings.
+
+## v0.14 — Pi 5 + AI HAT+ 2 deployment readiness (audit pass, no hardware)
+
+No physical Pi 5/AI HAT+ 2 exists in this dev sandbox, so this pass is
+**documentation and code-audit only** — not a real deploy attempt, and
+not fabricated fixes for problems that can't be verified without the
+hardware:
+- Reviewed `deploy/install_kiosk.sh`/`deploy/mia.service` against
+  everything shipped since (Expedition Mode's `trip_photos/`, new
+  config keys) — no changes needed: every new persisted-JSON manager
+  and `trip_photos/`'s root already creates its own directory lazily
+  in its own `__init__` (same pattern as `core/reference_library_manager.py`),
+  so deploy scripts never needed to pre-create them; `mia.service` has
+  no Expedition-specific paths hardcoded.
+- Flagged (`docs/KNOWN_ISSUES.md`, "Open" section) the real open
+  question the user's "this AI is going to live on that HAT" framing
+  raises: `core/llm_manager.py` currently targets Ollama's generic HTTP
+  API, and whether Ollama can drive the AI HAT+ 2's NPU accelerator (or
+  a different runtime/model format is needed) is genuinely unresolved
+  without the real hardware to test against.
+- Flagged (same file) Field Kit's and Diagnostics' 3-second polling
+  timers as a "revisit power/CPU budget once real Core hardware exists"
+  item — not changed now, since adjusting intervals blindly without
+  real hardware to benchmark against would be exactly the kind of
+  unverified guess this project avoids elsewhere.
+
+## v0.15 — Expedition data sync (Pi -> Home via physical docking)
+
+At the user's explicit request: the Pi ("Core") is a field
+data-gathering tool that, when docked, exports its Expedition data to
+the Home desktop. Sync is **physical storage transfer**, not network —
+`docs/HARDWARE.md`'s storage-split section already anticipated exactly
+this ("the same drive can be pulled and mounted on a desktop
+directly"), reusing the Field Kit's existing Connected Device Framework
+(USB storage detection, milestone 11.1) rather than building a new
+mechanism.
+
+New `core/expedition_sync.py`, mirroring `core/backup_manager.py`'s
+proven zip-bundle pattern (`manifest.json` + payload files, staged
+extraction via the newly-public `safe_extract_zip()` — renamed from
+`_safe_extract_all()` specifically so this module could reuse it
+verbatim instead of reimplementing the same path-traversal defense)
+but differing in two ways: **scoped to Expedition-relevant data only**
+(`expeditions.json`/`trips.json`/`waypoints.json`/`journal_entries.json`/
+`inventory_items.json` plus the `trip_photos/` tree — everything a Trip
+detail view references, not a full app backup), and **merges by record
+id on import rather than overwriting** (`restore_backup()`'s full-replace
+is right for restoring one machine to a prior state; a Home desktop
+likely already has its own data from other sources, so merging is the
+only sane semantic — a record whose id already exists at the
+destination is skipped, since ids are independently-generated UUIDs and
+a real match means "already imported," not a coincidence).
+
+`modules/field_kit/module.py`'s existing per-device action row (which
+already had "Browse Files"/"Eject Safely") gained "Export Expedition
+Data Here" (writes a timestamped `.zip` to the device's mountpoint) and
+"Import Expedition Data From Here" (`QFileDialog` to pick a bundle off
+the device), same not-mounted guard and same shape as the existing
+Eject button calling `core/device_framework.py` directly.
+
+Like `restore_backup()`, this module only touches files on disk — an
+already-running `TripManager`/`ExpeditionManager`/etc. won't see
+imported records until restart, same "restart to see the change" UX
+already used for backup restore, not a new pattern to learn.
+
+Verified with a real headless-Qt (offscreen QPA) smoke test that
+exercises the actual `FieldKitModule` button handlers end to end (not
+just the core functions in isolation): a simulated Pi instance
+(isolated data/trip_photos dirs) with a real Expedition/Trip/Waypoint/
+Journal-entry/photo exported through a fake docked `BlockDevice`, then
+imported into a completely separate simulated Home instance — confirmed
+every record and the photo file arrive correctly, and re-importing the
+same bundle a second time adds nothing further (no duplication).

@@ -3,6 +3,35 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Open: AI HAT+ 2 inference path unconfirmed (docs/ROADMAP.md milestone 14)
+
+`core/llm_manager.py` talks to Ollama's standard HTTP API
+(`OLLAMA_HOST`, CPU/generic-GPU inference), which is what this dev
+sandbox actually runs against (see `docs/HARDWARE.md`). Whether Ollama
+can drive the AI HAT+ 2's NPU accelerator directly, needs a different
+backend/runtime for that hardware, or needs a HAT-specific model
+format, is **genuinely unresolved** — there's no AI HAT+ 2 in this
+sandbox to test against, and this shouldn't be guessed at without the
+real hardware. Flag this before assuming the Assistant's current LLM
+backend will "just work" once M.I.A. actually runs on the Pi 5 + AI
+HAT+ 2 — verify on real hardware first, and expect `core/llm_manager.py`
+may need a HAT-specific code path if Ollama can't use the accelerator.
+
+## Open: Polling intervals not yet budgeted against real Pi 5 + AI HAT+ 2 power/CPU constraints
+
+Several modules run a widget-owned `QTimer` on a fixed interval
+regardless of device profile (`core/device_profile.py`): Field Kit's
+device-list refresh (`modules/field_kit/module.py`,
+`_DEVICE_REFRESH_MS = 3000`) and the Diagnostics System Health panel
+(`modules/diagnostics/module.py`, `_HEALTH_REFRESH_MS = 3000`) both
+poll every 3 seconds unconditionally. Whether this is actually a
+meaningful power/CPU cost on Pi 5 + AI HAT+ 2 hardware — and whether
+it's worth slowing down specifically for the Core profile — is
+**not verified**, so intervals haven't been changed: adjusting them
+blindly without real hardware to benchmark against would be exactly
+the kind of unverified guess this project avoids elsewhere. Revisit
+once real Core hardware exists to actually measure against.
+
 ## Closed: App hang while copying large content packs into reference_library/
 
 Symptom: during 4.3 manual testing, `python main.py` stopped logging

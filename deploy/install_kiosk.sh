@@ -90,17 +90,27 @@ systemctl --user enable mia.service
 systemctl --user restart mia.service
 
 # ---------------------------------------------------------------------
-# 5. Turn on kiosk_mode in config
+# 5. Turn on kiosk_mode + set the Core device profile/theme in config
 # ---------------------------------------------------------------------
-echo "Enabling kiosk_mode in config..."
+# device_profile="core" + theme="low_energy" mark this install as the
+# resource-constrained Pi 5 + AI HAT+ 2 edition (docs/ROADMAP.md
+# milestone 13.1/13.2) — a Home (desktop) install never runs this
+# script, so it keeps the defaults (device_profile="core" is still the
+# unconditional JSON default in config/default_config.json, but a Home
+# install is expected to switch it via Settings, or a future Home
+# install script sets "home"/"dark_field" the same way this one sets
+# the Core values).
+echo "Enabling kiosk_mode + Core device profile in config..."
 "${VENV_PYTHON}" - << PYEOF
 import sys
 sys.path.insert(0, "${MIA_DIR}")
 from core.config_manager import ConfigManager
 cfg = ConfigManager()
 cfg.set("system.kiosk_mode", True)
+cfg.set("system.device_profile", "core")
+cfg.set("gui.theme", "low_energy")
 cfg.save()
-print("kiosk_mode enabled.")
+print("kiosk_mode enabled, device_profile=core, gui.theme=low_energy.")
 PYEOF
 
 echo ""

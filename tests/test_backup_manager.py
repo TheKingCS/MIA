@@ -154,4 +154,4 @@ def test_safe_extract_rejects_path_traversal(tmp_path):
 
     with zipfile.ZipFile(malicious_zip_path) as zf:
         with pytest.raises(backup_manager_module.BackupError):
-            backup_manager_module._safe_extract_all(zf, target_dir)
+            backup_manager_module.safe_extract_zip(zf, target_dir)
