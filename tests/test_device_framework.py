@@ -23,8 +23,11 @@ from core.device_framework import (
     BlockDevice,
     DeviceFramework,
     SerialDevice,
+    device_still_matches,
     eject_storage_device,
+    flash_confirmation_matches,
     identify_serial_board,
+    is_boot_device,
     list_block_devices,
     list_serial_devices,
 )
@@ -36,10 +39,21 @@ class _FakeCompletedProcess:
         self.stdout = stdout
 
 
-def _fake_lsblk(blockdevices: list[dict]):
+def _fake_lsblk(blockdevices: list[dict], boot_disk_name: str = "sda"):
+    """
+    Also fakes is_boot_device()'s findmnt/lsblk-PKNAME calls (called
+    internally by list_block_devices() for every disk found), always
+    resolving the "boot device" to `boot_disk_name` — a name distinct
+    from every test fixture's external disk unless a test deliberately
+    wants to exercise the boot-device-exclusion path.
+    """
     payload = json.dumps({"blockdevices": blockdevices})
 
     def fake_run(args, capture_output, text, timeout, check):
+        if args[0] == "findmnt":
+            return _FakeCompletedProcess(f"/dev/{boot_disk_name}1")
+        if args[0] == "lsblk" and "PKNAME" in args:
+            return _FakeCompletedProcess(boot_disk_name)
         return _FakeCompletedProcess(payload)
 
     return fake_run
@@ -120,6 +134,30 @@ def test_list_block_devices_filters_to_external_only(monkeypatch):
     )
     devices = list_block_devices()
     assert [d.name for d in devices] == ["sdb"]
+
+
+def test_list_block_devices_excludes_boot_device_even_if_externally_flagged(monkeypatch):
+    """
+    Regression test for the safety gap found while designing milestone
+    11.3's flashing confirmation flow: an SD card reader can report the
+    boot microSD as `rm: 1` (removable), which would satisfy
+    is_external — is_boot_device() must still exclude it, since
+    otherwise "Eject Safely"/a future "Flash" action could target the
+    disk this OS is currently running from.
+    """
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        _fake_lsblk(
+            [
+                {"name": "mmcblk0", "size": "32G", "type": "disk", "mountpoint": "/", "fstype": "ext4", "model": "SD Card", "tran": None, "rm": True},
+                {"name": "sdb", "size": "32G", "type": "disk", "mountpoint": None, "fstype": "ext4", "model": "SanDisk Ultra", "tran": "usb", "rm": True},
+            ],
+            boot_disk_name="mmcblk0",
+        ),
+    )
+    devices = list_block_devices()
+    assert [d.name for d in devices] == ["sdb"]
     assert devices[0].display_name == "SanDisk Ultra (32G)"
 
 
@@ -150,6 +188,57 @@ def test_list_block_devices_returns_empty_on_malformed_json(monkeypatch):
 
     monkeypatch.setattr(subprocess, "run", fake_run)
     assert list_block_devices() == []
+
+
+# ----------------------------------------------------------------------
+# is_boot_device
+# ----------------------------------------------------------------------
+
+def _fake_boot_lookup(root_source: str, pkname: str):
+    def fake_run(args, capture_output, text, timeout, check):
+        if args[0] == "findmnt":
+            return _FakeCompletedProcess(root_source)
+        if args[0] == "lsblk":
+            return _FakeCompletedProcess(pkname)
+        raise AssertionError(f"unexpected command: {args}")
+
+    return fake_run
+
+
+def test_is_boot_device_true_when_root_partition_resolves_to_disk(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", _fake_boot_lookup("/dev/sda2", "sda"))
+    assert is_boot_device("sda") is True
+    assert is_boot_device("sdb") is False
+
+
+def test_is_boot_device_true_when_root_mounted_directly_on_disk_no_partition(monkeypatch):
+    """PKNAME empty -> root is a whole disk, not a partition (this dev sandbox's actual WSL2 layout)."""
+    monkeypatch.setattr(subprocess, "run", _fake_boot_lookup("/dev/sdd", ""))
+    assert is_boot_device("sdd") is True
+    assert is_boot_device("sdb") is False
+
+
+def test_is_boot_device_fails_closed_when_findmnt_fails(monkeypatch):
+    def fake_run(args, capture_output, text, timeout, check):
+        raise OSError("findmnt not found")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    assert is_boot_device("sdb") is True
+
+
+def test_is_boot_device_fails_closed_when_pkname_lookup_fails(monkeypatch):
+    def fake_run(args, capture_output, text, timeout, check):
+        if args[0] == "findmnt":
+            return _FakeCompletedProcess("/dev/sda2")
+        raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    assert is_boot_device("sdb") is True
+
+
+def test_is_boot_device_fails_closed_when_findmnt_returns_empty(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", _fake_boot_lookup("", ""))
+    assert is_boot_device("sdb") is True
 
 
 # ----------------------------------------------------------------------
@@ -365,3 +454,51 @@ def test_eject_returns_empty_when_lsblk_fails(monkeypatch):
     success, message = eject_storage_device("sdb")
     assert success is True
     assert "nothing mounted" in message
+
+
+# ----------------------------------------------------------------------
+# device_still_matches — milestone 11.3, Rail 4 (re-validation before write)
+# ----------------------------------------------------------------------
+
+def test_device_still_matches_when_model_and_size_unchanged(monkeypatch):
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        _fake_lsblk([{"name": "sdb", "size": "32G", "type": "disk", "mountpoint": None, "fstype": "ext4", "model": "SanDisk Ultra", "tran": "usb", "rm": True}]),
+    )
+    assert device_still_matches("sdb", expected_model="SanDisk Ultra", expected_size="32G") is True
+
+
+def test_device_still_matches_false_when_a_different_drive_now_has_the_same_name(monkeypatch):
+    """The real risk this guards against: the original device was unplugged and a different drive took its /dev/sdb name."""
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        _fake_lsblk([{"name": "sdb", "size": "64G", "type": "disk", "mountpoint": None, "fstype": "ext4", "model": "Kingston DataTraveler", "tran": "usb", "rm": True}]),
+    )
+    assert device_still_matches("sdb", expected_model="SanDisk Ultra", expected_size="32G") is False
+
+
+def test_device_still_matches_false_when_device_no_longer_present(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", _fake_lsblk([]))
+    assert device_still_matches("sdb", expected_model="SanDisk Ultra", expected_size="32G") is False
+
+
+# ----------------------------------------------------------------------
+# flash_confirmation_matches — milestone 11.3, Rail 3 (type-to-confirm)
+# ----------------------------------------------------------------------
+
+def test_flash_confirmation_matches_exact_disk_name():
+    assert flash_confirmation_matches("sdb", "sdb") is True
+
+
+def test_flash_confirmation_matches_is_case_sensitive():
+    assert flash_confirmation_matches("SDB", "sdb") is False
+
+
+def test_flash_confirmation_matches_rejects_partial_text():
+    assert flash_confirmation_matches("sd", "sdb") is False
+
+
+def test_flash_confirmation_matches_rejects_empty_text():
+    assert flash_confirmation_matches("", "sdb") is False

@@ -29,6 +29,25 @@ dev sandbox's WSL2 environment reports several "Virtual Disk" block
 devices with no transport at all; none of those should ever show up as
 an "attached device").
 
+**`is_boot_device()` is a second, independent exclusion, always
+applied on top of the `is_external` filter — found while designing
+milestone 11.3's OS-flashing confirmation flow.** SD/MMC card readers
+commonly report `rm: 1` (removable) for the card itself, which means a
+Raspberry Pi's own boot microSD could satisfy `is_external` too if it
+were ever queried the same way a USB stick is — `is_external` alone is
+not a safe enough guarantee that a device isn't the one this OS is
+currently running from. `is_boot_device()` instead asks the kernel
+directly (`findmnt -no SOURCE /` -> `lsblk -no PKNAME` to resolve a
+partition back to its parent disk) and fails **closed**: if either
+command errors or returns something unparseable, the device is treated
+as *if it were* the boot device (excluded), never the reverse — an
+unrecoverable mistake here is a bricked Pi, so an uncertain "maybe"
+must resolve to "don't touch it," not "probably fine." This filter is
+applied inside `list_block_devices()` itself, not just at the future
+flashing UI, so it retroactively protects 11.2's already-shipped
+"Eject Safely"/"Browse Files" actions too — those should never have
+been able to target the boot device either.
+
 Serial detection uses `pyserial`'s `serial.tools.list_ports.comports()`
 — pure enumeration, no port is ever opened here — filtered to ports
 with a USB vid/pid (`SerialDevice.is_external`), same reasoning as
@@ -152,8 +171,52 @@ class SerialDevice:
         return f"{label} ({self.device})"
 
 
+def is_boot_device(disk_name: str) -> bool:
+    """
+    True if `disk_name` (e.g. "sdd", "mmcblk0") is the disk this OS is
+    currently running from — resolved via `findmnt -no SOURCE /`
+    (the device/partition backing root) and `lsblk -no PKNAME` (walks a
+    partition back to its parent disk; empty output means root is
+    mounted directly on a whole disk with no partition table, so the
+    disk name is read straight from the findmnt result instead).
+
+    **Fails closed on any uncertainty**: if either command errors,
+    times out, or returns unparseable output, this returns True (i.e.
+    "assume every device might be the boot device") rather than False.
+    A false positive here just means a legitimate device is
+    (temporarily) refused for flashing/ejecting — annoying, but safe.
+    A false negative could mean writing an OS image straight over the
+    disk this code is running from. See this module's docstring for
+    the specific real-world risk (SD card readers commonly report
+    `removable`) that made this check necessary on top of
+    `BlockDevice.is_external`.
+    """
+    try:
+        root_source = subprocess.run(
+            ["findmnt", "-no", "SOURCE", "/"],
+            capture_output=True, text=True, timeout=_LSBLK_TIMEOUT_SECONDS, check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        log.warning("findmnt failed — treating '%s' as the boot device to be safe.", disk_name)
+        return True
+    if not root_source:
+        return True
+
+    try:
+        pkname = subprocess.run(
+            ["lsblk", "-no", "PKNAME", root_source],
+            capture_output=True, text=True, timeout=_LSBLK_TIMEOUT_SECONDS, check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        log.warning("lsblk PKNAME lookup failed — treating '%s' as the boot device to be safe.", disk_name)
+        return True
+
+    root_disk_name = pkname if pkname else root_source.removeprefix("/dev/")
+    return root_disk_name == disk_name
+
+
 def list_block_devices() -> list[BlockDevice]:
-    """External (USB/removable) storage devices only — see BlockDevice.is_external."""
+    """External (USB/removable), non-boot storage devices only — see BlockDevice.is_external and is_boot_device()."""
     try:
         result = subprocess.run(
             ["lsblk", "-J", "-o", _LSBLK_COLUMNS],
@@ -185,9 +248,43 @@ def list_block_devices() -> list[BlockDevice]:
             tran=entry.get("tran"),
             removable=bool(entry.get("rm", False)),
         )
-        if device.is_external:
+        if device.is_external and not is_boot_device(device.name):
             devices.append(device)
     return devices
+
+
+def device_still_matches(disk_name: str, expected_model: str, expected_size: str) -> bool:
+    """
+    Milestone 11.3's OS-flashing confirmation flow, Rail 4: re-checks
+    that `disk_name` is still the *same physical device* the user
+    selected and confirmed against — not just that a device with that
+    Linux name (e.g. "sdb") still exists. Device names aren't stable
+    across hotplug events: if the user's real target was unplugged and
+    a *different* drive happened to be assigned the same name before
+    the write started, model/size would no longer match and this
+    returns False, so the caller can abort instead of writing an image
+    to the wrong physical device. Also returns False (not just "doesn't
+    match") if the device has since become the boot device somehow, or
+    disappeared entirely, or is no longer external — same fail-closed
+    posture as `is_boot_device()`.
+    """
+    for device in list_block_devices():
+        if device.name == disk_name:
+            return device.model == expected_model and device.size == expected_size
+    return False
+
+
+def flash_confirmation_matches(typed_text: str, disk_name: str) -> bool:
+    """
+    Rail 3: the exact, case-sensitive text a user must type to enable
+    the "Flash" button in `gui/flash_confirm_dialog.py` — the disk's
+    own Linux device name (e.g. "sdb"), not a generic "yes"/"confirm".
+    Extracted as its own function (unlike `gui/delete_confirm_dialog.py`'s
+    inline `text == self._item_name` check) so this one comparison, on
+    the more dangerous of this project's two "type to confirm" flows,
+    is unit-tested without needing a live Qt dialog.
+    """
+    return typed_text == disk_name
 
 
 def list_serial_devices() -> list[SerialDevice]:

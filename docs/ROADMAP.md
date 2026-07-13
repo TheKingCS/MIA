@@ -970,17 +970,71 @@ pentesting toolkit assumes of its operator.
       here) rather than through `tests/run_module.py` interactively,
       since that harness blocks on `app.exec()` with no user present
       to close the window in this environment.
-- [ ] **11.3 OS + M.I.A. flashing/provisioning** — write a Raspberry Pi
-      OS image plus a first-boot script that auto-installs M.I.A. to a
-      selected storage device, turning this Pi into a field
-      provisioning station for a fleet of others. This is the one
-      genuinely destructive operation in Field Kit (writing to the
-      wrong device destroys its data with no undo), so the safety UX
-      matters as much as the write itself: show the exact
-      model/size/current-contents of the selected target before
-      committing, require typing the device's identifier to confirm
-      (not just a Yes/No dialog), and run the write on a worker thread
-      with progress reporting (images are multi-gigabyte).
+- [x] **11.3a Flashing confirmation flow — safety rails (design +
+      implementation)** — write a Raspberry Pi OS image plus a
+      first-boot script that auto-installs M.I.A. to a selected storage
+      device, turning this Pi into a field provisioning station for a
+      fleet of others, is the one genuinely destructive operation in
+      Field Kit (writing to the wrong device destroys its data with no
+      undo, and writing to the *boot* device bricks the running Pi) —
+      so before writing a single byte of the actual flashing engine, the
+      safety design was worked out and built as its own reviewable
+      piece, layered (any one rail alone isn't enough):
+      1. **Hard boot-device exclusion.** `core/device_framework.py`'s
+         new `is_boot_device()` (resolves `findmnt -no SOURCE /` back to
+         its parent disk via `lsblk -no PKNAME`) is applied inside
+         `list_block_devices()` itself, so a boot device can never even
+         appear in a device list to select from — not a UI-layer filter
+         that a future code path could bypass. Fails **closed** on any
+         lookup error (treats an unknown device as *if* it were the
+         boot device). This is a **retroactive fix to already-shipped
+         11.2**: `BlockDevice.is_external`'s removable-flag check alone
+         isn't sufficient — SD/MMC card readers commonly report the
+         boot microSD itself as `rm: 1`, which could have let "Eject
+         Safely"/a future "Flash" target the running boot device.
+      2. **Full device identity shown before commit.** `gui/flash_confirm_dialog.py`'s
+         `FlashConfirmDialog` displays model, size, raw `/dev/` path,
+         and current filesystem/mountpoint state alongside the image
+         being written — plain language, not an abstract "Device 1".
+      3. **Type-to-confirm, not Yes/No.** Same proven pattern as
+         `gui/delete_confirm_dialog.py` (used for permanent file
+         deletion), one step more rigorous: the user types the device's
+         own Linux name (e.g. "sdb") to enable the Flash button — a
+         much higher bar against habit-clicking than any fixed phrase.
+         The match check (`core.device_framework.flash_confirmation_matches`)
+         is its own unit-tested function, not an inline comparison —
+         the more dangerous of this project's two "type to confirm"
+         flows gets an extra testing seam.
+      4. **Re-validate the device is still the same physical drive
+         immediately before writing.** `device_still_matches()` re-queries
+         current model/size against what the user confirmed against —
+         device names aren't stable across hotplug (a different drive
+         can take over `/dev/sdb` between dialog-open and write-start),
+         so this catches a stale selection rather than writing to
+         whatever now answers to that name.
+      5. **Re-check not-boot-device immediately before writing, too** —
+         cheap, and protects against any reconfiguration between
+         selection and confirm.
+      Verified: all of the above with unit tests (mocked
+      `subprocess`/`lsblk`) and a headless smoke test of the dialog's
+      button-gating (starts disabled; rejects partial text, wrong case,
+      and trailing whitespace; enables only on an exact match).
+
+      **What's deliberately NOT built yet — 11.3b, the actual write
+      engine** — held back on purpose, not an oversight: (a) writing
+      raw bytes to a block device typically needs either the operating
+      user to already have write access (varies by distro/udev
+      config) or elevated privileges, and M.I.A. runs as a systemd
+      **user** service, not root — whether the target Pi OS deployment
+      has the right permissions out of the box is genuinely unknown
+      until tested on real hardware; (b) Raspberry Pi OS images ship
+      `.img.xz` compressed, raising a streaming-decompress-while-writing
+      vs. decompress-then-write design choice; (c) the actual first-boot
+      M.I.A. auto-install mechanism (what gets written into the image's
+      boot partition) needs its own design pass. Rails 1/4/5 above are
+      real safety infrastructure regardless of how 11.3b resolves these
+      questions, which is why they were built and shipped now instead
+      of waiting for the whole feature to be ready at once.
 - [ ] **11.4 Useful Scripts library** — a categorized library of
       user-authored shell/Python scripts with a run-and-view-output
       pane. No sandboxing (matches this project's existing stance:
