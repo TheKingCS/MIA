@@ -53,6 +53,7 @@ not from here.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
@@ -201,6 +202,68 @@ def list_serial_devices() -> list[SerialDevice]:
         for p in ports
     ]
     return [d for d in devices if d.is_external]
+
+
+def _list_mounted_partitions(disk_name: str) -> list[tuple[str, str]]:
+    """(partition_device_path, mountpoint) for every currently-mounted partition of the given disk — or the disk itself, if mounted directly with no partition table."""
+    try:
+        result = subprocess.run(
+            ["lsblk", "-J", "-o", "NAME,MOUNTPOINT,TYPE", f"/dev/{disk_name}"],
+            capture_output=True,
+            text=True,
+            timeout=_LSBLK_TIMEOUT_SECONDS,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return []
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return []
+
+    mounted = []
+    for entry in data.get("blockdevices", []):
+        if entry.get("type") == "disk" and entry.get("mountpoint"):
+            mounted.append((f"/dev/{entry['name']}", entry["mountpoint"]))
+        for child in entry.get("children", []) or []:
+            if child.get("type") == "part" and child.get("mountpoint"):
+                mounted.append((f"/dev/{child['name']}", child["mountpoint"]))
+    return mounted
+
+
+def eject_storage_device(disk_name: str) -> tuple[bool, str]:
+    """
+    Unmounts every mounted partition of `disk_name` (e.g. "sdb") so it's
+    safe to physically remove. Prefers `udisksctl unmount` — works for
+    the logged-in user via polkit with no special permissions on any
+    desktop Linux with udisks2 installed (present on Raspberry Pi OS
+    Desktop by default) — falling back to plain `umount` if udisksctl
+    isn't on PATH (this dev sandbox: it isn't); that fallback may need
+    elevated permissions depending on how the partition was originally
+    mounted.
+
+    **Real-hardware verification pending**: this dev sandbox has no
+    removable media attached to test an actual eject against — the
+    unmount call itself is exercised only with mocked subprocess calls
+    in tests/test_device_framework.py. Verify against a real USB drive
+    on the Pi before relying on this in the field.
+    """
+    partitions = _list_mounted_partitions(disk_name)
+    if not partitions:
+        return True, f"'{disk_name}' has nothing mounted — already safe to remove."
+
+    use_udisksctl = shutil.which("udisksctl") is not None
+    failures = []
+    for device_path, mountpoint in partitions:
+        command = ["udisksctl", "unmount", "-b", device_path] if use_udisksctl else ["umount", mountpoint]
+        try:
+            subprocess.run(command, capture_output=True, text=True, timeout=10.0, check=True)
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+            failures.append(f"{mountpoint}: {exc}")
+
+    if failures:
+        return False, "Failed to unmount: " + "; ".join(failures)
+    return True, f"'{disk_name}' safely ejected — {len(partitions)} partition(s) unmounted."
 
 
 class DeviceFramework:

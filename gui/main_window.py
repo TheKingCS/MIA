@@ -14,6 +14,7 @@ character rather than a modal dialog.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Signal
@@ -124,12 +125,23 @@ class MainWindow(QMainWindow):
         # Qt widget must only be touched from the GUI thread and the
         # action handler can't assume it's already on it.
         self.context.events.subscribe("assistant.open_module_requested", self._on_assistant_open_module_requested)
+        # docs/ROADMAP.md milestone 11.2 — Field Kit's "Browse Files"
+        # device action publishes this rather than importing
+        # modules.files_mod directly, same module-isolation reasoning
+        # as open_module_requested above.
+        self.context.events.subscribe("files.browse_path_requested", self._on_files_browse_path_requested)
 
     def _on_modules_changed(self, **kwargs) -> None:
         self._rebuild_menu()
 
     def _on_assistant_open_module_requested(self, module_id: str) -> None:
         self.open_module(module_id)
+
+    def _on_files_browse_path_requested(self, path: str) -> None:
+        self.open_module("files")
+        files_module = self.module_manager.get("files")
+        if files_module is not None:
+            files_module.navigate_to_path(Path(path))
 
     def _rebuild_menu(self) -> None:
         """Rebuild the main menu grid in place, preserving which screen is currently visible."""
@@ -191,6 +203,7 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe(
             "assistant.open_module_requested", self._on_assistant_open_module_requested
         )
+        self.context.events.unsubscribe("files.browse_path_requested", self._on_files_browse_path_requested)
         if self._character_panel is not None:
             self._character_panel.unsubscribe()
         super().closeEvent(event)

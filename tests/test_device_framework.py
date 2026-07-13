@@ -23,6 +23,7 @@ from core.device_framework import (
     BlockDevice,
     DeviceFramework,
     SerialDevice,
+    eject_storage_device,
     identify_serial_board,
     list_block_devices,
     list_serial_devices,
@@ -272,3 +273,95 @@ def test_refresh_returns_current_device_lists(monkeypatch):
 
     assert [d.name for d in storage] == ["sdb"]
     assert serial_devices == []
+
+
+# ----------------------------------------------------------------------
+# eject_storage_device
+# ----------------------------------------------------------------------
+
+def _fake_partition_query(disk_name: str, children: list[dict], disk_mountpoint=None):
+    payload = json.dumps({
+        "blockdevices": [
+            {"name": disk_name, "mountpoint": disk_mountpoint, "type": "disk", "children": children},
+        ]
+    })
+
+    def fake_run(args, capture_output, text, timeout, check):
+        if args[0] == "lsblk":
+            return _FakeCompletedProcess(payload)
+        return _FakeCompletedProcess("")
+
+    return fake_run
+
+
+def test_eject_reports_already_safe_when_nothing_mounted(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", _fake_partition_query("sdb", []))
+    monkeypatch.setattr(device_framework_module.shutil, "which", lambda name: None)
+
+    success, message = eject_storage_device("sdb")
+    assert success is True
+    assert "nothing mounted" in message
+
+
+def test_eject_unmounts_mounted_partition_via_umount_when_no_udisksctl(monkeypatch):
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        _fake_partition_query("sdb", [{"name": "sdb1", "mountpoint": "/media/usb", "type": "part"}]),
+    )
+    monkeypatch.setattr(device_framework_module.shutil, "which", lambda name: None)
+
+    success, message = eject_storage_device("sdb")
+    assert success is True
+    assert "1 partition(s) unmounted" in message
+
+
+def test_eject_prefers_udisksctl_when_available(monkeypatch):
+    calls = []
+
+    def fake_run(args, capture_output, text, timeout, check):
+        calls.append(args)
+        if args[0] == "lsblk":
+            return _FakeCompletedProcess(json.dumps({
+                "blockdevices": [{"name": "sdb", "mountpoint": None, "type": "disk", "children": [
+                    {"name": "sdb1", "mountpoint": "/media/usb", "type": "part"},
+                ]}]
+            }))
+        return _FakeCompletedProcess("")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(device_framework_module.shutil, "which", lambda name: "/usr/bin/udisksctl" if name == "udisksctl" else None)
+
+    success, _ = eject_storage_device("sdb")
+    assert success is True
+    assert ["udisksctl", "unmount", "-b", "/dev/sdb1"] in calls
+
+
+def test_eject_reports_failure_when_unmount_fails(monkeypatch):
+    def fake_run(args, capture_output, text, timeout, check):
+        if args[0] == "lsblk":
+            return _FakeCompletedProcess(json.dumps({
+                "blockdevices": [{"name": "sdb", "mountpoint": None, "type": "disk", "children": [
+                    {"name": "sdb1", "mountpoint": "/media/usb", "type": "part"},
+                ]}]
+            }))
+        raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(device_framework_module.shutil, "which", lambda name: None)
+
+    success, message = eject_storage_device("sdb")
+    assert success is False
+    assert "Failed to unmount" in message
+
+
+def test_eject_returns_empty_when_lsblk_fails(monkeypatch):
+    def fake_run(*args, **kwargs):
+        raise OSError("lsblk not found")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(device_framework_module.shutil, "which", lambda name: None)
+
+    success, message = eject_storage_device("sdb")
+    assert success is True
+    assert "nothing mounted" in message

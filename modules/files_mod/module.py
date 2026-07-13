@@ -151,6 +151,20 @@ class FilesModule(ModuleBase):
     # Navigation
     # ------------------------------------------------------------------
 
+    def navigate_to_path(self, path: Path) -> None:
+        """
+        Public entry point for other components to open Files rooted at
+        a specific folder — added for Field Kit's "Browse Files" device
+        action (docs/ROADMAP.md milestone 11.2), which navigates here
+        via the `"files.browse_path_requested"` event
+        (gui/main_window.py) rather than importing this module
+        directly, per this project's module-isolation rule. Requires
+        `get_widget()` to have already run — callers should go through
+        `MainWindow.open_module("files")` first, same as any other
+        cross-module navigation in this app.
+        """
+        self._navigate_to(path)
+
     def _navigate_to(self, path: Path) -> None:
         if not path.is_dir():
             self._set_status(f"Not a folder: {path}")

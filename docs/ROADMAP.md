@@ -929,17 +929,47 @@ pentesting toolkit assumes of its operator.
          USB descriptor, a native/virtual UART never does) fixes this,
          verified against the real environment: both device lists
          correctly return empty with nothing plugged in.
-- [ ] **11.2 Device Manager module + actions menu** —
-      `modules/field_kit/module.py`: live list of currently-attached
-      devices (name, type, identification) sourced from 11.1, with a
-      per-device actions menu. Storage devices: "Browse Files" (opens
-      the Files module rooted at that device's mount point — Files
-      already supports browsing arbitrary mounted filesystems per its
-      own docstring, this just gives it a device-aware entry point
-      instead of requiring the user to know the mount path) and "Eject
-      Safely". Serial devices: "Open Serial Monitor" (raw read/write
-      console, useful on its own for any MCU regardless of 11.5's
-      flashing support).
+- [x] **11.2 Device Manager module + actions menu** (partial — see
+      deferred item below) — `modules/field_kit/module.py`: live list
+      of currently-attached devices (name, type, identification)
+      sourced from 11.1's `context.devices.refresh()` on a
+      widget-owned `QTimer` (same pattern as
+      `modules/diagnostics/module.py`'s System Health panel), with a
+      per-device actions menu.
+
+      Storage devices get **"Browse Files"** (publishes
+      `"files.browse_path_requested"`; `gui/main_window.py` subscribes,
+      opens the Files module, then calls its new public
+      `navigate_to_path()` — Files already supports browsing arbitrary
+      mounted filesystems per its own docstring, this just gives it a
+      device-aware entry point instead of requiring the user to know
+      the mount path) and **"Eject Safely"**
+      (`core/device_framework.py`'s new `eject_storage_device()`:
+      unmounts every mounted partition of the disk via `udisksctl`
+      where available, falling back to plain `umount`).
+
+      **Deferred, not forgotten: "Open Serial Monitor" for serial
+      devices.** A raw read/write console needs a background-thread
+      serial read loop (same `QThread`-worker shape as
+      `modules/assistant/llm_worker.py`'s `ChatWorker`) — and this dev
+      sandbox has no real serial hardware attached to verify that loop
+      actually works against. Serial devices currently show
+      identification only, with a "coming soon" label; building the
+      actual monitor is left for whenever real MCU hardware is
+      available to test against, rather than shipping unverifiable
+      I/O-threading code.
+
+      **What was and wasn't verified here**: `core/device_framework.py`'s
+      `eject_storage_device()` and its partition-lookup helper are unit
+      tested with mocked `subprocess` calls, but — like 11.1's
+      detection — have **no real-hardware verification**; this dev
+      sandbox has no removable media to actually eject. The module
+      itself was smoke-tested headlessly (construct the widget, force
+      a refresh, confirm no crash and correct empty-state rendering
+      with zero devices attached — the only state actually reachable
+      here) rather than through `tests/run_module.py` interactively,
+      since that harness blocks on `app.exec()` with no user present
+      to close the window in this environment.
 - [ ] **11.3 OS + M.I.A. flashing/provisioning** — write a Raspberry Pi
       OS image plus a first-boot script that auto-installs M.I.A. to a
       selected storage device, turning this Pi into a field
