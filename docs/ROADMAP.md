@@ -490,6 +490,33 @@ boot never depends on an LLM server being up.
       declined, no hallucination) — all against the live Ollama server,
       not mocks.
 
+      **Follow-up fix (same week): tools and grounding were fighting
+      each other.** Real usage surfaced: "What can you tell me about
+      Honda Civics?" made the model hallucinate a nonexistent module_id
+      ("Reference Library: Wikibooks") and call `open_module` instead of
+      answering "I don't know" — because every message got ALL action
+      tools attached unconditionally, even pure information questions
+      with no relevant grounded match. `modules/assistant/module.py`
+      gains `looks_like_action_request()`, a simple keyword classifier
+      (phrases tied to the registered actions — "open", "set an alarm",
+      "add a note", etc., same simplicity level as
+      `core/device_help_manager.py`'s own retrieval scoring) that
+      `_on_send()` uses to decide which of two mutually-exclusive paths
+      to take: information questions get the grounded prompt (5.4/5.6)
+      and no tools; action requests get the user's raw prompt and the
+      action tools, skipping grounding entirely. That second half of the
+      split was itself found by testing the fix: with tools correctly
+      gated, "Set an alarm called Wake Up for 07:00" *still* failed to
+      call `add_alarm` — grounding was pulling in irrelevant doc chunks
+      (`docs/ADDING_MODULES.md`, matched on the word "add") that
+      convinced the model the conversation was about M.I.A.'s own
+      developer docs rather than the user's request. Fixed by skipping
+      `build_grounded_prompt()` for action requests too. Verified
+      against the live model: the Honda Civics question now correctly
+      declines with no tool call, and alarm/note/open-module action
+      requests all correctly call their tool, using the exact
+      `_on_send()` branching logic (not a hand-simplified stand-in).
+
 ## v0.6 breakdown (planned)
 
 Character/companion system — event bus driven, reacts to whatever

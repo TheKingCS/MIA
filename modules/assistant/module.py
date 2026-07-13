@@ -9,26 +9,48 @@ execution). A chat screen (scrollback + input box) wired to
 Talk" button wired to `AppContext.voice` (core/voice_manager.py) for
 speech in, speech out.
 
-Every prompt is run through `AppContext.device_help.build_grounded_prompt()`
-(core/device_help_manager.py) before it reaches the LLM — the actual text
-sent as the chat message is the retrieval-grounded version (M.I.A.'s own
-docs + module metadata as context), not the user's raw words, though the
-chat log still displays what the user actually typed/said. This is
-deliberate scope, not an accident: docs/HARDWARE.md's hardware note
-says the realistic on-device model size (1-7B params) should be aimed
-at "device help, structured Q&A" rather than open-ended conversation.
+`_on_send()` first classifies the prompt with `looks_like_action_request()`
+(a keyword check against phrases tied to the registered actions — "open",
+"set an alarm", "add a note", etc.) and branches on the result, because
+grounding and tool-calling actively interfere with each other:
 
-Every prompt is also sent with `AppContext.assistant_actions`
-(core/assistant_actions.py)'s registered tools attached, so the model
-can choose to perform an action (open a module, add an alarm/note/
-inventory item) instead of just answering. Tool calls are executed
-here, in `_on_reply()` — which Qt's queued-connection signal delivery
-guarantees runs on the GUI thread (see `ChatWorker`'s docstring) — not
-inside the worker thread, since an action like `open_module` needs to
-touch the GUI. This is **not** the Self-Modification / Dev Mode staged
-plan in docs/ROADMAP.md (that's specifically about the assistant
-editing M.I.A.'s own source code); these are just ordinary app actions
-a user could already do by hand.
+- **Information questions** (the common case) are run through
+  `AppContext.device_help.build_grounded_prompt()`
+  (core/device_help_manager.py) before reaching the LLM — the actual text
+  sent as the chat message is the retrieval-grounded version (M.I.A.'s own
+  docs + module metadata + Reference Library as context), not the user's
+  raw words, though the chat log still displays what the user actually
+  typed/said. No tools are attached. This is deliberate scope, not an
+  accident: docs/HARDWARE.md's hardware note says the realistic on-device
+  model size (1-7B params) should be aimed at "device help, structured
+  Q&A" rather than open-ended conversation.
+- **Action requests** skip grounding entirely and send the user's raw
+  prompt with `AppContext.assistant_actions` (core/assistant_actions.py)'s
+  registered tools attached, so the model can perform an action (open a
+  module, add an alarm/note/inventory item).
+
+Two real-usage bugs drove this split, both found only against the live
+model, not mocks:
+1. Attaching tools to *every* message made the model hallucinate a
+   nonexistent module_id and call `open_module` for a plain information
+   question ("What can you tell me about Honda Civics?") that had no
+   grounded match, instead of just saying "I don't know" — fixed by only
+   attaching tools when the prompt looks action-oriented.
+2. Grounding *every* message (including action requests) then broke the
+   opposite case: "Set an alarm called Wake Up for 07:00" pulled in
+   irrelevant doc chunks (e.g. `docs/ADDING_MODULES.md`, matched on the
+   word "add") that convinced the model the conversation was about
+   M.I.A.'s own developer docs, so it answered in prose instead of
+   calling `add_alarm` — fixed by skipping grounding for action requests
+   and sending the raw prompt instead.
+
+Tool calls are executed here, in `_on_reply()` — which Qt's
+queued-connection signal delivery guarantees runs on the GUI thread (see
+`ChatWorker`'s docstring) — not inside the worker thread, since an action
+like `open_module` needs to touch the GUI. This is **not** the
+Self-Modification / Dev Mode staged plan in docs/ROADMAP.md (that's
+specifically about the assistant editing M.I.A.'s own source code);
+these are just ordinary app actions a user could already do by hand.
 
 Two blocking operations each get their own scoped `QThread` rather than
 running on the GUI thread:
@@ -84,10 +106,38 @@ _LLM_UNAVAILABLE_STATUS = "Assistant unavailable — is Ollama running?"
 _MIC_UNAVAILABLE_STATUS = "Microphone unavailable."
 _STT_UNAVAILABLE_STATUS = "Speech-to-text unavailable."
 
+# Keyword phrases tied to the built-in actions registered in
+# core/application.py's _register_assistant_actions() (open_module,
+# add_alarm, add_note, add_inventory_item, recall_recent_activity).
+# Deliberately phrase-level rather than single loose words (e.g. "add a
+# note" not bare "note") to avoid false-positiving on unrelated
+# questions that happen to share a word ("notebook", "recent history of
+# the Roman Empire").
+_ACTION_REQUEST_KEYWORDS = (
+    "open ", "launch ", "go to ", "switch to ", "take me to ",
+    "set an alarm", "set a timer", "add an alarm", "remind me", "wake me up",
+    "add a note", "take a note", "make a note", "write down", "jot down",
+    "add to inventory", "add an inventory item", "inventory item",
+    "recent activity", "activity log", "what have i done", "what have i been doing", "what did i do",
+)
+
 
 def format_chat_line(speaker: str, text: str) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_assistant_module.py)."""
     return f"{speaker}: {text}"
+
+
+def looks_like_action_request(text: str) -> bool:
+    """
+    Drives both halves of the grounding/tool-calling split in
+    `_on_send()` — see this module's docstring for the two real-usage
+    regressions (hallucinated `open_module` call on an info question;
+    grounding noise blocking a real `add_alarm` call) this classifier
+    fixes. Pure keyword matching, same simplicity level as
+    core/device_help_manager.py's retrieval scoring.
+    """
+    lowered = f" {text.lower().strip()} "
+    return any(keyword in lowered for keyword in _ACTION_REQUEST_KEYWORDS)
 
 
 class AssistantModule(ModuleBase):
@@ -182,12 +232,16 @@ class AssistantModule(ModuleBase):
         self._input.clear()
         self._set_busy(True)
 
+        is_action_request = looks_like_action_request(prompt)
+
         llm_prompt = prompt
-        if self.context.device_help is not None:
+        if not is_action_request and self.context.device_help is not None:
             llm_prompt = self.context.device_help.build_grounded_prompt(prompt)
 
         messages = [{"role": "user", "content": llm_prompt}]
-        tools = self.context.assistant_actions.to_ollama_tools() if self.context.assistant_actions else []
+        tools = []
+        if is_action_request and self.context.assistant_actions is not None:
+            tools = self.context.assistant_actions.to_ollama_tools()
 
         self._worker = ChatWorker(self.context.llm, messages, tools)
         self._worker.result_ready.connect(self._on_reply)
