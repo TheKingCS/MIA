@@ -633,6 +633,46 @@ boot never depends on an LLM server being up.
       *current* behavior as intentional when the fix would introduce
       new complexity or risk disproportionate to the gap (gaps #2 and
       #3).
+- [x] **5.11 Golden-set live-model regression script** — every round of
+      tool-gating verification since 5.6 (the follow-up fix, 5.7-5.9,
+      5.10) was a throwaway scratch script written fresh each time,
+      re-deriving the same setup and occasionally re-discovering gaps
+      in categories already seen. `tests/live_model_check.py` is the
+      same idea kept around and extended instead of thrown away: 19
+      golden (prompt, expected tool-or-none) cases covering every
+      registered action plus the known false-positive/trade-off cases
+      from 5.9/5.10, run against a real Ollama server, with a PASS/FAIL
+      summary and non-zero exit on failure. Deliberately named without
+      a `test_` prefix so pytest never auto-collects it — it needs a
+      live model, unlike the rest of the suite.
+
+      `modules/assistant/module.py`'s `_on_send()` had the gating/
+      grounding decision logic extracted into a standalone
+      `build_chat_request(context, prompt)` function so this script
+      exercises the *exact* production decision path, not a hand-copied
+      reimplementation — every prior scratch script was, in effect, its
+      own slightly-drifting copy of that logic.
+
+      **A real mistake found while building this:** every prior scratch
+      script (including 5.7-5.10's) constructed real
+      Alarm/Journal/Inventory/Waypoint managers *without* isolating
+      their data directories, so all of that session's test fixtures
+      ("Wake Up" alarm, duplicate "Groceries" notes, "M3 bolts"
+      inventory items, "Home"/"Cabin" waypoints) were written straight
+      into this dev machine's real `data/*.json` files across multiple
+      runs. `tests/live_model_check.py` redirects every manager's data
+      directory into a throwaway `tempfile.mkdtemp()` location before
+      constructing anything, and never executes a tool call (only
+      inspects `reply.tool_calls`, same convention every scratch script
+      already used) — so it can be re-run freely without touching real
+      data. The already-polluted files were left for the user to review
+      rather than auto-deleted (data/*.json is gitignored personal
+      data, and telling apart a test fixture from a coincidentally
+      identical real entry isn't a call to make unilaterally). **Any
+      future one-off verification script must isolate data directories
+      the same way `tests/test_assistant_action_handlers.py` and
+      `tests/live_model_check.py` do — never construct a real manager
+      against the real `data/` path.**
 
 ## v0.6 breakdown (planned)
 

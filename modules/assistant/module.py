@@ -150,6 +150,35 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
     return any(keyword in lowered for keyword in keywords)
 
 
+def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
+    """
+    Decides whether `prompt` looks like an action request and builds
+    the (messages, tools) pair `_on_send()` hands to `ChatWorker` —
+    pulled out as its own function (touches only `context`, no Qt) so
+    `tests/live_model_check.py` (the golden-set live-model regression
+    script, milestone 5.11) exercises this exact decision logic
+    against the real Ollama server, not a hand-copied reimplementation
+    that could quietly drift from what production actually does.
+    """
+    action_keywords = (
+        context.assistant_actions.gating_keywords()
+        if context.assistant_actions is not None
+        else []
+    )
+    is_action_request = looks_like_action_request(prompt, action_keywords)
+
+    llm_prompt = prompt
+    if not is_action_request and context.device_help is not None:
+        llm_prompt = context.device_help.build_grounded_prompt(prompt)
+
+    messages = [{"role": "user", "content": llm_prompt}]
+    tools = []
+    if is_action_request and context.assistant_actions is not None:
+        tools = context.assistant_actions.to_ollama_tools()
+
+    return messages, tools
+
+
 class AssistantModule(ModuleBase):
     module_id = "assistant"
     display_name = "Assistant"
@@ -242,21 +271,7 @@ class AssistantModule(ModuleBase):
         self._input.clear()
         self._set_busy(True)
 
-        action_keywords = (
-            self.context.assistant_actions.gating_keywords()
-            if self.context.assistant_actions is not None
-            else []
-        )
-        is_action_request = looks_like_action_request(prompt, action_keywords)
-
-        llm_prompt = prompt
-        if not is_action_request and self.context.device_help is not None:
-            llm_prompt = self.context.device_help.build_grounded_prompt(prompt)
-
-        messages = [{"role": "user", "content": llm_prompt}]
-        tools = []
-        if is_action_request and self.context.assistant_actions is not None:
-            tools = self.context.assistant_actions.to_ollama_tools()
+        messages, tools = build_chat_request(self.context, prompt)
 
         self._worker = ChatWorker(self.context.llm, messages, tools)
         self._worker.result_ready.connect(self._on_reply)

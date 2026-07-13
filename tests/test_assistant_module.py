@@ -2,18 +2,18 @@
 tests.test_assistant_module
 =============================
 
-Unit tests for modules.assistant.module's pure logic — format_chat_line
-and looks_like_action_request — no Qt event loop needed. Same shape as
-tests/test_notes_module.py's format_entry_row test: the widget-building
-and worker-thread wiring in AssistantModule needs a real Qt event loop
-to exercise meaningfully, so that was verified with a manual headless
-smoke test instead (offscreen QPA platform) rather than unit-tested
-here.
+Unit tests for modules.assistant.module's pure logic —
+format_chat_line, looks_like_action_request, and build_chat_request —
+no Qt event loop needed. Same shape as tests/test_notes_module.py's
+format_entry_row test: the widget-building and worker-thread wiring in
+AssistantModule needs a real Qt event loop to exercise meaningfully, so
+that was verified with a manual headless smoke test instead (offscreen
+QPA platform) rather than unit-tested here.
 """
 
 from __future__ import annotations
 
-from modules.assistant.module import format_chat_line, looks_like_action_request
+from modules.assistant.module import build_chat_request, format_chat_line, looks_like_action_request
 
 
 def test_formats_speaker_and_text():
@@ -69,3 +69,68 @@ def test_recent_activity_phrasing_is_an_action_request():
 def test_notebook_word_does_not_false_positive_on_note_keyword():
     """Loose "note" would false-positive on unrelated words like "notebook" — must require the fuller phrase."""
     assert looks_like_action_request("What's a good notebook for taking handwritten notes?") is False
+
+
+# ----------------------------------------------------------------------
+# build_chat_request
+# ----------------------------------------------------------------------
+# Extracted out of _on_send() so tests/live_model_check.py's golden-set
+# regression script exercises this exact logic against the real Ollama
+# server, not a hand-copied reimplementation — see this function's
+# docstring.
+
+class _FakeAssistantActions:
+    def __init__(self, keywords, tools):
+        self._keywords = keywords
+        self._tools = tools
+
+    def gating_keywords(self):
+        return self._keywords
+
+    def to_ollama_tools(self):
+        return self._tools
+
+
+class _FakeDeviceHelp:
+    def build_grounded_prompt(self, prompt):
+        return f"GROUNDED[{prompt}]"
+
+
+class _FakeContext:
+    def __init__(self, assistant_actions=None, device_help=None):
+        self.assistant_actions = assistant_actions
+        self.device_help = device_help
+
+
+def test_build_chat_request_action_prompt_uses_raw_prompt_and_tools():
+    context = _FakeContext(
+        assistant_actions=_FakeAssistantActions(keywords=["open "], tools=[{"type": "function"}]),
+        device_help=_FakeDeviceHelp(),
+    )
+    messages, tools = build_chat_request(context, "Open the notes module")
+    assert messages == [{"role": "user", "content": "Open the notes module"}]
+    assert tools == [{"type": "function"}]
+
+
+def test_build_chat_request_info_prompt_uses_grounding_and_no_tools():
+    context = _FakeContext(
+        assistant_actions=_FakeAssistantActions(keywords=["open "], tools=[{"type": "function"}]),
+        device_help=_FakeDeviceHelp(),
+    )
+    messages, tools = build_chat_request(context, "What are the symptoms of hypothermia?")
+    assert messages == [{"role": "user", "content": "GROUNDED[What are the symptoms of hypothermia?]"}]
+    assert tools == []
+
+
+def test_build_chat_request_without_device_help_uses_raw_prompt_for_info_questions():
+    context = _FakeContext(assistant_actions=_FakeAssistantActions(keywords=[], tools=[]), device_help=None)
+    messages, tools = build_chat_request(context, "What are the symptoms of hypothermia?")
+    assert messages == [{"role": "user", "content": "What are the symptoms of hypothermia?"}]
+    assert tools == []
+
+
+def test_build_chat_request_without_assistant_actions_never_offers_tools():
+    context = _FakeContext(assistant_actions=None, device_help=_FakeDeviceHelp())
+    messages, tools = build_chat_request(context, "Open the notes module")
+    assert messages == [{"role": "user", "content": "GROUNDED[Open the notes module]"}]
+    assert tools == []
