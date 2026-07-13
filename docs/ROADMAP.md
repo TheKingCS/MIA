@@ -747,6 +747,48 @@ boot never depends on an LLM server being up.
       trip actually named in the prompt, confirmed a full round trip:
       the gear item and the trip-linked, conditions-populated journal
       entry both landed correctly in the real managers.
+- [x] **5.13 Assistant action-registry expansion: Calendar, Power,
+      Components, Field Kit (read actions)** — the next follow-up batch
+      flagged at the end of 5.12, closing most of the remaining
+      unconnected modules: registry grows 25 -> 34.
+      `add_calendar_event`/`list_calendar_events`/`delete_calendar_event`,
+      `get_power_status` (read-only), `add_component`/`list_components`/
+      `delete_component` (Workshop & Electronics), `list_connected_devices`
+      and `list_scripts` (Field Kit, both read-only). Same exact handler
+      shape as every prior batch. `delete_calendar_event` reuses the
+      "alarm "-style bare trailing-space trigger trick (`"event "`) for
+      real name-between-verb-and-noun phrasing ("delete my Doctor
+      Appointment event"), pinned against the "eventful" substring
+      false-positive the same way `"alarm "` already guards against
+      "alarming."
+
+      **Deliberately excluded: `run_script`.** Executing one of the
+      user's saved Field Kit scripts via voice/text is a meaningfully
+      different capability than every other action registered so far —
+      real command/code execution, not CRUD on M.I.A.'s own data — and
+      deserves its own explicit decision rather than being bundled
+      quietly into a read-action batch. `list_scripts` (read-only) shipped;
+      actually running one did not.
+
+      Extended `tests/live_model_check.py`'s `_build_context()` with a
+      real `DeviceFramework`/`PowerManager` (both read-only wrappers
+      over `lsblk`/`psutil` with no JSON file of their own, so — unlike
+      every other manager in that script — neither needs data-dir
+      isolation). Passed **42/42 on the first run**, confirmed stable on
+      a second independent run (one previously-passing "known accepted
+      trade-off" case called a different, still-`"safe"`, non-destructive
+      tool between the two runs — expected `temperature=0` sampling
+      noise per 5.9's finding, not a regression, since that case's
+      golden-set expectation is "no destructive call," not an exact
+      tool match). Also smoke-tested through the real `AssistantModule`
+      UI (add a calendar event, add a component) — both landed
+      correctly in the real managers.
+
+      **Still deliberately unconnected**: Expedition data sync
+      (export/import — awkward for conversational use, needs a real
+      physical device path), Data Logger (niche/config-heavy, not a
+      natural conversational fit). Not every module needs an Assistant
+      hook; these were considered and skipped, not overlooked.
 
 ## v0.6 breakdown (planned)
 

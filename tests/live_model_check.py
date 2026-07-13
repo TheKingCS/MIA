@@ -40,9 +40,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 _TEMP_DATA_DIR = Path(tempfile.mkdtemp(prefix="mia_live_model_check_"))
 
 import core.alarm_manager as alarm_manager_module
+import core.calendar_manager as calendar_manager_module
+import core.component_manager as component_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.script_library_manager as script_library_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 
@@ -58,12 +61,20 @@ expedition_manager_module._DATA_DIR = _TEMP_DATA_DIR
 expedition_manager_module._EXPEDITIONS_FILE = _TEMP_DATA_DIR / "expeditions.json"
 trip_manager_module._DATA_DIR = _TEMP_DATA_DIR
 trip_manager_module._TRIPS_FILE = _TEMP_DATA_DIR / "trips.json"
+calendar_manager_module._DATA_DIR = _TEMP_DATA_DIR
+calendar_manager_module._EVENTS_FILE = _TEMP_DATA_DIR / "calendar_events.json"
+component_manager_module._DATA_DIR = _TEMP_DATA_DIR
+component_manager_module._COMPONENTS_FILE = _TEMP_DATA_DIR / "components.json"
+script_library_manager_module._DATA_DIR = _TEMP_DATA_DIR
+script_library_manager_module._SCRIPTS_FILE = _TEMP_DATA_DIR / "scripts.json"
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.application import MIAApplication
 from core.assistant_actions import AssistantActionRegistry
+from core.calendar_manager import CalendarManager
+from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
@@ -73,6 +84,7 @@ from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.module_manager import ModuleManager
 from core.reference_library_manager import ReferenceLibraryManager
+from core.script_library_manager import ScriptLibraryManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 from modules.assistant.module import build_chat_request
@@ -82,6 +94,7 @@ from modules.assistant.module import build_chat_request
 _DESTRUCTIVE_TOOLS = {
     "delete_alarm", "delete_note", "delete_inventory_item",
     "adjust_inventory_quantity", "delete_waypoint",
+    "delete_calendar_event", "delete_component",
 }
 
 # (description, prompt, expected)
@@ -138,6 +151,17 @@ GOLDEN_CASES = [
         "I need to log off for the night",
         None,
     ),
+    # --- Assistant action-registry expansion: Calendar, Power, Components, Field Kit ---
+    ("add calendar event", "Add an event called Dentist on 2026-09-01 at 14:00", "add_calendar_event"),
+    ("list calendar events", "What's on my calendar?", "list_calendar_events"),
+    ("delete calendar event", "Delete my Doctor Appointment event", "delete_calendar_event"),
+    ("get power status", "What's my battery level?", "get_power_status"),
+    ("add component", "Add a component called 10k resistor", "add_component"),
+    ("list components", "What components do I have?", "list_components"),
+    ("delete component", "Delete the M3 bolts component", "delete_component"),
+    ("list connected devices", "What devices are connected right now?", "list_connected_devices"),
+    ("list scripts", "List my scripts", "list_scripts"),
+    ("false-positive sanity: 'eventful' is not 'event '", "This was an eventful week at work", None),
 ]
 
 
@@ -165,6 +189,16 @@ def _build_context() -> AppContext:
     context.config.set("trips.photo_root_path", str(_TEMP_DATA_DIR / "trip_photos"))
     context.expeditions = ExpeditionManager(context)
     context.trips = TripManager(context)
+    context.calendar = CalendarManager(context)
+    context.components = ComponentManager(context)
+    context.scripts = ScriptLibraryManager(context)
+    # Real DeviceFramework/PowerManager — both are read-only wrappers
+    # over lsblk/psutil with no JSON file of their own, so no isolation
+    # is needed the way every other manager above requires.
+    from core.device_framework import DeviceFramework
+    from core.power_manager import PowerManager
+    context.devices = DeviceFramework(context)
+    context.power = PowerManager(context)
     context.activity_log = ActivityLogManager(context)
     context.activity_log.register_module_lister(module_manager.all)
 
@@ -185,6 +219,9 @@ def _seed_fixtures(context: AppContext) -> None:
     expedition = context.expeditions.add_expedition(name="Field Season", start_date="2026-08-14")
     trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1", activity_type="Hiking")
     context.trips.add_gear_item(trip.trip_id, label="First aid kit")
+    context.calendar.add_event(title="Doctor Appointment", date="2026-08-14", time="09:00")
+    context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
+    context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
 
 
 def main() -> int:

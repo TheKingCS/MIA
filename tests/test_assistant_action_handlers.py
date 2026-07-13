@@ -18,19 +18,25 @@ from __future__ import annotations
 import pytest
 
 import core.alarm_manager as alarm_manager_module
+import core.calendar_manager as calendar_manager_module
+import core.component_manager as component_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.script_library_manager as script_library_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.application import MIAApplication
+from core.calendar_manager import CalendarManager
+from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
+from core.script_library_manager import ScriptLibraryManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 
@@ -50,6 +56,12 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(expedition_manager_module, "_EXPEDITIONS_FILE", data_dir / "expeditions.json")
     monkeypatch.setattr(trip_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(trip_manager_module, "_TRIPS_FILE", data_dir / "trips.json")
+    monkeypatch.setattr(calendar_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(calendar_manager_module, "_EVENTS_FILE", data_dir / "calendar_events.json")
+    monkeypatch.setattr(component_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(component_manager_module, "_COMPONENTS_FILE", data_dir / "components.json")
+    monkeypatch.setattr(script_library_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(script_library_manager_module, "_SCRIPTS_FILE", data_dir / "scripts.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -59,6 +71,9 @@ def context(tmp_path, monkeypatch):
     ctx.waypoints = WaypointManager(ctx)
     ctx.expeditions = ExpeditionManager(ctx)
     ctx.trips = TripManager(ctx)
+    ctx.calendar = CalendarManager(ctx)
+    ctx.components = ComponentManager(ctx)
+    ctx.scripts = ScriptLibraryManager(ctx)
     return ctx
 
 
@@ -526,3 +541,183 @@ def test_set_theme_updates_config_and_publishes_event(context):
     assert "Low Energy" in result
     assert context.config.get("gui.theme") == "low_energy"
     assert received == ["low_energy"]
+
+
+# ----------------------------------------------------------------------
+# Calendar
+# ----------------------------------------------------------------------
+
+def test_add_calendar_event_requires_a_title(context):
+    result = MIAApplication._action_add_calendar_event(context, {"date": "2026-08-14"})
+    assert "title" in result.lower()
+    assert context.calendar.all_events() == []
+
+
+def test_add_calendar_event_requires_a_date(context):
+    result = MIAApplication._action_add_calendar_event(context, {"title": "Doctor Appointment"})
+    assert "date" in result.lower()
+    assert context.calendar.all_events() == []
+
+
+def test_add_calendar_event_creates_event(context):
+    result = MIAApplication._action_add_calendar_event(
+        context, {"title": "Doctor Appointment", "date": "2026-08-14", "time": "09:00"}
+    )
+    assert "Doctor Appointment" in result and "2026-08-14" in result
+    assert len(context.calendar.all_events()) == 1
+
+
+def test_list_calendar_events_empty(context):
+    assert "no calendar events" in MIAApplication._action_list_calendar_events(context, {}).lower()
+
+
+def test_list_calendar_events_returns_all(context):
+    context.calendar.add_event(title="Doctor Appointment", date="2026-08-14", time="09:00")
+    result = MIAApplication._action_list_calendar_events(context, {})
+    assert "Doctor Appointment" in result and "2026-08-14" in result
+
+
+def test_delete_calendar_event_removes_matching_event(context):
+    context.calendar.add_event(title="Doctor Appointment", date="2026-08-14")
+    result = MIAApplication._action_delete_calendar_event(context, {"title": "Doctor Appointment"})
+    assert "Doctor Appointment" in result
+    assert context.calendar.all_events() == []
+
+
+def test_delete_calendar_event_unknown_title_does_not_delete_anything(context):
+    context.calendar.add_event(title="Doctor Appointment", date="2026-08-14")
+    result = MIAApplication._action_delete_calendar_event(context, {"title": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+    assert len(context.calendar.all_events()) == 1
+
+
+# ----------------------------------------------------------------------
+# Power
+# ----------------------------------------------------------------------
+
+def test_get_power_status_unavailable(context):
+    # A fake backend, not a real PowerManager — this sandbox's psutil
+    # actually reports a real (likely host-passthrough) battery reading,
+    # so relying on real hardware state here would be non-deterministic.
+    class _FakeNoPower:
+        def read(self):
+            return None
+
+    context.power = _FakeNoPower()
+    result = MIAApplication._action_get_power_status(context, {})
+    assert "not available" in result.lower() or "no battery" in result.lower()
+
+
+def test_get_power_status_reports_reading(context):
+    from core.power_manager import PowerStatus
+
+    class _FakePower:
+        def read(self):
+            return PowerStatus(percent=87.0, plugged_in=False, seconds_left=3600)
+
+    context.power = _FakePower()
+    result = MIAApplication._action_get_power_status(context, {})
+    assert "87" in result
+    assert "battery" in result.lower()
+    assert "60 minutes" in result
+
+
+# ----------------------------------------------------------------------
+# Components
+# ----------------------------------------------------------------------
+
+def test_add_component_requires_a_name(context):
+    result = MIAApplication._action_add_component(context, {})
+    assert "name" in result.lower()
+    assert context.components.all_components() == []
+
+
+def test_add_component_creates_component(context):
+    result = MIAApplication._action_add_component(context, {"name": "M3 bolts", "quantity": 25, "category": "Fastener"})
+    assert "M3 bolts" in result
+    components = context.components.all_components()
+    assert len(components) == 1
+    assert components[0].quantity == 25
+
+
+def test_list_components_empty(context):
+    assert "no components" in MIAApplication._action_list_components(context, {}).lower()
+
+
+def test_list_components_returns_all(context):
+    context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
+    result = MIAApplication._action_list_components(context, {})
+    assert "M3 bolts" in result and "25" in result
+
+
+def test_list_components_query_filters(context):
+    context.components.add_component(name="M3 bolts", quantity=25)
+    context.components.add_component(name="10k resistor", quantity=10)
+    result = MIAApplication._action_list_components(context, {"query": "bolts"})
+    assert "M3 bolts" in result
+    assert "resistor" not in result.lower()
+
+
+def test_delete_component_removes_matching_component(context):
+    context.components.add_component(name="M3 bolts", quantity=25)
+    result = MIAApplication._action_delete_component(context, {"name": "M3 bolts"})
+    assert "M3 bolts" in result
+    assert context.components.all_components() == []
+
+
+def test_delete_component_unknown_name_does_not_delete_anything(context):
+    context.components.add_component(name="M3 bolts", quantity=25)
+    result = MIAApplication._action_delete_component(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+    assert len(context.components.all_components()) == 1
+
+
+# ----------------------------------------------------------------------
+# Field Kit: connected devices + scripts
+# ----------------------------------------------------------------------
+
+def test_list_connected_devices_none_connected(context):
+    class _FakeDevices:
+        def list_block_devices(self):
+            return []
+
+        def list_serial_devices(self):
+            return []
+
+    context.devices = _FakeDevices()
+    result = MIAApplication._action_list_connected_devices(context, {})
+    assert "no external devices" in result.lower()
+
+
+def test_list_connected_devices_reports_connected(context):
+    class _FakeBlockDevice:
+        display_name = "SanDisk USB Drive (32G)"
+
+    class _FakeDevices:
+        def list_block_devices(self):
+            return [_FakeBlockDevice()]
+
+        def list_serial_devices(self):
+            return []
+
+    context.devices = _FakeDevices()
+    result = MIAApplication._action_list_connected_devices(context, {})
+    assert "SanDisk USB Drive" in result
+
+
+def test_list_scripts_empty(context):
+    assert "no saved scripts" in MIAApplication._action_list_scripts(context, {}).lower()
+
+
+def test_list_scripts_returns_all(context):
+    context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
+    result = MIAApplication._action_list_scripts(context, {})
+    assert "Backup" in result and "shell" in result
+
+
+def test_list_scripts_query_filters(context):
+    context.scripts.add_script(name="Backup", interpreter="shell")
+    context.scripts.add_script(name="Deploy", interpreter="python")
+    result = MIAApplication._action_list_scripts(context, {"query": "backup"})
+    assert "Backup" in result
+    assert "Deploy" not in result

@@ -614,6 +614,116 @@ class MIAApplication:
                 "low energy theme", "anime theme", "colored theme", "dark field theme",
             ),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_calendar_event",
+            description="Add a new event to M.I.A.'s Calendar.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "A short title for the event."},
+                    "date": {"type": "string", "description": "Date in YYYY-MM-DD format."},
+                    "time": {"type": "string", "description": "Optional time in 24-hour HH:MM format. Leave empty for an all-day event."},
+                    "notes": {"type": "string", "description": "Optional notes."},
+                },
+                "required": ["title", "date"],
+            },
+            handler=self._action_add_calendar_event,
+            trigger_phrases=("add an event", "add a calendar event", "schedule an event", "new calendar event"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_calendar_events",
+            description="List the user's Calendar events in M.I.A.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_calendar_events,
+            trigger_phrases=("list my events", "list my calendar", "what's on my calendar", "upcoming events", "show my calendar"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_calendar_event",
+            description="Delete an existing Calendar event in M.I.A. by its title.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The title of the event to delete."},
+                },
+                "required": ["title"],
+            },
+            handler=self._action_delete_calendar_event,
+            # Bare "event " (trailing space, avoids matching inside "eventful")
+            # needed alongside the combo phrases for the same name-between-
+            # verb-and-noun reason as "alarm "/"component " below.
+            trigger_phrases=("delete an event", "delete the event", "remove an event", "cancel the event", "event "),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_power_status",
+            description="Get this device's current battery/power status.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_power_status,
+            trigger_phrases=("battery level", "battery status", "power status", "how much battery", "how's my battery"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_component",
+            description="Add a new electronic component to M.I.A.'s Workshop & Electronics component database.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The component's name, e.g. 'M3 bolts' or '10k resistor'."},
+                    "category": {"type": "string", "description": "Optional category, e.g. 'Resistor', 'Capacitor', 'IC'."},
+                    "value": {"type": "string", "description": "Optional value, e.g. '10k', '100nF'."},
+                    "package": {"type": "string", "description": "Optional package, e.g. 'THT', '0805'."},
+                    "quantity": {"type": "integer", "description": "Quantity on hand, default 0."},
+                    "location": {"type": "string", "description": "Optional storage location."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_component,
+            trigger_phrases=("add a component", "new component", "add a part", "add to my parts"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_components",
+            description="List or search the user's electronic components in M.I.A.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional search text. Leave empty for all components."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_components,
+            trigger_phrases=("list my components", "list components", "what components", "show my components", "search components"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_component",
+            description="Delete an existing electronic component in M.I.A. by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the component to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_component,
+            trigger_phrases=("delete a component", "remove a component", "component "),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_connected_devices",
+            description="List currently connected external USB storage and serial devices in M.I.A.'s Field Kit.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_connected_devices,
+            trigger_phrases=("connected devices", "what devices are connected", "list devices", "usb devices", "list connected devices"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_scripts",
+            description="List the user's saved scripts in M.I.A.'s Field Kit script library.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional search text. Leave empty for all scripts."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_scripts,
+            trigger_phrases=("list my scripts", "list scripts", "what scripts", "show my scripts"),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -913,6 +1023,103 @@ class MIAApplication:
         context.config.save()
         context.events.publish("theme.changed", theme_id=theme_id)
         return f"Theme changed to {THEME_DISPLAY_NAMES[theme_id]}."
+
+    @staticmethod
+    def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip()
+        date_str = str(arguments.get("date", "") or "").strip()
+        if not title:
+            return "I need a title to add a calendar event."
+        if not date_str:
+            return "I need a date (YYYY-MM-DD) to add a calendar event."
+        time_str = str(arguments.get("time", "") or "").strip() or None
+        notes = str(arguments.get("notes", "") or "")
+        event = context.calendar.add_event(title=title, date=date_str, time=time_str, notes=notes)
+        time_part = f" at {event.time}" if event.time else ""
+        return f"Calendar event '{event.title}' added for {event.date}{time_part}."
+
+    @staticmethod
+    def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:
+        events = context.calendar.all_events()
+        if not events:
+            return "You have no calendar events."
+        lines = [f"- '{e.title}' on {e.date}" + (f" at {e.time}" if e.time else "") for e in events]
+        return "Your calendar events:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_delete_calendar_event(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip().lower()
+        match = next((e for e in context.calendar.all_events() if e.title.lower() == title), None)
+        if match is None:
+            return f"I don't have a calendar event called '{arguments.get('title', '')}'."
+        context.calendar.delete_event(match.event_id)
+        return f"Deleted the calendar event '{match.title}'."
+
+    @staticmethod
+    def _action_get_power_status(context: AppContext, arguments: dict) -> str:
+        status = context.power.read()
+        if status is None:
+            return "No battery or power status is available on this device."
+        plugged = "plugged in" if status.plugged_in else "on battery"
+        time_part = ""
+        if status.seconds_left is not None:
+            time_part = f", about {status.seconds_left // 60} minutes remaining"
+        return f"Battery: {status.percent:.0f}% ({plugged}{time_part})."
+
+    @staticmethod
+    def _action_add_component(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a component."
+        category = str(arguments.get("category", "") or "").strip()
+        value = str(arguments.get("value", "") or "").strip()
+        package = str(arguments.get("package", "") or "").strip()
+        try:
+            quantity = int(arguments.get("quantity", 0) or 0)
+        except (TypeError, ValueError):
+            quantity = 0
+        location = str(arguments.get("location", "") or "").strip()
+        component = context.components.add_component(
+            name=name, category=category, value=value, package=package, quantity=quantity, location=location,
+        )
+        return f"Component '{component.name}' added (qty {component.quantity})."
+
+    @staticmethod
+    def _action_list_components(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").strip()
+        components = context.components.search(query) if query else context.components.all_components()
+        if not components:
+            return "No matching components found." if query else "You have no components saved."
+        lines = [f"- '{c.name}' qty {c.quantity}" + (f" ({c.category})" if c.category else "") for c in components]
+        return "Your components:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_delete_component(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((c for c in context.components.all_components() if c.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a component called '{arguments.get('name', '')}'."
+        context.components.delete_component(match.component_id)
+        return f"Deleted the component '{match.name}'."
+
+    @staticmethod
+    def _action_list_connected_devices(context: AppContext, arguments: dict) -> str:
+        block_devices = context.devices.list_block_devices()
+        serial_devices = context.devices.list_serial_devices()
+        if not block_devices and not serial_devices:
+            return "No external devices are currently connected."
+        lines = [f"- {d.display_name} (storage)" for d in block_devices]
+        lines += [f"- {d.display_name} (serial)" for d in serial_devices]
+        return "Connected devices:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_list_scripts(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").strip()
+        scripts = context.scripts.search(query) if query else context.scripts.all_scripts()
+        if not scripts:
+            return "No matching scripts found." if query else "You have no saved scripts."
+        lines = [f"- '{s.name}'" + (f" [{s.category}]" if s.category else "") + f" ({s.interpreter})" for s in scripts]
+        return "Your scripts:\n" + "\n".join(lines)
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

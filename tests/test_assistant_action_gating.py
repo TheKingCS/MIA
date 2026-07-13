@@ -195,3 +195,58 @@ def test_ordinary_trip_mention_does_not_gate_open():
     """False-positive check: 'trip' as an ordinary word, not a request to act on a Trip record."""
     keywords = _real_gating_keywords()
     assert looks_like_action_request("That trip to the store took forever", keywords) is False
+
+
+# ----------------------------------------------------------------------
+# milestone 5.13 — Calendar, Power, Components, Field Kit (read actions)
+# ----------------------------------------------------------------------
+
+def test_add_calendar_event_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add an event called Doctor Appointment on 2026-08-14", keywords) is True
+
+
+def test_list_calendar_events_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What's on my calendar?", keywords) is True
+
+
+def test_delete_calendar_event_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete my Doctor Appointment event", keywords) is True
+
+
+def test_eventful_does_not_gate_open_on_bare_event_trigger():
+    """Same 'trailing space avoids the substring' trick as the existing 'alarm '/'component ' triggers."""
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("This was an eventful day", keywords) is False
+
+
+def test_get_power_status_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What's my battery level?", keywords) is True
+
+
+def test_add_component_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add a component called 10k resistor", keywords) is True
+
+
+def test_list_components_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What components do I have?", keywords) is True
+
+
+def test_delete_component_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete my M3 bolts component", keywords) is True
+
+
+def test_list_connected_devices_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What devices are connected?", keywords) is True
+
+
+def test_list_scripts_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("List my scripts", keywords) is True
