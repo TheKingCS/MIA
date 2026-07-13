@@ -79,3 +79,33 @@ def test_to_ollama_tools_shape():
 def test_to_ollama_tools_empty_registry():
     registry = AssistantActionRegistry()
     assert registry.to_ollama_tools() == []
+
+
+# ----------------------------------------------------------------------
+# gating_keywords — milestone 5.9
+# ----------------------------------------------------------------------
+
+def test_gating_keywords_flattens_all_registered_actions():
+    registry = AssistantActionRegistry()
+    registry.register(AssistantAction(
+        name="a",
+        description="A.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("open ", "launch "),
+    ))
+    registry.register(AssistantAction(
+        name="b",
+        description="B.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("set an alarm",),
+    ))
+
+    assert registry.gating_keywords() == ["open ", "launch ", "set an alarm"]
+
+
+def test_gating_keywords_empty_when_no_trigger_phrases():
+    registry = AssistantActionRegistry()
+    registry.register(_make_action())
+    assert registry.gating_keywords() == []

@@ -10,9 +10,11 @@ Talk" button wired to `AppContext.voice` (core/voice_manager.py) for
 speech in, speech out.
 
 `_on_send()` first classifies the prompt with `looks_like_action_request()`
-(a keyword check against phrases tied to the registered actions — "open",
-"set an alarm", "add a note", etc.) and branches on the result, because
-grounding and tool-calling actively interfere with each other:
+against `AppContext.assistant_actions.gating_keywords()` — the live union
+of every registered action's own `trigger_phrases`
+(core/assistant_actions.py), not a hand-maintained list in this file — and
+branches on the result, because grounding and tool-calling actively
+interfere with each other:
 
 - **Information questions** (the common case) are run through
   `AppContext.device_help.build_grounded_prompt()`
@@ -84,7 +86,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -106,13 +108,18 @@ _LLM_UNAVAILABLE_STATUS = "Assistant unavailable — is Ollama running?"
 _MIC_UNAVAILABLE_STATUS = "Microphone unavailable."
 _STT_UNAVAILABLE_STATUS = "Speech-to-text unavailable."
 
-# Keyword phrases tied to the built-in actions registered in
-# core/application.py's _register_assistant_actions() (open_module,
-# add_alarm, add_note, add_inventory_item, recall_recent_activity).
-# Deliberately phrase-level rather than single loose words (e.g. "add a
-# note" not bare "note") to avoid false-positiving on unrelated
-# questions that happen to share a word ("notebook", "recent history of
-# the Roman Empire").
+# Fallback keyword phrases, used only when looks_like_action_request()
+# is called without an explicit `keywords` argument (e.g. exercising
+# the pure classifier directly in tests/test_assistant_module.py).
+# Production code (_on_send() below) instead passes
+# `AppContext.assistant_actions.gating_keywords()` — the live union of
+# every registered action's own `trigger_phrases`
+# (core/assistant_actions.py), not this static list. Milestone 5.9
+# moved gating phrases onto each action's own registration for exactly
+# this reason: a hand-maintained central tuple like this one silently
+# drifts out of sync once the registry grows past a handful of
+# actions — this fallback exists purely so the classifier stays
+# testable in isolation, not as the real source of truth.
 _ACTION_REQUEST_KEYWORDS = (
     "open ", "launch ", "go to ", "switch to ", "take me to ",
     "set an alarm", "set a timer", "add an alarm", "remind me", "wake me up",
@@ -127,17 +134,20 @@ def format_chat_line(speaker: str, text: str) -> str:
     return f"{speaker}: {text}"
 
 
-def looks_like_action_request(text: str) -> bool:
+def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUEST_KEYWORDS) -> bool:
     """
     Drives both halves of the grounding/tool-calling split in
     `_on_send()` — see this module's docstring for the two real-usage
     regressions (hallucinated `open_module` call on an info question;
     grounding noise blocking a real `add_alarm` call) this classifier
     fixes. Pure keyword matching, same simplicity level as
-    core/device_help_manager.py's retrieval scoring.
+    core/device_help_manager.py's retrieval scoring. `keywords` defaults
+    to this module's own fallback list only for standalone testing —
+    see `_ACTION_REQUEST_KEYWORDS`'s docstring for why production code
+    always passes the registry's live keyword set instead.
     """
     lowered = f" {text.lower().strip()} "
-    return any(keyword in lowered for keyword in _ACTION_REQUEST_KEYWORDS)
+    return any(keyword in lowered for keyword in keywords)
 
 
 class AssistantModule(ModuleBase):
@@ -232,7 +242,12 @@ class AssistantModule(ModuleBase):
         self._input.clear()
         self._set_busy(True)
 
-        is_action_request = looks_like_action_request(prompt)
+        action_keywords = (
+            self.context.assistant_actions.gating_keywords()
+            if self.context.assistant_actions is not None
+            else []
+        )
+        is_action_request = looks_like_action_request(prompt, action_keywords)
 
         llm_prompt = prompt
         if not is_action_request and self.context.device_help is not None:

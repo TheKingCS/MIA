@@ -518,6 +518,65 @@ boot never depends on an LLM server being up.
       declines with no tool call, and alarm/note/open-module action
       requests all correctly call their tool, using the exact
       `_on_send()` branching logic (not a hand-simplified stand-in).
+- [x] **5.7 Assistant action-registry expansion: read/query tools** —
+      at the user's explicit request ("the assistant needs to be
+      supercharged... more capable than the user in using the
+      program"), the Assistant gains six new read-only tools, one per
+      existing domain: `list_alarms`, `list_notes` (search or list all
+      journal entries), `list_inventory` (search or list all items with
+      quantities), `list_waypoints` (search or list all saved
+      locations), `waypoint_distance` (distance + bearing between two
+      named waypoints), and `get_system_health` (live CPU/RAM/disk/
+      temperature/network snapshot). Deliberately read-only and lower
+      risk than write actions — this is the highest-value, lowest-risk
+      slice of "more capable than the user," since it directly answers
+      questions the user would otherwise have to open a module to
+      check, without adding new ways to mutate state. Total registered
+      tools go from 5 to 11.
+
+      `get_system_health` needed `modules/diagnostics/module.py`'s
+      `read_system_health()`/`format_system_health()`/
+      `SystemHealthSnapshot` — but `core/application.py` (where
+      assistant actions are registered) can never import from
+      `modules/` (this project's layering rule, see CLAUDE.md). Moved
+      that reader to a new `core/system_health.py` shared service
+      (Diagnostics' UI now imports from there too) rather than
+      duplicating it or bending the layering rule — same "promote to
+      core/ once something else actually needs it" reasoning already
+      behind Journal/Alarm/Inventory/Waypoint living in core/.
+- [x] **5.8 Assistant tool-gating scaling fix (registry-driven
+      keywords)** — done *before* 5.7's new tools were wired up, since
+      it's the safety net they depend on. The gating heuristic from the
+      5.6 follow-up fix (`looks_like_action_request()`) used a single
+      hand-maintained keyword tuple in `modules/assistant/module.py` —
+      fine at 5 actions, but a real liability once the registry was
+      about to grow past that (a developer adding action #12 has no
+      reason to remember a keyword list three files away). Fixed by
+      moving gating phrases onto each action's own registration:
+      `AssistantAction` gains a `trigger_phrases` field
+      (`core/assistant_actions.py`), `AssistantActionRegistry.
+      gating_keywords()` flattens every registered action's phrases,
+      and `_on_send()` passes that live set to
+      `looks_like_action_request()` instead of a static import. The old
+      hand-written tuple stays only as `looks_like_action_request()`'s
+      default argument, for standalone testing of the classifier
+      itself — production code always passes the registry's real
+      keywords.
+- [x] **5.9 Real-model verification at the new tool count** — with 11
+      tools now on the table (more than double milestone 5.5/5.6's 5),
+      re-ran the exact same live-model regression check this project
+      has used all along rather than trusting the design on paper: the
+      original Honda Civics case still declines correctly with zero
+      tools offered; `add_alarm`/`add_note`/`open_module` still fire
+      correctly; and all six new read tools (`list_alarms`,
+      `list_notes`, `list_inventory`, `list_waypoints`,
+      `waypoint_distance`, `get_system_health`) were exercised against
+      real seeded data and called the correct tool with correct
+      arguments. No new hallucination or tool-confusion observed at
+      this tool count on llama3.2:3b — but this doc's standing
+      guidance (5.6's writeup) still applies going forward: re-verify
+      against the live model at each future batch of new actions,
+      don't assume scaling stays safe by design alone.
 
 ## v0.6 breakdown (planned)
 

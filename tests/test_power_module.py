@@ -4,7 +4,7 @@ tests.test_power_module
 
 Unit test for modules.power.module.format_power_status — pure
 formatting logic, no Qt event loop needed. Same shape as
-tests/test_diagnostics_system_health.py's format_system_health test.
+tests/test_system_health.py's format_system_health test.
 """
 
 from __future__ import annotations

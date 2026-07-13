@@ -1,22 +1,23 @@
 """
-tests.test_diagnostics_system_health
-=======================================
+tests.test_system_health
+===========================
 
-Unit tests for modules.diagnostics.module's System Health functions
-(v0.7 milestone 7.1). format_system_health() is tested with hand-built
-snapshots (pure, deterministic). read_system_health()/
-_read_cpu_temperature() are tested against monkeypatched psutil calls
-rather than real system state, so results don't vary by machine/CI —
-same reasoning as test_llm_manager.py mocking urlopen rather than
-hitting a real server.
+Unit tests for core.system_health (moved here from
+modules.diagnostics.module in milestone 5.7 — see that module's own
+docstring and core/system_health.py's docstring for why). format_system_health()
+is tested with hand-built snapshots (pure, deterministic).
+read_system_health()/_read_cpu_temperature() are tested against
+monkeypatched psutil calls rather than real system state, so results
+don't vary by machine/CI — same reasoning as test_llm_manager.py
+mocking urlopen rather than hitting a real server.
 """
 
 from __future__ import annotations
 
 from types import SimpleNamespace
 
-import modules.diagnostics.module as diagnostics_module
-from modules.diagnostics.module import SystemHealthSnapshot, format_system_health, read_system_health
+import core.system_health as system_health
+from core.system_health import SystemHealthSnapshot, format_system_health, read_system_health
 
 
 def _snapshot(**overrides) -> SystemHealthSnapshot:
@@ -51,23 +52,23 @@ def test_format_system_health_handles_missing_temperature():
 
 
 def test_read_system_health_converts_units_correctly(monkeypatch):
-    monkeypatch.setattr(diagnostics_module.psutil, "cpu_percent", lambda interval=None: 55.0)
+    monkeypatch.setattr(system_health.psutil, "cpu_percent", lambda interval=None: 55.0)
     monkeypatch.setattr(
-        diagnostics_module.psutil,
+        system_health.psutil,
         "virtual_memory",
-        lambda: SimpleNamespace(percent=50.0, used=4 * diagnostics_module._BYTES_PER_GB, total=8 * diagnostics_module._BYTES_PER_GB),
+        lambda: SimpleNamespace(percent=50.0, used=4 * system_health._BYTES_PER_GB, total=8 * system_health._BYTES_PER_GB),
     )
     monkeypatch.setattr(
-        diagnostics_module.psutil,
+        system_health.psutil,
         "disk_usage",
-        lambda path: SimpleNamespace(percent=25.0, used=50 * diagnostics_module._BYTES_PER_GB, total=200 * diagnostics_module._BYTES_PER_GB),
+        lambda path: SimpleNamespace(percent=25.0, used=50 * system_health._BYTES_PER_GB, total=200 * system_health._BYTES_PER_GB),
     )
     monkeypatch.setattr(
-        diagnostics_module.psutil,
+        system_health.psutil,
         "net_io_counters",
-        lambda: SimpleNamespace(bytes_sent=5 * diagnostics_module._BYTES_PER_MB, bytes_recv=15 * diagnostics_module._BYTES_PER_MB),
+        lambda: SimpleNamespace(bytes_sent=5 * system_health._BYTES_PER_MB, bytes_recv=15 * system_health._BYTES_PER_MB),
     )
-    monkeypatch.setattr(diagnostics_module.psutil, "sensors_temperatures", lambda: {})
+    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", lambda: {})
 
     snapshot = read_system_health()
 
@@ -83,21 +84,21 @@ def test_read_system_health_converts_units_correctly(monkeypatch):
 
 def test_read_cpu_temperature_returns_first_reading(monkeypatch):
     monkeypatch.setattr(
-        diagnostics_module.psutil,
+        system_health.psutil,
         "sensors_temperatures",
         lambda: {"coretemp": [SimpleNamespace(current=61.5, label="Package")]},
     )
-    assert diagnostics_module._read_cpu_temperature() == 61.5
+    assert system_health._read_cpu_temperature() == 61.5
 
 
 def test_read_cpu_temperature_returns_none_when_empty(monkeypatch):
-    monkeypatch.setattr(diagnostics_module.psutil, "sensors_temperatures", lambda: {})
-    assert diagnostics_module._read_cpu_temperature() is None
+    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", lambda: {})
+    assert system_health._read_cpu_temperature() is None
 
 
 def test_read_cpu_temperature_returns_none_when_not_implemented(monkeypatch):
     def _raise():
         raise AttributeError("module 'psutil' has no attribute 'sensors_temperatures'")
 
-    monkeypatch.setattr(diagnostics_module.psutil, "sensors_temperatures", _raise)
-    assert diagnostics_module._read_cpu_temperature() is None
+    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", _raise)
+    assert system_health._read_cpu_temperature() is None

@@ -6,7 +6,7 @@ Unit tests for core.power_manager. should_warn_low_battery() is tested
 directly with constructed PowerStatus objects (pure, deterministic —
 no psutil or real battery involved). PsutilBatteryBackend/PowerManager
 are tested against monkeypatched psutil.sensors_battery(), same
-approach as test_diagnostics_system_health.py mocking psutil calls.
+approach as test_system_health.py mocking psutil calls.
 """
 
 from __future__ import annotations

@@ -6,7 +6,7 @@ Unit tests for modules.navigation.module's pure functions.
 format_sun_moon_summary() is tested against real coordinates (not
 mocked) since astral itself is the "real dependency" here (offline,
 deterministic, no network) — same reasoning as
-test_diagnostics_system_health.py mocking psutil but this module
+test_system_health.py mocking psutil but this module
 having no external state to fake in the first place.
 """
 

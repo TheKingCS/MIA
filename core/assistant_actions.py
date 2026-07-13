@@ -52,6 +52,14 @@ class AssistantAction:
     description: str
     parameters: dict  # JSON schema "parameters" object (Ollama/OpenAI tool-call format)
     handler: Callable[[AppContext, dict], str]
+    # Keyword phrases that make modules.assistant.module.looks_like_action_request()
+    # offer this action's tool at all (see that function's docstring for
+    # why tools aren't attached to every message unconditionally).
+    # Co-located with the action's own definition rather than a separate
+    # hand-maintained list elsewhere, so a new action's gating phrases
+    # can't silently drift out of sync as the registry grows past a
+    # handful of actions — milestone 5.9's fix for exactly that risk.
+    trigger_phrases: tuple[str, ...] = ()
 
     def to_ollama_tool(self) -> dict:
         return {
@@ -74,6 +82,13 @@ class AssistantActionRegistry:
 
     def to_ollama_tools(self) -> list[dict]:
         return [action.to_ollama_tool() for action in self._actions.values()]
+
+    def gating_keywords(self) -> list[str]:
+        """All registered actions' trigger_phrases, flattened — see AssistantAction.trigger_phrases."""
+        keywords: list[str] = []
+        for action in self._actions.values():
+            keywords.extend(action.trigger_phrases)
+        return keywords
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:
         """

@@ -11,26 +11,21 @@ a laptop or hunting for the file on a headless Pi. The System Health
 panel (v0.7 milestone 7.1) is the second: live CPU/RAM/disk/network/
 temperature via `psutil` (cross-platform, no stdlib equivalent).
 
-Stats-reading (read_system_health()/format_system_health()) is free
-functions (not methods), same shape as tail_lines()/filter_lines(), so
-they're unit-testable without a Qt event loop — see
-tests/test_diagnostics_system_health.py. This data is kept as plain functions
-here rather than promoted to a core/ service because it's Diagnostics'
-own exclusive concern (not shared across module sections the way
-Calculator Engine/Reference Library are) and it's stateless
-point-in-time reads with no persistence — a core manager would be pure
-ceremony. A widget-owned QTimer refreshes the panel while it's on
-screen, same timer-owned-by-the-widget pattern as
-gui/character_panel.py's idle timer. The QWidget-building side of
-get_widget() is exercised manually instead; see
-docs/testing/2.6_system_logs_viewer.md.
+Stats-reading (read_system_health()/format_system_health()) moved to
+core/system_health.py in milestone 5.7 — the Assistant's
+`get_system_health` action needed the same reader, and core/ can never
+import from modules/ (see CLAUDE.md's layering rule), so it was
+promoted to a shared core/ service at that point rather than staying
+Diagnostics-exclusive. See tests/test_system_health.py. A widget-owned
+QTimer refreshes the panel while it's on screen, same
+timer-owned-by-the-widget pattern as gui/character_panel.py's idle
+timer. The QWidget-building side of get_widget() is exercised manually
+instead; see docs/testing/2.6_system_logs_viewer.md.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import psutil
 from PySide6.QtCore import QTimer
@@ -46,6 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.logger import get_logger
+from core.system_health import format_system_health, read_system_health
 from modules.module_base import ModuleBase
 
 log = get_logger(__name__)
@@ -55,91 +51,6 @@ _MAX_DISPLAY_LINES = 1000
 _LOG_LEVELS = ["ALL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 _HEALTH_REFRESH_MS = 3000
-_BYTES_PER_GB = 1024 ** 3
-_BYTES_PER_MB = 1024 ** 2
-
-
-@dataclass
-class SystemHealthSnapshot:
-    cpu_percent: float
-    memory_percent: float
-    memory_used_gb: float
-    memory_total_gb: float
-    disk_percent: float
-    disk_used_gb: float
-    disk_total_gb: float
-    temperature_celsius: Optional[float]
-    network_sent_mb: float
-    network_recv_mb: float
-
-
-def read_system_health(disk_path: str = "/") -> SystemHealthSnapshot:
-    """
-    Read a point-in-time system health snapshot via psutil.
-
-    `psutil.cpu_percent(interval=None)` is non-blocking — it reports
-    usage since the *previous* call in this process, not a fresh
-    measurement, so the very first call after import is meaningless
-    (usually 0.0). Callers that display this on a periodic timer (this
-    module's get_widget()) should prime it with one throwaway call
-    before the first real reading, rather than passing a blocking
-    `interval` here and stalling the GUI thread on every refresh tick.
-    """
-    cpu_percent = psutil.cpu_percent(interval=None)
-    vm = psutil.virtual_memory()
-    disk = psutil.disk_usage(disk_path)
-    net = psutil.net_io_counters()
-    return SystemHealthSnapshot(
-        cpu_percent=cpu_percent,
-        memory_percent=vm.percent,
-        memory_used_gb=vm.used / _BYTES_PER_GB,
-        memory_total_gb=vm.total / _BYTES_PER_GB,
-        disk_percent=disk.percent,
-        disk_used_gb=disk.used / _BYTES_PER_GB,
-        disk_total_gb=disk.total / _BYTES_PER_GB,
-        temperature_celsius=_read_cpu_temperature(),
-        network_sent_mb=net.bytes_sent / _BYTES_PER_MB,
-        network_recv_mb=net.bytes_recv / _BYTES_PER_MB,
-    )
-
-
-def _read_cpu_temperature() -> Optional[float]:
-    """
-    First available sensor reading, or None. `sensors_temperatures()`
-    isn't implemented on every platform (raises on Windows/macOS) and
-    returns an empty dict on systems with no exposed thermal zone (true
-    in this project's own dev sandbox/WSL2) — both degrade to None
-    here rather than raising, same defensive pattern as every other
-    "external system state might just not be there" read in this app.
-    """
-    try:
-        temps = psutil.sensors_temperatures()
-    except Exception:
-        return None
-    for entries in temps.values():
-        for entry in entries:
-            if entry.current is not None:
-                return entry.current
-    return None
-
-
-def format_system_health(snapshot: SystemHealthSnapshot) -> str:
-    """Pure formatting logic — testable without Qt (see tests/test_diagnostics_system_health.py)."""
-    temperature_line = (
-        f"Temperature: {snapshot.temperature_celsius:.1f}°C"
-        if snapshot.temperature_celsius is not None
-        else "Temperature: not available on this system"
-    )
-    return "\n".join([
-        f"CPU: {snapshot.cpu_percent:.1f}%",
-        f"Memory: {snapshot.memory_percent:.1f}%  "
-        f"({snapshot.memory_used_gb:.1f} / {snapshot.memory_total_gb:.1f} GB)",
-        f"Disk: {snapshot.disk_percent:.1f}%  "
-        f"({snapshot.disk_used_gb:.1f} / {snapshot.disk_total_gb:.1f} GB)",
-        temperature_line,
-        f"Network: {snapshot.network_sent_mb:.1f} MB sent / "
-        f"{snapshot.network_recv_mb:.1f} MB received (since boot)",
-    ])
 
 
 def tail_lines(path: Path, max_lines: int) -> list[str]:

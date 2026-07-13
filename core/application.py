@@ -43,6 +43,7 @@ from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.search_manager import SearchManager, SearchResult
+from core.system_health import format_system_health, read_system_health
 from core.voice_manager import VoiceManager
 from core.waypoint_manager import WaypointManager
 from gui.lock_screen import LockScreen
@@ -199,6 +200,7 @@ class MIAApplication:
                 "required": ["module_id"],
             },
             handler=self._action_open_module,
+            trigger_phrases=("open ", "launch ", "go to ", "switch to ", "take me to "),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_alarm",
@@ -212,6 +214,14 @@ class MIAApplication:
                 "required": ["label", "time"],
             },
             handler=self._action_add_alarm,
+            trigger_phrases=("set an alarm", "set a timer", "add an alarm", "remind me", "wake me up"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_alarms",
+            description="List the user's current alarms in M.I.A.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_alarms,
+            trigger_phrases=("list my alarms", "list alarms", "what alarms", "show my alarms", "do i have any alarms"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_note",
@@ -225,6 +235,26 @@ class MIAApplication:
                 "required": ["title"],
             },
             handler=self._action_add_note,
+            trigger_phrases=("add a note", "take a note", "make a note", "write down", "jot down"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_notes",
+            description=(
+                "List or search the user's journal/note entries in M.I.A.'s Notes module. "
+                "Leave query empty to list everything, most recently updated first."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional keyword to search titles/bodies/tags for."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_notes,
+            trigger_phrases=(
+                "show me my notes", "show my notes", "list my notes", "list notes",
+                "search my notes", "search notes", "find a note", "read my notes", "what notes do i have",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_inventory_item",
@@ -238,6 +268,66 @@ class MIAApplication:
                 "required": ["name"],
             },
             handler=self._action_add_inventory_item,
+            trigger_phrases=("add to inventory", "add an inventory item", "inventory item"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_inventory",
+            description=(
+                "List or search M.I.A.'s Inventory tool, including quantities. "
+                "Leave query empty to list everything."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional keyword to search item names/categories/notes for."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_inventory,
+            # "how many" alone was tried and rejected: verified against
+            # the live model that it made "How many people live in
+            # Ohio?" hallucinate a get_system_health call — the exact
+            # failure mode this gating mechanism exists to prevent.
+            # "do i have" (without "any") still catches "how many M3
+            # bolts do I have?" without that false-positive.
+            trigger_phrases=("inventory", "do i have"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_waypoints",
+            description="List or search the user's saved waypoints (named locations) in M.I.A.'s Navigation module.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional keyword to search waypoint names/notes for."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_waypoints,
+            trigger_phrases=("waypoint", "waypoints", "list my waypoints", "list waypoints"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="waypoint_distance",
+            description="Get the distance and compass bearing between two of the user's saved waypoints, by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "from_name": {"type": "string", "description": "Name of the starting waypoint."},
+                    "to_name": {"type": "string", "description": "Name of the destination waypoint."},
+                },
+                "required": ["from_name", "to_name"],
+            },
+            handler=self._action_waypoint_distance,
+            trigger_phrases=("distance to", "distance from", "how far is", "how far apart", "bearing to", "bearing from"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_system_health",
+            description="Get a live snapshot of this device's system health: CPU, memory, disk, temperature, and network usage.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_system_health,
+            trigger_phrases=(
+                "system health", "cpu usage", "cpu temperature", "memory usage",
+                "disk usage", "diagnostics", "how's the system", "check diagnostics",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="recall_recent_activity",
@@ -262,6 +352,7 @@ class MIAApplication:
                 "required": [],
             },
             handler=self._action_recall_recent_activity,
+            trigger_phrases=("recent activity", "activity log", "what have i done", "what have i been doing", "what did i do"),
         ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
@@ -287,6 +378,14 @@ class MIAApplication:
         return f"Alarm '{alarm.label}' set for {alarm.time}."
 
     @staticmethod
+    def _action_list_alarms(context: AppContext, arguments: dict) -> str:
+        alarms = context.alarms.all_alarms()
+        if not alarms:
+            return "You have no alarms set."
+        lines = [f"- '{a.label}' at {a.time}" + ("" if a.enabled else " (disabled)") for a in alarms]
+        return "Your alarms:\n" + "\n".join(lines)
+
+    @staticmethod
     def _action_add_note(context: AppContext, arguments: dict) -> str:
         title = str(arguments.get("title", "")).strip()
         if not title:
@@ -294,6 +393,19 @@ class MIAApplication:
         body = str(arguments.get("body", ""))
         entry = context.journal.add_entry(title=title, body=body)
         return f"Note '{entry.title}' added."
+
+    @staticmethod
+    def _action_list_notes(context: AppContext, arguments: dict) -> str:
+        """Returns raw entries (title + body) as plain text — same
+        retrieve-then-let-the-LLM-answer shape as
+        _action_recall_recent_activity, so the model can quote/summarize
+        rather than this handler guessing what's relevant."""
+        query = str(arguments.get("query", "") or "").strip()
+        entries = context.journal.search(query) if query else context.journal.all_entries()
+        if not entries:
+            return "No matching notes found." if query else "You have no notes yet."
+        lines = [f"- '{e.title}': {e.body}" if e.body else f"- '{e.title}'" for e in entries]
+        return "Your notes:\n" + "\n".join(lines)
 
     @staticmethod
     def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
@@ -306,6 +418,47 @@ class MIAApplication:
             quantity = 0
         item = context.inventory.add_item(name=name, quantity=quantity)
         return f"Added {item.quantity}x '{item.name}' to inventory."
+
+    @staticmethod
+    def _action_list_inventory(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").strip()
+        items = context.inventory.search(query) if query else context.inventory.all_items()
+        if not items:
+            return "No matching inventory items found." if query else "Your inventory is empty."
+        lines = [f"- {i.quantity}x '{i.name}'" for i in items]
+        return "Your inventory:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_list_waypoints(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").lower().strip()
+        waypoints = context.waypoints.all_waypoints()
+        if query:
+            waypoints = [w for w in waypoints if query in f"{w.name} {w.notes}".lower()]
+        if not waypoints:
+            return "No matching waypoints found." if query else "You have no waypoints saved."
+        lines = [f"- '{w.name}' ({w.latitude:.5f}, {w.longitude:.5f})" for w in waypoints]
+        return "Your waypoints:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_waypoint_distance(context: AppContext, arguments: dict) -> str:
+        from_name = str(arguments.get("from_name", "")).strip().lower()
+        to_name = str(arguments.get("to_name", "")).strip().lower()
+        waypoints = {w.name.lower(): w for w in context.waypoints.all_waypoints()}
+        from_wp = waypoints.get(from_name)
+        to_wp = waypoints.get(to_name)
+        if from_wp is None:
+            return f"I don't have a waypoint called '{arguments.get('from_name', '')}'."
+        if to_wp is None:
+            return f"I don't have a waypoint called '{arguments.get('to_name', '')}'."
+        result = context.waypoints.distance_and_bearing(from_wp.waypoint_id, to_wp.waypoint_id)
+        if result is None:
+            return f"Couldn't compute a distance between '{from_wp.name}' and '{to_wp.name}'."
+        distance_km, bearing = result
+        return f"'{from_wp.name}' to '{to_wp.name}': {distance_km:.1f} km, bearing {bearing:.0f}°."
+
+    @staticmethod
+    def _action_get_system_health(context: AppContext, arguments: dict) -> str:
+        return format_system_health(read_system_health())
 
     @staticmethod
     def _action_recall_recent_activity(context: AppContext, arguments: dict) -> str:
