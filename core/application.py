@@ -33,6 +33,7 @@ from core.config_manager import ConfigManager
 from core.data_logger_manager import DataLoggerManager
 from core.device_framework import DeviceFramework
 from core.device_help_manager import DeviceHelpManager
+from core.device_profile import CORE, get_device_profile
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
@@ -47,15 +48,15 @@ from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
-from core.trip_manager import TripManager
+from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.voice_manager import VoiceManager
-from core.waypoint_manager import WaypointManager
+from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from gui.lock_screen import LockScreen
 from gui.main_window import MainWindow
 from gui.profile_select import ProfileSelectScreen
 from gui.setup_wizard import SetupWizard
 from gui.splash_screen import SplashScreen
-from gui.theme_manager import get_theme_stylesheet
+from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES, get_theme_stylesheet
 
 log = get_logger(__name__)
 
@@ -461,6 +462,158 @@ class MIAApplication:
             handler=self._action_recall_recent_activity,
             trigger_phrases=("recent activity", "activity log", "what have i done", "what have i been doing", "what did i do"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_waypoint",
+            description="Save a new named waypoint (location) in M.I.A.'s Navigation module.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name for the waypoint."},
+                    "latitude": {"type": "number", "description": "Latitude in decimal degrees."},
+                    "longitude": {"type": "number", "description": "Longitude in decimal degrees."},
+                    "category": {
+                        "type": "string",
+                        "description": "Optional category: Campsite, Trailhead, Water Source, Viewpoint, or Other.",
+                    },
+                },
+                "required": ["name", "latitude", "longitude"],
+            },
+            handler=self._action_add_waypoint,
+            trigger_phrases=("add a waypoint", "save a waypoint", "new waypoint", "mark a waypoint"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_expedition",
+            description="Start a new Expedition (a dated outing that can hold multiple trips) in M.I.A.'s Expeditions module.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name for the expedition."},
+                    "start_date": {"type": "string", "description": "Optional start date, YYYY-MM-DD."},
+                    "location": {"type": "string", "description": "Optional region/area name."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_expedition,
+            trigger_phrases=("start an expedition", "new expedition", "add an expedition", "create an expedition", "plan an expedition"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_expeditions",
+            description="List the user's Expeditions in M.I.A.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_expeditions,
+            trigger_phrases=("list my expeditions", "list expeditions", "what expeditions", "show my expeditions"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_trip",
+            description="Add a new Trip (one hike, paddle, ride, fishing trip, etc.) under an existing Expedition in M.I.A.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "expedition_name": {
+                        "type": "string",
+                        "description": "The name of the Expedition this trip belongs to (must already exist).",
+                    },
+                    "name": {"type": "string", "description": "A short name for the trip."},
+                    "activity_type": {
+                        "type": "string",
+                        "description": "Optional activity type: Hiking, Camping, Fishing, Kayaking, Biking, or Other.",
+                    },
+                    "start_date": {"type": "string", "description": "Optional start date, YYYY-MM-DD."},
+                },
+                "required": ["expedition_name", "name"],
+            },
+            handler=self._action_add_trip,
+            trigger_phrases=("add a trip", "new trip", "start a trip", "plan a trip", "create a trip"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_trips",
+            description="List the user's Trips in M.I.A., optionally filtered to one Expedition by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "expedition_name": {
+                        "type": "string",
+                        "description": "Optional Expedition name to filter by. Leave empty for all trips.",
+                    },
+                },
+                "required": [],
+            },
+            handler=self._action_list_trips,
+            trigger_phrases=("list my trips", "list trips", "what trips", "show my trips"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_gear_item",
+            description="Add an item to a Trip's gear checklist in M.I.A.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "trip_name": {
+                        "type": "string",
+                        "description": "The name of the trip to add gear to (must already exist).",
+                    },
+                    "label": {"type": "string", "description": "The gear item's name, e.g. 'Tent' or 'First aid kit'."},
+                },
+                "required": ["trip_name", "label"],
+            },
+            handler=self._action_add_gear_item,
+            trigger_phrases=("add gear", "add to my gear", "gear list", "packing list"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_trip_log_entry",
+            description=(
+                "Add a dated journal/log entry to a specific Trip in M.I.A., optionally "
+                "recording weather/conditions. Use this instead of add_note when the user "
+                "is logging something about a specific trip/outing (arriving somewhere, "
+                "conditions encountered, etc.), not a general-purpose note."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "trip_name": {
+                        "type": "string",
+                        "description": "The name of the trip this log entry belongs to (must already exist).",
+                    },
+                    "title": {"type": "string", "description": "A short title for the log entry."},
+                    "body": {"type": "string", "description": "Optional body text describing what happened."},
+                    "conditions": {
+                        "type": "string",
+                        "description": "Optional weather/conditions, e.g. 'Clear, ~15C, light wind'.",
+                    },
+                },
+                "required": ["trip_name", "title"],
+            },
+            handler=self._action_add_trip_log_entry,
+            trigger_phrases=("trip journal", "log entry for my trip", "log my arrival", "add to my trip log", "trip log"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_device_profile",
+            description=(
+                "Tell the user which M.I.A. edition this device is running: Core "
+                "(Pi 5 + AI HAT+ 2 field edition) or Home (desktop workstation edition)."
+            ),
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_device_profile,
+            trigger_phrases=("what device profile", "am i on core or home", "which edition", "device profile"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="set_theme",
+            description="Change M.I.A.'s visual theme.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "theme_id": {
+                        "type": "string",
+                        "description": "One of: dark_field, low_energy, colored, anime_monochrome.",
+                    },
+                },
+                "required": ["theme_id"],
+            },
+            handler=self._action_set_theme,
+            trigger_phrases=(
+                "change the theme", "set the theme", "switch the theme", "use a different theme",
+                "low energy theme", "anime theme", "colored theme", "dark field theme",
+            ),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -638,6 +791,128 @@ class MIAApplication:
 
         lines = [f"{e.timestamp.replace('T', ' ')} — {e.summary}" for e in entries]
         return "\n".join(lines)
+
+    @staticmethod
+    def _action_add_waypoint(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to save a waypoint."
+        try:
+            latitude = float(arguments.get("latitude"))
+            longitude = float(arguments.get("longitude"))
+        except (TypeError, ValueError):
+            return "I need a valid latitude and longitude to save a waypoint."
+        category = str(arguments.get("category", "") or "").strip()
+        if category not in WAYPOINT_CATEGORIES:
+            category = ""  # unrecognized value -> uncategorized, same fail-safe as the UI's blank option
+        waypoint = context.waypoints.add_waypoint(name=name, latitude=latitude, longitude=longitude, category=category)
+        return f"Waypoint '{waypoint.name}' saved at ({waypoint.latitude:.5f}, {waypoint.longitude:.5f})."
+
+    @staticmethod
+    def _action_add_expedition(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to start an expedition."
+        start_date = str(arguments.get("start_date", "") or "").strip()
+        location = str(arguments.get("location", "") or "").strip()
+        expedition = context.expeditions.add_expedition(name=name, start_date=start_date, location=location)
+        return f"Expedition '{expedition.name}' created."
+
+    @staticmethod
+    def _action_list_expeditions(context: AppContext, arguments: dict) -> str:
+        expeditions = context.expeditions.all_expeditions()
+        if not expeditions:
+            return "You have no expeditions yet."
+        lines = []
+        for expedition in expeditions:
+            date_part = f" ({expedition.start_date})" if expedition.start_date else ""
+            location_part = f" — {expedition.location}" if expedition.location else ""
+            lines.append(f"- '{expedition.name}'{date_part}{location_part}")
+        return "Your expeditions:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_trip(context: AppContext, arguments: dict) -> str:
+        expedition_name = str(arguments.get("expedition_name", "")).strip().lower()
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a trip."
+        expedition = next(
+            (e for e in context.expeditions.all_expeditions() if e.name.lower() == expedition_name), None
+        )
+        if expedition is None:
+            return f"I don't have an expedition called '{arguments.get('expedition_name', '')}'."
+        activity_type = str(arguments.get("activity_type", "") or "").strip()
+        if activity_type not in ACTIVITY_TYPES:
+            activity_type = ""
+        start_date = str(arguments.get("start_date", "") or "").strip()
+        trip = context.trips.add_trip(
+            expedition_id=expedition.expedition_id, name=name, activity_type=activity_type, start_date=start_date,
+        )
+        return f"Trip '{trip.name}' added under expedition '{expedition.name}'."
+
+    @staticmethod
+    def _action_list_trips(context: AppContext, arguments: dict) -> str:
+        expedition_name = str(arguments.get("expedition_name", "") or "").strip().lower()
+        if expedition_name:
+            expedition = next(
+                (e for e in context.expeditions.all_expeditions() if e.name.lower() == expedition_name), None
+            )
+            if expedition is None:
+                return f"I don't have an expedition called '{arguments.get('expedition_name', '')}'."
+            trips = context.trips.trips_for_expedition(expedition.expedition_id)
+        else:
+            trips = context.trips.all_trips()
+
+        if not trips:
+            return "No matching trips found." if expedition_name else "You have no trips yet."
+        lines = []
+        for trip in trips:
+            activity_part = f" [{trip.activity_type}]" if trip.activity_type else ""
+            lines.append(f"-{activity_part} '{trip.name}' ({trip.status})")
+        return "Your trips:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_gear_item(context: AppContext, arguments: dict) -> str:
+        trip_name = str(arguments.get("trip_name", "")).strip().lower()
+        label = str(arguments.get("label", "")).strip()
+        if not label:
+            return "I need a gear item name to add it to a trip's checklist."
+        trip = next((t for t in context.trips.all_trips() if t.name.lower() == trip_name), None)
+        if trip is None:
+            return f"I don't have a trip called '{arguments.get('trip_name', '')}'."
+        context.trips.add_gear_item(trip.trip_id, label=label)
+        return f"Added '{label}' to the gear checklist for '{trip.name}'."
+
+    @staticmethod
+    def _action_add_trip_log_entry(context: AppContext, arguments: dict) -> str:
+        trip_name = str(arguments.get("trip_name", "")).strip().lower()
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a title to add a trip log entry."
+        trip = next((t for t in context.trips.all_trips() if t.name.lower() == trip_name), None)
+        if trip is None:
+            return f"I don't have a trip called '{arguments.get('trip_name', '')}'."
+        body = str(arguments.get("body", "") or "")
+        conditions = str(arguments.get("conditions", "") or "")
+        context.journal.add_entry(title=title, body=body, trip_id=trip.trip_id, conditions=conditions)
+        return f"Log entry '{title}' added to '{trip.name}'."
+
+    @staticmethod
+    def _action_get_device_profile(context: AppContext, arguments: dict) -> str:
+        profile = get_device_profile(context)
+        label = "Core (Pi 5 + AI HAT+ 2 field edition)" if profile == CORE else "Home (desktop workstation edition)"
+        return f"This device is running the {label}."
+
+    @staticmethod
+    def _action_set_theme(context: AppContext, arguments: dict) -> str:
+        theme_id = str(arguments.get("theme_id", "")).strip().lower()
+        if theme_id not in THEMES:
+            valid = ", ".join(THEMES.keys())
+            return f"'{arguments.get('theme_id', '')}' isn't a theme I know. Valid themes: {valid}."
+        context.config.set("gui.theme", theme_id)
+        context.config.save()
+        context.events.publish("theme.changed", theme_id=theme_id)
+        return f"Theme changed to {THEME_DISPLAY_NAMES[theme_id]}."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

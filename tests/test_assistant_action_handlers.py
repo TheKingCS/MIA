@@ -18,16 +18,20 @@ from __future__ import annotations
 import pytest
 
 import core.alarm_manager as alarm_manager_module
+import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.application import MIAApplication
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
+from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 
 
@@ -42,12 +46,19 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(inventory_manager_module, "_ITEMS_FILE", data_dir / "inventory_items.json")
     monkeypatch.setattr(waypoint_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(waypoint_manager_module, "_WAYPOINTS_FILE", data_dir / "waypoints.json")
+    monkeypatch.setattr(expedition_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(expedition_manager_module, "_EXPEDITIONS_FILE", data_dir / "expeditions.json")
+    monkeypatch.setattr(trip_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(trip_manager_module, "_TRIPS_FILE", data_dir / "trips.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
+    ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
     ctx.alarms = AlarmManager(ctx)
     ctx.journal = JournalManager(ctx)
     ctx.inventory = InventoryManager(ctx)
     ctx.waypoints = WaypointManager(ctx)
+    ctx.expeditions = ExpeditionManager(ctx)
+    ctx.trips = TripManager(ctx)
     return ctx
 
 
@@ -309,3 +320,209 @@ def test_get_system_health_returns_formatted_snapshot(context):
     assert "CPU:" in result
     assert "Memory:" in result
     assert "Disk:" in result
+
+
+# ----------------------------------------------------------------------
+# Waypoints: add
+# ----------------------------------------------------------------------
+
+def test_add_waypoint_requires_a_name(context):
+    result = MIAApplication._action_add_waypoint(context, {"latitude": 40.0, "longitude": -83.0})
+    assert "name" in result.lower()
+    assert context.waypoints.all_waypoints() == []
+
+
+def test_add_waypoint_requires_valid_coordinates(context):
+    result = MIAApplication._action_add_waypoint(context, {"name": "Home", "latitude": "not-a-number", "longitude": -83.0})
+    assert "latitude" in result.lower()
+    assert context.waypoints.all_waypoints() == []
+
+
+def test_add_waypoint_creates_waypoint(context):
+    result = MIAApplication._action_add_waypoint(
+        context, {"name": "Home", "latitude": 40.0, "longitude": -83.0, "category": "Campsite"}
+    )
+    assert "Home" in result
+    waypoints = context.waypoints.all_waypoints()
+    assert len(waypoints) == 1
+    assert waypoints[0].category == "Campsite"
+
+
+def test_add_waypoint_unrecognized_category_falls_back_to_uncategorized(context):
+    MIAApplication._action_add_waypoint(
+        context, {"name": "Home", "latitude": 40.0, "longitude": -83.0, "category": "Bogus"}
+    )
+    assert context.waypoints.all_waypoints()[0].category == ""
+
+
+# ----------------------------------------------------------------------
+# Expeditions
+# ----------------------------------------------------------------------
+
+def test_add_expedition_requires_a_name(context):
+    result = MIAApplication._action_add_expedition(context, {})
+    assert "name" in result.lower()
+    assert context.expeditions.all_expeditions() == []
+
+
+def test_add_expedition_creates_expedition(context):
+    result = MIAApplication._action_add_expedition(context, {"name": "Field Season", "start_date": "2026-08-14"})
+    assert "Field Season" in result
+    assert len(context.expeditions.all_expeditions()) == 1
+
+
+def test_list_expeditions_empty(context):
+    assert "no expeditions" in MIAApplication._action_list_expeditions(context, {}).lower()
+
+
+def test_list_expeditions_returns_all(context):
+    context.expeditions.add_expedition(name="Field Season", start_date="2026-08-14", location="Sawtooth Wilderness")
+    result = MIAApplication._action_list_expeditions(context, {})
+    assert "Field Season" in result and "2026-08-14" in result and "Sawtooth Wilderness" in result
+
+
+# ----------------------------------------------------------------------
+# Trips
+# ----------------------------------------------------------------------
+
+def test_add_trip_requires_a_name(context):
+    context.expeditions.add_expedition(name="Field Season")
+    result = MIAApplication._action_add_trip(context, {"expedition_name": "Field Season"})
+    assert "name" in result.lower()
+    assert context.trips.all_trips() == []
+
+
+def test_add_trip_unknown_expedition_does_not_create_anything(context):
+    result = MIAApplication._action_add_trip(context, {"expedition_name": "Nonexistent", "name": "Day 1"})
+    assert "nonexistent" in result.lower()
+    assert context.trips.all_trips() == []
+
+
+def test_add_trip_creates_trip_under_expedition(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    result = MIAApplication._action_add_trip(
+        context, {"expedition_name": "field season", "name": "Day 1", "activity_type": "Hiking"}
+    )
+    assert "Day 1" in result and "Field Season" in result
+    trips = context.trips.all_trips()
+    assert len(trips) == 1
+    assert trips[0].expedition_id == expedition.expedition_id
+    assert trips[0].activity_type == "Hiking"
+
+
+def test_add_trip_unrecognized_activity_type_falls_back_to_unspecified(context):
+    context.expeditions.add_expedition(name="Field Season")
+    MIAApplication._action_add_trip(context, {"expedition_name": "Field Season", "name": "Day 1", "activity_type": "Bogus"})
+    assert context.trips.all_trips()[0].activity_type == ""
+
+
+def test_list_trips_empty(context):
+    assert "no trips" in MIAApplication._action_list_trips(context, {}).lower()
+
+
+def test_list_trips_returns_all(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1", activity_type="Hiking")
+    result = MIAApplication._action_list_trips(context, {})
+    assert "Day 1" in result and "Hiking" in result
+
+
+def test_list_trips_filters_by_unknown_expedition(context):
+    result = MIAApplication._action_list_trips(context, {"expedition_name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_list_trips_filters_by_known_expedition(context):
+    expedition_a = context.expeditions.add_expedition(name="Field Season")
+    expedition_b = context.expeditions.add_expedition(name="Other Trip")
+    context.trips.add_trip(expedition_id=expedition_a.expedition_id, name="Day 1")
+    context.trips.add_trip(expedition_id=expedition_b.expedition_id, name="Other Day")
+    result = MIAApplication._action_list_trips(context, {"expedition_name": "Field Season"})
+    assert "Day 1" in result
+    assert "Other Day" not in result
+
+
+# ----------------------------------------------------------------------
+# Gear checklist
+# ----------------------------------------------------------------------
+
+def test_add_gear_item_requires_a_label(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_add_gear_item(context, {"trip_name": "Day 1"})
+    assert "gear item" in result.lower()
+
+
+def test_add_gear_item_unknown_trip_does_not_add_anything(context):
+    result = MIAApplication._action_add_gear_item(context, {"trip_name": "Nonexistent", "label": "Tent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_add_gear_item_adds_to_matching_trip(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_add_gear_item(context, {"trip_name": "day 1", "label": "Tent"})
+    assert "Tent" in result and "Day 1" in result
+    reloaded = context.trips.get_trip(trip.trip_id)
+    assert reloaded.gear[0].label == "Tent"
+
+
+# ----------------------------------------------------------------------
+# Trip journal / weather log
+# ----------------------------------------------------------------------
+
+def test_add_trip_log_entry_requires_a_title(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_add_trip_log_entry(context, {"trip_name": "Day 1"})
+    assert "title" in result.lower()
+    assert context.journal.all_entries() == []
+
+
+def test_add_trip_log_entry_unknown_trip_does_not_add_anything(context):
+    result = MIAApplication._action_add_trip_log_entry(context, {"trip_name": "Nonexistent", "title": "Reached camp"})
+    assert "nonexistent" in result.lower()
+    assert context.journal.all_entries() == []
+
+
+def test_add_trip_log_entry_creates_linked_entry(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_add_trip_log_entry(
+        context, {"trip_name": "day 1", "title": "Reached camp", "conditions": "Clear, ~15C"}
+    )
+    assert "Reached camp" in result
+    entries = context.journal.all_entries()
+    assert len(entries) == 1
+    assert entries[0].trip_id == trip.trip_id
+    assert entries[0].conditions == "Clear, ~15C"
+
+
+# ----------------------------------------------------------------------
+# Device profile / theme
+# ----------------------------------------------------------------------
+
+def test_get_device_profile_defaults_to_core(context):
+    result = MIAApplication._action_get_device_profile(context, {})
+    assert "core" in result.lower()
+
+
+def test_get_device_profile_reports_home(context):
+    context.config.set("system.device_profile", "home")
+    result = MIAApplication._action_get_device_profile(context, {})
+    assert "home" in result.lower()
+
+
+def test_set_theme_rejects_unknown_theme(context):
+    result = MIAApplication._action_set_theme(context, {"theme_id": "bogus"})
+    assert "bogus" in result.lower()
+    assert context.config.get("gui.theme") != "bogus"
+
+
+def test_set_theme_updates_config_and_publishes_event(context):
+    received = []
+    context.events.subscribe("theme.changed", lambda theme_id: received.append(theme_id))
+    result = MIAApplication._action_set_theme(context, {"theme_id": "low_energy"})
+    assert "Low Energy" in result
+    assert context.config.get("gui.theme") == "low_energy"
+    assert received == ["low_energy"]

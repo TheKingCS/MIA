@@ -126,3 +126,72 @@ def test_used_to_phrasing_gates_open_as_a_known_accepted_tradeoff():
     """
     keywords = _real_gating_keywords()
     assert looks_like_action_request("I used to live in Ohio", keywords) is True
+
+
+# ----------------------------------------------------------------------
+# Assistant action-registry expansion: Expedition Mode + Device Profile/Theme
+# ----------------------------------------------------------------------
+
+def test_add_waypoint_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Save a waypoint here called Ridge Camp", keywords) is True
+
+
+def test_add_expedition_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Start a new expedition called Field Season", keywords) is True
+
+
+def test_list_expeditions_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("List my expeditions", keywords) is True
+
+
+def test_add_trip_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add a trip called Day 1 to Field Season", keywords) is True
+
+
+def test_list_trips_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What trips do I have?", keywords) is True
+
+
+def test_add_gear_item_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add gear to my Day 1 trip", keywords) is True
+
+
+def test_add_trip_log_entry_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add to my trip log: reached camp", keywords) is True
+
+
+def test_get_device_profile_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What device profile am I running?", keywords) is True
+
+
+def test_set_theme_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Change the theme to low energy", keywords) is True
+
+
+def test_set_theme_does_not_collide_with_switch_to_phrasing():
+    """
+    set_theme deliberately avoids open_module's bare "switch to "
+    trigger — "Switch to the Anime Monochrome theme" should still gate
+    open (open_module's trigger catches it), but this pins that
+    set_theme's own trigger phrases don't ALSO fire on "switch to ",
+    which would just be redundant, not a bug — the real risk (which
+    tool the *model* picks) is verified live in
+    tests/live_model_check.py, not here.
+    """
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Switch to the Anime Monochrome theme", keywords) is True
+
+
+def test_ordinary_trip_mention_does_not_gate_open():
+    """False-positive check: 'trip' as an ordinary word, not a request to act on a Trip record."""
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("That trip to the store took forever", keywords) is False

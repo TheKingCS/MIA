@@ -40,8 +40,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 _TEMP_DATA_DIR = Path(tempfile.mkdtemp(prefix="mia_live_model_check_"))
 
 import core.alarm_manager as alarm_manager_module
+import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 
 alarm_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -52,6 +54,10 @@ inventory_manager_module._DATA_DIR = _TEMP_DATA_DIR
 inventory_manager_module._ITEMS_FILE = _TEMP_DATA_DIR / "inventory_items.json"
 waypoint_manager_module._DATA_DIR = _TEMP_DATA_DIR
 waypoint_manager_module._WAYPOINTS_FILE = _TEMP_DATA_DIR / "waypoints.json"
+expedition_manager_module._DATA_DIR = _TEMP_DATA_DIR
+expedition_manager_module._EXPEDITIONS_FILE = _TEMP_DATA_DIR / "expeditions.json"
+trip_manager_module._DATA_DIR = _TEMP_DATA_DIR
+trip_manager_module._TRIPS_FILE = _TEMP_DATA_DIR / "trips.json"
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
@@ -61,11 +67,13 @@ from core.assistant_actions import AssistantActionRegistry
 from core.config_manager import ConfigManager
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
+from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.module_manager import ModuleManager
 from core.reference_library_manager import ReferenceLibraryManager
+from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 from modules.assistant.module import build_chat_request
 
@@ -104,6 +112,32 @@ GOLDEN_CASES = [
         "I used to live in Ohio",
         "safe",
     ),
+    # --- Assistant action-registry expansion: Expedition Mode + Device Profile/Theme ---
+    ("add waypoint", "Save a waypoint here called Ridge Camp at latitude 44.0 longitude -110.1", "add_waypoint"),
+    ("add expedition", "Start a new expedition called Field Season", "add_expedition"),
+    ("list expeditions", "List my expeditions", "list_expeditions"),
+    ("add trip", "Add a trip called Day 1 to my Field Season expedition", "add_trip"),
+    ("list trips", "What trips do I have?", "list_trips"),
+    ("add gear item", "Add a tent to the gear list for my Day 1 trip", "add_gear_item"),
+    (
+        "add trip log entry, not a generic note",
+        "Log to my trip journal that I reached camp, conditions were clear and 15 degrees",
+        "add_trip_log_entry",
+    ),
+    ("generic note still resolves to add_note, not trip log", "Add a note that says buy milk", "add_note"),
+    ("get device profile", "What device profile is this running?", "get_device_profile"),
+    ("set theme", "Change the theme to low energy", "set_theme"),
+    (
+        "collision risk: theme change phrased with 'switch to' must not hallucinate open_module",
+        "Switch to the Anime Monochrome theme",
+        "set_theme",
+    ),
+    ("false-positive sanity: ordinary use of the word 'trip'", "That trip to the store took forever", None),
+    (
+        "false-positive sanity: ordinary use of the word 'log' unrelated to a trip",
+        "I need to log off for the night",
+        None,
+    ),
 ]
 
 
@@ -128,6 +162,9 @@ def _build_context() -> AppContext:
     context.journal = JournalManager(context)
     context.inventory = InventoryManager(context)
     context.waypoints = WaypointManager(context)
+    context.config.set("trips.photo_root_path", str(_TEMP_DATA_DIR / "trip_photos"))
+    context.expeditions = ExpeditionManager(context)
+    context.trips = TripManager(context)
     context.activity_log = ActivityLogManager(context)
     context.activity_log.register_module_lister(module_manager.all)
 
@@ -145,6 +182,9 @@ def _seed_fixtures(context: AppContext) -> None:
     context.inventory.add_item(name="M3 bolts", quantity=25)
     context.waypoints.add_waypoint(name="Home", latitude=40.0, longitude=-83.0)
     context.waypoints.add_waypoint(name="Cabin", latitude=41.5, longitude=-84.5)
+    expedition = context.expeditions.add_expedition(name="Field Season", start_date="2026-08-14")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1", activity_type="Hiking")
+    context.trips.add_gear_item(trip.trip_id, label="First aid kit")
 
 
 def main() -> int:

@@ -677,6 +677,76 @@ boot never depends on an LLM server being up.
       the same way `tests/test_assistant_action_handlers.py` and
       `tests/live_model_check.py` do — never construct a real manager
       against the real `data/` path.**
+- [x] **5.12 Assistant action-registry expansion: Expedition Mode +
+      Device Profile/Theme** — closes the biggest post-5.11 gap: every
+      module built since (Expedition Mode's Expeditions/Trips/gear/
+      trip journal, and Device Profile/Theme) was completely invisible
+      to the Assistant. 9 new tools registered in
+      `core/application.py::_register_assistant_actions()`, same exact
+      shape as every prior batch (co-located `trigger_phrases`,
+      `@staticmethod` handler, case-insensitive by-name resolution,
+      fail-closed "I don't have a/an X called '...'" on no match, never
+      fuzzy-matched): `add_waypoint` (a real pre-existing gap —
+      waypoints could be listed/distanced/deleted via the Assistant but
+      never *added*), `add_expedition`/`list_expeditions`,
+      `add_trip`/`list_trips` (resolves the parent Expedition by name,
+      fails closed if it doesn't exist), `add_gear_item`,
+      `add_trip_log_entry`, `get_device_profile`, `set_theme` (reuses
+      the exact same `context.config.set("gui.theme", ...)` +
+      `"theme.changed"` event-bus publish as
+      `modules/settings/module.py`'s Theme dropdown, not reimplemented).
+      Registry grew from 16 to 25 tools.
+
+      Two collision risks were identified *before* writing any code,
+      not found after the fact: (1) `set_theme` could be hallucinated
+      as `open_module` since `open_module` already gates on bare
+      `"switch to "` — mitigated by giving `set_theme` entirely
+      non-overlapping trigger phrases, and pinned with an explicit
+      golden-set case ("Switch to the Anime Monochrome theme" must call
+      `set_theme`, not `open_module` with a hallucinated `module_id`).
+      (2) `add_trip_log_entry` and the pre-existing `add_note` both
+      ultimately write to the same `JournalManager` — golden-set cases
+      confirm the model picks the trip-specific tool for trip-flavored
+      phrasing and still correctly falls back to `add_note` for a
+      plain "Add a note that says buy milk".
+
+      **Unlike every previous batch (5.7-5.10), which each needed
+      multiple rounds of live-model fixes** (two real gating gaps in
+      5.7, a regression introduced by 5.7's own fix caught in 5.8,
+      etc.) — designing trigger phrases and the two collision
+      mitigations *before* running against the real model this time
+      produced a clean **32/32 pass on the first run** of the expanded
+      `tests/live_model_check.py` golden set, confirmed stable on a
+      second independent run (not just a lucky sampling draw — this
+      project's own 5.9 finding that `temperature=0` doesn't fully
+      eliminate llama.cpp's sampling variance means one green run alone
+      isn't sufficient evidence). Extended
+      `tests/test_assistant_action_handlers.py` (fixture gained
+      `ctx.expeditions`/`ctx.trips`, isolated `trips.photo_root_path`
+      too) and `tests/test_assistant_action_gating.py` with full
+      coverage for all 9 new tools.
+
+      **Deliberately not attempted this pass** — Field Kit (device
+      detection, script library, Expedition data sync), Calendar,
+      Power, Components, and Data Logger remain unconnected to the
+      Assistant. Flagged as a natural follow-up batch, not done here,
+      to keep this batch's live-model verification surface reviewable
+      rather than growing the registry by 20+ tools at once.
+
+      **Also verified through the real running Assistant UI end to
+      end** (not just `build_chat_request()` in isolation, which
+      `tests/live_model_check.py` checks — that never calls `execute()`
+      or touches Qt at all): a real `AssistantModule` widget, real
+      `ChatWorker` thread, two real messages sent through `_on_send()`
+      exactly as a user would type them. First caught a real prompt-
+      design mistake in the smoke test itself — "log that I reached
+      camp" with no trip named anywhere in the message correctly made
+      `add_trip_log_entry`'s fail-closed lookup say "I don't have a
+      trip called 'camp'" instead of guessing, which is the fail-closed
+      design working exactly as intended, not a bug — then, with the
+      trip actually named in the prompt, confirmed a full round trip:
+      the gear item and the trip-linked, conditions-populated journal
+      entry both landed correctly in the real managers.
 
 ## v0.6 breakdown (planned)
 
