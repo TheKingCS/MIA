@@ -2,11 +2,12 @@
 modules.field_kit.module
 ==========================
 
-Field Kit — docs/ROADMAP.md milestones 11.2 (Device Manager) and 11.4
-(Useful Scripts). Two tabs in one module (docs/MODULE_SPEC.md allows
-exactly one `ModuleBase` subclass per module folder, so multiple
-sub-features share tabs rather than becoming separate modules — the
-first module in this app to need a `QTabWidget` for that reason).
+Field Kit — docs/ROADMAP.md milestones 11.2 (Device Manager), 11.4
+(Useful Scripts), and 11.5 (Security/Network Toolkit). Three tabs in
+one module (docs/MODULE_SPEC.md allows exactly one `ModuleBase`
+subclass per module folder, so multiple sub-features share tabs rather
+than becoming separate modules — the first module in this app to need
+a `QTabWidget` for that reason).
 
 **Devices tab** — a live list of currently-attached external
 storage/serial devices with a per-device actions menu, sourced from
@@ -39,6 +40,22 @@ indefinitely, so reading its output on the GUI thread would freeze the
 whole app). No sandboxing when a script runs — these are the user's
 own trusted scripts, same stance this project already takes for
 module installation.
+
+**Security tab** — recon tools that need no external system binary and
+no root: a hash format identifier (`core/hash_identifier.py`), a
+password strength estimator (`core/password_strength.py`), a subnet/
+CIDR calculator (`core/subnet_calculator.py`), and a TCP connect-scan
+port scanner (`core/port_scanner.py`, run via
+`modules/field_kit/port_scan_worker.py`'s `PortScanWorker` — same
+scoped-`QThread` reasoning as the Scripts tab, since scanning even the
+short common-ports default can block for several seconds). **Wi-Fi/
+network analyzer and active tooling (hash cracking via John/Hashcat,
+packet crafting via scapy, exploit-framework launching) are
+deliberately not implemented**: none of those underlying tools are
+installed in this dev sandbox, and none can be added without root —
+confirmed blocked, not just deferred, same "no sudo" wall as Ollama's
+portable-binary workaround and Media/Music's missing `libpulse`. See
+docs/KNOWN_ISSUES.md.
 """
 
 from __future__ import annotations
@@ -68,10 +85,15 @@ from PySide6.QtWidgets import (
 
 from core.device_framework import BlockDevice, SerialDevice, eject_storage_device
 from core.expedition_sync import export_expedition_data, import_expedition_data
+from core.hash_identifier import identify_hash
 from core.logger import get_logger
+from core.password_strength import assess_password
+from core.port_scanner import PortScanResult
 from core.script_library_manager import Script
+from core.subnet_calculator import calculate_subnet
 from gui.add_edit_script_dialog import AddEditScriptDialog
 from gui.delete_confirm_dialog import DeleteConfirmDialog
+from modules.field_kit.port_scan_worker import PortScanWorker
 from modules.field_kit.script_worker import ScriptWorker
 from modules.module_base import ModuleBase
 
@@ -104,6 +126,17 @@ class FieldKitModule(ModuleBase):
         self._stop_button: Optional[QPushButton] = None
         self._script_worker: Optional[ScriptWorker] = None
 
+        self._hash_input: Optional[QLineEdit] = None
+        self._hash_result_label: Optional[QLabel] = None
+        self._password_input: Optional[QLineEdit] = None
+        self._password_result_label: Optional[QLabel] = None
+        self._subnet_input: Optional[QLineEdit] = None
+        self._subnet_result_label: Optional[QLabel] = None
+        self._scan_host_input: Optional[QLineEdit] = None
+        self._scan_button: Optional[QPushButton] = None
+        self._scan_result_label: Optional[QLabel] = None
+        self._scan_worker: Optional[PortScanWorker] = None
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         outer = QVBoxLayout(widget)
@@ -121,6 +154,7 @@ class FieldKitModule(ModuleBase):
         tabs = QTabWidget()
         tabs.addTab(self._build_devices_tab(), "Devices")
         tabs.addTab(self._build_scripts_tab(), "Scripts")
+        tabs.addTab(self._build_security_tab(), "Security")
         outer.addWidget(tabs, stretch=1)
 
         return widget
@@ -406,3 +440,152 @@ class FieldKitModule(ModuleBase):
         if self._script_worker is not None:
             self._script_worker.deleteLater()
             self._script_worker = None
+
+    # ------------------------------------------------------------------
+    # Security tab
+    # ------------------------------------------------------------------
+
+    def _build_security_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        layout.addWidget(self._section_label("Hash Identifier"))
+        hash_row = QHBoxLayout()
+        self._hash_input = QLineEdit()
+        self._hash_input.setPlaceholderText("Paste a hash, e.g. a bcrypt or SHA-256 digest...")
+        hash_row.addWidget(self._hash_input, stretch=1)
+        identify_button = QPushButton("Identify")
+        identify_button.clicked.connect(self._on_identify_hash)
+        hash_row.addWidget(identify_button)
+        layout.addLayout(hash_row)
+        self._hash_result_label = QLabel("")
+        self._hash_result_label.setObjectName("ReadoutLabel")
+        layout.addWidget(self._hash_result_label)
+
+        layout.addWidget(self._section_label("Password Strength"))
+        self._password_input = QLineEdit()
+        self._password_input.setPlaceholderText("Type a password to check its strength...")
+        self._password_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self._password_input.textChanged.connect(self._on_password_changed)
+        layout.addWidget(self._password_input)
+        self._password_result_label = QLabel("")
+        self._password_result_label.setObjectName("ReadoutLabel")
+        self._password_result_label.setWordWrap(True)
+        layout.addWidget(self._password_result_label)
+
+        layout.addWidget(self._section_label("Subnet Calculator"))
+        subnet_row = QHBoxLayout()
+        self._subnet_input = QLineEdit()
+        self._subnet_input.setPlaceholderText("e.g. 192.168.1.0/24")
+        subnet_row.addWidget(self._subnet_input, stretch=1)
+        calculate_button = QPushButton("Calculate")
+        calculate_button.clicked.connect(self._on_calculate_subnet)
+        subnet_row.addWidget(calculate_button)
+        layout.addLayout(subnet_row)
+        self._subnet_result_label = QLabel("")
+        self._subnet_result_label.setObjectName("ReadoutLabel")
+        self._subnet_result_label.setWordWrap(True)
+        layout.addWidget(self._subnet_result_label)
+
+        layout.addWidget(self._section_label("Port Scanner (TCP connect scan, common ports)"))
+        scan_row = QHBoxLayout()
+        self._scan_host_input = QLineEdit()
+        self._scan_host_input.setPlaceholderText("Host or IP, e.g. 192.168.1.1")
+        scan_row.addWidget(self._scan_host_input, stretch=1)
+        self._scan_button = QPushButton("Scan")
+        self._scan_button.clicked.connect(self._on_scan_ports)
+        scan_row.addWidget(self._scan_button)
+        layout.addLayout(scan_row)
+        self._scan_result_label = QLabel("")
+        self._scan_result_label.setObjectName("ReadoutLabel")
+        self._scan_result_label.setWordWrap(True)
+        layout.addWidget(self._scan_result_label)
+
+        blocked_note = QLabel(
+            "Wi-Fi/network analyzer and active tooling (hash cracking, packet "
+            "crafting, exploit-framework launching) aren't available in this "
+            "environment — the underlying tools (aircrack-ng, John/Hashcat, "
+            "scapy, Metasploit) aren't installed and can't be added without "
+            "root. See docs/KNOWN_ISSUES.md."
+        )
+        blocked_note.setObjectName("SubtitleLabel")
+        blocked_note.setWordWrap(True)
+        layout.addWidget(blocked_note)
+
+        layout.addStretch()
+        return tab
+
+    @staticmethod
+    def _section_label(text: str) -> QLabel:
+        label = QLabel(text)
+        label.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        return label
+
+    def _on_identify_hash(self) -> None:
+        value = self._hash_input.text().strip()
+        if not value:
+            self._hash_result_label.setText("Enter a hash to identify.")
+            return
+        candidates = identify_hash(value)
+        if not candidates:
+            self._hash_result_label.setText("No known hash format matched.")
+        else:
+            self._hash_result_label.setText("Possible: " + ", ".join(candidates))
+
+    def _on_password_changed(self, text: str) -> None:
+        if not text:
+            self._password_result_label.setText("")
+            return
+        result = assess_password(text)
+        lines = [f"Strength: {result.rating} ({result.entropy_bits:.1f} bits)"]
+        lines.extend(result.warnings)
+        self._password_result_label.setText("\n".join(lines))
+
+    def _on_calculate_subnet(self) -> None:
+        cidr = self._subnet_input.text().strip()
+        if not cidr:
+            self._subnet_result_label.setText("Enter a CIDR, e.g. 192.168.1.0/24.")
+            return
+        try:
+            info = calculate_subnet(cidr)
+        except ValueError as exc:
+            self._subnet_result_label.setText(f"Invalid CIDR: {exc}")
+            return
+        lines = [
+            f"Network: {info.network_address}/{info.prefix_length}",
+            f"Broadcast: {info.broadcast_address}",
+            f"Netmask: {info.netmask}",
+            f"Total addresses: {info.total_addresses}",
+            f"Usable hosts: {info.usable_host_count}",
+        ]
+        if info.first_usable:
+            lines.append(f"Usable range: {info.first_usable} - {info.last_usable}")
+        self._subnet_result_label.setText("\n".join(lines))
+
+    def _on_scan_ports(self) -> None:
+        if self._scan_worker is not None:
+            return
+        host = self._scan_host_input.text().strip()
+        if not host:
+            self._scan_result_label.setText("Enter a host or IP to scan.")
+            return
+
+        self._scan_result_label.setText("Scanning...")
+        self._scan_button.setEnabled(False)
+        self._scan_worker = PortScanWorker(host)
+        self._scan_worker.result_ready.connect(self._on_scan_finished)
+        self._scan_worker.start()
+
+    def _on_scan_finished(self, result: PortScanResult) -> None:
+        if result.error:
+            self._scan_result_label.setText(result.error)
+        elif not result.open_ports:
+            self._scan_result_label.setText(f"No open ports found among {result.scanned_count} scanned.")
+        else:
+            ports_text = ", ".join(str(p) for p in result.open_ports)
+            self._scan_result_label.setText(f"Open ports: {ports_text} (of {result.scanned_count} scanned)")
+
+        self._scan_button.setEnabled(True)
+        if self._scan_worker is not None:
+            self._scan_worker.deleteLater()
+            self._scan_worker = None

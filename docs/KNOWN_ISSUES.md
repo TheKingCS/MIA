@@ -3,6 +3,29 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Open: Security Toolkit's Wi-Fi analyzer + active tooling blocked on missing system tools (docs/ROADMAP.md milestone 11.5)
+
+`modules/field_kit/module.py`'s Security tab only ships recon tools
+that need no external binary: hash identifier, password strength,
+subnet calculator, and a pure-Python TCP connect-scan port scanner
+(`core/port_scanner.py`). Confirmed **blocked, not just deferred**: none
+of `nmap`, `john`, `hashcat`, `scapy` (the Python package), `aircrack-ng`,
+or `hydra` are installed in this dev sandbox, and none can be installed
+without root (the same "no sudo" wall Ollama's portable-binary install
+and Media/Music's missing `libpulse` already hit). This blocks:
+- **Wi-Fi/network analyzer** — needs `aircrack-ng`/raw-socket
+  packet capture, both root-gated.
+- **Active tooling** (hash cracking via John/Hashcat, packet crafting
+  via scapy, exploit-framework launching) — needs the actual
+  binaries/libraries present to wrap at all; M.I.A.'s own design intent
+  here is to be a UI/launcher over already-installed system tools, not
+  to reimplement them.
+
+Re-test once M.I.A. actually runs on real Pi 5 + AI HAT+ 2 hardware (or
+any environment with these tools installed and root available) —
+nothing about the *design* is blocked, only this dev sandbox's ability
+to verify it.
+
 ## Open: AI HAT+ 2 inference path unconfirmed (docs/ROADMAP.md milestone 14)
 
 `core/llm_manager.py` talks to Ollama's standard HTTP API

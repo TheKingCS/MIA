@@ -1247,16 +1247,45 @@ pentesting toolkit assumes of its operator.
       the fix drops stop time from ~30s to under 1ms, and re-verified
       through the actual GUI (`ScriptWorker`/"Stop" button), not just
       the isolated process-management function.
-- [ ] **11.5 Security/Network Toolkit** — recon tools (port scanner,
-      wifi/network analyzer, hash identifier, subnet calculator) plus
-      active tooling (hash cracking, packet crafting, exploit-framework
-      launching) wrapping already-installed system tools (nmap, John/
-      Hashcat, etc.) rather than reimplementing them — M.I.A. provides
-      the offline-friendly UI/launcher, not the underlying capability.
-      Network-facing recon (packet sniffer, wifi/BT scanning) is
-      reconciled with, not duplicated from, the still-unbuilt
-      Communications section (`docs/ROADMAP.md`'s v1.0+ bucket) when
-      that section is eventually built.
+- [x] **11.5 Security/Network Toolkit (partial — recon tools only, see
+      below for what's blocked)** — a third "Security" tab in
+      `modules/field_kit/module.py`, alongside 11.2's Device Manager and
+      11.4's Scripts (the same `QTabWidget` reasoning as those). Wires
+      up three pure-Python tools that were already sitting in the repo
+      untracked from an earlier session (`core/hash_identifier.py`,
+      `core/password_strength.py`, `core/subnet_calculator.py` — the
+      last of these is also where this session's WSL-VM-crash root
+      cause was found and fixed, see the "root cause found" note
+      earlier in this doc) into a real UI for the first time, plus one
+      genuinely new tool: `core/port_scanner.py`, a pure-Python TCP
+      connect-scan port scanner (`socket.connect_ex()`, no `nmap`
+      needed — confirmed `nmap` isn't installed in this dev sandbox and
+      can't be added without root, so a connect scan is what's
+      buildable here, not a SYN scan or OS fingerprinting, both of
+      which genuinely need `nmap`/raw sockets). Runs via
+      `modules/field_kit/port_scan_worker.py`'s `PortScanWorker`, same
+      scoped-`QThread` pattern as the Scripts tab's `ScriptWorker` —
+      scanning even the short common-ports default can block for
+      several seconds. Verified with a real headless-Qt smoke test
+      driving all four tools through the actual tab widgets, including
+      the port scanner's real `QThread` against a real local TCP
+      server bound to an ephemeral port (deterministic, no network/
+      internet dependency).
+
+      **Wi-Fi/network analyzer and all "active tooling" (hash cracking
+      via John/Hashcat, packet crafting via scapy, exploit-framework
+      launching) are explicitly NOT implemented** — confirmed blocked,
+      not just deferred: none of `nmap`/`john`/`hashcat`/`scapy`/
+      `aircrack-ng`/`hydra` are installed in this dev sandbox, and none
+      can be added without root, the same "no sudo" wall Ollama's
+      portable-binary install and Media/Music's missing `libpulse` both
+      already hit. The Security tab itself shows this limitation
+      directly to the user rather than silently omitting those
+      features. See `docs/KNOWN_ISSUES.md`. Network-facing recon
+      (packet sniffer, wifi/BT scanning) remains reconciled with, not
+      duplicated from, the still-unbuilt Communications section
+      (`docs/ROADMAP.md`'s v1.0+ bucket) when that section is
+      eventually built.
 - [ ] **11.6 MCU firmware flashing** — ties Workshop & Electronics'
       already-planned (but unbuilt) "MCU flashing" bullet to 11.1's
       serial-device detection: flash firmware via `esptool`/`avrdude`
