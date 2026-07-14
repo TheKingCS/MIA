@@ -200,3 +200,41 @@ def test_to_ollama_tools_accepts_an_explicit_actions_subset():
     subset = [a for a in registry.matching_actions("List my alarms") if a.name == "add_alarm"]
     tools = registry.to_ollama_tools(subset)
     assert [t["function"]["name"] for t in tools] == ["add_alarm"]
+
+# ----------------------------------------------------------------------
+# destructive — 2026-07-14 qwen2.5:7b model-comparison finding
+# ----------------------------------------------------------------------
+
+def test_is_destructive_true_for_a_destructive_action():
+    registry = AssistantActionRegistry()
+    registry.register(AssistantAction(
+        name="delete_alarm", description="Delete an alarm.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        destructive=True,
+    ))
+    assert registry.is_destructive("delete_alarm") is True
+
+
+def test_is_destructive_false_by_default():
+    registry = AssistantActionRegistry()
+    registry.register(_make_action(name="list_alarms"))
+    assert registry.is_destructive("list_alarms") is False
+
+
+def test_is_destructive_false_for_unknown_name():
+    registry = AssistantActionRegistry()
+    assert registry.is_destructive("does_not_exist") is False
+
+
+def test_destructive_action_names_returns_only_flagged_actions():
+    registry = AssistantActionRegistry()
+    registry.register(AssistantAction(
+        name="delete_alarm", description="Delete an alarm.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        destructive=True,
+    ))
+    registry.register(_make_action(name="list_alarms"))
+
+    assert registry.destructive_action_names() == {"delete_alarm"}

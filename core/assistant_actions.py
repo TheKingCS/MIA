@@ -100,6 +100,21 @@ class AssistantAction:
     # explicitly fails safe (visible everywhere) rather than silently
     # invisible everywhere.
     domain: str = _ALWAYS_ON_DOMAIN
+    # Marks a mutating/deleting action — used by
+    # modules/assistant/module.py's _on_reply() to refuse executing a
+    # destructive call when it's bundled alongside other tool calls in
+    # the same reply (see that module's docstring on why: the
+    # 2026-07-14 qwen2.5:7b model-comparison experiment found a
+    # stronger model can emit a spurious destructive call alongside a
+    # correct read call for the same ordinary question — llama3.2 never
+    # did this in this project's history, but nothing about this app's
+    # design prevents a future/different model from doing it again).
+    # Previously tracked only informally, by hand, in
+    # tests/live_model_check.py's _DESTRUCTIVE_TOOLS — formalized here
+    # so both that test script and production code share one source of
+    # truth instead of two lists that can drift, same lesson as
+    # trigger_phrases/gating_keywords in milestone 5.9.
+    destructive: bool = False
 
     def to_ollama_tool(self) -> dict:
         return {
@@ -119,6 +134,14 @@ class AssistantActionRegistry:
     def register(self, action: AssistantAction) -> None:
         self._actions[action.name] = action
         log.info("Registered assistant action: %s", action.name)
+
+    def is_destructive(self, name: str) -> bool:
+        """False for an unknown name — nothing to protect against executing something that doesn't exist."""
+        action = self._actions.get(name)
+        return action.destructive if action is not None else False
+
+    def destructive_action_names(self) -> set[str]:
+        return {action.name for action in self._actions.values() if action.destructive}
 
     def to_ollama_tools(self, actions: Optional[list[AssistantAction]] = None) -> list[dict]:
         """

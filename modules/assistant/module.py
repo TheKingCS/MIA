@@ -98,11 +98,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.llm_manager import ChatReply
+from core.llm_manager import ChatReply, ToolCall
+from core.logger import get_logger
 from core.push_to_talk_trigger import PushToTalkTrigger
 from modules.assistant.llm_worker import ChatWorker
 from modules.assistant.tts_worker import TTSWorker
 from modules.module_base import ModuleBase
+
+log = get_logger(__name__)
 
 _LLM_UNAVAILABLE_STATUS = "Assistant unavailable — is Ollama running?"
 _MIC_UNAVAILABLE_STATUS = "Microphone unavailable."
@@ -132,6 +135,38 @@ _ACTION_REQUEST_KEYWORDS = (
 def format_chat_line(speaker: str, text: str) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_assistant_module.py)."""
     return f"{speaker}: {text}"
+
+
+def split_safe_tool_calls(tool_calls: list[ToolCall], assistant_actions) -> tuple[list[ToolCall], list[ToolCall]]:
+    """
+    Returns (calls_to_execute, calls_skipped). Pure logic (no Qt) —
+    testable directly, see tests/test_assistant_module.py.
+
+    A single tool call executes regardless of whether it's destructive
+    — that's the normal, already-extensively-tested case (every
+    delete_*/adjust_* golden-set case is exactly one call). Only when
+    the model returns **more than one** tool call in the same reply are
+    destructive ones skipped rather than executed.
+
+    Why: found via the 2026-07-14 qwen2.5:7b model-comparison
+    experiment (docs/ROADMAP.md) — asked "How many M3 bolts do I have?"
+    (a pure read question), qwen2.5:7b returned BOTH `list_inventory`
+    AND a spurious `adjust_inventory_quantity` call in the same reply.
+    llama3.2 never did this across this project's entire history of
+    live-model verification, but nothing about this app's design
+    prevents a future/different model from doing it again, and this
+    app was never designed or tested for genuine multi-intent-per-
+    message use (every registered action assumes one atomic operation
+    per user turn). Bundling a destructive call alongside anything else
+    is treated as a sign of model confusion, not a feature request —
+    fail closed on the destructive part, same conservative bias as
+    every delete/adjust handler's own exact-match-or-refuse design.
+    """
+    if len(tool_calls) <= 1:
+        return list(tool_calls), []
+    kept = [tc for tc in tool_calls if not assistant_actions.is_destructive(tc.name)]
+    skipped = [tc for tc in tool_calls if assistant_actions.is_destructive(tc.name)]
+    return kept, skipped
 
 
 def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUEST_KEYWORDS) -> bool:
@@ -292,7 +327,17 @@ class AssistantModule(ModuleBase):
             # Executed here, not inside ChatWorker — see this module's
             # docstring and ChatWorker's for why tool execution needs
             # the GUI thread.
-            for tool_call in reply.tool_calls:
+            calls_to_execute, skipped_calls = split_safe_tool_calls(reply.tool_calls, self.context.assistant_actions)
+            if skipped_calls:
+                skipped_names = ", ".join(tc.name for tc in skipped_calls)
+                log.warning(
+                    "Skipped destructive tool call(s) bundled with other calls in one reply: %s", skipped_names
+                )
+                self._log.appendPlainText(format_chat_line(
+                    self.display_name,
+                    f"(Skipped a possibly unintended action for safety: {skipped_names}. Ask for that on its own if you really want it.)",
+                ))
+            for tool_call in calls_to_execute:
                 confirmation = self.context.assistant_actions.execute(
                     self.context, tool_call.name, tool_call.arguments
                 )

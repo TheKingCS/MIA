@@ -108,15 +108,6 @@ from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 from modules.assistant.module import build_chat_request
 
-# Tool names whose handlers mutate or delete real data — see this
-# module's docstring on the "safe" expectation below.
-_DESTRUCTIVE_TOOLS = {
-    "delete_alarm", "delete_note", "delete_inventory_item",
-    "adjust_inventory_quantity", "delete_waypoint",
-    "delete_calendar_event", "delete_component",
-    "delete_project", "delete_task",
-}
-
 # (description, prompt, expected)
 #   expected == None      -> must NOT call any tool
 #   expected == "safe"     -> may gate open, but must NOT call a destructive tool
@@ -312,7 +303,14 @@ def main() -> int:
             ok = called == []
             detail = f"expected no tool call, got {called}"
         elif expected == "safe":
-            ok = not any(name in _DESTRUCTIVE_TOOLS for name in called)
+            # Derived from the real registry's own destructive flag
+            # (core/assistant_actions.py), not a hand-maintained set —
+            # same "one source of truth" reasoning as trigger_phrases/
+            # gating_keywords in milestone 5.9, applied here after the
+            # 2026-07-14 qwen2.5:7b model-comparison finding formalized
+            # this flag.
+            destructive_names = context.assistant_actions.destructive_action_names()
+            ok = not any(name in destructive_names for name in called)
             detail = f"expected no destructive tool call, got {called}"
         else:
             ok = called == [expected]

@@ -1939,3 +1939,45 @@ prompt across the full golden set (max 17, min 6) — down from a flat
 847 tests passing, real headless-Qt smoke test confirming `build_chat_request()`
 returns a 9-tool subset for a real alarm request through the actual
 `AssistantModule` (not just the golden-set script).
+
+## Assistant safety: skip destructive tool calls bundled with other calls (built, 2026-07-14)
+
+Found mid-experiment, while running the model-upgrade comparison
+(2026-07-14, "let's continue on the AI" thread): asked "How many M3
+bolts do I have?" (a pure read question, seeded with a real "M3 bolts"
+inventory item), `qwen2.5:7b` returned **two** tool calls in one reply —
+the correct `list_inventory`, plus a spurious `adjust_inventory_quantity`
+that would have actually mutated real inventory data. `llama3.2` has
+never done this once across this project's entire live-model
+verification history, but nothing about `modules/assistant/module.py`'s
+design prevented it: `_on_reply()` executed **every** tool call in a
+reply, unconditionally, in a loop — this app was never designed or
+tested for genuine multi-intent-per-message use (every registered
+action assumes one atomic operation per turn), so this was a real,
+model-agnostic robustness gap, not something specific to one model.
+
+**Fix**: `AssistantAction` gained a `destructive: bool` field
+(formalizing what `tests/live_model_check.py`'s `_DESTRUCTIVE_TOOLS`
+tracked only informally by hand before this — that hardcoded set is
+now gone, replaced by `AssistantActionRegistry.destructive_action_names()`
+derived from the real registry, same "one source of truth" fix already
+applied to trigger_phrases/gating_keywords in milestone 5.9). All 9
+previously-informal destructive actions marked (`delete_alarm`,
+`delete_note`, `delete_inventory_item`, `adjust_inventory_quantity`,
+`delete_waypoint`, `delete_calendar_event`, `delete_component`,
+`delete_project`, `delete_task`). New pure function
+`split_safe_tool_calls()` in `modules/assistant/module.py`: a single
+tool call always executes regardless of whether it's destructive (the
+normal, extensively-tested case) — only when a reply bundles **more
+than one** tool call are any destructive ones skipped rather than
+executed, logged as a warning, and reported to the user in the chat
+log so they can ask again explicitly if they actually wanted it.
+
+Verified with a real headless-Qt smoke test reproducing the exact
+qwen2.5:7b scenario end-to-end through the actual `AssistantModule._on_reply()`
+(not just the pure-function unit tests): a real seeded "M3 bolts" (qty
+25) inventory item, a synthetic `ChatReply` bundling
+`adjust_inventory_quantity` + `list_inventory`, confirmed the quantity
+stayed at 25 (destructive call correctly skipped) while the user still
+received the correct "25x M3 bolts" answer from the safe call. 856
+tests passing.

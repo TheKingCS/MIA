@@ -13,7 +13,13 @@ QPA platform) rather than unit-tested here.
 
 from __future__ import annotations
 
-from modules.assistant.module import build_chat_request, format_chat_line, looks_like_action_request
+from core.llm_manager import ToolCall
+from modules.assistant.module import (
+    build_chat_request,
+    format_chat_line,
+    looks_like_action_request,
+    split_safe_tool_calls,
+)
 
 
 def test_formats_speaker_and_text():
@@ -147,3 +153,73 @@ def test_build_chat_request_without_assistant_actions_never_offers_tools():
     messages, tools = build_chat_request(context, "Open the notes module")
     assert messages == [{"role": "user", "content": "GROUNDED[Open the notes module]"}]
     assert tools == []
+
+
+# ----------------------------------------------------------------------
+# split_safe_tool_calls — 2026-07-14 qwen2.5:7b model-comparison finding
+# ----------------------------------------------------------------------
+
+class _FakeDestructiveLookup:
+    def __init__(self, destructive_names):
+        self._destructive_names = set(destructive_names)
+
+    def is_destructive(self, name):
+        return name in self._destructive_names
+
+
+def test_split_safe_tool_calls_single_call_executes_even_if_destructive():
+    calls = [ToolCall(name="delete_alarm", arguments={"label": "Wake Up"})]
+    registry = _FakeDestructiveLookup({"delete_alarm"})
+
+    kept, skipped = split_safe_tool_calls(calls, registry)
+
+    assert kept == calls
+    assert skipped == []
+
+
+def test_split_safe_tool_calls_no_calls():
+    kept, skipped = split_safe_tool_calls([], _FakeDestructiveLookup({}))
+    assert kept == []
+    assert skipped == []
+
+
+def test_split_safe_tool_calls_multiple_calls_skips_the_destructive_one():
+    """
+    Reproduces the exact 2026-07-14 qwen2.5:7b finding: "How many M3
+    bolts do I have?" returned both list_inventory (safe) and a
+    spurious adjust_inventory_quantity (destructive) in one reply.
+    """
+    read_call = ToolCall(name="list_inventory", arguments={"query": "M3 bolts"})
+    destructive_call = ToolCall(name="adjust_inventory_quantity", arguments={"name": "M3 bolts", "delta": -1})
+    registry = _FakeDestructiveLookup({"adjust_inventory_quantity"})
+
+    kept, skipped = split_safe_tool_calls([destructive_call, read_call], registry)
+
+    assert kept == [read_call]
+    assert skipped == [destructive_call]
+
+
+def test_split_safe_tool_calls_multiple_non_destructive_calls_all_kept():
+    calls = [
+        ToolCall(name="list_alarms", arguments={}),
+        ToolCall(name="list_notes", arguments={}),
+    ]
+    registry = _FakeDestructiveLookup({"delete_alarm"})  # neither call is in this set
+
+    kept, skipped = split_safe_tool_calls(calls, registry)
+
+    assert kept == calls
+    assert skipped == []
+
+
+def test_split_safe_tool_calls_multiple_destructive_calls_all_skipped():
+    calls = [
+        ToolCall(name="delete_alarm", arguments={"label": "Wake Up"}),
+        ToolCall(name="delete_note", arguments={"title": "Groceries"}),
+    ]
+    registry = _FakeDestructiveLookup({"delete_alarm", "delete_note"})
+
+    kept, skipped = split_safe_tool_calls(calls, registry)
+
+    assert kept == []
+    assert skipped == calls

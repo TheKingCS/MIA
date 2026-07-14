@@ -280,6 +280,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_alarm",
             domain="alarms",
+            destructive=True,
             description="Delete an existing alarm in M.I.A. by its label.",
             parameters={
                 "type": "object",
@@ -334,6 +335,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_note",
             domain="notes",
+            destructive=True,
             description="Delete an existing journal/note entry in M.I.A.'s Notes module by its title.",
             parameters={
                 "type": "object",
@@ -408,6 +410,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_inventory_item",
             domain="inventory",
+            destructive=True,
             description="Remove an item entirely from M.I.A.'s Inventory tool by name.",
             parameters={
                 "type": "object",
@@ -422,6 +425,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="adjust_inventory_quantity",
             domain="inventory",
+            destructive=True,
             description=(
                 "Change the quantity of an existing inventory item by an amount (positive to add "
                 "more, negative to use/remove some), e.g. 'I used 5 M3 bolts' -> delta -5. "
@@ -470,6 +474,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_waypoint",
             domain="waypoints",
+            destructive=True,
             description="Delete an existing saved waypoint in M.I.A.'s Navigation module by name.",
             parameters={
                 "type": "object",
@@ -746,6 +751,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_calendar_event",
             domain="calendar",
+            destructive=True,
             description="Delete an existing Calendar event in M.I.A. by its title.",
             parameters={
                 "type": "object",
@@ -804,6 +810,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_component",
             domain="components",
+            destructive=True,
             description="Delete an existing electronic component in M.I.A. by name.",
             parameters={
                 "type": "object",
@@ -1004,6 +1011,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_project",
             domain="projects",
+            destructive=True,
             description="Delete an existing Project (and unlink, but not delete, its Tasks) in M.I.A. by name.",
             parameters={
                 "type": "object",
@@ -1018,6 +1026,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="delete_task",
             domain="projects",
+            destructive=True,
             description="Delete an existing Task in M.I.A. by title.",
             parameters={
                 "type": "object",
