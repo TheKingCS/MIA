@@ -39,6 +39,7 @@ from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
+from core.memory_manager import MemoryManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
 from core.script_library_manager import ScriptLibraryManager
@@ -93,6 +94,7 @@ def context(tmp_path, monkeypatch):
     ctx.profiles = ProfileManager(ctx)
     ctx.projects = ProjectManager(ctx)
     ctx.tasks = TaskManager(ctx)
+    ctx.memories = MemoryManager(ctx)
     return ctx
 
 
@@ -1038,3 +1040,39 @@ def test_mark_task_done_can_set_false(context):
 def test_mark_task_done_unknown_title_reports_not_found(context):
     result = MIAApplication._action_mark_task_done(context, {"title": "Nonexistent"})
     assert "nonexistent" in result.lower()
+
+
+def test_recall_expedition_no_expeditions(context):
+    assert "no expeditions" in MIAApplication._action_recall_expedition(context, {}).lower()
+
+
+def test_recall_expedition_unknown_name_reports_not_found(context):
+    context.expeditions.add_expedition(name="Field Season")
+    result = MIAApplication._action_recall_expedition(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_recall_expedition_by_name(context):
+    context.expeditions.add_expedition(name="Field Season", location="Land Between the Lakes", start_date="2026-08-14")
+    result = MIAApplication._action_recall_expedition(context, {"name": "field season"})
+    assert "Field Season" in result and "Land Between the Lakes" in result
+
+
+def test_recall_expedition_defaults_to_most_recent(context):
+    context.expeditions.add_expedition(name="Earlier", start_date="2026-07-01")
+    context.expeditions.add_expedition(name="Later", start_date="2026-09-01")
+    result = MIAApplication._action_recall_expedition(context, {})
+    assert "Later" in result and "Earlier" not in result
+
+
+def test_recall_expedition_includes_activity_and_distance(context):
+    expedition = context.expeditions.add_expedition(name="Field Season", start_date="2026-08-14")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1", activity_type="Hiking")
+    a = context.waypoints.add_waypoint(name="A", latitude=0.0, longitude=0.0)
+    b = context.waypoints.add_waypoint(name="B", latitude=0.0, longitude=1.0)
+    from datetime import datetime
+    context.trips.record_split(trip.trip_id, a.waypoint_id, timestamp=datetime(2026, 8, 14, 8, 0, 0))
+    context.trips.record_split(trip.trip_id, b.waypoint_id, timestamp=datetime(2026, 8, 14, 10, 0, 0))
+
+    result = MIAApplication._action_recall_expedition(context, {"name": "Field Season"})
+    assert "Hiking" in result and "km" in result

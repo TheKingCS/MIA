@@ -338,3 +338,28 @@ def test_delete_task_phrasing_gates_open():
 def test_mark_task_done_phrasing_gates_open():
     keywords = _real_gating_keywords()
     assert looks_like_action_request("Mark the task called Buy fuse box as done", keywords) is True
+
+
+# ----------------------------------------------------------------------
+# Memories (v0.17): recall_expedition
+# ----------------------------------------------------------------------
+
+def test_recall_expedition_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Tell me about my last expedition", keywords) is True
+
+
+def test_recall_expedition_recap_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Can you describe my expedition to me", keywords) is True
+
+
+def test_recall_expedition_named_phrasing_gates_open():
+    """
+    Uses "the expedition called X" phrasing (name after the noun), same
+    reasoning as test_delete_project_phrasing_gates_open — "Tell me
+    about my Field Season expedition" (name before the noun) is a known,
+    deliberately accepted gap, not a bug.
+    """
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Tell me about the expedition called Field Season", keywords) is True

@@ -97,6 +97,7 @@ from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
+from core.memory_manager import MemoryManager
 from core.module_manager import ModuleManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
@@ -213,6 +214,14 @@ GOLDEN_CASES = [
     ("delete project", "Delete the project called Garage Rewire", "delete_project"),
     ("delete task", "Delete the task called Buy fuse box", "delete_task"),
     ("mark task done", "Mark the task called Buy fuse box as done", "mark_task_done"),
+    # --- milestone v0.17: Memories (recall_expedition) ---
+    ("recall expedition by name", "Tell me about the expedition called Field Season", "recall_expedition"),
+    ("recall most recent expedition", "Tell me about my last expedition", "recall_expedition"),
+    (
+        "collision risk: recall_expedition (one, detailed) vs. list_expeditions (bare list)",
+        "Can you describe my expedition to me",
+        "recall_expedition",
+    ),
 ]
 
 
@@ -246,6 +255,10 @@ def _build_context() -> AppContext:
     context.profiles = ProfileManager(context)
     context.projects = ProjectManager(context)
     context.tasks = TaskManager(context)
+    # Read-only aggregation, no persisted file of its own — see
+    # core/memory_manager.py's docstring — so no _DATA_DIR isolation
+    # is needed the way every other manager above requires.
+    context.memories = MemoryManager(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
     # over lsblk/psutil with no JSON file of their own, so no isolation
     # is needed the way every other manager above requires.

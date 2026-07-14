@@ -1771,7 +1771,7 @@ isolated this time) managers: mark done, mark not done, delete task,
 delete project, and a fail-closed delete of a nonexistent project, all
 round-tripping correctly with no `data/` pollution afterward.
 
-## v0.17 — Memories (planned, not yet built)
+## v0.17 — Memories (built)
 
 The first of three new subsystems from the 2026-07-14 wearable-companion
 vision update (see `docs/VISION.md`'s Mission section and
@@ -1780,33 +1780,67 @@ new-design-risk piece: almost entirely read-only aggregation over data
 Expedition Mode/Toolbox already capture, no new hardware required for
 a first version.
 
-- [ ] 17.1 `core/memory_manager.py` — read-only aggregation service.
-      Computes an Expedition "recap" on demand (never stored, so it
-      can't go stale relative to the underlying records): total
-      duration in days, distance/pace per Trip (from logged
-      speed/distance, v0.12 milestone 12.5), Waypoint categories
-      visited (campsites/trailheads/etc.), notable journal/conditions
-      entries, photo count.
-- [ ] 17.2 `modules/memories/module.py` — new top-level module (#19 in
-      this doc's module list above), a scrollable list of past
-      Expeditions each showing its recap plus a photo strip from
-      `trip_photos/`, most-recent-first. "On this day" resurfacing (a
-      prior Expedition/Trip whose start_date matches today's month/day
-      in an earlier year) as a lightweight extra, not the core feature.
-- [ ] 17.3 Location-tagged resurfacing on Navigation's maps — Waypoints
-      already carry lat/long + category; add navigation both ways
-      between a Memories recap and that Waypoint's pin on the existing
-      schematic map view (`gui/trip_map_view.py`).
-- [ ] 17.4 Assistant hook: a read-only "tell me about my last
-      expedition" / "what have I done at Land Between the Lakes"
-      question, reusing the `device_help` grounding pattern (this is a
-      retrieval/summarization question, not an app action, so it
-      doesn't belong in the tool-calling action registry).
+- [x] 17.1 `core/memory_manager.py` — read-only aggregation service, no
+      persisted file of its own. `recap_for_expedition()` computes an
+      `ExpeditionRecap` on demand (never stored, so it can't go stale
+      relative to the underlying records): `duration_days` (from the
+      Expedition's own dates, falling back to its Trips' date span if
+      unset), `activity_breakdown` (distance/pace grouped by
+      `Trip.activity_type`, from *logged* `total_distance_km()`/
+      `average_speed_kmh()` — actual data, not the planned-route
+      estimate), `waypoint_categories_visited` (unions each Trip's
+      logged splits with its planned route, since a Trip with no splits
+      yet should still show its planned campsites), `journal_highlights`
+      (entries linked via `trip_id`), and `photo_filenames`. Also
+      `all_recaps()` (most-recent-first) and `on_this_day()`.
+- [x] 17.2 `modules/memories/module.py` — new top-level module (#19 in
+      this doc's module list above, auto-discovered with zero registry
+      edits), a scrollable list of past Expeditions each showing its
+      recap, a photo thumbnail strip (reuses `trip_detail_dialog.py`'s
+      `QIcon(path)`-into-`QListWidget` pattern), and a per-Trip "View
+      Route Map" button, most-recent-first. An "On This Day" section
+      surfaces above the main list when applicable.
+- [x] 17.3 Location-tagged resurfacing on Navigation's maps — solved by
+      reusing `gui/trip_detail_dialog.py`'s existing `TripMapView`
+      wholesale rather than building new map code: each recap's Trip
+      rows have a "View Route Map" button that opens that Trip's own
+      detail dialog (map + everything else), the same dialog the
+      Expeditions module already uses.
+- [x] 17.4 Assistant hook: **design revised from the original plan
+      during implementation.** The original idea (reuse the
+      `device_help` grounding pattern, since "this is a
+      retrieval/summarization question, not an app action") turned out
+      to be solving a problem that doesn't exist here — `list_expeditions`/
+      `list_trips`/etc. already establish the pattern for exactly this
+      kind of dynamic-data Q&A via the tool-calling registry, and
+      `device_help`'s grounding is specifically for the app's own
+      static how-to documentation/reference content, not live user
+      data. Registered `recall_expedition` (registry 46 -> 47) instead,
+      consistent with every other read action in this file. Found a
+      real gating gap while adding its golden-set case (not while
+      writing the unit-level gating test, which used safe phrasing from
+      the start): "Tell me about my Field Season expedition" (name
+      before the noun) doesn't gate open — same accepted trade-off as
+      delete_project/delete_task/mark_task_done above; "tell me about /
+      describe the expedition called X" phrasing (name after the noun)
+      is supported instead.
 - [ ] 17.5 (stretch, deferred unless requested) catch/tally counts and
       species-identified counts in the recap — these need the new
       per-trip tally primitive from the Missions milestone below;
       Memories can display them once that primitive exists but doesn't
       need to invent it.
+
+60/60 on two independent live-model runs (3 new cases: recall by name,
+recall most recent, and a collision-risk case against `list_expeditions`
+— all passed cleanly once the gating gap above was fixed). 841 tests
+passing. Verified with real headless-Qt smoke tests: the module widget
+built through full app-boot module discovery with realistic seeded data
+(an Expedition with a hike and a paddle, logged splits, a journal entry,
+a photo), and the "View Route Map" button confirmed to actually open
+`TripDetailDialog` without crashing (`context.inventory` turned out to
+be a real dependency of that dialog's Gear section the first smoke-test
+pass didn't wire up — not a bug in the new code, just an incomplete
+test fixture, fixed before re-running).
 
 **Deliberately NOT in this milestone**: photo-based species/plant
 identification (needs a camera + vision model — see `HARDWARE.md`'s new

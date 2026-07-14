@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from core.inventory_manager import InventoryManager
     from core.journal_manager import JournalManager
     from core.llm_manager import LLMManager
+    from core.memory_manager import MemoryManager
     from core.notification_manager import NotificationManager
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
@@ -86,6 +87,7 @@ class AppContext:
     trips: Optional["TripManager"] = field(default=None, repr=False)
     projects: Optional["ProjectManager"] = field(default=None, repr=False)
     tasks: Optional["TaskManager"] = field(default=None, repr=False)
+    memories: Optional["MemoryManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

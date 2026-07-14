@@ -41,6 +41,7 @@ from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.logger import get_logger
+from core.memory_manager import MemoryManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.password_strength import assess_password
@@ -125,6 +126,10 @@ class MIAApplication:
         self.context.trips = TripManager(self.context)
         self.context.projects = ProjectManager(self.context)
         self.context.tasks = TaskManager(self.context)
+        # Memories is read-only aggregation over Expeditions/Trips/
+        # Waypoints/Journal, so it's constructed after all four are
+        # already on the context, same reasoning as Trips above.
+        self.context.memories = MemoryManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -537,6 +542,41 @@ class MIAApplication:
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_expeditions,
             trigger_phrases=("list my expeditions", "list expeditions", "what expeditions", "show my expeditions"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="recall_expedition",
+            description=(
+                "Get a detailed recap of ONE Expedition in M.I.A.'s Memories: duration, "
+                "distance/pace per activity type, waypoint categories visited, latest "
+                "journal/conditions entry, and photo count. This is a single-Expedition "
+                "summary, NOT a bare list — use list_expeditions instead for 'what "
+                "expeditions do I have'-style questions. Leave name empty for the most "
+                "recent Expedition."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Optional Expedition name. Leave empty for the most recent one.",
+                    },
+                },
+                "required": [],
+            },
+            handler=self._action_recall_expedition,
+            # "Tell me about my Field Season expedition" (name inserted
+            # before the noun) doesn't match any of these — same
+            # accepted trade-off as delete_project/delete_task/
+            # mark_task_done (see tests/test_assistant_action_gating.py's
+            # test_delete_project_phrasing_gates_open docstring). "the
+            # expedition called X" phrasing (name after the noun) is
+            # supported instead via the dedicated triggers below.
+            trigger_phrases=(
+                "tell me about my last expedition", "tell me about my expedition",
+                "tell me about the expedition", "describe my expedition",
+                "describe the expedition", "recap my expedition", "expedition recap",
+                "what did i do on my expedition", "what have i done on my expedition",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_trip",
@@ -1161,6 +1201,47 @@ class MIAApplication:
             location_part = f" — {expedition.location}" if expedition.location else ""
             lines.append(f"- '{expedition.name}'{date_part}{location_part}")
         return "Your expeditions:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_recall_expedition(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "") or "").strip().lower()
+        if name:
+            expedition = next(
+                (e for e in context.expeditions.all_expeditions() if e.name.lower() == name), None
+            )
+            if expedition is None:
+                return f"I don't have an expedition called '{arguments.get('name', '')}'."
+            recap = context.memories.recap_for_expedition(expedition.expedition_id)
+        else:
+            recaps = context.memories.all_recaps()
+            if not recaps:
+                return "You have no expeditions yet."
+            recap = recaps[0]
+
+        lines = [f"'{recap.expedition.name}'"]
+        if recap.expedition.location:
+            lines.append(f"Location: {recap.expedition.location}")
+        if recap.duration_days:
+            lines.append(f"Duration: {recap.duration_days} day{'s' if recap.duration_days != 1 else ''}")
+        for stats in recap.activity_breakdown.values():
+            parts = [f"{stats.trip_count} trip(s)"]
+            if stats.distance_km:
+                parts.append(f"{stats.distance_km:.1f} km")
+            if stats.average_speed_kmh:
+                parts.append(f"avg {stats.average_speed_kmh:.1f} km/h")
+            lines.append(f"{stats.activity_type}: " + ", ".join(parts))
+        if recap.waypoint_categories_visited:
+            categories = ", ".join(
+                f"{count} {category}" for category, count in sorted(recap.waypoint_categories_visited.items())
+            )
+            lines.append(f"Visited: {categories}")
+        if recap.journal_highlights:
+            latest = recap.journal_highlights[0]
+            conditions = f" ({latest.conditions})" if latest.conditions else ""
+            lines.append(f"Latest log: '{latest.title}'{conditions}")
+        if recap.photo_count:
+            lines.append(f"Photos: {recap.photo_count}")
+        return "\n".join(lines)
 
     @staticmethod
     def _action_add_trip(context: AppContext, arguments: dict) -> str:
