@@ -1981,3 +1981,39 @@ qwen2.5:7b scenario end-to-end through the actual `AssistantModule._on_reply()`
 stayed at 25 (destructive call correctly skipped) while the user still
 received the correct "25x M3 bolts" answer from the safe call. 856
 tests passing.
+
+## Model upgrade experiment: conclusion — keep llama3.2:3b (2026-07-14)
+
+The "model upgrade experiment" track from the AI-advancement thread
+(picked over embedding-based retrieval as the lower-risk first step).
+Pulled two stronger candidates within `docs/HARDWARE.md`'s stated
+realistic 1-7B ceiling for the AI HAT+2, ran the full 60-case golden
+set against each (properly warmed up first, one model loaded at a time
+— this dev sandbox's 11GB shared system RAM is tight for a 7B model
+and produced misleading fast-failure results before that fix; see the
+destructive-tool-call-safety entry above for what that same experiment
+run surfaced along the way):
+
+| Model | Golden-set result | Avg time/case |
+|---|---|---|
+| **llama3.2:3b (current default)** | **60/60** | **2.69s** |
+| qwen2.5:7b | 58/60 | 12.01s |
+| mistral:7b | 17/60 | 18.75s |
+
+**Conclusion: keep llama3.2:3b.** It isn't just "good enough" — it's
+the best performer of the three on the metric that actually matters
+(tool-calling correctness), and by a wide margin the fastest. Bigger
+parameter count did not mean better tool-calling here: qwen2.5:7b came
+close but introduced a real new failure mode (the destructive
+multi-tool-call bug documented above) and ran ~4.5x slower; mistral:7b
+was outright unreliable at tool-calling in this environment (mostly no
+tool call at all, "got []") and ~7x slower — plausibly because Ollama's
+plain `mistral:7b` tag isn't the function-calling-tuned checkpoint,
+though this wasn't chased further given llama3.2:3b's clean sweep made
+it unnecessary. Speed differences this large on CPU would very likely
+translate to the Hailo-10H too, even setting aside the still-unverified
+question of whether `hailo-ollama` runs these specific models at all
+(`docs/KNOWN_ISSUES.md`'s open item) — a slower, less-accurate model
+is a worse trade at any speed. `qwen2.5:7b`/`mistral:7b` left installed
+locally (not removed) in case they're useful for a future, differently-
+scoped experiment; not wired into any config default.
