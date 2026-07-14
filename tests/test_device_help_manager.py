@@ -30,22 +30,38 @@ class _FakeModule:
 
 
 class _FakeReferenceLibrary:
-    def __init__(self, snippets=None, error: bool = False) -> None:
+    def __init__(self, snippets=None, error: bool = False, snippets_by_query: dict = None) -> None:
         self._snippets = snippets or []
+        self._snippets_by_query = snippets_by_query or {}
         self._error = error
         self.last_query = None
         self.last_limit = None
+        self.all_queries: list[str] = []
 
     def search_all_packs(self, query, limit=3):
         self.last_query = query
         self.last_limit = limit
+        self.all_queries.append(query)
         if self._error:
             raise RuntimeError("boom")
+        if self._snippets_by_query:
+            return self._snippets_by_query.get(query, [])
         return self._snippets
 
 
-def _make_manager() -> DeviceHelpManager:
+class _FakeLLM:
+    def __init__(self, reply: str = "hypothermia frostbite cold exposure") -> None:
+        self._reply = reply
+        self.last_prompt = None
+
+    def generate(self, prompt):
+        self.last_prompt = prompt
+        return self._reply
+
+
+def _make_manager(llm=None) -> DeviceHelpManager:
     context = AppContext(config=_FakeConfig(), events=None)
+    context.llm = llm
     return DeviceHelpManager(context)
 
 
@@ -244,6 +260,86 @@ def test_reference_library_chunks_error_does_not_crash():
     manager = _make_manager()
     manager.register_reference_library(_FakeReferenceLibrary(error=True))
     assert manager._reference_library_chunks("anything") == []
+
+
+# ----------------------------------------------------------------------
+# LLM query reformulation (2026-07-14 vocabulary-mismatch fix)
+# ----------------------------------------------------------------------
+
+def test_reformulate_query_returns_none_without_an_llm():
+    manager = _make_manager(llm=None)
+    assert manager._reformulate_query_for_search("my hands are freezing") is None
+
+
+def test_reformulate_query_returns_none_when_llm_returns_empty():
+    manager = _make_manager(llm=_FakeLLM(reply=""))
+    assert manager._reformulate_query_for_search("my hands are freezing") is None
+
+
+def test_reformulate_query_returns_the_llm_reply():
+    manager = _make_manager(llm=_FakeLLM(reply="hypothermia frostbite symptoms"))
+    assert manager._reformulate_query_for_search("my hands are freezing") == "hypothermia frostbite symptoms"
+
+
+def test_reformulate_query_includes_the_original_question_in_the_prompt():
+    fake_llm = _FakeLLM()
+    manager = _make_manager(llm=fake_llm)
+    manager._reformulate_query_for_search("my hands are freezing")
+    assert "my hands are freezing" in fake_llm.last_prompt
+
+
+def test_reformulate_query_truncates_a_rambling_non_compliant_reply():
+    long_reply = " ".join(f"word{i}" for i in range(30))
+    manager = _make_manager(llm=_FakeLLM(reply=long_reply))
+    reformulated = manager._reformulate_query_for_search("anything")
+    assert len(reformulated.split()) == 4  # _MAX_REFORMULATED_QUERY_WORDS
+
+
+def test_reference_library_chunks_searches_with_reformulated_query_first():
+    """
+    Reproduces the exact 2026-07-14 finding: the original keywords find
+    an unrelated article, but the reformulated query finds the real one
+    — and its result must come first. Uses a single-word original query
+    ("numb") so _query_words()'s set-based tokenization can't reorder
+    it — a multi-word original query's word order isn't guaranteed.
+    """
+    manager = _make_manager(llm=_FakeLLM(reply="hypothermia frostbite"))
+    fake_library = _FakeReferenceLibrary(snippets_by_query={
+        "hypothermia frostbite": [
+            ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure."),
+        ],
+        "numb": [
+            ReferenceSnippet(pack_id="ifixit", pack_title="iFixit", article_title="iPod Touch Logic Board", snippet="Unrelated."),
+        ],
+    })
+    manager.register_reference_library(fake_library)
+
+    chunks = manager._reference_library_chunks("numb")
+    assert [c.heading for c in chunks] == ["Hypothermia", "iPod Touch Logic Board"]
+    assert fake_library.all_queries == ["hypothermia frostbite", "numb"]
+
+
+def test_reference_library_chunks_dedupes_across_both_queries():
+    manager = _make_manager(llm=_FakeLLM(reply="hypothermia"))
+    same_hit = ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure.")
+    fake_library = _FakeReferenceLibrary(snippets=[same_hit])  # returns the same hit regardless of query
+    manager.register_reference_library(fake_library)
+
+    chunks = manager._reference_library_chunks("hypothermia symptoms")
+    assert len(chunks) == 1
+
+
+def test_reference_library_chunks_falls_back_to_original_when_reformulation_unavailable():
+    """Single-word query — _query_words()'s set-based tokenization can't reorder a one-word result."""
+    manager = _make_manager(llm=None)
+    fake_library = _FakeReferenceLibrary(snippets=[
+        ReferenceSnippet(pack_id="medicine", pack_title="WikiMed", article_title="Hypothermia", snippet="Cold exposure."),
+    ])
+    manager.register_reference_library(fake_library)
+
+    chunks = manager._reference_library_chunks("hypothermia")
+    assert len(chunks) == 1
+    assert fake_library.all_queries == ["hypothermia"]  # only one search, no reformulation call
 
 
 def test_build_grounded_prompt_skips_reference_library_when_module_name_matches():

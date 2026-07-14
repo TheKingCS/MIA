@@ -2137,3 +2137,81 @@ question of whether `hailo-ollama` runs these specific models at all
 is a worse trade at any speed. `qwen2.5:7b`/`mistral:7b` left installed
 locally (not removed) in case they're useful for a future, differently-
 scoped experiment; not wired into any config default.
+
+## Embedding-based retrieval: LLM query reformulation instead of a real vector index (2026-07-14)
+
+The last item on the AI-advancement menu. Investigated the literal ask
+first rather than building blind: measured the installed Reference
+Library packs directly and found ~1.8 million articles total (Wikipedia
+top-mini alone is 875K, iFixit 103K, Wikibooks 118K, medicine-mini
+362K). Pre-computing and storing embeddings for all of that — re-indexed
+on every pack install/removal via the Knowledge module — is a
+multi-hour, multi-GB undertaking that belongs on Project 2's Home
+compute per `docs/VISION.md`'s own established Pi-vs-Home placement
+principle ("none of the compute-heavy reasoning belongs on the Pi5"),
+not something to build blind on Pi-class hardware in one pass. Resolved
+via `AskUserQuestion`: build the cheap, no-new-infrastructure fix now
+(LLM query reformulation), flag the real embedding index as its own
+future, larger, differently-placed initiative.
+
+**Measured the actual bug directly before writing any code** — not
+assumed: `search_all_packs("hypothermia symptoms")` correctly finds the
+real Hypothermia article, but `search_all_packs("my hands are freezing
+and numb")` (a far more natural way to actually ask this) returned
+completely unrelated hits, including an iPod Touch logic board
+replacement page. Direct lexical phrasing works; any natural paraphrase
+fails completely — libzim's full-text index has no way to bridge
+"freezing and numb" to "hypothermia" since they share no vocabulary.
+
+**Fix**: `core/device_help_manager.py`'s new `_reformulate_query_for_search()`
+asks the already-running LLM to name the single most likely encyclopedia
+article title for the question (2-3 words), then `_reference_library_chunks()`
+searches with BOTH the reformulated title and the original stopword-stripped
+keywords, merging and deduping by (pack, article) — reformulated results
+first, since they specifically target the case where the original
+keywords already fail. No new index, no new dependency, reuses the LLM
+connection that already exists for chat/tool-calling.
+
+**Found and fixed a real prompt-engineering gap via live testing against
+the real installed packs** (this project's own established discipline —
+"expect several rounds of real-model iteration, not one"): the first
+prompt asked for "2 to 5 keywords," which made results *worse* than not
+reformulating at all in two of three test cases. Measured directly
+against the real medicine pack: `search("hypothermia hypovolemia cold
+stress shock")` (5 terms) returned **zero hits**, while
+`search("hypothermia frostbite")` (2 terms) correctly ranked the real
+Frostbite article #1. Same "more retrieved context isn't always better"
+lesson this project already learned once for `docs/*.md` grounding
+(this module's own `_SYSTEM_PREAMBLE` comment), rediscovered here for
+Reference Library search terms specifically. Fixed by asking for "the
+single most likely article title (2-3 words)" instead of "2 to 5
+keywords" — verified this actually fixes the demonstrated failures:
+"my hands are freezing and numb" and "body temperature dropping
+dangerously low" both now correctly surface the real Hypothermia
+article across two independent runs (temperature=0, deterministic), and
+a full end-to-end `build_grounded_prompt()` + real LLM call for the
+former now correctly identifies frostbite/hypothermia in its answer,
+where it previously would have grounded on the irrelevant iPod snippet.
+
+**Found and fixed a second, unrelated real data-pollution issue while
+verifying this** — not caused by this feature, but caught while
+auditing test isolation after the `NotificationManager` leak from the
+v0.19 work above: `data/waypoints.json` had accumulated **1,860**
+leaked test waypoints (all named "A"/"B"/"C"/"New York"/"Los Angeles" —
+classic haversine-distance test fixture names) spanning from
+2026-07-13 through 2026-07-14, across multiple prior milestones' ad hoc
+verification scripts that forgot to isolate `waypoint_manager`'s data
+path. Confirmed zero real user data mixed in (only 5 unique names, no
+real place names/notes), reset to empty. **Lesson**: grepping for a
+specific milestone's own expected leaked strings isn't sufficient to
+catch pollution from an *earlier*, unrelated milestone's scratch
+script — a periodic raw entry-count audit across every `data/*.json`
+file (not just a targeted grep) is worth doing after any batch of
+manual scratch-script verification, not only when a specific string is
+suspected.
+
+944 tests passing (31 in `tests/test_device_help_manager.py`, including
+new coverage for reformulation success/failure/truncation and merge/
+dedup behavior with a fake LLM — no live model needed for the automated
+suite, matching this module's existing "no filesystem/Qt/LLM in unit
+tests" convention).

@@ -36,6 +36,30 @@ by `score_chunk()` — libzim's own full-text search relevance ranking
 is used as-is, since it's a real information-retrieval engine and this
 module's crude keyword-overlap heuristic would only make ranking
 worse, not better, for that content.
+
+**LLM query reformulation for Reference Library search** (2026-07-14,
+the "AI advancement" thread's embedding-based-retrieval work — see
+docs/ROADMAP.md for the full writeup on why this exists instead of a
+real vector index). Measured directly against the real installed packs
+that libzim's lexical search has a severe, genuine vocabulary-mismatch
+problem: "hypothermia symptoms" correctly finds the Hypothermia
+article, but "my hands are freezing and numb" (a far more natural way
+to actually ask this) returns completely unrelated hits (an iPod Touch
+logic board replacement page). A full semantic embedding index over
+these packs would fix this properly, but the installed packs total
+~1.8 million articles (Wikipedia top-mini alone is 875K) — pre-computing
+and storing embeddings for all of that, re-indexed on every pack
+install/removal, is a multi-hour, multi-GB undertaking that belongs on
+Project 2's Home compute per docs/VISION.md's own established
+Pi-vs-Home placement principle, not something to build blind on Pi-class
+hardware in one pass. `_reformulate_query_for_search()` asks the
+already-running LLM to translate a colloquial question into likely
+technical/topical search keywords, then `_reference_library_chunks()`
+searches with BOTH the original keywords and the reformulated ones,
+merging and deduping results (reformulated first, since it specifically
+targets the vocabulary-mismatch case the original keywords already
+fail at) — no new index, no new dependency, reuses the LLM connection
+that already exists for everything else.
 """
 
 from __future__ import annotations
@@ -93,6 +117,30 @@ _SYSTEM_PREAMBLE = (
 # knob — see that method's docstring for the real crowding bug this
 # avoids.
 _REFERENCE_LIBRARY_SNIPPET_LIMIT = 10
+
+# See this module's docstring on LLM query reformulation. Deliberately
+# asks for keywords, not a rephrased question — search_all_packs()
+# hands this straight to libzim's own keyword/full-text index
+# (core/reference_library_manager.py), not back through another LLM.
+_QUERY_REFORMULATION_PROMPT_TEMPLATE = (
+    "What is the single most likely encyclopedia article title for the "
+    "subject of the following question? Reply with ONLY that title (2-3 "
+    "words) — no punctuation, no explanation, no restating the question.\n\n"
+    "Question: {query}"
+)
+# Verified directly against the real installed packs (docs/ROADMAP.md's
+# writeup): asking libzim's search for MORE than ~3 words at once made
+# results dramatically worse, not better — "hypothermia hypovolemia cold
+# stress shock" (5 reformulated terms) returned ZERO hits at all, while
+# "hypothermia frostbite" (2 terms) correctly ranked the real Frostbite
+# article #1. Same "more retrieved context isn't always better" lesson
+# this project already learned once for docs/*.md grounding (this
+# module's own _SYSTEM_PREAMBLE comment), rediscovered here for
+# Reference Library search terms specifically. Prompt was changed from
+# "2 to 5 keywords" to "the single most likely article title (2-3
+# words)" for exactly this reason — defensive cap kept in case the
+# model ignores that and replies with more anyway.
+_MAX_REFORMULATED_QUERY_WORDS = 4
 
 
 @dataclass
@@ -256,6 +304,32 @@ class DeviceHelpManager:
         """Return the top `limit` chunks (docs + module metadata) ranked by keyword overlap with `query`."""
         return [chunk for _, chunk in self._scored_doc_and_module_chunks(query)[:limit]]
 
+    def _search_reference_library(self, search_terms: str, limit: int) -> list:
+        """Thin wrapper so both call sites in _reference_library_chunks() share one try/except."""
+        try:
+            return self._reference_library.search_all_packs(search_terms, limit=limit)
+        except Exception:
+            log.exception("Reference Library search raised an error — skipping it for device-help.")
+            return []
+
+    def _reformulate_query_for_search(self, query: str) -> Optional[str]:
+        """
+        See this module's docstring on LLM query reformulation. Returns
+        None (not an exception) on any failure — no LLM configured, the
+        backend unreachable, or an empty/non-compliant reply — since
+        this is an enhancement on top of the original keyword search,
+        never the only path to a result.
+        """
+        if self.context.llm is None:
+            return None
+        prompt = _QUERY_REFORMULATION_PROMPT_TEMPLATE.format(query=query)
+        reply = self.context.llm.generate(prompt)
+        if not reply:
+            return None
+        words = reply.strip().split()[:_MAX_REFORMULATED_QUERY_WORDS]
+        reformulated = " ".join(words).strip()
+        return reformulated or None
+
     def _reference_library_chunks(self, query: str, limit: int = _REFERENCE_LIBRARY_SNIPPET_LIMIT) -> list[HelpChunk]:
         """
         Snippets from the actual installed Reference Library content
@@ -263,26 +337,37 @@ class DeviceHelpManager:
         — see this module's docstring for why libzim's own relevance
         ranking is used as-is.
 
-        Passes stopword-stripped keywords (_query_words(), the same
-        extraction the docs/*.md scorer uses), not the raw question —
-        verified against the real medicine pack that this matters a lot:
-        "What are the symptoms of hypothermia?" ranked "Pulseless
-        electrical activity" first (filler words like "what"/"are"/"the"
-        diluted libzim's own relevance ranking), while "symptoms
-        hypothermia" correctly ranked the actual "Hypothermia" article
-        first.
+        Searches with BOTH the stopword-stripped original keywords
+        (_query_words() — verified against the real medicine pack that
+        this matters: "What are the symptoms of hypothermia?" ranked
+        "Pulseless electrical activity" first with filler words diluting
+        libzim's ranking, "symptoms hypothermia" correctly ranked
+        "Hypothermia" first) AND an LLM-reformulated version (this
+        module's docstring on the 2026-07-14 vocabulary-mismatch fix),
+        merged and deduped by (pack, article) — reformulated results
+        first, since they specifically target the case where the
+        original keywords already fail (e.g. "my hands are freezing and
+        numb" finding nothing hypothermia-related at all).
         """
         if self._reference_library is None:
             return []
+
         keywords = " ".join(_query_words(query))
-        try:
-            snippets = self._reference_library.search_all_packs(keywords, limit=limit)
-        except Exception:
-            log.exception("Reference Library search raised an error — skipping it for device-help.")
-            return []
+        reformulated = self._reformulate_query_for_search(query)
+
+        seen: set[tuple[str, str]] = set()
+        snippets = []
+        for search_terms in filter(None, [reformulated, keywords]):
+            for snippet in self._search_reference_library(search_terms, limit):
+                key = (snippet.pack_title, snippet.article_title)
+                if key in seen:
+                    continue
+                seen.add(key)
+                snippets.append(snippet)
+
         return [
             HelpChunk(source=f"Reference Library: {s.pack_title}", heading=s.article_title, text=s.snippet)
-            for s in snippets
+            for s in snippets[:limit]
         ]
 
     def build_grounded_prompt(self, query: str, limit: int = 5) -> str:
