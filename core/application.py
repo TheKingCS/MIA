@@ -903,6 +903,49 @@ class MIAApplication:
             handler=self._action_list_tasks,
             trigger_phrases=("list my tasks", "list tasks", "what tasks", "show my tasks"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_project",
+            description="Delete an existing Project (and unlink, but not delete, its Tasks) in M.I.A. by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the project to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_project,
+            trigger_phrases=("delete a project", "delete my project", "remove a project", "delete the project"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_task",
+            description="Delete an existing Task in M.I.A. by title.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The title of the task to delete."},
+                },
+                "required": ["title"],
+            },
+            handler=self._action_delete_task,
+            trigger_phrases=("delete a task", "delete my task", "remove a task", "delete the task"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="mark_task_done",
+            description="Mark an existing Task as done (complete) or not done in M.I.A. by title.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The title of the task to update."},
+                    "done": {
+                        "type": "boolean",
+                        "description": "True to mark it done/complete, false to mark it not done. Defaults to true.",
+                    },
+                },
+                "required": ["title"],
+            },
+            handler=self._action_mark_task_done,
+            trigger_phrases=("mark task", "mark my task", "mark the task", "complete my task", "finish my task", "task done", "task complete"),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1416,7 +1459,7 @@ class MIAApplication:
                 return f"I don't have a project called '{arguments.get('project_name', '')}'."
             tasks = context.tasks.tasks_for_project(project.project_id)
         else:
-            tasks = [t for p in context.projects.all_projects() for t in context.tasks.tasks_for_project(p.project_id)]
+            tasks = context.tasks.all_tasks()
 
         if not tasks:
             return "No matching tasks found." if project_name else "You have no tasks yet."
@@ -1426,6 +1469,35 @@ class MIAApplication:
             due_part = f" (due {task.due_date})" if task.due_date else ""
             lines.append(f"- {mark} '{task.title}'{due_part}")
         return "Your tasks:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_delete_project(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((p for p in context.projects.all_projects() if p.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a project called '{arguments.get('name', '')}'."
+        context.projects.delete_project(match.project_id)
+        return f"Deleted the project '{match.name}'."
+
+    @staticmethod
+    def _action_delete_task(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip().lower()
+        match = next((t for t in context.tasks.all_tasks() if t.title.lower() == title), None)
+        if match is None:
+            return f"I don't have a task called '{arguments.get('title', '')}'."
+        context.tasks.delete_task(match.task_id)
+        return f"Deleted the task '{match.title}'."
+
+    @staticmethod
+    def _action_mark_task_done(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip().lower()
+        match = next((t for t in context.tasks.all_tasks() if t.title.lower() == title), None)
+        if match is None:
+            return f"I don't have a task called '{arguments.get('title', '')}'."
+        done = bool(arguments.get("done", True))
+        context.tasks.update_task(match.task_id, done=done)
+        status = "done" if done else "not done"
+        return f"Marked the task '{match.title}' as {status}."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

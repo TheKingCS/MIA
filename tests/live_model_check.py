@@ -113,6 +113,7 @@ _DESTRUCTIVE_TOOLS = {
     "delete_alarm", "delete_note", "delete_inventory_item",
     "adjust_inventory_quantity", "delete_waypoint",
     "delete_calendar_event", "delete_component",
+    "delete_project", "delete_task",
 }
 
 # (description, prompt, expected)
@@ -208,6 +209,10 @@ GOLDEN_CASES = [
     ),
     ("list tasks", "What tasks do I have?", "list_tasks"),
     ("false-positive sanity: ordinary use of the word 'project'", "This project is taking forever", None),
+    # --- Project Manager CRUD follow-up: delete_project, delete_task, mark_task_done ---
+    ("delete project", "Delete the project called Garage Rewire", "delete_project"),
+    ("delete task", "Delete the task called Buy fuse box", "delete_task"),
+    ("mark task done", "Mark the task called Buy fuse box as done", "mark_task_done"),
 ]
 
 

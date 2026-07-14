@@ -1715,3 +1715,42 @@ all round-tripping through the real managers, not mocks) and a separate
 full-app-boot + `ModuleManager.discover()` check confirming `ProjectTool`
 shows up under Toolbox with zero registry edits, exactly as
 `core/module_manager.py`'s documented auto-discovery behavior promises.
+
+### Project Manager CRUD follow-up: delete_project, delete_task, mark_task_done
+
+Follow-up batch to v0.16 (registry 43 -> 46), completing Project
+Manager's Assistant coverage the same way 5.13 followed up 5.12's
+Expedition Mode first pass. `delete_project` (unlinks, does not
+cascade-delete, its Tasks — same non-destructive bias as
+`delete_expedition`), `delete_task`, and `mark_task_done` (a boolean
+`done` toggle by title — the "check off a to-do" case, not covered by
+`update_task`'s general field-setter). All three resolve their target
+by exact case-insensitive name/title match and fail closed ("I don't
+have a project/task called '...'") on no match, same pattern as every
+delete handler in this file.
+
+**Real, not just plausible, name-insertion gating gap found while
+writing this batch's own tests** — caught before it ever reached the
+live model, by re-deriving `test_delete_note_phrasing_gates_open`'s
+exact reasoning rather than assuming it didn't apply: "project"/"task"
+are exactly as common as "note" (already-pinned false-positive check:
+"This project is taking forever" must not gate anything open), so
+neither gets a bare trailing-space trigger the way "alarm "/"component "
+do. That means "Delete my Garage Rewire project" (name inserted
+before the noun) doesn't gate open on `delete_project`'s own triggers —
+a real gap, deliberately accepted, same trade-off `delete_note` already
+made. `delete_project`/`delete_task`/`mark_task_done` trigger phrases
+instead cover "delete/mark the X called Y" phrasing (name after the
+noun), and their gating/golden-set tests use that phrasing rather than
+papering over the gap.
+
+Also added `TaskManager.all_tasks()` (mirrors `TripManager.all_trips()`)
+and used it to simplify `_action_list_tasks`'s cross-project case,
+which previously did its own per-project loop.
+
+57/57 on two independent live-model runs (3 new cases: delete project,
+delete task, mark task done — plus all 54 prior cases still green).
+Verified with a real handler-level smoke test against real (properly
+isolated this time) managers: mark done, mark not done, delete task,
+delete project, and a fail-closed delete of a nonexistent project, all
+round-tripping correctly with no `data/` pollution afterward.

@@ -314,3 +314,27 @@ def test_ordinary_project_mention_does_not_gate_open():
     """False-positive check: 'project' as an ordinary word, not a request to act on a Project record."""
     keywords = _real_gating_keywords()
     assert looks_like_action_request("This project is taking forever", keywords) is False
+
+
+def test_delete_project_phrasing_gates_open():
+    """
+    Uses "called X" phrasing (name after the noun), same as
+    test_delete_note_phrasing_gates_open — "project"/"task" are common
+    enough English words (see test_ordinary_project_mention_does_not_gate_open
+    above) that neither gets a bare trailing-space trigger the way
+    "alarm "/"component " do, so name-before-noun phrasing ("Delete my
+    Garage Rewire project") is a known, deliberately accepted gap here,
+    same trade-off as delete_note's.
+    """
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete the project called Garage Rewire", keywords) is True
+
+
+def test_delete_task_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete the task called Buy fuse box", keywords) is True
+
+
+def test_mark_task_done_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Mark the task called Buy fuse box as done", keywords) is True

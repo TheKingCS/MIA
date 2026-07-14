@@ -966,3 +966,75 @@ def test_list_tasks_all_projects_when_unfiltered(context):
 
     result = MIAApplication._action_list_tasks(context, {})
     assert "Buy fuse box" in result and "Unrelated task" in result
+
+
+def test_delete_project_removes_matching_project(context):
+    context.projects.add_project(name="Garage Rewire")
+    result = MIAApplication._action_delete_project(context, {"name": "Garage Rewire"})
+    assert "Garage Rewire" in result
+    assert context.projects.all_projects() == []
+
+
+def test_delete_project_is_case_insensitive(context):
+    context.projects.add_project(name="Garage Rewire")
+    MIAApplication._action_delete_project(context, {"name": "garage rewire"})
+    assert context.projects.all_projects() == []
+
+
+def test_delete_project_unknown_name_does_not_delete_anything(context):
+    context.projects.add_project(name="Garage Rewire")
+    result = MIAApplication._action_delete_project(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+    assert len(context.projects.all_projects()) == 1
+
+
+def test_delete_project_unlinks_but_does_not_delete_its_tasks(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    MIAApplication._action_delete_project(context, {"name": "Garage Rewire"})
+    assert len(context.tasks.all_tasks()) == 1
+
+
+def test_delete_task_removes_matching_task(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    result = MIAApplication._action_delete_task(context, {"title": "Buy fuse box"})
+    assert "Buy fuse box" in result
+    assert context.tasks.all_tasks() == []
+
+
+def test_delete_task_is_case_insensitive(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    MIAApplication._action_delete_task(context, {"title": "buy fuse box"})
+    assert context.tasks.all_tasks() == []
+
+
+def test_delete_task_unknown_title_does_not_delete_anything(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    result = MIAApplication._action_delete_task(context, {"title": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+    assert len(context.tasks.all_tasks()) == 1
+
+
+def test_mark_task_done_defaults_to_true(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    task = context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    result = MIAApplication._action_mark_task_done(context, {"title": "Buy fuse box"})
+    assert "Buy fuse box" in result and "as done" in result
+    assert context.tasks.get_task(task.task_id).done is True
+
+
+def test_mark_task_done_can_set_false(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    task = context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    context.tasks.toggle_done(task.task_id)
+    result = MIAApplication._action_mark_task_done(context, {"title": "Buy fuse box", "done": False})
+    assert "as not done" in result
+    assert context.tasks.get_task(task.task_id).done is False
+
+
+def test_mark_task_done_unknown_title_reports_not_found(context):
+    result = MIAApplication._action_mark_task_done(context, {"title": "Nonexistent"})
+    assert "nonexistent" in result.lower()

@@ -153,3 +153,6 @@ class TaskManager:
 
     def tasks_for_project(self, project_id: str) -> list[Task]:
         return [t for t in self._tasks if t.project_id == project_id]
+
+    def all_tasks(self) -> list[Task]:
+        return list(self._tasks)
