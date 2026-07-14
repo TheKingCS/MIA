@@ -98,8 +98,16 @@ QFrame#CharacterPanel {
     border-radius: 12px;
 }
 
+/*
+2026-07-14 aesthetic pass part 3 (docs/ROADMAP.md): "bubble outline"
+icon look — a colored ring stroke with a transparent center, replacing
+the earlier filled-circle badge. Applies to every icon badge in the app
+(#CharacterIcon here, #ModuleButtonIcon and #DashboardSectionIcon
+below) for one consistent icon language.
+*/
 QLabel#CharacterIcon {
-    background-color: #1c2530;
+    background-color: transparent;
+    border: 2px solid #4fd1c5;
     border-radius: 48px;
     font-size: 44px;
 }
@@ -126,7 +134,8 @@ QPushButton#ModuleButton:pressed {
 }
 
 QLabel#ModuleButtonIcon {
-    background-color: #1c2530;
+    background-color: transparent;
+    border: 2px solid #4fd1c5;
     border-radius: 24px;
     font-size: 22px;
 }
@@ -140,6 +149,93 @@ QLabel#ModuleButtonName {
 QLabel#ModuleButtonDescription {
     font-size: 12px;
     color: #7a8a99;
+}
+
+QLabel#DashboardClockTime {
+    font-size: 34px;
+    font-weight: 600;
+    color: #d8e0e8;
+    letter-spacing: 1px;
+}
+
+QLabel#DashboardClockDate {
+    font-size: 14px;
+    color: #7a8a99;
+}
+
+QFrame#DashboardCard {
+    background-color: #161b22;
+    border: 1px solid #232b34;
+    border-radius: 12px;
+}
+
+QLabel#DashboardSectionIcon {
+    background-color: transparent;
+    border: 2px solid #4fd1c5;
+    border-radius: 20px;
+    font-size: 18px;
+}
+
+QLabel#DashboardSectionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #d8e0e8;
+}
+
+QLabel#DashboardSectionBody {
+    font-size: 13px;
+    color: #b8c4cf;
+}
+
+QPushButton#AppsLaunchButton {
+    background-color: #161b22;
+    border: 1px solid #4fd1c5;
+    border-radius: 10px;
+    padding: 14px;
+    color: #4fd1c5;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QPushButton#AppsLaunchButton:hover {
+    background-color: #1c2530;
+}
+
+QPushButton#AppsLaunchButton:pressed {
+    background-color: #0d1116;
+}
+
+/*
+QSlider falls back to the native OS/platform look if left unstyled —
+same invisible-on-this-background risk this file's own QCheckBox
+comment already documents. Used today by the Home dashboard's volume
+control (gui/home_dashboard.py).
+*/
+QSlider::groove:horizontal {
+    height: 6px;
+    background-color: #232b34;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    background-color: #4fd1c5;
+    border-radius: 8px;
+}
+
+QSlider::handle:horizontal:disabled {
+    background-color: #45505a;
+}
+
+QSlider::sub-page:horizontal {
+    background-color: #4fd1c5;
+    border-radius: 3px;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background-color: #2c3742;
 }
 
 QProgressBar {

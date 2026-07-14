@@ -5,7 +5,9 @@ gui.character_panel
 M.I.A.'s reactive companion panel — docs/ROADMAP.md milestone 6.2.
 Subscribes to the module-activity events milestone 6.1 added
 ("module.opened"/"menu.shown" from gui/main_window.py's navigation
-methods) plus the existing "notification.created" event, and updates
+methods, plus "home.shown" added in the 2026-07-14 aesthetic pass part 3
+once Home became its own landing screen separate from the Apps grid)
+plus the existing "notification.created" event, and updates
 its displayed icon/line to react to whatever's happening — the "reacts
 to whatever module is active" behavior the v0.6 phase-plan entry calls
 for.
@@ -50,9 +52,11 @@ from core.app_context import AppContext
 
 _DEFAULT_ICON = "\U0001F916"  # robot
 _MENU_ICON = "\U0001F3E0"  # house
+_HOME_ICON = "\U0001F3E1"  # house with garden — distinct from the Apps grid's plain house above
 _NOTIFICATION_ICON = "\U0001F514"  # bell
 
 _MENU_LINE = "What should we work on?"
+_HOME_LINE = "Welcome home."
 
 _IDLE_LINES = [
     "Just keeping watch.",
@@ -116,12 +120,12 @@ class CharacterPanel(QFrame):
         # cascade (see gui/styles.py's module docstring); a widget-level
         # setStyleSheet() call breaks that cascade for itself and its
         # children.
-        self._icon_label = QLabel(_DEFAULT_ICON)
+        self._icon_label = QLabel(_HOME_ICON)
         self._icon_label.setObjectName("CharacterIcon")
         self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._icon_label.setFixedSize(96, 96)
 
-        self._text_label = QLabel(_MENU_LINE)
+        self._text_label = QLabel(_HOME_LINE)
         self._text_label.setObjectName("CharacterPlaceholderText")
         self._text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._text_label.setWordWrap(True)
@@ -139,6 +143,7 @@ class CharacterPanel(QFrame):
 
         self.context.events.subscribe("module.opened", self._on_module_opened)
         self.context.events.subscribe("menu.shown", self._on_menu_shown)
+        self.context.events.subscribe("home.shown", self._on_home_shown)
         self.context.events.subscribe("notification.created", self._on_notification_created)
 
         self._last_event_at = time.monotonic()
@@ -152,6 +157,7 @@ class CharacterPanel(QFrame):
         self._idle_timer.stop()
         self.context.events.unsubscribe("module.opened", self._on_module_opened)
         self.context.events.unsubscribe("menu.shown", self._on_menu_shown)
+        self.context.events.unsubscribe("home.shown", self._on_home_shown)
         self.context.events.unsubscribe("notification.created", self._on_notification_created)
 
     def _on_module_opened(self, module_id: str) -> None:
@@ -161,6 +167,9 @@ class CharacterPanel(QFrame):
 
     def _on_menu_shown(self, **kwargs) -> None:
         self._apply_reaction(_MENU_ICON, _MENU_LINE)
+
+    def _on_home_shown(self, **kwargs) -> None:
+        self._apply_reaction(_HOME_ICON, _HOME_LINE)
 
     def _on_notification_created(self, notification) -> None:
         self._apply_reaction(_NOTIFICATION_ICON, f'"{notification.title}"')

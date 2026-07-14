@@ -2350,3 +2350,83 @@ longer touches it.
 panel QSS itself, same manual-screenshot-verification convention as
 part 1 — rendered and visually confirmed all 4 themes at the app's real
 1100x700 default window size.
+
+## Aesthetic upgrade, part 3: Home dashboard, Apps folder, icon restyle (2026-07-14)
+
+The user's own follow-up framing after using the app: "after logging in
+the menu should display a dashboard with some info like the systems
+power, the current mission, the time, currently playing song, volume
+control... everything should have more of a bubble outline icon
+look... all of the menu items shown now could be in a separate
+container like an apps folder." Scoped via `AskUserQuestion` first
+(same convention as every other multi-part vision ask this project has
+taken on) rather than guessing at the two pieces with no real backing
+data in this codebase:
+
+- **Volume control**: nothing like this existed anywhere in the
+  codebase, and this dev sandbox has no `amixer`/`pactl`/`wpctl` binary
+  to shell out to either — confirmed the same "blocked, not just
+  untested" way as 11.5's nmap/hashcat. User chose: build it for real
+  (targeting Pi audio hardware), accept it's unverified here. New
+  `core/volume_manager.py` — same `VolumeBackend` Protocol / concrete-
+  backend split as `core/power_manager.py`, `AmixerVolumeBackend`
+  shelling out to ALSA's `amixer` CLI (no Python audio binding, so it
+  doesn't hit the `libpulse`/`libportaudio2` wall that blocks Media/
+  Voice). `parse_amixer_output()` is a pure function, unit-tested
+  against captured sample `amixer` text without needing the real
+  binary. Flagged in `docs/KNOWN_ISSUES.md` alongside the existing
+  Security Toolkit entry, not silently assumed to work.
+- **"Currently playing song"**: zero real data source (Music is a bare
+  placeholder module, no playback). User chose: omit entirely, same
+  call `modules/dashboard/module.py` already made for the same reason.
+
+**New `gui/home_dashboard.py`** — the screen shown immediately after
+login, not `modules/dashboard/module.py` (that's a different, detailed
+aggregation page reachable from Apps like any other module; this one is
+a glanceable always-visible home screen). Live clock, a Power card
+(`context.power`), a Mission card (first active Mission + objective
+progress, `context.missions`), and a Volume card (slider + mute toggle,
+disabled with a "Not available on this device" note when
+`VolumeManager.is_available()` is `False` — same graceful-degradation
+UI pattern the Power module already uses for "no battery detected").
+All formatting logic (`format_clock_time`/`format_clock_date`/
+`format_power_line`/`format_active_mission_line`/`format_volume_line`)
+is pure and unit-tested (`tests/test_home_dashboard.py`), same split as
+every other module's `format_*` helpers in this codebase.
+
+**The Apps folder**: `gui/main_window.py`'s existing `_build_menu()`
+(the module grid) moved out of being the landing screen — it's
+unchanged code, just no longer the default view. The header's old
+single "⌂ Main Menu" button split into two: "🏠 Home" (new
+`show_home()`, publishes a new `"home.shown"` event) and "▦ Apps"
+(the pre-existing `show_main_menu()`, deliberately left un-renamed so
+its already-working `"menu.shown"` event and
+`gui/character_panel.py`'s existing reaction to it kept working with
+zero changes). `gui/character_panel.py` gained a matching Home
+reaction (`_HOME_ICON`/`_HOME_LINE`, "Welcome home.") and now defaults
+to it on construction, since Home — not the Apps grid — is what's
+actually on screen first now.
+
+**Icon restyle — "bubble outline" look**: presented three concrete
+visual directions via `AskUserQuestion` with ASCII previews (filled
+bubble refined, outlined ring with soft fill, outlined ring with
+transparent center) since this was too ambiguous to build sight-unseen;
+user picked the plain outlined ring. Changed `#ModuleButtonIcon` and
+`#CharacterIcon` from a filled-background circle to a transparent-
+center circle with a colored ring border, across all 4 themes
+(`gui/styles.py` + `gui/theme_manager.py`), plus matching new
+`#DashboardSectionIcon` badges for the three Home cards — one visual
+language reused everywhere an icon badge appears now, not three
+independent looks. Also styled `QSlider` for the first time in this
+codebase (groove/handle/disabled state per theme) — left unstyled, it
+would have fallen back to the native OS look, the same invisible-on-
+this-background risk `gui/styles.py`'s own `QCheckBox` comment already
+warned about for a different widget.
+
+968 tests passing (23 new: `tests/test_volume_manager.py`,
+`tests/test_home_dashboard.py`). Rendered and visually verified all 4
+themes at the real 1100x700 default window size, both the new Home
+screen and the Apps grid, with a real seeded active Mission and real
+`psutil` battery data (this WSL dev sandbox reports a real "100% —
+Plugged in" desktop-style battery status) to confirm the cards render
+real data, not just their empty-state fallback text.

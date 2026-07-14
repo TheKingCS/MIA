@@ -2,14 +2,19 @@
 gui.main_window
 ================
 
-The main M.I.A. shell: header bar, module menu grid, reserved character
-panel, and a stacked view area that swaps between the menu and an open
-module's widget.
+The main M.I.A. shell: header bar, a stacked view area, and a reserved
+character panel. The stacked area swaps between three kinds of screen:
+the post-login Home dashboard (`gui/home_dashboard.py`, the default
+landing view), the Apps grid (`_build_menu()` — every discovered
+module, moved out of being the landing view itself as of the 2026-07-14
+aesthetic pass part 3, see docs/ROADMAP.md), and whichever module's
+widget is currently open.
 
 This is meant to feel like the "desktop" of M.I.A.'s operating
-environment, not a single-purpose app window — hence "Main Menu" rather
-than a typical toolbar, and a persistent side panel reserved for the
-character rather than a modal dialog.
+environment, not a single-purpose app window — hence separate "Home"
+and "Apps" destinations rather than a single flat menu, and a
+persistent side panel reserved for the character rather than a modal
+dialog.
 """
 
 from __future__ import annotations
@@ -38,6 +43,7 @@ from core.logger import get_logger
 from core.module_manager import ModuleManager
 from gui.character_panel import CharacterPanel
 from gui.easter_egg import EasterEggDialog
+from gui.home_dashboard import HomeDashboard
 from gui.notification_center import NotificationCenterDialog
 from gui.notification_toast import NotificationToast
 from gui.search_dialog import SearchDialog
@@ -213,6 +219,7 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("files.browse_path_requested", self._on_files_browse_path_requested)
         if self._character_panel is not None:
             self._character_panel.unsubscribe()
+        self._home_widget.unsubscribe()
         super().closeEvent(event)
 
     def _setup_kiosk_exit_shortcut(self) -> None:
@@ -276,6 +283,12 @@ class MainWindow(QMainWindow):
         body_layout.setSpacing(20)
 
         self._stack = QStackedWidget()
+        # Home is added first, so it's the QStackedWidget's default
+        # currentWidget() — the post-login landing screen — with no
+        # extra setCurrentWidget() call needed here.
+        self._home_widget = HomeDashboard(self.context)
+        self._home_widget.open_apps_requested.connect(self.show_main_menu)
+        self._stack.addWidget(self._home_widget)
         self._menu_widget = self._build_menu()
         self._stack.addWidget(self._menu_widget)
         body_layout.addWidget(self._stack, stretch=3)
@@ -324,9 +337,21 @@ class MainWindow(QMainWindow):
         self._back_button.clicked.connect(self.go_back)
         self._back_button.setEnabled(False)
 
-        self._home_button = QPushButton("\u2302 Main Menu")
+        self._home_button = QPushButton("\U0001F3E0 Home")
         self._home_button.setObjectName("HeaderButton")
-        self._home_button.clicked.connect(self.show_main_menu)
+        self._home_button.clicked.connect(self.show_home)
+
+        # "Apps" \u2014 2026-07-14 aesthetic pass part 3: the module grid
+        # itself (_build_menu()) moved out of being the landing screen
+        # into its own destination, separate from the new Home
+        # dashboard above. Still calls the pre-existing show_main_menu()
+        # (unrenamed \u2014 it already meant exactly "show the module grid,"
+        # just under a name that predates Home existing) so its
+        # published "menu.shown" event and gui/character_panel.py's
+        # existing reaction to it both keep working unchanged.
+        self._apps_button = QPushButton("\u25A6 Apps")
+        self._apps_button.setObjectName("HeaderButton")
+        self._apps_button.clicked.connect(self.show_main_menu)
 
         self._switch_user_button = QPushButton("\u21C4 Switch User")
         self._switch_user_button.setObjectName("HeaderButton")
@@ -342,6 +367,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self._back_button)
         layout.addWidget(self._home_button)
+        layout.addWidget(self._apps_button)
         layout.addWidget(self._switch_user_button)
         layout.addWidget(self._search_button)
         layout.addWidget(self._notification_button)
@@ -392,10 +418,22 @@ class MainWindow(QMainWindow):
         # without MainWindow needing to know who's listening.
         self.context.events.publish("module.opened", module_id=module_id)
 
+    def show_home(self) -> None:
+        """
+        Go to the post-login Home dashboard. This clears history rather
+        than pushing onto it — Home is a reset point, not a step back,
+        same reasoning as show_main_menu() below.
+        """
+        self._history.clear()
+        self._back_button.setEnabled(False)
+        self._stack.setCurrentWidget(self._home_widget)
+        self.statusBar().showMessage("M.I.A. core online.")
+        self.context.events.publish("home.shown")
+
     def show_main_menu(self) -> None:
         """
-        Go "home" to the main menu grid. This clears history rather than
-        pushing onto it — Main Menu is a reset point, not a step back.
+        Go to the Apps grid. This clears history rather than pushing
+        onto it — Apps is a reset point, not a step back.
         """
         self._history.clear()
         self._back_button.setEnabled(False)
@@ -420,6 +458,9 @@ class MainWindow(QMainWindow):
         event (same events open_module()/show_main_menu() publish),
         so a subscriber never needs its own copy of this widget lookup.
         """
+        if widget is self._home_widget:
+            self.context.events.publish("home.shown")
+            return
         if widget is self._menu_widget:
             self.context.events.publish("menu.shown")
             return

@@ -58,6 +58,7 @@ from core.system_health import format_system_health, read_system_health
 from core.task_manager import TaskManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.voice_manager import VoiceManager
+from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from gui.lock_screen import LockScreen
 from gui.main_window import MainWindow
@@ -119,6 +120,7 @@ class MIAApplication:
         self.context.voice = VoiceManager(self.context)
         self.context.waypoints = WaypointManager(self.context)
         self.context.power = PowerManager(self.context)
+        self.context.volume = VolumeManager(self.context)
         self.context.devices = DeviceFramework(self.context)
         self.context.scripts = ScriptLibraryManager(self.context)
         # Trips references waypoints/inventory/journal, so it's

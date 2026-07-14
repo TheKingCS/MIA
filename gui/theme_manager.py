@@ -103,7 +103,8 @@ QFrame#CharacterPanel {
 }
 
 QLabel#CharacterIcon {
-    background-color: #dcdcd6;
+    background-color: transparent;
+    border: 2px solid #1a1a1a;
     border-radius: 48px;
     font-size: 44px;
 }
@@ -124,7 +125,8 @@ QPushButton#ModuleButton:hover {
 }
 
 QLabel#ModuleButtonIcon {
-    background-color: #dcdcd6;
+    background-color: transparent;
+    border: 2px solid #1a1a1a;
     border-radius: 24px;
     font-size: 22px;
 }
@@ -142,6 +144,87 @@ QLabel#ModuleButtonDescription {
 
 QPushButton#ModuleButton:pressed {
     background-color: #d8d8d2;
+}
+
+QLabel#DashboardClockTime {
+    font-size: 34px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: 1px;
+}
+
+QLabel#DashboardClockDate {
+    font-size: 14px;
+    color: #4a4a4a;
+}
+
+QFrame#DashboardCard {
+    background-color: #e6e6e2;
+    border: 1px solid #b8b8b2;
+    border-radius: 12px;
+}
+
+QLabel#DashboardSectionIcon {
+    background-color: transparent;
+    border: 2px solid #1a1a1a;
+    border-radius: 20px;
+    font-size: 18px;
+}
+
+QLabel#DashboardSectionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+QLabel#DashboardSectionBody {
+    font-size: 13px;
+    color: #3a3a34;
+}
+
+QPushButton#AppsLaunchButton {
+    background-color: #e6e6e2;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 14px;
+    color: #1a1a1a;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QPushButton#AppsLaunchButton:hover {
+    background-color: #dcdcd6;
+}
+
+QPushButton#AppsLaunchButton:pressed {
+    background-color: #d8d8d2;
+}
+
+QSlider::groove:horizontal {
+    height: 6px;
+    background-color: #d8d8d2;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+}
+
+QSlider::handle:horizontal:disabled {
+    background-color: #a8a8a2;
+}
+
+QSlider::sub-page:horizontal {
+    background-color: #1a1a1a;
+    border-radius: 3px;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background-color: #b8b8b2;
 }
 
 QProgressBar {
@@ -294,7 +377,8 @@ QFrame#CharacterPanel {
 }
 
 QLabel#CharacterIcon {
-    background-color: #3a2560;
+    background-color: transparent;
+    border: 2px solid #06d6a0;
     border-radius: 48px;
     font-size: 44px;
 }
@@ -317,7 +401,8 @@ QPushButton#ModuleButton:hover {
 }
 
 QLabel#ModuleButtonIcon {
-    background-color: #3a2560;
+    background-color: transparent;
+    border: 2px solid #ff6b6b;
     border-radius: 24px;
     font-size: 22px;
 }
@@ -335,6 +420,87 @@ QLabel#ModuleButtonDescription {
 
 QPushButton#ModuleButton:pressed {
     background-color: #150a26;
+}
+
+QLabel#DashboardClockTime {
+    font-size: 34px;
+    font-weight: 600;
+    color: #f1e9ff;
+    letter-spacing: 1px;
+}
+
+QLabel#DashboardClockDate {
+    font-size: 14px;
+    color: #c9b8e8;
+}
+
+QFrame#DashboardCard {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 12px;
+}
+
+QLabel#DashboardSectionIcon {
+    background-color: transparent;
+    border: 2px solid #ff6b6b;
+    border-radius: 20px;
+    font-size: 18px;
+}
+
+QLabel#DashboardSectionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f1e9ff;
+}
+
+QLabel#DashboardSectionBody {
+    font-size: 13px;
+    color: #c9b8e8;
+}
+
+QPushButton#AppsLaunchButton {
+    background-color: #2a1b47;
+    border: 1px solid #06d6a0;
+    border-radius: 10px;
+    padding: 14px;
+    color: #06d6a0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QPushButton#AppsLaunchButton:hover {
+    background-color: #3a2560;
+}
+
+QPushButton#AppsLaunchButton:pressed {
+    background-color: #150a26;
+}
+
+QSlider::groove:horizontal {
+    height: 6px;
+    background-color: #4a2f78;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    background-color: #06d6a0;
+    border-radius: 8px;
+}
+
+QSlider::handle:horizontal:disabled {
+    background-color: #6a5a88;
+}
+
+QSlider::sub-page:horizontal {
+    background-color: #06d6a0;
+    border-radius: 3px;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background-color: #3a2864;
 }
 
 QProgressBar {
@@ -510,9 +676,9 @@ QFrame#CharacterPanel {
 }
 
 QLabel#CharacterIcon {
-    background-color: #f0f0f0;
+    background-color: transparent;
     border-radius: 48px;
-    border: 1px solid #000000;
+    border: 2px solid #000000;
     font-size: 44px;
 }
 
@@ -550,9 +716,9 @@ QPushButton#ModuleButton:hover {
 }
 
 QLabel#ModuleButtonIcon {
-    background-color: #f0f0f0;
+    background-color: transparent;
     border-radius: 24px;
-    border: 1px solid #000000;
+    border: 2px solid #000000;
     font-size: 22px;
 }
 
@@ -570,6 +736,85 @@ QLabel#ModuleButtonDescription {
 QPushButton#ModuleButton:pressed {
     background-color: #444444;
     color: #ffffff;
+}
+
+QLabel#DashboardClockTime {
+    font-size: 34px;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 1px;
+}
+
+QLabel#DashboardClockDate {
+    font-size: 14px;
+    color: #444444;
+}
+
+QFrame#DashboardCard {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+}
+
+QLabel#DashboardSectionIcon {
+    background-color: transparent;
+    border: 2px solid #000000;
+    border-radius: 20px;
+    font-size: 18px;
+}
+
+QLabel#DashboardSectionTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000000;
+}
+
+QLabel#DashboardSectionBody {
+    font-size: 13px;
+    color: #444444;
+}
+
+QPushButton#AppsLaunchButton {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    padding: 14px;
+    color: #000000;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+QPushButton#AppsLaunchButton:hover {
+    background-color: #f0f0f0;
+}
+
+QPushButton#AppsLaunchButton:pressed {
+    background-color: #444444;
+    color: #ffffff;
+}
+
+QSlider::groove:horizontal {
+    height: 6px;
+    background-color: #cccccc;
+    border: 1px solid #000000;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    background-color: #000000;
+    border-radius: 8px;
+}
+
+QSlider::handle:horizontal:disabled {
+    background-color: #999999;
+}
+
+QSlider::sub-page:horizontal {
+    background-color: #000000;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background-color: #cccccc;
 }
 
 QProgressBar {

@@ -26,6 +26,25 @@ any environment with these tools installed and root available) —
 nothing about the *design* is blocked, only this dev sandbox's ability
 to verify it.
 
+## Open: Home dashboard's volume control unverified on real audio hardware (2026-07-14 aesthetic pass part 3)
+
+`core/volume_manager.py` shells out to ALSA's `amixer` CLI (no Python
+audio binding, same "avoid the libpulse/libportaudio2 wall" reasoning
+as everything else Media/Voice-adjacent in this project). This dev
+sandbox has **no `amixer` binary at all** (confirmed via `which
+amixer`, same "confirmed blocked, not just untested" situation as the
+Security Toolkit entry above) — `VolumeManager.is_available()` correctly
+reports `False` here, and `gui/home_dashboard.py`'s volume slider
+degrades to disabled + a "Not available on this device" note, which is
+as far as this environment can verify the feature. `parse_amixer_output()`'s
+text-parsing logic is unit-tested against captured sample output
+(`tests/test_volume_manager.py`), but the real `amixer get/set Master`
+round-trip against actual audio hardware has never run.
+
+Re-test once M.I.A. runs on real Pi 5 hardware with `alsa-utils`
+installed (ships on a standard Raspberry Pi OS image) — nothing about
+the design is blocked, only this dev sandbox's ability to verify it.
+
 ## Open: AI HAT+ 2 inference path unconfirmed (docs/ROADMAP.md milestone 14)
 
 `core/llm_manager.py` talks to Ollama's standard HTTP API

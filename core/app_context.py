@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from core.task_manager import TaskManager
     from core.trip_manager import TripManager
     from core.voice_manager import VoiceManager
+    from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
 
 
@@ -90,6 +91,7 @@ class AppContext:
     tasks: Optional["TaskManager"] = field(default=None, repr=False)
     memories: Optional["MemoryManager"] = field(default=None, repr=False)
     missions: Optional["MissionManager"] = field(default=None, repr=False)
+    volume: Optional["VolumeManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.
