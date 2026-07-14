@@ -1667,3 +1667,51 @@ Journal-entry/photo exported through a fake docked `BlockDevice`, then
 imported into a completely separate simulated Home instance — confirmed
 every record and the photo file arrive correctly, and re-importing the
 same bundle a second time adds nothing further (no duplication).
+
+## v0.16 — Project Manager (v1.0+ bucket, zero-hardware slice)
+
+The next v1.0+-bucket slice buildable with zero real hardware (same
+rationale as Activity Log/Navigation/Field Kit/Expedition Mode before
+it) — the "Project Manager" tool listed under Toolbox in this doc's
+"Top-level module sections" table. Two-level CRUD, deliberately the
+same shape as `modules/expeditions/module.py`: `core/project_manager.py`
+(`Project`: name/status — fixed vocabulary `PROJECT_STATUSES` =
+Planning/Active/On Hold/Complete, same pattern as `Trip.activity_type`
+— /due_date/description) holds multiple `core/task_manager.py` `Task`
+records (title/done/due_date/notes). Deleting a Project unlinks (does
+not cascade-delete) its Tasks, same non-destructive bias as
+Expedition/Trip. Lives as a new `ProjectTool` (`modules/toolbox/tools/
+project_tool.py`) inside the existing Toolbox module rather than a new
+top-level module — auto-discovered with a one-line addition to
+`ToolboxModule._tools`, no registry changes needed elsewhere.
+
+Assistant-connected from the start, following this project's now-
+established conservative-first-pass convention (read + add only, no
+delete/update — see 5.12's Expedition Mode batch for the same
+approach): `add_project`, `list_projects`, `add_task`, `list_tasks`.
+Registry grows 39 -> 43. `tests/live_model_check.py` extended with a
+seeded Project/Task fixture and 5 new golden-set cases (one per new
+tool, plus a false-positive check that ordinary use of the word
+"project" — "This project is taking forever" — doesn't gate anything
+open, the same "trip"/"event" false-positive pattern already pinned
+elsewhere). Passed **54/54 on two independent full runs**.
+
+**Found and immediately fixed a real data-pollution slip while
+smoke-testing**: an ad hoc verification script (checking the real
+Assistant handler round-trip through `AssistantModule`) isolated
+`config_manager_module._CONFIG_FILE` but forgot `project_manager_module`/
+`task_manager_module`'s own `_DATA_DIR`/`_PROJECTS_FILE`/`_TASKS_FILE` —
+the exact gotcha this project has hit before (see the memory notes on
+scratch-script data isolation), repeated on a brand-new pair of
+managers. Caught immediately by checking `data/` for stray files after
+the smoke test and confirmed via `git log`/`git check-ignore` that the
+two leaked files had never been tracked and contained nothing but the
+test's own "Kitchen Remodel"/"Pick tile" fixture data before deleting
+them outright.
+
+Verified with a real headless-Qt smoke test through the actual
+`ProjectTool` UI (add project, select it, add a task, toggle it done —
+all round-tripping through the real managers, not mocks) and a separate
+full-app-boot + `ModuleManager.discover()` check confirming `ProjectTool`
+shows up under Toolbox with zero registry edits, exactly as
+`core/module_manager.py`'s documented auto-discovery behavior promises.

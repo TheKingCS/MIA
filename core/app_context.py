@@ -44,9 +44,11 @@ if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
+    from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
     from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
+    from core.task_manager import TaskManager
     from core.trip_manager import TripManager
     from core.voice_manager import VoiceManager
     from core.waypoint_manager import WaypointManager
@@ -82,6 +84,8 @@ class AppContext:
     scripts: Optional["ScriptLibraryManager"] = field(default=None, repr=False)
     expeditions: Optional["ExpeditionManager"] = field(default=None, repr=False)
     trips: Optional["TripManager"] = field(default=None, repr=False)
+    projects: Optional["ProjectManager"] = field(default=None, repr=False)
+    tasks: Optional["TaskManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

@@ -46,7 +46,9 @@ import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
+import core.task_manager as task_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 
@@ -76,6 +78,10 @@ component_manager_module._DATA_DIR = _TEMP_DATA_DIR
 component_manager_module._COMPONENTS_FILE = _TEMP_DATA_DIR / "components.json"
 script_library_manager_module._DATA_DIR = _TEMP_DATA_DIR
 script_library_manager_module._SCRIPTS_FILE = _TEMP_DATA_DIR / "scripts.json"
+project_manager_module._DATA_DIR = _TEMP_DATA_DIR
+project_manager_module._PROJECTS_FILE = _TEMP_DATA_DIR / "projects.json"
+task_manager_module._DATA_DIR = _TEMP_DATA_DIR
+task_manager_module._TASKS_FILE = _TEMP_DATA_DIR / "tasks.json"
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
@@ -93,8 +99,10 @@ from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.module_manager import ModuleManager
 from core.profile_manager import ProfileManager
+from core.project_manager import ProjectManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
+from core.task_manager import TaskManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 from modules.assistant.module import build_chat_request
@@ -190,6 +198,16 @@ GOLDEN_CASES = [
         "Scan 10.0.0.1 for open ports",
         "scan_ports",
     ),
+    # --- milestone: Project Manager (Projects, Tasks) ---
+    ("add project", "Start a new project called Kitchen Remodel", "add_project"),
+    ("list projects", "What projects do I have?", "list_projects"),
+    (
+        "add task, not a generic note",
+        "Add a task called Buy fuse box to my Garage Rewire project",
+        "add_task",
+    ),
+    ("list tasks", "What tasks do I have?", "list_tasks"),
+    ("false-positive sanity: ordinary use of the word 'project'", "This project is taking forever", None),
 ]
 
 
@@ -221,6 +239,8 @@ def _build_context() -> AppContext:
     context.components = ComponentManager(context)
     context.scripts = ScriptLibraryManager(context)
     context.profiles = ProfileManager(context)
+    context.projects = ProjectManager(context)
+    context.tasks = TaskManager(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
     # over lsblk/psutil with no JSON file of their own, so no isolation
     # is needed the way every other manager above requires.
@@ -252,6 +272,8 @@ def _seed_fixtures(context: AppContext) -> None:
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
     context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
     context.profiles.create_profile(name="Zac", make_active=True)
+    project = context.projects.add_project(name="Garage Rewire", status="Active", due_date="2026-08-14")
+    context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
 
 
 def main() -> int:

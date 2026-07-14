@@ -24,7 +24,9 @@ import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
+import core.task_manager as task_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 from core.alarm_manager import AlarmManager
@@ -38,7 +40,9 @@ from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.profile_manager import ProfileManager
+from core.project_manager import ProjectManager
 from core.script_library_manager import ScriptLibraryManager
+from core.task_manager import TaskManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 
@@ -70,6 +74,10 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(component_manager_module, "_COMPONENTS_FILE", data_dir / "components.json")
     monkeypatch.setattr(script_library_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(script_library_manager_module, "_SCRIPTS_FILE", data_dir / "scripts.json")
+    monkeypatch.setattr(project_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(project_manager_module, "_PROJECTS_FILE", data_dir / "projects.json")
+    monkeypatch.setattr(task_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(task_manager_module, "_TASKS_FILE", data_dir / "tasks.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -83,6 +91,8 @@ def context(tmp_path, monkeypatch):
     ctx.components = ComponentManager(ctx)
     ctx.scripts = ScriptLibraryManager(ctx)
     ctx.profiles = ProfileManager(ctx)
+    ctx.projects = ProjectManager(ctx)
+    ctx.tasks = TaskManager(ctx)
     return ctx
 
 
@@ -871,3 +881,88 @@ def test_scan_ports_reports_resolution_error(context, monkeypatch):
     )
     result = MIAApplication._action_scan_ports(context, {"host": "bogus.invalid"})
     assert "could not resolve" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Project Manager (Projects, Tasks)
+# ----------------------------------------------------------------------
+
+def test_add_project_requires_a_name(context):
+    result = MIAApplication._action_add_project(context, {})
+    assert "name" in result.lower()
+    assert context.projects.all_projects() == []
+
+
+def test_add_project_creates_project(context):
+    result = MIAApplication._action_add_project(context, {"name": "Garage Rewire", "status": "Active"})
+    assert "Garage Rewire" in result
+    projects = context.projects.all_projects()
+    assert len(projects) == 1
+    assert projects[0].status == "Active"
+
+
+def test_add_project_unrecognized_status_falls_back_to_planning(context):
+    MIAApplication._action_add_project(context, {"name": "X", "status": "Bogus"})
+    assert context.projects.all_projects()[0].status == "Planning"
+
+
+def test_list_projects_empty(context):
+    assert "no projects" in MIAApplication._action_list_projects(context, {}).lower()
+
+
+def test_list_projects_returns_all(context):
+    context.projects.add_project(name="Garage Rewire", status="Active", due_date="2026-08-14")
+    result = MIAApplication._action_list_projects(context, {})
+    assert "Garage Rewire" in result and "Active" in result and "2026-08-14" in result
+
+
+def test_add_task_requires_a_title(context):
+    context.projects.add_project(name="Garage Rewire")
+    result = MIAApplication._action_add_task(context, {"project_name": "Garage Rewire"})
+    assert "title" in result.lower()
+    assert context.tasks.tasks_for_project(context.projects.all_projects()[0].project_id) == []
+
+
+def test_add_task_unknown_project_does_not_create_anything(context):
+    result = MIAApplication._action_add_task(context, {"project_name": "Nonexistent", "title": "Buy fuse box"})
+    assert "nonexistent" in result.lower()
+
+
+def test_add_task_creates_task_under_project(context):
+    project = context.projects.add_project(name="Garage Rewire")
+    result = MIAApplication._action_add_task(
+        context, {"project_name": "garage rewire", "title": "Buy fuse box", "due_date": "2026-08-10"}
+    )
+    assert "Buy fuse box" in result and "Garage Rewire" in result
+    tasks = context.tasks.tasks_for_project(project.project_id)
+    assert len(tasks) == 1
+    assert tasks[0].due_date == "2026-08-10"
+
+
+def test_list_tasks_empty(context):
+    assert "no tasks" in MIAApplication._action_list_tasks(context, {}).lower()
+
+
+def test_list_tasks_unknown_project_reports_not_found(context):
+    result = MIAApplication._action_list_tasks(context, {"project_name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_list_tasks_filtered_by_project(context):
+    project_a = context.projects.add_project(name="Garage Rewire")
+    project_b = context.projects.add_project(name="Other Project")
+    context.tasks.add_task(project_id=project_a.project_id, title="Buy fuse box")
+    context.tasks.add_task(project_id=project_b.project_id, title="Unrelated task")
+
+    result = MIAApplication._action_list_tasks(context, {"project_name": "Garage Rewire"})
+    assert "Buy fuse box" in result and "Unrelated task" not in result
+
+
+def test_list_tasks_all_projects_when_unfiltered(context):
+    project_a = context.projects.add_project(name="Garage Rewire")
+    project_b = context.projects.add_project(name="Other Project")
+    context.tasks.add_task(project_id=project_a.project_id, title="Buy fuse box")
+    context.tasks.add_task(project_id=project_b.project_id, title="Unrelated task")
+
+    result = MIAApplication._action_list_tasks(context, {})
+    assert "Buy fuse box" in result and "Unrelated task" in result

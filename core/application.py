@@ -47,11 +47,13 @@ from core.password_strength import assess_password
 from core.port_scanner import scan_ports
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
+from core.project_manager import PROJECT_STATUSES, ProjectManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.subnet_calculator import calculate_subnet
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
+from core.task_manager import TaskManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.voice_manager import VoiceManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -121,6 +123,8 @@ class MIAApplication:
         # constructed after all three are already on the context.
         self.context.expeditions = ExpeditionManager(self.context)
         self.context.trips = TripManager(self.context)
+        self.context.projects = ProjectManager(self.context)
+        self.context.tasks = TaskManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -840,6 +844,65 @@ class MIAApplication:
             handler=self._action_scan_ports,
             trigger_phrases=("scan this host", "scan for open ports", "port scan", "what ports are open", "scan ports"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_project",
+            description="Start a new Project (a container for tasks) in M.I.A.'s Project Manager tool.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name for the project."},
+                    "status": {
+                        "type": "string",
+                        "description": "Optional status: Planning, Active, On Hold, or Complete. Defaults to Planning.",
+                    },
+                    "due_date": {"type": "string", "description": "Optional due date, YYYY-MM-DD."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_project,
+            trigger_phrases=("add a project", "new project", "start a project", "create a project"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_projects",
+            description="List the user's Projects in M.I.A.'s Project Manager tool.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_projects,
+            trigger_phrases=("list my projects", "list projects", "what projects", "show my projects"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_task",
+            description="Add a new Task under an existing Project in M.I.A.'s Project Manager tool.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "description": "The name of the Project this task belongs to (must already exist).",
+                    },
+                    "title": {"type": "string", "description": "A short title for the task."},
+                    "due_date": {"type": "string", "description": "Optional due date, YYYY-MM-DD."},
+                },
+                "required": ["project_name", "title"],
+            },
+            handler=self._action_add_task,
+            trigger_phrases=("add a task", "new task", "add to my tasks", "create a task"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_tasks",
+            description="List the user's Tasks in M.I.A., optionally filtered to one Project by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "description": "Optional Project name to filter by. Leave empty for all tasks.",
+                    },
+                },
+                "required": [],
+            },
+            handler=self._action_list_tasks,
+            trigger_phrases=("list my tasks", "list tasks", "what tasks", "show my tasks"),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1303,6 +1366,66 @@ class MIAApplication:
             return f"No open ports found among the common ports checked ({ports_checked})."
         ports_open = ", ".join(str(p) for p in result.open_ports)
         return f"Open ports on {host}: {ports_open} (checked {ports_checked})."
+
+    @staticmethod
+    def _action_add_project(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to start a project."
+        status = str(arguments.get("status", "") or "").strip()
+        if status not in PROJECT_STATUSES:
+            status = "Planning"
+        due_date = str(arguments.get("due_date", "") or "").strip()
+        project = context.projects.add_project(name=name, status=status, due_date=due_date)
+        return f"Project '{project.name}' created."
+
+    @staticmethod
+    def _action_list_projects(context: AppContext, arguments: dict) -> str:
+        projects = context.projects.all_projects()
+        if not projects:
+            return "You have no projects yet."
+        lines = []
+        for project in projects:
+            due_part = f" (due {project.due_date})" if project.due_date else ""
+            lines.append(f"- '{project.name}' [{project.status}]{due_part}")
+        return "Your projects:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_task(context: AppContext, arguments: dict) -> str:
+        project_name = str(arguments.get("project_name", "")).strip().lower()
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a title to add a task."
+        project = next(
+            (p for p in context.projects.all_projects() if p.name.lower() == project_name), None
+        )
+        if project is None:
+            return f"I don't have a project called '{arguments.get('project_name', '')}'."
+        due_date = str(arguments.get("due_date", "") or "").strip()
+        task = context.tasks.add_task(project_id=project.project_id, title=title, due_date=due_date)
+        return f"Task '{task.title}' added under project '{project.name}'."
+
+    @staticmethod
+    def _action_list_tasks(context: AppContext, arguments: dict) -> str:
+        project_name = str(arguments.get("project_name", "") or "").strip().lower()
+        if project_name:
+            project = next(
+                (p for p in context.projects.all_projects() if p.name.lower() == project_name), None
+            )
+            if project is None:
+                return f"I don't have a project called '{arguments.get('project_name', '')}'."
+            tasks = context.tasks.tasks_for_project(project.project_id)
+        else:
+            tasks = [t for p in context.projects.all_projects() for t in context.tasks.tasks_for_project(p.project_id)]
+
+        if not tasks:
+            return "No matching tasks found." if project_name else "You have no tasks yet."
+        lines = []
+        for task in tasks:
+            mark = "[x]" if task.done else "[ ]"
+            due_part = f" (due {task.due_date})" if task.due_date else ""
+            lines.append(f"- {mark} '{task.title}'{due_part}")
+        return "Your tasks:\n" + "\n".join(lines)
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

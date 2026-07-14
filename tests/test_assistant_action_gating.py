@@ -284,3 +284,33 @@ def test_calculate_subnet_phrasing_gates_open():
 def test_scan_ports_phrasing_gates_open():
     keywords = _real_gating_keywords()
     assert looks_like_action_request("Scan 192.168.1.1 for open ports", keywords) is True
+
+
+# ----------------------------------------------------------------------
+# Project Manager tool: Projects, Tasks
+# ----------------------------------------------------------------------
+
+def test_add_project_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Start a new project called Garage Rewire", keywords) is True
+
+
+def test_list_projects_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What projects do I have?", keywords) is True
+
+
+def test_add_task_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add a task called Buy fuse box to my Garage Rewire project", keywords) is True
+
+
+def test_list_tasks_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What tasks do I have?", keywords) is True
+
+
+def test_ordinary_project_mention_does_not_gate_open():
+    """False-positive check: 'project' as an ordinary word, not a request to act on a Project record."""
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("This project is taking forever", keywords) is False
