@@ -4,7 +4,7 @@ modules.field_kit.script_worker
 
 Runs a Field Kit script (docs/ROADMAP.md milestone 11.4) off the GUI
 thread, streaming its output back line by line — same scoped
-`QThread`-per-run pattern as `modules/assistant/llm_worker.py`'s
+`QThread`-per-run pattern as `core/chat_worker.py`'s
 `ChatWorker`: a script can run indefinitely (a network diagnostic loop,
 a long-running build), and reading its output synchronously on the GUI
 thread would freeze the whole app for as long as it runs.

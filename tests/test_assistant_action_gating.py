@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from core.app_context import AppContext
 from core.application import MIAApplication
+from core.assistant_chat import looks_like_action_request
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
-from modules.assistant.module import looks_like_action_request
 
 
 def _real_gating_keywords() -> list[str]:

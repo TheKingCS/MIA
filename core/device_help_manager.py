@@ -5,9 +5,22 @@ core.device_help_manager
 Retrieval-grounded "what does this do / how do I use this device"
 answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1
 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in
-docs/ROADMAP.md: read-only retrieval over `docs/*.md` and module
-metadata, never a file write or code execution. Do not grow this into
-stage 2 (propose-a-patch) without a deliberate, separate decision.
+docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and
+module metadata, never a file write or code execution. Do not grow
+this into stage 2 (propose-a-patch) without a deliberate, separate
+decision.
+
+**2026-07-14 aesthetic pass part 4 (docs/ROADMAP.md): this used to
+index `docs/*.md` directly** — M.I.A.'s own *developer* documentation
+(architecture notes, module-writing spec, roadmap phase status). That
+was a real, user-reported bug, not just a missed opportunity: a real
+end user asking "how do I plan a trip" got back chunks about internal
+module folder structure, not actual usage help, because that dev-docs
+corpus is all this had to draw on. `docs/user_help/*.md` is a separate,
+genuinely end-user-facing corpus (plain language, one file per feature
+area) written specifically to be grounded on here — `docs/*.md` itself
+is no longer indexed at all. Keep any future "how do I..." content
+additions in `docs/user_help/`, not `docs/`.
 
 Retrieval is deliberately simple keyword overlap, not embeddings/vector
 search — the whole corpus here is a handful of markdown docs (a few
@@ -75,7 +88,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DOCS_DIR = _PROJECT_ROOT / "docs"
+_DOCS_DIR = _PROJECT_ROOT / "docs" / "user_help"
 
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
@@ -98,7 +111,8 @@ _SYSTEM_PREAMBLE = (
     "You are M.I.A.'s built-in assistant. Answer the user's question using "
     "ONLY the reference material below. If the answer isn't contained in "
     "it, say you don't know rather than guessing — do not use outside "
-    "knowledge."
+    "knowledge. Answer in plain conversational text — no markdown links, "
+    "citations, or bracketed source names."
 )
 # A longer version of this preamble (explicitly describing the material as
 # possibly including "reference library... encyclopedia articles, repair/
@@ -239,7 +253,7 @@ class DeviceHelpManager:
                 except OSError as exc:
                     log.warning("Could not read doc %s: %s", doc_path, exc)
                     continue
-                chunks.extend(split_into_chunks(text, source=f"docs/{doc_path.name}"))
+                chunks.extend(split_into_chunks(text, source=f"user_help/{doc_path.name}"))
         self._doc_chunks = chunks
 
     def _module_chunks(self) -> list[HelpChunk]:

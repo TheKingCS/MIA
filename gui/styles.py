@@ -336,4 +336,24 @@ QPlainTextEdit#ChatLog {
     padding: 10px;
     color: #d8e0e8;
 }
+
+QPushButton#SuggestionButton {
+    background-color: transparent;
+    border: 1px solid #232b34;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #b8c4cf;
+    font-size: 12px;
+    text-align: left;
+}
+
+QPushButton#SuggestionButton:hover {
+    background-color: #1c2530;
+    border: 1px solid #4fd1c5;
+    color: #d8e0e8;
+}
+
+QPushButton#SuggestionButton:pressed {
+    background-color: #0d1116;
+}
 """

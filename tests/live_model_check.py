@@ -91,6 +91,7 @@ from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.application import MIAApplication
 from core.assistant_actions import AssistantActionRegistry
+from core.assistant_chat import build_chat_request
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
@@ -110,7 +111,6 @@ from core.script_library_manager import ScriptLibraryManager
 from core.task_manager import TaskManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
-from modules.assistant.module import build_chat_request
 
 # (description, prompt, expected)
 #   expected == None      -> must NOT call any tool

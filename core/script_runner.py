@@ -14,7 +14,7 @@ live handle, clean up the temp file when the caller says it's done) —
 not the streaming-output-into-a-QThread half, which is a GUI-facing
 concern living in modules/field_kit/script_worker.py (same split as
 core/llm_manager.py's chat_with_tools() vs.
-modules/assistant/llm_worker.py's ChatWorker). Keeping this function
+core/chat_worker.py's ChatWorker). Keeping this function
 plain and Qt-free is also what makes it real-testable: unlike this
 milestone's flashing-engine/serial-monitor siblings, a script's
 execution needs no special hardware or permissions this dev sandbox

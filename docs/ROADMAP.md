@@ -2430,3 +2430,92 @@ screen and the Apps grid, with a real seeded active Mission and real
 `psutil` battery data (this WSL dev sandbox reports a real "100% —
 Plugged in" desktop-style battery status) to confirm the cards render
 real data, not just their empty-state fallback text.
+
+## Aesthetic upgrade, part 4: Assistant moves into the character panel (2026-07-14)
+
+Follow-up to parts 1-3, after the user actually used the app and gave
+concrete feedback: "the section on the right of the screen with the
+robot icon would be a perfect spot for the Assistant Conversations,"
+the Assistant should recommend questions it's good at answering, and
+"I still feel like the assistant is not very helpful with using the
+program." Scoped via `AskUserQuestion` first (keep both chat surfaces;
+suggestions contextual to the current screen; fix the help-content
+root cause too, not just the UI).
+
+**Refactor first, to respect the app's own layering rule.** `gui/` may
+import `core/` directly but must never import `modules/`
+(CLAUDE.md's one-directional layering) — so before any sidebar chat
+could exist, the pure request-building logic and the two `QThread`
+workers `modules/assistant/module.py` owned had to move to `core/`:
+new `core/assistant_chat.py` (`format_chat_line`/`split_safe_tool_calls`/
+`looks_like_action_request`/`build_chat_request`, pulled out verbatim,
+not reimplemented) and `core/chat_worker.py`/`core/tts_worker.py`
+(same precedent as `core/push_to_talk_trigger.py` already living in
+core/ despite CLAUDE.md's general "no threading in core" note, since
+none of these do any actual widget/rendering work). `modules/assistant/module.py`
+now imports from `core/` instead of owning these directly; its own
+docstring documents the split. Test files renamed/updated to match
+(`tests/test_assistant_module.py` -> `tests/test_assistant_chat.py`).
+
+**Root cause found and fixed for "the assistant isn't very helpful":**
+`core/device_help_manager.py` was grounding every "how do I..." question
+on `docs/*.md` — this project's own *developer* documentation
+(architecture notes, module-writing spec, roadmap phase status). A real
+user asking "how do I plan a trip" got back chunks about internal
+module folder structure, not usage help, because that was the entire
+corpus available. Fixed by writing a genuine end-user-facing help
+corpus, `docs/user_help/*.md` (10 files: getting_started, assistant,
+expeditions, missions, navigation, organizing, field_kit, knowledge,
+home_and_power, settings — plain language, one file per feature area)
+and repointing `_DOCS_DIR` at it; `docs/*.md` itself is no longer
+indexed at all. **Verified against the real running Ollama model, not
+just retrieval-in-isolation**: "How do I plan a trip in this app?" went
+from would-have-been dev-docs noise to a correct, concrete, step-by-step
+answer citing the real Assistant phrasings. Along the way, found and
+fixed a real ranking bug the same live check surfaced: near-identical
+"## Asking the Assistant" boilerplate footers repeated across most of
+the new files out-scored `assistant.md`'s own dedicated overview
+section for the query "what can the assistant help me with," because
+`score_chunk()` weighs heading-word matches double and those footers'
+heading literally contained both query words — fixed by deleting the
+redundant footers (assistant.md is now the one canonical place for
+"what to ask") and retitling assistant.md's own overview heading to
+directly match that phrasing. Also tightened `_SYSTEM_PREAMBLE` to stop
+the model from emitting markdown-link-style citations that would have
+rendered as ugly literal text in a plain `QPlainTextEdit` chat log —
+re-verified against the real model that this didn't regress the
+existing "what does the notes module do" confident-match case (a
+longer preamble broke exactly this case once before, per this file's
+5.6 writeup). Full 67-case golden set (`tests/live_model_check.py`)
+still 67/67 after both changes.
+
+**The sidebar chat itself**: `gui/character_panel.py` now has a
+compact, text-only chat (no mic/TTS — the full `modules/assistant/module.py`
+screen in Apps keeps voice, for a larger, focused session) built on the
+newly-shared `core/assistant_chat.py`/`core/chat_worker.py`, so the two
+surfaces can never silently drift apart in behavior. Above the input
+box, a handful of clickable suggested-prompt buttons change based on
+whatever screen is currently active — new `core/assistant_chat.py`
+functions `suggested_prompts_for_module()`/`MODULE_ID_TO_DOMAINS`/
+`DOMAIN_EXAMPLE_PROMPTS` (a small curated dict, same shape as this
+file's sibling `MODULE_REACTIONS`), keyed off the same "module.opened"/
+"home.shown"/"menu.shown" events the panel's reactive icon already
+subscribed to. **Found a real rendering bug via screenshot, not
+apparent from the code**: refreshing the suggestion buttons via the
+usual `takeAt()` + `deleteLater()` clear-a-layout pattern (already used
+elsewhere in this codebase, e.g. `modules/dashboard/module.py`) left
+the *previous* screen's stale buttons visibly overlapping the new,
+often-shorter list — `deleteLater()` only schedules the widget's actual
+destruction, it doesn't hide it immediately, and `takeAt()` alone only
+detaches it from the *layout*, not from the screen. Fixed by calling
+`hide()` + `setParent(None)` immediately before `deleteLater()`. Worth
+rechecking this exact pattern anywhere else in the codebase that clears
+and repopulates a layout, if a similar ghosting bug ever gets reported.
+
+Verified end-to-end against the real running Ollama server (not just
+mocked): clicked a suggestion button, watched it round-trip through the
+real `ChatWorker`/LLM and post a real reply in the sidebar log, then
+switched to the Missions module and confirmed the suggestions correctly
+changed to Missions-specific prompts. 973 tests passing (10 new in
+`tests/test_assistant_chat.py` for `suggested_prompts_for_module()`).
+Rendered and visually verified all 4 themes.

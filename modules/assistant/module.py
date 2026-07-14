@@ -9,6 +9,17 @@ execution). A chat screen (scrollback + input box) wired to
 Talk" button wired to `AppContext.voice` (core/voice_manager.py) for
 speech in, speech out.
 
+**2026-07-14 aesthetic pass part 4** (docs/ROADMAP.md): the pure
+request-building logic this module used to own directly
+(`format_chat_line`/`split_safe_tool_calls`/`looks_like_action_request`/
+`build_chat_request`) moved to `core/assistant_chat.py`, and the two
+`QThread` workers below moved to `core/chat_worker.py`/`core/tts_worker.py`
+— once `gui/character_panel.py`'s sidebar chat needed the exact same
+logic, it had to live in `core/` rather than here, since `gui/` may
+import `core/` directly but must never import `modules/`
+(CLAUDE.md's one-directional layering). This module still owns the
+full-screen widget/voice/GPIO wiring; only the non-Qt pieces moved.
+
 `_on_send()` first classifies the prompt with `looks_like_action_request()`
 against `AppContext.assistant_actions.gating_keywords()` — the live union
 of every registered action's own `trigger_phrases`
@@ -56,10 +67,9 @@ these are just ordinary app actions a user could already do by hand.
 
 Two blocking operations each get their own scoped `QThread` rather than
 running on the GUI thread:
-  - `context.llm.chat_with_tools()` runs on
-    `modules.assistant.llm_worker.ChatWorker`.
+  - `context.llm.chat_with_tools()` runs on `core.chat_worker.ChatWorker`.
   - `context.voice.synthesize()` + `.play()` run on
-    `modules.assistant.tts_worker.TTSWorker` (playback duration scales
+    `core.tts_worker.TTSWorker` (playback duration scales
     with reply length).
 Speech-to-text (`context.voice.transcribe()`) runs synchronously on the
 GUI thread — Vosk's small model transcribes a short push-to-talk clip
@@ -86,7 +96,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Optional
 
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -98,11 +108,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.llm_manager import ChatReply, ToolCall
+from core.assistant_chat import build_chat_request, format_chat_line, looks_like_action_request, split_safe_tool_calls
+from core.chat_worker import ChatWorker
+from core.llm_manager import ChatReply
 from core.logger import get_logger
 from core.push_to_talk_trigger import PushToTalkTrigger
-from modules.assistant.llm_worker import ChatWorker
-from modules.assistant.tts_worker import TTSWorker
+from core.tts_worker import TTSWorker
 from modules.module_base import ModuleBase
 
 log = get_logger(__name__)
@@ -110,113 +121,6 @@ log = get_logger(__name__)
 _LLM_UNAVAILABLE_STATUS = "Assistant unavailable — is Ollama running?"
 _MIC_UNAVAILABLE_STATUS = "Microphone unavailable."
 _STT_UNAVAILABLE_STATUS = "Speech-to-text unavailable."
-
-# Fallback keyword phrases, used only when looks_like_action_request()
-# is called without an explicit `keywords` argument (e.g. exercising
-# the pure classifier directly in tests/test_assistant_module.py).
-# Production code (_on_send() below) instead passes
-# `AppContext.assistant_actions.gating_keywords()` — the live union of
-# every registered action's own `trigger_phrases`
-# (core/assistant_actions.py), not this static list. Milestone 5.9
-# moved gating phrases onto each action's own registration for exactly
-# this reason: a hand-maintained central tuple like this one silently
-# drifts out of sync once the registry grows past a handful of
-# actions — this fallback exists purely so the classifier stays
-# testable in isolation, not as the real source of truth.
-_ACTION_REQUEST_KEYWORDS = (
-    "open ", "launch ", "go to ", "switch to ", "take me to ",
-    "set an alarm", "set a timer", "add an alarm", "remind me", "wake me up",
-    "add a note", "take a note", "make a note", "write down", "jot down",
-    "add to inventory", "add an inventory item", "inventory item",
-    "recent activity", "activity log", "what have i done", "what have i been doing", "what did i do",
-)
-
-
-def format_chat_line(speaker: str, text: str) -> str:
-    """Pure formatting logic — testable without Qt (see tests/test_assistant_module.py)."""
-    return f"{speaker}: {text}"
-
-
-def split_safe_tool_calls(tool_calls: list[ToolCall], assistant_actions) -> tuple[list[ToolCall], list[ToolCall]]:
-    """
-    Returns (calls_to_execute, calls_skipped). Pure logic (no Qt) —
-    testable directly, see tests/test_assistant_module.py.
-
-    A single tool call executes regardless of whether it's destructive
-    — that's the normal, already-extensively-tested case (every
-    delete_*/adjust_* golden-set case is exactly one call). Only when
-    the model returns **more than one** tool call in the same reply are
-    destructive ones skipped rather than executed.
-
-    Why: found via the 2026-07-14 qwen2.5:7b model-comparison
-    experiment (docs/ROADMAP.md) — asked "How many M3 bolts do I have?"
-    (a pure read question), qwen2.5:7b returned BOTH `list_inventory`
-    AND a spurious `adjust_inventory_quantity` call in the same reply.
-    llama3.2 never did this across this project's entire history of
-    live-model verification, but nothing about this app's design
-    prevents a future/different model from doing it again, and this
-    app was never designed or tested for genuine multi-intent-per-
-    message use (every registered action assumes one atomic operation
-    per user turn). Bundling a destructive call alongside anything else
-    is treated as a sign of model confusion, not a feature request —
-    fail closed on the destructive part, same conservative bias as
-    every delete/adjust handler's own exact-match-or-refuse design.
-    """
-    if len(tool_calls) <= 1:
-        return list(tool_calls), []
-    kept = [tc for tc in tool_calls if not assistant_actions.is_destructive(tc.name)]
-    skipped = [tc for tc in tool_calls if assistant_actions.is_destructive(tc.name)]
-    return kept, skipped
-
-
-def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUEST_KEYWORDS) -> bool:
-    """
-    Drives both halves of the grounding/tool-calling split in
-    `_on_send()` — see this module's docstring for the two real-usage
-    regressions (hallucinated `open_module` call on an info question;
-    grounding noise blocking a real `add_alarm` call) this classifier
-    fixes. Pure keyword matching, same simplicity level as
-    core/device_help_manager.py's retrieval scoring. `keywords` defaults
-    to this module's own fallback list only for standalone testing —
-    see `_ACTION_REQUEST_KEYWORDS`'s docstring for why production code
-    always passes the registry's live keyword set instead.
-    """
-    lowered = f" {text.lower().strip()} "
-    return any(keyword in lowered for keyword in keywords)
-
-
-def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
-    """
-    Decides whether `prompt` looks like an action request and builds
-    the (messages, tools) pair `_on_send()` hands to `ChatWorker` —
-    pulled out as its own function (touches only `context`, no Qt) so
-    `tests/live_model_check.py` (the golden-set live-model regression
-    script, milestone 5.11) exercises this exact decision logic
-    against the real Ollama server, not a hand-copied reimplementation
-    that could quietly drift from what production actually does.
-    """
-    matched_actions = (
-        context.assistant_actions.matching_actions(prompt)
-        if context.assistant_actions is not None
-        else []
-    )
-    is_action_request = bool(matched_actions)
-
-    llm_prompt = prompt
-    if not is_action_request and context.device_help is not None:
-        llm_prompt = context.device_help.build_grounded_prompt(prompt)
-
-    messages = [{"role": "user", "content": llm_prompt}]
-    tools = []
-    if is_action_request and context.assistant_actions is not None:
-        # Domain-scoped, not the full registry — see
-        # core/assistant_actions.py's docstring on why (tool-count
-        # scaling has caused real live-model-only interference bugs;
-        # matching_actions() attaches only the small always-on set plus
-        # whichever domain(s) this prompt's own triggers matched).
-        tools = context.assistant_actions.to_ollama_tools(matched_actions)
-
-    return messages, tools
 
 
 class AssistantModule(ModuleBase):

@@ -299,6 +299,26 @@ QPlainTextEdit#ChatLog {
     padding: 10px;
     color: #1a1a1a;
 }
+
+QPushButton#SuggestionButton {
+    background-color: transparent;
+    border: 1px solid #b8b8b2;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #3a3a34;
+    font-size: 12px;
+    text-align: left;
+}
+
+QPushButton#SuggestionButton:hover {
+    background-color: #dcdcd6;
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+}
+
+QPushButton#SuggestionButton:pressed {
+    background-color: #d8d8d2;
+}
 """
 
 _COLORED_THEME = """
@@ -580,6 +600,26 @@ QPlainTextEdit#ChatLog {
     border-radius: 6px;
     padding: 10px;
     color: #f1e9ff;
+}
+
+QPushButton#SuggestionButton {
+    background-color: transparent;
+    border: 1px solid #4a2f78;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #c9b8e8;
+    font-size: 12px;
+    text-align: left;
+}
+
+QPushButton#SuggestionButton:hover {
+    background-color: #3a2560;
+    border: 1px solid #ff6b6b;
+    color: #f1e9ff;
+}
+
+QPushButton#SuggestionButton:pressed {
+    background-color: #150a26;
 }
 """
 
@@ -889,6 +929,24 @@ QPlainTextEdit#ChatLog {
     border: 2px solid #000000;
     padding: 10px;
     color: #000000;
+}
+
+QPushButton#SuggestionButton {
+    background-color: transparent;
+    border: 1px solid #000000;
+    padding: 6px 10px;
+    color: #000000;
+    font-size: 12px;
+    text-align: left;
+}
+
+QPushButton#SuggestionButton:hover {
+    background-color: #f0f0f0;
+}
+
+QPushButton#SuggestionButton:pressed {
+    background-color: #444444;
+    color: #ffffff;
 }
 """
 

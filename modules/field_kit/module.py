@@ -35,7 +35,7 @@ scripts (`core/script_library_manager.py`), with Add/Edit/Delete (same
 CRUD shape as Notes/Inventory/Waypoints) plus Run/Stop, streaming live
 output via `modules/field_kit/script_worker.py`'s `ScriptWorker`
 (`QThread`, same scoped-worker pattern as
-`modules/assistant/llm_worker.py`'s `ChatWorker` — a script can run
+`core/chat_worker.py`'s `ChatWorker` — a script can run
 indefinitely, so reading its output on the GUI thread would freeze the
 whole app). No sandboxing when a script runs — these are the user's
 own trusted scripts, same stance this project already takes for

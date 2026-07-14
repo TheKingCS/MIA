@@ -1,0 +1,26 @@
+# Navigation, Waypoints, and Maps
+
+## Waypoints
+
+A Waypoint is a named location — a trailhead, a campsite, a water
+source, your home. Every Waypoint has a name, coordinates, and an
+optional category (Campsite, Trailhead, Water Source, Viewpoint, or
+Other) so you can tell them apart at a glance.
+
+## Distance and bearing
+
+Once you've saved two Waypoints, you can get the distance between them
+and the compass bearing to point yourself the right way — useful for
+planning a route or just checking how far something is.
+
+## Sun and moon reference
+
+The Navigation module also shows sunrise/sunset and moon phase
+information — handy for planning when to start a hike or knowing how
+much daylight you have left.
+
+## Maps
+
+The Maps module gives you an offline map view. Trip routes built from
+your Waypoints (see the Expeditions help section) are plotted as a
+schematic route rather than a full tiled basemap.

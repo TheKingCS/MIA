@@ -194,7 +194,7 @@ def test_build_grounded_prompt_falls_back_when_nothing_matches():
 def test_ensure_docs_loaded_reads_markdown_files_from_docs_dir(tmp_path, monkeypatch):
     import core.device_help_manager as device_help_module
 
-    docs_dir = tmp_path / "docs"
+    docs_dir = tmp_path / "user_help"
     docs_dir.mkdir()
     (docs_dir / "example.md").write_text("## Test Heading\nsome content about widgets\n", encoding="utf-8")
 
@@ -203,7 +203,7 @@ def test_ensure_docs_loaded_reads_markdown_files_from_docs_dir(tmp_path, monkeyp
     manager = _make_manager()
     results = manager.retrieve("widgets")
     assert len(results) == 1
-    assert results[0].source == "docs/example.md"
+    assert results[0].source == "user_help/example.md"
     assert results[0].heading == "Test Heading"
 
 

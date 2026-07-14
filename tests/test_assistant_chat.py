@@ -1,25 +1,30 @@
 """
-tests.test_assistant_module
+tests.test_assistant_chat
 =============================
 
-Unit tests for modules.assistant.module's pure logic —
-format_chat_line, looks_like_action_request, and build_chat_request —
-no Qt event loop needed. Same shape as tests/test_notes_module.py's
+Unit tests for core.assistant_chat's pure logic — format_chat_line,
+looks_like_action_request, build_chat_request, and split_safe_tool_calls
+— no Qt event loop needed. Moved here from tests/test_assistant_module.py
+(2026-07-14 aesthetic pass part 4) alongside the functions themselves
+moving from modules/assistant/module.py to core/assistant_chat.py — see
+that module's docstring for why. Same shape as tests/test_notes_module.py's
 format_entry_row test: the widget-building and worker-thread wiring in
-AssistantModule needs a real Qt event loop to exercise meaningfully, so
-that was verified with a manual headless smoke test instead (offscreen
-QPA platform) rather than unit-tested here.
+AssistantModule/the sidebar chat needs a real Qt event loop to exercise
+meaningfully, so that was verified with a manual headless smoke test
+instead (offscreen QPA platform) rather than unit-tested here.
 """
 
 from __future__ import annotations
 
-from core.llm_manager import ToolCall
-from modules.assistant.module import (
+from core.assistant_chat import (
+    DOMAIN_EXAMPLE_PROMPTS,
     build_chat_request,
     format_chat_line,
     looks_like_action_request,
     split_safe_tool_calls,
+    suggested_prompts_for_module,
 )
+from core.llm_manager import ToolCall
 
 
 def test_formats_speaker_and_text():
@@ -37,8 +42,9 @@ def test_formats_assistant_reply():
 # about Honda Civics?" made the model hallucinate a nonexistent
 # module_id and call open_module instead of answering "I don't know" —
 # traced to tools being attached to every message unconditionally, even
-# pure information questions with no relevant action. See this module's
-# docstring and looks_like_action_request()'s docstring.
+# pure information questions with no relevant action. See
+# modules/assistant/module.py's docstring and looks_like_action_request()'s
+# docstring.
 
 def test_honda_civics_question_is_not_an_action_request():
     assert looks_like_action_request("What can you tell me about Honda Civics?") is False
@@ -223,3 +229,39 @@ def test_split_safe_tool_calls_multiple_destructive_calls_all_skipped():
 
     assert kept == []
     assert skipped == calls
+
+
+# ----------------------------------------------------------------------
+# suggested_prompts_for_module
+# ----------------------------------------------------------------------
+
+def test_suggested_prompts_for_home_screen_uses_generic_set():
+    prompts = suggested_prompts_for_module(None)
+    assert prompts
+    assert len(prompts) <= 4
+
+
+def test_suggested_prompts_for_unmapped_module_uses_generic_set():
+    assert suggested_prompts_for_module("music") == suggested_prompts_for_module(None)
+
+
+def test_suggested_prompts_for_single_domain_module():
+    prompts = suggested_prompts_for_module("missions")
+    assert prompts == DOMAIN_EXAMPLE_PROMPTS["missions"]
+
+
+def test_suggested_prompts_for_multi_domain_module_spreads_across_domains():
+    """Toolbox spans 4 domains — the first round should draw one prompt from each, not four from one."""
+    prompts = suggested_prompts_for_module("toolbox")
+    assert len(prompts) == 4
+    assert prompts == [
+        DOMAIN_EXAMPLE_PROMPTS["alarms"][0],
+        DOMAIN_EXAMPLE_PROMPTS["calendar"][0],
+        DOMAIN_EXAMPLE_PROMPTS["inventory"][0],
+        DOMAIN_EXAMPLE_PROMPTS["projects"][0],
+    ]
+
+
+def test_suggested_prompts_never_exceeds_limit_of_four():
+    for module_id in ["missions", "expeditions", "toolbox", "field_kit", None, "some_unknown_module"]:
+        assert len(suggested_prompts_for_module(module_id)) <= 4

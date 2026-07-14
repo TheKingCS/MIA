@@ -1,13 +1,17 @@
 """
-modules.assistant.tts_worker
-==============================
+core.tts_worker
+==================
 
 Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread —
-docs/ROADMAP.md milestone 5.3. Same reasoning as
-modules/assistant/llm_worker.py's `LLMWorker`: `play()`'s `sd.wait()`
-blocks for the full duration of the spoken reply, which scales with
-reply length and would freeze the GUI thread for that whole time
-otherwise. Scoped to this module, same as `LLMWorker`.
+docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`:
+`play()`'s `sd.wait()` blocks for the full duration of the spoken
+reply, which scales with reply length and would freeze the GUI thread
+for that whole time otherwise.
+
+Moved here from `modules/assistant/tts_worker.py` alongside
+`core/chat_worker.py` (2026-07-14 aesthetic pass part 4) — see that
+module's docstring for why both had to move out of `modules/assistant/`
+once `gui/character_panel.py` needed them too.
 """
 
 from __future__ import annotations

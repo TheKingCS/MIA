@@ -7,7 +7,7 @@ milestone 11.5. Scanning even the short COMMON_PORTS default can block
 for several seconds (each closed/firewalled port waits out its own
 timeout), so this is the same scoped `QThread`-per-run pattern as
 `modules/field_kit/script_worker.py`'s `ScriptWorker` and
-`modules/assistant/llm_worker.py`'s `ChatWorker` — a blocking call runs
+`core/chat_worker.py`'s `ChatWorker` — a blocking call runs
 here, never directly in a button's click handler.
 """
 
