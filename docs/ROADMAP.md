@@ -858,6 +858,54 @@ boot never depends on an LLM server being up.
       internal `.save()` call would have hit the same real file).
       `config/config.json` is gitignored/never committed, so the
       already-leaked test artifact was cleaned up locally, not via git.
+- [x] **5.15 Assistant action-registry expansion: Security tab tools
+      (hash identifier, password strength, subnet calculator, port
+      scanner)** — registry grows 35 -> 39, connecting the 11.5 Security
+      Toolkit's read-only tools: `identify_hash`, `check_password_strength`,
+      `calculate_subnet`, and `scan_ports` (capped to 3 fast common ports —
+      22/80/443 — with a short 0.3s timeout each, so the worst case adds
+      under a second to a synchronous Assistant-thread call; a full
+      `COMMON_PORTS` sweep stays a Field Kit Security-tab-only,
+      QThread-backed operation). **Caveat carried forward, not silently
+      dropped**: `check_password_strength` puts whatever password the
+      user types/speaks into the Assistant's plaintext chat history —
+      same category of trade-off as 5.14's `switch_profile` exclusion,
+      but accepted here (unlike that exclusion) because this tool never
+      *authenticates* anything, it only scores a string's strength.
+
+      **Found a real, reproducible tool-count regression via live-model
+      testing — not sampling noise.** After connecting these 4 tools,
+      `tests/live_model_check.py` settled at a stable 48/49, with the
+      one failure always the same pre-existing case ("How many M3 bolts
+      do I have?" -> expected `list_inventory`, got no tool call at all)
+      on every run. Bisected by calling `LLMManager`'s backend directly
+      with hand-trimmed tool subsets: at the pre-5.15 tool count (35)
+      the model calls `list_inventory` correctly and reliably; somewhere
+      past that, it instead emits `{"name": "get_inventory_quantity",
+      ...}` — a hallucinated, never-registered tool name — as plain
+      text content, which `llm_manager.py`'s
+      `_looks_like_malformed_tool_call()` correctly detects and retries
+      once *without* tools, landing on an unrelated prose answer.
+      Isolating each new tool one at a time pinned `calculate_subnet`'s
+      mere presence as sufficient to reproduce the failure 5/5 runs by
+      itself; renaming just that one tool (identical description/
+      params) also fixed it in isolation, but stopped working again once
+      the other 3 new tools were present too — ruling out both "one bad
+      tool name" and "a hard tool-count ceiling" as the full story, and
+      pointing instead at cross-schema interference in a 3B model's
+      attention over a growing tool list, consistent with this
+      project's running finding that registry growth needs live-model
+      re-verification every time, not just unit/gating tests. Fixed by
+      spelling out the "how many X do I have" phrasing directly in
+      `list_inventory`'s own tool description (rather than renaming or
+      removing anything) — confirmed to hold at the full 39-tool count,
+      5/5 direct-backend runs and 49/49 on two independent full
+      `live_model_check.py` runs afterward.
+
+      Smoke-tested through the real `AssistantModule` UI under headless
+      Qt (widget builds cleanly with all 39 actions registered,
+      including the 4 new Security tools present in the Ollama tool
+      schema sent to the model).
 
 ## v0.6 breakdown (planned)
 

@@ -259,3 +259,28 @@ def test_list_scripts_phrasing_gates_open():
 def test_list_profiles_phrasing_gates_open():
     keywords = _real_gating_keywords()
     assert looks_like_action_request("What profiles are set up on this device?", keywords) is True
+
+
+# ----------------------------------------------------------------------
+# Security tab tools: hash identifier, password strength, subnet
+# calculator, port scanner
+# ----------------------------------------------------------------------
+
+def test_identify_hash_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What hash is this: $2b$12$abc...", keywords) is True
+
+
+def test_check_password_strength_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("How strong is this password: hunter2", keywords) is True
+
+
+def test_calculate_subnet_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Calculate this subnet: 192.168.1.0/24", keywords) is True
+
+
+def test_scan_ports_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Scan 192.168.1.1 for open ports", keywords) is True

@@ -36,16 +36,20 @@ from core.device_help_manager import DeviceHelpManager
 from core.device_profile import CORE, get_device_profile
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
+from core.hash_identifier import identify_hash
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
+from core.password_strength import assess_password
+from core.port_scanner import scan_ports
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
+from core.subnet_calculator import calculate_subnet
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
 from core.trip_manager import ACTIVITY_TYPES, TripManager
@@ -59,6 +63,18 @@ from gui.splash_screen import SplashScreen
 from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES, get_theme_stylesheet
 
 log = get_logger(__name__)
+
+# Assistant tool calls run synchronously on the GUI thread (see
+# modules/assistant/module.py's docstring) — unlike the Field Kit
+# Security tab's port scanner, which offloads to a QThread
+# (modules/field_kit/port_scan_worker.py) precisely because a full
+# COMMON_PORTS sweep can take several seconds. _action_scan_ports below
+# deliberately checks only these 3 fast, common ports with a short
+# timeout to keep worst-case blocking time small (~0.9s) rather than
+# freezing the UI for a full sweep; point the user at the Security tab
+# for anything more thorough.
+_ASSISTANT_SCAN_PORTS = (22, 80, 443)
+_ASSISTANT_SCAN_TIMEOUT_SECONDS = 0.3
 
 
 class MIAApplication:
@@ -338,7 +354,8 @@ class MIAApplication:
             name="list_inventory",
             description=(
                 "List or search M.I.A.'s Inventory tool, including quantities. "
-                "Leave query empty to list everything."
+                "Use this to answer 'how many X do I have' questions about "
+                "inventory items. Leave query empty to list everything."
             ),
             parameters={
                 "type": "object",
@@ -354,6 +371,20 @@ class MIAApplication:
             # failure mode this gating mechanism exists to prevent.
             # "do i have" (without "any") still catches "how many M3
             # bolts do I have?" without that false-positive.
+            #
+            # milestone 5.15 finding: once the registry crossed ~39
+            # tools (adding the Security tab's 4 tools), "How many M3
+            # bolts do I have?" started reproducibly (5/5 runs)
+            # hallucinating a non-existent "get_inventory_quantity"
+            # tool-call-shaped string as plain content instead of
+            # calling this tool — not sampling noise (see
+            # llm_manager.py's temperature=0 note), a real
+            # tool-count/schema-interference regression isolated by
+            # bisecting the attached tool set. Spelling out the "how
+            # many X do I have" phrasing directly in this description
+            # (rather than renaming/removing any tool) fixed it
+            # reliably at the full 39-tool count — cheaper than
+            # fighting the registry's all-or-nothing gating design.
             trigger_phrases=("inventory", "do i have"),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -748,6 +779,67 @@ class MIAApplication:
         # chat history, which is worse than a masked password field, not
         # just a different capability class. Same "exclude, don't
         # silently omit" treatment as run_script above.
+        self.context.assistant_actions.register(AssistantAction(
+            name="identify_hash",
+            description="Identify the likely algorithm(s) for a hash string (e.g. bcrypt, MD5, SHA-256) by its format.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "value": {"type": "string", "description": "The hash string to identify."},
+                },
+                "required": ["value"],
+            },
+            handler=self._action_identify_hash,
+            trigger_phrases=("identify this hash", "what hash is this", "identify hash", "hash format", "what kind of hash"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="check_password_strength",
+            description=(
+                "Estimate a password's strength (entropy-based rating and warnings). "
+                "For a real account password, prefer M.I.A.'s Field Kit Security tab "
+                "(a masked input field) over pasting it into chat — chat history isn't "
+                "masked/hidden the way a password field is."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "password": {"type": "string", "description": "The password text to assess."},
+                },
+                "required": ["password"],
+            },
+            handler=self._action_check_password_strength,
+            trigger_phrases=("check my password", "password strength", "how strong is this password", "rate this password", "check password strength"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="calculate_subnet",
+            description="Calculate subnet/CIDR details (network address, broadcast, netmask, usable host range) for an IPv4 or IPv6 CIDR.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "cidr": {"type": "string", "description": "CIDR notation, e.g. '192.168.1.0/24'."},
+                },
+                "required": ["cidr"],
+            },
+            handler=self._action_calculate_subnet,
+            trigger_phrases=("calculate this subnet", "subnet calculator", "calculate subnet", "cidr calculator", "what's my subnet"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="scan_ports",
+            description=(
+                "Quickly check whether 3 common ports (22 SSH, 80 HTTP, 443 HTTPS) are "
+                "open on a host. This is a fast, limited check — for a fuller scan of "
+                "more ports, use M.I.A.'s Field Kit Security tab instead."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "host": {"type": "string", "description": "Host or IP to scan, e.g. '192.168.1.1'."},
+                },
+                "required": ["host"],
+            },
+            handler=self._action_scan_ports,
+            trigger_phrases=("scan this host", "scan for open ports", "port scan", "what ports are open", "scan ports"),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1157,6 +1249,60 @@ class MIAApplication:
             lock = " \U0001F512" if profile.has_password else ""
             lines.append(f"- '{profile.name}'{marker}{lock}")
         return "Profiles on this device:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_identify_hash(context: AppContext, arguments: dict) -> str:
+        value = str(arguments.get("value", "")).strip()
+        if not value:
+            return "I need a hash value to identify."
+        candidates = identify_hash(value)
+        if not candidates:
+            return "No known hash format matched."
+        return "Possible format(s): " + ", ".join(candidates)
+
+    @staticmethod
+    def _action_check_password_strength(context: AppContext, arguments: dict) -> str:
+        password = str(arguments.get("password", ""))
+        if not password:
+            return "I need a password to check."
+        result = assess_password(password)
+        lines = [f"Strength: {result.rating} ({result.entropy_bits:.1f} bits)"]
+        lines.extend(result.warnings)
+        return "\n".join(lines)
+
+    @staticmethod
+    def _action_calculate_subnet(context: AppContext, arguments: dict) -> str:
+        cidr = str(arguments.get("cidr", "")).strip()
+        if not cidr:
+            return "I need a CIDR, e.g. '192.168.1.0/24', to calculate a subnet."
+        try:
+            info = calculate_subnet(cidr)
+        except ValueError as exc:
+            return f"Invalid CIDR: {exc}"
+        lines = [
+            f"Network: {info.network_address}/{info.prefix_length}",
+            f"Broadcast: {info.broadcast_address}",
+            f"Netmask: {info.netmask}",
+            f"Total addresses: {info.total_addresses}",
+            f"Usable hosts: {info.usable_host_count}",
+        ]
+        if info.first_usable:
+            lines.append(f"Usable range: {info.first_usable} - {info.last_usable}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _action_scan_ports(context: AppContext, arguments: dict) -> str:
+        host = str(arguments.get("host", "")).strip()
+        if not host:
+            return "I need a host or IP to scan."
+        result = scan_ports(host, ports=list(_ASSISTANT_SCAN_PORTS), timeout=_ASSISTANT_SCAN_TIMEOUT_SECONDS)
+        if result.error:
+            return result.error
+        ports_checked = ", ".join(str(p) for p in _ASSISTANT_SCAN_PORTS)
+        if not result.open_ports:
+            return f"No open ports found among the common ports checked ({ports_checked})."
+        ports_open = ", ".join(str(p) for p in result.open_ports)
+        return f"Open ports on {host}: {ports_open} (checked {ports_checked})."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

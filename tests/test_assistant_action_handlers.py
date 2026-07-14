@@ -762,3 +762,112 @@ def test_list_profiles_shows_password_lock_marker(context):
     context.profiles.create_profile(name="Zac", password="secret123")
     result = MIAApplication._action_list_profiles(context, {})
     assert "\U0001F512" in result
+
+
+# ----------------------------------------------------------------------
+# Security tab tools (hash identifier, password strength, subnet
+# calculator, port scanner) — pure functions, no manager state needed
+# beyond `context` itself.
+# ----------------------------------------------------------------------
+
+def test_identify_hash_requires_a_value(context):
+    result = MIAApplication._action_identify_hash(context, {})
+    assert "hash value" in result.lower()
+
+
+def test_identify_hash_returns_match(context):
+    result = MIAApplication._action_identify_hash(context, {"value": "$2b$12$abcdefghijklmnopqrstuv"})
+    assert "bcrypt" in result.lower()
+
+
+def test_identify_hash_no_match(context):
+    result = MIAApplication._action_identify_hash(context, {"value": "not-a-real-hash"})
+    assert "no known hash format" in result.lower()
+
+
+def test_check_password_strength_requires_a_password(context):
+    result = MIAApplication._action_check_password_strength(context, {})
+    assert "password" in result.lower()
+
+
+def test_check_password_strength_weak(context):
+    result = MIAApplication._action_check_password_strength(context, {"password": "password"})
+    assert "Very Weak" in result
+
+
+def test_check_password_strength_strong(context):
+    result = MIAApplication._action_check_password_strength(context, {"password": "Tr0ub4dour&3xtra-Long!"})
+    assert "Strong" in result  # "Very Strong" or "Strong" both contain "Strong"
+
+
+def test_calculate_subnet_requires_a_cidr(context):
+    result = MIAApplication._action_calculate_subnet(context, {})
+    assert "cidr" in result.lower()
+
+
+def test_calculate_subnet_valid(context):
+    result = MIAApplication._action_calculate_subnet(context, {"cidr": "192.168.1.0/24"})
+    assert "192.168.1.255" in result
+    assert "254" in result
+
+
+def test_calculate_subnet_invalid(context):
+    result = MIAApplication._action_calculate_subnet(context, {"cidr": "not-a-cidr"})
+    assert "invalid" in result.lower()
+
+
+def test_scan_ports_requires_a_host(context):
+    result = MIAApplication._action_scan_ports(context, {})
+    assert "host" in result.lower()
+
+
+def test_scan_ports_checks_the_three_fixed_ports_and_reports_open_ones(context, monkeypatch):
+    # Mocked rather than binding a real listener: all 3 of the fixed
+    # ports this handler checks (22/80/443) are privileged (<1024) and
+    # can't be bound without root — the real TCP-scanning mechanics are
+    # already covered by tests/test_port_scanner.py's ephemeral-port
+    # tests. This test only verifies _action_scan_ports' own behavior:
+    # which ports it asks for, and how it formats the result.
+    import core.application as application_module
+    from core.port_scanner import PortScanResult
+
+    captured = {}
+
+    def _fake_scan_ports(host, ports=None, timeout=None):
+        captured["host"] = host
+        captured["ports"] = ports
+        captured["timeout"] = timeout
+        return PortScanResult(host=host, open_ports=[22, 443], scanned_count=len(ports))
+
+    monkeypatch.setattr(application_module, "scan_ports", _fake_scan_ports)
+
+    result = MIAApplication._action_scan_ports(context, {"host": "192.168.1.1"})
+
+    assert captured["ports"] == [22, 80, 443]
+    assert captured["host"] == "192.168.1.1"
+    assert "22" in result and "443" in result
+    assert "80" not in result.split("checked")[0]  # 80 wasn't reported open, only mentioned in "checked (...)"
+
+
+def test_scan_ports_reports_no_open_ports(context, monkeypatch):
+    import core.application as application_module
+    from core.port_scanner import PortScanResult
+
+    monkeypatch.setattr(
+        application_module, "scan_ports",
+        lambda host, ports=None, timeout=None: PortScanResult(host=host, open_ports=[], scanned_count=len(ports)),
+    )
+    result = MIAApplication._action_scan_ports(context, {"host": "192.168.1.1"})
+    assert "no open ports" in result.lower()
+
+
+def test_scan_ports_reports_resolution_error(context, monkeypatch):
+    import core.application as application_module
+    from core.port_scanner import PortScanResult
+
+    monkeypatch.setattr(
+        application_module, "scan_ports",
+        lambda host, ports=None, timeout=None: PortScanResult(host=host, error=f"Could not resolve '{host}'"),
+    )
+    result = MIAApplication._action_scan_ports(context, {"host": "bogus.invalid"})
+    assert "could not resolve" in result.lower()

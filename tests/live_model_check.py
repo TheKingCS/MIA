@@ -179,6 +179,17 @@ GOLDEN_CASES = [
         "Show my profiles on this M.I.A. device",
         "list_profiles",
     ),
+    # --- milestone 5.15: Security tab tools (hash identifier, password
+    # strength, subnet calculator, port scanner) ---
+    ("identify hash", "What hash format is this: $2b$12$abcdefghijklmnopqrstuv", "identify_hash"),
+    ("check password strength", "How strong is this password: hunter2", "check_password_strength"),
+    ("calculate subnet", "Calculate this subnet: 192.168.1.0/24", "calculate_subnet"),
+    ("scan ports", "Scan 192.168.1.1 for open ports", "scan_ports"),
+    (
+        "collision risk: scan_ports vs. list_connected_devices (both device/network-ish)",
+        "Scan 10.0.0.1 for open ports",
+        "scan_ports",
+    ),
 ]
 
 
