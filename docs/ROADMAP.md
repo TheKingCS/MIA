@@ -2282,3 +2282,71 @@ script's own stated purpose might suggest.
 itself — its Qt widget-construction logic follows this project's
 existing convention of manual headless-Qt screenshot verification
 rather than pytest coverage, same as every other module's `get_widget()`).
+
+## Aesthetic upgrade, part 2: header bar + character panel (2026-07-14)
+
+Continuation of part 1, confirmed by the user via an explicit "keep
+going" rather than pausing. Same investigate-then-render-then-verify
+approach, applied to the two remaining plain/undecorated areas found by
+reading `gui/main_window.py`'s `_build_header()`: all 5 header buttons
+(Back, Main Menu, Switch User, Search, Notification bell) had no object
+names and no theme-aware QSS at all — just whatever generic QWidget
+look Qt falls back to.
+
+**Header bar**: gave every header button one shared `#HeaderButton`
+object name, scoped in QSS to `QFrame#HeaderBar QPushButton#HeaderButton`
+so the rule can never leak onto an unrelated button elsewhere in the
+app. Added matching padding/border/hover/pressed/disabled treatment to
+all 4 themes. The unread-notification bell gets its own accent state via
+a dynamic Qt property (`hasUnread`, toggled in
+`_update_notification_badge()` alongside its existing text-count logic)
+and a `[hasUnread="true"]` QSS attribute selector, rather than a second
+object name — this needed an explicit `style().unpolish()`/`.polish()`
+call after `setProperty()`, since Qt caches a widget's QSS
+property-selector match and won't silently re-evaluate it on every
+property change. Also grouped the title + greeting into their own
+`QVBoxLayout` for a tighter, stacked look instead of two labels floating
+side by side.
+
+For Anime Monochrome specifically, `HeaderButton` safely uses the
+theme's usual solid black/white hover invert (`QPushButton#HeaderButton:hover`)
+— unlike `ModuleButton`, this button's label is its own text, not a
+child `QLabel`, so the descendant-selector rendering bug documented in
+part 1 doesn't apply here. Left an explicit comment on why the two
+buttons' hover treatments differ, so a future edit doesn't "fix" one to
+match the other and reintroduce that bug.
+
+**Character panel**: `gui/character_panel.py` had one remaining
+`setStyleSheet("font-size: 48px;")` inline call on its icon label — a
+holdover that violated this project's own QSS-cascade convention (every
+other widget pulls its look from the QApplication-level stylesheet;
+per-widget `setStyleSheet()` breaks the cascade for that widget and its
+children). Replaced with a `#CharacterIcon` object name, a fixed 96x96
+circular badge (same treatment as `ModuleButton`'s icon badge from part
+1) styled per-theme, and a `QGraphicsDropShadowEffect` on the panel
+itself. Changed the panel's border from dashed to solid across the
+themes that had it dashed (Dark Field, Colored) — dashed read as an
+unfinished placeholder outline now that the panel has real content
+inside it.
+
+**Found and fixed the actual root cause of this session's repeatedly-
+recurring `data/waypoints.json` pollution** (previously hit 3 times and
+each time misattributed to "some ad hoc rendering/debugging script,"
+never pinned down): `tests/test_trip_manager.py`'s `isolated_paths`
+fixture only patched `trip_manager` module's `_DATA_DIR`/`_TRIPS_FILE`,
+never `waypoint_manager`'s — but its own `_make_context()` helper
+constructs a real `WaypointManager(context)` for the route/distance
+tests, which several tests then call `add_waypoint()` on with the exact
+"New York"/"Los Angeles"/"A"/"B"/"C" fixture names seen leaking all
+session. Every single `pytest` run was silently writing 20 fresh
+waypoint entries straight into the real, production `data/waypoints.json`
+— not any of the many one-off scripts written during this session's
+aesthetic work, which were the innocent bystander each time. Fixed by
+adding the missing `waypoint_manager` monkeypatch to that one fixture;
+reset `data/waypoints.json` to `[]` and confirmed a full `pytest` run no
+longer touches it.
+
+944 tests passing. No automated tests added for the header/character-
+panel QSS itself, same manual-screenshot-verification convention as
+part 1 — rendered and visually confirmed all 4 themes at the app's real
+1100x700 default window size.

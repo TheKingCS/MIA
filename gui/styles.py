@@ -62,10 +62,46 @@ QFrame#HeaderBar {
     border-bottom: 1px solid #232b34;
 }
 
+QFrame#HeaderBar QPushButton#HeaderButton {
+    background-color: transparent;
+    border: 1px solid #232b34;
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #b8c4cf;
+    font-size: 13px;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:hover {
+    background-color: #1c2530;
+    border: 1px solid #4fd1c5;
+    color: #d8e0e8;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:pressed {
+    background-color: #0d1116;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:disabled {
+    color: #45505a;
+    border: 1px solid #1c232b;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton[hasUnread="true"] {
+    border: 1px solid #4fd1c5;
+    color: #4fd1c5;
+    font-weight: 600;
+}
+
 QFrame#CharacterPanel {
     background-color: #161b22;
-    border: 1px dashed #2c3742;
-    border-radius: 8px;
+    border: 1px solid #232b34;
+    border-radius: 12px;
+}
+
+QLabel#CharacterIcon {
+    background-color: #1c2530;
+    border-radius: 48px;
+    font-size: 44px;
 }
 
 QLabel#CharacterPlaceholderText {

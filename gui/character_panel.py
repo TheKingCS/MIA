@@ -43,7 +43,8 @@ from __future__ import annotations
 import time
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QVBoxLayout
 
 from core.app_context import AppContext
 
@@ -102,18 +103,39 @@ class CharacterPanel(QFrame):
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setSpacing(18)
 
+        # A fixed-size circular badge (same "icon in a colored disc"
+        # treatment gui/widgets/module_button.py's redesign introduced
+        # for #ModuleButtonIcon) instead of a bare, inline-styled emoji
+        # floating in empty space — found via rendering the old version
+        # that a huge emoji directly on the panel's own background read
+        # as placeholder art rather than an intentional character slot.
+        # Object name + theme QSS, not setStyleSheet() — every other
+        # widget in this app pulls its look from the QApplication-level
+        # cascade (see gui/styles.py's module docstring); a widget-level
+        # setStyleSheet() call breaks that cascade for itself and its
+        # children.
         self._icon_label = QLabel(_DEFAULT_ICON)
-        self._icon_label.setStyleSheet("font-size: 48px;")
+        self._icon_label.setObjectName("CharacterIcon")
         self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._icon_label.setFixedSize(96, 96)
 
         self._text_label = QLabel(_MENU_LINE)
         self._text_label.setObjectName("CharacterPlaceholderText")
         self._text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._text_label.setWordWrap(True)
+        self._text_label.setFixedWidth(180)
 
-        layout.addWidget(self._icon_label)
+        layout.addWidget(self._icon_label, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._text_label)
+
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setXOffset(0)
+        shadow.setYOffset(3)
+        shadow.setColor(QColor(0, 0, 0, 90))
+        self.setGraphicsEffect(shadow)
 
         self.context.events.subscribe("module.opened", self._on_module_opened)
         self.context.events.subscribe("menu.shown", self._on_menu_shown)

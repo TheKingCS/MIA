@@ -66,9 +66,46 @@ QFrame#HeaderBar {
     border-bottom: 1px solid #b8b8b2;
 }
 
+QFrame#HeaderBar QPushButton#HeaderButton {
+    background-color: transparent;
+    border: 1px solid #b8b8b2;
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #3a3a34;
+    font-size: 13px;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:hover {
+    background-color: #dcdcd6;
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:pressed {
+    background-color: #d8d8d2;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:disabled {
+    color: #a8a8a2;
+    border: 1px solid #d0d0ca;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton[hasUnread="true"] {
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
 QFrame#CharacterPanel {
     background-color: #e6e6e2;
     border: 1px solid #b8b8b2;
+    border-radius: 12px;
+}
+
+QLabel#CharacterIcon {
+    background-color: #dcdcd6;
+    border-radius: 48px;
+    font-size: 44px;
 }
 
 QLabel#CharacterPlaceholderText {
@@ -220,10 +257,46 @@ QFrame#HeaderBar {
     border-bottom: 1px solid #4a2f78;
 }
 
+QFrame#HeaderBar QPushButton#HeaderButton {
+    background-color: transparent;
+    border: 1px solid #4a2f78;
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #c9b8e8;
+    font-size: 13px;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:hover {
+    background-color: #3a2560;
+    border: 1px solid #ff6b6b;
+    color: #f1e9ff;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:pressed {
+    background-color: #150a26;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:disabled {
+    color: #6a5a88;
+    border: 1px solid #3a2864;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton[hasUnread="true"] {
+    border: 1px solid #06d6a0;
+    color: #06d6a0;
+    font-weight: 600;
+}
+
 QFrame#CharacterPanel {
     background-color: #2a1b47;
-    border: 1px dashed #06d6a0;
-    border-radius: 10px;
+    border: 1px solid #4a2f78;
+    border-radius: 12px;
+}
+
+QLabel#CharacterIcon {
+    background-color: #3a2560;
+    border-radius: 48px;
+    font-size: 44px;
 }
 
 QLabel#CharacterPlaceholderText {
@@ -396,9 +469,51 @@ QFrame#HeaderBar QLabel#SubtitleLabel {
     color: #ffffff;
 }
 
+/*
+Unlike ModuleButton, HeaderButton has no QLabel children — its label is
+the QPushButton's own text — so the black/white hover invert this theme
+uses everywhere else is safe here; it's the QLabel-descendant :hover
+selector specifically that triggers the rendering bug documented above
+on ModuleButton, not a plain QPushButton:hover rule.
+*/
+QFrame#HeaderBar QPushButton#HeaderButton {
+    background-color: transparent;
+    border: 2px solid #ffffff;
+    padding: 6px 14px;
+    color: #ffffff;
+    font-size: 13px;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:pressed {
+    background-color: #444444;
+    color: #ffffff;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton:disabled {
+    color: #777777;
+    border: 2px solid #555555;
+}
+
+QFrame#HeaderBar QPushButton#HeaderButton[hasUnread="true"] {
+    border: 2px solid #ffffff;
+    font-weight: 700;
+}
+
 QFrame#CharacterPanel {
     background-color: #ffffff;
     border: 2px solid #000000;
+}
+
+QLabel#CharacterIcon {
+    background-color: #f0f0f0;
+    border-radius: 48px;
+    border: 1px solid #000000;
+    font-size: 44px;
 }
 
 QLabel#CharacterPlaceholderText {

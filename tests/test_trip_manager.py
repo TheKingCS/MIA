@@ -21,6 +21,7 @@ from datetime import datetime
 import pytest
 
 import core.trip_manager as trip_manager_module
+import core.waypoint_manager as waypoint_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
@@ -37,6 +38,17 @@ def isolated_paths(tmp_path, monkeypatch):
     trips_file = data_dir / "trips.json"
     monkeypatch.setattr(trip_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(trip_manager_module, "_TRIPS_FILE", trips_file)
+    # _make_context() below constructs a real WaypointManager (needed for
+    # the route/distance tests) — without also isolating its data path
+    # here, every test that adds a waypoint (New York/Los Angeles/A/B/C
+    # fixtures below) was silently writing into the real, production
+    # data/waypoints.json on every `pytest` run. This was the actual
+    # source of this project's repeated waypoints.json pollution
+    # (previously misattributed to ad hoc debugging scripts) — found by
+    # tracing timestamps on a fresh round of leaked entries back to a
+    # `pytest` invocation rather than any rendering/screenshot script.
+    monkeypatch.setattr(waypoint_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(waypoint_manager_module, "_WAYPOINTS_FILE", data_dir / "waypoints.json")
     return data_dir, trips_file
 
 

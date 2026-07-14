@@ -179,6 +179,15 @@ class MainWindow(QMainWindow):
         count = self.context.notifications.unread_count()
         label = f"\U0001F514 {count}" if count else "\U0001F514"
         self._notification_button.setText(label)
+        # Dynamic property, not a second object name — lets QSS give the
+        # bell an accent color only while there's something unread via
+        # "QPushButton#HeaderButton[hasUnread=true]", without a style()
+        # re-polish this method would otherwise skip (Qt caches QSS
+        # property-selector results per widget until explicitly told to
+        # re-evaluate).
+        self._notification_button.setProperty("hasUnread", bool(count))
+        self._notification_button.style().unpolish(self._notification_button)
+        self._notification_button.style().polish(self._notification_button)
 
     def _open_notification_center(self) -> None:
         dialog = NotificationCenterDialog(self.context, parent=self)
@@ -281,39 +290,56 @@ class MainWindow(QMainWindow):
     def _build_header(self) -> QFrame:
         header = QFrame()
         header.setObjectName("HeaderBar")
-        header.setFixedHeight(64)
+        header.setFixedHeight(68)
 
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(20, 0, 20, 0)
+        layout.setContentsMargins(24, 0, 24, 0)
+        layout.setSpacing(16)
+
+        title_column = QVBoxLayout()
+        title_column.setSpacing(0)
 
         title = QLabel("M.I.A.")
         title.setObjectName("TitleLabel")
+        title_column.addWidget(title)
 
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         user_name = active_profile.name if active_profile else ""
         greeting_text = f"Welcome back, {user_name}" if user_name else "Field System Online"
         greeting = QLabel(greeting_text)
         greeting.setObjectName("SubtitleLabel")
+        title_column.addWidget(greeting)
 
+        layout.addLayout(title_column)
+        layout.addStretch()
+
+        # 2026-07-14 aesthetic pass (docs/ROADMAP.md): every header
+        # button now shares one #HeaderButton object name (styled per-
+        # theme, scoped to "QFrame#HeaderBar QPushButton#HeaderButton"
+        # so it can never leak onto an unrelated button elsewhere in
+        # the app) instead of relying on the plain, theme-blind default
+        # QPushButton look every header button had before this pass.
         self._back_button = QPushButton("\u2190 Back")
+        self._back_button.setObjectName("HeaderButton")
         self._back_button.clicked.connect(self.go_back)
         self._back_button.setEnabled(False)
 
         self._home_button = QPushButton("\u2302 Main Menu")
+        self._home_button.setObjectName("HeaderButton")
         self._home_button.clicked.connect(self.show_main_menu)
 
         self._switch_user_button = QPushButton("\u21C4 Switch User")
+        self._switch_user_button.setObjectName("HeaderButton")
         self._switch_user_button.clicked.connect(self.switch_profile_requested.emit)
 
-        self._notification_button = QPushButton("\U0001F514")
-        self._notification_button.clicked.connect(self._open_notification_center)
-
         self._search_button = QPushButton("\U0001F50D Search")
+        self._search_button.setObjectName("HeaderButton")
         self._search_button.clicked.connect(self._open_search)
 
-        layout.addWidget(title)
-        layout.addWidget(greeting)
-        layout.addStretch()
+        self._notification_button = QPushButton("\U0001F514")
+        self._notification_button.setObjectName("HeaderButton")
+        self._notification_button.clicked.connect(self._open_notification_center)
+
         layout.addWidget(self._back_button)
         layout.addWidget(self._home_button)
         layout.addWidget(self._switch_user_button)
