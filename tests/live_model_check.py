@@ -46,6 +46,7 @@ import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.mission_manager as mission_manager_module
 import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
@@ -82,6 +83,8 @@ project_manager_module._DATA_DIR = _TEMP_DATA_DIR
 project_manager_module._PROJECTS_FILE = _TEMP_DATA_DIR / "projects.json"
 task_manager_module._DATA_DIR = _TEMP_DATA_DIR
 task_manager_module._TASKS_FILE = _TEMP_DATA_DIR / "tasks.json"
+mission_manager_module._DATA_DIR = _TEMP_DATA_DIR
+mission_manager_module._MISSIONS_FILE = _TEMP_DATA_DIR / "missions.json"
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
@@ -98,6 +101,7 @@ from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.memory_manager import MemoryManager
+from core.mission_manager import MissionManager
 from core.module_manager import ModuleManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
@@ -213,6 +217,14 @@ GOLDEN_CASES = [
         "Can you describe my expedition to me",
         "recall_expedition",
     ),
+    # --- milestone v0.18: Missions/Gamification ---
+    ("add mission", "Start a new mission called Kayak Explorer", "add_mission"),
+    ("list missions", "What missions do I have?", "list_missions"),
+    ("add objective", "Add an objective to my Master Baiter mission: catch 5 fish, target 5", "add_objective"),
+    ("log mission progress", "Log a catch for my Master Baiter mission", "log_mission_progress"),
+    ("delete mission", "Delete the mission called Master Baiter", "delete_mission"),
+    ("complete mission", "Complete the mission called Master Baiter", "complete_mission"),
+    ("false-positive sanity: ordinary use of the word 'mission'", "Our company's mission is customer satisfaction", None),
 ]
 
 
@@ -250,6 +262,7 @@ def _build_context() -> AppContext:
     # core/memory_manager.py's docstring — so no _DATA_DIR isolation
     # is needed the way every other manager above requires.
     context.memories = MemoryManager(context)
+    context.missions = MissionManager(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
     # over lsblk/psutil with no JSON file of their own, so no isolation
     # is needed the way every other manager above requires.
@@ -283,6 +296,8 @@ def _seed_fixtures(context: AppContext) -> None:
     context.profiles.create_profile(name="Zac", make_active=True)
     project = context.projects.add_project(name="Garage Rewire", status="Active", due_date="2026-08-14")
     context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
+    mission = context.missions.add_mission(name="Master Baiter", trip_id=trip.trip_id)
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
 
 
 def main() -> int:

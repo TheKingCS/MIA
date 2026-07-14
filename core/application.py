@@ -42,6 +42,7 @@ from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.memory_manager import MemoryManager
+from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.password_strength import assess_password
@@ -130,6 +131,9 @@ class MIAApplication:
         # Waypoints/Journal, so it's constructed after all four are
         # already on the context, same reasoning as Trips above.
         self.context.memories = MemoryManager(self.context)
+        # Missions references trips (for the trip_duration_hours metric
+        # type), so it's constructed after trips already is.
+        self.context.missions = MissionManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -1056,6 +1060,112 @@ class MIAApplication:
             handler=self._action_mark_task_done,
             trigger_phrases=("mark task", "mark my task", "mark the task", "complete my task", "finish my task", "task done", "task complete"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_mission",
+            domain="missions",
+            description=(
+                "Start a new gamified Mission in M.I.A. (e.g. a 'Master Baiter' mission for a "
+                "fishing trip). Optionally link it to an existing Trip by name."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short, fun name for the mission."},
+                    "trip_name": {
+                        "type": "string",
+                        "description": "Optional name of an existing Trip to link this mission to (must already exist).",
+                    },
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_mission,
+            trigger_phrases=("start a mission", "new mission", "create a mission", "add a mission"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_missions",
+            domain="missions",
+            description="List the user's Missions in M.I.A., including each objective's progress.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_missions,
+            trigger_phrases=("list my missions", "list missions", "what missions", "show my missions"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_objective",
+            domain="missions",
+            description=(
+                "Add an Objective to an existing Mission in M.I.A. — either a manually-tracked "
+                "tally (e.g. 'catch 3 fish') or a target computed automatically from time spent "
+                "on the mission's linked trip (e.g. 'spend 2 hours fishing')."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "mission_name": {"type": "string", "description": "The name of the mission (must already exist)."},
+                    "description": {"type": "string", "description": "A short description of the objective, e.g. 'Catch 3 fish'."},
+                    "metric_type": {
+                        "type": "string",
+                        "description": "One of 'tally' (manually counted) or 'trip_duration_hours' (auto-computed from the linked trip). Defaults to 'tally'.",
+                    },
+                    "target": {"type": "number", "description": "The target value to reach, e.g. 3 for '3 fish' or 2 for '2 hours'."},
+                },
+                "required": ["mission_name", "description", "target"],
+            },
+            handler=self._action_add_objective,
+            trigger_phrases=("add an objective", "new objective", "add a goal", "create an objective"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="log_mission_progress",
+            domain="missions",
+            description=(
+                "Log progress toward a tally-type Objective on a Mission in M.I.A. — e.g. "
+                "recording a catch, a species identified, or any other manually-counted goal. "
+                "Only works for tally-type objectives; trip_duration_hours objectives track "
+                "themselves automatically and never need this."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "mission_name": {"type": "string", "description": "The name of the mission (must already exist)."},
+                    "objective_description": {
+                        "type": "string",
+                        "description": "Optional — which objective to log against, if the mission has more than one tally objective.",
+                    },
+                    "delta": {"type": "number", "description": "How much to add to the tally. Defaults to 1."},
+                },
+                "required": ["mission_name"],
+            },
+            handler=self._action_log_mission_progress,
+            trigger_phrases=("log a catch", "log progress", "count that", "add to my tally", "update my mission progress", "mark progress on my mission"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_mission",
+            domain="missions",
+            destructive=True,
+            description="Delete an existing Mission in M.I.A. by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the mission to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_mission,
+            trigger_phrases=("delete a mission", "delete my mission", "remove a mission", "delete the mission"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="complete_mission",
+            domain="missions",
+            description="Mark an existing Mission as completed in M.I.A. by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the mission to mark complete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_complete_mission,
+            trigger_phrases=("complete my mission", "mark my mission complete", "finish my mission", "complete the mission", "mark the mission complete"),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1649,6 +1759,98 @@ class MIAApplication:
         context.tasks.update_task(match.task_id, done=done)
         status = "done" if done else "not done"
         return f"Marked the task '{match.title}' as {status}."
+
+    @staticmethod
+    def _action_add_mission(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to start a mission."
+        trip_name = str(arguments.get("trip_name", "") or "").strip().lower()
+        trip_id = None
+        if trip_name:
+            trip = next((t for t in context.trips.all_trips() if t.name.lower() == trip_name), None)
+            if trip is None:
+                return f"I don't have a trip called '{arguments.get('trip_name', '')}'."
+            trip_id = trip.trip_id
+        mission = context.missions.add_mission(name=name, trip_id=trip_id)
+        linked_note = f" Linked to trip '{trip.name}'." if trip_id else ""
+        return f"Mission '{mission.name}' created.{linked_note}"
+
+    @staticmethod
+    def _action_list_missions(context: AppContext, arguments: dict) -> str:
+        missions = context.missions.all_missions()
+        if not missions:
+            return "You have no missions yet."
+        lines = []
+        for mission in missions:
+            lines.append(f"- '{mission.name}' ({mission.status})")
+            for index, objective in enumerate(mission.objectives):
+                progress = context.missions.objective_progress(mission.mission_id, index) or 0.0
+                mark = "x" if context.missions.is_objective_complete(mission.mission_id, index) else " "
+                lines.append(f"    [{mark}] {objective.description}: {progress:g}/{objective.target:g}")
+        return "Your missions:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_objective(context: AppContext, arguments: dict) -> str:
+        mission_name = str(arguments.get("mission_name", "")).strip().lower()
+        description = str(arguments.get("description", "")).strip()
+        if not description:
+            return "I need a description to add an objective."
+        mission = next((m for m in context.missions.all_missions() if m.name.lower() == mission_name), None)
+        if mission is None:
+            return f"I don't have a mission called '{arguments.get('mission_name', '')}'."
+        metric_type = str(arguments.get("metric_type", "") or "tally").strip()
+        if metric_type not in MISSION_METRIC_TYPES:
+            metric_type = "tally"
+        try:
+            target = float(arguments.get("target", 1))
+        except (TypeError, ValueError):
+            return "I need a numeric target for this objective."
+        context.missions.add_objective(mission.mission_id, description, metric_type, target)
+        return f"Objective '{description}' added to mission '{mission.name}'."
+
+    @staticmethod
+    def _action_log_mission_progress(context: AppContext, arguments: dict) -> str:
+        mission_name = str(arguments.get("mission_name", "")).strip().lower()
+        mission = next((m for m in context.missions.all_missions() if m.name.lower() == mission_name), None)
+        if mission is None:
+            return f"I don't have a mission called '{arguments.get('mission_name', '')}'."
+
+        tally_objectives = [(i, o) for i, o in enumerate(mission.objectives) if o.metric_type == "tally"]
+        objective_description = str(arguments.get("objective_description", "") or "").strip().lower()
+        if objective_description:
+            match_index = next((i for i, o in tally_objectives if o.description.lower() == objective_description), None)
+            if match_index is None:
+                return f"I don't have a tally objective called '{arguments.get('objective_description', '')}' on mission '{mission.name}'."
+        elif len(tally_objectives) == 1:
+            match_index = tally_objectives[0][0]
+        else:
+            return f"Mission '{mission.name}' has {len(tally_objectives)} tally objectives — tell me which one."
+
+        delta = float(arguments.get("delta", 1) or 1)
+        context.missions.increment_tally(mission.mission_id, match_index, delta=delta)
+        new_progress = context.missions.objective_progress(mission.mission_id, match_index)
+        objective = mission.objectives[match_index]
+        done_note = " Objective complete!" if context.missions.is_objective_complete(mission.mission_id, match_index) else ""
+        return f"Logged progress on '{objective.description}': {new_progress:g}/{objective.target:g}.{done_note}"
+
+    @staticmethod
+    def _action_delete_mission(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a mission called '{arguments.get('name', '')}'."
+        context.missions.delete_mission(match.mission_id)
+        return f"Deleted the mission '{match.name}'."
+
+    @staticmethod
+    def _action_complete_mission(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a mission called '{arguments.get('name', '')}'."
+        context.missions.update_mission(match.mission_id, status="completed")
+        return f"Marked the mission '{match.name}' as completed. Nice work!"
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

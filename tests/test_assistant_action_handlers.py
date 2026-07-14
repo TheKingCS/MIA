@@ -24,6 +24,7 @@ import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
+import core.mission_manager as mission_manager_module
 import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
@@ -40,6 +41,7 @@ from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.memory_manager import MemoryManager
+from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
 from core.script_library_manager import ScriptLibraryManager
@@ -79,6 +81,8 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(project_manager_module, "_PROJECTS_FILE", data_dir / "projects.json")
     monkeypatch.setattr(task_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(task_manager_module, "_TASKS_FILE", data_dir / "tasks.json")
+    monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -95,6 +99,7 @@ def context(tmp_path, monkeypatch):
     ctx.projects = ProjectManager(ctx)
     ctx.tasks = TaskManager(ctx)
     ctx.memories = MemoryManager(ctx)
+    ctx.missions = MissionManager(ctx)
     return ctx
 
 
@@ -1076,3 +1081,166 @@ def test_recall_expedition_includes_activity_and_distance(context):
 
     result = MIAApplication._action_recall_expedition(context, {"name": "Field Season"})
     assert "Hiking" in result and "km" in result
+
+
+# ----------------------------------------------------------------------
+# Missions (v0.18)
+# ----------------------------------------------------------------------
+
+def test_add_mission_requires_a_name(context):
+    result = MIAApplication._action_add_mission(context, {})
+    assert "name" in result.lower()
+    assert context.missions.all_missions() == []
+
+
+def test_add_mission_creates_mission(context):
+    result = MIAApplication._action_add_mission(context, {"name": "Master Baiter"})
+    assert "Master Baiter" in result
+    missions = context.missions.all_missions()
+    assert len(missions) == 1
+    assert missions[0].trip_id is None
+
+
+def test_add_mission_links_to_a_trip_by_name(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Fishing Day")
+
+    result = MIAApplication._action_add_mission(context, {"name": "Master Baiter", "trip_name": "fishing day"})
+    assert "Master Baiter" in result and "Fishing Day" in result
+    assert context.missions.all_missions()[0].trip_id == trip.trip_id
+
+
+def test_add_mission_unknown_trip_does_not_create_anything(context):
+    result = MIAApplication._action_add_mission(context, {"name": "X", "trip_name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+    assert context.missions.all_missions() == []
+
+
+def test_list_missions_empty(context):
+    assert "no missions" in MIAApplication._action_list_missions(context, {}).lower()
+
+
+def test_list_missions_includes_objective_progress(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+    context.missions.increment_tally(mission.mission_id, 0, delta=1.0)
+
+    result = MIAApplication._action_list_missions(context, {})
+    assert "Master Baiter" in result and "Catch 3 fish" in result and "1/3" in result
+
+
+def test_add_objective_requires_a_description(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    result = MIAApplication._action_add_objective(
+        context, {"mission_name": "Master Baiter", "description": "", "target": 3}
+    )
+    assert "description" in result.lower()
+    assert context.missions.get_mission(mission.mission_id).objectives == []
+
+
+def test_add_objective_unknown_mission_does_not_create_anything(context):
+    result = MIAApplication._action_add_objective(
+        context, {"mission_name": "Nonexistent", "description": "Catch 3 fish", "target": 3}
+    )
+    assert "nonexistent" in result.lower()
+
+
+def test_add_objective_creates_tally_objective(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    result = MIAApplication._action_add_objective(
+        context, {"mission_name": "master baiter", "description": "Catch 3 fish", "metric_type": "tally", "target": 3}
+    )
+    assert "Catch 3 fish" in result and "Master Baiter" in result
+    reloaded = context.missions.get_mission(mission.mission_id)
+    assert len(reloaded.objectives) == 1
+    assert reloaded.objectives[0].metric_type == "tally"
+    assert reloaded.objectives[0].target == 3.0
+
+
+def test_add_objective_unrecognized_metric_type_falls_back_to_tally(context):
+    mission = context.missions.add_mission(name="X")
+    MIAApplication._action_add_objective(
+        context, {"mission_name": "X", "description": "Bogus", "metric_type": "not_a_real_metric", "target": 1}
+    )
+    assert context.missions.get_mission(mission.mission_id).objectives[0].metric_type == "tally"
+
+
+def test_log_mission_progress_unknown_mission_reports_not_found(context):
+    result = MIAApplication._action_log_mission_progress(context, {"mission_name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_log_mission_progress_defaults_to_the_only_tally_objective(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+
+    result = MIAApplication._action_log_mission_progress(context, {"mission_name": "Master Baiter"})
+    assert "Catch 3 fish" in result and "1/3" in result
+    assert context.missions.objective_progress(mission.mission_id, 0) == 1.0
+
+
+def test_log_mission_progress_reports_completion(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 1 fish", "tally", 1.0)
+
+    result = MIAApplication._action_log_mission_progress(context, {"mission_name": "Master Baiter"})
+    assert "complete" in result.lower()
+
+
+def test_log_mission_progress_ambiguous_without_objective_description(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+    context.missions.add_objective(mission.mission_id, "Identify 2 species", "tally", 2.0)
+
+    result = MIAApplication._action_log_mission_progress(context, {"mission_name": "Master Baiter"})
+    assert "which one" in result.lower()
+    assert context.missions.objective_progress(mission.mission_id, 0) == 0.0
+    assert context.missions.objective_progress(mission.mission_id, 1) == 0.0
+
+
+def test_log_mission_progress_resolves_by_objective_description(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+    context.missions.add_objective(mission.mission_id, "Identify 2 species", "tally", 2.0)
+
+    MIAApplication._action_log_mission_progress(
+        context, {"mission_name": "Master Baiter", "objective_description": "identify 2 species", "delta": 2}
+    )
+    assert context.missions.objective_progress(mission.mission_id, 1) == 2.0
+    assert context.missions.objective_progress(mission.mission_id, 0) == 0.0
+
+
+def test_log_mission_progress_unknown_objective_description(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+
+    result = MIAApplication._action_log_mission_progress(
+        context, {"mission_name": "Master Baiter", "objective_description": "Bogus objective"}
+    )
+    assert "bogus objective" in result.lower()
+
+
+def test_delete_mission_removes_matching_mission(context):
+    context.missions.add_mission(name="Master Baiter")
+    result = MIAApplication._action_delete_mission(context, {"name": "Master Baiter"})
+    assert "Master Baiter" in result
+    assert context.missions.all_missions() == []
+
+
+def test_delete_mission_unknown_name_does_not_delete_anything(context):
+    context.missions.add_mission(name="Master Baiter")
+    result = MIAApplication._action_delete_mission(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+    assert len(context.missions.all_missions()) == 1
+
+
+def test_complete_mission_sets_status(context):
+    mission = context.missions.add_mission(name="Master Baiter")
+    result = MIAApplication._action_complete_mission(context, {"name": "Master Baiter"})
+    assert "Master Baiter" in result
+    assert context.missions.get_mission(mission.mission_id).status == "completed"
+
+
+def test_complete_mission_unknown_name_reports_not_found(context):
+    result = MIAApplication._action_complete_mission(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()

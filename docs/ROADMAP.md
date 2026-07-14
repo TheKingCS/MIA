@@ -69,17 +69,8 @@ section," not just an ambient widget.)
 16. **System** — settings, user profiles, module manager, notifications, backup/restore, update manager
 17. **Field Kit** — connected device detection/identification (USB/serial now, wifi/BT planned), per-device actions (browse files, eject, flash OS + auto-install MIA), useful scripts library, security/network recon + active toolkit, MCU firmware flashing (ties into Workshop & Electronics' own planned "MCU flashing" bullet rather than duplicating it)
 18. **Expeditions** — Expedition Mode (v0.12): multi-activity outing tracking (hiking/camping/fishing/kayaking/biking/etc.), gear checklists, trip journal, logged speed/distance, schematic route maps, photos. Built after this list was originally written; added here for completeness.
-19. **Memories** (2026-07-14 addition, not yet built) — auto-generated trip recaps aggregated from Expeditions/Trips/Waypoints/Journal/photos (distance, pace, duration, catch/tally counts, species identified, campsites visited), a photo gallery, location-tagged logs surfaced on Navigation's offline maps, and "on this day" resurfacing. See `docs/VISION.md`'s concept-mapping table and the new "Missions/Gamification" note below for how this connects to the rest of the wearable-companion vision.
-
-**Missions/Gamification** (2026-07-14 addition, not yet built, not
-assigned a fixed top-level slot): turns the user's stated goals/hobbies
-into tracked objectives (e.g. "fish for 2 hours," "catch 3 fish").
-Deliberately left ambient/contextual rather than given its own big
-screen for now — the natural surfacing point is wherever the relevant
-activity already lives (a Trip detail view, the Memories recap, a
-Dashboard card), not a standalone section — revisit and promote to a
-real section if it grows enough to need one, same reasoning already
-applied to Character/Global Search above.
+19. **Memories** (v0.17, built) — auto-generated Expedition recaps aggregated from Expeditions/Trips/Waypoints/Journal/photos (distance, pace, duration, waypoint categories visited), a photo gallery, location-tagged cross-linking into Navigation's route map, and "on this day" resurfacing.
+20. **Missions** (v0.18, built) — gamified goals/objectives, optionally tied to a Trip (e.g. "Master Baiter" — catch 3 fish, spend 2 hours fishing) or general (not tied to any outing). Given its own standalone module rather than left ambient — see v0.18's writeup below for why that reverses this doc's earlier tentative "contextual only" note.
 
 ## Integration decisions (don't reinvent the wheel)
 
@@ -1849,19 +1840,70 @@ Camera section), live GPS-based pace/distance (needs a GPS module — see
 milestone — an independent consumer of Trip data, not a dependency in
 either direction).
 
-## v0.18 — Missions/Gamification (planned, not yet scoped in detail)
+## v0.18 — Missions/Gamification (built)
 
 Turns the user's stated goals/hobbies into tracked objectives (e.g. a
 "Master Baiter" mission for a fishing trip: an objective for time spent
-fishing, an objective for fish caught). A consumer of the event bus /
-Trip data rather than its own capture mechanism wherever possible —
-"time spent fishing" derives from a Trip's `activity_type="Fishing"`
-duration for free. The one genuinely new primitive needed: a simple
-per-trip tally/counter (fish caught, species identified, etc.) that
-nothing in the app currently models. Not yet broken into sub-milestones
-— do that as its own design pass when this is picked up, the same way
-Expedition Mode's 3-part scope got resolved via `AskUserQuestion` before
-v0.12 began.
+fishing, an objective for fish caught). Scope resolved via
+`AskUserQuestion` before building, same as Expedition Mode's 3-part
+scope before v0.12: (1) Assistant creation built in this same pass, not
+deferred to a follow-up batch — the "AI creates a mission" moment is
+core to the vision, not an afterthought; (2) a new standalone
+"Missions" module (#20 in this doc's module list), not contextual-only,
+so there's one place to see every active/completed mission at a glance.
+
+`core/mission_manager.py`: `Mission` (name, optional `trip_id` link —
+mirrors `JournalEntry.trip_id`'s optional-FK pattern, so a mission can
+be trip-scoped like "Master Baiter" or a general goal like "finish
+wiring the garage" — status) holds one or more `Objective`s (nested in
+the mission's own JSON, same reasoning as `GearItem`/`Split` nested in
+`Trip`). Two metric types (`METRIC_TYPES`): `"tally"` — a manually-
+incremented counter (fish caught, species identified) — the one
+genuinely new primitive this milestone needed, since nothing else in
+the app models an arbitrary count; and `"trip_duration_hours"` —
+computed live from the linked Trip's logged splits (first-to-last-split
+elapsed time), never stored, so "time spent fishing" derives from
+existing Trip data for free with zero manual entry, exactly the
+original design goal.
+
+New standalone module `modules/missions/module.py` (auto-discovered,
+zero registry edits) — two-level CRUD (Missions, then the selected
+Mission's Objectives), a "+1 Tally" button for tally-type objectives,
+and a linked-trip picker at mission creation only (`gui/add_edit_mission_dialog.py`;
+the link can't change after creation, same as Trip's fixed
+`expedition_id`) plus an objective-adding dialog
+(`gui/add_edit_objective_dialog.py`).
+
+Assistant-connected immediately (registry 47 -> 53): `add_mission`
+(optionally linked to an existing Trip by name), `list_missions`
+(with live objective progress), `add_objective`, `log_mission_progress`
+(the "I caught one!" moment — increments a tally objective, defaulting
+to the mission's only tally objective if unambiguous, otherwise asking
+which one), `delete_mission`, `complete_mission`. Domain `"missions"` —
+confirmed via direct registry check that a mission-related prompt
+attaches only the 6 missions-domain tools plus the 6 always-on
+`system`-domain tools (12 total), never an unrelated domain, exactly
+as domain-scoped attachment is designed to do.
+
+**Known, deliberately accepted gap**: `log_mission_progress`'s trigger
+phrases are generic ("log a catch", "log progress", "count that") since
+they can't hard-code every possible hobby's vocabulary — literally
+saying "I caught one!" with no mention of "mission"/"catch"/"progress"
+won't gate open on its own. Same category of trade-off as
+delete_project/delete_task/mark_task_done/recall_expedition's
+name-before-noun gaps elsewhere in this file: real, documented, not
+worth chasing further given the fixed-trigger-phrase gating design this
+whole registry uses.
+
+67/67 on two independent live-model runs (7 new cases: one per new
+tool, plus a false-positive check that ordinary use of the word
+"mission" doesn't gate anything open). 911 tests passing. Verified with
+real headless-Qt smoke tests: the module widget through full app-boot
+discovery (add mission, select it, add both objective types, +1 tally,
+confirmed the trip_duration_hours objective auto-computed 2.5 hours of
+progress with zero manual entry), and the Assistant handlers end to end
+through the actual `AssistantModule` (add_mission -> add_objective ->
+log_mission_progress -> list_missions round-tripping correctly).
 
 ## v0.19 — Home Dock auto-launch Dashboard (planned, not yet scoped in detail)
 

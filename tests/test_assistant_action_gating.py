@@ -363,3 +363,44 @@ def test_recall_expedition_named_phrasing_gates_open():
     """
     keywords = _real_gating_keywords()
     assert looks_like_action_request("Tell me about the expedition called Field Season", keywords) is True
+
+
+# ----------------------------------------------------------------------
+# Missions (v0.18)
+# ----------------------------------------------------------------------
+
+def test_add_mission_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Start a new mission called Master Baiter", keywords) is True
+
+
+def test_list_missions_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("What missions do I have?", keywords) is True
+
+
+def test_add_objective_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Add an objective to my Master Baiter mission", keywords) is True
+
+
+def test_log_mission_progress_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Log a catch for my mission", keywords) is True
+
+
+def test_delete_mission_phrasing_gates_open():
+    """"called X" phrasing (name after the noun), same accepted trade-off as delete_project/delete_task."""
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Delete the mission called Master Baiter", keywords) is True
+
+
+def test_complete_mission_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Complete the mission called Master Baiter", keywords) is True
+
+
+def test_ordinary_mission_mention_does_not_gate_open():
+    """False-positive check: 'mission' as an ordinary word, not a request to act on a Mission record."""
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("Our company's mission is customer satisfaction", keywords) is False
