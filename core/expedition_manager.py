@@ -93,6 +93,16 @@ class ExpeditionManager:
             log.exception("Failed to load expeditions.json — starting with an empty list.")
             self._expeditions = []
 
+    def reload(self) -> None:
+        """
+        Re-reads expeditions.json from disk, discarding in-memory state.
+        docs/ROADMAP.md milestone v0.19 (Home Dock auto-launch
+        Dashboard) — an auto-import needs its results visible
+        immediately, not after a manual app restart the way
+        core/expedition_sync.py's docstring otherwise requires.
+        """
+        self._load()
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _EXPEDITIONS_FILE.write_text(

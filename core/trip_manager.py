@@ -204,6 +204,10 @@ class TripManager:
             log.exception("Failed to load trips.json — starting with an empty list.")
             self._trips = []
 
+    def reload(self) -> None:
+        """Re-reads trips.json from disk — see ExpeditionManager.reload()'s docstring for why."""
+        self._load()
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _TRIPS_FILE.write_text(

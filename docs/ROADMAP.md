@@ -71,6 +71,7 @@ section," not just an ambient widget.)
 18. **Expeditions** — Expedition Mode (v0.12): multi-activity outing tracking (hiking/camping/fishing/kayaking/biking/etc.), gear checklists, trip journal, logged speed/distance, schematic route maps, photos. Built after this list was originally written; added here for completeness.
 19. **Memories** (v0.17, built) — auto-generated Expedition recaps aggregated from Expeditions/Trips/Waypoints/Journal/photos (distance, pace, duration, waypoint categories visited), a photo gallery, location-tagged cross-linking into Navigation's route map, and "on this day" resurfacing.
 20. **Missions** (v0.18, built) — gamified goals/objectives, optionally tied to a Trip (e.g. "Master Baiter" — catch 3 fish, spend 2 hours fishing) or general (not tied to any outing). Given its own standalone module rather than left ambient — see v0.18's writeup below for why that reverses this doc's earlier tentative "contextual only" note.
+21. **Dashboard** (v0.19, built) — read-only at-a-glance summary (recent activity, active Missions, recent Memories, upcoming Calendar events, active Projects/open Tasks), auto-navigated to when Field Kit detects a docked Core and auto-imports its Expedition data, but also a normal always-accessible menu entry.
 
 ## Integration decisions (don't reinvent the wheel)
 
@@ -1905,18 +1906,95 @@ progress with zero manual entry), and the Assistant handlers end to end
 through the actual `AssistantModule` (add_mission -> add_objective ->
 log_mission_progress -> list_missions round-tripping correctly).
 
-## v0.19 — Home Dock auto-launch Dashboard (planned, not yet scoped in detail)
+## v0.19 — Home Dock auto-launch Dashboard (built)
 
-Docking Core to the Home desktop should auto-launch M.I.A. into a
-Dashboard view (recent events/objectives/photos/music/projects,
-upcoming events/projects) rather than requiring the manual "Import
-Expedition Data" click v0.15 built. Mostly orchestration on top of
-v0.13's Core/Home device-profile split and v0.15's existing docking
-detection (Field Kit already detects a docked Core) — a new Dashboard
-view plus a dock-detected launch trigger, not new architecture. Needs
-its own design pass (what exactly triggers "launched," whether M.I.A.
-runs as a background service on Home waiting for a dock event, etc.)
-before becoming a checkbox list.
+Docking Core to the Home desktop auto-navigates M.I.A. to a Dashboard
+view rather than requiring the manual "Import Expedition Data" click
+v0.15 built. Scope resolved via `AskUserQuestion` first, same as v0.18:
+(1) build only the fully-testable "already running, auto-navigate"
+half now — the original vision's "launch M.I.A. itself from a cold,
+not-yet-running state" needs a persistent Windows background watcher
+(pywin32/WMI USB-arrival events), genuinely unbuildable-and-verifiable
+in this Linux dev sandbox, so it's a separate, deliberately deferred
+follow-up, same honest treatment as 11.3b/11.6/the AI HAT+2 question;
+(2) auto-import, not just auto-navigate — docking a recognized Core
+merges its Expedition data in with no manual button click needed.
+
+**Core-detection mechanism**: `core/expedition_sync.py::find_export_bundles()`
+globs a newly-mounted device's root for `mia_expedition_export_*.zip` —
+the exact filenames the existing Export button already writes.
+Deliberately does NOT try to read a marker file describing the docked
+device's own config (e.g. its `system.device_profile`) — the real Pi 5
+USB gadget-mode mount layout (`docs/HARDWARE.md`) is still unverified
+against real hardware, so detection instead relies only on files this
+app itself created, working regardless of how gadget-mode ends up
+exposing storage. `import_expedition_data()`'s existing merge-by-id is
+already idempotent, so no "already processed" bundle-tracking was
+needed — re-importing a bundle on a later dock is safe and cheap.
+
+**Removed the "restart M.I.A. to see imported data" limitation** (both
+for this new auto-import path and the existing manual Import button) by
+adding a `reload()` method to the 5 managers `import_expedition_data()`
+touches (`ExpeditionManager`/`TripManager`/`WaypointManager`/
+`JournalManager`/`InventoryManager`) — a thin public wrapper around
+each one's existing private `_load()`.
+
+`modules/field_kit/module.py`'s existing device-polling `_refresh_devices()`
+now calls a new `_check_for_docked_core()` per storage device (Home
+profile only — a Core docking to another Core was never part of the
+vision): finds bundles, imports each, reloads the 5 managers, raises a
+`NotificationManager` notification summarizing what came in, and
+publishes the *existing* `"assistant.open_module_requested"` event with
+`module_id="dashboard"` — reusing `gui/main_window.py`'s already-wired
+handler rather than inventing a new navigation mechanism, since
+navigating to a module by id is exactly what that already does whether
+the request came from the Assistant or here. A per-device "already
+auto-imported this dock" set (pruned to currently-connected device
+names each poll) stops the same still-docked device from re-triggering
+the notification/navigate on every 3-second poll tick, while still
+treating an unplug-and-redock as fresh.
+
+New `modules/dashboard/module.py` (auto-discovered, module #21): a
+read-only aggregation view — recent Activity Log entries, active
+Missions with objective progress, recent Memories (Expedition recaps),
+upcoming Calendar events, active Projects/open Tasks. **Deliberately
+excludes "recently played music"** from the original vision — Media/Music
+isn't a built module yet (confirmed blocked on missing `libpulse` in
+this dev sandbox), so there's no real data source for it; add that
+section once Media actually exists, not before. Writes its own small
+summary-line formatting rather than importing `modules.missions.module`/
+`modules.memories.module`'s formatting helpers — modules never import
+another module directly (`CLAUDE.md`'s one-directional layering rule).
+
+No new Assistant action needed — the existing generic `open_module`
+action already handles "open my dashboard"-style requests for any
+module, Dashboard included, for free.
+
+**Found and fixed a real test-isolation bug while writing the
+committed tests for `_check_for_docked_core()`** (distinct from the
+manual smoke test, which is what caught it): the new test file
+constructed a real `NotificationManager` without isolating
+`core.notification_manager`'s `_DATA_DIR`/`_NOTIFICATIONS_FILE`, so
+`context.notifications.notify()` calls in both the manual smoke test
+and the first pytest run landed in this dev machine's actual
+`data/notifications.json` — three "Core docked" test-artifact
+notifications, confirmed via `git check-ignore`/`git log` to be
+untracked with no real prior content, deleted outright rather than
+surgically edited. Fixed at the root in the test fixture. **Lesson for
+any future test touching Field Kit's docking flow**: `NotificationManager`
+needs the same isolation as every other persisted-JSON manager — easy
+to forget precisely because it's one line among five other managers'
+isolation setup, not because the pattern itself is unclear.
+
+Verified with a real, full end-to-end smoke test simulating two
+separate machines (a "Pi" instance seeding and exporting real Expedition
+data, a fresh "Home" instance in Home profile with zero data): confirmed
+the exported bundle is auto-detected, auto-imported with the Home
+Expedition count going from 0 to 1 with **no restart**, the
+auto-navigate event firing exactly once, a notification raised, a
+second poll tick for the same still-docked device NOT re-triggering,
+and the Dashboard module's widget correctly showing the newly-imported
+Expedition via Memories — all in one continuous run. 936 tests passing.
 
 ## Assistant architecture: domain-scoped tool attachment (built, 2026-07-14)
 

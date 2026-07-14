@@ -560,3 +560,18 @@ def test_splits_persist_across_a_fresh_load(isolated_paths):
     reloaded_trip = reloaded.get_trip(trip.trip_id)
     assert len(reloaded_trip.splits) == 1
     assert reloaded_trip.splits[0].waypoint_id == a.waypoint_id
+
+
+def test_reload_picks_up_changes_written_by_another_process(isolated_paths):
+    """docs/ROADMAP.md milestone v0.19 — reload() lets an auto-import's changes show up without an app restart."""
+    context = _make_context()
+    manager = _make_manager(context)
+    manager.add_trip(expedition_id="exp1", name="Original")
+    assert len(manager.all_trips()) == 1
+
+    other = TripManager(context)
+    other.add_trip(expedition_id="exp1", name="Added Elsewhere")
+
+    assert len(manager.all_trips()) == 1  # stale in-memory state
+    manager.reload()
+    assert len(manager.all_trips()) == 2

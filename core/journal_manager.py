@@ -105,6 +105,10 @@ class JournalManager:
             log.exception("Failed to load journal_entries.json — starting with an empty list.")
             self._entries = []
 
+    def reload(self) -> None:
+        """Re-reads journal_entries.json from disk — see ExpeditionManager.reload()'s docstring for why."""
+        self._load()
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _ENTRIES_FILE.write_text(

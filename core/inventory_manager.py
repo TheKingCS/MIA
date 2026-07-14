@@ -93,6 +93,10 @@ class InventoryManager:
             log.exception("Failed to load inventory_items.json — starting with an empty list.")
             self._items = []
 
+    def reload(self) -> None:
+        """Re-reads inventory_items.json from disk — see ExpeditionManager.reload()'s docstring for why."""
+        self._load()
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _ITEMS_FILE.write_text(

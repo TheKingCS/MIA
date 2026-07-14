@@ -197,3 +197,17 @@ def test_load_handles_corrupt_json_gracefully(isolated_paths):
 
     manager = _make_manager()
     assert manager.all_entries() == []
+
+
+def test_reload_picks_up_changes_written_by_another_process(isolated_paths):
+    """docs/ROADMAP.md milestone v0.19 — reload() lets an auto-import's changes show up without an app restart."""
+    manager = _make_manager()
+    manager.add_entry(title="Original")
+    assert len(manager.all_entries()) == 1
+
+    other = _make_manager()
+    other.add_entry(title="Added Elsewhere")
+
+    assert len(manager.all_entries()) == 1  # stale in-memory state
+    manager.reload()
+    assert len(manager.all_entries()) == 2

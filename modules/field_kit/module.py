@@ -84,7 +84,8 @@ from PySide6.QtWidgets import (
 )
 
 from core.device_framework import BlockDevice, SerialDevice, eject_storage_device
-from core.expedition_sync import export_expedition_data, import_expedition_data
+from core.device_profile import is_home_profile
+from core.expedition_sync import export_expedition_data, find_export_bundles, import_expedition_data
 from core.hash_identifier import identify_hash
 from core.logger import get_logger
 from core.password_strength import assess_password
@@ -118,6 +119,13 @@ class FieldKitModule(ModuleBase):
         super().__init__(context)
         self._device_list_layout: Optional[QVBoxLayout] = None
         self._device_timer: Optional[QTimer] = None
+        # docs/ROADMAP.md milestone v0.19 (Home Dock auto-launch
+        # Dashboard) — disk names of storage devices already
+        # auto-import-checked this "dock", so a still-connected device
+        # doesn't re-trigger on every 3s poll tick. Pruned to currently-
+        # connected names each refresh (see _refresh_devices()), so
+        # unplugging and re-docking the same device is treated as new.
+        self._auto_imported_devices: set[str] = set()
 
         self._script_list: Optional[QListWidget] = None
         self._script_filter_edit: Optional[QLineEdit] = None
@@ -187,6 +195,13 @@ class FieldKitModule(ModuleBase):
         if self.context.devices is None or self._device_list_layout is None:
             return
         storage, serial_devices = self.context.devices.refresh()
+
+        # Forget any device that's no longer connected, so unplugging
+        # and re-docking the same disk name is treated as a fresh dock
+        # (see _check_for_docked_core()'s docstring).
+        self._auto_imported_devices &= {device.name for device in storage}
+        for device in storage:
+            self._check_for_docked_core(device)
 
         # Clear existing rows — everything except the trailing stretch
         # added in _build_devices_tab(), which always stays last.
@@ -293,14 +308,86 @@ class FieldKitModule(ModuleBase):
 
         result = import_expedition_data(Path(source))
         if result.passed:
+            self._reload_expedition_managers()
             summary = "\n".join(f"{name}: +{count}" for name, count in result.counts.items() if count)
             if not summary:
                 summary = "No new records or photos — everything in this export was already present."
-            QMessageBox.information(
-                None, "Import Complete", f"{summary}\n\nRestart M.I.A. for imported data to appear."
-            )
+            QMessageBox.information(None, "Import Complete", summary)
         else:
             QMessageBox.warning(None, "Import Failed", "\n".join(result.errors))
+
+    def _reload_expedition_managers(self) -> None:
+        """
+        Re-reads every manager import_expedition_data() can touch, so
+        newly-merged records show up immediately — docs/ROADMAP.md
+        milestone v0.19 removed the previous "restart M.I.A. to see
+        imported data" limitation for both the manual Import button
+        above and the auto-import path below, once reload() existed on
+        each manager anyway (core/expedition_manager.py's docstring).
+        """
+        for manager in (
+            self.context.expeditions, self.context.trips, self.context.waypoints,
+            self.context.journal, self.context.inventory,
+        ):
+            if manager is not None:
+                manager.reload()
+
+    def _check_for_docked_core(self, device: BlockDevice) -> None:
+        """
+        Auto-import + auto-navigate half of docs/ROADMAP.md milestone
+        v0.19 (Home Dock auto-launch Dashboard) — Home-profile only
+        (a Core docking to another Core was never part of the vision).
+        Detection is `find_export_bundles()` (core/expedition_sync.py)
+        finding one or more `mia_expedition_export_*.zip` files at the
+        device's mount root — files only the Export button above ever
+        creates, so this works regardless of the still-unverified real
+        Pi 5 USB gadget-mode mount layout (docs/HARDWARE.md). Only the
+        in-app "already running, auto-navigate" half is built here —
+        launching M.I.A. itself from a cold, not-yet-running state via a
+        Windows background watcher (pywin32/WMI USB-arrival events) is a
+        separate, deliberately deferred follow-up: genuinely untestable
+        in this Linux dev sandbox, same category as 11.3b/11.6.
+        """
+        if not is_home_profile(self.context):
+            return
+        if not device.mountpoint or device.name in self._auto_imported_devices:
+            return
+
+        bundles = find_export_bundles(Path(device.mountpoint))
+        if not bundles:
+            return
+        self._auto_imported_devices.add(device.name)
+
+        total_counts: dict[str, int] = {}
+        any_failed = False
+        for bundle_path in bundles:
+            result = import_expedition_data(bundle_path)
+            if not result.passed:
+                any_failed = True
+                log.warning("Auto-import failed for '%s': %s", bundle_path, "; ".join(result.errors))
+                continue
+            for key, count in result.counts.items():
+                total_counts[key] = total_counts.get(key, 0) + count
+
+        self._reload_expedition_managers()
+
+        summary_lines = [f"{name}: +{count}" for name, count in total_counts.items() if count]
+        summary = "\n".join(summary_lines) if summary_lines else "No new records — everything was already present."
+        if any_failed:
+            summary += "\n(Some bundles could not be imported — see the log.)"
+
+        if self.context.notifications is not None:
+            self.context.notifications.notify(
+                title=f"Core docked: {device.display_name}",
+                message=summary,
+                source="field_kit",
+            )
+        # Reuses the existing open_module_requested event/handler
+        # (gui/main_window.py) rather than inventing a new one —
+        # navigating to a module by id is exactly what this already
+        # does, whether the request came from the Assistant or here.
+        self.context.events.publish("assistant.open_module_requested", module_id="dashboard")
+        log.info("Auto-imported Expedition data from docked Core '%s': %s", device.display_name, total_counts)
 
     # ------------------------------------------------------------------
     # Scripts tab

@@ -85,6 +85,35 @@ class ImportResult:
     counts: dict[str, int] = field(default_factory=dict)
 
 
+_EXPORT_FILENAME_GLOB = "mia_expedition_export_*.zip"
+
+
+def find_export_bundles(mountpoint: Path) -> list[Path]:
+    """
+    docs/ROADMAP.md milestone v0.19 (Home Dock auto-launch Dashboard) —
+    the detection mechanism for "is this docked device a Core with data
+    to bring in," used by modules/field_kit/module.py's auto-import.
+    Deliberately does NOT try to read a marker file describing the
+    docked device's own config (e.g. its `system.device_profile`) —
+    the real Pi 5 USB gadget-mode mount layout (docs/HARDWARE.md) is
+    still unverified against real hardware, so any assumption about
+    where such a file would even live on the exposed volume would be a
+    guess. Instead this looks for the exact filenames
+    `_on_export_expedition_data_clicked()` already writes at a device's
+    mount root — files this app itself created, so detection works
+    regardless of how gadget-mode ends up exposing storage. Sorted
+    newest-first by filename (the export timestamp is baked into the
+    name); import_expedition_data()'s merge-by-id is already idempotent,
+    so re-processing an already-imported bundle on a later dock is safe
+    and cheap rather than something that needs its own "already seen"
+    tracking.
+    """
+    mountpoint = Path(mountpoint)
+    if not mountpoint.is_dir():
+        return []
+    return sorted(mountpoint.glob(_EXPORT_FILENAME_GLOB), reverse=True)
+
+
 def export_expedition_data(destination_path: Path) -> ExportResult:
     """Build an Expedition-data bundle at destination_path (e.g. a docked drive's mount path)."""
     destination_path = Path(destination_path)

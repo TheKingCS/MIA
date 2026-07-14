@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 import core.expedition_sync as expedition_sync_module
-from core.expedition_sync import export_expedition_data, import_expedition_data
+from core.expedition_sync import export_expedition_data, find_export_bundles, import_expedition_data
 
 
 @pytest.fixture
@@ -178,3 +178,36 @@ def test_import_rejects_path_traversal(isolated_paths, tmp_path):
     result = import_expedition_data(malicious_path)
     assert result.passed is False
     assert "unsafe path" in result.errors[0].lower()
+
+
+# ----------------------------------------------------------------------
+# find_export_bundles — docs/ROADMAP.md milestone v0.19, Home Dock
+# auto-launch Dashboard's Core-detection mechanism
+# ----------------------------------------------------------------------
+
+def test_find_export_bundles_empty_when_none_present(tmp_path):
+    assert find_export_bundles(tmp_path) == []
+
+
+def test_find_export_bundles_finds_matching_files(tmp_path):
+    (tmp_path / "mia_expedition_export_20260814_120000.zip").write_bytes(b"fake")
+    (tmp_path / "not_a_bundle.zip").write_bytes(b"fake")
+    (tmp_path / "random.txt").write_text("hello")
+
+    found = find_export_bundles(tmp_path)
+    assert [p.name for p in found] == ["mia_expedition_export_20260814_120000.zip"]
+
+
+def test_find_export_bundles_sorted_newest_first(tmp_path):
+    (tmp_path / "mia_expedition_export_20260101_000000.zip").write_bytes(b"fake")
+    (tmp_path / "mia_expedition_export_20260901_000000.zip").write_bytes(b"fake")
+
+    found = find_export_bundles(tmp_path)
+    assert [p.name for p in found] == [
+        "mia_expedition_export_20260901_000000.zip",
+        "mia_expedition_export_20260101_000000.zip",
+    ]
+
+
+def test_find_export_bundles_nonexistent_mountpoint_returns_empty(tmp_path):
+    assert find_export_bundles(tmp_path / "does-not-exist") == []

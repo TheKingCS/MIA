@@ -128,6 +128,10 @@ class WaypointManager:
             log.exception("Failed to load waypoints.json — starting with an empty list.")
             self._waypoints = []
 
+    def reload(self) -> None:
+        """Re-reads waypoints.json from disk — see ExpeditionManager.reload()'s docstring for why."""
+        self._load()
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _WAYPOINTS_FILE.write_text(
