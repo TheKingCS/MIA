@@ -44,8 +44,12 @@ keeps the module count manageable as the feature list grows:
 
 ## Top-level module sections (post-consolidation)
 
-Character, Memories, and Global Search are system-wide / ambient, not
-sections themselves — everything below is a menu section:
+Character and Global Search are system-wide / ambient, not sections
+themselves — everything below is a menu section. (Memories was
+originally grouped with them here too; promoted to a real section,
+#19, per the 2026-07-14 wearable-companion vision update in
+`docs/VISION.md` — the user explicitly wants a visitable "Memories
+section," not just an ambient widget.)
 
 1. **Assistant** — conversational AI, voice interface, device help, character
 2. **Reference Library** — manuals/wikis/guides/PDFs/datasheets/Bible/man pages
@@ -64,6 +68,18 @@ sections themselves — everything below is a menu section:
 15. **Diagnostics** — CPU/RAM/storage/temp/network/UPS/sensors, always accessible
 16. **System** — settings, user profiles, module manager, notifications, backup/restore, update manager
 17. **Field Kit** — connected device detection/identification (USB/serial now, wifi/BT planned), per-device actions (browse files, eject, flash OS + auto-install MIA), useful scripts library, security/network recon + active toolkit, MCU firmware flashing (ties into Workshop & Electronics' own planned "MCU flashing" bullet rather than duplicating it)
+18. **Expeditions** — Expedition Mode (v0.12): multi-activity outing tracking (hiking/camping/fishing/kayaking/biking/etc.), gear checklists, trip journal, logged speed/distance, schematic route maps, photos. Built after this list was originally written; added here for completeness.
+19. **Memories** (2026-07-14 addition, not yet built) — auto-generated trip recaps aggregated from Expeditions/Trips/Waypoints/Journal/photos (distance, pace, duration, catch/tally counts, species identified, campsites visited), a photo gallery, location-tagged logs surfaced on Navigation's offline maps, and "on this day" resurfacing. See `docs/VISION.md`'s concept-mapping table and the new "Missions/Gamification" note below for how this connects to the rest of the wearable-companion vision.
+
+**Missions/Gamification** (2026-07-14 addition, not yet built, not
+assigned a fixed top-level slot): turns the user's stated goals/hobbies
+into tracked objectives (e.g. "fish for 2 hours," "catch 3 fish").
+Deliberately left ambient/contextual rather than given its own big
+screen for now — the natural surfacing point is wherever the relevant
+activity already lives (a Trip detail view, the Memories recap, a
+Dashboard card), not a standalone section — revisit and promote to a
+real section if it grows enough to need one, same reasoning already
+applied to Character/Global Search above.
 
 ## Integration decisions (don't reinvent the wheel)
 
@@ -1754,3 +1770,74 @@ Verified with a real handler-level smoke test against real (properly
 isolated this time) managers: mark done, mark not done, delete task,
 delete project, and a fail-closed delete of a nonexistent project, all
 round-tripping correctly with no `data/` pollution afterward.
+
+## v0.17 — Memories (planned, not yet built)
+
+The first of three new subsystems from the 2026-07-14 wearable-companion
+vision update (see `docs/VISION.md`'s Mission section and
+concept-mapping table) — picked to build first because it's the lowest
+new-design-risk piece: almost entirely read-only aggregation over data
+Expedition Mode/Toolbox already capture, no new hardware required for
+a first version.
+
+- [ ] 17.1 `core/memory_manager.py` — read-only aggregation service.
+      Computes an Expedition "recap" on demand (never stored, so it
+      can't go stale relative to the underlying records): total
+      duration in days, distance/pace per Trip (from logged
+      speed/distance, v0.12 milestone 12.5), Waypoint categories
+      visited (campsites/trailheads/etc.), notable journal/conditions
+      entries, photo count.
+- [ ] 17.2 `modules/memories/module.py` — new top-level module (#19 in
+      this doc's module list above), a scrollable list of past
+      Expeditions each showing its recap plus a photo strip from
+      `trip_photos/`, most-recent-first. "On this day" resurfacing (a
+      prior Expedition/Trip whose start_date matches today's month/day
+      in an earlier year) as a lightweight extra, not the core feature.
+- [ ] 17.3 Location-tagged resurfacing on Navigation's maps — Waypoints
+      already carry lat/long + category; add navigation both ways
+      between a Memories recap and that Waypoint's pin on the existing
+      schematic map view (`gui/trip_map_view.py`).
+- [ ] 17.4 Assistant hook: a read-only "tell me about my last
+      expedition" / "what have I done at Land Between the Lakes"
+      question, reusing the `device_help` grounding pattern (this is a
+      retrieval/summarization question, not an app action, so it
+      doesn't belong in the tool-calling action registry).
+- [ ] 17.5 (stretch, deferred unless requested) catch/tally counts and
+      species-identified counts in the recap — these need the new
+      per-trip tally primitive from the Missions milestone below;
+      Memories can display them once that primitive exists but doesn't
+      need to invent it.
+
+**Deliberately NOT in this milestone**: photo-based species/plant
+identification (needs a camera + vision model — see `HARDWARE.md`'s new
+Camera section), live GPS-based pace/distance (needs a GPS module — see
+`HARDWARE.md`'s updated GPS note), and the Missions engine itself (next
+milestone — an independent consumer of Trip data, not a dependency in
+either direction).
+
+## v0.18 — Missions/Gamification (planned, not yet scoped in detail)
+
+Turns the user's stated goals/hobbies into tracked objectives (e.g. a
+"Master Baiter" mission for a fishing trip: an objective for time spent
+fishing, an objective for fish caught). A consumer of the event bus /
+Trip data rather than its own capture mechanism wherever possible —
+"time spent fishing" derives from a Trip's `activity_type="Fishing"`
+duration for free. The one genuinely new primitive needed: a simple
+per-trip tally/counter (fish caught, species identified, etc.) that
+nothing in the app currently models. Not yet broken into sub-milestones
+— do that as its own design pass when this is picked up, the same way
+Expedition Mode's 3-part scope got resolved via `AskUserQuestion` before
+v0.12 began.
+
+## v0.19 — Home Dock auto-launch Dashboard (planned, not yet scoped in detail)
+
+Docking Core to the Home desktop should auto-launch M.I.A. into a
+Dashboard view (recent events/objectives/photos/music/projects,
+upcoming events/projects) rather than requiring the manual "Import
+Expedition Data" click v0.15 built. Mostly orchestration on top of
+v0.13's Core/Home device-profile split and v0.15's existing docking
+detection (Field Kit already detects a docked Core) — a new Dashboard
+view plus a dock-detected launch trigger, not new architecture. Needs
+its own design pass (what exactly triggers "launched," whether M.I.A.
+runs as a background service on Home waiting for a dock event, etc.)
+before becoming a checkbox list.

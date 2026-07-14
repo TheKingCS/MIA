@@ -14,11 +14,34 @@ platform, automation system, and lifelong knowledge base — one whose
 value compounds over years, improving through every completed project
 rather than staying static.
 
+**2026-07-14 update, at the user's explicit request: the physical end
+form is a wearable, modular backpack rig** — camera, speaker, and mic
+mounted to a strap, Pi5 + AI HAT+2 + battery mounted to the pack itself,
+plug-and-play modules for expansion. The test for "done" the user gave
+directly: **if the user couldn't happily survive any situation with
+this tool, it isn't complete.** M.I.A. Core is meant to be worn, not
+carried in a bag and pulled out — this changes real assumptions (always
+available vs. push-to-talk-when-needed, continuous vs. session-based
+data capture) that ripple into `ROADMAP.md` and `HARDWARE.md`.
+
 Guiding principles: offline-first, privacy-first, modular, expandable
 hardware, long-term maintainability, security by design, user ownership
 of all data, transparent reasoning, continuous learning through
 documented experience, and built to assist human decision-making rather
 than replace it.
+
+**"Privacy-first" and "log as much data about the user as possible" are
+not in tension, and it's worth being explicit about why.** Privacy-first
+here has always meant *no data leaves this device without you* — no
+cloud dependency, no telemetry, no third party ever in the loop. It was
+never a constraint on how much M.I.A. can know about its own single
+owner on a device that owner fully controls. Given that, the user's
+explicit call is **maximalist local logging**: track everything the
+hardware can capture (position, pace, elevation, catch/tally counts,
+photos, voice) rather than an artificially limited category list. The
+only real constraint is hardware capability, not self-imposed scope —
+see the new "Modular Backpack" section in `HARDWARE.md` for what that
+actually requires physically.
 
 ## The four-project architecture
 
@@ -84,6 +107,22 @@ the other.
   must keep working. `ModuleManager`'s per-module failure isolation
   already supports this by accident; it should be treated as a first
   principle going forward, not an implementation detail.
+- **Camera + on-device species/plant identification is the single
+  biggest new scope item introduced by the wearable-companion vision.**
+  It's a real image-classification workload, meaningfully harder than
+  the text tool-calling this project has built so far — there's no
+  camera in `HARDWARE.md` yet, and the AI HAT+2's Hailo-10H is a
+  plausible fit for lightweight on-device classification (Hailo's own
+  docs mention smart search/captioning), but "identify this plant with
+  no connectivity" may realistically need to be "capture now, identify
+  when docked to Project 2's Home compute" for v1, consistent with the
+  Expert Council compute-offload reasoning already established below.
+- **Live position/pace tracking just became load-bearing, not
+  optional.** "Hiked 11 miles at an average pace of 5 mph" requires
+  continuous position data, not the existing manual-waypoint-based
+  distance calculator. GPS moves from "defer until Navigation's later
+  phase" (its status through 2026-07-13) to something the Memories
+  vision genuinely depends on — see `HARDWARE.md`'s updated GPS note.
 
 ## Where the new concepts map into existing plans
 
@@ -97,6 +136,11 @@ the other.
 | Character/avatar, personality, transparency about uncertainty | Already planned — v0.6 Character/companion system, event-bus driven. |
 | Smart Environment (sensors, GPS, LoRa, SDR, cameras) | Already covered by Project 1's Communications, Navigation, Agriculture, and Smart Home sections; Project 3 is the larger-scale version of the same idea once dedicated sensor infrastructure exists beyond the Pi5 itself. |
 | Robotics / Drones / prosthetics research | Already covered by Project 1's Fleet section for what connects directly to the Pi5; Project 4 is the larger standalone robotics effort. |
+| **Missions/Gamification** (2026-07-14 addition: turn hobbies/goals into objectives with tracked progress, e.g. "Master Baiter" — fish for N hours, catch N fish) | Project 1, new core service (`core/mission_manager.py`), a consumer of the event bus / Activity Log rather than its own data-capture mechanism — objectives derive progress from Trip timings, a new lightweight per-trip tally primitive (catch counts, species identified, etc.), and existing manager events wherever possible instead of duplicating data capture. |
+| **Memories** (2026-07-14 addition: auto-generated trip recaps — distance/pace/duration/catches/species/photos — plus location-tagged logs surfaced on the offline maps) | Project 1. Already had a placeholder as an "ambient" section in `ROADMAP.md`'s module list; promoted to a real top-level module per the user's explicit ask for a visitable "Memories section." Mostly an aggregation/read layer over Expedition/Trip/Waypoint/Journal data that already exists, plus a photo gallery over `trip_photos/` — the lowest-new-design-risk piece of this whole addition, and the first one being built. |
+| **Home Dock auto-launch Dashboard** (2026-07-14 addition: docking Core to the Home desktop opens M.I.A. automatically to a dashboard of recent events/objectives/photos/music/projects and upcoming items) | Project 1/2 boundary. Extends v0.13's Core/Home device-profile split and v0.15's Expedition-sync docking detection (Field Kit already detects a docked Core) — mostly orchestration (launch-on-dock, a new Dashboard view) rather than new architecture. |
+| **Vitals/Stats logging** (2026-07-14 addition: maximalist local logging of user activity/position/pace/biometrics as hardware allows) | Project 1, new core service. Deliberately maximalist rather than category-limited, per the Mission section's reconciliation with "privacy-first" above — the only real ceiling is hardware capability (GPS, IMU, camera, mic), not self-imposed scope. |
+| **Modular wearable backpack form factor** (2026-07-14 addition: camera/speaker/mic on the strap, Pi5+HAT+battery on the pack, plug-and-play expansion modules) | Physical/industrial design work, not software — tracked in `HARDWARE.md`'s new "Modular Backpack" section as its own parallel track, same way Fleet/Communications hardware choices are deferred until acquired. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 

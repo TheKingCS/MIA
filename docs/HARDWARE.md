@@ -97,13 +97,63 @@ into `voice_models/` (gitignored).
   storage or network device) is the simplest first implementation;
   a full networked client is a possible v2+ direction, not required now.
 
+## Camera (2026-07-14 addition, not yet chosen)
+
+Added by the wearable-companion vision update (`docs/VISION.md`) —
+strap-mounted, alongside the speaker/mic. Two real jobs, likely
+different priorities:
+
+- **Photo capture for Memories/trip recaps** — straightforward, any
+  Pi-compatible camera module (CSI ribbon or USB UVC) works; the
+  harder question is power/trigger design (manual button vs.
+  automatic interval capture) given a battery-powered wearable rig,
+  not the camera hardware itself.
+- **On-device species/plant identification** — a real image-classification
+  workload, meaningfully harder than this project's text tool-calling
+  work so far. The AI HAT+2's Hailo-10H is a plausible fit for
+  lightweight on-device classification (Hailo's own docs mention smart
+  search/captioning), but running this fully offline in the field vs.
+  "capture now, identify once docked to Home" is an open design
+  question — see `VISION.md`'s critical-evaluation note. Don't assume
+  live in-field identification is feasible until actually benchmarked
+  on real HAT+2 hardware.
+
+## GPS (priority raised 2026-07-14 — now load-bearing, not deferred)
+
+Previously deferred as "many options, pick later." The Memories vision
+(distance hiked, average pace, location-tagged logs on the maps) now
+genuinely depends on continuous position data, not just the manual
+waypoint-based distance calculator `core/waypoint_manager.py` already
+has. Still no module chosen — evaluate once this becomes the active
+milestone, but don't treat it as low-priority anymore. An IMU/accelerometer
+may also be worth pairing with GPS for pace/motion data during
+GPS-denied stretches (tree cover, etc.) — open question, not decided.
+
+## Modular Backpack / physical form factor (2026-07-14 addition, not yet designed)
+
+The end physical form, per the user's explicit vision: a wearable
+backpack rig, not a device carried in a bag and pulled out. Camera,
+speaker, and mic mounted to a strap; Pi5 + AI HAT+2 + battery mounted
+to the pack body; plug-and-play expansion modules (the same spirit as
+Field Kit's Connected Device Framework, but physical/mechanical rather
+than USB/serial). This is real industrial/hardware design work — a
+module connector standard, strap-mount hardware, weatherproofing,
+weight distribution — tracked here as its own parallel track, the same
+way Fleet/Communications hardware choices are deferred until a concrete
+part gets chosen, not something resolved in software. Revisit once a
+first physical prototype is underway.
+
 ## Open questions to revisit as hardware is acquired
 
 - Exact mic/speaker hardware once voice interface is actually built
-- GPS module choice for Navigation (many options; defer until that
-  phase)
+- GPS module choice for Navigation — see the GPS section above, now
+  higher priority than previously noted
+- Camera module choice — see the Camera section above
 - LoRa/SDR/radio hardware for Communications — defer until that phase,
   since protocol choice (Meshtastic vs. custom) affects the hardware pick
 - Battery/UPS HAT choice for Power section — needs to report real
   telemetry (voltage/current), not just presence, so pick one with a
-  documented I2C interface
+  documented I2C interface — now doubly important given the same
+  battery is expected to run camera/mic/speaker peripherals too
+- Modular backpack connector standard / strap-mount hardware — see the
+  new section above
