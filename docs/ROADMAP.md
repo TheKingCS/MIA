@@ -1875,3 +1875,67 @@ view plus a dock-detected launch trigger, not new architecture. Needs
 its own design pass (what exactly triggers "launched," whether M.I.A.
 runs as a background service on Home waiting for a dock event, etc.)
 before becoming a checkbox list.
+
+## Assistant architecture: domain-scoped tool attachment (built, 2026-07-14)
+
+At the user's explicit request to make the Assistant "the most advanced
+we can make it" and use the AI HAT+2's 40 TOPS "for what it's capable
+of" — investigated first, rather than guessing at HAT-specific code:
+`core/llm_manager.py`'s docstring overclaimed that moving to the real
+Hailo-10H runtime (`hailo-ollama`) would be "just a config change";
+`docs/KNOWN_ISSUES.md` already correctly flags this as unverified
+without real hardware. Softened the docstring to stop asserting more
+confidence than the known-issues entry actually supports, rather than
+writing speculative HAT-specific integration code that can't be tested
+in this dev sandbox — same discipline already applied to 11.3b/11.6.
+
+**What's actually buildable and verifiable now, picked as the highest-
+leverage improvement**: the tool-registry itself had a real, structural
+scaling problem. Every prior round of registry growth this project has
+done found a live-model-only bug (5.7-5.9's gating gaps, 5.15's
+`calculate_subnet` cross-schema interference) — and the root cause of
+5.15's bug specifically was that `modules/assistant/module.py`'s
+`build_chat_request()` attached **every** registered tool (47 by then)
+to **every** action-request message, unconditionally, regardless of
+relevance. That's not just token overhead — it's unbounded interference
+risk that gets strictly worse every time the registry grows, with no
+ceiling in sight.
+
+**Fix: domain-scoped attachment.** `AssistantAction` gained a `domain`
+field (e.g. "alarms", "inventory", "security", "expeditions", "projects"
+— all 47 existing actions assigned one). `AssistantActionRegistry.
+matching_actions(prompt)` (`core/assistant_actions.py`) replaces the old
+"attach everything if anything gates open" behavior: it attaches only
+the small always-on `system` domain (6 generic/cross-cutting actions —
+`open_module`, `get_system_health`, `recall_recent_activity`,
+`get_device_profile`, `set_theme`, `list_profiles`) plus whichever
+domain(s) the prompt's own trigger phrases actually matched. Critically,
+both members of every collision pair this project already solved
+(`open_module`/`set_theme`, `list_profiles`/`get_device_profile`) live
+in the same `system` domain specifically so they keep getting attached
+together, exactly as before — this change narrows *which* tools get
+offered, never discards a previously-solved disambiguation case.
+`is_action_request` itself is unchanged (`bool(matching_actions(...))`
+is mathematically identical to the old flattened-keyword check), so
+`looks_like_action_request()`/`gating_keywords()` and every existing
+gating test stay exactly as they were — this is purely a scoping change
+on top of unchanged gating semantics.
+
+**Found and fixed a real, previously-latent bug while verifying this
+change** — not a regression it introduced, but a gap domain-scoping
+finally exposed: `scan_ports`'s own trigger phrases never actually
+covered its own golden-set prompts ("Scan 192.168.1.1/10.0.0.1 for open
+ports"). That only ever "worked" before because gating happened to open
+via `open_module`'s unrelated bare `"open "` trigger, which used to drag
+in the *entire* 47-tool registry (including `scan_ports`) regardless of
+which trigger actually fired. Added `"for open ports"` as an explicit
+trigger. This is exactly the kind of masked gap this whole change was
+meant to surface — previously silent, now impossible to hide behind
+"attach everything."
+
+**Measured result**: average 9.9 tools attached per action-request
+prompt across the full golden set (max 17, min 6) — down from a flat
+47 every time. 60/60 on two independent live-model runs after the fix,
+847 tests passing, real headless-Qt smoke test confirming `build_chat_request()`
+returns a 9-tool subset for a real alarm request through the actual
+`AssistantModule` (not just the golden-set script).

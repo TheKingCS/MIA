@@ -109,3 +109,94 @@ def test_gating_keywords_empty_when_no_trigger_phrases():
     registry = AssistantActionRegistry()
     registry.register(_make_action())
     assert registry.gating_keywords() == []
+
+# ----------------------------------------------------------------------
+# matching_actions — domain-scoped tool attachment
+# ----------------------------------------------------------------------
+
+def _register_domain_fixture(registry: AssistantActionRegistry) -> None:
+    registry.register(AssistantAction(
+        name="add_alarm", description="Create a new alarm.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("set an alarm",), domain="alarms",
+    ))
+    registry.register(AssistantAction(
+        name="list_alarms", description="List alarms.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("list my alarms",), domain="alarms",
+    ))
+    registry.register(AssistantAction(
+        name="calculate_subnet", description="Calculate a subnet.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("calculate subnet",), domain="security",
+    ))
+    registry.register(AssistantAction(
+        name="open_module", description="Open a module.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("switch to ",), domain="system",
+    ))
+    registry.register(AssistantAction(
+        name="get_system_health", description="Report system health.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: "ok",
+        trigger_phrases=("system health",), domain="system",
+    ))
+
+
+def test_matching_actions_returns_empty_when_nothing_matches():
+    registry = AssistantActionRegistry()
+    _register_domain_fixture(registry)
+    assert registry.matching_actions("What can you tell me about Honda Civics?") == []
+
+
+def test_matching_actions_attaches_only_matched_domain_plus_always_on():
+    registry = AssistantActionRegistry()
+    _register_domain_fixture(registry)
+
+    matched = {a.name for a in registry.matching_actions("Set an alarm for 7am")}
+    # Both alarm-domain actions (list_alarms' own trigger didn't match,
+    # but it shares add_alarm's domain) plus the always-on system
+    # domain — never the unrelated security-domain calculate_subnet.
+    assert matched == {"add_alarm", "list_alarms", "open_module", "get_system_health"}
+    assert "calculate_subnet" not in matched
+
+
+def test_matching_actions_never_includes_an_unrelated_domain():
+    registry = AssistantActionRegistry()
+    _register_domain_fixture(registry)
+
+    matched = {a.name for a in registry.matching_actions("Calculate subnet 192.168.1.0/24")}
+    assert "add_alarm" not in matched
+    assert "list_alarms" not in matched
+    assert "calculate_subnet" in matched
+
+
+def test_matching_actions_always_includes_the_system_domain_when_any_domain_matches():
+    registry = AssistantActionRegistry()
+    _register_domain_fixture(registry)
+
+    matched = {a.name for a in registry.matching_actions("List my alarms")}
+    assert "open_module" in matched
+    assert "get_system_health" in matched
+
+
+def test_matching_actions_unions_multiple_matched_domains():
+    registry = AssistantActionRegistry()
+    _register_domain_fixture(registry)
+
+    matched = {a.name for a in registry.matching_actions("Set an alarm and calculate subnet 10.0.0.0/8")}
+    assert "add_alarm" in matched
+    assert "calculate_subnet" in matched
+
+
+def test_to_ollama_tools_accepts_an_explicit_actions_subset():
+    registry = AssistantActionRegistry()
+    _register_domain_fixture(registry)
+
+    subset = [a for a in registry.matching_actions("List my alarms") if a.name == "add_alarm"]
+    tools = registry.to_ollama_tools(subset)
+    assert [t["function"]["name"] for t in tools] == ["add_alarm"]

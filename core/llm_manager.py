@@ -9,11 +9,16 @@ server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md).
 
 Built on stdlib `urllib.request` rather than the `requests` package —
 this is a single local JSON endpoint, and requirements.txt stays light
-per this project's design principles (see CLAUDE.md). Ollama is also
-the runtime the real Pi 5 + AI HAT+2 deployment uses (Hailo's own
-`hailo-ollama`), so moving from dev (this class against
-localhost:11434) to prod is a base_url/model config change, not a
-backend rewrite.
+per this project's design principles (see CLAUDE.md). `docs/HARDWARE.md`
+documents Hailo's own `hailo-ollama` as the intended real Pi 5 + AI
+HAT+2 runtime, which *would* make prod a base_url/model config change
+rather than a backend rewrite — but whether it's actually Ollama-API-
+compatible for tool-calling specifically, on the real Hailo-10H
+hardware, is **unverified** (see `docs/KNOWN_ISSUES.md`'s open "AI
+HAT+2 inference path unconfirmed" item). Don't take this docstring's
+framing as more settled than that until it's actually been tested
+against real hardware — this dev sandbox only ever runs against
+generic CPU Ollama.
 
 Neither `ollama` itself nor a pulled model is assumed to exist in every
 dev environment, and a kiosk device's assistant server can be down or

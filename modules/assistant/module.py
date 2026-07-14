@@ -160,12 +160,12 @@ def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
     against the real Ollama server, not a hand-copied reimplementation
     that could quietly drift from what production actually does.
     """
-    action_keywords = (
-        context.assistant_actions.gating_keywords()
+    matched_actions = (
+        context.assistant_actions.matching_actions(prompt)
         if context.assistant_actions is not None
         else []
     )
-    is_action_request = looks_like_action_request(prompt, action_keywords)
+    is_action_request = bool(matched_actions)
 
     llm_prompt = prompt
     if not is_action_request and context.device_help is not None:
@@ -174,7 +174,12 @@ def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
     messages = [{"role": "user", "content": llm_prompt}]
     tools = []
     if is_action_request and context.assistant_actions is not None:
-        tools = context.assistant_actions.to_ollama_tools()
+        # Domain-scoped, not the full registry — see
+        # core/assistant_actions.py's docstring on why (tool-count
+        # scaling has caused real live-model-only interference bugs;
+        # matching_actions() attaches only the small always-on set plus
+        # whichever domain(s) this prompt's own triggers matched).
+        tools = context.assistant_actions.to_ollama_tools(matched_actions)
 
     return messages, tools
 

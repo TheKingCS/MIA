@@ -80,15 +80,28 @@ def test_notebook_word_does_not_false_positive_on_note_keyword():
 # docstring.
 
 class _FakeAssistantActions:
+    """
+    Stands in for the real AssistantActionRegistry's domain-scoped
+    matching_actions()/to_ollama_tools(actions) pair (core/assistant_actions.py) —
+    `_tools` itself doubles as the "matched actions" list here since
+    build_chat_request() just threads whatever matching_actions()
+    returns straight into to_ollama_tools(), and this fake never needs
+    real AssistantAction objects or domain grouping to exercise that
+    plumbing.
+    """
+
     def __init__(self, keywords, tools):
         self._keywords = keywords
         self._tools = tools
 
-    def gating_keywords(self):
-        return self._keywords
+    def matching_actions(self, prompt):
+        lowered = f" {prompt.lower().strip()} "
+        if any(keyword in lowered for keyword in self._keywords):
+            return self._tools
+        return []
 
-    def to_ollama_tools(self):
-        return self._tools
+    def to_ollama_tools(self, actions=None):
+        return actions if actions is not None else self._tools
 
 
 class _FakeDeviceHelp:

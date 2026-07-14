@@ -31,12 +31,37 @@ model. A handler that needs to touch the GUI (e.g. `open_module`) must
 publish an event rather than reach into Qt directly, since handlers
 can be invoked from contexts where that matters — see
 modules/assistant/module.py's docstring for the threading reasoning.
+
+**Domain-scoped tool attachment (added once the registry crossed 47
+tools):** every prior round of tool-count growth in this project found
+a real live-model-only bug (5.7-5.9's gating gaps, milestone 5.15's
+`calculate_subnet` cross-schema interference — see docs/ROADMAP.md).
+5.15's bug in particular was specifically about *unrelated* tool
+schemas polluting the model's context on a totally unrelated prompt
+(a security tool's presence broke an inventory question). Attaching
+every registered tool to every action-request message, unconditionally,
+doesn't just cost tokens — it's a structural interference risk that
+gets worse every time the registry grows, with no ceiling. `domain`
+groups related actions (e.g. "inventory", "security", "expeditions");
+`AssistantActionRegistry.matching_actions()` attaches only the small
+always-on `_ALWAYS_ON_DOMAIN` set (generic, cross-cutting actions like
+`open_module`/`get_system_health` that existing collision-resolution
+cases depend on being visible alongside whichever domain(s) actually
+matched — see `_DOMAIN_ALWAYS_ON` below) plus whichever domain(s) the
+prompt's own trigger phrases actually matched — typically ~10-13 tools
+per request instead of the full registry, without discarding any
+previously-solved collision case (each of those pairs — `open_module`/
+`set_theme`, `list_profiles`/`get_device_profile` — lives in the same
+domain specifically so they still get attached together, same as
+before this change). Verified against the live model in
+tests/live_model_check.py before/after — see docs/ROADMAP.md for the
+verification writeup.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Optional
 
 from core.logger import get_logger
 
@@ -44,6 +69,15 @@ if TYPE_CHECKING:
     from core.app_context import AppContext
 
 log = get_logger(__name__)
+
+# Always attached alongside whichever domain(s) a prompt's own trigger
+# phrases matched — small and generic/cross-cutting enough that this
+# doesn't reintroduce the interference risk this whole scheme exists to
+# avoid, while keeping every collision-resolution case that predates
+# this change working exactly as before (both members of each known
+# collision pair — open_module/set_theme, list_profiles/
+# get_device_profile — live in this one domain).
+_ALWAYS_ON_DOMAIN = "system"
 
 
 @dataclass
@@ -60,6 +94,12 @@ class AssistantAction:
     # can't silently drift out of sync as the registry grows past a
     # handful of actions — milestone 5.9's fix for exactly that risk.
     trigger_phrases: tuple[str, ...] = ()
+    # Groups related actions for scoped tool attachment — see this
+    # module's docstring on domain-scoped attachment. Defaults to the
+    # always-on domain so a new action registered without picking one
+    # explicitly fails safe (visible everywhere) rather than silently
+    # invisible everywhere.
+    domain: str = _ALWAYS_ON_DOMAIN
 
     def to_ollama_tool(self) -> dict:
         return {
@@ -80,8 +120,17 @@ class AssistantActionRegistry:
         self._actions[action.name] = action
         log.info("Registered assistant action: %s", action.name)
 
-    def to_ollama_tools(self) -> list[dict]:
-        return [action.to_ollama_tool() for action in self._actions.values()]
+    def to_ollama_tools(self, actions: Optional[list[AssistantAction]] = None) -> list[dict]:
+        """
+        `actions` defaults to the full registry (used by nothing in
+        production anymore, kept only so this method stays usable
+        standalone/in tests without also calling matching_actions()
+        first) — modules/assistant/module.py's build_chat_request()
+        always passes matching_actions()'s result, per this module's
+        domain-scoped-attachment docstring.
+        """
+        source = actions if actions is not None else list(self._actions.values())
+        return [action.to_ollama_tool() for action in source]
 
     def gating_keywords(self) -> list[str]:
         """All registered actions' trigger_phrases, flattened — see AssistantAction.trigger_phrases."""
@@ -89,6 +138,28 @@ class AssistantActionRegistry:
         for action in self._actions.values():
             keywords.extend(action.trigger_phrases)
         return keywords
+
+    def matching_actions(self, prompt: str) -> list[AssistantAction]:
+        """
+        Actions to actually attach as tools for this specific prompt —
+        see this module's docstring on domain-scoped attachment. Empty
+        if no action's own trigger phrase matches (mirrors
+        modules.assistant.module.looks_like_action_request()'s
+        matching rule exactly, so "is this an action request at all"
+        stays identical to before this change — only *which* tools get
+        attached narrows, never *whether* any do).
+        """
+        lowered = f" {prompt.lower().strip()} "
+        matched_domains: set[str] = set()
+        for action in self._actions.values():
+            if any(phrase in lowered for phrase in action.trigger_phrases):
+                matched_domains.add(action.domain)
+
+        if not matched_domains:
+            return []
+
+        matched_domains.add(_ALWAYS_ON_DOMAIN)
+        return [action for action in self._actions.values() if action.domain in matched_domains]
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:
         """

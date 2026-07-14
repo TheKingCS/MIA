@@ -239,6 +239,7 @@ class MIAApplication:
         """
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
+            domain="system",
             description="Open/navigate to a M.I.A. module by its module_id.",
             parameters={
                 "type": "object",
@@ -255,6 +256,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_alarm",
+            domain="alarms",
             description="Create a new alarm in M.I.A.",
             parameters={
                 "type": "object",
@@ -269,6 +271,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_alarms",
+            domain="alarms",
             description="List the user's current alarms in M.I.A.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_alarms,
@@ -276,6 +279,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_alarm",
+            domain="alarms",
             description="Delete an existing alarm in M.I.A. by its label.",
             parameters={
                 "type": "object",
@@ -294,6 +298,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_note",
+            domain="notes",
             description="Add a new journal/note entry in M.I.A.'s Notes module.",
             parameters={
                 "type": "object",
@@ -308,6 +313,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_notes",
+            domain="notes",
             description=(
                 "List or search the user's journal/note entries in M.I.A.'s Notes module. "
                 "Leave query empty to list everything, most recently updated first."
@@ -327,6 +333,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_note",
+            domain="notes",
             description="Delete an existing journal/note entry in M.I.A.'s Notes module by its title.",
             parameters={
                 "type": "object",
@@ -347,6 +354,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_inventory_item",
+            domain="inventory",
             description="Add a new item to M.I.A.'s general Inventory tool.",
             parameters={
                 "type": "object",
@@ -361,6 +369,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_inventory",
+            domain="inventory",
             description=(
                 "List or search M.I.A.'s Inventory tool, including quantities. "
                 "Use this to answer 'how many X do I have' questions about "
@@ -398,6 +407,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_inventory_item",
+            domain="inventory",
             description="Remove an item entirely from M.I.A.'s Inventory tool by name.",
             parameters={
                 "type": "object",
@@ -411,6 +421,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="adjust_inventory_quantity",
+            domain="inventory",
             description=(
                 "Change the quantity of an existing inventory item by an amount (positive to add "
                 "more, negative to use/remove some), e.g. 'I used 5 M3 bolts' -> delta -5. "
@@ -429,6 +440,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_waypoints",
+            domain="waypoints",
             description="List or search the user's saved waypoints (named locations) in M.I.A.'s Navigation module.",
             parameters={
                 "type": "object",
@@ -442,6 +454,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="waypoint_distance",
+            domain="waypoints",
             description="Get the distance and compass bearing between two of the user's saved waypoints, by name.",
             parameters={
                 "type": "object",
@@ -456,6 +469,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_waypoint",
+            domain="waypoints",
             description="Delete an existing saved waypoint in M.I.A.'s Navigation module by name.",
             parameters={
                 "type": "object",
@@ -469,6 +483,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_system_health",
+            domain="system",
             description="Get a live snapshot of this device's system health: CPU, memory, disk, temperature, and network usage.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_get_system_health,
@@ -479,6 +494,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="recall_recent_activity",
+            domain="system",
             description=(
                 "Look up what the user has recently done in M.I.A. (modules opened, "
                 "notifications, profile switches), optionally filtered by a keyword. "
@@ -504,6 +520,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_waypoint",
+            domain="waypoints",
             description="Save a new named waypoint (location) in M.I.A.'s Navigation module.",
             parameters={
                 "type": "object",
@@ -523,6 +540,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_expedition",
+            domain="expeditions",
             description="Start a new Expedition (a dated outing that can hold multiple trips) in M.I.A.'s Expeditions module.",
             parameters={
                 "type": "object",
@@ -538,6 +556,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_expeditions",
+            domain="expeditions",
             description="List the user's Expeditions in M.I.A.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_expeditions,
@@ -545,6 +564,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="recall_expedition",
+            domain="expeditions",
             description=(
                 "Get a detailed recap of ONE Expedition in M.I.A.'s Memories: duration, "
                 "distance/pace per activity type, waypoint categories visited, latest "
@@ -580,6 +600,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_trip",
+            domain="expeditions",
             description="Add a new Trip (one hike, paddle, ride, fishing trip, etc.) under an existing Expedition in M.I.A.",
             parameters={
                 "type": "object",
@@ -602,6 +623,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_trips",
+            domain="expeditions",
             description="List the user's Trips in M.I.A., optionally filtered to one Expedition by name.",
             parameters={
                 "type": "object",
@@ -618,6 +640,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_gear_item",
+            domain="expeditions",
             description="Add an item to a Trip's gear checklist in M.I.A.",
             parameters={
                 "type": "object",
@@ -635,6 +658,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_trip_log_entry",
+            domain="expeditions",
             description=(
                 "Add a dated journal/log entry to a specific Trip in M.I.A., optionally "
                 "recording weather/conditions. Use this instead of add_note when the user "
@@ -662,6 +686,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_device_profile",
+            domain="system",
             description=(
                 "Tell the user which M.I.A. EDITION (hardware/software variant) this "
                 "device is running: Core (Pi 5 + AI HAT+ 2 field edition) or Home "
@@ -675,6 +700,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="set_theme",
+            domain="system",
             description="Change M.I.A.'s visual theme.",
             parameters={
                 "type": "object",
@@ -694,6 +720,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_calendar_event",
+            domain="calendar",
             description="Add a new event to M.I.A.'s Calendar.",
             parameters={
                 "type": "object",
@@ -710,6 +737,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_calendar_events",
+            domain="calendar",
             description="List the user's Calendar events in M.I.A.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_calendar_events,
@@ -717,6 +745,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_calendar_event",
+            domain="calendar",
             description="Delete an existing Calendar event in M.I.A. by its title.",
             parameters={
                 "type": "object",
@@ -733,6 +762,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_power_status",
+            domain="power",
             description="Get this device's current battery/power status.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_get_power_status,
@@ -740,6 +770,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_component",
+            domain="components",
             description="Add a new electronic component to M.I.A.'s Workshop & Electronics component database.",
             parameters={
                 "type": "object",
@@ -758,6 +789,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_components",
+            domain="components",
             description="List or search the user's electronic components in M.I.A.",
             parameters={
                 "type": "object",
@@ -771,6 +803,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_component",
+            domain="components",
             description="Delete an existing electronic component in M.I.A. by name.",
             parameters={
                 "type": "object",
@@ -784,6 +817,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_connected_devices",
+            domain="field_kit",
             description="List currently connected external USB storage and serial devices in M.I.A.'s Field Kit.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_connected_devices,
@@ -791,6 +825,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_scripts",
+            domain="field_kit",
             description="List the user's saved scripts in M.I.A.'s Field Kit script library.",
             parameters={
                 "type": "object",
@@ -804,6 +839,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_profiles",
+            domain="system",
             description=(
                 "List the user ACCOUNTS/PEOPLE set up on this M.I.A. device (e.g. "
                 "'Zac', 'Guest'). This is about user accounts, NOT the device's "
@@ -825,6 +861,7 @@ class MIAApplication:
         # silently omit" treatment as run_script above.
         self.context.assistant_actions.register(AssistantAction(
             name="identify_hash",
+            domain="security",
             description="Identify the likely algorithm(s) for a hash string (e.g. bcrypt, MD5, SHA-256) by its format.",
             parameters={
                 "type": "object",
@@ -838,6 +875,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="check_password_strength",
+            domain="security",
             description=(
                 "Estimate a password's strength (entropy-based rating and warnings). "
                 "For a real account password, prefer M.I.A.'s Field Kit Security tab "
@@ -856,6 +894,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="calculate_subnet",
+            domain="security",
             description="Calculate subnet/CIDR details (network address, broadcast, netmask, usable host range) for an IPv4 or IPv6 CIDR.",
             parameters={
                 "type": "object",
@@ -869,6 +908,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="scan_ports",
+            domain="security",
             description=(
                 "Quickly check whether 3 common ports (22 SSH, 80 HTTP, 443 HTTPS) are "
                 "open on a host. This is a fast, limited check — for a fuller scan of "
@@ -882,10 +922,25 @@ class MIAApplication:
                 "required": ["host"],
             },
             handler=self._action_scan_ports,
-            trigger_phrases=("scan this host", "scan for open ports", "port scan", "what ports are open", "scan ports"),
+            # "for open ports" added after domain-scoped attachment
+            # (core/assistant_actions.py) surfaced a real, latent gap:
+            # "Scan 192.168.1.1 for open ports"/"Scan 10.0.0.1 for open
+            # ports" — this tool's OWN golden-set cases — never actually
+            # matched any prior trigger phrase here. That only "worked"
+            # before because every prompt gating open at all (here, via
+            # open_module's bare "open " substring) attached the full
+            # 47-tool registry, so the model could still see and pick
+            # scan_ports despite its own trigger never firing. Scoped
+            # attachment means a domain that never matches is never
+            # offered, so this latent gap needed fixing, not masking.
+            trigger_phrases=(
+                "scan this host", "scan for open ports", "port scan",
+                "what ports are open", "scan ports", "for open ports",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_project",
+            domain="projects",
             description="Start a new Project (a container for tasks) in M.I.A.'s Project Manager tool.",
             parameters={
                 "type": "object",
@@ -904,6 +959,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_projects",
+            domain="projects",
             description="List the user's Projects in M.I.A.'s Project Manager tool.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_projects,
@@ -911,6 +967,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_task",
+            domain="projects",
             description="Add a new Task under an existing Project in M.I.A.'s Project Manager tool.",
             parameters={
                 "type": "object",
@@ -929,6 +986,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_tasks",
+            domain="projects",
             description="List the user's Tasks in M.I.A., optionally filtered to one Project by name.",
             parameters={
                 "type": "object",
@@ -945,6 +1003,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_project",
+            domain="projects",
             description="Delete an existing Project (and unlink, but not delete, its Tasks) in M.I.A. by name.",
             parameters={
                 "type": "object",
@@ -958,6 +1017,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_task",
+            domain="projects",
             description="Delete an existing Task in M.I.A. by title.",
             parameters={
                 "type": "object",
@@ -971,6 +1031,7 @@ class MIAApplication:
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="mark_task_done",
+            domain="projects",
             description="Mark an existing Task as done (complete) or not done in M.I.A. by title.",
             parameters={
                 "type": "object",
