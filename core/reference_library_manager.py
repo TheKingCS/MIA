@@ -242,6 +242,32 @@ class ReferenceLibraryManager:
             passed=True, pack_id=pack_id, title=self._get_metadata(archive, "Title", default=pack_id)
         )
 
+    def delete_pack(self, pack_id: str) -> tuple[bool, str]:
+        """
+        Permanently deletes an installed pack's .zim file from disk —
+        no trash/recycle bin, same as modules/files_mod's file
+        operations, which is why the GUI layer (modules/knowledge/module.py)
+        makes the user type the pack's name to confirm before calling
+        this, not a plain Yes/No dialog. Drops the cached Archive
+        (libzim's Archive has no explicit close() — dropping the last
+        Python reference is the documented cleanup) before unlinking,
+        so a stale cached entry can't outlive the file on disk.
+        """
+        pack = self.get_pack(pack_id)
+        if pack is None:
+            return False, f"No installed pack called '{pack_id}'."
+
+        self._archives.pop(pack_id, None)
+        self._failed_stat.pop(pack_id, None)
+
+        try:
+            Path(pack.file_path).unlink()
+        except OSError as exc:
+            return False, f"Could not delete '{pack.title}': {exc}"
+
+        log.info("Deleted content pack '%s' (%s)", pack_id, pack.title)
+        return True, f"Deleted '{pack.title}'."
+
     def _get_archive(self, pack_id: str, file_path: Path) -> Optional[Archive]:
         if pack_id in self._archives:
             return self._archives[pack_id]

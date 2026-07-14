@@ -39,6 +39,21 @@ worker thread: this codebase's other large-file copies
 (core/backup_manager.py's restore) are synchronous too, so a install
 click blocking the UI for as long as the copy takes is consistent with
 existing behavior, not a new tradeoff.
+
+Each pack row also has a "Delete" button (a known gap closed in a
+later polish pass: install existed with no uninstall at all) wrapping
+ReferenceLibraryManager.delete_pack — reuses
+gui/delete_confirm_dialog.py's typed-name confirmation as-is, same
+"no trash/recycle bin, real irreversible delete" pattern as
+modules/files_mod's file operations, since a multi-gigabyte content
+pack deleted by mistake has no cheap undo.
+
+The per-pack reader's search box debounces (`_SEARCH_DEBOUNCE_MS`,
+a `QTimer` parented to the page widget so it lives exactly as long as
+the pack page does) rather than re-querying libzim on every keystroke
+— the other known gap from that same polish pass. Only the "clear
+results immediately" half of the UX stays instant; the actual
+`ReferenceLibraryManager.search()` call waits out the debounce window.
 """
 
 from __future__ import annotations
@@ -46,7 +61,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -65,6 +80,7 @@ from PySide6.QtWidgets import (
 
 from core.reference_library_manager import ReferencePack
 from core.search_manager import SearchResult
+from gui.delete_confirm_dialog import DeleteConfirmDialog
 from modules.knowledge.zim_text_browser import ZimTextBrowser
 from modules.module_base import ModuleBase
 
@@ -72,6 +88,11 @@ from modules.module_base import ModuleBase
 # module docstring for why these exist at all.
 _SEARCH_HITS_PER_PACK = 3
 _SEARCH_RESULTS_TOTAL = 15
+
+# How long the per-pack search box waits after the last keystroke
+# before actually querying libzim — see the module docstring's polish-
+# pass note.
+_SEARCH_DEBOUNCE_MS = 300
 
 
 class KnowledgeModule(ModuleBase):
@@ -217,7 +238,33 @@ class KnowledgeModule(ModuleBase):
         open_button.clicked.connect(lambda checked=False, p=pack: self._open_pack(p))
         layout.addWidget(open_button, stretch=1)
 
+        delete_button = QPushButton("Delete")
+        delete_button.setMinimumHeight(40)
+        delete_button.clicked.connect(lambda checked=False, p=pack: self._on_delete_pack_clicked(p))
+        layout.addWidget(delete_button)
+
         return row
+
+    def _on_delete_pack_clicked(self, pack: ReferencePack) -> None:
+        dialog = DeleteConfirmDialog(pack.title, is_directory=False)
+        if dialog.exec() != DeleteConfirmDialog.DialogCode.Accepted:
+            return
+
+        passed, message = self.context.reference_library.delete_pack(pack.pack_id)
+        if passed:
+            # Drop the cached reader page too — it holds a ZimTextBrowser
+            # built against the now-deleted pack, and _open_pack() would
+            # otherwise happily reuse a stale one if the same pack_id
+            # ever came back (e.g. the same filename reinstalled later).
+            stale_page = self._pack_pages.pop(pack.pack_id, None)
+            if stale_page is not None and self._stack is not None:
+                self._stack.removeWidget(stale_page)
+                stale_page.deleteLater()
+            QMessageBox.information(None, "Pack Deleted", message)
+        else:
+            QMessageBox.warning(None, "Delete Failed", message)
+
+        self._populate_pack_rows()
 
     def _show_list_page(self) -> None:
         if self._stack is not None and self._list_page is not None:
@@ -279,12 +326,16 @@ class KnowledgeModule(ModuleBase):
         results_list.setMaximumHeight(140)
         results_list.hide()
 
-        def on_search_text_changed(text: str) -> None:
-            query = text.strip()
-            if not query:
-                results_list.hide()
-                results_list.clear()
-                return
+        # Parented to `page` so it lives exactly as long as this cached
+        # reader page does (modules/knowledge/module.py's docstring) —
+        # a QTimer with no Python reference kept elsewhere would
+        # otherwise risk being garbage-collected while still armed.
+        search_debounce_timer = QTimer(page)
+        search_debounce_timer.setSingleShot(True)
+        search_debounce_timer.setInterval(_SEARCH_DEBOUNCE_MS)
+
+        def run_search() -> None:
+            query = search_edit.text().strip()
             hits = self.context.reference_library.search(pack.pack_id, query)
             results_list.clear()
             for hit in hits:
@@ -292,6 +343,18 @@ class KnowledgeModule(ModuleBase):
                 item.setData(Qt.ItemDataRole.UserRole, hit.path)
                 results_list.addItem(item)
             results_list.setVisible(bool(hits))
+
+        search_debounce_timer.timeout.connect(run_search)
+
+        def on_search_text_changed(text: str) -> None:
+            # Clearing the box hides results immediately — only the
+            # actual libzim query (run_search) waits out the debounce.
+            if not text.strip():
+                search_debounce_timer.stop()
+                results_list.hide()
+                results_list.clear()
+                return
+            search_debounce_timer.start()
 
         def on_result_activated(item: QListWidgetItem) -> None:
             entry_path = item.data(Qt.ItemDataRole.UserRole)

@@ -323,6 +323,44 @@ def test_install_pack_from_file_rejects_duplicate_pack(isolated_root, tmp_path):
     assert "already installed" in result.errors[0]
 
 
+def test_delete_pack_removes_file_and_unlists_it(isolated_root):
+    isolated_root.mkdir(parents=True)
+    _build_zim(isolated_root / "demo.zim", title="Demo Pack")
+
+    manager = _make_manager()
+    assert len(manager.list_packs()) == 1
+
+    passed, message = manager.delete_pack("demo")
+    assert passed is True
+    assert "Demo Pack" in message
+    assert not (isolated_root / "demo.zim").exists()
+    assert manager.list_packs() == []
+
+
+def test_delete_pack_unknown_id_fails_closed(isolated_root):
+    manager = _make_manager()
+    passed, message = manager.delete_pack("does-not-exist")
+    assert passed is False
+    assert "does-not-exist" in message
+
+
+def test_delete_pack_then_reinstalling_same_filename_works(isolated_root, tmp_path):
+    isolated_root.mkdir(parents=True)
+    _build_zim(isolated_root / "demo.zim", title="Original Pack")
+
+    manager = _make_manager()
+    manager.delete_pack("demo")
+
+    # A stale cached Archive/failed_stat entry would make this either
+    # still list the deleted pack or wrongly reject the new one as a
+    # duplicate — confirms delete_pack() actually invalidates both caches.
+    source = tmp_path / "demo.zim"
+    _build_zim(source, title="Replacement Pack")
+    result = manager.install_pack_from_file(source)
+    assert result.passed
+    assert manager.list_packs()[0].title == "Replacement Pack"
+
+
 def test_root_path_config_override_is_used(tmp_path):
     custom_root = tmp_path / "external_ssd" / "reference_library"
     custom_root.mkdir(parents=True)

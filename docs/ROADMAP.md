@@ -281,6 +281,24 @@ must-have content pack turns out to need it.
       anything is copied in. Synchronous copy, no worker thread — see
       `docs/testing/4.4_install_content_pack.md` for why that's
       consistent with the rest of the codebase rather than a shortcut.
+      **2026-07-13 polish pass, closing two gaps flagged but not acted
+      on when 4.2/4.4 first shipped:** (1) install existed with no way
+      to uninstall a pack from the UI at all — new
+      `ReferenceLibraryManager.delete_pack()` (invalidates the cached
+      `Archive`/quiet-period-guard entries before unlinking the file —
+      libzim's `Archive` has no explicit `close()`, so dropping the
+      last Python reference is the documented cleanup) plus a "Delete"
+      button on each pack row in `modules/knowledge/module.py`, reusing
+      `gui/delete_confirm_dialog.py`'s typed-name confirmation as-is
+      (no trash/recycle bin for a real, possibly multi-gigabyte, file
+      delete). (2) the per-pack search box re-queried libzim on every
+      keystroke — added a 300ms debounce (`QTimer`, parented to the
+      reader page so it lives exactly as long as that cached page does,
+      the first debounce anywhere in this codebase). Verified with a
+      real headless-Qt smoke test: fast simulated typing produces zero
+      search calls until typing pauses, and a full pack install-then-
+      delete round trip removes both the pack listing and the stale
+      cached reader page, not just the file on disk.
 
 ## v0.5 breakdown (planned)
 
@@ -1291,6 +1309,17 @@ pentesting toolkit assumes of its operator.
       serial-device detection: flash firmware via `esptool`/`avrdude`
       wrappers to an identified, currently-attached board, rather than
       inventing a second, separate device-detection mechanism for it.
+      **Investigated 2026-07-13, deliberately left untouched (user's
+      call, not a build attempt that failed)**: `avrdude` is a genuine
+      apt package, not installed, and blocked the same "no sudo" way as
+      11.5's `nmap`/`hashcat`; `esptool` is pip-installable without
+      sudo, so tooling isn't the blocker for ESP32/ESP8266 specifically
+      — but zero serial devices exist in this dev sandbox
+      (`/dev/ttyUSB*`/`/dev/ttyACM*` don't exist) either way, so even
+      an `esptool`-only slice couldn't be verified end-to-end here, same
+      as 11.3b's disk-write engine and Field Kit's already-deferred
+      "Open Serial Monitor." Revisit once a real ESP32/AVR board (and,
+      for `avrdude`, a machine with root) is available to test against.
 
 ## v0.12 breakdown (planned)
 
