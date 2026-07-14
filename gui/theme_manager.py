@@ -79,14 +79,28 @@ QLabel#CharacterPlaceholderText {
 QPushButton#ModuleButton {
     background-color: #e6e6e2;
     border: 1px solid #b8b8b2;
-    padding: 16px;
     text-align: left;
-    font-size: 15px;
-    color: #1a1a1a;
 }
 
 QPushButton#ModuleButton:hover {
     border: 1px solid #1a1a1a;
+}
+
+QLabel#ModuleButtonIcon {
+    background-color: #dcdcd6;
+    border-radius: 24px;
+    font-size: 22px;
+}
+
+QLabel#ModuleButtonName {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+QLabel#ModuleButtonDescription {
+    font-size: 12px;
+    color: #5a5a54;
 }
 
 QPushButton#ModuleButton:pressed {
@@ -221,15 +235,29 @@ QPushButton#ModuleButton {
     background-color: #2a1b47;
     border: 1px solid #4a2f78;
     border-radius: 12px;
-    padding: 18px;
     text-align: left;
-    font-size: 15px;
-    color: #f1e9ff;
 }
 
 QPushButton#ModuleButton:hover {
     background-color: #3a2560;
     border: 1px solid #ff6b6b;
+}
+
+QLabel#ModuleButtonIcon {
+    background-color: #3a2560;
+    border-radius: 24px;
+    font-size: 22px;
+}
+
+QLabel#ModuleButtonName {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f1e9ff;
+}
+
+QLabel#ModuleButtonDescription {
+    font-size: 12px;
+    color: #c9b8e8;
 }
 
 QPushButton#ModuleButton:pressed {
@@ -382,17 +410,46 @@ QLabel#CharacterPlaceholderText {
 QPushButton#ModuleButton {
     background-color: #ffffff;
     border: 2px solid #000000;
-    padding: 18px;
     text-align: left;
+}
+
+/*
+Deliberately a light-gray highlight, not this theme's usual "invert to
+solid black" treatment other elements use — a solid-black hover
+background here would need the name/description QLabel children (now
+separate widgets, not the button's own text — see gui/widgets/module_button.py's
+2026-07-14 redesign) to flip to white via a
+"QPushButton:hover QLabel {...}" descendant selector, which is a real,
+reproducible Qt/PySide6 rendering bug: that specific selector pattern
+(a :hover compound selector targeting a DESCENDANT widget, not the
+button itself) made the label text vanish even in the *non*-hover
+state, confirmed in an isolated, freshly-started process (not just an
+artifact of this project's usual offscreen-Qt dev sandbox — re-verify
+on real display hardware before ever reintroducing this pattern). A
+lighter background avoids the whole bug class rather than working
+around it.
+*/
+QPushButton#ModuleButton:hover {
+    background-color: #f0f0f0;
+    border: 2px solid #000000;
+}
+
+QLabel#ModuleButtonIcon {
+    background-color: #f0f0f0;
+    border-radius: 24px;
+    border: 1px solid #000000;
+    font-size: 22px;
+}
+
+QLabel#ModuleButtonName {
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     color: #000000;
 }
 
-QPushButton#ModuleButton:hover {
-    background-color: #000000;
-    color: #ffffff;
-    border: 2px solid #000000;
+QLabel#ModuleButtonDescription {
+    font-size: 12px;
+    color: #444444;
 }
 
 QPushButton#ModuleButton:pressed {

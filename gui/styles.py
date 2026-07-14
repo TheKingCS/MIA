@@ -76,11 +76,8 @@ QLabel#CharacterPlaceholderText {
 QPushButton#ModuleButton {
     background-color: #161b22;
     border: 1px solid #232b34;
-    border-radius: 10px;
-    padding: 18px;
+    border-radius: 12px;
     text-align: left;
-    font-size: 15px;
-    color: #d8e0e8;
 }
 
 QPushButton#ModuleButton:hover {
@@ -90,6 +87,23 @@ QPushButton#ModuleButton:hover {
 
 QPushButton#ModuleButton:pressed {
     background-color: #0d1116;
+}
+
+QLabel#ModuleButtonIcon {
+    background-color: #1c2530;
+    border-radius: 24px;
+    font-size: 22px;
+}
+
+QLabel#ModuleButtonName {
+    font-size: 15px;
+    font-weight: 600;
+    color: #d8e0e8;
+}
+
+QLabel#ModuleButtonDescription {
+    font-size: 12px;
+    color: #7a8a99;
 }
 
 QProgressBar {

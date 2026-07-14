@@ -2215,3 +2215,70 @@ new coverage for reformulation success/failure/truncation and merge/
 dedup behavior with a fake LLM — no live model needed for the automated
 suite, matching this module's existing "no filesystem/Qt/LLM in unit
 tests" convention).
+
+## Aesthetic upgrade, part 1: main menu module cards (2026-07-14)
+
+At the user's request for "a massive upgrade on aesthetics... clean and
+cool." Investigated the real current state first — rendered actual
+screenshots of all 4 themes via the established offscreen-Qt technique
+— rather than redesigning blind.
+
+**Found two real, pre-existing bugs by looking at the rendered
+output**, neither previously caught by any unit test since neither is
+visible from stylesheet-string equality checks:
+
+1. `gui/widgets/module_button.py` built its button label as a single
+   f-string (`f"{module.icon}   {module.display_name}"`) handed
+   straight to `QPushButton`'s own text — Qt treats a bare `&` in
+   button text as a mnemonic/accelerator marker, silently mangling
+   "Workshop & Electronics" into "Workshop _Electronics" on screen.
+2. A genuine Qt/PySide6 rendering bug, confirmed via careful bisection
+   in a freshly-started process (an earlier bisection attempt inside a
+   single long-running process gave contradictory, unreliable results —
+   Qt's internal style caching across many rapid `setStyleSheet()`
+   calls in one process is not a trustworthy test harness for this kind
+   of investigation): a `:hover` compound selector targeting a
+   *descendant* widget inside a `QPushButton`
+   (`QPushButton:hover QLabel {...}`) can make that label's text vanish
+   even in the non-hover state, not just fail to apply on hover. Found
+   while giving the Anime Monochrome theme's module cards a white-text-
+   on-black-hover treatment — worked around by not inverting to a solid
+   background on hover for that element at all (a lighter highlight
+   instead), rather than fighting the bug further. Re-verify on real
+   display hardware before ever reintroducing this selector pattern.
+
+**Redesigned `ModuleButton`** from a single icon+name line into a
+richer card: a circular icon badge, bold module name, and a one-line
+muted description — using `module.description`, which already existed
+on every module but was never shown on the main menu. Both the name
+and description are eagerly elided to one line (`QFontMetrics.elidedText()`,
+measured against a font matching the actual QSS-applied size/weight —
+an earlier attempt measured against the wrong font and silently
+under-elided, clipping the ellipsis itself off-card) rather than word-
+wrapped: an early word-wrapped version made every card as tall as its
+longest description, and at this app's actual default 1100x700 kiosk
+window size (not just a wider dev-convenience test size), that pushed
+the full module list past the point of fitting without scrolling — a
+real usability cost on a kiosk device, found only by rendering at the
+real default size, not an arbitrary wider one. Added a
+`QGraphicsDropShadowEffect` for real depth. Applied consistently across
+all 4 themes (`gui/styles.py`'s Dark Field plus the other 3 in
+`gui/theme_manager.py`), each with matching icon-badge/name/description
+colors for its own palette.
+
+**Also found new data-pollution during this work** (a third occurrence
+this session, previously found and fixed twice already): `data/waypoints.json`
+had again accumulated leaked test waypoints (same "A"/"B"/"C"/"New
+York"/"Los Angeles" fixture names) from one of this session's own ad
+hoc rendering/debugging scripts, not the committed test suite. Cleaned
+up. **Standing lesson, now hit three times**: isolate every manager's
+data path in *any* scratch script that constructs a real `AppContext`,
+even ones that look unrelated to that manager (a UI/theme rendering
+script has no obvious reason to touch Waypoints) — `ModuleManager.discover()`
+and full `MainWindow` construction touch more of the app than a
+script's own stated purpose might suggest.
+
+944 tests passing (no new automated tests added for `ModuleButton`
+itself — its Qt widget-construction logic follows this project's
+existing convention of manual headless-Qt screenshot verification
+rather than pytest coverage, same as every other module's `get_widget()`).
