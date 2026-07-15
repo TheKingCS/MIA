@@ -32,6 +32,7 @@ from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
+from core.dashboard_widgets import DashboardWidgetRegistry, WidgetDescriptor
 from core.data_logger_manager import DataLoggerManager
 from core.device_framework import DeviceFramework
 from core.device_help_manager import DeviceHelpManager
@@ -141,6 +142,7 @@ class MIAApplication:
         self.context.missions = MissionManager(self.context)
         self.context.conversations = ConversationManager(self.context)
         self.context.user_memories = UserMemoryManager(self.context)
+        self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -155,6 +157,7 @@ class MIAApplication:
         self._register_search_providers()
         self._register_calculators()
         self._register_assistant_actions()
+        self._register_dashboard_widgets()
 
         self.splash: SplashScreen | None = None
         self.main_window: MainWindow | None = None
@@ -298,6 +301,20 @@ class MIAApplication:
 
         self.context.calculators.register(UnitConverterCalculator())
         self.context.calculators.register(OhmsLawCalculator())
+
+    def _register_dashboard_widgets(self) -> None:
+        """
+        Register the Home dashboard's built-in widgets — 2026-07-15,
+        "framework first" per the widget/dashboard-customization
+        conversation (docs/VISION.md). The actual QWidget construction
+        for each of these lives in gui/home_dashboard.py; this registry
+        only tracks identity/enabled-state/order, same core/gui split as
+        ModuleManager (core, module_ids) vs. MainWindow (gui, the grid).
+        """
+        self.context.dashboard_widgets.register(WidgetDescriptor("power", "Power", "\U0001F50B"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("mission", "Mission", "\U0001F3C6"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("volume", "Volume", "\U0001F50A"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("current_project", "Current Project", "\U0001F4CB"))
 
     def _register_assistant_actions(self) -> None:
         """

@@ -45,6 +45,21 @@ Voice-adjacent in this project. Which voice speaks is chosen in
 Settings (`modules/settings/module.py`'s Voice dropdown, backed by
 `core/voice_catalog.py`'s curated multi-voice selection).
 
+**2026-07-15: the fixed 3-card layout is now a real widget framework**
+(`core/dashboard_widgets.py`'s "framework first" build, prompted by the
+user wanting a "JARVIS-level dashboard" with more widgets — trading
+bot, weather, music, current project — and the ability to add/remove
+them). Power/Mission/Volume are now registered widgets like any other,
+not hardcoded cards — `_build_widgets_grid()` renders whatever
+`context.dashboard_widgets.enabled_widgets_in_order()` returns, and a
+new gear button opens `gui/dashboard_customize_dialog.py` to toggle/
+reorder them, live (no restart — same "rebuild on event" pattern
+`gui/main_window.py` already uses for the Apps grid). New widgets only
+need a `WidgetDescriptor` registration
+(`core/application.py`'s `_register_dashboard_widgets()`) plus a
+builder method here in `self._widget_builders` — the framework itself
+doesn't change. First new widget built this pass: Current Project.
+
 **"Currently playing song" from the original ask is deliberately not
 here** — Music is a bare placeholder module with no real playback data
 source (same reasoning `modules/dashboard/module.py` already gives for
@@ -87,18 +102,17 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 from core.daily_occasions import calendar_events_today
+from core.dashboard_widgets import WidgetDescriptor
 from core.mission_manager import Mission
 from core.power_manager import PowerStatus
+from core.project_manager import Project
 from core.startup_briefing import build_stat_highlights, build_startup_briefing
 from core.tts_worker import TTSWorker
 from core.volume_manager import VolumeStatus
+from gui.dashboard_customize_dialog import DashboardCustomizeDialog
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
 _CLOCK_TICK_MS = 1000
-
-_POWER_ICON = "\U0001F50B"  # battery
-_MISSION_ICON = "\U0001F3C6"  # trophy
-_VOLUME_ICON = "\U0001F50A"  # speaker
 
 
 def format_clock_time(now: datetime) -> str:
@@ -139,6 +153,15 @@ def format_volume_line(status: Optional[VolumeStatus]) -> str:
     return f"{status.percent}%"
 
 
+def format_current_project_line(project: Optional[Project], active_count: int) -> str:
+    """Pure formatting logic — testable without Qt."""
+    if project is None:
+        return "No active projects."
+    if active_count <= 1:
+        return f"{project.name}  [{project.status}]"
+    return f"{project.name}  [{project.status}]  (+{active_count - 1} more active)"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -149,6 +172,15 @@ class HomeDashboard(QFrame):
         self.context = context
         self.setObjectName("HomeDashboard")
         self._tts_worker: Optional[TTSWorker] = None
+        self._widget_bodies: dict[str, QLabel] = {}
+        self._volume_slider: Optional[QSlider] = None
+        self._mute_button: Optional[QPushButton] = None
+        self._widget_builders = {
+            "power": self._build_power_widget,
+            "mission": self._build_mission_widget,
+            "volume": self._build_volume_widget,
+            "current_project": self._build_current_project_widget,
+        }
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -159,15 +191,19 @@ class HomeDashboard(QFrame):
         outer.addWidget(self._build_briefing_banner())
         self._speak_briefing()
 
-        cards = QGridLayout()
-        cards.setSpacing(16)
-        self._power_body = self._add_card(cards, 0, 0, _POWER_ICON, "Power")
-        self._mission_body = self._add_card(cards, 0, 1, _MISSION_ICON, "Mission")
-        volume_card, self._volume_body, self._volume_slider, self._mute_button = self._build_volume_card()
-        cards.addWidget(volume_card, 0, 2)
-        outer.addLayout(cards)
+        self._widgets_container = QWidget()
+        self._widgets_grid: Optional[QGridLayout] = None
+        outer.addWidget(self._widgets_container)
+        self._build_widgets_grid()
 
-        outer.addWidget(self._build_apps_launch_card())
+        toolbar = QHBoxLayout()
+        toolbar.addWidget(self._build_apps_launch_card(), stretch=1)
+        customize_button = QPushButton("⚙")  # gear
+        customize_button.setObjectName("HeaderButton")
+        customize_button.setToolTip("Customize Dashboard")
+        customize_button.clicked.connect(self._on_customize_clicked)
+        toolbar.addWidget(customize_button)
+        outer.addLayout(toolbar)
         outer.addStretch()
 
         self._clock_timer = QTimer(self)
@@ -178,16 +214,21 @@ class HomeDashboard(QFrame):
         self._data_timer.timeout.connect(self._refresh_data)
         self._data_timer.start(_DATA_REFRESH_MS)
 
+        self.context.events.subscribe("dashboard.widgets_changed", self._on_widgets_changed)
+
         self._tick_clock()
         self._refresh_data()
 
     def unsubscribe(self) -> None:
         """Must be called before this widget is destroyed — stops both
-        timers, same cleanup reasoning as gui/character_panel.py's
-        unsubscribe() (a QTimer left running would keep firing into a
-        deleted Qt widget)."""
+        timers and unsubscribes from the event bus, same cleanup
+        reasoning as gui/character_panel.py's unsubscribe() (a QTimer
+        left running would keep firing into a deleted Qt widget, and a
+        stale event subscriber would keep this dead widget alive in
+        EventBus's callback list)."""
         self._clock_timer.stop()
         self._data_timer.stop()
+        self.context.events.unsubscribe("dashboard.widgets_changed", self._on_widgets_changed)
 
     # ------------------------------------------------------------------
     # Construction
@@ -212,10 +253,92 @@ class HomeDashboard(QFrame):
 
         return container
 
-    def _add_card(self, grid: QGridLayout, row: int, col: int, icon: str, title: str) -> QLabel:
-        """Builds one icon+title+body card, adds it to `grid`, and
-        returns just the body QLabel — the piece each section's
-        _refresh_data() actually needs to update."""
+    def _build_widgets_grid(self) -> None:
+        """(Re)builds the dashboard's widget grid from
+        context.dashboard_widgets.enabled_widgets_in_order() — called
+        once at construction and again any time "dashboard.widgets_changed"
+        fires (the Customize dialog), so this is always a full rebuild,
+        not an in-place patch. Reuses one QGridLayout instance for
+        self._widgets_container's whole lifetime rather than trying to
+        replace the layout object itself each time — Qt refuses (with
+        just a runtime warning, not an exception) to install a second
+        layout on a widget unless the first is fully detached, and an
+        early version of this method got that wrong: it silently left
+        the container with no live layout at all after the first
+        rebuild, so every widget was actually still present in
+        self._widget_bodies but invisible on screen. Clearing/refilling
+        the same grid sidesteps the problem entirely. Same explicit
+        hide()+setParent(None) cleanup as this app's other layout-
+        clearing code (modules/dashboard/module.py) — deleteLater()
+        alone doesn't hide anything immediately and has left ghosted
+        widgets on screen before in this codebase."""
+        if self._widgets_grid is None:
+            self._widgets_grid = QGridLayout(self._widgets_container)
+            self._widgets_grid.setSpacing(16)
+
+        while self._widgets_grid.count():
+            item = self._widgets_grid.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+
+        self._widget_bodies = {}
+        self._volume_slider = None
+        self._mute_button = None
+
+        registry = self.context.dashboard_widgets
+        widgets = registry.enabled_widgets_in_order() if registry is not None else []
+        for index, descriptor in enumerate(widgets):
+            builder = self._widget_builders.get(descriptor.widget_id)
+            if builder is None:
+                continue
+            widget = builder(descriptor)
+            self._widgets_grid.addWidget(widget, index // 3, index % 3)
+            # A widget added to an already-visible parent's layout isn't
+            # always auto-shown by Qt on every platform — confirmed via
+            # a real headless-Qt test: after the first rebuild, new
+            # cards reported isVisible()=False and a default unlaid-out
+            # size until explicitly shown. Harmless to call this during
+            # the initial construction-time build too (the parent isn't
+            # shown yet then anyway).
+            widget.show()
+
+        self._refresh_data()
+
+    def _on_widgets_changed(self) -> None:
+        self._build_widgets_grid()
+
+    def _on_customize_clicked(self) -> None:
+        dialog = DashboardCustomizeDialog(self.context, self)
+        dialog.exec()
+
+    def _build_power_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["power"] = body
+        return card
+
+    def _build_mission_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["mission"] = body
+        return card
+
+    def _build_current_project_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["current_project"] = body
+        return card
+
+    def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body, slider, mute_button = self._build_volume_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["volume"] = body
+        self._volume_slider = slider
+        self._mute_button = mute_button
+        return card
+
+    def _build_simple_card(self, icon: str, title: str) -> tuple[QFrame, QLabel]:
+        """Builds one icon+title+body card and returns (card, body_label)
+        — the widget builders above add it to the grid themselves."""
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
@@ -250,10 +373,9 @@ class HomeDashboard(QFrame):
         shadow.setColor(QColor(0, 0, 0, 80))
         card.setGraphicsEffect(shadow)
 
-        grid.addWidget(card, row, col)
-        return body_label
+        return card, body_label
 
-    def _build_volume_card(self) -> tuple[QFrame, QLabel, QSlider, QPushButton]:
+    def _build_volume_card(self, icon: str, title: str) -> tuple[QFrame, QLabel, QSlider, QPushButton]:
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
@@ -263,13 +385,13 @@ class HomeDashboard(QFrame):
         header = QHBoxLayout()
         header.setSpacing(10)
 
-        icon_badge = QLabel(_VOLUME_ICON)
+        icon_badge = QLabel(icon)
         icon_badge.setObjectName("DashboardSectionIcon")
         icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_badge.setFixedSize(40, 40)
         header.addWidget(icon_badge)
 
-        title_label = QLabel("Volume")
+        title_label = QLabel(title)
         title_label.setObjectName("DashboardSectionTitle")
         header.addWidget(title_label)
         header.addStretch()
@@ -389,13 +511,23 @@ class HomeDashboard(QFrame):
         self._clock_date_label.setText(format_clock_date(now.date()))
 
     def _refresh_data(self) -> None:
-        self._refresh_power()
-        self._refresh_mission()
-        self._refresh_volume()
+        """Only refreshes widgets that are actually currently built —
+        `self._widget_bodies` reflects whatever
+        context.dashboard_widgets.enabled_widgets_in_order() produced
+        last, so a disabled widget's refresh is simply skipped rather
+        than erroring on a body label that doesn't exist."""
+        if "power" in self._widget_bodies:
+            self._refresh_power()
+        if "mission" in self._widget_bodies:
+            self._refresh_mission()
+        if "current_project" in self._widget_bodies:
+            self._refresh_current_project()
+        if "volume" in self._widget_bodies:
+            self._refresh_volume()
 
     def _refresh_power(self) -> None:
         status = self.context.power.read() if self.context.power else None
-        self._power_body.setText(format_power_line(status))
+        self._widget_bodies["power"].setText(format_power_line(status))
 
     def _refresh_mission(self) -> None:
         mission = None
@@ -410,18 +542,32 @@ class HomeDashboard(QFrame):
                     for index in range(total)
                     if self.context.missions.is_objective_complete(mission.mission_id, index)
                 )
-        self._mission_body.setText(format_active_mission_line(mission, completed, total))
+        self._widget_bodies["mission"].setText(format_active_mission_line(mission, completed, total))
+
+    def _refresh_current_project(self) -> None:
+        project = None
+        active_count = 0
+        if self.context.projects is not None:
+            active_projects = [p for p in self.context.projects.all_projects() if p.status != "Complete"]
+            active_count = len(active_projects)
+            if active_projects:
+                project = active_projects[0]
+        self._widget_bodies["current_project"].setText(format_current_project_line(project, active_count))
 
     def _refresh_volume(self) -> None:
+        if self._volume_slider is None or self._mute_button is None:
+            return
         available = self.context.volume is not None and self.context.volume.is_available()
         status = self.context.volume.read() if available else None
-        self._volume_body.setText(format_volume_line(status))
+        self._widget_bodies["volume"].setText(format_volume_line(status))
         self._volume_slider.setEnabled(available)
         self._mute_button.setEnabled(available)
         if status is not None and not self._volume_slider.isSliderDown():
             self._volume_slider.setValue(status.percent)
 
     def _on_volume_slider_released(self) -> None:
+        if self._volume_slider is None:
+            return
         if self.context.volume is not None:
             self.context.volume.set_volume(self._volume_slider.value())
         self._refresh_volume()

@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
     from core.conversation_manager import ConversationManager
+    from core.dashboard_widgets import DashboardWidgetRegistry
     from core.data_logger_manager import DataLoggerManager
     from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
@@ -99,6 +100,7 @@ class AppContext:
     # pre-existing `memories` field above (core/memory_manager.py's
     # Expedition recaps) — same word, unrelated concept.
     user_memories: Optional["UserMemoryManager"] = field(default=None, repr=False)
+    dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

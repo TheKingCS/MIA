@@ -8,6 +8,19 @@ while the app is open. Implemented as a child widget of MainWindow
 window, since a child widget avoids cross-platform window-manager
 positioning quirks — it just needs to sit above its parent's other
 widgets and auto-close after a few seconds.
+
+**2026-07-15 fix**: this widget (and `gui/notification_center.py`'s row
+widget) predate the 4-theme system (milestone 13.2) and were never
+migrated — they called their own `setStyleSheet()` with a hardcoded
+dark-theme-only background (`#161b22`), so a toast/notification card
+looked identical (and wrong) regardless of the selected theme. Fixed
+the same way every other themed card in this app works: an object name
+(`#NotificationCard`, reusing `#DashboardCard`'s per-theme background)
+plus a `level` dynamic property so `gui/styles.py`/`gui/theme_manager.py`
+can style the level-accent border per theme
+(`QFrame#NotificationCard[level="..."]`) — no inline `setStyleSheet()`
+left on this widget at all now, same pattern as the header bell's
+`hasUnread` property.
 """
 
 from __future__ import annotations
@@ -17,21 +30,12 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLay
 
 from core.notification_manager import Notification
 
-_LEVEL_COLORS = {
-    "info": "#4fd1c5",
-    "warning": "#e0af68",
-    "critical": "#e06666",
-}
-
 
 class NotificationToast(QFrame):
     def __init__(self, parent, notification: Notification, duration_ms: int = 5000) -> None:
         super().__init__(parent)
-        color = _LEVEL_COLORS.get(notification.level, _LEVEL_COLORS["info"])
-        self.setStyleSheet(
-            f"QFrame {{ background-color: #161b22; border-left: 4px solid {color}; "
-            f"border-radius: 6px; }} QLabel {{ background: transparent; }}"
-        )
+        self.setObjectName("NotificationCard")
+        self.setProperty("level", notification.level)
         self.setFixedWidth(300)
 
         outer = QHBoxLayout(self)
@@ -43,7 +47,7 @@ class NotificationToast(QFrame):
         title_label.setWordWrap(True)
 
         message_label = QLabel(notification.message)
-        message_label.setStyleSheet("font-size: 12px; color: #a7b4c0;")
+        message_label.setObjectName("SubtitleLabel")
         message_label.setWordWrap(True)
 
         text_layout.addWidget(title_label)

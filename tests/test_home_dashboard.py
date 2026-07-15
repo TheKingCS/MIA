@@ -15,11 +15,13 @@ from datetime import date, datetime
 
 from core.mission_manager import Mission, Objective
 from core.power_manager import PowerStatus
+from core.project_manager import Project
 from core.volume_manager import VolumeStatus
 from gui.home_dashboard import (
     format_active_mission_line,
     format_clock_date,
     format_clock_time,
+    format_current_project_line,
     format_power_line,
     format_volume_line,
 )
@@ -78,3 +80,17 @@ def test_format_volume_line_normal():
 
 def test_format_volume_line_muted():
     assert format_volume_line(VolumeStatus(percent=62, muted=True)) == "62%  —  Muted"
+
+
+def test_format_current_project_line_none():
+    assert format_current_project_line(None, 0) == "No active projects."
+
+
+def test_format_current_project_line_single_active():
+    project = Project(project_id="p1", name="Garage Rewire", status="Active")
+    assert format_current_project_line(project, 1) == "Garage Rewire  [Active]"
+
+
+def test_format_current_project_line_multiple_active():
+    project = Project(project_id="p1", name="Garage Rewire", status="Active")
+    assert format_current_project_line(project, 3) == "Garage Rewire  [Active]  (+2 more active)"

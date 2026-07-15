@@ -164,6 +164,28 @@ QFrame#DashboardCard {
     border-radius: 12px;
 }
 
+QFrame#NotificationCard {
+    background-color: #e6e6e2;
+    border-radius: 6px;
+}
+
+QFrame#NotificationCard[level="info"] {
+    border-left: 4px solid #2f8f85;
+}
+
+QFrame#NotificationCard[level="warning"] {
+    border-left: 4px solid #a06a1f;
+}
+
+QFrame#NotificationCard[level="critical"] {
+    border-left: 4px solid #b23b3b;
+}
+
+QLabel#NotificationCardMeta {
+    font-size: 11px;
+    color: #4a4a4a;
+}
+
 QLabel#DashboardSectionIcon {
     background-color: transparent;
     border: 2px solid #1a1a1a;
@@ -490,6 +512,28 @@ QFrame#DashboardCard {
     background-color: #2a1b47;
     border: 1px solid #4a2f78;
     border-radius: 12px;
+}
+
+QFrame#NotificationCard {
+    background-color: #2a1b47;
+    border-radius: 6px;
+}
+
+QFrame#NotificationCard[level="info"] {
+    border-left: 4px solid #4fd1c5;
+}
+
+QFrame#NotificationCard[level="warning"] {
+    border-left: 4px solid #e0af68;
+}
+
+QFrame#NotificationCard[level="critical"] {
+    border-left: 4px solid #e06666;
+}
+
+QLabel#NotificationCardMeta {
+    font-size: 11px;
+    color: #c9b8e8;
 }
 
 QLabel#DashboardSectionIcon {
@@ -857,6 +901,29 @@ QLabel#DashboardClockDate {
 QFrame#DashboardCard {
     background-color: #ffffff;
     border: 2px solid #000000;
+}
+
+QFrame#NotificationCard {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 0px;
+}
+
+QFrame#NotificationCard[level="info"] {
+    border-left: 5px solid #4fd1c5;
+}
+
+QFrame#NotificationCard[level="warning"] {
+    border-left: 5px solid #e0af68;
+}
+
+QFrame#NotificationCard[level="critical"] {
+    border-left: 5px solid #e06666;
+}
+
+QLabel#NotificationCardMeta {
+    font-size: 11px;
+    color: #444444;
 }
 
 QLabel#DashboardSectionIcon {

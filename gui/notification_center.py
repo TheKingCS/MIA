@@ -30,12 +30,6 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 
-_LEVEL_COLORS = {
-    "info": "#4fd1c5",
-    "warning": "#e0af68",
-    "critical": "#e06666",
-}
-
 
 class NotificationCenterDialog(QDialog):
     def __init__(self, context: AppContext, parent=None) -> None:
@@ -93,11 +87,9 @@ class NotificationCenterDialog(QDialog):
             self._list_layout.addWidget(self._build_row(notification))
 
     def _build_row(self, notification) -> QFrame:
-        color = _LEVEL_COLORS.get(notification.level, _LEVEL_COLORS["info"])
         row = QFrame()
-        row.setStyleSheet(
-            f"QFrame {{ background-color: #161b22; border-left: 4px solid {color}; border-radius: 6px; }}"
-        )
+        row.setObjectName("NotificationCard")
+        row.setProperty("level", notification.level)
 
         outer = QHBoxLayout(row)
         text_layout = QVBoxLayout()
@@ -111,7 +103,7 @@ class NotificationCenterDialog(QDialog):
         message_label.setWordWrap(True)
 
         meta_label = QLabel(f"{notification.source} \u2022 {notification.created_at}")
-        meta_label.setStyleSheet("color: #5a6773; font-size: 11px;")
+        meta_label.setObjectName("NotificationCardMeta")
 
         text_layout.addWidget(title_label)
         text_layout.addWidget(message_label)

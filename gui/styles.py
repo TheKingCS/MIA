@@ -169,6 +169,28 @@ QFrame#DashboardCard {
     border-radius: 12px;
 }
 
+QFrame#NotificationCard {
+    background-color: #161b22;
+    border-radius: 6px;
+}
+
+QFrame#NotificationCard[level="info"] {
+    border-left: 4px solid #4fd1c5;
+}
+
+QFrame#NotificationCard[level="warning"] {
+    border-left: 4px solid #e0af68;
+}
+
+QFrame#NotificationCard[level="critical"] {
+    border-left: 4px solid #e06666;
+}
+
+QLabel#NotificationCardMeta {
+    font-size: 11px;
+    color: #7a8a99;
+}
+
 QLabel#DashboardSectionIcon {
     background-color: transparent;
     border: 2px solid #4fd1c5;

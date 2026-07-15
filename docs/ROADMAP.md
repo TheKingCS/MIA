@@ -2820,3 +2820,79 @@ zero audio devices (`sd.query_devices()` returns empty,
 originally documented, updated understanding but same practical
 conclusion: real speaker verification needs a real interactive/hardware
 session, not this one.
+
+## Notification popup theming fix + Home dashboard widget framework "part 1" (built, 2026-07-15)
+
+At the user's request: fixed a real, long-standing bug where
+`gui/notification_toast.py`/`gui/notification_center.py` predated the
+4-theme system (milestone 13.2) and still called their own
+`setStyleSheet()` with a hardcoded dark-only background — notification
+popups looked wrong (and identical) regardless of the selected theme.
+Fixed the idiomatic way this app already uses elsewhere (the header
+bell's `hasUnread` accent): an object name (`#NotificationCard`,
+reusing `#DashboardCard`'s per-theme background) plus a `level`
+dynamic property so each theme's own QSS drives the level-accent
+border color. No inline `setStyleSheet()` left on either widget.
+Verified with real screenshots across all 4 themes.
+
+**Then, the start of a much larger ask** — the user wants a
+"JARVIS-level dashboard": more widgets (trading bot graphs, weather,
+music, current project), the ability to add/remove/reorder them, and
+eventual Assistant integration. Scoped via `AskUserQuestion` before
+building anything (trading bot is an existing external system, not
+something to build here; online-dependent widgets should degrade
+gracefully offline rather than block, matching the Core/Home hybrid
+decided earlier the same session; build order is framework-first, then
+easy real-data widgets — all three the recommended option).
+
+**Built "framework first"**: new `core/dashboard_widgets.py`
+(`WidgetDescriptor` + `DashboardWidgetRegistry`) — deliberately mirrors
+`core/module_manager.py`'s enable/disable/event-publish convention
+(`is_enabled()`/`set_enabled()`, a `dashboard.disabled_widgets` config
+list, a `"dashboard.widgets_changed"` event) rather than inventing a
+second convention for what's structurally the same problem. `gui/`
+still owns the actual widget rendering (same core/gui split as
+ModuleManager vs. MainWindow) — `gui/home_dashboard.py`'s
+Power/Mission/Volume cards are now *registered widgets themselves*,
+not hardcoded, proving the framework with real production code rather
+than a toy example. New `gui/dashboard_customize_dialog.py`: a
+checkable, reorderable list (up/down buttons, not drag-and-drop —
+matches this project's own "start boring" discipline) that toggles/
+reorders widgets live, no restart. First new widget built to prove the
+framework handles genuinely new data, not just the pre-existing three:
+**Current Project**, a simple `context.projects`-backed card.
+
+**Found and fixed a real Qt bug via a live headless-Qt test, not
+assumption**: the first version of the live-rebuild logic tried to
+detach/replace the container's `QGridLayout` object itself between
+rebuilds (reparenting the old layout onto a throwaway widget) — this
+silently left the container with *no* live layout at all after the
+first rebuild: `_widget_bodies` correctly tracked all 3 remaining
+widgets, but the screenshot showed a completely blank grid. Fixed by
+keeping one `QGridLayout` instance alive for the container's whole
+lifetime and clearing/refilling it in place instead of replacing the
+layout object. A second, separate bug then surfaced the same way:
+newly-added widgets reported `isVisible()=False` and a default
+unlaid-out size (`640x480`) after a rebuild triggered on an
+*already-shown* parent — Qt doesn't reliably auto-show a widget added
+to a layout after the parent's already visible, at least not on this
+platform. Fixed with an explicit `widget.show()` after each
+`addWidget()` call. Both bugs were only visible via a real screenshot
++ widget-state dump, not from reading the code — consistent with this
+project's whole history of Qt bugs that don't show up any other way.
+
+Verified end-to-end via a real headless-Qt test: default view renders
+all 4 widgets correctly (including live real project data — "Garage
+Rewire [Active] (+1 more active)"), disabling a widget through the
+dialog's logic actually removes it and the remaining widgets re-flow
+live, and the change persists (`is_enabled()` reflects it, config
+`dashboard.widget_order` saved). 1098 tests passing (13 new — 10 for
+`core/dashboard_widgets.py`, 3 for `format_current_project_line()`).
+
+**Not built yet, deliberately** — this was "framework first" only:
+the trading bot widget (needs connection details from the user's
+existing bot), weather widget (needs the online-optional design
+pattern actually implemented, not just decided), music (Music module
+is still a placeholder), and any Assistant-widget conversational
+integration. Each is its own scoped piece of work on top of this
+framework, not blocked by it.
