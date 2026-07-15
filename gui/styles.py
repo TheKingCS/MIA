@@ -218,6 +218,15 @@ QLabel#DashboardSectionBody {
     color: #7c8798;
 }
 
+/* Activity Log's feed line — monospace, per the ForMIA stencil's
+"Log / feed" widget variant (distinct from every other widget's
+regular Inter-style DashboardSectionBody). */
+QLabel#DashboardActivityLogBody {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 12px;
+    color: #7c8798;
+}
+
 QLabel#DashboardBriefingText {
     font-size: 13px;
     font-weight: 400;

@@ -32,7 +32,11 @@
         "tts_voice_id": "en_US-lessac-low",
         "ai_voice_effect": true,
         "sample_rate": 16000,
-        "push_to_talk_gpio_pin": null
+        "push_to_talk_gpio_pin": null,
+        "push_to_talk_enabled": true
+    },
+    "notifications": {
+        "enabled": true
     },
     "power": {
         "low_battery_threshold_percent": 20

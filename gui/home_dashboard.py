@@ -101,6 +101,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.activity_log_manager import ActivityLogEntry
 from core.app_context import AppContext
 from core.daily_occasions import calendar_events_today
 from core.dashboard_widgets import WidgetDescriptor
@@ -111,9 +112,19 @@ from core.startup_briefing import build_stat_highlights, build_startup_briefing
 from core.tts_worker import TTSWorker
 from core.volume_manager import VolumeStatus
 from gui.dashboard_customize_dialog import DashboardCustomizeDialog
+from gui.widgets.toggle_switch import ToggleSwitch
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
 _CLOCK_TICK_MS = 1000
+_ACTIVITY_LOG_LIMIT = 3
+
+# Widgets that should span more than one grid column — everything else
+# defaults to span 1. 2026-07-15 "ForMIA" handoff: Activity Log is a
+# full-width "log/feed" card per WIDGET_STENCIL.md.
+_WIDGET_COLUMN_SPANS: dict[str, int] = {
+    "activity_log": 3,
+}
+_GRID_COLUMNS = 3
 
 
 def format_clock_time(now: datetime) -> str:
@@ -163,6 +174,16 @@ def format_current_project_line(project: Optional[Project], active_count: int) -
     return f"{project.name}  [{project.status}]  (+{active_count - 1} more active)"
 
 
+def format_activity_log_line(entries: list[ActivityLogEntry]) -> str:
+    """Pure formatting logic — testable without Qt. Matches the
+    "ForMIA" design handoff's log/feed stencil: "HH:MM summary //
+    HH:MM summary". `entries` is expected newest-first (same order
+    core.activity_log_manager.ActivityLogManager.recent() returns)."""
+    if not entries:
+        return "No recent activity."
+    return "  //  ".join(f"{entry.timestamp[11:16]} {entry.summary}" for entry in entries)
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -181,12 +202,18 @@ class HomeDashboard(QFrame):
             "mission": self._build_mission_widget,
             "volume": self._build_volume_widget,
             "current_project": self._build_current_project_widget,
+            "activity_log": self._build_activity_log_widget,
+            "quick_bus": self._build_quick_bus_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
             "mission": self._mission_highlight,
             "volume": self._volume_highlight,
             "current_project": self._current_project_highlight,
+            # activity_log/quick_bus deliberately have no highlight
+            # provider — "3 recent activity items" isn't a meaningful
+            # spoken briefing highlight the way a mission/project count
+            # is, same reasoning as volume's None provider below.
         }
 
         outer = QVBoxLayout(self)
@@ -305,12 +332,21 @@ class HomeDashboard(QFrame):
 
         registry = self.context.dashboard_widgets
         widgets = registry.enabled_widgets_in_order() if registry is not None else []
-        for index, descriptor in enumerate(widgets):
+        row = col = 0
+        for descriptor in widgets:
             builder = self._widget_builders.get(descriptor.widget_id)
             if builder is None:
                 continue
+            # Most widgets are span 1; a few (e.g. Activity Log) span
+            # the full grid width per _WIDGET_COLUMN_SPANS — wrap to a
+            # fresh row if the current one doesn't have room left,
+            # rather than silently overlapping/clipping a wide card.
+            span = min(_WIDGET_COLUMN_SPANS.get(descriptor.widget_id, 1), _GRID_COLUMNS)
+            if col + span > _GRID_COLUMNS:
+                row += 1
+                col = 0
             widget = builder(descriptor)
-            self._widgets_grid.addWidget(widget, index // 3, index % 3)
+            self._widgets_grid.addWidget(widget, row, col, 1, span)
             # A widget added to an already-visible parent's layout isn't
             # always auto-shown by Qt on every platform — confirmed via
             # a real headless-Qt test: after the first rebuild, new
@@ -319,6 +355,10 @@ class HomeDashboard(QFrame):
             # the initial construction-time build too (the parent isn't
             # shown yet then anyway).
             widget.show()
+            col += span
+            if col >= _GRID_COLUMNS:
+                row += 1
+                col = 0
 
         self._refresh_data()
 
@@ -371,6 +411,61 @@ class HomeDashboard(QFrame):
         self._volume_slider = slider
         self._mute_button = mute_button
         return card
+
+    def _build_activity_log_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        # The "ForMIA" stencil's log/feed variant is monospace, unlike
+        # every other widget's body text — a distinct object name so
+        # gui/styles.py can style just this one differently.
+        body.setObjectName("DashboardActivityLogBody")
+        self._widget_bodies["activity_log"] = body
+        return card
+
+    def _build_quick_bus_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The one widget with no single body label — see
+        core/notification_manager.py's notify() and
+        modules/assistant/module.py's _on_talk_pressed() for the real
+        (not cosmetic) behavior these two toggles gate, per the "ForMIA"
+        handoff's explicit "wire to real feature flags" instruction."""
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(10)
+        layout.addLayout(self._build_widget_header(descriptor.icon, descriptor.display_name))
+
+        layout.addLayout(self._build_toggle_row(
+            "Voice input",
+            self.context.config.get("voice.push_to_talk_enabled", True),
+            self._on_voice_input_toggled,
+        ))
+        layout.addLayout(self._build_toggle_row(
+            "Notifications",
+            self.context.config.get("notifications.enabled", True),
+            self._on_notifications_toggled,
+        ))
+        layout.addStretch()
+        return card
+
+    def _build_toggle_row(self, label_text: str, checked: bool, on_toggled: Callable[[bool], None]) -> QHBoxLayout:
+        row = QHBoxLayout()
+        label = QLabel(label_text)
+        label.setObjectName("DashboardSectionBody")
+        row.addWidget(label)
+        row.addStretch()
+        toggle = ToggleSwitch()
+        toggle.setChecked(checked)
+        toggle.toggled.connect(on_toggled)
+        row.addWidget(toggle)
+        return row
+
+    def _on_voice_input_toggled(self, checked: bool) -> None:
+        self.context.config.set("voice.push_to_talk_enabled", checked)
+        self.context.config.save()
+
+    def _on_notifications_toggled(self, checked: bool) -> None:
+        self.context.config.set("notifications.enabled", checked)
+        self.context.config.save()
 
     def _open_module(self, module_id: str) -> None:
         """Reuses the exact navigation mechanism the Assistant's own
@@ -628,6 +723,15 @@ class HomeDashboard(QFrame):
             self._refresh_current_project()
         if "volume" in self._widget_bodies:
             self._refresh_volume()
+        if "activity_log" in self._widget_bodies:
+            self._refresh_activity_log()
+        # quick_bus has no refresh — its two toggles reflect config
+        # state set at construction and via their own toggled signal,
+        # not the 5s poll every other widget uses.
+
+    def _refresh_activity_log(self) -> None:
+        entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []
+        self._widget_bodies["activity_log"].setText(format_activity_log_line(entries))
 
     def _refresh_power(self) -> None:
         status = self.context.power.read() if self.context.power else None

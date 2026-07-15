@@ -3254,3 +3254,59 @@ handoff's card structure. Full pytest suite (1109/1109, unaffected —
 this pass touched only styling/layout, no new pure-logic functions),
 confirmed the other 3 themes are untouched (only `DARK_FIELD_THEME`'s
 block was edited).
+
+## "ForMIA" design handoff, pass 2: Activity Log + Quick Bus widgets (built, 2026-07-15)
+
+Pass 1 was confirmed to land well — continuing per the handoff's
+remaining widgets, still deliberately staged rather than building
+everything the mockup shows at once. Picked the two new widgets that
+need **zero new data-gathering infrastructure** — both reuse fully-
+existing real services — leaving CPU Load (needs a new rolling-history
+sample buffer, since `core/system_health.py`'s `cpu_percent` is a
+point-in-time reading, not a series) and Network (the mockup's
+"round-trip ms" implies pinging something, in real tension with this
+project's offline-first principle — a real design question, not just
+an implementation detail) for a later pass once those are thought
+through properly rather than rushed in.
+
+**Activity Log** — a new full-width "log/feed" widget
+(`_WIDGET_COLUMN_SPANS` added to `gui/home_dashboard.py`'s grid
+placement, generalizing it beyond the single-column-per-widget
+assumption pass 1 shipped with) showing the 3 most recent
+`context.activity_log` entries as one monospace line
+(`format_activity_log_line()`, "HH:MM summary // HH:MM summary" per
+the stencil's log variant) — real data, the same service
+`modules/dashboard/module.py` already surfaces, not a new one.
+
+**Quick Bus** — two toggle switches (Voice input, Notifications), and
+per the handoff's own explicit instruction ("wire to real feature
+flags... not just visual") both drive **real behavior, not cosmetic
+UI state**:
+- New `notifications.enabled` config key — `core/notification_manager.py`'s
+  `notify()` now returns `None` and creates/persists/publishes nothing
+  at all when disabled. Checked first: no existing caller anywhere in
+  the codebase inspects `notify()`'s return value, so widening its
+  return type to `Optional[Notification]` is safe.
+- New `voice.push_to_talk_enabled` config key — `modules/assistant/module.py`'s
+  `_on_talk_pressed()` now refuses to start recording and shows "Voice
+  input is turned off" when disabled.
+- New `gui/widgets/toggle_switch.py`'s `ToggleSwitch` — custom-painted
+  (`QAbstractButton` + `paintEvent`, same technique as
+  `gui/presence_widget.py`) rather than a styled `QCheckBox`, since Qt's
+  checkbox QSS can fake a pill *shape* but not a knob that visibly
+  slides between two positions — that needs either an image asset
+  (this project has none for UI chrome) or real paint code.
+
+**`core/notification_manager.py` had no test file at all before this —
+a real, pre-existing gap**, not something this pass tries to fully
+backfill. Added a minimal `tests/test_notification_manager.py` covering
+specifically the new gate (3 tests), not general coverage.
+
+Verified for real, not just visually: a live headless-Qt test found the
+actual `ToggleSwitch` instances inside a real `HomeDashboard`, flipped
+one via `setChecked(False)` (the same call a real click makes), and
+confirmed `context.notifications.notify()` genuinely returned `None`
+and the config value actually changed — not a cosmetic switch that
+merely looks toggled. Also a real screenshot confirming Activity Log's
+full-width span and Quick Bus's two teal toggles render correctly with
+real log data. 1115 tests passing (6 new), no regressions.

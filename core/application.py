@@ -315,6 +315,13 @@ class MIAApplication:
         self.context.dashboard_widgets.register(WidgetDescriptor("mission", "Mission", "\U0001F3C6"))
         self.context.dashboard_widgets.register(WidgetDescriptor("volume", "Volume", "\U0001F50A"))
         self.context.dashboard_widgets.register(WidgetDescriptor("current_project", "Current Project", "\U0001F4CB"))
+        # 2026-07-15 "ForMIA" design handoff, pass 2: the first two new
+        # widgets from the mockup that need zero new data-gathering
+        # infrastructure (both reuse fully-existing real services) —
+        # CPU Load/Network are deliberately deferred to a later pass,
+        # see docs/ROADMAP.md for why.
+        self.context.dashboard_widgets.register(WidgetDescriptor("activity_log", "Activity Log", "\U0001F4DC"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("quick_bus", "Quick Bus", "\U0001F39B"))
 
     def _register_assistant_actions(self) -> None:
         """

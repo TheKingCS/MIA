@@ -107,11 +107,22 @@ class NotificationManager:
     # Raising notifications
     # ------------------------------------------------------------------
 
-    def notify(self, title: str, message: str, level: str = "info", source: str = "system") -> Notification:
+    def notify(self, title: str, message: str, level: str = "info", source: str = "system") -> Optional[Notification]:
         """
         Raise a new notification. Any module can call this via
         self.context.notifications.notify(...) — no registration needed.
+
+        2026-07-15 "ForMIA" design handoff, Quick Bus widget: returns
+        None (no notification created, persisted, or published) when
+        `notifications.enabled` is false — a real behind-the-scenes
+        effect for that dashboard toggle, not just a cosmetic switch.
+        No existing caller inspects the return value (checked before
+        this change), so this is safe.
         """
+        if not self.context.config.get("notifications.enabled", True):
+            log.info("Notification suppressed (notifications disabled) [%s] from '%s': %s", level, source, title)
+            return None
+
         if level not in VALID_LEVELS:
             log.warning("Unknown notification level '%s' from '%s' — defaulting to 'info'.", level, source)
             level = "info"

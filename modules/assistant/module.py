@@ -161,6 +161,7 @@ log = get_logger(__name__)
 _LLM_UNAVAILABLE_STATUS = "Assistant unavailable — is Ollama running?"
 _MIC_UNAVAILABLE_STATUS = "Microphone unavailable."
 _STT_UNAVAILABLE_STATUS = "Speech-to-text unavailable."
+_VOICE_INPUT_DISABLED_STATUS = "Voice input is turned off (Quick Bus, Home dashboard)."
 
 
 class AssistantModule(ModuleBase):
@@ -504,6 +505,9 @@ class AssistantModule(ModuleBase):
 
     def _on_talk_pressed(self) -> None:
         if self.context.voice is None or self._worker is not None or self._recording:
+            return
+        if not self.context.config.get("voice.push_to_talk_enabled", True):
+            self._status_label.setText(_VOICE_INPUT_DISABLED_STATUS)
             return
         if not self.context.voice.start_recording():
             self._status_label.setText(_MIC_UNAVAILABLE_STATUS)

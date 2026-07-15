@@ -13,12 +13,14 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
+from core.activity_log_manager import ActivityLogEntry
 from core.mission_manager import Mission, Objective
 from core.power_manager import PowerStatus
 from core.project_manager import Project
 from core.volume_manager import VolumeStatus
 from gui.home_dashboard import (
     format_active_mission_line,
+    format_activity_log_line,
     format_clock_date,
     format_clock_time,
     format_current_project_line,
@@ -94,3 +96,20 @@ def test_format_current_project_line_single_active():
 def test_format_current_project_line_multiple_active():
     project = Project(project_id="p1", name="Garage Rewire", status="Active")
     assert format_current_project_line(project, 3) == "Garage Rewire  [Active]  (+2 more active)"
+
+
+def test_format_activity_log_line_empty():
+    assert format_activity_log_line([]) == "No recent activity."
+
+
+def test_format_activity_log_line_single_entry():
+    entries = [ActivityLogEntry(entry_id="e1", event_type="module_opened", summary="Opened Notes", timestamp="2026-07-15T14:02:00")]
+    assert format_activity_log_line(entries) == "14:02 Opened Notes"
+
+
+def test_format_activity_log_line_multiple_entries_joined():
+    entries = [
+        ActivityLogEntry(entry_id="e1", event_type="waypoint_added", summary="Waypoint added", timestamp="2026-07-15T14:02:00"),
+        ActivityLogEntry(entry_id="e2", event_type="battery_check", summary="Battery check ok", timestamp="2026-07-15T14:00:00"),
+    ]
+    assert format_activity_log_line(entries) == "14:02 Waypoint added  //  14:00 Battery check ok"
