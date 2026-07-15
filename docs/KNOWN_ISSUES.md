@@ -26,6 +26,20 @@ any environment with these tools installed and root available) —
 nothing about the *design* is blocked, only this dev sandbox's ability
 to verify it.
 
+## Open: Calendar has no recurring-event support, so "anniversaries" don't repeat automatically (2026-07-14 aesthetic pass part 5)
+
+The daily occasion-check timer (`core/application.py`'s
+`_check_daily_occasions()`) surfaces today's Calendar events as part of
+"remind them of anniversaries" — but `core/calendar_manager.py`'s
+`CalendarEvent` has no recurrence field at all. A user-created "Our
+Anniversary" event only fires this reminder on the exact date it was
+entered; it will not automatically reappear next year unless the user
+(or the Assistant) adds a fresh event for it annually. Real recurring
+events (yearly/monthly/weekly) would need a genuine `CalendarEvent`
+schema change plus UI for it — not built here, since it's a separate
+feature from the daily-digest mechanism itself. Revisit if recurring
+reminders turn out to matter enough to justify that change.
+
 ## Open: Home dashboard's volume control unverified on real audio hardware (2026-07-14 aesthetic pass part 3)
 
 `core/volume_manager.py` shells out to ALSA's `amixer` CLI (no Python

@@ -43,6 +43,7 @@ import core.alarm_manager as alarm_manager_module
 import core.calendar_manager as calendar_manager_module
 import core.component_manager as component_manager_module
 import core.config_manager as config_manager_module
+import core.conversation_manager as conversation_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.journal_manager as journal_manager_module
@@ -51,6 +52,7 @@ import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
 import core.trip_manager as trip_manager_module
+import core.user_memory_manager as user_memory_manager_module
 import core.waypoint_manager as waypoint_manager_module
 
 # ProfileManager.create_profile()/set_active_profile() persist via
@@ -85,6 +87,10 @@ task_manager_module._DATA_DIR = _TEMP_DATA_DIR
 task_manager_module._TASKS_FILE = _TEMP_DATA_DIR / "tasks.json"
 mission_manager_module._DATA_DIR = _TEMP_DATA_DIR
 mission_manager_module._MISSIONS_FILE = _TEMP_DATA_DIR / "missions.json"
+conversation_manager_module._DATA_DIR = _TEMP_DATA_DIR
+conversation_manager_module._CONVERSATIONS_FILE = _TEMP_DATA_DIR / "conversations.json"
+user_memory_manager_module._DATA_DIR = _TEMP_DATA_DIR
+user_memory_manager_module._USER_MEMORIES_FILE = _TEMP_DATA_DIR / "user_memories.json"
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
@@ -95,6 +101,7 @@ from core.assistant_chat import build_chat_request
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
+from core.conversation_manager import ConversationManager
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
@@ -110,6 +117,7 @@ from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.task_manager import TaskManager
 from core.trip_manager import TripManager
+from core.user_memory_manager import UserMemoryManager
 from core.waypoint_manager import WaypointManager
 
 # (description, prompt, expected)
@@ -160,6 +168,7 @@ GOLDEN_CASES = [
         "Switch to the Anime Monochrome theme",
         "set_theme",
     ),
+    ("set birthday", "My birthday is March 3rd, 1990", "set_birthday"),
     ("false-positive sanity: ordinary use of the word 'trip'", "That trip to the store took forever", None),
     (
         "false-positive sanity: ordinary use of the word 'log' unrelated to a trip",
@@ -263,6 +272,8 @@ def _build_context() -> AppContext:
     # is needed the way every other manager above requires.
     context.memories = MemoryManager(context)
     context.missions = MissionManager(context)
+    context.conversations = ConversationManager(context)
+    context.user_memories = UserMemoryManager(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
     # over lsblk/psutil with no JSON file of their own, so no isolation
     # is needed the way every other manager above requires.
@@ -310,7 +321,13 @@ def main() -> int:
 
     failures = []
     for description, prompt, expected in GOLDEN_CASES:
-        messages, tools = build_chat_request(context, prompt)
+        # A fresh, empty conversation per case — this golden set verifies
+        # tool-gating/grounding decisions in isolation, one case at a
+        # time, not multi-turn history behavior (see
+        # tests/test_assistant_chat.py's history-specific tests for
+        # that instead).
+        conversation = context.conversations.start_new_active_conversation()
+        messages, tools = build_chat_request(context, conversation, prompt)
         reply = context.llm.chat_with_tools(messages, tools=tools)
         called = [tc.name for tc in reply.tool_calls] if reply and reply.tool_calls else []
 

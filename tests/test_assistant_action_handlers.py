@@ -570,6 +570,28 @@ def test_set_theme_updates_config_and_publishes_event(context):
 
 
 # ----------------------------------------------------------------------
+# Birthday
+# ----------------------------------------------------------------------
+
+def test_set_birthday_requires_active_profile(context):
+    result = MIAApplication._action_set_birthday(context, {"birthday": "1990-03-03"})
+    assert "active user profile" in result.lower()
+
+
+def test_set_birthday_rejects_invalid_format(context):
+    context.profiles.create_profile(name="Alex", make_active=True)
+    result = MIAApplication._action_set_birthday(context, {"birthday": "March 3rd"})
+    assert "yyyy-mm-dd" in result.lower()
+
+
+def test_set_birthday_saves_to_active_profile(context):
+    context.profiles.create_profile(name="Alex", make_active=True)
+    result = MIAApplication._action_set_birthday(context, {"birthday": "1990-03-03"})
+    assert "1990-03-03" in result
+    assert context.profiles.get_active_profile().birthday == "1990-03-03"
+
+
+# ----------------------------------------------------------------------
 # Calendar
 # ----------------------------------------------------------------------
 

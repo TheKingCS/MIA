@@ -30,6 +30,8 @@ from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
+from core.conversation_manager import ConversationManager
+from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
 from core.data_logger_manager import DataLoggerManager
 from core.device_framework import DeviceFramework
 from core.device_help_manager import DeviceHelpManager
@@ -57,6 +59,7 @@ from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
 from core.task_manager import TaskManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
+from core.user_memory_manager import UserMemoryManager
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -136,6 +139,8 @@ class MIAApplication:
         # Missions references trips (for the trip_duration_hours metric
         # type), so it's constructed after trips already is.
         self.context.missions = MissionManager(self.context)
+        self.context.conversations = ConversationManager(self.context)
+        self.context.user_memories = UserMemoryManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -176,11 +181,72 @@ class MIAApplication:
         self._power_check_timer.timeout.connect(self._check_power)
         self._power_check_timer.start(30_000)
 
+        # Same "always alive for the whole app session" reasoning as
+        # the timers above — birthdays/calendar/check-in must fire
+        # regardless of which screen is open. 5 minutes is plenty
+        # responsive for "once a day" events (see
+        # core/daily_occasions.py's own docstring for why each of the
+        # three checks below has its own independent "already ran
+        # today" gate rather than sharing one).
+        self._daily_occasion_timer = QTimer()
+        self._daily_occasion_timer.timeout.connect(self._check_daily_occasions)
+        self._daily_occasion_timer.start(300_000)
+
     def _check_alarms(self) -> None:
         self.context.alarms.check_due(datetime.now())
 
     def _check_power(self) -> None:
         self.context.power.check_low_battery()
+
+    def _check_daily_occasions(self) -> None:
+        """See core/daily_occasions.py's docstring for the full reasoning behind each check."""
+        now = datetime.now()
+        today_iso = now.date().isoformat()
+        config = self.context.config
+
+        if should_run_once_daily(config.get("system.last_birthday_celebrated_date"), today_iso):
+            active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+            if active_profile is not None and is_birthday_today(active_profile.birthday, now.date()):
+                self.context.notifications.notify(
+                    title="\U0001F389 Happy Birthday!",
+                    message=f"Happy birthday, {active_profile.name}! Wishing you an amazing day.",
+                    level="info",
+                    source="system",
+                )
+                config.set("system.last_birthday_celebrated_date", today_iso)
+                config.save()
+
+        if should_run_once_daily(config.get("system.last_calendar_digest_date"), today_iso):
+            events_today = (
+                calendar_events_today(self.context.calendar.all_events(), today_iso)
+                if self.context.calendar is not None
+                else []
+            )
+            if events_today:
+                titles = ", ".join(event.title for event in events_today)
+                self.context.notifications.notify(
+                    title="Today's calendar",
+                    message=f"You have {len(events_today)} event(s) today: {titles}",
+                    level="info",
+                    source="system",
+                )
+            config.set("system.last_calendar_digest_date", today_iso)
+            config.save()
+
+        if should_run_once_daily(config.get("system.last_checkin_date"), today_iso):
+            has_activity_today = self.context.conversations is not None and any(
+                conversation.updated_at[:10] == today_iso
+                for conversation in self.context.conversations.all_conversations()
+            )
+            if should_send_checkin(now, has_activity_today):
+                self.context.notifications.notify(
+                    title="Just checking in",
+                    message="Haven't heard from you today — how's everything going?",
+                    level="info",
+                    source="system",
+                )
+                config.set("system.last_checkin_date", today_iso)
+                config.save()
 
     def _display(self, widget) -> None:
         """
@@ -728,6 +794,27 @@ class MIAApplication:
                 "change the theme", "set the theme", "switch the theme", "use a different theme",
                 "low energy theme", "anime theme", "colored theme", "dark field theme",
             ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="set_birthday",
+            domain="system",
+            description=(
+                "Remember the current user's own birthday, so M.I.A. can recognize and celebrate it. "
+                "Use this whenever the user tells you their birthday in conversation — do not ask for "
+                "it unprompted."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "birthday": {
+                        "type": "string",
+                        "description": "The user's birthday as YYYY-MM-DD. Use a plausible recent year if only month/day were given.",
+                    },
+                },
+                "required": ["birthday"],
+            },
+            handler=self._action_set_birthday,
+            trigger_phrases=("my birthday is", "my birthday's", "remember my birthday"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_calendar_event",
@@ -1497,6 +1584,19 @@ class MIAApplication:
         profile = get_device_profile(context)
         label = "Core (Pi 5 + AI HAT+ 2 field edition)" if profile == CORE else "Home (desktop workstation edition)"
         return f"This device is running the {label}."
+
+    @staticmethod
+    def _action_set_birthday(context: AppContext, arguments: dict) -> str:
+        birthday = str(arguments.get("birthday", "")).strip()
+        try:
+            datetime.fromisoformat(birthday)
+        except ValueError:
+            return "I need a birthday in YYYY-MM-DD format to remember it."
+        active_profile = context.profiles.get_active_profile() if context.profiles is not None else None
+        if active_profile is None:
+            return "I don't have an active user profile to save that to."
+        context.profiles.set_birthday(active_profile.profile_id, birthday)
+        return f"Got it — I'll remember your birthday is {birthday}."
 
     @staticmethod
     def _action_set_theme(context: AppContext, arguments: dict) -> str:

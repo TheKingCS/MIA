@@ -107,12 +107,22 @@ _STOPWORDS = {
 
 _MODULE_NAME_MATCH_BONUS = 10
 
-_SYSTEM_PREAMBLE = (
-    "You are M.I.A.'s built-in assistant. Answer the user's question using "
-    "ONLY the reference material below. If the answer isn't contained in "
-    "it, say you don't know rather than guessing — do not use outside "
-    "knowledge. Answer in plain conversational text — no markdown links, "
-    "citations, or bracketed source names."
+#: The grounding half of the system message for information questions —
+#: combined with `core/assistant_chat.py`'s own identity/personality
+#: block into one system-role message, rather than living inline inside
+#: `build_grounded_prompt()`'s returned string. **2026-07-14 aesthetic
+#: pass part 5**: previously this was prepended directly onto the user
+#: message string, back when every chat turn was a single stateless
+#: message with no separate system role at all — now that
+#: `core/assistant_chat.py` sends real conversation history, this needs
+#: to be its own system message so it doesn't get repeated/confused
+#: with actual conversation content.
+GROUNDING_INSTRUCTION = (
+    "Answer the user's question using ONLY the reference material below. "
+    "If the answer isn't contained in it, say you don't know rather than "
+    "guessing — do not use outside knowledge. Answer in plain "
+    "conversational text — no markdown links, citations, or bracketed "
+    "source names."
 )
 # A longer version of this preamble (explicitly describing the material as
 # possibly including "reference library... encyclopedia articles, repair/
@@ -149,7 +159,7 @@ _QUERY_REFORMULATION_PROMPT_TEMPLATE = (
 # "hypothermia frostbite" (2 terms) correctly ranked the real Frostbite
 # article #1. Same "more retrieved context isn't always better" lesson
 # this project already learned once for docs/*.md grounding (this
-# module's own _SYSTEM_PREAMBLE comment), rediscovered here for
+# module's own GROUNDING_INSTRUCTION comment), rediscovered here for
 # Reference Library search terms specifically. Prompt was changed from
 # "2 to 5 keywords" to "the single most likely article title (2-3
 # words)" for exactly this reason — defensive cap kept in case the
@@ -386,13 +396,15 @@ class DeviceHelpManager:
 
     def build_grounded_prompt(self, query: str, limit: int = 5) -> str:
         """
-        Build a prompt instructing the LLM to answer `query` using only
-        retrieved M.I.A. documentation/module metadata plus any
-        matching Reference Library content — the actual "grounding."
-        Falls back to a "nothing matched" instruction (still read-only,
-        still no outside-topic license) if nothing relevant is indexed
-        anywhere, rather than silently falling through to open-ended
-        chat.
+        Build the user-turn content for an information question: the
+        retrieved M.I.A. documentation/module metadata plus any matching
+        Reference Library content, or a "nothing matched" fallback
+        instruction if nothing relevant is indexed anywhere — the
+        actual "grounding." **Does not include `GROUNDING_INSTRUCTION`
+        itself** (that's a system-role concern now, combined with
+        `core/assistant_chat.py`'s identity block — see that constant's
+        own docstring for why) — this returns only the per-turn material
+        and question.
 
         When there's already a strong, confident match (score >=
         _MODULE_NAME_MATCH_BONUS — a module named directly in the
@@ -423,13 +435,13 @@ class DeviceHelpManager:
         chunks = doc_chunks + reference_chunks
         if not chunks:
             return (
-                f"{_SYSTEM_PREAMBLE}\n\nNo reference material matched this question. Say that you "
-                f"don't have information about this in M.I.A.'s documentation or reference library."
+                "No reference material matched this question. Say that you "
+                "don't have information about this in M.I.A.'s documentation or reference library."
                 f"\n\nQuestion: {query}"
             )
 
         material = "\n\n".join(f"[{chunk.source} — {chunk.heading}]\n{chunk.text}" for chunk in chunks)
         return (
-            f"{_SYSTEM_PREAMBLE}\n\n--- Reference material ---\n{material}\n--- End reference material ---"
+            f"--- Reference material ---\n{material}\n--- End reference material ---"
             f"\n\nQuestion: {query}"
         )

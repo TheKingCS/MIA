@@ -200,6 +200,32 @@ QPushButton#AppsLaunchButton:pressed {
     background-color: #d8d8d2;
 }
 
+QPushButton#ConversationCard {
+    background-color: #e6e6e2;
+    border: 1px solid #b8b8b2;
+    border-radius: 8px;
+    text-align: left;
+}
+
+QPushButton#ConversationCard:hover {
+    background-color: #dcdcd6;
+}
+
+QPushButton#ConversationCard[selected="true"] {
+    border: 1px solid #1a1a1a;
+}
+
+QLabel#ConversationCardTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+QLabel#ConversationCardMeta {
+    font-size: 11px;
+    color: #4a4a4a;
+}
+
 QSlider::groove:horizontal {
     height: 6px;
     background-color: #d8d8d2;
@@ -494,6 +520,32 @@ QPushButton#AppsLaunchButton:hover {
 
 QPushButton#AppsLaunchButton:pressed {
     background-color: #150a26;
+}
+
+QPushButton#ConversationCard {
+    background-color: #2a1b47;
+    border: 1px solid #4a2f78;
+    border-radius: 8px;
+    text-align: left;
+}
+
+QPushButton#ConversationCard:hover {
+    background-color: #3a2560;
+}
+
+QPushButton#ConversationCard[selected="true"] {
+    border: 1px solid #06d6a0;
+}
+
+QLabel#ConversationCardTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1e9ff;
+}
+
+QLabel#ConversationCardMeta {
+    font-size: 11px;
+    color: #c9b8e8;
 }
 
 QSlider::groove:horizontal {
@@ -829,6 +881,40 @@ QPushButton#AppsLaunchButton:hover {
 QPushButton#AppsLaunchButton:pressed {
     background-color: #444444;
     color: #ffffff;
+}
+
+/*
+Same light-gray-hover-instead-of-solid-invert treatment as
+#ModuleButton on this theme (gui/widgets/module_button.py's docstring)
+— this card's title/meta are QLabel children too, and a solid-black
+hover would need a QLabel-descendant :hover selector to flip their
+text to white, which is the confirmed Qt/PySide6 rendering bug
+documented there.
+*/
+QPushButton#ConversationCard {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    text-align: left;
+}
+
+QPushButton#ConversationCard:hover {
+    background-color: #f0f0f0;
+}
+
+QPushButton#ConversationCard[selected="true"] {
+    border: 2px solid #000000;
+    background-color: #f0f0f0;
+}
+
+QLabel#ConversationCardTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #000000;
+}
+
+QLabel#ConversationCardMeta {
+    font-size: 11px;
+    color: #444444;
 }
 
 QSlider::groove:horizontal {

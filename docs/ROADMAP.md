@@ -2519,3 +2519,145 @@ switched to the Missions module and confirmed the suggestions correctly
 changed to Missions-specific prompts. 973 tests passing (10 new in
 `tests/test_assistant_chat.py` for `suggested_prompts_for_module()`).
 Rendered and visually verified all 4 themes.
+
+## Aesthetic upgrade, part 5: persistent memory, ChatGPT-style conversations, a companion personality (2026-07-14)
+
+The user actually used part 4's sidebar chat and came back with the
+next real ask: persistent, self-titled conversation logs (review/
+delete/continue, "very much like using ChatGPT"), a visible/editable
+store of what the Assistant remembers about the user, and a warmer
+personality — "like a researcher dedicated to understanding and
+discovering every aspect it can about the user," celebrating wins,
+comforting, encouraging growth, "like a lifelong friend." Also asked
+for birthdays, anniversaries, and check-ins specifically. This is the
+single largest Assistant change this project has made in one pass —
+new persistence layer, a rebuilt prompt-assembly pipeline, a two-pane
+UI rewrite, and three new proactive-notification mechanisms.
+
+**The concrete bug that motivated the persistence work**: tested
+live before writing any code — "My name is Alex and I love hiking in
+the Cascades" followed by "What's my name, and where do I like to
+hike?" got *"I don't know your name... I don't have any information
+about that."* Every prior chat turn (parts 1-4 included) was a single
+stateless message with zero conversation history — a real, demonstrated
+"not seamless" bug, not a hypothetical one.
+
+**New persistence layer**: `core/conversation_manager.py`
+(`Conversation`/`ConversationMessage`, auto-titled once an LLM call
+summarizes the first exchange, one "active" conversation shared by both
+chat surfaces via `get_or_create_active_conversation()`/
+`set_active_conversation_id()`, publishing `"conversation.updated"` on
+any content change and a distinct `"conversation.active_changed"` when
+the pointer itself moves — the two had to be separate events so a
+widget can tell "my current conversation's content changed" apart from
+"you're looking at a different conversation entirely now") and
+`core/user_memory_manager.py` (`UserMemory`, simple case-insensitive
+dedup on `add_memory()`). Both are the same persisted-JSON manager
+pattern as every other `core/*_manager.py` in this codebase, fully unit
+tested.
+
+**Prompt-assembly rewrite** (`core/assistant_chat.py`): `build_chat_request()`
+now sends bounded real history (`trim_history()`, 12 messages/6
+exchanges) and a proper system-role message
+(`build_system_message()`) instead of one bare user string. The
+identity/personality text is **only added to the information-question
+path, not the action-request one** — this project has a documented,
+measured regression from a *longer* preamble before
+(`core/device_help_manager.py`'s `GROUNDING_INSTRUCTION` docstring), and
+the 67-case tool-calling golden set is the most fragile, most-tested
+surface in this codebase; the user never sees the action path's system
+message anyway; adding personality text there was pure risk for zero
+benefit. Verified: full golden set stayed **67/67, then 68/68** after
+adding a `set_birthday` case, and the Alex/hiking scenario now correctly
+recalls both facts across turns.
+
+**Memory extraction was the hardest part to get right, and needed
+several rounds of live-model iteration** (exactly the discipline this
+project has learned to expect, not skip):
+1. First attempt included the assistant's own reply in the extraction
+   prompt — 100%-reproducible failure (not sampling noise): the model
+   concluded "no new facts" even when the user's message plainly stated
+   a name and a hobby in the same breath. Fixed by extracting from the
+   user's message alone.
+2. Widening the prompt to combat that then caused active hallucination
+   — the model invented a birth date, a relationship status, and a
+   "daily routine" that were never said, and guessed the user's gender
+   inconsistently (he/she) across otherwise-identical prompts. Fixed
+   with an explicit "never guess/infer anything not stated, use 'the
+   user' instead of pronouns" instruction, and a bias toward missing a
+   real fact over fabricating one — for a memory feature, a false
+   negative is far safer than a false positive.
+3. The model also doesn't reliably reply with the literal "NONE" it's
+   asked for — it sometimes paraphrases the same conclusion as a full
+   sentence, which would otherwise get stored as if it were a real
+   memory. `parse_extracted_memories()` got a hedge-phrase rejection
+   list as a belt-and-suspenders safety net on top of the prompt's own
+   instruction, same "don't trust the model to follow format
+   instructions perfectly" caution as `core/llm_manager.py`'s
+   `_looks_like_malformed_tool_call()`.
+
+**ChatGPT-style two-pane rebuild of `modules/assistant/module.py`**:
+left-hand conversation list (`gui/widgets/conversation_card.py`'s
+`ConversationCard`, same "no text of its own, QLabel children instead"
+shape as `ModuleButton` — auto-titled, click-to-continue, delete via the
+existing `gui/delete_confirm_dialog.py`) plus a "🧠 Memories" button
+opening `gui/user_memory_dialog.py` (review/delete individual memories,
+Clear All). Neither this screen nor `gui/character_panel.py`'s sidebar
+own a local transcript anymore — both are live views over
+`ConversationManager`, re-rendering on its events, which is what keeps
+them showing the same conversation without a direct reference to each
+other.
+
+**Found a genuinely new Qt rendering bug via screenshot, not obvious
+from the code, that cost real time to bisect**: `ConversationCard`'s
+title/meta text silently failed to paint once placed inside the
+conversation list's `QVBoxLayout` — geometry/text/visibility all
+reported correct, but nothing rendered, exactly like part 4's
+suggestion-button ghosting bug but with a different root cause.
+Bisected by bringing in a known-good comparison (`ModuleButton`,
+copy-pasted into the same minimal repro scaffold) rather than
+staring at `ConversationCard` alone — the one difference that mattered
+was `ModuleButton.setMinimumHeight(72)`. Every offscreen-QPA render this
+whole session has logged "This plugin does not support
+propagateSizeHints()"; this is almost certainly that limitation made
+concrete — a custom `QPushButton` relying purely on its children's
+natural `sizeHint()` (no explicit minimum size) can get laid out with a
+collapsed height on this platform before its content ever paints.
+Fixed with `setMinimumHeight(60)`; re-verify on real display hardware,
+and reach for an explicit minimum height on any future custom card
+widget rather than assuming content-driven sizing "just works" here.
+
+**Companion features**, the parts of the ask beyond persistence/UI:
+- `core.profile_manager.Profile` gained an optional `birthday` field,
+  set conversationally via a new `set_birthday` Assistant action (no
+  new form UI — Settings doesn't edit profile fields at all yet) and
+  injected into every info-question system message alongside free-text
+  memories (`build_user_context_block()`).
+- New `core/daily_occasions.py` (pure logic) + a 5-minute
+  `_daily_occasion_timer` in `core/application.py` (same
+  always-alive-for-the-session pattern as the existing alarm/power
+  timers): celebrates the active profile's birthday, digests today's
+  Calendar events, and — deliberately gated to evening only
+  (`should_send_checkin()`) so opening the app at 6am doesn't
+  immediately get scolded for "not having chatted yet" — a gentle
+  check-in notification if there's been no conversation activity that
+  day. Each of the three has its own independent "already ran today"
+  date tracker, since they don't share a firing condition.
+  **"Anniversaries" reuse the existing Calendar module rather than
+  being a new concept** — Calendar has no recurrence yet, a real,
+  separate gap flagged in `docs/KNOWN_ISSUES.md`, not silently assumed
+  to work indefinitely.
+- `core/mission_manager.py`'s `increment_tally()`/`update_mission()`
+  now fire celebratory notifications when an objective, all of a
+  mission's objectives, or the whole mission newly become complete —
+  living in the manager itself (not the Missions module UI or the
+  Assistant's own action handlers) so every path to completion
+  celebrates uniformly.
+
+1069 tests passing (86 new). Full 68-case live-model golden set
+passing. Rendered and visually verified all 4 themes. No data
+pollution (one real near-miss this pass: a scratch verification script
+forgot to isolate `config_manager`'s `_CONFIG_FILE` and created a real
+`config/config.json` with a scratch `assistant.active_conversation_id`
+— caught immediately by its mtime matching the test run exactly,
+cleaned up).

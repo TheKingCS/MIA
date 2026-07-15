@@ -65,6 +65,15 @@ class Profile:
     created_at: str
     password_hash: str = field(default="", repr=False)
     password_salt: str = field(default="", repr=False)
+    # 2026-07-14 aesthetic pass part 5: lets the Assistant know and
+    # celebrate the user's birthday (core.assistant_chat.build_user_context_block()),
+    # at the user's explicit request. ISO "YYYY-MM-DD", set
+    # conversationally via the set_birthday action
+    # (core/application.py) rather than a dedicated form field — no
+    # existing Settings UI edits profile fields at all yet (Settings
+    # today only covers Appearance/Device Profile), and adding one
+    # wasn't asked for.
+    birthday: Optional[str] = None
 
     @property
     def has_password(self) -> bool:
@@ -160,6 +169,7 @@ class ProfileManager:
                 created_at=data.get("created_at", ""),
                 password_hash=data.get("password_hash", ""),
                 password_salt=data.get("password_salt", ""),
+                birthday=data.get("birthday"),
             )
             for pid, data in raw.items()
         ]
@@ -179,6 +189,7 @@ class ProfileManager:
             created_at=raw.get("created_at", ""),
             password_hash=raw.get("password_hash", ""),
             password_salt=raw.get("password_salt", ""),
+            birthday=raw.get("birthday"),
         )
 
     def set_active_profile(self, profile_id: str) -> None:
@@ -191,6 +202,21 @@ class ProfileManager:
         config.save()
         self.context.events.publish("profile.switched", profile_id=profile_id)
         log.info("Switched active profile to '%s'", profile_id)
+
+    def set_birthday(self, profile_id: str, birthday: str) -> bool:
+        """Set a profile's birthday (ISO "YYYY-MM-DD"). Returns False if the profile doesn't exist."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to set birthday on unknown profile_id '%s'", profile_id)
+            return False
+
+        record = dict(raw)
+        record["birthday"] = birthday
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Birthday set for profile '%s'", profile_id)
+        return True
 
     def has_any_profiles(self) -> bool:
         return bool(self.context.config.get("profiles", {}))

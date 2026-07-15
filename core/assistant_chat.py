@@ -12,13 +12,46 @@ layering), so anything both surfaces need had to live here, not in
 `modules/assistant/module.py` — these functions already touched only
 `context`/plain data, never Qt, so the move is a pure relocation, not a
 rewrite.
+
+**2026-07-14 aesthetic pass part 5** (docs/ROADMAP.md), at the user's
+explicit request for a ChatGPT-like, "always growing with the user"
+companion rather than a stateless Q&A tool: `build_chat_request()` now
+takes a real `core.conversation_manager.Conversation` and sends bounded
+history (`trim_history()`) plus a proper system-role message
+(`build_system_message()`) instead of a single bare user message —
+verified this doesn't need a backend change at all, since
+`core.llm_manager.OllamaBackend.chat()` already forwards whatever
+`messages` list it's given straight to Ollama's `/api/chat`, which
+already understands multi-turn `system`/`user`/`assistant` roles; only
+the caller-side assembly needed to change.
+
+The identity/personality text is deliberately short — this project has
+hit real, live-model-verified regressions from a *longer* preamble
+before (core/device_help_manager.py's own `GROUNDING_INSTRUCTION`
+docstring: a longer version made llama3.2:3b MORE likely to falsely
+say "I don't know" even on confident matches) — and is only added to
+the **information-question** system message, not the action-request
+one. Action requests keep the shortest possible system framing
+(just the identity line, no warmth/personality elaboration) since
+that path's 67-case golden set (`tests/live_model_check.py`) is the
+most fragile, most-tested surface in this codebase and personality
+fluff sitting next to tool schemas is a real, avoidable regression
+risk for zero user-visible benefit — the user never sees this system
+message, only the tool's own (separately-worded) confirmation text.
+Re-verify against the full golden set after any further wording change
+here, not just a subjective read of the prompt.
 """
 
 from __future__ import annotations
 
-from typing import Iterable, Optional
+from datetime import date
+from typing import TYPE_CHECKING, Iterable, Optional
 
+from core.device_help_manager import GROUNDING_INSTRUCTION
 from core.llm_manager import ToolCall
+
+if TYPE_CHECKING:
+    from core.conversation_manager import Conversation, ConversationMessage
 
 # Curated example prompts per AssistantAction domain (core/assistant_actions.py's
 # own `domain` field) — shown as clickable suggestions in
@@ -175,7 +208,120 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
     return any(keyword in lowered for keyword in keywords)
 
 
-def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
+# Short, deliberately — see this module's docstring on why length is a
+# real, previously-measured regression risk for llama3.2:3b, and why
+# the warmer clauses are only added to the info-question path.
+_IDENTITY_LINE = (
+    "You are M.I.A. (Multifunctional Intelligent Assistant), the user's personal offline survival companion."
+)
+_IDENTITY_WARMTH = (
+    " You're warm, encouraging, and genuinely curious about the user as a person — like a lifelong friend, "
+    "not a cold Q&A tool. Celebrate their wins, comfort them when things are hard, and look for real "
+    "opportunities to get to know them better over time."
+)
+
+_MAX_HISTORY_MESSAGES = 12  # 6 exchanges — bounds prompt growth/latency on CPU-only Pi-class hardware
+
+_MAX_INJECTED_MEMORIES = 20  # most recent — bounds prompt growth as the memory store grows over months of use
+
+# Deliberately built from ONLY the user's own message, not the
+# assistant's reply too — measured directly against the live model
+# (docs/ROADMAP.md) that including the assistant's turn made this
+# consistently WORSE, not better: a 100%-reproducible failure (not
+# sampling noise — see core/device_help_manager.py's own docstring on
+# telling those apart) where the model concluded "no new facts" even
+# when the user's message plainly stated a name and a hobby in the same
+# breath. Also required an explicit anti-hallucination + anti-pronoun-
+# guessing instruction after live testing surfaced the small model
+# inventing biographical details (a birth date, a relationship status,
+# a "daily routine") that were never actually said, and guessing the
+# user's gender inconsistently across otherwise-identical prompts.
+# Biased deliberately toward missing a real fact (a false negative)
+# over fabricating one (a false positive) — for a feature whose whole
+# point is trustworthy long-term memory, a wrong invented "fact" is far
+# worse than an occasional missed one.
+_MEMORY_EXTRACTION_PROMPT_TEMPLATE = (
+    "The user just sent this message to their personal assistant:\n\n"
+    "\"{user_message}\"\n\n"
+    "List every fact it EXPLICITLY states about the user themselves (name, birthday, a relationship, a "
+    "stated preference, or a stated ongoing interest/hobby) — one short sentence per fact, using the "
+    "words \"the user\" instead of he/she/his/her, e.g. \"The user has a dog named Rex.\" Never add "
+    "a detail that wasn't actually said, and never guess at anything (gender, age, routine, schedule) "
+    "that wasn't stated. If it's a question, a one-time request/command, or states no personal fact, "
+    "reply with exactly: NONE"
+)
+
+_TITLE_GENERATION_PROMPT_TEMPLATE = (
+    "Write a short title (3-6 words, no punctuation, no quotes) summarizing what this conversation is "
+    "about so far, based on this first exchange.\n\n"
+    "User: {user_message}\n"
+    "You: {assistant_message}"
+)
+
+
+def trim_history(messages: list["ConversationMessage"], max_messages: int = _MAX_HISTORY_MESSAGES) -> list["ConversationMessage"]:
+    """Pure logic — testable without Qt or a real Conversation. Keeps the most recent `max_messages`."""
+    if max_messages <= 0:
+        return []
+    return messages[-max_messages:]
+
+
+def build_user_context_block(context) -> str:
+    """
+    Pure-ish (touches `context.profiles`/`context.user_memories`, no
+    LLM call) — assembles "what M.I.A. knows about this user so far"
+    from the active Profile's structured fields (name, birthday) plus
+    free-text UserMemory entries, for injection into the info-question
+    system message. Returns an empty-knowledge line rather than an
+    empty string when nothing is known yet, framed as an invitation to
+    learn more — matches this pass's "researcher" framing rather than
+    just silently omitting the section.
+    """
+    facts: list[str] = []
+
+    active_profile = context.profiles.get_active_profile() if context.profiles is not None else None
+    if active_profile is not None:
+        facts.append(f"Name: {active_profile.name}")
+        birthday = getattr(active_profile, "birthday", None)
+        if birthday:
+            facts.append(f"Birthday: {format_birthday(birthday)}")
+
+    if context.user_memories is not None:
+        for memory in context.user_memories.all_memories()[:_MAX_INJECTED_MEMORIES]:
+            facts.append(memory.text)
+
+    if not facts:
+        return "You don't know much about this user yet — a great opportunity to ask and learn."
+    bullet_list = "\n".join(f"- {fact}" for fact in facts)
+    return f"What you know about this user so far:\n{bullet_list}"
+
+
+def format_birthday(iso_date: str) -> str:
+    """Pure formatting logic — "March 3" (no year, this is a casual reference, not a form field)."""
+    try:
+        parsed = date.fromisoformat(iso_date)
+    except ValueError:
+        return iso_date
+    return f"{parsed.strftime('%B')} {parsed.day}"
+
+
+def build_system_message(context, is_action_request: bool) -> str:
+    """
+    The system-role message for one chat turn — pulled out as its own
+    function so `build_chat_request()` stays readable and this is
+    independently testable. Action requests get the bare identity line
+    only; information questions additionally get the warmth framing,
+    the user-context block, and `core.device_help_manager.GROUNDING_INSTRUCTION`
+    — see this module's docstring for why the split.
+    """
+    if is_action_request:
+        return _IDENTITY_LINE
+
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH, build_user_context_block(context), GROUNDING_INSTRUCTION]
+    return "\n\n".join(parts)
+
+
+def build_chat_request(context, conversation: "Conversation", prompt: str) -> tuple[list[dict], list[dict]]:
     """
     Decides whether `prompt` looks like an action request and builds
     the (messages, tools) pair a caller hands to `core.chat_worker.ChatWorker`
@@ -184,6 +330,16 @@ def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
     script, milestone 5.11) exercises this exact decision logic
     against the real Ollama server, not a hand-copied reimplementation
     that could quietly drift from what production actually does.
+
+    `conversation` supplies the bounded history sent alongside `prompt`
+    (2026-07-14 aesthetic pass part 5) — pass a conversation with no
+    prior messages (a fresh one) for a "no history yet" first turn, same
+    as before this pass. `messages` still ends with the current turn's
+    `prompt` (raw for an action request, grounded-with-reference-material
+    for an information question) as the final user message — history
+    entries are the plain, human-readable text as actually
+    displayed/stored, never a past turn's grounded/augmented version, so
+    old retrieval material doesn't pile up turn after turn.
     """
     matched_actions = (
         context.assistant_actions.matching_actions(prompt)
@@ -196,7 +352,11 @@ def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
     if not is_action_request and context.device_help is not None:
         llm_prompt = context.device_help.build_grounded_prompt(prompt)
 
-    messages = [{"role": "user", "content": llm_prompt}]
+    history = trim_history(conversation.messages) if conversation is not None else []
+    messages = [{"role": "system", "content": build_system_message(context, is_action_request)}]
+    messages.extend({"role": m.role, "content": m.content} for m in history)
+    messages.append({"role": "user", "content": llm_prompt})
+
     tools = []
     if is_action_request and context.assistant_actions is not None:
         # Domain-scoped, not the full registry — see
@@ -207,3 +367,85 @@ def build_chat_request(context, prompt: str) -> tuple[list[dict], list[dict]]:
         tools = context.assistant_actions.to_ollama_tools(matched_actions)
 
     return messages, tools
+
+
+def build_memory_extraction_prompt(user_message: str) -> str:
+    """Pure logic — testable without Qt or a real LLM (see tests/test_assistant_chat.py)."""
+    return _MEMORY_EXTRACTION_PROMPT_TEMPLATE.format(user_message=user_message)
+
+
+# Live-model testing found the small model doesn't reliably reply with
+# the literal word "NONE" as instructed — it sometimes paraphrases the
+# same "nothing to extract" conclusion in a full sentence instead (e.g.
+# "There is no new information provided about the user."). Rejecting
+# only an exact "NONE" match would let that paraphrase through and get
+# stored as if it were a real memory (this happened in testing). This
+# is a belt-and-suspenders safety net on top of the prompt's own
+# instruction, not a replacement for it — same "don't trust the model
+# to follow instructions perfectly" caution as
+# core/llm_manager.py's `_looks_like_malformed_tool_call()`.
+_NO_FACT_HEDGE_PHRASES = (
+    "no new", "nothing new", "no information", "not stated", "not explicitly",
+    "does not state", "doesn't state", "no fact", "not mentioned", "is mentioned",
+)
+
+
+def parse_extracted_memories(raw_text: Optional[str]) -> list[str]:
+    """
+    Pure parsing logic — one fact per non-empty line, stripping common
+    bullet/numbering prefixes, dropping a bare "NONE" (case-insensitive)
+    line and any line that reads as a hedge/explanation rather than a
+    stated fact (see `_NO_FACT_HEDGE_PHRASES`). Returns [] for
+    None/empty input rather than raising, since the LLM backend being
+    unreachable is an expected, non-fatal case for a background
+    enhancement like this — memory extraction failing should never
+    disrupt the actual chat reply already shown to the user.
+    """
+    if not raw_text:
+        return []
+    facts = []
+    for line in raw_text.splitlines():
+        line = line.strip().lstrip("-*•").strip()
+        # Strip a leading "1. "/"2) " numbering prefix, if present.
+        for index, char in enumerate(line):
+            if char.isdigit():
+                continue
+            if char in ".)" and index > 0:
+                line = line[index + 1:].strip()
+            break
+        if not line or line.strip(".").upper() == "NONE":
+            continue
+        lowered = line.lower()
+        if any(phrase in lowered for phrase in _NO_FACT_HEDGE_PHRASES):
+            continue
+        facts.append(line)
+    return facts
+
+
+def build_title_generation_prompt(user_message: str, assistant_message: str) -> str:
+    """Pure logic — testable without Qt or a real LLM (see tests/test_assistant_chat.py)."""
+    return _TITLE_GENERATION_PROMPT_TEMPLATE.format(user_message=user_message, assistant_message=assistant_message)
+
+
+_MAX_TITLE_LENGTH = 60
+
+
+def clean_generated_title(raw_title: Optional[str]) -> Optional[str]:
+    """
+    Pure cleanup logic — strips surrounding quotes/whitespace and caps
+    length (a small model occasionally ignores the "3-6 words"
+    instruction and free-associates a whole sentence). Returns None
+    (not the default title, not an empty string) for blank/missing
+    input, so callers can tell "nothing usable came back" apart from
+    "the model deliberately produced a short-but-valid title" without
+    re-checking against `core.conversation_manager.DEFAULT_TITLE`
+    themselves.
+    """
+    if not raw_title:
+        return None
+    cleaned = raw_title.strip().strip("\"'“”").strip()
+    if not cleaned:
+        return None
+    if len(cleaned) > _MAX_TITLE_LENGTH:
+        cleaned = cleaned[:_MAX_TITLE_LENGTH].rsplit(" ", 1)[0].rstrip(",.;:")
+    return cleaned or None

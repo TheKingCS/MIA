@@ -37,6 +37,7 @@ from core.activity_log_manager import ActivityLogManager  # noqa: E402
 from core.calendar_manager import CalendarManager  # noqa: E402
 from core.component_manager import ComponentManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
+from core.conversation_manager import ConversationManager  # noqa: E402
 from core.data_logger_manager import DataLoggerManager  # noqa: E402
 from core.device_framework import DeviceFramework  # noqa: E402
 from core.device_help_manager import DeviceHelpManager  # noqa: E402
@@ -51,6 +52,7 @@ from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.script_library_manager import ScriptLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
 from core.trip_manager import TripManager  # noqa: E402
+from core.user_memory_manager import UserMemoryManager  # noqa: E402
 from core.voice_manager import VoiceManager  # noqa: E402
 from core.waypoint_manager import WaypointManager  # noqa: E402
 from gui.theme_manager import get_theme_stylesheet  # noqa: E402
@@ -89,6 +91,8 @@ def main() -> int:
     context.search = SearchManager(context)
     context.device_help = DeviceHelpManager(context)
     context.activity_log = ActivityLogManager(context)
+    context.conversations = ConversationManager(context)
+    context.user_memories = UserMemoryManager(context)
     manager = ModuleManager(context)
     manager.discover()
     context.device_help.register_module_lister(manager.all)

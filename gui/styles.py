@@ -206,6 +206,40 @@ QPushButton#AppsLaunchButton:pressed {
 }
 
 /*
+2026-07-14 aesthetic pass part 5: the Assistant's conversation-history
+list (modules/assistant/module.py). Same "no QLabel-descendant :hover
+selector" rule as #ModuleButton (gui/widgets/module_button.py's
+docstring) — this card's title/meta are QLabel children too, and that
+exact selector pattern is a confirmed Qt/PySide6 rendering bug. Hover/
+selected only ever change the button's own background/border here.
+*/
+QPushButton#ConversationCard {
+    background-color: #161b22;
+    border: 1px solid #232b34;
+    border-radius: 8px;
+    text-align: left;
+}
+
+QPushButton#ConversationCard:hover {
+    background-color: #1c2530;
+}
+
+QPushButton#ConversationCard[selected="true"] {
+    border: 1px solid #4fd1c5;
+}
+
+QLabel#ConversationCardTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d8e0e8;
+}
+
+QLabel#ConversationCardMeta {
+    font-size: 11px;
+    color: #7a8a99;
+}
+
+/*
 QSlider falls back to the native OS/platform look if left unstyled —
 same invisible-on-this-background risk this file's own QCheckBox
 comment already documents. Used today by the Home dashboard's volume

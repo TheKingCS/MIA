@@ -20,6 +20,20 @@ import `core/` directly but must never import `modules/`
 (CLAUDE.md's one-directional layering). This module still owns the
 full-screen widget/voice/GPIO wiring; only the non-Qt pieces moved.
 
+**2026-07-14 aesthetic pass part 5**: ChatGPT-style redesign, at the
+user's explicit request — a left-hand conversation history (auto-titled,
+reviewable, deletable, click-to-continue) alongside the chat itself, and
+a "🧠 Memories" button opening `gui/user_memory_dialog.py`. The screen no
+longer owns its own single chat transcript — it's a live *view* over
+`AppContext.conversations` (`core/conversation_manager.py`), the same
+active conversation `gui/character_panel.py`'s sidebar chat reads and
+appends to. Neither widget renders from its own local message list;
+both re-render from `ConversationManager` whenever it publishes
+`"conversation.updated"` (subscribed once in `get_widget()`), which is
+what keeps the two surfaces showing the same conversation without a
+direct reference to each other — same event-bus-mediated-reactivity
+pattern this codebase already uses for module-navigation events.
+
 `_on_send()` first classifies the prompt with `looks_like_action_request()`
 against `AppContext.assistant_actions.gating_keywords()` — the live union
 of every registered action's own `trigger_phrases`
@@ -84,6 +98,15 @@ stuck disabled. `context.llm.chat_with_tools()` / `context.voice.*`
 returning `None`/`False` means the backend logged a warning and
 couldn't be reached — surfaced here as a status line, never a crash.
 
+Two more background `core.generate_worker.GenerateWorker` calls fire
+*after* a plain-text reply is shown (never before/blocking it): title
+generation (only once, the first time a conversation has a real
+exchange and its title is still the default) and memory extraction
+(every exchange) — both best-effort, both silently do nothing further
+if the LLM is unreachable or returns nothing usable. Not fired for
+tool-call replies — "add a waypoint" doesn't need a title or memory
+extraction pass of its own.
+
 Push-to-talk itself can be triggered two ways, unified by
 `core.push_to_talk_trigger.PushToTalkTrigger`: the on-screen "Hold to
 Talk" button (dev, and always available as a fallback) or a real GPIO
@@ -98,22 +121,39 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
-from core.assistant_chat import build_chat_request, format_chat_line, looks_like_action_request, split_safe_tool_calls
+from core.assistant_chat import (
+    build_chat_request,
+    build_memory_extraction_prompt,
+    build_title_generation_prompt,
+    clean_generated_title,
+    format_chat_line,
+    parse_extracted_memories,
+    split_safe_tool_calls,
+)
 from core.chat_worker import ChatWorker
+from core.conversation_manager import DEFAULT_TITLE, Conversation
+from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
 from core.logger import get_logger
 from core.push_to_talk_trigger import PushToTalkTrigger
 from core.tts_worker import TTSWorker
+from gui.delete_confirm_dialog import DeleteConfirmDialog
+from gui.user_memory_dialog import UserMemoryDialog
+from gui.widgets.conversation_card import ConversationCard
 from modules.module_base import ModuleBase
 
 log = get_logger(__name__)
@@ -136,15 +176,77 @@ class AssistantModule(ModuleBase):
         self._send_button: Optional[QPushButton] = None
         self._talk_button: Optional[QPushButton] = None
         self._status_label: Optional[QLabel] = None
+        self._conversation_list_layout: Optional[QVBoxLayout] = None
         self._worker: Optional[ChatWorker] = None
         self._tts_worker: Optional[TTSWorker] = None
+        self._title_worker: Optional[GenerateWorker] = None
+        self._memory_worker: Optional[GenerateWorker] = None
         self._ptt_trigger: Optional[PushToTalkTrigger] = None
         self._recording = False
+        self._conversation: Optional[Conversation] = None
 
     def get_widget(self) -> QWidget:
         widget = QWidget()
-        layout = QVBoxLayout(widget)
-        layout.setContentsMargins(24, 24, 24, 24)
+        outer = QHBoxLayout(widget)
+        outer.setContentsMargins(24, 24, 24, 24)
+        outer.setSpacing(20)
+
+        outer.addWidget(self._build_conversation_sidebar())
+        outer.addWidget(self._build_chat_pane(), stretch=1)
+
+        # GPIO path is a no-op unless voice.push_to_talk_gpio_pin is
+        # configured and gpiozero + real hardware are present — see
+        # core/push_to_talk_trigger.py. Both paths call the exact same
+        # handlers as the on-screen button.
+        self._ptt_trigger = PushToTalkTrigger(self.context, parent=widget)
+        self._ptt_trigger.pressed.connect(self._on_talk_pressed)
+        self._ptt_trigger.released.connect(self._on_talk_released)
+
+        self.context.events.subscribe("conversation.updated", self._on_conversation_updated)
+        self.context.events.subscribe("conversation.active_changed", self._on_conversation_active_changed)
+
+        self._load_active_conversation()
+        self._refresh_conversation_list()
+        self._refresh_availability()
+        return widget
+
+    # ------------------------------------------------------------------
+    # Construction
+    # ------------------------------------------------------------------
+
+    def _build_conversation_sidebar(self) -> QWidget:
+        container = QFrame()
+        container.setFixedWidth(220)
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        new_button = QPushButton("+ New Conversation")
+        new_button.setObjectName("AppsLaunchButton")
+        new_button.clicked.connect(self._on_new_conversation)
+        layout.addWidget(new_button)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        list_container = QWidget()
+        self._conversation_list_layout = QVBoxLayout(list_container)
+        self._conversation_list_layout.setSpacing(8)
+        self._conversation_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        scroll.setWidget(list_container)
+        layout.addWidget(scroll, stretch=1)
+
+        memories_button = QPushButton("\U0001F9E0 Memories")
+        memories_button.setObjectName("HeaderButton")
+        memories_button.clicked.connect(self._on_open_memories)
+        layout.addWidget(memories_button)
+
+        return container
+
+    def _build_chat_pane(self) -> QWidget:
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
 
         header = QLabel(f"{self.icon}  {self.display_name}")
@@ -180,17 +282,7 @@ class AssistantModule(ModuleBase):
         input_row.addWidget(self._talk_button)
 
         layout.addLayout(input_row)
-
-        # GPIO path is a no-op unless voice.push_to_talk_gpio_pin is
-        # configured and gpiozero + real hardware are present — see
-        # core/push_to_talk_trigger.py. Both paths call the exact same
-        # handlers as the on-screen button.
-        self._ptt_trigger = PushToTalkTrigger(self.context, parent=widget)
-        self._ptt_trigger.pressed.connect(self._on_talk_pressed)
-        self._ptt_trigger.released.connect(self._on_talk_released)
-
-        self._refresh_availability()
-        return widget
+        return container
 
     # ------------------------------------------------------------------
     # Availability
@@ -203,6 +295,97 @@ class AssistantModule(ModuleBase):
             self._status_label.setText(_LLM_UNAVAILABLE_STATUS)
 
     # ------------------------------------------------------------------
+    # Conversation history (left pane)
+    # ------------------------------------------------------------------
+
+    def _load_active_conversation(self) -> None:
+        self._conversation = self.context.conversations.get_or_create_active_conversation()
+        self._render_conversation_log()
+
+    def _render_conversation_log(self) -> None:
+        self._log.clear()
+        for message in self._conversation.messages:
+            speaker = "You" if message.role == "user" else self.display_name
+            self._log.appendPlainText(format_chat_line(speaker, message.content))
+
+    def _refresh_conversation_list(self) -> None:
+        while self._conversation_list_layout.count():
+            item = self._conversation_list_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                # See gui/character_panel.py's _refresh_suggestions() for
+                # why hide()+setParent(None) is needed before
+                # deleteLater() — a real ghosting bug found there
+                # otherwise.
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+
+        active_id = self._conversation.conversation_id if self._conversation else None
+        for conversation in self.context.conversations.all_conversations():
+            card = ConversationCard(conversation)
+            card.set_selected(conversation.conversation_id == active_id)
+            card.activated.connect(self._on_select_conversation)
+            card.delete_requested.connect(self._on_delete_conversation)
+            self._conversation_list_layout.addWidget(card)
+
+    def _on_select_conversation(self, conversation_id: str) -> None:
+        # Just changes the pointer — _on_conversation_active_changed()
+        # (subscribed in get_widget()) does the actual reload, since
+        # set_active_conversation_id() publishes that event synchronously
+        # on the same call stack. No-op if already the active one, same
+        # as before, to avoid an unnecessary republish.
+        if self._conversation is not None and conversation_id == self._conversation.conversation_id:
+            return
+        self.context.conversations.set_active_conversation_id(conversation_id)
+
+    def _on_new_conversation(self) -> None:
+        self.context.conversations.start_new_active_conversation()
+
+    def _on_delete_conversation(self, conversation_id: str) -> None:
+        conversation = self.context.conversations.get_conversation(conversation_id)
+        if conversation is None:
+            return
+        dialog = DeleteConfirmDialog(conversation.title, is_directory=False)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        # delete_conversation() itself publishes "conversation.updated"
+        # (refreshes the list either way) and, if this was the active
+        # conversation, also "conversation.active_changed" (reloads a
+        # fresh one) — both subscribed in get_widget(), nothing further
+        # needed here.
+        self.context.conversations.delete_conversation(conversation_id)
+
+    def _on_open_memories(self) -> None:
+        dialog = UserMemoryDialog(self.context, parent=self._log.window())
+        dialog.exec()
+
+    def _on_conversation_updated(self, conversation_id: str) -> None:
+        """
+        Fires for a write from *either* chat surface (this module or
+        gui/character_panel.py's sidebar) — reload from
+        ConversationManager rather than assuming this widget's own
+        in-memory `self._conversation` is still current, since the
+        write that triggered this may have come from the sidebar.
+        """
+        if self._conversation is not None and conversation_id == self._conversation.conversation_id:
+            self._conversation = self.context.conversations.get_conversation(conversation_id) or self._conversation
+            self._render_conversation_log()
+        self._refresh_conversation_list()
+
+    def _on_conversation_active_changed(self, conversation_id: Optional[str]) -> None:
+        """
+        The *active conversation itself* changed — from either surface
+        (this module's own New/switch/delete actions, or the sidebar
+        starting fresh) — always reload, regardless of what this widget
+        was previously displaying. See core/conversation_manager.py's
+        set_active_conversation_id() docstring for why this is a
+        separate event from "conversation.updated".
+        """
+        self._load_active_conversation()
+        self._refresh_conversation_list()
+
+    # ------------------------------------------------------------------
     # Text sending
     # ------------------------------------------------------------------
 
@@ -211,11 +394,11 @@ class AssistantModule(ModuleBase):
         if not prompt or self._worker is not None or self.context.llm is None:
             return
 
-        self._log.appendPlainText(format_chat_line("You", prompt))
         self._input.clear()
         self._set_busy(True)
+        self.context.conversations.add_message(self._conversation.conversation_id, "user", prompt)
 
-        messages, tools = build_chat_request(self.context, prompt)
+        messages, tools = build_chat_request(self.context, self._conversation, prompt)
 
         self._worker = ChatWorker(self.context.llm, messages, tools)
         self._worker.result_ready.connect(self._on_reply)
@@ -237,22 +420,26 @@ class AssistantModule(ModuleBase):
                 log.warning(
                     "Skipped destructive tool call(s) bundled with other calls in one reply: %s", skipped_names
                 )
-                self._log.appendPlainText(format_chat_line(
-                    self.display_name,
+                self.context.conversations.add_message(
+                    self._conversation.conversation_id,
+                    "assistant",
                     f"(Skipped a possibly unintended action for safety: {skipped_names}. Ask for that on its own if you really want it.)",
-                ))
+                )
             for tool_call in calls_to_execute:
                 confirmation = self.context.assistant_actions.execute(
                     self.context, tool_call.name, tool_call.arguments
                 )
-                self._log.appendPlainText(format_chat_line(self.display_name, confirmation))
+                self.context.conversations.add_message(self._conversation.conversation_id, "assistant", confirmation)
                 self._speak(confirmation)
             self._status_label.setText("")
             return
 
-        self._log.appendPlainText(format_chat_line(self.display_name, reply.content))
+        user_message = self._conversation.messages[-1].content if self._conversation.messages else ""
+        self.context.conversations.add_message(self._conversation.conversation_id, "assistant", reply.content)
         self._status_label.setText("")
         self._speak(reply.content)
+        self._maybe_generate_title(user_message, reply.content)
+        self._extract_memories(user_message)
 
     def _on_worker_finished(self) -> None:
         self._set_busy(False)
@@ -266,6 +453,50 @@ class AssistantModule(ModuleBase):
         self._talk_button.setEnabled(not busy)
         if busy:
             self._status_label.setText("Thinking…")
+
+    # ------------------------------------------------------------------
+    # Auto-titling + memory extraction — both best-effort, both fired
+    # only after a plain-text reply is already shown (never blocking).
+    # ------------------------------------------------------------------
+
+    def _maybe_generate_title(self, user_message: str, assistant_message: str) -> None:
+        if self._conversation.title != DEFAULT_TITLE or self._title_worker is not None:
+            return
+        prompt = build_title_generation_prompt(user_message, assistant_message)
+        self._title_worker = GenerateWorker(self.context.llm, prompt)
+        conversation_id = self._conversation.conversation_id
+        self._title_worker.result_ready.connect(lambda raw: self._on_title_generated(conversation_id, raw))
+        self._title_worker.finished.connect(self._on_title_worker_finished)
+        self._title_worker.start()
+
+    def _on_title_generated(self, conversation_id: str, raw_title: Optional[str]) -> None:
+        title = clean_generated_title(raw_title)
+        if title is not None:
+            self.context.conversations.set_title(conversation_id, title)
+
+    def _on_title_worker_finished(self) -> None:
+        if self._title_worker is not None:
+            self._title_worker.deleteLater()
+            self._title_worker = None
+
+    def _extract_memories(self, user_message: str) -> None:
+        if self._memory_worker is not None or self.context.user_memories is None:
+            return
+        prompt = build_memory_extraction_prompt(user_message)
+        self._memory_worker = GenerateWorker(self.context.llm, prompt)
+        conversation_id = self._conversation.conversation_id
+        self._memory_worker.result_ready.connect(lambda raw: self._on_memories_extracted(conversation_id, raw))
+        self._memory_worker.finished.connect(self._on_memory_worker_finished)
+        self._memory_worker.start()
+
+    def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
+        for fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, source_conversation_id=conversation_id)
+
+    def _on_memory_worker_finished(self) -> None:
+        if self._memory_worker is not None:
+            self._memory_worker.deleteLater()
+            self._memory_worker = None
 
     # ------------------------------------------------------------------
     # Push-to-talk (speech in)

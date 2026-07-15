@@ -63,6 +63,19 @@ whatever screen is currently active, at the user's explicit request
 ("the assistant should recommend questions that it has a good ability
 to help with"). Clicking one sends it exactly like typing it and
 pressing Send.
+
+**2026-07-14 aesthetic pass part 5**: this panel no longer owns its own
+chat transcript — like `modules/assistant/module.py`'s full screen, it's
+a live *view* over `AppContext.conversations`
+(`core/conversation_manager.py`)'s active conversation, re-rendering
+whenever `"conversation.updated"`/`"conversation.active_changed"`
+publish (subscribed here alongside the existing nav events), which is
+what keeps this compact chat and the full-screen one always showing the
+same conversation without a direct reference to each other. Also fires
+the same background auto-titling/memory-extraction
+(`core.generate_worker.GenerateWorker`) the full screen does after a
+plain-text reply — whichever surface the user is actually typing into
+does the extracting; the other just reflects the result via the event.
 """
 
 from __future__ import annotations
@@ -85,8 +98,19 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
-from core.assistant_chat import build_chat_request, format_chat_line, split_safe_tool_calls, suggested_prompts_for_module
+from core.assistant_chat import (
+    build_chat_request,
+    build_memory_extraction_prompt,
+    build_title_generation_prompt,
+    clean_generated_title,
+    format_chat_line,
+    parse_extracted_memories,
+    split_safe_tool_calls,
+    suggested_prompts_for_module,
+)
 from core.chat_worker import ChatWorker
+from core.conversation_manager import DEFAULT_TITLE
+from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
 
 _DEFAULT_ICON = "\U0001F916"  # robot
@@ -145,6 +169,9 @@ class CharacterPanel(QFrame):
         self.setFrameShape(QFrame.Shape.StyledPanel)
 
         self._worker: Optional[ChatWorker] = None
+        self._title_worker: Optional[GenerateWorker] = None
+        self._memory_worker: Optional[GenerateWorker] = None
+        self._conversation = None
 
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -189,12 +216,16 @@ class CharacterPanel(QFrame):
         self.context.events.subscribe("menu.shown", self._on_menu_shown)
         self.context.events.subscribe("home.shown", self._on_home_shown)
         self.context.events.subscribe("notification.created", self._on_notification_created)
+        self.context.events.subscribe("conversation.updated", self._on_conversation_updated)
+        self.context.events.subscribe("conversation.active_changed", self._on_conversation_active_changed)
 
         self._last_event_at = time.monotonic()
         self._idle_index = 0
         self._idle_timer = QTimer(self)
         self._idle_timer.timeout.connect(self._on_idle_tick)
         self._idle_timer.start(_IDLE_TICK_MS)
+
+        self._load_active_conversation()
 
     def unsubscribe(self) -> None:
         """Must be called before this widget is destroyed — see module docstring."""
@@ -203,6 +234,28 @@ class CharacterPanel(QFrame):
         self.context.events.unsubscribe("menu.shown", self._on_menu_shown)
         self.context.events.unsubscribe("home.shown", self._on_home_shown)
         self.context.events.unsubscribe("notification.created", self._on_notification_created)
+        self.context.events.unsubscribe("conversation.updated", self._on_conversation_updated)
+        self.context.events.unsubscribe("conversation.active_changed", self._on_conversation_active_changed)
+
+    def _load_active_conversation(self) -> None:
+        self._conversation = self.context.conversations.get_or_create_active_conversation()
+        self._render_conversation_log()
+
+    def _render_conversation_log(self) -> None:
+        self._chat_log.clear()
+        for message in self._conversation.messages:
+            speaker = "You" if message.role == "user" else "M.I.A."
+            self._chat_log.appendPlainText(format_chat_line(speaker, message.content))
+
+    def _on_conversation_updated(self, conversation_id: str) -> None:
+        """A write from either this panel or the full Assistant module — reflect it if it's ours."""
+        if self._conversation is not None and conversation_id == self._conversation.conversation_id:
+            self._conversation = self.context.conversations.get_conversation(conversation_id) or self._conversation
+            self._render_conversation_log()
+
+    def _on_conversation_active_changed(self, conversation_id: Optional[str]) -> None:
+        """The active conversation itself changed (new/switched/deleted from the full module) — always reload."""
+        self._load_active_conversation()
 
     def _on_module_opened(self, module_id: str) -> None:
         display_name = self._display_name_for(module_id)
@@ -319,11 +372,11 @@ class CharacterPanel(QFrame):
         if not prompt or self._worker is not None or self.context.llm is None:
             return
 
-        self._chat_log.appendPlainText(format_chat_line("You", prompt))
         self._input.clear()
         self._set_busy(True)
+        self.context.conversations.add_message(self._conversation.conversation_id, "user", prompt)
 
-        messages, tools = build_chat_request(self.context, prompt)
+        messages, tools = build_chat_request(self.context, self._conversation, prompt)
 
         self._worker = ChatWorker(self.context.llm, messages, tools)
         self._worker.result_ready.connect(self._on_reply)
@@ -342,26 +395,74 @@ class CharacterPanel(QFrame):
             calls_to_execute, skipped_calls = split_safe_tool_calls(reply.tool_calls, self.context.assistant_actions)
             if skipped_calls:
                 skipped_names = ", ".join(tc.name for tc in skipped_calls)
-                self._chat_log.appendPlainText(format_chat_line(
-                    "M.I.A.",
+                self.context.conversations.add_message(
+                    self._conversation.conversation_id,
+                    "assistant",
                     f"(Skipped a possibly unintended action for safety: {skipped_names}. Ask for that on its own if you really want it.)",
-                ))
+                )
             for tool_call in calls_to_execute:
                 confirmation = self.context.assistant_actions.execute(
                     self.context, tool_call.name, tool_call.arguments
                 )
-                self._chat_log.appendPlainText(format_chat_line("M.I.A.", confirmation))
+                self.context.conversations.add_message(self._conversation.conversation_id, "assistant", confirmation)
             self._status_label.setText("")
             return
 
-        self._chat_log.appendPlainText(format_chat_line("M.I.A.", reply.content))
+        user_message = self._conversation.messages[-1].content if self._conversation.messages else ""
+        self.context.conversations.add_message(self._conversation.conversation_id, "assistant", reply.content)
         self._status_label.setText("")
+        self._maybe_generate_title(user_message, reply.content)
+        self._extract_memories(user_message)
 
     def _on_worker_finished(self) -> None:
         self._set_busy(False)
         if self._worker is not None:
             self._worker.deleteLater()
             self._worker = None
+
+    # ------------------------------------------------------------------
+    # Auto-titling + memory extraction — same shape as
+    # modules/assistant/module.py's, both best-effort and non-blocking.
+    # ------------------------------------------------------------------
+
+    def _maybe_generate_title(self, user_message: str, assistant_message: str) -> None:
+        if self._conversation.title != DEFAULT_TITLE or self._title_worker is not None:
+            return
+        prompt = build_title_generation_prompt(user_message, assistant_message)
+        self._title_worker = GenerateWorker(self.context.llm, prompt)
+        conversation_id = self._conversation.conversation_id
+        self._title_worker.result_ready.connect(lambda raw: self._on_title_generated(conversation_id, raw))
+        self._title_worker.finished.connect(self._on_title_worker_finished)
+        self._title_worker.start()
+
+    def _on_title_generated(self, conversation_id: str, raw_title: Optional[str]) -> None:
+        title = clean_generated_title(raw_title)
+        if title is not None:
+            self.context.conversations.set_title(conversation_id, title)
+
+    def _on_title_worker_finished(self) -> None:
+        if self._title_worker is not None:
+            self._title_worker.deleteLater()
+            self._title_worker = None
+
+    def _extract_memories(self, user_message: str) -> None:
+        if self._memory_worker is not None or self.context.user_memories is None:
+            return
+        prompt = build_memory_extraction_prompt(user_message)
+        self._memory_worker = GenerateWorker(self.context.llm, prompt)
+        conversation_id = self._conversation.conversation_id
+        self._memory_worker.result_ready.connect(lambda raw: self._on_memories_extracted(conversation_id, raw))
+        self._memory_worker.finished.connect(self._on_memory_worker_finished)
+        self._memory_worker.start()
+
+    def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
+        for fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, source_conversation_id=conversation_id)
+
+    def _on_memory_worker_finished(self) -> None:
+        if self._memory_worker is not None:
+            self._memory_worker.deleteLater()
+            self._memory_worker = None
 
     def _set_busy(self, busy: bool) -> None:
         self._input.setEnabled(not busy)

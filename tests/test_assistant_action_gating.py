@@ -197,6 +197,11 @@ def test_ordinary_trip_mention_does_not_gate_open():
     assert looks_like_action_request("That trip to the store took forever", keywords) is False
 
 
+def test_set_birthday_phrasing_gates_open():
+    keywords = _real_gating_keywords()
+    assert looks_like_action_request("My birthday is March 3rd", keywords) is True
+
+
 # ----------------------------------------------------------------------
 # milestone 5.13 — Calendar, Power, Components, Field Kit (read actions)
 # ----------------------------------------------------------------------

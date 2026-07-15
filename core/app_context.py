@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from core.alarm_manager import AlarmManager
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
+    from core.conversation_manager import ConversationManager
     from core.data_logger_manager import DataLoggerManager
     from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
@@ -52,6 +53,7 @@ if TYPE_CHECKING:
     from core.search_manager import SearchManager
     from core.task_manager import TaskManager
     from core.trip_manager import TripManager
+    from core.user_memory_manager import UserMemoryManager
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -92,6 +94,11 @@ class AppContext:
     memories: Optional["MemoryManager"] = field(default=None, repr=False)
     missions: Optional["MissionManager"] = field(default=None, repr=False)
     volume: Optional["VolumeManager"] = field(default=None, repr=False)
+    conversations: Optional["ConversationManager"] = field(default=None, repr=False)
+    # Named user_memories, not memories, to stay distinct from the
+    # pre-existing `memories` field above (core/memory_manager.py's
+    # Expedition recaps) — same word, unrelated concept.
+    user_memories: Optional["UserMemoryManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

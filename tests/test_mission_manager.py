@@ -220,6 +220,101 @@ def test_increment_tally_rejects_non_tally_objective(isolated_paths):
         context.missions.increment_tally(mission.mission_id, 0)
 
 
+# ----------------------------------------------------------------------
+# Celebration notifications — 2026-07-14 aesthetic pass part 5, at the
+# user's explicit request ("celebrating their objective wins"). Fires
+# uniformly from the manager itself (not the Missions module UI or the
+# Assistant's own action handlers) so neither call site needs its own
+# copy of "did this just newly become complete."
+# ----------------------------------------------------------------------
+
+class _FakeNotifications:
+    def __init__(self) -> None:
+        self.notified: list[dict] = []
+
+    def notify(self, title, message, level="info", source="system"):
+        self.notified.append({"title": title, "message": message, "level": level, "source": source})
+
+
+def _make_context_with_notifications() -> tuple[AppContext, _FakeNotifications]:
+    context = _make_context()
+    notifications = _FakeNotifications()
+    context.notifications = notifications
+    return context, notifications
+
+
+def test_increment_tally_celebrates_objective_completion(isolated_paths):
+    context, notifications = _make_context_with_notifications()
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+
+    context.missions.increment_tally(mission.mission_id, 0)
+    context.missions.increment_tally(mission.mission_id, 0)
+    assert notifications.notified == []  # not complete yet — no celebration
+
+    # A single-objective mission completes both "this objective" and
+    # "all objectives" at once — both notifications are expected here.
+    context.missions.increment_tally(mission.mission_id, 0)
+    assert len(notifications.notified) == 2
+    assert "Objective complete" in notifications.notified[0]["title"]
+    assert "Master Baiter" in notifications.notified[0]["message"]
+    assert "All objectives" in notifications.notified[1]["title"]
+
+
+def test_increment_tally_does_not_recelebrate_already_complete_objective(isolated_paths):
+    context, notifications = _make_context_with_notifications()
+    mission = context.missions.add_mission(name="X")
+    context.missions.add_objective(mission.mission_id, "Catch 1 fish", "tally", 1.0)
+
+    context.missions.increment_tally(mission.mission_id, 0)
+    context.missions.increment_tally(mission.mission_id, 0)  # already complete, incrementing further
+
+    objective_celebrations = [n for n in notifications.notified if "Objective complete" in n["title"]]
+    assert len(objective_celebrations) == 1
+
+
+def test_increment_tally_celebrates_all_objectives_complete(isolated_paths):
+    context, notifications = _make_context_with_notifications()
+    mission = context.missions.add_mission(name="Master Baiter")
+    context.missions.add_objective(mission.mission_id, "Catch 1 fish", "tally", 1.0)
+    context.missions.add_objective(mission.mission_id, "Catch 1 more fish", "tally", 1.0)
+
+    context.missions.increment_tally(mission.mission_id, 0)
+    all_complete_celebrations = [n for n in notifications.notified if "All objectives" in n["title"]]
+    assert all_complete_celebrations == []  # only one of two objectives done
+
+    context.missions.increment_tally(mission.mission_id, 1)
+    all_complete_celebrations = [n for n in notifications.notified if "All objectives" in n["title"]]
+    assert len(all_complete_celebrations) == 1
+
+
+def test_update_mission_celebrates_completion(isolated_paths):
+    context, notifications = _make_context_with_notifications()
+    mission = context.missions.add_mission(name="Master Baiter")
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert len(notifications.notified) == 1
+    assert "Mission complete" in notifications.notified[0]["title"]
+    assert "Master Baiter" in notifications.notified[0]["message"]
+
+
+def test_update_mission_does_not_recelebrate_already_completed_mission(isolated_paths):
+    context, notifications = _make_context_with_notifications()
+    mission = context.missions.add_mission(name="X")
+    context.missions.update_mission(mission.mission_id, status="completed")
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert len(notifications.notified) == 1
+
+
+def test_update_mission_other_field_changes_do_not_celebrate(isolated_paths):
+    context, notifications = _make_context_with_notifications()
+    mission = context.missions.add_mission(name="X")
+    context.missions.update_mission(mission.mission_id, name="Renamed")
+    assert notifications.notified == []
+
+
 def test_objective_progress_tally_returns_stored_value(isolated_paths):
     context = _make_context()
     mission = context.missions.add_mission(name="X")

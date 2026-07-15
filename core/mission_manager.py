@@ -166,6 +166,7 @@ class MissionManager:
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
+        was_completed = mission.status == "completed"
         for key, value in fields.items():
             if key in ("created_at", "trip_id"):
                 raise ValueError(f"'{key}' can't be set through update_mission().")
@@ -174,6 +175,13 @@ class MissionManager:
             setattr(mission, key, value)
         self._bump_updated_at(mission)
         self._save()
+        # Fires uniformly whether "completed" was set via
+        # modules/missions/module.py's own UI button or the Assistant's
+        # complete_mission action (core/application.py) — celebration
+        # logic lives here, in the manager, so neither call site needs
+        # its own copy of "did this just newly become complete."
+        if not was_completed and mission.status == "completed":
+            self._notify_mission_completed(mission)
         return mission
 
     def delete_mission(self, mission_id: str) -> None:
@@ -227,10 +235,61 @@ class MissionManager:
         objective = mission.objectives[index]
         if objective.metric_type != "tally":
             raise ValueError(f"Objective '{objective.description}' is not a tally-type objective.")
+        was_objective_complete = objective.progress >= objective.target
+        all_were_complete = self._all_objectives_complete(mission)
         objective.progress += delta
         self._bump_updated_at(mission)
         self._save()
+
+        is_objective_complete = objective.progress >= objective.target
+        if not was_objective_complete and is_objective_complete:
+            self._notify_objective_completed(mission, objective)
+        if not all_were_complete and self._all_objectives_complete(mission):
+            self._notify_all_objectives_completed(mission)
         return mission
+
+    def _all_objectives_complete(self, mission: Mission) -> bool:
+        """
+        Uses is_objective_complete() (not a bare progress>=target check
+        here) so a mixed mission — some tally objectives, some
+        trip_duration_hours ones — is judged correctly on both metric
+        types, not just tally's directly-stored progress.
+        """
+        if not mission.objectives:
+            return False
+        return all(
+            self.is_objective_complete(mission.mission_id, index) for index in range(len(mission.objectives))
+        )
+
+    def _notify_objective_completed(self, mission: Mission, objective: Objective) -> None:
+        if self.context.notifications is None:
+            return
+        self.context.notifications.notify(
+            title="\U0001F3C6 Objective complete!",
+            message=f"You did it! \"{objective.description}\" is complete on your \"{mission.name}\" mission. Keep it up!",
+            level="info",
+            source="missions",
+        )
+
+    def _notify_all_objectives_completed(self, mission: Mission) -> None:
+        if self.context.notifications is None:
+            return
+        self.context.notifications.notify(
+            title="\U0001F3C6 All objectives complete!",
+            message=f"Every objective on \"{mission.name}\" is done — amazing work! Ready to mark it complete?",
+            level="info",
+            source="missions",
+        )
+
+    def _notify_mission_completed(self, mission: Mission) -> None:
+        if self.context.notifications is None:
+            return
+        self.context.notifications.notify(
+            title="\U0001F389 Mission complete!",
+            message=f"\"{mission.name}\" is complete! That's a real achievement — what's next?",
+            level="info",
+            source="missions",
+        )
 
     def objective_progress(self, mission_id: str, index: int) -> Optional[float]:
         mission = self.get_mission(mission_id)
