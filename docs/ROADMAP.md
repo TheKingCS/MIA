@@ -2774,3 +2774,49 @@ passing total, no regressions. **Actual speaker output remains
 unverified** — Piper synthesis itself is real and confirmed, but
 whether it sounds *good* through a real speaker needs real Pi hardware,
 flagged in `docs/KNOWN_ISSUES.md` rather than assumed.
+
+## Self-knowledge gap: the Assistant didn't know it could speak (fixed, 2026-07-15)
+
+Found live, by the user, immediately after the voice work above: asked
+"Can you speak?" and the Assistant answered "I don't know how to speak
+in the classical sense... I'm a text-based AI" — technically true of the
+model itself, but wrong for what M.I.A. actually does, since the full
+Assistant module speaks every reply via the `TTSWorker` pipeline that
+already exists. Root cause: `core/assistant_chat.py`'s system prompt
+never mentioned voice output at all — the model only knows what's
+written into its own system message, it doesn't discover new
+capabilities on its own. This is the first concrete instance of
+`docs/VISION.md`'s companion-philosophy "self-knowledge" principle
+being a real, structural gap, not a hypothetical one: every future
+capability (Memory Palace, Workout, Kitchen, ...) will need to be
+explicitly taught to the model the same way, or it'll confidently deny
+things it can actually do.
+
+Fixed by adding one sentence to `_IDENTITY_WARMTH` (not `_IDENTITY_LINE`)
+in `core/assistant_chat.py` — deliberately the info-question-only
+constant, never the one shared with the action-request path, so the
+68-case tool-calling golden set's system message stays byte-for-byte
+unchanged. Verified two ways: a direct live-model call showing the
+answer flipped from denial to "Yes, I can talk to you through this
+interface..."; and a full `tests/live_model_check.py` run confirming
+**68/68 still passing**, no regression on the fragile tool-calling
+surface. 1085 tests passing (no test changes needed — nothing asserts
+the info-question system message's literal content).
+
+Also investigated the same session: user reported the spoken briefing
+sounded "super quiet" or possibly didn't play at all. Directly measured
+the actual synthesized WAV's peak amplitude — 100% of full 16-bit
+scale, not a quiet signal — ruling out Piper/M.I.A.'s own synthesis as
+the cause. Most likely a system-level volume setting (Windows volume
+mixer for the WSL audio session, or WSLg's own passthrough gain), not
+an app bug; flagged to the user rather than guessed at further, since
+it's outside what this sandbox can directly verify (see the PortAudio
+entries in `docs/KNOWN_ISSUES.md` for the broader "can't verify real
+speaker output here" limitation this falls under). Separately confirmed
+`libportaudio2`, once actually installed, resolves the *import*
+failure but this specific sandboxed tool-execution context still has
+zero audio devices (`sd.query_devices()` returns empty,
+`Error querying device -1` on playback) — a distinct, narrower gap than
+originally documented, updated understanding but same practical
+conclusion: real speaker verification needs a real interactive/hardware
+session, not this one.

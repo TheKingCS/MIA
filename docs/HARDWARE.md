@@ -5,6 +5,15 @@ constraints for building M.I.A. Core on a Raspberry Pi 5. Update it as
 parts are chosen/tested — it should stay the source of truth for "what
 hardware does this software assume exists."
 
+**2026-07-15: this document now also covers Project 2 ("Home Cloud"),
+see its own section below** — its hardware started being sourced this
+date, and `docs/VISION.md`'s new "Core/Home split" section is the
+architectural decision this hardware exists to support: Core stays
+fully offline-capable on its own; Home is where a genuinely bigger
+model lives for deep reasoning and remote/streaming access. Read that
+section first for *why* this split exists before treating either half
+of this document as the whole picture.
+
 ## Core platform
 
 - **Raspberry Pi 5** (8GB recommended — the AI HAT+ 2 has its own
@@ -34,6 +43,28 @@ hardware does this software assume exists."
   WebUI is the reference example in Hailo's own docs; M.I.A.'s
   Assistant module will eventually talk to this backend directly
   instead)
+
+**2026-07-15: realistic offline capability, decided (see `VISION.md`'s
+"Core/Home split" for the full reasoning) — Core is scoped to keep,
+not expand:**
+
+- **Reliable offline on this hardware**: tool-calling/action execution
+  (the full registry, `docs/ASSISTANT_CAPABILITIES.md`), conversational
+  replies/personality/proactive behaviors, retrieval-grounded device
+  help, voice in/out, persistent memory, and — plausibly, still
+  unverified on real hardware — lightweight on-device image
+  classification (species/plant ID), since Hailo NPUs' origin is vision
+  inference, arguably a better fit for this chip than text generation.
+- **Not reliable on this hardware, confirmed by this project's own
+  2026-07-14 experiment** (`qwen2.5:7b` — right at this HAT's realistic
+  ceiling — tested worse than the current 3B model on both accuracy and
+  speed): deep, open-ended, multi-step reasoning, or robustly handling
+  a long/rich system prompt. **Don't expect reaching the HAT's 7B
+  ceiling to fix this project's already-documented prompt-fragility
+  gotchas** (`docs/ROADMAP.md`) — that needs a different model size
+  class entirely (13B+), which needs Project 2's hardware, not a bigger
+  HAT. This is a physics/market ceiling for edge NPUs generally, not a
+  gap specific to this part.
 
 **Known constraint — plan storage around this:** the AI HAT+ 2 and any
 NVMe M.2 storage HAT both require the Pi 5's single PCIe interface.
@@ -94,8 +125,67 @@ into `voice_models/` (gitignored).
 
 - USB-C to a computer for file transfer / extended use, per the
   project's stated goal. Gadget-mode (Pi 5 presenting as a USB mass
-  storage or network device) is the simplest first implementation;
-  a full networked client is a possible v2+ direction, not required now.
+  storage or network device) is the simplest first implementation.
+- **2026-07-15: a networked connection to Project 2 (Home) is now a
+  planned direction, not just a "possible v2+" maybe** — see
+  `VISION.md`'s "Core/Home split" and the new Project 2 section below.
+  Physical USB-C docking (file/Expedition-data sync, already built,
+  `core/expedition_sync.py`) and a networked link to Home for the
+  reasoning hand-off are two different mechanisms serving two different
+  needs — docking doesn't need to become networked for the hand-off to
+  work, and the hand-off doesn't require physical docking either.
+
+## Project 2: Home Cloud compute node (2026-07-15, hardware being sourced)
+
+The other half of the Core/Home split decided in `VISION.md` — where
+deep reasoning and the browser/app streaming access mode are meant to
+live, per that document's own reasoning for why Core (Pi5+HAT) can't
+do this itself. Software is entirely unbuilt; this section is the
+hardware plan only.
+
+**In progress**: CPU **AMD Ryzen 7 9800X3D** (Zen 5, strong single-
+thread performance, runs cool for its class) + GPU **AMD Radeon RX
+7900 XTX (24GB VRAM)**, being built by a family member as of
+2026-07-15. 24GB is genuinely generous headroom for local LLM
+inference — comfortably enough for a 30B-class quantized model, likely
+more, which is exactly the size class `VISION.md` identifies as needed
+to meaningfully outperform Core's 1–7B ceiling on prompt robustness.
+
+**Real caveat, not a blocker: AMD means ROCm, not CUDA.** The 7900
+XTX is one of ROCm's officially-supported targets (gfx1100) — unlike
+older/unsupported AMD parts, this is a real, working path — but ROCm's
+setup has historically been more hands-on than NVIDIA's CUDA path
+(driver installation, occasionally an explicit GPU-target environment
+variable). Budget real setup time the first time Ollama gets pointed
+at this GPU; don't assume it's zero-friction the way the portable
+Ollama-on-CPU install was for Core.
+
+**Recommended OS: Ubuntu LTS**, not Windows — ROCm's Linux support is
+more mature/better-documented, and it keeps this machine consistent
+with the rest of this project's Linux-first tooling. Windows ROCm
+support does exist if this machine needs to double as a general
+desktop; that's a real trade-off to weigh, not a wrong choice, just not
+the smoothest AI-specific path.
+
+**Rest of the build** (not yet finalized — update this section once
+parts are confirmed):
+- Motherboard: AM5 socket (required for 9800X3D), PCIe 4.0/5.0 x16 slot
+  for the GPU, confirm BIOS supports 9800X3D before assembly (some AM5
+  boards needed a BIOS update for newer Ryzen chips).
+- RAM: 32–64GB DDR5, dual-channel (matched kit, not a single stick).
+- Storage: 1–2TB NVMe SSD (OS + Ollama model files — individual models
+  can be tens of GB each).
+- PSU: 850–1000W, 80+ Gold or better — the 7900 XTX has real transient
+  power spikes even though sustained draw is lower; don't undersize
+  this.
+- Cooling: a solid air cooler is sufficient for the 9800X3D (no AIO
+  needed); case airflow matters more for the GPU.
+- Case: must physically fit the 7900 XTX (300mm+ in most versions).
+
+**Not yet designed**: the actual Core→Home hand-off mechanism, and the
+browser/app streaming interface — both flagged as unbuilt in
+`VISION.md`'s "Core/Home split" section. This hardware existing doesn't
+imply either is close to done.
 
 ## Camera (2026-07-14 addition, not yet chosen)
 
@@ -157,3 +247,7 @@ first physical prototype is underway.
   battery is expected to run camera/mic/speaker peripherals too
 - Modular backpack connector standard / strap-mount hardware — see the
   new section above
+- Project 2 (Home) — remaining parts (motherboard/RAM/storage/PSU/case/
+  cooling), see the new section above; also revisit whether it should
+  live on the home network only or need some form of secure remote
+  reachability once the streaming access mode is actually designed

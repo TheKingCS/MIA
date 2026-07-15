@@ -129,7 +129,7 @@ workout PRs, coding milestones, savings milestones, learning streaks).
 | Project | Role | Status |
 |---|---|---|
 | **1. M.I.A.** | "The Brain" — the portable field device and its core intelligence | **In progress.** This is "M.I.A. Core," the Pi5 kiosk device documented in `ROADMAP.md`, currently at v0.2. |
-| **2. Personal Home Cloud Infrastructure** | "The Nervous System" — a stationary, more powerful compute extension the Pi5 docks to or syncs with | Not started. This is where compute-heavy reasoning belongs (see below). |
+| **2. Personal Home Cloud Infrastructure** | "The Nervous System" — a stationary, more powerful compute extension the Pi5 docks to or syncs with | **Hardware being built as of 2026-07-15** (AMD Ryzen 9800X3D + Radeon 7900 XTX, see `HARDWARE.md`'s new Project 2 section) — software (the hand-off mechanism, the streaming access mode) not started. This is where compute-heavy reasoning belongs (see below and the new "Core/Home split" section). |
 | **3. Smart Environment** | "The Senses" — sensor networks, environmental monitoring, smart home integration | Not started. Overlaps with the Agriculture/Smart Home/Power sections already planned in `ROADMAP.md`. |
 | **4. Robotics and Physical Systems** | "The Hands" — robotic arms, drones, mobile robots, prosthetic research | Not started. Overlaps with the Fleet section already planned in `ROADMAP.md`. |
 
@@ -137,6 +137,112 @@ workout PRs, coding milestones, savings milestones, learning streaks).
 improvement to M.I.A. should make future projects easier.** That
 compounding relationship is the actual long-term goal — not any single
 feature.
+
+## Core/Home split — the resolved architecture (2026-07-15)
+
+Resolves the "multi-platform architecture" fork flagged earlier in this
+document. Prompted by a direct question: could the wearable Core device
+be both small-form-factor *and* capable of deep, open-ended reasoning
+fully offline? Answered honestly rather than optimistically — no, and
+it's worth being precise about why, since it's a hardware/market
+reality, not a gap in this project's engineering.
+
+### What Core (Pi5 + AI HAT+2) can actually be expected to handle offline
+
+Grounded in what this project has already measured, plus `HARDWARE.md`'s
+already-documented Hailo-10H ceiling (40 TOPS INT4, 8GB dedicated RAM,
+**realistic model size 1–7B parameters**) — not aspiration:
+
+**Reliable, fully offline, no change of scope needed:**
+- Tool-calling/action execution — the entire 54-action registry (see
+  `docs/ASSISTANT_CAPABILITIES.md`) and its natural growth, *as long as
+  per-request tool count stays bounded* via domain-scoped attachment.
+  This is a software discipline, not a hardware ceiling — the existing
+  architecture already gets this right.
+- Short-to-medium conversational replies, personality/warmth, proactive
+  daily behaviors (birthday/calendar/check-in), persistent memory
+  (extraction + storage) — all lightweight generation tasks, well
+  within a small model's actual strengths.
+- Retrieval-grounded "how do I use X" answers
+  (`core/device_help_manager.py`) — cheap by design (a few relevant
+  chunks, not an open-ended reasoning task).
+- Voice in/out (Vosk/Piper) — CPU-only, lightweight relative to LLM
+  inference, doesn't need the NPU at all.
+- Lightweight on-device image classification (species/plant ID) — this
+  is arguably the Hailo chip's actual home turf; Hailo NPUs originate
+  from vision-inference acceleration, and Hailo's own docs name smart
+  search/captioning explicitly. More likely to work well than deep text
+  reasoning on the same chip, though still unverified on real hardware
+  (`HARDWARE.md`'s Camera section).
+
+**Not reliably achievable on this hardware, confirmed by this
+project's own evidence, not just a spec-sheet inference:** deep,
+open-ended, multi-step reasoning, or robustly handling a long/rich
+system prompt with many simultaneous instructions. The 2026-07-14
+model-upgrade experiment already tested the top of the HAT's realistic
+range head-to-head — `qwen2.5:7b` against the current `llama3.2:3b` —
+and the 7B model was *worse*, not better: lower accuracy (58/60 vs.
+60/60) and ~5x slower. That was on CPU, not the Hailo NPU specifically,
+but it's real evidence that "bigger model, same size class" doesn't
+reliably buy more prompt robustness — so there's no reason to expect
+simply reaching the HAT's 7B ceiling solves the fragility this project
+has already documented (longer-preamble regressions, tool-count
+hallucination). A model genuinely capable of that needs to be a
+different size class entirely (13B+, realistically 30B+ for real
+headroom) — which needs discrete-GPU-class power/cooling no wearable
+form factor accommodates today. **This is a physics/market constraint,
+not a parts-selection problem** — no HAT swap fixes it.
+
+### The decision: hybrid, not pure streaming, not a bigger Core
+
+Three options were on the table; two were rejected explicitly:
+
+- **Rejected — make Core itself bigger/more capable.** Fights the
+  wearable design goal (light, low-power, always-available) for a
+  reasoning ceiling it structurally can't reach anyway. Keep Core's
+  hardware plan exactly as `HARDWARE.md` already specifies.
+- **Rejected — pure streaming (Core becomes a thin client to Home,
+  reasoning happens remotely by default).** Would quietly discard this
+  project's foundational offline-first principle. A *survival*
+  companion that requires a live connection to Home to function
+  defeats the actual point of the wearable — the scenarios this
+  project cares about most (no signal, off-grid, Home unreachable) are
+  exactly when a thin client stops working.
+- **Chosen — hybrid.** Core stays fully offline-capable for everything
+  in the "reliable" list above, unconditionally, forever — Home is
+  never required. When Home *is* reachable (docked, or eventually over
+  the user's own network — never the open internet, matching this
+  project's existing privacy-first stance of no data leaving the
+  user's own devices), the Assistant gets an explicit, optional
+  "consult deeper reasoning" hand-off for requests that genuinely need
+  it, and relays the answer back into the same conversation. This was
+  already sketched conceptually for the Expert Council concept earlier
+  in this document — this decision formalizes it as the general
+  Core→Home reasoning hand-off mechanism, not a debate-specific
+  feature.
+
+### New: streaming/remote access as its own access mode, not a Core fallback
+
+Separately from the hand-off above — a browser/app interface to reach
+M.I.A.'s **full Home-side capability** directly, for the times the user
+isn't wearing Core at all (at a desk, on a phone at home). This is the
+first concrete piece of the "Multi-platform, one companion" companion-
+philosophy principle to get a real design decision: it's explicitly
+**additive to Core, not a replacement for it or a dependency of it**.
+Neither Core's offline operation nor this streaming mode blocks the
+other from being built independently.
+
+### What this leaves unbuilt (flagged, not started)
+
+- The Core→Home hand-off mechanism itself (a new Assistant action type,
+  network-reachability detection, response relay back into the active
+  conversation).
+- The browser/app streaming interface to Home — needs the same "real
+  API boundary" rearchitecture flagged in the critical-evaluation
+  section above (`gui/` can no longer be the only client), now with a
+  concrete reason to build it rather than a hypothetical one.
+- Project 2's software stack entirely — the hardware is being built
+  (see `HARDWARE.md`); nothing runs on it yet.
 
 ## Why this is a separate document from ROADMAP.md
 
@@ -204,23 +310,16 @@ the other.
   distance calculator. GPS moves from "defer until Navigation's later
   phase" (its status through 2026-07-13) to something the Memories
   vision genuinely depends on — see `HARDWARE.md`'s updated GPS note.
-- **Multi-platform architecture is the single largest new fork this
-  update introduces, and it is genuinely a fork, not additive work.**
-  Today's `core`/`modules`/`gui` layering (see `CLAUDE.md`) is a
-  single-process desktop app — `gui/` calls straight into `core/`
-  services in-process. Real web/mobile/XR frontends need those same
-  services reachable as a real API boundary (a backend M.I.A. process
-  exposing itself over HTTP/WebSocket, with `gui/`'s PySide6 code
-  becoming *one client among several* rather than the only one) — a
-  genuine rearchitecture of the boundary this project has enforced
-  since v0.1, not a new module. It is **not yet decided** whether that
-  backend lives on the Pi5 itself (a phone/browser on the same network
-  talks to Core directly) or is a Project 2 (Home Cloud) capability
-  the Pi5 docks/syncs to, matching this document's existing "Pi5 stays
-  light, Home does heavy lifting" principle for Expert Council/GA/PSO
-  above — resolve this deliberately, with a real design pass, before
-  writing any client/server code; don't let it get implicitly decided
-  by whichever frontend happens to get built first.
+- **Multi-platform architecture — RESOLVED 2026-07-15, see the
+  dedicated "Core/Home split" section below.** Was flagged here as the
+  single largest fork in this update, genuinely undecided at the time.
+  Resolved to a hybrid: Core (Pi5+HAT) stays fully offline-capable and
+  is never required to reach Home to function; Home gets both a deep-
+  reasoning hand-off *and* a separate browser/app streaming access mode
+  for reaching M.I.A.'s full capability when not wearing Core. Pure
+  "stream everything from Home" was explicitly rejected — it would
+  quietly give up the offline-first survival-tool premise this whole
+  project is built on.
 - **Intelligent UI navigation needs a genuinely new tool category, not
   a bigger version of the existing one.** Today's Assistant tool-calling
   (domain-scoped, 2026-07-14) executes a data action
@@ -286,7 +385,7 @@ the other.
 | **Pet Profiles** (2026-07-15 addition: names, photos, medical history, vet visits) | Project 1, same shape as Relationship Profiles, camera-independent (no recognition implied) so fully buildable now. |
 | **Interactive onboarding + modular tutorial system** (2026-07-15 addition: M.I.A. teaches herself through real conversation and real tasks, always available via "teach me how X works") | Project 1. Builds on the existing Assistant conversation/personality pipeline (2026-07-14 part 5) plus `looks_like_action_request()`-style intent classification — a new "teaching mode" conversation path, not a new backend. |
 | **Self-knowledge** (2026-07-15 addition: M.I.A. can explain any of her own modules/features/workflows conversationally) | Project 1. Directly extends `core/device_help_manager.py`'s existing end-user-docs grounding (2026-07-14 part 4) — that system already answers "how do I use X"; this generalizes its coverage and hooks it into the tutorial system above rather than replacing it. |
-| **Multi-platform architecture + browser/XR support** (2026-07-15 addition: the same assistant/memory/modules reachable from desktop, web, mobile, wearable, voice-only, and future AR/XR) | Project 1/2 boundary, genuinely undecided which — see the dedicated critical-evaluation note above. The largest architectural fork in this update; do not start client/server code before that design pass happens. |
+| **Multi-platform architecture + browser/XR support** (2026-07-15 addition: the same assistant/memory/modules reachable from desktop, web, mobile, wearable, voice-only, and future AR/XR) | **Resolved 2026-07-15** — see the dedicated "Core/Home split" section above. Core stays fully offline-capable (Project 1); Home (Project 2) gets both a deep-reasoning hand-off and a separate browser/app streaming access mode. Neither built yet, but the architecture question itself is no longer open. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 

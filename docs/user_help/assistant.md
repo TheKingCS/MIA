@@ -1,5 +1,16 @@
 # The Assistant
 
+## What M.I.A. is
+
+M.I.A. speaks her replies aloud (the full-screen Assistant module, not
+the sidebar) — you can pick which voice from a few options in Settings.
+She also remembers things you tell her across conversations, not just
+within one chat: your name, facts you mention, and anything you ask her
+to remember, reviewable and deletable any time from the "🧠 Memories"
+button. She'll check in occasionally — a birthday, a reminder about
+today's calendar, or just asking how you're doing if it's been quiet —
+and she has a warm, curious personality by design, not a flat Q&A tool.
+
 ## What the Assistant can help with
 
 The Assistant isn't just a chatbot — for a lot of things it can
