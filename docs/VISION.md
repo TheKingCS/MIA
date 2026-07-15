@@ -15,9 +15,14 @@ value compounds over years, improving through every completed project
 rather than staying static.
 
 **2026-07-14 update, at the user's explicit request: the physical end
-form is a wearable, modular backpack rig** — camera, speaker, and mic
-mounted to a strap, Pi5 + AI HAT+2 + battery mounted to the pack itself,
-plug-and-play modules for expansion. The test for "done" the user gave
+form is a wearable, modular backpack rig** — **2026-07-15: refined into
+two concrete physical units**, a Compute Block (Pi5 + AI HAT+2 +
+battery/UPS + storage, one enclosure, side-of-backpack) and a separate
+Receiver (camera + speaker + mic bundled together, worn on the strap or
+chest-mounted, connected back to the Compute Block by cable) — full
+detail, connector recommendation, and solar-charging requirement in
+`docs/HARDWARE.md`'s "Modular Backpack" section; read that fresh rather
+than trusting this summary as it evolves. The test for "done" the user gave
 directly: **if the user couldn't happily survive any situation with
 this tool, it isn't complete.** M.I.A. Core is meant to be worn, not
 carried in a bag and pulled out — this changes real assumptions (always

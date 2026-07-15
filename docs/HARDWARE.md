@@ -97,12 +97,23 @@ which is reinstallable from the M.I.A. repo.
 **Recommended: physical push-to-talk button, not always-listening.**
 
 - A single momentary GPIO button, wired as a hardware interrupt (not
-  polled), for near-zero idle power draw and instant response
+  polled), for near-zero idle power draw and instant response — exact
+  placement (Compute Block vs. the chest/strap-mounted Receiver, see
+  "Modular Backpack" below) not yet decided; the Receiver is likely the
+  more reachable spot given where it's actually worn, but this needs a
+  real GPIO-over-the-connector-cable design either way, not just a
+  local Pi header pin
 - Avoids wake-word false triggers and the extra always-on compute/power
   budget of continuous audio processing — both matter for a
   battery-powered field device
-- Pairs a basic USB or I2S microphone with the Pi 5's headphone jack or
-  a small I2S DAC/amp for TTS output
+- **2026-07-15 update**: the mic/speaker pairing recommendation above
+  (I2S DAC/amp) assumed they'd sit right next to the Pi's own GPIO
+  header — no longer true now that mic+speaker live in the physically
+  remote Receiver module (see "Modular Backpack" below). USB is the
+  better fit for this actual arrangement, same reasoning as the
+  Receiver's camera connection: I2S needs a short direct wiring run,
+  USB tolerates the longer cable a chest/strap-to-side-of-pack
+  connection actually requires.
 
 **STT/TTS engine (decided, docs/ROADMAP.md milestone 5.3):** Vosk
 (speech-to-text) + Piper (text-to-speech), both offline and CPU-only —
@@ -189,9 +200,11 @@ imply either is close to done.
 
 ## Camera (2026-07-14 addition, not yet chosen)
 
-Added by the wearable-companion vision update (`docs/VISION.md`) —
-strap-mounted, alongside the speaker/mic. Two real jobs, likely
-different priorities:
+Added by the wearable-companion vision update (`docs/VISION.md`) — now
+part of the Receiver module, see "Modular Backpack / physical form
+factor" below for the concrete two-part physical architecture this
+lives in. Two real jobs for the camera specifically, likely different
+priorities:
 
 - **Photo capture for Memories/trip recaps** — straightforward, any
   Pi-compatible camera module (CSI ribbon or USB UVC) works; the
@@ -219,34 +232,88 @@ milestone, but don't treat it as low-priority anymore. An IMU/accelerometer
 may also be worth pairing with GPS for pace/motion data during
 GPS-denied stretches (tree cover, etc.) — open question, not decided.
 
-## Modular Backpack / physical form factor (2026-07-14 addition, not yet designed)
+## Modular Backpack / physical form factor
 
-The end physical form, per the user's explicit vision: a wearable
-backpack rig, not a device carried in a bag and pulled out. Camera,
-speaker, and mic mounted to a strap; Pi5 + AI HAT+2 + battery mounted
-to the pack body; plug-and-play expansion modules (the same spirit as
-Field Kit's Connected Device Framework, but physical/mechanical rather
-than USB/serial). This is real industrial/hardware design work — a
-module connector standard, strap-mount hardware, weatherproofing,
-weight distribution — tracked here as its own parallel track, the same
-way Fleet/Communications hardware choices are deferred until a concrete
-part gets chosen, not something resolved in software. Revisit once a
-first physical prototype is underway.
+**2026-07-15: the physical architecture is now concretely defined as
+two separate wearable units, not one block with strap-mounted
+peripherals** (an evolution of the 2026-07-14 wearable-companion
+vision, per the user's own explicit description):
+
+1. **Compute Block ("Core")** — one physical enclosure holding
+   everything from "Core platform"/"AI acceleration"/"Storage" above in
+   a single unit: the Pi 5, the AI HAT+ 2, the battery/UPS HAT (power
+   source), and the storage devices. **Mounted to the side of the
+   backpack**, not the strap — this is the heaviest, bulkiest part of
+   the rig, and side-of-pack placement (like a hiking pack's accessory
+   pocket) is both a better weight-distribution point and physically
+   protects the most expensive/critical hardware, versus putting it
+   somewhere it'd take a direct hit or snag.
+2. **Receiver** — a separate, remote module bundling the camera,
+   speaker, and mic together as *one* physical unit (previously
+   described individually in the Camera/Voice sections above as
+   separately strap-mounted — now understood as one combined puck).
+   **Worn on the backpack strap or chest-mounted** (like an
+   action-camera chest harness) — deliberately close to the user's own
+   eyes/ears/mouth, not down at pack-body height, since its whole job is
+   sensing the user's environment and voice, not just being near the
+   compute.
+
+**The open technical question this splits into: how the Receiver talks
+back to the Compute Block.** They're physically separated by a real
+distance (side-of-pack to chest/strap), so this needs an actual cable
+run, not a short ribbon connector. Recommendation, not yet decided:
+**USB, not CSI ribbon** — a Pi-native CSI camera would normally be the
+first choice for image quality/latency, but CSI ribbon cables are short
+and fragile, a poor fit for a run of this length across a
+person's body. USB is more robust over distance and — ideally — lets
+camera+mic+speaker share a *single* cable/connector if a combined
+USB device exists that bundles all three (worth searching for a
+conferencing-camera-style all-in-one unit specifically, rather than
+three separate USB peripherals and three separate cables). Whatever's
+chosen, the actual connector/cable itself (type, strain relief,
+routing along the pack and up to the chest/strap, weatherproofing) is
+real industrial design not resolved here — same "tracked as its own
+parallel track, revisit once a first physical prototype is underway"
+status as before, just with the architecture now concrete enough to
+prototype against instead of an open sketch.
+
+**Solar charging (2026-07-15 addition)**: the Compute Block's power
+source should be rechargeable from a solar panel charger, per the
+user's explicit ask. This doesn't need special solar-specific circuitry
+if the chosen battery/UPS HAT has a **standard USB-C PD charging
+input** — most portable/camping solar panels (commonly 20–30W foldable
+panels) output USB-C PD directly, so they can charge the same battery
+pack a wall charger would, no separate solar charge controller needed.
+This *adds* a second real requirement to the still-open Battery/UPS HAT
+choice below (documented I2C telemetry interface was the first) — now
+both matter: I2C for `core/power_manager.py` to report real
+voltage/current, and standard USB-C PD input so any common solar panel
+can charge it directly.
 
 ## Open questions to revisit as hardware is acquired
 
-- Exact mic/speaker hardware once voice interface is actually built
+- Exact camera/mic/speaker hardware for the Receiver module — ideally
+  one combined USB device rather than three separate ones, see
+  "Modular Backpack" above
+- The Compute Block ↔ Receiver cable/connector itself (type, strain
+  relief, routing, weatherproofing) — real industrial design, not
+  software-resolvable
+- Push-to-talk button placement — Compute Block or Receiver, see
+  "Voice interface" above
 - GPS module choice for Navigation — see the GPS section above, now
-  higher priority than previously noted
-- Camera module choice — see the Camera section above
+  higher priority than previously noted; also now worth asking whether
+  it belongs in the Compute Block or the body-worn Receiver, given the
+  two-module split
 - LoRa/SDR/radio hardware for Communications — defer until that phase,
   since protocol choice (Meshtastic vs. custom) affects the hardware pick
-- Battery/UPS HAT choice for Power section — needs to report real
-  telemetry (voltage/current), not just presence, so pick one with a
-  documented I2C interface — now doubly important given the same
-  battery is expected to run camera/mic/speaker peripherals too
-- Modular backpack connector standard / strap-mount hardware — see the
-  new section above
+- Battery/UPS HAT choice for the Compute Block — needs **both** a
+  documented I2C interface (real voltage/current telemetry, not just
+  presence) **and** a standard USB-C PD charging input (so a common
+  solar panel charger can charge it directly, per the 2026-07-15 solar
+  charging addition) — see "Modular Backpack" above
+- Compute Block enclosure — side-of-backpack mounting hardware, and
+  whether it needs a dedicated weatherproof case given AI HAT+2 needs
+  its own Active Cooler airflow (see "Core platform" above)
 - Project 2 (Home) — remaining parts (motherboard/RAM/storage/PSU/case/
   cooling), see the new section above; also revisit whether it should
   live on the home network only or need some form of secure remote
