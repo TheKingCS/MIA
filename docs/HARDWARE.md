@@ -96,13 +96,14 @@ which is reinstallable from the M.I.A. repo.
 
 **Recommended: physical push-to-talk button, not always-listening.**
 
-- A single momentary GPIO button, wired as a hardware interrupt (not
-  polled), for near-zero idle power draw and instant response — exact
-  placement (Compute Block vs. the chest/strap-mounted Receiver, see
-  "Modular Backpack" below) not yet decided; the Receiver is likely the
-  more reachable spot given where it's actually worn, but this needs a
-  real GPIO-over-the-connector-cable design either way, not just a
-  local Pi header pin
+- A single momentary button, wired as a hardware interrupt (not
+  polled), for near-zero idle power draw and instant response —
+  **placement decided 2026-07-15: on the Receiver** (see "Modular
+  Backpack" below), the reachable spot given where it's actually worn.
+  Now most likely wired through whatever local MCU the Receiver ends up
+  with (same section) rather than a raw GPIO run all the way back to
+  the Pi's own header, given how many other components (display, LED,
+  vibration motor) are also landing on the Receiver
 - Avoids wake-word false triggers and the extra always-on compute/power
   budget of continuous audio processing — both matter for a
   battery-powered field device
@@ -232,6 +233,14 @@ milestone, but don't treat it as low-priority anymore. An IMU/accelerometer
 may also be worth pairing with GPS for pace/motion data during
 GPS-denied stretches (tree cover, etc.) — open question, not decided.
 
+**2026-07-15: physical placement decided — the Compute Block, not the
+Receiver.** The user's own call. Practically this also means the GPS
+antenna sits at pack-side height, not up at chest/shoulder height —
+worth keeping in mind once a specific module is chosen, since GPS
+antenna placement/orientation and sky visibility affect fix quality;
+revisit if pack-side placement turns out to give meaningfully worse
+signal than chest-height would have.
+
 ## Modular Backpack / physical form factor
 
 **2026-07-15: the physical architecture is now concretely defined as
@@ -258,6 +267,54 @@ vision, per the user's own explicit description):
    sensing the user's environment and voice, not just being near the
    compute.
 
+**2026-07-15: the Receiver's component list grew, and two previously-open
+placement questions are now decided** (both the user's own explicit
+call):
+- **Push-to-talk button → on the Receiver**, not the Compute Block —
+  makes sense given it's worn at chest/strap height, the actually
+  reachable spot.
+- **A small, energy-efficient status display** on the Receiver, showing
+  battery level and GPS status. "Energy-efficient" here points pretty
+  clearly at **e-paper/e-ink** over OLED/LCD — it draws power only when
+  the image changes and holds it at zero power in between, which fits a
+  status readout that only needs to update every so often far better
+  than a display that's continuously powered to stay lit. The trade-off
+  is refresh speed (not a concern here) and no continuous video, which
+  this use case doesn't need anyway. Small Pi/Arduino-ecosystem e-paper
+  modules (1.5"–2.13" class, e.g. Waveshare's e-Paper HAT line) are the
+  right category to shop in — no specific part chosen yet.
+- **A recording-indicator LED** — lights while the camera/mic are
+  actively capturing. Worth noting this isn't just a nice-to-have: a
+  camera+mic worn on someone's body is exactly the kind of device where
+  a visible "this is recording" signal matters for the people around
+  the user too, not only the user themselves — keep it genuinely
+  reliable (tied to actual capture state, not just "powered on") rather
+  than cosmetic.
+- **A vibration motor** on the Receiver for notifications — a small ERM
+  or LRA motor (phone/controller-class hardware), needs a simple driver
+  circuit and a PWM-capable signal to trigger it, not just a raw GPIO
+  on/off.
+
+**This component list is now big enough to raise a real design
+question the original two-item Receiver didn't have: does the Receiver
+need its own small microcontroller, rather than every button/LED/
+vibration-motor/display running raw GPIO wires down the connector cable
+to the Pi?** Recommendation (not yet decided, worth a real answer once
+cable length/part choices firm up): **yes, probably** — a small local
+MCU (Pi Pico/RP2040-class is the obvious fit, cheap and well-supported)
+handling the button, LED, vibration motor, and e-paper display locally,
+then talking to the Compute Block over one clean USB/serial link,
+has real advantages over raw GPIO at a distance: fewer, more robust
+wires in the connector cable instead of one pair per component (voltage
+drop and noise pickup get worse the longer a raw GPIO run is), instant
+local response (the recording LED shouldn't wait on a round trip to the
+Pi to light up), and the e-paper display's own refresh logic can live
+on the MCU instead of the Pi. The real cost is added firmware work
+(MicroPython/CircuitPython on the Pico is the natural choice given this
+project's own Python-first bias) and one more component that can fail
+— a fair trade worth confirming once you're ready to commit to it, not
+decided unilaterally here.
+
 **The open technical question this splits into: how the Receiver talks
 back to the Compute Block.** They're physically separated by a real
 distance (side-of-pack to chest/strap), so this needs an actual cable
@@ -266,16 +323,15 @@ run, not a short ribbon connector. Recommendation, not yet decided:
 first choice for image quality/latency, but CSI ribbon cables are short
 and fragile, a poor fit for a run of this length across a
 person's body. USB is more robust over distance and — ideally — lets
-camera+mic+speaker share a *single* cable/connector if a combined
-USB device exists that bundles all three (worth searching for a
-conferencing-camera-style all-in-one unit specifically, rather than
-three separate USB peripherals and three separate cables). Whatever's
-chosen, the actual connector/cable itself (type, strain relief,
-routing along the pack and up to the chest/strap, weatherproofing) is
-real industrial design not resolved here — same "tracked as its own
-parallel track, revisit once a first physical prototype is underway"
-status as before, just with the architecture now concrete enough to
-prototype against instead of an open sketch.
+camera+mic+speaker (and, if the local-MCU route above gets picked, the
+button/LED/vibration/display too, via the MCU's own USB/serial link)
+share a *single* cable/connector rather than a bundle of separate ones.
+Whatever's chosen, the actual connector/cable itself (type, strain
+relief, routing along the pack and up to the chest/strap,
+weatherproofing) is real industrial design not resolved here — same
+"tracked as its own parallel track, revisit once a first physical
+prototype is underway" status as before, just with the architecture now
+concrete enough to prototype against instead of an open sketch.
 
 **Solar charging (2026-07-15 addition)**: the Compute Block's power
 source should be rechargeable from a solar panel charger, per the
@@ -295,15 +351,18 @@ can charge it directly.
 - Exact camera/mic/speaker hardware for the Receiver module — ideally
   one combined USB device rather than three separate ones, see
   "Modular Backpack" above
+- Exact e-paper display module, recording LED, and vibration motor
+  parts for the Receiver — see "Modular Backpack" above
+- Whether the Receiver gets its own small MCU (Pico/RP2040-class
+  recommended) to consolidate its button/LED/vibration/display, or runs
+  everything as raw GPIO over the connector cable — see "Modular
+  Backpack" above
 - The Compute Block ↔ Receiver cable/connector itself (type, strain
   relief, routing, weatherproofing) — real industrial design, not
   software-resolvable
-- Push-to-talk button placement — Compute Block or Receiver, see
-  "Voice interface" above
 - GPS module choice for Navigation — see the GPS section above, now
-  higher priority than previously noted; also now worth asking whether
-  it belongs in the Compute Block or the body-worn Receiver, given the
-  two-module split
+  higher priority than previously noted. Placement decided (Compute
+  Block); the module itself still isn't chosen.
 - LoRa/SDR/radio hardware for Communications — defer until that phase,
   since protocol choice (Meshtastic vs. custom) affects the hardware pick
 - Battery/UPS HAT choice for the Compute Block — needs **both** a
