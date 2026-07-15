@@ -2936,3 +2936,56 @@ Manager tool tab within it — `gui/main_window.py`'s `open_module()`
 has no deeper per-tool navigation for Toolbox the way Files' own
 `navigate_to_path()` does. Acceptable for now; revisit if it's ever
 worth a dedicated deep-link mechanism.
+
+## AI Voice Effect (built, 2026-07-15)
+
+At the user's explicit request: "upgrade M.I.A.'s voice" to sound like
+"a futuristic awesome AI companion device," not a plain human voice.
+Investigated what's actually tunable first — Piper's own
+`SynthesisConfig` (`length_scale`/`noise_scale`/`noise_w_scale`) only
+affects pace/expressiveness, not timbre, so it couldn't deliver a
+"futuristic" character on its own. The real lever is post-processing
+DSP on the raw synthesized audio.
+
+Scoped intensity via `AskUserQuestion` before building — "Subtle,
+JARVIS-like" was picked over "Noticeably robotic" and "no DSP, just an
+activation tone," since an overly strong effect genuinely hurts
+intelligibility (a real, well-known trade-off for effects like ring
+modulation, not just a taste call). New `core/voice_effects.py`:
+`apply_ring_modulation()` and `apply_chorus()` (both pure `numpy`, no
+new dependency — `numpy` was already in use for
+`core/voice_manager.py`'s recording/playback arrays), combined into
+`apply_ai_voice_effect()` at deliberately conservative mix levels (8%
+ring-mod, 18% chorus), peak-normalized against the original so mixing
+effects in doesn't quietly change volume or clip.
+`apply_ai_voice_effect_to_wav_file()` is the actual integration point:
+`core/voice_manager.py`'s `synthesize()` now runs every synthesized
+WAV through it whenever `voice.ai_voice_effect` is true (new config
+key, default `true`), best-effort — a post-processing failure logs and
+falls back to the unprocessed audio rather than losing speech
+entirely. New Settings checkbox ("✨ AI Voice Effect", next to the
+Voice dropdown) toggles it live and speaks a preview immediately,
+same "hear the change, don't just save it silently" pattern the voice
+picker itself already uses.
+
+**Explicit, important caveat**: I cannot listen to audio myself, so
+the specific effect parameters above are a first pass calibrated by
+the *description* the user chose ("JARVIS-like," "clearly
+intelligible"), not by ear — expect this to need tuning once actually
+heard, same as any other subjective creative choice in this project
+that can't be verified without a human's senses. If it needs
+adjusting, the four constants at the top of `core/voice_effects.py`
+(`_RING_MOD_CARRIER_HZ`/`_RING_MOD_MIX`/`_CHORUS_DELAY_MS`/`_CHORUS_MIX`)
+are the one place to change, not the effect functions themselves.
+
+Verified what's verifiable without ears: 11 new unit tests (shape/
+dtype/no-clipping/volume-preservation invariants, plus a real WAV
+round-trip and a stereo-file no-op check), and a real end-to-end run
+through the actual `VoiceManager.synthesize()` path confirming the
+effect measurably changes Piper's real output and the toggle actually
+turns it on/off. Also confirmed, while investigating an initial
+"suspicious" file-size difference between runs, that Piper's own
+synthesis has genuine frame-count variance between separate calls on
+identical text (nothing to do with this change) — worth remembering
+before treating a similar size difference as a bug in the future.
+1109 tests passing.

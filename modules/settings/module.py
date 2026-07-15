@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Optional
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QHBoxLayout,
@@ -142,6 +143,15 @@ class SettingsModule(ModuleBase):
             voice_row.addWidget(self._voice_combo, stretch=1)
             outer.addLayout(voice_row)
 
+            self._ai_effect_checkbox = QCheckBox("✨ AI Voice Effect")
+            self._ai_effect_checkbox.setToolTip(
+                "Subtle digital polish on M.I.A.'s voice — ring modulation + light chorus, "
+                "tuned to stay clearly intelligible. Turn off for the plain Piper voice."
+            )
+            self._ai_effect_checkbox.setChecked(self.context.config.get("voice.ai_voice_effect", True))
+            self._ai_effect_checkbox.toggled.connect(self._on_ai_voice_effect_toggled)
+            outer.addWidget(self._ai_effect_checkbox)
+
         backup_section = QLabel("Backup & Restore")
         backup_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
         outer.addWidget(backup_section)
@@ -231,6 +241,12 @@ class SettingsModule(ModuleBase):
             return
         display_name = self._voice_combo.currentText()
         self._set_status(f"Voice changed to {display_name}.")
+        self._speak_preview()
+
+    def _on_ai_voice_effect_toggled(self, checked: bool) -> None:
+        self.context.config.set("voice.ai_voice_effect", checked)
+        self.context.config.save()
+        self._set_status("AI Voice Effect " + ("on." if checked else "off."))
         self._speak_preview()
 
     def _speak_preview(self) -> None:

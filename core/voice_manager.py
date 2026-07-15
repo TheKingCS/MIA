@@ -32,6 +32,15 @@ legacy `voice.tts_model_path` override still wins if explicitly set
 (an escape hatch for a model file outside the catalog entirely), same
 as before this change.
 
+**2026-07-15: the "AI Voice Effect"** (`core/voice_effects.py`), at the
+user's explicit request for M.I.A. to "sound like a futuristic awesome
+AI companion device" rather than a plain human voice. `synthesize()`
+below post-processes Piper's raw output through
+`apply_ai_voice_effect_to_wav_file()` whenever `voice.ai_voice_effect`
+is true (default), toggleable in Settings next to the voice picker.
+Best-effort — a post-processing failure logs and falls back to the
+unprocessed audio rather than losing speech entirely.
+
 Recording (mic capture) and playback both go through `sounddevice`,
 which wraps the system PortAudio library. Unlike the STT/TTS models,
 PortAudio is a *system* package (`libportaudio2` on Debian/Raspberry Pi
@@ -56,6 +65,7 @@ from typing import Optional, Protocol
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.voice_catalog import DEFAULT_VOICE_ID, VOICE_CATALOG, VoiceOption
+from core.voice_effects import apply_ai_voice_effect_to_wav_file
 
 log = get_logger(__name__)
 
@@ -264,8 +274,18 @@ class VoiceManager:
 
     def synthesize(self, text: str, output_path: Path) -> Optional[Path]:
         try:
-            self._tts.synthesize(text, Path(output_path))
-            return Path(output_path)
+            output_path = Path(output_path)
+            self._tts.synthesize(text, output_path)
+            if self.context.config.get("voice.ai_voice_effect", True):
+                # Best-effort — a post-processing failure shouldn't turn
+                # working speech into no speech at all. See
+                # core/voice_effects.py's docstring for what this does
+                # and why the defaults are deliberately conservative.
+                try:
+                    apply_ai_voice_effect_to_wav_file(output_path)
+                except Exception:
+                    log.exception("AI voice effect post-processing failed — using unprocessed audio instead.")
+            return output_path
         except VoiceUnavailableError as exc:
             log.warning("Text-to-speech unavailable: %s", exc)
             return None
