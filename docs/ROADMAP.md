@@ -2989,3 +2989,56 @@ synthesis has genuine frame-count variance between separate calls on
 identical text (nothing to do with this change) — worth remembering
 before treating a similar size difference as a bug in the future.
 1109 tests passing.
+
+## Startup briefing connected to real dashboard widgets (built, 2026-07-15)
+
+The user reported the spoken briefing "read like a script instead of
+providing a startup dashboard summary" — quoting a real launch where it
+said only the greeting + "nothing new to report." Root cause, found by
+reading the code rather than assuming: `_build_briefing_text()`
+checked a fixed, hardcoded list of data sources (missions/calendar/
+notifications/projects/memory) with **zero connection** to
+`core/dashboard_widgets.py`'s actual enabled-widget list — adding,
+removing, or reordering a widget never changed what the briefing talked
+about, because it wasn't reading from the widget system at all.
+
+Fixed by making the briefing genuinely widget-driven:
+`gui/home_dashboard.py` gained one `_<widget_id>_highlight()` method
+per existing widget (Power/Mission/Volume/Current Project — Volume
+deliberately returns `None`, not meaningful for a spoken summary),
+registered in `self._widget_highlight_providers` alongside
+`self._widget_builders`. `_widget_highlights()` iterates
+`context.dashboard_widgets.enabled_widgets_in_order()` — the exact same
+list `gui/dashboard_customize_dialog.py` writes to — so the briefing
+now automatically tracks whatever's actually enabled, with no separate
+list to keep in sync by hand. `core/startup_briefing.py`'s
+`build_stat_highlights()` lost its `active_mission_count`/
+`active_project_count` params (those moved to the widget providers
+above) and now only covers Calendar/Notifications, which aren't Home
+widgets of their own yet. Construction order in `HomeDashboard.__init__()`
+had to flip — the widget grid now builds (and refreshes with real data)
+*before* the briefing banner, even though it's still added to the
+visible layout afterward, since the briefing needs real widget state
+already computed to read from.
+
+Verified for real, not just by reading the diff: a live headless-Qt
+test added an active Mission, confirmed the briefing said "1 active
+mission," then called `dashboard_widgets.set_enabled("mission", False)`
+(the exact call `dashboard_customize_dialog.py` makes) and confirmed a
+freshly-rebuilt briefing no longer mentioned missions at all — the
+dashboard and the briefing are now provably the same source of truth,
+not two systems that happen to agree by coincidence. 1109 tests
+passing (test count unchanged — `build_stat_highlights()`'s existing
+tests were updated for the narrower signature, not added to).
+
+**This was picked as the concrete first slice of a much larger
+sharpening of the companion-philosophy vision** — see `docs/VISION.md`'s
+new "The voice-only operability test" section: the user's real target
+is a device fully operable by voice alone, with M.I.A. acting like a
+game-guide-style tutor that deeply understands every module's live data
+and capabilities, not just its own tool registry. This fix is a small,
+concrete instance of that principle (the briefing now reflects real
+app state instead of a hardcoded list) but the larger initiative — full
+conversational understanding of widget/module data, voice-driven
+interaction with widget menus, and a visual redesign of the Home
+screen — is intentionally not started here; needs its own scoping pass.

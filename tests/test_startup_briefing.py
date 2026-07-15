@@ -34,22 +34,17 @@ def test_greeting_for_hour_boundary_6pm_is_evening():
 
 
 def test_build_stat_highlights_all_zero_returns_empty():
-    assert build_stat_highlights(0, 0, 0, 0) == []
+    assert build_stat_highlights(0, 0) == []
 
 
 def test_build_stat_highlights_singular_nouns():
-    highlights = build_stat_highlights(1, 1, 1, 1)
-    assert highlights == [
-        "1 active mission",
-        "1 calendar event today",
-        "1 unread notification",
-        "1 project in progress",
-    ]
+    highlights = build_stat_highlights(1, 1)
+    assert highlights == ["1 calendar event today", "1 unread notification"]
 
 
 def test_build_stat_highlights_plural_nouns_and_skips_zero():
-    highlights = build_stat_highlights(2, 0, 3, 0)
-    assert highlights == ["2 active missions", "3 unread notifications"]
+    highlights = build_stat_highlights(0, 3)
+    assert highlights == ["3 unread notifications"]
 
 
 def test_build_startup_briefing_nothing_to_report():

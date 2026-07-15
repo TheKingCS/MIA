@@ -96,6 +96,56 @@ it's marketed:
    update; see "Critical evaluation" below before assuming it's additive
    work.
 
+### The voice-only operability test (2026-07-15 sharpening)
+
+Principles 1 and 2 above were written somewhat abstractly; the user
+gave a much sharper, concrete standard for what they actually mean in
+practice, prompted by a real complaint that the startup briefing felt
+like "reading a script" rather than genuinely understanding the
+dashboard: **the test for whether M.I.A.'s voice/companion layer is
+good enough is whether a user could operate the entire application
+using voice alone** — not "voice as one more input method alongside
+touch," but voice as a fully sufficient control surface on its own.
+The user's own framing, worth preserving close to verbatim since it's
+the clearest statement of this principle so far: *"Think about how the
+user would interact with a device system like this in real life. It
+should work like a game guide with a tutorial for use over voice."*
+
+That "game guide" framing is doing real work and shouldn't be
+flattened into generic "voice commands":
+
+- **Deep, current understanding of every module's data and
+  capabilities, not just the Assistant's own tool registry.** Today's
+  self-knowledge work (`docs/ASSISTANT_CAPABILITIES.md`) covers tool
+  *actions* — this goes further: M.I.A. should be able to describe
+  what's currently *displayed* in any widget or module (not just that
+  a `list_missions` tool exists), have a conversation about that live
+  data, and act on it — including a widget's own interaction menu
+  (`gui/dashboard_customize_dialog.py`'s "⋯" actions), not just its
+  headline tool calls.
+- **A guide, not just a command executor.** A game guide doesn't wait
+  to be asked the exact right question — it teaches capabilities
+  proactively, in context, the way a good tutorial reveals mechanics as
+  a player needs them. This is the through-line connecting several
+  previously-separate items in this document: self-knowledge (knowing
+  the answer), the modular tutorial system (teaching it), and
+  intelligent UI navigation (demonstrating it live on screen while
+  explaining it) are really one capability — "M.I.A. as tutor," not
+  three unrelated features.
+- **The dashboard/widget disconnect that prompted this is a concrete
+  instance of a general problem, not a one-off bug.** The startup
+  briefing checked a fixed, hardcoded list of data sources instead of
+  reflecting whatever's actually on the dashboard — worth fixing on its
+  own, but the deeper point is that *any* place M.I.A. talks about
+  "what's going on" needs to stay live-synced to real app state as that
+  state grows (more widgets, more modules), not re-hardcoded by hand
+  each time a new one ships.
+
+**Not scoped or sequenced yet** — this is a real north-star sharpening,
+not a build plan. `docs/ROADMAP.md` should carry the concrete first
+slice picked from this (see its own entry for what actually got built
+first) rather than this document trying to plan the whole thing.
+
 **New subsystems named in this update**, each real enough to eventually
 warrant its own `core/*_manager.py` + module, roughly in the same shape
 as Missions/Expedition Mode/Field Kit before them: a **Memory Palace**

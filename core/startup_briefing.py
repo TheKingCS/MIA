@@ -4,12 +4,7 @@ core.startup_briefing
 
 Pure logic for the "Good evening, Zac. Welcome back." launch greeting —
 docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup
-Dashboard Briefing." Picked as the first concrete slice from that
-update: it's aggregation/summarization over data that already exists
-(the same five sections `modules/dashboard/module.py` already lists —
-missions, calendar, notifications, projects, memories — reused here as
-a short spoken-style greeting instead of a bare list), so it carries no
-new data-model risk.
+Dashboard Briefing."
 
 **Deliberately template-based, not an LLM call.** This runs once at
 every app launch; boot-time latency (or Ollama simply not being warmed
@@ -20,12 +15,19 @@ applies to Continuous Learning. Revisit with real live-model iteration
 gotchas) if a template ever stops feeling "intelligent enough" — don't
 assume a template can't be improved further before that happens.
 
-**Weather, workout recommendations, financial updates, and smart home
-status are named in the original ask but have no real module/data
-source yet** (all listed as new, not-yet-built subsystems in
-`docs/VISION.md`'s companion-philosophy update) — omitted here, same
-"don't build fake data" discipline as `gui/home_dashboard.py`'s missing
-"currently playing song".
+**2026-07-15: `build_stat_highlights()` no longer covers missions/
+projects.** Found via direct user feedback that the briefing felt like
+"reading a script" rather than a real dashboard summary — root cause
+was that this file hardcoded a fixed set of data sources completely
+disconnected from `core/dashboard_widgets.py`'s actual enabled-widget
+list, so adding/removing/reordering widgets never changed what the
+briefing talked about. Mission/project highlights now come from
+`gui/home_dashboard.py`'s own per-widget highlight providers instead —
+each enabled widget contributes its own highlight (or nothing), so the
+briefing is a genuine reflection of the dashboard's live state rather
+than a separately-maintained list that silently drifts out of sync as
+widgets are added. This function still covers Calendar/Notifications,
+since those aren't Home widgets of their own (yet).
 
 Pure functions only, no Qt/manager coupling — testable without a real
 app (see `tests/test_startup_briefing.py`), same shape as
@@ -55,29 +57,20 @@ def _join_with_and(items: list[str]) -> str:
     return ", ".join(items[:-1]) + f", and {items[-1]}"
 
 
-def build_stat_highlights(
-    active_mission_count: int,
-    events_today_count: int,
-    unread_notification_count: int,
-    active_project_count: int,
-) -> list[str]:
+def build_stat_highlights(events_today_count: int, unread_notification_count: int) -> list[str]:
     """Each nonzero count becomes one short highlight phrase — a zero
     count is skipped entirely rather than padding the briefing with
     "you have 0 X", same reasoning as
-    `gui/home_dashboard.py`'s per-card "not available" fallbacks."""
+    `gui/home_dashboard.py`'s per-card "not available" fallbacks.
+    Missions/projects are no longer covered here — see this module's
+    docstring for why."""
     highlights: list[str] = []
-    if active_mission_count:
-        noun = "mission" if active_mission_count == 1 else "missions"
-        highlights.append(f"{active_mission_count} active {noun}")
     if events_today_count:
         noun = "event" if events_today_count == 1 else "events"
         highlights.append(f"{events_today_count} calendar {noun} today")
     if unread_notification_count:
         noun = "notification" if unread_notification_count == 1 else "notifications"
         highlights.append(f"{unread_notification_count} unread {noun}")
-    if active_project_count:
-        noun = "project" if active_project_count == 1 else "projects"
-        highlights.append(f"{active_project_count} {noun} in progress")
     return highlights
 
 

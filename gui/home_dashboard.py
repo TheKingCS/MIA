@@ -182,6 +182,12 @@ class HomeDashboard(QFrame):
             "volume": self._build_volume_widget,
             "current_project": self._build_current_project_widget,
         }
+        self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
+            "power": self._power_highlight,
+            "mission": self._mission_highlight,
+            "volume": self._volume_highlight,
+            "current_project": self._current_project_highlight,
+        }
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -189,13 +195,21 @@ class HomeDashboard(QFrame):
         outer.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         outer.addWidget(self._build_clock())
+
+        # Built (and refreshed with real data) before the briefing
+        # banner below, even though it's added to the layout after —
+        # _build_briefing_text() reads live widget state via
+        # self._widget_bodies/the highlight providers, so that needs to
+        # already be populated with this launch's real values first.
+        # Doesn't need to already be in `outer`'s layout for that.
+        self._widgets_container = QWidget()
+        self._widgets_grid: Optional[QGridLayout] = None
+        self._build_widgets_grid()
+
         outer.addWidget(self._build_briefing_banner())
         self._speak_briefing()
 
-        self._widgets_container = QWidget()
-        self._widgets_grid: Optional[QGridLayout] = None
         outer.addWidget(self._widgets_container)
-        self._build_widgets_grid()
 
         toolbar = QHBoxLayout()
         toolbar.addWidget(self._build_apps_launch_card(), stretch=1)
@@ -482,21 +496,71 @@ class HomeDashboard(QFrame):
 
         return card
 
+    def _power_highlight(self) -> Optional[str]:
+        if self.context.power is None:
+            return None
+        status = self.context.power.read()
+        if status is None:
+            return None
+        return f"{status.percent:.0f}% battery"
+
+    def _mission_highlight(self) -> Optional[str]:
+        if self.context.missions is None:
+            return None
+        count = sum(1 for m in self.context.missions.all_missions() if m.status == "active")
+        if not count:
+            return None
+        noun = "mission" if count == 1 else "missions"
+        return f"{count} active {noun}"
+
+    def _volume_highlight(self) -> Optional[str]:
+        return None  # not meaningful for a spoken dashboard summary
+
+    def _current_project_highlight(self) -> Optional[str]:
+        if self.context.projects is None:
+            return None
+        count = sum(1 for p in self.context.projects.all_projects() if p.status != "Complete")
+        if not count:
+            return None
+        noun = "project" if count == 1 else "projects"
+        return f"{count} {noun} in progress"
+
+    def _widget_highlights(self) -> list[str]:
+        """The briefing's dashboard-specific content — one highlight
+        per currently-*enabled* widget that actually has something to
+        say, via self._widget_highlight_providers (populated alongside
+        self._widget_builders). This is what keeps the briefing honest:
+        adding/removing/reordering a widget changes what gets
+        summarized automatically, since it reads the same
+        enabled-widgets list gui/dashboard_customize_dialog.py writes
+        to — no separate, easily-stale list to maintain by hand."""
+        registry = self.context.dashboard_widgets
+        if registry is None:
+            return []
+        highlights = []
+        for descriptor in registry.enabled_widgets_in_order():
+            provider = self._widget_highlight_providers.get(descriptor.widget_id)
+            if provider is None:
+                continue
+            highlight = provider()
+            if highlight:
+                highlights.append(highlight)
+        return highlights
+
     def _build_briefing_text(self) -> str:
         """Computed once at construction (not on the 5s data-refresh
         timer below) — this is a "welcome back" greeting, not a live
         ticker. See this module's docstring for what's deliberately
-        omitted (weather/workout/finance/smart home — no real data
-        source yet) and where to extend this as those subsystems land."""
+        omitted (weather/workout/finance/smart home — no real widget
+        yet) and where to extend this as those subsystems land: add a
+        _<widget_id>_highlight() method and register it in
+        self._widget_highlight_providers alongside the widget's builder,
+        same as the four already there."""
         profile_name = "there"
         if self.context.profiles is not None:
             active_profile = self.context.profiles.get_active_profile()
             if active_profile is not None:
                 profile_name = active_profile.name
-
-        active_mission_count = 0
-        if self.context.missions is not None:
-            active_mission_count = sum(1 for m in self.context.missions.all_missions() if m.status == "active")
 
         events_today_count = 0
         if self.context.calendar is not None:
@@ -505,19 +569,13 @@ class HomeDashboard(QFrame):
 
         unread_notification_count = self.context.notifications.unread_count() if self.context.notifications else 0
 
-        active_project_count = 0
-        if self.context.projects is not None:
-            active_project_count = sum(1 for p in self.context.projects.all_projects() if p.status != "Complete")
-
         latest_memory_line = None
         if self.context.memories is not None:
             recaps = self.context.memories.all_recaps()
             if recaps:
                 latest_memory_line = recaps[0].expedition.name
 
-        highlights = build_stat_highlights(
-            active_mission_count, events_today_count, unread_notification_count, active_project_count
-        )
+        highlights = self._widget_highlights() + build_stat_highlights(events_today_count, unread_notification_count)
         return build_startup_briefing(profile_name, datetime.now(), highlights, latest_memory_line)
 
     def _speak_briefing(self) -> None:
