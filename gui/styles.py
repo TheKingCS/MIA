@@ -12,8 +12,8 @@ swapped for a "theme" config option, per config/default_config.json's
 
 DARK_FIELD_THEME = """
 QMainWindow, QWidget {
-    background-color: #10141a;
-    color: #d8e0e8;
+    background-color: #0a0e15;
+    color: #e7ecf3;
     font-family: "Segoe UI", "DejaVu Sans", sans-serif;
     font-size: 14px;
 }
@@ -58,23 +58,23 @@ QLabel#ReadoutLabel {
 }
 
 QFrame#HeaderBar {
-    background-color: #161b22;
-    border-bottom: 1px solid #232b34;
+    background-color: #0c1017;
+    border-bottom: 1px solid #1b222e;
 }
 
 QFrame#HeaderBar QPushButton#HeaderButton {
-    background-color: transparent;
-    border: 1px solid #232b34;
-    border-radius: 8px;
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 7px;
     padding: 6px 14px;
-    color: #b8c4cf;
+    color: #e7ecf3;
     font-size: 13px;
 }
 
 QFrame#HeaderBar QPushButton#HeaderButton:hover {
     background-color: #1c2530;
-    border: 1px solid #4fd1c5;
-    color: #d8e0e8;
+    border: 1px solid #38d9c9;
+    color: #e7ecf3;
 }
 
 QFrame#HeaderBar QPushButton#HeaderButton:pressed {
@@ -87,14 +87,14 @@ QFrame#HeaderBar QPushButton#HeaderButton:disabled {
 }
 
 QFrame#HeaderBar QPushButton#HeaderButton[hasUnread="true"] {
-    border: 1px solid #4fd1c5;
-    color: #4fd1c5;
+    border: 1px solid #38d9c9;
+    color: #38d9c9;
     font-weight: 600;
 }
 
 QFrame#CharacterPanel {
-    background-color: #161b22;
-    border: 1px solid #232b34;
+    background-color: #0c1017;
+    border: 1px solid #1b222e;
     border-radius: 12px;
 }
 
@@ -153,29 +153,29 @@ QLabel#ModuleButtonDescription {
 
 QLabel#DashboardClockTime {
     font-size: 34px;
-    font-weight: 600;
-    color: #d8e0e8;
+    font-weight: 700;
+    color: #e7ecf3;
     letter-spacing: 1px;
 }
 
 QLabel#DashboardClockDate {
-    font-size: 14px;
-    color: #7a8a99;
+    font-size: 13px;
+    color: #7c8798;
 }
 
 QFrame#DashboardCard {
-    background-color: #161b22;
-    border: 1px solid #232b34;
-    border-radius: 12px;
+    background-color: #101722;
+    border: 1px solid #1b222e;
+    border-radius: 10px;
 }
 
 QFrame#NotificationCard {
-    background-color: #161b22;
+    background-color: #101722;
     border-radius: 6px;
 }
 
 QFrame#NotificationCard[level="info"] {
-    border-left: 4px solid #4fd1c5;
+    border-left: 4px solid #38d9c9;
 }
 
 QFrame#NotificationCard[level="warning"] {
@@ -188,39 +188,48 @@ QFrame#NotificationCard[level="critical"] {
 
 QLabel#NotificationCardMeta {
     font-size: 11px;
-    color: #7a8a99;
+    color: #7c8798;
 }
 
+/* 2026-07-15 "ForMIA" design handoff: widget cards no longer show an
+icon badge (see gui/home_dashboard.py's _build_widget_header()) — this
+selector is kept only for gui/settings_module or any future reuse, not
+currently applied to any built widget. */
 QLabel#DashboardSectionIcon {
     background-color: transparent;
-    border: 2px solid #4fd1c5;
+    border: 2px solid #38d9c9;
     border-radius: 20px;
     font-size: 18px;
 }
 
+/* The "eyebrow" label — small uppercase mono-style tag above a card's
+value, per the ForMIA widget stencil. QSS has no text-transform, so
+gui/home_dashboard.py uppercases the label text itself before setting it. */
 QLabel#DashboardSectionTitle {
-    font-size: 14px;
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
     font-weight: 600;
-    color: #d8e0e8;
+    color: #5b6a80;
+    letter-spacing: 1px;
 }
 
 QLabel#DashboardSectionBody {
     font-size: 13px;
-    color: #b8c4cf;
+    color: #7c8798;
 }
 
 QLabel#DashboardBriefingText {
-    font-size: 16px;
-    font-weight: 500;
-    color: #d8e0e8;
+    font-size: 13px;
+    font-weight: 400;
+    color: #c3ccd9;
 }
 
 QPushButton#AppsLaunchButton {
-    background-color: #161b22;
-    border: 1px solid #4fd1c5;
-    border-radius: 10px;
+    background-color: #101722;
+    border: 1px solid #38d9c9;
+    border-radius: 8px;
     padding: 14px;
-    color: #4fd1c5;
+    color: #38d9c9;
     font-size: 15px;
     font-weight: 600;
 }

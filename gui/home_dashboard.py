@@ -383,21 +383,26 @@ class HomeDashboard(QFrame):
         self, icon: str, title: str, menu_actions: Optional[list[tuple[str, Callable[[], None]]]] = None
     ) -> QHBoxLayout:
         """Shared by _build_simple_card()/_build_volume_card() — the
-        icon+title+stretch+optional "⋯" menu button row every widget
-        card starts with. 2026-07-15: the "menus for interacting with
-        widgets" half of the JARVIS-dashboard ask, built right after
-        the framework itself."""
+        eyebrow-label+stretch+optional "⋯" menu button row every widget
+        card starts with.
+
+        **2026-07-15 "ForMIA" design handoff**: widget cards no longer
+        show an icon badge — just a small uppercase "eyebrow" label
+        (`#DashboardSectionTitle`, restyled in gui/styles.py to match),
+        the pattern the handoff's `WIDGET_STENCIL.md` specifies for
+        every card. `icon` is kept as a parameter (not removed, callers
+        still pass each widget's real glyph) and used as the eyebrow
+        label's tooltip instead of being rendered directly — a module's
+        icon identity isn't fully gone, just no longer taking up card
+        space the way it used to. QSS has no text-transform, so the
+        label text is uppercased here in Python.
+        """
         header = QHBoxLayout()
         header.setSpacing(10)
 
-        icon_badge = QLabel(icon)
-        icon_badge.setObjectName("DashboardSectionIcon")
-        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_badge.setFixedSize(40, 40)
-        header.addWidget(icon_badge)
-
-        title_label = QLabel(title)
+        title_label = QLabel(title.upper())
         title_label.setObjectName("DashboardSectionTitle")
+        title_label.setToolTip(f"{icon} {title}")
         header.addWidget(title_label)
         header.addStretch()
 

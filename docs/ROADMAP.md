@@ -3202,3 +3202,55 @@ missed by an exact-case replace) and a fresh 68/68 run of the live-model
 golden set, confirming the renamed trigger phrases still gate and
 resolve correctly against the real model, not just that the test
 fixtures were internally consistent.
+
+## "ForMIA" design handoff, pass 1: color tokens + widget card restyle (built, 2026-07-15)
+
+After the boot-sequence animation redesign was rejected outright, the
+user brought a real, high-fidelity design handoff instead of more
+guessing — `ForMIA.zip` (a `README.md` with exact design tokens, a
+`WIDGET_STENCIL.md` copy-paste card pattern, and `Dashboard.dc.html`/
+`Dashboard Options.dc.html` HTML mockups of the chosen design and its
+earlier explored directions). The handoff's own instructions were
+explicit: "design references... not production code to copy directly...
+recreate this design inside your program's existing environment...
+implement pixel-close."
+
+**Deliberately split into two passes, not one big change again** —
+direct lesson from the rejected boot-sequence redesign (see the earlier
+entry + `feedback_animation_taste_limits` in memory): ship one visible
+thing, get it confirmed, before adding more. Pass 1 (this entry): exact
+color tokens + the widget card restructure, scoped to `dark_field`
+(the theme the handoff is explicitly evolving — its own README says
+"restyled to match the app's existing color scheme") and just the Home
+dashboard. Not yet touched: the four new widgets the mockup shows (CPU
+Load sparkline, Network, Quick Bus toggles, Activity Log), the header's
+pill-style nav buttons, and the assistant sidebar's restyled message
+bubbles — each is its own follow-up pass.
+
+**Exact token swap in `gui/styles.py`'s `DARK_FIELD_THEME`**: page
+background `#10141a`→`#0a0e15`, header/panel background `#161b22`→
+`#0c1017`, card background `#161b22`→`#101722`, border `#232b34`→
+`#1b222e`, accent teal `#4fd1c5`→`#38d9c9`, text primary/secondary
+updated to the handoff's exact hex values throughout. Header nav
+buttons gained a filled background (`#111722`) matching the mockup's
+pill treatment instead of the old transparent-bordered look.
+
+**Real structural change, not just colors**: the handoff's widget
+stencil drops icon badges entirely in favor of a small uppercase
+"eyebrow" label above each card's content — `gui/home_dashboard.py`'s
+`_build_widget_header()` no longer renders `DashboardSectionIcon` at
+all. QSS has no `text-transform`, so the label text is uppercased in
+Python before being set. The `icon` parameter is kept (not removed —
+every widget still carries its real glyph) and now drives the eyebrow
+label's tooltip instead of taking up card space, so a module's icon
+identity isn't fully discarded, just no longer visually prominent.
+`#DashboardSectionTitle`'s QSS switched to a small (10px) monospace,
+letter-spaced, muted-color style matching the stencil's eyebrow spec.
+
+Verified with a real screenshot of the actual `HomeDashboard` (not the
+HTML mockup) — Power/Mission/Volume/Current Project cards all show the
+new eyebrow-label pattern with real data, no icon badges, matching the
+handoff's card structure. Full pytest suite (1109/1109, unaffected —
+this pass touched only styling/layout, no new pure-logic functions),
+confirmed the other 3 themes are untouched (only `DARK_FIELD_THEME`'s
+block was edited).
