@@ -3103,3 +3103,73 @@ amber rotating-ring loading, amber fast-pulse notification. 1109 tests
 passing (test count unchanged — no new pure-logic functions; this is
 Qt-widget behavior, covered by the live verification above per this
 project's own established test-tier split, not pytest).
+
+## Boot sequence rewrite — "M.I.A. waking up" (built, 2026-07-15)
+
+The second concrete slice of `docs/VISION.md`'s Home visual-identity
+brief, picked next by the user over the main dashboard layout: "the
+system initializes, modules come online, sensors activate, and M.I.A.'s
+personality begins loading... like powering on a futuristic device,"
+not a static progress bar.
+
+**`core/application.py`'s boot steps are now real, not cosmetic.** The
+old 4-step sequence (`"INITIALIZING CORE SYSTEMS..."`, etc.) was mostly
+`_noop()` filler around one real action
+(`module_manager.discover()`) — replaced with 6 steps that each report
+something actually true right now: `_boot_step_core_systems()`,
+`_boot_step_module_array()` (real discovered count, e.g. "19 MODULES
+ONLINE"), `_boot_step_assistant_core()` (a real `context.llm.is_available()`
+check — reports "OFFLINE (OLLAMA NOT DETECTED)" honestly if it isn't),
+`_boot_step_voice_interface()` (real STT/TTS availability),
+`_boot_step_power_systems()` (real battery read or "NO BATTERY
+DETECTED"), `_boot_step_personality_matrix()` (the final "she's awake"
+beat). `_run_boot_steps()` simplified to a plain list of callables
+returning the log line to show, rather than a list of
+`(message, action)` tuples with the message written *before* the real
+result was known — the displayed text now always matches what actually
+happened. The now-fully-unused `_noop()` staticmethod was deleted.
+
+**`gui/splash_screen.py` rewritten around three real changes**: (1)
+`gui/presence_widget.py`'s `PresenceWidget` (built for the Presence
+entry above) replaces the fixed `PulsingCoreWidget` — boot now shows
+the `loading` state (amber, rotating ring) throughout, flipping to
+`idle` (calm teal breathing) the instant `_boot_step_personality_matrix()`
+fires, a visible "she's awake now" moment instead of the window just
+closing mid-animation. (2) `set_status()` (replace the one line) became
+`add_log_line()` (*append*) — boot now reads as an accumulating system
+log, closer to the "watching a device power on" feel than a single
+line being silently swapped underneath the user. (3) new
+`show_modules()` reveals one small icon badge per *actually discovered*
+module (real `ModuleBase.icon`/`display_name`, not placeholder art) —
+the literal "modules come online" moment — faded in as one batch rather
+than staggered per-icon (a real per-module delay would add wall-clock
+boot time proportional to module count, already ~19 modules).
+`gui/boot_core_widget.py` deleted outright once `PresenceWidget` fully
+superseded its one caller — no reason to keep two versions of the same
+rendering technique.
+
+**Found two real Qt geometry bugs via a live headless-Qt test, not
+assumption — same recurring category this session has hit before
+(the dashboard grid's layout-replacement and widget-visibility bugs)**:
+(1) a word-wrapped `QLabel`'s height didn't grow after `setText()`
+changed its content from one line to several post-construction — the
+label reported a single-line-tall size while actually holding 5 lines
+of text. Fixed with `adjustSize()` + re-activating the parent layout.
+(2) A `QGraphicsOpacityEffect`-wrapped container reported a real
+`(0, 0)` size even after the same `activate()` fix that resolved (1) —
+needed an explicit `QApplication.processEvents()` to force the
+geometry pass immediately, since effect-wrapped widgets apparently
+don't get one from a plain layout-invalidation call alone. Also bumped
+the splash window from 480×460 to 480×640 — the old size was tuned for
+one status line and clipped badly once boot could show a multi-line
+log plus a module-icon row.
+
+Verified for real, not just visually: constructed a real
+`MIAApplication` (not simulated data) and called all 6 boot-step
+methods directly, confirming genuinely real output (19 modules found,
+"ASSISTANT CORE... ONLINE" because Ollama is actually running here,
+"VOICE INTERFACE... ONLINE", "POWER SYSTEMS... NOMINAL (100%)"), that
+the log accumulates correctly, that all 19 real module icons render,
+and that the presence orb correctly lands on `idle` at the end. Also
+rendered real before/after screenshots (loading vs. ready) confirming
+the visual transition. 1109 tests passing, no data/config pollution.

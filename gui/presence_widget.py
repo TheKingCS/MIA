@@ -9,15 +9,18 @@ reacts during interactions. When listening, thinking, loading modules,
 or completing tasks, the visual system should communicate her state
 through motion, lighting, and animation."* Replaces
 `gui/character_panel.py`'s static emoji-swap with an always-alive orb
-instead of inventing a new animation system from scratch —
-`gui/boot_core_widget.py`'s `PulsingCoreWidget` (a timer-driven
-breathing glow-orb, layered translucent rings for cheap bloom, no real
-blur pass) already proved this technique out for milestone 2.9's boot
-animation; this generalizes it to be state-driven (color/pulse-speed/
-an optional rotating highlight ring) and to render an arbitrary
-centered glyph instead of a fixed "M.I.A." label, so each module still
-keeps its own icon identity — state communicates *what M.I.A. is
-doing*, the glyph still communicates *what you're looking at*.
+instead of inventing a new animation system from scratch — milestone
+2.9's original boot animation (`PulsingCoreWidget`, a timer-driven
+breathing glow-orb with layered translucent rings for cheap bloom, no
+real blur pass) already proved this rendering technique out; this
+generalizes it to be state-driven (color/pulse-speed/an optional
+rotating highlight ring) and to render an arbitrary centered glyph
+instead of a fixed "M.I.A." label, so each module still keeps its own
+icon identity — state communicates *what M.I.A. is doing*, the glyph
+still communicates *what you're looking at*. `PulsingCoreWidget` itself
+was removed once this widget fully superseded its one caller
+(`gui/splash_screen.py`) — no reason to keep two versions of the same
+technique around.
 
 Deliberately still 2D/QPainter, no OpenGL/3D — Home has real GPU-class
 hardware (`docs/HARDWARE.md`'s Project 2 section), so this isn't a
@@ -59,9 +62,9 @@ _ARC_SPAN_DEGREES = 50
 
 
 class PresenceWidget(QWidget):
-    """A small always-visible presence orb (compare
-    gui/boot_core_widget.py's PulsingCoreWidget, sized for a full-screen
-    boot moment, not a sidebar). See this module's docstring for the
+    """A presence orb sized per caller — small (96px) for
+    gui/character_panel.py's sidebar, larger (200px) for
+    gui/splash_screen.py's boot moment. See this module's docstring for the
     state model."""
 
     def __init__(self, parent=None, diameter: int = 96) -> None:
@@ -145,7 +148,14 @@ class PresenceWidget(QWidget):
 
         if self._glyph:
             font = QFont()
-            font.setPointSizeF(max(1.0, max_radius * 0.5))
+            # Tuned for two real cases, not a continuous formula: a
+            # single emoji glyph (CharacterPanel's module icons) can
+            # fill most of the core, but multi-character text (the boot
+            # screen's literal "M.I.A." emblem) needs to shrink to still
+            # fit inside the circle — 0.32 matches the original
+            # PulsingCoreWidget's own tuning for that exact text.
+            size_factor = 0.5 if len(self._glyph) <= 2 else 0.32
+            font.setPointSizeF(max(1.0, max_radius * size_factor))
             painter.setFont(font)
             text_color = QColor(_LABEL_COLOR)
             text_color.setAlphaF(0.85 + 0.15 * intensity)

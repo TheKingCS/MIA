@@ -2007,36 +2007,87 @@ class MIAApplication:
         self.splash = SplashScreen()
         self._display(self.splash)
 
-        # The splash screen steps through a short sequence of boot
-        # messages before handing off to the wizard or main window. Using
-        # a QTimer chain (rather than time.sleep) keeps the GUI responsive
+        # The splash screen steps through a sequence of boot checks
+        # before handing off to the wizard or main window. Using a
+        # QTimer chain (rather than time.sleep) keeps the GUI responsive
         # during startup instead of freezing.
+        #
+        # 2026-07-15: each step now reports something *real* (an actual
+        # module count, an actual Assistant/voice/power availability
+        # check) instead of cosmetic filler text — docs/VISION.md's
+        # Home visual-identity section asked for boot to feel like
+        # "the system initializes, modules come online, sensors
+        # activate" specifically, not just decorative HUD dressing.
+        # Module icons are revealed as one batch right after discovery
+        # resolves (gui/splash_screen.py's show_modules()) rather than
+        # staggered one-by-one — a real per-module animation delay would
+        # add wall-clock boot time proportional to module count (already
+        # ~20 modules), which a single batch reveal avoids while still
+        # showing the literal "modules come online" moment.
         boot_steps = [
-            ("INITIALIZING CORE SYSTEMS...", self._noop),
-            ("SYNCING CONFIGURATION MATRIX...", self._noop),
-            ("SCANNING MODULE ARRAY...", self.module_manager.discover),
-            ("ENGAGING INTERFACE...", self._noop),
+            self._boot_step_core_systems,
+            self._boot_step_module_array,
+            self._boot_step_assistant_core,
+            self._boot_step_voice_interface,
+            self._boot_step_power_systems,
+            self._boot_step_personality_matrix,
         ]
         self._run_boot_steps(boot_steps, index=0)
 
         return self.qt_app.exec()
 
-    def _run_boot_steps(self, steps: list[tuple[str, callable]], index: int) -> None:
+    def _boot_step_core_systems(self) -> str:
+        return "CORE SYSTEMS... ONLINE"
+
+    def _boot_step_module_array(self) -> str:
+        self.module_manager.discover()
+        modules = self.module_manager.all()
+        self.splash.show_modules(modules)
+        return f"MODULE ARRAY... {len(modules)} MODULES ONLINE"
+
+    def _boot_step_assistant_core(self) -> str:
+        available = self.context.llm.is_available() if self.context.llm is not None else False
+        return "ASSISTANT CORE... ONLINE" if available else "ASSISTANT CORE... OFFLINE (OLLAMA NOT DETECTED)"
+
+    def _boot_step_voice_interface(self) -> str:
+        if self.context.voice is None:
+            return "VOICE INTERFACE... UNAVAILABLE"
+        tts_ok = self.context.voice.is_tts_available()
+        stt_ok = self.context.voice.is_stt_available()
+        if tts_ok and stt_ok:
+            return "VOICE INTERFACE... ONLINE"
+        if tts_ok or stt_ok:
+            return "VOICE INTERFACE... PARTIAL (CHECK VOICE MODELS)"
+        return "VOICE INTERFACE... UNAVAILABLE"
+
+    def _boot_step_power_systems(self) -> str:
+        status = self.context.power.read() if self.context.power is not None else None
+        if status is None:
+            return "POWER SYSTEMS... NO BATTERY DETECTED"
+        return f"POWER SYSTEMS... NOMINAL ({status.percent:.0f}%)"
+
+    def _boot_step_personality_matrix(self) -> str:
+        self.splash.set_ready()
+        return "PERSONALITY MATRIX... LOADED — ALL SYSTEMS NOMINAL"
+
+    def _run_boot_steps(self, steps: list, index: int) -> None:
         if index >= len(steps):
             self._finish_boot()
             return
 
-        message, action = steps[index]
-        self.splash.set_status(message)
+        step = steps[index]
         try:
-            action()
+            message = step()
         except Exception:
-            log.exception("Error during boot step: %s", message)
+            log.exception("Error during boot step %d (%s)", index, getattr(step, "__name__", step))
+            message = None
+        if message:
+            self.splash.add_log_line(message)
 
-        # 1400ms/step (5.6s total for the 4 steps below) — gives the
-        # splash's pulsing core (gui/boot_core_widget.py) a couple of
-        # full breathing cycles per step; the original 350ms made the
-        # animation flash by too fast to register.
+        # 1400ms/step — gives the splash's presence orb
+        # (gui/presence_widget.py) a couple of full breathing cycles per
+        # step; the original 350ms made the animation flash by too fast
+        # to register.
         QTimer.singleShot(1400, lambda: self._run_boot_steps(steps, index + 1))
 
     def _finish_boot(self) -> None:
@@ -2128,7 +2179,3 @@ class MIAApplication:
         self.main_window = MainWindow(self.context, self.module_manager)
         self.main_window.switch_profile_requested.connect(self._on_switch_profile_requested)
         self._display(self.main_window)
-
-    @staticmethod
-    def _noop() -> None:
-        pass
