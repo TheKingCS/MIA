@@ -3173,3 +3173,32 @@ the log accumulates correctly, that all 19 real module icons render,
 and that the presence orb correctly lands on `idle` at the end. Also
 rendered real before/after screenshots (loading vs. ready) confirming
 the visual transition. 1109 tests passing, no data/config pollution.
+
+## "Master Baiter" example renamed to "Master Angler" (2026-07-15)
+
+The user, live-testing the app, hit the placeholder text in the New
+Mission dialog and flagged it — funny, but not something that should
+be the default example shown in the real app. Fixed everywhere it
+appeared as live example text, not just the one dialog: the New Mission
+placeholder itself (`gui/add_edit_mission_dialog.py`), `core/mission_manager.py`'s
+docstring, the `add_mission` Assistant action's description
+(`core/application.py` — regenerates into `docs/ASSISTANT_CAPABILITIES.md`,
+fixed there too), `docs/VISION.md`'s concept-mapping table, and every
+test fixture using it as example data (6 test files). Picked "Master
+Angler" over inventing a new pun — it's a real term US state fishing
+programs use for a trophy-catch achievement, so it's not just clean,
+it's a more authentic example than the original joke was.
+
+**`docs/ROADMAP.md`'s own historical entries were deliberately left
+alone** — those are dated records of what was actually built/said at
+the time, not live reference text; rewriting them would misrepresent
+history. Only this document's *live* content (test fixtures, source
+descriptions, the capabilities doc) got the rename.
+
+Verified for real: full pytest suite (1109/1109, one real casualty of
+a bulk find-replace caught and fixed — a lowercase `"master baiter"`
+variant specifically testing case-insensitive mission-name lookup,
+missed by an exact-case replace) and a fresh 68/68 run of the live-model
+golden set, confirming the renamed trigger phrases still gate and
+resolve correctly against the real model, not just that the test
+fixtures were internally consistent.

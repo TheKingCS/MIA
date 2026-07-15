@@ -1170,7 +1170,7 @@ class MIAApplication:
             name="add_mission",
             domain="missions",
             description=(
-                "Start a new gamified Mission in M.I.A. (e.g. a 'Master Baiter' mission for a "
+                "Start a new gamified Mission in M.I.A. (e.g. a 'Master Angler' mission for a "
                 "fishing trip). Optionally link it to an existing Trip by name."
             ),
             parameters={

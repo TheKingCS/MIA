@@ -61,13 +61,13 @@ def test_starts_empty_when_no_file_exists(isolated_paths):
 
 def test_add_mission_persists_across_a_fresh_load(isolated_paths):
     context = _make_context()
-    added = context.missions.add_mission(name="Master Baiter")
+    added = context.missions.add_mission(name="Master Angler")
 
     reloaded = MissionManager(context)
     missions = reloaded.all_missions()
     assert len(missions) == 1
     assert missions[0].mission_id == added.mission_id
-    assert missions[0].name == "Master Baiter"
+    assert missions[0].name == "Master Angler"
     assert missions[0].trip_id is None
     assert missions[0].status == "active"
     assert missions[0].objectives == []
@@ -80,7 +80,7 @@ def test_add_mission_can_link_to_a_trip(isolated_paths):
     expedition = context.expeditions.add_expedition(name="Field Season")
     trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
 
-    mission = context.missions.add_mission(name="Master Baiter", trip_id=trip.trip_id)
+    mission = context.missions.add_mission(name="Master Angler", trip_id=trip.trip_id)
     assert mission.trip_id == trip.trip_id
     assert context.missions.missions_for_trip(trip.trip_id) == [mission]
 
@@ -156,7 +156,7 @@ def test_load_handles_corrupt_json_gracefully(isolated_paths, tmp_path):
 
 def test_add_objective_appends_to_mission(isolated_paths):
     context = _make_context()
-    mission = context.missions.add_mission(name="Master Baiter")
+    mission = context.missions.add_mission(name="Master Angler")
     context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
 
     reloaded = context.missions.get_mission(mission.mission_id)
@@ -245,7 +245,7 @@ def _make_context_with_notifications() -> tuple[AppContext, _FakeNotifications]:
 
 def test_increment_tally_celebrates_objective_completion(isolated_paths):
     context, notifications = _make_context_with_notifications()
-    mission = context.missions.add_mission(name="Master Baiter")
+    mission = context.missions.add_mission(name="Master Angler")
     context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
 
     context.missions.increment_tally(mission.mission_id, 0)
@@ -257,7 +257,7 @@ def test_increment_tally_celebrates_objective_completion(isolated_paths):
     context.missions.increment_tally(mission.mission_id, 0)
     assert len(notifications.notified) == 2
     assert "Objective complete" in notifications.notified[0]["title"]
-    assert "Master Baiter" in notifications.notified[0]["message"]
+    assert "Master Angler" in notifications.notified[0]["message"]
     assert "All objectives" in notifications.notified[1]["title"]
 
 
@@ -275,7 +275,7 @@ def test_increment_tally_does_not_recelebrate_already_complete_objective(isolate
 
 def test_increment_tally_celebrates_all_objectives_complete(isolated_paths):
     context, notifications = _make_context_with_notifications()
-    mission = context.missions.add_mission(name="Master Baiter")
+    mission = context.missions.add_mission(name="Master Angler")
     context.missions.add_objective(mission.mission_id, "Catch 1 fish", "tally", 1.0)
     context.missions.add_objective(mission.mission_id, "Catch 1 more fish", "tally", 1.0)
 
@@ -290,13 +290,13 @@ def test_increment_tally_celebrates_all_objectives_complete(isolated_paths):
 
 def test_update_mission_celebrates_completion(isolated_paths):
     context, notifications = _make_context_with_notifications()
-    mission = context.missions.add_mission(name="Master Baiter")
+    mission = context.missions.add_mission(name="Master Angler")
 
     context.missions.update_mission(mission.mission_id, status="completed")
 
     assert len(notifications.notified) == 1
     assert "Mission complete" in notifications.notified[0]["title"]
-    assert "Master Baiter" in notifications.notified[0]["message"]
+    assert "Master Angler" in notifications.notified[0]["message"]
 
 
 def test_update_mission_does_not_recelebrate_already_completed_mission(isolated_paths):
@@ -355,7 +355,7 @@ def test_trip_duration_hours_progress_computed_from_splits(isolated_paths):
     context.trips.record_split(trip.trip_id, a.waypoint_id, timestamp=datetime(2026, 8, 14, 8, 0, 0))
     context.trips.record_split(trip.trip_id, b.waypoint_id, timestamp=datetime(2026, 8, 14, 10, 30, 0))
 
-    mission = context.missions.add_mission(name="Master Baiter", trip_id=trip.trip_id)
+    mission = context.missions.add_mission(name="Master Angler", trip_id=trip.trip_id)
     context.missions.add_objective(mission.mission_id, "Spend 2 hours fishing", "trip_duration_hours", 2.0)
 
     progress = context.missions.objective_progress(mission.mission_id, 0)
@@ -367,7 +367,7 @@ def test_trip_duration_hours_zero_when_fewer_than_two_splits(isolated_paths):
     context = _make_context()
     expedition = context.expeditions.add_expedition(name="Field Season")
     trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Fishing")
-    mission = context.missions.add_mission(name="Master Baiter", trip_id=trip.trip_id)
+    mission = context.missions.add_mission(name="Master Angler", trip_id=trip.trip_id)
     context.missions.add_objective(mission.mission_id, "Spend 2 hours fishing", "trip_duration_hours", 2.0)
 
     assert context.missions.objective_progress(mission.mission_id, 0) == 0.0

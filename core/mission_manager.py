@@ -5,7 +5,7 @@ core.mission_manager
 Missions/Gamification — docs/ROADMAP.md milestone v0.18, the second of
 three new subsystems from the 2026-07-14 wearable-companion vision
 update (see docs/VISION.md). Turns a stated goal/hobby into a tracked
-Mission with one or more Objectives (e.g. a "Master Baiter" mission for
+Mission with one or more Objectives (e.g. a "Master Angler" mission for
 a fishing trip: one objective for time spent fishing, one for fish
 caught). Same persisted-JSON pattern as core/expedition_manager.py:
 data/missions.json, dataclasses with to_dict/from_dict, a manager class

@@ -376,7 +376,7 @@ def test_recall_expedition_named_phrasing_gates_open():
 
 def test_add_mission_phrasing_gates_open():
     keywords = _real_gating_keywords()
-    assert looks_like_action_request("Start a new mission called Master Baiter", keywords) is True
+    assert looks_like_action_request("Start a new mission called Master Angler", keywords) is True
 
 
 def test_list_missions_phrasing_gates_open():
@@ -386,7 +386,7 @@ def test_list_missions_phrasing_gates_open():
 
 def test_add_objective_phrasing_gates_open():
     keywords = _real_gating_keywords()
-    assert looks_like_action_request("Add an objective to my Master Baiter mission", keywords) is True
+    assert looks_like_action_request("Add an objective to my Master Angler mission", keywords) is True
 
 
 def test_log_mission_progress_phrasing_gates_open():
@@ -397,12 +397,12 @@ def test_log_mission_progress_phrasing_gates_open():
 def test_delete_mission_phrasing_gates_open():
     """"called X" phrasing (name after the noun), same accepted trade-off as delete_project/delete_task."""
     keywords = _real_gating_keywords()
-    assert looks_like_action_request("Delete the mission called Master Baiter", keywords) is True
+    assert looks_like_action_request("Delete the mission called Master Angler", keywords) is True
 
 
 def test_complete_mission_phrasing_gates_open():
     keywords = _real_gating_keywords()
-    assert looks_like_action_request("Complete the mission called Master Baiter", keywords) is True
+    assert looks_like_action_request("Complete the mission called Master Angler", keywords) is True
 
 
 def test_ordinary_mission_mention_does_not_gate_open():

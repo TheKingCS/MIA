@@ -179,7 +179,7 @@ registry changes (`core/application.py`'s `_register_assistant_actions()`).
 
 | Action | Destructive | Description |
 |---|---|---|
-| `add_mission` |  | Start a new gamified Mission in M.I.A. (e.g. a 'Master Baiter' mission for a fishing trip). Optionally link it to an existing Trip by name. |
+| `add_mission` |  | Start a new gamified Mission in M.I.A. (e.g. a 'Master Angler' mission for a fishing trip). Optionally link it to an existing Trip by name. |
 | `add_objective` |  | Add an Objective to an existing Mission in M.I.A. — either a manually-tracked tally (e.g. 'catch 3 fish') or a target computed automatically from time spent on the mission's linked trip (e.g. 'spend 2 hours fishing'). |
 | `complete_mission` |  | Mark an existing Mission as completed in M.I.A. by name. |
 | `delete_mission` | Yes | Delete an existing Mission in M.I.A. by name. |

@@ -229,10 +229,10 @@ GOLDEN_CASES = [
     # --- milestone v0.18: Missions/Gamification ---
     ("add mission", "Start a new mission called Kayak Explorer", "add_mission"),
     ("list missions", "What missions do I have?", "list_missions"),
-    ("add objective", "Add an objective to my Master Baiter mission: catch 5 fish, target 5", "add_objective"),
-    ("log mission progress", "Log a catch for my Master Baiter mission", "log_mission_progress"),
-    ("delete mission", "Delete the mission called Master Baiter", "delete_mission"),
-    ("complete mission", "Complete the mission called Master Baiter", "complete_mission"),
+    ("add objective", "Add an objective to my Master Angler mission: catch 5 fish, target 5", "add_objective"),
+    ("log mission progress", "Log a catch for my Master Angler mission", "log_mission_progress"),
+    ("delete mission", "Delete the mission called Master Angler", "delete_mission"),
+    ("complete mission", "Complete the mission called Master Angler", "complete_mission"),
     ("false-positive sanity: ordinary use of the word 'mission'", "Our company's mission is customer satisfaction", None),
 ]
 
@@ -307,7 +307,7 @@ def _seed_fixtures(context: AppContext) -> None:
     context.profiles.create_profile(name="Zac", make_active=True)
     project = context.projects.add_project(name="Garage Rewire", status="Active", due_date="2026-08-14")
     context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
-    mission = context.missions.add_mission(name="Master Baiter", trip_id=trip.trip_id)
+    mission = context.missions.add_mission(name="Master Angler", trip_id=trip.trip_id)
     context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
 
 

@@ -41,7 +41,7 @@ class AddEditMissionDialog(QDialog):
 
         layout.addWidget(QLabel("Name:"))
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("Name, e.g. 'Master Baiter'")
+        self.name_edit.setPlaceholderText("Name, e.g. 'Master Angler'")
         layout.addWidget(self.name_edit)
 
         self.trip_combo: Optional[QComboBox] = None

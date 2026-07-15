@@ -13,8 +13,8 @@ from modules.missions.module import format_mission_row, format_objective_row
 
 
 def test_format_mission_row_with_trip():
-    mission = Mission(mission_id="m1", name="Master Baiter", status="active")
-    assert format_mission_row(mission, trip_name="Day 1") == "Master Baiter  [Day 1]  (active)"
+    mission = Mission(mission_id="m1", name="Master Angler", status="active")
+    assert format_mission_row(mission, trip_name="Day 1") == "Master Angler  [Day 1]  (active)"
 
 
 def test_format_mission_row_no_trip():

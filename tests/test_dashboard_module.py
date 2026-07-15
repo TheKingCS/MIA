@@ -31,13 +31,13 @@ def test_format_activity_line():
 
 
 def test_format_mission_summary_line_with_objectives():
-    mission = Mission(mission_id="m1", name="Master Baiter")
-    assert format_mission_summary_line(mission, completed_objectives=1, total_objectives=2) == "Master Baiter  (1/2 objectives complete)"
+    mission = Mission(mission_id="m1", name="Master Angler")
+    assert format_mission_summary_line(mission, completed_objectives=1, total_objectives=2) == "Master Angler  (1/2 objectives complete)"
 
 
 def test_format_mission_summary_line_no_objectives_yet():
-    mission = Mission(mission_id="m1", name="Master Baiter")
-    assert format_mission_summary_line(mission, completed_objectives=0, total_objectives=0) == "Master Baiter  (no objectives yet)"
+    mission = Mission(mission_id="m1", name="Master Angler")
+    assert format_mission_summary_line(mission, completed_objectives=0, total_objectives=0) == "Master Angler  (no objectives yet)"
 
 
 def test_format_recap_summary_line_full():
