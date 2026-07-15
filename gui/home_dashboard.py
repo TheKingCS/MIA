@@ -17,6 +17,23 @@ scrollable log, this one is a glanceable, always-visible home screen
 with a handful of live-updating cards. The two are complementary, not
 duplicates.
 
+**2026-07-15: Startup Dashboard Briefing** (`docs/VISION.md`'s
+companion-philosophy update — "greet the user with an intelligent
+summary instead of simply opening the dashboard"). A short greeting
+banner is built once per `HomeDashboard` construction (i.e. once per
+app launch / login, not on the 5s data-refresh timer — this is meant to
+read as "welcome back," not a live ticker) via
+`core/startup_briefing.py`'s pure template functions, summarizing
+active missions, today's calendar events, unread notifications, active
+projects, and the most recent Memory. **This will need to grow** as
+more of the companion-philosophy vision ships (weather, workout
+recommendations, financial updates, smart home status are all named in
+the vision but have no real module yet) — `_build_briefing_text()`
+below is the one place to extend with new `context.*` sources as they
+land, and `core.startup_briefing.build_stat_highlights()` is written to
+take plain counts precisely so new sources slot in without restructuring
+it.
+
 **"Currently playing song" from the original ask is deliberately not
 here** — Music is a bare placeholder module with no real playback data
 source (same reasoning `modules/dashboard/module.py` already gives for
@@ -56,8 +73,10 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
+from core.daily_occasions import calendar_events_today
 from core.mission_manager import Mission
 from core.power_manager import PowerStatus
+from core.startup_briefing import build_stat_highlights, build_startup_briefing
 from core.volume_manager import VolumeStatus
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
@@ -122,6 +141,7 @@ class HomeDashboard(QFrame):
         outer.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         outer.addWidget(self._build_clock())
+        outer.addWidget(self._build_briefing_banner())
 
         cards = QGridLayout()
         cards.setSpacing(16)
@@ -262,6 +282,64 @@ class HomeDashboard(QFrame):
         card.setGraphicsEffect(shadow)
 
         return card, body_label, slider, mute_button
+
+    def _build_briefing_banner(self) -> QWidget:
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 18, 20, 18)
+
+        self._briefing_label = QLabel(self._build_briefing_text())
+        self._briefing_label.setObjectName("DashboardBriefingText")
+        self._briefing_label.setWordWrap(True)
+        layout.addWidget(self._briefing_label)
+
+        shadow = QGraphicsDropShadowEffect(card)
+        shadow.setBlurRadius(16)
+        shadow.setXOffset(0)
+        shadow.setYOffset(2)
+        shadow.setColor(QColor(0, 0, 0, 80))
+        card.setGraphicsEffect(shadow)
+
+        return card
+
+    def _build_briefing_text(self) -> str:
+        """Computed once at construction (not on the 5s data-refresh
+        timer below) — this is a "welcome back" greeting, not a live
+        ticker. See this module's docstring for what's deliberately
+        omitted (weather/workout/finance/smart home — no real data
+        source yet) and where to extend this as those subsystems land."""
+        profile_name = "there"
+        if self.context.profiles is not None:
+            active_profile = self.context.profiles.get_active_profile()
+            if active_profile is not None:
+                profile_name = active_profile.name
+
+        active_mission_count = 0
+        if self.context.missions is not None:
+            active_mission_count = sum(1 for m in self.context.missions.all_missions() if m.status == "active")
+
+        events_today_count = 0
+        if self.context.calendar is not None:
+            today_iso = date.today().isoformat()
+            events_today_count = len(calendar_events_today(self.context.calendar.all_events(), today_iso))
+
+        unread_notification_count = self.context.notifications.unread_count() if self.context.notifications else 0
+
+        active_project_count = 0
+        if self.context.projects is not None:
+            active_project_count = sum(1 for p in self.context.projects.all_projects() if p.status != "Complete")
+
+        latest_memory_line = None
+        if self.context.memories is not None:
+            recaps = self.context.memories.all_recaps()
+            if recaps:
+                latest_memory_line = recaps[0].expedition.name
+
+        highlights = build_stat_highlights(
+            active_mission_count, events_today_count, unread_notification_count, active_project_count
+        )
+        return build_startup_briefing(profile_name, datetime.now(), highlights, latest_memory_line)
 
     def _build_apps_launch_card(self) -> QWidget:
         button = QPushButton("▦  Open Apps")

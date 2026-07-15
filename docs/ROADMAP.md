@@ -2661,3 +2661,54 @@ forgot to isolate `config_manager`'s `_CONFIG_FILE` and created a real
 `config/config.json` with a scratch `assistant.active_conversation_id`
 — caught immediately by its mtime matching the test run exactly,
 cleaned up).
+
+## Companion philosophy: Startup Dashboard Briefing (built, 2026-07-15)
+
+At the user's explicit request, `docs/VISION.md` gained a large
+companion-philosophy update (voice-first design, intelligent UI
+navigation, proactive suggestions, multi-platform architecture, and a
+long list of new subsystems — Memory Palace, Workout, Kitchen, Finance,
+Relationship/Pet Profiles, onboarding, tutorials, self-knowledge). Given
+the scope, the user was asked via `AskUserQuestion` which piece to build
+first rather than guessing at sequencing; they picked the **Startup
+Dashboard Briefing** — the lowest-new-design-risk slice, since it's
+aggregation over data that already exists (the same five sections
+`modules/dashboard/module.py` already lists), same reasoning that put
+Memories first in the 2026-07-14 vision update.
+
+New `core/startup_briefing.py` (pure functions, no Qt/manager coupling,
+same shape as `core/daily_occasions.py`): `greeting_for_hour()` (time-
+of-day greeting), `build_stat_highlights()` (turns raw counts into short
+phrases, skipping any that are zero), `build_startup_briefing()`
+(assembles the final greeting sentence). **Deliberately template-based,
+not an LLM call** — this runs once at every app launch, and boot-time
+latency (or Ollama not being warmed up yet) is a worse trade-off than a
+scripted-but-warm sentence; same "start boring, not clever" principle
+`docs/VISION.md` already applies to Continuous Learning. Wired into
+`gui/home_dashboard.py` as a new banner card above the existing Power/
+Mission/Volume cards, computed once at `HomeDashboard` construction
+(i.e. once per login/launch, not on the 5s data-refresh timer — this is
+a "welcome back" greeting, not a live ticker), summarizing active
+missions, today's calendar events, unread notifications, active
+projects, and the most recent Memory. New `#DashboardBriefingText` QSS
+rule added to all 4 themes.
+
+**Weather, workout recommendations, financial updates, and smart home
+status are named in the original companion-philosophy ask but have no
+real module/data source yet** — omitted, same "don't build fake data"
+discipline as the dashboard's already-documented missing "currently
+playing song." The user separately flagged that the dashboard is
+expected to keep growing as more of the vision ships — `_build_briefing_text()`
+in `gui/home_dashboard.py` is the one place to extend with new
+`context.*` sources as they land, and `build_stat_highlights()` takes
+plain counts specifically so new sources slot in without restructuring
+it.
+
+Verified: 13 new pure-logic tests (`tests/test_startup_briefing.py`),
+1082 tests passing total, no regressions. Rendered and visually
+verified via a real headless-Qt screenshot in both `dark_field` and
+`anime_monochrome` (the theme with a prior real text-visibility bug) —
+banner text fully legible in both, no layout issues. No data/config
+pollution (scratch render script isolated every manager's data dir and
+`config_manager`'s `_CONFIG_FILE` up front, per the gotcha immediately
+above).

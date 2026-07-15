@@ -182,6 +182,12 @@ QLabel#DashboardSectionBody {
     color: #3a3a34;
 }
 
+QLabel#DashboardBriefingText {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
 QPushButton#AppsLaunchButton {
     background-color: #e6e6e2;
     border: 1px solid #1a1a1a;
@@ -502,6 +508,12 @@ QLabel#DashboardSectionTitle {
 QLabel#DashboardSectionBody {
     font-size: 13px;
     color: #c9b8e8;
+}
+
+QLabel#DashboardBriefingText {
+    font-size: 16px;
+    font-weight: 500;
+    color: #f1e9ff;
 }
 
 QPushButton#AppsLaunchButton {
@@ -863,6 +875,12 @@ QLabel#DashboardSectionTitle {
 QLabel#DashboardSectionBody {
     font-size: 13px;
     color: #444444;
+}
+
+QLabel#DashboardBriefingText {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000000;
 }
 
 QPushButton#AppsLaunchButton {

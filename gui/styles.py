@@ -187,6 +187,12 @@ QLabel#DashboardSectionBody {
     color: #b8c4cf;
 }
 
+QLabel#DashboardBriefingText {
+    font-size: 16px;
+    font-weight: 500;
+    color: #d8e0e8;
+}
+
 QPushButton#AppsLaunchButton {
     background-color: #161b22;
     border: 1px solid #4fd1c5;
