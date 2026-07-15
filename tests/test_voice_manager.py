@@ -22,13 +22,21 @@ from core.voice_manager import VoiceManager, VoiceUnavailableError
 
 
 class _FakeConfig:
-    """Minimal stand-in for ConfigManager, just enough for `.get(key, default)`."""
+    """Minimal stand-in for ConfigManager — `.get(key, default)` plus
+    `.set()`/`.save()` for the voice-switching tests below."""
 
     def __init__(self, overrides: dict) -> None:
         self._overrides = overrides
+        self.saved = False
 
     def get(self, key: str, default=None):
         return self._overrides.get(key, default)
+
+    def set(self, key: str, value) -> None:
+        self._overrides[key] = value
+
+    def save(self) -> None:
+        self.saved = True
 
 
 class _FakeSTTBackend:
@@ -114,3 +122,43 @@ def test_play_false_when_sounddevice_unavailable(monkeypatch):
 def test_stop_recording_returns_none_when_never_started():
     manager = _make_manager()
     assert manager.stop_recording() is None
+
+
+def test_list_available_voices_only_returns_files_present_on_disk(tmp_path, monkeypatch):
+    import core.voice_manager as voice_manager_module
+
+    monkeypatch.setattr(voice_manager_module, "_VOICE_MODELS_DIR", tmp_path)
+    (tmp_path / "en_US-lessac-low.onnx").write_bytes(b"")
+    (tmp_path / "en_US-amy-low.onnx").write_bytes(b"")
+
+    manager = _make_manager()
+    available_ids = {option.voice_id for option in manager.list_available_voices()}
+    assert available_ids == {"en_US-lessac-low", "en_US-amy-low"}
+
+
+def test_set_voice_switches_and_persists_when_model_present(tmp_path, monkeypatch):
+    import core.voice_manager as voice_manager_module
+
+    monkeypatch.setattr(voice_manager_module, "_VOICE_MODELS_DIR", tmp_path)
+    (tmp_path / "en_US-lessac-low.onnx").write_bytes(b"")
+    (tmp_path / "en_US-ryan-medium.onnx").write_bytes(b"")
+
+    config = _FakeConfig({})
+    context = AppContext(config=config, events=None)
+    manager = VoiceManager(context)
+
+    assert manager.set_voice("en_US-ryan-medium") is True
+    assert manager.current_voice_id == "en_US-ryan-medium"
+    assert config.get("voice.tts_voice_id") == "en_US-ryan-medium"
+    assert config.saved is True
+
+
+def test_set_voice_returns_false_and_makes_no_change_when_model_missing(tmp_path, monkeypatch):
+    import core.voice_manager as voice_manager_module
+
+    monkeypatch.setattr(voice_manager_module, "_VOICE_MODELS_DIR", tmp_path)
+    (tmp_path / "en_US-lessac-low.onnx").write_bytes(b"")
+
+    manager = _make_manager()
+    assert manager.set_voice("en_US-amy-low") is False
+    assert manager.current_voice_id == "en_US-lessac-low"

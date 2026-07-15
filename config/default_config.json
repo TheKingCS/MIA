@@ -29,6 +29,7 @@
     "voice": {
         "stt_model_path": "",
         "tts_model_path": "",
+        "tts_voice_id": "en_US-lessac-low",
         "sample_rate": 16000,
         "push_to_talk_gpio_pin": null
     },

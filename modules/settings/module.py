@@ -6,17 +6,26 @@ Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export/
 import config + the data directory (profiles, notifications, etc.),
 optionally passphrase-encrypted via core/secrets_manager.py — Update
 Manager (milestone 2.8) — apply an offline update package onto the
-running installation, see docs/UPDATE_PACKAGE_SPEC.md — and Appearance &
+running installation, see docs/UPDATE_PACKAGE_SPEC.md — Appearance &
 Device Profile (milestone 13.1/13.2): live theme switching
 (gui/theme_manager.py) and viewing/changing which edition
-(Core/Pi5+HAT vs. Home/desktop, core/device_profile.py) this install is.
+(Core/Pi5+HAT vs. Home/desktop, core/device_profile.py) this install is
+— and Voice (2026-07-15, at the user's explicit request to "pick
+through different voices for M.I.A."): a dropdown over
+`core/voice_manager.py`'s `list_available_voices()` (only voices whose
+model file is actually present in `voice_models/` — see
+`deploy/download_voice_models.sh`), speaking a short preview line
+through `core/tts_worker.py` immediately on selection so the change is
+heard, not just saved silently.
 User info and module toggles remain a placeholder for a future
 milestone.
 """
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
+from typing import Optional
 
 from PySide6.QtWidgets import (
     QComboBox,
@@ -32,6 +41,7 @@ from PySide6.QtWidgets import (
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
+from core.tts_worker import TTSWorker
 from core.update_manager import apply_update_package, peek_update_manifest
 from gui.backup_dialog import BackupPassphraseDialog
 from gui.password_dialog import PasswordPromptDialog
@@ -41,6 +51,7 @@ from modules.module_base import ModuleBase
 log = get_logger(__name__)
 
 _PROFILE_DISPLAY_NAMES = {CORE: "Core (Pi 5 + AI HAT+ 2)", HOME: "Home (desktop workstation)"}
+_VOICE_PREVIEW_TEXT = "Hi, I'm M.I.A. This is what I sound like."
 
 
 class SettingsModule(ModuleBase):
@@ -52,6 +63,7 @@ class SettingsModule(ModuleBase):
     def __init__(self, context) -> None:
         super().__init__(context)
         self._status_label: QLabel | None = None
+        self._tts_worker: Optional[TTSWorker] = None
 
     def get_widget(self) -> QWidget:
         widget = QWidget()
@@ -103,6 +115,32 @@ class SettingsModule(ModuleBase):
         profile_desc.setObjectName("SubtitleLabel")
         profile_desc.setWordWrap(True)
         outer.addWidget(profile_desc)
+
+        voice_section = QLabel("Voice")
+        voice_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        outer.addWidget(voice_section)
+
+        available_voices = self.context.voice.list_available_voices() if self.context.voice else []
+        if not available_voices:
+            no_voices_label = QLabel(
+                "No voice models found — run deploy/download_voice_models.sh to fetch some."
+            )
+            no_voices_label.setObjectName("SubtitleLabel")
+            no_voices_label.setWordWrap(True)
+            outer.addWidget(no_voices_label)
+        else:
+            voice_row = QHBoxLayout()
+            voice_row.addWidget(QLabel("Assistant Voice:"))
+            self._voice_combo = QComboBox()
+            for option in available_voices:
+                self._voice_combo.addItem(option.display_name, option.voice_id)
+            current_voice_id = self.context.voice.current_voice_id
+            index = self._voice_combo.findData(current_voice_id)
+            if index != -1:
+                self._voice_combo.setCurrentIndex(index)
+            self._voice_combo.currentIndexChanged.connect(self._on_voice_changed)
+            voice_row.addWidget(self._voice_combo, stretch=1)
+            outer.addLayout(voice_row)
 
         backup_section = QLabel("Backup & Restore")
         backup_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
@@ -183,6 +221,30 @@ class SettingsModule(ModuleBase):
         self.context.config.set("system.device_profile", profile_id)
         self.context.config.save()
         self._set_status(f"Device profile changed to {_PROFILE_DISPLAY_NAMES[profile_id]}.")
+
+    def _on_voice_changed(self) -> None:
+        voice_id = self._voice_combo.currentData()
+        if voice_id is None or self.context.voice is None:
+            return
+        if not self.context.voice.set_voice(voice_id):
+            self._set_status(f"Could not switch voice — '{voice_id}' model file is missing.")
+            return
+        display_name = self._voice_combo.currentText()
+        self._set_status(f"Voice changed to {display_name}.")
+        self._speak_preview()
+
+    def _speak_preview(self) -> None:
+        if self.context.voice is None or self._tts_worker is not None:
+            return
+        output_path = Path(tempfile.gettempdir()) / "mia_voice_preview.wav"
+        self._tts_worker = TTSWorker(self.context.voice, _VOICE_PREVIEW_TEXT, output_path)
+        self._tts_worker.finished.connect(self._on_tts_finished)
+        self._tts_worker.start()
+
+    def _on_tts_finished(self) -> None:
+        if self._tts_worker is not None:
+            self._tts_worker.deleteLater()
+            self._tts_worker = None
 
     def _on_backup_clicked(self) -> None:
         dialog = BackupPassphraseDialog(None)

@@ -34,6 +34,17 @@ land, and `core.startup_briefing.build_stat_highlights()` is written to
 take plain counts precisely so new sources slot in without restructuring
 it.
 
+**2026-07-15: the briefing is now spoken, not just displayed** — at the
+user's explicit request ("I want this startup to be a spoken thing"),
+`_speak_briefing()` runs the greeting through `core/tts_worker.py`
+(same fire-and-forget QThread pattern `modules/assistant/module.py`
+already uses for spoken replies) once, right after construction.
+Degrades silently if Voice/TTS isn't available (no model fetched, no
+PortAudio) — same graceful-degradation stance as everything else
+Voice-adjacent in this project. Which voice speaks is chosen in
+Settings (`modules/settings/module.py`'s Voice dropdown, backed by
+`core/voice_catalog.py`'s curated multi-voice selection).
+
 **"Currently playing song" from the original ask is deliberately not
 here** — Music is a bare placeholder module with no real playback data
 source (same reasoning `modules/dashboard/module.py` already gives for
@@ -55,7 +66,9 @@ format_active_mission_line()/format_volume_line() are free functions
 
 from __future__ import annotations
 
+import tempfile
 from datetime import date, datetime
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import QTimer, Qt, Signal
@@ -77,6 +90,7 @@ from core.daily_occasions import calendar_events_today
 from core.mission_manager import Mission
 from core.power_manager import PowerStatus
 from core.startup_briefing import build_stat_highlights, build_startup_briefing
+from core.tts_worker import TTSWorker
 from core.volume_manager import VolumeStatus
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
@@ -134,6 +148,7 @@ class HomeDashboard(QFrame):
         super().__init__()
         self.context = context
         self.setObjectName("HomeDashboard")
+        self._tts_worker: Optional[TTSWorker] = None
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -142,6 +157,7 @@ class HomeDashboard(QFrame):
 
         outer.addWidget(self._build_clock())
         outer.addWidget(self._build_briefing_banner())
+        self._speak_briefing()
 
         cards = QGridLayout()
         cards.setSpacing(16)
@@ -340,6 +356,22 @@ class HomeDashboard(QFrame):
             active_mission_count, events_today_count, unread_notification_count, active_project_count
         )
         return build_startup_briefing(profile_name, datetime.now(), highlights, latest_memory_line)
+
+    def _speak_briefing(self) -> None:
+        """Fire-and-forget, same pattern as modules/assistant/module.py's
+        _speak() — degrades silently (logged in VoiceManager) if TTS
+        isn't available, never blocks construction of this widget."""
+        if self.context.voice is None:
+            return
+        output_path = Path(tempfile.gettempdir()) / "mia_startup_briefing.wav"
+        self._tts_worker = TTSWorker(self.context.voice, self._briefing_label.text(), output_path)
+        self._tts_worker.finished.connect(self._on_tts_finished)
+        self._tts_worker.start()
+
+    def _on_tts_finished(self) -> None:
+        if self._tts_worker is not None:
+            self._tts_worker.deleteLater()
+            self._tts_worker = None
 
     def _build_apps_launch_card(self) -> QWidget:
         button = QPushButton("▦  Open Apps")

@@ -2712,3 +2712,65 @@ banner text fully legible in both, no layout issues. No data/config
 pollution (scratch render script isolated every manager's data dir and
 `config_manager`'s `_CONFIG_FILE` up front, per the gotcha immediately
 above).
+
+## Companion philosophy: M.I.A. speaks — spoken startup briefing + selectable voices (built, 2026-07-15)
+
+Immediate follow-up to the Startup Dashboard Briefing above, at the
+user's explicit request: "we need to get MIA talking... I want this
+startup to be a spoken thing. Also I want to be able to pick through
+different voices for M.I.A."
+
+**Spoken briefing**: `gui/home_dashboard.py`'s `_speak_briefing()` runs
+the greeting text through `core/tts_worker.py`'s existing fire-and-
+forget QThread pattern (same one `modules/assistant/module.py` already
+uses for spoken Assistant replies) once, right after construction.
+Degrades silently (logged) if TTS/PortAudio isn't available, same
+graceful-degradation stance as everything else Voice-adjacent in this
+project.
+
+**Selectable voices**: new `core/voice_catalog.py` — a curated,
+hand-picked 5-voice `VOICE_CATALOG` (Lessac/Amy/Ryan — US — and
+Alan/Southern English Female — British), not Piper's entire library,
+same "curated, not exhaustive" discipline as the 4-theme system.
+`core/voice_manager.py`'s `VoiceManager` gained `current_voice_id`,
+`list_available_voices()` (only catalog entries whose `.onnx` file is
+actually present in `voice_models/` — a fetch isn't guaranteed to have
+run), and `set_voice()` (switches the live `PiperBackend` instance and
+persists `voice.tts_voice_id` to config, same "manager owns its own
+persistence" convention as every other core manager). The legacy
+`voice.tts_model_path` override still wins if explicitly set.
+`deploy/download_voice_models.sh` now fetches all 5 catalog voices
+(hand-kept in sync with `core/voice_catalog.py`, since bash can't
+import the Python module directly) — actually run in this dev sandbox
+this session to verify for real, not just against mocks (confirmed:
+network access works here; all 5 `.onnx`/`.onnx.json` pairs fetched,
+~63MB each).
+
+New Settings UI: `modules/settings/module.py` gained a "Voice" section
+— a dropdown over `list_available_voices()`, calling `set_voice()` and
+immediately speaking a short preview line ("Hi, I'm M.I.A. This is what
+I sound like.") through a new `TTSWorker` instance on selection, so a
+voice change is *heard*, not just silently saved — same "make the
+change felt, not just logged" instinct as `set_theme`'s live re-apply.
+
+**Verified for real, not just against mocks**: constructed a real
+`VoiceManager` against the actual downloaded models — `list_available_voices()`
+correctly found all 5, `set_voice("en_US-amy-low")` switched and
+persisted (confirmed surviving a fresh `ConfigManager()` reload,
+simulating an app restart), and synthesizing the same sentence through
+two different voices produced genuinely different audio byte content
+(89,644 vs. 110,124 bytes) — not a stale/cached backend silently
+reusing the old voice. Also drove a real `HomeDashboard` construction
+end-to-end: confirmed the TTS `QThread` actually starts, synthesizes
+the real briefing text to a 171KB wav file, gracefully logs and no-ops
+on `play()` (no PortAudio in this sandbox — see the new
+`docs/KNOWN_ISSUES.md` entry), and cleans up its worker reference on
+finish with no crash. Rendered `modules/settings/module.py`'s new Voice
+dropdown via a real headless-Qt screenshot — all 5 display names appear
+correctly, consistent styling with the rest of the screen.
+
+11 new/updated tests (`tests/test_voice_manager.py`), 1085 tests
+passing total, no regressions. **Actual speaker output remains
+unverified** — Piper synthesis itself is real and confirmed, but
+whether it sounds *good* through a real speaker needs real Pi hardware,
+flagged in `docs/KNOWN_ISSUES.md` rather than assumed.

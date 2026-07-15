@@ -26,6 +26,26 @@ any environment with these tools installed and root available) —
 nothing about the *design* is blocked, only this dev sandbox's ability
 to verify it.
 
+## Open: TTS playback unverified on real audio hardware (2026-07-15, spoken startup briefing + selectable voices)
+
+`core/voice_manager.py`'s `PiperBackend.synthesize()` is real and fully
+verified in this dev sandbox — confirmed producing genuinely different
+audio for different selected voices (`core/voice_catalog.py`'s 5-voice
+catalog, all fetched via `deploy/download_voice_models.sh` and load-
+tested here). `VoiceManager.play()` (the `sounddevice`/PortAudio-backed
+half) cannot be verified at all in this sandbox — there is no
+`libportaudio2` here (same "no sudo" wall as `amixer`/`QtMultimedia`
+elsewhere in this project, see the Home dashboard volume-control entry
+below) — so `_speak_briefing()` (`gui/home_dashboard.py`) and the Voice
+Settings preview (`modules/settings/module.py`) both correctly log
+"Cannot play audio — sounddevice/PortAudio is not available" and no-op
+rather than crash, but the actual speaker output has never been heard.
+
+Re-test once M.I.A. runs on real Pi 5 hardware with `libportaudio2`
+installed (or on this dev machine if PortAudio is ever installed some
+other way) — nothing about the design is blocked, only this dev
+sandbox's ability to verify the final audio-out step.
+
 ## Open: Calendar has no recurring-event support, so "anniversaries" don't repeat automatically (2026-07-14 aesthetic pass part 5)
 
 The daily occasion-check timer (`core/application.py`'s

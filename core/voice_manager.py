@@ -23,6 +23,15 @@ missing/unfetched model degrades to a logged warning and an
 core/llm_manager.py or a missing/corrupt `.zim` pack in
 core/reference_library_manager.py.
 
+**2026-07-15: selectable TTS voices** (`core/voice_catalog.py`), at the
+user's explicit request to "pick through different voices for M.I.A."
+`voice.tts_voice_id` (config) selects among `VOICE_CATALOG`'s curated
+entries; `list_available_voices()`/`set_voice()` below are the two new
+entry points `modules/settings/module.py`'s Voice dropdown uses. The
+legacy `voice.tts_model_path` override still wins if explicitly set
+(an escape hatch for a model file outside the catalog entirely), same
+as before this change.
+
 Recording (mic capture) and playback both go through `sounddevice`,
 which wraps the system PortAudio library. Unlike the STT/TTS models,
 PortAudio is a *system* package (`libportaudio2` on Debian/Raspberry Pi
@@ -46,12 +55,13 @@ from typing import Optional, Protocol
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.voice_catalog import DEFAULT_VOICE_ID, VOICE_CATALOG, VoiceOption
 
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_STT_MODEL_PATH = _PROJECT_ROOT / "voice_models" / "vosk-model-small-en-us-0.15"
-_DEFAULT_TTS_MODEL_PATH = _PROJECT_ROOT / "voice_models" / "en_US-lessac-low.onnx"
+_VOICE_MODELS_DIR = _PROJECT_ROOT / "voice_models"
+_DEFAULT_STT_MODEL_PATH = _VOICE_MODELS_DIR / "vosk-model-small-en-us-0.15"
 _DEFAULT_SAMPLE_RATE = 16000
 
 try:
@@ -189,10 +199,18 @@ class VoiceManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         stt_model_path = Path(context.config.get("voice.stt_model_path", "") or _DEFAULT_STT_MODEL_PATH)
-        tts_model_path = Path(context.config.get("voice.tts_model_path", "") or _DEFAULT_TTS_MODEL_PATH)
         self._sample_rate = int(context.config.get("voice.sample_rate", _DEFAULT_SAMPLE_RATE))
         self._stt: STTBackend = VoskBackend(stt_model_path)
+
+        # An explicit voice.tts_model_path always wins (a pre-2026-07-15
+        # escape hatch for a model file outside the curated catalog
+        # entirely); otherwise resolve the configured voice_id against
+        # VOICE_CATALOG, falling back to the default voice.
+        explicit_tts_path = context.config.get("voice.tts_model_path", "")
+        self._voice_id = context.config.get("voice.tts_voice_id", DEFAULT_VOICE_ID)
+        tts_model_path = Path(explicit_tts_path) if explicit_tts_path else self._model_path_for_voice(self._voice_id)
         self._tts: TTSBackend = PiperBackend(tts_model_path)
+
         self._recording_frames: list = []
         self._input_stream = None
 
@@ -205,6 +223,37 @@ class VoiceManager:
 
     def is_tts_available(self) -> bool:
         return self._tts.available
+
+    @staticmethod
+    def _model_path_for_voice(voice_id: str) -> Path:
+        option = VOICE_CATALOG.get(voice_id)
+        filename = option.voice_id if option is not None else voice_id
+        return _VOICE_MODELS_DIR / f"{filename}.onnx"
+
+    @property
+    def current_voice_id(self) -> str:
+        return self._voice_id
+
+    def list_available_voices(self) -> list[VoiceOption]:
+        """Catalog entries whose .onnx file is actually present in
+        voice_models/ — a fetch via deploy/download_voice_models.sh
+        isn't guaranteed to have run for every entry (see
+        docs/KNOWN_ISSUES.md)."""
+        return [option for option in VOICE_CATALOG.values() if self._model_path_for_voice(option.voice_id).exists()]
+
+    def set_voice(self, voice_id: str) -> bool:
+        """Switches the active TTS voice and persists the choice.
+        Returns False (logged, no change made) if that voice's model
+        file isn't present locally."""
+        model_path = self._model_path_for_voice(voice_id)
+        if not model_path.exists():
+            log.warning("Cannot switch to voice '%s' — model file not found at %s", voice_id, model_path)
+            return False
+        self._voice_id = voice_id
+        self._tts = PiperBackend(model_path)
+        self.context.config.set("voice.tts_voice_id", voice_id)
+        self.context.config.save()
+        return True
 
     def transcribe(self, wav_path: Path) -> Optional[str]:
         try:
