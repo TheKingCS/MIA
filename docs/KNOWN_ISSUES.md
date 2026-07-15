@@ -26,25 +26,54 @@ any environment with these tools installed and root available) —
 nothing about the *design* is blocked, only this dev sandbox's ability
 to verify it.
 
-## Open: TTS playback unverified on real audio hardware (2026-07-15, spoken startup briefing + selectable voices)
+## Closed: TTS playback unverified on real audio hardware (2026-07-15, spoken startup briefing + selectable voices)
 
-`core/voice_manager.py`'s `PiperBackend.synthesize()` is real and fully
-verified in this dev sandbox — confirmed producing genuinely different
-audio for different selected voices (`core/voice_catalog.py`'s 5-voice
-catalog, all fetched via `deploy/download_voice_models.sh` and load-
-tested here). `VoiceManager.play()` (the `sounddevice`/PortAudio-backed
-half) cannot be verified at all in this sandbox — there is no
-`libportaudio2` here (same "no sudo" wall as `amixer`/`QtMultimedia`
-elsewhere in this project, see the Home dashboard volume-control entry
-below) — so `_speak_briefing()` (`gui/home_dashboard.py`) and the Voice
-Settings preview (`modules/settings/module.py`) both correctly log
-"Cannot play audio — sounddevice/PortAudio is not available" and no-op
-rather than crash, but the actual speaker output has never been heard.
+`core/voice_manager.py`'s `PiperBackend.synthesize()` was already
+verified real (confirmed producing genuinely different audio for
+different selected voices, `core/voice_catalog.py`'s 5-voice catalog).
+The playback half (`sounddevice`/PortAudio) took 4 rounds of real
+environment debugging to get working under this dev sandbox's WSL2 —
+worth recording the full chain since it'll matter again for anyone
+setting up a fresh WSL2 dev environment for this project:
 
-Re-test once M.I.A. runs on real Pi 5 hardware with `libportaudio2`
-installed (or on this dev machine if PortAudio is ever installed some
-other way) — nothing about the design is blocked, only this dev
-sandbox's ability to verify the final audio-out step.
+1. `libportaudio2` (the system library `sounddevice`'s Linux wheel
+   needs but doesn't bundle) was missing entirely — `import sounddevice`
+   raised `OSError` outright. Fixed: `sudo apt install libportaudio2`.
+2. With that installed, `sd.query_devices()` still returned empty and
+   playback failed with "Error querying device -1" — this dev sandbox
+   (WSL2) has **no real ALSA hardware card at all** (expected; audio is
+   virtualized). `amixer`/`alsa-utils` were also missing, but installing
+   just those didn't help either — `amixer: Mixer attach default error`
+   confirmed there's no ALSA card for `amixer` to control, a different
+   problem than a muted mixer.
+3. WSLg actually bridges audio through **PulseAudio**, not raw ALSA
+   hardware (`/mnt/wslg/PulseServer` was already running, confirmed via
+   `pactl info` once `pulseaudio-utils`/`libpulse0` were installed —
+   `Default Sink: RDPSink`, WSLg forwards audio to Windows over RDP).
+   But `sounddevice`/PortAudio still saw zero devices even after this —
+   Ubuntu's `libportaudio2` package talks to ALSA, not directly to
+   Pulse, and nothing was routing ALSA's "default" device to Pulse.
+4. Fixed with the standard ALSA→Pulse bridge: installed
+   `libasound2-plugins` (provides ALSA's `pulse` PCM type) plus a
+   `~/.asoundrc`:
+   ```
+   pcm.!default { type pulse }
+   ctl.!default { type pulse }
+   ```
+   After this, `sd.query_devices()` showed real `pulse`/`default` ALSA
+   devices, and a real `VoiceManager.play()` call through M.I.A.'s own
+   code returned `True` with no errors — **and the user confirmed
+   actually hearing it** through Windows, the first real, human-confirmed
+   audio output this project has had.
+
+**Full chain needed on a fresh WSL2 box**: `libportaudio2` +
+`alsa-utils` + `pulseaudio-utils` + `libasound2-plugins` (apt) plus the
+`~/.asoundrc` snippet above (not project-tracked — it's a user-home
+dotfile, has to be set up per machine). None of this is needed on real
+Pi 5 hardware, which has actual ALSA-visible audio hardware and doesn't
+route through a Windows/WSLg bridge at all — this whole chain is a
+WSL2-dev-environment-specific quirk, not something to replicate in
+`deploy/install_kiosk.sh`.
 
 ## Open: Calendar has no recurring-event support, so "anniversaries" don't repeat automatically (2026-07-14 aesthetic pass part 5)
 
@@ -60,24 +89,18 @@ schema change plus UI for it — not built here, since it's a separate
 feature from the daily-digest mechanism itself. Revisit if recurring
 reminders turn out to matter enough to justify that change.
 
-## Open: Home dashboard's volume control unverified on real audio hardware (2026-07-14 aesthetic pass part 3)
+## Closed: Home dashboard's volume control unverified on real audio hardware (2026-07-14 aesthetic pass part 3)
 
-`core/volume_manager.py` shells out to ALSA's `amixer` CLI (no Python
-audio binding, same "avoid the libpulse/libportaudio2 wall" reasoning
-as everything else Media/Voice-adjacent in this project). This dev
-sandbox has **no `amixer` binary at all** (confirmed via `which
-amixer`, same "confirmed blocked, not just untested" situation as the
-Security Toolkit entry above) — `VolumeManager.is_available()` correctly
-reports `False` here, and `gui/home_dashboard.py`'s volume slider
-degrades to disabled + a "Not available on this device" note, which is
-as far as this environment can verify the feature. `parse_amixer_output()`'s
-text-parsing logic is unit-tested against captured sample output
-(`tests/test_volume_manager.py`), but the real `amixer get/set Master`
-round-trip against actual audio hardware has never run.
-
-Re-test once M.I.A. runs on real Pi 5 hardware with `alsa-utils`
-installed (ships on a standard Raspberry Pi OS image) — nothing about
-the design is blocked, only this dev sandbox's ability to verify it.
+`core/volume_manager.py` shells out to ALSA's `amixer` CLI. Resolved as
+a direct side effect of the WSL2 audio investigation above (see the
+"Closed: TTS playback" entry for the full `libportaudio2`/`alsa-utils`/
+`pulseaudio-utils`/`libasound2-plugins`/`~/.asoundrc` chain) — once
+ALSA's default device was routed through Pulse, `amixer get Master`
+started working against the real (virtual) device too. Confirmed via a
+real `VolumeManager` call: `is_available()` now `True`,
+`read()` -> `VolumeStatus(percent=100, muted=False)` — the dashboard's
+volume slider should now be live and functional in this dev sandbox,
+not just on real Pi hardware.
 
 ## Open: AI HAT+ 2 inference path unconfirmed (docs/ROADMAP.md milestone 14)
 
