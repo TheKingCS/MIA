@@ -12,13 +12,23 @@ its displayed icon/line to react to whatever's happening — the "reacts
 to whatever module is active" behavior the v0.6 phase-plan entry calls
 for.
 
-Deliberately text + emoji only, no animation/sprite assets or rendering
-engine — that upgrade is real future work (see the bottom of this
-docstring) but a separate, later decision, not part of this phase.
 `MODULE_REACTIONS` is a static per-module_id flavor-line mapping kept
 in this one file (not spread across every module's own code) so adding
 a new module never requires touching this file; an unlisted module
 just gets a generic fallback line built from its display_name.
+
+**2026-07-15: the static emoji icon is now `gui/presence_widget.py`'s
+`PresenceWidget`** — a living orb (extends `gui/boot_core_widget.py`'s
+breathing-glow technique) that renders each module's icon centered in
+it, same as before, but now also communicates *state* (idle/thinking/
+loading/notification) through color, pulse speed, and a rotating
+highlight ring for "actively working" states — see
+`docs/VISION.md`'s Home visual-identity section for the design brief
+this answers. `_apply_reaction()`/`_set_display()` below take an
+explicit `state` now, not just an icon+line; `_start_transient_state()`
+handles states that should auto-revert to idle after a short delay
+(module-open "loading," a notification) rather than sticking
+permanently the way the icon swap used to.
 
 Idle ambient behavior — milestone 6.3: a `QTimer` (same
 timer-owned-by-the-widget pattern as core/application.py's alarm-check
@@ -112,6 +122,10 @@ from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
 from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
+from gui.presence_widget import PresenceWidget
+
+_LOADING_STATE_MS = 700
+_NOTIFICATION_STATE_MS = 3000
 
 _DEFAULT_ICON = "\U0001F916"  # robot
 _MENU_ICON = "\U0001F3E0"  # house
@@ -176,21 +190,14 @@ class CharacterPanel(QFrame):
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
 
-        # A fixed-size circular badge (same "icon in a colored disc"
-        # treatment gui/widgets/module_button.py's redesign introduced
-        # for #ModuleButtonIcon) instead of a bare, inline-styled emoji
-        # floating in empty space — found via rendering the old version
-        # that a huge emoji directly on the panel's own background read
-        # as placeholder art rather than an intentional character slot.
-        # Object name + theme QSS, not setStyleSheet() — every other
-        # widget in this app pulls its look from the QApplication-level
-        # cascade (see gui/styles.py's module docstring); a widget-level
-        # setStyleSheet() call breaks that cascade for itself and its
-        # children.
-        self._icon_label = QLabel(_HOME_ICON)
-        self._icon_label.setObjectName("CharacterIcon")
-        self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._icon_label.setFixedSize(96, 96)
+        # PresenceWidget self-paints its own glow/motion (same technique
+        # as gui/boot_core_widget.py's PulsingCoreWidget) rather than
+        # pulling a look from the theme QSS cascade the way every other
+        # widget in this app does — that's deliberate here, the whole
+        # point is state-driven color/animation a static stylesheet rule
+        # can't express. See gui/presence_widget.py's docstring.
+        self._presence = PresenceWidget(diameter=96)
+        self._presence.set_glyph(_HOME_ICON)
 
         self._text_label = QLabel(_HOME_LINE)
         self._text_label.setObjectName("CharacterPlaceholderText")
@@ -198,8 +205,12 @@ class CharacterPanel(QFrame):
         self._text_label.setWordWrap(True)
         self._text_label.setFixedWidth(180)
 
-        layout.addWidget(self._icon_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._text_label)
+
+        self._transient_state_timer = QTimer(self)
+        self._transient_state_timer.setSingleShot(True)
+        self._transient_state_timer.timeout.connect(lambda: self._presence.set_state("idle"))
 
         layout.addWidget(self._build_chat_section(), stretch=1)
 
@@ -230,6 +241,8 @@ class CharacterPanel(QFrame):
     def unsubscribe(self) -> None:
         """Must be called before this widget is destroyed — see module docstring."""
         self._idle_timer.stop()
+        self._transient_state_timer.stop()
+        self._presence.stop()
         self.context.events.unsubscribe("module.opened", self._on_module_opened)
         self.context.events.unsubscribe("menu.shown", self._on_menu_shown)
         self.context.events.unsubscribe("home.shown", self._on_home_shown)
@@ -261,6 +274,7 @@ class CharacterPanel(QFrame):
         display_name = self._display_name_for(module_id)
         icon, line = reaction_for_module(module_id, display_name)
         self._apply_reaction(icon, line)
+        self._start_transient_state("loading", _LOADING_STATE_MS)
         self._refresh_suggestions(module_id=module_id)
 
     def _on_menu_shown(self, **kwargs) -> None:
@@ -273,6 +287,7 @@ class CharacterPanel(QFrame):
 
     def _on_notification_created(self, notification) -> None:
         self._apply_reaction(_NOTIFICATION_ICON, f'"{notification.title}"')
+        self._start_transient_state("notification", _NOTIFICATION_STATE_MS)
 
     def _on_idle_tick(self) -> None:
         if time.monotonic() - self._last_event_at < _IDLE_THRESHOLD_SECONDS:
@@ -290,8 +305,20 @@ class CharacterPanel(QFrame):
         self._last_event_at = time.monotonic()
         self._idle_index = 0
 
+    def _start_transient_state(self, state: str, duration_ms: int) -> None:
+        """A presence state that should auto-revert to idle after a
+        short delay rather than sticking permanently — module-open
+        "loading" and a notification's brief pulse, per
+        docs/VISION.md's "communicate her state through motion,
+        lighting, and animation" ask. Restarting the timer on every
+        call means a second transient event (e.g. two notifications
+        close together) simply extends the current one rather than
+        fighting it."""
+        self._presence.set_state(state)
+        self._transient_state_timer.start(duration_ms)
+
     def _set_display(self, icon: str, line: str) -> None:
-        self._icon_label.setText(icon)
+        self._presence.set_glyph(icon)
         self._text_label.setText(line)
 
     # ------------------------------------------------------------------
@@ -467,5 +494,6 @@ class CharacterPanel(QFrame):
     def _set_busy(self, busy: bool) -> None:
         self._input.setEnabled(not busy)
         self._send_button.setEnabled(not busy)
+        self._presence.set_state("thinking" if busy else "idle")
         if busy:
             self._status_label.setText("Thinking…")

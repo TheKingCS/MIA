@@ -299,6 +299,117 @@ other from being built independently.
 - Project 2's software stack entirely — the hardware is being built
   (see `HARDWARE.md`); nothing runs on it yet.
 
+### 2026-07-15 sharpening: Core drops its GUI entirely — voice-first, no screen
+
+A direct follow-on decision, made explicit while scoping a visual
+redesign: **Home is the only place the rich visual companion interface
+lives. Core becomes voice-first with no traditional dashboard UI at
+all** — its only visual output is the small e-paper status display on
+the Receiver (`HARDWARE.md`'s Modular Backpack section), not a
+touchscreen kiosk. This is a real, significant reframing of what
+"M.I.A. Core" has meant for most of this project's history so far —
+worth being explicit about the practical consequence rather than
+letting it stay implicit:
+
+**Everything built in `gui/` and every module's `get_widget()` so far
+should now be understood as "the Home app," not "the Core app."** The
+Pi5 kiosk-mode framing that's driven `docs/HARDWARE.md`'s "Boot &
+kiosk" section and this whole project's early milestones (v0.1–v0.2)
+was written before this split existed — none of that work is wasted,
+it just has a new home (literally), and Home's hardware (a real
+desktop-class machine, `HARDWARE.md`'s Project 2 section) is a
+strictly better fit for a PySide6 desktop app than a Pi5 ever was
+anyway.
+
+**Why this pivot is architecturally clean rather than a rewrite**: this
+project's own layering discipline (`docs/ARCHITECTURE.md`) already
+enforces `core/` never importing `gui/` or `modules/` — every manager,
+the Assistant, voice, and all persisted data already work with zero GUI
+dependency. Core's new software shape is *just* the `core/` layer plus
+a new lightweight voice-loop entry point (push-to-talk → transcribe →
+Assistant → speak), no `gui/`/`modules/` construction at all. Home runs
+the existing full `gui/` + `modules/` stack over the same `core/`
+services, unchanged. The strict layering that's been maintained since
+v0.1 — sometimes at the cost of extra ceremony, per `ARCHITECTURE.md`'s
+own stated tradeoff — is exactly what makes this split cheap now
+instead of a painful retrofit.
+
+**Not built yet, and genuinely substantial when it is**: the actual
+headless/voice-first Core runtime itself — a new entry point separate
+from `main.py` (which boots the full GUI app), a voice-loop controller
+running without Qt's event loop driving it, and real hardware
+integration for the Receiver's push-to-talk button/e-paper display/
+recording LED/vibration motor outside of any GUI framework. Flagged
+here as real, unstarted work — same "don't build blind, scope it
+properly first" discipline as everything else in this document.
+
+## Home's visual identity — a sci-fi companion interface (2026-07-15)
+
+Now that Home is confirmed as the only place M.I.A.'s visual interface
+lives (previous section), the user gave a detailed, real design brief
+for what that interface should feel like — worth preserving close to
+the original framing since it's a genuine creative direction, not a
+vague mood board:
+
+**The core standard: this should feel like a living companion system,
+not a traditional desktop application.** Named inspirations: VR spatial
+interfaces, futuristic game HUDs, holographic assistant systems, sci-fi
+operating systems, RPG-style menus/quest systems — "a spaceship command
+interface... a VR home environment... a futuristic RPG menu... a
+personal AI companion from a sci-fi game."
+
+**Boot sequence**: not a static splash screen — M.I.A. should feel like
+she's *waking up*. System initializing, modules coming online, sensors
+activating, personality loading — powering on a futuristic device or
+entering a game world, not watching a progress bar. `gui/boot_core_widget.py`'s
+`PulsingCoreWidget` (a cheap, timer-driven breathing glow-orb, already
+built for milestone 2.9's boot animation) is the right *technique* to
+build this out from — layered translucent rings for bloom without a
+real blur pass, already proven cheap enough to run continuously — not
+a starting-from-scratch effort.
+
+**Main interface**: floating panels instead of flat windows; UI
+elements that feel like they exist in 3D space; smooth transitions and
+subtle animation; layered depth, parallax, glowing elements,
+holographic-style panels; modules as interactive objects to select and
+open, not menu items; the dashboard as a command center, not an app
+screen.
+
+**Presence, not just menus** — the specific thing that makes sci-fi
+interfaces feel alive, in the user's own words: *"MIA should have an
+avatar/core presence that reacts during interactions. When listening,
+thinking, loading modules, or completing tasks, the visual system
+should communicate her state through motion, lighting, and animation."*
+This is a real, distinct design requirement from the boot sequence
+above — it needs to persist across the whole app, not just play once at
+launch. `gui/character_panel.py` already has the right integration
+point (`_apply_reaction()`, currently swapping a static emoji + text
+line on module-open/notification/idle events) but the wrong visual
+language for this ask — the fix is replacing the static icon with a
+state-driven descendant of `PulsingCoreWidget` (distinct color/pulse-
+rate/motion per state: idle, listening, thinking, module-loading,
+task-complete, notification) rather than inventing a new reaction
+mechanism from scratch. This presence widget is genuinely reusable
+infrastructure — the boot sequence and any future floating-panel work
+are both natural *consumers* of it, not separate animation systems.
+
+**Practical constraints the user gave alongside the ambition** (written
+before the Core-drops-its-GUI decision above, so read "must run on
+Pi 5" as historical context for *why* these constraints exist, not as
+still applying to Home specifically — Home has real GPU-class hardware,
+per `HARDWARE.md`'s Project 2 section, and doesn't need the same
+restraint Core would have): smooth performance, optimized animations,
+avoid heavy 3D rendering unless it earns its cost, prioritize
+responsiveness over spectacle. Worth keeping as *taste*, not just a
+hardware limit — restraint tends to age better than maximalism even
+when the hardware could technically support more.
+
+**Not scoped into concrete milestones yet** — this is the design brief;
+`docs/ROADMAP.md` carries whatever gets built first. The presence
+widget is the natural first slice (foundational, reusable, directly
+requested, builds on existing code) — see its entry there for what
+actually shipped versus what's still just this brief.
+
 ## Why this is a separate document from ROADMAP.md
 
 This vision includes ideas (a multi-agent "Expert Council," genetic

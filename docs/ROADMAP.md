@@ -3042,3 +3042,64 @@ app state instead of a hardcoded list) but the larger initiative — full
 conversational understanding of widget/module data, voice-driven
 interaction with widget menus, and a visual redesign of the Home
 screen — is intentionally not started here; needs its own scoping pass.
+
+## Core drops its GUI; Home visual identity — Presence widget (built, 2026-07-15)
+
+Two big decisions landed in the same conversation, both now written
+into `docs/VISION.md`: **Core becomes voice-first with no rich
+dashboard UI at all** (only the small e-paper Receiver display,
+`docs/HARDWARE.md`'s Modular Backpack section) — meaning everything in
+`gui/`/`modules/*/module.py` built so far should now be understood as
+"the Home app," not "the Core app," a real reframing worth reading the
+VISION.md section for rather than assuming. And **Home gets a full
+sci-fi companion-interface redesign** — floating panels, 3D-feeling
+depth, holographic styling, modules as interactive objects, a living
+"presence" that reacts through motion/lighting/animation. Both are
+north-star decisions; this entry is the first concrete slice actually
+built from them.
+
+**Built: `gui/presence_widget.py`'s `PresenceWidget`**, replacing
+`gui/character_panel.py`'s static emoji-swap reaction display. Extends
+`gui/boot_core_widget.py`'s `PulsingCoreWidget` technique (a cheap,
+timer-driven breathing glow-orb — layered translucent rings for bloom
+without a real blur pass, already proven fast enough for continuous
+30fps repainting) rather than inventing a new animation system: same
+rendering approach, now state-driven (`idle`/`listening`/`thinking`/
+`loading`/`notification`, each its own color + pulse speed, with a
+rotating highlight arc reserved for "actively working" states) and
+rendering an arbitrary centered glyph instead of a fixed "M.I.A." label
+— so each module keeps its own icon identity while the orb's motion
+communicates what M.I.A. is currently doing. Falls back to `idle` for
+an unrecognized state rather than raising.
+
+Wired into `CharacterPanel`: `_set_busy()` (an Assistant reply in
+flight) drives `thinking`; module-open and a new notification each
+trigger a new `_start_transient_state()` helper — a short auto-reverting
+pulse (`loading` for ~700ms, `notification` for ~3s) rather than
+sticking permanently the way the old icon swap did, restarting cleanly
+if a second transient event arrives before the first one's timer fires.
+
+**Deliberately not wired yet: a genuine `listening` state.**
+`CharacterPanel`'s sidebar chat is text-only by design (no mic — voice
+lives on the full `modules/assistant/module.py` screen, which doesn't
+have a presence widget at all yet). Flagged here, not silently skipped
+— extending presence to the full Assistant screen (with real
+push-to-talk-driven `listening`) is natural next work, not started.
+
+**Known minor cleanup, not done**: `gui/styles.py`/`gui/theme_manager.py`
+still carry `QLabel#CharacterIcon` QSS rules from the old static-icon
+approach — now unused (`PresenceWidget` self-paints, doesn't pull from
+the theme cascade), harmless dead CSS, not yet removed.
+
+Verified for real, not just visually: a live headless-Qt test drove
+`CharacterPanel` through the actual event bus (`module.opened`,
+`notification.created`) and `_set_busy()` toggling, confirming every
+state transition (`idle` → `loading` → `idle`, `idle` → `notification`
+→ `idle`, `idle` → `thinking` → `idle`) fires correctly with no crash,
+plus a separate render confirming all 5 states are visually distinct
+side by side (screenshot, not just asserted in code) — teal breathing
+idle, teal rotating-ring listening, purple rotating-ring thinking,
+amber rotating-ring loading, amber fast-pulse notification. 1109 tests
+passing (test count unchanged — no new pure-logic functions; this is
+Qt-widget behavior, covered by the live verification above per this
+project's own established test-tier split, not pytest).
