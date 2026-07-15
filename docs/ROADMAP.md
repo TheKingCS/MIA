@@ -2896,3 +2896,43 @@ pattern actually implemented, not just decided), music (Music module
 is still a placeholder), and any Assistant-widget conversational
 integration. Each is its own scoped piece of work on top of this
 framework, not blocked by it.
+
+## Widget interaction menus (built, 2026-07-15)
+
+Immediate follow-up, picked via `AskUserQuestion` as the next piece of
+the JARVIS-dashboard work over the trading bot/weather widgets
+(scoping those needs details/decisions not settled yet) — the "menus
+for interacting with widgets" half of the original ask.
+
+`gui/home_dashboard.py` gained `_build_widget_header()`, a shared
+icon+title+stretch+optional-"⋯"-menu row now used by both
+`_build_simple_card()` and `_build_volume_card()` (previously
+duplicated inline in each). Power/Mission/Current Project each got one
+real menu action — "Open Power"/"Open Missions"/"Open Projects" —
+reusing the *exact* navigation mechanism the Assistant's own
+`open_module` action already uses (`"assistant.open_module_requested"`
+on the event bus, handled by `gui/main_window.py`'s `open_module()`):
+a widget menu click and a chat command now both go through the same
+one path, not two. **Volume deliberately got no menu** — it already has
+a dedicated mute button and no related module to open, and a "⋯" menu
+with only a redundant "Toggle Mute" item would be worse than no menu
+at all; not every widget needs one.
+
+Verified for real, not just visually: a headless-Qt test found the
+Mission widget's actual `QPushButton`, retrieved its attached `QMenu`,
+triggered the "Open Missions" `QAction` directly, and confirmed the
+real `"assistant.open_module_requested"` event fired with
+`module_id="missions"` — the same call a live click would make, not a
+mocked shortcut. Also confirmed via the same test that exactly 3 menu
+buttons exist (Power/Mission/Current Project), not 4 — Volume's
+absence is intentional, not a bug. 1098 tests passing, no regressions
+(this was a UI-only change with no new pure-logic function, so no new
+pytest cases — covered by the existing widget-framework tests plus
+this live verification).
+
+**Known limitation carried forward, not fixed here**: "Open Projects"
+navigates to the Toolbox module generally, not directly to the Project
+Manager tool tab within it — `gui/main_window.py`'s `open_module()`
+has no deeper per-tool navigation for Toolbox the way Files' own
+`navigate_to_path()` does. Acceptable for now; revisit if it's ever
+worth a dedicated deep-link mechanism.

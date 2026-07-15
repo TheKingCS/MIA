@@ -84,7 +84,7 @@ from __future__ import annotations
 import tempfile
 from datetime import date, datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QColor
@@ -94,6 +94,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QSlider,
     QVBoxLayout,
@@ -315,36 +316,63 @@ class HomeDashboard(QFrame):
         dialog.exec()
 
     def _build_power_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            menu_actions=[("Open Power", lambda: self._open_module("power"))],
+        )
         self._widget_bodies["power"] = body
         return card
 
     def _build_mission_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            menu_actions=[("Open Missions", lambda: self._open_module("missions"))],
+        )
         self._widget_bodies["mission"] = body
         return card
 
     def _build_current_project_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            # Projects live inside the Toolbox module (a "Project Manager"
+            # tool tab), not a standalone module of their own — this opens
+            # Toolbox, same one-level-deep limitation
+            # gui/main_window.py's open_module() has for any nested tool.
+            menu_actions=[("Open Projects", lambda: self._open_module("toolbox"))],
+        )
         self._widget_bodies["current_project"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        # No menu_actions here — the dedicated mute button already
+        # covers this widget's one real action, and there's no related
+        # module to open (unlike Power/Mission/Current Project); a "⋯"
+        # menu with only a redundant "Toggle Mute" item would be worse
+        # than no menu at all.
         card, body, slider, mute_button = self._build_volume_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["volume"] = body
         self._volume_slider = slider
         self._mute_button = mute_button
         return card
 
-    def _build_simple_card(self, icon: str, title: str) -> tuple[QFrame, QLabel]:
-        """Builds one icon+title+body card and returns (card, body_label)
-        — the widget builders above add it to the grid themselves."""
-        card = QFrame()
-        card.setObjectName("DashboardCard")
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(18, 16, 18, 16)
-        layout.setSpacing(10)
+    def _open_module(self, module_id: str) -> None:
+        """Reuses the exact navigation mechanism the Assistant's own
+        `open_module` action already uses (core/application.py) — a
+        widget menu action and a chat command both end up going through
+        the same one path, gui/main_window.py's open_module()."""
+        self.context.events.publish("assistant.open_module_requested", module_id=module_id)
 
+    def _build_widget_header(
+        self, icon: str, title: str, menu_actions: Optional[list[tuple[str, Callable[[], None]]]] = None
+    ) -> QHBoxLayout:
+        """Shared by _build_simple_card()/_build_volume_card() — the
+        icon+title+stretch+optional "⋯" menu button row every widget
+        card starts with. 2026-07-15: the "menus for interacting with
+        widgets" half of the JARVIS-dashboard ask, built right after
+        the framework itself."""
         header = QHBoxLayout()
         header.setSpacing(10)
 
@@ -358,7 +386,32 @@ class HomeDashboard(QFrame):
         title_label.setObjectName("DashboardSectionTitle")
         header.addWidget(title_label)
         header.addStretch()
-        layout.addLayout(header)
+
+        if menu_actions:
+            menu_button = QPushButton("⋯")
+            menu_button.setObjectName("HeaderButton")
+            menu_button.setFixedSize(28, 28)
+            menu_button.setToolTip(f"{title} actions")
+            menu = QMenu(menu_button)
+            for label, callback in menu_actions:
+                menu.addAction(label).triggered.connect(callback)
+            menu_button.setMenu(menu)
+            header.addWidget(menu_button)
+
+        return header
+
+    def _build_simple_card(
+        self, icon: str, title: str, menu_actions: Optional[list[tuple[str, Callable[[], None]]]] = None
+    ) -> tuple[QFrame, QLabel]:
+        """Builds one icon+title+body card and returns (card, body_label)
+        — the widget builders above add it to the grid themselves."""
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(10)
+
+        layout.addLayout(self._build_widget_header(icon, title, menu_actions))
 
         body_label = QLabel()
         body_label.setObjectName("DashboardSectionBody")
@@ -382,19 +435,7 @@ class HomeDashboard(QFrame):
         layout.setContentsMargins(18, 16, 18, 16)
         layout.setSpacing(10)
 
-        header = QHBoxLayout()
-        header.setSpacing(10)
-
-        icon_badge = QLabel(icon)
-        icon_badge.setObjectName("DashboardSectionIcon")
-        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_badge.setFixedSize(40, 40)
-        header.addWidget(icon_badge)
-
-        title_label = QLabel(title)
-        title_label.setObjectName("DashboardSectionTitle")
-        header.addWidget(title_label)
-        header.addStretch()
+        header = self._build_widget_header(icon, title)
 
         mute_button = QPushButton("\U0001F507")
         mute_button.setObjectName("HeaderButton")
