@@ -463,10 +463,29 @@ that fact-finding doesn't need to happen again next session.
   `product_listings`, `revenue`, `expenses`, a `materials_needing_restock`
   view) meant to be the single source of truth every fab module, a
   future web store, and an eventual request-to-fulfillment engine read/
-  write against. This project has never used SQL anywhere (every
-  existing manager is a persisted-JSON file, per this repo's established
-  pattern) — adopting a real schema/database here would be a first,
-  worth a deliberate decision rather than a silent default.
+  write against. **Resolved 2026-07-16: adapted to this project's
+  persisted-JSON-manager convention, not adopted as SQLite** — three
+  real options were weighed (SQLite as-is; JSON, matching every other
+  manager; a hybrid scoping SQL to just this join-heavy domain); the
+  user picked JSON for consistency with the 40+ managers that already
+  exist, none of which have ever needed a database despite plenty of
+  their own cross-references (Missions→Trips, Journal→Trips, etc., all
+  resolved by ID in Python already). **Scoped down to just the
+  foundational piece first** — `core/material_manager.py` (`Material`
+  dataclass + `MaterialManager`, same exact shape as
+  `core/component_manager.py`) covers only the `materials` table plus
+  `materials_needing_restock()` as a plain Python function (same
+  "compute on demand" precedent as `core/memory_manager.py`, replacing
+  the proposed SQL view). Deliberately a third separate inventory-style
+  manager, not a reuse of the general Inventory tool or the electronics
+  Component DB — same "mixing unrelated domains serves neither well"
+  reasoning `component_manager.py`'s own docstring already gives.
+  **`jobs`/`products`/`product_listings`/`revenue`/`expenses`/
+  `material_consumption` are NOT built yet** — later slices once
+  Materials is proven; `cost_rates`/`labor_rate` will likely become
+  plain `workshop.*` config keys rather than their own managers
+  (simple scalars, not many-record entities) once jobs are actually
+  built, not decided yet.
 
 ### Three financial widget sources, meant to converge into one Net Worth view
 

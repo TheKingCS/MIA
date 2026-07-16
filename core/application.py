@@ -34,6 +34,7 @@ from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
+from core.material_manager import MaterialManager
 from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
@@ -156,6 +157,7 @@ class MIAApplication:
         self.context.inventory = InventoryManager(self.context)
         self.context.data_logger = DataLoggerManager(self.context)
         self.context.components = ComponentManager(self.context)
+        self.context.materials = MaterialManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         self.context.voice = VoiceManager(self.context)

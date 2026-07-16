@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from core.avatar_manager import AvatarManager
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
+    from core.material_manager import MaterialManager
     from core.conversation_manager import ConversationManager
     from core.dashboard_widgets import DashboardWidgetRegistry
     from core.data_logger_manager import DataLoggerManager
@@ -87,6 +88,7 @@ class AppContext:
     power: Optional["PowerManager"] = field(default=None, repr=False)
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
+    materials: Optional["MaterialManager"] = field(default=None, repr=False)
     activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
     waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
     devices: Optional["DeviceFramework"] = field(default=None, repr=False)

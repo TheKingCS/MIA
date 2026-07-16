@@ -3523,9 +3523,10 @@ milestones yet; tracked as real follow-up work, not just aspiration:
       concept relates to this repo's existing `ModuleBase`/`MODULE_SPEC.md`
       — **a sibling concept, built 2026-07-16 as `core/workshop_machine.py`,
       see the dedicated entry below**
-- [ ] Decide whether `mia_home_schema.sql` gets adopted as-is, adapted to
+- [x] Decide whether `mia_home_schema.sql` gets adopted as-is, adapted to
       this project's persisted-JSON-manager convention, or something in
-      between
+      between — **adapted to JSON, built 2026-07-16 (Materials slice
+      only), see the dedicated entry below**
 
 ## MIA Home financial snapshot ingestion: watched-folder mechanism built (2026-07-16)
 
@@ -3580,6 +3581,55 @@ instance. Plus a real headless smoke test through the full
 the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
+
+## mia_home_schema.sql adapted to JSON: MaterialManager (2026-07-16)
+
+Fourth and (for now) final slice of MIA Home's expanded scope, same
+day — the last open architecture question on the checklist. Presented
+three real options (SQLite as-is; adapt to this project's JSON
+convention; a hybrid scoping SQL just to this join-heavy domain); user
+picked **adapt to JSON**, for consistency with the 40+ managers already
+in this codebase, none of which have ever needed a real database
+despite plenty of their own cross-references already (Missions→Trips,
+Journal→Trips, resolved by ID in Python, not SQL joins).
+
+Also scoped down deliberately, at the user's explicit call, given the
+size of the full proposed schema (`materials`, `material_consumption`,
+`cost_rates`, `labor_rate`, `jobs`, `products`, `product_listings`,
+`revenue`, `expenses`) and that only the table *names* were ever
+handed off, not literal column definitions — **built just the
+foundational `materials` piece this pass**: new
+`core/material_manager.py` (`Material` dataclass + `MaterialManager`),
+same exact shape as `core/component_manager.py` (`data/materials.json`,
+add/update/delete/get/all/search). `materials_needing_restock()` is a
+plain Python function over already-loaded records — same "compute on
+demand so it can never go stale" precedent `core/memory_manager.py`
+already established — replacing the proposed schema's SQL view, which
+has no direct equivalent once there's no database underneath it.
+
+**Deliberately a third separate inventory-style manager, not a reuse of
+`core/inventory_manager.py` (general household) or
+`core/component_manager.py` (electronics)** — same "mixing unrelated
+domains serves neither well" reasoning `component_manager.py`'s own
+docstring already gives for being separate from Inventory; fabrication
+materials want `unit_cost`/`reorder_threshold` fields neither of the
+other two has.
+
+**Not built this pass, explicit next slices once Materials is
+proven**: `jobs`/`products`/`product_listings`/`revenue`/`expenses`/
+`material_consumption` (the actual production-to-sales pipeline);
+`cost_rates`/`labor_rate` will likely become plain `workshop.*` config
+keys rather than their own managers (simple scalars, not many-record
+entities) once jobs are built — not decided yet. No GUI wired either —
+same "core scaffolding first" pattern as the WorkshopMachine entry
+above, this is core/-layer only.
+
+17 new tests (`tests/test_material_manager.py`, same shape as
+`tests/test_component_manager.py`, plus dedicated
+`materials_needing_restock()` pure-function tests) plus a real headless
+boot smoke test confirming the manager constructs cleanly against the
+real (currently empty) `data/` directory with no stray file written.
+1179 tests passing (17 new).
 
 ## Workshop hardware module framework: MIAModule reconciled as WorkshopMachine (2026-07-16)
 
