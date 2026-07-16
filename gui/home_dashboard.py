@@ -77,6 +77,18 @@ than "the code path is exercised."
 format_clock_time()/format_clock_date()/format_power_line()/
 format_active_mission_line()/format_volume_line() are free functions
 (not methods) — testable without Qt, see tests/test_home_dashboard.py.
+
+**2026-07-16: Companion Avatar widget** — a new registered dashboard
+widget (`avatar_camera`) showing a live camera feed via
+`gui/widgets/avatar_camera_widget.py`, built for VMagicMirror's Virtual
+Camera Output but generic to any virtual-camera source (see
+`core/avatar_manager.py`'s docstring for why no VMagicMirror-specific
+code exists at all). Device selection lives in the widget's own "⋯"
+menu (`_avatar_camera_menu_actions()`), same self-contained-config
+pattern as the Volume widget's mute button — no Settings-module page
+needed. Unverified end-to-end in this dev sandbox (no camera devices
+exist here, and VMagicMirror only runs on Windows) — re-test on the
+real machine once VMagicMirror's Virtual Camera Output is enabled.
 """
 
 from __future__ import annotations
@@ -112,6 +124,7 @@ from core.startup_briefing import build_stat_highlights, build_startup_briefing
 from core.tts_worker import TTSWorker
 from core.volume_manager import VolumeStatus
 from gui.dashboard_customize_dialog import DashboardCustomizeDialog
+from gui.widgets.avatar_camera_widget import AvatarCameraWidget
 from gui.widgets.toggle_switch import ToggleSwitch
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
@@ -123,6 +136,9 @@ _ACTIVITY_LOG_LIMIT = 3
 # full-width "log/feed" card per WIDGET_STENCIL.md.
 _WIDGET_COLUMN_SPANS: dict[str, int] = {
     "activity_log": 3,
+    # A live camera feed reads as cramped at the default 1-column card
+    # width every other widget uses.
+    "avatar_camera": 2,
 }
 _GRID_COLUMNS = 3
 
@@ -197,6 +213,7 @@ class HomeDashboard(QFrame):
         self._widget_bodies: dict[str, QLabel] = {}
         self._volume_slider: Optional[QSlider] = None
         self._mute_button: Optional[QPushButton] = None
+        self._avatar_camera_widget: Optional[AvatarCameraWidget] = None
         self._widget_builders = {
             "power": self._build_power_widget,
             "mission": self._build_mission_widget,
@@ -204,6 +221,7 @@ class HomeDashboard(QFrame):
             "current_project": self._build_current_project_widget,
             "activity_log": self._build_activity_log_widget,
             "quick_bus": self._build_quick_bus_widget,
+            "avatar_camera": self._build_avatar_camera_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -270,6 +288,8 @@ class HomeDashboard(QFrame):
         EventBus's callback list)."""
         self._clock_timer.stop()
         self._data_timer.stop()
+        if self._avatar_camera_widget is not None:
+            self._avatar_camera_widget.stop()
         self.context.events.unsubscribe("dashboard.widgets_changed", self._on_widgets_changed)
 
     # ------------------------------------------------------------------
@@ -329,6 +349,14 @@ class HomeDashboard(QFrame):
         self._widget_bodies = {}
         self._volume_slider = None
         self._mute_button = None
+        if self._avatar_camera_widget is not None:
+            # A live QCamera has no Qt-parent-driven cleanup — unlike
+            # every other widget cleared above, it needs an explicit
+            # stop() or the device stays open after this rebuild
+            # discards the card around it, same "stop before discard"
+            # reasoning as gui/presence_widget.py's animation timer.
+            self._avatar_camera_widget.stop()
+            self._avatar_camera_widget = None
 
         registry = self.context.dashboard_widgets
         widgets = registry.enabled_widgets_in_order() if registry is not None else []
@@ -446,6 +474,69 @@ class HomeDashboard(QFrame):
         ))
         layout.addStretch()
         return card
+
+    def _build_avatar_camera_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """A live camera feed of a VMagicMirror-rendered companion
+        avatar (or any other virtual-camera source) — see
+        core/avatar_manager.py's docstring for the full reasoning.
+        Unlike every other widget here, this one starts/stops a real
+        QCamera rather than just reading a config value or polling a
+        manager, so it's built once at construction (and again on
+        camera selection) rather than on the 5s _refresh_data() timer —
+        restarting a camera every 5 seconds would be wasteful and would
+        visibly glitch the feed, same reasoning quick_bus's toggles
+        already established for skipping that poll."""
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(10)
+        layout.addLayout(
+            self._build_widget_header(
+                descriptor.icon, descriptor.display_name, menu_actions=self._avatar_camera_menu_actions()
+            )
+        )
+
+        self._avatar_camera_widget = AvatarCameraWidget()
+        layout.addWidget(self._avatar_camera_widget, stretch=1)
+
+        shadow = QGraphicsDropShadowEffect(card)
+        shadow.setBlurRadius(16)
+        shadow.setXOffset(0)
+        shadow.setYOffset(2)
+        shadow.setColor(QColor(0, 0, 0, 80))
+        card.setGraphicsEffect(shadow)
+
+        self._refresh_avatar_camera()
+        return card
+
+    def _avatar_camera_menu_actions(self) -> list[tuple[str, Callable[[], None]]]:
+        if self.context.avatar is None:
+            return []
+        devices = self.context.avatar.list_devices()
+        if not devices:
+            return [("No cameras found", lambda: None)]
+        return [
+            (f"Use {device.description}", lambda _checked=False, d=device: self._on_avatar_camera_selected(d))
+            for device in devices
+        ]
+
+    def _on_avatar_camera_selected(self, device) -> None:
+        if self.context.avatar is not None:
+            self.context.avatar.set_selected_device_id(device.device_id)
+        self._refresh_avatar_camera()
+
+    def _refresh_avatar_camera(self) -> None:
+        if self._avatar_camera_widget is None or self.context.avatar is None:
+            return
+        if not self.context.avatar.is_available():
+            self._avatar_camera_widget.show_unavailable()
+            return
+        device_id = self.context.avatar.selected_device_id()
+        if device_id is None:
+            self._avatar_camera_widget.show_not_selected()
+            return
+        self._avatar_camera_widget.start(device_id)
 
     def _build_toggle_row(self, label_text: str, checked: bool, on_toggled: Callable[[bool], None]) -> QHBoxLayout:
         row = QHBoxLayout()

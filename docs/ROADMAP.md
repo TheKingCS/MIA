@@ -3361,3 +3361,51 @@ milestones yet; tracked as real follow-up work, not just aspiration:
 - [ ] Decide whether `mia_home_schema.sql` gets adopted as-is, adapted to
       this project's persisted-JSON-manager convention, or something in
       between
+
+## Companion Avatar dashboard widget: VMagicMirror camera integration (2026-07-16)
+
+Picked up where the user's last VMagicMirror/aesthetics conversation
+left off — a live camera feed of a VMagicMirror-rendered avatar,
+displayed as a new Home dashboard widget card (`avatar_camera`,
+alongside Power/Mission/Activity Log/etc. in the same widget
+framework). Researched VMagicMirror's actual current capabilities
+first rather than guessing: it's a Windows-only Unity/WPF app with no
+Linux port, so nothing about it can run or be tested from this Linux/
+WSL2 dev sandbox. Of the four real integration paths found (virtual
+camera capture, native window capture, Spout GPU texture sharing, or
+just positioning VMagicMirror's own transparent/always-on-top window
+over the dashboard), the user chose **virtual camera capture** — read
+via Qt's own `QCamera`/`QMediaCaptureSession`/`QVideoWidget`, the same
+way VMagicMirror's Virtual Camera Output already works with OBS. This
+needs zero VMagicMirror-specific protocol/SDK code, and works unchanged
+for any other virtual-camera source pointed at it later.
+
+New `core/avatar_manager.py` (`AppContext.avatar`) — camera device
+enumeration + config-backed selection only (`dashboard.avatar_camera_device`),
+no widget/rendering code, consistent with this project's core/gui
+split. New `gui/widgets/avatar_camera_widget.py` (`AvatarCameraWidget`)
+— the actual `QCamera`/`QVideoWidget` construction, with a graceful
+placeholder ("no cameras found" / "no camera selected" / a specific
+error string) whenever there's nothing to show, same degrade-gracefully
+stance as the Volume widget's missing-`amixer` handling. Registered as
+a new dashboard widget in `gui/home_dashboard.py`
+(`_build_avatar_camera_widget`), device selection lives in the card's
+own "⋯" menu (one action per detected device) rather than a new
+Settings-module page. An explicit `.stop()` call is needed whenever the
+card is torn down (grid rebuild on enable/disable, or the whole
+dashboard closing) since a `QCamera` has no Qt-parent-driven cleanup
+the way a plain widget does.
+
+**Verified what's actually verifiable here**: 6 new unit tests
+(`tests/test_avatar_manager.py`, `QMediaDevices.videoInputs()`
+monkeypatched, same "mock the OS query" pattern as
+`test_volume_manager.py`/`test_power_manager.py`) plus a real
+headless-Qt smoke test confirming the widget builds, shows the correct
+"no camera devices found" placeholder (this sandbox has zero cameras,
+confirmed), and cleanly stops/rebuilds through a disable→enable cycle
+with no leak or crash. 1121 tests passing (6 new). **Not verifiable
+here, flagged rather than assumed**: an actual live video frame —
+VMagicMirror only runs on Windows, so the real end-to-end path (enable
+VMagicMirror's Virtual Camera Output, select it from the widget's menu,
+confirm the live avatar renders) needs to happen on the real Windows
+machine.

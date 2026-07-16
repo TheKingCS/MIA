@@ -25,6 +25,7 @@ from PySide6.QtWidgets import QApplication
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
+from core.avatar_manager import AvatarManager
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
@@ -143,6 +144,7 @@ class MIAApplication:
         self.context.conversations = ConversationManager(self.context)
         self.context.user_memories = UserMemoryManager(self.context)
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
+        self.context.avatar = AvatarManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -322,6 +324,11 @@ class MIAApplication:
         # see docs/ROADMAP.md for why.
         self.context.dashboard_widgets.register(WidgetDescriptor("activity_log", "Activity Log", "\U0001F4DC"))
         self.context.dashboard_widgets.register(WidgetDescriptor("quick_bus", "Quick Bus", "\U0001F39B"))
+        # 2026-07-16: live camera feed of a VMagicMirror-rendered
+        # companion avatar (or any other virtual-camera source) — see
+        # core/avatar_manager.py's docstring for how this works with no
+        # VMagicMirror-specific code at all.
+        self.context.dashboard_widgets.register(WidgetDescriptor("avatar_camera", "Companion Avatar", "\U0001F9D1"))
 
     def _register_assistant_actions(self) -> None:
         """
