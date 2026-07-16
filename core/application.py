@@ -2025,12 +2025,6 @@ class MIAApplication:
         # Home visual-identity section asked for boot to feel like
         # "the system initializes, modules come online, sensors
         # activate" specifically, not just decorative HUD dressing.
-        # Module icons are revealed as one batch right after discovery
-        # resolves (gui/splash_screen.py's show_modules()) rather than
-        # staggered one-by-one — a real per-module animation delay would
-        # add wall-clock boot time proportional to module count (already
-        # ~20 modules), which a single batch reveal avoids while still
-        # showing the literal "modules come online" moment.
         boot_steps = [
             self._boot_step_core_systems,
             self._boot_step_module_array,
@@ -2049,7 +2043,6 @@ class MIAApplication:
     def _boot_step_module_array(self) -> str:
         self.module_manager.discover()
         modules = self.module_manager.all()
-        self.splash.show_modules(modules)
         return f"MODULE ARRAY... {len(modules)} MODULES ONLINE"
 
     def _boot_step_assistant_core(self) -> str:
@@ -2074,7 +2067,6 @@ class MIAApplication:
         return f"POWER SYSTEMS... NOMINAL ({status.percent:.0f}%)"
 
     def _boot_step_personality_matrix(self) -> str:
-        self.splash.set_ready()
         return "PERSONALITY MATRIX... LOADED — ALL SYSTEMS NOMINAL"
 
     def _run_boot_steps(self, steps: list, index: int) -> None:
@@ -2089,7 +2081,7 @@ class MIAApplication:
             log.exception("Error during boot step %d (%s)", index, getattr(step, "__name__", step))
             message = None
         if message:
-            self.splash.add_log_line(message)
+            self.splash.set_status(message)
 
         # 1400ms/step — gives the splash's presence orb
         # (gui/presence_widget.py) a couple of full breathing cycles per

@@ -410,6 +410,155 @@ widget is the natural first slice (foundational, reusable, directly
 requested, builds on existing code) — see its entry there for what
 actually shipped versus what's still just this brief.
 
+## MIA Home's expanded scope: the Jarvis workshop/office vision (2026-07-16)
+
+**Naming resolution, since this had genuinely drifted:** "MIA Home" and
+"MIA Core" had been getting mixed together across separate planning
+conversations (the user's own framing) — some of that planning assumed
+a brand-new, separate project, when in fact the "Core/Home split"
+section above already settled this. **MIA Home is not a new project —
+it *is* this repo's existing `gui/` + `modules/` application** (already
+established above as "the Home app"), continuing to grow, eventually
+running on Project 2's hardware (`HARDWARE.md`'s Ryzen 9800X3D + Radeon
+7900 XTX Home Cloud node) instead of a dev laptop. MIA Core stays the
+separate, not-yet-built, voice-only Pi5+HAT runtime. Everything below
+is new *scope for Home*, not a fifth project.
+
+This scope was synthesized from a consolidated handoff doc
+(`MIA_HOME_CLAUDE_CODE_HANDOFF.md`, brought in 2026-07-16) covering
+three separate claude.ai planning conversations — dashboard
+architecture, a crypto trading agent, and real estate portfolio
+tracking — none of which had been reconciled against this repo before.
+**Confirmed via direct audit: none of it exists in this repo yet** — no
+`mia_module_contract.py`, no `mia_home_schema.sql`, no trading-agent
+code, no real-estate ingestion, nothing Kraken/Robinhood/Fidelity-
+related anywhere in `core/`/`modules/`/`gui/`. This section exists so
+that fact-finding doesn't need to happen again next session.
+
+### Two foundational pieces referenced but not yet built here
+
+- **`mia_module_contract.py`** — a standard `MIAModule` interface every
+  hardware/service module would implement (`get_status()`, `send_job()`,
+  `pause()`, `stop()`), plus `StatusReport`/`JobHandle`/`ModuleError`
+  data shapes, and a `LaserEngraverModule` stub demonstrating the
+  pattern (not a working driver). This is a *different* module contract
+  from this repo's own `docs/MODULE_SPEC.md`/`ModuleBase` (which governs
+  GUI-facing app modules) — it's scoped to physical workshop-hardware
+  jobs specifically (engravers, CNC, 3D printers, etc.), and needs a
+  real decision on how the two relate (a new sibling concept? a
+  specialization of `ModuleBase`?) before it's built, not an assumption.
+- **`mia_home_schema.sql`** — a proposed shared data layer (`materials`,
+  `material_consumption`, `cost_rates`, `labor_rate`, `jobs`, `products`,
+  `product_listings`, `revenue`, `expenses`, a `materials_needing_restock`
+  view) meant to be the single source of truth every fab module, a
+  future web store, and an eventual request-to-fulfillment engine read/
+  write against. This project has never used SQL anywhere (every
+  existing manager is a persisted-JSON file, per this repo's established
+  pattern) — adopting a real schema/database here would be a first,
+  worth a deliberate decision rather than a silent default.
+
+### Three financial widget sources, meant to converge into one Net Worth view
+
+The most fragmented piece across the source conversations — flagged
+explicitly so it isn't rebuilt three separate times:
+
+- **Brokerage (Fidelity + Robinhood)** — not built. Likely a read-only
+  holdings view (most retail brokers don't expose full trading APIs).
+  Robinhood has an official Trading MCP
+  (`https://agent.robinhood.com/mcp/trading`, a custom connector) that
+  may also serve read-only portfolio data, not just execution — worth
+  checking before assuming a scrape/manual-export path is needed.
+  Fidelity's actual data-access options are still unconfirmed.
+- **Kraken trading agent (crypto)** — the most substantial of the three,
+  already built as a **separate, live-executing** Python project (not
+  part of this repo): a paper-trading engine (synthetic OHLCV, MA-
+  crossover signal scoring, a 3-gate filter — trend MA, ADX chop,
+  volume confirmation), an ATR-adaptive risk manager with trailing
+  stops, a ticker screener/ranker with a correlation guard, a
+  filesystem-flag kill switch, idempotent order submission with
+  reconciliation, a hard-enforced 40% cash / 30% equities / 30% crypto
+  allocation rule, a 5-entries/day budget (exits exempt, reserve slots
+  tighten signal strength as budget depletes), and a Kraken REST broker
+  using HMAC-SHA512 signing. **Explicit gaps, not yet done**: no real
+  backtest against historical data, no state persistence across process
+  restarts, live broker wiring into the main execution loop is
+  incomplete, a market-hours classifier exists but isn't wired into the
+  live loop, and it isn't yet running 24/7 or connected to Home — the
+  goal is the Ubuntu/Project-2 desktop, once migrated. **A dashboard
+  export module already exists** on that side, producing the JSON shape
+  below.
+- **Real Estate portfolio** — built as a separate, sandboxed browser
+  React dashboard (not part of this repo): per-property income/expense
+  tracking, amortization-based payoff projections with extra-payment
+  support, cap rate/cash-on-cash return/blended DTI, a CSV bank-
+  statement import wizard (flexible column mapping, keyword auto-
+  categorization), a statement-balance override (real imported balance
+  over a computed estimate when available), and actuals-vs-estimate
+  comparison per property. **A JSON export function already exists**
+  there too, matching the same shape, plus manual placeholder fields for
+  brokerage/crypto totals to approximate a combined net worth figure in
+  the interim. No live bank API (the sandboxed tool can't do it) —
+  export is manual/user-downloaded.
+
+**Shared JSON export shape** (both the Kraken agent and the real estate
+dashboard already produce this, so one parser handles either source):
+
+```json
+{
+  "source": "real_estate_portfolio",
+  "generated_at": "2026-07-16T14:32:00.000Z",
+  "summary": {
+    "total_invested": 480000, "total_value": 540000,
+    "total_equity": 210000, "total_loan_balance": 330000,
+    "gain_loss": 60000, "gain_loss_pct": 12.5,
+    "monthly_cash_flow": 875.50, "blended_dti_pct": 31.4
+  },
+  "external_assets": {
+    "brokerage_value": 42000, "crypto_value": 8500, "as_of": "2026-07-15"
+  },
+  "combined_net_worth": 260500,
+  "allocation": [
+    { "label": "123 Maple St Duplex", "value": 130000, "pct": 61.9 },
+    { "label": "Crypto (Kraken)", "value": 8500, "pct": null }
+  ],
+  "properties": [ { "name": "123 Maple St Duplex", "current_value": 300000,
+    "loan_balance": 170000, "equity": 130000, "monthly_cash_flow": 425.00,
+    "cap_rate_pct": 6.2, "payoff_date": "2051-03-01",
+    "loan_balance_source": "statement" } ]
+}
+```
+`source` differs per origin; both share the `summary`/`allocation` shape.
+
+**Recommended widget split** (from the source planning, still just a
+recommendation, not built): three separate small widgets — Brokerage,
+Kraken Agent, Real Estate — feeding one combined Net Worth rollup,
+*not* one blob, since Kraken is a live-acting agent and the other two
+are read-only/manually-updated; conflating them risks hiding which one
+actually trades with real money.
+
+**Open decision, still unresolved**: where Home reads these exported
+snapshot files from — a watched folder vs. manual drag-and-drop upload
+vs. something else. Deliberately left undecided pending an actual
+architecture call in this codebase, not guessed at here.
+
+### Immediate follow-up (tracked as real work, not vision-only)
+
+1. Decide the snapshot ingestion mechanism (watched folder vs. manual
+   upload) before building the ingestion widgets.
+2. Build the real estate + Kraken ingestion widgets — both are
+   hardware-independent and safe to build now, pre-Project-2-migration,
+   same "safe to build early" reasoning as this document's other
+   zero-hardware-needed slices.
+3. Confirm what Fidelity actually exposes before committing to a
+   brokerage widget approach.
+4. Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
+   concept relates to this repo's existing `ModuleBase`/`MODULE_SPEC.md`
+   before writing any workshop-hardware module against it.
+5. Decide whether `mia_home_schema.sql` (a real SQL layer) gets adopted
+   as-is, adapted to this project's existing persisted-JSON-manager
+   convention, or something in between — don't silently default to
+   either.
+
 ## Why this is a separate document from ROADMAP.md
 
 This vision includes ideas (a multi-agent "Expert Council," genetic
@@ -545,7 +694,10 @@ the other.
 | **Smart Suggestions** (2026-07-15 addition: proactive, unprompted recommendations from recent activity) | Project 1, new core service. Same "structured logging + retrieval, not ML" realism principle already established for Continuous Learning above — the existing `core/daily_occasions.py` (2026-07-14, birthday/calendar/check-in) is the direct precedent and likely extension point, not a new mechanism from scratch. |
 | **Workout Module** (2026-07-15 addition: personal-trainer-style guided sessions, PRs, progress charts) | Project 1, new module + `core/workout_manager.py`, same CRUD-plus-Assistant-hooks shape as Missions/Expedition Mode. Live guided-session timers/rest-tracking are the genuinely new UI pattern here (closest existing precedent: Expedition Mode's speed/splits tracking). |
 | **Kitchen Module** (2026-07-15 addition: recipes, inventory, grocery lists, nutrition, meal suggestions) | Project 1, new module. Overlaps in spirit with the already-planned Agriculture section (garden → kitchen supply chain is a natural future link, not built yet). |
-| **Finance** (2026-07-15 addition: budgets, savings, mortgage/loan payoff, real estate, crypto, stocks, net worth, cash flow, projections) | Project 1 for read/tracking + local projections; anything requiring live market data crosses this project's offline-first principle and needs its own explicit online/offline scoping decision before building, same discipline as every other network-dependent feature here. |
+| **Finance** (2026-07-15 addition: budgets, savings, mortgage/loan payoff, real estate, crypto, stocks, net worth, cash flow, projections) | **Corrected 2026-07-16: Home (Project 2), not Project 1.** See the dedicated "MIA Home's expanded scope" section above — this is a real, substantially-planned body of work (three financial widget sources, a live Kraken trading agent, a real estate dashboard), not a lightweight read/tracking add-on, and it's desktop-class scope, not field-device scope. |
+| **Kraken Trading Agent** (2026-07-16 addition: live crypto trading agent — paper engine, ATR risk manager, screener, kill switch, Kraken REST broker) | Home (Project 2), see the expanded-scope section above. Built as a separate project; not yet connected to this repo or running 24/7. |
+| **Real Estate Portfolio** (2026-07-16 addition: per-property income/expense/payoff/cap-rate tracking, CSV bank-statement import) | Home (Project 2), see the expanded-scope section above. Built as a separate sandboxed React dashboard; JSON export exists, ingestion into Home is not yet built. |
+| **Workshop Hardware Module Framework** (2026-07-16 addition: a standard `MIAModule` interface — get_status/send_job/pause/stop — for fab-shop hardware like laser engravers/CNC) | Home (Project 2), see the expanded-scope section above. A real open question on how it relates to this repo's existing `ModuleBase` contract — not yet reconciled. |
 | **Smart Home & Homestead** (2026-07-15 addition: lighting, cameras, doors, sensors, garden automation, solar, weather stations) | Project 1/3 boundary — merges into the already-planned Smart Home/Agriculture sections in `ROADMAP.md`'s v1.0+ bucket and Project 3 ("The Senses") above; all genuinely hardware-gated, same treatment as Fleet/Communications. |
 | **Relationship Profiles** (2026-07-15 addition: people M.I.A. knows — birthdays, gift ideas, shared memories, optional visual recognition) | Project 1, new core service, a structured extension of Memory Palace scoped to people specifically. Visual recognition ("who am I looking at") needs the camera hardware/on-device classification already flagged as this vision's biggest open hardware question above — text-only profiles (no recognition) are buildable now; recognition is not. |
 | **Pet Profiles** (2026-07-15 addition: names, photos, medical history, vet visits) | Project 1, same shape as Relationship Profiles, camera-independent (no recognition implied) so fully buildable now. |

@@ -3310,3 +3310,54 @@ and the config value actually changed — not a cosmetic switch that
 merely looks toggled. Also a real screenshot confirming Activity Log's
 full-width span and Quick Bus's two teal toggles render correctly with
 real log data. 1115 tests passing (6 new), no regressions.
+
+## Boot sequence: 3 disliked 2026-07-15 elements reverted (2026-07-16)
+
+User feedback on the 2026-07-15 boot rewrite ("the icons under MIA, the
+color change of the orb, and the stacking log... all made it look
+worse") is finally actioned, not just logged as a pending revert.
+`gui/splash_screen.py`: the per-module icon reveal row (`show_modules()`)
+is removed entirely, `add_log_line()`'s accumulating multi-line log is
+reverted back to a single-line `set_status()` that replaces the text
+each step, and the presence orb no longer switches to the amber
+`"loading"` state during boot — it stays in the default `"idle"` state
+(blue-teal breathing, no rotating ring) throughout, matching milestone
+2.9's original `PulsingCoreWidget` look exactly. Splash size reverted
+480x640 -> 480x380 (the extra height existed only for the now-removed
+log/icon row). `core/application.py`'s boot-step call sites updated to
+match (`show_modules()`/`set_ready()` calls removed, `add_log_line()` ->
+`set_status()`). Verified with a real headless-Qt boot smoke test
+(actual `SplashScreen` + a full `MIAApplication` boot through all 19
+real modules) confirming no crash, correct 480x380 size, `idle` default
+state, and status-replace-not-append behavior. 1115 tests passing
+(unaffected — this is Qt-widget behavior, not pytest-covered, per this
+project's established test-tier split).
+
+## MIA Home scope reconciliation (2026-07-16) — see `docs/VISION.md`
+
+A consolidated planning handoff (`MIA_HOME_CLAUDE_CODE_HANDOFF.md`,
+covering separate claude.ai conversations on dashboard architecture, a
+Kraken crypto trading agent, and real estate portfolio tracking) was
+folded into `docs/VISION.md`'s new "MIA Home's expanded scope" section
+and its concept-mapping table (the stale "Finance -> Project 1" row
+corrected to Home/Project 2, three new rows added). **Audited this repo
+directly first — confirmed none of it exists here yet**: no
+`mia_module_contract.py`, no `mia_home_schema.sql`, no trading-agent or
+real-estate code anywhere in `core/`/`modules/`/`gui/`. Full detail
+(financial widget shapes, the shared JSON export format, open ingestion-
+mechanism question, workshop-hardware module-contract question) lives
+in `VISION.md` — read it fresh before starting any of this rather than
+relying on this one-paragraph pointer. Not scoped into concrete
+milestones yet; tracked as real follow-up work, not just aspiration:
+
+- [ ] Decide the snapshot ingestion mechanism (watched folder vs. manual
+      upload) for Kraken/real-estate export files
+- [ ] Build real estate + Kraken ingestion widgets (hardware-independent,
+      safe to build now, pre-Project-2-migration)
+- [ ] Confirm what Fidelity actually exposes before committing to a
+      brokerage widget approach
+- [ ] Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
+      concept relates to this repo's existing `ModuleBase`/`MODULE_SPEC.md`
+- [ ] Decide whether `mia_home_schema.sql` gets adopted as-is, adapted to
+      this project's persisted-JSON-manager convention, or something in
+      between
