@@ -3388,6 +3388,68 @@ state, and status-replace-not-append behavior. 1115 tests passing
 (unaffected — this is Qt-widget behavior, not pytest-covered, per this
 project's established test-tier split).
 
+## Chat message bubbles, Switch User moved to Settings, Settings headers enlarged (2026-07-16)
+
+Three more pieces of user feedback, all built.
+
+**Chat message bubbles** — the last remaining gap from the ForMIA
+pass-3 re-comparison, closed now. New `gui/widgets/chat_bubble.py`'s
+`ChatBubble` replaces `gui/character_panel.py`'s plain scrolling
+`QPlainTextEdit` log with real alternating-alignment bubbles (user
+right, assistant left, teal-accented border) — a `QScrollArea` +
+`QVBoxLayout` of bubble widgets, rebuilt on every conversation
+update/switch with the same explicit `hide()`+`setParent(None)`+
+`deleteLater()` cleanup this codebase already established for
+`gui/home_dashboard.py`'s widget grid. Scoped to the sidebar only —
+`modules/assistant/module.py`'s full-screen chat keeps its existing
+denser log, unchanged.
+
+**Hit and fixed a real, previously-undocumented Qt layout bug**: every
+wrapped multi-line bubble rendered with its first and last lines
+clipped/overlapping, reproducing identically regardless of
+`adjustSize()`/`layout().activate()`/explicit `show()` calls (all tried
+first, all failed — confirmed via direct measurement that
+`label.sizeHint()` correctly reported the full wrapped height, e.g.
+75px for 5 lines, but the layout only ever actually allocated 60px, a
+clean one-line shortfall). Root cause: `QVBoxLayout` doesn't reliably
+negotiate `heightForWidth()` through nested layouts (a frame's own
+`QVBoxLayout`, added to the chat log's outer `QVBoxLayout` with an
+alignment flag, inside a `QScrollArea`) — a known, long-standing Qt
+limitation, not a bug in this codebase's own layout-invalidation
+conventions. Fixed by removing Qt's automatic negotiation from the
+picture entirely: the label gets both a fixed width *and* a fixed
+height computed directly via `heightForWidth()`, rather than trying to
+coax the layout into re-negotiating correctly. Worth remembering for
+any future word-wrapped label inside more than one level of nested
+layout in this codebase — don't assume `adjustSize()`/`activate()`
+alone will fix a wrong wrapped height the way it did for
+`gui/home_dashboard.py`'s simpler (single-level) cases.
+
+**Switch User moved from the header to Settings**, at the user's
+explicit request. `gui/main_window.py`'s header bar no longer has the
+button; a new "Account" section in `modules/settings/module.py` has it
+instead. Modules can't import `gui/` directly (CLAUDE.md's layering),
+so the button publishes a new `"profile.switch_requested"` event
+instead — `MainWindow` subscribes and re-emits its existing
+`switch_profile_requested` signal, so `core/application.py`'s handler
+needed zero changes. Same module-isolation pattern as the Assistant's
+`open_module` action. Verified end-to-end with a real headless-Qt test:
+clicking the Settings button genuinely fires the same signal the old
+header button did.
+
+**Settings module's category headers enlarged** — they'd been an
+inline `setStyleSheet("font-weight: 600")` with no font-size at all
+(just the base 14px), too subtle to read as real section breaks
+stacked five deep on one page. New `#SettingsSectionHeader` QSS class
+(17px, 700 weight) applied to all five section labels (including the
+new "Account" one).
+
+Verified with real screenshots (chat bubbles rendering correctly side
+by side, Settings page with visibly bigger headers, header bar with no
+Switch User button). 1123 tests passing throughout — none of this pass
+needed new pure-logic functions, all Qt-widget/styling behavior per
+this project's established test-tier split.
+
 ## Boot orb size increased, Hold to Talk gets real press/release feedback (2026-07-16)
 
 Two more concrete pieces of feedback from the same session as the boot
@@ -3401,6 +3463,15 @@ restore that exact value blind (440px wouldn't even fit this splash's
 current 40px margins at the old 480px window width), bumped to 300px
 and grew the splash window 480x380 -> 560x460 to comfortably fit it —
 verified via a real screenshot, no clipping, correct proportions.
+**Still judged too small on a second look, same day** — bumped again
+to 380px (window 560x460 -> 680x580), and separately fixed the whole
+group visibly "sitting low": the layout had equal-weighted stretches on
+both sides of the orb, but the fixed content above it (just the
+subtitle) was smaller than below it (status label + progress bar), so
+the group rendered low rather than centered. Removed the leading
+stretch entirely (subtitle now anchors near the top margin) and kept
+only the stretch below the orb, pulling the whole group upward —
+verified via a real screenshot.
 
 **Hold to Talk had no visual press/release indication at all** — only
 the small status label below it changed text ("Listening…"). Gave the

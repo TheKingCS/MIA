@@ -80,8 +80,24 @@ class SettingsModule(ModuleBase):
         subtitle.setObjectName("SubtitleLabel")
         outer.addWidget(subtitle)
 
+        account_section = QLabel("Account")
+        account_section.setObjectName("SettingsSectionHeader")
+        outer.addWidget(account_section)
+
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        account_desc = QLabel(
+            f"Signed in as {active_profile.name}." if active_profile else "No active profile."
+        )
+        account_desc.setObjectName("SubtitleLabel")
+        outer.addWidget(account_desc)
+
+        switch_user_button = QPushButton("⇄ Switch User")
+        switch_user_button.setObjectName("ModuleButton")
+        switch_user_button.clicked.connect(self._on_switch_user_clicked)
+        outer.addWidget(switch_user_button)
+
         appearance_section = QLabel("Appearance & Device Profile")
-        appearance_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        appearance_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(appearance_section)
 
         theme_row = QHBoxLayout()
@@ -118,7 +134,7 @@ class SettingsModule(ModuleBase):
         outer.addWidget(profile_desc)
 
         voice_section = QLabel("Voice")
-        voice_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        voice_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(voice_section)
 
         available_voices = self.context.voice.list_available_voices() if self.context.voice else []
@@ -153,7 +169,7 @@ class SettingsModule(ModuleBase):
             outer.addWidget(self._ai_effect_checkbox)
 
         backup_section = QLabel("Backup & Restore")
-        backup_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        backup_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(backup_section)
 
         backup_desc = QLabel(
@@ -179,7 +195,7 @@ class SettingsModule(ModuleBase):
         outer.addLayout(button_row)
 
         update_section = QLabel("Update Manager")
-        update_section.setStyleSheet("font-weight: 600; margin-top: 12px;")
+        update_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(update_section)
 
         update_desc = QLabel(
@@ -203,6 +219,22 @@ class SettingsModule(ModuleBase):
 
         outer.addStretch()
         return widget
+
+    # ------------------------------------------------------------------
+    # Account
+    # ------------------------------------------------------------------
+
+    def _on_switch_user_clicked(self) -> None:
+        """
+        2026-07-16: moved out of gui/main_window.py's header bar into
+        Settings, at the user's explicit request. Modules can't import
+        gui/ directly (CLAUDE.md's one-directional layering), so this
+        publishes an event instead — MainWindow subscribes to
+        "profile.switch_requested" and re-emits its own existing
+        switch_profile_requested signal, same module-isolation pattern
+        as the Assistant's open_module action.
+        """
+        self.context.events.publish("profile.switch_requested")
 
     # ------------------------------------------------------------------
     # Backup

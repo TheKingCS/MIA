@@ -49,6 +49,18 @@ QLabel#SubtitleLabel {
     color: #7a8a99;
 }
 
+/* Settings module's category headers ("Account", "Appearance & Device
+Profile", "Voice", "Backup & Restore", "Update Manager") — previously
+an inline setStyleSheet("font-weight: 600") with no font-size at all
+(just the base 14px), too subtle to read as real section breaks in a
+page with 5 of them stacked. */
+QLabel#SettingsSectionHeader {
+    font-size: 17px;
+    font-weight: 700;
+    color: #e7ecf3;
+    margin-top: 18px;
+}
+
 QLabel#BootSubtitleLabel {
     font-size: 20px;
     letter-spacing: 1px;
@@ -208,6 +220,28 @@ QFrame#DashboardCard {
     background-color: #101722;
     border: 1px solid #1b222e;
     border-radius: 10px;
+}
+
+/* 2026-07-16: gui/character_panel.py's sidebar chat bubbles
+(gui/widgets/chat_bubble.py), per the ForMIA mockup — replaces the
+plain scrolling QPlainTextEdit log the sidebar shipped with. Both
+share ChatBubbleText's font/color; only the bubble's own background/
+border differs, matching the mockup's exact two-tone scheme. */
+QFrame#ChatBubbleUser {
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 8px;
+}
+
+QFrame#ChatBubbleAssistant {
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 8px;
+}
+
+QLabel#ChatBubbleText {
+    font-size: 12px;
+    color: #c3ccd9;
 }
 
 QFrame#NotificationCard {

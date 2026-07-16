@@ -55,15 +55,23 @@ would be a perfect spot for the Assistant Conversations"), this panel
 now also holds a compact, always-available chat — text-only (no mic/
 TTS; the full modules/assistant/module.py screen in Apps still has
 voice for a larger, focused session). Reuses
-`core.assistant_chat.build_chat_request()`/`split_safe_tool_calls()`/
-`format_chat_line()` and `core.chat_worker.ChatWorker` — the exact same
-request-building and tool-execution-safety logic the full Assistant
-module uses, not a reimplementation, so the two surfaces can never
-silently drift apart in behavior. `gui/` may import `core/` directly
-but must never import `modules/` (CLAUDE.md's one-directional
-layering), which is why that shared logic lives in `core/` now instead
-of `modules/assistant/module.py` — see core/assistant_chat.py's
-docstring for the full reasoning.
+`core.assistant_chat.build_chat_request()`/`split_safe_tool_calls()`
+and `core.chat_worker.ChatWorker` — the exact same request-building and
+tool-execution-safety logic the full Assistant module uses, not a
+reimplementation, so the two surfaces can never silently drift apart in
+behavior. `gui/` may import `core/` directly but must never import
+`modules/` (CLAUDE.md's one-directional layering), which is why that
+shared logic lives in `core/` now instead of
+`modules/assistant/module.py` — see core/assistant_chat.py's docstring
+for the full reasoning.
+
+**2026-07-16: real message bubbles** (`gui/widgets/chat_bubble.py`'s
+`ChatBubble`, alternating right/left alignment per the ForMIA mockup)
+replace the plain scrolling `QPlainTextEdit` log this panel shipped
+with — `format_chat_line()`'s "Speaker: text" plain-string formatting
+is no longer used here (each `ConversationMessage`'s `.role`/`.content`
+goes straight into a bubble instead); the full Assistant module screen
+keeps using it unchanged for its own denser, more terminal-like log.
 
 Also shows a handful of clickable suggested-prompt buttons above the
 input box, refreshed every time the reaction changes (a new module
@@ -101,8 +109,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -113,7 +121,6 @@ from core.assistant_chat import (
     build_memory_extraction_prompt,
     build_title_generation_prompt,
     clean_generated_title,
-    format_chat_line,
     parse_extracted_memories,
     split_safe_tool_calls,
     suggested_prompts_for_module,
@@ -123,6 +130,7 @@ from core.conversation_manager import DEFAULT_TITLE
 from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
 from gui.presence_widget import PresenceWidget
+from gui.widgets.chat_bubble import ChatBubble
 
 _LOADING_STATE_MS = 700
 _NOTIFICATION_STATE_MS = 3000
@@ -255,10 +263,44 @@ class CharacterPanel(QFrame):
         self._render_conversation_log()
 
     def _render_conversation_log(self) -> None:
-        self._chat_log.clear()
+        """Full rebuild on every call (a new/switched/updated
+        conversation), same "clear and refill" shape as
+        gui/home_dashboard.py's widget grid — explicit hide() +
+        setParent(None) before deleteLater() since this app has hit
+        real ghosted-widget bugs from skipping that step (see
+        gui/home_dashboard.py's _build_widgets_grid() docstring). The
+        trailing stretch is removed and re-added each time so bubbles
+        always stack above it, not after it."""
+        while self._chat_log_layout.count():
+            item = self._chat_log_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+
         for message in self._conversation.messages:
-            speaker = "You" if message.role == "user" else "M.I.A."
-            self._chat_log.appendPlainText(format_chat_line(speaker, message.content))
+            bubble = ChatBubble(message.role, message.content)
+            alignment = Qt.AlignmentFlag.AlignRight if message.role == "user" else Qt.AlignmentFlag.AlignLeft
+            self._chat_log_layout.addWidget(bubble, alignment=alignment)
+            # A widget added to a layout isn't always auto-shown by Qt
+            # on every platform — same real gap gui/home_dashboard.py's
+            # widget grid hit (see its _build_widgets_grid() docstring).
+            bubble.show()
+
+        self._chat_log_layout.addStretch()
+        self._chat_log_layout.activate()
+
+        # Scroll to the latest message — QScrollArea has no QPlainTextEdit-
+        # style auto-scroll-on-append, so this has to be explicit. Queued
+        # via QTimer.singleShot(0, ...) because the scrollbar's maximum
+        # isn't updated to reflect the new content until after this
+        # method returns and Qt processes the pending layout.
+        QTimer.singleShot(0, self._scroll_chat_log_to_bottom)
+
+    def _scroll_chat_log_to_bottom(self) -> None:
+        scrollbar = self._chat_log_scroll.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
 
     def _on_conversation_updated(self, conversation_id: str) -> None:
         """A write from either this panel or the full Assistant module — reflect it if it's ours."""
@@ -333,10 +375,18 @@ class CharacterPanel(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
-        self._chat_log = QPlainTextEdit()
-        self._chat_log.setObjectName("ChatLog")
-        self._chat_log.setReadOnly(True)
-        layout.addWidget(self._chat_log, stretch=1)
+        self._chat_log_scroll = QScrollArea()
+        self._chat_log_scroll.setObjectName("ChatLog")
+        self._chat_log_scroll.setWidgetResizable(True)
+        self._chat_log_scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        self._chat_log_container = QWidget()
+        self._chat_log_layout = QVBoxLayout(self._chat_log_container)
+        self._chat_log_layout.setContentsMargins(4, 4, 4, 4)
+        self._chat_log_layout.setSpacing(8)
+        self._chat_log_layout.addStretch()
+        self._chat_log_scroll.setWidget(self._chat_log_container)
+        layout.addWidget(self._chat_log_scroll, stretch=1)
 
         self._suggestions_layout = QVBoxLayout()
         self._suggestions_layout.setSpacing(4)

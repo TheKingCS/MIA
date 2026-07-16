@@ -134,12 +134,21 @@ class MainWindow(QMainWindow):
         # modules.files_mod directly, same module-isolation reasoning
         # as open_module_requested above.
         self.context.events.subscribe("files.browse_path_requested", self._on_files_browse_path_requested)
+        # 2026-07-16 — Settings' "Switch User" button (moved out of the
+        # header bar) publishes this rather than importing gui/
+        # directly, same module-isolation reasoning as open_module_requested
+        # above; re-emits the existing switch_profile_requested signal so
+        # core/application.py's handler needs no changes.
+        self.context.events.subscribe("profile.switch_requested", self._on_profile_switch_requested)
 
     def _on_modules_changed(self, **kwargs) -> None:
         self._rebuild_menu()
 
     def _on_assistant_open_module_requested(self, module_id: str) -> None:
         self.open_module(module_id)
+
+    def _on_profile_switch_requested(self, **kwargs) -> None:
+        self.switch_profile_requested.emit()
 
     def _on_files_browse_path_requested(self, path: str) -> None:
         self.open_module("files")
@@ -217,6 +226,7 @@ class MainWindow(QMainWindow):
             "assistant.open_module_requested", self._on_assistant_open_module_requested
         )
         self.context.events.unsubscribe("files.browse_path_requested", self._on_files_browse_path_requested)
+        self.context.events.unsubscribe("profile.switch_requested", self._on_profile_switch_requested)
         if self._character_panel is not None:
             self._character_panel.unsubscribe()
         self._home_widget.unsubscribe()
@@ -353,10 +363,6 @@ class MainWindow(QMainWindow):
         self._apps_button.setObjectName("HeaderButton")
         self._apps_button.clicked.connect(self.show_main_menu)
 
-        self._switch_user_button = QPushButton("\u21C4 Switch User")
-        self._switch_user_button.setObjectName("HeaderButton")
-        self._switch_user_button.clicked.connect(self.switch_profile_requested.emit)
-
         self._search_button = QPushButton("\U0001F50D Search")
         self._search_button.setObjectName("HeaderButton")
         self._search_button.clicked.connect(self._open_search)
@@ -368,7 +374,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self._back_button)
         layout.addWidget(self._home_button)
         layout.addWidget(self._apps_button)
-        layout.addWidget(self._switch_user_button)
         layout.addWidget(self._search_button)
         layout.addWidget(self._notification_button)
 
