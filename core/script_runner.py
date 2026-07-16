@@ -20,6 +20,25 @@ milestone's flashing-engine/serial-monitor siblings, a script's
 execution needs no special hardware or permissions this dev sandbox
 lacks, so this is exercised here with genuine subprocess runs, not
 mocks.
+
+**2026-07-16: Windows support for terminate_process_tree().** Found via
+static audit while scoping MIA Home's move onto real Windows hardware
+(`docs/HARDWARE.md`'s Project 2 machine) — the original
+`os.killpg(os.getpgid(...))` is POSIX-only and doesn't exist on
+Windows at all (`AttributeError`, uncaught by the existing
+`except (ProcessLookupError, PermissionError, OSError)`). Windows has
+no process-group/signal model to mirror it with directly; `taskkill
+/T /F /PID` is the standard equivalent — it walks Windows' own
+parent-child process records to kill the whole tree, forcefully,
+regardless of whether the target process handles any signal at all
+(arbitrary user scripts can't be assumed to). `start_new_session=True`
+itself needed no Windows branch — CPython's Windows `Popen` code path
+silently ignores that parameter rather than raising, confirmed by
+reading `subprocess.py`'s source directly rather than assuming.
+**Still genuinely unverified beyond that source read**: this dev
+sandbox has no Windows to run `taskkill` against — same "confirmed via
+what's checkable, flagged rather than assumed for the rest" treatment
+as `core/avatar_manager.py`'s VMagicMirror integration.
 """
 
 from __future__ import annotations
@@ -32,6 +51,7 @@ import tempfile
 from pathlib import Path
 
 _INTERPRETER_SUFFIXES = {"python": ".py", "shell": ".sh"}
+_TASKKILL_TIMEOUT_SECONDS = 5.0
 
 
 def _interpreter_command(interpreter: str, script_path: Path) -> list[str]:
@@ -82,12 +102,32 @@ def start_script_process(interpreter: str, content: str) -> tuple[subprocess.Pop
 
 def terminate_process_tree(process: subprocess.Popen) -> None:
     """
-    Signals the entire process group `start_script_process()` created
-    for `process`, not just the single PID Python knows about — see
-    that function's docstring for the real bug (an orphaned child
-    process blocking output for the remainder of its runtime) this
-    fixes. Safe to call on an already-exited process.
+    Kills the entire process tree `start_script_process()` created for
+    `process`, not just the single PID Python knows about — see that
+    function's docstring for the real bug (an orphaned child process
+    blocking output for the remainder of its runtime) this fixes. Safe
+    to call on an already-exited process.
+
+    Two genuinely different mechanisms, not one call with a platform
+    branch bolted on: POSIX signals the process *group*
+    `start_new_session=True` created; Windows has no equivalent group
+    concept, so `taskkill /T` instead walks Windows' own parent-child
+    process records to find the whole tree, and `/F` forces termination
+    regardless of whether the target handles any signal — arbitrary
+    user scripts can't be assumed to.
     """
+    if sys.platform == "win32":
+        try:
+            subprocess.run(
+                ["taskkill", "/T", "/F", "/PID", str(process.pid)],
+                capture_output=True,
+                timeout=_TASKKILL_TIMEOUT_SECONDS,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        return
+
     try:
         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
     except (ProcessLookupError, PermissionError, OSError):

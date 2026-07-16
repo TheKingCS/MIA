@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import sys
 import time
+from types import SimpleNamespace
 
+import core.script_runner as script_runner_module
 from core.script_runner import cleanup_script_file, start_script_process, terminate_process_tree
 
 
@@ -122,3 +124,36 @@ def test_script_can_be_terminated_before_completion():
     assert elapsed < 5.0, f"Reading stdout to EOF took {elapsed:.2f}s — an orphaned child is likely still running"
     assert process.returncode != 0
     cleanup_script_file(script_path)
+
+
+# ----------------------------------------------------------------------
+# terminate_process_tree — Windows branch (taskkill mocked; this dev
+# sandbox has no real Windows to run it against, see script_runner.py's
+# 2026-07-16 docstring note)
+# ----------------------------------------------------------------------
+
+def test_terminate_process_tree_uses_taskkill_on_windows(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    calls = []
+    monkeypatch.setattr(
+        script_runner_module.subprocess,
+        "run",
+        lambda args, **kwargs: calls.append(args) or SimpleNamespace(returncode=0),
+    )
+    fake_process = SimpleNamespace(pid=4242)
+
+    terminate_process_tree(fake_process)
+
+    assert calls == [["taskkill", "/T", "/F", "/PID", "4242"]]
+
+
+def test_terminate_process_tree_swallows_taskkill_errors_on_windows(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    def _raise(*args, **kwargs):
+        raise FileNotFoundError("taskkill not found")
+
+    monkeypatch.setattr(script_runner_module.subprocess, "run", _raise)
+    fake_process = SimpleNamespace(pid=4242)
+
+    terminate_process_tree(fake_process)  # must not raise

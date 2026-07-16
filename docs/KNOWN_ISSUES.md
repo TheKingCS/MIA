@@ -3,6 +3,24 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Open: MIA Home's move onto Windows is unverified beyond a static code audit
+
+Static audit (2026-07-16, ahead of running MIA Home on the real Project
+2 Windows machine to connect VMagicMirror) found: every pinned
+dependency in `requirements.txt` has a Windows wheel (`PySide6`,
+`libzim`, `piper-tts`, `vosk`, `sounddevice`, `psutil`, `cryptography`,
+`pyserial`, `astral` — checked directly, not assumed), and every
+Linux-only *feature* (Volume's `amixer`, Field Kit's `lsblk`/`udisksctl`)
+already degrades gracefully rather than crashing. One real gap was
+found and fixed: `core/script_runner.py`'s `terminate_process_tree()`
+used POSIX-only `os.killpg()`, uncaught on Windows — now branches to
+`taskkill /T /F` there. **None of this has been run against a real
+Windows install** — this dev sandbox is Linux/WSL2 only. Re-verify
+`pip install -r requirements.txt` + `python main.py` actually boot
+clean on Windows, and that a Field Kit script's Stop button genuinely
+kills a whole process tree there, before trusting either further than
+"the code path is exercised."
+
 ## Open: Security Toolkit's Wi-Fi analyzer + active tooling blocked on missing system tools (docs/ROADMAP.md milestone 11.5)
 
 `modules/field_kit/module.py`'s Security tab only ships recon tools
