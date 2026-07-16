@@ -36,6 +36,7 @@ from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.job_manager import JobManager
 from core.material_manager import MaterialManager
+from core.ledger_manager import LedgerManager
 from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
@@ -167,6 +168,10 @@ class MIAApplication:
         # constructed after both already are — same ordering precedent
         # as Trips/Waypoints/Inventory in core/application.py.
         self.context.jobs = JobManager(self.context)
+        # Ledger references products (record_sale() reaches into
+        # self.context.products), so it's constructed after products
+        # already is, same ordering precedent as above.
+        self.context.ledger = LedgerManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         self.context.voice = VoiceManager(self.context)

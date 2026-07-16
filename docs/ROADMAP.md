@@ -3582,6 +3582,55 @@ the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
 
+## MIA Home production pipeline, slice 4 (final): LedgerManager — schema fully adapted to JSON (2026-07-16)
+
+Fourth and final slice of the production-to-sales pipeline, at the
+user's explicit call ("let's build Revenue and Expenses next"). **This
+completes the entire originally proposed `mia_home_schema.sql`**
+(`materials`/`material_consumption`/`cost_rates`/`labor_rate`/`jobs`/
+`products`/`product_listings`/`revenue`/`expenses`), fully adapted to
+this project's persisted-JSON-manager convention rather than SQLite,
+across four commits this session.
+
+New `core/ledger_manager.py` — deliberately named `ledger_manager`, NOT
+`finance_manager`: `core/finance_manager.py` already exists and is a
+different concept entirely (watched-folder ingestion of *externally*-
+generated Kraken/real-estate snapshots, built earlier this session).
+This one is MIA Home's own bookkeeping for its own workshop sales.
+`RevenueEntry`/`ExpenseEntry` are two peer lists (`data/revenue.json`,
+`data/expenses.json`) owned by one manager — unlike
+`material_consumption`/`product_listings`, they're not a parent/child
+nesting, just two sides of one simple ledger (revenue in, expenses
+out, net profit is the difference).
+
+**The real integration point**: `LedgerManager.record_sale()` — same
+shape as `consume_material()`/`produce_product()` — records a
+`RevenueEntry` *and* deducts the sold quantity from
+`core/product_manager.py`'s `quantity_in_stock` (clamped at zero, same
+stance as everywhere else in this pipeline). A sale is now a real
+inventory movement, not just a dollar figure next to an unrelated stock
+count. Plain `add_revenue()` stays available for revenue not tied to
+moving product stock (a commission, a flat fee). `net_profit()`/
+`total_revenue()`/`total_expenses()` (optionally date-ranged, plain
+ISO-8601 string comparison — same reasoning `core/finance_manager.py`'s
+`generated_at` comparison already uses) are computed on demand, never
+persisted, same "can't go stale" precedent as every cost/reporting
+function built this session.
+
+31 new tests (`tests/test_ledger_manager.py` — full CRUD for both
+entry types, date-range reporting, and `record_sale()`'s cross-manager
+integration with `ProductManager`) plus a real headless boot smoke
+test confirming the manager constructs cleanly with no stray files
+written. 1264 tests passing (31 new).
+
+**Whole MIA Home production-pipeline arc, one commit per slice**:
+Materials → Jobs (consume_material) → Products (produce_product,
+listings) → Ledger (record_sale) — a genuinely connected system end to
+end, not four independent lists. Next natural step, not started: a
+real GUI for any of this (still core/-layer only across all four
+slices) — or the still-open Fidelity research item, the one piece of
+the broader MIA Home scope this session didn't touch.
+
 ## MIA Home production pipeline, slice 3: ProductManager (2026-07-16)
 
 Direct continuation of Jobs above, at the user's explicit call ("let's

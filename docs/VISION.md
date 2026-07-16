@@ -507,9 +507,24 @@ that fact-finding doesn't need to happen again next session.
   product's `quantity_in_stock` too, closing the full loop: a job
   consumes raw materials and produces finished goods, both real
   inventory movements across all three managers.
-  **`revenue`/`expenses` are still NOT built** — the last piece of the
-  proposed schema, a later slice once Products is proven, same
-  one-piece-at-a-time discipline.
+  **`revenue`/`expenses` built next, 2026-07-16 — see
+  `core/ledger_manager.py`. This completes the entire originally
+  proposed `mia_home_schema.sql`, fully adapted to JSON.** Named
+  `ledger_manager`, deliberately not `finance_manager` —
+  `core/finance_manager.py` already exists and is a different concept
+  entirely (watched-folder ingestion of *externally*-generated Kraken/
+  real-estate snapshots; this is MIA Home's own bookkeeping for its own
+  workshop sales). Revenue/expenses are two peer lists in one manager,
+  not a parent/child nesting the way `material_consumption`/
+  `product_listings` are. `LedgerManager.record_sale()` is this slice's
+  integration point, same shape as `consume_material()`/
+  `produce_product()` — records the revenue entry *and* deducts the
+  sold quantity from the product's `quantity_in_stock`, so a sale is a
+  real inventory movement too, not just a dollar figure sitting next to
+  an unrelated stock count. `net_profit()`/`total_revenue()`/
+  `total_expenses()` are computed on demand, same "never a snapshot
+  that could drift" precedent as every other cost/reporting function
+  in this pipeline.
 
 ### Three financial widget sources, meant to converge into one Net Worth view
 
