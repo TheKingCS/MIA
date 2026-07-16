@@ -278,6 +278,7 @@ class AssistantModule(ModuleBase):
         input_row.addWidget(self._send_button)
 
         self._talk_button = QPushButton("\U0001F3A4  Hold to Talk")
+        self._talk_button.setObjectName("TalkButton")
         self._talk_button.pressed.connect(self._on_talk_pressed)
         self._talk_button.released.connect(self._on_talk_released)
         input_row.addWidget(self._talk_button)
@@ -513,12 +514,14 @@ class AssistantModule(ModuleBase):
             self._status_label.setText(_MIC_UNAVAILABLE_STATUS)
             return
         self._recording = True
+        self._set_talk_button_recording(True)
         self._status_label.setText("Listening…")
 
     def _on_talk_released(self) -> None:
         if self.context.voice is None or not self._recording:
             return
         self._recording = False
+        self._set_talk_button_recording(False)
 
         wav_path = self.context.voice.stop_recording()
         if wav_path is None:
@@ -533,6 +536,23 @@ class AssistantModule(ModuleBase):
 
         self._input.setText(transcript)
         self._on_send()
+
+    def _set_talk_button_recording(self, recording: bool) -> None:
+        """Dynamic property, not a second object name — same QSS
+        re-polish pattern as gui/main_window.py's notification-bell
+        "hasUnread" accent (Qt caches property-selector QSS matches per
+        widget until explicitly told to re-evaluate). Gives Hold to Talk
+        an unmistakable visual change while actually recording — before
+        this, press/release was reflected only in the small status
+        label below the button, not the button itself. Driven from this
+        one method (not Qt's native :pressed pseudo-state) so it stays
+        correct for both the on-screen click and
+        core.push_to_talk_trigger.PushToTalkTrigger's GPIO path, which
+        fires the exact same _on_talk_pressed()/_on_talk_released()
+        handlers."""
+        self._talk_button.setProperty("recording", recording)
+        self._talk_button.style().unpolish(self._talk_button)
+        self._talk_button.style().polish(self._talk_button)
 
     # ------------------------------------------------------------------
     # Speech out

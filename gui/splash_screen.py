@@ -46,9 +46,11 @@ class SplashScreen(QWidget):
         # A resizable default size, not setFixedSize() — MIAApplication
         # now routes this through _display(), which calls
         # showFullScreen() in kiosk mode. A hard fixed size would cap
-        # the window at 480x380 even in fullscreen state, leaving most
-        # of the screen blank instead of actually filling it.
-        self.resize(480, 380)
+        # the window at 560x460 even in fullscreen state, leaving most
+        # of the screen blank instead of actually filling it. Grown from
+        # 480x380 to comfortably fit the larger 2026-07-16 orb size
+        # below (300px) without clipping/cramping the other elements.
+        self.resize(560, 460)
         self._build_ui()
         self._center_on_screen()
 
@@ -64,7 +66,7 @@ class SplashScreen(QWidget):
         subtitle.setObjectName("BootSubtitleLabel")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self._core = PresenceWidget(diameter=200)
+        self._core = PresenceWidget(diameter=300)
         self._core.set_glyph("M.I.A.")
         # Deliberately no set_state() call — PresenceWidget already
         # defaults to "idle" (blue-teal breathing, no rotating ring),

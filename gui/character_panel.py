@@ -388,7 +388,11 @@ class CharacterPanel(QFrame):
             # arg; wrap in a lambda so _on_suggestion_clicked only ever
             # sees the prompt text, not that bool.
             button.clicked.connect(lambda _checked=False, p=prompt: self._on_suggestion_clicked(p))
-            self._suggestions_layout.addWidget(button)
+            # AlignLeft so the pill-shaped chip sizes to its own text
+            # (the ForMIA mockup's compact "chip" look) instead of
+            # QVBoxLayout's default of stretching the button to the
+            # panel's full width.
+            self._suggestions_layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def _on_suggestion_clicked(self, prompt: str) -> None:
         self._input.setText(prompt)

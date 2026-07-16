@@ -3311,6 +3311,61 @@ merely looks toggled. Also a real screenshot confirming Activity Log's
 full-width span and Quick Bus's two teal toggles render correctly with
 real log data. 1115 tests passing (6 new), no regressions.
 
+## ForMIA design handoff, pass 3: bundled fonts + closing remaining fidelity gaps (2026-07-16)
+
+Re-compared the running app directly against the original
+`ForMIA.zip`/`Dashboard.dc.html` mockup (still on the user's desktop,
+re-extracted fresh) via a real screenshot, rather than assuming passes
+1-2 already matched it. Found the two theme colors were already
+pixel-correct, but two real gaps: **typography** and **missing
+structural elements**.
+
+**Typography**: the mockup's own CSS specifies Inter (UI text) and
+JetBrains Mono (numeric/mono accents) — `gui/styles.py`'s
+`DARK_FIELD_THEME` had shipped with generic system-font fallbacks
+("Segoe UI"/"Consolas") the whole time, a real, visible fidelity gap
+just not caught until directly re-comparing. Neither font is a default
+system install on Windows/Linux/Pi, so both are now bundled
+(`assets/fonts/`, 8 static-weight `.ttf` files, SIL OFL / Apache 2.0
+licensed — see `assets/fonts/NOTICE.md`) and registered via
+`QFontDatabase.addApplicationFont()` in `core/application.py`'s new
+`_load_bundled_fonts()`, called right after `QApplication` construction
+and before any stylesheet applies. Scoped to `dark_field` only, same as
+every prior ForMIA pass — the other 3 themes keep their original system
+fonts.
+
+**Missing structural elements**, all present in the mockup's markup but
+absent from the shipped dashboard: the "SYSTEM OVERVIEW" section label
++ "● ALL SYSTEMS NOMINAL" status pill (new `_build_overview_row()` —
+the pill is static ambient copy, same precedent as
+`gui/main_window.py`'s own status-bar default message, not a live
+health check); the clock had shipped as a bare centered label stack
+with no card/border/eyebrow at all, now a real `DashboardCard` matching
+the mockup's eyebrow-label-left / date-right layout; a "WIDGETS"
+section label above the widget grid. Also restyled the assistant
+sidebar's suggested-prompt buttons from full-width left-aligned bars
+into the mockup's actual small pill-shaped chips
+(`gui/character_panel.py` now adds them with `AlignLeft` so
+`QVBoxLayout` doesn't stretch them back to full width).
+
+**Deliberately left as-is, not "fixed" to match the static mockup
+literally**: Volume's real slider + mute button (mockup only shows a
+static progress bar — real interactivity is a legitimate improvement
+over a non-interactive prototype, not a gap); the presence-orb avatar
+in the sidebar (mockup shows a plain static "M" badge — the
+state-driven `PresenceWidget` is deliberate, already-decided richer
+functionality, not a regression); CPU Load/Network widgets (already
+deferred, see above). **Chat message bubbles** (mockup shows
+alternating-alignment bubble styling; the app currently renders one
+plain scrolling text box) remain a real, already-flagged gap — same
+"next candidate" status noted in the pass-2 entry above, not rushed
+into this pass.
+
+Verified with real screenshots of the actual running `MainWindow` (not
+the HTML mockup) before and after, side by side against the mockup's
+markup. 1123 tests passing, unaffected (styling/layout only, no new
+pure-logic functions).
+
 ## Boot sequence: 3 disliked 2026-07-15 elements reverted (2026-07-16)
 
 User feedback on the 2026-07-15 boot rewrite ("the icons under MIA, the
@@ -3331,6 +3386,41 @@ match (`show_modules()`/`set_ready()` calls removed, `add_log_line()` ->
 real modules) confirming no crash, correct 480x380 size, `idle` default
 state, and status-replace-not-append behavior. 1115 tests passing
 (unaffected — this is Qt-widget behavior, not pytest-covered, per this
+project's established test-tier split).
+
+## Boot orb size increased, Hold to Talk gets real press/release feedback (2026-07-16)
+
+Two more concrete pieces of feedback from the same session as the boot
+revert above. **Boot orb too small**: the 2026-07-16 revert (previous
+entry) restored the original blue/single-line/no-icons boot look, but
+carried over the interim redesign's 200px `PresenceWidget` diameter
+without checking the *original* milestone 2.9 size — `git show` on the
+pre-redesign `gui/boot_core_widget.py` shows the original
+`PulsingCoreWidget` was a fixed 440×440, noticeably larger. Rather than
+restore that exact value blind (440px wouldn't even fit this splash's
+current 40px margins at the old 480px window width), bumped to 300px
+and grew the splash window 480x380 -> 560x460 to comfortably fit it —
+verified via a real screenshot, no clipping, correct proportions.
+
+**Hold to Talk had no visual press/release indication at all** — only
+the small status label below it changed text ("Listening…"). Gave the
+button its own `#TalkButton` QSS identity (previously fully unstyled)
+plus a `recording` dynamic property, same re-polish pattern as
+`gui/main_window.py`'s notification-bell `hasUnread` accent — solid red
+(reusing this theme's existing critical-notification `#e06666`, the
+universal "recording" convention) while held, reverting to the idle
+teal-outline look on release. Driven from
+`_set_talk_button_recording()` inside the existing
+`_on_talk_pressed()`/`_on_talk_released()` handlers rather than Qt's
+native `:pressed` pseudo-state, so it stays correct for both the
+on-screen click and `core/push_to_talk_trigger.py`'s GPIO path, which
+fires the same handlers. Verified with a real headless-Qt smoke test
+(faked `VoiceManager.start_recording()`, confirmed the `recording`
+property and rendered color genuinely flip on press and revert on
+release, via two screenshots).
+
+1123 tests passing throughout (no new pure-logic functions — both are
+Qt-widget/styling behavior, covered by real screenshots per this
 project's established test-tier split).
 
 ## MIA Home scope reconciliation (2026-07-16) — see `docs/VISION.md`
@@ -3409,3 +3499,21 @@ VMagicMirror only runs on Windows, so the real end-to-end path (enable
 VMagicMirror's Virtual Camera Output, select it from the widget's menu,
 confirm the live avatar renders) needs to happen on the real Windows
 machine.
+
+**2026-07-16, same day, paused at the user's explicit call**: trying to
+actually connect a real VMagicMirror instance surfaced a genuine
+architecture conflict, not just a setup inconvenience — VMagicMirror is
+Windows-only, but `docs/HARDWARE.md`'s Project 2 (the actual Home Cloud
+machine this is meant to run on) is planned to run **Ubuntu**,
+specifically for ROCm GPU-compute support, which has much weaker
+Windows support. The widget is unregistered from the default dashboard
+(`core/application.py`'s `_register_dashboard_widgets()`) but not
+deleted — `core/avatar_manager.py`/`gui/widgets/avatar_camera_widget.py`
+stay in place as real, reusable code. **Three options identified, none
+chosen yet** — revisit once ready: (1) drop VMagicMirror, find/build a
+Linux-native VRM avatar renderer (e.g. a web-based three-vrm.js viewer
+in a Qt web view); (2) keep VMagicMirror on a separate Windows
+machine/VM, stream its output to the Ubuntu box over the network
+(NDI/RTSP) instead of a local virtual-camera read; (3) reconsider
+Project 2's OS to Windows, accepting the ROCm trade-off. Don't resume
+building against this widget without picking one of these first.

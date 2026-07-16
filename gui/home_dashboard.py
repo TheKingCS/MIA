@@ -239,6 +239,7 @@ class HomeDashboard(QFrame):
         outer.setSpacing(24)
         outer.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        outer.addLayout(self._build_overview_row())
         outer.addWidget(self._build_clock())
 
         # Built (and refreshed with real data) before the briefing
@@ -254,6 +255,9 @@ class HomeDashboard(QFrame):
         outer.addWidget(self._build_briefing_banner())
         self._speak_briefing()
 
+        widgets_label = QLabel("WIDGETS")
+        widgets_label.setObjectName("DashboardOverlineLabel")
+        outer.addWidget(widgets_label)
         outer.addWidget(self._widgets_container)
 
         toolbar = QHBoxLayout()
@@ -296,24 +300,58 @@ class HomeDashboard(QFrame):
     # Construction
     # ------------------------------------------------------------------
 
+    def _build_overview_row(self) -> QHBoxLayout:
+        """The "SYSTEM OVERVIEW" / "● ALL SYSTEMS NOMINAL" header row —
+        a real gap found re-comparing against the ForMIA mockup
+        (`Dashboard.dc.html`), missing entirely before this pass. The
+        status chip is static ambient copy, same precedent as
+        gui/main_window.py's own status-bar default message ("M.I.A.
+        core online.") — not a live health check standing behind it."""
+        row = QHBoxLayout()
+        overview_label = QLabel("SYSTEM OVERVIEW")
+        overview_label.setObjectName("DashboardOverlineLabel")
+        row.addWidget(overview_label)
+        row.addStretch()
+        status_chip = QLabel("● ALL SYSTEMS NOMINAL")
+        status_chip.setObjectName("DashboardStatusChip")
+        row.addWidget(status_chip)
+        return row
+
     def _build_clock(self) -> QWidget:
-        container = QWidget()
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        """A real card (eyebrow "CLOCK" label + big time, left; date,
+        right) — re-comparing against the ForMIA mockup found this had
+        shipped as a bare centered label stack with no card/eyebrow at
+        all, unlike every other widget's card treatment."""
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QHBoxLayout(card)
+        layout.setContentsMargins(20, 18, 20, 18)
+
+        time_column = QVBoxLayout()
+        time_column.setSpacing(6)
+        clock_eyebrow = QLabel("CLOCK")
+        clock_eyebrow.setObjectName("DashboardSectionTitle")
+        time_column.addWidget(clock_eyebrow)
 
         self._clock_time_label = QLabel()
         self._clock_time_label.setObjectName("DashboardClockTime")
-        self._clock_time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._clock_time_label)
+        time_column.addWidget(self._clock_time_label)
+        layout.addLayout(time_column)
+        layout.addStretch()
 
         self._clock_date_label = QLabel()
         self._clock_date_label.setObjectName("DashboardClockDate")
-        self._clock_date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._clock_date_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
         layout.addWidget(self._clock_date_label)
 
-        return container
+        shadow = QGraphicsDropShadowEffect(card)
+        shadow.setBlurRadius(16)
+        shadow.setXOffset(0)
+        shadow.setYOffset(2)
+        shadow.setColor(QColor(0, 0, 0, 80))
+        card.setGraphicsEffect(shadow)
+
+        return card
 
     def _build_widgets_grid(self) -> None:
         """(Re)builds the dashboard's widget grid from

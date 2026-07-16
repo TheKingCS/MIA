@@ -8,13 +8,28 @@ All widgets should pull their look from here rather than setting inline
 styles, so the whole application's appearance can be changed (or
 swapped for a "theme" config option, per config/default_config.json's
 "gui.theme" key) from one place.
+
+**2026-07-16: "Inter"/"JetBrains Mono" font-family names** — the
+"ForMIA" design handoff's actual specified typography, not the
+"Segoe UI"/"Consolas" system-font fallback this theme originally
+shipped with (a real, visible fidelity gap from the reference design,
+found while re-comparing against it). Both are bundled in
+`assets/fonts/` and registered by `core/application.py`'s
+`_load_bundled_fonts()` before this stylesheet is ever applied — see
+that function's docstring and `assets/fonts/NOTICE.md` for why they're
+bundled rather than assumed installed. The system-font names stay as a
+fallback in each `font-family` list, so a font-file load failure still
+degrades to something legible rather than a Qt warning-only blank
+default. Scoped to this theme only (`dark_field`, the one the ForMIA
+handoff is restyling) — the other 3 themes in `gui/theme_manager.py`
+keep their original system fonts, unchanged.
 """
 
 DARK_FIELD_THEME = """
 QMainWindow, QWidget {
     background-color: #0a0e15;
     color: #e7ecf3;
-    font-family: "Segoe UI", "DejaVu Sans", sans-serif;
+    font-family: "Inter", "Segoe UI", "DejaVu Sans", sans-serif;
     font-size: 14px;
 }
 
@@ -41,14 +56,14 @@ QLabel#BootSubtitleLabel {
 }
 
 QLabel#BootStatusLabel {
-    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 16px;
     letter-spacing: 2px;
     color: #4fd1c5;
 }
 
 QLabel#ReadoutLabel {
-    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 16px;
     color: #4fd1c5;
     padding: 10px;
@@ -152,6 +167,7 @@ QLabel#ModuleButtonDescription {
 }
 
 QLabel#DashboardClockTime {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 34px;
     font-weight: 700;
     color: #e7ecf3;
@@ -161,6 +177,31 @@ QLabel#DashboardClockTime {
 QLabel#DashboardClockDate {
     font-size: 13px;
     color: #7c8798;
+}
+
+/* The "SYSTEM OVERVIEW"/"WIDGETS" section overline labels — distinct
+from #DashboardSectionTitle's smaller mono card-eyebrow style, per the
+ForMIA mockup's own two-tier label hierarchy (a bold section header
+above the mono per-card eyebrows). */
+QLabel#DashboardOverlineLabel {
+    font-size: 13px;
+    font-weight: 700;
+    color: #7c8798;
+    letter-spacing: 0.3px;
+}
+
+/* The "● ALL SYSTEMS NOMINAL" status pill next to SYSTEM OVERVIEW —
+same ambient-status-text precedent as MainWindow's own status bar
+default message ("M.I.A. core online."), not a live health check. */
+QLabel#DashboardStatusChip {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #38d9c9;
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 10px;
+    padding: 5px 10px;
 }
 
 QFrame#DashboardCard {
@@ -206,7 +247,7 @@ QLabel#DashboardSectionIcon {
 value, per the ForMIA widget stencil. QSS has no text-transform, so
 gui/home_dashboard.py uppercases the label text itself before setting it. */
 QLabel#DashboardSectionTitle {
-    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 10px;
     font-weight: 600;
     color: #5b6a80;
@@ -222,7 +263,7 @@ QLabel#DashboardSectionBody {
 "Log / feed" widget variant (distinct from every other widget's
 regular Inter-style DashboardSectionBody). */
 QLabel#DashboardActivityLogBody {
-    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 12px;
     color: #7c8798;
 }
@@ -371,7 +412,7 @@ QPlainTextEdit#LogView {
     border: 1px solid #232b34;
     border-radius: 6px;
     color: #9fb0bf;
-    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 12px;
 }
 
@@ -417,23 +458,60 @@ QPlainTextEdit#ChatLog {
     color: #d8e0e8;
 }
 
+/* Restyled 2026-07-16 to match the ForMIA mockup's small pill-shaped
+"suggested-prompt chip" (was a full-width left-aligned bar before —
+gui/character_panel.py now also adds these with AlignLeft so the
+layout doesn't stretch them back to full width). */
 QPushButton#SuggestionButton {
-    background-color: transparent;
-    border: 1px solid #232b34;
-    border-radius: 8px;
-    padding: 6px 10px;
-    color: #b8c4cf;
-    font-size: 12px;
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 12px;
+    padding: 6px 12px;
+    color: #38d9c9;
+    font-size: 11px;
     text-align: left;
 }
 
 QPushButton#SuggestionButton:hover {
-    background-color: #1c2530;
-    border: 1px solid #4fd1c5;
-    color: #d8e0e8;
+    background-color: #16292c;
+    border: 1px solid #5eead4;
+    color: #5eead4;
 }
 
 QPushButton#SuggestionButton:pressed {
     background-color: #0d1116;
+}
+
+/* 2026-07-16: Hold to Talk previously had no styling at all — press/
+release was only reflected in the small status label below it, not the
+button itself. [recording="true"] is a dynamic property set from
+modules/assistant/module.py's _set_talk_button_recording(), same
+pattern as QPushButton#HeaderButton[hasUnread]'s notification-bell
+accent above — solid red is the universal "actively recording"
+convention (reusing this theme's existing #e06666 critical-notification
+red rather than inventing a new color), unmistakably different from the
+idle teal-outline look. */
+QPushButton#TalkButton {
+    background-color: #101722;
+    border: 1px solid #38d9c9;
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: #38d9c9;
+}
+
+QPushButton#TalkButton:hover {
+    background-color: #16292c;
+}
+
+QPushButton#TalkButton:disabled {
+    color: #45505a;
+    border: 1px solid #1c232b;
+}
+
+QPushButton#TalkButton[recording="true"] {
+    background-color: #e06666;
+    border: 1px solid #e06666;
+    color: #0d1116;
+    font-weight: 600;
 }
 """

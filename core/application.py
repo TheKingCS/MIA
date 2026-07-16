@@ -19,8 +19,10 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import QTimer
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 
 from core.activity_log_manager import ActivityLogManager
@@ -87,12 +89,44 @@ _ASSISTANT_SCAN_PORTS = (22, 80, 443)
 _ASSISTANT_SCAN_TIMEOUT_SECONDS = 0.3
 
 
+_FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+_BUNDLED_FONT_FILES = (
+    "Inter-Regular.ttf",
+    "Inter-Medium.ttf",
+    "Inter-SemiBold.ttf",
+    "Inter-Bold.ttf",
+    "Inter-ExtraBold.ttf",
+    "JetBrainsMono-Regular.ttf",
+    "JetBrainsMono-Medium.ttf",
+    "JetBrainsMono-Bold.ttf",
+)
+
+
+def _load_bundled_fonts() -> None:
+    """Registers the "ForMIA" design handoff's Inter/JetBrains Mono font
+    files (assets/fonts/, see assets/fonts/NOTICE.md for license/source)
+    with Qt's font database, so gui/styles.py's DARK_FIELD_THEME QSS can
+    reference them by name. Must run after QApplication exists (Qt
+    requirement for QFontDatabase) but before any stylesheet/widget is
+    applied/shown. Neither font is a default system font on a fresh
+    Windows/Linux/Pi install — bundling avoids silently falling back to
+    a generic system font and looking wrong without any visible error.
+    A font file failing to load (missing/corrupt) is logged and skipped
+    rather than crashing boot; Qt's own font-fallback chain (the QSS's
+    own listed fallback fonts) still covers that case gracefully."""
+    for filename in _BUNDLED_FONT_FILES:
+        font_id = QFontDatabase.addApplicationFont(str(_FONTS_DIR / filename))
+        if font_id == -1:
+            log.warning("Could not load bundled font: %s", filename)
+
+
 class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
     def __init__(self) -> None:
         self.qt_app = QApplication(sys.argv)
         self.qt_app.setApplicationName("M.I.A.")
+        _load_bundled_fonts()
 
         self.config = ConfigManager()
         self.events = EventBus()
@@ -324,11 +358,16 @@ class MIAApplication:
         # see docs/ROADMAP.md for why.
         self.context.dashboard_widgets.register(WidgetDescriptor("activity_log", "Activity Log", "\U0001F4DC"))
         self.context.dashboard_widgets.register(WidgetDescriptor("quick_bus", "Quick Bus", "\U0001F39B"))
-        # 2026-07-16: live camera feed of a VMagicMirror-rendered
-        # companion avatar (or any other virtual-camera source) — see
-        # core/avatar_manager.py's docstring for how this works with no
-        # VMagicMirror-specific code at all.
-        self.context.dashboard_widgets.register(WidgetDescriptor("avatar_camera", "Companion Avatar", "\U0001F9D1"))
+        # 2026-07-16: the Companion Avatar widget (core/avatar_manager.py,
+        # gui/widgets/avatar_camera_widget.py) is deliberately NOT
+        # registered here for now — dropped at the user's explicit call
+        # once a real architecture conflict surfaced: VMagicMirror is
+        # Windows-only, but Project 2's Home Cloud machine
+        # (docs/HARDWARE.md) is planned to run Ubuntu for ROCm support,
+        # not Windows. The code is left in place, unregistered rather
+        # than deleted, since it's real and reusable once either a
+        # Linux-native avatar renderer or a network-streaming approach
+        # is decided — see docs/ROADMAP.md's entry for the open options.
 
     def _register_assistant_actions(self) -> None:
         """
