@@ -3582,6 +3582,63 @@ the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
 
+## MIA Home production pipeline GUI: Workshop & Electronics gains 4 new tabs (2026-07-16)
+
+The GUI for all four production-pipeline slices above, at the user's
+explicit call. Scoped via `AskUserQuestion` first: **placement** —
+new tabs in the existing Workshop & Electronics module (its own
+docstring already flagged production/fab as future scope, and
+`modules/field_kit/module.py` already established the "one module,
+several tabs" pattern for exactly this "multiple sub-features, one
+`ModuleBase` subclass per folder" situation) rather than a new
+top-level module; **coverage** — all four (Materials/Jobs/Products/
+Ledger) in one pass, not staged further, since the backend already
+fully connects them and a GUI covering only part would feel oddly
+incomplete.
+
+`modules/workshop/module.py` rebuilt around a `QTabWidget` (Components
+unchanged, four new tabs added). Each new tab follows the same list +
+filter + Add/Edit/Delete shape Components already established, plus
+their own real actions: Jobs gets "Consume Material…"/"Produce
+Product…" (the actual `consume_material()`/`produce_product()`
+integration points, not just CRUD); Products gets "Add Listing…"/
+"Remove Last Listing"; Ledger gets "Add Revenue…"/"Record Sale…"/"Add
+Expense…" plus a live Net Profit summary line. One new reusable dialog,
+`gui/pick_item_quantity_dialog.py` — "pick an existing item, enter a
+quantity (and optionally an amount)" is the exact same shape for
+Consume Material, Produce Product, *and* Record Sale, so one
+parametrized dialog replaces three near-identical ones. Five other new
+small dialogs (`add_edit_material_dialog.py`/`add_edit_job_dialog.py`/
+`add_edit_product_dialog.py`/`add_edit_listing_dialog.py`/
+`add_revenue_dialog.py`/`add_expense_dialog.py`) all mirror
+`gui/add_edit_component_dialog.py`'s established shape exactly.
+
+Verified for real, thoroughly, given this is the largest single GUI
+addition this session: 10 new pure-formatting-function tests
+(`format_material_row()`/`format_job_row()`/`format_product_row()`/
+`format_revenue_row()`/`format_expense_row()`, same shape as the
+pre-existing `format_component_row()` test). Plus a real headless-Qt
+smoke test driving the *actual* end-to-end workflow through an isolated
+`WorkshopModule` instance — added a material, a job, and a product;
+consumed material into the job; produced product from the job; added a
+listing; recorded a sale; added an expense — then switched through all
+5 real tabs and screenshotted each, confirming correct computed values
+on screen (job cost, product stock, net profit) matching what the
+managers themselves report. Separately verified all 7 new dialogs'
+field-to-property wiring directly (set widget values, call the
+dialog's own accept handler, assert the exposed `entered_*` properties
+match) — the one part a screenshot alone can't confirm. Confirmed no
+stray files were left in the real `data/` directory afterward.
+
+1274 tests passing (10 new — the GUI/dialog verification itself is
+Qt-widget behavior, covered by the smoke test above, not pytest, same
+test-tier split this project has used throughout).
+
+**This closes out the entire MIA Home production-pipeline arc for this
+session**: backend (`18bb218`→`7a7ab9f`) + GUI (this entry), all in one
+day. Only remaining open item from the original MIA Home scope:
+Fidelity data-access research (the user's own external task).
+
 ## MIA Home production pipeline, slice 4 (final): LedgerManager — schema fully adapted to JSON (2026-07-16)
 
 Fourth and final slice of the production-to-sales pipeline, at the
