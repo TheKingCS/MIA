@@ -360,6 +360,41 @@ QLabel#ConversationCardMeta {
     color: #7a8a99;
 }
 
+/* 2026-07-16: gui/widgets/mission_card.py's MissionCard / gui/widgets/
+objective_card.py's ObjectiveCard — "bigger and more bubbly button-like"
+per the user's explicit request, replacing modules/missions/module.py's
+old plain QListWidget rows. Same shape as #ConversationCard just above
+(clickable card, [selected="true"] dynamic-property accent) but a much
+larger border-radius (20px vs. 8px) is the actual "bubbly" part, plus a
+bigger title font matching the "bigger" ask. Scoped to dark_field only
+for now, same as every ForMIA-era addition — the other 3 themes in
+gui/theme_manager.py don't have this styling yet. */
+QPushButton#MissionCard, QPushButton#ObjectiveCard {
+    background-color: #101722;
+    border: 1px solid #1b222e;
+    border-radius: 20px;
+    text-align: left;
+}
+
+QPushButton#MissionCard:hover, QPushButton#ObjectiveCard:hover {
+    background-color: #16202c;
+}
+
+QPushButton#MissionCard[selected="true"] {
+    border: 2px solid #38d9c9;
+}
+
+QLabel#MissionCardTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e7ecf3;
+}
+
+QLabel#MissionCardMeta {
+    font-size: 12px;
+    color: #7c8798;
+}
+
 /*
 QSlider falls back to the native OS/platform look if left unstyled —
 same invisible-on-this-background risk this file's own QCheckBox

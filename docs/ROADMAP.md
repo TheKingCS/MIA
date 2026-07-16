@@ -3582,6 +3582,59 @@ the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
 
+## Missions redesign, chat bubble overflow fix, boot orb re-centered (2026-07-16)
+
+Three more pieces of user feedback after actually using the app.
+
+**Missions module redesign** — replaced the plain `QListWidget` rows
+(both Missions and Objectives) with big "bubbly" cards
+(`gui/widgets/mission_card.py`'s `MissionCard`, `gui/widgets/
+objective_card.py`'s `ObjectiveCard`), at the user's explicit request
+for "bigger and more bubbly button-like choosing... and interacting."
+Modeled directly on the existing `gui/widgets/conversation_card.py`'s
+`ConversationCard` pattern (a `QPushButton` with `QLabel` children, a
+`selected` dynamic property, nested buttons whose clicks don't also
+fire the parent's) — just bigger (96/88px minimum height vs. 60px,
+16px titles vs. 13px) and rounder (20px border-radius vs. 8px — the
+actual "bubbly" part). Each card now carries its own inline actions
+(Mission: ✎ edit / ✕ delete; Objective: real `QProgressBar` + "+1"
+tally / ✕ delete) instead of a separate "select from the list, then
+click a button below" two-step — a genuinely more direct interaction,
+not just a visual reskin. Scoped to `dark_field` only, same as every
+ForMIA-era styling addition.
+
+**Chat bubble text overflow, sidebar** — a real bug in the
+2026-07-16 chat-bubble build: longer, realistic assistant responses
+had their text clipped at the bottom of the bubble. Root cause found by
+direct measurement (not guessed): `QLabel.heightForWidth()` and
+`.sizeHint().height()` disagreed with each other by 16px+ on longer
+text, even with the correct 12px font already resolved — neither Qt
+API alone is reliable for this. Fixed by taking the max of both plus a
+small safety buffer, erring toward "a little extra empty space at the
+bottom of a bubble" rather than clipped text.
+
+**Boot orb re-centered** — the previous "sits low" fix (a fixed
+`addSpacing(48)` before the subtitle) overcorrected into "sits too
+high." Root cause: earlier attempts balanced stretch *around the whole
+content block* without first checking whether the fixed content above
+the orb (just the subtitle) actually matched the fixed content below it
+(status + progress) — it didn't, so equal stretches still left the orb
+off-center. Fixed by symmetric 20px spacing on both sides of the orb
+and one equal stretch above/below the whole now-balanced group. Bumped
+again per "a bit bigger" (380px → 420px, window 680x580 → 720x640).
+
+Verified for real: existing `format_mission_row()`/`format_objective_row()`
+pure-function tests still pass unchanged (both stayed valid, just no
+longer literally what's on screen — MissionCard/ObjectiveCard build
+their own richer display from the same data). A real headless-Qt smoke
+test exercising the actual Missions workflow end-to-end (select a
+mission card, click a real "+1" button, confirm progress actually
+updates via `core.mission_manager`, screenshot both the unselected and
+selected/incremented states) plus a real long-message chat bubble
+screenshot and a re-centered boot-orb screenshot. 1274 tests passing
+throughout (unaffected — all three are Qt-widget/styling behavior, not
+pytest, per this project's established test-tier split).
+
 ## MIA Home production pipeline GUI: Workshop & Electronics gains 4 new tabs (2026-07-16)
 
 The GUI for all four production-pipeline slices above, at the user's

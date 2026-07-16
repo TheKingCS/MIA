@@ -59,9 +59,18 @@ class ChatBubble(QFrame):
         # lines) regardless of adjustSize()/activate()/explicit show()
         # calls — every wrapped bubble rendered with its first and last
         # lines clipped/overlapping. Fixed by computing the exact needed
-        # height ourselves via heightForWidth() and setting it as a
-        # *fixed* size — this removes Qt's automatic negotiation from the
-        # picture entirely rather than trying to coax it into working.
+        # height ourselves and setting it as a *fixed* size — this
+        # removes Qt's automatic negotiation from the picture entirely
+        # rather than trying to coax it into working.
         label.setFixedWidth(_MAX_LABEL_WIDTH)
-        label.setFixedHeight(label.heightForWidth(_MAX_LABEL_WIDTH))
+        # heightForWidth() and sizeHint().height() disagree with each
+        # other by a line or more on longer, real assistant-length
+        # responses (confirmed via direct measurement: 224px vs. 240px
+        # for the same label/width/font) — neither Qt API alone is
+        # reliable here. Taking the max of both, plus a small buffer,
+        # errs toward "a little extra empty space at the bottom of a
+        # bubble" rather than the alternative (clipped/cut-off text),
+        # which is the failure this project has actually hit twice now.
+        computed_height = max(label.heightForWidth(_MAX_LABEL_WIDTH), label.sizeHint().height())
+        label.setFixedHeight(computed_height + 6)
         layout.addWidget(label)

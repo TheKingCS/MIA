@@ -11,26 +11,41 @@ gui/add_edit_mission_dialog.py); objectives track progress toward a
 target, either a manually-incremented tally or time computed live from
 the linked Trip's logged splits (core/mission_manager.py).
 
+**2026-07-16 redesign**: replaced the plain QListWidget rows (both
+Missions and Objectives) with big "bubbly" cards
+(gui/widgets/mission_card.py's MissionCard / gui/widgets/
+objective_card.py's ObjectiveCard) — at the user's explicit request for
+"bigger and more bubbly button-like choosing... and interacting."
+Each card carries its own inline actions now (Mission: ✎ edit / ✕
+delete; Objective: +1 tally / ✕ delete), so there's no more separate
+"select from the list, then click a button below" two-step — the
+screen-level button rows are now just "Add Mission"/"Add Objective".
+Same QScrollArea + explicit hide()/setParent(None)/deleteLater()
+rebuild-on-refresh pattern as gui/character_panel.py's chat log, for
+the same reason: this app has hit real ghosted-widget bugs from
+skipping that cleanup step before.
+
 format_mission_row()/format_objective_row() are free functions (not
 methods) — testable without Qt, see tests/test_missions_module.py.
 format_objective_row() takes already-computed progress/is_complete
-rather than a Mission/index pair, so it stays pure or here — the live
-computation itself lives in core.mission_manager.MissionManager.
+rather than a Mission/index pair, so it stays pure — the live
+computation itself lives in core.mission_manager.MissionManager. Both
+are now used for tooltips/logging rather than a literal list row, but
+kept unchanged (and still tested) since MissionCard/ObjectiveCard build
+their own richer display from the same underlying data.
 """
 
 from __future__ import annotations
 
 from typing import Optional
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
-    QHBoxLayout,
+    QFrame,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -39,6 +54,8 @@ from core.mission_manager import Mission, Objective
 from gui.add_edit_mission_dialog import AddEditMissionDialog
 from gui.add_edit_objective_dialog import AddEditObjectiveDialog
 from gui.delete_confirm_dialog import DeleteConfirmDialog
+from gui.widgets.mission_card import MissionCard
+from gui.widgets.objective_card import ObjectiveCard
 from modules.module_base import ModuleBase
 
 
@@ -62,8 +79,13 @@ class MissionsModule(ModuleBase):
 
     def __init__(self, context) -> None:
         super().__init__(context)
-        self._mission_list: Optional[QListWidget] = None
-        self._objective_list: Optional[QListWidget] = None
+        self._mission_scroll: Optional[QScrollArea] = None
+        self._mission_cards_container: Optional[QWidget] = None
+        self._mission_cards_layout: Optional[QVBoxLayout] = None
+        self._objective_scroll: Optional[QScrollArea] = None
+        self._objective_cards_container: Optional[QWidget] = None
+        self._objective_cards_layout: Optional[QVBoxLayout] = None
+        self._selected_mission_id: Optional[str] = None
 
     def get_widget(self) -> QWidget:
         widget = QWidget()
@@ -83,106 +105,114 @@ class MissionsModule(ModuleBase):
         mission_title.setObjectName("SubtitleLabel")
         layout.addWidget(mission_title)
 
-        self._mission_list = QListWidget()
-        self._mission_list.currentItemChanged.connect(self._on_mission_selected)
-        layout.addWidget(self._mission_list, stretch=1)
+        self._mission_scroll, self._mission_cards_container, self._mission_cards_layout = self._build_card_scroll()
+        layout.addWidget(self._mission_scroll, stretch=1)
 
-        mission_buttons = QHBoxLayout()
         add_mission_button = QPushButton("Add Mission")
         add_mission_button.clicked.connect(self._on_add_mission)
-        mission_buttons.addWidget(add_mission_button)
-
-        edit_mission_button = QPushButton("Edit Selected")
-        edit_mission_button.clicked.connect(self._on_edit_mission)
-        mission_buttons.addWidget(edit_mission_button)
-
-        delete_mission_button = QPushButton("Delete Selected")
-        delete_mission_button.clicked.connect(self._on_delete_mission)
-        mission_buttons.addWidget(delete_mission_button)
-        layout.addLayout(mission_buttons)
+        layout.addWidget(add_mission_button)
 
         objective_title = QLabel("Objectives in selected Mission")
         objective_title.setObjectName("SubtitleLabel")
         layout.addWidget(objective_title)
 
-        self._objective_list = QListWidget()
-        layout.addWidget(self._objective_list, stretch=1)
+        self._objective_scroll, self._objective_cards_container, self._objective_cards_layout = (
+            self._build_card_scroll()
+        )
+        layout.addWidget(self._objective_scroll, stretch=1)
 
-        objective_buttons = QHBoxLayout()
         add_objective_button = QPushButton("Add Objective")
         add_objective_button.clicked.connect(self._on_add_objective)
-        objective_buttons.addWidget(add_objective_button)
+        layout.addWidget(add_objective_button)
 
-        increment_button = QPushButton("+1 Tally")
-        increment_button.clicked.connect(self._on_increment_objective)
-        objective_buttons.addWidget(increment_button)
-
-        delete_objective_button = QPushButton("Delete Selected")
-        delete_objective_button.clicked.connect(self._on_delete_objective)
-        objective_buttons.addWidget(delete_objective_button)
-        layout.addLayout(objective_buttons)
-
-        self._refresh_mission_list()
+        self._refresh_mission_cards()
         return widget
+
+    @staticmethod
+    def _build_card_scroll() -> tuple[QScrollArea, QWidget, QVBoxLayout]:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        container = QWidget()
+        container_layout = QVBoxLayout(container)
+        container_layout.setContentsMargins(2, 2, 2, 2)
+        container_layout.setSpacing(10)
+        container_layout.addStretch()
+        scroll.setWidget(container)
+
+        return scroll, container, container_layout
 
     # ------------------------------------------------------------------
     # Refresh
     # ------------------------------------------------------------------
 
-    def _refresh_mission_list(self) -> None:
-        previously_selected = self._selected_mission_id()
+    def _refresh_mission_cards(self) -> None:
+        """Full rebuild on every call, same "clear and refill" shape as
+        gui/character_panel.py's chat log — explicit hide() +
+        setParent(None) before deleteLater(), same reasoning."""
+        while self._mission_cards_layout.count():
+            item = self._mission_cards_layout.takeAt(0)
+            card = item.widget()
+            if card is not None:
+                card.hide()
+                card.setParent(None)
+                card.deleteLater()
 
-        self._mission_list.clear()
-        for mission in self.context.missions.all_missions():
+        missions = self.context.missions.all_missions()
+        if self._selected_mission_id is not None and not any(
+            m.mission_id == self._selected_mission_id for m in missions
+        ):
+            self._selected_mission_id = None
+
+        for mission in missions:
             trip_name = ""
-            if mission.trip_id:
+            if mission.trip_id and self.context.trips is not None:
                 trip = self.context.trips.get_trip(mission.trip_id)
                 trip_name = trip.name if trip is not None else ""
-            item = QListWidgetItem(format_mission_row(mission, trip_name))
-            item.setData(Qt.ItemDataRole.UserRole, mission.mission_id)
-            self._mission_list.addItem(item)
+            card = MissionCard(mission, trip_name)
+            card.set_selected(mission.mission_id == self._selected_mission_id)
+            card.activated.connect(self._on_mission_selected)
+            card.edit_requested.connect(self._on_edit_mission)
+            card.delete_requested.connect(self._on_delete_mission)
+            self._mission_cards_layout.addWidget(card)
+            card.show()
 
-        if previously_selected is not None:
-            for row in range(self._mission_list.count()):
-                item = self._mission_list.item(row)
-                if item.data(Qt.ItemDataRole.UserRole) == previously_selected:
-                    self._mission_list.setCurrentItem(item)
-                    break
-        self._refresh_objective_list()
+        self._mission_cards_layout.addStretch()
+        self._refresh_objective_cards()
 
-    def _refresh_objective_list(self) -> None:
-        self._objective_list.clear()
-        mission_id = self._selected_mission_id()
-        if mission_id is None:
+    def _refresh_objective_cards(self) -> None:
+        while self._objective_cards_layout.count():
+            item = self._objective_cards_layout.takeAt(0)
+            card = item.widget()
+            if card is not None:
+                card.hide()
+                card.setParent(None)
+                card.deleteLater()
+
+        if self._selected_mission_id is None:
+            self._objective_cards_layout.addStretch()
             return
-        mission = self.context.missions.get_mission(mission_id)
+
+        mission = self.context.missions.get_mission(self._selected_mission_id)
         if mission is None:
+            self._objective_cards_layout.addStretch()
             return
+
         for index, objective in enumerate(mission.objectives):
-            progress = self.context.missions.objective_progress(mission_id, index) or 0.0
-            is_complete = self.context.missions.is_objective_complete(mission_id, index)
-            item = QListWidgetItem(format_objective_row(objective, progress, is_complete))
-            item.setData(Qt.ItemDataRole.UserRole, index)
-            self._objective_list.addItem(item)
+            progress = self.context.missions.objective_progress(self._selected_mission_id, index) or 0.0
+            is_complete = self.context.missions.is_objective_complete(self._selected_mission_id, index)
+            card = ObjectiveCard(index, objective, progress, is_complete)
+            card.increment_requested.connect(self._on_increment_objective)
+            card.delete_requested.connect(self._on_delete_objective)
+            self._objective_cards_layout.addWidget(card)
+            card.show()
 
-    def _on_mission_selected(self) -> None:
-        self._refresh_objective_list()
+        self._objective_cards_layout.addStretch()
 
-    # ------------------------------------------------------------------
-    # Selection helpers
-    # ------------------------------------------------------------------
-
-    def _selected_mission_id(self) -> Optional[str]:
-        item = self._mission_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
-
-    def _selected_objective_index(self) -> Optional[int]:
-        item = self._objective_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+    def _on_mission_selected(self, mission_id: str) -> None:
+        self._selected_mission_id = mission_id
+        self._refresh_mission_cards()
 
     # ------------------------------------------------------------------
     # Mission actions
@@ -194,43 +224,38 @@ class MissionsModule(ModuleBase):
             return
 
         self.context.missions.add_mission(name=dialog.entered_name, trip_id=dialog.entered_trip_id)
-        self._refresh_mission_list()
+        self._refresh_mission_cards()
 
-    def _on_edit_mission(self) -> None:
-        mission_id = self._selected_mission_id()
-        if mission_id is None:
-            QMessageBox.information(None, "No Mission Selected", "Select a mission to edit.")
-            return
-
+    def _on_edit_mission(self, mission_id: str) -> None:
         mission = self.context.missions.get_mission(mission_id)
+        if mission is None:
+            return
         dialog = AddEditMissionDialog(self.context, mission=mission)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         self.context.missions.update_mission(mission_id, name=dialog.entered_name, status=dialog.entered_status)
-        self._refresh_mission_list()
+        self._refresh_mission_cards()
 
-    def _on_delete_mission(self) -> None:
-        mission_id = self._selected_mission_id()
-        if mission_id is None:
-            QMessageBox.information(None, "No Mission Selected", "Select a mission to delete.")
-            return
-
+    def _on_delete_mission(self, mission_id: str) -> None:
         mission = self.context.missions.get_mission(mission_id)
+        if mission is None:
+            return
         dialog = DeleteConfirmDialog(mission.name, is_directory=False)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         self.context.missions.delete_mission(mission_id)
-        self._refresh_mission_list()
+        if self._selected_mission_id == mission_id:
+            self._selected_mission_id = None
+        self._refresh_mission_cards()
 
     # ------------------------------------------------------------------
     # Objective actions
     # ------------------------------------------------------------------
 
     def _on_add_objective(self) -> None:
-        mission_id = self._selected_mission_id()
-        if mission_id is None:
+        if self._selected_mission_id is None:
             QMessageBox.information(None, "No Mission Selected", "Select a mission to add an objective to.")
             return
 
@@ -239,18 +264,16 @@ class MissionsModule(ModuleBase):
             return
 
         self.context.missions.add_objective(
-            mission_id, dialog.entered_description, dialog.entered_metric_type, dialog.entered_target
+            self._selected_mission_id, dialog.entered_description, dialog.entered_metric_type, dialog.entered_target
         )
-        self._refresh_objective_list()
+        self._refresh_objective_cards()
 
-    def _on_increment_objective(self) -> None:
-        mission_id = self._selected_mission_id()
-        index = self._selected_objective_index()
-        if mission_id is None or index is None:
-            QMessageBox.information(None, "No Objective Selected", "Select an objective to increment.")
+    def _on_increment_objective(self, index: int) -> None:
+        if self._selected_mission_id is None:
             return
-
-        mission = self.context.missions.get_mission(mission_id)
+        mission = self.context.missions.get_mission(self._selected_mission_id)
+        if mission is None or not (0 <= index < len(mission.objectives)):
+            return
         if mission.objectives[index].metric_type != "tally":
             QMessageBox.information(
                 None, "Not a Tally Objective",
@@ -258,20 +281,18 @@ class MissionsModule(ModuleBase):
             )
             return
 
-        self.context.missions.increment_tally(mission_id, index)
-        self._refresh_objective_list()
+        self.context.missions.increment_tally(self._selected_mission_id, index)
+        self._refresh_objective_cards()
 
-    def _on_delete_objective(self) -> None:
-        mission_id = self._selected_mission_id()
-        index = self._selected_objective_index()
-        if mission_id is None or index is None:
-            QMessageBox.information(None, "No Objective Selected", "Select an objective to delete.")
+    def _on_delete_objective(self, index: int) -> None:
+        if self._selected_mission_id is None:
             return
-
-        mission = self.context.missions.get_mission(mission_id)
+        mission = self.context.missions.get_mission(self._selected_mission_id)
+        if mission is None or not (0 <= index < len(mission.objectives)):
+            return
         dialog = DeleteConfirmDialog(mission.objectives[index].description, is_directory=False)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
-        self.context.missions.delete_objective(mission_id, index)
-        self._refresh_objective_list()
+        self.context.missions.delete_objective(self._selected_mission_id, index)
+        self._refresh_objective_cards()

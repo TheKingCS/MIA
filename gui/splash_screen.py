@@ -46,12 +46,10 @@ class SplashScreen(QWidget):
         # A resizable default size, not setFixedSize() — MIAApplication
         # now routes this through _display(), which calls
         # showFullScreen() in kiosk mode. A hard fixed size would cap
-        # the window at 680x580 even in fullscreen state, leaving most
-        # of the screen blank instead of actually filling it. Grown
-        # again (560x460 -> 680x580) to fit the bigger 380px orb below —
-        # the first size bump (480x380 -> 560x460, orb 200 -> 300) was
-        # judged still too small.
-        self.resize(680, 580)
+        # the window at 720x640 even in fullscreen state, leaving most
+        # of the screen blank instead of actually filling it. Grown a
+        # third time (680x580 -> 720x640) to fit the bigger 420px orb.
+        self.resize(720, 640)
         self._build_ui()
         self._center_on_screen()
 
@@ -60,14 +58,15 @@ class SplashScreen(QWidget):
         layout.setContentsMargins(40, 32, 40, 32)
         layout.setSpacing(12)
 
-        # A fixed addSpacing() before the subtitle, not a flexible
-        # addStretch() — a stretch here previously made the whole group
-        # sit too low (competing against the smaller fixed content below
-        # the orb), so it was removed entirely, which then over-
-        # corrected and put the group too close to the top instead. A
-        # fixed pixel offset lands between the two without reintroducing
-        # either imbalance.
-        layout.addSpacing(48)
+        # Genuinely centered this time: one equal stretch above and
+        # below the whole (subtitle + orb + status + progress) group,
+        # with symmetric fixed spacing (20px) on both sides of the orb
+        # itself — the two earlier attempts each had lopsided fixed
+        # content on one side only (just the subtitle above vs.
+        # status+progress below), so equal stretches still left the orb
+        # off-center; balancing the fixed content first is what actually
+        # centers it.
+        layout.addStretch(1)
 
         # "M.I.A." itself is rendered inside the presence orb (see
         # gui/presence_widget.py) rather than as a separate label here.
@@ -75,7 +74,7 @@ class SplashScreen(QWidget):
         subtitle.setObjectName("BootSubtitleLabel")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self._core = PresenceWidget(diameter=380)
+        self._core = PresenceWidget(diameter=420)
         self._core.set_glyph("M.I.A.")
         # Deliberately no set_state() call — PresenceWidget already
         # defaults to "idle" (blue-teal breathing, no rotating ring),
@@ -95,11 +94,12 @@ class SplashScreen(QWidget):
         self._progress.setTextVisible(False)
 
         layout.addWidget(subtitle)
-        layout.addSpacing(24)
+        layout.addSpacing(20)
         layout.addWidget(self._core, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addStretch()
+        layout.addSpacing(20)
         layout.addWidget(self._status_label)
         layout.addWidget(self._progress, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addStretch(1)
 
     def _center_on_screen(self) -> None:
         screen = self.screen()
