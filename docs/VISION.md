@@ -480,12 +480,27 @@ that fact-finding doesn't need to happen again next session.
   manager, not a reuse of the general Inventory tool or the electronics
   Component DB — same "mixing unrelated domains serves neither well"
   reasoning `component_manager.py`'s own docstring already gives.
-  **`jobs`/`products`/`product_listings`/`revenue`/`expenses`/
-  `material_consumption` are NOT built yet** — later slices once
-  Materials is proven; `cost_rates`/`labor_rate` will likely become
-  plain `workshop.*` config keys rather than their own managers
-  (simple scalars, not many-record entities) once jobs are actually
-  built, not decided yet.
+  **`jobs` built next, 2026-07-16 — see `core/job_manager.py`.**
+  `material_consumption` nests as a plain list on each `Job` rather than
+  being a fourth separate manager — same "a record owns a list of its
+  own sub-items" shape as `Mission.objectives`/Trip's gear list.
+  `cost_rates`/`labor_rate` resolved as predicted: a single
+  `workshop.labor_rate_per_hour` config key (defaults to `0.0` — an
+  unset rate shouldn't silently inflate every job's cost with a made-up
+  number), not their own managers. `job_material_cost()`/
+  `job_labor_cost()`/`job_total_cost()` are plain functions over
+  already-loaded `Job`/`Material` records, same "compute on demand"
+  precedent as `materials_needing_restock()` — a job's cost is always
+  read live against current material prices/labor rate, never a
+  snapshot that could drift. `JobManager.consume_material()` is the
+  one real integration point — it reaches into
+  `core/material_manager.py` to actually deduct the consumed quantity
+  from `quantity_on_hand`, clamped at zero rather than going negative
+  (same stance `MaterialManager.update_material()` already takes) —
+  this is what makes Materials + Jobs a genuinely connected system
+  rather than two independent lists. **`products`/`product_listings`/
+  `revenue`/`expenses` are still NOT built** — later slices once Jobs
+  is proven, same one-piece-at-a-time discipline.
 
 ### Three financial widget sources, meant to converge into one Net Worth view
 

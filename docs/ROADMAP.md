@@ -3582,6 +3582,58 @@ the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
 
+## MIA Home production pipeline, slice 2: JobManager (2026-07-16)
+
+Direct continuation of the Materials slice above, at the user's
+explicit call — Materials alone has nothing consuming it yet, so this
+is what actually makes the two-manager system useful. New
+`core/job_manager.py`: `Job` (name/description/status — one of
+`JOB_STATUSES` = Planned/In Progress/Complete/Cancelled, same
+fixed-vocabulary plain-str pattern as `Project.status`/
+`Trip.activity_type` — /labor_hours/notes) holding a plain list of
+`MaterialConsumptionEntry` (material_id + quantity_used) rather than a
+fourth separate manager for what's really just line items belonging to
+one job, same shape as `Mission.objectives`.
+
+**The real integration point**: `JobManager.consume_material()` both
+records the consumption entry *and* reaches into
+`core/material_manager.py` (`self.context.materials`) to actually
+deduct the used quantity from `quantity_on_hand` — clamped at zero
+rather than going negative, matching `MaterialManager.update_material()`'s
+own stance (a real inventory count can drift from what's on hand; the
+job still genuinely happened either way, so don't block it). This is
+what makes Materials + Jobs a connected system, not two independent
+lists — a job's consumption now visibly affects
+`materials_needing_restock()`.
+
+**`cost_rates`/`labor_rate` resolved exactly as predicted** when
+Materials was built: a single `workshop.labor_rate_per_hour` config
+key (defaults to `0.0`, so an unset rate doesn't silently inflate every
+job's cost), not their own managers — there was never enough there to
+justify more than a scalar config value. `job_material_cost()`/
+`job_labor_cost()`/`job_total_cost()` are plain functions computing
+over already-loaded `Job`/`Material` records (`JobManager.total_cost()`
+wraps them, pulling live material prices and the configured labor rate
+fresh on every call) — same "compute on demand so it can never go
+stale" precedent as `materials_needing_restock()`/
+`core/memory_manager.py`, replacing the proposed schema's implied
+costing logic without a database underneath it.
+
+**Not built yet, explicit next slices**: `products`/`product_listings`/
+`revenue`/`expenses` (the actual sales side this production pipeline
+feeds into). No GUI wired either — core/-layer only, same pattern as
+every other MIA Home piece this session.
+
+25 new tests (`tests/test_job_manager.py`) — pure cost-function tests,
+full CRUD, and dedicated `consume_material()` integration tests
+(isolating both `MaterialManager` and `JobManager` in the same
+tmp_path, same "combined-manager fixture" pattern as
+`test_mission_manager.py`'s Trip/Waypoint/Expedition isolation)
+confirming stock genuinely deducts, clamps at zero, and persists
+correctly across a fresh manager reload. Plus a real headless boot
+smoke test confirming the manager constructs cleanly with no stray
+file written. 1204 tests passing (25 new).
+
 ## mia_home_schema.sql adapted to JSON: MaterialManager (2026-07-16)
 
 Fourth and (for now) final slice of MIA Home's expanded scope, same

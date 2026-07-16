@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
     from core.inventory_manager import InventoryManager
+    from core.job_manager import JobManager
     from core.journal_manager import JournalManager
     from core.llm_manager import LLMManager
     from core.memory_manager import MemoryManager
@@ -89,6 +90,7 @@ class AppContext:
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
     materials: Optional["MaterialManager"] = field(default=None, repr=False)
+    jobs: Optional["JobManager"] = field(default=None, repr=False)
     activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
     waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
     devices: Optional["DeviceFramework"] = field(default=None, repr=False)
