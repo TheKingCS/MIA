@@ -3514,8 +3514,9 @@ milestones yet; tracked as real follow-up work, not just aspiration:
 - [x] Decide the snapshot ingestion mechanism (watched folder vs. manual
       upload) for Kraken/real-estate export files — **watched folder,
       built 2026-07-16, see the dedicated entry below**
-- [ ] Build real estate + Kraken ingestion widgets (hardware-independent,
-      safe to build now, pre-Project-2-migration)
+- [x] Build real estate + Kraken ingestion widgets (hardware-independent,
+      safe to build now, pre-Project-2-migration) — **built 2026-07-16,
+      see the dedicated entry below**
 - [ ] Confirm what Fidelity actually exposes before committing to a
       brokerage widget approach
 - [ ] Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
@@ -3577,6 +3578,49 @@ instance. Plus a real headless smoke test through the full
 the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
+
+## Real Estate + Kraken Agent + Net Worth dashboard widgets (2026-07-16)
+
+Immediate follow-up, same day — the widgets that actually consume
+`core/finance_manager.py`'s ingestion above. Three new registered
+dashboard widgets (`gui/home_dashboard.py` + `core/application.py`),
+same framework every other widget uses:
+
+- **Real Estate** — reads the `real_estate_portfolio` source's
+  `summary.total_equity`/`monthly_cash_flow`, the one fully-confirmed
+  field shape (directly from `docs/VISION.md`'s worked example).
+- **Kraken Agent** — reads the `kraken_trading_agent` source's
+  `summary.total_value`/`gain_loss_pct`. **The exact source-string tag
+  is this project's own best-guess placeholder, not confirmed anywhere**
+  (`gui/home_dashboard.py`'s `_KRAKEN_SOURCE` constant, flagged in a
+  comment right there) — re-verify against the real Kraken export code
+  once available and update it if it differs.
+- **Net Worth** — sums each currently-known snapshot's own
+  `summary.total_value` (deliberately *not* reusing any snapshot's own
+  self-reported `combined_net_worth` field, which per `VISION.md` is
+  the real-estate export's own approximation using manually-entered
+  placeholder values for whatever it didn't have real data for — not a
+  value meant to be re-summed across independent sources). Shows how
+  many sources actually contributed rather than silently overstating
+  completeness if one source has no snapshot yet.
+
+All three degrade to "No snapshot imported yet" / "No financial
+snapshots imported yet" until a real export file gets dropped in —
+same graceful-degradation stance as every hardware-optional widget
+already on this dashboard (Volume, the paused Companion Avatar).
+No menu actions on any of the three — there's no dedicated Finance
+module/screen to open yet (this pass is dashboard-only), same as
+Activity Log's card.
+
+Verified for real: 13 new pure-formatting-function tests
+(`tests/test_home_dashboard.py`) plus a real headless-Qt smoke test —
+built a `HomeDashboard` against an isolated `FinanceManager` (tmp_path
+import folder + tmp_path data dir, real repo state never touched),
+confirmed the empty state renders correctly, then dropped real
+real-estate + Kraken-shaped JSON files in, called
+`scan_for_new_snapshots()`, and confirmed all three widgets update to
+the correct computed values via a screenshot. 1152 tests passing (13
+new).
 
 ## Companion Avatar dashboard widget: VMagicMirror camera integration (2026-07-16)
 

@@ -390,6 +390,15 @@ class MIAApplication:
         # than deleted, since it's real and reusable once either a
         # Linux-native avatar renderer or a network-streaming approach
         # is decided — see docs/ROADMAP.md's entry for the open options.
+        # 2026-07-16: MIA Home's expanded scope (docs/VISION.md) —
+        # real estate + Kraken agent widgets over
+        # core/finance_manager.py's watched-folder snapshot ingestion,
+        # plus a combined Net Worth rollup. Both degrade gracefully to
+        # "No snapshot imported yet" until the user actually drops an
+        # export file in.
+        self.context.dashboard_widgets.register(WidgetDescriptor("real_estate", "Real Estate", "\U0001F3D8"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("kraken_agent", "Kraken Agent", "\U0001F4C8"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("net_worth", "Net Worth", "\U0001F4B0"))
 
     def _register_assistant_actions(self) -> None:
         """

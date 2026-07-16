@@ -117,6 +117,7 @@ from core.activity_log_manager import ActivityLogEntry
 from core.app_context import AppContext
 from core.daily_occasions import calendar_events_today
 from core.dashboard_widgets import WidgetDescriptor
+from core.finance_manager import FinancialSnapshot
 from core.mission_manager import Mission
 from core.power_manager import PowerStatus
 from core.project_manager import Project
@@ -141,6 +142,18 @@ _WIDGET_COLUMN_SPANS: dict[str, int] = {
     "avatar_camera": 2,
 }
 _GRID_COLUMNS = 3
+
+# core.finance_manager.FinancialSnapshot.source values these widgets
+# look up. "real_estate_portfolio" is confirmed directly from
+# docs/VISION.md's worked example export. "kraken_trading_agent" is
+# this project's own best-guess placeholder — the real Kraken agent's
+# exact source tag isn't confirmed anywhere yet (see
+# core/finance_manager.py's docstring); re-verify this string against
+# the actual Kraken export code once it's available, and update it
+# here (and in any already-dropped-in real snapshot files) if it
+# differs.
+_REAL_ESTATE_SOURCE = "real_estate_portfolio"
+_KRAKEN_SOURCE = "kraken_trading_agent"
 
 
 def format_clock_time(now: datetime) -> str:
@@ -200,6 +213,69 @@ def format_activity_log_line(entries: list[ActivityLogEntry]) -> str:
     return "  //  ".join(f"{entry.timestamp[11:16]} {entry.summary}" for entry in entries)
 
 
+def format_real_estate_line(snapshot: Optional[FinancialSnapshot]) -> str:
+    """Pure formatting logic — testable without Qt. Reads
+    docs/VISION.md's documented real-estate export shape directly
+    (`summary.total_equity`/`monthly_cash_flow`) — this is the one
+    fully-confirmed worked example, unlike Kraken's (see
+    format_kraken_line() below)."""
+    if snapshot is None:
+        return "No snapshot imported yet."
+    summary = snapshot.data.get("summary", {})
+    equity = summary.get("total_equity")
+    if equity is None:
+        return "Snapshot imported, but no summary data found."
+    line = f"${equity:,.0f} equity"
+    cash_flow = summary.get("monthly_cash_flow")
+    if cash_flow is not None:
+        line += f"  —  ${cash_flow:,.0f}/mo cash flow"
+    return line
+
+
+def format_kraken_line(snapshot: Optional[FinancialSnapshot]) -> str:
+    """Pure formatting logic — testable without Qt. Deliberately reads
+    only the fields docs/VISION.md documents as *shared* between both
+    export sources (summary.total_value/gain_loss_pct) — the real
+    Kraken agent's exact export schema isn't confirmed yet (see
+    core/finance_manager.py's docstring), so this degrades to "no
+    summary data" rather than assuming any field beyond that shared
+    shape is actually present."""
+    if snapshot is None:
+        return "No snapshot imported yet."
+    summary = snapshot.data.get("summary", {})
+    total_value = summary.get("total_value")
+    if total_value is None:
+        return "Snapshot imported, but no summary data found."
+    line = f"${total_value:,.0f}"
+    gain_loss_pct = summary.get("gain_loss_pct")
+    if gain_loss_pct is not None:
+        sign = "+" if gain_loss_pct >= 0 else ""
+        line += f"  ({sign}{gain_loss_pct:.1f}%)"
+    return line
+
+
+def format_net_worth_line(snapshots: list[FinancialSnapshot]) -> str:
+    """Pure formatting logic — testable without Qt. Deliberately sums
+    each snapshot's own `summary.total_value` rather than reusing any
+    snapshot's self-reported `combined_net_worth` field — per
+    docs/VISION.md, that field is the real-estate export's own
+    approximation using manually-entered placeholder values for
+    whatever it didn't have real data for, not a value meant to be
+    re-summed across sources. Snapshots missing `total_value` are
+    excluded (not treated as zero) and the source count is shown so
+    this never silently overstates itself as more complete than it is."""
+    contributions = [
+        (snapshot.source, snapshot.data.get("summary", {}).get("total_value")) for snapshot in snapshots
+    ]
+    contributions = [(source, value) for source, value in contributions if value is not None]
+    if not contributions:
+        return "No financial snapshots imported yet."
+    total = sum(value for _, value in contributions)
+    count = len(contributions)
+    noun = "source" if count == 1 else "sources"
+    return f"${total:,.0f}  —  from {count} {noun}"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -222,12 +298,21 @@ class HomeDashboard(QFrame):
             "activity_log": self._build_activity_log_widget,
             "quick_bus": self._build_quick_bus_widget,
             "avatar_camera": self._build_avatar_camera_widget,
+            "real_estate": self._build_real_estate_widget,
+            "kraken_agent": self._build_kraken_agent_widget,
+            "net_worth": self._build_net_worth_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
             "mission": self._mission_highlight,
             "volume": self._volume_highlight,
             "current_project": self._current_project_highlight,
+            # real_estate/kraken_agent/net_worth deliberately have no
+            # highlight provider yet — same reasoning as
+            # activity_log/quick_bus below: this is genuinely new,
+            # possibly-empty data (no snapshot imported at all is the
+            # common case until the user actually drops an export file
+            # in), not yet a meaningful spoken-briefing highlight.
             # activity_log/quick_bus deliberately have no highlight
             # provider — "3 recent activity items" isn't a meaningful
             # spoken briefing highlight the way a mission/project count
@@ -464,6 +549,24 @@ class HomeDashboard(QFrame):
             menu_actions=[("Open Projects", lambda: self._open_module("toolbox"))],
         )
         self._widget_bodies["current_project"] = body
+        return card
+
+    def _build_real_estate_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        # No menu_actions — there's no dedicated Finance module/screen
+        # to open yet (this pass is dashboard-only, per
+        # docs/ROADMAP.md), same reasoning Activity Log's card has none.
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["real_estate"] = body
+        return card
+
+    def _build_kraken_agent_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["kraken_agent"] = body
+        return card
+
+    def _build_net_worth_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["net_worth"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -857,6 +960,24 @@ class HomeDashboard(QFrame):
         # quick_bus has no refresh — its two toggles reflect config
         # state set at construction and via their own toggled signal,
         # not the 5s poll every other widget uses.
+        if "real_estate" in self._widget_bodies:
+            self._refresh_real_estate()
+        if "kraken_agent" in self._widget_bodies:
+            self._refresh_kraken_agent()
+        if "net_worth" in self._widget_bodies:
+            self._refresh_net_worth()
+
+    def _refresh_real_estate(self) -> None:
+        snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
+        self._widget_bodies["real_estate"].setText(format_real_estate_line(snapshot))
+
+    def _refresh_kraken_agent(self) -> None:
+        snapshot = self.context.finance.latest_snapshot(_KRAKEN_SOURCE) if self.context.finance else None
+        self._widget_bodies["kraken_agent"].setText(format_kraken_line(snapshot))
+
+    def _refresh_net_worth(self) -> None:
+        snapshots = self.context.finance.all_latest_snapshots() if self.context.finance else []
+        self._widget_bodies["net_worth"].setText(format_net_worth_line(snapshots))
 
     def _refresh_activity_log(self) -> None:
         entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []

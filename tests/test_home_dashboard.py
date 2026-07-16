@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date, datetime
 
 from core.activity_log_manager import ActivityLogEntry
+from core.finance_manager import FinancialSnapshot
 from core.mission_manager import Mission, Objective
 from core.power_manager import PowerStatus
 from core.project_manager import Project
@@ -24,7 +25,10 @@ from gui.home_dashboard import (
     format_clock_date,
     format_clock_time,
     format_current_project_line,
+    format_kraken_line,
+    format_net_worth_line,
     format_power_line,
+    format_real_estate_line,
     format_volume_line,
 )
 
@@ -113,3 +117,74 @@ def test_format_activity_log_line_multiple_entries_joined():
         ActivityLogEntry(entry_id="e2", event_type="battery_check", summary="Battery check ok", timestamp="2026-07-15T14:00:00"),
     ]
     assert format_activity_log_line(entries) == "14:02 Waypoint added  //  14:00 Battery check ok"
+
+
+def _snapshot(source: str, summary: dict) -> FinancialSnapshot:
+    return FinancialSnapshot(
+        source=source, generated_at="2026-07-16T00:00:00.000Z", imported_at="2026-07-16T00:00:00.000Z",
+        data={"source": source, "summary": summary},
+    )
+
+
+def test_format_real_estate_line_no_snapshot():
+    assert format_real_estate_line(None) == "No snapshot imported yet."
+
+
+def test_format_real_estate_line_missing_summary():
+    snapshot = _snapshot("real_estate_portfolio", {})
+    assert format_real_estate_line(snapshot) == "Snapshot imported, but no summary data found."
+
+
+def test_format_real_estate_line_with_equity_only():
+    snapshot = _snapshot("real_estate_portfolio", {"total_equity": 210000})
+    assert format_real_estate_line(snapshot) == "$210,000 equity"
+
+
+def test_format_real_estate_line_with_equity_and_cash_flow():
+    snapshot = _snapshot("real_estate_portfolio", {"total_equity": 210000, "monthly_cash_flow": 875.50})
+    assert format_real_estate_line(snapshot) == "$210,000 equity  —  $876/mo cash flow"
+
+
+def test_format_kraken_line_no_snapshot():
+    assert format_kraken_line(None) == "No snapshot imported yet."
+
+
+def test_format_kraken_line_missing_summary():
+    assert format_kraken_line(_snapshot("kraken_trading_agent", {})) == "Snapshot imported, but no summary data found."
+
+
+def test_format_kraken_line_with_value_only():
+    snapshot = _snapshot("kraken_trading_agent", {"total_value": 8500})
+    assert format_kraken_line(snapshot) == "$8,500"
+
+
+def test_format_kraken_line_with_positive_gain():
+    snapshot = _snapshot("kraken_trading_agent", {"total_value": 8500, "gain_loss_pct": 12.5})
+    assert format_kraken_line(snapshot) == "$8,500  (+12.5%)"
+
+
+def test_format_kraken_line_with_negative_gain():
+    snapshot = _snapshot("kraken_trading_agent", {"total_value": 8500, "gain_loss_pct": -4.2})
+    assert format_kraken_line(snapshot) == "$8,500  (-4.2%)"
+
+
+def test_format_net_worth_line_no_snapshots():
+    assert format_net_worth_line([]) == "No financial snapshots imported yet."
+
+
+def test_format_net_worth_line_excludes_snapshots_missing_total_value():
+    snapshots = [_snapshot("real_estate_portfolio", {})]
+    assert format_net_worth_line(snapshots) == "No financial snapshots imported yet."
+
+
+def test_format_net_worth_line_single_source():
+    snapshots = [_snapshot("real_estate_portfolio", {"total_value": 540000})]
+    assert format_net_worth_line(snapshots) == "$540,000  —  from 1 source"
+
+
+def test_format_net_worth_line_sums_multiple_sources():
+    snapshots = [
+        _snapshot("real_estate_portfolio", {"total_value": 540000}),
+        _snapshot("kraken_trading_agent", {"total_value": 8500}),
+    ]
+    assert format_net_worth_line(snapshots) == "$548,500  —  from 2 sources"
