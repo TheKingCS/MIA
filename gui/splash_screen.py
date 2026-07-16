@@ -60,13 +60,15 @@ class SplashScreen(QWidget):
         layout.setContentsMargins(40, 32, 40, 32)
         layout.setSpacing(12)
 
-        # No leading addStretch() before the subtitle (there was one) —
-        # with equal-weighted stretches on both sides of the orb, the
-        # smaller fixed-height content above it (just the subtitle) vs.
-        # below it (status label + progress bar) meant the whole group
-        # rendered sitting noticeably lower than center. Anchoring the
-        # subtitle near the top margin instead and keeping the stretch
-        # *below* the orb pulls the whole group upward.
+        # A fixed addSpacing() before the subtitle, not a flexible
+        # addStretch() — a stretch here previously made the whole group
+        # sit too low (competing against the smaller fixed content below
+        # the orb), so it was removed entirely, which then over-
+        # corrected and put the group too close to the top instead. A
+        # fixed pixel offset lands between the two without reintroducing
+        # either imbalance.
+        layout.addSpacing(48)
+
         # "M.I.A." itself is rendered inside the presence orb (see
         # gui/presence_widget.py) rather than as a separate label here.
         subtitle = QLabel("Multifunctional Intelligent Assistant")
