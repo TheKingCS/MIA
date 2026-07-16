@@ -38,6 +38,14 @@ voice_models/*
 trip_photos/*
 !trip_photos/.gitkeep
 
+# MIA Home financial snapshot ingestion (docs/VISION.md's "MIA Home's
+# expanded scope" section, core/finance_manager.py) — a watched drop
+# folder for externally-exported Kraken/real-estate JSON snapshots
+# (user-provided external content, not app-owned data/*.json state,
+# same reasoning as Reference Library/Trip Photos above).
+financial_snapshots/*
+!financial_snapshots/.gitkeep
+
 # --- Editors / OS ---
 .vscode/
 .idea/

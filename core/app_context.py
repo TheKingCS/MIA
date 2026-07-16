@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
     from core.expedition_manager import ExpeditionManager
+    from core.finance_manager import FinanceManager
     from core.inventory_manager import InventoryManager
     from core.journal_manager import JournalManager
     from core.llm_manager import LLMManager
@@ -103,6 +104,7 @@ class AppContext:
     user_memories: Optional["UserMemoryManager"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
+    finance: Optional["FinanceManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

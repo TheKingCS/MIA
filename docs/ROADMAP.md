@@ -3511,8 +3511,9 @@ in `VISION.md` — read it fresh before starting any of this rather than
 relying on this one-paragraph pointer. Not scoped into concrete
 milestones yet; tracked as real follow-up work, not just aspiration:
 
-- [ ] Decide the snapshot ingestion mechanism (watched folder vs. manual
-      upload) for Kraken/real-estate export files
+- [x] Decide the snapshot ingestion mechanism (watched folder vs. manual
+      upload) for Kraken/real-estate export files — **watched folder,
+      built 2026-07-16, see the dedicated entry below**
 - [ ] Build real estate + Kraken ingestion widgets (hardware-independent,
       safe to build now, pre-Project-2-migration)
 - [ ] Confirm what Fidelity actually exposes before committing to a
@@ -3522,6 +3523,60 @@ milestones yet; tracked as real follow-up work, not just aspiration:
 - [ ] Decide whether `mia_home_schema.sql` gets adopted as-is, adapted to
       this project's persisted-JSON-manager convention, or something in
       between
+
+## MIA Home financial snapshot ingestion: watched-folder mechanism built (2026-07-16)
+
+First real slice of "MIA Home's expanded scope" (see the section above
+in `VISION.md`), picked deliberately as the one genuine blocking
+decision — the real estate/Kraken ingestion widgets can't be built
+without it. Confirmed via `AskUserQuestion`: **watched folder**, not a
+manual upload button — both source tools (the Kraken trading agent, the
+real estate portfolio dashboard) already require a manual export step
+on the user's end, so the only remaining manual action is dropping the
+file into one folder; Home picks it up from there automatically,
+reusing the same "periodic scan, no user click needed" pattern already
+established by v0.19's Home Dock auto-import.
+
+New `core/finance_manager.py` (`AppContext.finance`) — a
+`financial_snapshots/` folder (sibling of `data/`, same "user-provided
+external content, not app-owned state" precedent as
+`reference_library/`/`trip_photos/`, configurable via
+`finance.snapshot_import_folder`). `core/application.py` polls it every
+60s via a new `_finance_snapshot_timer` (same "always alive for the
+whole session" pattern as the alarm/power/daily-occasion timers),
+firing a notification for each newly-imported snapshot.
+`parse_snapshot_content()` deliberately only requires `source`/
+`generated_at` — every other field is accepted opaquely into
+`.data` rather than validated against `VISION.md`'s one worked example,
+since the real Kraken export's exact schema isn't confirmed yet and
+being strict here risks rejecting a real, valid export over a guessed
+field. A snapshot only replaces an existing one for the same `source`
+if its `generated_at` sorts newer (plain ISO-8601 string comparison),
+so a stale re-dropped file can't regress already-imported data.
+Processed files move to `imported/` (kept, not deleted) or `failed/`
+(so a broken file doesn't get re-logged every single poll forever) —
+never left in the watched folder to be reprocessed.
+
+Deliberately NOT built this pass — genuinely a separate, later
+decision: any actual "combined net worth" computation across multiple
+snapshot sources. The recommended three-widget-plus-rollup split (see
+`VISION.md`) needs the real Kraken export's exact field shape first,
+which isn't confirmed — this manager only stores/exposes each source's
+raw snapshot (`latest_snapshot(source)`/`all_latest_snapshots()`),
+leaving any cross-source math to whichever pass builds the actual
+widgets next.
+
+Verified for real: 16 new tests (`tests/test_finance_manager.py`) — the
+pure `parse_snapshot_content()` validation logic, plus a real tmp_path
+watched folder exercising genuine file moves/reads (same "no hardware
+needed, so use the real thing, not mocks" reasoning as
+`test_script_runner.py`) covering create-on-first-run, import, replace-
+if-newer, discard-if-older, and persistence across a fresh manager
+instance. Plus a real headless smoke test through the full
+`MIAApplication` boot confirming the manager constructs, resolves to
+the real `financial_snapshots/` folder, and an empty scan is a genuine
+no-op (no stray `data/financial_snapshots.json` written). 1139 tests
+passing (16 new).
 
 ## Companion Avatar dashboard widget: VMagicMirror camera integration (2026-07-16)
 

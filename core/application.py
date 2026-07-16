@@ -28,6 +28,7 @@ from PySide6.QtWidgets import QApplication
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
+from core.finance_manager import FinanceManager
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
@@ -179,6 +180,7 @@ class MIAApplication:
         self.context.user_memories = UserMemoryManager(self.context)
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
+        self.context.finance = FinanceManager(self.context)
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
@@ -231,11 +233,31 @@ class MIAApplication:
         self._daily_occasion_timer.timeout.connect(self._check_daily_occasions)
         self._daily_occasion_timer.start(300_000)
 
+        # Same "always alive for the whole app session" reasoning as
+        # the timers above — MIA Home's watched-folder financial
+        # snapshot ingestion (core/finance_manager.py) must pick up a
+        # dropped export regardless of which screen is open, not just
+        # while a future finance widget/module happens to be visible.
+        # 60s is frequent enough that "I just dropped a file" gets
+        # noticed promptly without polling the filesystem needlessly
+        # often for what's normally a rare event.
+        self._finance_snapshot_timer = QTimer()
+        self._finance_snapshot_timer.timeout.connect(self._check_finance_snapshots)
+        self._finance_snapshot_timer.start(60_000)
+
     def _check_alarms(self) -> None:
         self.context.alarms.check_due(datetime.now())
 
     def _check_power(self) -> None:
         self.context.power.check_low_battery()
+
+    def _check_finance_snapshots(self) -> None:
+        newly_imported = self.context.finance.scan_for_new_snapshots()
+        for snapshot in newly_imported:
+            self.context.notifications.notify(
+                "New financial snapshot imported",
+                f"Imported an updated snapshot from '{snapshot.source}'.",
+            )
 
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check."""
