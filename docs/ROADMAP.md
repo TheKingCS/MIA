@@ -3582,6 +3582,49 @@ the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
 
+## Boot-up sound: synthesized "growing pulsing energy" effect (2026-07-16)
+
+Last piece of feedback from the same round — a sound to go with the
+pulsing boot orb, "like a growing pulsing energy sound." New
+`core/boot_sound.py`: `generate_boot_sound_samples()` synthesizes a
+rising-pitch "power up" sweep (110Hz → 440Hz, proper chirp synthesis
+via cumulative phase integration, not the naive/wrong
+`sin(2*pi*freq(t)*t)` approach) with a pulsing amplitude envelope on
+top and an overall fade-in ("growing" from silence) + short fade-out
+(avoids a click). Generated programmatically with numpy (already a
+dependency, via `core/voice_manager.py`'s `play()`) rather than
+bundling or fetching an audio file — sidesteps both this project's
+offline-first stance on network-fetched assets and any licensing
+question a found sound effect would raise.
+
+New `core/boot_sound_worker.py`'s `BootSoundWorker` plays it off the
+GUI thread, same reasoning `core/tts_worker.py` already established
+(`VoiceManager.play()`'s `sd.wait()` blocks for the sound's whole
+duration, which would otherwise freeze the boot sequence's own
+`QTimer`-chained steps). Wired into `core/application.py`'s `run()`
+right after the splash screen is displayed — fire-and-forget, degrades
+silently if Voice/PortAudio isn't available, regenerated fresh each
+boot (a few seconds of numpy synthesis is cheap enough that caching
+would be premature).
+
+**Genuinely unverifiable end-to-end in this dev sandbox** — confirmed,
+not assumed, same as every other Voice-adjacent feature here:
+`core/voice_manager.py`'s own docstring already establishes this
+sandbox has no system PortAudio and no audio hardware at all. What
+*is* verified: 8 new tests (`tests/test_boot_sound.py`) covering the
+pure synthesis function directly — correct sample count/duration,
+real int16 non-silent audio, no full-scale clipping, genuine fade-in/
+fade-out behavior, and a real `wave`-module round trip write/read —
+plus a real headless-Qt smoke test confirming the worker starts,
+finishes cleanly, and writes a correctly-sized `.wav` file through
+`_play_boot_sound()` directly, and a full real boot sequence through
+`MIAApplication.run()` completing without any crash with the sound
+wired in. Actually *hearing* it, and whether the ~3.5s duration/pulse
+rate feels right alongside the real orb animation, needs real audio
+hardware to confirm.
+
+1282 tests passing (8 new).
+
 ## Missions redesign, chat bubble overflow fix, boot orb re-centered (2026-07-16)
 
 Three more pieces of user feedback after actually using the app.

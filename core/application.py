@@ -18,6 +18,7 @@ startup logic — it only constructs and runs MIAApplication.
 from __future__ import annotations
 
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -34,6 +35,8 @@ from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
+from core.boot_sound import write_boot_sound_wav
+from core.boot_sound_worker import BootSoundWorker
 from core.job_manager import JobManager
 from core.material_manager import MaterialManager
 from core.ledger_manager import LedgerManager
@@ -220,6 +223,7 @@ class MIAApplication:
         self._register_dashboard_widgets()
 
         self.splash: SplashScreen | None = None
+        self._boot_sound_worker: BootSoundWorker | None = None
         self.main_window: MainWindow | None = None
         self.setup_wizard: SetupWizard | None = None
         self.profile_select: ProfileSelectScreen | None = None
@@ -2112,6 +2116,7 @@ class MIAApplication:
 
         self.splash = SplashScreen()
         self._display(self.splash)
+        self._play_boot_sound()
 
         # The splash screen steps through a sequence of boot checks
         # before handing off to the wizard or main window. Using a
@@ -2135,6 +2140,22 @@ class MIAApplication:
         self._run_boot_steps(boot_steps, index=0)
 
         return self.qt_app.exec()
+
+    def _play_boot_sound(self) -> None:
+        """Fire-and-forget, same pattern as gui/home_dashboard.py's
+        _speak_briefing() — degrades silently (logged inside
+        VoiceManager.play() itself) if Voice/PortAudio isn't available,
+        never blocks or delays the boot sequence. The synthesized
+        "growing pulsing energy" sound (core/boot_sound.py) is
+        regenerated fresh each boot rather than cached — numpy
+        synthesis of a few seconds of audio is cheap enough that
+        caching would be premature."""
+        if self.context.voice is None:
+            return
+        output_path = Path(tempfile.gettempdir()) / "mia_boot_sound.wav"
+        write_boot_sound_wav(output_path)
+        self._boot_sound_worker = BootSoundWorker(self.context.voice, output_path)
+        self._boot_sound_worker.start()
 
     def _boot_step_core_systems(self) -> str:
         return "CORE SYSTEMS... ONLINE"
