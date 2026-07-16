@@ -498,9 +498,18 @@ that fact-finding doesn't need to happen again next session.
   from `quantity_on_hand`, clamped at zero rather than going negative
   (same stance `MaterialManager.update_material()` already takes) —
   this is what makes Materials + Jobs a genuinely connected system
-  rather than two independent lists. **`products`/`product_listings`/
-  `revenue`/`expenses` are still NOT built** — later slices once Jobs
-  is proven, same one-piece-at-a-time discipline.
+  rather than two independent lists.
+  **`products` built next, 2026-07-16 — see `core/product_manager.py`.**
+  `product_listings` nests as a plain list on each `Product`, same
+  reasoning as `material_consumption` nesting on `Job` — a listing
+  without a product doesn't mean anything. `JobManager.produce_product()`
+  is `consume_material()`'s other half — a job now genuinely credits a
+  product's `quantity_in_stock` too, closing the full loop: a job
+  consumes raw materials and produces finished goods, both real
+  inventory movements across all three managers.
+  **`revenue`/`expenses` are still NOT built** — the last piece of the
+  proposed schema, a later slice once Products is proven, same
+  one-piece-at-a-time discipline.
 
 ### Three financial widget sources, meant to converge into one Net Worth view
 

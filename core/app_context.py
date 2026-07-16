@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
+    from core.product_manager import ProductManager
     from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
     from core.script_library_manager import ScriptLibraryManager
@@ -91,6 +92,7 @@ class AppContext:
     components: Optional["ComponentManager"] = field(default=None, repr=False)
     materials: Optional["MaterialManager"] = field(default=None, repr=False)
     jobs: Optional["JobManager"] = field(default=None, repr=False)
+    products: Optional["ProductManager"] = field(default=None, repr=False)
     activity_log: Optional["ActivityLogManager"] = field(default=None, repr=False)
     waypoints: Optional["WaypointManager"] = field(default=None, repr=False)
     devices: Optional["DeviceFramework"] = field(default=None, repr=False)

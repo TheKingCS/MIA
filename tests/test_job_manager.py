@@ -5,9 +5,10 @@ tests.test_job_manager
 Unit tests for core.job_manager. Isolates _DATA_DIR/_JOBS_FILE into a
 tmp_path scratch area, same monkeypatch pattern as
 test_component_manager.py's isolated_paths. consume_material()/
-total_cost() also need core.material_manager isolated in the same
-tmp_path, same "combined-manager fixture" pattern as
-test_mission_manager.py's Trip/Waypoint/Expedition isolation.
+total_cost()/produce_product() also need core.material_manager/
+core.product_manager isolated in the same tmp_path, same
+"combined-manager fixture" pattern as test_mission_manager.py's
+Trip/Waypoint/Expedition isolation.
 """
 
 from __future__ import annotations
@@ -16,11 +17,13 @@ import pytest
 
 import core.job_manager as job_manager_module
 import core.material_manager as material_manager_module
+import core.product_manager as product_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.job_manager import Job, JobManager, MaterialConsumptionEntry, job_labor_cost, job_material_cost, job_total_cost
 from core.material_manager import Material, MaterialManager
+from core.product_manager import ProductManager
 
 
 @pytest.fixture
@@ -30,11 +33,14 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(job_manager_module, "_JOBS_FILE", data_dir / "jobs.json")
     monkeypatch.setattr(material_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(material_manager_module, "_MATERIALS_FILE", data_dir / "materials.json")
+    monkeypatch.setattr(product_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(product_manager_module, "_PRODUCTS_FILE", data_dir / "products.json")
 
 
 def _make_context() -> AppContext:
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.materials = MaterialManager(context)
+    context.products = ProductManager(context)
     context.jobs = JobManager(context)
     return context
 
@@ -265,3 +271,54 @@ def test_total_cost_defaults_labor_rate_to_zero_when_unset(isolated_paths):
 def test_total_cost_unknown_job_returns_none(isolated_paths):
     context = _make_context()
     assert context.jobs.total_cost("does-not-exist") is None
+
+
+# ----------------------------------------------------------------------
+# produce_product — the other half of the consume/produce loop
+# ----------------------------------------------------------------------
+
+def test_produce_product_records_entry_and_credits_stock(isolated_paths):
+    context = _make_context()
+    product = context.products.add_product(name="Coasters", quantity_in_stock=5)
+    job = context.jobs.add_job(name="Batch run")
+
+    context.jobs.produce_product(job.job_id, product.product_id, 20)
+
+    assert len(job.products_produced) == 1
+    assert job.products_produced[0].product_id == product.product_id
+    assert job.products_produced[0].quantity_produced == 20
+    assert context.products.get_product(product.product_id).quantity_in_stock == 25
+
+
+def test_produce_product_unknown_job_raises(isolated_paths):
+    context = _make_context()
+    product = context.products.add_product(name="Coasters")
+    with pytest.raises(ValueError):
+        context.jobs.produce_product("does-not-exist", product.product_id, 5)
+
+
+def test_produce_product_persists_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    product = context.products.add_product(name="Coasters", quantity_in_stock=0)
+    job = context.jobs.add_job(name="Batch run")
+    context.jobs.produce_product(job.job_id, product.product_id, 10)
+
+    reloaded_jobs = JobManager(context)
+    reloaded_job = reloaded_jobs.get_job(job.job_id)
+    assert len(reloaded_job.products_produced) == 1
+    assert reloaded_job.products_produced[0].quantity_produced == 10
+
+
+def test_a_job_can_both_consume_materials_and_produce_products(isolated_paths):
+    """The full loop: a job consumes raw material and produces a
+    finished product from it, both real inventory movements."""
+    context = _make_context()
+    material = context.materials.add_material(name="Plywood", unit_cost=10.0, quantity_on_hand=20)
+    product = context.products.add_product(name="Coasters", quantity_in_stock=0)
+    job = context.jobs.add_job(name="Batch run")
+
+    context.jobs.consume_material(job.job_id, material.material_id, 5)
+    context.jobs.produce_product(job.job_id, product.product_id, 20)
+
+    assert context.materials.get_material(material.material_id).quantity_on_hand == 15
+    assert context.products.get_product(product.product_id).quantity_in_stock == 20

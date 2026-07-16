@@ -28,19 +28,22 @@ consumer (job costing) exists. `job_material_cost()`/`job_labor_cost()`/
 `materials_needing_restock()` — rather than persisting a cost figure
 that could drift from the real material prices/labor rate.
 
-`consume_material()` is the one place this manager reaches across to
-`core/material_manager.py` (`self.context.materials`), same
+`consume_material()`/`produce_product()` are the places this manager
+reaches across to `core/material_manager.py`/`core/product_manager.py`
+(`self.context.materials`/`self.context.products`), same
 cross-manager-reference pattern already established by
 `core/mission_manager.py`'s `_trip_elapsed_hours()` reaching into
 `self.context.trips` — resolved lazily at call time, not cached at
-construction, so construction-order between the two managers in
+construction, so construction-order between these managers in
 `core/application.py` doesn't matter here (unlike Trips/Missions, which
-*does* have a real ordering requirement).
+*does* have a real ordering requirement). `produce_product()`
+(2026-07-16) is `consume_material()`'s other half — a job consumes raw
+materials and produces finished goods, both real inventory movements,
+closing the loop between all three managers.
 
-`products`/`product_listings`/`revenue`/`expenses` (the actual
-production-to-sales pipeline this feeds into) are NOT built yet —
-later slices once Jobs is proven, same "one piece at a time" discipline
-as every other MIA Home addition.
+`revenue`/`expenses` (the proposed schema's actual sales-ledger tables)
+are NOT built yet — a later slice once Products is proven, same "one
+piece at a time" discipline as every other MIA Home addition.
 """
 
 from __future__ import annotations
@@ -83,12 +86,34 @@ class MaterialConsumptionEntry:
 
 
 @dataclass
+class ProductionEntry:
+    """One job producing some quantity of a finished product — see
+    JobManager.produce_product(). A job can produce more than one
+    product (or the same product across more than one run), same
+    reasoning material_consumption supports more than one material."""
+
+    product_id: str
+    quantity_produced: float
+
+    def to_dict(self) -> dict:
+        return {"product_id": self.product_id, "quantity_produced": self.quantity_produced}
+
+    @staticmethod
+    def from_dict(data: dict) -> "ProductionEntry":
+        return ProductionEntry(
+            product_id=data.get("product_id", ""),
+            quantity_produced=data.get("quantity_produced", 0.0),
+        )
+
+
+@dataclass
 class Job:
     job_id: str
     name: str
     description: str = ""
     status: str = "Planned"  # one of JOB_STATUSES
     material_consumption: list[MaterialConsumptionEntry] = field(default_factory=list)
+    products_produced: list[ProductionEntry] = field(default_factory=list)
     labor_hours: float = 0.0
     notes: str = ""
     created_at: str = ""
@@ -101,6 +126,7 @@ class Job:
             "description": self.description,
             "status": self.status,
             "material_consumption": [entry.to_dict() for entry in self.material_consumption],
+            "products_produced": [entry.to_dict() for entry in self.products_produced],
             "labor_hours": self.labor_hours,
             "notes": self.notes,
             "created_at": self.created_at,
@@ -116,6 +142,9 @@ class Job:
             status=data.get("status", "Planned"),
             material_consumption=[
                 MaterialConsumptionEntry.from_dict(entry) for entry in data.get("material_consumption", [])
+            ],
+            products_produced=[
+                ProductionEntry.from_dict(entry) for entry in data.get("products_produced", [])
             ],
             labor_hours=data.get("labor_hours", 0.0),
             notes=data.get("notes", ""),
@@ -253,6 +282,29 @@ class JobManager:
                 self.context.materials.update_material(
                     material_id, quantity_on_hand=material.quantity_on_hand - quantity_used
                 )
+        return job
+
+    def produce_product(self, job_id: str, product_id: str, quantity_produced: float) -> Job:
+        """
+        Records a production entry on the job *and* credits the same
+        quantity onto core/product_manager.py's own quantity_in_stock —
+        the other half of consume_material()'s consume-and-deduct
+        pattern, closing the loop: a job consumes raw materials and
+        produces finished goods, both real inventory movements.
+        """
+        job = self.get_job(job_id)
+        if job is None:
+            raise ValueError(f"No job with id '{job_id}'.")
+        quantity_produced = max(0.0, quantity_produced)
+
+        job.products_produced.append(ProductionEntry(product_id=product_id, quantity_produced=quantity_produced))
+        job.updated_at = datetime.now().isoformat(timespec="seconds")
+        self._save()
+
+        if self.context.products is not None:
+            product = self.context.products.get_product(product_id)
+            if product is not None:
+                self.context.products.adjust_stock(product_id, quantity_produced)
         return job
 
     # ------------------------------------------------------------------

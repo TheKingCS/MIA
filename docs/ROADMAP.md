@@ -3582,6 +3582,43 @@ the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
 
+## MIA Home production pipeline, slice 3: ProductManager (2026-07-16)
+
+Direct continuation of Jobs above, at the user's explicit call ("let's
+build Products next"). New `core/product_manager.py`: `Product`
+(name/description/optional `job_id` link/`quantity_in_stock`/
+`base_price`/notes) holding a plain list of `ProductListing`
+(platform/price/`status` — one of `LISTING_STATUSES` =
+Active/Inactive/Sold Out/url) rather than a fourth separate manager for
+`product_listings` — same "a record owns a list of its own sub-items"
+shape as `Job.material_consumption`. A product can carry several
+listings at once (Etsy, a web store, local sales), each independently
+priced/tracked.
+
+**Closes the full loop**: `core/job_manager.py` gained
+`produce_product()`, the other half of `consume_material()` — a job now
+records a `ProductionEntry` (product_id + quantity_produced) on itself
+*and* credits the same quantity onto the product's real
+`quantity_in_stock` (via `ProductManager.adjust_stock()`, clamped at
+zero same as everywhere else). A job consumes raw materials and
+produces finished goods, and both sides are now genuine inventory
+movements flowing through all three managers, not independent lists
+that happen to reference each other. `ProductManager.adjust_stock()`
+also stands alone for manual stock corrections not tied to a specific
+job (a recount, a sale recorded by hand before Revenue exists).
+
+**Not built yet**: `revenue`/`expenses` — the last piece of the
+originally proposed schema, a later slice once Products is proven. No
+GUI wired — still core/-layer only, same pattern as every MIA Home
+piece this session.
+
+29 new tests (`tests/test_product_manager.py`'s full CRUD/listings
+coverage, plus `tests/test_job_manager.py`'s new `produce_product()`
+integration tests — including one exercising the *full* consume-and-
+produce loop on a single job) plus a real headless boot smoke test
+confirming both managers construct cleanly with no stray file written.
+1233 tests passing (29 new).
+
 ## MIA Home production pipeline, slice 2: JobManager (2026-07-16)
 
 Direct continuation of the Materials slice above, at the user's

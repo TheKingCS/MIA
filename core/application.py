@@ -36,6 +36,7 @@ from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.job_manager import JobManager
 from core.material_manager import MaterialManager
+from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
@@ -159,10 +160,12 @@ class MIAApplication:
         self.context.data_logger = DataLoggerManager(self.context)
         self.context.components = ComponentManager(self.context)
         self.context.materials = MaterialManager(self.context)
-        # Jobs references materials (consume_material()/total_cost()
-        # reach into self.context.materials), so it's constructed after
-        # materials already is — same ordering precedent as
-        # Trips/Waypoints/Inventory in core/application.py.
+        self.context.products = ProductManager(self.context)
+        # Jobs references both materials and products
+        # (consume_material()/produce_product()/total_cost() reach into
+        # self.context.materials/self.context.products), so it's
+        # constructed after both already are — same ordering precedent
+        # as Trips/Waypoints/Inventory in core/application.py.
         self.context.jobs = JobManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
