@@ -3519,8 +3519,10 @@ milestones yet; tracked as real follow-up work, not just aspiration:
       see the dedicated entry below**
 - [ ] Confirm what Fidelity actually exposes before committing to a
       brokerage widget approach
-- [ ] Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
+- [x] Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
       concept relates to this repo's existing `ModuleBase`/`MODULE_SPEC.md`
+      — **a sibling concept, built 2026-07-16 as `core/workshop_machine.py`,
+      see the dedicated entry below**
 - [ ] Decide whether `mia_home_schema.sql` gets adopted as-is, adapted to
       this project's persisted-JSON-manager convention, or something in
       between
@@ -3578,6 +3580,49 @@ instance. Plus a real headless smoke test through the full
 the real `financial_snapshots/` folder, and an empty scan is a genuine
 no-op (no stray `data/financial_snapshots.json` written). 1139 tests
 passing (16 new).
+
+## Workshop hardware module framework: MIAModule reconciled as WorkshopMachine (2026-07-16)
+
+Third slice of MIA Home's expanded scope, same day. Resolved the
+architecture question flagged since the original handoff-doc fold-in:
+how does the proposed `mia_module_contract.py`'s `MIAModule` interface
+(`get_status()`/`send_job()`/`pause()`/`stop()`, `StatusReport`/
+`JobHandle`/`ModuleError`, a `LaserEngraverModule` stub) relate to this
+repo's own `ModuleBase`? **Answer: a sibling concept, not a
+specialization or replacement — renamed entirely
+(`WorkshopMachine`/`MachineStatusReport`/`MachineJobHandle`/
+`WorkshopMachineError`) to remove the naming collision.** Checked
+`modules/module_base.py` directly rather than assuming: `ModuleBase`
+answers "what discoverable app screens exist" (one per top-level
+`modules/` folder, `get_widget()`-driven, `pkgutil`-scanned). A
+workshop machine answers a completely different question — "what
+physical fabrication device can I send a job to and poll status on" —
+structurally much closer to `core/calculator_engine.py`'s
+`CalculatorPlugin` (many pluggable things, registered by id, one shared
+control surface) than to `ModuleBase`, so `core/workshop_machine.py`
+is modeled directly on that precedent (an `ABC` + a
+`WorkshopMachineRegistry`, mirroring `CalculatorEngine`'s own
+register/get/all shape) rather than invented from scratch or forced
+into `ModuleBase`.
+
+New `AppContext.workshop_machines`; a `LaserEngraverMachine` stub is
+registered by default in `core/application.py` so the pattern
+demonstrates end-to-end (`all_machines()` isn't empty, `get_status()`
+returns a real `MachineStatusReport`) without pretending to control
+real hardware — `get_status()` honestly reports `state="offline"`,
+every other method raises `WorkshopMachineError`, same "flag as stub,
+don't fake it" discipline as 11.3b/11.6. **Deliberately no GUI wired
+this pass** — `modules/workshop/module.py`'s own docstring already
+flagged "3D printer/CNC/laser... waits for that hardware/tooling to
+exist" before this session ever started; this is exactly the
+core-level scaffolding that was waiting on, not a reason to build a
+control screen with nothing real behind it yet.
+
+10 new tests (`tests/test_workshop_machine.py`, same shape as
+`tests/test_calculator_engine.py`) plus a real headless boot smoke test
+confirming the registry constructs, the stub registers, and
+`get_status()` returns the expected offline report through the actual
+`MIAApplication` boot path. 1162 tests passing (10 new).
 
 ## Real Estate + Kraken Agent + Net Worth dashboard widgets (2026-07-16)
 

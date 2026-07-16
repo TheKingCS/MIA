@@ -29,6 +29,7 @@ from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
 from core.finance_manager import FinanceManager
+from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
@@ -181,6 +182,11 @@ class MIAApplication:
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
+        self.context.workshop_machines = WorkshopMachineRegistry(self.context)
+        # Registered by default so the registry has something real to
+        # demonstrate end-to-end — it's a stub (no real driver), not a
+        # working device, see core/workshop_machine.py's docstring.
+        self.context.workshop_machines.register(LaserEngraverMachine())
         self.module_manager = ModuleManager(self.context)
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)

@@ -60,6 +60,7 @@ if TYPE_CHECKING:
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
+    from core.workshop_machine import WorkshopMachineRegistry
 
 
 @dataclass
@@ -105,6 +106,7 @@ class AppContext:
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)
+    workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

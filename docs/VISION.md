@@ -437,16 +437,27 @@ that fact-finding doesn't need to happen again next session.
 
 ### Two foundational pieces referenced but not yet built here
 
-- **`mia_module_contract.py`** — a standard `MIAModule` interface every
-  hardware/service module would implement (`get_status()`, `send_job()`,
-  `pause()`, `stop()`), plus `StatusReport`/`JobHandle`/`ModuleError`
-  data shapes, and a `LaserEngraverModule` stub demonstrating the
-  pattern (not a working driver). This is a *different* module contract
-  from this repo's own `docs/MODULE_SPEC.md`/`ModuleBase` (which governs
-  GUI-facing app modules) — it's scoped to physical workshop-hardware
-  jobs specifically (engravers, CNC, 3D printers, etc.), and needs a
-  real decision on how the two relate (a new sibling concept? a
-  specialization of `ModuleBase`?) before it's built, not an assumption.
+- **`mia_module_contract.py`** — **resolved and built 2026-07-16, see
+  `core/workshop_machine.py`.** The proposed `MIAModule` interface
+  (`get_status()`/`send_job()`/`pause()`/`stop()`, plus `StatusReport`/
+  `JobHandle`/`ModuleError`) is a *sibling* concept to this repo's own
+  `ModuleBase`, not a specialization or replacement — renamed to
+  `WorkshopMachine`/`MachineStatusReport`/`MachineJobHandle`/
+  `WorkshopMachineError` specifically to remove the naming collision.
+  `ModuleBase` answers "what discoverable app screens exist"; a
+  workshop machine answers "what physical fabrication device can I send
+  a job to and poll status on" — structurally much closer to
+  `core/calculator_engine.py`'s `CalculatorPlugin` (many pluggable
+  things, registered by id, one shared control surface) than to
+  `ModuleBase`, so it's modeled directly on that precedent (an `ABC` +
+  a `WorkshopMachineRegistry`) rather than invented from scratch. A
+  `LaserEngraverMachine` stub (registered by default, `AppContext
+  .workshop_machines`) demonstrates the pattern end-to-end without
+  pretending to control real hardware. **No GUI wired yet** —
+  `modules/workshop/module.py`'s own docstring already flagged "3D
+  printer/CNC/laser... waits for that hardware/tooling to exist," and
+  this core-level scaffolding is exactly what that was waiting on, not
+  a reason to build the control screen blind.
 - **`mia_home_schema.sql`** — a proposed shared data layer (`materials`,
   `material_consumption`, `cost_rates`, `labor_rate`, `jobs`, `products`,
   `product_listings`, `revenue`, `expenses`, a `materials_needing_restock`
@@ -543,17 +554,17 @@ architecture call in this codebase, not guessed at here.
 
 ### Immediate follow-up (tracked as real work, not vision-only)
 
-1. Decide the snapshot ingestion mechanism (watched folder vs. manual
-   upload) before building the ingestion widgets.
-2. Build the real estate + Kraken ingestion widgets — both are
-   hardware-independent and safe to build now, pre-Project-2-migration,
-   same "safe to build early" reasoning as this document's other
-   zero-hardware-needed slices.
+1. ~~Decide the snapshot ingestion mechanism~~ — **done 2026-07-16**:
+   watched folder, `core/finance_manager.py`.
+2. ~~Build the real estate + Kraken ingestion widgets~~ — **done
+   2026-07-16**, `gui/home_dashboard.py`'s Real Estate/Kraken Agent/Net
+   Worth cards.
 3. Confirm what Fidelity actually exposes before committing to a
    brokerage widget approach.
-4. Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
-   concept relates to this repo's existing `ModuleBase`/`MODULE_SPEC.md`
-   before writing any workshop-hardware module against it.
+4. ~~Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
+   concept relates to this repo's existing `ModuleBase`~~ — **done
+   2026-07-16**: a sibling concept, not a specialization — see
+   `core/workshop_machine.py`.
 5. Decide whether `mia_home_schema.sql` (a real SQL layer) gets adopted
    as-is, adapted to this project's existing persisted-JSON-manager
    convention, or something in between — don't silently default to
