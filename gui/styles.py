@@ -30,7 +30,7 @@ QMainWindow, QWidget {
     background-color: #0a0e15;
     color: #e7ecf3;
     font-family: "Inter", "Segoe UI", "DejaVu Sans", sans-serif;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 QLabel {
@@ -38,14 +38,14 @@ QLabel {
 }
 
 QLabel#TitleLabel {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 600;
     color: #4fd1c5;
     letter-spacing: 2px;
 }
 
 QLabel#SubtitleLabel {
-    font-size: 13px;
+    font-size: 14px;
     color: #7a8a99;
 }
 
@@ -55,28 +55,28 @@ an inline setStyleSheet("font-weight: 600") with no font-size at all
 (just the base 14px), too subtle to read as real section breaks in a
 page with 5 of them stacked. */
 QLabel#SettingsSectionHeader {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     color: #e7ecf3;
     margin-top: 18px;
 }
 
 QLabel#BootSubtitleLabel {
-    font-size: 20px;
+    font-size: 22px;
     letter-spacing: 1px;
     color: #7a8a99;
 }
 
 QLabel#BootStatusLabel {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 16px;
+    font-size: 17px;
     letter-spacing: 2px;
     color: #4fd1c5;
 }
 
 QLabel#ReadoutLabel {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 16px;
+    font-size: 17px;
     color: #4fd1c5;
     padding: 10px;
     background-color: #161b22;
@@ -95,7 +95,7 @@ QFrame#HeaderBar QPushButton#HeaderButton {
     border-radius: 7px;
     padding: 6px 14px;
     color: #e7ecf3;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 QFrame#HeaderBar QPushButton#HeaderButton:hover {
@@ -136,12 +136,12 @@ QLabel#CharacterIcon {
     background-color: transparent;
     border: 2px solid #4fd1c5;
     border-radius: 48px;
-    font-size: 44px;
+    font-size: 46px;
 }
 
 QLabel#CharacterPlaceholderText {
     color: #4fd1c5;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 QPushButton#ModuleButton {
@@ -164,30 +164,30 @@ QLabel#ModuleButtonIcon {
     background-color: transparent;
     border: 2px solid #4fd1c5;
     border-radius: 24px;
-    font-size: 22px;
+    font-size: 23px;
 }
 
 QLabel#ModuleButtonName {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: #d8e0e8;
 }
 
 QLabel#ModuleButtonDescription {
-    font-size: 12px;
+    font-size: 13px;
     color: #7a8a99;
 }
 
 QLabel#DashboardClockTime {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 34px;
+    font-size: 36px;
     font-weight: 700;
     color: #e7ecf3;
     letter-spacing: 1px;
 }
 
 QLabel#DashboardClockDate {
-    font-size: 13px;
+    font-size: 14px;
     color: #7c8798;
 }
 
@@ -196,7 +196,7 @@ from #DashboardSectionTitle's smaller mono card-eyebrow style, per the
 ForMIA mockup's own two-tier label hierarchy (a bold section header
 above the mono per-card eyebrows). */
 QLabel#DashboardOverlineLabel {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: #7c8798;
     letter-spacing: 0.3px;
@@ -207,7 +207,7 @@ same ambient-status-text precedent as MainWindow's own status bar
 default message ("M.I.A. core online."), not a live health check. */
 QLabel#DashboardStatusChip {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: #38d9c9;
     background-color: #0f1a1c;
@@ -220,6 +220,28 @@ QFrame#DashboardCard {
     background-color: #101722;
     border: 1px solid #1b222e;
     border-radius: 10px;
+}
+
+/* 2026-07-16: click-to-navigate widget cards (Power/Mission/Current
+Project) — see gui/home_dashboard.py's _build_simple_card() docstring.
+A QPushButton sharing #DashboardCard's look plus a hover/pressed state,
+same "only style the button itself, never a QLabel inside it" rule
+QPushButton#ModuleButton already follows below, to avoid that widget's
+documented descendant-QLabel-hover text-vanishing Qt bug. */
+QPushButton#DashboardCard {
+    background-color: #101722;
+    border: 1px solid #1b222e;
+    border-radius: 10px;
+    text-align: left;
+}
+
+QPushButton#DashboardCard:hover {
+    background-color: #161e2a;
+    border: 1px solid #38d9c9;
+}
+
+QPushButton#DashboardCard:pressed {
+    background-color: #0c111a;
 }
 
 /* 2026-07-16: gui/character_panel.py's sidebar chat bubbles
@@ -240,7 +262,7 @@ QFrame#ChatBubbleAssistant {
 }
 
 QLabel#ChatBubbleText {
-    font-size: 12px;
+    font-size: 13px;
     color: #c3ccd9;
 }
 
@@ -262,7 +284,7 @@ QFrame#NotificationCard[level="critical"] {
 }
 
 QLabel#NotificationCardMeta {
-    font-size: 11px;
+    font-size: 12px;
     color: #7c8798;
 }
 
@@ -274,7 +296,7 @@ QLabel#DashboardSectionIcon {
     background-color: transparent;
     border: 2px solid #38d9c9;
     border-radius: 20px;
-    font-size: 18px;
+    font-size: 19px;
 }
 
 /* The "eyebrow" label — small uppercase mono-style tag above a card's
@@ -282,14 +304,14 @@ value, per the ForMIA widget stencil. QSS has no text-transform, so
 gui/home_dashboard.py uppercases the label text itself before setting it. */
 QLabel#DashboardSectionTitle {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     color: #5b6a80;
     letter-spacing: 1px;
 }
 
 QLabel#DashboardSectionBody {
-    font-size: 13px;
+    font-size: 14px;
     color: #7c8798;
 }
 
@@ -298,12 +320,12 @@ QLabel#DashboardSectionBody {
 regular Inter-style DashboardSectionBody). */
 QLabel#DashboardActivityLogBody {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 12px;
+    font-size: 13px;
     color: #7c8798;
 }
 
 QLabel#DashboardBriefingText {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     color: #c3ccd9;
 }
@@ -314,7 +336,7 @@ QPushButton#AppsLaunchButton {
     border-radius: 8px;
     padding: 14px;
     color: #38d9c9;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
 }
 
@@ -350,13 +372,13 @@ QPushButton#ConversationCard[selected="true"] {
 }
 
 QLabel#ConversationCardTitle {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: #d8e0e8;
 }
 
 QLabel#ConversationCardMeta {
-    font-size: 11px;
+    font-size: 12px;
     color: #7a8a99;
 }
 
@@ -385,14 +407,30 @@ QPushButton#MissionCard[selected="true"] {
 }
 
 QLabel#MissionCardTitle {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     color: #e7ecf3;
 }
 
 QLabel#MissionCardMeta {
-    font-size: 12px;
+    font-size: 13px;
     color: #7c8798;
+}
+
+/* 2026-07-16 gamification pass: the "quest giver" badge on a mission
+MIA auto-assigned (core/mission_manager.py's check_for_auto_assignment())
+vs. one the user created by hand — a bright, high-contrast pill (unlike
+any other accent color in this card) so it reads instantly as "MIA gave
+you this one", the Borderlands-quest-log "feel" the user asked for. */
+QLabel#MissionCardBadge {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: #1a1206;
+    background-color: #f0b83c;
+    border-radius: 8px;
+    padding: 3px 8px;
+    letter-spacing: 0.5px;
 }
 
 /*
@@ -482,7 +520,7 @@ QPlainTextEdit#LogView {
     border-radius: 6px;
     color: #9fb0bf;
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /*
@@ -537,7 +575,7 @@ QPushButton#SuggestionButton {
     border-radius: 12px;
     padding: 6px 12px;
     color: #38d9c9;
-    font-size: 11px;
+    font-size: 12px;
     text-align: left;
 }
 

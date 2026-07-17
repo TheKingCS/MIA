@@ -11,12 +11,13 @@ same pattern as test_memory_manager.py's combined-manager fixture.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
 import core.expedition_manager as expedition_manager_module
 import core.mission_manager as mission_manager_module
+import core.task_manager as task_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 from core.app_context import AppContext
@@ -24,6 +25,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.mission_manager import MissionManager
+from core.task_manager import TaskManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 
@@ -39,6 +41,8 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(trip_manager_module, "_TRIPS_FILE", data_dir / "trips.json")
     monkeypatch.setattr(waypoint_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(waypoint_manager_module, "_WAYPOINTS_FILE", data_dir / "waypoints.json")
+    monkeypatch.setattr(task_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(task_manager_module, "_TASKS_FILE", data_dir / "tasks.json")
 
 
 def _make_context() -> AppContext:
@@ -47,6 +51,15 @@ def _make_context() -> AppContext:
     context.expeditions = ExpeditionManager(context)
     context.trips = TripManager(context)
     context.missions = MissionManager(context)
+    return context
+
+
+def _make_context_with_tasks() -> AppContext:
+    """check_for_auto_assignment()'s "stale task" rule needs context.tasks
+    — a separate helper (not folded into _make_context()) since most
+    existing tests here have no need for a TaskManager at all."""
+    context = _make_context()
+    context.tasks = TaskManager(context)
     return context
 
 
@@ -380,3 +393,222 @@ def test_trip_duration_hours_zero_when_mission_has_no_trip(isolated_paths):
     context.missions.add_objective(mission.mission_id, "Spend 2 hours fishing", "trip_duration_hours", 2.0)
 
     assert context.missions.objective_progress(mission.mission_id, 0) == 0.0
+
+
+# ----------------------------------------------------------------------
+# task_done (computed live from a linked Task's `done` flag)
+# ----------------------------------------------------------------------
+
+def test_task_done_progress_reflects_incomplete_task(isolated_paths):
+    context = _make_context_with_tasks()
+    task = context.tasks.add_task(project_id="p1", title="Wire the garage")
+    mission = context.missions.add_mission(name="Finally Finish: Wire the garage", task_id=task.task_id)
+    context.missions.add_objective(mission.mission_id, 'Complete "Wire the garage"', "task_done", 1.0)
+
+    assert context.missions.objective_progress(mission.mission_id, 0) == 0.0
+    assert context.missions.is_objective_complete(mission.mission_id, 0) is False
+
+
+def test_task_done_progress_reflects_completed_task(isolated_paths):
+    context = _make_context_with_tasks()
+    task = context.tasks.add_task(project_id="p1", title="Wire the garage")
+    context.tasks.toggle_done(task.task_id)
+    mission = context.missions.add_mission(name="Finally Finish: Wire the garage", task_id=task.task_id)
+    context.missions.add_objective(mission.mission_id, 'Complete "Wire the garage"', "task_done", 1.0)
+
+    assert context.missions.objective_progress(mission.mission_id, 0) == 1.0
+    assert context.missions.is_objective_complete(mission.mission_id, 0) is True
+
+
+def test_task_done_zero_when_mission_has_no_task(isolated_paths):
+    context = _make_context_with_tasks()
+    mission = context.missions.add_mission(name="General Goal")
+    context.missions.add_objective(mission.mission_id, "Complete something", "task_done", 1.0)
+
+    assert context.missions.objective_progress(mission.mission_id, 0) == 0.0
+
+
+def test_task_done_zero_when_no_task_manager_available(isolated_paths):
+    context = _make_context()  # no context.tasks
+    mission = context.missions.add_mission(name="General Goal", task_id="nonexistent")
+    context.missions.add_objective(mission.mission_id, "Complete something", "task_done", 1.0)
+
+    assert context.missions.objective_progress(mission.mission_id, 0) == 0.0
+
+
+# ----------------------------------------------------------------------
+# assigned_by / task_id persistence round trip
+# ----------------------------------------------------------------------
+
+def test_assigned_by_and_task_id_persist_across_reload(isolated_paths):
+    context = _make_context_with_tasks()
+    task = context.tasks.add_task(project_id="p1", title="Wire the garage")
+    context.missions.add_mission(name="MIA's Pick", task_id=task.task_id, assigned_by="mia")
+
+    reloaded_context = _make_context_with_tasks()
+    mission = reloaded_context.missions.all_missions()[0]
+    assert mission.assigned_by == "mia"
+    assert mission.task_id == task.task_id
+
+
+def test_add_mission_defaults_assigned_by_to_user(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Self-Chosen Goal")
+    assert mission.assigned_by == "user"
+    assert mission.task_id is None
+
+
+# ----------------------------------------------------------------------
+# check_for_auto_assignment — idle rule
+# ----------------------------------------------------------------------
+
+def test_idle_rule_assigns_a_template_mission_when_no_missions_exist_at_all(isolated_paths):
+    context = _make_context()
+    mission = context.missions.check_for_auto_assignment()
+
+    assert mission is not None
+    assert mission.assigned_by == "mia"
+    assert mission.status == "active"
+    assert len(mission.objectives) >= 1
+    assert context.missions.all_missions() == [mission]
+
+
+def test_idle_rule_does_nothing_when_an_active_mission_already_exists(isolated_paths):
+    context = _make_context()
+    context.missions.add_mission(name="My Own Goal")
+
+    assert context.missions.check_for_auto_assignment() is None
+    assert len(context.missions.all_missions()) == 1
+
+
+def test_idle_rule_fires_once_active_mission_is_abandoned(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="My Own Goal")
+    context.missions.update_mission(mission.mission_id, status="abandoned")
+
+    auto_mission = context.missions.check_for_auto_assignment()
+    assert auto_mission is not None
+    assert auto_mission.assigned_by == "mia"
+
+
+def test_idle_rule_does_not_refire_within_the_idle_window(isolated_paths):
+    context = _make_context()
+    first = context.missions.check_for_auto_assignment()
+    context.missions.update_mission(first.mission_id, status="abandoned")
+
+    # Still well within _AUTO_ASSIGN_IDLE_DAYS of `first`'s created_at —
+    # no second mission should be assigned yet.
+    assert context.missions.check_for_auto_assignment() is None
+    assert len(context.missions.all_missions()) == 1
+
+
+def test_idle_rule_refires_after_the_idle_window_elapses(isolated_paths, monkeypatch):
+    context = _make_context()
+    first = context.missions.check_for_auto_assignment()
+    context.missions.update_mission(first.mission_id, status="abandoned")
+
+    real_datetime = mission_manager_module.datetime
+    future = real_datetime.now() + timedelta(days=mission_manager_module._AUTO_ASSIGN_IDLE_DAYS + 1)
+
+    class _FrozenDatetime(real_datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return future
+
+    monkeypatch.setattr(mission_manager_module, "datetime", _FrozenDatetime)
+
+    second = context.missions.check_for_auto_assignment()
+    assert second is not None
+    assert second.mission_id != first.mission_id
+
+
+def test_idle_rule_cycles_through_templates_without_immediate_repeats(isolated_paths):
+    context = _make_context()
+    seen_names = set()
+    for _ in range(len(mission_manager_module._AUTO_MISSION_TEMPLATES)):
+        mission = context.missions.check_for_auto_assignment()
+        assert mission.name not in seen_names
+        seen_names.add(mission.name)
+        context.missions.update_mission(mission.mission_id, status="abandoned")
+        # Bypass the idle window for this cycling test — jump each
+        # mission's created_at far into the past so the next call's
+        # "how long since the last mia-assigned mission" check always
+        # passes, isolating just the "don't repeat a name" behavior.
+        mission.created_at = "2000-01-01T00:00:00"
+
+
+# ----------------------------------------------------------------------
+# check_for_auto_assignment — stale task rule
+# ----------------------------------------------------------------------
+
+def test_stale_task_rule_wraps_the_least_recently_updated_incomplete_task(isolated_paths):
+    context = _make_context_with_tasks()
+    # Keep this one active — the idle rule's own guard skips its check
+    # entirely while any mission is active, isolating this test to just
+    # the stale-task rule's own behavior.
+    context.missions.add_mission(name="Existing Goal")
+
+    old_task = context.tasks.add_task(project_id="p1", title="Old Task")
+    # update_task() always re-stamps updated_at to now() regardless of
+    # what fields were passed (core/task_manager.py's own update_task())
+    # — mutate the dataclass field directly to backdate it for this test.
+    old_task.updated_at = "2000-01-01T00:00:00"
+    recent_task = context.tasks.add_task(project_id="p1", title="Recent Task")
+
+    mission = context.missions.check_for_auto_assignment()
+
+    assert mission is not None
+    assert mission.task_id == old_task.task_id
+    assert mission.assigned_by == "mia"
+    assert mission.objectives[0].metric_type == "task_done"
+
+
+def test_stale_task_rule_skips_a_task_updated_recently(isolated_paths):
+    context = _make_context_with_tasks()
+    # Keep this one active — the idle rule's own guard skips its check
+    # entirely while any mission is active, isolating this test to just
+    # the stale-task rule's own behavior.
+    context.missions.add_mission(name="Existing Goal")
+    context.tasks.add_task(project_id="p1", title="Fresh Task")
+
+    assert context.missions.check_for_auto_assignment() is None
+
+
+def test_stale_task_rule_skips_a_task_already_wrapped_by_a_mission(isolated_paths):
+    context = _make_context_with_tasks()
+    # Keep this one active — the idle rule's own guard skips its check
+    # entirely while any mission is active, isolating this test to just
+    # the stale-task rule's own behavior.
+    context.missions.add_mission(name="Existing Goal")
+
+    task = context.tasks.add_task(project_id="p1", title="Old Task")
+    task.updated_at = "2000-01-01T00:00:00"
+    context.missions.add_mission(name="Already Wrapped", task_id=task.task_id, assigned_by="mia")
+
+    assert context.missions.check_for_auto_assignment() is None
+
+
+def test_stale_task_rule_skips_a_task_already_marked_done(isolated_paths):
+    context = _make_context_with_tasks()
+    # Keep this one active — the idle rule's own guard skips its check
+    # entirely while any mission is active, isolating this test to just
+    # the stale-task rule's own behavior.
+    context.missions.add_mission(name="Existing Goal")
+
+    task = context.tasks.add_task(project_id="p1", title="Old Done Task")
+    context.tasks.toggle_done(task.task_id)
+    task.updated_at = "2000-01-01T00:00:00"
+
+    assert context.missions.check_for_auto_assignment() is None
+
+
+def test_stale_task_rule_not_reached_when_idle_rule_already_fired(isolated_paths):
+    """The idle rule takes priority — with no active mission and no
+    prior mia-assigned mission, it fires first even if a stale task also
+    qualifies, and only one Mission is created per call."""
+    context = _make_context_with_tasks()
+    task = context.tasks.add_task(project_id="p1", title="Old Task")
+    task.updated_at = "2000-01-01T00:00:00"
+
+    mission = context.missions.check_for_auto_assignment()
+    assert mission.task_id is None  # the idle-rule template mission, not the stale-task one

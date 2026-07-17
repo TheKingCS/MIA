@@ -170,7 +170,13 @@ class MissionsModule(ModuleBase):
             if mission.trip_id and self.context.trips is not None:
                 trip = self.context.trips.get_trip(mission.trip_id)
                 trip_name = trip.name if trip is not None else ""
-            card = MissionCard(mission, trip_name)
+            total_objectives = len(mission.objectives)
+            completed_objectives = sum(
+                1
+                for index in range(total_objectives)
+                if self.context.missions.is_objective_complete(mission.mission_id, index)
+            )
+            card = MissionCard(mission, trip_name, completed_objectives, total_objectives)
             card.set_selected(mission.mission_id == self._selected_mission_id)
             card.activated.connect(self._on_mission_selected)
             card.edit_requested.connect(self._on_edit_mission)

@@ -524,7 +524,7 @@ class HomeDashboard(QFrame):
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
-            menu_actions=[("Open Power", lambda: self._open_module("power"))],
+            on_click=lambda: self._open_module("power"),
         )
         self._widget_bodies["power"] = body
         return card
@@ -533,7 +533,7 @@ class HomeDashboard(QFrame):
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
-            menu_actions=[("Open Missions", lambda: self._open_module("missions"))],
+            on_click=lambda: self._open_module("missions"),
         )
         self._widget_bodies["mission"] = body
         return card
@@ -546,15 +546,15 @@ class HomeDashboard(QFrame):
             # tool tab), not a standalone module of their own — this opens
             # Toolbox, same one-level-deep limitation
             # gui/main_window.py's open_module() has for any nested tool.
-            menu_actions=[("Open Projects", lambda: self._open_module("toolbox"))],
+            on_click=lambda: self._open_module("toolbox"),
         )
         self._widget_bodies["current_project"] = body
         return card
 
     def _build_real_estate_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        # No menu_actions — there's no dedicated Finance module/screen
-        # to open yet (this pass is dashboard-only, per
-        # docs/ROADMAP.md), same reasoning Activity Log's card has none.
+        # No on_click — there's no dedicated Finance module/screen to
+        # open yet (this pass is dashboard-only, per docs/ROADMAP.md),
+        # same reasoning Activity Log's card has none.
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["real_estate"] = body
         return card
@@ -570,11 +570,11 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        # No menu_actions here — the dedicated mute button already
-        # covers this widget's one real action, and there's no related
-        # module to open (unlike Power/Mission/Current Project); a "⋯"
-        # menu with only a redundant "Toggle Mute" item would be worse
-        # than no menu at all.
+        # No on_click here — the dedicated mute button already covers
+        # this widget's one real action, and there's no related module
+        # to open (unlike Power/Mission/Current Project); making the
+        # whole card a button would conflict with the slider/mute
+        # button already living inside it.
         card, body, slider, mute_button = self._build_volume_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["volume"] = body
         self._volume_slider = slider
@@ -747,21 +747,59 @@ class HomeDashboard(QFrame):
         return header
 
     def _build_simple_card(
-        self, icon: str, title: str, menu_actions: Optional[list[tuple[str, Callable[[], None]]]] = None
+        self, icon: str, title: str, on_click: Optional[Callable[[], None]] = None
     ) -> tuple[QFrame, QLabel]:
         """Builds one icon+title+body card and returns (card, body_label)
-        — the widget builders above add it to the grid themselves."""
-        card = QFrame()
-        card.setObjectName("DashboardCard")
+        — the widget builders above add it to the grid themselves.
+
+        **2026-07-16**: replaces the old "⋯" menu-button-with-one-item
+        pattern (which just opened the card's related module page) with
+        the whole card being clickable, per the user's explicit ask:
+        "Instead of the menu buttons on the widgets I want to be able to
+        click on a widget like a button and it bring me to its
+        page/menu while still displaying the data it needs to." When
+        `on_click` is given, the card itself is a `QPushButton` (same
+        "QPushButton with QLabel children, no text of its own" shape as
+        `gui/widgets/module_button.py`'s `ModuleButton` and
+        `gui/widgets/conversation_card.py`'s `ConversationCard` — avoids
+        that pattern's documented Qt bug where `:hover` on a descendant
+        QLabel makes its text vanish, by only ever styling the button
+        itself in QSS, never a QLabel inside it). Widgets with no
+        related page to open (Activity Log, Real Estate, Kraken Agent,
+        Net Worth — see each builder's own comment) pass no `on_click`
+        and get the original plain, non-clickable `QFrame` card.
+        """
+        card: QWidget
+        if on_click is not None:
+            card = QPushButton()
+            card.setObjectName("DashboardCard")
+            card.setCursor(Qt.CursorShape.PointingHandCursor)
+            card.setToolTip(f"Open {title}")
+            card.clicked.connect(on_click)
+            # Confirmed via a real headless-Qt screenshot, not assumed:
+            # a bare QPushButton relying on its children's natural
+            # sizeHint collapses to a sliver on this platform (same
+            # "This plugin does not support propagateSizeHints()" Qt
+            # bug gui/widgets/conversation_card.py's docstring already
+            # documents) — a plain QFrame card never had this problem,
+            # only the new clickable QPushButton variant.
+            card.setMinimumHeight(96)
+        else:
+            card = QFrame()
+            card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
         layout.setContentsMargins(18, 16, 18, 16)
         layout.setSpacing(10)
 
-        layout.addLayout(self._build_widget_header(icon, title, menu_actions))
+        layout.addLayout(self._build_widget_header(icon, title))
 
         body_label = QLabel()
         body_label.setObjectName("DashboardSectionBody")
         body_label.setWordWrap(True)
+        # A QLabel can't receive mouse events meant for its QPushButton
+        # parent's click — but it doesn't need to: word-wrapped body
+        # text under a click-through label already works fine for
+        # ModuleButton's description label, same shape here.
         layout.addWidget(body_label)
         layout.addStretch()
 
@@ -783,8 +821,16 @@ class HomeDashboard(QFrame):
 
         header = self._build_widget_header(icon, title)
 
-        mute_button = QPushButton("\U0001F507")
+        # 2026-07-16: this used to show a bare, never-updated "🔇"
+        # regardless of actual mute state — the user couldn't tell what
+        # it did or whether they were currently muted. _refresh_volume()
+        # now swaps the icon (🔊 unmuted / 🔇 muted) and sets an explicit
+        # tooltip on every refresh, same "state should be visible, not
+        # just clickable" bar the recording-state Talk button and the
+        # notification bell's hasUnread accent already set elsewhere.
+        mute_button = QPushButton("\U0001F50A")
         mute_button.setObjectName("HeaderButton")
+        mute_button.setToolTip("Mute")
         mute_button.clicked.connect(self._on_mute_clicked)
         header.addWidget(mute_button)
         layout.addLayout(header)
@@ -941,6 +987,23 @@ class HomeDashboard(QFrame):
         self._clock_time_label.setText(format_clock_time(now))
         self._clock_date_label.setText(format_clock_date(now.date()))
 
+    def _set_widget_body_text(self, widget_id: str, text: str) -> None:
+        """setText() plus an explicit height fix — word-wrapped QLabels
+        have a documented Qt bug (see gui/widgets/chat_bubble.py's
+        docstring for the fullest writeup): heightForWidth()/sizeHint()
+        can disagree with the label's actual allocated height, clipping
+        wrapped text. Confirmed here too via direct measurement (not
+        assumed) once the 2026-07-16 font-size increase pushed the
+        Mission card's body onto two lines for the first time: label
+        height was 26px, sizeHint reported 34px. Recomputed on *every*
+        call (not once at construction, unlike ChatBubble) since these
+        labels' text changes on every 5s refresh."""
+        label = self._widget_bodies[widget_id]
+        label.setText(text)
+        width = label.width()
+        if width > 0:
+            label.setMinimumHeight(max(label.heightForWidth(width), label.sizeHint().height()) + 4)
+
     def _refresh_data(self) -> None:
         """Only refreshes widgets that are actually currently built —
         `self._widget_bodies` reflects whatever
@@ -969,23 +1032,23 @@ class HomeDashboard(QFrame):
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
-        self._widget_bodies["real_estate"].setText(format_real_estate_line(snapshot))
+        self._set_widget_body_text("real_estate", format_real_estate_line(snapshot))
 
     def _refresh_kraken_agent(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_KRAKEN_SOURCE) if self.context.finance else None
-        self._widget_bodies["kraken_agent"].setText(format_kraken_line(snapshot))
+        self._set_widget_body_text("kraken_agent", format_kraken_line(snapshot))
 
     def _refresh_net_worth(self) -> None:
         snapshots = self.context.finance.all_latest_snapshots() if self.context.finance else []
-        self._widget_bodies["net_worth"].setText(format_net_worth_line(snapshots))
+        self._set_widget_body_text("net_worth", format_net_worth_line(snapshots))
 
     def _refresh_activity_log(self) -> None:
         entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []
-        self._widget_bodies["activity_log"].setText(format_activity_log_line(entries))
+        self._set_widget_body_text("activity_log", format_activity_log_line(entries))
 
     def _refresh_power(self) -> None:
         status = self.context.power.read() if self.context.power else None
-        self._widget_bodies["power"].setText(format_power_line(status))
+        self._set_widget_body_text("power", format_power_line(status))
 
     def _refresh_mission(self) -> None:
         mission = None
@@ -1000,7 +1063,7 @@ class HomeDashboard(QFrame):
                     for index in range(total)
                     if self.context.missions.is_objective_complete(mission.mission_id, index)
                 )
-        self._widget_bodies["mission"].setText(format_active_mission_line(mission, completed, total))
+        self._set_widget_body_text("mission", format_active_mission_line(mission, completed, total))
 
     def _refresh_current_project(self) -> None:
         project = None
@@ -1010,18 +1073,22 @@ class HomeDashboard(QFrame):
             active_count = len(active_projects)
             if active_projects:
                 project = active_projects[0]
-        self._widget_bodies["current_project"].setText(format_current_project_line(project, active_count))
+        self._set_widget_body_text("current_project", format_current_project_line(project, active_count))
 
     def _refresh_volume(self) -> None:
         if self._volume_slider is None or self._mute_button is None:
             return
         available = self.context.volume is not None and self.context.volume.is_available()
         status = self.context.volume.read() if available else None
-        self._widget_bodies["volume"].setText(format_volume_line(status))
+        self._set_widget_body_text("volume", format_volume_line(status))
         self._volume_slider.setEnabled(available)
         self._mute_button.setEnabled(available)
         if status is not None and not self._volume_slider.isSliderDown():
             self._volume_slider.setValue(status.percent)
+
+        muted = status is not None and status.muted
+        self._mute_button.setText("\U0001F507" if muted else "\U0001F50A")
+        self._mute_button.setToolTip("Unmute" if muted else "Mute")
 
     def _on_volume_slider_released(self) -> None:
         if self._volume_slider is None:

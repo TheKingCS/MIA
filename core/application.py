@@ -271,11 +271,31 @@ class MIAApplication:
         self._finance_snapshot_timer.timeout.connect(self._check_finance_snapshots)
         self._finance_snapshot_timer.start(60_000)
 
+        # Same "always alive for the whole app session" reasoning as the
+        # timers above — "MIA should assign me missions sometimes"
+        # (docs/VISION.md's gamification goal) needs to fire regardless
+        # of whether the Missions screen is even open. 5 minutes matches
+        # _daily_occasion_timer's cadence: check_for_auto_assignment()'s
+        # own rules are day-granularity (core/mission_manager.py), so
+        # this is just frequent enough to notice a newly-idle/newly-stale
+        # state promptly without polling meaningfully more than needed.
+        self._mission_check_timer = QTimer()
+        self._mission_check_timer.timeout.connect(self._check_mission_auto_assignment)
+        self._mission_check_timer.start(300_000)
+        # Also run once immediately at boot — QTimer.start() only
+        # schedules the *next* firing, so without this a long-idle user
+        # would wait a full 5 minutes after opening MIA before getting a
+        # mission that was already overdue.
+        self._check_mission_auto_assignment()
+
     def _check_alarms(self) -> None:
         self.context.alarms.check_due(datetime.now())
 
     def _check_power(self) -> None:
         self.context.power.check_low_battery()
+
+    def _check_mission_auto_assignment(self) -> None:
+        self.context.missions.check_for_auto_assignment()
 
     def _check_finance_snapshots(self) -> None:
         newly_imported = self.context.finance.scan_for_new_snapshots()

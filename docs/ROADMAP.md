@@ -4073,3 +4073,146 @@ machine/VM, stream its output to the Ubuntu box over the network
 (NDI/RTSP) instead of a local virtual-camera read; (3) reconsider
 Project 2's OS to Windows, accepting the ROCm trade-off. Don't resume
 building against this widget without picking one of these first.
+
+## Boot sound gets a proper ending; volume mute button fixed; text size increased app-wide; dashboard cards become click-to-navigate (2026-07-16)
+
+Five separate fixes/polish items from the same conversation, at the
+user's explicit request after praising the new boot sound but wanting
+follow-through on several rough edges:
+
+**Boot sound now ends with a "ping"**: `core/boot_sound.py`'s single
+growing/pulsing sweep is now two synthesized pieces —
+`_generate_sweep()` (the original "woooooooom," now with no fade-out of
+its own) immediately followed by `_generate_ping()` (a short bell-like
+chime: a fundamental plus two detuned harmonics, fast exponential
+decay, matching the user's own description "like a woooooooom ping").
+`_PING_FRACTION = 0.15` of the total duration is the ping; total
+duration bumped 3.5s → 3.9s so the sweep isn't shortened to make room
+for it. 7 new tests in `tests/test_boot_sound.py` (13 total).
+
+**Volume widget's mute button finally shows real state**: it used to
+show a bare, never-updated 🔇 regardless of actual mute state.
+`gui/home_dashboard.py`'s `_refresh_volume()` now swaps the icon
+(🔊 unmuted / 🔇 muted) and sets an explicit tooltip on every refresh —
+same "state should be visible, not just clickable" bar the Talk
+button's recording state already set.
+
+**Text size increased across the whole app**: every `font-size: Npx`
+value in `gui/styles.py`'s `DARK_FIELD_THEME` bumped up (roughly +1 to
++2px each, e.g. base 14→15, titles 26→28, module names 15→16) via a
+single Python regex pass to avoid chained-replacement collisions — 31
+values changed. Scoped to `dark_field` only, same as every ForMIA-era
+addition. **Surfaced a real latent bug**: the Mission dashboard
+widget's body text started clipping once it wrapped to 2 lines at the
+new size — the same `heightForWidth()`/`sizeHint()` disagreement
+already fixed once for `ChatBubble`. Fixed via a new
+`_set_widget_body_text()` helper (`gui/home_dashboard.py`) applied to
+all 8 dashboard widget body-text call sites, recomputing an explicit
+minimum height on every refresh (not just once, since these labels'
+text changes every 5s).
+
+**Dashboard widget cards are now click-to-navigate, not "⋯" menus**:
+at the user's explicit request ("I want to be able to click on a
+widget like a button and it bring me to its page"), the Power/Mission/
+Current Project cards' "⋯" menu (which only ever had one action, "Open
+X") is gone — `_build_simple_card()` now optionally builds the whole
+card as a `QPushButton` (same shape as `ModuleButton`/`ConversationCard`)
+when an `on_click` callback is given, falling back to the original
+plain `QFrame` for widgets with nothing to navigate to (Activity Log,
+Real Estate, Kraken Agent, Net Worth). Confirmed via a real headless-Qt
+screenshot that a bare clickable `QPushButton` card collapses to a
+sliver on this platform without an explicit `setMinimumHeight()` (same
+propagateSizeHints() quirk `ConversationCard`'s docstring already
+documents) — fixed the same way. Avatar Camera's device-selection "⋯"
+menu is untouched (a real multi-item menu, not a "go to page"
+shortcut, so it doesn't fit this pattern). 1287 tests passing.
+
+## Missions gamification: MIA-assigned quests + game-y card accents (2026-07-16/17)
+
+At the user's explicit request ("MIA should assign me missions
+sometimes... there's not much fun in having to assign yourself
+missions... we want to gamify life") plus a Borderlands-style
+quest-log "feel" for the cards — scoped via two clarifying questions
+first: (1) keep the existing bubbly MissionCard/ObjectiveCard shape and
+add game-y accents rather than a full re-skin, and (2) make MIA's
+proactive assignment rule-based (fully offline, no LLM — out of scope
+per this doc's own v0.5 note that no AI/assistant logic exists yet),
+not activity-mined or manual-trigger-only.
+
+**`core/mission_manager.py`**: `Mission` gains `assigned_by` ("user" |
+"mia") and `task_id` (mirrors `trip_id`'s optional-FK pattern, linking
+to `core.task_manager.Task`). New `"task_done"` metric type — same
+"compute live from the linked record, never store it" philosophy as
+the existing `trip_duration_hours` type. New
+`check_for_auto_assignment()`, called from a new always-alive
+`core/application.py` timer (`_mission_check_timer`, 5-minute cadence
+plus one immediate run at boot, same pattern as
+`_check_daily_occasions`), runs two rules in priority order and creates
+at most one Mission per call:
+1. **Idle rule** — no active mission exists, and either no mission's
+   ever been auto-assigned or it's been ≥3 days since the last one —
+   picks the next not-yet-used template from a small pool of
+   self-contained, flavorful "life" goals (`_AUTO_MISSION_TEMPLATES`:
+   Digital Declutter, Deep Work Streak, Tidy Up, Move Your Body, Inbox
+   Zero Push), cycling back once every template's been used.
+2. **Stale task rule** — otherwise, if `context.tasks` is available,
+   finds the least-recently-updated incomplete Task with no Mission
+   already wrapping it and, once it's sat untouched ≥5 days, turns it
+   into a one-objective Mission (`task_done`) — a quietly-ignored task
+   becomes a nudge instead of needing the user to notice it themselves.
+
+**`gui/widgets/mission_card.py`**: a bright "MIA ASSIGNED" badge pill
+(`#MissionCardBadge`, high-contrast gold) shows next to the title for
+`assigned_by="mia"` missions, and a real aggregate `QProgressBar`
+("N/M objectives") now sits under the meta line — one level up from
+`ObjectiveCard`'s existing per-objective bar. `completed_objectives`/
+`total_objectives` are computed by the caller
+(`modules/missions/module.py`), keeping the card itself context-free.
+
+23 new tests (`tests/test_mission_manager.py`, 46 total in that file).
+Verified visually via a real headless-Qt screenshot: badge and progress
+bar both render correctly, `check_for_auto_assignment()` produces a
+real Mission with the right `assigned_by`/objectives. 1304 tests
+passing.
+
+## Maps module: a real waypoint schematic map, replacing the placeholder (2026-07-17)
+
+Picked as the top item from a full project audit (roadmap/known-issues/
+vision/git-log/grep sweep) of "what still needs work" — of everything
+flagged, this was the one item that was both real and immediately
+buildable with zero hardware or open decisions blocking it (`music` is
+the only other pure-stub module, and it's confirmed blocked on missing
+`libpulse` without root).
+
+**Deliberately not real cartography** — `modules/navigation/module.py`'s
+own docstring already scoped "offline maps, trails, elevation" as
+waiting on real GPS/mapping hardware/data this dev sandbox doesn't
+have. Maps' zero-hardware slice instead: a schematic plot of whatever
+waypoints already exist (`core.waypoint_manager.WaypointManager`), a
+click-to-select distance/bearing lookup between any two of them
+(finally surfacing `distance_and_bearing()`, which existed since the
+Navigation module shipped but had no caller anywhere in the app), and
+an optional Trip route overlay (`Trip.waypoint_ids`, the "ordered
+planned route"). Maps has no waypoint CRUD of its own — that stays
+Navigation's job; Maps is the spatial-visualization companion to it.
+
+New `gui/widgets/waypoint_map_canvas.py` (`WaypointMapCanvas`, a
+`QPainter`-based custom widget, same technique
+`gui/presence_widget.py` already established) — `project_waypoints()`
+is a free function doing a simple equirectangular-style, fit-to-box
+projection with one shared scale factor (not stretched per-axis, so
+relative shape isn't distorted), pure math tested without Qt. Clicking
+a waypoint dot sets "from" then "to" for a distance/bearing readout;
+picking a Trip from a combo box overlays its route as a dashed line. No
+live refresh from other modules (`gui/main_window.py` caches each
+module's widget after first open, and neither
+`WaypointManager`/`TripManager` publishes a changed-event) — a plain
+"Refresh" button covers it instead, consistent with several other
+read-only aggregate-view modules.
+
+10 new tests (`tests/test_waypoint_map_canvas.py`,
+`tests/test_maps_module.py`). Verified via a real headless-Qt smoke
+test with screenshots: waypoints plot in the correct relative
+positions, the route overlay draws correctly, and clicking two
+waypoints produces the correct real distance/bearing text
+("Base Camp → Summit: 8.7 km — bearing 027°"). 1314 tests passing.
