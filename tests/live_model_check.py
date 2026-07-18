@@ -229,6 +229,11 @@ GOLDEN_CASES = [
     # --- milestone v0.18: Missions/Gamification ---
     ("add mission", "Start a new mission called Kayak Explorer", "add_mission"),
     ("list missions", "What missions do I have?", "list_missions"),
+    (
+        "current mission phrasing — 2026-07-18 real gap, trigger phrases didn't cover this",
+        "What is my current mission?",
+        "list_missions",
+    ),
     ("add objective", "Add an objective to my Master Angler mission: catch 5 fish, target 5", "add_objective"),
     ("log mission progress", "Log a catch for my Master Angler mission", "log_mission_progress"),
     ("delete mission", "Delete the mission called Master Angler", "delete_mission"),

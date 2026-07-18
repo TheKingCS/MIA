@@ -1349,7 +1349,18 @@ class MIAApplication:
             description="List the user's Missions in M.I.A., including each objective's progress.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_missions,
-            trigger_phrases=("list my missions", "list missions", "what missions", "show my missions"),
+            trigger_phrases=(
+                "list my missions", "list missions", "what missions", "show my missions",
+                # 2026-07-18: real gap found live — "what is my current
+                # mission" matched none of the phrases above, so the
+                # missions domain never got attached and the model just
+                # said "I don't know, check the Missions module." This
+                # is the same list_missions handler (it already returns
+                # every mission with its status, current ones included)
+                # — the gap was purely in trigger-phrase coverage, not
+                # the handler itself.
+                "current mission", "my current mission", "my mission", "active mission", "what mission",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_objective",
