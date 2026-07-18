@@ -3,6 +3,33 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Open (fix applied, unconfirmed): real crash using Home/Back navigation buttons
+
+2026-07-18, reported by the user: "I keep crashing when using the home
+and back buttons." `logs/mia.log` shows no Python traceback at all —
+the log simply stops mid-session (last line: a `home.shown` event
+right after Settings was open) — same "no caught exception" signature
+as the fullscreen-crash entry below, strongly suggesting the same
+underlying class of bug, not a new one.
+
+Best diagnosis possible without a real display to reproduce against:
+`gui/main_window.py`'s `_stack` (a `QStackedWidget` holding Home, the
+Apps grid, and every opened module's widget) was added directly to the
+body layout with no scroll clipping. Switching `currentWidget()` to a
+module whose content's minimum size exceeds the window's current
+geometry can make Qt's layout engine try to grow the *window* itself
+to satisfy that minimum — while already fullscreen (kiosk mode), that
+is exactly the same kind of buffer-size-vs-configured-fullscreen-state
+mismatch that already killed the Wayland connection once before (see
+below). Fixed by wrapping `_stack` in its own `QScrollArea` — any
+module's oversized content now scrolls internally instead of ever
+pushing a size demand up to the top-level window.
+
+**Not confirmed as the fix** — verified only that navigation still
+renders and functions correctly under headless-Qt (a real crash
+reproduction needs the actual Wayland display that hit this). Needs
+the user to confirm on their real machine before this is closed out.
+
 ## Open (fix applied, unconfirmed): real crash — Wayland connection killed going fullscreen
 
 2026-07-17, hit live on the user's real machine right after selecting a

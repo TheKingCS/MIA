@@ -301,7 +301,30 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._home_widget)
         self._menu_widget = self._build_menu()
         self._stack.addWidget(self._menu_widget)
-        body_layout.addWidget(self._stack, stretch=3)
+
+        # 2026-07-18: the stack is wrapped in its own QScrollArea rather
+        # than added to body_layout directly — a real crash was reported
+        # navigating via Home/Back with no Python traceback in
+        # logs/mia.log (same "no caught exception" signature as the
+        # earlier documented Wayland fullscreen crash, see
+        # docs/KNOWN_ISSUES.md). Best diagnosis possible without a real
+        # display to reproduce against: switching QStackedWidget's
+        # current widget to a module whose content's minimum size
+        # exceeds the current window geometry can make Qt's layout
+        # engine attempt to grow the top-level *window* to fit — while
+        # already fullscreen, that's the exact same kind of buffer/
+        # configured-size mismatch that already crashed the Wayland
+        # connection once. A QScrollArea absorbs any module's oversized
+        # minimum height into a scrollbar instead of ever pushing that
+        # demand up to the window itself. Not confirmed as the fix
+        # (unverified beyond this one incident, same as the earlier
+        # fullscreen fix) — needs the user to confirm on the machine
+        # that actually hit this.
+        stack_scroll = QScrollArea()
+        stack_scroll.setWidgetResizable(True)
+        stack_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        stack_scroll.setWidget(self._stack)
+        body_layout.addWidget(stack_scroll, stretch=3)
 
         self._character_panel: Optional[CharacterPanel] = None
         if self.context.config.get("gui.show_character_panel", True):
