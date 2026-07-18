@@ -119,6 +119,51 @@ QFrame#HeaderBar QPushButton#HeaderButton[hasUnread="true"] {
     font-weight: 600;
 }
 
+/* 2026-07-18: replaces the old bare "Search" header button — a real
+QLineEdit made to look like a search bar (rounded, muted background,
+placeholder text carries the magnifying glass) rather than a button
+labeled "Search". Still read-only/click-to-open (gui/search_dialog.py
+owns the actual typing/live-filtering), so no focus/text-cursor styling
+is needed here. */
+QFrame#HeaderBar QLineEdit#HeaderSearchBar {
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 16px;
+    padding: 6px 16px;
+    color: #e7ecf3;
+    font-size: 14px;
+}
+
+QFrame#HeaderBar QLineEdit#HeaderSearchBar:hover {
+    border: 1px solid #38d9c9;
+}
+
+/* 2026-07-18: replaces the old notification bell — a circular avatar
+showing the active profile's first initial. [hasUnread] reuses the
+exact same accent convention as the old bell (see above). */
+QFrame#HeaderBar QPushButton#ProfileAvatarButton {
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 20px;
+    color: #e7ecf3;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QFrame#HeaderBar QPushButton#ProfileAvatarButton:hover {
+    border: 1px solid #38d9c9;
+}
+
+QFrame#HeaderBar QPushButton#ProfileAvatarButton::menu-indicator {
+    image: none;
+    width: 0px;
+}
+
+QFrame#HeaderBar QPushButton#ProfileAvatarButton[hasUnread="true"] {
+    border: 1px solid #38d9c9;
+    color: #38d9c9;
+}
+
 QFrame#CharacterPanel {
     background-color: #0c1017;
     border: 1px solid #1b222e;
@@ -641,5 +686,26 @@ QPushButton#StopSpeakingButton:hover {
 QPushButton#StopSpeakingButton:disabled {
     color: #45505a;
     border: 1px solid #1c232b;
+}
+
+/* 2026-07-18: the floating orb that reveals the Assistant sidebar —
+gui/widgets/floating_orb_widget.py handles show/hide/position, this
+just gives it its "glowing blue orb" look. The QGraphicsDropShadowEffect
+set in that widget's own __init__ provides the soft outer glow halo;
+this gradient is the orb's solid body. */
+QPushButton#FloatingOrb {
+    background: qradialgradient(
+        cx: 0.4, cy: 0.35, radius: 0.9, fx: 0.4, fy: 0.35,
+        stop: 0 #a8d0ff, stop: 0.5 #3b82f6, stop: 1 #1d4ed8
+    );
+    border: none;
+    border-radius: 28px;
+}
+
+QPushButton#FloatingOrb:hover {
+    background: qradialgradient(
+        cx: 0.4, cy: 0.35, radius: 0.9, fx: 0.4, fy: 0.35,
+        stop: 0 #c2e0ff, stop: 0.5 #5b9bff, stop: 1 #2563eb
+    );
 }
 """

@@ -22,20 +22,23 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QPushButton,
     QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
+    QWidgetAction,
 )
 
 from core.app_context import AppContext
@@ -47,7 +50,9 @@ from gui.home_dashboard import HomeDashboard
 from gui.notification_center import NotificationCenterDialog
 from gui.notification_toast import NotificationToast
 from gui.search_dialog import SearchDialog
+from gui.widgets.floating_orb_widget import FloatingOrbWidget
 from gui.widgets.module_button import ModuleButton
+from gui.widgets.volume_quick_control import VolumeQuickControl
 
 log = get_logger(__name__)
 
@@ -192,17 +197,17 @@ class MainWindow(QMainWindow):
 
     def _update_notification_badge(self) -> None:
         count = self.context.notifications.unread_count()
-        label = f"\U0001F514 {count}" if count else "\U0001F514"
-        self._notification_button.setText(label)
+        self._notifications_menu_action.setText(f"\U0001F514 Notifications ({count})" if count else "\U0001F514 Notifications")
         # Dynamic property, not a second object name — lets QSS give the
-        # bell an accent color only while there's something unread via
-        # "QPushButton#HeaderButton[hasUnread=true]", without a style()
-        # re-polish this method would otherwise skip (Qt caches QSS
-        # property-selector results per widget until explicitly told to
-        # re-evaluate).
-        self._notification_button.setProperty("hasUnread", bool(count))
-        self._notification_button.style().unpolish(self._notification_button)
-        self._notification_button.style().polish(self._notification_button)
+        # avatar button an accent color only while there's something
+        # unread via "QPushButton#ProfileAvatarButton[hasUnread=true]",
+        # without a style() re-polish this method would otherwise skip
+        # (Qt caches QSS property-selector results per widget until
+        # explicitly told to re-evaluate). Same technique the old
+        # notification bell used, just moved to the new button.
+        self._profile_button.setProperty("hasUnread", bool(count))
+        self._profile_button.style().unpolish(self._profile_button)
+        self._profile_button.style().polish(self._profile_button)
 
     def _open_notification_center(self) -> None:
         dialog = NotificationCenterDialog(self.context, parent=self)
@@ -229,6 +234,8 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("profile.switch_requested", self._on_profile_switch_requested)
         if self._character_panel is not None:
             self._character_panel.unsubscribe()
+        if hasattr(self, "_orb_timer"):
+            self._orb_timer.stop()
         self._home_widget.unsubscribe()
         super().closeEvent(event)
 
@@ -326,12 +333,30 @@ class MainWindow(QMainWindow):
         self._stack_scroll.setWidget(self._stack)
         body_layout.addWidget(self._stack_scroll, stretch=3)
 
+        # 2026-07-18: real user ask — no more "24/7 open assistant
+        # screen." The sidebar is still built eagerly (it needs to keep
+        # reacting to nav events/reflecting the active conversation
+        # exactly like before), but hidden by default; a hidden widget
+        # in a layout claims no space, so the stack area reclaims the
+        # sidebar's width until the floating orb below reveals it again.
         self._character_panel: Optional[CharacterPanel] = None
         if self.context.config.get("gui.show_character_panel", True):
             self._character_panel = CharacterPanel(self.context)
             body_layout.addWidget(self._character_panel, stretch=1)
+            self._character_panel.hide()
+
+            self._orb = FloatingOrbWidget(central)
+            self._orb.clicked.connect(self._toggle_character_panel)
+            self._orb_timer = QTimer(self)
+            self._orb_timer.timeout.connect(self._orb.update_position)
+            self._orb_timer.start(50)
 
         root_layout.addWidget(body)
+
+    def _toggle_character_panel(self) -> None:
+        if self._character_panel is None:
+            return
+        self._character_panel.setVisible(not self._character_panel.isVisible())
 
     def _build_header(self) -> QFrame:
         header = QFrame()
@@ -386,19 +411,52 @@ class MainWindow(QMainWindow):
         self._apps_button.setObjectName("HeaderButton")
         self._apps_button.clicked.connect(self.show_main_menu)
 
-        self._search_button = QPushButton("\U0001F50D Search")
-        self._search_button.setObjectName("HeaderButton")
-        self._search_button.clicked.connect(self._open_search)
+        # 2026-07-18: a real search *bar* (QLineEdit chrome), not a
+        # button labeled "Search" — read-only so it can't half-pretend
+        # to be its own live-filtering box (that's gui/search_dialog.py's
+        # job, already built and tested); clicking it just opens that
+        # dialog immediately, same as the button did, but it now *looks*
+        # like what it is.
+        self._search_bar = QLineEdit()
+        self._search_bar.setObjectName("HeaderSearchBar")
+        self._search_bar.setPlaceholderText("\U0001F50D  Search…")
+        self._search_bar.setReadOnly(True)
+        self._search_bar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._search_bar.setFixedWidth(220)
+        self._search_bar.mousePressEvent = lambda event: self._open_search()
 
-        self._notification_button = QPushButton("\U0001F514")
-        self._notification_button.setObjectName("HeaderButton")
-        self._notification_button.clicked.connect(self._open_notification_center)
+        # 2026-07-18: replaces the notification bell — a circular avatar
+        # showing the active profile's first initial, opening a menu with
+        # Notifications (preserving that access point, just relocated),
+        # a quick volume control, and a Settings shortcut. Real-time
+        # notifications still pop up via NotificationToast regardless of
+        # whether this menu is ever opened — this is just the "check
+        # what I might have missed" access point, same role the bell had.
+        initial = user_name[0].upper() if user_name else "?"
+        self._profile_button = QPushButton(initial)
+        self._profile_button.setObjectName("ProfileAvatarButton")
+        self._profile_button.setFixedSize(40, 40)
+        self._profile_button.setToolTip(user_name or "Profile")
+
+        self._profile_menu = QMenu(self._profile_button)
+        self._notifications_menu_action = self._profile_menu.addAction(
+            "\U0001F514 Notifications", self._open_notification_center
+        )
+        self._profile_menu.addSeparator()
+        self._volume_quick_control = VolumeQuickControl(self.context)
+        volume_action = QWidgetAction(self._profile_menu)
+        volume_action.setDefaultWidget(self._volume_quick_control)
+        self._profile_menu.addAction(volume_action)
+        self._profile_menu.addSeparator()
+        self._profile_menu.addAction("\U00002699 Settings", lambda: self.open_module("settings"))
+        self._profile_menu.aboutToShow.connect(self._volume_quick_control.refresh)
+        self._profile_button.setMenu(self._profile_menu)
 
         layout.addWidget(self._back_button)
         layout.addWidget(self._home_button)
         layout.addWidget(self._apps_button)
-        layout.addWidget(self._search_button)
-        layout.addWidget(self._notification_button)
+        layout.addWidget(self._search_bar)
+        layout.addWidget(self._profile_button)
 
         return header
 

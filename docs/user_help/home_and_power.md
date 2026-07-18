@@ -2,10 +2,9 @@
 
 ## The Home screen's cards
 
-Home shows three live cards: Power (battery percentage and whether
-you're plugged in), Mission (your current active Mission and its
-objective progress), and Volume (a slider and mute toggle for system
-volume). Each updates automatically every few seconds.
+Home shows two live cards: Power (battery percentage and whether you're
+plugged in) and Mission (your current active Mission and its objective
+progress). Each updates automatically every few seconds.
 
 ## Power
 
@@ -16,7 +15,9 @@ if it drops below the configured threshold while unplugged.
 
 ## Volume
 
-The Volume card controls the device's actual system volume — drag the
-slider or tap the mute button. If your device doesn't support system
-volume control, the card will show as unavailable rather than pretend
-to do something it can't.
+Volume lives in the header now, not on the Home screen — tap your
+profile avatar (top-right, a circle with your name's first letter) to
+open a menu with a quick volume slider and mute button. It controls the
+device's actual system volume. If your device doesn't support system
+volume control, it will show as unavailable rather than pretend to do
+something it can't.

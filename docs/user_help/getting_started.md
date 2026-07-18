@@ -3,10 +3,10 @@
 ## The Home screen
 
 When you log in, you land on the Home screen — a quick glance at your
-system: the current time and date, your device's power status, your
-current active Mission and its progress, and a volume control. There's
-a big "Open Apps" button at the bottom that takes you to every
-installed module.
+system: the current time and date, your device's power status, and
+your current active Mission and its progress. There's a big
+"Open Apps" button at the bottom that takes you to every installed
+module.
 
 ## The Apps screen
 
@@ -19,22 +19,29 @@ were just looking at.
 
 ## Getting around
 
-The header bar at the top always has: Back, Home, Apps, Switch User,
-Search, and a notification bell. Search (or Ctrl+K on a keyboard) opens
-a quick command palette that can jump straight to a module or switch
-profiles. The notification bell shows a number when there's something
-unread — tap it to open the Notification Center.
+The header bar at the top always has: Back, Home, Apps, a search bar,
+and your profile avatar (a circle with your name's first letter).
+Tapping the search bar (or Ctrl+K on a keyboard) opens a quick command
+palette that can jump straight to a module or switch profiles. Tapping
+your avatar opens a menu with Notifications (shows a count when
+there's something unread), a quick volume slider, and Settings.
 
 ## The Assistant
 
-There's a persistent Assistant panel on the right side of every
-screen (next to the robot icon) — you can chat with it from anywhere,
-no need to open a separate app. It can answer questions and, for a lot
-of things, actually do them for you: add a waypoint, log mission
-progress, check your battery, and more. See the "Assistant" help
-section for a full rundown of what to ask it. There's also a
-full-screen Assistant module (in Apps) if you want a bigger view for a
-longer conversation, with voice input/output support.
+A small glowing blue orb appears near the bottom-right corner of the
+screen whenever your mouse (or finger, on touch) gets close to that
+corner — tap it to pull out the Assistant sidebar, and tap it again (or
+tap the orb again) to tuck it back away. This replaces keeping a
+separate Assistant screen open all the time. The sidebar starts fresh
+each time you launch M.I.A. — tap "History" inside it to reopen an
+older conversation. It has its own push-to-talk and Stop button, so
+voice works there too, not just in the full-screen version.
+
+It can answer questions and, for a lot of things, actually do them for
+you: add a waypoint, log mission progress, check your battery, and
+more. See the "Assistant" help section for a full rundown of what to
+ask it. There's also a full-screen Assistant module (in Apps) if you
+want a bigger view for a longer conversation.
 
 ## Themes
 

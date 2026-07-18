@@ -28,12 +28,18 @@ existed; every prior answer to that question required reading
   Separately, specific facts the user states get extracted and stored
   long-term (`core/user_memory_manager.py`, reviewable/deletable via
   the "🧠 Memories" button in the Assistant module).
-- **Spoken output.** The full-screen Assistant module (not the sidebar)
-  speaks every reply aloud via Piper TTS, and the Home dashboard speaks
-  its startup briefing once per launch. Voice is selectable in
+- **Spoken output.** Both the full-screen Assistant module and the
+  character panel sidebar (2026-07-18: gained full voice parity) speak
+  every reply aloud via Piper TTS, and the Home dashboard speaks its
+  startup briefing once per launch. A Stop button on both surfaces
+  interrupts playback mid-sentence
+  (`core/voice_manager.py`'s `stop_playback()`). Voice is selectable in
   Settings among a curated 5-voice catalog (`core/voice_catalog.py`).
-- **Voice input.** Push-to-talk in the full Assistant module transcribes
-  speech via Vosk and sends it as if typed.
+- **Voice input.** Push-to-talk in both the full Assistant module and
+  the sidebar transcribes speech via Vosk and sends it as if typed (the
+  sidebar's is on-screen-click only — see `gui/character_panel.py`'s
+  docstring for why it doesn't share a GPIO `PushToTalkTrigger` with
+  the full module).
 - **A warm, curious personality** on conversational (non-action)
   replies — deliberately absent from the action-request path, see
   "Why not just attach everything" below.

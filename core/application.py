@@ -444,7 +444,14 @@ class MIAApplication:
         """
         self.context.dashboard_widgets.register(WidgetDescriptor("power", "Power", "\U0001F50B"))
         self.context.dashboard_widgets.register(WidgetDescriptor("mission", "Mission", "\U0001F3C6"))
-        self.context.dashboard_widgets.register(WidgetDescriptor("volume", "Volume", "\U0001F50A"))
+        # 2026-07-18: Volume moved out of the dashboard grid entirely,
+        # into a compact control in the header's new profile menu (see
+        # gui/main_window.py) — real user report traced the dashboard's
+        # recurring "spacing/wording is off" complaint to this widget:
+        # it's the only 3-element card (header + slider + body) among
+        # otherwise-uniform 2-element cards, and it happened to land in
+        # the very first grid row (registration order 3rd) right next to
+        # Power/Mission, forcing that row taller than the others.
         self.context.dashboard_widgets.register(WidgetDescriptor("current_project", "Current Project", "\U0001F4CB"))
         # 2026-07-15 "ForMIA" design handoff, pass 2: the first two new
         # widgets from the mockup that need zero new data-gathering

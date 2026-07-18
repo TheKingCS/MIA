@@ -52,9 +52,13 @@ Likely future implementation notes (not built yet, intentionally):
 **2026-07-14 aesthetic pass part 4** (docs/ROADMAP.md): at the user's
 request ("the section on the right of the screen with the robot icon
 would be a perfect spot for the Assistant Conversations"), this panel
-now also holds a compact, always-available chat — text-only (no mic/
-TTS; the full modules/assistant/module.py screen in Apps still has
-voice for a larger, focused session). Reuses
+now also holds a compact, always-available chat. **2026-07-18: gained
+full voice parity with the full-screen Assistant module** — push-to-
+talk (on-screen click only, see _build_chat_section()'s docstring for
+why it doesn't share a PushToTalkTrigger with the full module) and a
+Stop button to interrupt mid-sentence — at the user's request, since
+this panel is now meant to replace keeping the full Assistant screen
+open all the time, not just supplement it. Reuses
 `core.assistant_chat.build_chat_request()`/`split_safe_tool_calls()`
 and `core.chat_worker.ChatWorker` — the exact same request-building and
 tool-execution-safety logic the full Assistant module uses, not a
@@ -98,7 +102,9 @@ does the extracting; the other just reflects the result via the event.
 
 from __future__ import annotations
 
+import tempfile
 import time
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer
@@ -129,6 +135,8 @@ from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
 from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
+from core.tts_worker import TTSWorker
+from gui.conversation_history_dialog import ConversationHistoryDialog
 from gui.presence_widget import PresenceWidget
 from gui.widgets.chat_bubble import ChatBubble
 
@@ -151,6 +159,13 @@ _IDLE_LINES = [
 ]
 _IDLE_THRESHOLD_SECONDS = 30.0
 _IDLE_TICK_MS = 20_000  # matches core/application.py's alarm-check timer cadence
+
+# Same wording as modules/assistant/module.py's own copies of these —
+# can't import them directly (gui/ may import core/ but never modules/,
+# CLAUDE.md's one-directional layering).
+_MIC_UNAVAILABLE_STATUS = "Microphone unavailable."
+_STT_UNAVAILABLE_STATUS = "Speech-to-text unavailable."
+_VOICE_INPUT_DISABLED_STATUS = "Voice input is turned off (Quick Bus, Home dashboard)."
 
 # module_id -> (icon, line). Any module not listed here falls back to
 # (_DEFAULT_ICON, "Watching over <display_name>.") in _reaction_for_module.
@@ -193,6 +208,8 @@ class CharacterPanel(QFrame):
         self._worker: Optional[ChatWorker] = None
         self._title_worker: Optional[GenerateWorker] = None
         self._memory_worker: Optional[GenerateWorker] = None
+        self._tts_worker: Optional[TTSWorker] = None
+        self._recording = False
         self._conversation = None
 
         layout = QVBoxLayout(self)
@@ -244,7 +261,17 @@ class CharacterPanel(QFrame):
         self._idle_timer.timeout.connect(self._on_idle_tick)
         self._idle_timer.start(_IDLE_TICK_MS)
 
-        self._load_active_conversation()
+        # 2026-07-18: real user ask — the sidebar used to load and
+        # render whatever conversation was last active, meaning a long-
+        # running chat history greeted the user again on every single
+        # app launch. Starts a brand new conversation on construction
+        # instead (this is also what the full Assistant module's "+ New
+        # Conversation" button does) — start_new_active_conversation()
+        # publishes "conversation.active_changed" synchronously, which
+        # _on_conversation_active_changed() (subscribed above) already
+        # reloads/renders from, so no separate render call is needed
+        # here. The new "History" button is the way back to an older one.
+        self.context.conversations.start_new_active_conversation()
 
     def unsubscribe(self) -> None:
         """Must be called before this widget is destroyed — see module docstring."""
@@ -375,6 +402,17 @@ class CharacterPanel(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
+        # 2026-07-18: real user ask — a way to reach older conversations
+        # now that this panel starts fresh every launch instead of
+        # showing whatever was last active (see __init__'s comment).
+        history_row = QHBoxLayout()
+        history_row.addStretch()
+        self._history_button = QPushButton("\U0001F553 History")
+        self._history_button.setObjectName("HeaderButton")
+        self._history_button.clicked.connect(self._on_open_history)
+        history_row.addWidget(self._history_button)
+        layout.addLayout(history_row)
+
         self._chat_log_scroll = QScrollArea()
         self._chat_log_scroll.setObjectName("ChatLog")
         self._chat_log_scroll.setWidgetResizable(True)
@@ -408,6 +446,32 @@ class CharacterPanel(QFrame):
         input_row.addWidget(self._send_button)
 
         layout.addLayout(input_row)
+
+        # 2026-07-18: real user ask — push-to-talk and a stop button,
+        # matching modules/assistant/module.py's full-screen voice
+        # controls. On their own row since this panel can be as narrow
+        # as 220px (setMinimumWidth above) — input+Send+Talk+Stop all in
+        # one row would crowd badly at that width. Deliberately does NOT
+        # construct its own core.push_to_talk_trigger.PushToTalkTrigger —
+        # that would bind a second gpiozero.Button to the same physical
+        # GPIO pin the full Assistant module's own trigger already binds
+        # to, which fails on real hardware. The physical PTT button (if
+        # ever wired) drives the full module only, for now; this panel's
+        # mic is on-screen-click only, same as this method's Send button.
+        voice_row = QHBoxLayout()
+        self._talk_button = QPushButton("\U0001F3A4  Hold to Talk")
+        self._talk_button.setObjectName("TalkButton")
+        self._talk_button.pressed.connect(self._on_talk_pressed)
+        self._talk_button.released.connect(self._on_talk_released)
+        voice_row.addWidget(self._talk_button, stretch=1)
+
+        self._stop_speaking_button = QPushButton("⏹  Stop")
+        self._stop_speaking_button.setObjectName("StopSpeakingButton")
+        self._stop_speaking_button.setEnabled(False)
+        self._stop_speaking_button.clicked.connect(self._on_stop_speaking)
+        voice_row.addWidget(self._stop_speaking_button)
+
+        layout.addLayout(voice_row)
         return section
 
     def _refresh_suggestions(self, module_id: Optional[str]) -> None:
@@ -486,12 +550,14 @@ class CharacterPanel(QFrame):
                     self.context, tool_call.name, tool_call.arguments
                 )
                 self.context.conversations.add_message(self._conversation.conversation_id, "assistant", confirmation)
+                self._speak(confirmation)
             self._status_label.setText("")
             return
 
         user_message = self._conversation.messages[-1].content if self._conversation.messages else ""
         self.context.conversations.add_message(self._conversation.conversation_id, "assistant", reply.content)
         self._status_label.setText("")
+        self._speak(reply.content)
         self._maybe_generate_title(user_message, reply.content)
         self._extract_memories(user_message)
 
@@ -548,6 +614,87 @@ class CharacterPanel(QFrame):
     def _set_busy(self, busy: bool) -> None:
         self._input.setEnabled(not busy)
         self._send_button.setEnabled(not busy)
+        self._talk_button.setEnabled(not busy)
         self._presence.set_state("thinking" if busy else "idle")
         if busy:
             self._status_label.setText("Thinking…")
+
+    # ------------------------------------------------------------------
+    # Conversation history popup
+    # ------------------------------------------------------------------
+
+    def _on_open_history(self) -> None:
+        current_id = self._conversation.conversation_id if self._conversation else None
+        dialog = ConversationHistoryDialog(self.context, current_id, parent=self)
+        if dialog.exec() and dialog.selected_conversation_id is not None:
+            if dialog.selected_conversation_id != current_id:
+                self.context.conversations.set_active_conversation_id(dialog.selected_conversation_id)
+
+    # ------------------------------------------------------------------
+    # Push-to-talk (speech in) — same behavior as
+    # modules/assistant/module.py's, see _build_chat_section()'s
+    # docstring for why this panel doesn't share a PushToTalkTrigger
+    # with it.
+    # ------------------------------------------------------------------
+
+    def _on_talk_pressed(self) -> None:
+        if self.context.voice is None or self._worker is not None or self._recording:
+            return
+        if not self.context.config.get("voice.push_to_talk_enabled", True):
+            self._status_label.setText(_VOICE_INPUT_DISABLED_STATUS)
+            return
+        if not self.context.voice.start_recording():
+            self._status_label.setText(_MIC_UNAVAILABLE_STATUS)
+            return
+        self._recording = True
+        self._set_talk_button_recording(True)
+        self._status_label.setText("Listening…")
+
+    def _on_talk_released(self) -> None:
+        if self.context.voice is None or not self._recording:
+            return
+        self._recording = False
+        self._set_talk_button_recording(False)
+
+        wav_path = self.context.voice.stop_recording()
+        if wav_path is None:
+            self._status_label.setText(_MIC_UNAVAILABLE_STATUS)
+            return
+
+        self._status_label.setText("Transcribing…")
+        transcript = self.context.voice.transcribe(wav_path)
+        if not transcript:
+            self._status_label.setText(_STT_UNAVAILABLE_STATUS)
+            return
+
+        self._input.setText(transcript)
+        self._on_send()
+
+    def _set_talk_button_recording(self, recording: bool) -> None:
+        """Same dynamic-property technique as modules/assistant/module.py's Talk button."""
+        self._talk_button.setProperty("recording", recording)
+        self._talk_button.style().unpolish(self._talk_button)
+        self._talk_button.style().polish(self._talk_button)
+
+    # ------------------------------------------------------------------
+    # Speech out
+    # ------------------------------------------------------------------
+
+    def _speak(self, text: str) -> None:
+        if self.context.voice is None or self._tts_worker is not None:
+            return
+        output_path = Path(tempfile.gettempdir()) / "mia_character_panel_reply.wav"
+        self._tts_worker = TTSWorker(self.context.voice, text, output_path)
+        self._tts_worker.finished.connect(self._on_tts_finished)
+        self._tts_worker.start()
+        self._stop_speaking_button.setEnabled(True)
+
+    def _on_tts_finished(self) -> None:
+        if self._tts_worker is not None:
+            self._tts_worker.deleteLater()
+            self._tts_worker = None
+        self._stop_speaking_button.setEnabled(False)
+
+    def _on_stop_speaking(self) -> None:
+        if self.context.voice is not None:
+            self.context.voice.stop_playback()

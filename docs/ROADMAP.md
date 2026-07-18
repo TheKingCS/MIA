@@ -4769,3 +4769,73 @@ discipline as every prior registry expansion:
 new golden-set cases (100 → 113). Full official golden set verified
 113/113 clean after the fixes above. Registry now 74 actions across 19
 domains. 1399 pytest tests passing (22 new).
+
+## Floating orb + collapsible sidebar, header redesign, sidebar voice/history (2026-07-18)
+
+Large UX pass, several pieces:
+
+- **Floating orb + collapsible Assistant sidebar** (new
+  `gui/widgets/floating_orb_widget.py`). Real ask: "so we don't have to
+  have a 24/7 open assistant screen." `gui/main_window.py`'s
+  `CharacterPanel` is now hidden by default; a small glowing blue orb
+  appears and "reaches" toward the mouse (clamped to a max-travel
+  radius from its home corner, via a plain 50ms-polled `QCursor.pos()`
+  timer — no event-filter fighting this app's deep widget tree, no
+  animation easing on top yet, deliberately, since screenshot-only
+  review can't judge motion "feel") whenever the cursor nears the
+  bottom-right corner; clicking it toggles the sidebar. **Found and
+  fixed a real bug via a headless smoke test**: the orb's "stay visible
+  while hovering the orb itself" check used its raw `geometry()`,
+  which defaults to `(0, 0)` before the orb has ever been shown/moved —
+  a mouse position near the window's top-left corner (nowhere near the
+  real trigger zone) falsely counted as "hovering the orb." Fixed by
+  only trusting that check while the orb is actually visible.
+- **Header redesign**: the old bare "Search" button is now a real
+  `QLineEdit` styled as a search bar (still click-to-open
+  `gui/search_dialog.py`, which already owns the actual live-filtering
+  logic — this only changes what it looks like). The notification bell
+  is gone, replaced by a circular avatar showing the active profile's
+  first initial; clicking it opens a menu with Notifications
+  (preserves that access point, count included in the label),
+  a quick volume slider (new `gui/widgets/volume_quick_control.py`),
+  and Settings.
+- **Volume moved out of the Home dashboard grid entirely** — real bug
+  report ("spacing and wording of the widgets is off again"), and the
+  user's own hunch was right: the old Volume card was the only
+  3-element card (header + slider + body) among otherwise-uniform
+  2-element cards, and it landed in the grid's first row right next to
+  Power/Mission, forcing that row taller than the others. Removed from
+  `core/application.py`'s `_register_dashboard_widgets()` and
+  `gui/home_dashboard.py` entirely (dead code removed, not just
+  disabled) now that it lives in the header's profile menu instead.
+- **Sidebar gets full voice parity with the full-screen Assistant
+  module**: push-to-talk (on-screen click only — deliberately does NOT
+  construct its own `PushToTalkTrigger`, since a second instance would
+  bind a second `gpiozero.Button` to the same physical GPIO pin the
+  full module's own trigger already claims) and a Stop button.
+- **Sidebar starts fresh every launch**: previously loaded and rendered
+  whatever conversation was last active, so a long chat history greeted
+  the user again on every single boot. Now calls
+  `start_new_active_conversation()` on construction instead (same as
+  the full module's "+ New Conversation" button); a new "History"
+  button opens `gui/conversation_history_dialog.py` (reuses
+  `ConversationCard` as-is) to reach an older conversation.
+
+**Caught a real data-pollution incident while smoke-testing the
+sidebar changes**: an ad hoc verification script didn't isolate
+`ConversationManager`'s data directory (the same mistake class this
+project has hit before — see gotcha #11), and briefly wrote several
+test conversations into the real `data/conversations.json`. Caught by
+inspecting the file's actual content before trusting the test result,
+not just the test's own pass/fail — 7 test-generated entries identified
+by timestamp/content and removed, the one real conversation preserved.
+Updated `docs/user_help/getting_started.md` and `home_and_power.md`,
+which both referenced the old header layout/Home volume card.
+
+1399 pytest tests passing (no new committed ones — this is almost
+entirely Qt widget/layout/interaction behavior, verified via three ad
+hoc headless smoke tests instead: dashboard-grid removal, sidebar
+blank-start + history switch, and the orb's show/hide/position/click
+behavior). **The orb's motion "feel" specifically still needs real,
+live user judgment** — it's the kind of thing this project's own
+history has repeatedly found can't be assessed from a screenshot alone.
