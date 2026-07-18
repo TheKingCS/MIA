@@ -80,6 +80,16 @@ _STATE_BOUNDING_BOXES: dict[str, tuple[float, float, float, float]] = {
 }
 
 
+def format_trail_map_row(park_name: str, state: str, notes: str) -> str:
+    """Pure formatting logic — testable without Qt (see
+    tests/test_maps_module.py). Includes `notes` when present so
+    multiple catalog entries for the same park (e.g. several distinct
+    trail maps for one large recreation area) read as distinguishable
+    list rows, not identical-looking duplicates."""
+    suffix = f"  —  {notes}" if notes else ""
+    return f"{park_name}  ({state}){suffix}"
+
+
 def format_distance_bearing_line(distance_km: float, bearing_degrees: float) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_maps_module.py)."""
     return f"{distance_km:.1f} km  —  bearing {bearing_degrees:03.0f}°"
@@ -341,7 +351,7 @@ class MapsModule(ModuleBase):
     def _refresh_trail_maps_tab(self) -> None:
         self._trail_map_list.clear()
         for trail_map in self.context.trail_maps.all_trail_maps():
-            item = QListWidgetItem(f"{trail_map.park_name}  ({trail_map.state})")
+            item = QListWidgetItem(format_trail_map_row(trail_map.park_name, trail_map.state, trail_map.notes))
             item.setData(1, trail_map.trail_map_id)
             self._trail_map_list.addItem(item)
 

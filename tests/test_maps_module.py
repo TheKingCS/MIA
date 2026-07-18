@@ -8,7 +8,23 @@ tests/test_navigation_module.py (no Qt event loop, no fixtures).
 
 from __future__ import annotations
 
-from modules.maps.module import format_distance_bearing_line, format_tile_count_estimate
+from modules.maps.module import (
+    format_distance_bearing_line,
+    format_tile_count_estimate,
+    format_trail_map_row,
+)
+
+
+def test_format_trail_map_row_without_notes():
+    assert format_trail_map_row("Cumberland Falls State Resort Park", "Kentucky", "") == "Cumberland Falls State Resort Park  (Kentucky)"
+
+
+def test_format_trail_map_row_with_notes_distinguishes_entries():
+    row_a = format_trail_map_row("Land Between the Lakes NRA", "Kentucky/Tennessee", "Turkey Bay OHV Area trail map")
+    row_b = format_trail_map_row("Land Between the Lakes NRA", "Kentucky/Tennessee", "Wranglers Horse & Wagon Trails map")
+    assert row_a != row_b
+    assert "Turkey Bay" in row_a
+    assert "Wranglers" in row_b
 
 
 def test_format_distance_bearing_line():

@@ -4316,3 +4316,38 @@ plus 2 more in `tests/test_maps_module.py`) — network calls mocked in
 the committed suite (real fetches only happen in the one-off smoke
 test), same "mock the external query" pattern as
 `test_avatar_manager.py`/`test_power_manager.py`. 1341 tests passing.
+
+## Trail Map catalog seeded with real Kentucky/Tennessee parks, LBL emphasized (2026-07-17)
+
+Immediate follow-up: "Add a few real trail maps from Kentucky and
+Tennessee parks... Especially LBL." Every URL was verified reachable
+(`curl`, HTTP 200 + `application/pdf` content-type) before being added
+— none guessed, consistent with `core/trail_map_library.py`'s own
+"never pre-seed with unverified scraped links" design. Added via the
+real `TrailMapLibrary.add_from_url()` (the exact same path the in-app
+"Add Trail Map" button uses), not hand-edited into `data/trail_maps.json`.
+
+Seeded 7 real trail maps: **Land Between the Lakes NRA** (4 maps —
+general visitor/recreation map, North End of the North/South Trail,
+Turkey Bay OHV Area, Wranglers Horse & Wagon Trails — cataloged as
+state "Kentucky/Tennessee" since LBL genuinely straddles both),
+**Cumberland Falls State Resort Park** and **Natural Bridge State
+Resort Park** (Kentucky), **Pickett CCC Memorial State Park**
+(Tennessee). `tnstateparks.com` itself blocks MIA's own User-Agent
+string (confirmed: the exact same URL that returns 200 for a
+browser-UA'd `curl` returns 403 through `add_from_url()`'s
+`"MIA-Home/0.2"` User-Agent) — Fall Creek Falls was dropped for this
+reason and Pickett's map was sourced from a mirror
+(`cloudhiking.com`) instead, rather than having MIA spoof a browser
+identity to bypass a site's own anti-bot measure.
+
+**Found and fixed a real display bug this surfaced**: the Trail Maps
+list only showed "park name (state)", so the 4 distinct LBL entries
+were visually indistinguishable from each other. New
+`format_trail_map_row()` appends each entry's `notes` when present
+("Land Between the Lakes NRA (Kentucky/Tennessee) — Turkey Bay OHV
+Area trail map"). 2 new tests, confirmed via a real headless-Qt
+screenshot that all 7 entries are now distinguishable. 1343 tests
+passing. The 7 real PDFs (~21MB total) live in the gitignored
+`trail_maps/` folder, same as Reference Library packs/trip photos —
+not committed to git, real user content.
