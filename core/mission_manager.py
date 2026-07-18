@@ -183,6 +183,7 @@ class Mission:
     # label" spirit as Trip.activity_type.
     icon: str = "\U0001F4CB"  # clipboard, matches this project's emoji-glyph convention (no image assets)
     region: str = ""
+    summary: str = ""  # longer descriptive paragraph, shown on the Mission Log detail card
     difficulty: str = "NORMAL"
     mission_type: str = "OPTIONAL MISSION"  # e.g. "OPTIONAL MISSION", "DAILY MISSION" — free text, shown as-is
     reward_xp: int = 0
@@ -201,6 +202,7 @@ class Mission:
             "updated_at": self.updated_at,
             "icon": self.icon,
             "region": self.region,
+            "summary": self.summary,
             "difficulty": self.difficulty,
             "mission_type": self.mission_type,
             "reward_xp": self.reward_xp,
@@ -221,6 +223,7 @@ class Mission:
             updated_at=data.get("updated_at", ""),
             icon=data.get("icon", "\U0001F4CB"),
             region=data.get("region", ""),
+            summary=data.get("summary", ""),
             difficulty=data.get("difficulty", "NORMAL"),
             mission_type=data.get("mission_type", "OPTIONAL MISSION"),
             reward_xp=data.get("reward_xp", 0),
@@ -271,6 +274,7 @@ class MissionManager:
         assigned_by: str = "user",
         icon: str = "\U0001F4CB",
         region: str = "",
+        summary: str = "",
         difficulty: str = "NORMAL",
         mission_type: str = "OPTIONAL MISSION",
         reward_xp: int = 0,
@@ -287,6 +291,7 @@ class MissionManager:
             updated_at=now,
             icon=icon,
             region=region,
+            summary=summary,
             difficulty=difficulty,
             mission_type=mission_type,
             reward_xp=reward_xp,

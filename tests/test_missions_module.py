@@ -9,7 +9,14 @@ tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 from __future__ import annotations
 
 from core.mission_manager import Mission, Objective
-from modules.missions.module import format_mission_row, format_objective_row
+from modules.missions.module import (
+    format_checklist_label,
+    format_level_footer_line,
+    format_mission_row,
+    format_objective_row,
+    format_objectives_heading,
+    format_rewards_line,
+)
 
 
 def test_format_mission_row_with_trip():
@@ -35,3 +42,43 @@ def test_format_objective_row_complete():
 def test_format_objective_row_fractional_hours():
     objective = Objective(description="Spend 2 hours fishing", metric_type="trip_duration_hours", target=2.0)
     assert format_objective_row(objective, progress=1.5, is_complete=False) == "[ ] Spend 2 hours fishing: 1.5 of 2"
+
+
+def test_format_rewards_line():
+    assert format_rewards_line(25, 160) == "$25    160 XP"
+
+
+def test_format_rewards_line_zero_rewards():
+    assert format_rewards_line(0, 0) == "$0    0 XP"
+
+
+def test_format_rewards_line_formats_large_numbers_with_commas():
+    assert format_rewards_line(1500, 12000) == "$1,500    12,000 XP"
+
+
+def test_format_level_footer_line():
+    assert format_level_footer_line(6, 9143, 13886) == "Level 6    9,143 / 13,886"
+
+
+def test_format_objectives_heading_no_objectives():
+    assert format_objectives_heading(0, 0) == "OBJECTIVES"
+
+
+def test_format_objectives_heading_partial():
+    assert format_objectives_heading(1, 2) == "OBJECTIVES — 1 of 2 complete"
+
+
+def test_format_objectives_heading_all_complete():
+    assert format_objectives_heading(2, 2) == "OBJECTIVES — 2 of 2 complete"
+
+
+def test_format_checklist_label_single_step_target_omits_fraction():
+    assert format_checklist_label("Complete the task", 0.0, 1.0, False) == "Complete the task"
+
+
+def test_format_checklist_label_multi_step_incomplete_shows_fraction():
+    assert format_checklist_label("Catch 3 fish", 1.0, 3.0, False) == "Catch 3 fish (1 of 3)"
+
+
+def test_format_checklist_label_complete_omits_fraction_even_with_multi_step_target():
+    assert format_checklist_label("Catch 3 fish", 3.0, 3.0, True) == "Catch 3 fish"

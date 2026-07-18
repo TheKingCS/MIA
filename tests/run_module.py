@@ -47,8 +47,10 @@ from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
 from core.llm_manager import LLMManager  # noqa: E402
 from core.map_tile_cache import MapTileCache  # noqa: E402
+from core.mission_manager import MissionManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.power_manager import PowerManager  # noqa: E402
+from core.profile_manager import ProfileManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.script_library_manager import ScriptLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
@@ -67,14 +69,18 @@ def main() -> int:
     args = parser.parse_args()
 
     # Wires the same data-manager services core/application.py constructs
-    # at real boot (minus profiles/notifications, which no module reads
-    # from get_widget()/on_load() today and which carry side effects —
-    # ProfileManager's legacy-user migration, NotificationManager's
-    # QTimer — this harness has no business triggering). Add a manager
-    # here if a new module's get_widget()/on_load() starts needing one
-    # and this script starts crashing the same way it used to for Notes'
-    # context.search before this fix.
+    # at real boot (minus notifications, which no module reads from
+    # get_widget()/on_load() today and which carries a real side effect —
+    # NotificationManager's QTimer — this harness has no business
+    # triggering). Add a manager here if a new module's
+    # get_widget()/on_load() starts needing one and this script starts
+    # crashing the same way it used to for Notes' context.search before
+    # this fix. ProfileManager moved from "deliberately omitted" to wired
+    # for real once modules/missions/module.py's 2026-07-18 redesign
+    # started reading context.profiles for its Level/XP footer.
     context = AppContext(config=ConfigManager(), events=EventBus())
+    context.profiles = ProfileManager(context)
+    context.missions = MissionManager(context)
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)
     context.journal = JournalManager(context)

@@ -4879,3 +4879,74 @@ rename.
 
 1403 pytest tests passing (4 new — `prepare_text_for_speech()`'s unit
 tests).
+
+## Mission Log redesign — second phase of the Dashboard+Missions design handoff (2026-07-18)
+
+Rebuilt `modules/missions/module.py` entirely against `CCH.zip`'s
+`Missions.dc.html` reference: a two-panel "Mission Log" (detail panel —
+icon/title/region, summary, an objectives checklist, difficulty tag,
+a rewards footer — on the left; a mission list — ACTIVE/COMPLETED
+grouped, a sticky Level+XP footer — on the right), replacing the old
+single-column "Missions list above Objectives list" layout entirely,
+not just restyling it. New `gui/widgets/mission_list_row.py` (compact
+icon+title row, no inline edit/delete — editing/deleting now happens
+from the selected mission's detail panel) and
+`gui/widgets/objective_checklist_row.py` (a real checkbox glyph instead
+of ObjectiveCard's separate "+1" button); the old `MissionCard`/
+`ObjectiveCard` widgets are retired (deleted, not left dead) now that
+nothing uses them. `AddEditMissionDialog` gained fields for all the new
+Mission data (icon/region/summary/difficulty/mission type/reward XP/
+reward credits). The sticky footer reads the *real* active profile's
+level/XP (`core.leveling.compute_level_progress()`), not placeholder
+numbers — this is live gamification state now.
+
+**Found and fixed a real Qt ghosting bug via an actual screenshot, not
+assumed**: the detail panel's header row and difficulty-tag row were
+added via `addLayout()` directly rather than wrapped in a `QWidget`,
+so `_refresh_detail()`'s `takeAt()`+`hide()`+`setParent(None)`+
+`deleteLater()` cleanup loop (this app's established safe-rebuild
+pattern) couldn't reach their child widgets — a bare nested layout has
+no widget of its own for `takeAt()` to hide/reparent/delete. Selecting
+a second mission then a third left the first mission's title/region/
+tag labels visibly overlapping the newest one's, confirmed by an actual
+rendered screenshot. Fixed by wrapping both in real `QWidget` containers
+before adding them, same "always wrap dynamic sub-sections in a real
+widget, never a bare sub-layout" lesson this project has hit before
+(`gui/character_panel.py`'s `_refresh_suggestions()`).
+
+**Also caught real regressions before they shipped**, all for the same
+reason: the design mockup's own placeholder data never exercised these
+pre-existing features, so a literal rebuild against just the mockup
+would have silently dropped them.
+1. The "MIA ASSIGNED" badge (2026-07-16 gamification pass's quest-giver
+   indicator) — added back onto the detail panel's header, verified via
+   a second screenshot with an auto-assigned mission selected.
+2. `MissionCard`'s aggregate objective-progress bar and `ObjectiveCard`'s
+   per-objective fractional progress — a checklist row's checkbox alone
+   only shows done/not-done, losing "1 of 2 objectives complete" and
+   "2 of 3 fish caught" entirely. Added back as plain text: new
+   `format_objectives_heading()` ("OBJECTIVES — 1 of 2 complete") and
+   `format_checklist_label()` (appends "(1 of 3)" to any incomplete
+   objective whose target is more than one step). Verified via a third
+   screenshot with partial progress on two different objectives.
+
+`tests/run_module.py` needed `context.missions`/`context.profiles`
+wired in for real (profiles was previously deliberately omitted for its
+legacy-migration side effect — now genuinely needed since the Level/XP
+footer reads it) — its own file comment already documents this
+maintenance convention.
+
+10 new pure-function tests (`format_rewards_line`/
+`format_level_footer_line`/`format_objectives_heading`/
+`format_checklist_label`), verified end-to-end via a headless smoke
+test (auto-select first active mission, click-to-select in the list,
+click-checkbox-to-increment-tally, real level/XP footer) with three
+screenshots. 1430 pytest tests passing (10 new — Qt widget behavior
+itself verified via the ad hoc smoke test, not a permanent one, same
+treatment as this project's other pure-UI changes).
+
+**Still remaining from the same design handoff**: the Dashboard console
+redesign (telemetry gauges, the big centered animated orb, collapsible
+right rail, bottom chat bar) and the new top nav (tabs replacing the
+just-shipped search-bar+avatar header) — a separate, similarly-sized
+piece of work, not started yet.

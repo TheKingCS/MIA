@@ -427,46 +427,16 @@ QLabel#ConversationCardMeta {
     color: #7a8a99;
 }
 
-/* 2026-07-16: gui/widgets/mission_card.py's MissionCard / gui/widgets/
-objective_card.py's ObjectiveCard — "bigger and more bubbly button-like"
-per the user's explicit request, replacing modules/missions/module.py's
-old plain QListWidget rows. Same shape as #ConversationCard just above
-(clickable card, [selected="true"] dynamic-property accent) but a much
-larger border-radius (20px vs. 8px) is the actual "bubbly" part, plus a
-bigger title font matching the "bigger" ask. Scoped to dark_field only
-for now, same as every ForMIA-era addition — the other 3 themes in
-gui/theme_manager.py don't have this styling yet. */
-QPushButton#MissionCard, QPushButton#ObjectiveCard {
-    background-color: #101722;
-    border: 1px solid #1b222e;
-    border-radius: 20px;
-    text-align: left;
-}
-
-QPushButton#MissionCard:hover, QPushButton#ObjectiveCard:hover {
-    background-color: #16202c;
-}
-
-QPushButton#MissionCard[selected="true"] {
-    border: 2px solid #38d9c9;
-}
-
-QLabel#MissionCardTitle {
-    font-size: 17px;
-    font-weight: 700;
-    color: #e7ecf3;
-}
-
-QLabel#MissionCardMeta {
-    font-size: 13px;
-    color: #7c8798;
-}
-
 /* 2026-07-16 gamification pass: the "quest giver" badge on a mission
 MIA auto-assigned (core/mission_manager.py's check_for_auto_assignment())
 vs. one the user created by hand — a bright, high-contrast pill (unlike
 any other accent color in this card) so it reads instantly as "MIA gave
-you this one", the Borderlands-quest-log "feel" the user asked for. */
+you this one", the Borderlands-quest-log "feel" the user asked for.
+Originally gui/widgets/mission_card.py's MissionCard (retired in the
+2026-07-18 Mission Log redesign); now shown on
+modules/missions/module.py's detail-panel header instead — the
+objectName carries over unchanged since it's just a small pill, not
+tied to that card's own shape. */
 QLabel#MissionCardBadge {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 10px;
@@ -707,5 +677,166 @@ QPushButton#FloatingOrb:hover {
         cx: 0.4, cy: 0.35, radius: 0.9, fx: 0.4, fy: 0.35,
         stop: 0 #c2e0ff, stop: 0.5 #5b9bff, stop: 1 #2563eb
     );
+}
+
+/* 2026-07-18 design handoff (CCH.zip) — the redesigned Mission Log
+(modules/missions/module.py). Color tokens match the handoff's own
+theme table exactly (accent teal #38d9c9/#0d9488/#5eead4, accentBg
+#0f1a1c, borderAccent #1f3538) rather than reusing an unrelated accent
+already in this theme, per the handoff's "high-fidelity... implement
+pixel-close" note. */
+QLabel#MissionActiveCountPill {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0d9488;
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 10px;
+    padding: 5px 10px;
+}
+
+QLabel#MissionDetailIcon {
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 9px;
+    font-size: 16px;
+    padding: 8px;
+}
+
+QLabel#MissionDetailTitle {
+    font-size: 19px;
+    font-weight: 700;
+    color: #e7ecf3;
+}
+
+QLabel#MissionDetailRegion {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #5b6a80;
+    letter-spacing: 1px;
+}
+
+QLabel#MissionDetailSummary {
+    font-size: 13px;
+    color: #c3ccd9;
+}
+
+QLabel#MissionDifficultyTag {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0d9488;
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+
+QWidget#MissionRewardsFooter {
+    background-color: #131b26;
+    border: 1px solid #1b222e;
+    border-radius: 10px;
+}
+
+QLabel#MissionRewardsText {
+    font-size: 16px;
+    font-weight: 700;
+    color: #38d9c9;
+}
+
+QLabel#MissionTypeLabel {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #5b6a80;
+    letter-spacing: 1px;
+}
+
+QLabel#MissionListSectionActive {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #0d9488;
+    letter-spacing: 1.5px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1b222e;
+}
+
+QLabel#MissionListSectionCompleted {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #5b6a80;
+    letter-spacing: 1.5px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1b222e;
+}
+
+QPushButton#MissionListRow {
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    text-align: left;
+}
+
+QPushButton#MissionListRow:hover {
+    background-color: #131b26;
+}
+
+QPushButton#MissionListRow[selected="true"] {
+    background-color: #0f1a1c;
+}
+
+QLabel#MissionListRowTitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: #c3ccd9;
+}
+
+QLabel#MissionListRowCompletedTitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: #5b6a80;
+}
+
+QWidget#MissionLevelFooter {
+    background-color: #131b26;
+    border: 1px solid #1b222e;
+    border-radius: 10px 10px 0 0;
+}
+
+QLabel#MissionLevelFooterText {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e7ecf3;
+}
+
+QPushButton#ObjectiveChecklistBox {
+    background-color: transparent;
+    border: 1.5px solid #1b222e;
+    border-radius: 4px;
+    color: #06131a;
+    font-size: 11px;
+}
+
+QPushButton#ObjectiveChecklistBox[checked="true"] {
+    background-color: #38d9c9;
+    border: 1.5px solid #38d9c9;
+}
+
+QPushButton#ObjectiveChecklistBox:disabled {
+    color: #06131a;
+}
+
+QLabel#ObjectiveChecklistText {
+    font-size: 13px;
+    color: #c3ccd9;
+}
+
+QLabel#ObjectiveChecklistTextDone {
+    font-size: 13px;
+    color: #5b6a80;
 }
 """
