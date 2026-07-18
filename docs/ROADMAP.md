@@ -4491,3 +4491,50 @@ formatting change updated 7 existing test assertions across
 `test_home_dashboard.py`/`test_assistant_action_handlers.py`. Verified
 via a real headless-Qt screenshot: the slider moved to 200%, config
 persisted, status label confirmed. 1352 tests passing (5 new).
+
+## Assistant personality: "confident native fluency" + closing real help-doc gaps (2026-07-18)
+
+At the user's explicit request: "I want it to be as if this program is
+an extension of the assistant and it should know it like the back of
+its hand" — concretely triggered by the Assistant answering "I don't
+know" to questions about Maps/Workshop/Missions' newer features. Two
+real, separate causes, both fixed:
+
+**A wording gap**: `core/assistant_chat.py` gained `_IDENTITY_APP_FLUENCY`
+— info-question-path-only (same regression-safety split
+`_IDENTITY_WARMTH` already established; the action-request path's bare
+`_IDENTITY_LINE` stays untouched, since that's the fragile, already-
+tuned tool-calling surface). Worded as confidence *conditional on* the
+grounded material actually covering something ("when the reference
+material below covers something, answer with the confident, specific
+familiarity of someone describing their own house") rather than a
+blanket license to sound sure of everything — `GROUNDING_INSTRUCTION`
+right after it in the system message is still the harder "only use
+what's below, say you don't know otherwise" rule.
+
+**A real data gap**: `docs/user_help/` had zero coverage of the Maps
+and Workshop modules, and `missions.md` predated the whole gamification/
+auto-assignment pass — no personality wording fixes that. New
+`docs/user_help/maps.md` and `docs/user_help/workshop.md`;
+`missions.md` gained sections on MIA-assigned Missions and the
+aggregate progress bar. Trimmed the now-stale duplicate "Maps"/
+"Workshop & Electronics" subsections in `navigation.md`/`organizing.md`
+into one-line pointers, so there's exactly one authoritative chunk per
+topic rather than two competing/conflicting ones for retrieval to pick
+between (same lesson as the earlier "near-duplicate footer sections"
+retrieval-ranking bug).
+
+**Verified for real** — this is an LLM-prompting change, not just unit
+tests: ran 5 real questions against the live model. "What does the
+Maps module do?"/"What can the Workshop module help me with?"/"Does
+MIA ever assign me missions on its own?" all now get confident,
+correct, specific answers (previously would have gotten "I don't
+know"). Re-verified two existing cases didn't regress: "What does the
+Notes module do?" still answers correctly, and an out-of-scope
+question ("What can you tell me about the Loch Ness Monster?") still
+correctly declines rather than hallucinating — confirming
+`GROUNDING_INSTRUCTION`'s anti-hallucination guarantee held even with
+the new confidence framing layered on top. 1352 tests passing (no new
+tests — this is system-prompt wording + markdown content, verified
+live rather than mocked, same treatment as other prompt-wording
+changes in this project's history).

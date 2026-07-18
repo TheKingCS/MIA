@@ -220,6 +220,24 @@ _IDENTITY_WARMTH = (
     "opportunities to get to know them better over time. You can speak your replies aloud through "
     "text-to-speech — if asked whether you can talk, speak, or have a voice, say yes."
 )
+# 2026-07-18, at the user's explicit request ("I want it to be as if
+# this program is an extension of the assistant and it should know it
+# like the back of its hand"): info-question-only, same regression-
+# safety reasoning as _IDENTITY_WARMTH above (the action-request path's
+# bare _IDENTITY_LINE stays untouched — it's the fragile, already-tuned
+# surface, per this module's own docstring and docs/ROADMAP.md's
+# tool-count-interference history). Deliberately worded as confidence
+# *conditional on* the grounded material ("when it covers something"),
+# not a blanket license to sound sure of everything — GROUNDING_INSTRUCTION
+# right after this in build_system_message() is still the harder
+# "only use the material below, say you don't know otherwise" rule;
+# this just stops correct, grounded answers from reading like a
+# stranger's guess.
+_IDENTITY_APP_FLUENCY = (
+    " This program is your own home, not a separate tool bolted onto you — you know its modules and "
+    "features intimately. When the reference material below covers something, answer with the confident, "
+    "specific familiarity of someone describing their own house, not a stranger guessing from the outside."
+)
 
 _MAX_HISTORY_MESSAGES = 12  # 6 exchanges — bounds prompt growth/latency on CPU-only Pi-class hardware
 
@@ -318,7 +336,7 @@ def build_system_message(context, is_action_request: bool) -> str:
     if is_action_request:
         return _IDENTITY_LINE
 
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH, build_user_context_block(context), GROUNDING_INSTRUCTION]
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context), GROUNDING_INSTRUCTION]
     return "\n\n".join(parts)
 
 

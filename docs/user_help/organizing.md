@@ -25,6 +25,6 @@ Toolbox is a collection of everyday tools, each its own tab:
 
 ## Workshop & Electronics
 
-A separate component inventory specifically for electronics and
-workshop projects — resistors, connectors, fasteners, whatever you're
-stocking for a build.
+A separate module with its own help section — an electronics
+components inventory plus a small Materials/Jobs/Products/Ledger
+production pipeline. See the Workshop help section for details.
