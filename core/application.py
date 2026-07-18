@@ -371,8 +371,30 @@ class MIAApplication:
         screen transition through this one method is what makes
         fullscreen actually persist across the whole boot/switch flow,
         not just within MainWindow.
+
+        **2026-07-17: resize to the screen's own geometry before
+        requesting fullscreen.** Every top-level screen constructs
+        itself at a small fixed windowed size first (e.g. MainWindow's
+        own `resize(1100, 700)`, SplashScreen's `resize(720, 640)`) —
+        harmless normally, but going straight from that small windowed
+        size to `showFullScreen()` is exactly the transition that
+        triggered a real crash: `xdg_surface buffer (1920 x 1205) is
+        larger than the configured fullscreen state (1920 x 1200)` — a
+        fatal Wayland protocol error that killed the whole Wayland
+        connection, not just M.I.A. Explicitly resizing to the actual
+        screen size first means the widget is already at the correct
+        geometry before the fullscreen request, removing the small-
+        then-huge jump Qt's Wayland backend was mis-negotiating.
+        **Unverified beyond this one incident** — this dev sandbox has
+        no real Wayland display to reproduce/confirm the fix against
+        (same "genuinely unverifiable here" situation as
+        docs/KNOWN_ISSUES.md's other real-hardware-only entries);
+        needs confirming on the machine that actually hit the crash.
         """
         if self.config.get("system.kiosk_mode", False):
+            screen = widget.screen() or self.qt_app.primaryScreen()
+            if screen is not None:
+                widget.resize(screen.size())
             widget.showFullScreen()
         else:
             widget.show()

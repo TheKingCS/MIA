@@ -3,6 +3,26 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Open (fix applied, unconfirmed): real crash — Wayland connection killed going fullscreen
+
+2026-07-17, hit live on the user's real machine right after selecting a
+profile (kiosk_mode on): `xdg_wm_base@3: error 4: xdg_surface buffer
+(1920 x 1205) is larger than the configured fullscreen state (1920 x
+1200)` then `The Wayland connection experienced a fatal error: Protocol
+error` — this kills the whole Wayland session, not just M.I.A.
+
+Root cause (best diagnosis possible without a real Wayland display to
+reproduce against — this dev sandbox is headless/offscreen-QPA only):
+every top-level screen constructs itself at a small fixed windowed size
+first (`MainWindow.resize(1100, 700)`, `SplashScreen.resize(720, 640)`,
+etc.), then `core/application.py`'s `_display()` immediately calls
+`showFullScreen()` on top of that when kiosk_mode is on. That small-
+windowed-then-huge-fullscreen jump is a known trigger for a Qt/Wayland
+buffer-negotiation race. Fix: `_display()` now explicitly resizes the
+widget to the actual screen's geometry *before* requesting fullscreen,
+removing the jump. **Not confirmed fixed** — needs the user to relaunch
+on the machine that actually hit this and confirm it doesn't recur.
+
 ## Open: MIA Home's move onto Windows is unverified beyond a static code audit
 
 Static audit (2026-07-16, ahead of running MIA Home on the real Project
