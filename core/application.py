@@ -1134,6 +1134,174 @@ class MIAApplication:
             handler=self._action_delete_component,
             trigger_phrases=("delete a component", "remove a component", "component "),
         ))
+        # 2026-07-18: Workshop's Materials/Jobs/Products/Ledger production
+        # pipeline (built earlier this session) had zero Assistant
+        # actions until now — a real gap found via a module-coverage
+        # audit, not guessed. Four small domains (not one big "workshop"
+        # domain) so a materials-only question doesn't also attach
+        # ledger/job tools it doesn't need — same per-topic scoping this
+        # registry already uses everywhere else.
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_material",
+            domain="materials",
+            description="Add a raw Material to M.I.A.'s Workshop production pipeline (Materials tab).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The material's name, e.g. 'Plywood' or 'PLA Filament'."},
+                    "unit": {"type": "string", "description": "Optional unit, e.g. 'sheet', 'kg', 'spool'."},
+                    "quantity_on_hand": {"type": "number", "description": "Optional starting quantity on hand."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_material,
+            trigger_phrases=("add a material", "new material", "add material"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_materials",
+            domain="materials",
+            description="List the user's raw Materials in M.I.A.'s Workshop production pipeline.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional search text. Leave empty for all materials."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_materials,
+            trigger_phrases=("list my materials", "list materials", "what materials", "show my materials"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_product",
+            domain="products",
+            description="Add a finished Product to M.I.A.'s Workshop production pipeline (Products tab).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The product's name."},
+                    "quantity_in_stock": {"type": "number", "description": "Optional starting quantity in stock."},
+                    "base_price": {"type": "number", "description": "Optional default selling price."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_product,
+            trigger_phrases=("add a product", "new product", "add product"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_products",
+            domain="products",
+            description="List the user's finished Products in M.I.A.'s Workshop production pipeline.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional search text. Leave empty for all products."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_products,
+            trigger_phrases=("list my products", "list products", "what products", "show my products"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_job",
+            domain="jobs",
+            description="Start a new production Job in M.I.A.'s Workshop pipeline.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The job's name."},
+                    "description": {"type": "string", "description": "Optional description of the job."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_job,
+            # Deliberately no bare "new job" — found via live testing that
+            # it falsely gates open on "I love my new job at the bakery"
+            # and, worse, the model then hallucinated an unrelated
+            # set_birthday call once the (wrongly) attached jobs-domain
+            # tools were in front of it. "start a new job" (matching the
+            # same "Start a new X called Y" phrasing add_mission/
+            # add_project/add_expedition already use) is specific enough
+            # to avoid that collision.
+            trigger_phrases=("start a job", "start a new job", "add a job", "create a job"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_jobs",
+            domain="jobs",
+            description="List the user's production Jobs in M.I.A.'s Workshop pipeline.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_jobs,
+            trigger_phrases=("list my jobs", "list jobs", "what jobs", "show my jobs"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="consume_material",
+            domain="jobs",
+            description=(
+                "Record that an existing Job consumed some quantity of an existing Material — deducts "
+                "that quantity from the Material's own stock automatically."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "job_name": {"type": "string", "description": "The name of the existing Job."},
+                    "material_name": {"type": "string", "description": "The name of the existing Material consumed."},
+                    "quantity": {"type": "number", "description": "How much of the material was used."},
+                },
+                "required": ["job_name", "material_name", "quantity"],
+            },
+            handler=self._action_consume_material,
+            # "job used" not "my job used" — real phrasing puts the job's
+            # own name between "my" and "job used" ("My Birdhouse Batch
+            # job used..."), which the stricter phrase missed entirely.
+            trigger_phrases=("used material", "consumed material", "consume material", "job used"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="produce_product",
+            domain="jobs",
+            description=(
+                "Record that an existing Job produced some quantity of an existing Product — credits "
+                "that quantity onto the Product's own stock automatically."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "job_name": {"type": "string", "description": "The name of the existing Job."},
+                    "product_name": {"type": "string", "description": "The name of the existing Product produced."},
+                    "quantity": {"type": "number", "description": "How much of the product was produced."},
+                },
+                "required": ["job_name", "product_name", "quantity"],
+            },
+            handler=self._action_produce_product,
+            # "job produced" not "my job produced" — same reasoning as
+            # consume_material's "job used" fix just above.
+            trigger_phrases=("job produced", "job finished producing", "produced product", "produce product"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="record_sale",
+            domain="ledger",
+            description=(
+                "Record a sale of an existing Product in M.I.A.'s Workshop Ledger — deducts the sold "
+                "quantity from the Product's stock and logs the revenue."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "product_name": {"type": "string", "description": "The name of the existing Product sold."},
+                    "quantity": {"type": "number", "description": "How many units were sold."},
+                    "amount": {"type": "number", "description": "The total sale amount in dollars."},
+                },
+                "required": ["product_name", "quantity", "amount"],
+            },
+            handler=self._action_record_sale,
+            trigger_phrases=("record a sale", "log a sale", "sold a product", "i sold", "record sale"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_ledger_summary",
+            domain="ledger",
+            description="Get the user's total revenue, expenses, and net profit from M.I.A.'s Workshop Ledger.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_ledger_summary,
+            trigger_phrases=("ledger summary", "how much profit", "my revenue", "my expenses", "net profit"),
+        ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_connected_devices",
             domain="field_kit",
@@ -1926,6 +2094,124 @@ class MIAApplication:
             return f"I don't have a component called '{arguments.get('name', '')}'."
         context.components.delete_component(match.component_id)
         return f"Deleted the component '{match.name}'."
+
+    @staticmethod
+    def _action_add_material(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a material."
+        unit = str(arguments.get("unit", "") or "").strip()
+        try:
+            quantity_on_hand = float(arguments.get("quantity_on_hand", 0) or 0)
+        except (TypeError, ValueError):
+            quantity_on_hand = 0.0
+        material = context.materials.add_material(name=name, unit=unit, quantity_on_hand=quantity_on_hand)
+        return f"Material '{material.name}' added (qty {material.quantity_on_hand:g}{' ' + unit if unit else ''})."
+
+    @staticmethod
+    def _action_list_materials(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").strip()
+        materials = context.materials.search(query) if query else context.materials.all_materials()
+        if not materials:
+            return "No matching materials found." if query else "You have no materials saved."
+        lines = [f"- '{m.name}': {m.quantity_on_hand:g}{' ' + m.unit if m.unit else ''} on hand" for m in materials]
+        return "Your materials:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_product(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a product."
+        try:
+            quantity_in_stock = float(arguments.get("quantity_in_stock", 0) or 0)
+        except (TypeError, ValueError):
+            quantity_in_stock = 0.0
+        try:
+            base_price = float(arguments.get("base_price", 0) or 0)
+        except (TypeError, ValueError):
+            base_price = 0.0
+        product = context.products.add_product(name=name, quantity_in_stock=quantity_in_stock, base_price=base_price)
+        return f"Product '{product.name}' added (qty {product.quantity_in_stock:g})."
+
+    @staticmethod
+    def _action_list_products(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").strip()
+        products = context.products.search(query) if query else context.products.all_products()
+        if not products:
+            return "No matching products found." if query else "You have no products saved."
+        lines = [f"- '{p.name}': {p.quantity_in_stock:g} in stock" for p in products]
+        return "Your products:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_job(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to start a job."
+        description = str(arguments.get("description", "") or "").strip()
+        job = context.jobs.add_job(name=name, description=description)
+        return f"Job '{job.name}' started (status {job.status})."
+
+    @staticmethod
+    def _action_list_jobs(context: AppContext, arguments: dict) -> str:
+        jobs = context.jobs.all_jobs()
+        if not jobs:
+            return "You have no jobs yet."
+        return "Your jobs:\n" + "\n".join(f"- '{j.name}' ({j.status})" for j in jobs)
+
+    @staticmethod
+    def _action_consume_material(context: AppContext, arguments: dict) -> str:
+        job_name = str(arguments.get("job_name", "")).strip().lower()
+        material_name = str(arguments.get("material_name", "")).strip().lower()
+        job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
+        if job is None:
+            return f"I don't have a job called '{arguments.get('job_name', '')}'."
+        material = next((m for m in context.materials.all_materials() if m.name.lower() == material_name), None)
+        if material is None:
+            return f"I don't have a material called '{arguments.get('material_name', '')}'."
+        try:
+            quantity = float(arguments.get("quantity", 0))
+        except (TypeError, ValueError):
+            return "I need a numeric quantity to record material use."
+        context.jobs.consume_material(job.job_id, material.material_id, quantity)
+        return f"Recorded {quantity:g} of '{material.name}' used on job '{job.name}'."
+
+    @staticmethod
+    def _action_produce_product(context: AppContext, arguments: dict) -> str:
+        job_name = str(arguments.get("job_name", "")).strip().lower()
+        product_name = str(arguments.get("product_name", "")).strip().lower()
+        job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
+        if job is None:
+            return f"I don't have a job called '{arguments.get('job_name', '')}'."
+        product = next((p for p in context.products.all_products() if p.name.lower() == product_name), None)
+        if product is None:
+            return f"I don't have a product called '{arguments.get('product_name', '')}'."
+        try:
+            quantity = float(arguments.get("quantity", 0))
+        except (TypeError, ValueError):
+            return "I need a numeric quantity to record production."
+        context.jobs.produce_product(job.job_id, product.product_id, quantity)
+        return f"Recorded {quantity:g} of '{product.name}' produced by job '{job.name}'."
+
+    @staticmethod
+    def _action_record_sale(context: AppContext, arguments: dict) -> str:
+        product_name = str(arguments.get("product_name", "")).strip().lower()
+        product = next((p for p in context.products.all_products() if p.name.lower() == product_name), None)
+        if product is None:
+            return f"I don't have a product called '{arguments.get('product_name', '')}'."
+        try:
+            quantity = float(arguments.get("quantity", 0))
+            amount = float(arguments.get("amount", 0))
+        except (TypeError, ValueError):
+            return "I need a numeric quantity and sale amount to record a sale."
+        context.ledger.record_sale(product.product_id, quantity, amount)
+        return f"Recorded a sale of {quantity:g} '{product.name}' for ${amount:.2f}."
+
+    @staticmethod
+    def _action_get_ledger_summary(context: AppContext, arguments: dict) -> str:
+        revenue = context.ledger.total_revenue()
+        expenses = context.ledger.total_expenses()
+        profit = context.ledger.net_profit()
+        return f"Total revenue: ${revenue:.2f}. Total expenses: ${expenses:.2f}. Net profit: ${profit:.2f}."
 
     @staticmethod
     def _action_list_connected_devices(context: AppContext, arguments: dict) -> str:

@@ -4581,3 +4581,41 @@ tasks, the notes/add_note overlap resolving correctly) — all pass. All
 golden set (69 → 84), which now passes 84/84. 1352 pytest tests
 passing (unchanged — this is entirely trigger-phrase/description
 tuning, verified live, not unit-testable in the traditional sense).
+
+## Workshop production pipeline gets real Assistant actions (2026-07-18)
+
+The single biggest gap from the earlier module-coverage audit: the
+Materials/Jobs/Products/Ledger pipeline had zero executable path for
+the Assistant — it could talk about Workshop (per the new help doc
+above) but couldn't do anything in it. 10 new actions across 4 small
+domains (`materials`, `products`, `jobs`, `ledger` — not one big
+"workshop" domain, so a materials-only question doesn't also attach
+unrelated ledger/job tools): `add_material`/`list_materials`,
+`add_product`/`list_products`, `add_job`/`list_jobs`,
+`consume_material`/`produce_product` (both resolve a job name + a
+material/product name to real records, same "name-before-noun"
+resolution pattern the rest of this registry already uses), and
+`record_sale`/`get_ledger_summary`.
+
+**Found and fixed 3 real issues via live-model testing before trusting
+any of this**, same "re-verify against the real model, don't assume
+scaling stays safe" discipline as every prior registry expansion:
+1. `consume_material`/`produce_product`'s own trigger phrases ("my job
+   used"/"my job produced") assumed the job's name would never appear
+   between "my" and "job" — real phrasing ("My Birdhouse Batch job
+   used 4 sheets...") breaks that assumption. Loosened to "job used"/
+   "job produced".
+2. `add_job`'s bare "new job" trigger falsely gated open on "I love my
+   new job at the bakery" — and, worse, once the (wrongly) attached
+   jobs-domain tools were in front of the model, it hallucinated a
+   completely unrelated `set_birthday` call rather than declining.
+   Replaced with "start a new job" (matching the same "Start a new X
+   called Y" phrasing `add_mission`/`add_project`/`add_expedition`
+   already use), which doesn't collide with the false-positive case.
+
+17 new unit tests (`tests/test_assistant_action_handlers.py`, testing
+the actual handler logic — stock deduction/crediting, revenue/expense
+totals — not just gating) plus 10 new golden-set cases (84 → 96,
+including 2 false-positive sanity checks for the "job"/"material"
+words in ordinary conversation). Full official golden set re-verified
+clean at 96/96 after every fix. 1369 pytest tests passing (17 new).

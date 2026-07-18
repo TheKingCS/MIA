@@ -46,8 +46,12 @@ import core.config_manager as config_manager_module
 import core.conversation_manager as conversation_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
+import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
+import core.ledger_manager as ledger_manager_module
+import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
+import core.product_manager as product_manager_module
 import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
@@ -87,6 +91,15 @@ task_manager_module._DATA_DIR = _TEMP_DATA_DIR
 task_manager_module._TASKS_FILE = _TEMP_DATA_DIR / "tasks.json"
 mission_manager_module._DATA_DIR = _TEMP_DATA_DIR
 mission_manager_module._MISSIONS_FILE = _TEMP_DATA_DIR / "missions.json"
+material_manager_module._DATA_DIR = _TEMP_DATA_DIR
+material_manager_module._MATERIALS_FILE = _TEMP_DATA_DIR / "materials.json"
+job_manager_module._DATA_DIR = _TEMP_DATA_DIR
+job_manager_module._JOBS_FILE = _TEMP_DATA_DIR / "jobs.json"
+product_manager_module._DATA_DIR = _TEMP_DATA_DIR
+product_manager_module._PRODUCTS_FILE = _TEMP_DATA_DIR / "products.json"
+ledger_manager_module._DATA_DIR = _TEMP_DATA_DIR
+ledger_manager_module._REVENUE_FILE = _TEMP_DATA_DIR / "revenue.json"
+ledger_manager_module._EXPENSES_FILE = _TEMP_DATA_DIR / "expenses.json"
 conversation_manager_module._DATA_DIR = _TEMP_DATA_DIR
 conversation_manager_module._CONVERSATIONS_FILE = _TEMP_DATA_DIR / "conversations.json"
 user_memory_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -106,11 +119,15 @@ from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
+from core.job_manager import JobManager
 from core.journal_manager import JournalManager
+from core.ledger_manager import LedgerManager
 from core.llm_manager import LLMManager
+from core.material_manager import MaterialManager
 from core.memory_manager import MemoryManager
 from core.mission_manager import MissionManager
 from core.module_manager import ModuleManager
+from core.product_manager import ProductManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
 from core.reference_library_manager import ReferenceLibraryManager
@@ -269,6 +286,29 @@ GOLDEN_CASES = [
         "What did I write down about the trip?",
         "list_notes",
     ),
+    # --- 2026-07-18: Workshop production pipeline (Materials/Jobs/Products/
+    # Ledger) had zero Assistant actions until now — real gap found via a
+    # module-coverage audit. ---
+    ("add material", "Add a material called Aluminum Rod", "add_material"),
+    ("list materials", "What materials do I have?", "list_materials"),
+    ("add product", "Add a product called Bookshelf", "add_product"),
+    ("list products", "What products do I have?", "list_products"),
+    ("add job", "Start a new job called Bookshelf Batch", "add_job"),
+    ("list jobs", "What jobs do I have?", "list_jobs"),
+    (
+        "consume material on a job",
+        "My Birdhouse Batch job used 4 sheets of Plywood",
+        "consume_material",
+    ),
+    (
+        "produce product on a job",
+        "My Birdhouse Batch job produced 3 Birdhouses",
+        "produce_product",
+    ),
+    ("record a sale", "I sold 2 Birdhouses for $50", "record_sale"),
+    ("ledger summary", "What's my net profit so far?", "get_ledger_summary"),
+    ("false-positive sanity: ordinary use of the word 'job'", "I love my new job at the bakery", None),
+    ("false-positive sanity: ordinary use of the word 'material'", "This shirt is made of a soft material", None),
 ]
 
 
@@ -307,6 +347,10 @@ def _build_context() -> AppContext:
     # is needed the way every other manager above requires.
     context.memories = MemoryManager(context)
     context.missions = MissionManager(context)
+    context.materials = MaterialManager(context)
+    context.jobs = JobManager(context)
+    context.products = ProductManager(context)
+    context.ledger = LedgerManager(context)
     context.conversations = ConversationManager(context)
     context.user_memories = UserMemoryManager(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
@@ -344,6 +388,9 @@ def _seed_fixtures(context: AppContext) -> None:
     context.tasks.add_task(project_id=project.project_id, title="Buy fuse box")
     mission = context.missions.add_mission(name="Master Angler", trip_id=trip.trip_id)
     context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
+    context.materials.add_material(name="Plywood", unit="sheet", quantity_on_hand=10)
+    context.jobs.add_job(name="Birdhouse Batch")
+    context.products.add_product(name="Birdhouse", quantity_in_stock=2, base_price=25.0)
 
 
 def main() -> int:

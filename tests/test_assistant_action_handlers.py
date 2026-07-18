@@ -23,8 +23,12 @@ import core.component_manager as component_manager_module
 import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
+import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
+import core.ledger_manager as ledger_manager_module
+import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
+import core.product_manager as product_manager_module
 import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
@@ -39,9 +43,13 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
+from core.job_manager import JobManager
 from core.journal_manager import JournalManager
+from core.ledger_manager import LedgerManager
+from core.material_manager import MaterialManager
 from core.memory_manager import MemoryManager
 from core.mission_manager import MissionManager
+from core.product_manager import ProductManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
 from core.script_library_manager import ScriptLibraryManager
@@ -83,6 +91,15 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(task_manager_module, "_TASKS_FILE", data_dir / "tasks.json")
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
+    monkeypatch.setattr(material_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(material_manager_module, "_MATERIALS_FILE", data_dir / "materials.json")
+    monkeypatch.setattr(job_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(job_manager_module, "_JOBS_FILE", data_dir / "jobs.json")
+    monkeypatch.setattr(product_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(product_manager_module, "_PRODUCTS_FILE", data_dir / "products.json")
+    monkeypatch.setattr(ledger_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(ledger_manager_module, "_REVENUE_FILE", data_dir / "revenue.json")
+    monkeypatch.setattr(ledger_manager_module, "_EXPENSES_FILE", data_dir / "expenses.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -100,6 +117,10 @@ def context(tmp_path, monkeypatch):
     ctx.tasks = TaskManager(ctx)
     ctx.memories = MemoryManager(ctx)
     ctx.missions = MissionManager(ctx)
+    ctx.materials = MaterialManager(ctx)
+    ctx.jobs = JobManager(ctx)
+    ctx.products = ProductManager(ctx)
+    ctx.ledger = LedgerManager(ctx)
     return ctx
 
 
@@ -1266,3 +1287,122 @@ def test_complete_mission_sets_status(context):
 def test_complete_mission_unknown_name_reports_not_found(context):
     result = MIAApplication._action_complete_mission(context, {"name": "Nonexistent"})
     assert "nonexistent" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Workshop production pipeline: Materials, Jobs, Products, Ledger
+# ----------------------------------------------------------------------
+
+def test_add_material_requires_a_name(context):
+    result = MIAApplication._action_add_material(context, {})
+    assert "name" in result.lower()
+    assert context.materials.all_materials() == []
+
+
+def test_add_material_creates_material(context):
+    result = MIAApplication._action_add_material(context, {"name": "Plywood", "unit": "sheet", "quantity_on_hand": 10})
+    assert "Plywood" in result and "10" in result
+    assert len(context.materials.all_materials()) == 1
+
+
+def test_list_materials_empty(context):
+    assert "no materials" in MIAApplication._action_list_materials(context, {}).lower()
+
+
+def test_list_materials_returns_all(context):
+    context.materials.add_material(name="Plywood", unit="sheet", quantity_on_hand=10)
+    result = MIAApplication._action_list_materials(context, {})
+    assert "Plywood" in result and "10" in result
+
+
+def test_add_product_requires_a_name(context):
+    result = MIAApplication._action_add_product(context, {})
+    assert "name" in result.lower()
+    assert context.products.all_products() == []
+
+
+def test_add_product_creates_product(context):
+    result = MIAApplication._action_add_product(context, {"name": "Birdhouse", "quantity_in_stock": 2})
+    assert "Birdhouse" in result
+    assert len(context.products.all_products()) == 1
+
+
+def test_list_products_empty(context):
+    assert "no products" in MIAApplication._action_list_products(context, {}).lower()
+
+
+def test_add_job_requires_a_name(context):
+    result = MIAApplication._action_add_job(context, {})
+    assert "name" in result.lower()
+    assert context.jobs.all_jobs() == []
+
+
+def test_add_job_creates_job(context):
+    result = MIAApplication._action_add_job(context, {"name": "Birdhouse Batch"})
+    assert "Birdhouse Batch" in result
+    assert len(context.jobs.all_jobs()) == 1
+
+
+def test_list_jobs_empty(context):
+    assert "no jobs" in MIAApplication._action_list_jobs(context, {}).lower()
+
+
+def test_consume_material_deducts_material_stock(context):
+    job = context.jobs.add_job(name="Birdhouse Batch")
+    material = context.materials.add_material(name="Plywood", quantity_on_hand=10)
+    result = MIAApplication._action_consume_material(
+        context, {"job_name": "Birdhouse Batch", "material_name": "Plywood", "quantity": 4}
+    )
+    assert "4" in result and "Plywood" in result and "Birdhouse Batch" in result
+    assert context.materials.get_material(material.material_id).quantity_on_hand == 6
+
+
+def test_consume_material_unknown_job_reports_not_found(context):
+    context.materials.add_material(name="Plywood", quantity_on_hand=10)
+    result = MIAApplication._action_consume_material(
+        context, {"job_name": "Nonexistent", "material_name": "Plywood", "quantity": 4}
+    )
+    assert "nonexistent" in result.lower()
+
+
+def test_consume_material_unknown_material_reports_not_found(context):
+    context.jobs.add_job(name="Birdhouse Batch")
+    result = MIAApplication._action_consume_material(
+        context, {"job_name": "Birdhouse Batch", "material_name": "Nonexistent", "quantity": 4}
+    )
+    assert "nonexistent" in result.lower()
+
+
+def test_produce_product_credits_product_stock(context):
+    job = context.jobs.add_job(name="Birdhouse Batch")
+    product = context.products.add_product(name="Birdhouse", quantity_in_stock=2)
+    result = MIAApplication._action_produce_product(
+        context, {"job_name": "Birdhouse Batch", "product_name": "Birdhouse", "quantity": 3}
+    )
+    assert "3" in result and "Birdhouse" in result
+    assert context.products.get_product(product.product_id).quantity_in_stock == 5
+
+
+def test_record_sale_deducts_stock_and_logs_revenue(context):
+    product = context.products.add_product(name="Birdhouse", quantity_in_stock=5)
+    result = MIAApplication._action_record_sale(
+        context, {"product_name": "Birdhouse", "quantity": 2, "amount": 50.0}
+    )
+    assert "2" in result and "Birdhouse" in result and "50.00" in result
+    assert context.products.get_product(product.product_id).quantity_in_stock == 3
+    assert context.ledger.total_revenue() == 50.0
+
+
+def test_record_sale_unknown_product_reports_not_found(context):
+    result = MIAApplication._action_record_sale(
+        context, {"product_name": "Nonexistent", "quantity": 2, "amount": 50.0}
+    )
+    assert "nonexistent" in result.lower()
+
+
+def test_get_ledger_summary_reports_revenue_expenses_and_profit(context):
+    product = context.products.add_product(name="Birdhouse", quantity_in_stock=5)
+    context.ledger.record_sale(product.product_id, quantity_sold=2, amount=50.0)
+    context.ledger.add_expense(amount=10.0, description="Wood")
+    result = MIAApplication._action_get_ledger_summary(context, {})
+    assert "50.00" in result and "10.00" in result and "40.00" in result
