@@ -483,6 +483,16 @@ class HomeDashboard(QFrame):
         if self._widgets_grid is None:
             self._widgets_grid = QGridLayout(self._widgets_container)
             self._widgets_grid.setSpacing(16)
+            # 2026-07-18: real report — dashboard widgets "spaced very far
+            # apart" after navigating away and back. self's outer layout
+            # already guards against this at the top level (AlignTop
+            # above), but this inner grid had no alignment of its own —
+            # if self._widgets_container ever gets handed more height
+            # than its cards need (e.g. via gui/main_window.py's
+            # self._stack_scroll wrapping the whole stack), a grid with
+            # no alignment set grows the gaps between fixed-size cards
+            # to fill it rather than leaving it as blank margin.
+            self._widgets_grid.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         while self._widgets_grid.count():
             item = self._widgets_grid.takeAt(0)

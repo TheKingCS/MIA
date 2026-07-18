@@ -621,4 +621,25 @@ QPushButton#TalkButton[recording="true"] {
     color: #0d1116;
     font-weight: 600;
 }
+
+/* 2026-07-18: lets the user cut M.I.A. off mid-sentence — reuses the
+same critical red as TalkButton's recording state, but outline-only
+while enabled (this isn't a destructive action, just an interrupt), so
+it doesn't visually compete with an actual "recording" indicator. */
+QPushButton#StopSpeakingButton {
+    background-color: #101722;
+    border: 1px solid #e06666;
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: #e06666;
+}
+
+QPushButton#StopSpeakingButton:hover {
+    background-color: #2a1414;
+}
+
+QPushButton#StopSpeakingButton:disabled {
+    color: #45505a;
+    border: 1px solid #1c232b;
+}
 """

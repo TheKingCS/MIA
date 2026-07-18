@@ -4678,3 +4678,42 @@ verified 100/100 clean on the first live-model run — no trigger-phrase
 gaps or false positives found this time, unlike the earlier
 Workshop-pipeline pass. Registry now 67 actions across 18 domains.
 1377 pytest tests passing (8 new).
+
+## Stop-speaking button, "power percentage" trigger gap, grid spacing fix (2026-07-18)
+
+Three real user reports in one pass. (1) No way to interrupt M.I.A.
+mid-sentence once TTS playback started — new "⏹ Stop" button next to
+Hold to Talk in `modules/assistant/module.py`, wired to a new
+`VoiceManager.stop_playback()` (`sounddevice.stop()`, which aborts the
+stream `play()`'s blocking `sd.wait()` is sitting in on
+`core/tts_worker.py`'s `QThread`, same as natural playback completion
+— a global stop, so it also cuts off the Home dashboard's spoken
+startup briefing if that happens to be playing). Enabled only while a
+`TTSWorker` is actually running. (2) "What is my power percentage?"
+got a hedging "I don't know" reply that only awkwardly related power
+to battery — real trigger-phrase gap, `get_power_status` only had
+"battery"/"power status" phrasing, nothing matching bare "power" +
+"percentage"/"level". Added "power percentage", "power level", "percent
+power", "how much power" — same pattern as every other trigger-gap fix
+this project has made, re-verified against the live model (102/102,
+including a new false-positive sanity check: "This new drill has a lot
+more power than my old one" correctly triggers nothing). (3) Apps grid
+and Home dashboard widgets reported "spaced very far apart" after
+navigating away and back — real regression from the Home/Back crash
+fix earlier this session: wrapping the whole `QStackedWidget` in its
+own resizable `self._stack_scroll` can hand whatever page is current
+more vertical space than its content needs, and neither
+`gui/main_window.py`'s Apps grid (`_build_menu()`) nor
+`gui/home_dashboard.py`'s widgets grid (`_build_widgets_grid()`) had an
+alignment set on their `QGridLayout`, so the extra space grew as gaps
+between rows instead of sitting as blank margin below the content —
+same underlying issue `gui/home_dashboard.py`'s own top-level
+`outer.setAlignment(AlignTop)` already guards against, just missing at
+the grid level. Fixed by setting `AlignLeft | AlignTop` on both grids.
+**Actually reproduced and confirmed this time** (unlike the two
+"unconfirmed" crash-fix entries in `docs/KNOWN_ISSUES.md`): a headless
+test forcing a 2400×1600 window measured the Apps grid's extra
+inter-row gap at ~122px before the fix, 16px (the configured spacing,
+correct) after. 1377 pytest tests passing (no new ones — layout-only
+fix, verified via an ad hoc geometry smoke test instead of a permanent
+one, same treatment as the earlier dashboard-sizing showEvent fix).

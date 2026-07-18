@@ -283,6 +283,12 @@ class AssistantModule(ModuleBase):
         self._talk_button.released.connect(self._on_talk_released)
         input_row.addWidget(self._talk_button)
 
+        self._stop_speaking_button = QPushButton("⏹  Stop")
+        self._stop_speaking_button.setObjectName("StopSpeakingButton")
+        self._stop_speaking_button.setEnabled(False)
+        self._stop_speaking_button.clicked.connect(self._on_stop_speaking)
+        input_row.addWidget(self._stop_speaking_button)
+
         layout.addLayout(input_row)
         return container
 
@@ -565,8 +571,19 @@ class AssistantModule(ModuleBase):
         self._tts_worker = TTSWorker(self.context.voice, text, output_path)
         self._tts_worker.finished.connect(self._on_tts_finished)
         self._tts_worker.start()
+        self._stop_speaking_button.setEnabled(True)
 
     def _on_tts_finished(self) -> None:
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
+        self._stop_speaking_button.setEnabled(False)
+
+    def _on_stop_speaking(self) -> None:
+        """Cuts M.I.A. off mid-sentence — real user ask (2026-07-18):
+        no way to interrupt her once she started talking. Only stops
+        playback; synthesis (if still running) finishes harmlessly with
+        nothing left to play, same as if the user just wasn't
+        listening."""
+        if self.context.voice is not None:
+            self.context.voice.stop_playback()

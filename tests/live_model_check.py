@@ -274,6 +274,12 @@ GOLDEN_CASES = [
     ("tasks: 'what do I need to do'", "What do I need to do?", "list_tasks"),
     ("alarms: 'when is my next alarm'", "When is my next alarm?", "list_alarms"),
     ("power: 'am I plugged in'", "Am I plugged in right now?", "get_power_status"),
+    (
+        "power: 'power percentage' real gap — user report, no trigger phrase matched at all",
+        "What is my power percentage?",
+        "get_power_status",
+    ),
+    ("false-positive sanity: 'power' unrelated to battery", "This new drill has a lot more power than my old one", None),
     ("expeditions: 'how many expeditions have I done'", "How many expeditions have I been on?", "list_expeditions"),
     ("waypoints: 'what locations have I saved'", "What locations have I saved?", "list_waypoints"),
     ("notes: 'anything I wrote down'", "Is there anything I wrote down recently?", "list_notes"),

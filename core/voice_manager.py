@@ -396,3 +396,18 @@ class VoiceManager:
             log.warning("Could not play audio: %s", exc)
             return False
         return True
+
+    def stop_playback(self) -> None:
+        """Immediately cuts off whatever `play()` is currently doing —
+        lets the user interrupt M.I.A. mid-sentence. `sounddevice.stop()`
+        aborts the stream a running `play()` call started on another
+        thread (`core/tts_worker.py`'s `QThread`); the `sd.wait()` inside
+        that call's `play()` returns right away once the stream is
+        stopped, same as it would on natural playback completion. A
+        no-op (not an error) if nothing is currently playing."""
+        if _sd is None:
+            return
+        try:
+            _sd.stop()
+        except Exception as exc:
+            log.warning("Could not stop audio playback: %s", exc)

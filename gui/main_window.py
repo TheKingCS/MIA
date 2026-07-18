@@ -22,7 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
@@ -410,6 +410,17 @@ class MainWindow(QMainWindow):
         container = QWidget()
         grid = QGridLayout(container)
         grid.setSpacing(16)
+        # 2026-07-18: real report — Apps cards "spaced very far apart."
+        # `container` sits in a resizable QScrollArea (this one, plus now
+        # gui/main_window.py's own outer `self._stack_scroll` wrapping
+        # the whole stack) which can hand it more space than the grid's
+        # content actually needs; with no alignment set, QGridLayout
+        # distributes that leftover space by growing the gaps between
+        # fixed-size cards rather than leaving it as blank margin. Same
+        # fix as gui/home_dashboard.py's `outer.setAlignment(AlignTop)`,
+        # applied at the grid level here since that's the layout with
+        # the excess room.
+        grid.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         modules = self.module_manager.enabled_modules()
         columns = 3

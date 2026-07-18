@@ -1079,6 +1079,14 @@ class MIAApplication:
                 "battery level", "battery status", "power status", "how much battery", "how's my battery",
                 # 2026-07-18: real gap — "am I plugged in" matched nothing at all.
                 "plugged in", "am i charging",
+                # 2026-07-18: real gap — "What is my power percentage"
+                # matched nothing at all (STT correctly transcribed it,
+                # but no trigger phrase used the word "power" alone with
+                # "percentage"/"level"), so it fell through to the
+                # grounded info-question path instead of calling this
+                # tool, and got a hedging "I don't know" reply that only
+                # awkwardly related power to battery in prose.
+                "power percentage", "power level", "percent power", "how much power",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(

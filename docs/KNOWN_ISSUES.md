@@ -3,6 +3,24 @@
 Closed items are kept below for history — each links back to its root
 cause and fix, in case something similar resurfaces later.
 
+## Closed: Apps grid / Home dashboard widgets "spaced very far apart" after navigating
+
+2026-07-18, reported by the user right after the Home/Back crash fix
+below: "when navigating the app I swapped to the Apps page and they
+were all spaced very far apart for some reason and then did the same
+thing on the home page." A real regression from that same crash fix —
+wrapping the whole `QStackedWidget` in its own resizable
+`self._stack_scroll` can hand whatever page is current more vertical
+space than its content needs, and neither `gui/main_window.py`'s Apps
+grid nor `gui/home_dashboard.py`'s widgets grid had an alignment set on
+their `QGridLayout`, so Qt grew the gaps between rows to fill the
+extra space instead of leaving it as blank margin. Fixed by setting
+`AlignLeft | AlignTop` on both grids (matching the same alignment
+`gui/home_dashboard.py`'s own top-level layout already used).
+**Reproduced and confirmed, not just theorized**: a headless test
+forcing a 2400×1600 window measured the Apps grid's extra inter-row
+gap at ~122px before the fix, 16px (the configured spacing) after.
+
 ## Open (fix applied, unconfirmed): real crash using Home/Back navigation buttons
 
 2026-07-18, reported by the user: "I keep crashing when using the home
