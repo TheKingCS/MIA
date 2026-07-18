@@ -37,7 +37,7 @@ class EasterEggDialog(QDialog):
         icon.setStyleSheet("font-size: 48px;")
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        title = QLabel("M.I.A.")
+        title = QLabel("MIA")
         title.setObjectName("TitleLabel")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 

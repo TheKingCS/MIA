@@ -1,6 +1,6 @@
-# M.I.A. — Long-Term Vision & Multi-Project Architecture
+# MIA — Long-Term Vision & Multi-Project Architecture
 
-This document captures the long-term mission behind M.I.A. and how it
+This document captures the long-term mission behind MIA and how it
 relates to the near-term work in `docs/ROADMAP.md`. Read this for
 *why* and *where this is all going*; read `ROADMAP.md` for *what we're
 actually building next*. Keeping these separate is deliberate — see
@@ -8,7 +8,7 @@ actually building next*. Keeping these separate is deliberate — see
 
 ## Mission
 
-M.I.A. is not a chatbot. It's meant to become a modular, offline-first,
+MIA is not a chatbot. It's meant to become a modular, offline-first,
 privacy-focused engineering partner, survival assistant, research
 platform, automation system, and lifelong knowledge base — one whose
 value compounds over years, improving through every completed project
@@ -24,7 +24,7 @@ detail, connector recommendation, and solar-charging requirement in
 `docs/HARDWARE.md`'s "Modular Backpack" section; read that fresh rather
 than trusting this summary as it evolves. The test for "done" the user gave
 directly: **if the user couldn't happily survive any situation with
-this tool, it isn't complete.** M.I.A. Core is meant to be worn, not
+this tool, it isn't complete.** MIA Core is meant to be worn, not
 carried in a bag and pulled out — this changes real assumptions (always
 available vs. push-to-talk-when-needed, continuous vs. session-based
 data capture) that ripple into `ROADMAP.md` and `HARDWARE.md`.
@@ -39,7 +39,7 @@ than replace it.
 not in tension, and it's worth being explicit about why.** Privacy-first
 here has always meant *no data leaves this device without you* — no
 cloud dependency, no telemetry, no third party ever in the loop. It was
-never a constraint on how much M.I.A. can know about its own single
+never a constraint on how much MIA can know about its own single
 owner on a device that owner fully controls. Given that, the user's
 explicit call is **maximalist local logging**: track everything the
 hardware can capture (position, pace, elevation, catch/tally counts,
@@ -52,12 +52,12 @@ actually requires physically.
 
 At the user's explicit request, this section is the new interpretive
 lens for every future feature decision, not just an added bullet list:
-**M.I.A. should not feel like software.** She should feel like an
+**MIA should not feel like software.** She should feel like an
 intelligent companion and personal operating system that naturally
 assists the user throughout daily life — every module, memory,
 tutorial, and interface contributing to one cohesive experience instead
 of feeling like separate apps bolted together. The user's own litmus
-test, to be applied to every future feature: *"Does this make M.I.A.
+test, to be applied to every future feature: *"Does this make MIA
 feel more like a knowledgeable companion?"*
 
 Four structural principles fall out of that test, each with real
@@ -66,24 +66,24 @@ it's marketed:
 
 1. **Voice-first design.** Voice should eventually become the primary
    interface — the user speaks naturally ("Add a mission," "Start my
-   next workout," "Teach me how finances work") and M.I.A. understands
+   next workout," "Teach me how finances work") and MIA understands
    intent rather than requiring rigid commands or menu-hunting. Today's
    Assistant (v0.5+) already does tool-calling intent recognition over
    text/voice input; this principle means every *future* module's
    primary interaction path should be designed voice-first, with the
    GUI as a supporting visual, not the other way around.
 2. **Intelligent UI navigation.** The GUI should react to the
-   conversation, not require it. When the user asks M.I.A. to do
+   conversation, not require it. When the user asks MIA to do
    something, the interface should navigate to the right module and
    visually perform the action *while the conversation continues* — "Add
    a mission" should open Missions, show the New Mission form, and fill
-   it in live as M.I.A. asks for the title and objectives, not just
+   it in live as MIA asks for the title and objectives, not just
    silently call `add_mission` in the background the way tool calls work
    today. This is a genuinely new capability, not a bigger version of an
    existing one — see the architecture note below.
 3. **Proactive, not just reactive.** Startup should greet the user with
    an intelligent summary ("Good evening Zac, let's review today's
-   information") instead of a static dashboard, and M.I.A. should
+   information") instead of a static dashboard, and MIA should
    continuously analyze recent activity to make unprompted, *actually
    useful* suggestions (recovery after intense workouts, a grocery trip
    when supplies run low, a birthday gift reminder before the date) —
@@ -102,7 +102,7 @@ Principles 1 and 2 above were written somewhat abstractly; the user
 gave a much sharper, concrete standard for what they actually mean in
 practice, prompted by a real complaint that the startup briefing felt
 like "reading a script" rather than genuinely understanding the
-dashboard: **the test for whether M.I.A.'s voice/companion layer is
+dashboard: **the test for whether MIA's voice/companion layer is
 good enough is whether a user could operate the entire application
 using voice alone** — not "voice as one more input method alongside
 touch," but voice as a fully sufficient control surface on its own.
@@ -117,7 +117,7 @@ flattened into generic "voice commands":
 - **Deep, current understanding of every module's data and
   capabilities, not just the Assistant's own tool registry.** Today's
   self-knowledge work (`docs/ASSISTANT_CAPABILITIES.md`) covers tool
-  *actions* — this goes further: M.I.A. should be able to describe
+  *actions* — this goes further: MIA should be able to describe
   what's currently *displayed* in any widget or module (not just that
   a `list_missions` tool exists), have a conversation about that live
   data, and act on it — including a widget's own interaction menu
@@ -130,13 +130,13 @@ flattened into generic "voice commands":
   previously-separate items in this document: self-knowledge (knowing
   the answer), the modular tutorial system (teaching it), and
   intelligent UI navigation (demonstrating it live on screen while
-  explaining it) are really one capability — "M.I.A. as tutor," not
+  explaining it) are really one capability — "MIA as tutor," not
   three unrelated features.
 - **The dashboard/widget disconnect that prompted this is a concrete
   instance of a general problem, not a one-off bug.** The startup
   briefing checked a fixed, hardcoded list of data sources instead of
   reflecting whatever's actually on the dashboard — worth fixing on its
-  own, but the deeper point is that *any* place M.I.A. talks about
+  own, but the deeper point is that *any* place MIA talks about
   "what's going on" needs to stay live-synced to real app state as that
   state grows (more widgets, more modules), not re-hardcoded by hand
   each time a new one ships.
@@ -152,7 +152,7 @@ as Missions/Expedition Mode/Field Kit before them: a **Memory Palace**
 (categorized, interconnected memory — Family/Programming/Fitness/
 Fishing/Projects/Travel/Cooking/Finance/Pets/Education/Work — replacing
 today's flat `UserMemory` list, not just extending it), **Relationship
-Profiles** (people M.I.A. knows — birthdays, favorite things, gift
+Profiles** (people MIA knows — birthdays, favorite things, gift
 ideas, shared memories, optionally tied to visual recognition when
 hardware supports it) and **Pet Profiles** (names, photos, medical
 history, vet visits) as structured extensions of the same idea, a
@@ -168,11 +168,11 @@ already-planned Agriculture/Smart Home sections below), a **Smart
 Suggestions** engine (the proactive-recommendation half of principle 3
 above), a **Startup Dashboard Briefing** (the proactive half of the
 existing Home Dashboard), an **interactive first-time onboarding**
-(M.I.A. teaches herself through real conversation and real tasks, not
+(MIA teaches herself through real conversation and real tasks, not
 docs/slides) and an always-available **modular tutorial system** ("Teach
-me how quests work," organized by category and skill level, with M.I.A.
+me how quests work," organized by category and skill level, with MIA
 proactively suggesting a walkthrough for never-used features), and
-**self-knowledge** (M.I.A. should be able to explain any of her own
+**self-knowledge** (MIA should be able to explain any of her own
 modules/features/workflows conversationally — the user should never need
 to read documentation). Motivation & celebration already exists in
 scoped form (Mission completions, per `core/mission_manager.py`) and
@@ -183,13 +183,13 @@ workout PRs, coding milestones, savings milestones, learning streaks).
 
 | Project | Role | Status |
 |---|---|---|
-| **1. M.I.A.** | "The Brain" — the portable field device and its core intelligence | **In progress.** This is "M.I.A. Core," the Pi5 kiosk device documented in `ROADMAP.md`, currently at v0.2. |
+| **1. MIA** | "The Brain" — the portable field device and its core intelligence | **In progress.** This is "MIA Core," the Pi5 kiosk device documented in `ROADMAP.md`, currently at v0.2. |
 | **2. Personal Home Cloud Infrastructure** | "The Nervous System" — a stationary, more powerful compute extension the Pi5 docks to or syncs with | **Hardware being built as of 2026-07-15** (AMD Ryzen 9800X3D + Radeon 7900 XTX, see `HARDWARE.md`'s new Project 2 section) — software (the hand-off mechanism, the streaming access mode) not started. This is where compute-heavy reasoning belongs (see below and the new "Core/Home split" section). |
 | **3. Smart Environment** | "The Senses" — sensor networks, environmental monitoring, smart home integration | Not started. Overlaps with the Agriculture/Smart Home/Power sections already planned in `ROADMAP.md`. |
 | **4. Robotics and Physical Systems** | "The Hands" — robotic arms, drones, mobile robots, prosthetic research | Not started. Overlaps with the Fleet section already planned in `ROADMAP.md`. |
 
-**Every future project should expand M.I.A.'s capabilities, and every
-improvement to M.I.A. should make future projects easier.** That
+**Every future project should expand MIA's capabilities, and every
+improvement to MIA should make future projects easier.** That
 compounding relationship is the actual long-term goal — not any single
 feature.
 
@@ -279,7 +279,7 @@ Three options were on the table; two were rejected explicitly:
 ### New: streaming/remote access as its own access mode, not a Core fallback
 
 Separately from the hand-off above — a browser/app interface to reach
-M.I.A.'s **full Home-side capability** directly, for the times the user
+MIA's **full Home-side capability** directly, for the times the user
 isn't wearing Core at all (at a desk, on a phone at home). This is the
 first concrete piece of the "Multi-platform, one companion" companion-
 philosophy principle to get a real design decision: it's explicitly
@@ -307,7 +307,7 @@ lives. Core becomes voice-first with no traditional dashboard UI at
 all** — its only visual output is the small e-paper status display on
 the Receiver (`HARDWARE.md`'s Modular Backpack section), not a
 touchscreen kiosk. This is a real, significant reframing of what
-"M.I.A. Core" has meant for most of this project's history so far —
+"MIA Core" has meant for most of this project's history so far —
 worth being explicit about the practical consequence rather than
 letting it stay implicit:
 
@@ -345,7 +345,7 @@ properly first" discipline as everything else in this document.
 
 ## Home's visual identity — a sci-fi companion interface (2026-07-15)
 
-Now that Home is confirmed as the only place M.I.A.'s visual interface
+Now that Home is confirmed as the only place MIA's visual interface
 lives (previous section), the user gave a detailed, real design brief
 for what that interface should feel like — worth preserving close to
 the original framing since it's a genuine creative direction, not a
@@ -358,7 +358,7 @@ operating systems, RPG-style menus/quest systems — "a spaceship command
 interface... a VR home environment... a futuristic RPG menu... a
 personal AI companion from a sci-fi game."
 
-**Boot sequence**: not a static splash screen — M.I.A. should feel like
+**Boot sequence**: not a static splash screen — MIA should feel like
 she's *waking up*. System initializing, modules coming online, sensors
 activating, personality loading — powering on a futuristic device or
 entering a game world, not watching a progress bar. `gui/boot_core_widget.py`'s
@@ -700,7 +700,7 @@ the other.
   Resolved to a hybrid: Core (Pi5+HAT) stays fully offline-capable and
   is never required to reach Home to function; Home gets both a deep-
   reasoning hand-off *and* a separate browser/app streaming access mode
-  for reaching M.I.A.'s full capability when not wearing Core. Pure
+  for reaching MIA's full capability when not wearing Core. Pure
   "stream everything from Home" was explicitly rejected — it would
   quietly give up the offline-first survival-tool premise this whole
   project is built on.
@@ -753,7 +753,7 @@ the other.
 | Robotics / Drones / prosthetics research | Already covered by Project 1's Fleet section for what connects directly to the Pi5; Project 4 is the larger standalone robotics effort. |
 | **Missions/Gamification** (2026-07-14 addition: turn hobbies/goals into objectives with tracked progress, e.g. "Master Angler" — fish for N hours, catch N fish) | Project 1, new core service (`core/mission_manager.py`), a consumer of the event bus / Activity Log rather than its own data-capture mechanism — objectives derive progress from Trip timings, a new lightweight per-trip tally primitive (catch counts, species identified, etc.), and existing manager events wherever possible instead of duplicating data capture. |
 | **Memories** (2026-07-14 addition: auto-generated trip recaps — distance/pace/duration/catches/species/photos — plus location-tagged logs surfaced on the offline maps) | Project 1. Already had a placeholder as an "ambient" section in `ROADMAP.md`'s module list; promoted to a real top-level module per the user's explicit ask for a visitable "Memories section." Mostly an aggregation/read layer over Expedition/Trip/Waypoint/Journal data that already exists, plus a photo gallery over `trip_photos/` — the lowest-new-design-risk piece of this whole addition, and the first one being built. |
-| **Home Dock auto-launch Dashboard** (2026-07-14 addition: docking Core to the Home desktop opens M.I.A. automatically to a dashboard of recent events/objectives/photos/music/projects and upcoming items) | Project 1/2 boundary. Extends v0.13's Core/Home device-profile split and v0.15's Expedition-sync docking detection (Field Kit already detects a docked Core) — mostly orchestration (launch-on-dock, a new Dashboard view) rather than new architecture. |
+| **Home Dock auto-launch Dashboard** (2026-07-14 addition: docking Core to the Home desktop opens MIA automatically to a dashboard of recent events/objectives/photos/music/projects and upcoming items) | Project 1/2 boundary. Extends v0.13's Core/Home device-profile split and v0.15's Expedition-sync docking detection (Field Kit already detects a docked Core) — mostly orchestration (launch-on-dock, a new Dashboard view) rather than new architecture. |
 | **Vitals/Stats logging** (2026-07-14 addition: maximalist local logging of user activity/position/pace/biometrics as hardware allows) | Project 1, new core service. Deliberately maximalist rather than category-limited, per the Mission section's reconciliation with "privacy-first" above — the only real ceiling is hardware capability (GPS, IMU, camera, mic), not self-imposed scope. |
 | **Modular wearable backpack form factor** (2026-07-14 addition: camera/speaker/mic on the strap, Pi5+HAT+battery on the pack, plug-and-play expansion modules) | Physical/industrial design work, not software — tracked in `HARDWARE.md`'s new "Modular Backpack" section as its own parallel track, same way Fleet/Communications hardware choices are deferred until acquired. |
 | **Memory Palace** (2026-07-15 addition: categorized, cross-referenced memory trees instead of a flat fact list) | Project 1. A schema/migration on `core/user_memory_manager.py`, not a new service — see the critical-evaluation note above on why this isn't purely additive. |
@@ -768,17 +768,17 @@ the other.
 | **Real Estate Portfolio** (2026-07-16 addition: per-property income/expense/payoff/cap-rate tracking, CSV bank-statement import) | Home (Project 2), see the expanded-scope section above. Built as a separate sandboxed React dashboard; JSON export exists, ingestion into Home is not yet built. |
 | **Workshop Hardware Module Framework** (2026-07-16 addition: a standard `MIAModule` interface — get_status/send_job/pause/stop — for fab-shop hardware like laser engravers/CNC) | Home (Project 2), see the expanded-scope section above. A real open question on how it relates to this repo's existing `ModuleBase` contract — not yet reconciled. |
 | **Smart Home & Homestead** (2026-07-15 addition: lighting, cameras, doors, sensors, garden automation, solar, weather stations) | Project 1/3 boundary — merges into the already-planned Smart Home/Agriculture sections in `ROADMAP.md`'s v1.0+ bucket and Project 3 ("The Senses") above; all genuinely hardware-gated, same treatment as Fleet/Communications. |
-| **Relationship Profiles** (2026-07-15 addition: people M.I.A. knows — birthdays, gift ideas, shared memories, optional visual recognition) | Project 1, new core service, a structured extension of Memory Palace scoped to people specifically. Visual recognition ("who am I looking at") needs the camera hardware/on-device classification already flagged as this vision's biggest open hardware question above — text-only profiles (no recognition) are buildable now; recognition is not. |
+| **Relationship Profiles** (2026-07-15 addition: people MIA knows — birthdays, gift ideas, shared memories, optional visual recognition) | Project 1, new core service, a structured extension of Memory Palace scoped to people specifically. Visual recognition ("who am I looking at") needs the camera hardware/on-device classification already flagged as this vision's biggest open hardware question above — text-only profiles (no recognition) are buildable now; recognition is not. |
 | **Pet Profiles** (2026-07-15 addition: names, photos, medical history, vet visits) | Project 1, same shape as Relationship Profiles, camera-independent (no recognition implied) so fully buildable now. |
-| **Interactive onboarding + modular tutorial system** (2026-07-15 addition: M.I.A. teaches herself through real conversation and real tasks, always available via "teach me how X works") | Project 1. Builds on the existing Assistant conversation/personality pipeline (2026-07-14 part 5) plus `looks_like_action_request()`-style intent classification — a new "teaching mode" conversation path, not a new backend. |
-| **Self-knowledge** (2026-07-15 addition: M.I.A. can explain any of her own modules/features/workflows conversationally) | Project 1. Directly extends `core/device_help_manager.py`'s existing end-user-docs grounding (2026-07-14 part 4) — that system already answers "how do I use X"; this generalizes its coverage and hooks it into the tutorial system above rather than replacing it. |
+| **Interactive onboarding + modular tutorial system** (2026-07-15 addition: MIA teaches herself through real conversation and real tasks, always available via "teach me how X works") | Project 1. Builds on the existing Assistant conversation/personality pipeline (2026-07-14 part 5) plus `looks_like_action_request()`-style intent classification — a new "teaching mode" conversation path, not a new backend. |
+| **Self-knowledge** (2026-07-15 addition: MIA can explain any of her own modules/features/workflows conversationally) | Project 1. Directly extends `core/device_help_manager.py`'s existing end-user-docs grounding (2026-07-14 part 4) — that system already answers "how do I use X"; this generalizes its coverage and hooks it into the tutorial system above rather than replacing it. |
 | **Multi-platform architecture + browser/XR support** (2026-07-15 addition: the same assistant/memory/modules reachable from desktop, web, mobile, wearable, voice-only, and future AR/XR) | **Resolved 2026-07-15** — see the dedicated "Core/Home split" section above. Core stays fully offline-capable (Project 1); Home (Project 2) gets both a deep-reasoning hand-off and a separate browser/app streaming access mode. Neither built yet, but the architecture question itself is no longer open. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 
 | Horizon | Focus |
 |---|---|
-| **Now** | Project 1, M.I.A. Core v0.2–v1.0 per `ROADMAP.md` — a working, reliable, offline field device |
+| **Now** | Project 1, MIA Core v0.2–v1.0 per `ROADMAP.md` — a working, reliable, offline field device |
 | **Next** | Project 1 continues to v1.0+ (Fleet, Communications, Navigation, Agriculture, Medical, etc., as real hardware is acquired) |
 | **Later** | Project 2 (Home Cloud) begins — this is where Expert Council, GA/PSO, and simulation become realistic to attempt, once Project 1 is stable and there's a genuine compute-offload target to build against |
 | **Eventually** | Projects 3 and 4 — likely absorbed largely into Project 1's existing section structure rather than needing wholly separate builds, revisited once real hardware for each exists |

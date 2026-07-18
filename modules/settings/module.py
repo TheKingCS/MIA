@@ -11,7 +11,7 @@ Device Profile (milestone 13.1/13.2): live theme switching
 (gui/theme_manager.py) and viewing/changing which edition
 (Core/Pi5+HAT vs. Home/desktop, core/device_profile.py) this install is
 — and Voice (2026-07-15, at the user's explicit request to "pick
-through different voices for M.I.A."): a dropdown over
+through different voices for MIA"): a dropdown over
 `core/voice_manager.py`'s `list_available_voices()` (only voices whose
 model file is actually present in `voice_models/` — see
 `deploy/download_voice_models.sh`), speaking a short preview line
@@ -55,13 +55,13 @@ from modules.module_base import ModuleBase
 log = get_logger(__name__)
 
 _PROFILE_DISPLAY_NAMES = {CORE: "Core (Pi 5 + AI HAT+ 2)", HOME: "Home (desktop workstation)"}
-_VOICE_PREVIEW_TEXT = "Hi, I'm M.I.A. This is what I sound like."
+_VOICE_PREVIEW_TEXT = "Hi, I'm MIA This is what I sound like."
 
 
 class SettingsModule(ModuleBase):
     module_id = "settings"
     display_name = "Settings"
-    description = "Configure M.I.A. — theme, user info, module options."
+    description = "Configure MIA — theme, user info, module options."
     icon = "⚙"  # gear
 
     def __init__(self, context) -> None:
@@ -164,7 +164,7 @@ class SettingsModule(ModuleBase):
 
             self._ai_effect_checkbox = QCheckBox("✨ AI Voice Effect")
             self._ai_effect_checkbox.setToolTip(
-                "Subtle digital polish on M.I.A.'s voice — ring modulation + light chorus, "
+                "Subtle digital polish on MIA's voice — ring modulation + light chorus, "
                 "tuned to stay clearly intelligible. Turn off for the plain Piper voice."
             )
             self._ai_effect_checkbox.setChecked(self.context.config.get("voice.ai_voice_effect", True))
@@ -177,7 +177,7 @@ class SettingsModule(ModuleBase):
             self._volume_slider.setRange(int(MIN_PLAYBACK_VOLUME * 100), int(MAX_PLAYBACK_VOLUME * 100))
             current_volume = self.context.config.get("voice.playback_volume", DEFAULT_PLAYBACK_VOLUME)
             self._volume_slider.setValue(round(current_volume * 100))
-            self._volume_slider.setToolTip("How loud M.I.A.'s spoken replies play — a plain playback gain, separate from system volume.")
+            self._volume_slider.setToolTip("How loud MIA's spoken replies play — a plain playback gain, separate from system volume.")
             self._volume_slider.valueChanged.connect(self._on_volume_slider_moved)
             self._volume_slider.sliderReleased.connect(self._on_volume_slider_released)
             volume_row.addWidget(self._volume_slider, stretch=1)
@@ -217,7 +217,7 @@ class SettingsModule(ModuleBase):
 
         update_desc = QLabel(
             "Apply an offline update package (e.g. from a USB drive). "
-            "This modifies M.I.A.'s own application files directly — "
+            "This modifies MIA's own application files directly — "
             "see docs/UPDATE_PACKAGE_SPEC.md before building one."
         )
         update_desc.setObjectName("SubtitleLabel")
@@ -336,7 +336,7 @@ class SettingsModule(ModuleBase):
         # repo, that's the project's own git working tree, which is
         # exactly where a backup shouldn't land by default.
         default_path = str(Path.home() / default_name)
-        file_filter = "M.I.A. Backup (*.miabackup)" if passphrase else "M.I.A. Backup (*.zip)"
+        file_filter = "MIA Backup (*.miabackup)" if passphrase else "MIA Backup (*.zip)"
         destination, _ = QFileDialog.getSaveFileName(None, "Save Backup As", default_path, file_filter)
         if not destination:
             return
@@ -355,7 +355,7 @@ class SettingsModule(ModuleBase):
 
     def _on_restore_clicked(self) -> None:
         source, _ = QFileDialog.getOpenFileName(
-            None, "Select Backup File", "", "M.I.A. Backup (*.zip *.miabackup);;All Files (*)"
+            None, "Select Backup File", "", "MIA Backup (*.zip *.miabackup);;All Files (*)"
         )
         if not source:
             return
@@ -384,9 +384,9 @@ class SettingsModule(ModuleBase):
         if result.passed:
             QMessageBox.information(
                 None, "Restore Complete",
-                "Restore complete. Please restart M.I.A. for the changes to take effect."
+                "Restore complete. Please restart MIA for the changes to take effect."
             )
-            self._set_status("Restore complete — restart M.I.A. to apply.")
+            self._set_status("Restore complete — restart MIA to apply.")
         else:
             QMessageBox.warning(None, "Restore Failed", "\n".join(result.errors))
             self._set_status("Restore failed — see error dialog.")
@@ -401,7 +401,7 @@ class SettingsModule(ModuleBase):
 
     def _on_apply_update_clicked(self) -> None:
         source, _ = QFileDialog.getOpenFileName(
-            None, "Select Update Package", "", "M.I.A. Update Package (*.zip);;All Files (*)"
+            None, "Select Update Package", "", "MIA Update Package (*.zip);;All Files (*)"
         )
         if not source:
             return
@@ -417,7 +417,7 @@ class SettingsModule(ModuleBase):
             None,
             "Confirm Update",
             f"{details}\n\n"
-            "Applying this update will overwrite M.I.A.'s own application "
+            "Applying this update will overwrite MIA's own application "
             "files — including core system files — with no code review "
             "performed. Only proceed if you built this package yourself "
             "or have reviewed and trust it.\n\nContinue?",
@@ -437,9 +437,9 @@ class SettingsModule(ModuleBase):
             QMessageBox.information(
                 None, "Update Applied",
                 f"Applied {len(result.applied_files)} file(s).\n\n{rollback_note}\n\n"
-                "Please restart M.I.A. for the changes to take effect."
+                "Please restart MIA for the changes to take effect."
             )
-            self._set_status(f"Update applied ({len(result.applied_files)} file(s)) — restart M.I.A. to apply.")
+            self._set_status(f"Update applied ({len(result.applied_files)} file(s)) — restart MIA to apply.")
         else:
             QMessageBox.warning(None, "Update Failed", "\n".join(result.errors))
             self._set_status("Update failed — see error dialog.")

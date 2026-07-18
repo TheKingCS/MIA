@@ -1,7 +1,7 @@
-# M.I.A. — Multifunctional Intelligent Assistant
+# MIA — Multifunctional Intelligent Assistant
 
-M.I.A. is an offline-first, modular field operating environment built
-on Linux. Rather than a single-purpose application, M.I.A. is designed
+MIA is an offline-first, modular field operating environment built
+on Linux. Rather than a single-purpose application, MIA is designed
 to feel like a custom desktop environment: a unified interface for
 engineering, survival, robotics, networking, local AI, and personal
 knowledge management.
@@ -62,7 +62,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-On first run, M.I.A. will walk you through the setup wizard (name, date,
+On first run, MIA will walk you through the setup wizard (name, date,
 time) before showing the main menu.
 
 ## Developing a module

@@ -2,7 +2,7 @@
 core.profile_manager
 ======================
 
-Manages M.I.A. user profiles — distinct from ConfigManager, which holds
+Manages MIA user profiles — distinct from ConfigManager, which holds
 app-wide settings (theme, kiosk mode, etc.) that apply regardless of
 who's using the device. A "profile" is a person: their display name,
 when they were created, an optional password, and (going forward) the

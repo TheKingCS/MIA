@@ -385,7 +385,7 @@ class ReferenceLibraryManager:
         and return up to `limit` short plain-text snippets total —
         used by core/device_help_manager.py to ground Assistant answers
         in the actual installed reference content (Wikipedia/iFixit/
-        etc.), not just M.I.A.'s own docs/*.md. Similar cross-pack
+        etc.), not just MIA's own docs/*.md. Similar cross-pack
         fan-out shape to modules/knowledge/module.py's Global Search
         provider, but returns grounding snippets, not SearchResult UI
         objects, and doesn't re-rank hits — libzim's own full-text

@@ -94,7 +94,7 @@ their real machine that the sizing issue no longer recurs.
 profile (kiosk_mode on): `xdg_wm_base@3: error 4: xdg_surface buffer
 (1920 x 1205) is larger than the configured fullscreen state (1920 x
 1200)` then `The Wayland connection experienced a fatal error: Protocol
-error` — this kills the whole Wayland session, not just M.I.A.
+error` — this kills the whole Wayland session, not just MIA
 
 Root cause (best diagnosis possible without a real Wayland display to
 reproduce against — this dev sandbox is headless/offscreen-QPA only):
@@ -140,11 +140,11 @@ and Media/Music's missing `libpulse` already hit). This blocks:
   packet capture, both root-gated.
 - **Active tooling** (hash cracking via John/Hashcat, packet crafting
   via scapy, exploit-framework launching) — needs the actual
-  binaries/libraries present to wrap at all; M.I.A.'s own design intent
+  binaries/libraries present to wrap at all; MIA's own design intent
   here is to be a UI/launcher over already-installed system tools, not
   to reimplement them.
 
-Re-test once M.I.A. actually runs on real Pi 5 + AI HAT+ 2 hardware (or
+Re-test once MIA actually runs on real Pi 5 + AI HAT+ 2 hardware (or
 any environment with these tools installed and root available) —
 nothing about the *design* is blocked, only this dev sandbox's ability
 to verify it.
@@ -184,7 +184,7 @@ setting up a fresh WSL2 dev environment for this project:
    ctl.!default { type pulse }
    ```
    After this, `sd.query_devices()` showed real `pulse`/`default` ALSA
-   devices, and a real `VoiceManager.play()` call through M.I.A.'s own
+   devices, and a real `VoiceManager.play()` call through MIA's own
    code returned `True` with no errors — **and the user confirmed
    actually hearing it** through Windows, the first real, human-confirmed
    audio output this project has had.
@@ -235,7 +235,7 @@ backend/runtime for that hardware, or needs a HAT-specific model
 format, is **genuinely unresolved** — there's no AI HAT+ 2 in this
 sandbox to test against, and this shouldn't be guessed at without the
 real hardware. Flag this before assuming the Assistant's current LLM
-backend will "just work" once M.I.A. actually runs on the Pi 5 + AI
+backend will "just work" once MIA actually runs on the Pi 5 + AI
 HAT+ 2 — verify on real hardware first, and expect `core/llm_manager.py`
 may need a HAT-specific code path if Ollama can't use the accelerator.
 

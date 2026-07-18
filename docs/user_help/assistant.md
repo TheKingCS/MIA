@@ -1,8 +1,8 @@
 # The Assistant
 
-## What M.I.A. is
+## What MIA is
 
-M.I.A. speaks her replies aloud (the full-screen Assistant module, not
+MIA speaks her replies aloud (the full-screen Assistant module, not
 the sidebar) — you can pick which voice from a few options in Settings.
 She also remembers things you tell her across conversations, not just
 within one chat: your name, facts you mention, and anything you ask her

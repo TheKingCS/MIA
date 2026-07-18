@@ -2,7 +2,7 @@
 core.device_profile
 ======================
 
-M.I.A. runs as one codebase across two editions — docs/ROADMAP.md
+MIA runs as one codebase across two editions — docs/ROADMAP.md
 milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a
 field data-gathering tool) and **Home** (a desktop workstation, more
 storage/resources), distinguished only by `config.system.device_profile`.

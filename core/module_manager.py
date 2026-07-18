@@ -2,7 +2,7 @@
 core.module_manager
 ====================
 
-Discovers and manages M.I.A. modules.
+Discovers and manages MIA modules.
 
 Design decision: modules are discovered automatically by scanning the
 `modules/` package for subpackages containing a `module.py` that defines

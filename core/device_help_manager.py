@@ -11,7 +11,7 @@ this into stage 2 (propose-a-patch) without a deliberate, separate
 decision.
 
 **2026-07-14 aesthetic pass part 4 (docs/ROADMAP.md): this used to
-index `docs/*.md` directly** — M.I.A.'s own *developer* documentation
+index `docs/*.md` directly** — MIA's own *developer* documentation
 (architecture notes, module-writing spec, roadmap phase status). That
 was a real, user-reported bug, not just a missed opportunity: a real
 end user asking "how do I plan a trip" got back chunks about internal
@@ -397,7 +397,7 @@ class DeviceHelpManager:
     def build_grounded_prompt(self, query: str, limit: int = 5) -> str:
         """
         Build the user-turn content for an information question: the
-        retrieved M.I.A. documentation/module metadata plus any matching
+        retrieved MIA documentation/module metadata plus any matching
         Reference Library content, or a "nothing matched" fallback
         instruction if nothing relevant is indexed anywhere — the
         actual "grounding." **Does not include `GROUNDING_INSTRUCTION`
@@ -436,7 +436,7 @@ class DeviceHelpManager:
         if not chunks:
             return (
                 "No reference material matched this question. Say that you "
-                "don't have information about this in M.I.A.'s documentation or reference library."
+                "don't have information about this in MIA's documentation or reference library."
                 f"\n\nQuestion: {query}"
             )
 

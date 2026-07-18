@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-M.I.A. (Multifunctional Intelligent Assistant) is an offline-first, modular
+MIA (Multifunctional Intelligent Assistant) is an offline-first, modular
 desktop shell for Linux (target: kiosk mode on a Raspberry Pi 5), built with
 Python + PySide6. It is currently v0.1/v0.2 — a core framework and system
 layer with mostly stub feature modules; no AI/assistant logic exists yet.

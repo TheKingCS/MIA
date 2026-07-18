@@ -6,7 +6,7 @@ Companion-avatar camera source for the Home Dashboard's Companion
 Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py).
 Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a
 separately-running, Windows-only Unity/VRM avatar app the user has been
-running alongside M.I.A. — but this manager never talks to VMagicMirror
+running alongside MIA — but this manager never talks to VMagicMirror
 directly, and knows nothing VMagicMirror-specific at all. VMagicMirror's
 own "Virtual Camera Output" setting (its Window tab) publishes the
 rendered avatar as a normal OS video-input device, the same mechanism

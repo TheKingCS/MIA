@@ -2,7 +2,7 @@
 modules.module_base
 ====================
 
-Defines ModuleBase, the contract every M.I.A. module must implement.
+Defines ModuleBase, the contract every MIA module must implement.
 
 This file lives at the top of `modules/` (not inside any single module
 folder) because it's shared infrastructure that every module package
@@ -31,7 +31,7 @@ from core.app_context import AppContext
 
 class ModuleBase(ABC):
     """
-    Base class for all M.I.A. modules.
+    Base class for all MIA modules.
 
     Class attributes (override these in your subclass):
         module_id     -- unique, stable, snake_case identifier (e.g. "notes")

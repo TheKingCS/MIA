@@ -249,7 +249,7 @@ QLabel#DashboardOverlineLabel {
 
 /* The "● ALL SYSTEMS NOMINAL" status pill next to SYSTEM OVERVIEW —
 same ambient-status-text precedent as MainWindow's own status bar
-default message ("M.I.A. core online."), not a live health check. */
+default message ("MIA core online."), not a live health check. */
 QLabel#DashboardStatusChip {
     font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
     font-size: 12px;
@@ -667,7 +667,7 @@ QPushButton#TalkButton[recording="true"] {
     font-weight: 600;
 }
 
-/* 2026-07-18: lets the user cut M.I.A. off mid-sentence — reuses the
+/* 2026-07-18: lets the user cut MIA off mid-sentence — reuses the
 same critical red as TalkButton's recording state, but outline-only
 while enabled (this isn't a destructive action, just an interrupt), so
 it doesn't visually compete with an actual "recording" indicator. */

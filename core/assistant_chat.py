@@ -212,7 +212,7 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
 # real, previously-measured regression risk for llama3.2:3b, and why
 # the warmer clauses are only added to the info-question path.
 _IDENTITY_LINE = (
-    "You are M.I.A. (Multifunctional Intelligent Assistant), the user's personal offline survival companion."
+    "You are MIA (Multifunctional Intelligent Assistant), the user's personal offline survival companion."
 )
 _IDENTITY_WARMTH = (
     " You're warm, encouraging, and genuinely curious about the user as a person — like a lifelong friend, "
@@ -288,7 +288,7 @@ def trim_history(messages: list["ConversationMessage"], max_messages: int = _MAX
 def build_user_context_block(context) -> str:
     """
     Pure-ish (touches `context.profiles`/`context.user_memories`, no
-    LLM call) — assembles "what M.I.A. knows about this user so far"
+    LLM call) — assembles "what MIA knows about this user so far"
     from the active Profile's structured fields (name, birthday) plus
     free-text UserMemory entries, for injection into the info-question
     system message. Returns an empty-knowledge line rather than an

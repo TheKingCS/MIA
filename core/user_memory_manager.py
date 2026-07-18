@@ -2,7 +2,7 @@
 core.user_memory_manager
 ===========================
 
-Persistent facts M.I.A. has learned about the user over the course of
+Persistent facts MIA has learned about the user over the course of
 conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at
 the user's explicit request: "an ability to review and delete... see
 the AI's stored memories about the user and keep or delete them." Same

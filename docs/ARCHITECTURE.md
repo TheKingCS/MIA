@@ -1,4 +1,4 @@
-# M.I.A. Architecture
+# MIA Architecture
 
 This document explains the *why* behind the v0.1 foundation, so future
 contributors (including future-you) don't have to reverse-engineer the
@@ -6,7 +6,7 @@ reasoning from the code.
 
 ## Guiding constraint
 
-M.I.A. is meant to be developed on and off for years, by potentially
+MIA is meant to be developed on and off for years, by potentially
 more than one person, often offline, and it needs to keep growing new
 modules (robotics, networking, local AI, etc.) without the core ever
 needing a rewrite. Every decision below optimizes for that, sometimes
@@ -84,7 +84,7 @@ case (e.g. a robotics/networking daemon) appears.
 
 - **License:** LGPL, safe for an open-source project without the
   GPL/commercial split that PyQt6 has.
-- **Custom styling (QSS):** needed to make M.I.A. feel like an "OS shell"
+- **Custom styling (QSS):** needed to make MIA feel like an "OS shell"
   rather than a stock desktop app.
 - **Widget + animation system:** the eventual animated character panel
   needs real animation primitives (QMovie, QPropertyAnimation, or a
@@ -108,7 +108,7 @@ overwritten. `config/config.json` is the user's actual, gitignored
 config, seeded from and merged with the defaults on load (see
 `ConfigManager._merge_defaults`). This means:
 
-- Upgrading M.I.A. can introduce new config keys without wiping a user's
+- Upgrading MIA can introduce new config keys without wiping a user's
   existing settings.
 - A user can delete `config/config.json` to factory-reset.
 - Nothing sensitive/personal ever accidentally gets committed to git.
@@ -117,7 +117,7 @@ config, seeded from and merged with the defaults on load (see
 
 - No AI/assistant logic — explicitly out of scope per the project brief.
 - No plugin sandboxing — all modules run in-process. Fine for a
-  single-user offline tool; would need revisiting if M.I.A. ever loads
+  single-user offline tool; would need revisiting if MIA ever loads
   third-party modules it doesn't fully trust.
 - No async/threading — fine until a module needs a long-running
   background task (e.g. a network scan). When that happens, introduce

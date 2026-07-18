@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from core.app_context import AppContext
-from core.voice_manager import VoiceManager, VoiceUnavailableError, apply_playback_volume
+from core.voice_manager import VoiceManager, VoiceUnavailableError, apply_playback_volume, prepare_text_for_speech
 
 
 class _FakeConfig:
@@ -201,3 +201,20 @@ def test_apply_playback_volume_result_stays_int16():
     audio = np.array([100, 200], dtype=np.int16)
     result = apply_playback_volume(audio, 1.4)
     assert result.dtype == np.int16
+
+
+def test_prepare_text_for_speech_replaces_bare_mia():
+    assert prepare_text_for_speech("MIA can help with that.") == "Mia can help with that."
+
+
+def test_prepare_text_for_speech_replaces_multiple_occurrences():
+    assert prepare_text_for_speech("MIA here. MIA can do that.") == "Mia here. Mia can do that."
+
+
+def test_prepare_text_for_speech_leaves_other_text_unchanged():
+    assert prepare_text_for_speech("Your battery is at 80%.") == "Your battery is at 80%."
+
+
+def test_prepare_text_for_speech_does_not_touch_substrings_like_miami():
+    assert prepare_text_for_speech("I'm flying to Miami, MIAMI Beach specifically.") == \
+        "I'm flying to Miami, MIAMI Beach specifically."

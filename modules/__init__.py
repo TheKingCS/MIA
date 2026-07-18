@@ -2,7 +2,7 @@
 modules
 =======
 
-Every feature of M.I.A. (Assistant, Files, Notes, Maps, etc.) lives here
+Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here
 as an independent package. Each module package must:
 
     - contain a module.py

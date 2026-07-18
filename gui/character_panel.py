@@ -2,7 +2,7 @@
 gui.character_panel
 ====================
 
-M.I.A.'s reactive companion panel — docs/ROADMAP.md milestone 6.2.
+MIA's reactive companion panel — docs/ROADMAP.md milestone 6.2.
 Subscribes to the module-activity events milestone 6.1 added
 ("module.opened"/"menu.shown" from gui/main_window.py's navigation
 methods, plus "home.shown" added in the 2026-07-14 aesthetic pass part 3

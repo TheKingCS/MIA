@@ -2,7 +2,7 @@
 gui.user_memory_dialog
 =========================
 
-"What M.I.A. remembers about you" — 2026-07-14 aesthetic pass part 5
+"What MIA remembers about you" — 2026-07-14 aesthetic pass part 5
 (docs/ROADMAP.md), at the user's explicit request: "an ability to...
 see the AI's stored memories about the user and keep or delete them."
 Opened from `modules/assistant/module.py`'s "🧠 Memories" button.
@@ -38,13 +38,13 @@ class UserMemoryDialog(QDialog):
     def __init__(self, context: AppContext, parent=None) -> None:
         super().__init__(parent)
         self.context = context
-        self.setWindowTitle("What M.I.A. Remembers About You")
+        self.setWindowTitle("What MIA Remembers About You")
         self.resize(480, 520)
 
         layout = QVBoxLayout(self)
 
         subtitle = QLabel(
-            "M.I.A. picks these up naturally as you chat. Delete anything you'd rather it forget."
+            "MIA picks these up naturally as you chat. Delete anything you'd rather it forget."
         )
         subtitle.setObjectName("SubtitleLabel")
         subtitle.setWordWrap(True)
@@ -126,7 +126,7 @@ class UserMemoryDialog(QDialog):
         reply = QMessageBox.question(
             self,
             "Clear All Memories",
-            "Delete everything M.I.A. remembers about you? This can't be undone.",
+            "Delete everything MIA remembers about you? This can't be undone.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )

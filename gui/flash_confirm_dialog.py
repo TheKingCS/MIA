@@ -2,7 +2,7 @@
 gui.flash_confirm_dialog
 ===========================
 
-Confirmation dialog for Field Kit's OS + M.I.A. flashing/provisioning
+Confirmation dialog for Field Kit's OS + MIA flashing/provisioning
 action (docs/ROADMAP.md milestone 11.3) — writing an image to the
 wrong device is unrecoverable (a bricked Pi, or a wiped real drive), so
 this is deliberately the most cautious confirmation flow in the app,

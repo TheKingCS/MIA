@@ -2,7 +2,7 @@
 core.logger
 ===========
 
-Centralized logging setup for M.I.A.
+Centralized logging setup for MIA
 
 Every part of the system (core services, modules, GUI) should log through
 the logger returned by `get_logger()` rather than using `print()`. This

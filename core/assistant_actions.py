@@ -3,14 +3,14 @@ core.assistant_actions
 =========================
 
 The Assistant's tool-use/action-execution registry — docs/ROADMAP.md
-milestone 5.5. Lets the LLM actually DO things in M.I.A. (open a
+milestone 5.5. Lets the LLM actually DO things in MIA (open a
 module, add an alarm, a note, an inventory item), not just answer
 questions, via Ollama's structured tool-calling API
 (core/llm_manager.py's `chat_with_tools()`).
 
 This is a **different** capability from the Self-Modification / Dev
 Mode staged plan in docs/ROADMAP.md, which is specifically about the
-assistant editing M.I.A.'s own source code and is gated behind a
+assistant editing MIA's own source code and is gated behind a
 cautious multi-stage rollout (read & explain -> propose-not-apply ->
 sandboxed testing -> scoped autonomy). Actions registered here are
 just normal, everyday app operations any user could already do by

@@ -1,8 +1,8 @@
-# Adding a New Module to M.I.A.
+# Adding a New Module to MIA
 
 Modules are discovered automatically — there is no registry file to
 edit. Follow these steps and your module will appear on the main menu
-the next time M.I.A. starts.
+the next time MIA starts.
 
 ## 1. Create the folder
 

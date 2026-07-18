@@ -2,7 +2,7 @@
 core
 ====
 
-The M.I.A. kernel.
+The MIA kernel.
 
 This package contains everything the rest of the system depends on, and
 depends on nothing else in the project (no GUI imports, no module imports).

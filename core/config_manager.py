@@ -2,14 +2,14 @@
 core.config_manager
 ====================
 
-Handles reading, writing, and defaulting M.I.A.'s configuration.
+Handles reading, writing, and defaulting MIA's configuration.
 
 Configuration lives in config/config.json (user-specific, gitignored) and
 is seeded from config/default_config.json (checked into version control,
 never overwritten). This split means:
 
     - New installs always have sane defaults, even if config.json is missing.
-    - Upgrading M.I.A. can add new default keys without clobbering a user's
+    - Upgrading MIA can add new default keys without clobbering a user's
       existing settings (see `_merge_defaults`).
     - config.json can be safely deleted by the user to "factory reset".
 
@@ -35,7 +35,7 @@ _DEFAULT_CONFIG_FILE = _CONFIG_DIR / "default_config.json"
 
 class ConfigManager:
     """
-    Loads, holds, and persists M.I.A.'s configuration.
+    Loads, holds, and persists MIA's configuration.
 
     The config is a plain nested dict. For v0.1 this is intentionally
     simple (no schema library) since the config surface is still small.

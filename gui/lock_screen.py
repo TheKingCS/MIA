@@ -37,7 +37,7 @@ class LockScreen(QWidget):
         super().__init__()
         self.context = context
         self.profile = profile
-        self.setWindowTitle("M.I.A. — Locked")
+        self.setWindowTitle("MIA — Locked")
         self.resize(380, 280)
         self._build_ui()
 

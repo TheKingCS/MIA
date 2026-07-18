@@ -3,7 +3,7 @@ core.update_manager
 ======================
 
 Apply an offline update package (a zip of new/changed project files)
-onto the running M.I.A. installation, per docs/ROADMAP.md milestone
+onto the running MIA installation, per docs/ROADMAP.md milestone
 2.8. "No internet required" — the package is just a local file (from
 a USB drive, or anywhere else); this module never makes a network call.
 
@@ -115,7 +115,7 @@ def apply_update_package(source_path: Path) -> UpdateResult:
         return UpdateResult(passed=False, errors=[f"Not a valid update package: {exc}"])
 
     if _MANIFEST_NAME not in zf.namelist():
-        return UpdateResult(passed=False, errors=["Not a M.I.A. update package (missing manifest)."])
+        return UpdateResult(passed=False, errors=["Not a MIA update package (missing manifest)."])
 
     try:
         manifest_data = json.loads(zf.read(_MANIFEST_NAME))
@@ -123,7 +123,7 @@ def apply_update_package(source_path: Path) -> UpdateResult:
         return UpdateResult(passed=False, errors=[f"Update manifest is not valid JSON: {exc}"])
 
     if manifest_data.get("app") != "M.I.A.":
-        return UpdateResult(passed=False, errors=["Not a M.I.A. update package (manifest app mismatch)."])
+        return UpdateResult(passed=False, errors=["Not a MIA update package (manifest app mismatch)."])
 
     staging_dir = Path(tempfile.mkdtemp(prefix="mia_update_staging_"))
     try:

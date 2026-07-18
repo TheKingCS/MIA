@@ -2,7 +2,7 @@
 gui.presence_widget
 ======================
 
-PresenceWidget: M.I.A.'s living "core presence" — the visual entity
+PresenceWidget: MIA's living "core presence" — the visual entity
 `docs/VISION.md`'s Home visual-identity section calls for, at the
 user's own framing: *"MIA should have an avatar/core presence that
 reacts during interactions. When listening, thinking, loading modules,
@@ -15,8 +15,8 @@ breathing glow-orb with layered translucent rings for cheap bloom, no
 real blur pass) already proved this rendering technique out; this
 generalizes it to be state-driven (color/pulse-speed/an optional
 rotating highlight ring) and to render an arbitrary centered glyph
-instead of a fixed "M.I.A." label, so each module still keeps its own
-icon identity — state communicates *what M.I.A. is doing*, the glyph
+instead of a fixed "MIA" label, so each module still keeps its own
+icon identity — state communicates *what MIA is doing*, the glyph
 still communicates *what you're looking at*. `PulsingCoreWidget` itself
 was removed once this widget fully superseded its one caller
 (`gui/splash_screen.py`) — no reason to keep two versions of the same
@@ -88,7 +88,7 @@ class PresenceWidget(QWidget):
 
     def set_glyph(self, glyph: str) -> None:
         """The icon/emoji rendered centered in the orb — same slot
-        PulsingCoreWidget uses for the "M.I.A." boot-screen label, now
+        PulsingCoreWidget uses for the "MIA" boot-screen label, now
         per-caller instead of fixed."""
         self._glyph = glyph
         self.update()
@@ -151,7 +151,7 @@ class PresenceWidget(QWidget):
             # Tuned for two real cases, not a continuous formula: a
             # single emoji glyph (CharacterPanel's module icons) can
             # fill most of the core, but multi-character text (the boot
-            # screen's literal "M.I.A." emblem) needs to shrink to still
+            # screen's literal "MIA" emblem) needs to shrink to still
             # fit inside the circle — 0.32 matches the original
             # PulsingCoreWidget's own tuning for that exact text.
             size_factor = 0.5 if len(self._glyph) <= 2 else 0.32

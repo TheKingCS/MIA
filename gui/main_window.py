@@ -2,7 +2,7 @@
 gui.main_window
 ================
 
-The main M.I.A. shell: header bar, a stacked view area, and a reserved
+The main MIA shell: header bar, a stacked view area, and a reserved
 character panel. The stacked area swaps between three kinds of screen:
 the post-login Home dashboard (`gui/home_dashboard.py`, the default
 landing view), the Apps grid (`_build_menu()` — every discovered
@@ -10,7 +10,7 @@ module, moved out of being the landing view itself as of the 2026-07-14
 aesthetic pass part 3, see docs/ROADMAP.md), and whichever module's
 widget is currently open.
 
-This is meant to feel like the "desktop" of M.I.A.'s operating
+This is meant to feel like the "desktop" of MIA's operating
 environment, not a single-purpose app window — hence separate "Home"
 and "Apps" destinations rather than a single flat menu, and a
 persistent side panel reserved for the character rather than a modal
@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         # gains sub-screens of its own (e.g. Notes -> a specific note).
         self._history: list[QWidget] = []
 
-        self.setWindowTitle("M.I.A. — Multifunctional Intelligent Assistant")
+        self.setWindowTitle("MIA — Multifunctional Intelligent Assistant")
         self.resize(
             context.config.get("gui.window_width", 1100),
             context.config.get("gui.window_height", 700),
@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
         self._setup_search_shortcut()
         self._setup_notifications()
         self._setup_module_events()
-        self.statusBar().showMessage("M.I.A. core online.")
+        self.statusBar().showMessage("MIA core online.")
 
     def _setup_search_shortcut(self) -> None:
         """Ctrl+K opens search from anywhere in the app — matches the
@@ -258,9 +258,9 @@ class MainWindow(QMainWindow):
     def _on_kiosk_exit_requested(self) -> None:
         reply = QMessageBox.question(
             self,
-            "Exit M.I.A.",
-            "Exit M.I.A. and return to the desktop?\n\n"
-            "(If running as a system service, M.I.A. will restart "
+            "Exit MIA",
+            "Exit MIA and return to the desktop?\n\n"
+            "(If running as a system service, MIA will restart "
             "automatically after a few seconds.)",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -370,7 +370,7 @@ class MainWindow(QMainWindow):
         title_column = QVBoxLayout()
         title_column.setSpacing(0)
 
-        title = QLabel("M.I.A.")
+        title = QLabel("MIA")
         title.setObjectName("TitleLabel")
         title_column.addWidget(title)
 
@@ -525,7 +525,7 @@ class MainWindow(QMainWindow):
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._home_widget)
         self._refresh_stack_geometry()
-        self.statusBar().showMessage("M.I.A. core online.")
+        self.statusBar().showMessage("MIA core online.")
         self.context.events.publish("home.shown")
 
     def show_main_menu(self) -> None:
@@ -537,7 +537,7 @@ class MainWindow(QMainWindow):
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._menu_widget)
         self._refresh_stack_geometry()
-        self.statusBar().showMessage("M.I.A. core online.")
+        self.statusBar().showMessage("MIA core online.")
         self.context.events.publish("menu.shown")
 
     def go_back(self) -> None:
@@ -548,7 +548,7 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(previous_widget)
         self._refresh_stack_geometry()
         self._back_button.setEnabled(bool(self._history))
-        self.statusBar().showMessage("M.I.A. core online." if previous_widget is self._menu_widget else "Viewing previous screen")
+        self.statusBar().showMessage("MIA core online." if previous_widget is self._menu_widget else "Viewing previous screen")
         self._publish_navigation_event_for_widget(previous_widget)
 
     def _publish_navigation_event_for_widget(self, widget: QWidget) -> None:

@@ -161,7 +161,7 @@ def import_expedition_data(source_path: Path) -> ImportResult:
     """
     Merge an Expedition-data bundle (created by export_expedition_data())
     into this machine's data/trip_photos — never overwrites an existing
-    record/photo, only adds new ones. Restart M.I.A. to see imported
+    record/photo, only adds new ones. Restart MIA to see imported
     data if the app is currently running (same as restore_backup()).
     """
     source_path = Path(source_path)
@@ -177,7 +177,7 @@ def import_expedition_data(source_path: Path) -> ImportResult:
         return ImportResult(passed=False, errors=["File is not a valid archive (corrupted?)."])
 
     if "manifest.json" not in zf.namelist():
-        return ImportResult(passed=False, errors=["Not a M.I.A. expedition data export (missing manifest)."])
+        return ImportResult(passed=False, errors=["Not a MIA expedition data export (missing manifest)."])
 
     staging_dir = Path(tempfile.mkdtemp(prefix="mia_expedition_import_staging_"))
     counts: dict[str, int] = {}

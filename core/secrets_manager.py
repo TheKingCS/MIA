@@ -2,7 +2,7 @@
 core.secrets_manager
 ======================
 
-Passphrase-based symmetric encryption for anything M.I.A. needs to keep
+Passphrase-based symmetric encryption for anything MIA needs to keep
 confidential at rest — introduced for encrypted Backup/Restore
 (core/backup_manager.py), but deliberately generic rather than
 backup-specific, so a future module with a real secret to protect

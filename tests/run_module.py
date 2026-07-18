@@ -3,7 +3,7 @@
 tests/run_module.py
 =====================
 
-Standalone test harness: boots just enough of M.I.A. to display a
+Standalone test harness: boots just enough of MIA to display a
 single module's widget, without the splash screen, setup wizard, or
 main menu. This is the fast feedback loop for module development —
 see docs/ADDING_MODULES.md.
@@ -61,7 +61,7 @@ from gui.theme_manager import get_theme_stylesheet  # noqa: E402
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a single M.I.A. module in isolation.")
+    parser = argparse.ArgumentParser(description="Run a single MIA module in isolation.")
     parser.add_argument("module_id", nargs="?", help="The module_id to load, e.g. 'notes'")
     parser.add_argument("--list", action="store_true", help="List all discovered module ids and exit.")
     args = parser.parse_args()
@@ -122,7 +122,7 @@ def main() -> int:
     module.on_load()
 
     window = QMainWindow()
-    window.setWindowTitle(f"M.I.A. Module Test — {module.display_name}")
+    window.setWindowTitle(f"MIA Module Test — {module.display_name}")
     window.resize(700, 500)
     window.setCentralWidget(module.get_widget())
     window.show()

@@ -301,7 +301,7 @@ class FieldKitModule(ModuleBase):
             return
 
         source, _ = QFileDialog.getOpenFileName(
-            None, "Select Expedition Data Export", device.mountpoint, "M.I.A. Expedition Export (*.zip)"
+            None, "Select Expedition Data Export", device.mountpoint, "MIA Expedition Export (*.zip)"
         )
         if not source:
             return
@@ -320,7 +320,7 @@ class FieldKitModule(ModuleBase):
         """
         Re-reads every manager import_expedition_data() can touch, so
         newly-merged records show up immediately — docs/ROADMAP.md
-        milestone v0.19 removed the previous "restart M.I.A. to see
+        milestone v0.19 removed the previous "restart MIA to see
         imported data" limitation for both the manual Import button
         above and the auto-import path below, once reload() existed on
         each manager anyway (core/expedition_manager.py's docstring).
@@ -343,7 +343,7 @@ class FieldKitModule(ModuleBase):
         creates, so this works regardless of the still-unverified real
         Pi 5 USB gadget-mode mount layout (docs/HARDWARE.md). Only the
         in-app "already running, auto-navigate" half is built here —
-        launching M.I.A. itself from a cold, not-yet-running state via a
+        launching MIA itself from a cold, not-yet-running state via a
         Windows background watcher (pywin32/WMI USB-arrival events) is a
         separate, deliberately deferred follow-up: genuinely untestable
         in this Linux dev sandbox, same category as 11.3b/11.6.

@@ -3,7 +3,7 @@ gui.profile_select
 ====================
 
 Shown at boot when more than one profile exists (the "shared device"
-case — e.g. a family using one M.I.A. unit), and also reachable at any
+case — e.g. a family using one MIA unit), and also reachable at any
 time via the "Switch User" button in the main window header — that
 path always shows this screen regardless of profile count, since it's
 also how a second profile gets added in the first place.
@@ -41,7 +41,7 @@ class ProfileSelectScreen(QWidget):
     def __init__(self, context: AppContext) -> None:
         super().__init__()
         self.context = context
-        self.setWindowTitle("M.I.A. — Select Profile")
+        self.setWindowTitle("MIA — Select Profile")
         self.resize(440, 520)
         self._build_ui()
 
@@ -51,7 +51,7 @@ class ProfileSelectScreen(QWidget):
         layout.setSpacing(14)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        title = QLabel("Who's using M.I.A.?")
+        title = QLabel("Who's using MIA?")
         title.setObjectName("TitleLabel")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)

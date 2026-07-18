@@ -137,7 +137,7 @@ class MIAApplication:
 
     def __init__(self) -> None:
         self.qt_app = QApplication(sys.argv)
-        self.qt_app.setApplicationName("M.I.A.")
+        self.qt_app.setApplicationName("MIA")
         _load_bundled_fonts()
 
         self.config = ConfigManager()
@@ -382,7 +382,7 @@ class MIAApplication:
         triggered a real crash: `xdg_surface buffer (1920 x 1205) is
         larger than the configured fullscreen state (1920 x 1200)` — a
         fatal Wayland protocol error that killed the whole Wayland
-        connection, not just M.I.A. Explicitly resizing to the actual
+        connection, not just MIA Explicitly resizing to the actual
         screen size first means the widget is already at the correct
         geometry before the fullscreen request, removing the small-
         then-huge jump Qt's Wayland backend was mis-negotiating.
@@ -493,7 +493,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",
-            description="Open/navigate to a M.I.A. module by its module_id.",
+            description="Open/navigate to a MIA module by its module_id.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -510,7 +510,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_alarm",
             domain="alarms",
-            description="Create a new alarm in M.I.A.",
+            description="Create a new alarm in MIA",
             parameters={
                 "type": "object",
                 "properties": {
@@ -525,7 +525,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_alarms",
             domain="alarms",
-            description="List the user's current alarms in M.I.A.",
+            description="List the user's current alarms in MIA",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_alarms,
             trigger_phrases=(
@@ -538,7 +538,7 @@ class MIAApplication:
             name="delete_alarm",
             domain="alarms",
             destructive=True,
-            description="Delete an existing alarm in M.I.A. by its label.",
+            description="Delete an existing alarm in MIA by its label.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -557,7 +557,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_note",
             domain="notes",
-            description="Add a new journal/note entry in M.I.A.'s Notes module.",
+            description="Add a new journal/note entry in MIA's Notes module.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -573,7 +573,7 @@ class MIAApplication:
             name="list_notes",
             domain="notes",
             description=(
-                "List or search the user's journal/note entries in M.I.A.'s Notes module. "
+                "List or search the user's journal/note entries in MIA's Notes module. "
                 "Leave query empty to list everything, most recently updated first."
             ),
             parameters={
@@ -600,7 +600,7 @@ class MIAApplication:
             name="delete_note",
             domain="notes",
             destructive=True,
-            description="Delete an existing journal/note entry in M.I.A.'s Notes module by its title.",
+            description="Delete an existing journal/note entry in MIA's Notes module by its title.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -621,7 +621,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_inventory_item",
             domain="inventory",
-            description="Add a new item to M.I.A.'s general Inventory tool.",
+            description="Add a new item to MIA's general Inventory tool.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -637,7 +637,7 @@ class MIAApplication:
             name="list_inventory",
             domain="inventory",
             description=(
-                "List or search M.I.A.'s Inventory tool, including quantities. "
+                "List or search MIA's Inventory tool, including quantities. "
                 "Use this to answer 'how many X do I have' questions about "
                 "inventory items. Leave query empty to list everything."
             ),
@@ -675,7 +675,7 @@ class MIAApplication:
             name="delete_inventory_item",
             domain="inventory",
             destructive=True,
-            description="Remove an item entirely from M.I.A.'s Inventory tool by name.",
+            description="Remove an item entirely from MIA's Inventory tool by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -709,7 +709,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_waypoints",
             domain="waypoints",
-            description="List or search the user's saved waypoints (named locations) in M.I.A.'s Navigation module.",
+            description="List or search the user's saved waypoints (named locations) in MIA's Navigation module.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -744,7 +744,7 @@ class MIAApplication:
             name="delete_waypoint",
             domain="waypoints",
             destructive=True,
-            description="Delete an existing saved waypoint in M.I.A.'s Navigation module by name.",
+            description="Delete an existing saved waypoint in MIA's Navigation module by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -774,7 +774,7 @@ class MIAApplication:
             name="recall_recent_activity",
             domain="system",
             description=(
-                "Look up what the user has recently done in M.I.A. (modules opened, "
+                "Look up what the user has recently done in MIA (modules opened, "
                 "notifications, profile switches), optionally filtered by a keyword. "
                 "Use this for questions like 'what have I been doing' or 'what did I do "
                 "with notes recently'."
@@ -799,7 +799,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_waypoint",
             domain="waypoints",
-            description="Save a new named waypoint (location) in M.I.A.'s Navigation module.",
+            description="Save a new named waypoint (location) in MIA's Navigation module.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -840,7 +840,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_expedition",
             domain="expeditions",
-            description="Start a new Expedition (a dated outing that can hold multiple trips) in M.I.A.'s Expeditions module.",
+            description="Start a new Expedition (a dated outing that can hold multiple trips) in MIA's Expeditions module.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -856,7 +856,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_expeditions",
             domain="expeditions",
-            description="List the user's Expeditions in M.I.A.",
+            description="List the user's Expeditions in MIA",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_expeditions,
             trigger_phrases=(
@@ -870,7 +870,7 @@ class MIAApplication:
             name="recall_expedition",
             domain="expeditions",
             description=(
-                "Get a detailed recap of ONE Expedition in M.I.A.'s Memories: duration, "
+                "Get a detailed recap of ONE Expedition in MIA's Memories: duration, "
                 "distance/pace per activity type, waypoint categories visited, latest "
                 "journal/conditions entry, and photo count. This is a single-Expedition "
                 "summary, NOT a bare list — use list_expeditions instead for 'what "
@@ -905,7 +905,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_trip",
             domain="expeditions",
-            description="Add a new Trip (one hike, paddle, ride, fishing trip, etc.) under an existing Expedition in M.I.A.",
+            description="Add a new Trip (one hike, paddle, ride, fishing trip, etc.) under an existing Expedition in MIA",
             parameters={
                 "type": "object",
                 "properties": {
@@ -928,7 +928,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_trips",
             domain="expeditions",
-            description="List the user's Trips in M.I.A., optionally filtered to one Expedition by name.",
+            description="List the user's Trips in MIA, optionally filtered to one Expedition by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -945,7 +945,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_gear_item",
             domain="expeditions",
-            description="Add an item to a Trip's gear checklist in M.I.A.",
+            description="Add an item to a Trip's gear checklist in MIA",
             parameters={
                 "type": "object",
                 "properties": {
@@ -964,7 +964,7 @@ class MIAApplication:
             name="add_trip_log_entry",
             domain="expeditions",
             description=(
-                "Add a dated journal/log entry to a specific Trip in M.I.A., optionally "
+                "Add a dated journal/log entry to a specific Trip in MIA, optionally "
                 "recording weather/conditions. Use this instead of add_note when the user "
                 "is logging something about a specific trip/outing (arriving somewhere, "
                 "conditions encountered, etc.), not a general-purpose note."
@@ -992,7 +992,7 @@ class MIAApplication:
             name="delete_expedition",
             domain="expeditions",
             destructive=True,
-            description="Delete an existing Expedition in M.I.A. by name.",
+            description="Delete an existing Expedition in MIA by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1012,7 +1012,7 @@ class MIAApplication:
             name="delete_trip",
             domain="expeditions",
             destructive=True,
-            description="Delete an existing Trip in M.I.A. by name.",
+            description="Delete an existing Trip in MIA by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1044,7 +1044,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="get_trip_summary",
             domain="expeditions",
-            description="Get a Trip's logged distance, average speed, and planned route distance in M.I.A.",
+            description="Get a Trip's logged distance, average speed, and planned route distance in MIA",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1059,7 +1059,7 @@ class MIAApplication:
             name="get_device_profile",
             domain="system",
             description=(
-                "Tell the user which M.I.A. EDITION (hardware/software variant) this "
+                "Tell the user which MIA EDITION (hardware/software variant) this "
                 "device is running: Core (Pi 5 + AI HAT+ 2 field edition) or Home "
                 "(desktop workstation edition). This is about the device/installation "
                 "itself, NOT about user accounts — use list_profiles for the people "
@@ -1072,7 +1072,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="set_theme",
             domain="system",
-            description="Change M.I.A.'s visual theme.",
+            description="Change MIA's visual theme.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1093,7 +1093,7 @@ class MIAApplication:
             name="set_birthday",
             domain="system",
             description=(
-                "Remember the current user's own birthday, so M.I.A. can recognize and celebrate it. "
+                "Remember the current user's own birthday, so MIA can recognize and celebrate it. "
                 "Use this whenever the user tells you their birthday in conversation — do not ask for "
                 "it unprompted."
             ),
@@ -1113,7 +1113,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_calendar_event",
             domain="calendar",
-            description="Add a new event to M.I.A.'s Calendar.",
+            description="Add a new event to MIA's Calendar.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1131,7 +1131,7 @@ class MIAApplication:
             name="list_calendar_events",
             domain="calendar",
             description=(
-                "List the user's upcoming/scheduled Calendar events in M.I.A. — what's coming up "
+                "List the user's upcoming/scheduled Calendar events in MIA — what's coming up "
                 "today, this week, or on any date. Not for past activity — see recall_recent_activity for that."
             ),
             parameters={"type": "object", "properties": {}, "required": []},
@@ -1150,7 +1150,7 @@ class MIAApplication:
             name="delete_calendar_event",
             domain="calendar",
             destructive=True,
-            description="Delete an existing Calendar event in M.I.A. by its title.",
+            description="Delete an existing Calendar event in MIA by its title.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1187,7 +1187,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_component",
             domain="components",
-            description="Add a new electronic component to M.I.A.'s Workshop & Electronics component database.",
+            description="Add a new electronic component to MIA's Workshop & Electronics component database.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1206,7 +1206,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_components",
             domain="components",
-            description="List or search the user's electronic components in M.I.A.",
+            description="List or search the user's electronic components in MIA",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1227,7 +1227,7 @@ class MIAApplication:
             name="delete_component",
             domain="components",
             destructive=True,
-            description="Delete an existing electronic component in M.I.A. by name.",
+            description="Delete an existing electronic component in MIA by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1248,7 +1248,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_material",
             domain="materials",
-            description="Add a raw Material to M.I.A.'s Workshop production pipeline (Materials tab).",
+            description="Add a raw Material to MIA's Workshop production pipeline (Materials tab).",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1264,7 +1264,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_materials",
             domain="materials",
-            description="List the user's raw Materials in M.I.A.'s Workshop production pipeline.",
+            description="List the user's raw Materials in MIA's Workshop production pipeline.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1278,7 +1278,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_product",
             domain="products",
-            description="Add a finished Product to M.I.A.'s Workshop production pipeline (Products tab).",
+            description="Add a finished Product to MIA's Workshop production pipeline (Products tab).",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1294,7 +1294,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_products",
             domain="products",
-            description="List the user's finished Products in M.I.A.'s Workshop production pipeline.",
+            description="List the user's finished Products in MIA's Workshop production pipeline.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1308,7 +1308,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_job",
             domain="jobs",
-            description="Start a new production Job in M.I.A.'s Workshop pipeline.",
+            description="Start a new production Job in MIA's Workshop pipeline.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1331,7 +1331,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_jobs",
             domain="jobs",
-            description="List the user's production Jobs in M.I.A.'s Workshop pipeline.",
+            description="List the user's production Jobs in MIA's Workshop pipeline.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_jobs,
             trigger_phrases=("list my jobs", "list jobs", "what jobs", "show my jobs"),
@@ -1383,7 +1383,7 @@ class MIAApplication:
             name="record_sale",
             domain="ledger",
             description=(
-                "Record a sale of an existing Product in M.I.A.'s Workshop Ledger — deducts the sold "
+                "Record a sale of an existing Product in MIA's Workshop Ledger — deducts the sold "
                 "quantity from the Product's stock and logs the revenue."
             ),
             parameters={
@@ -1401,7 +1401,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="get_ledger_summary",
             domain="ledger",
-            description="Get the user's total revenue, expenses, and net profit from M.I.A.'s Workshop Ledger.",
+            description="Get the user's total revenue, expenses, and net profit from MIA's Workshop Ledger.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_get_ledger_summary,
             trigger_phrases=("ledger summary", "how much profit", "my revenue", "my expenses", "net profit"),
@@ -1409,7 +1409,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_connected_devices",
             domain="field_kit",
-            description="List currently connected external USB storage and serial devices in M.I.A.'s Field Kit.",
+            description="List currently connected external USB storage and serial devices in MIA's Field Kit.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_connected_devices,
             trigger_phrases=("connected devices", "what devices are connected", "list devices", "usb devices", "list connected devices"),
@@ -1417,7 +1417,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_scripts",
             domain="field_kit",
-            description="List the user's saved scripts in M.I.A.'s Field Kit script library.",
+            description="List the user's saved scripts in MIA's Field Kit script library.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1432,7 +1432,7 @@ class MIAApplication:
             name="list_profiles",
             domain="system",
             description=(
-                "List the user ACCOUNTS/PEOPLE set up on this M.I.A. device (e.g. "
+                "List the user ACCOUNTS/PEOPLE set up on this MIA device (e.g. "
                 "'Zac', 'Guest'). This is about user accounts, NOT the device's "
                 "Core/Home edition setting — use get_device_profile for that."
             ),
@@ -1469,7 +1469,7 @@ class MIAApplication:
             domain="security",
             description=(
                 "Estimate a password's strength (entropy-based rating and warnings). "
-                "For a real account password, prefer M.I.A.'s Field Kit Security tab "
+                "For a real account password, prefer MIA's Field Kit Security tab "
                 "(a masked input field) over pasting it into chat — chat history isn't "
                 "masked/hidden the way a password field is."
             ),
@@ -1503,7 +1503,7 @@ class MIAApplication:
             description=(
                 "Quickly check whether 3 common ports (22 SSH, 80 HTTP, 443 HTTPS) are "
                 "open on a host. This is a fast, limited check — for a fuller scan of "
-                "more ports, use M.I.A.'s Field Kit Security tab instead."
+                "more ports, use MIA's Field Kit Security tab instead."
             ),
             parameters={
                 "type": "object",
@@ -1532,7 +1532,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_project",
             domain="projects",
-            description="Start a new Project (a container for tasks) in M.I.A.'s Project Manager tool.",
+            description="Start a new Project (a container for tasks) in MIA's Project Manager tool.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1551,7 +1551,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_projects",
             domain="projects",
-            description="List the user's Projects in M.I.A.'s Project Manager tool.",
+            description="List the user's Projects in MIA's Project Manager tool.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_projects,
             trigger_phrases=(
@@ -1564,7 +1564,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_task",
             domain="projects",
-            description="Add a new Task under an existing Project in M.I.A.'s Project Manager tool.",
+            description="Add a new Task under an existing Project in MIA's Project Manager tool.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1583,7 +1583,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_tasks",
             domain="projects",
-            description="List the user's Tasks in M.I.A., optionally filtered to one Project by name.",
+            description="List the user's Tasks in MIA, optionally filtered to one Project by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1606,7 +1606,7 @@ class MIAApplication:
             name="delete_project",
             domain="projects",
             destructive=True,
-            description="Delete an existing Project (and unlink, but not delete, its Tasks) in M.I.A. by name.",
+            description="Delete an existing Project (and unlink, but not delete, its Tasks) in MIA by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1621,7 +1621,7 @@ class MIAApplication:
             name="delete_task",
             domain="projects",
             destructive=True,
-            description="Delete an existing Task in M.I.A. by title.",
+            description="Delete an existing Task in MIA by title.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1635,7 +1635,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="mark_task_done",
             domain="projects",
-            description="Mark an existing Task as done (complete) or not done in M.I.A. by title.",
+            description="Mark an existing Task as done (complete) or not done in MIA by title.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1654,7 +1654,7 @@ class MIAApplication:
             name="add_mission",
             domain="missions",
             description=(
-                "Start a new gamified Mission in M.I.A. (e.g. a 'Master Angler' mission for a "
+                "Start a new gamified Mission in MIA (e.g. a 'Master Angler' mission for a "
                 "fishing trip). Optionally link it to an existing Trip by name."
             ),
             parameters={
@@ -1674,7 +1674,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_missions",
             domain="missions",
-            description="List the user's Missions in M.I.A., including each objective's progress.",
+            description="List the user's Missions in MIA, including each objective's progress.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_missions,
             trigger_phrases=(
@@ -1694,7 +1694,7 @@ class MIAApplication:
             name="add_objective",
             domain="missions",
             description=(
-                "Add an Objective to an existing Mission in M.I.A. — either a manually-tracked "
+                "Add an Objective to an existing Mission in MIA — either a manually-tracked "
                 "tally (e.g. 'catch 3 fish') or a target computed automatically from time spent "
                 "on the mission's linked trip (e.g. 'spend 2 hours fishing')."
             ),
@@ -1718,7 +1718,7 @@ class MIAApplication:
             name="log_mission_progress",
             domain="missions",
             description=(
-                "Log progress toward a tally-type Objective on a Mission in M.I.A. — e.g. "
+                "Log progress toward a tally-type Objective on a Mission in MIA — e.g. "
                 "recording a catch, a species identified, or any other manually-counted goal. "
                 "Only works for tally-type objectives; trip_duration_hours objectives track "
                 "themselves automatically and never need this."
@@ -1742,7 +1742,7 @@ class MIAApplication:
             name="delete_mission",
             domain="missions",
             destructive=True,
-            description="Delete an existing Mission in M.I.A. by name.",
+            description="Delete an existing Mission in MIA by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1756,7 +1756,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="complete_mission",
             domain="missions",
-            description="Mark an existing Mission as completed in M.I.A. by name.",
+            description="Mark an existing Mission as completed in MIA by name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1770,7 +1770,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_trail_maps",
             domain="maps",
-            description="List the trail map PDFs cataloged in M.I.A.'s Maps module, optionally filtered by park name or state.",
+            description="List the trail map PDFs cataloged in MIA's Maps module, optionally filtered by park name or state.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1788,7 +1788,7 @@ class MIAApplication:
             name="add_trail_map_from_url",
             domain="maps",
             description=(
-                "Download a trail map PDF from a direct URL and add it to M.I.A.'s trail map "
+                "Download a trail map PDF from a direct URL and add it to MIA's trail map "
                 "catalog. Not for offline tile/basemap downloads — those are only available "
                 "from the Maps module's own UI, since they can take too long to run as part "
                 "of a chat reply."
@@ -1810,7 +1810,7 @@ class MIAApplication:
             name="delete_trail_map",
             domain="maps",
             destructive=True,
-            description="Delete a cataloged trail map PDF from M.I.A.'s Maps module by park name.",
+            description="Delete a cataloged trail map PDF from MIA's Maps module by park name.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1825,7 +1825,7 @@ class MIAApplication:
             name="convert_units",
             domain="toolbox",
             description=(
-                "Convert a numeric value between two units of measurement using M.I.A.'s "
+                "Convert a numeric value between two units of measurement using MIA's "
                 "Unit Converter (length, area, volume, weight, temperature, speed, pressure, "
                 "energy, power, time, data storage, angle, or fuel economy). Unit names can "
                 "be everyday words (e.g. 'miles', 'celsius') — no need for exact formatting."
@@ -1863,7 +1863,7 @@ class MIAApplication:
             domain="toolbox",
             description=(
                 "Solve Ohm's Law (V = I x R) for voltage, current, or resistance, given the "
-                "other two values, using M.I.A.'s Ohm's Law calculator."
+                "other two values, using MIA's Ohm's Law calculator."
             ),
             parameters={
                 "type": "object",
@@ -2888,7 +2888,7 @@ class MIAApplication:
 
     def run(self) -> int:
         """Start the boot sequence and enter the Qt event loop."""
-        log.info("M.I.A. starting up (version %s)", self.config.get("system.version"))
+        log.info("MIA starting up (version %s)", self.config.get("system.version"))
 
         self.splash = SplashScreen()
         self._display(self.splash)

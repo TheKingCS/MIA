@@ -37,11 +37,11 @@ class _WelcomePage(QWizardPage):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setTitle("Welcome to M.I.A.")
+        self.setTitle("Welcome to MIA")
         self.setSubTitle("Let's set up your system for the first time.")
 
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("What should M.I.A. call you?"))
+        layout.addWidget(QLabel("What should MIA call you?"))
 
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText("Your name")
@@ -59,7 +59,7 @@ class _DateTimePage(QWizardPage):
     def __init__(self) -> None:
         super().__init__()
         self.setTitle("Confirm Date & Time")
-        self.setSubTitle("M.I.A. uses this to timestamp your setup. Adjust if needed.")
+        self.setSubTitle("MIA uses this to timestamp your setup. Adjust if needed.")
 
         layout = QVBoxLayout(self)
 
@@ -82,7 +82,7 @@ class SetupWizard(QWizard):
     def __init__(self, context: AppContext) -> None:
         super().__init__()
         self.context = context
-        self.setWindowTitle("M.I.A. — First-Time Setup")
+        self.setWindowTitle("MIA — First-Time Setup")
         self.setFixedSize(480, 320)
 
         self._welcome_page = _WelcomePage()

@@ -44,7 +44,7 @@ interfere with each other:
 - **Information questions** (the common case) are run through
   `AppContext.device_help.build_grounded_prompt()`
   (core/device_help_manager.py) before reaching the LLM — the actual text
-  sent as the chat message is the retrieval-grounded version (M.I.A.'s own
+  sent as the chat message is the retrieval-grounded version (MIA's own
   docs + module metadata + Reference Library as context), not the user's
   raw words, though the chat log still displays what the user actually
   typed/said. No tools are attached. This is deliberate scope, not an
@@ -67,7 +67,7 @@ model, not mocks:
    opposite case: "Set an alarm called Wake Up for 07:00" pulled in
    irrelevant doc chunks (e.g. `docs/ADDING_MODULES.md`, matched on the
    word "add") that convinced the model the conversation was about
-   M.I.A.'s own developer docs, so it answered in prose instead of
+   MIA's own developer docs, so it answered in prose instead of
    calling `add_alarm` — fixed by skipping grounding for action requests
    and sending the raw prompt instead.
 
@@ -76,7 +76,7 @@ queued-connection signal delivery guarantees runs on the GUI thread (see
 `ChatWorker`'s docstring) — not inside the worker thread, since an action
 like `open_module` needs to touch the GUI. This is **not** the
 Self-Modification / Dev Mode staged plan in docs/ROADMAP.md (that's
-specifically about the assistant editing M.I.A.'s own source code);
+specifically about the assistant editing MIA's own source code);
 these are just ordinary app actions a user could already do by hand.
 
 Two blocking operations each get their own scoped `QThread` rather than
@@ -580,7 +580,7 @@ class AssistantModule(ModuleBase):
         self._stop_speaking_button.setEnabled(False)
 
     def _on_stop_speaking(self) -> None:
-        """Cuts M.I.A. off mid-sentence — real user ask (2026-07-18):
+        """Cuts MIA off mid-sentence — real user ask (2026-07-18):
         no way to interrupt her once she started talking. Only stops
         playback; synthesis (if still running) finishes harmlessly with
         nothing left to play, same as if the user just wasn't

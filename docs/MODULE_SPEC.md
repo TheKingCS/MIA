@@ -1,7 +1,7 @@
-# M.I.A. Module Compatibility Specification (v1)
+# MIA Module Compatibility Specification (v1)
 
 This is the authoritative, checklist-style reference for what a module
-must satisfy to be successfully added to M.I.A. — whether you're
+must satisfy to be successfully added to MIA — whether you're
 writing one by hand or installing one through the **Modules** screen's
 "Add Module" feature, which enforces every rule below automatically
 before anything is copied into `modules/`.

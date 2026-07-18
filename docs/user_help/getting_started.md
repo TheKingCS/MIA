@@ -1,4 +1,4 @@
-# Getting Started with M.I.A.
+# Getting Started with MIA
 
 ## The Home screen
 
@@ -33,7 +33,7 @@ screen whenever your mouse (or finger, on touch) gets close to that
 corner — tap it to pull out the Assistant sidebar, and tap it again (or
 tap the orb again) to tuck it back away. This replaces keeping a
 separate Assistant screen open all the time. The sidebar starts fresh
-each time you launch M.I.A. — tap "History" inside it to reopen an
+each time you launch MIA — tap "History" inside it to reopen an
 older conversation. It has its own push-to-talk and Stop button, so
 voice works there too, not just in the full-screen version.
 
@@ -45,6 +45,6 @@ want a bigger view for a longer conversation.
 
 ## Themes
 
-M.I.A. has 4 visual themes — Dark Field, Low Energy, Colored, and Anime
+MIA has 4 visual themes — Dark Field, Low Energy, Colored, and Anime
 Monochrome — changeable any time from Settings, or by asking the
 Assistant to switch themes for you.

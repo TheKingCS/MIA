@@ -6,7 +6,7 @@ Files: a real file manager (docs/ROADMAP.md milestone 3.6), replacing
 the earlier placeholder. Browses starting from the user's home
 directory but can navigate anywhere the OS permits — matching the
 project's "browse (USB/SSD/SD/NAS)" vision for this module, not just
-M.I.A.'s own data folder.
+MIA's own data folder.
 
 Built on QFileSystemModel + QTreeView (Qt's own file-browsing widgets)
 rather than hand-rolled directory listing — sorting, icons, and live

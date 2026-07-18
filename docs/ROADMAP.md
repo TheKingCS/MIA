@@ -1,12 +1,12 @@
-# M.I.A. Roadmap
+# MIA Roadmap
 
 **See also: `docs/VISION.md`** — the long-term, four-project mission
-behind M.I.A. (this device is "Project 1: The Brain" of that larger
+behind MIA (this device is "Project 1: The Brain" of that larger
 picture). This document is the near-term execution plan; VISION.md is
 the North Star. Keep them separate — see VISION.md's "why this is a
 separate document" section for why that distinction matters.
 
-This is the living plan for M.I.A. beyond v0.1. It exists so scope
+This is the living plan for MIA beyond v0.1. It exists so scope
 decisions made in conversation don't get lost — update it whenever the
 plan changes.
 
@@ -102,7 +102,7 @@ testing guide accompanies each milestone as it's built — see
 | **v0.8** | Workshop & Electronics + The Lab (shared Data Logger) |
 | **v0.9** | Activity/Memory Log (shared service) + Memories AI-query — the first v1.0+-bucket slice buildable with zero real hardware |
 | **v0.10** | Navigation: Waypoints + Sun/Moon calculator — the second v1.0+-bucket slice buildable with zero real hardware (offline maps/trails/elevation wait for real GPS/mapping data) |
-| **v0.11** | Field Kit — Connected Device Framework (core service, USB/serial detection+identification) + Device Manager UI, OS/MIA flashing+provisioning, useful scripts library, security/network toolkit, MCU firmware flashing tie-in — the third v1.0+-bucket slice buildable with zero real hardware beyond a spare USB drive/SD card, at the user's explicit request to turn M.I.A. into a field engineering/programming tool |
+| **v0.11** | Field Kit — Connected Device Framework (core service, USB/serial detection+identification) + Device Manager UI, OS/MIA flashing+provisioning, useful scripts library, security/network toolkit, MCU firmware flashing tie-in — the third v1.0+-bucket slice buildable with zero real hardware beyond a spare USB drive/SD card, at the user's explicit request to turn MIA into a field engineering/programming tool |
 | **v0.12** | Expedition Mode — Expedition + Trip core/CRUD with a Trip activity type (hiking, camping, fishing, kayaking, biking, etc.), campsite/waypoint categories, gear checklist (Inventory-linked or freeform), trip journal with an explicit weather/conditions field, speed & distance from logged checkpoints, a schematic (non-tiled) route map, and trip photos — the fourth v1.0+-bucket slice buildable with zero real hardware, at the user's explicit request for field-ready outing tracking across activity types (live GPS, elevation, automated weather, and real map tiles all explicitly deferred — see the v0.12 breakdown) |
 | **v0.13** | Device Profile + Theme System — one codebase, config-driven Core (Pi 5 + AI HAT+ 2) vs. Home (desktop) editions, plus a selectable theme system (Dark Field, Low Energy, Colored, Anime Monochrome) applied at the QApplication level so it can differ in weight between editions |
 | **v0.14** | Pi 5 + AI HAT+ 2 deployment readiness — documentation/code-audit pass only (no physical hardware yet): deploy script review, flagged the open AI-HAT-inference-path question and polling-interval power budget as real unknowns to revisit once real hardware exists |
@@ -111,7 +111,7 @@ testing guide accompanies each milestone as it's built — see
 
 ## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
 
-A specific, explicit goal for M.I.A.: an assistant that can eventually
+A specific, explicit goal for MIA: an assistant that can eventually
 help maintain and extend its own codebase. This is the highest-risk
 capability on the entire roadmap — for a kiosk-mode offline device with
 no easy remote access, "the AI broke its own boot sequence" is close to
@@ -168,7 +168,7 @@ Splitting the System layer into small, independently testable milestones:
       USB drive/local file, no internet required
 - [x] **2.9 Boot animation** — replaced the plain splash-screen text
       steps with a fullscreen "Jarvis-style" boot sequence: a pulsing
-      glow core (`gui/boot_core_widget.py`) with "M.I.A." rendered in
+      glow core (`gui/boot_core_widget.py`) with "MIA" rendered in
       its center, HUD-style status text, running before the setup
       wizard / profile selector / lock screen is shown.
 
@@ -371,7 +371,7 @@ boot never depends on an LLM server being up.
       questions" section.
 - [x] **5.4 Device-help grounding** — the Assistant answers "what does
       this do / how do I use this device" questions grounded in
-      M.I.A.'s own docs (`docs/*.md`) and module metadata via
+      MIA's own docs (`docs/*.md`) and module metadata via
       retrieval, not open-ended chat. This is explicitly **stage 1
       ("Read & explain")** of the Self-Modification / Dev Mode staged
       plan above — read-only, no file writes, and stays that way until
@@ -399,7 +399,7 @@ boot never depends on an LLM server being up.
       structured tool-calling API (`/api/chat` + a `tools` schema).
       This is explicitly **not** the Self-Modification / Dev Mode
       staged plan above — that's specifically about the assistant
-      editing M.I.A.'s own source code, gated behind a cautious
+      editing MIA's own source code, gated behind a cautious
       multi-stage rollout; actions here are just normal, everyday app
       operations any user could already do by hand through the UI.
       `core/assistant_actions.py`'s `AssistantActionRegistry` is a
@@ -456,7 +456,7 @@ boot never depends on an LLM server being up.
       the next request no longer cold-loads.
 - [x] **5.6 Assistant + Reference Library grounding** — the Assistant's
       grounding (5.4) previously only ever searched `docs/*.md`
-      (M.I.A.'s own self-documentation), completely separate from the
+      (MIA's own self-documentation), completely separate from the
       actual Reference Library content (Wikipedia/iFixit/Wikibooks/
       Appropedia packs) the Knowledge module manages — asked at the
       user's request, after using the app in practice: "I want to be
@@ -541,7 +541,7 @@ boot never depends on an LLM server being up.
       gated, "Set an alarm called Wake Up for 07:00" *still* failed to
       call `add_alarm` — grounding was pulling in irrelevant doc chunks
       (`docs/ADDING_MODULES.md`, matched on the word "add") that
-      convinced the model the conversation was about M.I.A.'s own
+      convinced the model the conversation was about MIA's own
       developer docs rather than the user's request. Fixed by skipping
       `build_grounded_prompt()` for action requests too. Verified
       against the live model: the Honda Civics question now correctly
@@ -791,7 +791,7 @@ boot never depends on an LLM server being up.
       **Deliberately excluded: `run_script`.** Executing one of the
       user's saved Field Kit scripts via voice/text is a meaningfully
       different capability than every other action registered so far —
-      real command/code execution, not CRUD on M.I.A.'s own data — and
+      real command/code execution, not CRUD on MIA's own data — and
       deserves its own explicit decision rather than being bundled
       quietly into a read-action batch. `list_scripts` (read-only) shipped;
       actually running one did not.
@@ -1116,10 +1116,10 @@ that section can be verified here right now.
 
 ## v0.11 breakdown (planned)
 
-**Field Kit** — requested directly by the user to turn M.I.A. into "the
+**Field Kit** — requested directly by the user to turn MIA into "the
 most useful offline engineering and field programming tool": detect and
 identify devices physically plugged into the Pi, act on them (browse
-files, flash an OS + auto-install M.I.A., flash MCU firmware), plus a
+files, flash an OS + auto-install MIA, flash MCU firmware), plus a
 useful-scripts library and a security/network toolkit. This is the
 third v1.0+-bucket slice buildable with zero hardware this project
 doesn't already have (just a spare USB drive/SD card for real-world
@@ -1213,7 +1213,7 @@ pentesting toolkit assumes of its operator.
       to close the window in this environment.
 - [x] **11.3a Flashing confirmation flow — safety rails (design +
       implementation)** — write a Raspberry Pi OS image plus a
-      first-boot script that auto-installs M.I.A. to a selected storage
+      first-boot script that auto-installs MIA to a selected storage
       device, turning this Pi into a field provisioning station for a
       fleet of others, is the one genuinely destructive operation in
       Field Kit (writing to the wrong device destroys its data with no
@@ -1265,13 +1265,13 @@ pentesting toolkit assumes of its operator.
       engine** — held back on purpose, not an oversight: (a) writing
       raw bytes to a block device typically needs either the operating
       user to already have write access (varies by distro/udev
-      config) or elevated privileges, and M.I.A. runs as a systemd
+      config) or elevated privileges, and MIA runs as a systemd
       **user** service, not root — whether the target Pi OS deployment
       has the right permissions out of the box is genuinely unknown
       until tested on real hardware; (b) Raspberry Pi OS images ship
       `.img.xz` compressed, raising a streaming-decompress-while-writing
       vs. decompress-then-write design choice; (c) the actual first-boot
-      M.I.A. auto-install mechanism (what gets written into the image's
+      MIA auto-install mechanism (what gets written into the image's
       boot partition) needs its own design pass. Rails 1/4/5 above are
       real safety infrastructure regardless of how 11.3b resolves these
       questions, which is why they were built and shipped now instead
@@ -1520,7 +1520,7 @@ an oversight later):**
 ## v0.13 breakdown (planned)
 
 Device Profile + Theme System, at the user's explicit request to
-prepare M.I.A. for its real target hardware (a Pi 5 + AI HAT+ 2, which
+prepare MIA for its real target hardware (a Pi 5 + AI HAT+ 2, which
 "this AI is going to live on") as one codebase serving two editions —
 **Core** (the Pi, resource-constrained, a field data-gathering tool)
 and **Home** (a desktop workstation, more storage/resources) — rather
@@ -1908,11 +1908,11 @@ log_mission_progress -> list_missions round-tripping correctly).
 
 ## v0.19 — Home Dock auto-launch Dashboard (built)
 
-Docking Core to the Home desktop auto-navigates M.I.A. to a Dashboard
+Docking Core to the Home desktop auto-navigates MIA to a Dashboard
 view rather than requiring the manual "Import Expedition Data" click
 v0.15 built. Scope resolved via `AskUserQuestion` first, same as v0.18:
 (1) build only the fully-testable "already running, auto-navigate"
-half now — the original vision's "launch M.I.A. itself from a cold,
+half now — the original vision's "launch MIA itself from a cold,
 not-yet-running state" needs a persistent Windows background watcher
 (pywin32/WMI USB-arrival events), genuinely unbuildable-and-verifiable
 in this Linux dev sandbox, so it's a separate, deliberately deferred
@@ -1932,7 +1932,7 @@ exposing storage. `import_expedition_data()`'s existing merge-by-id is
 already idempotent, so no "already processed" bundle-tracking was
 needed — re-importing a bundle on a later dock is safe and cheap.
 
-**Removed the "restart M.I.A. to see imported data" limitation** (both
+**Removed the "restart MIA to see imported data" limitation** (both
 for this new auto-import path and the existing manual Import button) by
 adding a `reload()` method to the 5 managers `import_expedition_data()`
 touches (`ExpeditionManager`/`TripManager`/`WaypointManager`/
@@ -2713,12 +2713,12 @@ pollution (scratch render script isolated every manager's data dir and
 `config_manager`'s `_CONFIG_FILE` up front, per the gotcha immediately
 above).
 
-## Companion philosophy: M.I.A. speaks — spoken startup briefing + selectable voices (built, 2026-07-15)
+## Companion philosophy: MIA speaks — spoken startup briefing + selectable voices (built, 2026-07-15)
 
 Immediate follow-up to the Startup Dashboard Briefing above, at the
 user's explicit request: "we need to get MIA talking... I want this
 startup to be a spoken thing. Also I want to be able to pick through
-different voices for M.I.A."
+different voices for MIA"
 
 **Spoken briefing**: `gui/home_dashboard.py`'s `_speak_briefing()` runs
 the greeting text through `core/tts_worker.py`'s existing fire-and-
@@ -2748,7 +2748,7 @@ network access works here; all 5 `.onnx`/`.onnx.json` pairs fetched,
 
 New Settings UI: `modules/settings/module.py` gained a "Voice" section
 — a dropdown over `list_available_voices()`, calling `set_voice()` and
-immediately speaking a short preview line ("Hi, I'm M.I.A. This is what
+immediately speaking a short preview line ("Hi, I'm MIA This is what
 I sound like.") through a new `TTSWorker` instance on selection, so a
 voice change is *heard*, not just silently saved — same "make the
 change felt, not just logged" instinct as `set_theme`'s live re-apply.
@@ -2780,7 +2780,7 @@ flagged in `docs/KNOWN_ISSUES.md` rather than assumed.
 Found live, by the user, immediately after the voice work above: asked
 "Can you speak?" and the Assistant answered "I don't know how to speak
 in the classical sense... I'm a text-based AI" — technically true of the
-model itself, but wrong for what M.I.A. actually does, since the full
+model itself, but wrong for what MIA actually does, since the full
 Assistant module speaks every reply via the `TTSWorker` pipeline that
 already exists. Root cause: `core/assistant_chat.py`'s system prompt
 never mentioned voice output at all — the model only knows what's
@@ -2806,7 +2806,7 @@ the info-question system message's literal content).
 Also investigated the same session: user reported the spoken briefing
 sounded "super quiet" or possibly didn't play at all. Directly measured
 the actual synthesized WAV's peak amplitude — 100% of full 16-bit
-scale, not a quiet signal — ruling out Piper/M.I.A.'s own synthesis as
+scale, not a quiet signal — ruling out Piper/MIA's own synthesis as
 the cause. Most likely a system-level volume setting (Windows volume
 mixer for the WSL audio session, or WSLg's own passthrough gain), not
 an app bug; flagged to the user rather than guessed at further, since
@@ -2939,7 +2939,7 @@ worth a dedicated deep-link mechanism.
 
 ## AI Voice Effect (built, 2026-07-15)
 
-At the user's explicit request: "upgrade M.I.A.'s voice" to sound like
+At the user's explicit request: "upgrade MIA's voice" to sound like
 "a futuristic awesome AI companion device," not a plain human voice.
 Investigated what's actually tunable first — Piper's own
 `SynthesisConfig` (`length_scale`/`noise_scale`/`noise_w_scale`) only
@@ -3034,7 +3034,7 @@ tests were updated for the narrower signature, not added to).
 **This was picked as the concrete first slice of a much larger
 sharpening of the companion-philosophy vision** — see `docs/VISION.md`'s
 new "The voice-only operability test" section: the user's real target
-is a device fully operable by voice alone, with M.I.A. acting like a
+is a device fully operable by voice alone, with MIA acting like a
 game-guide-style tutor that deeply understands every module's live data
 and capabilities, not just its own tool registry. This fix is a small,
 concrete instance of that principle (the briefing now reflects real
@@ -3067,9 +3067,9 @@ without a real blur pass, already proven fast enough for continuous
 rendering approach, now state-driven (`idle`/`listening`/`thinking`/
 `loading`/`notification`, each its own color + pulse speed, with a
 rotating highlight arc reserved for "actively working" states) and
-rendering an arbitrary centered glyph instead of a fixed "M.I.A." label
+rendering an arbitrary centered glyph instead of a fixed "MIA" label
 — so each module keeps its own icon identity while the orb's motion
-communicates what M.I.A. is currently doing. Falls back to `idle` for
+communicates what MIA is currently doing. Falls back to `idle` for
 an unrecognized state rather than raising.
 
 Wired into `CharacterPanel`: `_set_busy()` (an Assistant reply in
@@ -3104,11 +3104,11 @@ passing (test count unchanged — no new pure-logic functions; this is
 Qt-widget behavior, covered by the live verification above per this
 project's own established test-tier split, not pytest).
 
-## Boot sequence rewrite — "M.I.A. waking up" (built, 2026-07-15)
+## Boot sequence rewrite — "MIA waking up" (built, 2026-07-15)
 
 The second concrete slice of `docs/VISION.md`'s Home visual-identity
 brief, picked next by the user over the main dashboard layout: "the
-system initializes, modules come online, sensors activate, and M.I.A.'s
+system initializes, modules come online, sensors activate, and MIA's
 personality begins loading... like powering on a futuristic device,"
 not a static progress bar.
 
@@ -4681,7 +4681,7 @@ Workshop-pipeline pass. Registry now 67 actions across 18 domains.
 
 ## Stop-speaking button, "power percentage" trigger gap, grid spacing fix (2026-07-18)
 
-Three real user reports in one pass. (1) No way to interrupt M.I.A.
+Three real user reports in one pass. (1) No way to interrupt MIA
 mid-sentence once TTS playback started — new "⏹ Stop" button next to
 Hold to Talk in `modules/assistant/module.py`, wired to a new
 `VoiceManager.stop_playback()` (`sounddevice.stop()`, which aborts the
@@ -4839,3 +4839,43 @@ blank-start + history switch, and the orb's show/hide/position/click
 behavior). **The orb's motion "feel" specifically still needs real,
 live user judgment** — it's the kind of thing this project's own
 history has repeatedly found can't be assessed from a screenshot alone.
+
+## "MIA" rename, everywhere + correct pronunciation (2026-07-18)
+
+Real ask, decided via AskUserQuestion: change every display of
+"M.I.A." to "MIA" throughout the app, and make it *sound* like the name
+"Mia" when spoken rather than being spelled out letter-by-letter.
+Literal find-and-replace across 64 files (UI text, docstrings/comments,
+`docs/*.md`, `docs/user_help/*.md`, `README.md`, `CLAUDE.md`) —
+deliberately **excluded** the `"app": "M.I.A."` manifest-format
+constant in `core/backup_manager.py`/`core/update_manager.py`/
+`core/expedition_sync.py` and their test fixtures, since that's a
+real on-disk data-format identifier checked against existing backup/
+update/expedition-export files, not display text; changing it would
+have silently broken loading anything already exported before this
+rename. Prose/comments/user-facing error strings *inside* those same
+three files did still get renamed (e.g. "Not a MIA backup file...").
+
+New `core/voice_manager.py`'s `prepare_text_for_speech()` (pure,
+tested) substitutes whole-word "MIA" → "Mia" only in the text actually
+sent to Piper synthesis, never in what's displayed — one choke point
+(`VoiceManager.synthesize()`) covers every spoken surface (chat replies,
+tool confirmations, the startup briefing) regardless of which code
+composed the text. Word-boundary-safe, confirmed it doesn't touch
+"MIAMI"/similar.
+
+Re-verified the live golden set (113/113 clean) after changing
+`core/assistant_chat.py`'s `_IDENTITY_LINE` — used on both the
+action-request and info-question paths, the most fragile prompt
+surface in this codebase, so any wording change there gets the same
+re-verification discipline as every prior identity/prompt change.
+
+**Design note for later**: the incoming Dashboard/Missions design
+handoff's own nav uses "M.I.A." as a stylized wordmark/logotype but
+"MIA" in body copy ("Say 'Hey MIA' to start a voice session") — worth
+keeping in mind if a future visual pass wants a distinct logotype
+treatment for the wordmark specifically, separate from this plain-text
+rename.
+
+1403 pytest tests passing (4 new — `prepare_text_for_speech()`'s unit
+tests).

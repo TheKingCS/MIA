@@ -2,7 +2,7 @@
 core.backup_manager
 =====================
 
-Export/import M.I.A.'s config + data directory as a single backup
+Export/import MIA's config + data directory as a single backup
 file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted
 via core/secrets_manager.py.
 
@@ -81,7 +81,7 @@ def is_backup_encrypted(path: Path) -> bool:
     """
     Peek at a backup file's header to tell whether it needs a
     passphrase, without reading/decrypting the whole file. Returns
-    False for anything that isn't a recognized M.I.A. backup at all —
+    False for anything that isn't a recognized MIA backup at all —
     callers should rely on restore_backup()'s own validation for that;
     this is only for deciding whether to show a passphrase prompt.
     """
@@ -164,7 +164,7 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None) -> Resto
     else:
         # No magic prefix means "not encrypted" — a plain backup is
         # just a raw zip, so there's nothing to strip. Whether it's
-        # actually a M.I.A. backup (vs. an unrelated file) is checked
+        # actually a MIA backup (vs. an unrelated file) is checked
         # below via the zip-open + manifest.json checks.
         zip_bytes = raw
 
@@ -174,7 +174,7 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None) -> Resto
         return RestoreResult(passed=False, errors=["Backup contents are not a valid archive (corrupted?)."])
 
     if "manifest.json" not in zf.namelist():
-        return RestoreResult(passed=False, errors=["Not a M.I.A. backup file (missing manifest)."])
+        return RestoreResult(passed=False, errors=["Not a MIA backup file (missing manifest)."])
 
     staging_dir = Path(tempfile.mkdtemp(prefix="mia_restore_staging_"))
     try:

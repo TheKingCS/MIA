@@ -3,7 +3,7 @@ core.voice_effects
 =====================
 
 Post-processing DSP effects applied to Piper's raw synthesized audio —
-2026-07-15, at the user's explicit request for M.I.A. to "sound like a
+2026-07-15, at the user's explicit request for MIA to "sound like a
 futuristic awesome AI companion device," not a plain human voice.
 Deliberately pure `numpy` (already a dependency for `core/voice_manager.py`'s
 recording/playback arrays) rather than reaching for a heavier audio

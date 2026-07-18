@@ -1,7 +1,7 @@
-# M.I.A. Hardware Guide
+# MIA Hardware Guide
 
 This document tracks concrete hardware recommendations and known
-constraints for building M.I.A. Core on a Raspberry Pi 5. Update it as
+constraints for building MIA Core on a Raspberry Pi 5. Update it as
 parts are chosen/tested — it should stay the source of truth for "what
 hardware does this software assume exists."
 
@@ -40,7 +40,7 @@ of this document as the whole picture.
   scope accordingly (device help, survival reference lookup, structured
   Q&A) rather than open-ended conversation
 - Setup path: Hailo's `hailo-ollama` runtime + a local frontend (Open
-  WebUI is the reference example in Hailo's own docs; M.I.A.'s
+  WebUI is the reference example in Hailo's own docs; MIA's
   Assistant module will eventually talk to this backend directly
   instead)
 
@@ -90,7 +90,7 @@ installed — see Storage below.
 
 This split also means an SD card failure (the classic Pi failure mode)
 doesn't take your reference library or journal with it — only the OS,
-which is reinstallable from the M.I.A. repo.
+which is reinstallable from the MIA repo.
 
 ## Voice interface
 
@@ -129,7 +129,7 @@ into `voice_models/` (gitignored).
 
 ## Boot & kiosk
 
-- Autologin + a systemd service launching M.I.A. directly in a minimal
+- Autologin + a systemd service launching MIA directly in a minimal
   Wayland/X session (kiosk mode) — no desktop shell visible. Covered in
   `docs/ROADMAP.md` Phase v0.2.
 

@@ -24,7 +24,7 @@ core/llm_manager.py or a missing/corrupt `.zim` pack in
 core/reference_library_manager.py.
 
 **2026-07-15: selectable TTS voices** (`core/voice_catalog.py`), at the
-user's explicit request to "pick through different voices for M.I.A."
+user's explicit request to "pick through different voices for MIA"
 `voice.tts_voice_id` (config) selects among `VOICE_CATALOG`'s curated
 entries; `list_available_voices()`/`set_voice()` below are the two new
 entry points `modules/settings/module.py`'s Voice dropdown uses. The
@@ -33,7 +33,7 @@ legacy `voice.tts_model_path` override still wins if explicitly set
 as before this change.
 
 **2026-07-15: the "AI Voice Effect"** (`core/voice_effects.py`), at the
-user's explicit request for M.I.A. to "sound like a futuristic awesome
+user's explicit request for MIA to "sound like a futuristic awesome
 AI companion device" rather than a plain human voice. `synthesize()`
 below post-processes Piper's raw output through
 `apply_ai_voice_effect_to_wav_file()` whenever `voice.ai_voice_effect`
@@ -68,6 +68,7 @@ directly can wrap/overflow instead of clipping cleanly at the top end).
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import wave
 from pathlib import Path
@@ -109,6 +110,25 @@ def apply_playback_volume(audio: np.ndarray, volume: float) -> np.ndarray:
         return audio
     amplified = audio.astype(np.float32) * volume
     return np.clip(amplified, -32768, 32767).astype(np.int16)
+
+
+_MIA_WORD_PATTERN = re.compile(r"\bMIA\b")
+
+
+def prepare_text_for_speech(text: str) -> str:
+    """
+    Pure function — testable without a TTS backend (see
+    tests/test_voice_manager.py). 2026-07-18: real user ask — "MIA"
+    should be *displayed* everywhere (chat text, UI labels), but
+    *pronounced* like the name "Mia," not spelled out letter-by-letter,
+    which is Piper/espeak's usual heuristic for a bare all-caps word.
+    Substituting to mixed-case "Mia" only in the text actually sent to
+    synthesis (never in what's shown on screen) gets both at once,
+    from one place, regardless of which piece of code composed the
+    text. Word-boundary-safe so it doesn't touch "MIAMI" or similar.
+    """
+    return _MIA_WORD_PATTERN.sub("Mia", text)
+
 
 try:
     import sounddevice as _sd
@@ -311,7 +331,7 @@ class VoiceManager:
     def synthesize(self, text: str, output_path: Path) -> Optional[Path]:
         try:
             output_path = Path(output_path)
-            self._tts.synthesize(text, output_path)
+            self._tts.synthesize(prepare_text_for_speech(text), output_path)
             if self.context.config.get("voice.ai_voice_effect", True):
                 # Best-effort — a post-processing failure shouldn't turn
                 # working speech into no speech at all. See
@@ -399,7 +419,7 @@ class VoiceManager:
 
     def stop_playback(self) -> None:
         """Immediately cuts off whatever `play()` is currently doing —
-        lets the user interrupt M.I.A. mid-sentence. `sounddevice.stop()`
+        lets the user interrupt MIA mid-sentence. `sounddevice.stop()`
         aborts the stream a running `play()` call started on another
         thread (`core/tts_worker.py`'s `QThread`); the `sd.wait()` inside
         that call's `play()` returns right away once the stream is

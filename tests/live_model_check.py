@@ -222,7 +222,7 @@ GOLDEN_CASES = [
     ("list profiles", "What user profiles do I have set up?", "list_profiles"),
     (
         "collision risk: 'profile' is overloaded (user profiles vs. device_profile edition)",
-        "Show my profiles on this M.I.A. device",
+        "Show my profiles on this MIA device",
         "list_profiles",
     ),
     # --- milestone 5.15: Security tab tools (hash identifier, password

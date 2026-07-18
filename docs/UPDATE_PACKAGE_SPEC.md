@@ -1,4 +1,4 @@
-# M.I.A. Update Package Specification (v1)
+# MIA Update Package Specification (v1)
 
 Reference for building an offline update package for the **Update
 Manager** (Settings screen → "Apply Update Package..."), per
@@ -23,7 +23,7 @@ There is no diffing or patching; if a file is in the package, it wins.
 
 ```json
 {
-    "app": "M.I.A.",
+    "app": "MIA",
     "manifest_version": 1,
     "target_version": "0.3.0",
     "description": "Short summary of what this update changes."
@@ -32,7 +32,7 @@ There is no diffing or patching; if a file is in the package, it wins.
 
 | Field | Required | Notes |
 |---|---|---|
-| `app` | Yes | Must be exactly `"M.I.A."` — this is the check that tells a real update package apart from an arbitrary zip. |
+| `app` | Yes | Must be exactly `"MIA"` — this is the check that tells a real update package apart from an arbitrary zip. |
 | `manifest_version` | No | Reserved for future format changes. Not currently checked. |
 | `target_version` | No | Free-form; shown in the confirmation dialog so you know what you're about to apply. Defaults to `"unknown"` if omitted. |
 | `description` | No | Free-form; shown in the confirmation dialog, and becomes the git commit body if a rollback commit is created. |
@@ -47,7 +47,7 @@ mkdir -p /tmp/mia_update/core
 cp core/module_manager.py /tmp/mia_update/core/module_manager.py
 cat > /tmp/mia_update/update_manifest.json <<'EOF'
 {
-    "app": "M.I.A.",
+    "app": "MIA",
     "manifest_version": 1,
     "target_version": "0.2.1",
     "description": "Fixes the rescan() duplicate-module_id warning."
@@ -63,7 +63,7 @@ the target device, then apply it from Settings.
 ## What happens when you apply one
 
 1. The zip is validated (real zip, has the manifest, manifest says
-   `"app": "M.I.A."`) before anything touches the live project.
+   `"app": "MIA"`) before anything touches the live project.
 2. It's extracted into a staging temp directory first — a corrupt or
    malicious package can't leave a half-applied mess, since nothing is
    copied into the real project until staging succeeds.
@@ -74,7 +74,7 @@ the target device, then apply it from Settings.
    other uncommitted work you had sitting in the tree is left alone.
    This commit is your rollback point: `git revert` if the update
    turns out to be bad.
-5. You'll need to restart M.I.A. for changes to Python files to take
+5. You'll need to restart MIA for changes to Python files to take
    effect — already-imported modules don't hot-reload.
 
 ## Security note — read this before applying anything

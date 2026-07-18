@@ -31,7 +31,7 @@ without having to open the Missions module.
 
 ## MIA can assign you a Mission
 
-M.I.A. sometimes picks a Mission for you, rather than waiting for you
+MIA sometimes picks a Mission for you, rather than waiting for you
 to create one yourself — this is the gamification side of Missions,
 turning real goals into something more like a game's quest log.
 MIA-assigned Missions show a gold "MIA ASSIGNED" badge on their card so

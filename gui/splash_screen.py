@@ -3,7 +3,7 @@ gui.splash_screen
 ==================
 
 The boot splash shown while core.application.MIAApplication runs
-through its boot sequence — the "M.I.A. waking up" animation
+through its boot sequence — the "MIA waking up" animation
 `docs/VISION.md`'s Home visual-identity section calls for (a real boot
 sequence should feel like "powering on a futuristic device," not a
 static progress bar), building on milestone 2.9's original "Jarvis-
@@ -68,14 +68,14 @@ class SplashScreen(QWidget):
         # centers it.
         layout.addStretch(1)
 
-        # "M.I.A." itself is rendered inside the presence orb (see
+        # "MIA" itself is rendered inside the presence orb (see
         # gui/presence_widget.py) rather than as a separate label here.
         subtitle = QLabel("Multifunctional Intelligent Assistant")
         subtitle.setObjectName("BootSubtitleLabel")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._core = PresenceWidget(diameter=420)
-        self._core.set_glyph("M.I.A.")
+        self._core.set_glyph("MIA")
         # Deliberately no set_state() call — PresenceWidget already
         # defaults to "idle" (blue-teal breathing, no rotating ring),
         # matching the original PulsingCoreWidget's look exactly. See

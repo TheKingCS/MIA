@@ -4,14 +4,14 @@ core.event_bus
 
 A minimal publish/subscribe event bus.
 
-Why this exists: as M.I.A. grows, modules will need to react to things
+Why this exists: as MIA grows, modules will need to react to things
 happening elsewhere in the system (e.g. the "Notes" module wants to know
 when the "Assistant" module creates a reminder) without importing each
 other directly. Direct imports between modules create a tangled
 dependency graph that becomes unmaintainable over a multi-year project.
 
 The event bus is intentionally simple (no priorities, no async, no
-threading guarantees) because M.I.A. v0.1 is a single-threaded desktop
+threading guarantees) because MIA v0.1 is a single-threaded desktop
 GUI app. If a future version needs cross-thread or cross-process events
 (e.g. a background robotics/networking daemon), that's a good moment to
 revisit this module — but don't add that complexity now.

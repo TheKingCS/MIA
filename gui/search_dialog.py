@@ -75,7 +75,7 @@ class SearchDialog(QDialog):
     def __init__(self, context: AppContext, parent=None) -> None:
         super().__init__(parent)
         self.context = context
-        self.setWindowTitle("Search M.I.A.")
+        self.setWindowTitle("Search MIA")
         self.resize(440, 480)
         self._build_ui()
 

@@ -408,7 +408,7 @@ class HomeDashboard(QFrame):
         a real gap found re-comparing against the ForMIA mockup
         (`Dashboard.dc.html`), missing entirely before this pass. The
         status chip is static ambient copy, same precedent as
-        gui/main_window.py's own status-bar default message ("M.I.A.
+        gui/main_window.py's own status-bar default message ("MIA
         core online.") — not a live health check standing behind it."""
         row = QHBoxLayout()
         overview_label = QLabel("SYSTEM OVERVIEW")

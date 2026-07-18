@@ -4,7 +4,7 @@ core.voice_catalog
 
 The curated set of selectable Piper TTS voices — 2026-07-15, at the
 user's explicit request: "I want to be able to pick through different
-voices for M.I.A." Piper's full voice library (`rhasspy/piper-voices`
+voices for MIA" Piper's full voice library (`rhasspy/piper-voices`
 on Hugging Face) has dozens of entries; this is a small, hand-picked
 subset spanning a real spread of accent/character rather than every
 option — same "curated, not exhaustive" discipline as
