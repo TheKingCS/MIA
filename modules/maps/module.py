@@ -15,15 +15,20 @@ Three tabs:
   existed but had no caller anywhere in the app) and an optional Trip
   route overlay (Trip.waypoint_ids). Deliberately not real cartography
   — see that widget's own docstring for the full reasoning.
-- **Basemap** — a real tile-based map (gui/widgets/tile_map_view.py),
-  sourced from USGS National Map's public-domain topo tiles (shows
-  real trails, unlike a roads-only basemap) — confirmed reachable
-  directly before writing any code against it. Ships with one-click
-  "Download Kentucky"/"Download Tennessee" buttons (the user's own
-  starting scope) that bulk-prefetch a modest, pre-measured zoom range
-  (~19MB/557 tiles per state) via a background worker so the area
-  works fully offline afterward; live panning/zooming fetches
-  individual tiles beyond that range on demand.
+- **Basemap** — a real tile-based map (gui/widgets/tile_map_view.py)
+  with a source switcher between two providers, each scoped to a
+  specific job (see core.map_tile_cache's own docstring for the full
+  reasoning): **USGS National Map** topo tiles (US only, shows real
+  trails) for high-detail region caching, and **OpenStreetMap** for a
+  small worldwide low-zoom overview only (~5MB for the whole planet —
+  OSM's tile usage policy prohibits the kind of bulk/deep caching USGS
+  is fine with, so OSM is never used for that). One-click "Download
+  Kentucky"/"Download Tennessee" buttons (the user's original starting
+  scope) plus "Download Current View" (pan/zoom anywhere, then cache
+  that exact area — not limited to the two preset states) and
+  "Download Worldwide Overview" all bulk-prefetch via a background
+  worker so the area works fully offline afterward; live panning/
+  zooming fetches individual tiles beyond whatever's cached on demand.
 - **Trail Maps** — a catalog of official per-park trail map PDFs
   (core.trail_map_library.TrailMapLibrary). Deliberately not
   pre-seeded with scraped URLs — see that module's own docstring for
@@ -54,7 +59,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.map_tile_cache import DEFAULT_PREFETCH_ZOOM_LEVELS
+from core.map_tile_cache import (
+    DEFAULT_PREFETCH_SOURCE,
+    DEFAULT_PREFETCH_ZOOM_LEVELS,
+    WORLDWIDE_BOUNDS,
+    WORLDWIDE_OVERVIEW_SOURCE,
+    WORLDWIDE_OVERVIEW_ZOOM_LEVELS,
+)
 from core.map_tile_math import tiles_covering_bbox
 from core.trail_map_library import NotAPdfError, TrailMap
 from core.trip_manager import Trip
@@ -77,6 +88,17 @@ _NO_ROUTE_LABEL = "No route overlay"
 _STATE_BOUNDING_BOXES: dict[str, tuple[float, float, float, float]] = {
     "Kentucky": (36.497, -89.571, 39.147, -81.965),
     "Tennessee": (34.983, -90.310, 36.678, -81.647),
+}
+
+#: Deeper than DEFAULT_PREFETCH_ZOOM_LEVELS — "download the current
+#: view" targets a much smaller area than a whole state (the visible
+#: viewport), so it can afford more detail per tile-count budget.
+_CURRENT_VIEW_PREFETCH_ZOOM_LEVELS: tuple[int, ...] = (8, 9, 10, 11, 12)
+
+#: Dropdown label -> internal core.map_tile_cache.TILE_SOURCES key.
+_SOURCE_DISPLAY_NAMES: dict[str, str] = {
+    "USGS Topo (US detail, real trails)": "usgs_topo",
+    "OpenStreetMap (worldwide, low-zoom overview only)": "osm",
 }
 
 
@@ -119,6 +141,7 @@ class MapsModule(ModuleBase):
         self._to_id: Optional[str] = None
 
         self._tile_view: Optional[TileMapView] = None
+        self._source_combo: Optional[QComboBox] = None
         self._prefetch_status_label: Optional[QLabel] = None
         self._prefetch_buttons: list[QPushButton] = []
         self._prefetch_worker: Optional[TilePrefetchWorker] = None
@@ -260,11 +283,20 @@ class MapsModule(ModuleBase):
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        hint = QLabel("Drag to pan, scroll to zoom. Download a state below to make it fully available offline.")
+        hint = QLabel("Drag to pan, scroll to zoom. Download a region below to make it fully available offline.")
         hint.setObjectName("DashboardSectionBody")
         layout.addWidget(hint)
 
-        self._tile_view = TileMapView(self.context.map_tiles)
+        source_row = QHBoxLayout()
+        source_row.addWidget(QLabel("Basemap source:"))
+        self._source_combo = QComboBox()
+        for label, source_key in _SOURCE_DISPLAY_NAMES.items():
+            self._source_combo.addItem(label, source_key)
+        self._source_combo.currentIndexChanged.connect(self._on_source_changed)
+        source_row.addWidget(self._source_combo, stretch=1)
+        layout.addLayout(source_row)
+
+        self._tile_view = TileMapView(self.context.map_tiles, source=DEFAULT_PREFETCH_SOURCE)
         layout.addWidget(self._tile_view, stretch=1)
 
         self._prefetch_status_label = QLabel("")
@@ -279,39 +311,81 @@ class MapsModule(ModuleBase):
             self._prefetch_buttons.append(button)
         layout.addLayout(controls)
 
+        more_controls = QHBoxLayout()
+        current_view_button = QPushButton("Download Current View")
+        current_view_button.setToolTip("Pan/zoom to any area, then cache it here for offline use")
+        current_view_button.clicked.connect(self._on_download_current_view_clicked)
+        more_controls.addWidget(current_view_button)
+        self._prefetch_buttons.append(current_view_button)
+
+        worldwide_button = QPushButton("Download Worldwide Overview")
+        worldwide_button.setToolTip("A small (~5MB) low-zoom overview of the entire planet")
+        worldwide_button.clicked.connect(self._on_download_worldwide_clicked)
+        more_controls.addWidget(worldwide_button)
+        self._prefetch_buttons.append(worldwide_button)
+        layout.addLayout(more_controls)
+
         return tab
 
-    def _on_download_state_clicked(self, state_name: str) -> None:
+    def _on_source_changed(self, index: int) -> None:
+        source_key = self._source_combo.itemData(index)
+        if source_key is not None:
+            self._tile_view.set_source(source_key)
+
+    def _run_prefetch(
+        self,
+        label: str,
+        source: str,
+        min_lat: float,
+        min_lon: float,
+        max_lat: float,
+        max_lon: float,
+        zoom_levels: tuple[int, ...],
+    ) -> None:
         if self._prefetch_worker is not None:
             return  # a prefetch is already running
 
-        min_lat, min_lon, max_lat, max_lon = _STATE_BOUNDING_BOXES[state_name]
-        estimate = format_tile_count_estimate(min_lat, min_lon, max_lat, max_lon, DEFAULT_PREFETCH_ZOOM_LEVELS)
+        estimate = format_tile_count_estimate(min_lat, min_lon, max_lat, max_lon, zoom_levels)
         confirm = QMessageBox.question(
             None,
-            f"Download {state_name}?",
+            f"Download {label}?",
             f"This will download {estimate} of map tiles for offline use. Continue?",
         )
         if confirm != QMessageBox.StandardButton.Yes:
             return
 
-        self._tile_view.set_center((min_lat + max_lat) / 2, (min_lon + max_lon) / 2, zoom=7)
-
         for button in self._prefetch_buttons:
             button.setEnabled(False)
-        self._prefetch_status_label.setText(f"Downloading {state_name}... 0/0")
+        self._prefetch_status_label.setText(f"Downloading {label}... 0/0")
 
         self._prefetch_worker = TilePrefetchWorker(
-            self.context.map_tiles, min_lat, min_lon, max_lat, max_lon, DEFAULT_PREFETCH_ZOOM_LEVELS
+            self.context.map_tiles, min_lat, min_lon, max_lat, max_lon, zoom_levels, source=source
         )
         self._prefetch_worker.progress.connect(
-            lambda done, total, s=state_name: self._prefetch_status_label.setText(f"Downloading {s}... {done}/{total}")
+            lambda done, total, s=label: self._prefetch_status_label.setText(f"Downloading {s}... {done}/{total}")
         )
-        self._prefetch_worker.finished_prefetch.connect(lambda count, s=state_name: self._on_prefetch_finished(s, count))
+        self._prefetch_worker.finished_prefetch.connect(lambda count, s=label: self._on_prefetch_finished(s, count))
         self._prefetch_worker.start()
 
-    def _on_prefetch_finished(self, state_name: str, count: int) -> None:
-        self._prefetch_status_label.setText(f"{state_name}: {count} new tiles cached for offline use.")
+    def _on_download_state_clicked(self, state_name: str) -> None:
+        min_lat, min_lon, max_lat, max_lon = _STATE_BOUNDING_BOXES[state_name]
+        self._tile_view.set_center((min_lat + max_lat) / 2, (min_lon + max_lon) / 2, zoom=7)
+        self._run_prefetch(state_name, DEFAULT_PREFETCH_SOURCE, min_lat, min_lon, max_lat, max_lon, DEFAULT_PREFETCH_ZOOM_LEVELS)
+
+    def _on_download_current_view_clicked(self) -> None:
+        min_lat, min_lon, max_lat, max_lon = self._tile_view.visible_bounds()
+        self._run_prefetch(
+            "current view", DEFAULT_PREFETCH_SOURCE, min_lat, min_lon, max_lat, max_lon, _CURRENT_VIEW_PREFETCH_ZOOM_LEVELS
+        )
+
+    def _on_download_worldwide_clicked(self) -> None:
+        min_lat, min_lon, max_lat, max_lon = WORLDWIDE_BOUNDS
+        self._run_prefetch(
+            "worldwide overview", WORLDWIDE_OVERVIEW_SOURCE, min_lat, min_lon, max_lat, max_lon, WORLDWIDE_OVERVIEW_ZOOM_LEVELS
+        )
+
+    def _on_prefetch_finished(self, label: str, count: int) -> None:
+        self._prefetch_status_label.setText(f"{label}: {count} new tiles cached for offline use.")
         for button in self._prefetch_buttons:
             button.setEnabled(True)
         self._prefetch_worker = None

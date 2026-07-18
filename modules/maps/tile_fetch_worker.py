@@ -30,21 +30,21 @@ log = get_logger(__name__)
 
 
 class TileFetchWorker(QThread):
-    tile_ready = Signal(int, int, int, str)  # zoom, x, y, local file path
+    tile_ready = Signal(str, int, int, int, str)  # source, zoom, x, y, local file path
 
     def __init__(self, tile_cache: MapTileCache) -> None:
         super().__init__()
         self._tile_cache = tile_cache
-        self._queue: "queue.Queue[tuple[int, int, int] | None]" = queue.Queue()
-        self._pending: set[tuple[int, int, int]] = set()
+        self._queue: "queue.Queue[tuple[str, int, int, int] | None]" = queue.Queue()
+        self._pending: set[tuple[str, int, int, int]] = set()
         self._running = True
 
-    def request(self, zoom: int, x: int, y: int) -> None:
+    def request(self, source: str, zoom: int, x: int, y: int) -> None:
         """Enqueues a tile fetch if it isn't already queued/in-flight —
         called from the GUI thread every time paintEvent() finds a
         missing tile; safe to call repeatedly for the same tile while
         panning without piling up duplicate work."""
-        key = (zoom, x, y)
+        key = (source, zoom, x, y)
         if key in self._pending:
             return
         self._pending.add(key)
@@ -60,11 +60,11 @@ class TileFetchWorker(QThread):
             item = self._queue.get()
             if item is None:
                 break
-            zoom, x, y = item
+            source, zoom, x, y = item
             try:
-                path = self._tile_cache.fetch_tile(zoom, x, y)
-                self.tile_ready.emit(zoom, x, y, str(path))
+                path = self._tile_cache.fetch_tile(source, zoom, x, y)
+                self.tile_ready.emit(source, zoom, x, y, str(path))
             except (urllib.error.URLError, OSError):
-                log.warning("Failed to fetch map tile z=%s x=%s y=%s.", zoom, x, y, exc_info=True)
+                log.warning("Failed to fetch map tile source=%s z=%s x=%s y=%s.", source, zoom, x, y, exc_info=True)
             finally:
                 self._pending.discard(item)

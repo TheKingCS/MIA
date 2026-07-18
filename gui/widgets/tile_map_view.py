@@ -41,28 +41,46 @@ from core.map_tile_math import lat_lon_to_world_pixel, world_pixel_to_lat_lon
 from modules.maps.tile_fetch_worker import TileFetchWorker
 
 _TILE_SIZE = 256
-_MIN_ZOOM = 3
+_MIN_ZOOM = 0
 _MAX_ZOOM = 15
 _BACKGROUND_COLOR = QColor("#0d1116")
 _PLACEHOLDER_COLOR = QColor("#161b22")
 _GRID_COLOR = QColor("#232b34")
 _ATTRIBUTION_COLOR = QColor("#7c8798")
 
+#: source name -> attribution text. OSM's own attribution requirement
+#: ("© OpenStreetMap contributors") is different wording from USGS's —
+#: shown based on whichever source is actually on screen, not hardcoded.
+_ATTRIBUTIONS: dict[str, str] = {
+    "usgs_topo": "USGS National Map",
+    "osm": "© OpenStreetMap contributors",
+}
+
 
 class TileMapView(QWidget):
-    """A real basemap: mouse-drag to pan, scroll wheel to zoom."""
+    """A real basemap: mouse-drag to pan, scroll wheel to zoom.
+    set_source() switches which tile provider is displayed — see
+    core.map_tile_cache's own docstring for why there are two
+    (USGS for US high-detail, OSM for a worldwide low-zoom overview
+    only) and why they're never blended per-tile (each renders its own
+    consistent visual style; switching is an explicit user choice, same
+    reasoning real map apps offer a basemap-source switcher rather than
+    silently mixing providers)."""
 
-    def __init__(self, tile_cache: MapTileCache, parent: Optional[QWidget] = None) -> None:
+    def __init__(
+        self, tile_cache: MapTileCache, source: str = "usgs_topo", parent: Optional[QWidget] = None
+    ) -> None:
         super().__init__(parent)
         self.setMinimumHeight(320)
         self.setMouseTracking(True)
 
         self._tile_cache = tile_cache
+        self._source = source
         self._center_lat = 37.0  # roughly the KY/TN border — a reasonable default center
         self._center_lon = -85.5
         self._zoom = 7
 
-        self._pixmap_cache: dict[tuple[int, int, int], QPixmap] = {}
+        self._pixmap_cache: dict[tuple[str, int, int, int], QPixmap] = {}
         self._drag_last_pos: Optional[QPointF] = None
 
         self._fetch_worker = TileFetchWorker(tile_cache)
@@ -83,6 +101,13 @@ class TileMapView(QWidget):
         if zoom is not None:
             self._zoom = max(_MIN_ZOOM, min(_MAX_ZOOM, zoom))
         self.update()
+
+    def set_source(self, source: str) -> None:
+        self._source = source
+        self.update()
+
+    def source(self) -> str:
+        return self._source
 
     def visible_bounds(self) -> tuple[float, float, float, float]:
         """(min_lat, min_lon, max_lat, max_lon) currently on screen —
@@ -122,14 +147,15 @@ class TileMapView(QWidget):
                 self._paint_tile(painter, tile_x, tile_y, screen_x, screen_y)
 
         painter.setPen(_ATTRIBUTION_COLOR)
-        painter.drawText(self.rect().adjusted(6, 0, -6, -6), Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight, "USGS National Map")
+        attribution = _ATTRIBUTIONS.get(self._source, self._source)
+        painter.drawText(self.rect().adjusted(6, 0, -6, -6), Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight, attribution)
         painter.end()
 
     def _paint_tile(self, painter: QPainter, tile_x: int, tile_y: int, screen_x: float, screen_y: float) -> None:
-        key = (self._zoom, tile_x, tile_y)
+        key = (self._source, self._zoom, tile_x, tile_y)
         pixmap = self._pixmap_cache.get(key)
         if pixmap is None:
-            path = self._tile_cache.tile_path(self._zoom, tile_x, tile_y)
+            path = self._tile_cache.tile_path(self._source, self._zoom, tile_x, tile_y)
             if path.exists():
                 pixmap = QPixmap(str(path))
                 self._pixmap_cache[key] = pixmap
@@ -137,13 +163,13 @@ class TileMapView(QWidget):
                 painter.fillRect(int(screen_x), int(screen_y), _TILE_SIZE, _TILE_SIZE, _PLACEHOLDER_COLOR)
                 painter.setPen(QPen(_GRID_COLOR, 1))
                 painter.drawRect(int(screen_x), int(screen_y), _TILE_SIZE, _TILE_SIZE)
-                self._fetch_worker.request(self._zoom, tile_x, tile_y)
+                self._fetch_worker.request(self._source, self._zoom, tile_x, tile_y)
                 return
 
         painter.drawPixmap(int(screen_x), int(screen_y), pixmap)
 
-    def _on_tile_ready(self, zoom: int, x: int, y: int, path: str) -> None:
-        if zoom == self._zoom:
+    def _on_tile_ready(self, source: str, zoom: int, x: int, y: int, path: str) -> None:
+        if source == self._source and zoom == self._zoom:
             self.update()
 
     # ------------------------------------------------------------------

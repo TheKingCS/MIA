@@ -4405,3 +4405,58 @@ anyway since page 1 was a real official USFS map — same "multi-page
 document, judge every page" lesson as the viewer fix), and Kentucky
 State Parks' own site had no scrapable topo-map links at all (same
 anti-bot blocking already documented for Tennessee's park site).
+
+## Worldwide low-zoom overview + selectable high-detail regions (2026-07-18)
+
+Follow-up ask after the KY/TN basemap shipped: "what do i need to make
+the fully offline maps available? I want worldwide offline maps."
+Scoped via `AskUserQuestion` first, given the real constraints already
+found (USGS is US-only; OSM's tile server prohibits bulk/deep
+caching): user picked "worldwide low-zoom + selectable regions at high
+detail" — the same model every real offline-map app (OsmAnd, Gaia GPS)
+already uses, rather than attempting true worldwide high-detail
+coverage (would be many terabytes, measured directly before ruling it
+out).
+
+**`core/map_tile_cache.py` now supports multiple named tile sources**
+(`TILE_SOURCES`, each `(url_template, file_extension)`, cached under
+`data/map_tiles/{source}/...` so they never collide) — every method
+(`tile_path`/`fetch_tile`/`ensure_region_cached`) takes an explicit
+`source` argument now rather than always assuming USGS. Two sources
+registered: `"usgs_topo"` (unchanged, US high-detail) and `"osm"`
+(`tile.openstreetmap.org`) — used **only** for
+`WORLDWIDE_OVERVIEW_ZOOM_LEVELS` (0-4, ~341 tiles/~5MB for the entire
+planet, measured directly before picking this range). This is a
+deliberate, narrow exception to "never hit OSM's tile server
+programmatically" (established when USGS was first chosen over OSM):
+a one-time ~5MB worldwide fetch is the same order of magnitude as a
+single normal browsing session, not the kind of bulk/systematic
+scraping OSM's usage policy targets — but OSM is never used for
+`DEFAULT_PREFETCH_ZOOM_LEVELS`-style deep regional caching, which
+*would* cross that line. High-detail coverage outside the US remains
+a real, documented gap (no compliant bulk tile source found), not
+silently worked around by overusing OSM's server beyond this narrow
+case.
+
+**`gui/widgets/tile_map_view.py`** gained `set_source()`/`source()` —
+switching sources is an explicit user choice (a dropdown in the Maps
+module), not an automatic per-tile blend between two providers with
+different visual styles; each source also gets its own correct
+attribution text (`"USGS National Map"` vs `"© OpenStreetMap
+contributors"`, OSM's own required wording). `modules/maps/module.py`
+gained a source dropdown, a "Download Worldwide Overview" button, and
+a "Download Current View" button — the latter uses
+`TileMapView.visible_bounds()` (already existed) so *any* region can
+be cached at high detail by panning/zooming there first, not just the
+two original KY/TN preset buttons (which still exist, now just calling
+the same shared `_run_prefetch()` helper as the two new buttons).
+
+7 new unit tests (`tests/test_map_tile_cache.py`, network calls
+mocked). Verified for real: a headless-Qt smoke test switched the
+basemap source live, ran a real worldwide OSM overview fetch (reduced
+zoom range for the test's own runtime — the full range is separately
+confirmed small via a dedicated unit test) and a real USGS
+"current view" fetch over an arbitrary region (central Kentucky
+counties, not one of the two presets), confirmed via screenshots
+showing real rendered tiles and correct attribution text for both
+sources. 1347 tests passing (7 new).

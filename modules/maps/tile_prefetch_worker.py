@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QThread, Signal
 
-from core.map_tile_cache import DEFAULT_PREFETCH_ZOOM_LEVELS, MapTileCache
+from core.map_tile_cache import DEFAULT_PREFETCH_SOURCE, DEFAULT_PREFETCH_ZOOM_LEVELS, MapTileCache
 
 
 class TilePrefetchWorker(QThread):
@@ -31,6 +31,7 @@ class TilePrefetchWorker(QThread):
         max_lat: float,
         max_lon: float,
         zoom_levels: tuple[int, ...] = DEFAULT_PREFETCH_ZOOM_LEVELS,
+        source: str = DEFAULT_PREFETCH_SOURCE,
     ) -> None:
         super().__init__()
         self._tile_cache = tile_cache
@@ -39,9 +40,11 @@ class TilePrefetchWorker(QThread):
         self._max_lat = max_lat
         self._max_lon = max_lon
         self._zoom_levels = zoom_levels
+        self._source = source
 
     def run(self) -> None:
         count = self._tile_cache.ensure_region_cached(
+            self._source,
             self._min_lat,
             self._min_lon,
             self._max_lat,
