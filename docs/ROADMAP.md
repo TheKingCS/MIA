@@ -4375,3 +4375,33 @@ entry now reaches its actual cartographic map on page 2. 1343 tests
 passing (no new tests — this is pure Qt widget-configuration behavior,
 same "verify via real headless-Qt screenshot, not a mocked pytest
 test" treatment as this project's other QPainter/QPdfView-level fixes).
+
+## Replaced brochure-style trail maps with genuine topographic ones (2026-07-18)
+
+Follow-up push-back from the user after the viewer fix above: "No the
+issue is that they aren't maps, they are park info guides." Correct,
+even accounting for the viewer bug — most of the 7 originally-seeded
+PDFs (LBL's general brochure, Cumberland Falls, Natural Bridge,
+Wranglers) are illustrated visitor-guide maps (facility icons, mileage
+tables, stylized roads), not real cartography, even on their actual
+map page. Deleted all 7 (`TrailMapLibrary.delete_trail_map()` via the
+real catalog, not a file-system wipe) and searched specifically for
+**official government-published topographic maps** this time — real
+contour lines/shaded relief, not illustration — verifying each
+candidate by actually rendering every page with `QPdfDocument` and
+visually inspecting it before cataloging (applying the exact lesson
+from the viewer-bug investigation: verify the real artifact, don't
+trust metadata/validation alone). Seeded 4 genuine topographic trail
+maps: **Mammoth Cave National Park** (Kentucky, official NPS shaded-
+relief map), **Red River Gorge / Daniel Boone National Forest**
+(Kentucky, official USDA Forest Service numbered-trail map,
+1:42,000), **Great Smoky Mountains National Park** (Tennessee,
+official NPS map), **Big South Fork National River and Recreation
+Area** (Kentucky/Tennessee, official NPS 9-quad-sheet topographic set).
+Two rejected candidates during this pass, confirmed non-map content by
+rendering before deciding: a Red River Gorge "hiking map" PDF whose
+second page was purely a restaurant/shopping business directory (kept
+anyway since page 1 was a real official USFS map — same "multi-page
+document, judge every page" lesson as the viewer fix), and Kentucky
+State Parks' own site had no scrapable topo-map links at all (same
+anti-bot blocking already documented for Tennessee's park site).
