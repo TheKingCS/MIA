@@ -381,6 +381,29 @@ class HomeDashboard(QFrame):
             self._avatar_camera_widget.stop()
         self.context.events.unsubscribe("dashboard.widgets_changed", self._on_widgets_changed)
 
+    def showEvent(self, event) -> None:
+        """
+        2026-07-18: real "sizing issue with the dashboard widgets when
+        going from the Assistant to the Home Screen" report. Root
+        cause: `_data_timer` keeps firing every `_DATA_REFRESH_MS`
+        regardless of whether this widget is the currently-visible
+        stack page (`gui/main_window.py`'s `QStackedWidget` just hides
+        it, doesn't stop it) — and `_set_widget_body_text()`'s
+        min-height recompute reads `label.width()` at whatever moment
+        the timer happens to fire. If that's while this page is
+        hidden, or right in the middle of the stack/scroll-area
+        settling into its new geometry after a page switch, the width
+        read can be stale, producing a wrong minimum height that then
+        persists — visibly clipped/oversized card text — until the
+        next 5-second tick happens to catch a good width. Forcing a
+        refresh on every showEvent() (real Qt event fired exactly when
+        this page becomes visible again, width already final by then)
+        means the correction is immediate instead of "eventually,
+        maybe up to 5 seconds later."
+        """
+        super().showEvent(event)
+        self._refresh_data()
+
     # ------------------------------------------------------------------
     # Construction
     # ------------------------------------------------------------------

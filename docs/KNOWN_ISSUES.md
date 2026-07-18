@@ -30,6 +30,46 @@ renders and functions correctly under headless-Qt (a real crash
 reproduction needs the actual Wayland display that hit this). Needs
 the user to confirm on their real machine before this is closed out.
 
+## Open (fix applied, unconfirmed): Home dashboard widgets sized wrong after visiting the Assistant
+
+2026-07-18, reported by the user: "I keep having a sizing issue with
+the dashboard widgets when going from the Assistant to the Home
+Screen." A headless-Qt reproduction at a fixed window size (building a
+real `MainWindow`, seeding 80 conversation messages so the Assistant's
+own chat log genuinely scrolls, then round-tripping Home → Assistant →
+Home) did **not** reproduce a static geometry discrepancy — card sizes
+measured identical before and after.
+
+Most likely root cause given that: `HomeDashboard._data_timer` (a
+5-second `QTimer`) keeps firing on schedule regardless of whether Home
+is the currently-visible `QStackedWidget` page — `QStackedWidget` just
+hides the widget, it doesn't pause its timers. `_set_widget_body_text()`
+(the existing `heightForWidth`/`sizeHint()` fix from an earlier pass)
+reads `label.width()` to compute a correct `setMinimumHeight()`; if that
+timer tick lands while Home is hidden, or mid-transition right after a
+page switch before layout has settled, the width it reads can be stale,
+producing a wrong minimum height that then persists — visibly
+clipped/oversized card text — until a later tick happens to catch a
+good width (up to 5 seconds, or indefinitely if the page stays hidden).
+
+Fix: `HomeDashboard` now overrides `showEvent()` to call
+`_refresh_data()` immediately whenever the page becomes visible again,
+instead of relying on the next timer tick. Verified via a headless
+spy test that this fires exactly once on initial show and once again
+on becoming visible after a hide/show round-trip through a
+`QStackedWidget`. As a secondary defensive measure,
+`gui/main_window.py`'s four page-switch methods (`show_home()`,
+`show_main_menu()`, `go_back()`, `_navigate_to()`) now also call
+`updateGeometry()` on both the `QStackedWidget` and the `QScrollArea`
+wrapping it (added for the Home/Back crash fix above), in case
+`setCurrentWidget()` alone doesn't generate a real resize event for the
+newly-current page.
+
+**Not confirmed as the fix** — the original bug was never reproduced
+in this headless dev sandbox, so this is the most plausible mechanism
+found rather than a verified root cause. Needs the user to confirm on
+their real machine that the sizing issue no longer recurs.
+
 ## Open (fix applied, unconfirmed): real crash — Wayland connection killed going fullscreen
 
 2026-07-17, hit live on the user's real machine right after selecting a

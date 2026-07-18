@@ -4619,3 +4619,31 @@ totals — not just gating) plus 10 new golden-set cases (84 → 96,
 including 2 false-positive sanity checks for the "job"/"material"
 words in ordinary conversation). Full official golden set re-verified
 clean at 96/96 after every fix. 1369 pytest tests passing (17 new).
+
+## Home dashboard widget sizing fix after Assistant round-trip (2026-07-18)
+
+User report: "I keep having a sizing issue with the dashboard widgets
+when going from the Assistant to the Home Screen." Couldn't reproduce
+a static geometry discrepancy in a headless round-trip test at a fixed
+window size, so diagnosed the more likely mechanism instead:
+`HomeDashboard._data_timer` keeps firing on its normal 5-second
+schedule even while Home is hidden behind the `QStackedWidget`, and the
+existing `_set_widget_body_text()` min-height fix reads `label.width()`
+at whatever moment the timer happens to land — stale if that's while
+hidden or mid-page-transition, producing wrong/clipped card sizing
+that only self-corrects on a later lucky tick.
+
+Fix: `HomeDashboard.showEvent()` now forces an immediate
+`_refresh_data()` the moment the page becomes visible again, rather
+than waiting on the timer. Verified via a headless spy test that this
+fires on both initial show and on becoming visible again after a
+hide/show round-trip. Added a secondary defensive measure in
+`gui/main_window.py`: all four page-switch methods now call
+`updateGeometry()` on both the stack and its wrapping `QScrollArea`
+(from the Home/Back crash fix) right after `setCurrentWidget()`, in
+case that call alone doesn't generate a real resize event for the
+newly-current page. See `docs/KNOWN_ISSUES.md` — unconfirmed on real
+hardware, since the original bug was never reproduced here. 1369
+pytest tests passing (no new ones — the fix isn't reproducible under
+headless Qt, so it was verified with a targeted spy test instead of a
+permanent regression test).

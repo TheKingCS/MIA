@@ -320,11 +320,11 @@ class MainWindow(QMainWindow):
         # (unverified beyond this one incident, same as the earlier
         # fullscreen fix) — needs the user to confirm on the machine
         # that actually hit this.
-        stack_scroll = QScrollArea()
-        stack_scroll.setWidgetResizable(True)
-        stack_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        stack_scroll.setWidget(self._stack)
-        body_layout.addWidget(stack_scroll, stretch=3)
+        self._stack_scroll = QScrollArea()
+        self._stack_scroll.setWidgetResizable(True)
+        self._stack_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._stack_scroll.setWidget(self._stack)
+        body_layout.addWidget(self._stack_scroll, stretch=3)
 
         self._character_panel: Optional[CharacterPanel] = None
         if self.context.config.get("gui.show_character_panel", True):
@@ -455,6 +455,7 @@ class MainWindow(QMainWindow):
         self._history.clear()
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._home_widget)
+        self._refresh_stack_geometry()
         self.statusBar().showMessage("M.I.A. core online.")
         self.context.events.publish("home.shown")
 
@@ -466,6 +467,7 @@ class MainWindow(QMainWindow):
         self._history.clear()
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._menu_widget)
+        self._refresh_stack_geometry()
         self.statusBar().showMessage("M.I.A. core online.")
         self.context.events.publish("menu.shown")
 
@@ -475,6 +477,7 @@ class MainWindow(QMainWindow):
             return
         previous_widget = self._history.pop()
         self._stack.setCurrentWidget(previous_widget)
+        self._refresh_stack_geometry()
         self._back_button.setEnabled(bool(self._history))
         self.statusBar().showMessage("M.I.A. core online." if previous_widget is self._menu_widget else "Viewing previous screen")
         self._publish_navigation_event_for_widget(previous_widget)
@@ -508,3 +511,18 @@ class MainWindow(QMainWindow):
             self._history.append(current)
             self._back_button.setEnabled(True)
         self._stack.setCurrentWidget(widget)
+        self._refresh_stack_geometry()
+
+    def _refresh_stack_geometry(self) -> None:
+        """
+        2026-07-18: defensive follow-up to the dashboard-sizing report.
+        `setCurrentWidget()` alone doesn't generate a real resize/show
+        event for the newly-current page in every case, so the
+        QScrollArea wrapping `self._stack` (added for the Home/Back
+        crash fix) can be left holding stale geometry for it. Nudging
+        both explicitly right after every page switch is cheap
+        insurance against that, on top of the more targeted
+        `HomeDashboard.showEvent()` fix.
+        """
+        self._stack.updateGeometry()
+        self._stack_scroll.updateGeometry()
