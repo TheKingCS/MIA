@@ -4351,3 +4351,27 @@ screenshot that all 7 entries are now distinguishable. 1343 tests
 passing. The 7 real PDFs (~21MB total) live in the gitignored
 `trail_maps/` folder, same as Reference Library packs/trip photos —
 not committed to git, real user content.
+
+## Fixed a real bug: the trail map PDF viewer silently hid every page past the first (2026-07-18)
+
+User report: "The trail maps you added for LBL are not maps at all."
+Investigated by actually rendering every seeded PDF's pages (via
+`QPdfDocument`, saved to PNG, visually inspected) rather than trusting
+the earlier `%PDF`-header validation — and found the data was fine: 6
+of the 7 seeded entries are genuine, detailed trail maps (contour
+lines, legends, named trails), the 7th (LBL's general brochure) has a
+real park-facilities overview map on page 2. **The actual bug was in
+`gui/trail_map_viewer_dialog.py`**: `QPdfView` defaults to
+`PageMode.SinglePage` (confirmed directly), and with no page-turn
+control anywhere in the dialog, that silently showed only page 1 —
+which for every one of these trifold park brochures is just a cover/
+title/rules page, with the real map living on page 2. So every single
+entry *looked* like it had no map at all, regardless of the real
+content. Fixed by switching to `PageMode.MultiPage` (continuous
+scroll, like any normal PDF viewer) plus a page-count label so a
+multi-page document doesn't look like a dead end. Verified via a real
+headless-Qt screenshot: scrolling the North End of North/South Trail
+entry now reaches its actual cartographic map on page 2. 1343 tests
+passing (no new tests — this is pure Qt widget-configuration behavior,
+same "verify via real headless-Qt screenshot, not a mocked pytest
+test" treatment as this project's other QPainter/QPdfView-level fixes).
