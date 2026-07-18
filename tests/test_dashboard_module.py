@@ -32,7 +32,7 @@ def test_format_activity_line():
 
 def test_format_mission_summary_line_with_objectives():
     mission = Mission(mission_id="m1", name="Master Angler")
-    assert format_mission_summary_line(mission, completed_objectives=1, total_objectives=2) == "Master Angler  (1/2 objectives complete)"
+    assert format_mission_summary_line(mission, completed_objectives=1, total_objectives=2) == "Master Angler  (1 of 2 objectives complete)"
 
 
 def test_format_mission_summary_line_no_objectives_yet():

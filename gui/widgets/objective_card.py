@@ -62,7 +62,7 @@ class ObjectiveCard(QPushButton):
         progress_bar = QProgressBar()
         progress_bar.setRange(0, max(1, int(objective.target)))
         progress_bar.setValue(min(int(progress), int(objective.target)))
-        progress_bar.setFormat(f"{progress:g} / {objective.target:g}")
+        progress_bar.setFormat(f"{progress:g} of {objective.target:g}")
         progress_bar.setFixedHeight(18)
         text_column.addWidget(progress_bar)
 

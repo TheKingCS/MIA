@@ -73,7 +73,7 @@ def test_format_active_mission_line_with_progress():
             Objective(description="Take a photo", metric_type="tally", target=1),
         ],
     )
-    assert format_active_mission_line(mission, 1, 2) == "Scout the ridge  —  1/2 objectives complete"
+    assert format_active_mission_line(mission, 1, 2) == "Scout the ridge  —  1 of 2 objectives complete"
 
 
 def test_format_volume_line_unavailable():

@@ -103,7 +103,7 @@ class MissionCard(QPushButton):
             progress_bar = QProgressBar()
             progress_bar.setRange(0, total_objectives)
             progress_bar.setValue(completed_objectives)
-            progress_bar.setFormat(f"{completed_objectives}/{total_objectives} objectives")
+            progress_bar.setFormat(f"{completed_objectives} of {total_objectives} objectives")
             progress_bar.setFixedHeight(16)
             text_column.addWidget(progress_bar)
 

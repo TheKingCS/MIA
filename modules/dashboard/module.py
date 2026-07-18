@@ -60,7 +60,7 @@ def format_mission_summary_line(mission: Mission, completed_objectives: int, tot
     """Pure formatting logic — testable without Qt (see tests/test_dashboard_module.py)."""
     if total_objectives == 0:
         return f"{mission.name}  (no objectives yet)"
-    return f"{mission.name}  ({completed_objectives}/{total_objectives} objectives complete)"
+    return f"{mission.name}  ({completed_objectives} of {total_objectives} objectives complete)"
 
 
 def format_recap_summary_line(recap: ExpeditionRecap) -> str:

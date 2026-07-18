@@ -17,8 +17,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
+
 from core.app_context import AppContext
-from core.voice_manager import VoiceManager, VoiceUnavailableError
+from core.voice_manager import VoiceManager, VoiceUnavailableError, apply_playback_volume
 
 
 class _FakeConfig:
@@ -162,3 +164,40 @@ def test_set_voice_returns_false_and_makes_no_change_when_model_missing(tmp_path
     manager = _make_manager()
     assert manager.set_voice("en_US-amy-low") is False
     assert manager.current_voice_id == "en_US-lessac-low"
+
+
+# ----------------------------------------------------------------------
+# apply_playback_volume — pure gain logic, no audio hardware needed
+# ----------------------------------------------------------------------
+
+def test_apply_playback_volume_at_1x_returns_audio_unchanged():
+    audio = np.array([100, -200, 300], dtype=np.int16)
+    result = apply_playback_volume(audio, 1.0)
+    assert np.array_equal(result, audio)
+
+
+def test_apply_playback_volume_amplifies_quiet_audio():
+    audio = np.array([100, -200, 300], dtype=np.int16)
+    result = apply_playback_volume(audio, 2.0)
+    assert list(result) == [200, -400, 600]
+
+
+def test_apply_playback_volume_attenuates_below_1x():
+    audio = np.array([1000, -1000], dtype=np.int16)
+    result = apply_playback_volume(audio, 0.5)
+    assert list(result) == [500, -500]
+
+
+def test_apply_playback_volume_clips_rather_than_wraps_on_overflow():
+    # A bare (audio * volume).astype(int16) would wrap 32767*2 around to
+    # a negative number instead of clipping — this is exactly the bug
+    # apply_playback_volume() exists to avoid.
+    audio = np.array([32767, -32768], dtype=np.int16)
+    result = apply_playback_volume(audio, 2.0)
+    assert list(result) == [32767, -32768]
+
+
+def test_apply_playback_volume_result_stays_int16():
+    audio = np.array([100, 200], dtype=np.int16)
+    result = apply_playback_volume(audio, 1.4)
+    assert result.dtype == np.int16

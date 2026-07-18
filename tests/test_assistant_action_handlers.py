@@ -1148,7 +1148,7 @@ def test_list_missions_includes_objective_progress(context):
     context.missions.increment_tally(mission.mission_id, 0, delta=1.0)
 
     result = MIAApplication._action_list_missions(context, {})
-    assert "Master Angler" in result and "Catch 3 fish" in result and "1/3" in result
+    assert "Master Angler" in result and "Catch 3 fish" in result and "1 of 3" in result
 
 
 def test_add_objective_requires_a_description(context):
@@ -1197,7 +1197,7 @@ def test_log_mission_progress_defaults_to_the_only_tally_objective(context):
     context.missions.add_objective(mission.mission_id, "Catch 3 fish", "tally", 3.0)
 
     result = MIAApplication._action_log_mission_progress(context, {"mission_name": "Master Angler"})
-    assert "Catch 3 fish" in result and "1/3" in result
+    assert "Catch 3 fish" in result and "1 of 3" in result
     assert context.missions.objective_progress(mission.mission_id, 0) == 1.0
 
 

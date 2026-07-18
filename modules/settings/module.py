@@ -27,6 +27,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -35,6 +36,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QSlider,
     QVBoxLayout,
     QWidget,
 )
@@ -43,6 +45,7 @@ from core.backup_manager import create_backup, is_backup_encrypted, restore_back
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
 from core.tts_worker import TTSWorker
+from core.voice_manager import DEFAULT_PLAYBACK_VOLUME, MAX_PLAYBACK_VOLUME, MIN_PLAYBACK_VOLUME
 from core.update_manager import apply_update_package, peek_update_manifest
 from gui.backup_dialog import BackupPassphraseDialog
 from gui.password_dialog import PasswordPromptDialog
@@ -168,6 +171,20 @@ class SettingsModule(ModuleBase):
             self._ai_effect_checkbox.toggled.connect(self._on_ai_voice_effect_toggled)
             outer.addWidget(self._ai_effect_checkbox)
 
+            volume_row = QHBoxLayout()
+            volume_row.addWidget(QLabel("Assistant Volume:"))
+            self._volume_slider = QSlider(Qt.Orientation.Horizontal)
+            self._volume_slider.setRange(int(MIN_PLAYBACK_VOLUME * 100), int(MAX_PLAYBACK_VOLUME * 100))
+            current_volume = self.context.config.get("voice.playback_volume", DEFAULT_PLAYBACK_VOLUME)
+            self._volume_slider.setValue(round(current_volume * 100))
+            self._volume_slider.setToolTip("How loud M.I.A.'s spoken replies play — a plain playback gain, separate from system volume.")
+            self._volume_slider.valueChanged.connect(self._on_volume_slider_moved)
+            self._volume_slider.sliderReleased.connect(self._on_volume_slider_released)
+            volume_row.addWidget(self._volume_slider, stretch=1)
+            self._volume_value_label = QLabel(f"{self._volume_slider.value()}%")
+            volume_row.addWidget(self._volume_value_label)
+            outer.addLayout(volume_row)
+
         backup_section = QLabel("Backup & Restore")
         backup_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(backup_section)
@@ -279,6 +296,19 @@ class SettingsModule(ModuleBase):
         self.context.config.set("voice.ai_voice_effect", checked)
         self.context.config.save()
         self._set_status("AI Voice Effect " + ("on." if checked else "off."))
+        self._speak_preview()
+
+    def _on_volume_slider_moved(self, value: int) -> None:
+        # Just updates the live "N%" label while dragging — the actual
+        # save + spoken preview only happens on release (see below), so
+        # dragging the slider doesn't re-synthesize/replay on every tick.
+        self._volume_value_label.setText(f"{value}%")
+
+    def _on_volume_slider_released(self) -> None:
+        volume = self._volume_slider.value() / 100.0
+        self.context.config.set("voice.playback_volume", volume)
+        self.context.config.save()
+        self._set_status(f"Assistant volume set to {self._volume_slider.value()}%.")
         self._speak_preview()
 
     def _speak_preview(self) -> None:

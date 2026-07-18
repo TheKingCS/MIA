@@ -34,6 +34,7 @@
         "tts_model_path": "",
         "tts_voice_id": "en_US-lessac-low",
         "ai_voice_effect": true,
+        "playback_volume": 1.4,
         "sample_rate": 16000,
         "push_to_talk_gpio_pin": null,
         "push_to_talk_enabled": true

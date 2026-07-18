@@ -2073,7 +2073,7 @@ class MIAApplication:
             for index, objective in enumerate(mission.objectives):
                 progress = context.missions.objective_progress(mission.mission_id, index) or 0.0
                 mark = "x" if context.missions.is_objective_complete(mission.mission_id, index) else " "
-                lines.append(f"    [{mark}] {objective.description}: {progress:g}/{objective.target:g}")
+                lines.append(f"    [{mark}] {objective.description}: {progress:g} of {objective.target:g}")
         return "Your missions:\n" + "\n".join(lines)
 
     @staticmethod
@@ -2118,7 +2118,7 @@ class MIAApplication:
         new_progress = context.missions.objective_progress(mission.mission_id, match_index)
         objective = mission.objectives[match_index]
         done_note = " Objective complete!" if context.missions.is_objective_complete(mission.mission_id, match_index) else ""
-        return f"Logged progress on '{objective.description}': {new_progress:g}/{objective.target:g}.{done_note}"
+        return f"Logged progress on '{objective.description}': {new_progress:g} of {objective.target:g}.{done_note}"
 
     @staticmethod
     def _action_delete_mission(context: AppContext, arguments: dict) -> str:

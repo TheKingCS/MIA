@@ -52,6 +52,17 @@ hardware at all, so recording/playback can only be verified for their
 graceful-degradation path here; the STT/TTS round trip itself (Piper
 writes a .wav -> Vosk transcribes it) needs neither and was verified
 for real, not just mocked.
+
+**2026-07-18: adjustable playback volume**, at the user's explicit
+request ("make the assistant a bit louder with a slider for its
+volume"). `voice.playback_volume` (config, default
+`_DEFAULT_PLAYBACK_VOLUME` — louder than Piper's raw output, the "bit
+louder" half of the ask) is a plain float gain applied to samples in
+`play()` itself, not baked into the synthesized `.wav` file the way the
+AI Voice Effect is — so moving the Settings slider changes the very
+next reply's volume with no re-synthesis needed. Applied in float
+space then clipped back to `int16` range (scaling `int16` samples
+directly can wrap/overflow instead of clipping cleanly at the top end).
 """
 
 from __future__ import annotations
@@ -61,6 +72,8 @@ import tempfile
 import wave
 from pathlib import Path
 from typing import Optional, Protocol
+
+import numpy as np
 
 from core.app_context import AppContext
 from core.logger import get_logger
@@ -73,6 +86,29 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _VOICE_MODELS_DIR = _PROJECT_ROOT / "voice_models"
 _DEFAULT_STT_MODEL_PATH = _VOICE_MODELS_DIR / "vosk-model-small-en-us-0.15"
 _DEFAULT_SAMPLE_RATE = 16000
+
+#: Playback gain range — see this module's own "adjustable playback
+#: volume" docstring note. 1.0 would be Piper's raw, unboosted output;
+#: the default is deliberately above that per the user's explicit "make
+#: it a bit louder" ask. MIN/MAX bound modules/settings/module.py's slider.
+DEFAULT_PLAYBACK_VOLUME = 1.4
+MIN_PLAYBACK_VOLUME = 0.5
+MAX_PLAYBACK_VOLUME = 2.5
+
+
+def apply_playback_volume(audio: np.ndarray, volume: float) -> np.ndarray:
+    """
+    Pure function — testable without real audio hardware (see
+    tests/test_voice_manager.py). Scales int16 PCM samples by `volume`
+    in float space, then clips back to int16 range rather than letting
+    values wrap/overflow — a bare `(audio * volume).astype(int16)`
+    would silently wrap a loud, boosted sample around to the opposite
+    sign instead of clipping cleanly at the top.
+    """
+    if volume == 1.0:
+        return audio
+    amplified = audio.astype(np.float32) * volume
+    return np.clip(amplified, -32768, 32767).astype(np.int16)
 
 try:
     import sounddevice as _sd
@@ -333,8 +369,6 @@ class VoiceManager:
         if not self._recording_frames:
             return None
 
-        import numpy as np
-
         audio = np.concatenate(self._recording_frames, axis=0)
         self._recording_frames = []
         output_path = Path(tempfile.gettempdir()) / "mia_push_to_talk.wav"
@@ -352,10 +386,10 @@ class VoiceManager:
             return False
 
         try:
-            import numpy as np
-
             with wave.open(str(wav_path), "rb") as wf:
                 audio = np.frombuffer(wf.readframes(wf.getnframes()), dtype="int16")
+                volume = self.context.config.get("voice.playback_volume", DEFAULT_PLAYBACK_VOLUME)
+                audio = apply_playback_volume(audio, volume)
                 _sd.play(audio, samplerate=wf.getframerate())
                 _sd.wait()
         except Exception as exc:

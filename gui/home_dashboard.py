@@ -182,7 +182,7 @@ def format_active_mission_line(mission: Optional[Mission], completed: int, total
         return "No active mission."
     if total == 0:
         return f"{mission.name}  (no objectives yet)"
-    return f"{mission.name}  —  {completed}/{total} objectives complete"
+    return f"{mission.name}  —  {completed} of {total} objectives complete"
 
 
 def format_volume_line(status: Optional[VolumeStatus]) -> str:

@@ -4460,3 +4460,34 @@ confirmed small via a dedicated unit test) and a real USGS
 counties, not one of the two presets), confirmed via screenshots
 showing real rendered tiles and correct attribution text for both
 sources. 1347 tests passing (7 new).
+
+## Objective/mission progress reads "X of Y" instead of "X/Y"; Assistant gets a volume slider (2026-07-18)
+
+Two small, concrete asks alongside the bigger Assistant-coverage audit
+below. **"X/Y" → "X of Y"**: every place a Mission/Objective's progress
+was rendered with a bare slash — `ObjectiveCard`/`MissionCard`'s
+`QProgressBar` text, `modules/dashboard/module.py` and
+`gui/home_dashboard.py`'s summary lines, and the Assistant's own
+`list_missions`/`log_mission_progress` reply text — now reads "1 of 3"
+instead of "1/3".
+
+**Assistant volume slider**: `core/voice_manager.py` gained
+`apply_playback_volume()` (pure gain logic — float-space multiply then
+clip back to int16 range, since a bare `(audio*volume).astype(int16)`
+would wrap a loud sample around to a negative value instead of
+clipping cleanly) and `voice.playback_volume` (config, new default
+`1.4` — louder than Piper's raw output, the "make it a bit louder"
+half of the ask). Applied at playback time in `play()`, not baked into
+the synthesized `.wav`, so the new Settings slider
+(`modules/settings/module.py`, next to the existing Voice/AI Effect
+controls) changes the very next spoken reply's volume immediately —
+`valueChanged` only updates a live "N%" label while dragging,
+`sliderReleased` is what actually saves + triggers a spoken preview,
+so dragging doesn't re-synthesize on every tick.
+
+5 new tests (`tests/test_voice_manager.py`), plus the mission/objective
+formatting change updated 7 existing test assertions across
+`tests/test_missions_module.py`/`test_dashboard_module.py`/
+`test_home_dashboard.py`/`test_assistant_action_handlers.py`. Verified
+via a real headless-Qt screenshot: the slider moved to 200%, config
+persisted, status label confirmed. 1352 tests passing (5 new).

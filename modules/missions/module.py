@@ -68,7 +68,7 @@ def format_mission_row(mission: Mission, trip_name: str = "") -> str:
 def format_objective_row(objective: Objective, progress: float, is_complete: bool) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_missions_module.py)."""
     mark = "[x]" if is_complete else "[ ]"
-    return f"{mark} {objective.description}: {progress:g}/{objective.target:g}"
+    return f"{mark} {objective.description}: {progress:g} of {objective.target:g}"
 
 
 class MissionsModule(ModuleBase):
