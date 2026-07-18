@@ -23,6 +23,8 @@ with no special-casing anywhere else in this file.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from PySide6.QtWidgets import QComboBox, QFormLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from core.calculator_engine import CalculatorPlugin
@@ -187,6 +189,24 @@ def convert(category: str, from_unit: str, to_unit: str, value: float) -> float:
     to_base, _ = units[from_unit]
     _, from_base = units[to_unit]
     return from_base(to_base(value))
+
+
+def resolve_unit_key(units: dict, text: str) -> Optional[str]:
+    """Matches free-form unit text (as an LLM tool call would send it,
+    e.g. 'miles' or 'mi') against one of `units`' exact display-string
+    keys (e.g. 'Miles (mi)') — core.application.py's convert_units
+    Assistant action needs this since the model can't be expected to
+    know these exact key strings verbatim. Matches the name part before
+    the parenthesis, the abbreviation inside it, or a substring of the
+    name part, case-insensitively."""
+    text = text.strip().lower()
+    for key in units:
+        paren_start = key.find("(")
+        name_part = (key[:paren_start] if paren_start != -1 else key).strip().lower()
+        abbrev_part = key[paren_start + 1 : key.find(")")].strip().lower() if paren_start != -1 else ""
+        if text == name_part or text == abbrev_part or text in name_part:
+            return key
+    return None
 
 
 class UnitConverterCalculator(CalculatorPlugin):

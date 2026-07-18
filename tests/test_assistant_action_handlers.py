@@ -1497,3 +1497,153 @@ def test_delete_trail_map_removes_matching_map(context, tmp_path):
 def test_delete_trail_map_unknown_name_reports_not_found(context):
     result = MIAApplication._action_delete_trail_map(context, {"park_name": "Nonexistent"})
     assert "nonexistent" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Expeditions / trips — delete, gear, summary
+# ----------------------------------------------------------------------
+
+def test_delete_expedition_removes_matching_expedition(context):
+    context.expeditions.add_expedition(name="Field Season")
+    result = MIAApplication._action_delete_expedition(context, {"name": "field season"})
+    assert "Field Season" in result
+    assert context.expeditions.all_expeditions() == []
+
+
+def test_delete_expedition_unknown_name_reports_not_found(context):
+    result = MIAApplication._action_delete_expedition(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_delete_trip_removes_matching_trip(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_delete_trip(context, {"name": "day 1"})
+    assert "Day 1" in result
+    assert context.trips.all_trips() == []
+
+
+def test_delete_trip_unknown_name_reports_not_found(context):
+    result = MIAApplication._action_delete_trip(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_toggle_gear_packed_marks_item_packed(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    context.trips.add_gear_item(trip.trip_id, label="Tent")
+    result = MIAApplication._action_toggle_gear_packed(context, {"trip_name": "day 1", "label": "tent"})
+    assert "packed" in result.lower() and "not packed" not in result.lower()
+    reloaded = context.trips.get_trip(trip.trip_id)
+    assert reloaded.gear[0].packed is True
+
+
+def test_toggle_gear_packed_toggles_back_to_not_packed(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    context.trips.add_gear_item(trip.trip_id, label="Tent")
+    MIAApplication._action_toggle_gear_packed(context, {"trip_name": "Day 1", "label": "Tent"})
+    result = MIAApplication._action_toggle_gear_packed(context, {"trip_name": "Day 1", "label": "Tent"})
+    assert "not packed" in result.lower()
+
+
+def test_toggle_gear_packed_unknown_trip_reports_not_found(context):
+    result = MIAApplication._action_toggle_gear_packed(context, {"trip_name": "Nonexistent", "label": "Tent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_toggle_gear_packed_unknown_label_reports_not_found(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_toggle_gear_packed(context, {"trip_name": "Day 1", "label": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_get_trip_summary_unknown_name_reports_not_found(context):
+    result = MIAApplication._action_get_trip_summary(context, {"name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_get_trip_summary_reports_no_data_yet(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    result = MIAApplication._action_get_trip_summary(context, {"name": "Day 1"})
+    assert "no distance" in result.lower()
+
+
+def test_get_trip_summary_reports_planned_route_distance(context):
+    expedition = context.expeditions.add_expedition(name="Field Season")
+    trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1")
+    context.waypoints.add_waypoint(name="Home", latitude=40.0, longitude=-83.0)
+    context.waypoints.add_waypoint(name="Cabin", latitude=41.5, longitude=-84.5)
+    home = next(w for w in context.waypoints.all_waypoints() if w.name == "Home")
+    cabin = next(w for w in context.waypoints.all_waypoints() if w.name == "Cabin")
+    context.trips.add_waypoint_to_route(trip.trip_id, home.waypoint_id)
+    context.trips.add_waypoint_to_route(trip.trip_id, cabin.waypoint_id)
+    result = MIAApplication._action_get_trip_summary(context, {"name": "Day 1"})
+    assert "Planned route distance" in result
+
+
+# ----------------------------------------------------------------------
+# Sun / moon
+# ----------------------------------------------------------------------
+
+def test_get_sun_moon_info_unknown_waypoint_reports_not_found(context):
+    result = MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": "Nonexistent"})
+    assert "nonexistent" in result.lower()
+
+
+def test_get_sun_moon_info_returns_summary_for_known_waypoint(context):
+    context.waypoints.add_waypoint(name="Cabin", latitude=41.5, longitude=-84.5)
+    result = MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": "cabin"})
+    assert "Cabin" in result
+    assert "Sunrise" in result or "unavailable" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Toolbox — unit conversion, Ohm's Law
+# ----------------------------------------------------------------------
+
+def test_convert_units_requires_from_and_to(context):
+    result = MIAApplication._action_convert_units(context, {"value": 5, "from_unit": "miles"})
+    assert "need" in result.lower()
+
+
+def test_convert_units_requires_a_numeric_value(context):
+    result = MIAApplication._action_convert_units(context, {"value": "abc", "from_unit": "miles", "to_unit": "km"})
+    assert "numeric" in result.lower()
+
+
+def test_convert_units_miles_to_kilometers(context):
+    result = MIAApplication._action_convert_units(context, {"value": 1, "from_unit": "miles", "to_unit": "kilometers"})
+    assert "1.609" in result
+
+
+def test_convert_units_celsius_to_fahrenheit(context):
+    result = MIAApplication._action_convert_units(context, {"value": 0, "from_unit": "celsius", "to_unit": "fahrenheit"})
+    assert "32" in result
+
+
+def test_convert_units_unrecognized_unit_reports_not_found(context):
+    result = MIAApplication._action_convert_units(context, {"value": 1, "from_unit": "bogus", "to_unit": "km"})
+    assert "don't recognize" in result.lower()
+
+
+def test_calculate_ohms_law_requires_solve_for(context):
+    result = MIAApplication._action_calculate_ohms_law(context, {"current": 2, "resistance": 10})
+    assert "solve for" in result.lower() or "need to know" in result.lower()
+
+
+def test_calculate_ohms_law_solves_for_voltage(context):
+    result = MIAApplication._action_calculate_ohms_law(context, {"solve_for": "voltage", "current": 2, "resistance": 10})
+    assert "20" in result and "V" in result
+
+
+def test_calculate_ohms_law_solves_for_current(context):
+    result = MIAApplication._action_calculate_ohms_law(context, {"solve_for": "current", "voltage": 20, "resistance": 10})
+    assert "2" in result
+
+
+def test_calculate_ohms_law_missing_values_reports_need_more(context):
+    result = MIAApplication._action_calculate_ohms_law(context, {"solve_for": "voltage", "current": 2})
+    assert "need" in result.lower()

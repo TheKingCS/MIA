@@ -810,6 +810,27 @@ class MIAApplication:
             trigger_phrases=("add a waypoint", "save a waypoint", "new waypoint", "mark a waypoint"),
         ))
         self.context.assistant_actions.register(AssistantAction(
+            name="get_sun_moon_info",
+            domain="waypoints",
+            description=(
+                "Get today's sunrise/sunset times and moon phase for a saved waypoint's "
+                "location — real survival-relevant info (how much daylight is left, "
+                "moon phase for night navigation)."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "waypoint_name": {"type": "string", "description": "The name of the saved waypoint."},
+                },
+                "required": ["waypoint_name"],
+            },
+            handler=self._action_get_sun_moon_info,
+            trigger_phrases=(
+                "sunrise", "sunset", "moon phase", "when does the sun", "when will the sun",
+                "what time does the sun", "how much daylight",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
             name="add_expedition",
             domain="expeditions",
             description="Start a new Expedition (a dated outing that can hold multiple trips) in M.I.A.'s Expeditions module.",
@@ -959,6 +980,73 @@ class MIAApplication:
             },
             handler=self._action_add_trip_log_entry,
             trigger_phrases=("trip journal", "log entry for my trip", "log my arrival", "add to my trip log", "trip log"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_expedition",
+            domain="expeditions",
+            destructive=True,
+            description="Delete an existing Expedition in M.I.A. by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the expedition to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_expedition,
+            # "Delete my Field Season expedition" (name inserted before
+            # the noun) doesn't match any of these — same accepted
+            # trade-off as delete_project/delete_task (see
+            # tests/test_assistant_action_gating.py). "the expedition
+            # called X"/"delete the expedition" (name after) is supported.
+            trigger_phrases=("delete an expedition", "delete my expedition", "remove an expedition", "delete the expedition"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_trip",
+            domain="expeditions",
+            destructive=True,
+            description="Delete an existing Trip in M.I.A. by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the trip to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_trip,
+            # Same accepted name-before-noun trade-off as delete_expedition
+            # above — "delete the trip called X" gates open, "delete my
+            # Day 1 trip" (name in the middle) doesn't.
+            trigger_phrases=("delete a trip", "delete my trip", "remove a trip", "delete the trip"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="toggle_gear_packed",
+            domain="expeditions",
+            description="Mark a gear checklist item on a Trip as packed or not packed (toggles its current state).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "trip_name": {"type": "string", "description": "The name of the trip the gear item belongs to."},
+                    "label": {"type": "string", "description": "The gear item's name, e.g. 'Tent' or 'First aid kit'."},
+                },
+                "required": ["trip_name", "label"],
+            },
+            handler=self._action_toggle_gear_packed,
+            trigger_phrases=("mark packed", "mark as packed", "i packed", "packed my", "gear is packed", "mark unpacked", "not packed yet"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_trip_summary",
+            domain="expeditions",
+            description="Get a Trip's logged distance, average speed, and planned route distance in M.I.A.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The name of the trip."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_get_trip_summary,
+            trigger_phrases=("how far did i", "trip distance", "trip summary", "how fast was i", "average speed", "how long is my planned route", "planned route distance"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_device_profile",
@@ -1726,6 +1814,75 @@ class MIAApplication:
             handler=self._action_delete_trail_map,
             trigger_phrases=("delete a trail map", "delete trail map", "remove a trail map", "remove trail map"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="convert_units",
+            domain="toolbox",
+            description=(
+                "Convert a numeric value between two units of measurement using M.I.A.'s "
+                "Unit Converter (length, area, volume, weight, temperature, speed, pressure, "
+                "energy, power, time, data storage, angle, or fuel economy). Unit names can "
+                "be everyday words (e.g. 'miles', 'celsius') — no need for exact formatting."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "value": {"type": "number", "description": "The numeric value to convert."},
+                    "from_unit": {"type": "string", "description": "The unit to convert from, e.g. 'miles'."},
+                    "to_unit": {"type": "string", "description": "The unit to convert to, e.g. 'kilometers'."},
+                },
+                "required": ["value", "from_unit", "to_unit"],
+            },
+            handler=self._action_convert_units,
+            # 2026-07-18: a bare "convert" trigger gated the domain open
+            # for "I'm trying to convert my garage into a workshop" and
+            # the model then actually hallucinated a convert_units call
+            # for it — same class of cross-domain confabulation as
+            # add_job's old bare "new job" trigger. Replaced with
+            # specific "to <unit>"/"how many <unit>" compounds, which
+            # still cover real conversion phrasing without the bare-verb
+            # false-positive risk.
+            trigger_phrases=(
+                "convert units", "unit conversion",
+                "to miles", "to kilometers", "to feet", "to meters", "to yards", "to inches",
+                "to pounds", "to kilograms", "to ounces", "to grams",
+                "to celsius", "to fahrenheit", "to liters", "to gallons",
+                "how many miles", "how many kilometers", "how many feet", "how many meters",
+                "how many pounds", "how many kilograms",
+                "in fahrenheit", "in celsius",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="calculate_ohms_law",
+            domain="toolbox",
+            description=(
+                "Solve Ohm's Law (V = I x R) for voltage, current, or resistance, given the "
+                "other two values, using M.I.A.'s Ohm's Law calculator."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "solve_for": {"type": "string", "description": "Which value to solve for: 'voltage', 'current', or 'resistance'."},
+                    "voltage": {"type": "number", "description": "Voltage in volts, if known."},
+                    "current": {"type": "number", "description": "Current in amps, if known."},
+                    "resistance": {"type": "number", "description": "Resistance in ohms, if known."},
+                },
+                "required": ["solve_for"],
+            },
+            handler=self._action_calculate_ohms_law,
+            # 2026-07-18: real gap — "I have 2 amps through a 10 ohm
+            # resistor, what's the voltage?" (a natural way to actually
+            # ask this) matched none of the original triggers, which all
+            # assumed the user would say "Ohm's law" or "solve for X"
+            # explicitly. Added specific electronics vocabulary instead
+            # of a bare "current" (too ambiguous — collides with "current
+            # events"/"current job") or bare "voltage"/"resistance".
+            trigger_phrases=(
+                "ohm's law", "ohms law", "solve for voltage", "solve for current", "solve for resistance",
+                "amps through", "ohm resistor", "volts across",
+                "how many volts", "how many ohms", "how many amps",
+                "what's the voltage", "what is the voltage",
+            ),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1905,6 +2062,54 @@ class MIAApplication:
         return f"Deleted the trail map for '{match.park_name}'."
 
     @staticmethod
+    def _action_convert_units(context: AppContext, arguments: dict) -> str:
+        from modules.toolbox.calculators.unit_converter import UNIT_CATEGORIES, convert, resolve_unit_key
+
+        from_text = str(arguments.get("from_unit", "")).strip()
+        to_text = str(arguments.get("to_unit", "")).strip()
+        if not from_text or not to_text:
+            return "I need both a 'from' and 'to' unit to convert."
+        try:
+            value = float(arguments.get("value"))
+        except (TypeError, ValueError):
+            return "I need a numeric value to convert."
+
+        for category, units in UNIT_CATEGORIES.items():
+            from_key = resolve_unit_key(units, from_text)
+            to_key = resolve_unit_key(units, to_text)
+            if from_key is not None and to_key is not None:
+                result = convert(category, from_key, to_key, value)
+                return f"{value:g} {from_key} = {result:.4g} {to_key}"
+        return f"I don't recognize '{from_text}' and/or '{to_text}' as units I can convert between."
+
+    @staticmethod
+    def _action_calculate_ohms_law(context: AppContext, arguments: dict) -> str:
+        from modules.toolbox.calculators.ohms_law import solve
+
+        solve_for = str(arguments.get("solve_for", "")).strip().lower()
+        if solve_for not in ("voltage", "current", "resistance"):
+            return "I need to know which value to solve for: voltage, current, or resistance."
+
+        def _optional_float(key: str):
+            raw = arguments.get(key)
+            if raw is None or raw == "":
+                return None
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                return None
+
+        voltage = _optional_float("voltage")
+        current = _optional_float("current")
+        resistance = _optional_float("resistance")
+        try:
+            result = solve(solve_for, voltage, current, resistance)
+        except (TypeError, ZeroDivisionError):
+            return f"I need the other two values (not {solve_for}) to solve this."
+        units = {"voltage": "V", "current": "A", "resistance": "Ω"}
+        return f"{solve_for.capitalize()} = {result:.4g} {units[solve_for]}"
+
+    @staticmethod
     def _action_delete_waypoint(context: AppContext, arguments: dict) -> str:
         name = str(arguments.get("name", "")).strip().lower()
         match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
@@ -1912,6 +2117,19 @@ class MIAApplication:
             return f"I don't have a waypoint called '{arguments.get('name', '')}'."
         context.waypoints.delete_waypoint(match.waypoint_id)
         return f"Deleted the waypoint '{match.name}'."
+
+    @staticmethod
+    def _action_get_sun_moon_info(context: AppContext, arguments: dict) -> str:
+        from datetime import date as _date
+
+        from modules.navigation.module import format_sun_moon_summary
+
+        name = str(arguments.get("waypoint_name", "")).strip().lower()
+        match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a waypoint called '{arguments.get('waypoint_name', '')}'."
+        summary = format_sun_moon_summary(match.latitude, match.longitude, _date.today())
+        return f"For '{match.name}': {summary}"
 
     @staticmethod
     def _action_get_system_health(context: AppContext, arguments: dict) -> str:
@@ -2085,6 +2303,59 @@ class MIAApplication:
         conditions = str(arguments.get("conditions", "") or "")
         context.journal.add_entry(title=title, body=body, trip_id=trip.trip_id, conditions=conditions)
         return f"Log entry '{title}' added to '{trip.name}'."
+
+    @staticmethod
+    def _action_delete_expedition(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((e for e in context.expeditions.all_expeditions() if e.name.lower() == name), None)
+        if match is None:
+            return f"I don't have an expedition called '{arguments.get('name', '')}'."
+        context.expeditions.delete_expedition(match.expedition_id)
+        return f"Deleted the expedition '{match.name}'."
+
+    @staticmethod
+    def _action_delete_trip(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((t for t in context.trips.all_trips() if t.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a trip called '{arguments.get('name', '')}'."
+        context.trips.delete_trip(match.trip_id)
+        return f"Deleted the trip '{match.name}'."
+
+    @staticmethod
+    def _action_toggle_gear_packed(context: AppContext, arguments: dict) -> str:
+        trip_name = str(arguments.get("trip_name", "")).strip().lower()
+        label = str(arguments.get("label", "")).strip().lower()
+        trip = next((t for t in context.trips.all_trips() if t.name.lower() == trip_name), None)
+        if trip is None:
+            return f"I don't have a trip called '{arguments.get('trip_name', '')}'."
+        index = next((i for i, g in enumerate(trip.gear) if g.label.lower() == label), None)
+        if index is None:
+            return f"'{trip.name}' has no gear item called '{arguments.get('label', '')}'."
+        updated = context.trips.toggle_gear_packed(trip.trip_id, index)
+        item = updated.gear[index]
+        state = "packed" if item.packed else "not packed"
+        return f"'{item.label}' on '{trip.name}' is now marked {state}."
+
+    @staticmethod
+    def _action_get_trip_summary(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        trip = next((t for t in context.trips.all_trips() if t.name.lower() == name), None)
+        if trip is None:
+            return f"I don't have a trip called '{arguments.get('name', '')}'."
+        lines = [f"'{trip.name}':"]
+        distance = context.trips.total_distance_km(trip.trip_id)
+        if distance is not None:
+            lines.append(f"- Logged distance: {distance:.1f} km")
+        speed = context.trips.average_speed_kmh(trip.trip_id)
+        if speed is not None:
+            lines.append(f"- Average speed: {speed:.1f} km/h")
+        planned = context.trips.planned_route_distance_km(trip.trip_id)
+        if planned is not None:
+            lines.append(f"- Planned route distance: {planned:.1f} km")
+        if len(lines) == 1:
+            lines.append("- No distance/speed data logged for this trip yet.")
+        return "\n".join(lines)
 
     @staticmethod
     def _action_get_device_profile(context: AppContext, arguments: dict) -> str:

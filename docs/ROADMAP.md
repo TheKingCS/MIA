@@ -4717,3 +4717,55 @@ inter-row gap at ~122px before the fix, 16px (the configured spacing,
 correct) after. 1377 pytest tests passing (no new ones — layout-only
 fix, verified via an ad hoc geometry smoke test instead of a permanent
 one, same treatment as the earlier dashboard-sizing showEvent fix).
+
+## Voice-command expansion: Navigation, Expeditions, Toolbox (2026-07-18)
+
+First slice of "make the Assistant deeply more interactive for the
+most important offline survival tool use cases" (Maps/Missions were
+already well covered — Maps last commit, Missions from the earlier
+trigger-audit pass; Knowledge already works through the grounded
+info-question path, not a tool call, so no action was added there).
+7 new actions across 3 domains:
+
+- **Expeditions** (`expeditions` domain, 7 → 11 actions):
+  `delete_expedition`, `delete_trip`, `toggle_gear_packed` (mark a gear
+  checklist item packed/unpacked by trip + label), `get_trip_summary`
+  (logged distance, average speed, planned route distance).
+- **Navigation** (`waypoints` domain): `get_sun_moon_info` — sunrise/
+  sunset times and moon phase for a saved waypoint, reusing
+  `modules/navigation/module.py`'s existing `format_sun_moon_summary()`
+  pure function. Genuinely survival-relevant (daylight remaining, moon
+  phase for night travel).
+- **Toolbox** (new `toolbox` domain): `convert_units` (any of the Unit
+  Converter's 13 categories, resolving everyday unit words like
+  "miles"/"celsius" against the calculator's exact display strings via
+  a new `resolve_unit_key()` in `modules/toolbox/calculators/
+  unit_converter.py`) and `calculate_ohms_law` (solves V=IR for
+  whichever value is missing).
+
+**Found and fixed 3 real issues via live-model testing**, same
+discipline as every prior registry expansion:
+1. `calculate_ohms_law`'s original triggers all assumed the user would
+   say "Ohm's law" or "solve for X" explicitly — "I have 2 amps through
+   a 10 ohm resistor, what's the voltage?" (a natural way to actually
+   ask) matched nothing. Added specific electronics vocabulary
+   ("amps through", "ohm resistor", "how many volts", ...) — bare
+   "current" was deliberately avoided (collides with "current events"/
+   "current job").
+2. `convert_units`'s original bare "convert" trigger caused a real
+   false positive: "I'm trying to convert my garage into a workshop"
+   gated the domain open and the model actually called
+   `convert_units` for it — same class of hallucination as `add_job`'s
+   old bare "new job" trigger. Replaced with specific "to <unit>"/
+   "how many <unit>" compounds.
+3. `delete_expedition`/`delete_trip` with the name inserted before the
+   noun ("Delete my Field Season expedition") gate nothing — same
+   accepted name-before-noun trade-off this registry already has for
+   delete_project/delete_task, not a new bug; documented in the trigger
+   phrase comments and the golden-set cases use the supported "delete
+   the X called Y" phrasing instead.
+
+22 new unit tests (`tests/test_assistant_action_handlers.py`) plus 13
+new golden-set cases (100 → 113). Full official golden set verified
+113/113 clean after the fixes above. Registry now 74 actions across 19
+domains. 1399 pytest tests passing (22 new).
