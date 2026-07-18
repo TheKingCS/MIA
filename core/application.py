@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 
@@ -72,7 +73,7 @@ from core.subnet_calculator import calculate_subnet
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
 from core.task_manager import TaskManager
-from core.trail_map_library import TrailMapLibrary
+from core.trail_map_library import NotAPdfError, TrailMapLibrary
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.voice_manager import VoiceManager
@@ -1663,6 +1664,60 @@ class MIAApplication:
             handler=self._action_complete_mission,
             trigger_phrases=("complete my mission", "mark my mission complete", "finish my mission", "complete the mission", "mark the mission complete"),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_trail_maps",
+            domain="maps",
+            description="List the trail map PDFs cataloged in M.I.A.'s Maps module, optionally filtered by park name or state.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional keyword to filter by park name or state."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_trail_maps,
+            trigger_phrases=(
+                "trail map", "trail maps", "park map", "park maps", "list my trail maps",
+                "what maps do i have", "maps do i have", "maps have i",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_trail_map_from_url",
+            domain="maps",
+            description=(
+                "Download a trail map PDF from a direct URL and add it to M.I.A.'s trail map "
+                "catalog. Not for offline tile/basemap downloads — those are only available "
+                "from the Maps module's own UI, since they can take too long to run as part "
+                "of a chat reply."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "park_name": {"type": "string", "description": "The name of the park."},
+                    "state": {"type": "string", "description": "The U.S. state the park is in."},
+                    "url": {"type": "string", "description": "Direct URL to the trail map PDF."},
+                    "notes": {"type": "string", "description": "Optional notes about this trail map."},
+                },
+                "required": ["park_name", "state", "url"],
+            },
+            handler=self._action_add_trail_map_from_url,
+            trigger_phrases=("add a trail map", "add trail map", "download a trail map", "download this trail map", "catalog this trail map"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_trail_map",
+            domain="maps",
+            destructive=True,
+            description="Delete a cataloged trail map PDF from M.I.A.'s Maps module by park name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "park_name": {"type": "string", "description": "The name of the park whose trail map should be deleted."},
+                },
+                "required": ["park_name"],
+            },
+            handler=self._action_delete_trail_map,
+            trigger_phrases=("delete a trail map", "delete trail map", "remove a trail map", "remove trail map"),
+        ))
 
     def _action_open_module(self, context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
@@ -1804,6 +1859,42 @@ class MIAApplication:
             return f"Couldn't compute a distance between '{from_wp.name}' and '{to_wp.name}'."
         distance_km, bearing = result
         return f"'{from_wp.name}' to '{to_wp.name}': {distance_km:.1f} km, bearing {bearing:.0f}°."
+
+    @staticmethod
+    def _action_list_trail_maps(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").lower().strip()
+        trail_maps = context.trail_maps.all_trail_maps()
+        if query:
+            trail_maps = [t for t in trail_maps if query in f"{t.park_name} {t.state}".lower()]
+        if not trail_maps:
+            return "No matching trail maps found." if query else "You have no trail maps cataloged."
+        lines = [f"- '{t.park_name}' ({t.state})" for t in trail_maps]
+        return "Your trail maps:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_add_trail_map_from_url(context: AppContext, arguments: dict) -> str:
+        park_name = str(arguments.get("park_name", "")).strip()
+        state = str(arguments.get("state", "")).strip()
+        url = str(arguments.get("url", "")).strip()
+        notes = str(arguments.get("notes", "") or "")
+        if not park_name or not state or not url:
+            return "I need a park name, state, and URL to add a trail map."
+        try:
+            trail_map = context.trail_maps.add_from_url(park_name, state, url, notes=notes)
+        except NotAPdfError:
+            return f"The file at '{url}' doesn't look like a real trail map PDF — nothing was added."
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            return f"Couldn't download that trail map: {exc}"
+        return f"Added '{trail_map.park_name}' ({trail_map.state}) to your trail map catalog."
+
+    @staticmethod
+    def _action_delete_trail_map(context: AppContext, arguments: dict) -> str:
+        park_name = str(arguments.get("park_name", "")).strip().lower()
+        match = next((t for t in context.trail_maps.all_trail_maps() if t.park_name.lower() == park_name), None)
+        if match is None:
+            return f"I don't have a trail map called '{arguments.get('park_name', '')}'."
+        context.trail_maps.delete_trail_map(match.trail_map_id)
+        return f"Deleted the trail map for '{match.park_name}'."
 
     @staticmethod
     def _action_delete_waypoint(context: AppContext, arguments: dict) -> str:

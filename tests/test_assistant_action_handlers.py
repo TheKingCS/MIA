@@ -32,6 +32,7 @@ import core.product_manager as product_manager_module
 import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
+import core.trail_map_library as trail_map_library_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
 from core.alarm_manager import AlarmManager
@@ -54,6 +55,7 @@ from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
 from core.script_library_manager import ScriptLibraryManager
 from core.task_manager import TaskManager
+from core.trail_map_library import NotAPdfError, TrailMapLibrary
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
 
@@ -100,9 +102,12 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(ledger_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(ledger_manager_module, "_REVENUE_FILE", data_dir / "revenue.json")
     monkeypatch.setattr(ledger_manager_module, "_EXPENSES_FILE", data_dir / "expenses.json")
+    monkeypatch.setattr(trail_map_library_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(trail_map_library_module, "_TRAIL_MAPS_FILE", data_dir / "trail_maps.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
+    ctx.config.set("maps.trail_map_root_path", str(tmp_path / "trail_maps"))
     ctx.alarms = AlarmManager(ctx)
     ctx.journal = JournalManager(ctx)
     ctx.inventory = InventoryManager(ctx)
@@ -121,6 +126,7 @@ def context(tmp_path, monkeypatch):
     ctx.jobs = JobManager(ctx)
     ctx.products = ProductManager(ctx)
     ctx.ledger = LedgerManager(ctx)
+    ctx.trail_maps = TrailMapLibrary(ctx)
     return ctx
 
 
@@ -1406,3 +1412,88 @@ def test_get_ledger_summary_reports_revenue_expenses_and_profit(context):
     context.ledger.add_expense(amount=10.0, description="Wood")
     result = MIAApplication._action_get_ledger_summary(context, {})
     assert "50.00" in result and "10.00" in result and "40.00" in result
+
+
+# ----------------------------------------------------------------------
+# Trail maps
+# ----------------------------------------------------------------------
+
+def _seed_trail_map(context, tmp_path, park_name, state, filename="map.pdf"):
+    pdf_path = tmp_path / filename
+    pdf_path.write_bytes(b"%PDF-1.4 fake trail map contents")
+    return context.trail_maps.add_from_local_file(park_name, state, pdf_path)
+
+
+def test_list_trail_maps_empty(context):
+    result = MIAApplication._action_list_trail_maps(context, {})
+    assert "no trail maps" in result.lower()
+
+
+def test_list_trail_maps_returns_all(context, tmp_path):
+    _seed_trail_map(context, tmp_path, "Mammoth Cave", "Kentucky", "mammoth.pdf")
+    _seed_trail_map(context, tmp_path, "Great Smoky Mountains", "Tennessee", "smoky.pdf")
+    result = MIAApplication._action_list_trail_maps(context, {})
+    assert "Mammoth Cave" in result and "Great Smoky Mountains" in result
+
+
+def test_list_trail_maps_search_filters_by_query(context, tmp_path):
+    _seed_trail_map(context, tmp_path, "Mammoth Cave", "Kentucky", "mammoth.pdf")
+    _seed_trail_map(context, tmp_path, "Great Smoky Mountains", "Tennessee", "smoky.pdf")
+    result = MIAApplication._action_list_trail_maps(context, {"query": "smoky"})
+    assert "Great Smoky Mountains" in result and "Mammoth Cave" not in result
+
+
+def test_add_trail_map_from_url_requires_all_fields(context):
+    result = MIAApplication._action_add_trail_map_from_url(context, {"park_name": "Mammoth Cave"})
+    assert "need" in result.lower()
+    assert context.trail_maps.all_trail_maps() == []
+
+
+def test_add_trail_map_from_url_rejects_non_pdf_response(context, monkeypatch):
+    class _FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc_info):
+            return False
+
+        def read(self):
+            return b"<html>not a pdf</html>"
+
+    monkeypatch.setattr(trail_map_library_module.urllib.request, "urlopen", lambda *a, **k: _FakeResponse())
+    result = MIAApplication._action_add_trail_map_from_url(
+        context, {"park_name": "Mammoth Cave", "state": "Kentucky", "url": "https://example.com/map.pdf"}
+    )
+    assert "doesn't look like a real" in result.lower()
+    assert context.trail_maps.all_trail_maps() == []
+
+
+def test_add_trail_map_from_url_adds_a_real_pdf_response(context, monkeypatch):
+    class _FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc_info):
+            return False
+
+        def read(self):
+            return b"%PDF-1.4 fake trail map contents"
+
+    monkeypatch.setattr(trail_map_library_module.urllib.request, "urlopen", lambda *a, **k: _FakeResponse())
+    result = MIAApplication._action_add_trail_map_from_url(
+        context, {"park_name": "Mammoth Cave", "state": "Kentucky", "url": "https://example.com/map.pdf"}
+    )
+    assert "Mammoth Cave" in result
+    assert len(context.trail_maps.all_trail_maps()) == 1
+
+
+def test_delete_trail_map_removes_matching_map(context, tmp_path):
+    _seed_trail_map(context, tmp_path, "Mammoth Cave", "Kentucky", "mammoth.pdf")
+    result = MIAApplication._action_delete_trail_map(context, {"park_name": "mammoth cave"})
+    assert "Mammoth Cave" in result
+    assert context.trail_maps.all_trail_maps() == []
+
+
+def test_delete_trail_map_unknown_name_reports_not_found(context):
+    result = MIAApplication._action_delete_trail_map(context, {"park_name": "Nonexistent"})
+    assert "nonexistent" in result.lower()

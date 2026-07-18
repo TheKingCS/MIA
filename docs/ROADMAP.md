@@ -4647,3 +4647,34 @@ hardware, since the original bug was never reproduced here. 1369
 pytest tests passing (no new ones — the fix isn't reproducible under
 headless Qt, so it was verified with a targeted spy test instead of a
 permanent regression test).
+
+## Maps gets real Assistant actions (2026-07-18)
+
+Closed the last module-coverage gap from the earlier audit: the trail
+map catalog (`core/trail_map_library.py`) had zero Assistant-callable
+actions. New `maps` domain, 3 actions: `list_trail_maps` (optional
+park/state keyword filter), `add_trail_map_from_url`, and
+`delete_trail_map` (resolves by park name, same case-insensitive
+exact-match convention every other delete action uses). Deliberately
+did **not** add an action for downloading offline map tiles/basemaps —
+that's a real, considered scope decision, not an oversight: prefetching
+a region's tiles runs on a background `QThread` worker in
+`modules/maps/module.py` because it can take many seconds to minutes,
+and this project's Assistant action handlers are synchronous calls
+that block the chat reply while they run (no async/background
+execution model exists for tool calls yet) — wiring a real tile
+download through one would either freeze the chat for a long stretch
+or need new plumbing this ask didn't call for. `add_trail_map_from_url`
+does do a real (bounded, 15s-timeout) network fetch synchronously,
+which is a first for this registry, but it's a single small PDF, not a
+multi-tile region download.
+
+8 new unit tests (`tests/test_assistant_action_handlers.py`, mocking
+`urllib.request.urlopen` for the add-from-url success/rejection paths
+rather than hitting a real network in the committed suite) plus 4 new
+golden-set cases (96 → 100, including a false-positive sanity check
+for the ordinary use of the word "map"). Full official golden set
+verified 100/100 clean on the first live-model run — no trigger-phrase
+gaps or false positives found this time, unlike the earlier
+Workshop-pipeline pass. Registry now 67 actions across 18 domains.
+1377 pytest tests passing (8 new).

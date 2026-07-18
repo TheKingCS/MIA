@@ -55,6 +55,7 @@ import core.product_manager as product_manager_module
 import core.project_manager as project_manager_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
+import core.trail_map_library as trail_map_library_module
 import core.trip_manager as trip_manager_module
 import core.user_memory_manager as user_memory_manager_module
 import core.waypoint_manager as waypoint_manager_module
@@ -104,6 +105,8 @@ conversation_manager_module._DATA_DIR = _TEMP_DATA_DIR
 conversation_manager_module._CONVERSATIONS_FILE = _TEMP_DATA_DIR / "conversations.json"
 user_memory_manager_module._DATA_DIR = _TEMP_DATA_DIR
 user_memory_manager_module._USER_MEMORIES_FILE = _TEMP_DATA_DIR / "user_memories.json"
+trail_map_library_module._DATA_DIR = _TEMP_DATA_DIR
+trail_map_library_module._TRAIL_MAPS_FILE = _TEMP_DATA_DIR / "trail_maps.json"
 
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
@@ -133,6 +136,7 @@ from core.project_manager import ProjectManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.task_manager import TaskManager
+from core.trail_map_library import TrailMapLibrary
 from core.trip_manager import TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.waypoint_manager import WaypointManager
@@ -309,6 +313,16 @@ GOLDEN_CASES = [
     ("ledger summary", "What's my net profit so far?", "get_ledger_summary"),
     ("false-positive sanity: ordinary use of the word 'job'", "I love my new job at the bakery", None),
     ("false-positive sanity: ordinary use of the word 'material'", "This shirt is made of a soft material", None),
+    # --- 2026-07-18: Maps module (trail map catalog) had zero Assistant
+    # actions until now — real gap found via a module-coverage audit. ---
+    ("list trail maps", "What trail maps do I have?", "list_trail_maps"),
+    (
+        "add trail map from url",
+        "Add a trail map for Red River Gorge in Kentucky from https://example.com/rrg.pdf",
+        "add_trail_map_from_url",
+    ),
+    ("delete a trail map", "Delete my trail map for Mammoth Cave", "delete_trail_map"),
+    ("false-positive sanity: ordinary use of the word 'map'", "I can't map out my whole week right now", None),
 ]
 
 
@@ -353,6 +367,8 @@ def _build_context() -> AppContext:
     context.ledger = LedgerManager(context)
     context.conversations = ConversationManager(context)
     context.user_memories = UserMemoryManager(context)
+    context.config.set("maps.trail_map_root_path", str(_TEMP_DATA_DIR / "trail_maps"))
+    context.trail_maps = TrailMapLibrary(context)
     # Real DeviceFramework/PowerManager — both are read-only wrappers
     # over lsblk/psutil with no JSON file of their own, so no isolation
     # is needed the way every other manager above requires.
@@ -391,6 +407,9 @@ def _seed_fixtures(context: AppContext) -> None:
     context.materials.add_material(name="Plywood", unit="sheet", quantity_on_hand=10)
     context.jobs.add_job(name="Birdhouse Batch")
     context.products.add_product(name="Birdhouse", quantity_in_stock=2, base_price=25.0)
+    fake_pdf_path = _TEMP_DATA_DIR / "seed_trail_map.pdf"
+    fake_pdf_path.write_bytes(b"%PDF-1.4 fake trail map contents")
+    context.trail_maps.add_from_local_file("Mammoth Cave", "Kentucky", fake_pdf_path)
 
 
 def main() -> int:
