@@ -239,6 +239,36 @@ GOLDEN_CASES = [
     ("delete mission", "Delete the mission called Master Angler", "delete_mission"),
     ("complete mission", "Complete the mission called Master Angler", "complete_mission"),
     ("false-positive sanity: ordinary use of the word 'mission'", "Our company's mission is customer satisfaction", None),
+    # --- 2026-07-18: systematic trigger-phrase gap audit, prompted by the
+    # "current mission" bug above — probed many natural alternate phrasings
+    # across every existing domain (not just missions) and found 11 more
+    # real gaps of the same shape (a plausible real phrasing simply
+    # missing from trigger_phrases, not covered by the golden set above).
+    # All fixed with new trigger phrases; kept here so future registry
+    # growth can't silently reintroduce them. ---
+    ("calendar: 'anything on my calendar today'", "Do I have anything on my calendar today?", "list_calendar_events"),
+    ("calendar: 'what's going on this week'", "What do I have going on this week?", "list_calendar_events"),
+    ("components: 'what parts do I have'", "What parts do I have in my workshop?", "list_components"),
+    ("tasks: 'what am I working on'", "What am I currently working on?", "list_tasks"),
+    ("tasks: 'what do I need to do'", "What do I need to do?", "list_tasks"),
+    ("alarms: 'when is my next alarm'", "When is my next alarm?", "list_alarms"),
+    ("power: 'am I plugged in'", "Am I plugged in right now?", "get_power_status"),
+    ("expeditions: 'how many expeditions have I done'", "How many expeditions have I been on?", "list_expeditions"),
+    ("waypoints: 'what locations have I saved'", "What locations have I saved?", "list_waypoints"),
+    ("notes: 'anything I wrote down'", "Is there anything I wrote down recently?", "list_notes"),
+    ("system health: 'is everything ok'", "Is everything running okay on this device?", "get_system_health"),
+    (
+        "false-positive: 'everything ok' as small talk, not a system check",
+        "Hey, is everything ok with you today?",
+        "safe",
+    ),
+    ("false-positive: 'plugged in' unrelated to power", "I just plugged in my new keyboard.", "safe"),
+    ("false-positive: 'working on' unrelated to tasks/projects", "I've been working on my patience lately.", "safe"),
+    (
+        "collision check: notes list vs add, both share 'wrote/write down' phrasing",
+        "What did I write down about the trip?",
+        "list_notes",
+    ),
 ]
 
 

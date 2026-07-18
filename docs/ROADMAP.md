@@ -4538,3 +4538,46 @@ the new confidence framing layered on top. 1352 tests passing (no new
 tests — this is system-prompt wording + markdown content, verified
 live rather than mocked, same treatment as other prompt-wording
 changes in this project's history).
+
+## Systematic trigger-phrase gap audit: 11 more real gaps found and fixed (2026-07-18)
+
+Follow-up to fixing "what is my current mission" — asked to "think of
+many ways to improve and test the Assistant." Rather than guess, probed
+~13 plausible natural alternate phrasings across nearly every existing
+domain (not just missions) against the live model, using a scratch
+copy of `tests/live_model_check.py`'s own harness. **11 of 13 failed**
+— confirming the "current mission" bug was one instance of a systemic
+pattern, not a one-off: "when is my next alarm," "am I plugged in,"
+"what parts do I have," "what do I have going on this week," "how many
+expeditions have I been on," and 6 others all either called nothing or
+the wrong tool. Two distinct failure shapes found: most were pure
+gating gaps (no trigger phrase matched at all, so the domain's tools
+were never attached); one was a genuine tool-*selection* ambiguity
+once gating was fixed — "what do I have going on this week" correctly
+attached both `calendar` and the always-on `system` domain, but the
+model preferred `recall_recent_activity` over `list_calendar_events`
+until that tool's description was sharpened to explicitly say
+"upcoming... not for past activity."
+
+Fixed all 11 with new trigger phrases (`list_calendar_events`,
+`list_components`, `list_tasks`, `list_alarms`, `get_power_status`,
+`list_expeditions`, `list_waypoints`, `list_notes`,
+`get_system_health`) plus the one description sharpening above.
+`list_notes`'s new "wrote down" phrasing deliberately overlaps
+`add_note`'s own "write down" trigger rather than avoiding it — same
+already-proven "let both domains attach, trust the model to
+disambiguate via tool descriptions" pattern this registry already
+relies on elsewhere (`set_theme`/`open_module`,
+`list_profiles`/`get_device_profile`).
+
+**Verified thoroughly, not just the fixes themselves**: re-ran the full
+official 69-case golden set after the trigger additions (no
+regressions), then again after the description change (still no
+regressions), added 4 new false-positive/collision sanity checks
+targeting the specific new broad phrases ("is everything ok" as small
+talk, "plugged in" unrelated to power, "working on" unrelated to
+tasks, the notes/add_note overlap resolving correctly) — all pass. All
+17 new cases folded into the permanent `tests/live_model_check.py`
+golden set (69 → 84), which now passes 84/84. 1352 pytest tests
+passing (unchanged — this is entirely trigger-phrase/description
+tuning, verified live, not unit-testable in the traditional sense).

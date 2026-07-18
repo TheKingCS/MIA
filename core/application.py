@@ -520,7 +520,11 @@ class MIAApplication:
             description="List the user's current alarms in M.I.A.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_alarms,
-            trigger_phrases=("list my alarms", "list alarms", "what alarms", "show my alarms", "do i have any alarms"),
+            trigger_phrases=(
+                "list my alarms", "list alarms", "what alarms", "show my alarms", "do i have any alarms",
+                # 2026-07-18: real gap — "when is my next alarm" matched nothing at all.
+                "next alarm", "when is my alarm",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_alarm",
@@ -575,6 +579,13 @@ class MIAApplication:
             trigger_phrases=(
                 "show me my notes", "show my notes", "list my notes", "list notes",
                 "search my notes", "search notes", "find a note", "read my notes", "what notes do i have",
+                # 2026-07-18: real gap — "anything I wrote down" matched
+                # nothing. Deliberately overlaps add_note's own "write
+                # down" trigger (both domains attach together, same
+                # already-proven "let the model disambiguate via tool
+                # descriptions" pattern as other collision pairs in this
+                # registry) rather than trying to avoid it.
+                "anything i wrote down", "what did i write down",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -699,7 +710,12 @@ class MIAApplication:
                 "required": [],
             },
             handler=self._action_list_waypoints,
-            trigger_phrases=("waypoint", "waypoints", "list my waypoints", "list waypoints"),
+            trigger_phrases=(
+                "waypoint", "waypoints", "list my waypoints", "list waypoints",
+                # 2026-07-18: real gap — "what locations have I saved"
+                # matched nothing (bare "waypoint(s)" wasn't said at all).
+                "locations have i saved", "saved locations",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="waypoint_distance",
@@ -740,6 +756,10 @@ class MIAApplication:
             trigger_phrases=(
                 "system health", "cpu usage", "cpu temperature", "memory usage",
                 "disk usage", "diagnostics", "how's the system", "check diagnostics",
+                # 2026-07-18: real gap — "is everything running okay"
+                # matched nothing at all (no tool call, not even
+                # recognized as an action request).
+                "everything ok", "everything okay", "everything running",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -810,7 +830,12 @@ class MIAApplication:
             description="List the user's Expeditions in M.I.A.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_expeditions,
-            trigger_phrases=("list my expeditions", "list expeditions", "what expeditions", "show my expeditions"),
+            trigger_phrases=(
+                "list my expeditions", "list expeditions", "what expeditions", "show my expeditions",
+                # 2026-07-18: real gap — "how many expeditions have I
+                # been on" matched nothing at all.
+                "how many expeditions", "expeditions have i",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="recall_expedition",
@@ -1009,10 +1034,21 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="list_calendar_events",
             domain="calendar",
-            description="List the user's Calendar events in M.I.A.",
+            description=(
+                "List the user's upcoming/scheduled Calendar events in M.I.A. — what's coming up "
+                "today, this week, or on any date. Not for past activity — see recall_recent_activity for that."
+            ),
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_calendar_events,
-            trigger_phrases=("list my events", "list my calendar", "what's on my calendar", "upcoming events", "show my calendar"),
+            trigger_phrases=(
+                "list my events", "list my calendar", "what's on my calendar", "upcoming events", "show my calendar",
+                # 2026-07-18: real gaps found live-probing beyond the
+                # official golden set — "do i have anything today" was
+                # ONLY catching inventory's broad "do i have" trigger,
+                # never calendar's own domain at all; "going on this
+                # week" matched nothing. Both now covered here.
+                "anything on my calendar", "anything today", "going on this week", "going on today",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_calendar_event",
@@ -1038,7 +1074,11 @@ class MIAApplication:
             description="Get this device's current battery/power status.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_get_power_status,
-            trigger_phrases=("battery level", "battery status", "power status", "how much battery", "how's my battery"),
+            trigger_phrases=(
+                "battery level", "battery status", "power status", "how much battery", "how's my battery",
+                # 2026-07-18: real gap — "am I plugged in" matched nothing at all.
+                "plugged in", "am i charging",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_component",
@@ -1071,7 +1111,13 @@ class MIAApplication:
                 "required": [],
             },
             handler=self._action_list_components,
-            trigger_phrases=("list my components", "list components", "what components", "show my components", "search components"),
+            trigger_phrases=(
+                "list my components", "list components", "what components", "show my components", "search components",
+                # 2026-07-18: real gap — "what parts do I have" only
+                # matched inventory's broad "do i have" trigger, never
+                # reached the components domain at all.
+                "what parts", "my parts",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_component",
@@ -1236,7 +1282,12 @@ class MIAApplication:
             description="List the user's Projects in M.I.A.'s Project Manager tool.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_projects,
-            trigger_phrases=("list my projects", "list projects", "what projects", "show my projects"),
+            trigger_phrases=(
+                "list my projects", "list projects", "what projects", "show my projects",
+                # 2026-07-18: real gap — "what am I currently working
+                # on" matched nothing at all (no tool call).
+                "what am i working on", "currently working on",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="add_task",
@@ -1272,7 +1323,12 @@ class MIAApplication:
                 "required": [],
             },
             handler=self._action_list_tasks,
-            trigger_phrases=("list my tasks", "list tasks", "what tasks", "show my tasks"),
+            trigger_phrases=(
+                "list my tasks", "list tasks", "what tasks", "show my tasks",
+                # 2026-07-18: real gap — "what do I need to do" matched
+                # nothing at all (no tool call).
+                "what do i need to do", "what do i have to do",
+            ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_project",
