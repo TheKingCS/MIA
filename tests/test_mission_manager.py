@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
+import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.mission_manager as mission_manager_module
 import core.task_manager as task_manager_module
@@ -25,6 +26,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.mission_manager import MissionManager
+from core.profile_manager import ProfileManager
 from core.task_manager import TaskManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
@@ -33,6 +35,7 @@ from core.waypoint_manager import WaypointManager
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
     monkeypatch.setattr(expedition_manager_module, "_DATA_DIR", data_dir)
@@ -60,6 +63,15 @@ def _make_context_with_tasks() -> AppContext:
     existing tests here have no need for a TaskManager at all."""
     context = _make_context()
     context.tasks = TaskManager(context)
+    return context
+
+
+def _make_context_with_profiles() -> AppContext:
+    """_credit_mission_rewards() needs context.profiles — separate
+    helper for the same reason _make_context_with_tasks() is, most
+    existing tests here have no need for a ProfileManager at all."""
+    context = _make_context()
+    context.profiles = ProfileManager(context)
     return context
 
 
@@ -326,6 +338,48 @@ def test_update_mission_other_field_changes_do_not_celebrate(isolated_paths):
     mission = context.missions.add_mission(name="X")
     context.missions.update_mission(mission.mission_id, name="Renamed")
     assert notifications.notified == []
+
+
+def test_completing_a_mission_credits_xp_and_credits_to_active_profile(isolated_paths):
+    context = _make_context_with_profiles()
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="Master Angler", reward_xp=160, reward_credits=25)
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    reloaded = context.profiles.list_profiles()[0]
+    assert reloaded.total_xp == 160
+    assert reloaded.total_credits == 25
+
+
+def test_completing_a_mission_with_no_rewards_credits_nothing(isolated_paths):
+    context = _make_context_with_profiles()
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="X")
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    reloaded = context.profiles.list_profiles()[0]
+    assert reloaded.total_xp == 0
+    assert reloaded.total_credits == 0
+
+
+def test_completing_a_mission_with_no_active_profile_does_not_crash(isolated_paths):
+    context = _make_context_with_profiles()
+    mission = context.missions.add_mission(name="Master Angler", reward_xp=160, reward_credits=25)
+    context.missions.update_mission(mission.mission_id, status="completed")  # should not raise
+
+
+def test_recompleting_a_mission_does_not_double_credit(isolated_paths):
+    context = _make_context_with_profiles()
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="Master Angler", reward_xp=160, reward_credits=25)
+    context.missions.update_mission(mission.mission_id, status="completed")
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    reloaded = context.profiles.list_profiles()[0]
+    assert reloaded.total_xp == 160
+    assert reloaded.total_credits == 25
 
 
 def test_objective_progress_tally_returns_stored_value(isolated_paths):

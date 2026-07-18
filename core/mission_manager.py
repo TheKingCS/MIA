@@ -159,6 +159,12 @@ class Objective:
         )
 
 
+#: Suggested vocabulary for Mission.difficulty — a plain str, not an
+#: enum, same "unrecognized/blank just means unspecified" reasoning as
+#: core/trip_manager.py's ACTIVITY_TYPES.
+DIFFICULTY_LEVELS: tuple[str, ...] = ("EASY", "NORMAL", "HARD")
+
+
 @dataclass
 class Mission:
     mission_id: str
@@ -170,6 +176,17 @@ class Mission:
     objectives: list[Objective] = field(default_factory=list)
     created_at: str = ""  # ISO datetime
     updated_at: str = ""  # ISO datetime
+    # 2026-07-18 design handoff (CCH.zip's Mission Log screen) — cosmetic/
+    # gamification fields the redesigned Missions module surfaces.
+    # `region` is a short mono "eyebrow" label (e.g. "FIELD SEASON ·
+    # FISHING"), not a real geographic region — free text, same "just a
+    # label" spirit as Trip.activity_type.
+    icon: str = "\U0001F4CB"  # clipboard, matches this project's emoji-glyph convention (no image assets)
+    region: str = ""
+    difficulty: str = "NORMAL"
+    mission_type: str = "OPTIONAL MISSION"  # e.g. "OPTIONAL MISSION", "DAILY MISSION" — free text, shown as-is
+    reward_xp: int = 0
+    reward_credits: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -182,6 +199,12 @@ class Mission:
             "objectives": [o.to_dict() for o in self.objectives],
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "icon": self.icon,
+            "region": self.region,
+            "difficulty": self.difficulty,
+            "mission_type": self.mission_type,
+            "reward_xp": self.reward_xp,
+            "reward_credits": self.reward_credits,
         }
 
     @staticmethod
@@ -196,6 +219,12 @@ class Mission:
             objectives=[Objective.from_dict(d) for d in data.get("objectives", [])],
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
+            icon=data.get("icon", "\U0001F4CB"),
+            region=data.get("region", ""),
+            difficulty=data.get("difficulty", "NORMAL"),
+            mission_type=data.get("mission_type", "OPTIONAL MISSION"),
+            reward_xp=data.get("reward_xp", 0),
+            reward_credits=data.get("reward_credits", 0),
         )
 
 
@@ -240,6 +269,12 @@ class MissionManager:
         trip_id: Optional[str] = None,
         task_id: Optional[str] = None,
         assigned_by: str = "user",
+        icon: str = "\U0001F4CB",
+        region: str = "",
+        difficulty: str = "NORMAL",
+        mission_type: str = "OPTIONAL MISSION",
+        reward_xp: int = 0,
+        reward_credits: int = 0,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -250,6 +285,12 @@ class MissionManager:
             assigned_by=assigned_by,
             created_at=now,
             updated_at=now,
+            icon=icon,
+            region=region,
+            difficulty=difficulty,
+            mission_type=mission_type,
+            reward_xp=reward_xp,
+            reward_credits=reward_credits,
         )
         self._missions.append(mission)
         self._save()
@@ -276,7 +317,25 @@ class MissionManager:
         # its own copy of "did this just newly become complete."
         if not was_completed and mission.status == "completed":
             self._notify_mission_completed(mission)
+            self._credit_mission_rewards(mission)
         return mission
+
+    def _credit_mission_rewards(self, mission: Mission) -> None:
+        """
+        Credits reward_xp/reward_credits to the active profile — best-
+        effort, same graceful-degradation stance as everything else here
+        that depends on another manager (no active profile yet, e.g.
+        during first-run setup, just means no one to credit).
+        """
+        if self.context.profiles is None or (mission.reward_xp == 0 and mission.reward_credits == 0):
+            return
+        active_profile = self.context.profiles.get_active_profile()
+        if active_profile is None:
+            return
+        if mission.reward_xp:
+            self.context.profiles.add_xp(active_profile.profile_id, mission.reward_xp)
+        if mission.reward_credits:
+            self.context.profiles.add_credits(active_profile.profile_id, mission.reward_credits)
 
     def delete_mission(self, mission_id: str) -> None:
         self._missions = [m for m in self._missions if m.mission_id != mission_id]

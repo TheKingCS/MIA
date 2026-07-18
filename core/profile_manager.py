@@ -74,6 +74,15 @@ class Profile:
     # today only covers Appearance/Device Profile), and adding one
     # wasn't asked for.
     birthday: Optional[str] = None
+    # 2026-07-18 design handoff (CCH.zip's Missions screen gamification):
+    # lifetime-cumulative XP/credits, credited by
+    # core/mission_manager.py's update_mission() on mission completion.
+    # What *level* this corresponds to is derived on demand
+    # (core/leveling.py's compute_level_progress()), never stored here —
+    # same "derive it, don't persist a second copy that can drift"
+    # philosophy MissionManager already uses for objective progress.
+    total_xp: int = 0
+    total_credits: int = 0
 
     @property
     def has_password(self) -> bool:
@@ -170,6 +179,8 @@ class ProfileManager:
                 password_hash=data.get("password_hash", ""),
                 password_salt=data.get("password_salt", ""),
                 birthday=data.get("birthday"),
+                total_xp=data.get("total_xp", 0),
+                total_credits=data.get("total_credits", 0),
             )
             for pid, data in raw.items()
         ]
@@ -190,6 +201,8 @@ class ProfileManager:
             password_hash=raw.get("password_hash", ""),
             password_salt=raw.get("password_salt", ""),
             birthday=raw.get("birthday"),
+            total_xp=raw.get("total_xp", 0),
+            total_credits=raw.get("total_credits", 0),
         )
 
     def set_active_profile(self, profile_id: str) -> None:
@@ -217,6 +230,38 @@ class ProfileManager:
         config.save()
         log.info("Birthday set for profile '%s'", profile_id)
         return True
+
+    def add_xp(self, profile_id: str, amount: int) -> Optional[int]:
+        """Credits `amount` XP to a profile's lifetime total. Returns the new total, or None if the profile doesn't exist."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to add XP to unknown profile_id '%s'", profile_id)
+            return None
+
+        record = dict(raw)
+        new_total = record.get("total_xp", 0) + amount
+        record["total_xp"] = new_total
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Profile '%s' earned %d XP (total now %d)", profile_id, amount, new_total)
+        return new_total
+
+    def add_credits(self, profile_id: str, amount: int) -> Optional[int]:
+        """Credits `amount` credits to a profile's lifetime total. Returns the new total, or None if the profile doesn't exist."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to add credits to unknown profile_id '%s'", profile_id)
+            return None
+
+        record = dict(raw)
+        new_total = record.get("total_credits", 0) + amount
+        record["total_credits"] = new_total
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Profile '%s' earned %d credits (total now %d)", profile_id, amount, new_total)
+        return new_total
 
     def has_any_profiles(self) -> bool:
         return bool(self.context.config.get("profiles", {}))

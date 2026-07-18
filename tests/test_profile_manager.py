@@ -67,3 +67,40 @@ def test_get_active_profile_includes_birthday(isolated_paths):
 
     active = manager.get_active_profile()
     assert active.birthday == "1990-03-03"
+
+
+def test_add_xp_accumulates(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert manager.add_xp(profile.profile_id, 100) == 100
+    assert manager.add_xp(profile.profile_id, 50) == 150
+
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.total_xp == 150
+
+
+def test_add_xp_unknown_profile_returns_none(isolated_paths):
+    manager = _make_manager()
+    assert manager.add_xp("does-not-exist", 100) is None
+
+
+def test_add_credits_accumulates(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert manager.add_credits(profile.profile_id, 25) == 25
+    assert manager.add_credits(profile.profile_id, 25) == 50
+
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.total_credits == 50
+
+
+def test_add_credits_unknown_profile_returns_none(isolated_paths):
+    manager = _make_manager()
+    assert manager.add_credits("does-not-exist", 25) is None
+
+
+def test_new_profile_starts_with_zero_xp_and_credits(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert profile.total_xp == 0
+    assert profile.total_credits == 0
