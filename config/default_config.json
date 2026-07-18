@@ -19,6 +19,9 @@
     "trips": {
         "photo_root_path": ""
     },
+    "maps": {
+        "trail_map_root_path": ""
+    },
     "llm": {
         "base_url": "http://localhost:11434",
         "model": "llama3.2",

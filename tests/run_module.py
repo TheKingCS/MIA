@@ -46,11 +46,13 @@ from core.expedition_manager import ExpeditionManager  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
 from core.llm_manager import LLMManager  # noqa: E402
+from core.map_tile_cache import MapTileCache  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.power_manager import PowerManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.script_library_manager import ScriptLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
+from core.trail_map_library import TrailMapLibrary  # noqa: E402
 from core.trip_manager import TripManager  # noqa: E402
 from core.user_memory_manager import UserMemoryManager  # noqa: E402
 from core.voice_manager import VoiceManager  # noqa: E402
@@ -93,6 +95,8 @@ def main() -> int:
     context.activity_log = ActivityLogManager(context)
     context.conversations = ConversationManager(context)
     context.user_memories = UserMemoryManager(context)
+    context.map_tiles = MapTileCache(context)
+    context.trail_maps = TrailMapLibrary(context)
     manager = ModuleManager(context)
     manager.discover()
     context.device_help.register_module_lister(manager.all)

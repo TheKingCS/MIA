@@ -4216,3 +4216,103 @@ test with screenshots: waypoints plot in the correct relative
 positions, the route overlay draws correctly, and clicking two
 waypoints produces the correct real distance/bearing text
 ("Base Camp → Summit: 8.7 km — bearing 027°"). 1314 tests passing.
+
+## Maps module, part 2: a real offline basemap + a state park/trail map PDF catalog (2026-07-17)
+
+User follow-up right after Maps shipped: "Can we get the offline Maps
+together? Also include state park maps and trail maps" — a genuine
+scope jump from part 1's schematic waypoint plot to actual cartographic
+imagery. Investigated feasibility directly before writing any code
+rather than guessing:
+
+- **This dev sandbox has real internet access** (confirmed via
+  `curl`) and ample disk space, so real map data fetching is possible.
+- **`PySide6.QtWebEngineWidgets` (the easy path to an embedded
+  Leaflet.js slippy map) fails to import** — missing `libnspr4.so`, no
+  sudo, the same class of blocked system dependency as
+  `libportaudio2`/`libpulse` before it. Ruled out, not worked around.
+- **OpenStreetMap's own tile server explicitly prohibits bulk/
+  automated downloading for offline caching** — exactly the "download
+  this region" feature being built — so it was deliberately not used
+  as the tile source.
+- **USGS National Map's "USGSTopo" tile service
+  (`basemap.nationalmap.gov`) confirmed reachable directly and is a
+  public-domain federal service meant for this kind of programmatic
+  use** — chosen instead, and it's a real topographic map (shows
+  trails), not just roads.
+- **State park agency sites (Kentucky, Tennessee) block automated
+  scraping** — both `WebFetch` and a browser-UA'd `curl` got 403s/404s
+  trying to enumerate real per-park trail map PDF links. Rather than
+  hardcode guessed/scraped URLs that might not resolve, the Trail Map
+  library was built as a real add-by-URL/add-by-local-file catalog —
+  the user (or a future, carefully-scoped scraping pass against a
+  confirmed-scrapable site) supplies the actual park/URL/file.
+- **`PySide6.QtPdf`/`QtPdfWidgets` ARE importable** (unlike WebEngine)
+  — so trail map PDFs open in a real embedded viewer, no external
+  viewer or new dependency needed.
+
+Scoped via `AskUserQuestion` before building: user chose **both** a
+real pannable basemap and an official PDF trail-map catalog, starting
+with **Kentucky and Tennessee**.
+
+**New `core/map_tile_math.py`** — pure Web Mercator "slippy map" tile
+math (the same addressing scheme OSM/USGS/every standard XYZ tile
+provider uses): `lat_lon_to_tile_xy()`/`tile_xy_to_lat_lon()` (whole-
+tile addressing), `lat_lon_to_world_pixel()`/`world_pixel_to_lat_lon()`
+(continuous coordinates for smooth pan/zoom), `tiles_covering_bbox()`.
+
+**New `core/map_tile_cache.py`** (`AppContext.map_tiles`) — disk-backed
+tile cache using stdlib `urllib.request` (not the `requests` package,
+matching `requirements.txt`'s "keep this list minimal" stance).
+`fetch_tile()` downloads-and-caches one tile; `ensure_region_cached()`
+bulk-prefetches a bounding box across a zoom range, skipping already-
+cached tiles, tolerating individual tile failures without aborting the
+batch. `DEFAULT_PREFETCH_ZOOM_LEVELS` (6-10) was picked by directly
+measuring real tile counts for a Kentucky+Tennessee-sized bounding box
+first (~557 tiles, ~19MB) rather than guessing at a "reasonable" range.
+**Confirmed the ArcGIS tile endpoint's `{z}/{y}/{x}` path-segment
+order directly against the live service** — the reverse of the more
+common `{z}/{x}/{y}` XYZ convention this module's own local cache path
+and `core.map_tile_math` use.
+
+**New `core/trail_map_library.py`** (`AppContext.trail_maps`) — same
+persisted-JSON-metadata-plus-files-on-disk split as
+`ReferenceLibraryManager` (`data/trail_maps.json` for metadata,
+`trail_maps/` at the repo root for the actual PDFs — configurable via
+`maps.trail_map_root_path`, not under `data/` since PDFs are real
+files and `data/` is what `core/backup_manager.py` backs up wholesale).
+`add_from_url()`/`add_from_local_file()` both validate a real `%PDF`
+magic-number header before cataloging anything, so a 404/error page
+served with a 200 status doesn't silently become a broken catalog entry.
+
+**New GUI**: `gui/widgets/tile_map_view.py` (`TileMapView`, a
+`QPainter`-based pannable/zoomable basemap, mouse-drag pan + scroll-
+wheel zoom, missing tiles get a placeholder + a background fetch
+request rather than blocking the paint thread — via new
+`modules/maps/tile_fetch_worker.py`'s `TileFetchWorker`, a persistent
+queue-processing `QThread`, distinct from the one-shot
+`modules/maps/tile_prefetch_worker.py`'s `TilePrefetchWorker` used for
+the bulk "Download Kentucky"/"Download Tennessee" buttons). New
+`gui/add_trail_map_dialog.py` (URL or local-file entry, mutually
+exclusive), `gui/trail_map_viewer_dialog.py` (embedded `QPdfView`), and
+`modules/maps/trail_map_fetch_worker.py` (the URL-download path off the
+GUI thread). `modules/maps/module.py` restructured into a 3-tab
+`QTabWidget`: Waypoints (part 1's schematic plot, unchanged), Basemap
+(new), Trail Maps (new).
+
+**Verified for real, not just unit-tested**: a real headless-Qt smoke
+test fetched an actual tile from the live USGS service, rendered it in
+`TileMapView` (screenshot confirms real topographic imagery — rivers,
+roads, place names, "Allegheny National Forest" labels — not a
+placeholder), downloaded a real small test PDF end-to-end through
+`TrailMapFetchWorker` into the catalog, and opened it in the real
+embedded `QPdfView` (screenshot confirms actual PDF content rendering).
+The Maps module was also confirmed to boot cleanly through the real
+`ModuleManager` discovery path (`tests/run_module.py maps`, updated
+with the two new services per that file's own maintenance convention).
+27 new unit tests (`tests/test_map_tile_math.py`,
+`tests/test_map_tile_cache.py`, `tests/test_trail_map_library.py`,
+plus 2 more in `tests/test_maps_module.py`) — network calls mocked in
+the committed suite (real fetches only happen in the one-off smoke
+test), same "mock the external query" pattern as
+`test_avatar_manager.py`/`test_power_manager.py`. 1341 tests passing.

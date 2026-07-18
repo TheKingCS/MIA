@@ -46,6 +46,13 @@ trip_photos/*
 financial_snapshots/*
 !financial_snapshots/.gitkeep
 
+# Trail map PDFs (core/trail_map_library.py, Maps module) — user-added
+# official state park/trail map PDFs, downloaded or copied in by the
+# user. Same "large-ish user-supplied binary, not under data/" reasoning
+# as Reference Library/Trip Photos/financial snapshots above.
+trail_maps/*
+!trail_maps/.gitkeep
+
 # --- Editors / OS ---
 .vscode/
 .idea/

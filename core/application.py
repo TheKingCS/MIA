@@ -56,6 +56,7 @@ from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
 from core.llm_manager import LLMManager
 from core.logger import get_logger
+from core.map_tile_cache import MapTileCache
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
 from core.module_manager import ModuleManager
@@ -71,6 +72,7 @@ from core.subnet_calculator import calculate_subnet
 from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
 from core.task_manager import TaskManager
+from core.trail_map_library import TrailMapLibrary
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.voice_manager import VoiceManager
@@ -201,6 +203,8 @@ class MIAApplication:
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
+        self.context.map_tiles = MapTileCache(self.context)
+        self.context.trail_maps = TrailMapLibrary(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
         # Registered by default so the registry has something real to
         # demonstrate end-to-end — it's a stub (no real driver), not a

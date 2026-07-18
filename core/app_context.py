@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from core.journal_manager import JournalManager
     from core.ledger_manager import LedgerManager
     from core.llm_manager import LLMManager
+    from core.map_tile_cache import MapTileCache
     from core.memory_manager import MemoryManager
     from core.mission_manager import MissionManager
     from core.notification_manager import NotificationManager
@@ -59,6 +60,7 @@ if TYPE_CHECKING:
     from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
     from core.task_manager import TaskManager
+    from core.trail_map_library import TrailMapLibrary
     from core.trip_manager import TripManager
     from core.user_memory_manager import UserMemoryManager
     from core.voice_manager import VoiceManager
@@ -115,6 +117,8 @@ class AppContext:
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)
     workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)
+    map_tiles: Optional["MapTileCache"] = field(default=None, repr=False)
+    trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.
