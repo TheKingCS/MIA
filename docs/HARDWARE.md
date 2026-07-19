@@ -228,10 +228,47 @@ Previously deferred as "many options, pick later." The Memories vision
 (distance hiked, average pace, location-tagged logs on the maps) now
 genuinely depends on continuous position data, not just the manual
 waypoint-based distance calculator `core/waypoint_manager.py` already
-has. Still no module chosen — evaluate once this becomes the active
-milestone, but don't treat it as low-priority anymore. An IMU/accelerometer
-may also be worth pairing with GPS for pace/motion data during
-GPS-denied stretches (tree cover, etc.) — open question, not decided.
+has. An IMU/accelerometer may also be worth pairing with GPS for pace/
+motion data during GPS-denied stretches (tree cover, etc.) — open
+question, not decided.
+
+**2026-07-19: module family decided — u-blox M9N or M10, exact
+breakout board still open.** Real motivation surfaced while testing
+voice-command robustness for the wearable: `add_waypoint`'s only way
+to place a waypoint today is the user speaking exact latitude/longitude,
+which isn't practical in the field — a real GPS fix is what makes a
+future "save a waypoint here" voice command actually work. Chose
+multi-constellation M9N/M10 over the cheaper, GPS-only NEO-6M
+specifically because of this rig's own tree-cover concern (a hiking/
+field device under canopy needs GLONASS/Galileo/BeiDou reception, not
+just GPS, to get a reliable fix) — worth the extra cost/power draw over
+NEO-6M for that reason. **Power draw explicitly accepted, with a
+concrete fallback already decided**: if the M9N/M10's draw turns out to
+strain the Compute Block's power budget once the Battery/UPS HAT is
+chosen (still an open question below), the plan is to double the
+battery capacity rather than downgrade the GPS module — noted here so
+that trade-off isn't relitigated once real power numbers come in.
+**2026-07-19: IMU pairing decided — a separate IMU chip alongside the
+M9N/M10, not an integrated GPS+IMU module.** u-blox does make combined
+dead-reckoning parts (NEO-M8U, ZED-F9R), evaluated and deliberately
+passed over:
+- **NEO-M8U** is built on the older M8 GNSS core, a real step back from
+  M9N/M10's concurrent multi-constellation/jamming-resistance
+  improvements — the exact properties M9N/M10 was chosen for. An
+  integrated IMU isn't worth quietly giving back the canopy performance
+  this rig specifically needs.
+- **ZED-F9R** (dual-frequency, automotive/robotics-grade) would likely
+  match or beat M9N/M10 under canopy, but at several times the cost and
+  integration complexity aimed at self-driving-car-class use cases —
+  real overkill for a hiking wearable.
+
+Keeping M9N/M10 and adding a separate, inexpensive IMU breakout (e.g.
+an MPU-6050 or BNO055/BNO085-class part — exact one still open) keeps
+the already-decided canopy performance intact and stays far cheaper
+than F9R, at the cost of one extra I2C part and doing sensor fusion in
+software (on the Pi) rather than in the GPS module's own firmware.
+Still open: the exact GPS breakout board (SparkFun vs. Adafruit vs.
+other) and the exact IMU part.
 
 **2026-07-15: physical placement decided — the Compute Block, not the
 Receiver.** The user's own call. Practically this also means the GPS
@@ -360,9 +397,10 @@ can charge it directly.
 - The Compute Block ↔ Receiver cable/connector itself (type, strain
   relief, routing, weatherproofing) — real industrial design, not
   software-resolvable
-- GPS module choice for Navigation — see the GPS section above, now
-  higher priority than previously noted. Placement decided (Compute
-  Block); the module itself still isn't chosen.
+- GPS module choice for Navigation — see the GPS section above.
+  Placement (Compute Block), chipset family (u-blox M9N/M10), and IMU
+  pairing (yes, a separate chip, not an integrated M8U/F9R) are all
+  decided; the exact GPS breakout board and exact IMU part are still open.
 - LoRa/SDR/radio hardware for Communications — defer until that phase,
   since protocol choice (Meshtastic vs. custom) affects the hardware pick
 - Battery/UPS HAT choice for the Compute Block — needs **both** a
