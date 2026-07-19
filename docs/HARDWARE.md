@@ -463,27 +463,70 @@ matter: I2C for `core/power_manager.py` to report real voltage/current,
 and standard USB-C PD input so any common solar panel can charge it
 directly.
 
-**2026-07-19: Battery/UPS HAT decided — Waveshare UPS HAT (E).**
-Verified via real current listings (including CNX Software's
-independent coverage, not just the vendor page) rather than assumed
-from memory, since Pi5-compatible UPS HATs are a newer, faster-moving
-category than this document's other hardware picks: real I2C fuel
-gauge (voltage/current/power/remaining capacity — exactly what
-`core/power_manager.py` needs), USB-C **PD3.0** input up to 40W (a
-genuine PD negotiation, not just a 5V-only USB-C port — satisfies the
-solar-charging requirement directly), and 4×21700 Li cells for 5V/6A
-output. The 4-cell 21700 format gives real headroom to grow capacity
-if the M9N/M10 GPS module's power draw strains the budget, matching
-the "double the battery" fallback already agreed to in the GPS section
-above — swapping in higher-capacity 21700 cells or simply keeping all
-4 populated is a direct, already-supported path to that, not a HAT
-swap. SunFounder's PiPower 5 (5V/5A, USB-C PD 45W, I2C via an onboard
-Cortex-M23 MCU) was a real close alternative, passed over only because
-its battery format/capacity wasn't as clearly documented in what was
-verified.
+**2026-07-19: Battery/UPS HAT tentatively picked as Waveshare UPS HAT
+(E), then reopened the same day — physical stacking with the AI HAT+2
+unconfirmed.** Original reasoning: real I2C fuel gauge (voltage/
+current/power/remaining capacity — exactly what `core/power_manager.py`
+needs), USB-C **PD3.0** input up to 40W (genuine PD negotiation, not
+just a 5V-only USB-C port — satisfies the solar-charging requirement
+directly), and 4×21700 Li cells for 5V/6A output, with real headroom
+for the "double the battery" fallback (see GPS section above) via
+higher-capacity 21700 cells rather than a HAT swap.
+
+**Real problem found while mapping out the actual wiring**: the AI
+HAT+2's stock mounting hardware "doesn't expose any pins" on the
+40-pin header once installed — confirmed directly, not assumed — so
+nothing else can physically use that header afterward. The Waveshare
+UPS HAT (E) was verified to avoid the GPIO *pins* electrically (powers
+the Pi via its own pogo-pin connector), but **its physical mounting
+position relative to the Pi 5 was never actually confirmed** — whether
+those pogo-pin contacts land somewhere that's clear of where the AI
+HAT+2 needs to sit is still an open, unverified question, and
+Waveshare's own detailed wiki/manual pages weren't fetchable to check
+directly.
+
+**Real alternative found, only partially verified**: Geekworm's
+X1200/X1202 UPS boards are explicitly documented as "designed to be
+attached on bottom and don't use the 40-pin header, enabling easy
+stacking with other Raspberry Pi accessory boards" — the actual
+mounting-compatibility confirmation the Waveshare board is missing.
+X1202 takes 4×18650 cells (smaller/lower capacity per cell than
+21700, though still 4 cells) and has real I2C status monitoring. The
+trade-off: its USB-C input spec only says "5Vdc 5A," with no PD3.0
+negotiation confirmed the way Waveshare's board has — will likely still
+charge from a solar panel (5V is PD's universal fallback voltage), just
+without Waveshare's higher-wattage negotiation flexibility.
+
+**Not resolved — pick this back up next session**: either (a) find a
+definitive answer on the Waveshare UPS HAT (E)'s actual mounting
+position relative to the Pi 5 (check its manual/wiki directly, or find
+a real assembled Pi5+AI HAT+2+UPS HAT (E) build to confirm/deny
+physical fit), or (b) switch to the Geekworm X1202, accepting its less
+certain charging-negotiation flexibility as the trade for confirmed
+mechanical compatibility. SunFounder's PiPower 5 (5V/5A, USB-C PD 45W,
+I2C via an onboard Cortex-M23 MCU) remains a real but less-verified
+third option, noted previously and not re-examined here.
+
+**Also found while mapping the wiring (real, not in question — safe to
+build around)**: the AI HAT+2's GPIO block means the GPS/IMU Qwiic
+chain can't use the 40-pin header either. Fix: an **Adafruit FT232H
+Breakout (USB-C & STEMMA QT)** — a genuine USB-to-I2C bridge — takes a
+free Pi 5 USB port and gives the GPS/IMU chain a STEMMA QT/Qwiic
+connector to daisy-chain from instead. Separately, the Receiver needs
+**a small internal USB hub** (3 USB devices in there — the Pico,
+the camera+mic module, the FiiO DAC — all riding the one IP67 cable
+back to the Compute Block) that wasn't an explicit line item until
+walking through the actual wiring surfaced it.
 
 ## Open questions to revisit as hardware is acquired
 
+- **Battery/UPS HAT — reopened 2026-07-19, pick this up first next
+  session.** Waveshare UPS HAT (E) (best-verified charging: real
+  PD3.0/40W + I2C + 4×21700) vs. Geekworm X1202 (confirmed bottom-mount,
+  stack-compatible with the AI HAT+2, but less-certain PD negotiation
+  and smaller 18650 cells) — see the Battery/UPS HAT section above for
+  the full trade-off. Needs either a definitive answer on Waveshare's
+  actual physical mounting position, or a decision to switch to X1202.
 - The Compute Block ↔ Receiver cable's routing along the pack/strap and
   its enclosure penetrations at each end — the cable itself (IP67
   threaded-lock USB-C) and the link it carries are both decided, see
