@@ -427,7 +427,7 @@ class MainWindow(QMainWindow):
         # doesn't need to account for). Tabs map onto real screens:
         # "Monitoring" -> the existing Diagnostics module (same data),
         # "App Center" -> the existing Apps grid.
-        wordmark = QLabel("MIA")
+        wordmark = QLabel("M.I.A.")
         wordmark.setObjectName("NavWordmark")
         layout.addWidget(wordmark)
 

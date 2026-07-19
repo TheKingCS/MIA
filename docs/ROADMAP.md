@@ -5340,3 +5340,56 @@ both real investigations of their own, not something to guess at
 blind. In the meantime, worth knowing this project's own voice command
 guidance (`docs/user_help/`) should favor query-form phrasing over
 imperative-form where both exist.
+
+## Nav bar blending, M.I.A. wordmark restored, bigger sidebar widgets, chat bar voice buttons (2026-07-19)
+
+Real follow-up report on the Home dashboard, checked against `MIAHome.png`:
+
+1. **"The Nav bar needs to blend with the bar behind it... one
+   continuous color with just the words over top."** `QFrame#NavTabGroup`
+   (the distinct background+border box added around Home/Missions/
+   Monitoring/App Center in the previous nav-grouping pass) is now
+   transparent/borderless — the reference has no box at all, just text
+   on the header's own continuous background. The frame itself stays
+   (still does layout/margin work), just its QSS fill is gone.
+2. **"Change MIA back to M.I.A." — specifically the top-left wordmark
+   and the console title, not the rest of the app** (which stays "MIA,"
+   pronounced like the name, per the earlier explicit rename). `gui/main_window.py`'s
+   `NavWordmark` and `gui/home_dashboard.py`'s console title are the only
+   two spots touched.
+3. **"Widgets on the sidebars stop halfway down the screen — should be
+   big enough to fill."** Compared a real headless-Qt screenshot against
+   `MIAHome.png` at its exact 1491×1027 size (not eyeballed at a
+   different window size) before touching anything. Every right-rail
+   card (Assistant Profile/Monitoring/Activity Log/Quick Toggles) and
+   the left telemetry panel's cards got real `setContentsMargins()`/
+   `setSpacing()` values instead of Qt's small defaults; the gauge
+   rail's own spacing roughly doubled and its CPU/NET/SYS gauges grew
+   104px → 116px. Closes most (not literally all) of the gap — the
+   reference itself has some empty space in the left/middle columns
+   too, confirmed by measuring both at identical dimensions rather than
+   assuming "fill 100%" was actually the reference's own intent.
+4. **"2 buttons before Send: start recording voice, and stop MIA
+   talking."** Brought the full Assistant module's existing Hold to
+   Talk / Stop Speaking pair (`modules/assistant/module.py`) to this
+   bar too — same `core/push_to_talk_trigger.py` wiring, same
+   `TalkButton`/`StopSpeakingButton` QSS (already themed, no new
+   styling needed), same handler shape (`_on_talk_pressed`/
+   `_on_talk_released`/`_on_stop_speaking`). This dashboard's own
+   existing `_set_state()`/console state label doubles as the status
+   feedback modules/assistant/module.py gets from a separate status
+   label, so no new UI element was needed for that part.
+
+**Verified for real, not just screenshotted**: a real press-and-hold
+(with an actual elapsed delay, not a same-tick press+release) correctly
+starts/stops recording and degrades to "Speech-to-text unavailable"
+gracefully in this mic-less dev sandbox; a real `_speak()` call
+correctly enables/disables the Stop button across a full TTS
+synthesis+playback cycle. **One real finding along the way**: an
+earlier same-tick synthetic press+release (zero elapsed time between
+them, not achievable by an actual human clicking a button) left a
+`TTSWorker` thread and the whole process stuck for several minutes —
+not reproducible with any realistic press-hold duration, so treated as
+a synthetic-test artifact rather than a real bug, but worth knowing if
+a future automated test ever tries to simulate press/release without a
+real delay between them. 1439 pytest tests still pass.

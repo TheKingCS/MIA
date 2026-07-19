@@ -103,14 +103,15 @@ QLabel#NavWordmark {
     letter-spacing: 0.5px;
 }
 
-/* 2026-07-18: gives the tab cluster its own subtly distinct background
-(vs. the plain HeaderBar bg) so it reads as a grouped "menu" element,
-per the real user report that the header lacked the reference's
-"distinct lines and separation and color differences". */
+/* 2026-07-19: reversed the previous pass's distinct tab-group
+background/border — real user report, re-checked against MIAHome.png:
+the reference has no box around the tab cluster at all, just text
+sitting directly on the header's own continuous background. Kept as an
+empty rule (not deleted) since gui/main_window.py's NavTabGroup frame
+still exists for layout purposes (margins/spacing around the tabs). */
 QFrame#NavTabGroup {
-    background-color: #111722;
-    border: 1px solid #1b222e;
-    border-radius: 10px;
+    background: transparent;
+    border: none;
 }
 
 QFrame#HeaderBar QFrame#NavSeparator {

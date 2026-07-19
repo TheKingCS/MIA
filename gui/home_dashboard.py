@@ -103,6 +103,7 @@ from core.assistant_chat import (
 from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
 from core.daily_occasions import calendar_events_today
+from core.push_to_talk_trigger import PushToTalkTrigger
 from core.dashboard_telemetry import compute_network_mbps, format_uptime_line
 from core.finance_manager import FinancialSnapshot
 from core.generate_worker import GenerateWorker
@@ -268,6 +269,7 @@ class HomeDashboard(QFrame):
         self._title_worker: Optional[GenerateWorker] = None
         self._memory_worker: Optional[GenerateWorker] = None
         self._conversation = None
+        self._recording = False
 
         # psutil.cpu_percent(interval=None) reports usage since the
         # *previous* call in this process — the very first call is
@@ -304,6 +306,15 @@ class HomeDashboard(QFrame):
         outer.addLayout(body, stretch=1)
 
         outer.addWidget(self._build_chat_bar())
+
+        # GPIO path is a no-op unless voice.push_to_talk_gpio_pin is
+        # configured and gpiozero + real hardware are present — see
+        # core/push_to_talk_trigger.py. Both paths fire the exact same
+        # handlers as the on-screen Talk button, same precedent as
+        # modules/assistant/module.py's own wiring.
+        self._ptt_trigger = PushToTalkTrigger(self.context, parent=self)
+        self._ptt_trigger.pressed.connect(self._on_talk_pressed)
+        self._ptt_trigger.released.connect(self._on_talk_released)
 
         self._data_timer = QTimer(self)
         self._data_timer.timeout.connect(self._refresh_telemetry)
@@ -344,12 +355,14 @@ class HomeDashboard(QFrame):
 
         container = QWidget()
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(18, 20, 18, 20)
-        layout.setSpacing(14)
+        layout.setContentsMargins(18, 24, 18, 24)
+        layout.setSpacing(22)
 
         load_card = QFrame()
         load_card.setObjectName("DashboardCard")
         load_layout = QVBoxLayout(load_card)
+        load_layout.setContentsMargins(16, 18, 16, 18)
+        load_layout.setSpacing(10)
         load_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         load_title = QLabel("PROCESSING LOAD")
         load_title.setObjectName("DashboardSectionTitle")
@@ -362,6 +375,7 @@ class HomeDashboard(QFrame):
         layout.addWidget(load_card)
 
         stats_row = QHBoxLayout()
+        stats_row.setSpacing(14)
         power_card, self._power_value_label, self._power_caption_label = self._build_stat_tile("POWER")
         stats_row.addWidget(power_card)
         uptime_card, self._uptime_value_label, self._uptime_caption_label = self._build_stat_tile("UPTIME")
@@ -371,6 +385,8 @@ class HomeDashboard(QFrame):
         tip_card = QFrame()
         tip_card.setObjectName("DashboardCard")
         tip_layout = QHBoxLayout(tip_card)
+        tip_layout.setContentsMargins(16, 16, 16, 16)
+        tip_layout.setSpacing(12)
         tip_icon = QLabel("\U0001F4A1")
         tip_icon.setObjectName("MissionDetailIcon")
         tip_layout.addWidget(tip_icon)
@@ -388,6 +404,8 @@ class HomeDashboard(QFrame):
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
+        layout.setContentsMargins(14, 14, 14, 14)
+        layout.setSpacing(6)
         title_label = QLabel(title)
         title_label.setObjectName("DashboardSectionTitle")
         layout.addWidget(title_label)
@@ -420,7 +438,7 @@ class HomeDashboard(QFrame):
 
         header = QVBoxLayout()
         header.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        title = QLabel("MIA CONSOLE")
+        title = QLabel("M.I.A. CONSOLE")
         title.setObjectName("ConsoleTitle")
         header.addWidget(title, alignment=Qt.AlignmentFlag.AlignHCenter)
         eyebrow = QLabel("ASSISTANT MODE")
@@ -517,8 +535,8 @@ class HomeDashboard(QFrame):
         rail.setObjectName("DashboardTelemetryPanel")
         rail.setMinimumWidth(110)
         layout = QVBoxLayout(rail)
-        layout.setContentsMargins(10, 18, 10, 18)
-        layout.setSpacing(16)
+        layout.setContentsMargins(10, 24, 10, 24)
+        layout.setSpacing(28)
         layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
         title = QLabel("TELEMETRY")
@@ -535,7 +553,7 @@ class HomeDashboard(QFrame):
     def _build_small_gauge(self, layout: QVBoxLayout, label_text: str) -> CircularGauge:
         column = QVBoxLayout()
         column.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        gauge = CircularGauge(diameter=104, stroke_width=10)
+        gauge = CircularGauge(diameter=116, stroke_width=10)
         column.addWidget(gauge)
         label = QLabel(label_text)
         label.setObjectName("DashboardSectionTitle")
@@ -557,8 +575,8 @@ class HomeDashboard(QFrame):
 
         container = QWidget()
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(14, 18, 14, 18)
-        layout.setSpacing(14)
+        layout.setContentsMargins(16, 22, 16, 22)
+        layout.setSpacing(24)
 
         layout.addWidget(self._build_assistant_profile_card())
         layout.addWidget(self._build_monitoring_card())
@@ -573,6 +591,8 @@ class HomeDashboard(QFrame):
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
         title = QLabel("ASSISTANT PROFILE")
         title.setObjectName("DashboardSectionTitle")
         layout.addWidget(title)
@@ -600,11 +620,14 @@ class HomeDashboard(QFrame):
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
         title = QLabel("MONITORING")
         title.setObjectName("DashboardSectionTitle")
         layout.addWidget(title)
 
         grid_row_1 = QHBoxLayout()
+        grid_row_1.setSpacing(10)
         power_tile, self._monitor_power_label = self._build_monitor_tile("POWER")
         grid_row_1.addWidget(power_tile)
         volume_tile, self._monitor_volume_label = self._build_monitor_tile("VOLUME")
@@ -612,6 +635,7 @@ class HomeDashboard(QFrame):
         layout.addLayout(grid_row_1)
 
         grid_row_2 = QHBoxLayout()
+        grid_row_2.setSpacing(10)
         network_tile, self._monitor_network_label = self._build_monitor_tile("NETWORK")
         grid_row_2.addWidget(network_tile)
         ram_tile, self._monitor_ram_label = self._build_monitor_tile("RAM")
@@ -623,10 +647,10 @@ class HomeDashboard(QFrame):
     def _build_monitor_tile(self, label_text: str) -> tuple[QFrame, QLabel]:
         tile = QFrame()
         tile.setObjectName("MonitorTile")
-        tile.setMinimumHeight(64)
+        tile.setMinimumHeight(78)
         layout = QVBoxLayout(tile)
-        layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(4)
+        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setSpacing(6)
         title = QLabel(label_text)
         title.setObjectName("DashboardSectionTitle")
         layout.addWidget(title)
@@ -639,6 +663,8 @@ class HomeDashboard(QFrame):
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
         title = QLabel("ACTIVITY LOG")
         title.setObjectName("DashboardSectionTitle")
         layout.addWidget(title)
@@ -657,6 +683,8 @@ class HomeDashboard(QFrame):
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(14)
         title = QLabel("QUICK TOGGLES")
         title.setObjectName("DashboardSectionTitle")
         layout.addWidget(title)
@@ -715,6 +743,22 @@ class HomeDashboard(QFrame):
         self._input.setPlaceholderText("Ask Mia anything…")
         self._input.returnPressed.connect(self._on_send)
         layout.addWidget(self._input, stretch=1)
+
+        # Same two buttons as the full Assistant module
+        # (modules/assistant/module.py) — press-and-hold to talk, plus a
+        # way to cut MIA off mid-reply — brought to this bar too since
+        # it's a real chat surface of its own, not just suggestion chips.
+        self._talk_button = QPushButton("\U0001F3A4  Hold to Talk")
+        self._talk_button.setObjectName("TalkButton")
+        self._talk_button.pressed.connect(self._on_talk_pressed)
+        self._talk_button.released.connect(self._on_talk_released)
+        layout.addWidget(self._talk_button)
+
+        self._stop_speaking_button = QPushButton("⏹  Stop")
+        self._stop_speaking_button.setObjectName("StopSpeakingButton")
+        self._stop_speaking_button.setEnabled(False)
+        self._stop_speaking_button.clicked.connect(self._on_stop_speaking)
+        layout.addWidget(self._stop_speaking_button)
 
         self._send_button = QPushButton("Send")
         self._send_button.setObjectName("AppsLaunchButton")
@@ -835,6 +879,7 @@ class HomeDashboard(QFrame):
     def _set_busy(self, busy: bool) -> None:
         self._input.setEnabled(not busy)
         self._send_button.setEnabled(not busy)
+        self._talk_button.setEnabled(not busy)
         self._set_state("thinking" if busy else "idle")
 
     def _maybe_generate_title(self, conversation, user_message: str, assistant_message: str) -> None:
@@ -884,6 +929,7 @@ class HomeDashboard(QFrame):
         self._tts_worker.finished.connect(self._on_tts_finished)
         self._set_state("speaking")
         self._tts_worker.start()
+        self._stop_speaking_button.setEnabled(True)
 
     def _on_tts_finished(self) -> None:
         if self._tts_worker is not None:
@@ -891,6 +937,63 @@ class HomeDashboard(QFrame):
             self._tts_worker = None
         if self._mia_state == "speaking":
             self._set_state("idle")
+        self._stop_speaking_button.setEnabled(False)
+
+    def _on_stop_speaking(self) -> None:
+        """Cuts MIA off mid-sentence — same real ask (2026-07-18) already
+        answered on the full Assistant module, brought to this bar too.
+        Only stops playback; synthesis (if still running) finishes
+        harmlessly with nothing left to play."""
+        if self.context.voice is not None:
+            self.context.voice.stop_playback()
+
+    # ------------------------------------------------------------------
+    # Push-to-talk (speech in) — same pipeline as
+    # modules/assistant/module.py's Hold to Talk button.
+    # ------------------------------------------------------------------
+
+    def _on_talk_pressed(self) -> None:
+        if self.context.voice is None or self._worker is not None or self._recording:
+            return
+        if not self.context.config.get("voice.push_to_talk_enabled", True):
+            self._set_last_message("Voice input is turned off (Settings).")
+            return
+        if not self.context.voice.start_recording():
+            self._set_last_message("Microphone unavailable.")
+            return
+        self._recording = True
+        self._set_talk_button_recording(True)
+        self._set_state("listening")
+
+    def _on_talk_released(self) -> None:
+        if self.context.voice is None or not self._recording:
+            return
+        self._recording = False
+        self._set_talk_button_recording(False)
+
+        wav_path = self.context.voice.stop_recording()
+        if wav_path is None:
+            self._set_last_message("Microphone unavailable.")
+            self._set_state("idle")
+            return
+
+        self._set_state("thinking")
+        transcript = self.context.voice.transcribe(wav_path)
+        if not transcript:
+            self._set_last_message("Speech-to-text unavailable.")
+            self._set_state("idle")
+            return
+
+        self._input.setText(transcript)
+        self._on_send()
+
+    def _set_talk_button_recording(self, recording: bool) -> None:
+        """Dynamic property, not a second object name — same QSS
+        re-polish pattern as modules/assistant/module.py's own
+        `_set_talk_button_recording()`."""
+        self._talk_button.setProperty("recording", recording)
+        self._talk_button.style().unpolish(self._talk_button)
+        self._talk_button.style().polish(self._talk_button)
 
     # ------------------------------------------------------------------
     # Telemetry refresh
