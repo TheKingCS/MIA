@@ -107,14 +107,15 @@ which is reinstallable from the MIA repo.
 - Avoids wake-word false triggers and the extra always-on compute/power
   budget of continuous audio processing — both matter for a
   battery-powered field device
-- **2026-07-15 update**: the mic/speaker pairing recommendation above
-  (I2S DAC/amp) assumed they'd sit right next to the Pi's own GPIO
-  header — no longer true now that mic+speaker live in the physically
-  remote Receiver module (see "Modular Backpack" below). USB is the
-  better fit for this actual arrangement, same reasoning as the
-  Receiver's camera connection: I2S needs a short direct wiring run,
-  USB tolerates the longer cable a chest/strap-to-side-of-pack
-  connection actually requires.
+- **2026-07-15 update**: the mic/audio-output pairing recommendation
+  above (I2S DAC/amp) assumed they'd sit right next to the Pi's own
+  GPIO header — no longer true now that the mic and audio output (a
+  headphone jack as of 2026-07-19, see "Modular Backpack" below) live
+  in the physically remote Receiver module. USB is the better fit for
+  this actual arrangement, same reasoning as the Receiver's camera
+  connection: I2S needs a short direct wiring run, USB tolerates the
+  longer cable a chest/strap-to-side-of-pack connection actually
+  requires.
 
 **STT/TTS engine (decided, docs/ROADMAP.md milestone 5.3):** Vosk
 (speech-to-text) + Piper (text-to-speech), both offline and CPU-only —
@@ -294,15 +295,33 @@ vision, per the user's own explicit description):
    pocket) is both a better weight-distribution point and physically
    protects the most expensive/critical hardware, versus putting it
    somewhere it'd take a direct hit or snag.
-2. **Receiver** — a separate, remote module bundling the camera,
-   speaker, and mic together as *one* physical unit (previously
-   described individually in the Camera/Voice sections above as
-   separately strap-mounted — now understood as one combined puck).
-   **Worn on the backpack strap or chest-mounted** (like an
-   action-camera chest harness) — deliberately close to the user's own
-   eyes/ears/mouth, not down at pack-body height, since its whole job is
-   sensing the user's environment and voice, not just being near the
-   compute.
+2. **Receiver** — a separate, remote module bundling the camera, mic,
+   and (2026-07-19: revised, see below) a headphone jack together as
+   *one* physical unit. **Worn on the backpack strap or chest-mounted**
+   (like an action-camera chest harness) — deliberately close to the
+   user's own eyes/ears/mouth, not down at pack-body height, since its
+   whole job is sensing the user's environment and voice, not just
+   being near the compute.
+
+**2026-07-19: audio output changed from an open speaker to a headphone
+jack, staying on the Receiver (not moved to the Compute Block).** Two
+real reasons: privacy/reliability (an open speaker broadcasts MIA's
+replies to everyone nearby and has to compete with wind/ambient noise
+outdoors; earbuds are private and heard reliably), and it actually
+solves the "no wearable 3-in-1 device" problem found while researching
+the camera+mic+speaker combo — a speaker needs its own driver/cone
+(what pushed every speaker-inclusive product to desk-puck scale, 3.5"+
+and 100g+), while a headphone jack just needs a jack + a small
+headphone-amp chip, a completely different size class that a real
+camera+mic+headphone-jack wearable combo can plausibly fit. Staying on
+the Receiver rather than the Compute Block specifically because the
+Receiver already needs a cable run back to the Compute Block (camera/
+mic/button/LED/vibration/display) and already sits close to the ears —
+putting the jack there means a few-inch cable to the ear and the long
+pack-to-chest run stays a single cable carrying everything digitally.
+Moving it to the Compute Block would have meant an entire second cable
+run the full pack-to-head distance, working against the whole reason
+the Receiver is chest-mounted in the first place.
 
 **2026-07-15: the Receiver's component list grew, and two previously-open
 placement questions are now decided** (both the user's own explicit
@@ -317,20 +336,29 @@ call):
   status readout that only needs to update every so often far better
   than a display that's continuously powered to stay lit. The trade-off
   is refresh speed (not a concern here) and no continuous video, which
-  this use case doesn't need anyway. Small Pi/Arduino-ecosystem e-paper
-  modules (1.5"–2.13" class, e.g. Waveshare's e-Paper HAT line) are the
-  right category to shop in — no specific part chosen yet.
+  this use case doesn't need anyway. **2026-07-19: specific part
+  chosen — a 2.13" monochrome Waveshare e-Paper module** (250×122,
+  SPI, well-supported CircuitPython/MicroPython drivers for the
+  Pico/RP2040). Monochrome over color: this only ever shows battery %/
+  GPS status text/icons, and color e-paper adds slower refresh and more
+  complex driving for no real benefit here. 2.13" over the smaller
+  1.54" class: meaningfully better at-a-glance readability worn at
+  chest height, worth the small size/weight increase.
 - **A recording-indicator LED** — lights while the camera/mic are
   actively capturing. Worth noting this isn't just a nice-to-have: a
   camera+mic worn on someone's body is exactly the kind of device where
   a visible "this is recording" signal matters for the people around
   the user too, not only the user themselves — keep it genuinely
   reliable (tied to actual capture state, not just "powered on") rather
-  than cosmetic.
-- **A vibration motor** on the Receiver for notifications — a small ERM
-  or LRA motor (phone/controller-class hardware), needs a simple driver
-  circuit and a PWM-capable signal to trigger it, not just a raw GPIO
-  on/off.
+  than cosmetic. Any basic 3mm/5mm LED driven off the Pico/RP2040 works
+  — no real part decision here, just wiring discipline.
+- **A vibration motor** on the Receiver for notifications.
+  **2026-07-19: decided — a simple ERM motor**, not LRA. LRA (phone-
+  quality, crisp/distinct pulses via a TI DRV2605L driver) was the
+  fancier option on the table, but ERM keeps this to one fewer part (no
+  separate haptic driver chip needed, just PWM or basic on/off through
+  a transistor) for a notification buzzer that doesn't need nuanced
+  distinct-feel patterns.
 
 **2026-07-19: decided — the Receiver gets its own small microcontroller,
 a Pi Pico/RP2040.** This component list had grown big enough to raise a
@@ -355,7 +383,7 @@ Compute Block.** They're physically separated by a real distance
 a short ribbon connector. A Pi-native CSI camera would normally be the
 first choice for image quality/latency, but CSI ribbon cables are short
 and fragile, a poor fit for a run of this length across a person's
-body. USB is more robust over distance and lets camera+mic+speaker
+body. USB is more robust over distance and lets camera+mic+headphone-jack
 *and* the Pico's own USB/serial link (button/LED/vibration/display)
 share a single cable/connector rather than a bundle of separate ones.
 Still open: the actual connector/cable itself (type, strain relief,
@@ -372,35 +400,52 @@ if the chosen battery/UPS HAT has a **standard USB-C PD charging
 input** — most portable/camping solar panels (commonly 20–30W foldable
 panels) output USB-C PD directly, so they can charge the same battery
 pack a wall charger would, no separate solar charge controller needed.
-This *adds* a second real requirement to the still-open Battery/UPS HAT
-choice below (documented I2C telemetry interface was the first) — now
-both matter: I2C for `core/power_manager.py` to report real
-voltage/current, and standard USB-C PD input so any common solar panel
-can charge it directly.
+This *added* a second real requirement to the Battery/UPS HAT choice
+(documented I2C telemetry interface was the first) — both needed to
+matter: I2C for `core/power_manager.py` to report real voltage/current,
+and standard USB-C PD input so any common solar panel can charge it
+directly.
+
+**2026-07-19: Battery/UPS HAT decided — Waveshare UPS HAT (E).**
+Verified via real current listings (including CNX Software's
+independent coverage, not just the vendor page) rather than assumed
+from memory, since Pi5-compatible UPS HATs are a newer, faster-moving
+category than this document's other hardware picks: real I2C fuel
+gauge (voltage/current/power/remaining capacity — exactly what
+`core/power_manager.py` needs), USB-C **PD3.0** input up to 40W (a
+genuine PD negotiation, not just a 5V-only USB-C port — satisfies the
+solar-charging requirement directly), and 4×21700 Li cells for 5V/6A
+output. The 4-cell 21700 format gives real headroom to grow capacity
+if the M9N/M10 GPS module's power draw strains the budget, matching
+the "double the battery" fallback already agreed to in the GPS section
+above — swapping in higher-capacity 21700 cells or simply keeping all
+4 populated is a direct, already-supported path to that, not a HAT
+swap. SunFounder's PiPower 5 (5V/5A, USB-C PD 45W, I2C via an onboard
+Cortex-M23 MCU) was a real close alternative, passed over only because
+its battery format/capacity wasn't as clearly documented in what was
+verified.
 
 ## Open questions to revisit as hardware is acquired
 
-- Exact camera/mic/speaker hardware for the Receiver module — ideally
-  one combined USB device rather than three separate ones, see
-  "Modular Backpack" above
-- Exact e-paper display module, recording LED, and vibration motor
-  parts for the Receiver — see "Modular Backpack" above
+- Exact camera+mic module and headphone-jack breakout for the Receiver
+  — architecture decided (camera+mic module, no speaker, a headphone
+  jack instead — see "Modular Backpack" above), exact parts still open.
+  A genuine combined camera+mic+headphone-jack device may now be
+  plausible at wearable scale (unlike the camera+mic+speaker combo
+  researched and rejected), worth a real search before falling back to
+  a small camera+mic module (e.g. Arducam's mini UVC line) plus a
+  separate small headphone-jack breakout.
 - The Compute Block ↔ Receiver cable/connector itself (type, strain
   relief, routing, weatherproofing) — real industrial design, not
-  software-resolvable. The link itself is decided (USB, carrying both
-  the Pico's button/LED/vibration/display traffic and camera/mic/
-  speaker), just not the physical connector/cable part.
+  software-resolvable. The link itself is decided (USB, carrying the
+  Pico's button/LED/vibration/display/headphone-audio traffic and
+  camera/mic), just not the physical connector/cable part.
 - GPS module choice for Navigation — see the GPS section above.
   Placement (Compute Block), chipset family (u-blox M9N/M10), and IMU
   pairing (yes, a separate chip, not an integrated M8U/F9R) are all
   decided; the exact GPS breakout board and exact IMU part are still open.
 - LoRa/SDR/radio hardware for Communications — defer until that phase,
   since protocol choice (Meshtastic vs. custom) affects the hardware pick
-- Battery/UPS HAT choice for the Compute Block — needs **both** a
-  documented I2C interface (real voltage/current telemetry, not just
-  presence) **and** a standard USB-C PD charging input (so a common
-  solar panel charger can charge it directly, per the 2026-07-15 solar
-  charging addition) — see "Modular Backpack" above
 - Compute Block enclosure — side-of-backpack mounting hardware, and
   whether it needs a dedicated weatherproof case given AI HAT+2 needs
   its own Active Cooler airflow (see "Core platform" above)
