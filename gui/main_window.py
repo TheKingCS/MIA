@@ -337,17 +337,16 @@ class MainWindow(QMainWindow):
         self._stack_scroll.setWidget(self._stack)
         body_layout.addWidget(self._stack_scroll, stretch=3)
 
-        # 2026-07-18: real user ask — no more "24/7 open assistant
-        # screen." The sidebar is still built eagerly (it needs to keep
-        # reacting to nav events/reflecting the active conversation
-        # exactly like before), but hidden by default; a hidden widget
-        # in a layout claims no space, so the stack area reclaims the
-        # sidebar's width until the floating orb below reveals it again.
+        # 2026-07-19: reversed the previous "no more 24/7 open assistant
+        # screen" pass (2026-07-18) — real user report, preferred the
+        # sidebar always visible like before that change. Visible by
+        # default again; the floating orb below still toggles it closed
+        # for anyone who wants to collapse it, it just no longer starts
+        # collapsed.
         self._character_panel: Optional[CharacterPanel] = None
         if self.context.config.get("gui.show_character_panel", True):
             self._character_panel = CharacterPanel(self.context)
             body_layout.addWidget(self._character_panel, stretch=1)
-            self._character_panel.hide()
 
             self._orb = FloatingOrbWidget(central)
             self._orb.clicked.connect(self._toggle_character_panel)
@@ -397,15 +396,12 @@ class MainWindow(QMainWindow):
             button.style().polish(button)
 
     def _update_corner_orb(self) -> None:
-        """2026-07-18 design handoff: the Dashboard/Home screen now has
-        its own big centered presence orb (gui/home_dashboard.py's
-        console) — the small corner-follow orb that reveals the
-        sidebar would be a redundant second orb concept there, so it
-        stays hidden while Home is the current screen and only tracks
-        the mouse everywhere else, per the user's own explicit call."""
-        if self._stack.currentWidget() is self._home_widget:
-            self._orb.hide()
-            return
+        """Tracks the mouse everywhere, including Home — the
+        2026-07-18 special-case that hid this on Home (to avoid
+        duplicating the Dashboard console's own big presence orb) no
+        longer applies now that Home is back to the original
+        widget-grid layout (2026-07-19 revert), which has no orb of its
+        own."""
         self._orb.update_position()
 
     def _build_header(self) -> QFrame:

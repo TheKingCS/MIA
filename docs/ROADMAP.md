@@ -5393,3 +5393,61 @@ not reproducible with any realistic press-hold duration, so treated as
 a synthetic-test artifact rather than a real bug, but worth knowing if
 a future automated test ever tries to simulate press/release without a
 real delay between them. 1439 pytest tests still pass.
+
+## Partial revert: sidebar Assistant chat + original widget cards restored, new header kept (2026-07-19)
+
+Real user report: "I liked how the dashboard looked before the second
+Claude design handoff with the AI assistant in the sidebar and the
+original button widgets. The new dashboard isn't looking right."
+Investigated via git history rather than guessing which past state was
+meant — `git log` showed two distinct design-reference-driven passes:
+"ForMIA" (`12cac62`/`dff015f`, 2026-07-15, gave the sidebar chat + the
+original Power/Mission/Current Project/Activity Log/Quick Bus/Real
+Estate/Kraken Agent/Net Worth widget cards) and the CCH.zip/MIAHome.png
+handoff starting at `5c092d6` (2026-07-18, floating-orb collapsible
+sidebar + the console/gauges dashboard rebuild + new nav tabs).
+Rendered the exact pre-second-handoff commit (`d98f0e0`) in an isolated
+git worktree to confirm this by screenshot before touching anything,
+then let the user choose the scope via `AskUserQuestion` rather than
+assuming "revert everything since 5c092d6" was correct: **a blend, not
+a full rollback** — bring back the sidebar chat and the original widget
+cards, but keep the current header (M.I.A. wordmark, nav tabs, search,
+avatar).
+
+`gui/home_dashboard.py` is now the pre-second-handoff widget-grid
+implementation (`core/dashboard_widgets.py`'s registry was untouched
+the whole time, confirmed via `git diff --stat` showing zero changes
+to it across the entire span — only how `home_dashboard.py` rendered
+it had changed), with the chat-bar/voice-button work from the last two
+sessions grafted back in on top (same `core.assistant_chat`/
+`core.chat_worker`/`core.push_to_talk_trigger` wiring, unchanged).
+Restored `gui/dashboard_customize_dialog.py`, deleted in the console
+rebuild (`1f553f9`) and never recreated — a real dependency the old
+dashboard needs. `gui/main_window.py`: removed the
+`self._character_panel.hide()` from the 2026-07-18 "no more 24/7 open
+assistant screen" pass (a real explicit ask at the time, now reversed
+by a real explicit ask the other way — both preserved here for
+context, not a mistake either time) — the floating orb still toggles
+it closed for anyone who wants to collapse it, it just no longer
+starts collapsed. Also fixed a real staleness bug this surfaced:
+`_update_corner_orb()`'s docstring/logic hid the small corner orb
+specifically on the Home screen to avoid duplicating the console's own
+big presence orb — since Home no longer has that console at all, this
+special-case was actively wrong now, not just unnecessary, and was
+removed.
+
+**A real regression found via screenshot, not assumed away**: with the
+sidebar back to permanently visible, it eats width from the main
+content column — the dashboard chat bar's own suggestion-chip row
+(redundant with the sidebar's identical chips) pushed the whole screen
+past its available width into an unwanted horizontal scrollbar.
+Removed that redundant chip row (and the now-dead
+`_on_suggestion_clicked()`/`suggested_prompts_for_module` import) —
+confirmed clean with a re-rendered screenshot at the same 1491×1027
+reference size.
+
+**Verified for real**: all 1439 pytest tests pass against the merged
+file; a real headless-Qt boot screenshot at 1491×1027 confirms the
+restored layout; a real interactive test confirmed the character panel
+starts visible and a full send-through-the-dashboard's-own-chat-bar
+round trip against the live Ollama server completes with no crash.
