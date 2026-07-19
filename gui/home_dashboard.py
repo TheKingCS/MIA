@@ -423,18 +423,26 @@ class HomeDashboard(QFrame):
         # *all* leftover vertical space in the console column — a huge,
         # nearly-empty grey box around a 150px orb that made the fixed-
         # width side panels/rail read as small and squished by
-        # comparison, even though their own pixel widths never actually
-        # changed. Fixed height instead of stretch=1.
-        # Real user report #2 (follow-up): "smaller from top to bottom
-        # but still stretches a bit far across... can be a bit taller
-        # but less wide" — taller than the first fix's 260px, and
-        # capped to a max width (instead of filling the full console
-        # column width) + centered, so it reads as a contained stage
-        # around the orb rather than a wide banner.
-        stage.setFixedHeight(300)
-        stage.setMaximumWidth(460)
+        # comparison. Fixed height instead of stretch=1.
+        # Real user report #2: "smaller from top to bottom but still
+        # stretches a bit far across... can be a bit taller but less
+        # wide" — taller, capped max-width + centered.
+        # Real user report #3 (this pass): "should be top to bottom and
+        # the text underneath, and the same less wide width across so
+        # the side menus don't look weird." Now a genuinely narrow,
+        # tall tile — a *fixed* width matching the side panels' own
+        # scale (240px, between the telemetry panel's 220 and the right
+        # rail's 230) instead of a wide centered box, with the
+        # last-message text moved *inside* the tile underneath the orb
+        # instead of sitting outside it as a separate widget. Height is
+        # deliberately left natural (not hardcoded) — sized to fit
+        # whatever's actually inside, so there's no risk of clipping
+        # the message text on a longer reply.
+        stage.setFixedWidth(240)
         stage_layout = QVBoxLayout(stage)
-        stage_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        stage_layout.setContentsMargins(14, 14, 14, 14)
+        stage_layout.setSpacing(10)
+        stage_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
         toggle_row = QHBoxLayout()
         toggle_row.addStretch()
@@ -446,23 +454,30 @@ class HomeDashboard(QFrame):
         toggle_row.addWidget(self._right_toggle_button)
         stage_layout.addLayout(toggle_row)
 
-        # 2026-07-18 follow-up: bigger (150 -> 190px), pulses more
-        # noticeably (pulse_amplitude 0.2 -> 0.4 — see
-        # gui/presence_widget.py's docstring; the sidebar/splash screen
-        # instances are untouched, still the original 0.2), and no more
-        # "Mia" text glyph overlaid on it once past the startup moment
-        # — the console's own title/last-message already say who this
-        # is, the glyph was redundant clutter on the orb itself.
-        self._presence = PresenceWidget(diameter=190, pulse_amplitude=0.4)
-        stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignCenter)
+        # 2026-07-18: "put MIA back somewhere under or above the orb,
+        # big bold and outlined, the same blue used throughout" — a
+        # separate labeled heading above the orb now, not text drawn
+        # inside the orb glyph itself (that was removed as redundant
+        # clutter in an earlier pass; this is a deliberately distinct,
+        # more prominent re-addition).
+        mia_label = QLabel("MIA")
+        mia_label.setObjectName("ConsoleOrbLabel")
+        stage_layout.addWidget(mia_label, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-        layout.addWidget(stage, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # 160px (down from 190) to comfortably fit this narrower 240px-
+        # wide tile with real margin either side; pulse_amplitude 0.4
+        # unchanged from the previous round.
+        self._presence = PresenceWidget(diameter=160, pulse_amplitude=0.4)
+        stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self._last_message_label = QLabel("")
         self._last_message_label.setObjectName("ConsoleLastMessage")
         self._last_message_label.setWordWrap(True)
         self._last_message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._last_message_label)
+        stage_layout.addWidget(self._last_message_label)
+
+        layout.addWidget(stage, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addStretch()
 
         layout.addStretch()
 

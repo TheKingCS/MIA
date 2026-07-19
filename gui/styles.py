@@ -935,6 +935,21 @@ QFrame#ConsoleOrbStage {
     border-radius: 14px;
 }
 
+/* 2026-07-18: "put MIA back... big bold and outlined, the same blue
+used throughout" — Qt's QSS has no real text-stroke property, so
+"outlined" is a bordered badge around big bold text (the same
+bordered-pill language MissionDifficultyTag/MissionActiveCountPill
+already use elsewhere), not a literal hollow-letter stroke effect. */
+QLabel#ConsoleOrbLabel {
+    font-size: 24px;
+    font-weight: 800;
+    color: #38d9c9;
+    border: 2px solid #38d9c9;
+    border-radius: 8px;
+    padding: 2px 18px;
+    letter-spacing: 2px;
+}
+
 QLabel#ConsoleLastMessage {
     font-size: 13px;
     color: #c3ccd9;

@@ -30,7 +30,11 @@ your name's first letter). The active tab is underlined in teal.
 Tapping the search bar (or Ctrl+K on a keyboard) opens a quick command
 palette that can jump straight to a module or switch profiles. Tapping
 your avatar opens a menu with Notifications (shows a count when
-there's something unread), a quick volume slider, and Settings.
+there's something unread), a quick volume slider, Settings, and
+"Always show login screen" — if you're the only profile on the device
+and haven't set a password, MIA normally skips straight to Home on
+launch; turn this on if you'd rather still see a "Welcome back,
+continue?" prompt every time.
 
 ## The Assistant, away from Home
 

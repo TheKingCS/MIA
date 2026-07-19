@@ -3026,9 +3026,22 @@ class MIAApplication:
             only_profile = profiles.list_profiles()[0]
             profiles.set_active_profile(only_profile.profile_id)
 
+        # 2026-07-18: real ask — a single, password-less profile should
+        # skip straight to the main window (already true below), *and*
+        # that should be an explicit, toggleable setting
+        # (`profile.always_show_login_screen`, default False — matches
+        # the behavior every existing single-profile-no-password user
+        # already gets today, so this formalizes it rather than
+        # changing it) rather than just an unconditional code path with
+        # no way to opt back into a confirmation screen. Toggled from
+        # the profile-avatar menu (gui/main_window.py).
+        always_show_login = self.context.config.get("profile.always_show_login_screen", False)
         active_profile = profiles.get_active_profile()
-        if active_profile is not None and active_profile.has_password:
-            log.info("Single profile is password-protected — showing lock screen.")
+        if active_profile is not None and (active_profile.has_password or always_show_login):
+            log.info(
+                "Showing the login screen (%s).",
+                "password-protected" if active_profile.has_password else "always_show_login_screen is on",
+            )
             self.lock_screen = LockScreen(self.context, active_profile)
             self.lock_screen.unlocked.connect(self._on_lock_screen_unlocked)
             self.splash.close()

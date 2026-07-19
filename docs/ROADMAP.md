@@ -5083,3 +5083,44 @@ Dashboard's instance specifically could pulse more noticeably
 weren't part of this report.
 
 1439 pytest tests passing, verified via a headless-Qt screenshot.
+
+## Console tile restructure + toggleable login screen (2026-07-18)
+
+Three more follow-ups:
+
+1. **"The tile with the assistant should be top to bottom and the text
+   underneath, and the same less wide width across so the side menus
+   don't look weird."** The orb stage is now a genuinely narrow,
+   naturally-tall tile (`setFixedWidth(240)`, no hardcoded height —
+   sized to fit whatever's inside, so a long reply can never clip) —
+   240px sits between the telemetry panel's 220 and the right rail's
+   230, so the console no longer reads as an inconsistently-wide
+   centered box next to the side panels. The last-message text moved
+   *inside* the tile, underneath the orb, instead of sitting outside
+   it as a separate widget.
+2. **"Put MIA back somewhere under or above the orb, big bold and
+   outlined, the same blue used throughout."** A new `ConsoleOrbLabel`
+   — big bold teal text in a bordered box (Qt's QSS has no real text-
+   stroke property, so "outlined" here is the same bordered-badge
+   language `MissionDifficultyTag`/`MissionActiveCountPill` already
+   use) — sits above the orb inside the tile. Distinct from the
+   glyph-inside-the-orb text an earlier pass removed as redundant
+   clutter; this is a deliberate, more prominent re-addition. Orb
+   itself sized down slightly (190 → 160px) to fit the narrower tile
+   with real margin.
+3. **"If there's only one user profile and no password it should skip
+   the login screen, and that should be a setting toggleable in the
+   [profile avatar] settings menu."** This behavior already existed
+   unconditionally (`gui/lock_screen.py`'s own docstring: "shown at
+   boot only... exactly one profile AND it has a password set") — this
+   formalizes it into an explicit, opt-out-able setting
+   (`profile.always_show_login_screen`, default False, toggled from
+   the profile-avatar menu) rather than just an unconditional code
+   path with no way back to a confirmation screen. `LockScreen` now
+   handles a password-less profile gracefully when the setting is on:
+   no password field (there's nothing to verify), a plain "Welcome
+   back, continue?" prompt with a `Continue` button instead.
+
+1439 pytest tests passing, verified via a headless-Qt screenshot (tile)
+and real-click smoke tests (`LockScreen`'s two modes, the menu toggle's
+config round-trip through a fresh reload from disk).

@@ -215,6 +215,10 @@ class MainWindow(QMainWindow):
         dialog.exec()
         self._update_notification_badge()
 
+    def _on_always_show_login_toggled(self, checked: bool) -> None:
+        self.context.config.set("profile.always_show_login_screen", checked)
+        self.context.config.save()
+
     def closeEvent(self, event) -> None:
         """
         Unsubscribe from the event bus before this window is destroyed.
@@ -489,6 +493,17 @@ class MainWindow(QMainWindow):
         self._profile_menu.addAction(volume_action)
         self._profile_menu.addSeparator()
         self._profile_menu.addAction("\U00002699 Settings", lambda: self.open_module("settings"))
+        self._profile_menu.addSeparator()
+        # 2026-07-18: real ask — a single, password-less profile already
+        # skips straight to the main window at boot (core/application.py's
+        # _finish_boot()); this makes that behavior an explicit,
+        # toggleable setting instead of just an unconditional code path,
+        # for anyone who'd rather see a "Welcome back, continue?" prompt
+        # every launch even without a password.
+        self._always_show_login_action = self._profile_menu.addAction("Always show login screen")
+        self._always_show_login_action.setCheckable(True)
+        self._always_show_login_action.setChecked(self.context.config.get("profile.always_show_login_screen", False))
+        self._always_show_login_action.toggled.connect(self._on_always_show_login_toggled)
         self._profile_menu.aboutToShow.connect(self._volume_quick_control.refresh)
         self._profile_button.setMenu(self._profile_menu)
 
