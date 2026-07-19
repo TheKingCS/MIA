@@ -4945,8 +4945,85 @@ screenshots. 1430 pytest tests passing (10 new — Qt widget behavior
 itself verified via the ad hoc smoke test, not a permanent one, same
 treatment as this project's other pure-UI changes).
 
-**Still remaining from the same design handoff**: the Dashboard console
-redesign (telemetry gauges, the big centered animated orb, collapsible
-right rail, bottom chat bar) and the new top nav (tabs replacing the
-just-shipped search-bar+avatar header) — a separate, similarly-sized
-piece of work, not started yet.
+## Dashboard console redesign + new top nav — final phase of the CCH.zip handoff (2026-07-18)
+
+Closes out the design handoff: `gui/home_dashboard.py` is a full
+rewrite (not a restyle) replacing the old customizable-widget-grid Home
+screen entirely, and `gui/main_window.py`'s header gained a tab row.
+
+**The console**: a left telemetry panel (Processing Load gauge, Power/
+Uptime stats, a tip card), a center console (state label, the big
+animated `PresenceWidget` orb — gained a new "speaking" state — the
+latest reply as a message bubble), a narrow CPU/NET/SYS gauge rail, a
+collapsible right rail (Assistant Profile, Monitoring, Activity Log,
+Quick Toggles), and a bottom chat bar. New `gui/widgets/circular_gauge.py`
+(plain `QPainter`, matching this app's established technique for
+anything circular/animated — no SVG dependency) and
+`core/dashboard_telemetry.py` (pure network-rate/uptime-formatting
+math, since `core.system_health`'s network counters are cumulative
+since-boot totals, not a rate).
+
+**This is the third chat surface** (alongside the full Assistant module
+and the sidebar) — reuses the exact same `core.assistant_chat`/
+`ChatWorker`/`TTSWorker` logic, so all three can never drift apart. The
+startup briefing is now the console's first message bubble instead of
+a separate spoken-once banner — same underlying
+`build_startup_briefing()` call as before.
+
+**The Assistant Profile card is honest, not a literal mockup port**:
+the design's "Mode" selector and "Wake word" row don't correspond to
+any real MIA feature (no adaptive-mode concept, no wake-word
+detection) — rather than build non-functional UI for either, those
+rows show real facts instead (configured TTS voice, the always-on
+personality trait, "Push-to-talk" as the honest name for the real
+voice-input mechanism). Matches this project's own established stance
+against fabricating UI for features that don't exist.
+
+**New top nav**: "MIA" wordmark + tabs (Home/Missions/Monitoring/App
+Center, mapped onto the existing Diagnostics module and Apps grid) —
+Back, the search bar, and the profile avatar menu (all shipped last
+round) stay, since they're real, tested, valuable features the
+design's own shallower nav didn't need to account for. The active tab
+is derived from `self._stack.currentWidget()` on every navigation call
+(`_sync_nav_tabs()`), not tracked separately, so it can't drift out of
+sync with `go_back()` landing somewhere unexpected. Per the user's own
+call: the small corner-follow orb (from the earlier collapsible-sidebar
+pass) now hides itself while Home is the current screen, since the
+console's own big orb already serves that role there — everywhere
+else, it works exactly as before.
+
+**Found and fixed two real bugs via headless-Qt screenshots**:
+1. Reconstructing `gui/home_dashboard.py`'s pure formatting functions
+   from memory instead of copying them verbatim from the file being
+   replaced broke 21 existing tests (wrong clock format, wrong
+   real-estate/kraken/net-worth field names, wrong power-line wording)
+   — caught immediately by the test suite, fixed by pulling the exact
+   original implementations from git history instead of re-deriving
+   them.
+2. The Power/Uptime stat tiles reused a 19px bold font sized for a
+   different, wider card elsewhere — "59h 18m" clipped to "59h 18n" in
+   the tile's ~100px half-column width, and forced the whole fixed-
+   width side panel wider than intended, showing an unwanted horizontal
+   scrollbar. Fixed with a dedicated smaller font
+   (`DashboardStatValue`) plus word-wrap, and a defensive
+   `ScrollBarAlwaysOff` policy on both side panels regardless.
+
+**Caught a real data-pollution incident while smoke-testing nav
+clicks**: forgot to isolate `ActivityLogManager`'s data directory in an
+ad hoc script — clicking the Missions/Monitoring tabs wrote 3 real
+`module.opened` entries into the actual `data/activity_log.json`.
+Caught by inspecting the file's actual content (not just trusting the
+test's pass/fail), identified by timestamp, removed.
+
+Also deleted `gui/dashboard_customize_dialog.py` (zero callers left
+once the old widget-grid Home screen was replaced) and updated
+`docs/user_help/getting_started.md`/`home_and_power.md` for the new
+layout. `core/dashboard_widgets.py`'s registry service itself is left
+in place, unused — same "leave it, don't tear out the config-state
+migration too" reasoning as the Mission Log phase's own notes.
+
+1439 pytest tests passing (no new committed ones — this phase is
+almost entirely Qt widget/layout/interaction behavior, verified via
+headless smoke-test screenshots covering the console, both rail-toggle
+states, and full nav-tab click-through instead). This closes out the
+entire `CCH.zip` Dashboard+Missions design handoff.

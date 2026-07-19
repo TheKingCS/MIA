@@ -21,6 +21,7 @@ reads with no persistence, so a manager class would be pure ceremony.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import Optional
 
@@ -73,6 +74,15 @@ def read_system_health(disk_path: str = "/") -> SystemHealthSnapshot:
         network_sent_mb=net.bytes_sent / _BYTES_PER_MB,
         network_recv_mb=net.bytes_recv / _BYTES_PER_MB,
     )
+
+
+def read_uptime_seconds() -> float:
+    """Seconds since boot — 2026-07-18 design handoff (CCH.zip's Dashboard
+    console "Uptime" stat tile). Kept alongside read_system_health()
+    rather than in gui/home_dashboard.py directly, same "all psutil
+    calls live in core/system_health.py" convention that module's
+    docstring already establishes."""
+    return time.time() - psutil.boot_time()
 
 
 def _read_cpu_temperature() -> Optional[float]:

@@ -1,47 +1,53 @@
 # Getting Started with MIA
 
-## The Home screen
+## The Home screen — MIA's console
 
-When you log in, you land on the Home screen — a quick glance at your
-system: the current time and date, your device's power status, and
-your current active Mission and its progress. There's a big
-"Open Apps" button at the bottom that takes you to every installed
-module.
+When you log in, you land on Home — a console-style screen, not just a
+status page. A big glowing orb in the center shows Mia herself, and her
+current state (Idle, Listening, Thinking, Speaking). Around her: a
+Processing Load gauge and Power/Uptime stats on the left, CPU/Network/
+System gauges on a narrow rail to the right of the console, and a
+collapsible right-hand rail (tap the ☰ button on the console) with your
+Assistant Profile (voice, personality, input method), live Monitoring
+tiles (Power/Volume/Network/RAM), a recent Activity Log, and Quick
+Toggles for Voice and Alerts. A chat bar along the bottom lets you talk
+to Mia directly from Home — type, or tap a suggested prompt — no need
+to open a separate Assistant screen for that.
 
-## The Apps screen
+## The App Center
 
-Tap "Apps" in the header bar (or the "Open Apps" button on Home) to see
-every module on the device — Notes, Expeditions, Missions, Navigation,
-Field Kit, and more, each as its own card with an icon, name, and short
-description. Tap a card to open that module. Tap "Home" in the header
-to come back to the Home screen, or "Back" to return to whatever you
-were just looking at.
+Tap "App Center" in the header to see every module on the device —
+Notes, Expeditions, Missions, Navigation, Field Kit, and more, each as
+its own card with an icon, name, and short description. Tap a card to
+open that module. Tap "Home" in the header to come back to the
+console, or "Back" to return to whatever you were just looking at.
 
 ## Getting around
 
-The header bar at the top always has: Back, Home, Apps, a search bar,
-and your profile avatar (a circle with your name's first letter).
+The header bar has: the MIA wordmark, tabs (Home, Missions, Monitoring,
+App Center), Back, a search bar, and your profile avatar (a circle with
+your name's first letter). The active tab is underlined in teal.
 Tapping the search bar (or Ctrl+K on a keyboard) opens a quick command
 palette that can jump straight to a module or switch profiles. Tapping
 your avatar opens a menu with Notifications (shows a count when
 there's something unread), a quick volume slider, and Settings.
 
-## The Assistant
+## The Assistant, away from Home
 
-A small glowing blue orb appears near the bottom-right corner of the
-screen whenever your mouse (or finger, on touch) gets close to that
-corner — tap it to pull out the Assistant sidebar, and tap it again (or
-tap the orb again) to tuck it back away. This replaces keeping a
-separate Assistant screen open all the time. The sidebar starts fresh
-each time you launch MIA — tap "History" inside it to reopen an
-older conversation. It has its own push-to-talk and Stop button, so
-voice works there too, not just in the full-screen version.
+Away from Home, a small glowing blue orb appears near the bottom-right
+corner of the screen whenever your mouse (or finger, on touch) gets
+close to that corner — tap it to pull out a compact Assistant sidebar
+without leaving whatever module you're in, and tap it again to tuck it
+back away. The sidebar starts fresh each time you launch MIA — tap
+"History" inside it to reopen an older conversation. It has its own
+push-to-talk and Stop button, so voice works there too, not just on
+Home or in the full-screen version.
 
-It can answer questions and, for a lot of things, actually do them for
+Mia can answer questions and, for a lot of things, actually do them for
 you: add a waypoint, log mission progress, check your battery, and
 more. See the "Assistant" help section for a full rundown of what to
-ask it. There's also a full-screen Assistant module (in Apps) if you
-want a bigger view for a longer conversation.
+ask her. There's also a full-screen Assistant module (in App Center) if
+you want a bigger view for a longer conversation.
 
 ## Themes
 

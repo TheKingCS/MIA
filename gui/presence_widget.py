@@ -53,6 +53,14 @@ _STATE_CONFIG: dict[str, dict] = {
     "thinking": {"color": "#a78bfa", "pulse_step": 0.14, "rotating": True},
     "loading": {"color": "#e0af68", "pulse_step": 0.12, "rotating": True},
     "notification": {"color": "#e0af68", "pulse_step": 0.35, "rotating": False},
+    # 2026-07-18 design handoff (CCH.zip's Dashboard console orb) — a
+    # distinct state for "TTS is actively playing a reply back," which
+    # nothing needed before this (the sidebar/full-module chat surfaces
+    # only ever showed "thinking" while waiting on the LLM, never a
+    # separate state for the speaking-it-aloud phase). Reuses the
+    # design's own exact teal (matches its idle color too, deliberately
+    # — "idle" and "speaking" are both calm states, just one is active).
+    "speaking": {"color": "#38d9c9", "pulse_step": 0.16, "rotating": True},
 }
 _DEFAULT_STATE = "idle"
 _LABEL_COLOR = QColor("#0d1116")

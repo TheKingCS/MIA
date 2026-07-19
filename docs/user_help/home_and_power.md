@@ -1,17 +1,20 @@
 # Home Screen, Power, and Volume
 
-## The Home screen's cards
+## The Home console's live readouts
 
-Home shows two live cards: Power (battery percentage and whether you're
-plugged in) and Mission (your current active Mission and its objective
-progress). Each updates automatically every few seconds.
+Home's left panel shows your Power percentage and plugged-in state plus
+Uptime since boot; the Monitoring card in the collapsible right rail
+adds Volume, Network, and RAM tiles alongside Power. All of it updates
+automatically every few seconds. Your current active Mission and its
+progress live in the Mission Log (the Missions tab) now, with a real
+Level/XP footer, instead of a card on Home.
 
 ## Power
 
-The Power module (and the Home screen's Power card) show battery
-percentage, plugged-in status, and estimated time remaining when
-running on battery. You'll get a low-battery notification automatically
-if it drops below the configured threshold while unplugged.
+The Power module (and Home's own Power stat/Monitoring tile) show
+battery percentage and plugged-in status. You'll get a low-battery
+notification automatically if it drops below the configured threshold
+while unplugged.
 
 ## Volume
 

@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
 
         self._wire_module_browser()
         self._build_ui()
+        self._sync_nav_tabs()
         self._setup_kiosk_exit_shortcut()
         self._setup_easter_egg_shortcut()
         self._setup_search_shortcut()
@@ -304,7 +305,6 @@ class MainWindow(QMainWindow):
         # currentWidget() — the post-login landing screen — with no
         # extra setCurrentWidget() call needed here.
         self._home_widget = HomeDashboard(self.context)
-        self._home_widget.open_apps_requested.connect(self.show_main_menu)
         self._stack.addWidget(self._home_widget)
         self._menu_widget = self._build_menu()
         self._stack.addWidget(self._menu_widget)
@@ -348,7 +348,7 @@ class MainWindow(QMainWindow):
             self._orb = FloatingOrbWidget(central)
             self._orb.clicked.connect(self._toggle_character_panel)
             self._orb_timer = QTimer(self)
-            self._orb_timer.timeout.connect(self._orb.update_position)
+            self._orb_timer.timeout.connect(self._update_corner_orb)
             self._orb_timer.start(50)
 
         root_layout.addWidget(body)
@@ -357,6 +357,52 @@ class MainWindow(QMainWindow):
         if self._character_panel is None:
             return
         self._character_panel.setVisible(not self._character_panel.isVisible())
+
+    def _on_nav_tab_clicked(self, tab_id: str) -> None:
+        if tab_id == "home":
+            self.show_home()
+        elif tab_id == "apps":
+            self.show_main_menu()
+        else:
+            self.open_module(tab_id)
+
+    def _sync_nav_tabs(self) -> None:
+        """Highlights whichever nav tab matches the currently-shown
+        screen, derived from `self._stack.currentWidget()` rather than
+        tracked separately — a widget can only ever be "current" one
+        way, so there's no separate state to let drift out of sync.
+        Landing on some other module (not one of the 4 tabs) or a
+        history-restored widget via go_back() just clears every tab's
+        active state, same as the design's own tabs having no
+        "unmapped screen" concept."""
+        current = self._stack.currentWidget()
+        active_tab_id = None
+        if current is self._home_widget:
+            active_tab_id = "home"
+        elif current is self._menu_widget:
+            active_tab_id = "apps"
+        else:
+            for tab_id in ("missions", "diagnostics"):
+                if self._module_widgets.get(tab_id) is current:
+                    active_tab_id = tab_id
+                    break
+
+        for tab_id, button in self._nav_tabs.items():
+            button.setProperty("active", tab_id == active_tab_id)
+            button.style().unpolish(button)
+            button.style().polish(button)
+
+    def _update_corner_orb(self) -> None:
+        """2026-07-18 design handoff: the Dashboard/Home screen now has
+        its own big centered presence orb (gui/home_dashboard.py's
+        console) — the small corner-follow orb that reveals the
+        sidebar would be a redundant second orb concept there, so it
+        stays hidden while Home is the current screen and only tracks
+        the mouse everywhere else, per the user's own explicit call."""
+        if self._stack.currentWidget() is self._home_widget:
+            self._orb.hide()
+            return
+        self._orb.update_position()
 
     def _build_header(self) -> QFrame:
         header = QFrame()
@@ -367,21 +413,30 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(24, 0, 24, 0)
         layout.setSpacing(16)
 
-        title_column = QVBoxLayout()
-        title_column.setSpacing(0)
-
-        title = QLabel("MIA")
-        title.setObjectName("TitleLabel")
-        title_column.addWidget(title)
-
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         user_name = active_profile.name if active_profile else ""
-        greeting_text = f"Welcome back, {user_name}" if user_name else "Field System Online"
-        greeting = QLabel(greeting_text)
-        greeting.setObjectName("SubtitleLabel")
-        title_column.addWidget(greeting)
 
-        layout.addLayout(title_column)
+        # 2026-07-18 design handoff (CCH.zip): "MIA" wordmark + a tab
+        # row (Home/Missions/Monitoring/App Center), replacing the
+        # separate Home/Apps text buttons \u2014 Back stays (real navigation
+        # depth this app has that the design's own shallower nav
+        # doesn't need to account for). Tabs map onto real screens:
+        # "Monitoring" -> the existing Diagnostics module (same data),
+        # "App Center" -> the existing Apps grid.
+        wordmark = QLabel("MIA")
+        wordmark.setObjectName("NavWordmark")
+        layout.addWidget(wordmark)
+
+        self._nav_tabs: dict[str, QPushButton] = {}
+        for tab_id, label in (
+            ("home", "Home"), ("missions", "Missions"), ("diagnostics", "Monitoring"), ("apps", "App Center")
+        ):
+            tab_button = QPushButton(label)
+            tab_button.setObjectName("NavTab")
+            tab_button.clicked.connect(lambda _checked=False, t=tab_id: self._on_nav_tab_clicked(t))
+            layout.addWidget(tab_button)
+            self._nav_tabs[tab_id] = tab_button
+
         layout.addStretch()
 
         # 2026-07-14 aesthetic pass (docs/ROADMAP.md): every header
@@ -394,22 +449,7 @@ class MainWindow(QMainWindow):
         self._back_button.setObjectName("HeaderButton")
         self._back_button.clicked.connect(self.go_back)
         self._back_button.setEnabled(False)
-
-        self._home_button = QPushButton("\U0001F3E0 Home")
-        self._home_button.setObjectName("HeaderButton")
-        self._home_button.clicked.connect(self.show_home)
-
-        # "Apps" \u2014 2026-07-14 aesthetic pass part 3: the module grid
-        # itself (_build_menu()) moved out of being the landing screen
-        # into its own destination, separate from the new Home
-        # dashboard above. Still calls the pre-existing show_main_menu()
-        # (unrenamed \u2014 it already meant exactly "show the module grid,"
-        # just under a name that predates Home existing) so its
-        # published "menu.shown" event and gui/character_panel.py's
-        # existing reaction to it both keep working unchanged.
-        self._apps_button = QPushButton("\u25A6 Apps")
-        self._apps_button.setObjectName("HeaderButton")
-        self._apps_button.clicked.connect(self.show_main_menu)
+        layout.addWidget(self._back_button)
 
         # 2026-07-18: a real search *bar* (QLineEdit chrome), not a
         # button labeled "Search" — read-only so it can't half-pretend
@@ -452,9 +492,6 @@ class MainWindow(QMainWindow):
         self._profile_menu.aboutToShow.connect(self._volume_quick_control.refresh)
         self._profile_button.setMenu(self._profile_menu)
 
-        layout.addWidget(self._back_button)
-        layout.addWidget(self._home_button)
-        layout.addWidget(self._apps_button)
         layout.addWidget(self._search_bar)
         layout.addWidget(self._profile_button)
 
@@ -525,6 +562,7 @@ class MainWindow(QMainWindow):
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._home_widget)
         self._refresh_stack_geometry()
+        self._sync_nav_tabs()
         self.statusBar().showMessage("MIA core online.")
         self.context.events.publish("home.shown")
 
@@ -537,6 +575,7 @@ class MainWindow(QMainWindow):
         self._back_button.setEnabled(False)
         self._stack.setCurrentWidget(self._menu_widget)
         self._refresh_stack_geometry()
+        self._sync_nav_tabs()
         self.statusBar().showMessage("MIA core online.")
         self.context.events.publish("menu.shown")
 
@@ -547,6 +586,7 @@ class MainWindow(QMainWindow):
         previous_widget = self._history.pop()
         self._stack.setCurrentWidget(previous_widget)
         self._refresh_stack_geometry()
+        self._sync_nav_tabs()
         self._back_button.setEnabled(bool(self._history))
         self.statusBar().showMessage("MIA core online." if previous_widget is self._menu_widget else "Viewing previous screen")
         self._publish_navigation_event_for_widget(previous_widget)
@@ -581,6 +621,7 @@ class MainWindow(QMainWindow):
             self._back_button.setEnabled(True)
         self._stack.setCurrentWidget(widget)
         self._refresh_stack_geometry()
+        self._sync_nav_tabs()
 
     def _refresh_stack_geometry(self) -> None:
         """

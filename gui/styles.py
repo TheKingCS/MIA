@@ -89,6 +89,40 @@ QFrame#HeaderBar {
     border-bottom: 1px solid #1b222e;
 }
 
+/* 2026-07-18 design handoff (CCH.zip) — the header's new wordmark +
+tab row, replacing the old title/greeting column and separate Home/Apps
+buttons. Tabs use the exact same active-state convention as every other
+dynamic-property accent in this theme (hasUnread, selected, checked,
+...): a 2px teal bottom border when active, transparent otherwise, no
+second object name needed. */
+QLabel#NavWordmark {
+    font-family: "Inter", "Segoe UI", sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0d9488;
+    letter-spacing: 0.5px;
+}
+
+QFrame#HeaderBar QPushButton#NavTab {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0px;
+    padding: 6px 4px;
+    color: #7c8798;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QFrame#HeaderBar QPushButton#NavTab:hover {
+    color: #c3ccd9;
+}
+
+QFrame#HeaderBar QPushButton#NavTab[active="true"] {
+    color: #e7ecf3;
+    border-bottom: 2px solid #38d9c9;
+}
+
 QFrame#HeaderBar QPushButton#HeaderButton {
     background-color: #111722;
     border: 1px solid #1b222e;
@@ -838,5 +872,73 @@ QLabel#ObjectiveChecklistText {
 QLabel#ObjectiveChecklistTextDone {
     font-size: 13px;
     color: #5b6a80;
+}
+
+/* 2026-07-18 design handoff (CCH.zip) — the redesigned Home dashboard
+console (gui/home_dashboard.py), replacing the old customizable-widget
+grid entirely. Same token palette as the Mission Log redesign above. */
+QScrollArea#DashboardTelemetryPanel, QWidget#DashboardTelemetryPanel {
+    background-color: #0c1017;
+    border-right: 1px solid #1b222e;
+}
+
+/* Smaller than MissionDetailTitle's 19px — a real bug found via a
+headless-Qt screenshot: that font clipped "59h 18m" in this tile's
+~100px half-column width, which forced the whole side panel wider than
+its fixed column width, showing an unwanted horizontal scrollbar. */
+QLabel#DashboardStatValue {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e7ecf3;
+}
+
+QLabel#ConsoleTitle {
+    font-size: 20px;
+    font-weight: 800;
+    color: #38d9c9;
+    letter-spacing: 1px;
+}
+
+QLabel#ConsoleStateLabel {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e7ecf3;
+}
+
+QFrame#ConsoleOrbStage {
+    background-color: #101722;
+    border: 1px solid #1b222e;
+    border-radius: 14px;
+}
+
+QLabel#ConsoleLastMessage {
+    font-size: 13px;
+    color: #c3ccd9;
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+QLabel#ConsoleInfoValue {
+    font-size: 12px;
+    color: #7c8798;
+}
+
+QFrame#DashboardChatBar {
+    background-color: #0c1017;
+    border-top: 1px solid #1b222e;
+}
+
+QFrame#MonitorTile {
+    background-color: #131b26;
+    border: 1px solid #1b222e;
+    border-radius: 7px;
+}
+
+QLabel#MonitorTileValue {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e7ecf3;
 }
 """

@@ -17,7 +17,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import core.system_health as system_health
-from core.system_health import SystemHealthSnapshot, format_system_health, read_system_health
+from core.system_health import SystemHealthSnapshot, format_system_health, read_system_health, read_uptime_seconds
 
 
 def _snapshot(**overrides) -> SystemHealthSnapshot:
@@ -102,3 +102,9 @@ def test_read_cpu_temperature_returns_none_when_not_implemented(monkeypatch):
 
     monkeypatch.setattr(system_health.psutil, "sensors_temperatures", _raise)
     assert system_health._read_cpu_temperature() is None
+
+
+def test_read_uptime_seconds(monkeypatch):
+    monkeypatch.setattr(system_health.psutil, "boot_time", lambda: 1000.0)
+    monkeypatch.setattr(system_health.time, "time", lambda: 4600.0)
+    assert read_uptime_seconds() == 3600.0

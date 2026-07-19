@@ -2,157 +2,126 @@
 gui.home_dashboard
 ====================
 
-The screen shown immediately after login — a real "home screen," not
-just the module grid. 2026-07-14 aesthetic pass, part 3 (docs/ROADMAP.md):
-the user's own framing was "after logging in the menu should display a
-dashboard" with system power, the current mission, the time, and volume
-control — the module grid itself moves to a separate "Apps" screen
-(`gui/main_window.py`'s existing `_build_menu()`, now reached via its
-own header button rather than being the landing view).
+The screen shown immediately after login — rebuilt 2026-07-18 against
+a design handoff (CCH.zip's Dashboard.dc.html), a full replacement of
+the previous customizable-widget-grid Home screen, not a restyle. The
+new layout is a "console": a left telemetry panel (Processing Load
+gauge, Power/Uptime, a tip card), a center console (state label, the
+big animated presence orb, the last spoken reply), a narrow side gauge
+rail (CPU/NET/SYS), a collapsible right rail (Assistant Profile,
+Monitoring, Activity Log, Quick Toggles), and a bottom chat bar — MIA
+talks to you directly on Home now, instead of needing a separate
+Assistant screen or the sidebar for that.
 
-Deliberately not `modules/dashboard/module.py` (the existing "recent
-activity/missions/memories/events/projects/tasks" aggregation page,
-reachable from Apps like any other module) — that page is a detailed
-scrollable log, this one is a glanceable, always-visible home screen
-with a handful of live-updating cards. The two are complementary, not
-duplicates.
+**This is the third chat surface in this codebase** (alongside
+`modules/assistant/module.py`'s full screen and `gui/character_panel.py`'s
+sidebar) — reuses the exact same shared logic
+(`core.assistant_chat.build_chat_request()`/`split_safe_tool_calls()`,
+`core.chat_worker.ChatWorker`, `core.tts_worker.TTSWorker`) those two
+already do, so all three can never silently drift apart in behavior.
+The startup briefing (previously a separate spoken-once label) is now
+this console's very first `lastMessage` — same
+`core.startup_briefing.build_startup_briefing()` call as before, just
+populating the console's own message bubble instead of a dedicated
+banner widget.
 
-**2026-07-15: Startup Dashboard Briefing** (`docs/VISION.md`'s
-companion-philosophy update — "greet the user with an intelligent
-summary instead of simply opening the dashboard"). A short greeting
-banner is built once per `HomeDashboard` construction (i.e. once per
-app launch / login, not on the 5s data-refresh timer — this is meant to
-read as "welcome back," not a live ticker) via
-`core/startup_briefing.py`'s pure template functions, summarizing
-active missions, today's calendar events, unread notifications, active
-projects, and the most recent Memory. **This will need to grow** as
-more of the companion-philosophy vision ships (weather, workout
-recommendations, financial updates, smart home status are all named in
-the vision but have no real module yet) — `_build_briefing_text()`
-below is the one place to extend with new `context.*` sources as they
-land, and `core.startup_briefing.build_stat_highlights()` is written to
-take plain counts precisely so new sources slot in without restructuring
-it.
+**Telemetry**: Processing Load and the CPU side gauge both read
+`core.system_health.read_system_health()`'s `cpu_percent` (the design's
+own mockup shows these as two separate gauges too — this isn't
+redundant, just two different visual placements of the same real
+number). SYS reads `memory_percent`. NET needs an actual *rate*, not
+the cumulative since-boot totals `SystemHealthSnapshot` carries — this
+class holds the previous reading + timestamp itself and calls
+`core.dashboard_telemetry.compute_network_mbps()` on every 5s refresh
+tick, capped visually at `_NET_GAUGE_CEILING_MBPS` (an assumed display
+ceiling — the raw Mbps number is still shown as text, only the ring's
+fill fraction is capped).
 
-**2026-07-15: the briefing is now spoken, not just displayed** — at the
-user's explicit request ("I want this startup to be a spoken thing"),
-`_speak_briefing()` runs the greeting through `core/tts_worker.py`
-(same fire-and-forget QThread pattern `modules/assistant/module.py`
-already uses for spoken replies) once, right after construction.
-Degrades silently if Voice/TTS isn't available (no model fetched, no
-PortAudio) — same graceful-degradation stance as everything else
-Voice-adjacent in this project. Which voice speaks is chosen in
-Settings (`modules/settings/module.py`'s Voice dropdown, backed by
-`core/voice_catalog.py`'s curated multi-voice selection).
+**Right rail's "Assistant Profile" card is honest, not a literal port
+of the mockup**: the design shows a "Mode" selector and a "Wake word"
+row neither of which correspond to any real MIA feature (no
+adaptive-mode concept, no wake-word detection — only push-to-talk
+exists). Rather than fabricate non-functional UI for either, those
+rows are replaced with real facts: the actual configured TTS voice
+(`core.voice_catalog`), the always-on warm/curious personality trait,
+and "Push-to-talk" as the honest name for the real voice-input
+mechanism. Matches this project's own established stance against
+building UI for features that don't exist yet.
 
-**2026-07-15: the fixed 3-card layout is now a real widget framework**
-(`core/dashboard_widgets.py`'s "framework first" build, prompted by the
-user wanting a "JARVIS-level dashboard" with more widgets — trading
-bot, weather, music, current project — and the ability to add/remove
-them). Power/Mission/Volume are now registered widgets like any other,
-not hardcoded cards — `_build_widgets_grid()` renders whatever
-`context.dashboard_widgets.enabled_widgets_in_order()` returns, and a
-new gear button opens `gui/dashboard_customize_dialog.py` to toggle/
-reorder them, live (no restart — same "rebuild on event" pattern
-`gui/main_window.py` already uses for the Apps grid). New widgets only
-need a `WidgetDescriptor` registration
-(`core/application.py`'s `_register_dashboard_widgets()`) plus a
-builder method here in `self._widget_builders` — the framework itself
-doesn't change. First new widget built this pass: Current Project.
-
-**"Currently playing song" from the original ask is deliberately not
-here** — Music is a bare placeholder module with no real playback data
-source (same reasoning `modules/dashboard/module.py` already gives for
-omitting it). Add it once Media/Music is a real built module.
-
-**Volume control targets real Pi audio hardware
-(`core/volume_manager.py`'s `amixer`-based backend) but is unverified in
-this dev sandbox**, which has no `amixer` binary at all — the slider
-degrades to disabled + a "Not available on this device" note via
-`VolumeManager.is_available()`, same graceful-degradation UI pattern as
-the Power card below when no battery/UPS is present. Re-verify the
-slider's live behavior on real Pi hardware before trusting it further
-than "the code path is exercised."
+**No longer rendered on Home at all** (no natural slot in the new
+console layout, per the design's own fixed Monitoring-tile set):
+Real Estate/Kraken Agent/Net Worth (MIA Home finance widgets) and the
+Companion Avatar camera feed. Their pure formatting functions
+(`format_real_estate_line()` etc.) and backing managers are untouched
+and still tested — just not wired into any widget here anymore. Same
+"left in place, unregistered rather than deleted" treatment
+`core/application.py`'s docstring already gives the Avatar widget.
+`core/dashboard_widgets.py`'s `DashboardWidgetRegistry` (the old
+enable/disable/reorder mechanism) is likewise now unused by this
+screen — left in place rather than torn out, since removing it also
+means migrating away `dashboard.disabled_widgets`/
+`dashboard.widget_order` config state, out of scope for this pass.
 
 format_clock_time()/format_clock_date()/format_power_line()/
-format_active_mission_line()/format_volume_line() are free functions
-(not methods) — testable without Qt, see tests/test_home_dashboard.py.
-
-**2026-07-16: Companion Avatar widget** — a new registered dashboard
-widget (`avatar_camera`) showing a live camera feed via
-`gui/widgets/avatar_camera_widget.py`, built for VMagicMirror's Virtual
-Camera Output but generic to any virtual-camera source (see
-`core/avatar_manager.py`'s docstring for why no VMagicMirror-specific
-code exists at all). Device selection lives in the widget's own "⋯"
-menu (`_avatar_camera_menu_actions()`), same self-contained-config
-pattern as the Volume widget's mute button — no Settings-module page
-needed. Unverified end-to-end in this dev sandbox (no camera devices
-exist here, and VMagicMirror only runs on Windows) — re-test on the
-real machine once VMagicMirror's Virtual Camera Output is enabled.
+format_active_mission_line()/format_volume_line()/
+format_activity_log_line() are free functions (not methods) — testable
+without Qt, see tests/test_home_dashboard.py.
 """
 
 from __future__ import annotations
 
 import tempfile
+import time
 from datetime import date, datetime
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 
-from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import (
     QFrame,
     QGraphicsDropShadowEffect,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
-    QMenu,
+    QLineEdit,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
 from core.activity_log_manager import ActivityLogEntry
 from core.app_context import AppContext
+from core.assistant_chat import (
+    build_chat_request,
+    build_memory_extraction_prompt,
+    build_title_generation_prompt,
+    clean_generated_title,
+    parse_extracted_memories,
+    split_safe_tool_calls,
+    suggested_prompts_for_module,
+)
+from core.chat_worker import ChatWorker
+from core.conversation_manager import DEFAULT_TITLE
 from core.daily_occasions import calendar_events_today
-from core.dashboard_widgets import WidgetDescriptor
+from core.dashboard_telemetry import compute_network_mbps, format_uptime_line
 from core.finance_manager import FinancialSnapshot
+from core.generate_worker import GenerateWorker
+from core.llm_manager import ChatReply
 from core.mission_manager import Mission
 from core.power_manager import PowerStatus
 from core.project_manager import Project
 from core.startup_briefing import build_stat_highlights, build_startup_briefing
+from core.system_health import read_system_health, read_uptime_seconds
 from core.tts_worker import TTSWorker
+from core.voice_catalog import VOICE_CATALOG
 from core.volume_manager import VolumeStatus
-from gui.dashboard_customize_dialog import DashboardCustomizeDialog
-from gui.widgets.avatar_camera_widget import AvatarCameraWidget
+from gui.presence_widget import PresenceWidget
+from gui.widgets.circular_gauge import CircularGauge
 from gui.widgets.toggle_switch import ToggleSwitch
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
-_CLOCK_TICK_MS = 1000
-_ACTIVITY_LOG_LIMIT = 3
-
-# Widgets that should span more than one grid column — everything else
-# defaults to span 1. 2026-07-15 "ForMIA" handoff: Activity Log is a
-# full-width "log/feed" card per WIDGET_STENCIL.md.
-_WIDGET_COLUMN_SPANS: dict[str, int] = {
-    "activity_log": 3,
-    # A live camera feed reads as cramped at the default 1-column card
-    # width every other widget uses.
-    "avatar_camera": 2,
-}
-_GRID_COLUMNS = 3
-
-# core.finance_manager.FinancialSnapshot.source values these widgets
-# look up. "real_estate_portfolio" is confirmed directly from
-# docs/VISION.md's worked example export. "kraken_trading_agent" is
-# this project's own best-guess placeholder — the real Kraken agent's
-# exact source tag isn't confirmed anywhere yet (see
-# core/finance_manager.py's docstring); re-verify this string against
-# the actual Kraken export code once it's available, and update it
-# here (and in any already-dropped-in real snapshot files) if it
-# differs.
-_REAL_ESTATE_SOURCE = "real_estate_portfolio"
-_KRAKEN_SOURCE = "kraken_trading_agent"
+_NET_GAUGE_CEILING_MBPS = 100.0  # assumed display ceiling for the NET ring's fill fraction only — the text label always shows the real uncapped number
+_STATE_LABELS = {"idle": "Idle", "listening": "Listening…", "thinking": "Thinking…", "speaking": "Speaking…"}
 
 
 def format_clock_time(now: datetime) -> str:
@@ -217,7 +186,8 @@ def format_real_estate_line(snapshot: Optional[FinancialSnapshot]) -> str:
     docs/VISION.md's documented real-estate export shape directly
     (`summary.total_equity`/`monthly_cash_flow`) — this is the one
     fully-confirmed worked example, unlike Kraken's (see
-    format_kraken_line() below)."""
+    format_kraken_line() below). Not currently rendered on Home (see
+    module docstring) but kept alive/tested for a future pass."""
     if snapshot is None:
         return "No snapshot imported yet."
     summary = snapshot.data.get("summary", {})
@@ -238,7 +208,8 @@ def format_kraken_line(snapshot: Optional[FinancialSnapshot]) -> str:
     Kraken agent's exact export schema isn't confirmed yet (see
     core/finance_manager.py's docstring), so this degrades to "no
     summary data" rather than assuming any field beyond that shared
-    shape is actually present."""
+    shape is actually present. Not currently rendered on Home (see
+    module docstring) but kept alive/tested for a future pass."""
     if snapshot is None:
         return "No snapshot imported yet."
     summary = snapshot.data.get("summary", {})
@@ -262,7 +233,9 @@ def format_net_worth_line(snapshots: list[FinancialSnapshot]) -> str:
     whatever it didn't have real data for, not a value meant to be
     re-summed across sources. Snapshots missing `total_value` are
     excluded (not treated as zero) and the source count is shown so
-    this never silently overstates itself as more complete than it is."""
+    this never silently overstates itself as more complete than it is.
+    Not currently rendered on Home (see module docstring) but kept
+    alive/tested for a future pass."""
     contributions = [
         (snapshot.source, snapshot.data.get("summary", {}).get("total_value")) for snapshot in snapshots
     ]
@@ -278,434 +251,378 @@ def format_net_worth_line(snapshots: list[FinancialSnapshot]) -> str:
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
-    open_apps_requested = Signal()
-
     def __init__(self, context: AppContext) -> None:
         super().__init__()
         self.context = context
         self.setObjectName("HomeDashboard")
+
+        self._mia_state = "idle"
+        self._last_message = ""
+        self._right_open = True
+        self._prev_net_sent_mb = 0.0
+        self._prev_net_recv_mb = 0.0
+        self._prev_net_time = time.monotonic()
+
+        self._worker: Optional[ChatWorker] = None
         self._tts_worker: Optional[TTSWorker] = None
-        self._widget_bodies: dict[str, QLabel] = {}
-        self._avatar_camera_widget: Optional[AvatarCameraWidget] = None
-        self._widget_builders = {
-            "power": self._build_power_widget,
-            "mission": self._build_mission_widget,
-            "current_project": self._build_current_project_widget,
-            "activity_log": self._build_activity_log_widget,
-            "quick_bus": self._build_quick_bus_widget,
-            "avatar_camera": self._build_avatar_camera_widget,
-            "real_estate": self._build_real_estate_widget,
-            "kraken_agent": self._build_kraken_agent_widget,
-            "net_worth": self._build_net_worth_widget,
-        }
-        self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
-            "power": self._power_highlight,
-            "mission": self._mission_highlight,
-            "current_project": self._current_project_highlight,
-            # real_estate/kraken_agent/net_worth deliberately have no
-            # highlight provider yet — same reasoning as
-            # activity_log/quick_bus below: this is genuinely new,
-            # possibly-empty data (no snapshot imported at all is the
-            # common case until the user actually drops an export file
-            # in), not yet a meaningful spoken-briefing highlight.
-            # activity_log/quick_bus deliberately have no highlight
-            # provider — "3 recent activity items" isn't a meaningful
-            # spoken briefing highlight the way a mission/project count
-            # is, same reasoning as volume's None provider below.
-        }
+        self._title_worker: Optional[GenerateWorker] = None
+        self._memory_worker: Optional[GenerateWorker] = None
+        self._conversation = None
+
+        # psutil.cpu_percent(interval=None) reports usage since the
+        # *previous* call in this process — the very first call is
+        # meaningless (usually 0.0), see core/system_health.py's own
+        # docstring. Primed here so the first real _refresh_telemetry()
+        # tick already has something meaningful to show.
+        read_system_health()
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
-        outer.setSpacing(24)
-        outer.setAlignment(Qt.AlignmentFlag.AlignTop)
+        outer.setSpacing(0)
 
-        outer.addLayout(self._build_overview_row())
-        outer.addWidget(self._build_clock())
+        body = QHBoxLayout()
+        body.setSpacing(0)
+        body.addWidget(self._build_telemetry_panel())
+        body.addWidget(self._build_console_panel(), stretch=1)
+        body.addWidget(self._build_gauge_rail())
+        self._right_rail = self._build_right_rail()
+        body.addWidget(self._right_rail)
+        outer.addLayout(body, stretch=1)
 
-        # Built (and refreshed with real data) before the briefing
-        # banner below, even though it's added to the layout after —
-        # _build_briefing_text() reads live widget state via
-        # self._widget_bodies/the highlight providers, so that needs to
-        # already be populated with this launch's real values first.
-        # Doesn't need to already be in `outer`'s layout for that.
-        self._widgets_container = QWidget()
-        self._widgets_grid: Optional[QGridLayout] = None
-        self._build_widgets_grid()
-
-        outer.addWidget(self._build_briefing_banner())
-        self._speak_briefing()
-
-        widgets_label = QLabel("WIDGETS")
-        widgets_label.setObjectName("DashboardOverlineLabel")
-        outer.addWidget(widgets_label)
-        outer.addWidget(self._widgets_container)
-
-        toolbar = QHBoxLayout()
-        toolbar.addWidget(self._build_apps_launch_card(), stretch=1)
-        customize_button = QPushButton("⚙")  # gear
-        customize_button.setObjectName("HeaderButton")
-        customize_button.setToolTip("Customize Dashboard")
-        customize_button.clicked.connect(self._on_customize_clicked)
-        toolbar.addWidget(customize_button)
-        outer.addLayout(toolbar)
-        outer.addStretch()
-
-        self._clock_timer = QTimer(self)
-        self._clock_timer.timeout.connect(self._tick_clock)
-        self._clock_timer.start(_CLOCK_TICK_MS)
+        outer.addWidget(self._build_chat_bar())
 
         self._data_timer = QTimer(self)
-        self._data_timer.timeout.connect(self._refresh_data)
+        self._data_timer.timeout.connect(self._refresh_telemetry)
         self._data_timer.start(_DATA_REFRESH_MS)
+        self._refresh_telemetry()
 
-        self.context.events.subscribe("dashboard.widgets_changed", self._on_widgets_changed)
-
-        self._tick_clock()
-        self._refresh_data()
-
-    def unsubscribe(self) -> None:
-        """Must be called before this widget is destroyed — stops both
-        timers and unsubscribes from the event bus, same cleanup
-        reasoning as gui/character_panel.py's unsubscribe() (a QTimer
-        left running would keep firing into a deleted Qt widget, and a
-        stale event subscriber would keep this dead widget alive in
-        EventBus's callback list)."""
-        self._clock_timer.stop()
-        self._data_timer.stop()
-        if self._avatar_camera_widget is not None:
-            self._avatar_camera_widget.stop()
-        self.context.events.unsubscribe("dashboard.widgets_changed", self._on_widgets_changed)
+        self._greet()
 
     def showEvent(self, event) -> None:
-        """
-        2026-07-18: real "sizing issue with the dashboard widgets when
-        going from the Assistant to the Home Screen" report. Root
-        cause: `_data_timer` keeps firing every `_DATA_REFRESH_MS`
-        regardless of whether this widget is the currently-visible
-        stack page (`gui/main_window.py`'s `QStackedWidget` just hides
-        it, doesn't stop it) — and `_set_widget_body_text()`'s
-        min-height recompute reads `label.width()` at whatever moment
-        the timer happens to fire. If that's while this page is
-        hidden, or right in the middle of the stack/scroll-area
-        settling into its new geometry after a page switch, the width
-        read can be stale, producing a wrong minimum height that then
-        persists — visibly clipped/oversized card text — until the
-        next 5-second tick happens to catch a good width. Forcing a
-        refresh on every showEvent() (real Qt event fired exactly when
-        this page becomes visible again, width already final by then)
-        means the correction is immediate instead of "eventually,
-        maybe up to 5 seconds later."
-        """
+        """Forces an immediate telemetry refresh on becoming visible
+        again, rather than waiting for the next 5s timer tick — same
+        real fix as this class's earlier "dashboard widgets sized wrong
+        after navigating away and back" bug (stale readings computed
+        while hidden)."""
         super().showEvent(event)
-        self._refresh_data()
+        self._refresh_telemetry()
+
+    def unsubscribe(self) -> None:
+        """Must be called before this widget is destroyed."""
+        self._data_timer.stop()
 
     # ------------------------------------------------------------------
-    # Construction
+    # Left telemetry panel
     # ------------------------------------------------------------------
 
-    def _build_overview_row(self) -> QHBoxLayout:
-        """The "SYSTEM OVERVIEW" / "● ALL SYSTEMS NOMINAL" header row —
-        a real gap found re-comparing against the ForMIA mockup
-        (`Dashboard.dc.html`), missing entirely before this pass. The
-        status chip is static ambient copy, same precedent as
-        gui/main_window.py's own status-bar default message ("MIA
-        core online.") — not a live health check standing behind it."""
-        row = QHBoxLayout()
-        overview_label = QLabel("SYSTEM OVERVIEW")
-        overview_label.setObjectName("DashboardOverlineLabel")
-        row.addWidget(overview_label)
-        row.addStretch()
-        status_chip = QLabel("● ALL SYSTEMS NOMINAL")
-        status_chip.setObjectName("DashboardStatusChip")
-        row.addWidget(status_chip)
-        return row
+    def _build_telemetry_panel(self) -> QWidget:
+        panel = QScrollArea()
+        panel.setObjectName("DashboardTelemetryPanel")
+        panel.setWidgetResizable(True)
+        panel.setFrameShape(QFrame.Shape.NoFrame)
+        panel.setFixedWidth(220)
+        # Belt-and-suspenders alongside the DashboardStatValue font fix
+        # below — this is a fixed-width side panel, never meant to
+        # scroll horizontally; if some future content is ever a few
+        # pixels too wide again, it should just get clipped, not sprout
+        # a scrollbar.
+        panel.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-    def _build_clock(self) -> QWidget:
-        """A real card (eyebrow "CLOCK" label + big time, left; date,
-        right) — re-comparing against the ForMIA mockup found this had
-        shipped as a bare centered label stack with no card/eyebrow at
-        all, unlike every other widget's card treatment."""
-        card = QFrame()
-        card.setObjectName("DashboardCard")
-        layout = QHBoxLayout(card)
-        layout.setContentsMargins(20, 18, 20, 18)
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(18, 20, 18, 20)
+        layout.setSpacing(14)
 
-        time_column = QVBoxLayout()
-        time_column.setSpacing(6)
-        clock_eyebrow = QLabel("CLOCK")
-        clock_eyebrow.setObjectName("DashboardSectionTitle")
-        time_column.addWidget(clock_eyebrow)
+        load_card = QFrame()
+        load_card.setObjectName("DashboardCard")
+        load_layout = QVBoxLayout(load_card)
+        load_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        load_title = QLabel("PROCESSING LOAD")
+        load_title.setObjectName("DashboardSectionTitle")
+        load_layout.addWidget(load_title, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self._load_gauge = CircularGauge(diameter=150, stroke_width=8)
+        load_layout.addWidget(self._load_gauge)
+        load_caption = QLabel("Overall system load")
+        load_caption.setObjectName("DashboardSectionBody")
+        load_layout.addWidget(load_caption, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(load_card)
 
-        self._clock_time_label = QLabel()
-        self._clock_time_label.setObjectName("DashboardClockTime")
-        time_column.addWidget(self._clock_time_label)
-        layout.addLayout(time_column)
+        stats_row = QHBoxLayout()
+        power_card, self._power_value_label, self._power_caption_label = self._build_stat_tile("POWER")
+        stats_row.addWidget(power_card)
+        uptime_card, self._uptime_value_label, self._uptime_caption_label = self._build_stat_tile("UPTIME")
+        stats_row.addWidget(uptime_card)
+        layout.addLayout(stats_row)
+
+        tip_card = QFrame()
+        tip_card.setObjectName("DashboardCard")
+        tip_layout = QHBoxLayout(tip_card)
+        tip_icon = QLabel("\U0001F4A1")
+        tip_icon.setObjectName("MissionDetailIcon")
+        tip_layout.addWidget(tip_icon)
+        tip_text = QLabel('Say "Hey Mia" to start talking — just click Hold to Talk on the Assistant screen for now.')
+        tip_text.setObjectName("DashboardSectionBody")
+        tip_text.setWordWrap(True)
+        tip_layout.addWidget(tip_text, stretch=1)
+        layout.addWidget(tip_card)
+
         layout.addStretch()
+        panel.setWidget(container)
+        return panel
 
-        self._clock_date_label = QLabel()
-        self._clock_date_label.setObjectName("DashboardClockDate")
-        self._clock_date_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
-        layout.addWidget(self._clock_date_label)
-
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(16)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        card.setGraphicsEffect(shadow)
-
-        return card
-
-    def _build_widgets_grid(self) -> None:
-        """(Re)builds the dashboard's widget grid from
-        context.dashboard_widgets.enabled_widgets_in_order() — called
-        once at construction and again any time "dashboard.widgets_changed"
-        fires (the Customize dialog), so this is always a full rebuild,
-        not an in-place patch. Reuses one QGridLayout instance for
-        self._widgets_container's whole lifetime rather than trying to
-        replace the layout object itself each time — Qt refuses (with
-        just a runtime warning, not an exception) to install a second
-        layout on a widget unless the first is fully detached, and an
-        early version of this method got that wrong: it silently left
-        the container with no live layout at all after the first
-        rebuild, so every widget was actually still present in
-        self._widget_bodies but invisible on screen. Clearing/refilling
-        the same grid sidesteps the problem entirely. Same explicit
-        hide()+setParent(None) cleanup as this app's other layout-
-        clearing code (modules/dashboard/module.py) — deleteLater()
-        alone doesn't hide anything immediately and has left ghosted
-        widgets on screen before in this codebase."""
-        if self._widgets_grid is None:
-            self._widgets_grid = QGridLayout(self._widgets_container)
-            self._widgets_grid.setSpacing(16)
-            # 2026-07-18: real report — dashboard widgets "spaced very far
-            # apart" after navigating away and back. self's outer layout
-            # already guards against this at the top level (AlignTop
-            # above), but this inner grid had no alignment of its own —
-            # if self._widgets_container ever gets handed more height
-            # than its cards need (e.g. via gui/main_window.py's
-            # self._stack_scroll wrapping the whole stack), a grid with
-            # no alignment set grows the gaps between fixed-size cards
-            # to fill it rather than leaving it as blank margin.
-            self._widgets_grid.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-
-        while self._widgets_grid.count():
-            item = self._widgets_grid.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.hide()
-                widget.setParent(None)
-                widget.deleteLater()
-
-        self._widget_bodies = {}
-        self._volume_slider = None
-        self._mute_button = None
-        if self._avatar_camera_widget is not None:
-            # A live QCamera has no Qt-parent-driven cleanup — unlike
-            # every other widget cleared above, it needs an explicit
-            # stop() or the device stays open after this rebuild
-            # discards the card around it, same "stop before discard"
-            # reasoning as gui/presence_widget.py's animation timer.
-            self._avatar_camera_widget.stop()
-            self._avatar_camera_widget = None
-
-        registry = self.context.dashboard_widgets
-        widgets = registry.enabled_widgets_in_order() if registry is not None else []
-        row = col = 0
-        for descriptor in widgets:
-            builder = self._widget_builders.get(descriptor.widget_id)
-            if builder is None:
-                continue
-            # Most widgets are span 1; a few (e.g. Activity Log) span
-            # the full grid width per _WIDGET_COLUMN_SPANS — wrap to a
-            # fresh row if the current one doesn't have room left,
-            # rather than silently overlapping/clipping a wide card.
-            span = min(_WIDGET_COLUMN_SPANS.get(descriptor.widget_id, 1), _GRID_COLUMNS)
-            if col + span > _GRID_COLUMNS:
-                row += 1
-                col = 0
-            widget = builder(descriptor)
-            self._widgets_grid.addWidget(widget, row, col, 1, span)
-            # A widget added to an already-visible parent's layout isn't
-            # always auto-shown by Qt on every platform — confirmed via
-            # a real headless-Qt test: after the first rebuild, new
-            # cards reported isVisible()=False and a default unlaid-out
-            # size until explicitly shown. Harmless to call this during
-            # the initial construction-time build too (the parent isn't
-            # shown yet then anyway).
-            widget.show()
-            col += span
-            if col >= _GRID_COLUMNS:
-                row += 1
-                col = 0
-
-        self._refresh_data()
-
-    def _on_widgets_changed(self) -> None:
-        self._build_widgets_grid()
-
-    def _on_customize_clicked(self) -> None:
-        dialog = DashboardCustomizeDialog(self.context, self)
-        dialog.exec()
-
-    def _build_power_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(
-            descriptor.icon,
-            descriptor.display_name,
-            on_click=lambda: self._open_module("power"),
-        )
-        self._widget_bodies["power"] = body
-        return card
-
-    def _build_mission_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(
-            descriptor.icon,
-            descriptor.display_name,
-            on_click=lambda: self._open_module("missions"),
-        )
-        self._widget_bodies["mission"] = body
-        return card
-
-    def _build_current_project_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(
-            descriptor.icon,
-            descriptor.display_name,
-            # Projects live inside the Toolbox module (a "Project Manager"
-            # tool tab), not a standalone module of their own — this opens
-            # Toolbox, same one-level-deep limitation
-            # gui/main_window.py's open_module() has for any nested tool.
-            on_click=lambda: self._open_module("toolbox"),
-        )
-        self._widget_bodies["current_project"] = body
-        return card
-
-    def _build_real_estate_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        # No on_click — there's no dedicated Finance module/screen to
-        # open yet (this pass is dashboard-only, per docs/ROADMAP.md),
-        # same reasoning Activity Log's card has none.
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
-        self._widget_bodies["real_estate"] = body
-        return card
-
-    def _build_kraken_agent_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
-        self._widget_bodies["kraken_agent"] = body
-        return card
-
-    def _build_net_worth_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
-        self._widget_bodies["net_worth"] = body
-        return card
-
-    def _build_activity_log_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
-        # The "ForMIA" stencil's log/feed variant is monospace, unlike
-        # every other widget's body text — a distinct object name so
-        # gui/styles.py can style just this one differently.
-        body.setObjectName("DashboardActivityLogBody")
-        self._widget_bodies["activity_log"] = body
-        return card
-
-    def _build_quick_bus_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        """The one widget with no single body label — see
-        core/notification_manager.py's notify() and
-        modules/assistant/module.py's _on_talk_pressed() for the real
-        (not cosmetic) behavior these two toggles gate, per the "ForMIA"
-        handoff's explicit "wire to real feature flags" instruction."""
+    def _build_stat_tile(self, title: str) -> tuple[QFrame, QLabel, QLabel]:
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(16, 16, 16, 16)
+        title_label = QLabel(title)
+        title_label.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title_label)
+        # Real bug found via a headless-Qt screenshot: reusing
+        # MissionDetailTitle's 19px bold font here clipped "59h 18m" in
+        # this tile's ~100px half-column width (side by side with its
+        # sibling stat tile), which in turn forced this whole scroll
+        # panel wider than its fixed column width — showing an
+        # unintended horizontal scrollbar. A dedicated smaller font
+        # (DashboardStatValue) plus word-wrap fixes both at once.
+        value_label = QLabel("—")
+        value_label.setObjectName("DashboardStatValue")
+        value_label.setWordWrap(True)
+        layout.addWidget(value_label)
+        caption_label = QLabel("")
+        caption_label.setObjectName("DashboardSectionBody")
+        caption_label.setWordWrap(True)
+        layout.addWidget(caption_label)
+        return card, value_label, caption_label
+
+    # ------------------------------------------------------------------
+    # Center console
+    # ------------------------------------------------------------------
+
+    def _build_console_panel(self) -> QWidget:
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(10)
-        layout.addLayout(self._build_widget_header(descriptor.icon, descriptor.display_name))
 
-        layout.addLayout(self._build_toggle_row(
-            "Voice input",
-            self.context.config.get("voice.push_to_talk_enabled", True),
-            self._on_voice_input_toggled,
-        ))
-        layout.addLayout(self._build_toggle_row(
-            "Notifications",
-            self.context.config.get("notifications.enabled", True),
-            self._on_notifications_toggled,
-        ))
+        header = QVBoxLayout()
+        header.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        title = QLabel("MIA CONSOLE")
+        title.setObjectName("ConsoleTitle")
+        header.addWidget(title, alignment=Qt.AlignmentFlag.AlignHCenter)
+        eyebrow = QLabel("ASSISTANT MODE")
+        eyebrow.setObjectName("DashboardSectionTitle")
+        header.addWidget(eyebrow, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self._state_label = QLabel(_STATE_LABELS["idle"])
+        self._state_label.setObjectName("ConsoleStateLabel")
+        header.addWidget(self._state_label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addLayout(header)
+
+        stage = QFrame()
+        stage.setObjectName("ConsoleOrbStage")
+        stage_layout = QVBoxLayout(stage)
+        stage_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        toggle_row = QHBoxLayout()
+        toggle_row.addStretch()
+        self._right_toggle_button = QPushButton("☰")
+        self._right_toggle_button.setObjectName("HeaderButton")
+        self._right_toggle_button.setFixedSize(30, 30)
+        self._right_toggle_button.setToolTip("Toggle the right rail")
+        self._right_toggle_button.clicked.connect(self._on_toggle_right_rail)
+        toggle_row.addWidget(self._right_toggle_button)
+        stage_layout.addLayout(toggle_row)
+
+        self._presence = PresenceWidget(diameter=150)
+        self._presence.set_glyph("Mia")
+        stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(stage, stretch=1)
+
+        self._last_message_label = QLabel("")
+        self._last_message_label.setObjectName("ConsoleLastMessage")
+        self._last_message_label.setWordWrap(True)
+        self._last_message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self._last_message_label)
+
+        return container
+
+    def _on_toggle_right_rail(self) -> None:
+        self._right_open = not self._right_open
+        self._right_rail.setVisible(self._right_open)
+
+    # ------------------------------------------------------------------
+    # Side gauge rail
+    # ------------------------------------------------------------------
+
+    def _build_gauge_rail(self) -> QWidget:
+        rail = QWidget()
+        rail.setObjectName("DashboardTelemetryPanel")
+        rail.setFixedWidth(110)
+        layout = QVBoxLayout(rail)
+        layout.setContentsMargins(10, 18, 10, 18)
+        layout.setSpacing(16)
+        layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        title = QLabel("TELEMETRY")
+        title.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        self._cpu_gauge = self._build_small_gauge(layout, "CPU")
+        self._net_gauge = self._build_small_gauge(layout, "NET")
+        self._sys_gauge = self._build_small_gauge(layout, "SYS")
+
         layout.addStretch()
-        return card
+        return rail
 
-    def _build_avatar_camera_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        """A live camera feed of a VMagicMirror-rendered companion
-        avatar (or any other virtual-camera source) — see
-        core/avatar_manager.py's docstring for the full reasoning.
-        Unlike every other widget here, this one starts/stops a real
-        QCamera rather than just reading a config value or polling a
-        manager, so it's built once at construction (and again on
-        camera selection) rather than on the 5s _refresh_data() timer —
-        restarting a camera every 5 seconds would be wasteful and would
-        visibly glitch the feed, same reasoning quick_bus's toggles
-        already established for skipping that poll."""
+    def _build_small_gauge(self, layout: QVBoxLayout, label_text: str) -> CircularGauge:
+        column = QVBoxLayout()
+        column.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        gauge = CircularGauge(diameter=84, stroke_width=9)
+        column.addWidget(gauge)
+        label = QLabel(label_text)
+        label.setObjectName("DashboardSectionTitle")
+        column.addWidget(label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addLayout(column)
+        return gauge
+
+    # ------------------------------------------------------------------
+    # Right rail
+    # ------------------------------------------------------------------
+
+    def _build_right_rail(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setObjectName("DashboardTelemetryPanel")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setFixedWidth(230)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(14, 18, 14, 18)
+        layout.setSpacing(14)
+
+        layout.addWidget(self._build_assistant_profile_card())
+        layout.addWidget(self._build_monitoring_card())
+        layout.addWidget(self._build_activity_log_card())
+        layout.addWidget(self._build_quick_toggles_card())
+        layout.addStretch()
+
+        scroll.setWidget(container)
+        return scroll
+
+    def _build_assistant_profile_card(self) -> QWidget:
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(18, 16, 18, 16)
-        layout.setSpacing(10)
-        layout.addLayout(
-            self._build_widget_header(
-                descriptor.icon, descriptor.display_name, menu_actions=self._avatar_camera_menu_actions()
-            )
-        )
+        title = QLabel("ASSISTANT PROFILE")
+        title.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title)
 
-        self._avatar_camera_widget = AvatarCameraWidget()
-        layout.addWidget(self._avatar_camera_widget, stretch=1)
-
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(16)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        card.setGraphicsEffect(shadow)
-
-        self._refresh_avatar_camera()
+        voice_id = self.context.voice.current_voice_id if self.context.voice is not None else None
+        voice_option = VOICE_CATALOG.get(voice_id) if voice_id else None
+        voice_name = voice_option.display_name if voice_option is not None else "Not available"
+        layout.addLayout(self._build_info_row("Voice", voice_name))
+        layout.addLayout(self._build_info_row("Personality", "Warm & curious"))
+        layout.addLayout(self._build_info_row("Input", "Push-to-talk"))
         return card
 
-    def _avatar_camera_menu_actions(self) -> list[tuple[str, Callable[[], None]]]:
-        if self.context.avatar is None:
-            return []
-        devices = self.context.avatar.list_devices()
-        if not devices:
-            return [("No cameras found", lambda: None)]
-        return [
-            (f"Use {device.description}", lambda _checked=False, d=device: self._on_avatar_camera_selected(d))
-            for device in devices
-        ]
-
-    def _on_avatar_camera_selected(self, device) -> None:
-        if self.context.avatar is not None:
-            self.context.avatar.set_selected_device_id(device.device_id)
-        self._refresh_avatar_camera()
-
-    def _refresh_avatar_camera(self) -> None:
-        if self._avatar_camera_widget is None or self.context.avatar is None:
-            return
-        if not self.context.avatar.is_available():
-            self._avatar_camera_widget.show_unavailable()
-            return
-        device_id = self.context.avatar.selected_device_id()
-        if device_id is None:
-            self._avatar_camera_widget.show_not_selected()
-            return
-        self._avatar_camera_widget.start(device_id)
-
-    def _build_toggle_row(self, label_text: str, checked: bool, on_toggled: Callable[[bool], None]) -> QHBoxLayout:
+    def _build_info_row(self, label_text: str, value_text: str) -> QHBoxLayout:
         row = QHBoxLayout()
         label = QLabel(label_text)
         label.setObjectName("DashboardSectionBody")
         row.addWidget(label)
         row.addStretch()
-        toggle = ToggleSwitch()
-        toggle.setChecked(checked)
-        toggle.toggled.connect(on_toggled)
-        row.addWidget(toggle)
+        value = QLabel(value_text)
+        value.setObjectName("ConsoleInfoValue")
+        row.addWidget(value)
         return row
+
+    def _build_monitoring_card(self) -> QWidget:
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        title = QLabel("MONITORING")
+        title.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title)
+
+        grid_row_1 = QHBoxLayout()
+        power_tile, self._monitor_power_label = self._build_monitor_tile("POWER")
+        grid_row_1.addWidget(power_tile)
+        volume_tile, self._monitor_volume_label = self._build_monitor_tile("VOLUME")
+        grid_row_1.addWidget(volume_tile)
+        layout.addLayout(grid_row_1)
+
+        grid_row_2 = QHBoxLayout()
+        network_tile, self._monitor_network_label = self._build_monitor_tile("NETWORK")
+        grid_row_2.addWidget(network_tile)
+        ram_tile, self._monitor_ram_label = self._build_monitor_tile("RAM")
+        grid_row_2.addWidget(ram_tile)
+        layout.addLayout(grid_row_2)
+
+        return card
+
+    def _build_monitor_tile(self, label_text: str) -> tuple[QFrame, QLabel]:
+        tile = QFrame()
+        tile.setObjectName("MonitorTile")
+        layout = QVBoxLayout(tile)
+        title = QLabel(label_text)
+        title.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title)
+        value = QLabel("—")
+        value.setObjectName("MonitorTileValue")
+        layout.addWidget(value)
+        return tile, value
+
+    def _build_activity_log_card(self) -> QWidget:
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        title = QLabel("ACTIVITY LOG")
+        title.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title)
+        self._activity_log_label = QLabel("")
+        self._activity_log_label.setObjectName("DashboardActivityLogBody")
+        self._activity_log_label.setWordWrap(True)
+        layout.addWidget(self._activity_log_label)
+        refresh_button = QPushButton("Refresh")
+        refresh_button.setObjectName("HeaderButton")
+        refresh_button.clicked.connect(self._refresh_activity_log)
+        layout.addWidget(refresh_button)
+        self._refresh_activity_log()
+        return card
+
+    def _build_quick_toggles_card(self) -> QWidget:
+        card = QFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        title = QLabel("QUICK TOGGLES")
+        title.setObjectName("DashboardSectionTitle")
+        layout.addWidget(title)
+
+        voice_row = QHBoxLayout()
+        voice_label = QLabel("\U0001F3A4 Voice")
+        voice_label.setObjectName("DashboardSectionBody")
+        voice_row.addWidget(voice_label)
+        voice_row.addStretch()
+        voice_toggle = ToggleSwitch()
+        voice_toggle.setChecked(self.context.config.get("voice.push_to_talk_enabled", True))
+        voice_toggle.toggled.connect(self._on_voice_input_toggled)
+        voice_row.addWidget(voice_toggle)
+        layout.addLayout(voice_row)
+
+        alerts_row = QHBoxLayout()
+        alerts_label = QLabel("\U0001F514 Alerts")
+        alerts_label.setObjectName("DashboardSectionBody")
+        alerts_row.addWidget(alerts_label)
+        alerts_row.addStretch()
+        alerts_toggle = ToggleSwitch()
+        alerts_toggle.setChecked(self.context.config.get("notifications.enabled", True))
+        alerts_toggle.toggled.connect(self._on_notifications_toggled)
+        alerts_row.addWidget(alerts_toggle)
+        layout.addLayout(alerts_row)
+
+        return card
 
     def _on_voice_input_toggled(self, checked: bool) -> None:
         self.context.config.set("voice.push_to_talk_enabled", checked)
@@ -715,196 +632,49 @@ class HomeDashboard(QFrame):
         self.context.config.set("notifications.enabled", checked)
         self.context.config.save()
 
-    def _open_module(self, module_id: str) -> None:
-        """Reuses the exact navigation mechanism the Assistant's own
-        `open_module` action already uses (core/application.py) — a
-        widget menu action and a chat command both end up going through
-        the same one path, gui/main_window.py's open_module()."""
-        self.context.events.publish("assistant.open_module_requested", module_id=module_id)
+    # ------------------------------------------------------------------
+    # Bottom chat bar
+    # ------------------------------------------------------------------
 
-    def _build_widget_header(
-        self, icon: str, title: str, menu_actions: Optional[list[tuple[str, Callable[[], None]]]] = None
-    ) -> QHBoxLayout:
-        """Shared by _build_simple_card()/_build_volume_card() — the
-        eyebrow-label+stretch+optional "⋯" menu button row every widget
-        card starts with.
+    def _build_chat_bar(self) -> QWidget:
+        bar = QFrame()
+        bar.setObjectName("DashboardChatBar")
+        layout = QHBoxLayout(bar)
+        layout.setContentsMargins(20, 12, 20, 12)
+        layout.setSpacing(8)
 
-        **2026-07-15 "ForMIA" design handoff**: widget cards no longer
-        show an icon badge — just a small uppercase "eyebrow" label
-        (`#DashboardSectionTitle`, restyled in gui/styles.py to match),
-        the pattern the handoff's `WIDGET_STENCIL.md` specifies for
-        every card. `icon` is kept as a parameter (not removed, callers
-        still pass each widget's real glyph) and used as the eyebrow
-        label's tooltip instead of being rendered directly — a module's
-        icon identity isn't fully gone, just no longer taking up card
-        space the way it used to. QSS has no text-transform, so the
-        label text is uppercased here in Python.
-        """
-        header = QHBoxLayout()
-        header.setSpacing(10)
+        for prompt in suggested_prompts_for_module(None):
+            chip = QPushButton(prompt)
+            chip.setObjectName("SuggestionButton")
+            chip.clicked.connect(lambda _checked=False, p=prompt: self._on_suggestion_clicked(p))
+            layout.addWidget(chip)
 
-        title_label = QLabel(title.upper())
-        title_label.setObjectName("DashboardSectionTitle")
-        title_label.setToolTip(f"{icon} {title}")
-        header.addWidget(title_label)
-        header.addStretch()
+        self._input = QLineEdit()
+        self._input.setObjectName("HeaderSearchBar")
+        self._input.setPlaceholderText("Ask Mia anything…")
+        self._input.returnPressed.connect(self._on_send)
+        layout.addWidget(self._input, stretch=1)
 
-        if menu_actions:
-            menu_button = QPushButton("⋯")
-            menu_button.setObjectName("HeaderButton")
-            menu_button.setFixedSize(28, 28)
-            menu_button.setToolTip(f"{title} actions")
-            menu = QMenu(menu_button)
-            for label, callback in menu_actions:
-                menu.addAction(label).triggered.connect(callback)
-            menu_button.setMenu(menu)
-            header.addWidget(menu_button)
+        self._send_button = QPushButton("Send")
+        self._send_button.setObjectName("AppsLaunchButton")
+        self._send_button.clicked.connect(self._on_send)
+        layout.addWidget(self._send_button)
 
-        return header
+        return bar
 
-    def _build_simple_card(
-        self, icon: str, title: str, on_click: Optional[Callable[[], None]] = None
-    ) -> tuple[QFrame, QLabel]:
-        """Builds one icon+title+body card and returns (card, body_label)
-        — the widget builders above add it to the grid themselves.
+    def _on_suggestion_clicked(self, prompt: str) -> None:
+        self._input.setText(prompt)
+        self._on_send()
 
-        **2026-07-16**: replaces the old "⋯" menu-button-with-one-item
-        pattern (which just opened the card's related module page) with
-        the whole card being clickable, per the user's explicit ask:
-        "Instead of the menu buttons on the widgets I want to be able to
-        click on a widget like a button and it bring me to its
-        page/menu while still displaying the data it needs to." When
-        `on_click` is given, the card itself is a `QPushButton` (same
-        "QPushButton with QLabel children, no text of its own" shape as
-        `gui/widgets/module_button.py`'s `ModuleButton` and
-        `gui/widgets/conversation_card.py`'s `ConversationCard` — avoids
-        that pattern's documented Qt bug where `:hover` on a descendant
-        QLabel makes its text vanish, by only ever styling the button
-        itself in QSS, never a QLabel inside it). Widgets with no
-        related page to open (Activity Log, Real Estate, Kraken Agent,
-        Net Worth — see each builder's own comment) pass no `on_click`
-        and get the original plain, non-clickable `QFrame` card.
-        """
-        card: QWidget
-        if on_click is not None:
-            card = QPushButton()
-            card.setObjectName("DashboardCard")
-            card.setCursor(Qt.CursorShape.PointingHandCursor)
-            card.setToolTip(f"Open {title}")
-            card.clicked.connect(on_click)
-            # Confirmed via a real headless-Qt screenshot, not assumed:
-            # a bare QPushButton relying on its children's natural
-            # sizeHint collapses to a sliver on this platform (same
-            # "This plugin does not support propagateSizeHints()" Qt
-            # bug gui/widgets/conversation_card.py's docstring already
-            # documents) — a plain QFrame card never had this problem,
-            # only the new clickable QPushButton variant.
-            card.setMinimumHeight(96)
-        else:
-            card = QFrame()
-            card.setObjectName("DashboardCard")
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(18, 16, 18, 16)
-        layout.setSpacing(10)
+    # ------------------------------------------------------------------
+    # Chat — same shared core.assistant_chat/core.chat_worker logic as
+    # gui/character_panel.py and modules/assistant/module.py.
+    # ------------------------------------------------------------------
 
-        layout.addLayout(self._build_widget_header(icon, title))
-
-        body_label = QLabel()
-        body_label.setObjectName("DashboardSectionBody")
-        body_label.setWordWrap(True)
-        # A QLabel can't receive mouse events meant for its QPushButton
-        # parent's click — but it doesn't need to: word-wrapped body
-        # text under a click-through label already works fine for
-        # ModuleButton's description label, same shape here.
-        layout.addWidget(body_label)
-        layout.addStretch()
-
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(16)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        card.setGraphicsEffect(shadow)
-
-        return card, body_label
-
-    def _build_briefing_banner(self) -> QWidget:
-        card = QFrame()
-        card.setObjectName("DashboardCard")
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(20, 18, 20, 18)
-
-        self._briefing_label = QLabel(self._build_briefing_text())
-        self._briefing_label.setObjectName("DashboardBriefingText")
-        self._briefing_label.setWordWrap(True)
-        layout.addWidget(self._briefing_label)
-
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(16)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        card.setGraphicsEffect(shadow)
-
-        return card
-
-    def _power_highlight(self) -> Optional[str]:
-        if self.context.power is None:
-            return None
-        status = self.context.power.read()
-        if status is None:
-            return None
-        return f"{status.percent:.0f}% battery"
-
-    def _mission_highlight(self) -> Optional[str]:
-        if self.context.missions is None:
-            return None
-        count = sum(1 for m in self.context.missions.all_missions() if m.status == "active")
-        if not count:
-            return None
-        noun = "mission" if count == 1 else "missions"
-        return f"{count} active {noun}"
-
-    def _current_project_highlight(self) -> Optional[str]:
-        if self.context.projects is None:
-            return None
-        count = sum(1 for p in self.context.projects.all_projects() if p.status != "Complete")
-        if not count:
-            return None
-        noun = "project" if count == 1 else "projects"
-        return f"{count} {noun} in progress"
-
-    def _widget_highlights(self) -> list[str]:
-        """The briefing's dashboard-specific content — one highlight
-        per currently-*enabled* widget that actually has something to
-        say, via self._widget_highlight_providers (populated alongside
-        self._widget_builders). This is what keeps the briefing honest:
-        adding/removing/reordering a widget changes what gets
-        summarized automatically, since it reads the same
-        enabled-widgets list gui/dashboard_customize_dialog.py writes
-        to — no separate, easily-stale list to maintain by hand."""
-        registry = self.context.dashboard_widgets
-        if registry is None:
-            return []
-        highlights = []
-        for descriptor in registry.enabled_widgets_in_order():
-            provider = self._widget_highlight_providers.get(descriptor.widget_id)
-            if provider is None:
-                continue
-            highlight = provider()
-            if highlight:
-                highlights.append(highlight)
-        return highlights
-
-    def _build_briefing_text(self) -> str:
-        """Computed once at construction (not on the 5s data-refresh
-        timer below) — this is a "welcome back" greeting, not a live
-        ticker. See this module's docstring for what's deliberately
-        omitted (weather/workout/finance/smart home — no real widget
-        yet) and where to extend this as those subsystems land: add a
-        _<widget_id>_highlight() method and register it in
-        self._widget_highlight_providers alongside the widget's builder,
-        same as the four already there."""
+    def _greet(self) -> None:
+        """Populates the console's first `lastMessage` with the real
+        startup briefing (previously a separate spoken-once banner) and
+        speaks it, same one-per-launch behavior as before."""
         profile_name = "there"
         if self.context.profiles is not None:
             active_profile = self.context.profiles.get_active_profile()
@@ -915,8 +685,18 @@ class HomeDashboard(QFrame):
         if self.context.calendar is not None:
             today_iso = date.today().isoformat()
             events_today_count = len(calendar_events_today(self.context.calendar.all_events(), today_iso))
-
         unread_notification_count = self.context.notifications.unread_count() if self.context.notifications else 0
+
+        highlights = []
+        if self.context.power is not None:
+            status = self.context.power.read()
+            if status is not None:
+                highlights.append(f"{status.percent:.0f}% battery")
+        if self.context.missions is not None:
+            count = sum(1 for m in self.context.missions.all_missions() if m.status == "active")
+            if count:
+                highlights.append(f"{count} active {'mission' if count == 1 else 'missions'}")
+        highlights += build_stat_highlights(events_today_count, unread_notification_count)
 
         latest_memory_line = None
         if self.context.memories is not None:
@@ -924,122 +704,170 @@ class HomeDashboard(QFrame):
             if recaps:
                 latest_memory_line = recaps[0].expedition.name
 
-        highlights = self._widget_highlights() + build_stat_highlights(events_today_count, unread_notification_count)
-        return build_startup_briefing(profile_name, datetime.now(), highlights, latest_memory_line)
+        briefing = build_startup_briefing(profile_name, datetime.now(), highlights, latest_memory_line)
+        self._set_last_message(briefing)
+        self.context.conversations.start_new_active_conversation()
+        self._speak(briefing)
 
-    def _speak_briefing(self) -> None:
-        """Fire-and-forget, same pattern as modules/assistant/module.py's
-        _speak() — degrades silently (logged in VoiceManager) if TTS
-        isn't available, never blocks construction of this widget."""
-        if self.context.voice is None:
+    def _set_last_message(self, text: str) -> None:
+        self._last_message = text
+        self._last_message_label.setText(text)
+
+    def _set_state(self, state: str) -> None:
+        self._mia_state = state
+        self._state_label.setText(_STATE_LABELS.get(state, "Idle"))
+        self._presence.set_state(state)
+
+    def _on_send(self) -> None:
+        prompt = self._input.text().strip()
+        if not prompt or self._worker is not None or self.context.llm is None:
             return
-        output_path = Path(tempfile.gettempdir()) / "mia_startup_briefing.wav"
-        self._tts_worker = TTSWorker(self.context.voice, self._briefing_label.text(), output_path)
+
+        self._input.clear()
+        self._set_busy(True)
+        conversation = self.context.conversations.get_or_create_active_conversation()
+        self._conversation = conversation
+        self.context.conversations.add_message(conversation.conversation_id, "user", prompt)
+
+        messages, tools = build_chat_request(self.context, conversation, prompt)
+        self._worker = ChatWorker(self.context.llm, messages, tools)
+        self._worker.result_ready.connect(self._on_reply)
+        self._worker.finished.connect(self._on_worker_finished)
+        self._worker.start()
+
+    def _on_reply(self, reply: Optional[ChatReply]) -> None:
+        if reply is None:
+            self._set_last_message("Assistant unavailable — is Ollama running?")
+            return
+
+        conversation = self._conversation
+        if conversation is None:
+            return
+
+        if reply.tool_calls:
+            calls_to_execute, skipped_calls = split_safe_tool_calls(reply.tool_calls, self.context.assistant_actions)
+            if skipped_calls:
+                skipped_names = ", ".join(tc.name for tc in skipped_calls)
+                message = f"(Skipped a possibly unintended action for safety: {skipped_names}. Ask for that on its own if you really want it.)"
+                self.context.conversations.add_message(conversation.conversation_id, "assistant", message)
+                self._set_last_message(message)
+            for tool_call in calls_to_execute:
+                confirmation = self.context.assistant_actions.execute(self.context, tool_call.name, tool_call.arguments)
+                self.context.conversations.add_message(conversation.conversation_id, "assistant", confirmation)
+                self._set_last_message(confirmation)
+                self._speak(confirmation)
+            return
+
+        user_message = conversation.messages[-1].content if conversation.messages else ""
+        self.context.conversations.add_message(conversation.conversation_id, "assistant", reply.content)
+        self._set_last_message(reply.content)
+        self._speak(reply.content)
+        self._maybe_generate_title(conversation, user_message, reply.content)
+        self._extract_memories(conversation, user_message)
+
+    def _on_worker_finished(self) -> None:
+        self._set_busy(False)
+        if self._worker is not None:
+            self._worker.deleteLater()
+            self._worker = None
+
+    def _set_busy(self, busy: bool) -> None:
+        self._input.setEnabled(not busy)
+        self._send_button.setEnabled(not busy)
+        self._set_state("thinking" if busy else "idle")
+
+    def _maybe_generate_title(self, conversation, user_message: str, assistant_message: str) -> None:
+        if conversation.title != DEFAULT_TITLE or self._title_worker is not None:
+            return
+        prompt = build_title_generation_prompt(user_message, assistant_message)
+        self._title_worker = GenerateWorker(self.context.llm, prompt)
+        conversation_id = conversation.conversation_id
+        self._title_worker.result_ready.connect(lambda raw: self._on_title_generated(conversation_id, raw))
+        self._title_worker.finished.connect(self._on_title_worker_finished)
+        self._title_worker.start()
+
+    def _on_title_generated(self, conversation_id: str, raw_title: Optional[str]) -> None:
+        title = clean_generated_title(raw_title)
+        if title is not None:
+            self.context.conversations.set_title(conversation_id, title)
+
+    def _on_title_worker_finished(self) -> None:
+        if self._title_worker is not None:
+            self._title_worker.deleteLater()
+            self._title_worker = None
+
+    def _extract_memories(self, conversation, user_message: str) -> None:
+        if self._memory_worker is not None or self.context.user_memories is None:
+            return
+        prompt = build_memory_extraction_prompt(user_message)
+        self._memory_worker = GenerateWorker(self.context.llm, prompt)
+        conversation_id = conversation.conversation_id
+        self._memory_worker.result_ready.connect(lambda raw: self._on_memories_extracted(conversation_id, raw))
+        self._memory_worker.finished.connect(self._on_memory_worker_finished)
+        self._memory_worker.start()
+
+    def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
+        for fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, source_conversation_id=conversation_id)
+
+    def _on_memory_worker_finished(self) -> None:
+        if self._memory_worker is not None:
+            self._memory_worker.deleteLater()
+            self._memory_worker = None
+
+    def _speak(self, text: str) -> None:
+        if self.context.voice is None or self._tts_worker is not None:
+            return
+        output_path = Path(tempfile.gettempdir()) / "mia_dashboard_reply.wav"
+        self._tts_worker = TTSWorker(self.context.voice, text, output_path)
         self._tts_worker.finished.connect(self._on_tts_finished)
+        self._set_state("speaking")
         self._tts_worker.start()
 
     def _on_tts_finished(self) -> None:
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
-
-    def _build_apps_launch_card(self) -> QWidget:
-        button = QPushButton("▦  Open Apps")
-        button.setObjectName("AppsLaunchButton")
-        button.clicked.connect(self.open_apps_requested.emit)
-        return button
+        if self._mia_state == "speaking":
+            self._set_state("idle")
 
     # ------------------------------------------------------------------
-    # Refresh
+    # Telemetry refresh
     # ------------------------------------------------------------------
 
-    def _tick_clock(self) -> None:
-        now = datetime.now()
-        self._clock_time_label.setText(format_clock_time(now))
-        self._clock_date_label.setText(format_clock_date(now.date()))
+    def _refresh_telemetry(self) -> None:
+        snapshot = read_system_health()
 
-    def _set_widget_body_text(self, widget_id: str, text: str) -> None:
-        """setText() plus an explicit height fix — word-wrapped QLabels
-        have a documented Qt bug (see gui/widgets/chat_bubble.py's
-        docstring for the fullest writeup): heightForWidth()/sizeHint()
-        can disagree with the label's actual allocated height, clipping
-        wrapped text. Confirmed here too via direct measurement (not
-        assumed) once the 2026-07-16 font-size increase pushed the
-        Mission card's body onto two lines for the first time: label
-        height was 26px, sizeHint reported 34px. Recomputed on *every*
-        call (not once at construction, unlike ChatBubble) since these
-        labels' text changes on every 5s refresh."""
-        label = self._widget_bodies[widget_id]
-        label.setText(text)
-        width = label.width()
-        if width > 0:
-            label.setMinimumHeight(max(label.heightForWidth(width), label.sizeHint().height()) + 4)
+        self._load_gauge.set_value(snapshot.cpu_percent, 100.0, value_text=f"{snapshot.cpu_percent:.0f}", unit_text="%")
+        self._cpu_gauge.set_value(snapshot.cpu_percent, 100.0, value_text=f"{snapshot.cpu_percent:.0f}")
+        self._sys_gauge.set_value(snapshot.memory_percent, 100.0, value_text=f"{snapshot.memory_percent:.0f}")
 
-    def _refresh_data(self) -> None:
-        """Only refreshes widgets that are actually currently built —
-        `self._widget_bodies` reflects whatever
-        context.dashboard_widgets.enabled_widgets_in_order() produced
-        last, so a disabled widget's refresh is simply skipped rather
-        than erroring on a body label that doesn't exist."""
-        if "power" in self._widget_bodies:
-            self._refresh_power()
-        if "mission" in self._widget_bodies:
-            self._refresh_mission()
-        if "current_project" in self._widget_bodies:
-            self._refresh_current_project()
-        if "activity_log" in self._widget_bodies:
-            self._refresh_activity_log()
-        # quick_bus has no refresh — its two toggles reflect config
-        # state set at construction and via their own toggled signal,
-        # not the 5s poll every other widget uses.
-        if "real_estate" in self._widget_bodies:
-            self._refresh_real_estate()
-        if "kraken_agent" in self._widget_bodies:
-            self._refresh_kraken_agent()
-        if "net_worth" in self._widget_bodies:
-            self._refresh_net_worth()
+        now = time.monotonic()
+        elapsed = now - self._prev_net_time
+        mbps = compute_network_mbps(
+            self._prev_net_sent_mb, self._prev_net_recv_mb, elapsed, snapshot.network_sent_mb, snapshot.network_recv_mb
+        )
+        self._prev_net_sent_mb = snapshot.network_sent_mb
+        self._prev_net_recv_mb = snapshot.network_recv_mb
+        self._prev_net_time = now
+        self._net_gauge.set_value(mbps, _NET_GAUGE_CEILING_MBPS, value_text=f"{mbps:.0f}")
 
-    def _refresh_real_estate(self) -> None:
-        snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
-        self._set_widget_body_text("real_estate", format_real_estate_line(snapshot))
+        power_status = self.context.power.read() if self.context.power is not None else None
+        if power_status is not None:
+            self._power_value_label.setText(f"{power_status.percent:.0f}%")
+            self._power_caption_label.setText("Plugged in" if power_status.plugged_in else "On battery")
+        else:
+            self._power_value_label.setText("—")
+            self._power_caption_label.setText("No battery or UPS detected")
+        self._uptime_value_label.setText(format_uptime_line(read_uptime_seconds()))
+        self._uptime_caption_label.setText("Since boot")
 
-    def _refresh_kraken_agent(self) -> None:
-        snapshot = self.context.finance.latest_snapshot(_KRAKEN_SOURCE) if self.context.finance else None
-        self._set_widget_body_text("kraken_agent", format_kraken_line(snapshot))
-
-    def _refresh_net_worth(self) -> None:
-        snapshots = self.context.finance.all_latest_snapshots() if self.context.finance else []
-        self._set_widget_body_text("net_worth", format_net_worth_line(snapshots))
+        self._monitor_power_label.setText(f"{power_status.percent:.0f}%" if power_status is not None else "—")
+        volume_status = self.context.volume.read() if self.context.volume is not None and self.context.volume.is_available() else None
+        self._monitor_volume_label.setText(f"{volume_status.percent}%" if volume_status is not None else "—")
+        self._monitor_network_label.setText(f"{mbps:.1f} mbps")
+        self._monitor_ram_label.setText(f"{snapshot.memory_percent:.1f}%")
 
     def _refresh_activity_log(self) -> None:
-        entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []
-        self._set_widget_body_text("activity_log", format_activity_log_line(entries))
-
-    def _refresh_power(self) -> None:
-        status = self.context.power.read() if self.context.power else None
-        self._set_widget_body_text("power", format_power_line(status))
-
-    def _refresh_mission(self) -> None:
-        mission = None
-        completed = total = 0
-        if self.context.missions is not None:
-            active = [m for m in self.context.missions.all_missions() if m.status == "active"]
-            if active:
-                mission = active[0]
-                total = len(mission.objectives)
-                completed = sum(
-                    1
-                    for index in range(total)
-                    if self.context.missions.is_objective_complete(mission.mission_id, index)
-                )
-        self._set_widget_body_text("mission", format_active_mission_line(mission, completed, total))
-
-    def _refresh_current_project(self) -> None:
-        project = None
-        active_count = 0
-        if self.context.projects is not None:
-            active_projects = [p for p in self.context.projects.all_projects() if p.status != "Complete"]
-            active_count = len(active_projects)
-            if active_projects:
-                project = active_projects[0]
-        self._set_widget_body_text("current_project", format_current_project_line(project, active_count))
+        entries = self.context.activity_log.recent(limit=3) if self.context.activity_log is not None else []
+        self._activity_log_label.setText(format_activity_log_line(entries))
