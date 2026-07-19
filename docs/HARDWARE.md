@@ -200,7 +200,7 @@ browser/app streaming interface — both flagged as unbuilt in
 `VISION.md`'s "Core/Home split" section. This hardware existing doesn't
 imply either is close to done.
 
-## Camera (2026-07-14 addition, not yet chosen)
+## Camera (2026-07-14 addition; module chosen 2026-07-19)
 
 Added by the wearable-companion vision update (`docs/VISION.md`) — now
 part of the Receiver module, see "Modular Backpack / physical form
@@ -222,6 +222,32 @@ priorities:
   question — see `VISION.md`'s critical-evaluation note. Don't assume
   live in-field identification is feasible until actually benchmarked
   on real HAT+2 hardware.
+
+**2026-07-19: module decided — Arducam 8MP IMX219 autofocus USB
+camera module with microphone** (mini UVC-class, USB2.0). Picked over
+the lower-power 2MP low-light wide-angle alternative specifically
+because autofocus helps *both* real jobs above at once: a blurry
+unfocused shot hurts classification accuracy more than resolution
+does, and the Memories trip-recap photo gallery (`trip_photos/`,
+already a real shipped feature, not hypothetical) genuinely benefits
+from real photo quality over a wide-angle sensor tuned closer to
+security-camera use. The power/cost trade-off is accepted as modest —
+the camera is only active during actual capture moments (button-press
+or interval), nothing like the GPS or LLM's continuous draw.
+
+**Confirmed no true camera+mic+headphone-jack 3-in-1 module exists**
+(searched directly, not assumed) — camera modules (image sensor + ISP)
+and audio DACs are different silicon/PCB categories that hobbyist/
+embedded board vendors don't combine. The practical answer is still one
+small Receiver puck, just built from two tiny boards riding the same
+internal USB hub rather than one: this camera+mic module, plus a
+**FiiO Snowsky Tiny A USB-C-to-3.5mm DAC** (29×22×10mm, 7g, ~$15–22)
+for the headphone jack — genuinely small enough to sit alongside the
+camera module without meaningfully growing the Receiver's size. Chosen
+as a USB-audio-class device specifically (not a Pico-driven I2S
+breakout) so it rides the same shared USB hub as the camera+mic module,
+consistent with the Pico's own separate USB link only carrying button/
+LED/vibration/display traffic, not audio.
 
 ## GPS (priority raised 2026-07-14 — now load-bearing, not deferred)
 
@@ -427,14 +453,6 @@ verified.
 
 ## Open questions to revisit as hardware is acquired
 
-- Exact camera+mic module and headphone-jack breakout for the Receiver
-  — architecture decided (camera+mic module, no speaker, a headphone
-  jack instead — see "Modular Backpack" above), exact parts still open.
-  A genuine combined camera+mic+headphone-jack device may now be
-  plausible at wearable scale (unlike the camera+mic+speaker combo
-  researched and rejected), worth a real search before falling back to
-  a small camera+mic module (e.g. Arducam's mini UVC line) plus a
-  separate small headphone-jack breakout.
 - The Compute Block ↔ Receiver cable/connector itself (type, strain
   relief, routing, weatherproofing) — real industrial design, not
   software-resolvable. The link itself is decided (USB, carrying the
