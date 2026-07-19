@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from core.map_tile_cache import MapTileCache
     from core.memory_manager import MemoryManager
     from core.mission_manager import MissionManager
+    from core.module_manager import ModuleManager
     from core.notification_manager import NotificationManager
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
@@ -119,6 +120,15 @@ class AppContext:
     workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)
     map_tiles: Optional["MapTileCache"] = field(default=None, repr=False)
     trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
+    # Set by MIAApplication (Home) or core/core_runtime.py (headless
+    # Core) right after construction, same "assigned after the fact"
+    # reason as profiles/etc. above. _action_open_module is the only
+    # assistant action handler that needs it; every other handler is a
+    # pure function of (context, arguments). Headless Core never calls
+    # .discover() on it, so .all() stays empty and open_module degrades
+    # to "there's no module called X" rather than crashing — there's no
+    # screen to open one on anyway.
+    module_manager: Optional["ModuleManager"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

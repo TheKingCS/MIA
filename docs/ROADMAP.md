@@ -5203,3 +5203,79 @@ repo tree (`core/`, `gui/`, `modules/`, `config/`, and `data/` minus the
 72MB `map_tiles/` cache) — real managers, real config, zero
 monkeypatching, and zero risk to the actual `data/`/`config/` files
 since it only ever touches the copy. 1439 pytest tests still pass.
+
+## Headless MIA Core entry point — first slice (2026-07-19)
+
+Picks up the thread `docs/VISION.md`'s 2026-07-15 "Core drops its GUI
+entirely" sharpening flagged as "not built yet, and genuinely
+substantial when it is": a new `core_main.py` (parallel to `main.py`,
+never imports PySide6/`gui.*` directly or transitively — confirmed by
+checking `sys.modules` after import) drives `core/voice_loop.py`'s
+push-to-talk -> transcribe -> Assistant -> speak cycle as one blocking,
+single-threaded loop — no Qt event loop, no QThread workers, matching
+the Receiver's actual shape (a screen-free device with one user talking
+to it one turn at a time).
+
+**`core/core_runtime.py`** builds a right-sized `AppContext` (profiles,
+notifications, calendar, alarms, journal, inventory, llm, voice,
+waypoints, power, expeditions, trips, memories, missions, user_memories,
+activity_log, reference_library, device_help, plus an un-discovered
+`ModuleManager` so `context.module_manager`-dependent code degrades
+gracefully instead of crashing) and a **deliberately curated Assistant
+action registry** — alarms, notes, inventory, calendar, waypoints,
+missions, recall_recent_activity/system_health/power_status — rather
+than the full ~65-action registry `core/application.py`'s
+`_register_assistant_actions()` builds for Home. Every one of those
+`_action_*` handlers turned out to already be a `@staticmethod` — a
+pure function of `(context, arguments)` with zero dependency on
+`MIAApplication` itself except `open_module` (now also converted to a
+`@staticmethod` reading a new `context.module_manager` field, set by
+both entry points) — which is what made it safe to give Core its own
+independent copy of the ~20 handlers it curates without touching or
+duplicating Home's much larger registry. Left out deliberately, not by
+oversight: anything GUI-navigation-only (`open_module`, `set_theme`),
+Workshop/Field Kit/Maps/Project Manager/Expedition-detail actions (real
+Home-desktop-scoped surfaces, revisitable once this first slice proves
+itself on real hardware), and `get_sun_moon_info` specifically (its
+handler imports `modules.navigation.module`, which would have dragged a
+`modules/`/PySide6 import into this supposedly gui-free process).
+
+**Physical Receiver hardware (push-to-talk button/e-paper display/
+recording LED/vibration motor) is stubbed, not built** — `docs/HARDWARE.md`
+still lists the exact parts and whether the Receiver gets its own MCU
+as open questions, so writing real driver code now would be building
+blind, same discipline as 11.3b/11.6. `core/receiver_indicators.py`
+defines a `ReceiverIndicators` Protocol (on_idle/on_listening/
+on_thinking/on_speaking/on_notify) with a real, fully-functional
+`ConsoleReceiverIndicators` default (logs instead of driving GPIO/SPI) —
+swap in a real backend once the Receiver's parts are chosen, nothing
+else needs to change. `core/push_to_talk_source.py` mirrors this split
+for the button itself: `GpioPushToTalkSource` (real `gpiozero.Button`)
+falls back to `KeyboardPushToTalkSource` (Enter to start, Enter to stop
+— a terminal has no clean "held down" signal the way a real button
+does, so this is an honest two-press interaction, not a simulated one).
+
+**Verified for real, not mocked, including a real discovery along the
+way**: this dev sandbox turned out to have real `sounddevice`/
+`libportaudio2` now (previously documented as blocked) — but `aplay -l`
+confirms there's still no real sound card, just a software PulseAudio
+device, so live mic capture itself remains unverifiable here. Instead,
+verified the same way this project always has for voice work: a real
+Piper-synthesized `.wav` fed straight into real Vosk transcription
+(bypassing only the mic-capture step), then the full pipeline exercised
+against the real running Ollama server end-to-end — "Set an alarm
+called Wake Up for 07:00" correctly called the real `add_alarm` handler
+and created a real `Alarm`; a two-turn "My name is Alex and I love
+hiking in the Cascades" / "What's my name, and where do I like to
+hike?" exchange correctly used in-memory conversation history *and*
+correctly extracted two real facts via `core/user_memory_manager.py`.
+Confirmed `PySide6` never appears in `sys.modules` throughout. All 1439
+pytest tests still pass; `open_module` re-verified working for Home
+too, both for a real module and a missing one.
+
+**Not built yet, flagged for a future slice, not an oversight**: the
+Core→Home hand-off mechanism (still unbuilt per `docs/VISION.md`),
+expanding Core's curated action registry toward parity with Home's once
+this shape is validated on real Pi hardware, and the real Receiver
+hardware backends once `docs/HARDWARE.md`'s open parts questions are
+resolved.

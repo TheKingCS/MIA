@@ -212,6 +212,7 @@ class MIAApplication:
         # working device, see core/workshop_machine.py's docstring.
         self.context.workshop_machines.register(LaserEngraverMachine())
         self.module_manager = ModuleManager(self.context)
+        self.context.module_manager = self.module_manager
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
         self.context.activity_log = ActivityLogManager(self.context)
@@ -486,9 +487,15 @@ class MIAApplication:
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
         milestone 5.5. Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
-        the one place independent core services get wired together,
-        and open_module's handler needs self.module_manager to
-        validate the target actually exists.
+        the one place independent core services get wired together.
+        Every handler below is a `@staticmethod` — a pure function of
+        (context, arguments) — except that none of them actually need
+        `self` at all; `context.module_manager` (set right above) is
+        what `_action_open_module` reads to validate the target
+        actually exists. That staticmethod-purity is what let
+        `core/core_runtime.py`'s headless Core entry point curate its
+        own smaller Assistant action set (see that module) without
+        having to duplicate this class or its Qt/gui-heavy imports.
         """
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
@@ -1891,9 +1898,10 @@ class MIAApplication:
             ),
         ))
 
-    def _action_open_module(self, context: AppContext, arguments: dict) -> str:
+    @staticmethod
+    def _action_open_module(context: AppContext, arguments: dict) -> str:
         requested = str(arguments.get("module_id", "")).strip()
-        module = self.module_manager.resolve(requested)
+        module = context.module_manager.resolve(requested) if context.module_manager is not None else None
         if module is None:
             return f"There's no module called '{requested}'."
         # Published rather than calling MainWindow directly — this
