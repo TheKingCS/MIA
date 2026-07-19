@@ -730,6 +730,13 @@ class MIAApplication:
                 # 2026-07-18: real gap — "what locations have I saved"
                 # matched nothing (bare "waypoint(s)" wasn't said at all).
                 "locations have i saved", "saved locations",
+                # 2026-07-19: real gap found via tests/core_live_voice_check.py's
+                # Piper-TTS-to-Vosk-STT tier — Vosk's small model
+                # transcribes "waypoint(s)" as the two separate words
+                # "way point(s)" 100% of the time in testing (6/6 across
+                # several phrasings/positions), so the bare "waypoint"
+                # trigger above never actually fires from real speech.
+                "way point", "way points",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(

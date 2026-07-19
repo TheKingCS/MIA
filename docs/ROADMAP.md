@@ -5279,3 +5279,64 @@ expanding Core's curated action registry toward parity with Home's once
 this shape is validated on real Pi hardware, and the real Receiver
 hardware backends once `docs/HARDWARE.md`'s open parts questions are
 resolved.
+
+## Voice-command readiness for offline wearable use — real STT-noise finding + fix (2026-07-19)
+
+Direct follow-up ask: "deep focus on preparing the assistant for use
+offline with the wearable by voice commands." The previous session's
+verification of the headless Core entry point only ever fed clean,
+hand-typed text into `build_chat_request()`/`chat_with_tools()` — real
+enough for proving the pipeline and registry work, but it never
+actually exercised real speech recognition noise, which is the one
+part of "voice commands on a wearable" that's genuinely different from
+typing.
+
+New `tests/core_live_voice_check.py` (sibling of `tests/live_model_check.py`,
+scoped to Core's curated registry via `core/core_runtime.py::build_core_context()`
+directly rather than a second hand-duplicated context builder) has two
+tiers: a 33-case clean-text golden set covering every action Core
+registers (all passing, including confirming `open_module`/`set_theme`/
+`get_sun_moon_info` correctly never fire — they're not registered), and
+a second tier that's new for this project: real Piper-synthesized
+`.wav` audio fed through real Vosk transcription, then *that* (possibly
+garbled) transcript run through the same pipeline `core/voice_loop.py`
+uses — not typed text standing in for speech.
+
+**Found a real, 100%-reproducible bug this way**: Vosk's small STT
+model transcribes the word "waypoint(s)" as the two separate words "way
+point(s)" — confirmed 6/6 across several phrasings and sentence
+positions (`"List my waypoints"` -> `"this to my way points"`, `"What
+waypoints do I have"` -> `"what way points do i have"`, etc.). Since
+`list_waypoints`' gating relied on the bare substring "waypoint" to
+open the whole waypoints domain, this meant the domain would
+essentially never gate open from real spoken input, regardless of
+phrasing — a much more fundamental gap than a missing trigger phrase
+variant. Fixed by adding `"way point"`/`"way points"` to
+`list_waypoints`'s `trigger_phrases` in **both**
+`core/application.py` (Home) and `core/core_runtime.py` (Core) — this
+affects Home's existing push-to-talk voice input identically, since
+both go through the same `VoiceManager`/Vosk backend. Domain-scoped
+attachment (`AssistantActionRegistry.matching_actions()`) means this
+one addition reopens `add_waypoint`/`waypoint_distance` too, not just
+`list_waypoints` itself — no need to duplicate the fix into their own
+trigger lists. Re-verified: the previously-failing case now passes,
+8/8 on the voice tier, 33/33 on the golden set, 1439 pytest tests still
+green.
+
+**A second, related pattern observed but deliberately not "fixed" the
+same way**: imperative-leading phrasings ("List my alarms", "Show my
+waypoints") had their leading verb itself swallowed by Vosk
+(`"list"` -> `"this"`/`"this to"`, `"show"` -> `"though"`), reproducibly,
+across multiple domains — not a one-off. Query-form phrasings ("What's
+my X", "What do I have") survived intact in every test. Unlike the
+waypoint fix, this isn't safely patchable via more trigger phrases:
+the literal words "list"/"show" are simply absent from the transcript,
+and words generic enough to catch "this"/"though" as stand-ins would
+collide constantly with unrelated speech. Flagged, not fixed — the real
+fix path is evaluating a larger Vosk model (this project has only ever
+benchmarked LLM model size for the Assistant's language model, never
+STT model size) or a custom vocabulary/grammar bias for command words,
+both real investigations of their own, not something to guess at
+blind. In the meantime, worth knowing this project's own voice command
+guidance (`docs/user_help/`) should favor query-form phrasing over
+imperative-form where both exist.

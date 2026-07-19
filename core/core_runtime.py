@@ -359,7 +359,15 @@ def _register_core_assistant_actions(context: AppContext) -> None:
             "required": [],
         },
         handler=_action_list_waypoints,
-        trigger_phrases=("waypoint", "waypoints", "list my waypoints", "list waypoints", "locations have i saved", "saved locations"),
+        # "way point"/"way points" added 2026-07-19 — see
+        # core/application.py's twin registration for why: Vosk's small
+        # STT model transcribes "waypoint(s)" as two separate words
+        # every time in testing, so the bare "waypoint" trigger alone
+        # never fires from real speech.
+        trigger_phrases=(
+            "waypoint", "waypoints", "list my waypoints", "list waypoints",
+            "locations have i saved", "saved locations", "way point", "way points",
+        ),
     ))
     registry.register(AssistantAction(
         name="waypoint_distance",
