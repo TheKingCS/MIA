@@ -122,9 +122,9 @@ QFrame#HeaderBar QPushButton#NavTab {
     border: none;
     border-bottom: 2px solid transparent;
     border-radius: 0px;
-    padding: 6px 4px;
+    padding: 8px 16px;
     color: #7c8798;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
 }
 

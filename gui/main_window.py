@@ -445,8 +445,8 @@ class MainWindow(QMainWindow):
         tab_group = QFrame()
         tab_group.setObjectName("NavTabGroup")
         tab_group_layout = QHBoxLayout(tab_group)
-        tab_group_layout.setContentsMargins(6, 4, 6, 4)
-        tab_group_layout.setSpacing(4)
+        tab_group_layout.setContentsMargins(8, 6, 8, 6)
+        tab_group_layout.setSpacing(6)
 
         self._nav_tabs: dict[str, QPushButton] = {}
         for tab_id, label in (
