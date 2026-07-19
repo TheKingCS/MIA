@@ -419,15 +419,20 @@ class HomeDashboard(QFrame):
 
         stage = QFrame()
         stage.setObjectName("ConsoleOrbStage")
-        # Real user report: with `stretch=1` below, this frame filled
+        # Real user report #1: with `stretch=1` below, this frame filled
         # *all* leftover vertical space in the console column — a huge,
         # nearly-empty grey box around a 150px orb that made the fixed-
         # width side panels/rail read as small and squished by
         # comparison, even though their own pixel widths never actually
-        # changed. Capped to a fixed height sized for the orb + toggle
-        # button + padding instead; leftover space now goes below the
-        # last-message bubble as plain background, not an inflated box.
-        stage.setFixedHeight(260)
+        # changed. Fixed height instead of stretch=1.
+        # Real user report #2 (follow-up): "smaller from top to bottom
+        # but still stretches a bit far across... can be a bit taller
+        # but less wide" — taller than the first fix's 260px, and
+        # capped to a max width (instead of filling the full console
+        # column width) + centered, so it reads as a contained stage
+        # around the orb rather than a wide banner.
+        stage.setFixedHeight(300)
+        stage.setMaximumWidth(460)
         stage_layout = QVBoxLayout(stage)
         stage_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -441,11 +446,17 @@ class HomeDashboard(QFrame):
         toggle_row.addWidget(self._right_toggle_button)
         stage_layout.addLayout(toggle_row)
 
-        self._presence = PresenceWidget(diameter=150)
-        self._presence.set_glyph("Mia")
+        # 2026-07-18 follow-up: bigger (150 -> 190px), pulses more
+        # noticeably (pulse_amplitude 0.2 -> 0.4 — see
+        # gui/presence_widget.py's docstring; the sidebar/splash screen
+        # instances are untouched, still the original 0.2), and no more
+        # "Mia" text glyph overlaid on it once past the startup moment
+        # — the console's own title/last-message already say who this
+        # is, the glyph was redundant clutter on the orb itself.
+        self._presence = PresenceWidget(diameter=190, pulse_amplitude=0.4)
         stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        layout.addWidget(stage)
+        layout.addWidget(stage, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self._last_message_label = QLabel("")
         self._last_message_label.setObjectName("ConsoleLastMessage")

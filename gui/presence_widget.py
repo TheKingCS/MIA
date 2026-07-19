@@ -73,15 +73,24 @@ class PresenceWidget(QWidget):
     """A presence orb sized per caller — small (96px) for
     gui/character_panel.py's sidebar, larger (200px) for
     gui/splash_screen.py's boot moment. See this module's docstring for the
-    state model."""
+    state model.
 
-    def __init__(self, parent=None, diameter: int = 96) -> None:
+    `pulse_amplitude` (0-1, default 0.2 — the original hardcoded value,
+    unchanged for every existing caller) controls how much the
+    breathing glow's brightness swings; real user ask (2026-07-18):
+    "make the orb pulse a bit more" for the Home dashboard console's
+    instance specifically, without touching the sidebar/splash screen's
+    already-tuned feel. A bare `intensity = 0.8 + 0.2 * sin(...)`
+    became `(1 - pulse_amplitude) + pulse_amplitude * sin(...)`."""
+
+    def __init__(self, parent=None, diameter: int = 96, pulse_amplitude: float = 0.2) -> None:
         super().__init__(parent)
         self.setFixedSize(diameter, diameter)
         self._phase = 0.0
         self._rotation = 0.0
         self._state = _DEFAULT_STATE
         self._glyph = ""
+        self._pulse_amplitude = max(0.0, min(1.0, pulse_amplitude))
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
@@ -120,10 +129,10 @@ class PresenceWidget(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
 
-        # Breathing intensity oscillates between 0.8 and 1.0 (not 0-1)
-        # so the core never fades out completely — same as
-        # PulsingCoreWidget.
-        intensity = 0.8 + 0.2 * math.sin(self._phase)
+        # Breathing intensity oscillates within `_pulse_amplitude` of
+        # 1.0 (never all the way down to 0) so the core never fades out
+        # completely — same as PulsingCoreWidget for the default 0.2.
+        intensity = (1.0 - self._pulse_amplitude) + self._pulse_amplitude * math.sin(self._phase)
 
         center = self.rect().center()
         max_radius = min(self.width(), self.height()) / 2 - 2

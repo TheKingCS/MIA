@@ -5061,3 +5061,25 @@ entire `CCH.zip` Dashboard+Missions design handoff.
 
 1439 pytest tests passing, verified via headless-Qt screenshots of
 both fixes.
+
+## Orb stage tuning, round 2 (2026-07-18)
+
+Follow-up on the previous orb-sizing fix: "smaller from top to bottom
+but still stretches a bit far across... can be a bit taller but less
+wide," plus "remove the word MIA over the orb... make the orb a bit
+bigger and pulse a bit more." Console orb stage: 260px → 300px tall,
+now capped at 460px max width and centered (was filling the full
+console column width). The orb itself: 150px → 190px, and no longer
+shows the "Mia" text glyph once past the startup moment — the
+console's title/last-message already say who this is, the glyph on the
+orb itself was redundant.
+
+`gui/presence_widget.py` gained an optional `pulse_amplitude`
+constructor param (default 0.2, the original hardcoded value —
+`gui/character_panel.py`'s sidebar and `gui/splash_screen.py`'s boot
+moment are both untouched, still their original feel) so the
+Dashboard's instance specifically could pulse more noticeably
+(`pulse_amplitude=0.4`) without changing the two other callers that
+weren't part of this report.
+
+1439 pytest tests passing, verified via a headless-Qt screenshot.
