@@ -5124,3 +5124,29 @@ Three more follow-ups:
 1439 pytest tests passing, verified via a headless-Qt screenshot (tile)
 and real-click smoke tests (`LockScreen`'s two modes, the menu toggle's
 config round-trip through a fresh reload from disk).
+
+## Dashboard column proportions fixed against the real design reference (2026-07-18)
+
+The user shared the actual design handoff screenshot (`MIAHome.png`) —
+confirmed the root cause of "the side menus are still too small, bring
+them closer towards the center": the design's own CSS grid uses
+proportional flex ratios for *all four* columns
+(`minmax(150px,2.3fr) minmax(260px,3.6fr) minmax(110px,1.6fr)
+minmax(170px,2.5fr)`), not fixed-pixel side panels sitting next to a
+`stretch=1` center that soaks up 100% of whatever's left over. That
+mismatch is exactly what made the sides look small on a wide window —
+they stayed a fixed size while the center kept growing to fill it.
+`gui/home_dashboard.py`'s `body` layout now uses that same 2.3:3.6:
+1.6:2.5 ratio (×10 for clean integer stretch factors) across the
+telemetry panel/console/gauge rail/right rail, each keeping a minimum
+width (`setMinimumWidth()`, not `setFixedWidth()`) matching the
+design's own "minmax" — never below a usable size, but free to grow
+proportionally with the window instead of staying pinned at a fixed
+pixel count.
+
+Also moved the "MIA" label (added last pass) to below the orb instead
+of above it, per a direct follow-up correction.
+
+1439 pytest tests passing, verified via a headless-Qt screenshot at
+the reference image's own approximate window size (1490×1030) —
+resulting column widths now closely match the reference's proportions.

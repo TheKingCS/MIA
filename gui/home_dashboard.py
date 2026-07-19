@@ -280,13 +280,27 @@ class HomeDashboard(QFrame):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
+        # 2026-07-18: real user report ("the side menus are still too
+        # small, bring them closer towards the center"), confirmed
+        # against the design handoff's own reference screenshot
+        # (MIAHome.png) — the design's CSS grid uses proportional flex
+        # ratios for *all four* columns (minmax(150px,2.3fr)
+        # minmax(260px,3.6fr) minmax(110px,1.6fr) minmax(170px,2.5fr)),
+        # not fixed-pixel side panels next to a stretch=1 center that
+        # soaks up 100% of whatever's left over. That's exactly what
+        # made the sides look small on a wide window: they stayed a
+        # fixed size while the center kept growing. Stretch factors
+        # below are that same 2.3:3.6:1.6:2.5 ratio (x10 for clean
+        # ints); each panel keeps a minimum width instead of a fixed
+        # one, matching the design's own "minmax" — never below a
+        # usable size, but free to grow proportionally with the window.
         body = QHBoxLayout()
         body.setSpacing(0)
-        body.addWidget(self._build_telemetry_panel())
-        body.addWidget(self._build_console_panel(), stretch=1)
-        body.addWidget(self._build_gauge_rail())
+        body.addWidget(self._build_telemetry_panel(), stretch=23)
+        body.addWidget(self._build_console_panel(), stretch=36)
+        body.addWidget(self._build_gauge_rail(), stretch=16)
         self._right_rail = self._build_right_rail()
-        body.addWidget(self._right_rail)
+        body.addWidget(self._right_rail, stretch=25)
         outer.addLayout(body, stretch=1)
 
         outer.addWidget(self._build_chat_bar())
@@ -320,7 +334,7 @@ class HomeDashboard(QFrame):
         panel.setObjectName("DashboardTelemetryPanel")
         panel.setWidgetResizable(True)
         panel.setFrameShape(QFrame.Shape.NoFrame)
-        panel.setFixedWidth(220)
+        panel.setMinimumWidth(220)
         # Belt-and-suspenders alongside the DashboardStatValue font fix
         # below — this is a fixed-width side panel, never meant to
         # scroll horizontally; if some future content is ever a few
@@ -454,21 +468,22 @@ class HomeDashboard(QFrame):
         toggle_row.addWidget(self._right_toggle_button)
         stage_layout.addLayout(toggle_row)
 
+        # 160px (down from 190) to comfortably fit this narrower 240px-
+        # wide tile with real margin either side; pulse_amplitude 0.4
+        # unchanged from the previous round.
+        self._presence = PresenceWidget(diameter=160, pulse_amplitude=0.4)
+        stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignHCenter)
+
         # 2026-07-18: "put MIA back somewhere under or above the orb,
-        # big bold and outlined, the same blue used throughout" — a
-        # separate labeled heading above the orb now, not text drawn
+        # big bold and outlined, the same blue used throughout" —
+        # originally placed above the orb; follow-up report moved it
+        # below instead. A separate labeled heading, not text drawn
         # inside the orb glyph itself (that was removed as redundant
         # clutter in an earlier pass; this is a deliberately distinct,
         # more prominent re-addition).
         mia_label = QLabel("MIA")
         mia_label.setObjectName("ConsoleOrbLabel")
         stage_layout.addWidget(mia_label, alignment=Qt.AlignmentFlag.AlignHCenter)
-
-        # 160px (down from 190) to comfortably fit this narrower 240px-
-        # wide tile with real margin either side; pulse_amplitude 0.4
-        # unchanged from the previous round.
-        self._presence = PresenceWidget(diameter=160, pulse_amplitude=0.4)
-        stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self._last_message_label = QLabel("")
         self._last_message_label.setObjectName("ConsoleLastMessage")
@@ -494,7 +509,7 @@ class HomeDashboard(QFrame):
     def _build_gauge_rail(self) -> QWidget:
         rail = QWidget()
         rail.setObjectName("DashboardTelemetryPanel")
-        rail.setFixedWidth(110)
+        rail.setMinimumWidth(110)
         layout = QVBoxLayout(rail)
         layout.setContentsMargins(10, 18, 10, 18)
         layout.setSpacing(16)
@@ -531,7 +546,7 @@ class HomeDashboard(QFrame):
         scroll.setObjectName("DashboardTelemetryPanel")
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setFixedWidth(230)
+        scroll.setMinimumWidth(230)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         container = QWidget()
