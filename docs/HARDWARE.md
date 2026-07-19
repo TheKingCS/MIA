@@ -289,13 +289,30 @@ passed over:
   integration complexity aimed at self-driving-car-class use cases —
   real overkill for a hiking wearable.
 
-Keeping M9N/M10 and adding a separate, inexpensive IMU breakout (e.g.
-an MPU-6050 or BNO055/BNO085-class part — exact one still open) keeps
+Keeping M9N/M10 and adding a separate, inexpensive IMU breakout keeps
 the already-decided canopy performance intact and stays far cheaper
-than F9R, at the cost of one extra I2C part and doing sensor fusion in
-software (on the Pi) rather than in the GPS module's own firmware.
-Still open: the exact GPS breakout board (SparkFun vs. Adafruit vs.
-other) and the exact IMU part.
+than F9R.
+
+**2026-07-19: both exact breakout boards decided**, verified via real
+current listings rather than assumed:
+- **GPS: SparkFun GNSS Receiver Breakout — MAX-M10S (Qwiic).**
+  Confirmed <25mW continuous tracking (genuinely low-power, matters
+  given the power trade-off already accepted for this chipset family),
+  an SMA connector for an external antenna (antenna placement/
+  orientation was already flagged as affecting fix quality at pack
+  height — SMA makes swapping/positioning it straightforward), and
+  Qwiic (I2C, solderless).
+- **IMU: Adafruit 9-DOF Orientation IMU Fusion Breakout — BNO085
+  (STEMMA QT/Qwiic).** A real step up from a bare MPU-6050: the BNO08x
+  series has an onboard ARM Cortex M0+ doing sensor fusion in
+  hardware, so it outputs ready-to-use orientation data directly
+  instead of needing raw accelerometer/gyro/magnetometer fused in
+  software on the Pi — reduces the "software fusion" cost this section
+  originally expected to pay. STEMMA QT and Qwiic are the same
+  connector standard, cross-compatible — so this and the GPS board
+  above daisy-chain on one I2C bus with zero soldering, consistent
+  with this project's existing simple-wiring bias (same reasoning that
+  picked MicroPython/CircuitPython for the Receiver's Pico).
 
 **2026-07-15: physical placement decided — the Compute Block, not the
 Receiver.** The user's own call. Practically this also means the GPS
@@ -472,10 +489,6 @@ verified.
   threaded-lock USB-C) and the link it carries are both decided, see
   "Modular Backpack" above; only the physical routing/mounting is real
   industrial design left for a prototype.
-- GPS module choice for Navigation — see the GPS section above.
-  Placement (Compute Block), chipset family (u-blox M9N/M10), and IMU
-  pairing (yes, a separate chip, not an integrated M8U/F9R) are all
-  decided; the exact GPS breakout board and exact IMU part are still open.
 - LoRa/SDR/radio hardware for Communications — defer until that phase,
   since protocol choice (Meshtastic vs. custom) affects the hardware pick
 - Compute Block enclosure — side-of-backpack mounting hardware, and
