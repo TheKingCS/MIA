@@ -835,6 +835,12 @@ QLabel#MissionListRowCompletedTitle {
     color: #5b6a80;
 }
 
+QLabel#MissionListRowChevron {
+    color: #5b6a80;
+    font-size: 15px;
+    font-weight: 700;
+}
+
 QWidget#MissionLevelFooter {
     background-color: #131b26;
     border: 1px solid #1b222e;
@@ -862,6 +868,24 @@ QPushButton#ObjectiveChecklistBox[checked="true"] {
 
 QPushButton#ObjectiveChecklistBox:disabled {
     color: #06131a;
+}
+
+/* 2026-07-18: real user report — a plain checkbox gave no visible hint
+that clicking it repeatedly logged tally progress for a multi-step
+objective. This explicit "+1" button is the actual progress control for
+those now (see gui/widgets/objective_checklist_row.py's docstring). */
+QPushButton#ObjectiveProgressButton {
+    background-color: #0f1a1c;
+    border: 1px solid #1f3538;
+    border-radius: 6px;
+    padding: 3px 10px;
+    color: #38d9c9;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+QPushButton#ObjectiveProgressButton:hover {
+    background-color: #16292c;
 }
 
 QLabel#ObjectiveChecklistText {

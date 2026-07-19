@@ -14,7 +14,7 @@ own" shape as ConversationCard/ModuleButton, for the same reason: a QSS
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton
 
 
@@ -24,8 +24,16 @@ class MissionListRow(QPushButton):
     def __init__(self, mission_id: str, icon: str, title: str, completed: bool = False) -> None:
         super().__init__()
         self.setObjectName("MissionListRow")
-        self.setToolTip(title)
+        self.setToolTip(f"View '{title}'")
         self.setMinimumHeight(36)
+        # 2026-07-18 real user report ("needs to allow you to select
+        # the mission to view it") — clicking a row already worked
+        # mechanically, but nothing about a plain text row visually
+        # signaled it was clickable at all. A pointing-hand cursor plus
+        # the trailing "›" chevron below (the same "tap to go deeper"
+        # convention the design's own Assistant Profile rows use) makes
+        # the affordance obvious instead of just mechanically present.
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._mission_id = mission_id
         self.clicked.connect(lambda: self.activated.emit(self._mission_id))
 
@@ -42,6 +50,11 @@ class MissionListRow(QPushButton):
         title_label.setObjectName("MissionListRowCompletedTitle" if completed else "MissionListRowTitle")
         title_label.setWordWrap(True)
         layout.addWidget(title_label, stretch=1)
+
+        if not completed:
+            chevron = QLabel("›")
+            chevron.setObjectName("MissionListRowChevron")
+            layout.addWidget(chevron)
 
     def set_selected(self, selected: bool) -> None:
         self.setProperty("selected", selected)

@@ -419,6 +419,15 @@ class HomeDashboard(QFrame):
 
         stage = QFrame()
         stage.setObjectName("ConsoleOrbStage")
+        # Real user report: with `stretch=1` below, this frame filled
+        # *all* leftover vertical space in the console column — a huge,
+        # nearly-empty grey box around a 150px orb that made the fixed-
+        # width side panels/rail read as small and squished by
+        # comparison, even though their own pixel widths never actually
+        # changed. Capped to a fixed height sized for the orb + toggle
+        # button + padding instead; leftover space now goes below the
+        # last-message bubble as plain background, not an inflated box.
+        stage.setFixedHeight(260)
         stage_layout = QVBoxLayout(stage)
         stage_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -436,13 +445,15 @@ class HomeDashboard(QFrame):
         self._presence.set_glyph("Mia")
         stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        layout.addWidget(stage, stretch=1)
+        layout.addWidget(stage)
 
         self._last_message_label = QLabel("")
         self._last_message_label.setObjectName("ConsoleLastMessage")
         self._last_message_label.setWordWrap(True)
         self._last_message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._last_message_label)
+
+        layout.addStretch()
 
         return container
 

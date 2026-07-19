@@ -5027,3 +5027,37 @@ almost entirely Qt widget/layout/interaction behavior, verified via
 headless smoke-test screenshots covering the console, both rail-toggle
 states, and full nav-tab click-through instead). This closes out the
 entire `CCH.zip` Dashboard+Missions design handoff.
+
+## Two real follow-up reports on the CCH.zip redesign (2026-07-18)
+
+1. **"The orb's grey rectangle takes up so much space it makes
+   everything around it small and squished."** Real bug in
+   `gui/home_dashboard.py`'s `_build_console_panel()`: the orb stage
+   frame was added with `stretch=1`, so it filled *all* leftover
+   vertical space in the console column — a large, mostly-empty grey
+   box around the 150px orb that made the fixed-width side panels read
+   as cramped by visual contrast, even though their own pixel
+   dimensions never changed. Fixed with a fixed height (260px) sized
+   for the orb + toggle button + padding, moving the stretch to below
+   the last-message bubble instead so leftover space is plain
+   background, not an inflated box.
+2. **"[Missions] needs some way of adding to the progression/tracking
+   and it also needs to allow you to select the mission to view it."**
+   Verified with real simulated mouse clicks (`QTest.mouseClick`, not
+   just `.click()`) that selecting a mission and incrementing a tally
+   objective both worked mechanically — the real gap was
+   *discoverability*, not a broken mechanism: (a) a single-step
+   objective's checkbox reads as an ordinary checkbox, but a
+   multi-step one ("Catch 3 fish") gave no visible hint that clicking
+   the same plain checkbox repeatedly was how you logged partial
+   progress; (b) mission list rows had no visual signal that they were
+   clickable at all. Fixed: multi-step objectives now get an explicit,
+   clearly-labeled "+1" button (`gui/widgets/objective_checklist_row.py`)
+   separate from the checkbox, which becomes a pure completion
+   indicator for those; mission list rows gained a pointing-hand
+   cursor and a trailing "›" chevron (`gui/widgets/mission_list_row.py`)
+   — the same "tap to go deeper" convention the design's own Assistant
+   Profile rows already use.
+
+1439 pytest tests passing, verified via headless-Qt screenshots of
+both fixes.

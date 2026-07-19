@@ -344,7 +344,9 @@ class MissionsModule(ModuleBase):
             progress = self.context.missions.objective_progress(mission.mission_id, index) or 0.0
             is_complete = self.context.missions.is_objective_complete(mission.mission_id, index)
             label_text = format_checklist_label(objective.description, progress, objective.target, is_complete)
-            row = ObjectiveChecklistRow(index, label_text, is_complete, objective.metric_type == "tally")
+            row = ObjectiveChecklistRow(
+                index, label_text, is_complete, objective.metric_type == "tally", is_multi_step=objective.target > 1
+            )
             row.increment_requested.connect(self._on_increment_objective)
             row.delete_requested.connect(self._on_delete_objective)
             self._detail_layout.addWidget(row)
