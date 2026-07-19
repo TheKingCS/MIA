@@ -5150,3 +5150,56 @@ of above it, per a direct follow-up correction.
 1439 pytest tests passing, verified via a headless-Qt screenshot at
 the reference image's own approximate window size (1490×1030) —
 resulting column widths now closely match the reference's proportions.
+
+## Console tile reversed back to wide/tall, nav grouping, bigger sidebar widgets (2026-07-18)
+
+Real follow-up report, re-checked directly against `MIAHome.png` rather
+than reasoned about from memory: **"the assistant panel in the middle
+is too short and not wide enough with too much space around it, it
+should be the full length of the window just like the 2 side bars but
+should stop a little sooner before reaching the bottom of the window to
+display the welcome message underneath."**
+
+This directly reversed the previous pass's `stage.setFixedWidth(240)`
+decision. That 240px-narrow read was made *before* the side panels'
+own proportional-width bug was fixed — once the side panels actually
+grew to their correct width (previous section), a narrow 240px console
+tile no longer made sense next to them; the reference clearly shows a
+wide box filling nearly the whole console column. `gui/home_dashboard.py`'s
+`_build_console_panel()`: the width cap is gone, `stage` gets
+`stretch=1` in the outer column layout (tall, like the side bars, but
+stopping short of the very bottom because `_last_message_label` is now
+a sibling *below* it, not nested inside — this also reverses "text
+underneath" being satisfied by nesting it inside the tile). Presence
+orb bumped back up 160 → 190px now that there's room again.
+
+**"All the widget looking pieces on the sidebars need to be a bit
+bigger"** — the Processing Load gauge (150 → 170px), the CPU/NET/SYS
+rail gauges (84 → 104px), and the right rail's Monitoring tiles
+(`MonitorTileValue` 15 → 19px, `MonitorTile` given explicit padding and
+a 64px minimum height) all sized up. `DashboardStatValue` (POWER/UPTIME)
+also bumped 15 → 19px — safe now that the telemetry panel has real
+proportional width instead of the old fixed 220px column that caused
+the original clipping bug this font size was shrunk to avoid.
+
+**"The menu doesn't have the distinct lines and separation and color
+differences the reference picture has"** — `gui/main_window.py`'s
+header previously put the wordmark, tabs, and back/search/avatar
+cluster directly on the header's own flat background with only spacing
+between them. Added a new `_build_nav_separator()` (a thin `QFrame`
+VLine) between the wordmark and the tab row, and again before the Back
+button; the four nav tabs are now wrapped in their own `NavTabGroup`
+frame with a distinct background (`#111722`, matching the same tone
+`HeaderButton`/`HeaderSearchBar`/`ProfileAvatarButton` already use) and
+a bordered, rounded-pill container, instead of floating loose on the
+header bar.
+
+Verified this whole pass with a real headless-Qt boot: rather than a
+throwaway widget-only smoke script, this one runs the *actual*
+`core.application.MIAApplication` boot sequence (splash → module
+discovery → straight to the main window, since the real dev profile is
+already single/password-less) against a temporary copy of the whole
+repo tree (`core/`, `gui/`, `modules/`, `config/`, and `data/` minus the
+72MB `map_tiles/` cache) — real managers, real config, zero
+monkeypatching, and zero risk to the actual `data/`/`config/` files
+since it only ever touches the copy. 1439 pytest tests still pass.

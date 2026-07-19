@@ -354,7 +354,7 @@ class HomeDashboard(QFrame):
         load_title = QLabel("PROCESSING LOAD")
         load_title.setObjectName("DashboardSectionTitle")
         load_layout.addWidget(load_title, alignment=Qt.AlignmentFlag.AlignHCenter)
-        self._load_gauge = CircularGauge(diameter=150, stroke_width=8)
+        self._load_gauge = CircularGauge(diameter=170, stroke_width=9)
         load_layout.addWidget(self._load_gauge)
         load_caption = QLabel("Overall system load")
         load_caption.setObjectName("DashboardSectionBody")
@@ -441,21 +441,26 @@ class HomeDashboard(QFrame):
         # Real user report #2: "smaller from top to bottom but still
         # stretches a bit far across... can be a bit taller but less
         # wide" — taller, capped max-width + centered.
-        # Real user report #3 (this pass): "should be top to bottom and
-        # the text underneath, and the same less wide width across so
-        # the side menus don't look weird." Now a genuinely narrow,
-        # tall tile — a *fixed* width matching the side panels' own
-        # scale (240px, between the telemetry panel's 220 and the right
-        # rail's 230) instead of a wide centered box, with the
-        # last-message text moved *inside* the tile underneath the orb
-        # instead of sitting outside it as a separate widget. Height is
-        # deliberately left natural (not hardcoded) — sized to fit
-        # whatever's actually inside, so there's no risk of clipping
-        # the message text on a longer reply.
-        stage.setFixedWidth(240)
+        # Real user report #3: "should be top to bottom and the text
+        # underneath, and the same less wide width across so the side
+        # menus don't look weird" — narrowed to a fixed 240px with the
+        # message moved *inside* the tile.
+        # Real user report #4 (this pass, checked directly against
+        # MIAHome.png): report #3's fixed-240px read was wrong — once
+        # the side panels were fixed to their correct proportional width
+        # (see the body-layout comment above), the reference shows this
+        # tile as *wide*, filling nearly the whole console column, and
+        # *tall*, spanning most (not all) of the column's height — not
+        # narrow to match the side panels. And the reference's message
+        # bubble ("All systems nominal...") sits *outside/below* the
+        # dark box as its own element, not nested inside it. So: no
+        # width cap (fills the column like the reference), `stretch=1`
+        # so it's tall like the side panels but stops short of the
+        # very bottom, and the message label moved back out to be a
+        # sibling below `stage`, not a child inside it.
         stage_layout = QVBoxLayout(stage)
-        stage_layout.setContentsMargins(14, 14, 14, 14)
-        stage_layout.setSpacing(10)
+        stage_layout.setContentsMargins(20, 16, 20, 20)
+        stage_layout.setSpacing(12)
         stage_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
         toggle_row = QHBoxLayout()
@@ -468,10 +473,12 @@ class HomeDashboard(QFrame):
         toggle_row.addWidget(self._right_toggle_button)
         stage_layout.addLayout(toggle_row)
 
-        # 160px (down from 190) to comfortably fit this narrower 240px-
-        # wide tile with real margin either side; pulse_amplitude 0.4
+        stage_layout.addStretch()
+
+        # Back up to 190px (from 160) now that the tile is wide/tall
+        # again instead of a narrow 240px column; pulse_amplitude 0.4
         # unchanged from the previous round.
-        self._presence = PresenceWidget(diameter=160, pulse_amplitude=0.4)
+        self._presence = PresenceWidget(diameter=190, pulse_amplitude=0.4)
         stage_layout.addWidget(self._presence, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         # 2026-07-18: "put MIA back somewhere under or above the orb,
@@ -485,16 +492,15 @@ class HomeDashboard(QFrame):
         mia_label.setObjectName("ConsoleOrbLabel")
         stage_layout.addWidget(mia_label, alignment=Qt.AlignmentFlag.AlignHCenter)
 
+        stage_layout.addStretch()
+
+        layout.addWidget(stage, stretch=1)
+
         self._last_message_label = QLabel("")
         self._last_message_label.setObjectName("ConsoleLastMessage")
         self._last_message_label.setWordWrap(True)
         self._last_message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        stage_layout.addWidget(self._last_message_label)
-
-        layout.addWidget(stage, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addStretch()
-
-        layout.addStretch()
+        layout.addWidget(self._last_message_label)
 
         return container
 
@@ -529,7 +535,7 @@ class HomeDashboard(QFrame):
     def _build_small_gauge(self, layout: QVBoxLayout, label_text: str) -> CircularGauge:
         column = QVBoxLayout()
         column.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        gauge = CircularGauge(diameter=84, stroke_width=9)
+        gauge = CircularGauge(diameter=104, stroke_width=10)
         column.addWidget(gauge)
         label = QLabel(label_text)
         label.setObjectName("DashboardSectionTitle")
@@ -617,7 +623,10 @@ class HomeDashboard(QFrame):
     def _build_monitor_tile(self, label_text: str) -> tuple[QFrame, QLabel]:
         tile = QFrame()
         tile.setObjectName("MonitorTile")
+        tile.setMinimumHeight(64)
         layout = QVBoxLayout(tile)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(4)
         title = QLabel(label_text)
         title.setObjectName("DashboardSectionTitle")
         layout.addWidget(title)

@@ -431,6 +431,23 @@ class MainWindow(QMainWindow):
         wordmark.setObjectName("NavWordmark")
         layout.addWidget(wordmark)
 
+        # 2026-07-18: real user report, checked against MIAHome.png —
+        # the reference reads as three distinct header zones (wordmark,
+        # tab cluster, icon cluster), and this bar previously had every
+        # element sitting directly on the header's own background with
+        # nothing but spacing telling them apart. A thin separator plus
+        # its own subtly-different background for the tab cluster
+        # ("NavTabGroup") gives the "distinct lines and separation and
+        # color differences" the flat version lacked, without
+        # restyling each tab button individually.
+        layout.addWidget(self._build_nav_separator())
+
+        tab_group = QFrame()
+        tab_group.setObjectName("NavTabGroup")
+        tab_group_layout = QHBoxLayout(tab_group)
+        tab_group_layout.setContentsMargins(6, 4, 6, 4)
+        tab_group_layout.setSpacing(4)
+
         self._nav_tabs: dict[str, QPushButton] = {}
         for tab_id, label in (
             ("home", "Home"), ("missions", "Missions"), ("diagnostics", "Monitoring"), ("apps", "App Center")
@@ -438,9 +455,10 @@ class MainWindow(QMainWindow):
             tab_button = QPushButton(label)
             tab_button.setObjectName("NavTab")
             tab_button.clicked.connect(lambda _checked=False, t=tab_id: self._on_nav_tab_clicked(t))
-            layout.addWidget(tab_button)
+            tab_group_layout.addWidget(tab_button)
             self._nav_tabs[tab_id] = tab_button
 
+        layout.addWidget(tab_group)
         layout.addStretch()
 
         # 2026-07-14 aesthetic pass (docs/ROADMAP.md): every header
@@ -454,6 +472,7 @@ class MainWindow(QMainWindow):
         self._back_button.clicked.connect(self.go_back)
         self._back_button.setEnabled(False)
         layout.addWidget(self._back_button)
+        layout.addWidget(self._build_nav_separator())
 
         # 2026-07-18: a real search *bar* (QLineEdit chrome), not a
         # button labeled "Search" — read-only so it can't half-pretend
@@ -511,6 +530,17 @@ class MainWindow(QMainWindow):
         layout.addWidget(self._profile_button)
 
         return header
+
+    def _build_nav_separator(self) -> QFrame:
+        """A thin vertical divider between the header's wordmark/tab/
+        icon zones — see the "distinct lines and separation" comment in
+        _build_header()."""
+        line = QFrame()
+        line.setObjectName("NavSeparator")
+        line.setFrameShape(QFrame.Shape.VLine)
+        line.setFixedWidth(1)
+        line.setFixedHeight(28)
+        return line
 
     def _build_menu(self) -> QWidget:
         scroll = QScrollArea()

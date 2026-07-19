@@ -103,6 +103,20 @@ QLabel#NavWordmark {
     letter-spacing: 0.5px;
 }
 
+/* 2026-07-18: gives the tab cluster its own subtly distinct background
+(vs. the plain HeaderBar bg) so it reads as a grouped "menu" element,
+per the real user report that the header lacked the reference's
+"distinct lines and separation and color differences". */
+QFrame#NavTabGroup {
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 10px;
+}
+
+QFrame#HeaderBar QFrame#NavSeparator {
+    background-color: #232b38;
+}
+
 QFrame#HeaderBar QPushButton#NavTab {
     background-color: transparent;
     border: none;
@@ -906,12 +920,16 @@ QScrollArea#DashboardTelemetryPanel, QWidget#DashboardTelemetryPanel {
     border-right: 1px solid #1b222e;
 }
 
-/* Smaller than MissionDetailTitle's 19px — a real bug found via a
-headless-Qt screenshot: that font clipped "59h 18m" in this tile's
-~100px half-column width, which forced the whole side panel wider than
-its fixed column width, showing an unwanted horizontal scrollbar. */
+/* Originally a smaller 15px to dodge a real clipping bug ("59h 18m"
+overflowing a ~100px half-column, forcing an unwanted horizontal
+scrollbar) — that was against the old *fixed*-220px telemetry panel.
+Now that the panel uses a proportional stretch width (see the body-
+layout comment in gui/home_dashboard.py), there's real room again, and
+2026-07-18's "widgets on the sidebars need to be a bit bigger" report
+bumped this back up to 19px; word-wrap on the label is still the actual
+overflow guard, not this font size. */
 QLabel#DashboardStatValue {
-    font-size: 15px;
+    font-size: 19px;
     font-weight: 700;
     color: #e7ecf3;
 }
@@ -976,7 +994,7 @@ QFrame#MonitorTile {
 }
 
 QLabel#MonitorTileValue {
-    font-size: 15px;
+    font-size: 19px;
     font-weight: 700;
     color: #e7ecf3;
 }
