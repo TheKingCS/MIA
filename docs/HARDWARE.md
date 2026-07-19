@@ -100,10 +100,10 @@ which is reinstallable from the MIA repo.
   polled), for near-zero idle power draw and instant response —
   **placement decided 2026-07-15: on the Receiver** (see "Modular
   Backpack" below), the reachable spot given where it's actually worn.
-  Now most likely wired through whatever local MCU the Receiver ends up
-  with (same section) rather than a raw GPIO run all the way back to
-  the Pi's own header, given how many other components (display, LED,
-  vibration motor) are also landing on the Receiver
+  Wired through the Receiver's own Pico/RP2040 (see "Modular Backpack"
+  below, decided 2026-07-19) rather than a raw GPIO run all the way
+  back to the Pi's own header, alongside the display/LED/vibration
+  motor also landing on that same MCU
 - Avoids wake-word false triggers and the extra always-on compute/power
   budget of continuous audio processing — both matter for a
   battery-powered field device
@@ -332,43 +332,38 @@ call):
   circuit and a PWM-capable signal to trigger it, not just a raw GPIO
   on/off.
 
-**This component list is now big enough to raise a real design
-question the original two-item Receiver didn't have: does the Receiver
-need its own small microcontroller, rather than every button/LED/
-vibration-motor/display running raw GPIO wires down the connector cable
-to the Pi?** Recommendation (not yet decided, worth a real answer once
-cable length/part choices firm up): **yes, probably** — a small local
-MCU (Pi Pico/RP2040-class is the obvious fit, cheap and well-supported)
-handling the button, LED, vibration motor, and e-paper display locally,
-then talking to the Compute Block over one clean USB/serial link,
-has real advantages over raw GPIO at a distance: fewer, more robust
-wires in the connector cable instead of one pair per component (voltage
-drop and noise pickup get worse the longer a raw GPIO run is), instant
-local response (the recording LED shouldn't wait on a round trip to the
-Pi to light up), and the e-paper display's own refresh logic can live
-on the MCU instead of the Pi. The real cost is added firmware work
-(MicroPython/CircuitPython on the Pico is the natural choice given this
-project's own Python-first bias) and one more component that can fail
-— a fair trade worth confirming once you're ready to commit to it, not
-decided unilaterally here.
+**2026-07-19: decided — the Receiver gets its own small microcontroller,
+a Pi Pico/RP2040.** This component list had grown big enough to raise a
+real design question the original two-item Receiver didn't have:
+whether every button/LED/vibration-motor/display should run raw GPIO
+wires down the connector cable to the Pi, or consolidate locally
+first. Going with the local-MCU route: the Pico handles the button,
+LED, vibration motor, and e-paper display locally, then talks to the
+Compute Block over one clean USB/serial link. Real advantages over raw
+GPIO at a distance: fewer, more robust wires in the connector cable
+instead of one pair per component (voltage drop and noise pickup get
+worse the longer a raw GPIO run is), instant local response (the
+recording LED doesn't wait on a round trip to the Pi to light up), and
+the e-paper display's own refresh logic lives on the MCU instead of
+the Pi. Accepted cost: real firmware work (MicroPython/CircuitPython
+on the Pico is the natural choice given this project's own
+Python-first bias) and one more component that can fail.
 
-**The open technical question this splits into: how the Receiver talks
-back to the Compute Block.** They're physically separated by a real
-distance (side-of-pack to chest/strap), so this needs an actual cable
-run, not a short ribbon connector. Recommendation, not yet decided:
-**USB, not CSI ribbon** — a Pi-native CSI camera would normally be the
+**2026-07-19: decided — USB is how the Receiver talks back to the
+Compute Block.** They're physically separated by a real distance
+(side-of-pack to chest/strap), so this needs an actual cable run, not
+a short ribbon connector. A Pi-native CSI camera would normally be the
 first choice for image quality/latency, but CSI ribbon cables are short
-and fragile, a poor fit for a run of this length across a
-person's body. USB is more robust over distance and — ideally — lets
-camera+mic+speaker (and, if the local-MCU route above gets picked, the
-button/LED/vibration/display too, via the MCU's own USB/serial link)
-share a *single* cable/connector rather than a bundle of separate ones.
-Whatever's chosen, the actual connector/cable itself (type, strain
-relief, routing along the pack and up to the chest/strap,
-weatherproofing) is real industrial design not resolved here — same
-"tracked as its own parallel track, revisit once a first physical
-prototype is underway" status as before, just with the architecture now
-concrete enough to prototype against instead of an open sketch.
+and fragile, a poor fit for a run of this length across a person's
+body. USB is more robust over distance and lets camera+mic+speaker
+*and* the Pico's own USB/serial link (button/LED/vibration/display)
+share a single cable/connector rather than a bundle of separate ones.
+Still open: the actual connector/cable itself (type, strain relief,
+routing along the pack and up to the chest/strap, weatherproofing) —
+real industrial design not resolved here, same "tracked as its own
+parallel track, revisit once a first physical prototype is underway"
+status as before, just with the architecture now concrete enough to
+prototype against instead of an open sketch.
 
 **Solar charging (2026-07-15 addition)**: the Compute Block's power
 source should be rechargeable from a solar panel charger, per the
@@ -390,13 +385,11 @@ can charge it directly.
   "Modular Backpack" above
 - Exact e-paper display module, recording LED, and vibration motor
   parts for the Receiver — see "Modular Backpack" above
-- Whether the Receiver gets its own small MCU (Pico/RP2040-class
-  recommended) to consolidate its button/LED/vibration/display, or runs
-  everything as raw GPIO over the connector cable — see "Modular
-  Backpack" above
 - The Compute Block ↔ Receiver cable/connector itself (type, strain
   relief, routing, weatherproofing) — real industrial design, not
-  software-resolvable
+  software-resolvable. The link itself is decided (USB, carrying both
+  the Pico's button/LED/vibration/display traffic and camera/mic/
+  speaker), just not the physical connector/cable part.
 - GPS module choice for Navigation — see the GPS section above.
   Placement (Compute Block), chipset family (u-blox M9N/M10), and IMU
   pairing (yes, a separate chip, not an integrated M8U/F9R) are all
