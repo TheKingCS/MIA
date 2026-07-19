@@ -412,12 +412,26 @@ and fragile, a poor fit for a run of this length across a person's
 body. USB is more robust over distance and lets camera+mic+headphone-jack
 *and* the Pico's own USB/serial link (button/LED/vibration/display)
 share a single cable/connector rather than a bundle of separate ones.
-Still open: the actual connector/cable itself (type, strain relief,
-routing along the pack and up to the chest/strap, weatherproofing) —
-real industrial design not resolved here, same "tracked as its own
-parallel track, revisit once a first physical prototype is underway"
-status as before, just with the architecture now concrete enough to
-prototype against instead of an open sketch.
+
+**2026-07-19: connector decided — an IP67 threaded-lock USB-C cable**
+(e.g. Leehitech/DataPro-class panel-mount extension cables), over a
+magnetic breakaway alternative. Both were verified as real options
+first, not assumed: magnetic USB-C cables genuinely do carry real
+USB 2.0 data (480Mbps, confirmed — not the charge-only cables that are
+also common) and would pull apart safely if snagged on brush, but
+aren't weatherproof and are more prone to working loose during a
+hike's constant movement. Chosen IP67 instead because this rig's whole
+design has already leaned toward weatherproofing/reliability as the
+priority (the solar-charging requirement, the still-open enclosure
+weatherproofing question below) — snag risk gets handled instead
+through cable routing/slack management along the strap, a mitigation
+that doesn't depend on connector choice. Threaded lock also keeps the
+connection secure through a hike's constant jostling, which a magnetic
+connector doesn't guarantee as reliably.
+Still open: the exact routing along the pack and up to the chest/
+strap, and the enclosure penetrations at each end — real industrial
+design not resolved here, same "tracked as its own parallel track,
+revisit once a first physical prototype is underway" status as before.
 
 **Solar charging (2026-07-15 addition)**: the Compute Block's power
 source should be rechargeable from a solar panel charger, per the
@@ -453,11 +467,11 @@ verified.
 
 ## Open questions to revisit as hardware is acquired
 
-- The Compute Block ↔ Receiver cable/connector itself (type, strain
-  relief, routing, weatherproofing) — real industrial design, not
-  software-resolvable. The link itself is decided (USB, carrying the
-  Pico's button/LED/vibration/display/headphone-audio traffic and
-  camera/mic), just not the physical connector/cable part.
+- The Compute Block ↔ Receiver cable's routing along the pack/strap and
+  its enclosure penetrations at each end — the cable itself (IP67
+  threaded-lock USB-C) and the link it carries are both decided, see
+  "Modular Backpack" above; only the physical routing/mounting is real
+  industrial design left for a prototype.
 - GPS module choice for Navigation — see the GPS section above.
   Placement (Compute Block), chipset family (u-blox M9N/M10), and IMU
   pairing (yes, a separate chip, not an integrated M8U/F9R) are all
