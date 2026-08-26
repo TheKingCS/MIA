@@ -28,8 +28,40 @@ class HardwareRegistry:
     def register(self, item: Describable, module_id: str) -> list[HardwareRequirement]:
         reqs = item.describe_hardware_requirements()
         for req in reqs:
+            self._log_hardware_change(module_id, req)
             self._persist(module_id, req)
         return reqs
+
+    def _log_hardware_change(self, module_id: str, req: HardwareRequirement) -> None:
+        existing = self.db.execute(
+            "SELECT quantity, est_unit_cost, purpose FROM hardware_requirements "
+            "WHERE module_id = ? AND item = ?",
+            (module_id, req.item),
+        ).fetchone()
+
+        if existing is None:
+            self.db.execute(
+                "INSERT INTO system_changelog (module_id, change_type, field_name, old_value, new_value) "
+                "VALUES (?, 'first_registered', 'hardware', NULL, ?)",
+                (module_id, f"{req.item} (qty {req.quantity})"),
+            )
+            self.db.commit()
+            return
+
+        old_qty, old_cost, old_purpose = existing
+        if old_qty != req.quantity:
+            self._log_change(module_id, req.item, "quantity", old_qty, req.quantity)
+        if old_cost != req.est_unit_cost:
+            self._log_change(module_id, req.item, "est_unit_cost", old_cost, req.est_unit_cost)
+
+    def _log_change(self, module_id: str, item: str, field: str, old_value, new_value) -> None:
+        self.db.execute(
+            "INSERT INTO system_changelog (module_id, change_type, field_name, old_value, new_value) "
+            "VALUES (?, 'hardware_changed', ?, ?, ?)",
+            (module_id, f"{item}.{field}", str(old_value), str(new_value)),
+        )
+        self.db.commit()
+        logger.info("Changelog: %s %s.%s changed: %s -> %s", module_id, item, field, old_value, new_value)
 
     def register_all(self, items_with_ids: list[tuple[Describable, str]]) -> int:
         total = 0

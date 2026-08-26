@@ -72,13 +72,42 @@ anything by hand.
 Checklist, in order:
 1. Implement the module's actual logic (`read_sensors`/`evaluate`, or
    whatever the service does).
-2. Implement `describe_capabilities()` in the same sitting — not after,
-   not "later once it's stable." If you can't yet describe what it does
-   in a sentence, the module's purpose probably isn't well-defined yet.
+2. Implement `describe_capabilities()` and `describe_hardware_requirements()`
+   in the same sitting — not after, not "later once it's stable." If you
+   can't yet describe what it does in a sentence, the module's purpose
+   probably isn't well-defined yet.
 3. Register it in `config/modules.yaml` (control modules) or add it to
-   the `register_all()` call in `main.py` (standalone services).
-4. Restart and confirm it shows up via `get_system_capabilities` (or
-   just query the `system_capabilities` table directly).
+   the `all_describables` list in `main.py` (standalone services).
+4. **Run `python3 core/self_audit.py`.** This is not optional — it's
+   the check that catches exactly the failure mode of steps 1-2 done
+   correctly and step 3 forgotten: real code with a real
+   `describe_capabilities()` that nobody wired into registration,
+   silently invisible to the assistant. It also re-runs the full
+   safety scenario suite as a final gate.
+5. Restart and confirm the module shows up via `get_system_capabilities`,
+   and that if you changed anything about an EXISTING module,
+   `get_self_change_history` shows a real entry — not silence, and not
+   noise on an unrelated restart with no code changes.
 
 If you skip step 2, the module won't run at all — Python enforces this
-before you can even get to step 3.
+before you can even get to step 3. If you skip step 3, step 4 catches
+it before you ship it.
+
+## How the system's self-understanding tracks its own development
+
+Every time `CapabilityRegistry` or `HardwareRegistry` registers a
+module, it diffs the new declaration against what was stored last
+time. Three outcomes:
+
+- **First time seeing this module** → logged as `first_registered`.
+- **Nothing changed** → nothing logged. A restart with no code changes
+  produces zero changelog noise — this was verified directly: two
+  identical registrations in a row produced no entries, then an actual
+  edit produced exactly two precise, field-level entries.
+- **Something changed** → logged with the specific field, old value,
+  and new value, timestamped.
+
+This is what "the system's understanding of itself changes as it's
+developed" actually means in practice — not a vibe, a table
+(`system_changelog`) you can query, and a tool (`get_self_change_history`)
+the assistant uses to answer honestly instead of guessing.

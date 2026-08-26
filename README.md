@@ -46,6 +46,16 @@ without rearchitecting anything already running.
    specific relay channel and pipe segment instead of a generic
    troubleshooting checklist. See `assistant/PERSONALITY.md`'s Identity
    section and `docs/CAPABILITY_REGISTRATION.md`.
+9. **Self-understanding tracks development, not just current state.**
+   Every capability/hardware registration diffs against what was known
+   last time — real changes get a timestamped, field-level entry in
+   `system_changelog`; an unchanged restart produces zero noise. Verified
+   directly: two identical registrations logged nothing, one real edit
+   logged exactly two precise entries. `core/self_audit.py` is the
+   enforcement step — run it before considering any change done; it
+   catches the specific failure of writing a real module and forgetting
+   to wire it into registration (proven: a deliberately-unregistered
+   test module was caught on the first run).
 
 ## Layout
 
@@ -69,7 +79,8 @@ mia-homestead/
 │   ├── bed_planting.py             # what's planted where, cell compatibility checks
 │   ├── experiment_manager.py       # the aquaponics scientist — proposes/runs/evaluates experiments
 │   ├── infrastructure_registry.py  # wiring + plumbing knowledge, with rationale
-│   └── diagnostics.py              # cross-references alerts against infrastructure for specific guidance
+│   ├── diagnostics.py              # cross-references alerts against infrastructure for specific guidance
+│   └── self_audit.py               # catches modules that exist but aren't wired into registration
 ├── modules/
 │   ├── aquaponics_cell.py          # pH/EC dosing control loop
 │   ├── power_monitor.py            # solar/battery telemetry + load shed

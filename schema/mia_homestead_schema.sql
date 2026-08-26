@@ -439,6 +439,24 @@ CREATE TABLE hardware_requirements (
     UNIQUE(module_id, item)
 );
 
+-- ============ SELF-UNDERSTANDING CHANGELOG ============
+-- Every time a module's declared capability or hardware needs differ
+-- from what was stored last time, that's logged here — a real,
+-- queryable history of how the system's self-understanding has
+-- changed as the code itself changed. Populated automatically by
+-- capability_registry.py and hardware_registry.py on every registration.
+
+CREATE TABLE system_changelog (
+    id INTEGER PRIMARY KEY,
+    module_id TEXT NOT NULL,
+    change_type TEXT NOT NULL,   -- 'first_registered','capability_changed','hardware_changed'
+    field_name TEXT,
+    old_value TEXT,
+    new_value TEXT,
+    detected_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_changelog_detected ON system_changelog(detected_at);
+
 -- ============ CAPABILITY REGISTRY ============
 -- Populated at startup from every module's describe_capabilities().
 -- This is the assistant's actual source of self-knowledge — see

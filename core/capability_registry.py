@@ -29,9 +29,50 @@ class CapabilityRegistry:
 
     def register(self, item: Describable) -> Capability:
         cap = item.describe_capabilities()
+        self._log_changes(cap)
         self._persist(cap)
         logger.info("Registered capability: %s", cap.module_id)
         return cap
+
+    def _log_changes(self, cap: Capability) -> None:
+        """Compares against what was stored last time this module
+        registered — this is the actual mechanism behind 'the system's
+        self-understanding changes as the code changes.' A module whose
+        declared purpose, actions, or limits changed gets a real,
+        timestamped entry, not just a silent overwrite."""
+        existing = self.db.execute(
+            "SELECT purpose, data_produced, actions_possible, limits_and_safety "
+            "FROM system_capabilities WHERE module_id = ?",
+            (cap.module_id,),
+        ).fetchone()
+
+        if existing is None:
+            self._changelog_entry(cap.module_id, "first_registered", None, None, cap.purpose)
+            return
+
+        old_purpose, old_data, old_actions, old_limits = existing
+        new_data = json.dumps(cap.data_produced)
+        new_actions = json.dumps(cap.actions_possible)
+
+        if old_purpose != cap.purpose:
+            self._changelog_entry(cap.module_id, "capability_changed", "purpose", old_purpose, cap.purpose)
+        if old_data != new_data:
+            self._changelog_entry(cap.module_id, "capability_changed", "data_produced", old_data, new_data)
+        if old_actions != new_actions:
+            self._changelog_entry(cap.module_id, "capability_changed", "actions_possible", old_actions, new_actions)
+        if old_limits != cap.limits_and_safety:
+            self._changelog_entry(cap.module_id, "capability_changed", "limits_and_safety",
+                                   old_limits, cap.limits_and_safety)
+
+    def _changelog_entry(self, module_id: str, change_type: str, field_name: str | None,
+                          old_value: str | None, new_value: str | None) -> None:
+        self.db.execute(
+            "INSERT INTO system_changelog (module_id, change_type, field_name, old_value, new_value) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (module_id, change_type, field_name, old_value, new_value),
+        )
+        self.db.commit()
+        logger.info("Changelog: %s.%s changed (%s)", module_id, field_name or "", change_type)
 
     def register_all(self, items: list[Describable]) -> list[Capability]:
         return [self.register(item) for item in items]
@@ -72,6 +113,22 @@ class CapabilityRegistry:
             return "(no modules registered yet)"
         lines = [f"- {display_name} ({module_id}): {purpose}" for module_id, display_name, purpose in rows]
         return "\n".join(lines)
+
+    @staticmethod
+    def get_change_history(db_conn: sqlite3.Connection, module_id: str = None, limit: int = 20) -> list[dict]:
+        """The direct answer to 'how have you changed' — a real,
+        queryable log of when this system's self-understanding shifted,
+        not a guess based on training data or a static changelog file
+        someone has to remember to update."""
+        q = "SELECT * FROM system_changelog"
+        params = ()
+        if module_id:
+            q += " WHERE module_id = ?"
+            params = (module_id,)
+        q += " ORDER BY detected_at DESC LIMIT ?"
+        params = params + (limit,)
+        db_conn.row_factory = sqlite3.Row
+        return [dict(r) for r in db_conn.execute(q, params).fetchall()]
 
     @staticmethod
     def render_full(db_conn: sqlite3.Connection, module_id: str = None) -> list[dict]:

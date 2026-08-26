@@ -174,6 +174,21 @@ TOOLS = [
         },
     },
     {
+        "name": "get_self_change_history",
+        "description": (
+            "Get the real history of how your own capabilities/hardware needs have "
+            "changed as the underlying code was developed. Use when asked 'how have "
+            "you changed', 'what's new about you', or similar self-development questions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "module_id": {"type": "string"},
+                "limit": {"type": "integer", "default": 20},
+            },
+        },
+    },
+    {
         "name": "get_active_help_requests",
         "description": "Get any active 'help requested' beacon triggers — critical issues where a human presence was detected near the greenhouse.",
         "input_schema": {"type": "object", "properties": {}},
@@ -507,6 +522,9 @@ class GreenhouseAssistant:
 
     def _tool_get_system_capabilities(self, module_id: str | None = None) -> dict:
         return {"capabilities": CapabilityRegistry.render_full(self.db, module_id=module_id)}
+
+    def _tool_get_self_change_history(self, module_id: str | None = None, limit: int = 20) -> dict:
+        return {"changes": CapabilityRegistry.get_change_history(self.db, module_id=module_id, limit=limit)}
 
     def _tool_get_hardware_needs_list(self) -> dict:
         return {
