@@ -127,23 +127,45 @@ mia-homestead/
   someone with zero technical background through exactly what to plug
   in and where, sourced from plain-language YAML files under
   `config/devices/roles/` — no code knowledge required
-- **Assistant tools** now include inventory, maintenance, revenue, the
-  to-order queue, system self-knowledge, help requests, and device
-  setup — it can answer "what's low on stock," "any open repair
-  tasks," "is the greenhouse asking for help," "how do I set up the
-  watering controller," and act on requests like "assign someone to
-  fix the leak" or "pair that new device as fertilizer"
+- **Assistant tools** include inventory, maintenance, revenue, the
+  to-order queue, system self-knowledge, hardware needs, help requests,
+  and device setup — it can answer "what's low on stock," "any open
+  repair tasks," "is the greenhouse asking for help," "how do I set up
+  the watering controller," "what hardware do I still need," and act on
+  requests like "assign someone to fix the leak" or "pair that new
+  device as fertilizer"
+- **Real Atlas Scientific driver** (`drivers/atlas_scientific_driver.py`)
+  — the actual I2C EZO protocol (not a simulation), same
+  write-into-sensor_readings contract as the simulator so it's a
+  drop-in replacement the moment hardware arrives. Confirmed it fails
+  gracefully and informatively without hardware/smbus2 present, rather
+  than an opaque import error. Includes a guided (never automated)
+  calibration mode.
+- **Current hardware pricing** — pH and EC kits were re-priced against
+  live search results (`docs/HARDWARE_BOM_CURRENT.md`); the running BOM
+  jumped from a rough ~$288 estimate to a real ~$573 once kit pricing
+  replaced circuit-only guesses. This is exactly why the registry
+  exists — the number changed, and every module's declaration updated
+  in one place, not scattered across notes.
+- **Desktop-ready** — `requirements.txt`, `.gitignore`, `SETUP.md` with
+  a post-transfer verification step (`scenarios/scenarios.py` should
+  print 7/7 passing after moving machines), and an initialized git repo
+  with a full initial commit so Claude Code has real history to work
+  from on the desktop.
 
 **Not yet built (next steps, roughly in order):**
-1. Real sensor driver layer (Atlas Scientific EZO circuits, DS18B20, etc)
-2. Safety MCU firmware implementing `MCU_PROTOCOL.md` (including the
-   announce/pairing handshake device_registry.py already expects)
-3. Real dosing limit values, once hardware is chosen
-4. SMS provider wiring (Twilio or similar)
-5. Real ordering integration (currently tracks order intent only —
+1. Safety MCU firmware implementing `MCU_PROTOCOL.md` (including the
+   announce/pairing handshake device_registry.py already expects) —
+   the Atlas Scientific sensor driver side is done; this is the other half
+2. Real dosing limit values, once dosing pump hardware is chosen and tested
+3. SMS provider wiring (Twilio or similar)
+4. Real ordering integration (currently tracks order intent only —
    no live supplier API)
-6. Physical beacon hardware for self-preservation (a light/speaker —
+5. Physical beacon hardware for self-preservation (a light/speaker —
    the logic and DB layer are ready, this is the last missing piece)
+6. Pricing pass on dosing pumps, PIR sensor, beacon, solar/battery
+   hardware — only pH/EC/MCU pricing has been verified against current
+   market data so far (see `docs/HARDWARE_BOM_CURRENT.md`)
 7. MIA Home sync — pushing summarized state to the main dashboard
 8. Local web UI for the on-site dashboard
 
