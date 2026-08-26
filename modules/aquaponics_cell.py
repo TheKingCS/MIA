@@ -254,4 +254,17 @@ class AquaponicsCell(MiaHomesteadModule):
                 item="DS18B20 waterproof temp probe", category="sensor",
                 quantity=1, purpose="water temperature monitoring", est_unit_cost=8.0,
             ),
+            HardwareRequirement(
+                item="Submersible aquarium air pump + airstone", category="actuator",
+                quantity=1, purpose="aeration — the highest-priority load per SAFETY_SPEC.md's "
+                "power-loss ordering; fish suffocate faster than anything else fails",
+                est_unit_cost=10.0,
+                notes="Safe default is always ON — never wired through a dosing-style pulse relay.",
+            ),
+            HardwareRequirement(
+                item="Submersible circulation pump", category="actuator",
+                quantity=1, purpose="moves water to the grow bed and biofilter — second priority "
+                "after aeration per SAFETY_SPEC.md",
+                est_unit_cost=15.0,
+            ),
         ]

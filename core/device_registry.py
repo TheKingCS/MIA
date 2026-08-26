@@ -228,4 +228,19 @@ class DeviceRegistry(Describable):
                       f"See config/devices/roles/{role_id}.yaml",
             )
             for role_id, r in self.roles.items()
+        ] + [
+            HardwareRequirement(
+                item="4-channel relay module (5V, optocoupler-isolated)", category="actuator",
+                quantity=len(self.roles), purpose="switches 12V pump/valve loads from ESP32 GPIO — "
+                "a GPIO pin cannot directly drive a pump, this is the missing link",
+                est_unit_cost=8.0,
+                notes="One per MCU role. Optocoupler isolation matters — protects the ESP32 "
+                      "from voltage spikes on the pump side. ~$6-9 each, verified current pricing.",
+            ),
+            HardwareRequirement(
+                item="12V DC power supply (2-3A)", category="power", quantity=1,
+                purpose="powers the dosing pumps and irrigation valve — separate from the Pi's own power",
+                est_unit_cost=12.0,
+                notes="Size amperage to your actual pump count/draw once chosen.",
+            ),
         ]
