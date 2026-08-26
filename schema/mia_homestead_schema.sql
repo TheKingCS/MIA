@@ -458,6 +458,37 @@ CREATE TABLE system_state (
     updated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- ============ AUTOMATED ACTION LOG ============
+-- Uniform "why did you do that" for non-dosing automated actions —
+-- dosing already has rationale via dosing_events; this covers
+-- load-shedding, beacon triggers, and anything else automated that
+-- doesn't already have its own rationale field.
+
+CREATE TABLE automated_action_log (
+    id INTEGER PRIMARY KEY,
+    module_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    rationale TEXT NOT NULL,
+    timestamp TEXT DEFAULT (datetime('now'))
+);
+
+-- ============ DEAD-MAN'S-SWITCH STATE ============
+
+CREATE TABLE deadmans_switch_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),  -- single row, singleton config/state
+    escalation_level INTEGER DEFAULT 0,     -- 0=none, 1=primary notified, 2=secondary notified
+    last_escalated_at TEXT
+);
+INSERT INTO deadmans_switch_state (id, escalation_level) VALUES (1, 0);
+
+-- ============ PERIODIC SELF-REPORTS ============
+
+CREATE TABLE daily_reports (
+    id INTEGER PRIMARY KEY,
+    generated_at TEXT DEFAULT (datetime('now')),
+    content TEXT NOT NULL
+);
+
 -- ============ CONFIG BACKUP & ROLLBACK ============
 
 CREATE TABLE config_snapshots (

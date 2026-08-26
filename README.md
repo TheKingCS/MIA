@@ -70,8 +70,25 @@ without rearchitecting anything already running.
     cites the actual scenario test or dated manual proof behind each
     module; `docs/FEATURES_AND_CAPABILITIES.md` regenerates from this
     live data every startup, so the running features list can never
-    drift into aspiration. Currently 13/13 registered modules carry
+    drift into aspiration. Currently 15/15 registered modules carry
     real evidence — checked and enforced by `core/self_audit.py`.
+12. **Caught a real "should auto-update but didn't" bug in this very
+    pass.** `main.py` was calling the doc generators' `generate()`
+    function, which only returns a string — it never actually wrote
+    the file. Found by deliberately deleting both generated docs and
+    running `main.py` for real: they didn't come back. Fixed by adding
+    a `generate_and_write()` entry point and confirmed by repeating
+    the exact same test — delete, run, confirm regeneration with a
+    fresh timestamp and correct 15/15 coverage.
+13. **Four sustaining features from the brainstorm, all built and
+    proven live:** explain-yourself logging for load-shedding and
+    beacon actions (`core/action_log.py`), a two-stage dead-man's-switch
+    escalation ladder that correctly escalates once per level without
+    spamming (`core/deadmans_switch.py`), predictive consumable
+    forecasting that projects real depletion dates from actual
+    consumption rate (`InventoryManager.forecast_depletion`), and a
+    periodic state-of-the-greenhouse report composing existing data
+    into one digest (`core/report_generator.py`).
 
 ## Layout
 
@@ -99,7 +116,11 @@ mia-homestead/
 │   ├── self_audit.py               # catches modules that exist but aren't wired into registration
 │   ├── backup_manager.py           # config snapshot/restore, auto-rollback on post-update alert spike
 │   ├── backup_cli.py                # manual snapshot/restore, no API key needed
-│   └── generate_capabilities_doc.py # regenerates docs/FEATURES_AND_CAPABILITIES.md from live data
+│   ├── generate_capabilities_doc.py # regenerates docs/FEATURES_AND_CAPABILITIES.md from live data
+│   ├── generate_bom_doc.py         # regenerates docs/HARDWARE_BOM_LIVE.md from live data
+│   ├── action_log.py               # uniform "why did you do that" for non-dosing automated actions
+│   ├── deadmans_switch.py          # two-stage check-in escalation ladder
+│   └── report_generator.py         # periodic state-of-the-greenhouse digest
 ├── modules/
 │   ├── aquaponics_cell.py          # pH/EC dosing control loop
 │   ├── power_monitor.py            # solar/battery telemetry + load shed

@@ -405,6 +405,39 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_recent_automated_actions",
+        "description": "Get recent automated actions with their rationale (load-shedding, beacon triggers, etc) — the 'why did you do that' log for non-dosing actions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "module_id": {"type": "string"},
+                "days": {"type": "integer", "default": 7},
+            },
+        },
+    },
+    {
+        "name": "get_greenhouse_report",
+        "description": "Get a compiled state-of-the-greenhouse report — yields, dosing, alerts, pending approvals, maintenance, experiments — instead of asking several separate questions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"days": {"type": "integer", "default": 7}},
+        },
+    },
+    {
+        "name": "get_consumable_forecast",
+        "description": "Get a projection of when an inventory item will hit its reorder threshold based on real consumption rate.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"item_id": {"type": "integer"}},
+            "required": ["item_id"],
+        },
+    },
+    {
+        "name": "record_human_checkin",
+        "description": "Record that a human has checked in/interacted with the system — resets the dead-man's-switch escalation. Call this naturally whenever the user is actively conversing.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -573,6 +606,27 @@ class GreenhouseAssistant:
 
     def _tool_get_verification_coverage(self) -> dict:
         return CapabilityRegistry.get_verification_coverage(self.db)
+
+    def _tool_get_recent_automated_actions(self, module_id: str | None = None, days: int = 7) -> dict:
+        from core.action_log import get_recent_actions
+        return {"actions": get_recent_actions(self.db, module_id=module_id, days=days)}
+
+    def _tool_get_greenhouse_report(self, days: int = 7) -> dict:
+        from core.report_generator import ReportGenerator
+        gen = ReportGenerator(self.db)
+        return {"report": gen.generate_report(days=days)}
+
+    def _tool_get_consumable_forecast(self, item_id: int) -> dict:
+        from core.inventory import InventoryManager
+        inv = InventoryManager(self.db)
+        forecast = inv.forecast_depletion(item_id)
+        return {"forecast": forecast}
+
+    def _tool_record_human_checkin(self) -> dict:
+        from core.deadmans_switch import DeadMansSwitchMonitor
+        mgr = DeadMansSwitchMonitor(self.db)
+        mgr.record_checkin(method="assistant_conversation")
+        return {"checked_in": True}
 
     def _tool_get_hardware_needs_list(self) -> dict:
         return {

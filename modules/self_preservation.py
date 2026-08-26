@@ -78,6 +78,9 @@ class SelfPreservationModule(MiaHomesteadModule):
         # and turn the beacon off, regardless of whether anyone's there.
         if not open_critical and open_help_request:
             self._resolve_help_request(open_help_request[0])
+            from core.action_log import log_action
+            log_action(self.db, self.module_id, "beacon_off",
+                       "Critical condition that triggered the help request has cleared — silencing beacon.")
             return [self._beacon_command("off")]
 
         if not open_critical or not presence_detected:
@@ -86,6 +89,10 @@ class SelfPreservationModule(MiaHomesteadModule):
         if not open_help_request:
             request_id = self._create_help_request(open_critical)
             logger.warning("SELF-PRESERVATION: help requested (request #%s), human detected nearby", request_id)
+            from core.action_log import log_action
+            log_action(self.db, self.module_id, "beacon_on",
+                       f"Critical alert(s) open AND human presence detected — signaling for help "
+                       f"(help request #{request_id}).")
             return [self._beacon_command("on")]
 
         # Already an open request — nudge periodically rather than spam
@@ -93,6 +100,10 @@ class SelfPreservationModule(MiaHomesteadModule):
         request_id, last_nudge = self._get_request_nudge_state(open_help_request[0])
         if self._should_nudge(last_nudge):
             self._update_nudge_time(request_id)
+            from core.action_log import log_action
+            log_action(self.db, self.module_id, "beacon_nudge",
+                       f"Help request #{request_id} still unresolved and presence still detected — "
+                       f"re-signaling ({NUDGE_INTERVAL_MINUTES}min since last nudge).")
             return [self._beacon_command("on")]
         return []
 

@@ -81,10 +81,10 @@ class PowerMonitor(MiaHomesteadModule):
                 f"{self.array_name}: battery SOC {soc:.1f}% — "
                 f"shedding dosing and non-critical sensors per load-shed order",
             )
-            commands += self._load_shed_commands()
+            commands += self._load_shed_commands(soc=soc)
         return commands
 
-    def _load_shed_commands(self) -> list[ActuatorCommand]:
+    def _load_shed_commands(self, soc: float = None) -> list[ActuatorCommand]:
         """
         Returns commands to disable non-critical actuators in priority
         order per SAFETY_SPEC.md: dosing and dashboard sync shed first,
@@ -92,19 +92,30 @@ class PowerMonitor(MiaHomesteadModule):
         """
         cur = self.db.execute(
             """
-            SELECT id FROM actuators
+            SELECT id, name FROM actuators
             WHERE cell_id = ? AND type IN ('dosing_pump')
             """,
             (self.cell_id,),
         )
-        return [
+        rows = cur.fetchall()
+        commands = [
             ActuatorCommand(
                 actuator_id=row[0],
                 action="off",
                 triggered_by=TriggerSource.SAFETY_FALLBACK,
             )
-            for row in cur.fetchall()
+            for row in rows
         ]
+        if rows:
+            from core.action_log import log_action
+            soc_str = f"{soc:.1f}%" if soc is not None else "unknown"
+            log_action(
+                self.db, self.module_id, "load_shed",
+                f"Shed {len(rows)} dosing pump(s) ({', '.join(r[1] for r in rows)}) — "
+                f"battery SOC at {soc_str}, below threshold {self.low_soc_threshold_pct}%. "
+                f"Aeration and circulation are never shed regardless of SOC.",
+            )
+        return commands
 
     def describe_capabilities(self):
         from contracts.capability import Capability

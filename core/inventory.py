@@ -178,6 +178,68 @@ class InventoryManager(Describable):
             created += 1
         return created
 
+    def forecast_depletion(self, item_id: int, lookback_days: int = 14) -> dict | None:
+        """Projects days-until-reorder-threshold from actual recent
+        consumption rate — the point of this over the reactive
+        low-stock check: '6 days until you hit the reorder point' is
+        useful earlier than 'you just hit it.'"""
+        row = self.db.execute(
+            "SELECT quantity_on_hand, reorder_threshold, unit FROM inventory_items WHERE id = ?",
+            (item_id,),
+        ).fetchone()
+        if not row:
+            return None
+        quantity, threshold, unit = row
+
+        consumed = self.db.execute(
+            "SELECT SUM(-change_qty) FROM inventory_transactions WHERE item_id = ? "
+            "AND change_qty < 0 AND timestamp >= datetime('now', ?)",
+            (item_id, f"-{lookback_days} days"),
+        ).fetchone()[0]
+
+        if not consumed or consumed <= 0:
+            return {"item_id": item_id, "daily_rate": 0, "days_until_threshold": None,
+                     "note": "no consumption in the lookback window — can't project a trend"}
+
+        daily_rate = consumed / lookback_days
+        amount_above_threshold = quantity - threshold
+        days_until_threshold = amount_above_threshold / daily_rate if daily_rate > 0 else None
+
+        return {
+            "item_id": item_id, "daily_rate": round(daily_rate, 2),
+            "days_until_threshold": round(days_until_threshold, 1) if days_until_threshold is not None else None,
+            "unit": unit,
+        }
+
+    def check_forecasted_shortages(self, warning_days: int = 7) -> int:
+        """Proactive version of auto_propose_reorders — catches items
+        trending toward the threshold within warning_days even if they
+        haven't crossed it yet. Same propose_reorder() path, same
+        approval queue, just triggered earlier with a clear rationale."""
+        items = self.db.execute("SELECT id, name FROM inventory_items").fetchall()
+        proposed = 0
+        for item_id, name in items:
+            forecast = self.forecast_depletion(item_id)
+            if not forecast or forecast["days_until_threshold"] is None:
+                continue
+            if 0 < forecast["days_until_threshold"] <= warning_days:
+                existing = self.db.execute(
+                    "SELECT id FROM inventory_orders WHERE item_id = ? "
+                    "AND status IN ('proposed', 'approved', 'ordered')",
+                    (item_id,),
+                ).fetchone()
+                if existing:
+                    continue
+                self.propose_reorder(
+                    item_id,
+                    note=f"forecasted: at current usage (~{forecast['daily_rate']}{forecast.get('unit', '')}/day), "
+                         f"trending toward reorder threshold in ~{forecast['days_until_threshold']} days",
+                )
+                logger.info("Forecasted shortage: %s in ~%s days — proposed early reorder",
+                           name, forecast["days_until_threshold"])
+                proposed += 1
+        return proposed
+
     def approve_order(self, order_id: int) -> None:
         """Approves a proposed order. Doesn't place it anywhere — you
         still buy it yourself. This just confirms 'yes, get this' and
@@ -246,6 +308,10 @@ class InventoryManager(Describable):
                 "and order->receive cycle produces correct final stock totals",
                 "Live manual test 2026-08-26: confirmed auto-propose/approve/deny/skip flow "
                 "works correctly via both assistant tools and the standalone CLI",
+                "Live manual test 2026-08-26: confirmed consumption-rate forecasting correctly "
+                "projects days-until-threshold (21.43ml/day -> 18.7 days), correctly withholds "
+                "an early proposal when outside the warning window, and correctly proposes one "
+                "with the right rationale when the window is widened to include it",
             ],
         )
 

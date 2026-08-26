@@ -36,7 +36,10 @@ from core.experiment_manager import ExperimentManager
 from core.infrastructure_registry import InfrastructureRegistry
 from core.diagnostics import DiagnosticEngine
 from core.backup_manager import BackupManager
-from core.generate_capabilities_doc import generate as generate_capabilities_doc
+from core.generate_capabilities_doc import generate_and_write as write_capabilities_doc
+from core.generate_bom_doc import generate_and_write as write_bom_doc
+from core.deadmans_switch import DeadMansSwitchMonitor
+from core.report_generator import ReportGenerator
 from viewer.export_state import export_state
 
 logging.basicConfig(
@@ -98,6 +101,8 @@ def main():
     infrastructure = InfrastructureRegistry(db)
     diagnostics = DiagnosticEngine(db, infrastructure, maintenance=maintenance, notifier=notifier)
     backups = BackupManager(db, notifier=notifier)
+    deadmans = DeadMansSwitchMonitor(db, notifier=notifier)
+    reports = ReportGenerator(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -108,7 +113,8 @@ def main():
         (species, "species_registry"), (bed_planting, "bed_planting"),
         (experiments, "experiment_manager"),
         (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
-        (backups, "backup_manager"),
+        (backups, "backup_manager"), (deadmans, "deadmans_switch"),
+        (reports, "report_generator"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -124,7 +130,8 @@ def main():
     # The running, provable features/capabilities doc — regenerated
     # from live data every startup, so it can never drift from what
     # the code actually does or claim proof that doesn't exist.
-    generate_capabilities_doc(args.db)
+    write_capabilities_doc(args.db)
+    write_bom_doc(args.db)
     coverage = CapabilityRegistry.get_verification_coverage(db)
     logger.info("Verification coverage: %d/%d modules have proof behind their capabilities",
                 coverage["verified"], coverage["total"])
@@ -157,6 +164,16 @@ def main():
                 watch_results = backups.check_update_watches()
                 if watch_results:
                     logger.info("Update watch results: %s", watch_results)
+                forecasted = inventory.check_forecasted_shortages()
+                if forecasted:
+                    logger.info("Forecasted %d shortage(s) proposed early", forecasted)
+                deadmans_result = deadmans.check_escalation()
+                if deadmans_result.get("escalated"):
+                    logger.warning("Dead-man's-switch escalated: %s", deadmans_result)
+                hours_since_report = reports.hours_since_last_report()
+                if hours_since_report is None or hours_since_report >= 24:
+                    reports.generate_and_send()
+                    logger.info("Periodic report generated and sent")
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the
