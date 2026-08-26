@@ -246,8 +246,9 @@ class AquaponicsCell(MiaHomesteadModule):
             HardwareRequirement(
                 item="Peristaltic dosing pump", category="actuator",
                 quantity=3, purpose="pH-up, pH-down, and nutrient concentrate dosing",
-                est_unit_cost=25.0,
-                notes="One per chemical — never share a pump line between chemicals.",
+                est_unit_cost=12.0,
+                notes="One per chemical — never share a pump line between chemicals. "
+                      "~$10-15 for a basic 12V DC unit (INTLLAB/Kamoer NKP class). See docs/HARDWARE_BOM_CURRENT.md.",
             ),
             HardwareRequirement(
                 item="DS18B20 waterproof temp probe", category="sensor",

@@ -52,8 +52,41 @@ circuit-only pricing, since that's what you'd actually buy first. Run
 `python3 core/hardware_bom.py --db mia_homestead.db` after re-registering
 to see the corrected running total.
 
+## Dosing pumps
+
+Basic 12V DC DIY peristaltic pumps (INTLLAB, Kamoer NKP, and similar —
+the same class of pump hobbyist aquarium/hydroponics builders use) run
+**~$10–15 each**. This is meaningfully cheaper than the earlier $25
+placeholder — updated in code below.
+
+Source: Amazon, INTLLAB store (live-checked)
+
+## PIR motion sensor
+
+HC-SR501 modules — the standard hobbyist PIR sensor — run **~$4–5
+each**, confirming the earlier estimate was already accurate. No
+update needed.
+
+Source: multiple hobbyist electronics retailers (live-checked)
+
+## Solar charge controller (Modbus/RS485)
+
+A 10A MPPT controller with RS485/Modbus support runs **~$100–130**; a
+40A version (more realistic for a greenhouse-scale array) runs
+**~$149**. The RS485/Modbus requirement — needed so `power_monitor.py`
+can actually poll telemetry — rules out the cheapest PWM controllers,
+which typically don't expose any digital interface at all.
+
+Source: Linovision, Amazon (live-checked)
+
+## Battery bank
+
+Left unpriced this round — capacity needs to be sized against actual
+greenhouse load first (aeration, circulation, dosing pumps, the Pi
+itself), which isn't finalized yet. Pricing a battery before sizing it
+would just produce a number that has to be redone anyway.
+
 ## Not yet priced this round
 
-Dosing pumps, PIR motion sensor, alert beacon, solar charge controller,
-and battery bank still carry earlier rough estimates in the code — flag
-these for a pricing pass before actually ordering them.
+Alert beacon (light/speaker) and the battery bank still carry earlier
+rough estimates or are unpriced — flag before actually ordering.

@@ -137,10 +137,13 @@ class PowerMonitor(MiaHomesteadModule):
             HardwareRequirement(
                 item="Solar charge controller (Modbus/RS485 telemetry)", category="power",
                 quantity=1, purpose="reports watts/SOC this module reads",
-                notes="Must expose telemetry the Pi can poll — confirm Modbus support before buying.",
+                est_unit_cost=140.0,
+                notes="Must expose telemetry the Pi can poll — confirm Modbus support before buying. "
+                      "~$100-150 for a 10-40A MPPT unit with RS485. See docs/HARDWARE_BOM_CURRENT.md.",
             ),
             HardwareRequirement(
                 item="Battery bank (LiFePO4 recommended)", category="power",
                 quantity=1, purpose="stores solar generation for load through outages",
+                notes="Unpriced — needs capacity sized against real greenhouse load first. See docs/HARDWARE_BOM_CURRENT.md.",
             ),
         ]
