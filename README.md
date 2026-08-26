@@ -152,20 +152,37 @@ mia-homestead/
   print 7/7 passing after moving machines), and an initialized git repo
   with a full initial commit so Claude Code has real history to work
   from on the desktop.
+- **Safety MCU firmware** (`firmware/safety_mcu/safety_mcu.ino`) — real
+  ESP32 code implementing the full protocol: announce/pair handshake,
+  heartbeat timeout, safe fallback (dosing forced off, aeration/
+  circulation to their configured safe defaults), local dosing limits
+  as a redundant safety layer independent of the Pi. **Not compiled or
+  tested** — no ESP32 toolchain was available in the environment that
+  wrote it. Honest, specific caveats and known gaps (actuator ID
+  mapping, blocking delay() during pulses, no live limit sync) are
+  documented in `firmware/safety_mcu/README.md` rather than glossed
+  over — this is a strong first draft, treat it as one.
+- **Complete hardware pricing pass** — dosing pumps re-priced down
+  (~$10–15 real vs. $25 guess), solar charge controller priced
+  (~$100–150 for RS485/Modbus-capable), PIR sensor confirmed accurate.
+  Battery bank deliberately left unpriced — pricing it before sizing
+  it against real load would just be a number you'd have to redo.
+  Running BOM total: **~$674** (see `docs/HARDWARE_BOM_CURRENT.md`
+  for full sourcing).
 
 **Not yet built (next steps, roughly in order):**
-1. Safety MCU firmware implementing `MCU_PROTOCOL.md` (including the
-   announce/pairing handshake device_registry.py already expects) —
-   the Atlas Scientific sensor driver side is done; this is the other half
+1. **Compile and flash-test the Safety MCU firmware** — it's written,
+   not verified. This is the single highest-value next step: it turns
+   the entire two-tier safety architecture from "designed" to "real."
+   See `firmware/safety_mcu/README.md`'s known-gaps list, especially
+   the actuator-ID-to-pin mapping, which needs resolving first.
 2. Real dosing limit values, once dosing pump hardware is chosen and tested
 3. SMS provider wiring (Twilio or similar)
 4. Real ordering integration (currently tracks order intent only —
    no live supplier API)
 5. Physical beacon hardware for self-preservation (a light/speaker —
    the logic and DB layer are ready, this is the last missing piece)
-6. Pricing pass on dosing pumps, PIR sensor, beacon, solar/battery
-   hardware — only pH/EC/MCU pricing has been verified against current
-   market data so far (see `docs/HARDWARE_BOM_CURRENT.md`)
+6. Battery bank sizing and pricing, once real greenhouse load is known
 7. MIA Home sync — pushing summarized state to the main dashboard
 8. Local web UI for the on-site dashboard
 
