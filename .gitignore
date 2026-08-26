@@ -1,0 +1,26 @@
+# Runtime data — never commit a live database, it's regenerated from schema.sql
+*.db
+*.db-journal
+*.db-wal
+
+# Digital twin live state — regenerated every control cycle
+viewer/state.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Generated exports
+*.md.bak
+bom_export.md
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit an API key
+.env

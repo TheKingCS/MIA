@@ -1,0 +1,490 @@
+"""
+MIA Homestead — Greenhouse Assistant
+v0.1
+
+The conversational layer: lets Zac ask the greenhouse natural-language
+questions and get answers grounded in real data via tool use. This is
+NOT a control interface — it cannot bypass dosing limits or the safety
+layer. It reads state and explains it; the module_registry + safety MCU
+own all actual actuation.
+
+Requires: anthropic python SDK (`pip install anthropic --break-system-packages`)
+and ANTHROPIC_API_KEY set in environment.
+"""
+
+import json
+import logging
+import sqlite3
+from pathlib import Path
+
+import anthropic
+
+from core.capability_registry import CapabilityRegistry
+from core.hardware_registry import HardwareRegistry
+
+logger = logging.getLogger("mia_homestead.assistant")
+
+MODEL = "claude-sonnet-5"
+
+PERSONALITY_PATH = Path(__file__).parent / "PERSONALITY.md"
+
+
+TOOLS = [
+    {
+        "name": "get_current_status",
+        "description": (
+            "Get the latest sensor readings (pH, EC, temp, DO, water "
+            "level, etc) for a given cell, or all cells if none specified."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer", "description": "Optional cell ID"},
+            },
+        },
+    },
+    {
+        "name": "get_open_alerts",
+        "description": "Get all unresolved alerts, optionally filtered by minimum severity.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "min_severity": {
+                    "type": "string",
+                    "enum": ["info", "warning", "critical"],
+                },
+            },
+        },
+    },
+    {
+        "name": "get_dosing_history",
+        "description": "Get recent dosing events for a cell, within a lookback window in days.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "days": {"type": "integer", "default": 7},
+            },
+            "required": ["cell_id"],
+        },
+    },
+    {
+        "name": "get_yield_summary",
+        "description": "Get harvest/yield events for a cell within a lookback window in days.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "days": {"type": "integer", "default": 30},
+            },
+            "required": ["cell_id"],
+        },
+    },
+    {
+        "name": "get_power_status",
+        "description": "Get the latest power telemetry — solar/battery/generator watts and battery SOC.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_inventory_status",
+        "description": "Get current stock levels for all tracked inventory items (sensors, chemicals, spare parts).",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_low_stock_items",
+        "description": "Get inventory items at or below their reorder threshold.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_open_maintenance_tasks",
+        "description": "Get open/in-progress maintenance tasks, optionally filtered by priority.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+            },
+        },
+    },
+    {
+        "name": "create_maintenance_task",
+        "description": (
+            "Create a maintenance task — e.g. 'swap the MCU', 'fix a leak in Cell A', "
+            "'order a replacement pH probe'. Use this whenever the user asks you to "
+            "log, assign, or track a repair/replacement/inspection."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "task_type": {"type": "string", "enum": ["repair", "replacement", "calibration", "inspection", "other"]},
+                "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"], "default": "medium"},
+                "description": {"type": "string"},
+                "assigned_to": {"type": "string"},
+                "due_date": {"type": "string", "description": "ISO date, optional"},
+            },
+            "required": ["title", "task_type"],
+        },
+    },
+    {
+        "name": "get_revenue_summary",
+        "description": "Get revenue transactions within a lookback window in days.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"days": {"type": "integer", "default": 30}},
+        },
+    },
+    {
+        "name": "get_to_order_list",
+        "description": "Get items awaiting approve/deny decision in the reorder queue — things the system flagged as low stock.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "approve_order",
+        "description": "Approve a pending order in the to-order queue by its order_id.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"order_id": {"type": "integer"}},
+            "required": ["order_id"],
+        },
+    },
+    {
+        "name": "deny_order",
+        "description": "Deny/dismiss a pending order in the to-order queue by its order_id.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "integer"},
+                "reason": {"type": "string"},
+            },
+            "required": ["order_id"],
+        },
+    },
+    {
+        "name": "get_system_capabilities",
+        "description": (
+            "Get full detail on what a specific part of the system can do — "
+            "actions it can take, limits, safety behavior. Use this whenever "
+            "you're unsure what a module is capable of, or the user asks "
+            "'what can you do' / 'can you handle X'. Omit module_id to get "
+            "everything."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"module_id": {"type": "string"}},
+        },
+    },
+    {
+        "name": "get_active_help_requests",
+        "description": "Get any active 'help requested' beacon triggers — critical issues where a human presence was detected near the greenhouse.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "acknowledge_help_request",
+        "description": "Acknowledge an active help request so the beacon stops nudging — use when the user says they're on it / helping now.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"request_id": {"type": "integer"}},
+            "required": ["request_id"],
+        },
+    },
+    {
+        "name": "get_unpaired_devices",
+        "description": "Get devices that are plugged in but haven't been assigned a role yet.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_device_setup_instructions",
+        "description": "Get plain-language setup instructions for a device role (e.g. 'watering_mcu') — what to plug in, which port, where to mount it.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"role": {"type": "string"}},
+            "required": ["role"],
+        },
+    },
+    {
+        "name": "pair_device",
+        "description": "Assign a role to a device by its hardware_id — use when the user tells you what a newly plugged-in device is for.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "hardware_id": {"type": "string"},
+                "role": {"type": "string"},
+            },
+            "required": ["hardware_id", "role"],
+        },
+    },
+    {
+        "name": "get_hardware_needs_list",
+        "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_last_human_checkin",
+        "description": "Get when a human last acknowledged an alert or viewed the dashboard.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+]
+
+
+class GreenhouseAssistant:
+    def __init__(self, db_path: str, api_key: str | None = None):
+        self.db = sqlite3.connect(db_path)
+        self.db.row_factory = sqlite3.Row
+        self.client = anthropic.Anthropic(api_key=api_key)
+        self.personality = PERSONALITY_PATH.read_text()
+        self.history: list[dict] = []
+
+    # ---------- Public interface ----------
+
+    def ask(self, message: str) -> str:
+        self.history.append({"role": "user", "content": message})
+
+        while True:
+            response = self.client.messages.create(
+                model=MODEL,
+                max_tokens=1024,
+                system=self._system_prompt(),
+                tools=TOOLS,
+                messages=self.history,
+            )
+
+            if response.stop_reason != "tool_use":
+                final_text = "".join(
+                    block.text for block in response.content
+                    if block.type == "text"
+                )
+                self.history.append({"role": "assistant", "content": response.content})
+                return final_text
+
+            # Handle tool calls, feed results back, loop again
+            self.history.append({"role": "assistant", "content": response.content})
+            tool_results = []
+            for block in response.content:
+                if block.type != "tool_use":
+                    continue
+                result = self._dispatch_tool(block.name, block.input)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": json.dumps(result, default=str),
+                })
+            self.history.append({"role": "user", "content": tool_results})
+
+    # ---------- System prompt ----------
+
+    def _system_prompt(self) -> str:
+        live_capabilities = CapabilityRegistry.render_compact(self.db)
+        return (
+            "You are the conversational voice of a homestead greenhouse "
+            "aquaponics system called MIA Homestead. You answer questions "
+            "about your own state using the tools provided — every factual "
+            "claim must come from a tool call, never from assumption or "
+            "prior turns if fresher data might exist. Follow this "
+            "personality and behavior spec exactly:\n\n" + self.personality +
+            "\n\n---\n\n"
+            "The following is a LIVE, auto-generated list of every module "
+            "currently registered in this system — it was built directly "
+            "from the code at startup, not written by hand, so it's always "
+            "current even as modules get added later. Use this to know what "
+            "exists; call get_system_capabilities for full detail (actions "
+            "possible, limits, safety behavior) on anything specific:\n\n" +
+            live_capabilities
+        )
+
+    # ---------- Tool dispatch ----------
+
+    def _dispatch_tool(self, name: str, tool_input: dict) -> dict:
+        try:
+            handler = getattr(self, f"_tool_{name}")
+            return handler(**tool_input)
+        except Exception as e:
+            logger.exception("Tool %s failed", name)
+            return {"error": str(e)}
+
+    def _tool_get_current_status(self, cell_id: int | None = None) -> dict:
+        query = """
+            SELECT s.cell_id, s.type, sr.value, sr.timestamp, sr.is_stale
+            FROM sensor_readings sr
+            JOIN sensors s ON s.id = sr.sensor_id
+            WHERE sr.id IN (SELECT MAX(id) FROM sensor_readings GROUP BY sensor_id)
+        """
+        params = ()
+        if cell_id is not None:
+            query += " AND s.cell_id = ?"
+            params = (cell_id,)
+        rows = self.db.execute(query, params).fetchall()
+        return {"readings": [dict(r) for r in rows]}
+
+    def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
+        order = {"info": 0, "warning": 1, "critical": 2}
+        query = "SELECT * FROM alerts WHERE resolved = 0 ORDER BY timestamp DESC LIMIT 20"
+        rows = [dict(r) for r in self.db.execute(query).fetchall()]
+        if min_severity:
+            rows = [r for r in rows if order.get(r["severity"], 0) >= order[min_severity]]
+        return {"alerts": rows}
+
+    def _tool_get_dosing_history(self, cell_id: int, days: int = 7) -> dict:
+        rows = self.db.execute(
+            """
+            SELECT * FROM dosing_events
+            WHERE cell_id = ? AND timestamp >= datetime('now', ?)
+            ORDER BY timestamp DESC
+            """,
+            (cell_id, f"-{days} days"),
+        ).fetchall()
+        return {"dosing_events": [dict(r) for r in rows]}
+
+    def _tool_get_yield_summary(self, cell_id: int, days: int = 30) -> dict:
+        rows = self.db.execute(
+            """
+            SELECT * FROM yield_events
+            WHERE cell_id = ? AND timestamp >= datetime('now', ?)
+            ORDER BY timestamp DESC
+            """,
+            (cell_id, f"-{days} days"),
+        ).fetchall()
+        return {"yield_events": [dict(r) for r in rows]}
+
+    def _tool_get_power_status(self) -> dict:
+        row = self.db.execute(
+            "SELECT * FROM power_telemetry ORDER BY timestamp DESC LIMIT 5"
+        ).fetchall()
+        return {"recent_power_telemetry": [dict(r) for r in row]}
+
+    def _tool_get_last_human_checkin(self) -> dict:
+        row = self.db.execute(
+            "SELECT * FROM human_checkins ORDER BY timestamp DESC LIMIT 1"
+        ).fetchone()
+        return {"last_checkin": dict(row) if row else None}
+
+    def _tool_get_system_capabilities(self, module_id: str | None = None) -> dict:
+        return {"capabilities": CapabilityRegistry.render_full(self.db, module_id=module_id)}
+
+    def _tool_get_hardware_needs_list(self) -> dict:
+        return {
+            "bom_summary": HardwareRegistry.render_bom(self.db, group_by_module=False),
+            "items": HardwareRegistry.get_all(self.db),
+        }
+
+    def _tool_get_active_help_requests(self) -> dict:
+        rows = self.db.execute(
+            "SELECT * FROM help_requests WHERE resolved = 0 ORDER BY created_at DESC"
+        ).fetchall()
+        return {"help_requests": [dict(r) for r in rows]}
+
+    def _tool_acknowledge_help_request(self, request_id: int) -> dict:
+        self.db.execute(
+            "UPDATE help_requests SET acknowledged = 1, acknowledged_at = datetime('now') WHERE id = ?",
+            (request_id,),
+        )
+        self.db.commit()
+        return {"request_id": request_id, "acknowledged": True}
+
+    def _tool_get_unpaired_devices(self) -> dict:
+        rows = self.db.execute(
+            "SELECT hardware_id, role, first_seen FROM device_registrations WHERE status = 'needs_attention'"
+        ).fetchall()
+        return {"unpaired_devices": [dict(r) for r in rows]}
+
+    def _tool_get_device_setup_instructions(self, role: str) -> dict:
+        from core.device_registry import DeviceRegistry
+        registry = DeviceRegistry(self.db)
+        return {"instructions": registry.get_setup_instructions(role)}
+
+    def _tool_pair_device(self, hardware_id: str, role: str) -> dict:
+        from core.device_registry import DeviceRegistry
+        registry = DeviceRegistry(self.db)
+        return registry.pair_device(hardware_id, role)
+
+    def _tool_get_to_order_list(self) -> dict:
+        rows = self.db.execute(
+            """
+            SELECT io.id AS order_id, ii.name, ii.category, io.quantity, ii.unit,
+                   io.cost, io.notes, ii.supplier
+            FROM inventory_orders io
+            JOIN inventory_items ii ON ii.id = io.item_id
+            WHERE io.status = 'proposed'
+            ORDER BY io.ordered_at ASC
+            """
+        ).fetchall()
+        return {"pending_orders": [dict(r) for r in rows]}
+
+    def _tool_approve_order(self, order_id: int) -> dict:
+        self.db.execute(
+            "UPDATE inventory_orders SET status = 'approved' WHERE id = ? AND status = 'proposed'",
+            (order_id,),
+        )
+        self.db.commit()
+        return {"order_id": order_id, "status": "approved"}
+
+    def _tool_deny_order(self, order_id: int, reason: str | None = None) -> dict:
+        notes_suffix = f" | denied: {reason}" if reason else " | denied"
+        self.db.execute(
+            "UPDATE inventory_orders SET status = 'denied', "
+            "notes = COALESCE(notes, '') || ? WHERE id = ? AND status = 'proposed'",
+            (notes_suffix, order_id),
+        )
+        self.db.commit()
+        return {"order_id": order_id, "status": "denied"}
+
+    def _tool_get_inventory_status(self) -> dict:
+        rows = self.db.execute(
+            "SELECT name, category, quantity_on_hand, unit, reorder_threshold FROM inventory_items"
+        ).fetchall()
+        return {"inventory": [dict(r) for r in rows]}
+
+    def _tool_get_low_stock_items(self) -> dict:
+        rows = self.db.execute(
+            "SELECT name, category, quantity_on_hand, reorder_threshold, unit, supplier "
+            "FROM inventory_items WHERE quantity_on_hand <= reorder_threshold"
+        ).fetchall()
+        return {"low_stock": [dict(r) for r in rows]}
+
+    def _tool_get_open_maintenance_tasks(self, priority: str | None = None) -> dict:
+        q = "SELECT * FROM maintenance_tasks WHERE status IN ('open', 'in_progress')"
+        params = ()
+        if priority:
+            q += " AND priority = ?"
+            params = (priority,)
+        rows = self.db.execute(q, params).fetchall()
+        return {"tasks": [dict(r) for r in rows]}
+
+    def _tool_create_maintenance_task(
+        self, title: str, task_type: str, priority: str = "medium",
+        description: str | None = None, assigned_to: str | None = None,
+        due_date: str | None = None,
+    ) -> dict:
+        cur = self.db.execute(
+            """
+            INSERT INTO maintenance_tasks
+            (title, description, task_type, priority, assigned_to, due_date, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, 'assistant')
+            """,
+            (title, description, task_type, priority, assigned_to, due_date),
+        )
+        self.db.commit()
+        return {"created_task_id": cur.lastrowid, "title": title, "priority": priority}
+
+    def _tool_get_revenue_summary(self, days: int = 30) -> dict:
+        rows = self.db.execute(
+            "SELECT * FROM revenue_transactions WHERE timestamp >= datetime('now', ?) "
+            "ORDER BY timestamp DESC",
+            (f"-{days} days",),
+        ).fetchall()
+        total = sum(r["total_amount"] for r in rows) if rows else 0
+        return {"transactions": [dict(r) for r in rows], "total": total}
+
+
+if __name__ == "__main__":
+    import os
+    assistant = GreenhouseAssistant(
+        db_path="mia_homestead.db",
+        api_key=os.environ.get("ANTHROPIC_API_KEY"),
+    )
+    print("MIA Homestead assistant ready. Ctrl+C to exit.")
+    while True:
+        try:
+            q = input("\nyou: ")
+            print(f"\ngreenhouse: {assistant.ask(q)}")
+        except KeyboardInterrupt:
+            break

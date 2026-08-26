@@ -1,0 +1,39 @@
+{
+  "site": {
+    "name": "Homestead Greenhouse",
+    "footprint": { "width_ft": 25, "length_ft": 25, "note": "PLACEHOLDER — update once real greenhouse dimensions are known. Cleared site is ~50x200ft total, greenhouse occupies a portion of it." }
+  },
+  "cells": [
+    {
+      "id": 1,
+      "name": "Cell A",
+      "position": { "x": 0, "z": 0 },
+      "tanks": [
+        { "name": "Tank A1", "capacity_gallons": 500, "size_ft": { "w": 6, "l": 10, "h": 3 }, "linked_module_id": "cell_a_aquaponics" }
+      ],
+      "grow_beds": [
+        { "name": "Bed A1", "sqft": 100, "size_ft": { "w": 4, "l": 25 } }
+      ]
+    }
+  ],
+  "power": {
+    "greenhouse_array": {
+      "position": { "x": 15, "z": -5 },
+      "linked_module_id": "greenhouse_power",
+      "note": "Panel array position, placeholder — avoid self-shading from greenhouse structure once real orientation is known"
+    }
+  },
+  "beacons": [
+    {
+      "name": "Entrance Help Beacon",
+      "position": { "x": 0, "z": 12 },
+      "linked_module_id": "greenhouse_self_preservation",
+      "note": "PIR sensor + alert beacon at the greenhouse entrance"
+    }
+  ],
+  "_meta": {
+    "purpose": "Feeds viewer/digital_twin.html. Update this file as real measurements, cell counts, and equipment positions become known. linked_module_id ties a physical object to the module whose alerts should color/highlight it — this is how the viewer knows WHERE to glow red, not just THAT something's wrong. This is a spatial status reference, not a fabrication/CAD source of truth — structural design stays in FreeCAD.",
+    "version": "0.2"
+  }
+}
+

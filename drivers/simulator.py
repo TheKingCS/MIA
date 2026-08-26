@@ -1,0 +1,171 @@
+"""
+MIA Homestead — Sensor Simulator Driver
+v0.1
+
+Generates realistic, slowly-drifting fake sensor data and writes it into
+sensor_readings, standing in for real hardware drivers. This lets the
+entire control loop, dosing logic, alerting, and assistant run and be
+tested TODAY, before any hardware is purchased — and it's a genuine
+value, not just a demo toy: it's how you'll validate control logic
+changes safely before ever pointing them at a real fish tank.
+
+Swapping this for real hardware later means writing one new driver file
+matching this same "write into sensor_readings" contract — nothing in
+modules/ or contracts/ needs to change.
+
+Usage:
+    python drivers/simulator.py --db mia_homestead.db --setup
+    python drivers/simulator.py --db mia_homestead.db --run
+"""
+
+import argparse
+import random
+import sqlite3
+import time
+from datetime import datetime
+
+SIM_SENSOR_DEFS = [
+    # (type, unit, start_value, drift_range, noise)
+    ("ph", "pH", 6.9, 0.02, 0.03),
+    ("ec", "uS/cm", 950, 5, 15),
+    ("temp_water", "F", 74.0, 0.1, 0.3),
+    ("temp_air", "F", 78.0, 0.3, 0.8),
+    ("humidity", "%RH", 55.0, 0.5, 1.5),
+    ("level", "in", 24.0, 0.05, 0.1),
+]
+
+
+def setup_demo_cell(conn: sqlite3.Connection) -> int:
+    """Creates a demo cell + tank + sensors if none exist yet."""
+    cur = conn.execute("SELECT id FROM cells LIMIT 1")
+    row = cur.fetchone()
+    if row:
+        return row[0]
+
+    cur = conn.execute(
+        "INSERT INTO cells (name, description) VALUES (?, ?)",
+        ("Cell A", "Demo/simulation cell"),
+    )
+    cell_id = cur.lastrowid
+
+    conn.execute(
+        "INSERT INTO tanks (cell_id, name, capacity_gallons, species, stocked_date) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (cell_id, "Tank A1", 500, "tilapia", datetime.utcnow().isoformat()),
+    )
+    conn.execute(
+        "INSERT INTO grow_beds (cell_id, name, sqft, media_type) VALUES (?, ?, ?, ?)",
+        (cell_id, "Bed A1", 100, "expanded clay"),
+    )
+
+    for sensor_type, unit, start, _, _ in SIM_SENSOR_DEFS:
+        conn.execute(
+            "INSERT INTO sensors (cell_id, type, unit, location_note, install_date, active) "
+            "VALUES (?, ?, ?, ?, ?, 1)",
+            (cell_id, sensor_type, unit, "simulated", datetime.utcnow().isoformat()),
+        )
+
+    # Demo actuators so dosing commands have somewhere to resolve to
+    for name, atype, default in [
+        ("ph_up_pump", "dosing_pump", "off"),
+        ("ph_down_pump", "dosing_pump", "off"),
+        ("nutrient_concentrate_pump", "dosing_pump", "off"),
+        ("circulation_pump", "circulation_pump", "on"),
+        ("aerator", "aerator", "on"),
+    ]:
+        conn.execute(
+            "INSERT INTO actuators (cell_id, type, name, safe_default_state) "
+            "VALUES (?, ?, ?, ?)",
+            (cell_id, atype, name, default),
+        )
+
+    # Baseline dosing limits so validation logic has something to check
+    for dose_type, max_dose, max_day, interval in [
+        ("ph_up", 10, 40, 5),
+        ("ph_down", 10, 40, 5),
+        ("nutrient_concentrate", 20, 100, 10),
+    ]:
+        conn.execute(
+            "INSERT INTO dosing_limits (cell_id, dose_type, max_per_dose_ml, "
+            "max_per_day_ml, min_interval_minutes) VALUES (?, ?, ?, ?, ?)",
+            (cell_id, dose_type, max_dose, max_day, interval),
+        )
+
+    conn.commit()
+    print(f"Demo cell created (cell_id={cell_id}) with 6 sensors, 5 actuators.")
+    return cell_id
+
+
+class Simulator:
+    """Maintains slowly-drifting state per sensor type and writes new
+    readings on each tick — mimics real-world sensor behavior (gradual
+    drift, small noise) rather than pure random jitter, so control logic
+    gets tested against realistic conditions."""
+
+    def __init__(self, conn: sqlite3.Connection):
+        self.conn = conn
+        self.state: dict[int, float] = {}  # sensor_id -> current value
+        self.defs: dict[int, tuple] = {}    # sensor_id -> (drift, noise)
+        self._load_sensors()
+
+    def _load_sensors(self):
+        rows = self.conn.execute("SELECT id, type FROM sensors WHERE active = 1").fetchall()
+        by_type = {d[0]: d for d in SIM_SENSOR_DEFS}
+        for sensor_id, sensor_type in rows:
+            if sensor_type not in by_type:
+                continue
+            _, _, start, drift, noise = by_type[sensor_type]
+            self.state[sensor_id] = start
+            self.defs[sensor_id] = (drift, noise)
+
+    def tick(self):
+        for sensor_id, value in self.state.items():
+            drift, noise = self.defs[sensor_id]
+            value += random.uniform(-drift, drift)
+            reading = value + random.uniform(-noise, noise)
+            self.state[sensor_id] = value
+            self.conn.execute(
+                "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) "
+                "VALUES (?, ?, 0, 0)",
+                (sensor_id, round(reading, 3)),
+            )
+        self.conn.commit()
+
+    def inject_event(self, sensor_type: str, delta: float):
+        """Manually nudge a sensor type — useful for testing that dosing
+        logic actually triggers (e.g. inject_event('ph', -0.5))."""
+        for sensor_id in self.state:
+            row = self.conn.execute(
+                "SELECT type FROM sensors WHERE id = ?", (sensor_id,)
+            ).fetchone()
+            if row and row[0] == sensor_type:
+                self.state[sensor_id] += delta
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--db", default="mia_homestead.db")
+    parser.add_argument("--setup", action="store_true")
+    parser.add_argument("--run", action="store_true")
+    parser.add_argument("--interval", type=float, default=5.0, help="seconds between ticks")
+    args = parser.parse_args()
+
+    conn = sqlite3.connect(args.db)
+
+    if args.setup:
+        setup_demo_cell(conn)
+
+    if args.run:
+        sim = Simulator(conn)
+        print(f"Simulating {len(sim.state)} sensors every {args.interval}s. Ctrl+C to stop.")
+        try:
+            while True:
+                sim.tick()
+                print(f"[{datetime.utcnow().isoformat()}] tick written")
+                time.sleep(args.interval)
+        except KeyboardInterrupt:
+            print("\nSimulator stopped.")
+
+
+if __name__ == "__main__":
+    main()

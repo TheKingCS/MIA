@@ -1,0 +1,67 @@
+# MIA Homestead — Module Configuration
+# v0.1
+#
+# This file IS the modularity mechanism. To add a new subsystem later
+# (second solar array for the house, poultry module, irrigation zone,
+# additional aquaponics cell), you add an entry here and write one class
+# implementing MiaHomesteadModule. Nothing in core/ changes.
+
+modules:
+
+  - id: cell_a_aquaponics
+    enabled: true
+    class: modules.aquaponics_cell.AquaponicsCell
+    cell_id: 1
+    params:
+      ph_target_min: 6.6
+      ph_target_max: 7.2
+      ec_target_min: 800   # microsiemens/cm, tune once fish/plants selected
+      ec_target_max: 1500
+
+  - id: greenhouse_power
+    enabled: true
+    class: modules.power_monitor.PowerMonitor
+    cell_id: 1
+    params:
+      array_name: "greenhouse_array"
+      battery_capacity_wh: 5000   # placeholder, set once battery sized
+      low_soc_threshold_pct: 20
+
+  - id: greenhouse_self_preservation
+    enabled: true
+    class: modules.self_preservation.SelfPreservationModule
+    cell_id: 1
+    params: {}
+
+  # ---- Future modules — uncomment and configure when ready ----
+  #
+  # - id: house_power
+  #   enabled: false
+  #   class: modules.power_monitor.PowerMonitor
+  #   cell_id: 1
+  #   params:
+  #     array_name: "house_array"
+  #     battery_capacity_wh: 0
+  #     low_soc_threshold_pct: 20
+  #
+  # - id: cell_b_aquaponics
+  #   enabled: false
+  #   class: modules.aquaponics_cell.AquaponicsCell
+  #   cell_id: 2
+  #   params:
+  #     ph_target_min: 6.6
+  #     ph_target_max: 7.2
+  #     ec_target_min: 800
+  #     ec_target_max: 1500
+  #
+  # - id: poultry
+  #   enabled: false
+  #   class: modules.poultry.PoultryModule
+  #   cell_id: 3
+  #   params: {}
+  #
+  # - id: irrigation_zone_1
+  #   enabled: false
+  #   class: modules.irrigation.IrrigationZone
+  #   cell_id: 4
+  #   params: {}

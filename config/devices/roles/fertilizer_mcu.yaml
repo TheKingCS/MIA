@@ -1,0 +1,22 @@
+role: fertilizer_mcu
+display_name: "Fertilizer / Nutrient Dosing Controller"
+description: >
+  Controls the nutrient concentrate dosing pump for a cell's grow bed.
+
+port_label: "PORT 4 — FERTILIZER"
+mount_location: "Mount next to the nutrient concentrate reservoir, Cell A."
+default_cell_id: 1
+
+controls:
+  - actuator_type: dosing_pump
+    actuator_name: nutrient_concentrate_pump
+    safe_default_state: "off"
+
+setup_instructions: |
+  1. Find the MCU labeled "FERTILIZER" in the parts bin (green label).
+  2. Plug it into PORT 4 on the Pi expansion hub.
+  3. Mount it next to the nutrient concentrate reservoir in Cell A.
+  4. Power it on — MIA Homestead detects it automatically within a
+     few seconds.
+  5. Once detected, the system confirms pairing on its own. If it
+     doesn't pair within a minute, double-check the connection.

@@ -1,0 +1,7 @@
+pyyaml>=6.0
+anthropic>=0.40.0
+
+# Real hardware drivers (uncomment once actual sensors are connected —
+# not needed for simulation-only work):
+# smbus2>=0.4.3      # I2C, for Atlas Scientific EZO circuits on Raspberry Pi
+# pyserial>=3.5       # UART, if using EZO circuits in UART mode instead of I2C
