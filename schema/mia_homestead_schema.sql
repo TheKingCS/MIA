@@ -439,6 +439,49 @@ CREATE TABLE hardware_requirements (
     UNIQUE(module_id, item)
 );
 
+-- ============ BACKUPS & UPDATE TRACKING ============
+
+CREATE TABLE backups (
+    id INTEGER PRIMARY KEY,
+    path TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    label TEXT,
+    reason TEXT,                        -- 'manual','pre_update','scheduled'
+    git_commit TEXT,
+    db_size_bytes INTEGER,
+    restored_at TEXT                    -- set if this backup was ever restored FROM
+);
+
+CREATE TABLE system_state (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- ============ CONFIG BACKUP & ROLLBACK ============
+
+CREATE TABLE config_snapshots (
+    id INTEGER PRIMARY KEY,
+    label TEXT NOT NULL,
+    reason TEXT,
+    git_commit TEXT,
+    snapshot_dir TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    is_auto_pre_update INTEGER DEFAULT 0
+);
+
+CREATE TABLE update_watches (
+    id INTEGER PRIMARY KEY,
+    pre_update_snapshot_id INTEGER NOT NULL REFERENCES config_snapshots(id),
+    applied_at TEXT DEFAULT (datetime('now')),
+    validation_window_minutes INTEGER DEFAULT 30,
+    critical_alert_baseline INTEGER DEFAULT 0,
+    critical_alert_threshold INTEGER DEFAULT 2,
+    status TEXT DEFAULT 'watching',   -- 'watching','confirmed_good','auto_rolled_back'
+    resolved_at TEXT,
+    resolution_note TEXT
+);
+
 -- ============ SELF-UNDERSTANDING CHANGELOG ============
 -- Every time a module's declared capability or hardware needs differ
 -- from what was stored last time, that's logged here — a real,

@@ -56,6 +56,15 @@ without rearchitecting anything already running.
    catches the specific failure of writing a real module and forgetting
    to wire it into registration (proven: a deliberately-unregistered
    test module was caught on the first run).
+10. **Changes to configuration can be undone — by you, or automatically.**
+    `core/backup_manager.py` snapshots config files and live control
+    parameters (never history/alerts/yield/species knowledge — those
+    are earned record, not config) before a change, and watches for a
+    critical-alert spike afterward. Proven live: applied a deliberately
+    dangerous dosing limit change (10ml → 500ml max per dose), simulated
+    the resulting critical alerts, and confirmed the system detected
+    the spike and reverted the limit on its own, with a clear
+    notification explaining exactly what happened and why.
 
 ## Layout
 
@@ -80,7 +89,9 @@ mia-homestead/
 │   ├── experiment_manager.py       # the aquaponics scientist — proposes/runs/evaluates experiments
 │   ├── infrastructure_registry.py  # wiring + plumbing knowledge, with rationale
 │   ├── diagnostics.py              # cross-references alerts against infrastructure for specific guidance
-│   └── self_audit.py               # catches modules that exist but aren't wired into registration
+│   ├── self_audit.py               # catches modules that exist but aren't wired into registration
+│   ├── backup_manager.py           # config snapshot/restore, auto-rollback on post-update alert spike
+│   └── backup_cli.py                # manual snapshot/restore, no API key needed
 ├── modules/
 │   ├── aquaponics_cell.py          # pH/EC dosing control loop
 │   ├── power_monitor.py            # solar/battery telemetry + load shed

@@ -377,6 +377,29 @@ TOOLS = [
         },
     },
     {
+        "name": "create_config_snapshot",
+        "description": "Create a backup snapshot of current configuration before making a change.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"label": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["label"],
+        },
+    },
+    {
+        "name": "list_config_snapshots",
+        "description": "List available configuration backup snapshots.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "restore_config_snapshot",
+        "description": "Restore configuration from a snapshot — reverts config files and control parameters, not history. Use only after explicit user confirmation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"snapshot_id": {"type": "integer"}},
+            "required": ["snapshot_id"],
+        },
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -525,6 +548,23 @@ class GreenhouseAssistant:
 
     def _tool_get_self_change_history(self, module_id: str | None = None, limit: int = 20) -> dict:
         return {"changes": CapabilityRegistry.get_change_history(self.db, module_id=module_id, limit=limit)}
+
+    def _tool_create_config_snapshot(self, label: str, reason: str | None = None) -> dict:
+        from core.backup_manager import BackupManager
+        mgr = BackupManager(self.db)
+        snapshot_id = mgr.create_snapshot(label, reason=reason)
+        return {"snapshot_id": snapshot_id, "label": label}
+
+    def _tool_list_config_snapshots(self) -> dict:
+        rows = self.db.execute(
+            "SELECT id, label, reason, created_at, is_auto_pre_update FROM config_snapshots ORDER BY created_at DESC"
+        ).fetchall()
+        return {"snapshots": [dict(r) for r in rows]}
+
+    def _tool_restore_config_snapshot(self, snapshot_id: int) -> dict:
+        from core.backup_manager import BackupManager
+        mgr = BackupManager(self.db)
+        return mgr.restore_snapshot(snapshot_id)
 
     def _tool_get_hardware_needs_list(self) -> dict:
         return {

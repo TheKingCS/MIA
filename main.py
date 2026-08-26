@@ -35,6 +35,7 @@ from core.bed_planting import BedPlantingManager
 from core.experiment_manager import ExperimentManager
 from core.infrastructure_registry import InfrastructureRegistry
 from core.diagnostics import DiagnosticEngine
+from core.backup_manager import BackupManager
 from viewer.export_state import export_state
 
 logging.basicConfig(
@@ -95,6 +96,7 @@ def main():
     experiments = ExperimentManager(db, notifier=notifier)
     infrastructure = InfrastructureRegistry(db)
     diagnostics = DiagnosticEngine(db, infrastructure, maintenance=maintenance, notifier=notifier)
+    backups = BackupManager(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -105,6 +107,7 @@ def main():
         (species, "species_registry"), (bed_planting, "bed_planting"),
         (experiments, "experiment_manager"),
         (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
+        (backups, "backup_manager"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -142,6 +145,9 @@ def main():
                 due_experiments = experiments.check_due_experiments()
                 if due_experiments:
                     logger.info("Completed %d experiment(s): %s — check results", len(due_experiments), due_experiments)
+                watch_results = backups.check_update_watches()
+                if watch_results:
+                    logger.info("Update watch results: %s", watch_results)
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the
