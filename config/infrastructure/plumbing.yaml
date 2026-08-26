@@ -1,0 +1,60 @@
+# MIA Homestead — Plumbing Topology
+#
+# This file IS the plumbing knowledge — edit this, not code, when the
+# physical plumbing changes. Each segment describes one leg of the
+# water flow path, why it's routed that way, and its physical specs.
+# The diagnostic engine reads this to point at a specific pipe/fitting
+# when something's wrong, not just "check the plumbing somewhere."
+
+cells:
+  - cell_id: 1
+    cell_name: "Cell A"
+    segments:
+      - name: "tank_to_grow_bed"
+        from_component: "Tank A1 outlet"
+        to_component: "Bed A1 inlet"
+        pipe_diameter_in: 0.75
+        flow_direction: "gravity-fed, pump-assisted"
+        driven_by_actuator: "circulation_pump"
+        rationale: >
+          3/4" chosen to match the circulation pump's outlet fitting
+          size directly — no reducer needed, one less failure point.
+          Gravity-fed downhill run from tank to bed reduces the pump's
+          duty cycle since it isn't fighting elevation on this leg.
+        notes: "Slope: bed sits ~4in below tank outlet."
+
+      - name: "grow_bed_to_sump"
+        from_component: "Bed A1 drain"
+        to_component: "Sump/biofilter"
+        pipe_diameter_in: 1.0
+        flow_direction: "gravity drain"
+        driven_by_actuator: null
+        rationale: >
+          Sized larger than the inlet (1in vs 3/4in) deliberately —
+          drain lines should never be the bottleneck, or the bed
+          floods. Standard aquaponics bell-siphon sizing practice.
+        notes: "Bell siphon drain — check for clogging first if bed is holding water too long."
+
+      - name: "sump_to_tank"
+        from_component: "Sump/biofilter outlet"
+        to_component: "Tank A1 inlet"
+        pipe_diameter_in: 0.75
+        flow_direction: "pump-driven, return leg"
+        driven_by_actuator: "circulation_pump"
+        rationale: >
+          Same pump drives both the tank->bed and sump->tank legs —
+          one circulation pump for the whole loop, not two, to reduce
+          moving parts and points of failure. 3/4in matches the
+          tank_to_grow_bed segment for parts commonality.
+        notes: null
+
+      - name: "aeration_line"
+        from_component: "Aerator/air pump"
+        to_component: "Tank A1 airstone"
+        pipe_diameter_in: 0.25
+        flow_direction: "air, not water"
+        driven_by_actuator: "aerator"
+        rationale: >
+          Standard airline tubing size for a hobbyist aquarium air
+          pump — matches the pump's barbed outlet without an adapter.
+        notes: "Independent of the water circulation loop entirely — aeration keeps running even if circulation stops."

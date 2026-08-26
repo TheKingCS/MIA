@@ -98,9 +98,14 @@ CREATE TABLE dosing_events (
     cell_id INTEGER NOT NULL REFERENCES cells(id),
     timestamp TEXT DEFAULT (datetime('now')),
     dose_type TEXT NOT NULL,
-    amount_ml REAL NOT NULL,
+    amount_ml REAL,                     -- nullable: MCU pulse duration determines actual
+                                         -- volume; Pi-side software logs an estimate, not a
+                                         -- flow-metered exact figure, until real flow
+                                         -- metering hardware exists
     reading_before REAL,
     reading_after REAL,                 -- filled in on next confirmed reading
+    rationale TEXT,                     -- human-readable "why" — e.g. "pH 6.3 below
+                                         -- target range 6.6-7.2, correcting toward target"
     triggered_by TEXT NOT NULL
 );
 
@@ -312,6 +317,9 @@ CREATE TABLE bed_plantings (
     cell_id INTEGER NOT NULL REFERENCES cells(id),
     species_id INTEGER NOT NULL REFERENCES species_profiles(id),
     variety TEXT,
+    quantity_planted INTEGER,           -- how many plants/starts went in
+    expected_yield_amount REAL,         -- what a normal harvest of this many should produce
+    expected_yield_unit TEXT,
     planted_date TEXT DEFAULT (datetime('now')),
     expected_harvest_date TEXT,
     status TEXT DEFAULT 'active',       -- 'active','harvested','failed'
@@ -378,6 +386,39 @@ CREATE TABLE parameter_change_proposals (
     status TEXT DEFAULT 'proposed',     -- 'proposed','approved','denied'
     proposed_at TEXT DEFAULT (datetime('now')),
     decided_at TEXT
+);
+
+-- ============ INFRASTRUCTURE KNOWLEDGE ============
+-- Wiring lives in config/devices/roles/*.yaml (relay_channel,
+-- wiring_rationale per control) — no separate table needed, it's read
+-- live from those files by infrastructure_registry.py. Plumbing gets
+-- its own table since it's synced from config/infrastructure/plumbing.yaml
+-- and queried more often (diagnostics cross-reference it per alert).
+
+CREATE TABLE plumbing_map (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    segment_name TEXT NOT NULL,
+    from_component TEXT NOT NULL,
+    to_component TEXT NOT NULL,
+    pipe_diameter_in REAL,
+    flow_direction TEXT,
+    driven_by_actuator TEXT,
+    rationale TEXT,
+    notes TEXT,
+    UNIQUE(cell_id, segment_name)
+);
+
+-- ============ WATER USAGE TRACKING ============
+
+CREATE TABLE water_usage_events (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    grow_bed_name TEXT,
+    timestamp TEXT DEFAULT (datetime('now')),
+    amount_gallons REAL NOT NULL,
+    reason TEXT NOT NULL,               -- e.g. 'scheduled_watering','moisture_triggered','manual_topoff'
+    triggered_by TEXT DEFAULT 'auto_control'
 );
 
 -- ============ HARDWARE NEEDS REGISTRY ============

@@ -153,9 +153,13 @@ class AquaponicsCell(MiaHomesteadModule):
             return []
 
         if avg < self._targets["ph_target_min"]:
-            return [self._dose_command("ph_up", reading.value)]
+            return [self._dose_command("ph_up", reading.value,
+                    f"pH {avg:.2f} below target range {self._targets['ph_target_min']}-"
+                    f"{self._targets['ph_target_max']}, correcting upward")]
         if avg > self._targets["ph_target_max"]:
-            return [self._dose_command("ph_down", reading.value)]
+            return [self._dose_command("ph_down", reading.value,
+                    f"pH {avg:.2f} above target range {self._targets['ph_target_min']}-"
+                    f"{self._targets['ph_target_max']}, correcting downward")]
         return []
 
     def _evaluate_ec(self, reading: SensorReading) -> list[ActuatorCommand]:
@@ -167,20 +171,33 @@ class AquaponicsCell(MiaHomesteadModule):
 
         avg = sum(self._ec_history) / len(self._ec_history)
         if avg < self._targets["ec_target_min"]:
-            return [self._dose_command("nutrient_concentrate", reading.value)]
+            return [self._dose_command("nutrient_concentrate", reading.value,
+                    f"EC {avg:.0f} below target range {self._targets['ec_target_min']}-"
+                    f"{self._targets['ec_target_max']}, correcting upward")]
         # No auto-correction for EC too high — diluting requires a water
         # change action, which should stay a human-approved/manual step
         # in v0.1 rather than an automated dump of fresh water.
         return []
 
-    def _dose_command(self, dose_type: str, current_value: float) -> ActuatorCommand:
+    def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand:
         # Actuator ID lookup would come from the actuators table in a
         # real implementation, keyed by cell_id + dose_type.
         actuator_id = self._actuator_id_for(dose_type)
         logger.info(
-            "%s: proposing dose %s (current reading %.2f)",
-            self.module_id, dose_type, current_value,
+            "%s: proposing dose %s (current reading %.2f) — %s",
+            self.module_id, dose_type, current_value, rationale,
         )
+        # Log the dosing decision itself, with WHY — this is the
+        # concrete answer to "how much of a nutrient and why," not just
+        # a log line. amount_ml is left null: the Pi doesn't know the
+        # exact volume until real flow-metering hardware exists, only
+        # the MCU's pulse duration does — see dosing_events schema note.
+        self.db.execute(
+            "INSERT INTO dosing_events (cell_id, dose_type, reading_before, rationale, triggered_by) "
+            "VALUES (?, ?, ?, ?, 'auto_control')",
+            (self.cell_id, dose_type, current_value, rationale),
+        )
+        self.db.commit()
         return ActuatorCommand(
             actuator_id=actuator_id,
             action="pulse",

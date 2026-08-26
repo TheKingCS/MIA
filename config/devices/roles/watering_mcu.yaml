@@ -16,6 +16,9 @@ controls:
   - actuator_type: valve
     actuator_name: irrigation_valve
     safe_default_state: "off"
+    relay_channel: 1
+    wiring_rationale: >
+      Single valve on this MCU — channel 1, standard default position.
 
 setup_instructions: |
   1. Find the MCU labeled "WATERING" in the parts bin (yellow label).

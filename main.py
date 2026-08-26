@@ -33,6 +33,8 @@ from core.device_registry import DeviceRegistry
 from core.species_registry import SpeciesRegistry
 from core.bed_planting import BedPlantingManager
 from core.experiment_manager import ExperimentManager
+from core.infrastructure_registry import InfrastructureRegistry
+from core.diagnostics import DiagnosticEngine
 from viewer.export_state import export_state
 
 logging.basicConfig(
@@ -91,6 +93,8 @@ def main():
     species = SpeciesRegistry(db)
     bed_planting = BedPlantingManager(db, species, notifier=notifier)
     experiments = ExperimentManager(db, notifier=notifier)
+    infrastructure = InfrastructureRegistry(db)
+    diagnostics = DiagnosticEngine(db, infrastructure, maintenance=maintenance, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -100,6 +104,7 @@ def main():
         (notifier, "notifications"), (devices, "device_registry"),
         (species, "species_registry"), (bed_planting, "bed_planting"),
         (experiments, "experiment_manager"),
+        (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])

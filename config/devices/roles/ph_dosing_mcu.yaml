@@ -11,9 +11,20 @@ controls:
   - actuator_type: dosing_pump
     actuator_name: ph_up_pump
     safe_default_state: "off"
+    relay_channel: 1
+    wiring_rationale: >
+      Channel 1 chosen because it's the first (leftmost) relay on the
+      board, closest to the MCU's 5V input — shortest wire run to the
+      relay's control-side power, reducing voltage drop on a channel
+      that fires frequently.
   - actuator_type: dosing_pump
     actuator_name: ph_down_pump
     safe_default_state: "off"
+    relay_channel: 2
+    wiring_rationale: >
+      Channel 2, adjacent to ph_up_pump's channel 1 — keeping both pH
+      pumps on neighboring channels makes the physical wiring easier
+      to trace and reduces the chance of miswiring during maintenance.
 
 setup_instructions: |
   1. Find the MCU labeled "PH DOSING" in the parts bin (blue label).

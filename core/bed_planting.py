@@ -23,11 +23,15 @@ class BedPlantingManager(Describable):
         self.notifier = notifier
 
     def plant(self, grow_bed_name: str, cell_id: int, species_id: int,
-              variety: str = None, expected_harvest_date: str = None) -> int:
+              variety: str = None, expected_harvest_date: str = None,
+              quantity_planted: int = None, expected_yield_amount: float = None,
+              expected_yield_unit: str = None) -> int:
         cur = self.db.execute(
-            "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, variety, expected_harvest_date) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (grow_bed_name, cell_id, species_id, variety, expected_harvest_date),
+            "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, variety, "
+            "expected_harvest_date, quantity_planted, expected_yield_amount, expected_yield_unit) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (grow_bed_name, cell_id, species_id, variety, expected_harvest_date,
+             quantity_planted, expected_yield_amount, expected_yield_unit),
         )
         self.db.commit()
         planting_id = cur.lastrowid
@@ -48,6 +52,46 @@ class BedPlantingManager(Describable):
         )
         self.db.commit()
 
+    def get_expected_vs_actual(self, planting_id: int) -> dict:
+        """The direct answer to 'how much did we expect vs how much did
+        we get' — sums actual yield_events logged for this planting's
+        cell since it was planted, against the expected figure recorded
+        at planting time. Approximate: yield_events are per-cell, not
+        per-planting, so if multiple plantings share a cell this sums
+        ALL yield in that window, not just this planting's — flagged
+        explicitly rather than silently overcounted."""
+        self.db.row_factory = sqlite3.Row
+        planting = self.db.execute("SELECT * FROM bed_plantings WHERE id = ?", (planting_id,)).fetchone()
+        if not planting:
+            return {"error": f"no planting {planting_id}"}
+        planting = dict(planting)
+
+        actual = self.db.execute(
+            "SELECT SUM(quantity) FROM yield_events WHERE cell_id = ? AND timestamp >= ?",
+            (planting["cell_id"], planting["planted_date"]),
+        ).fetchone()[0]
+
+        isolated = not self._other_active_plantings_in_cell(planting)
+        return {
+            "grow_bed_name": planting["grow_bed_name"],
+            "expected_amount": planting["expected_yield_amount"],
+            "expected_unit": planting["expected_yield_unit"],
+            "actual_amount_so_far": actual,
+            "note": (
+                "isolated to this planting — no other active plantings share this cell"
+                if isolated else
+                "actual_amount is summed across ALL yield events in this cell since "
+                "planting — other plantings share this cell, so this isn't isolated"
+            ),
+        }
+
+    def _other_active_plantings_in_cell(self, planting: dict) -> bool:
+        count = self.db.execute(
+            "SELECT COUNT(*) FROM bed_plantings WHERE cell_id = ? AND status = 'active' AND id != ?",
+            (planting["cell_id"], planting["id"]),
+        ).fetchone()[0]
+        return count > 0
+
     def get_current_plantings(self, cell_id: int = None) -> list[dict]:
         self.db.row_factory = sqlite3.Row
         q = """
@@ -61,6 +105,26 @@ class BedPlantingManager(Describable):
             q += " AND bp.cell_id = ?"
             params = (cell_id,)
         return [dict(r) for r in self.db.execute(q, params).fetchall()]
+
+    def record_water_usage(self, cell_id: int, amount_gallons: float, reason: str,
+                            grow_bed_name: str = None, triggered_by: str = "auto_control") -> int:
+        """The direct answer to 'how much water and why' — every
+        irrigation pulse gets a reason, not just a volume."""
+        cur = self.db.execute(
+            "INSERT INTO water_usage_events (cell_id, grow_bed_name, amount_gallons, reason, triggered_by) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (cell_id, grow_bed_name, amount_gallons, reason, triggered_by),
+        )
+        self.db.commit()
+        return cur.lastrowid
+
+    def get_water_usage(self, cell_id: int, days: int = 7) -> list[dict]:
+        self.db.row_factory = sqlite3.Row
+        return [dict(r) for r in self.db.execute(
+            "SELECT * FROM water_usage_events WHERE cell_id = ? AND timestamp >= datetime('now', ?) "
+            "ORDER BY timestamp DESC",
+            (cell_id, f"-{days} days"),
+        ).fetchall()]
 
     def _check_cell_compatibility(self, cell_id: int) -> None:
         """Every species sharing this cell's water needs overlapping
@@ -92,12 +156,15 @@ class BedPlantingManager(Describable):
             module_id="bed_planting",
             display_name="Bed Planting Tracker",
             purpose=(
-                "Tracks what species is planted in each grow bed, and flags when two "
-                "plantings sharing the same cell's water want genuinely incompatible "
-                "pH/EC ranges — since a cell has one water chemistry for every bed on it."
+                "Tracks what species is planted in each grow bed, expected vs actual yield, "
+                "water usage with the reason behind each use, and flags when two plantings "
+                "sharing the same cell's water want genuinely incompatible pH/EC ranges — "
+                "since a cell has one water chemistry for every bed on it."
             ),
-            data_produced=["current plantings per bed, with species/variety/planted date"],
+            data_produced=["current plantings per bed, with species/variety/planted date",
+                            "expected vs actual yield comparisons", "water usage log with rationale"],
             actions_possible=["record a new planting", "mark harvested or failed",
+                               "record water usage with a reason",
                                "check whether current plantings in a cell are chemically compatible"],
             limits_and_safety=(
                 "Warns, does not block — planting something incompatible is allowed, "

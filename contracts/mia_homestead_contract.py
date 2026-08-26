@@ -130,21 +130,33 @@ class MiaHomesteadModule(Describable, ABC):
         for r in readings:
             if now - r.timestamp > self.STALE_THRESHOLD:
                 r.is_stale = True
+                sensor_type = self._sensor_type_label(r.sensor_id)
                 self._raise_alert(
                     Severity.WARNING,
-                    f"{self.module_id}: sensor {r.sensor_id} stale "
+                    f"{self.module_id}: {sensor_type} sensor (id {r.sensor_id}) stale "
                     f"(last update {r.timestamp.isoformat()})",
                 )
                 continue
             if r.is_out_of_range:
+                sensor_type = self._sensor_type_label(r.sensor_id)
                 self._raise_alert(
                     Severity.WARNING,
-                    f"{self.module_id}: sensor {r.sensor_id} out of "
+                    f"{self.module_id}: {sensor_type} sensor (id {r.sensor_id}) out of "
                     f"physically plausible range, discarding",
                 )
                 continue
             valid.append(r)
         return valid
+
+    def _sensor_type_label(self, sensor_id: int) -> str:
+        """Looks up the sensor's type so alert messages are specific
+        enough for the diagnostic engine to pattern-match against —
+        'pH sensor stale' is diagnosable, 'sensor 3 stale' isn't."""
+        try:
+            row = self.db.execute("SELECT type FROM sensors WHERE id = ?", (sensor_id,)).fetchone()
+            return row[0] if row else "unknown"
+        except Exception:
+            return "unknown"
 
     def _validate_command(self, cmd: ActuatorCommand) -> ActuatorCommand:
         """

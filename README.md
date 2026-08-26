@@ -38,6 +38,14 @@ without rearchitecting anything already running.
    evidence, not statistical proof. See `docs/PILOT_VS_SCALE.md` on
    why running the same experiment across the pilot and full-scale
    cells is how real confidence actually gets built.
+8. **The assistant is an Aquaponics Scientist and Greenhouse Manager,
+   not a chatbot with a dashboard attached.** It knows what's planted
+   where, how much was expected vs. actually harvested, how much water
+   and nutrient went where and why, and — critically — how everything
+   is physically wired and plumbed and why, so a diagnosis points at a
+   specific relay channel and pipe segment instead of a generic
+   troubleshooting checklist. See `assistant/PERSONALITY.md`'s Identity
+   section and `docs/CAPABILITY_REGISTRATION.md`.
 
 ## Layout
 
@@ -59,7 +67,9 @@ mia-homestead/
 │   ├── device_setup_cli.py         # zero-technical-knowledge setup walkthrough
 │   ├── species_registry.py         # ideal pH/EC/temp ranges per plant/fish species
 │   ├── bed_planting.py             # what's planted where, cell compatibility checks
-│   └── experiment_manager.py       # the aquaponics scientist — proposes/runs/evaluates experiments
+│   ├── experiment_manager.py       # the aquaponics scientist — proposes/runs/evaluates experiments
+│   ├── infrastructure_registry.py  # wiring + plumbing knowledge, with rationale
+│   └── diagnostics.py              # cross-references alerts against infrastructure for specific guidance
 ├── modules/
 │   ├── aquaponics_cell.py          # pH/EC dosing control loop
 │   ├── power_monitor.py            # solar/battery telemetry + load shed
@@ -171,6 +181,33 @@ mia-homestead/
   recommendation (+32.3% yield), approved it, and confirmed the change
   correctly promoted from `set_by: experiment` to `set_by: manual` —
   the exact distinction between "currently testing" and "adopted policy."
+- **Infrastructure knowledge + diagnostics** — wiring detail (relay
+  channel, port, mounting location, WHY wired that way) lives directly
+  in the device role configs; plumbing topology (pipe segments, sizes,
+  flow direction, WHY routed that way) lives in
+  `config/infrastructure/plumbing.yaml`. Proved the full diagnostic
+  chain through REAL code, not a hand-written test: backdated a pH
+  sensor reading, ran the actual control cycle, let the base contract
+  raise a genuine staleness alert, then confirmed the diagnostic engine
+  correctly traced it to the exact MCU (pH Dosing Controller, PORT 2,
+  relay channel 1), its physical mounting location, and auto-filed a
+  maintenance task with that diagnosis attached — not a generic "check
+  the sensor" message. Also caught and fixed a real gap in the
+  process: the base contract's staleness alerts didn't include sensor
+  TYPE, only a numeric ID, which would have made this kind of specific
+  diagnosis impossible — fixed at the source (`mia_homestead_contract.py`)
+  rather than worked around.
+- **Resource tracking with rationale** — `dosing_events` now actually
+  gets written to (it existed in the schema but nothing wrote to it
+  until this pass) with a plain-language reason for every dose;
+  `water_usage_events` and expected-vs-actual yield comparison track
+  the same "how much and why" for irrigation and harvest outcomes.
+- **Explicit identity** — `assistant/PERSONALITY.md` now states
+  outright what "Aquaponics Scientist and Greenhouse Manager" means:
+  forms and tests hypotheses, knows the full operational picture down
+  to individual pipe segments, and is a steward that proposes and
+  diagnoses continuously but never bypasses the human-approval gates
+  already built into the safety and financial-decision layers.
 - **Desktop-ready** — `requirements.txt`, `.gitignore`, `SETUP.md` with
   a post-transfer verification step (`scenarios/scenarios.py` should
   print 7/7 passing after moving machines), and an initialized git repo

@@ -214,6 +214,71 @@ TOOLS = [
         },
     },
     {
+        "name": "get_wiring_info",
+        "description": "Get how a specific actuator is wired — which MCU, port, relay channel, and why.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"actuator_name": {"type": "string"}},
+            "required": ["actuator_name"],
+        },
+    },
+    {
+        "name": "get_plumbing_info",
+        "description": "Get plumbing segments for a cell or a specific actuator, including pipe sizes and why routed that way.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "actuator_name": {"type": "string"},
+            },
+        },
+    },
+    {
+        "name": "diagnose_alert",
+        "description": "Get a specific, wiring-aware diagnosis for an alert — which physical component to check, not generic troubleshooting.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "alert_id": {"type": "integer"},
+                "create_task": {"type": "boolean", "default": False},
+            },
+            "required": ["alert_id"],
+        },
+    },
+    {
+        "name": "get_expected_vs_actual_yield",
+        "description": "Compare expected vs actual yield for a specific planting.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"planting_id": {"type": "integer"}},
+            "required": ["planting_id"],
+        },
+    },
+    {
+        "name": "get_water_usage",
+        "description": "Get water usage history for a cell, with the reason behind each use.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "days": {"type": "integer", "default": 7},
+            },
+            "required": ["cell_id"],
+        },
+    },
+    {
+        "name": "get_dosing_rationale",
+        "description": "Get recent dosing events for a cell WITH the reasoning behind each dose, not just the amount.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "days": {"type": "integer", "default": 7},
+            },
+            "required": ["cell_id"],
+        },
+    },
+    {
         "name": "get_bed_plantings",
         "description": "Get what's currently planted in each bed, optionally filtered by cell.",
         "input_schema": {
@@ -448,6 +513,53 @@ class GreenhouseAssistant:
             "bom_summary": HardwareRegistry.render_bom(self.db, group_by_module=False),
             "items": HardwareRegistry.get_all(self.db),
         }
+
+    def _tool_get_wiring_info(self, actuator_name: str) -> dict:
+        from core.infrastructure_registry import InfrastructureRegistry
+        infra = InfrastructureRegistry(self.db)
+        wiring = infra.get_wiring_for_actuator(actuator_name)
+        return {"wiring": wiring}
+
+    def _tool_get_plumbing_info(self, cell_id: int | None = None, actuator_name: str | None = None) -> dict:
+        from core.infrastructure_registry import InfrastructureRegistry
+        infra = InfrastructureRegistry(self.db)
+        if actuator_name:
+            return {"plumbing": infra.get_plumbing_for_actuator(actuator_name)}
+        if cell_id is not None:
+            return {"plumbing": infra.get_plumbing_for_cell(cell_id)}
+        return {"error": "provide cell_id or actuator_name"}
+
+    def _tool_diagnose_alert(self, alert_id: int, create_task: bool = False) -> dict:
+        from core.infrastructure_registry import InfrastructureRegistry
+        from core.diagnostics import DiagnosticEngine
+        from core.maintenance import MaintenanceManager
+        infra = InfrastructureRegistry(self.db)
+        maintenance = MaintenanceManager(self.db)
+        engine = DiagnosticEngine(self.db, infra, maintenance=maintenance)
+        return engine.diagnose_alert(alert_id, create_task=create_task)
+
+    def _tool_get_expected_vs_actual_yield(self, planting_id: int) -> dict:
+        from core.species_registry import SpeciesRegistry
+        from core.bed_planting import BedPlantingManager
+        species = SpeciesRegistry(self.db)
+        bp = BedPlantingManager(self.db, species)
+        return bp.get_expected_vs_actual(planting_id)
+
+    def _tool_get_water_usage(self, cell_id: int, days: int = 7) -> dict:
+        rows = self.db.execute(
+            "SELECT * FROM water_usage_events WHERE cell_id = ? AND timestamp >= datetime('now', ?) "
+            "ORDER BY timestamp DESC",
+            (cell_id, f"-{days} days"),
+        ).fetchall()
+        return {"water_usage": [dict(r) for r in rows]}
+
+    def _tool_get_dosing_rationale(self, cell_id: int, days: int = 7) -> dict:
+        rows = self.db.execute(
+            "SELECT dose_type, timestamp, reading_before, rationale, triggered_by FROM dosing_events "
+            "WHERE cell_id = ? AND timestamp >= datetime('now', ?) ORDER BY timestamp DESC",
+            (cell_id, f"-{days} days"),
+        ).fetchall()
+        return {"dosing_events": [dict(r) for r in rows]}
 
     def _tool_get_bed_plantings(self, cell_id: int | None = None) -> dict:
         q = """
