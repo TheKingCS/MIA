@@ -513,6 +513,7 @@ CREATE TABLE system_capabilities (
     actions_possible TEXT,       -- JSON array
     limits_and_safety TEXT,
     example_questions TEXT,      -- JSON array
+    verification_evidence TEXT,  -- JSON array — what actually proves this works
     updated_at TEXT DEFAULT (datetime('now'))
 );
 

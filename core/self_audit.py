@@ -138,6 +138,24 @@ def main():
     else:
         print(f"   OK: {summary}")
 
+    print("\n4. Checking verification coverage (claims backed by proof)...")
+    try:
+        import sqlite3
+        from core.capability_registry import CapabilityRegistry
+        # Coverage is informational, not a hard failure — an unverified
+        # module is a real gap worth knowing about, but shouldn't block
+        # a build the way a broken import or a failing scenario does.
+        conn = sqlite3.connect(ROOT / "mia_homestead.db")
+        coverage = CapabilityRegistry.get_verification_coverage(conn)
+        if coverage["total"] == 0:
+            print("   (no capabilities registered yet — run main.py once first)")
+        else:
+            print(f"   {coverage['verified']}/{coverage['total']} modules have verification evidence")
+            if coverage["unverified_modules"]:
+                print(f"   Unverified (not a failure, just a gap): {', '.join(coverage['unverified_modules'])}")
+    except Exception as e:
+        print(f"   (skipped — {e})")
+
     print()
     if all_clear:
         print("All checks passed. Self-understanding is consistent with the code.")

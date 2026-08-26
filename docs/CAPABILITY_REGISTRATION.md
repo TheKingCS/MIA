@@ -83,8 +83,16 @@ Checklist, in order:
    correctly and step 3 forgotten: real code with a real
    `describe_capabilities()` that nobody wired into registration,
    silently invisible to the assistant. It also re-runs the full
-   safety scenario suite as a final gate.
-5. Restart and confirm the module shows up via `get_system_capabilities`,
+   safety scenario suite as a final gate, and reports verification
+   coverage — how many modules have real proof behind their claims.
+5. **Add `verification_evidence` to `describe_capabilities()`** citing
+   the actual scenario test or a dated, specific description of what
+   was manually run and confirmed. An empty list is an honest,
+   permitted answer for something genuinely untested — a fabricated
+   or vague evidence string is not. This is what makes
+   `docs/FEATURES_AND_CAPABILITIES.md` a real proof document instead
+   of another self-description.
+6. Restart and confirm the module shows up via `get_system_capabilities`,
    and that if you changed anything about an EXISTING module,
    `get_self_change_history` shows a real entry — not silence, and not
    noise on an unrelated restart with no code changes.

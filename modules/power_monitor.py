@@ -129,6 +129,10 @@ class PowerMonitor(MiaHomesteadModule):
                 "What's the battery at?", "Has it had to shed any loads recently?",
                 "How's the greenhouse array doing today?",
             ],
+            verification_evidence=[
+                "scenarios.py::scenario_power_loss_load_shed — confirmed critical alert and "
+                "load-shed behavior fire correctly when telemetry is missing entirely",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

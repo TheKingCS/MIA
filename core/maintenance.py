@@ -175,6 +175,13 @@ class MaintenanceManager(Describable):
                 "Any open repair tasks?", "What's overdue for calibration?",
                 "Assign someone to fix the leak by the sump",
             ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed manual task creation with priority-based "
+                "alerting, and auto-generated calibration task correctly created from an overdue "
+                "sensor calibration_due date",
+                "Live manual test 2026-08-26: diagnostic engine successfully auto-filed a "
+                "maintenance task from a real diagnosed alert",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

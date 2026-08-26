@@ -36,6 +36,7 @@ from core.experiment_manager import ExperimentManager
 from core.infrastructure_registry import InfrastructureRegistry
 from core.diagnostics import DiagnosticEngine
 from core.backup_manager import BackupManager
+from core.generate_capabilities_doc import generate as generate_capabilities_doc
 from viewer.export_state import export_state
 
 logging.basicConfig(
@@ -119,6 +120,14 @@ def main():
     hardware = HardwareRegistry(db)
     hw_count = hardware.register_all(all_describables)
     logger.info("Registered %d hardware requirement(s) across all modules", hw_count)
+
+    # The running, provable features/capabilities doc — regenerated
+    # from live data every startup, so it can never drift from what
+    # the code actually does or claim proof that doesn't exist.
+    generate_capabilities_doc(args.db)
+    coverage = CapabilityRegistry.get_verification_coverage(db)
+    logger.info("Verification coverage: %d/%d modules have proof behind their capabilities",
+                coverage["verified"], coverage["total"])
 
     print(f"\nMIA Homestead control loop running. Cycle every {args.interval}s. Ctrl+C to stop.\n")
     cycle_count = 0

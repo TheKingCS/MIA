@@ -263,6 +263,13 @@ class ExperimentManager(Describable):
                 "What did the last EC experiment find?",
                 "Should I approve raising the pH target for Cell A?",
             ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: full lifecycle proven end to end — proposed a "
+                "target change, confirmed live effect on the control loop with zero restart, "
+                "logged before/after yield data, completed the experiment, got a correct "
+                "evidence-based +32.3% adopt recommendation, approved it, and confirmed the "
+                "change promoted from set_by='experiment' to set_by='manual'",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

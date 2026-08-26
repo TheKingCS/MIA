@@ -41,7 +41,7 @@ class CapabilityRegistry:
         declared purpose, actions, or limits changed gets a real,
         timestamped entry, not just a silent overwrite."""
         existing = self.db.execute(
-            "SELECT purpose, data_produced, actions_possible, limits_and_safety "
+            "SELECT purpose, data_produced, actions_possible, limits_and_safety, verification_evidence "
             "FROM system_capabilities WHERE module_id = ?",
             (cap.module_id,),
         ).fetchone()
@@ -50,9 +50,10 @@ class CapabilityRegistry:
             self._changelog_entry(cap.module_id, "first_registered", None, None, cap.purpose)
             return
 
-        old_purpose, old_data, old_actions, old_limits = existing
+        old_purpose, old_data, old_actions, old_limits, old_evidence = existing
         new_data = json.dumps(cap.data_produced)
         new_actions = json.dumps(cap.actions_possible)
+        new_evidence = json.dumps(cap.verification_evidence)
 
         if old_purpose != cap.purpose:
             self._changelog_entry(cap.module_id, "capability_changed", "purpose", old_purpose, cap.purpose)
@@ -63,6 +64,12 @@ class CapabilityRegistry:
         if old_limits != cap.limits_and_safety:
             self._changelog_entry(cap.module_id, "capability_changed", "limits_and_safety",
                                    old_limits, cap.limits_and_safety)
+        if old_evidence != new_evidence:
+            # Worth its own change type — adding proof that something
+            # works is a meaningfully different event than the
+            # capability's description changing.
+            self._changelog_entry(cap.module_id, "verification_changed", "verification_evidence",
+                                   old_evidence, new_evidence)
 
     def _changelog_entry(self, module_id: str, change_type: str, field_name: str | None,
                           old_value: str | None, new_value: str | None) -> None:
@@ -82,8 +89,8 @@ class CapabilityRegistry:
             """
             INSERT INTO system_capabilities
             (module_id, display_name, purpose, data_produced, actions_possible,
-             limits_and_safety, example_questions, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+             limits_and_safety, example_questions, verification_evidence, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             ON CONFLICT(module_id) DO UPDATE SET
                 display_name = excluded.display_name,
                 purpose = excluded.purpose,
@@ -91,12 +98,14 @@ class CapabilityRegistry:
                 actions_possible = excluded.actions_possible,
                 limits_and_safety = excluded.limits_and_safety,
                 example_questions = excluded.example_questions,
+                verification_evidence = excluded.verification_evidence,
                 updated_at = datetime('now')
             """,
             (
                 cap.module_id, cap.display_name, cap.purpose,
                 json.dumps(cap.data_produced), json.dumps(cap.actions_possible),
                 cap.limits_and_safety, json.dumps(cap.example_questions),
+                json.dumps(cap.verification_evidence),
             ),
         )
         self.db.commit()
@@ -147,5 +156,26 @@ class CapabilityRegistry:
             d["data_produced"] = json.loads(d["data_produced"] or "[]")
             d["actions_possible"] = json.loads(d["actions_possible"] or "[]")
             d["example_questions"] = json.loads(d["example_questions"] or "[]")
+            d["verification_evidence"] = json.loads(d.get("verification_evidence") or "[]")
             results.append(d)
         return results
+
+    @staticmethod
+    def get_verification_coverage(db_conn: sqlite3.Connection) -> dict:
+        """What fraction of registered capabilities actually have proof
+        behind them, vs. just a description. This is the honest
+        maturity metric — a module can describe itself perfectly and
+        still have zero evidence it actually works."""
+        rows = db_conn.execute(
+            "SELECT module_id, verification_evidence FROM system_capabilities"
+        ).fetchall()
+        total = len(rows)
+        verified = 0
+        unverified = []
+        for module_id, evidence_json in rows:
+            evidence = json.loads(evidence_json or "[]")
+            if evidence:
+                verified += 1
+            else:
+                unverified.append(module_id)
+        return {"total": total, "verified": verified, "unverified_modules": unverified}

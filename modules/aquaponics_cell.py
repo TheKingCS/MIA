@@ -263,6 +263,17 @@ class AquaponicsCell(MiaHomesteadModule):
                 "How's the pH in Cell A?", "Has it been dosing much lately?",
                 "Why didn't it correct the EC this morning?",
             ],
+            verification_evidence=[
+                "scenarios.py::scenario_ph_crash_response — confirmed dosing triggers after "
+                "3 consistent readings, closed-loop physics shows pH recovering from the correction",
+                "scenarios.py::scenario_inconsistent_readings — confirmed dosing withheld when "
+                "readings disagree beyond tolerance",
+                "scenarios.py::scenario_stale_sensor_freeze — confirmed dosing freezes when a "
+                "sensor is missing/stale",
+                "Live manual test 2026-08-26: confirmed target_overrides changes the live control "
+                "target with zero restart (cell._current_targets() picked up an experiment change "
+                "immediately)",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

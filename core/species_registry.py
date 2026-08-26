@@ -149,6 +149,10 @@ class SpeciesRegistry(Describable):
                 "informs target_overrides, which is what the control loop actually reads."
             ),
             example_questions=["What pH does lettuce want?", "What's the ideal range for tilapia?"],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed baseline seeding produces 3 correct "
+                "species profiles (lettuce, basil, tilapia) with real horticultural ranges",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

@@ -211,6 +211,11 @@ class DeviceRegistry(Describable):
                 "Is there a device waiting to be paired?",
                 "What's plugged in right now?",
             ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed a device announcing a known unclaimed "
+                "role auto-pairs and its actuators get created automatically; confirmed an "
+                "ambiguous/unlabeled device correctly queues for a human instead of guessing",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

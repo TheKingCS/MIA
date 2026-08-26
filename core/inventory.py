@@ -241,6 +241,12 @@ class InventoryManager(Describable):
                 "What's low on stock?", "What's in the to-order queue?",
                 "How much pH-up chemical have we used this month?",
             ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed low-stock alert fires at threshold, "
+                "and order->receive cycle produces correct final stock totals",
+                "Live manual test 2026-08-26: confirmed auto-propose/approve/deny/skip flow "
+                "works correctly via both assistant tools and the standalone CLI",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

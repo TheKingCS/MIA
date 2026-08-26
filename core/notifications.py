@@ -141,6 +141,12 @@ class NotificationDispatcher(Describable):
                 "for a delivered alert."
             ),
             example_questions=["Would I get notified if something went critical right now?"],
+            verification_evidence=[
+                "Live manual test 2026-08-26: email dispatch path exercised throughout session "
+                "logs (no real SMTP credentials configured, so delivery itself unverified — "
+                "the code path and severity routing are). SMS explicitly UNVERIFIED: no "
+                "provider is wired, and the code honestly logs 'not sent' rather than faking success.",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

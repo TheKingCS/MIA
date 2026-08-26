@@ -31,6 +31,12 @@ class Capability:
     actions_possible: list[str] = field(default_factory=list)   # what it can actually DO
     limits_and_safety: str = ""                     # constraints, failsafes, what it will NOT do
     example_questions: list[str] = field(default_factory=list)  # what a user might ask about it
+    verification_evidence: list[str] = field(default_factory=list)
+    # What actually PROVES this capability works, not just describes it —
+    # a specific scenario test name, a dated manual live-test result, or
+    # explicitly "unverified" if nothing has actually confirmed it yet.
+    # This is the difference between a claim and a proven claim — see
+    # docs/FEATURES_AND_CAPABILITIES.md, generated from this field.
 
 
 @dataclass

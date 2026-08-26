@@ -257,6 +257,12 @@ class BackupManager(Describable):
             ),
             example_questions=["What snapshots exist?", "Roll back to before the last change",
                                 "Did the last update trigger an auto-rollback?"],
+            verification_evidence=[
+                "Live manual test 2026-08-26: full end-to-end proof — applied a deliberately "
+                "dangerous dosing limit change (10ml -> 500ml max per dose), simulated the "
+                "resulting critical alert spike, and confirmed automatic detection and rollback "
+                "to the correct baseline value (500 -> 10) with a clear notification",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

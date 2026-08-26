@@ -153,6 +153,13 @@ class DiagnosticEngine(Describable):
                 "autonomous fix, only points a human at the right place."
             ),
             example_questions=["Why is the pH sensor stale?", "Diagnose this alert for me"],
+            verification_evidence=[
+                "Live manual test 2026-08-26: full real-code-path proof — backdated a real "
+                "sensor reading, ran the actual control cycle, let the base contract raise a "
+                "genuine staleness alert, then confirmed the diagnosis correctly traced it to "
+                "the exact MCU (pH Dosing Controller, PORT 2, relay channel 1) and physical "
+                "mounting location, and auto-filed a maintenance task with that diagnosis attached",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

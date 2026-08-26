@@ -144,6 +144,11 @@ class InfrastructureRegistry(Describable):
                 "What's the plumbing between the tank and the grow bed?",
                 "Why is that pipe 3/4 inch instead of 1 inch?",
             ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed wiring/plumbing queries return correct, "
+                "specific data (relay channel, port, mount location, pipe segments) for a real "
+                "actuator and cell",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

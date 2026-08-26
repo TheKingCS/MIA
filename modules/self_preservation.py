@@ -199,6 +199,11 @@ class SelfPreservationModule(MiaHomesteadModule):
                 "Is the greenhouse asking for help right now?",
                 "What's the beacon been triggered for recently?",
             ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed all three states — silent while critical "
+                "and alone, beacon on the moment presence is detected, auto-resolved and beacon "
+                "off once the critical condition cleared",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

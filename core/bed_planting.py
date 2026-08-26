@@ -172,6 +172,11 @@ class BedPlantingManager(Describable):
                 "against known ranges, not a guarantee of real-world outcome."
             ),
             example_questions=["What's planted in Cell A?", "Can lettuce and basil share a cell?"],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed compatible plantings (lettuce+basil, "
+                "overlapping ranges) produce no warning; a fabricated incompatible species "
+                "correctly triggered the warning",
+            ],
         )
 
     def describe_hardware_requirements(self) -> list:

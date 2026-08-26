@@ -65,6 +65,13 @@ without rearchitecting anything already running.
     the resulting critical alerts, and confirmed the system detected
     the spike and reverted the limit on its own, with a clear
     notification explaining exactly what happened and why.
+11. **Every capability claim is either proven or honestly marked
+    unverified — there's no third option.** `Capability.verification_evidence`
+    cites the actual scenario test or dated manual proof behind each
+    module; `docs/FEATURES_AND_CAPABILITIES.md` regenerates from this
+    live data every startup, so the running features list can never
+    drift into aspiration. Currently 13/13 registered modules carry
+    real evidence — checked and enforced by `core/self_audit.py`.
 
 ## Layout
 
@@ -91,7 +98,8 @@ mia-homestead/
 │   ├── diagnostics.py              # cross-references alerts against infrastructure for specific guidance
 │   ├── self_audit.py               # catches modules that exist but aren't wired into registration
 │   ├── backup_manager.py           # config snapshot/restore, auto-rollback on post-update alert spike
-│   └── backup_cli.py                # manual snapshot/restore, no API key needed
+│   ├── backup_cli.py                # manual snapshot/restore, no API key needed
+│   └── generate_capabilities_doc.py # regenerates docs/FEATURES_AND_CAPABILITIES.md from live data
 ├── modules/
 │   ├── aquaponics_cell.py          # pH/EC dosing control loop
 │   ├── power_monitor.py            # solar/battery telemetry + load shed

@@ -400,6 +400,11 @@ TOOLS = [
         },
     },
     {
+        "name": "get_verification_coverage",
+        "description": "Get how many capabilities are actually proven vs just described — an honest maturity check.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -565,6 +570,9 @@ class GreenhouseAssistant:
         from core.backup_manager import BackupManager
         mgr = BackupManager(self.db)
         return mgr.restore_snapshot(snapshot_id)
+
+    def _tool_get_verification_coverage(self) -> dict:
+        return CapabilityRegistry.get_verification_coverage(self.db)
 
     def _tool_get_hardware_needs_list(self) -> dict:
         return {
