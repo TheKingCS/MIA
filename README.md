@@ -89,6 +89,16 @@ without rearchitecting anything already running.
     consumption rate (`InventoryManager.forecast_depletion`), and a
     periodic state-of-the-greenhouse report composing existing data
     into one digest (`core/report_generator.py`).
+14. **Conversational coverage is audited, not assumed.** A hands-on
+    review found six real backend actions with no matching assistant
+    tool — water usage logging, harvest/failure recording, adding a
+    species, maintenance task status/assignment, denying a parameter
+    change — all fixed. `core/self_audit.py` step 5 now checks this on
+    every build with a keyword heuristic; run against the fixed code it
+    correctly flags only the two actions that are deliberately NOT
+    commandable (direct dosing pulses, raw notification sends — both
+    bypass safety gating if exposed as bare chat commands), confirming
+    the heuristic works without over- or under-flagging.
 
 ## Layout
 

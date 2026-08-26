@@ -99,6 +99,50 @@ def check_all_describables_registered() -> list[str]:
     return problems
 
 
+def check_conversational_coverage() -> dict:
+    """Best-effort check: does every registered capability's
+    actions_possible have SOMETHING that looks like a matching
+    assistant tool? This is deliberately a keyword heuristic, not
+    exact matching — action descriptions are free text. It exists to
+    catch the specific failure mode this project has hit before: a
+    real backend method exists, does something useful, and nobody
+    wired a conversational path to it. False positives are expected
+    and fine to dismiss after a manual look; false negatives (a real
+    gap this misses) are the risk to watch for."""
+    import json
+    import re
+    import sqlite3
+
+    db_path = ROOT / "mia_homestead.db"
+    if not db_path.exists():
+        return {}
+
+    conn = sqlite3.connect(str(db_path))
+    tools_source = (ROOT / "assistant" / "greenhouse_assistant.py").read_text().lower()
+
+    # Verb-ish stopwords stripped so "record a new planting" -> {"record","new","planting"}
+    # then checked against whether those words appear near a tool name/description.
+    STOPWORDS = {"a", "the", "to", "for", "of", "on", "with", "and", "or", "an", "is", "this"}
+
+    rows = conn.execute("SELECT module_id, actions_possible FROM system_capabilities").fetchall()
+    gaps = {}
+    for module_id, actions_json in rows:
+        actions = json.loads(actions_json or "[]")
+        missing = []
+        for action in actions:
+            words = [w for w in re.findall(r"[a-z]+", action.lower()) if w not in STOPWORDS and len(w) > 3]
+            if not words:
+                continue
+            # A tool "covers" this action if at least half its significant
+            # words show up somewhere in the tools source text.
+            hits = sum(1 for w in words if w in tools_source)
+            if hits < max(1, len(words) // 2):
+                missing.append(action)
+        if missing:
+            gaps[module_id] = missing
+    return gaps
+
+
 def check_scenarios() -> tuple[bool, str]:
     result = subprocess.run(
         [sys.executable, str(ROOT / "scenarios" / "scenarios.py")],
@@ -155,6 +199,17 @@ def main():
                 print(f"   Unverified (not a failure, just a gap): {', '.join(coverage['unverified_modules'])}")
     except Exception as e:
         print(f"   (skipped — {e})")
+
+    print("\n5. Checking conversational coverage (best-effort heuristic)...")
+    gaps = check_conversational_coverage()
+    if gaps:
+        print(f"   {len(gaps)} module(s) declare actions with no obviously-matching assistant tool:")
+        for module_id, actions in gaps.items():
+            print(f"   - {module_id}: {actions}")
+        print("   (This is a heuristic keyword match, not exhaustive — verify by hand before "
+              "assuming a real gap. But every hit so far in this project's history has been real.)")
+    else:
+        print("   OK — no obvious gaps found")
 
     print()
     if all_clear:

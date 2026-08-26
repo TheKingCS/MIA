@@ -43,6 +43,23 @@ class DeadMansSwitchMonitor(Describable):
         )
         self.db.commit()
 
+    def get_status(self) -> dict:
+        """Read-only — for conversational status checks. Never
+        escalates or sends a notification, unlike check_escalation()
+        which is the active periodic check main.py runs. A question
+        shouldn't have the side effect of triggering a critical alert."""
+        last_checkin = self.db.execute(
+            "SELECT timestamp FROM human_checkins ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        hours_since = None
+        if last_checkin:
+            last_time = datetime.fromisoformat(last_checkin[0])
+            hours_since = (datetime.utcnow() - last_time).total_seconds() / 3600
+        level = self.db.execute(
+            "SELECT escalation_level FROM deadmans_switch_state WHERE id = 1"
+        ).fetchone()[0]
+        return {"hours_since_checkin": hours_since, "escalation_level": level}
+
     def check_escalation(self) -> dict:
         last_checkin = self.db.execute(
             "SELECT timestamp FROM human_checkins ORDER BY id DESC LIMIT 1"

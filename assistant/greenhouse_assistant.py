@@ -316,6 +316,104 @@ TOOLS = [
         },
     },
     {
+        "name": "mark_planting_harvested",
+        "description": "Mark a planting as harvested — use when the user says they harvested something.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"planting_id": {"type": "integer"}},
+            "required": ["planting_id"],
+        },
+    },
+    {
+        "name": "mark_planting_failed",
+        "description": "Mark a planting as failed — use when the user says a crop died or didn't make it.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "planting_id": {"type": "integer"},
+                "notes": {"type": "string"},
+            },
+            "required": ["planting_id"],
+        },
+    },
+    {
+        "name": "record_water_usage",
+        "description": "Log water usage with a reason — use when the user tells you they watered something, or to record a manual watering.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "amount_gallons": {"type": "number"},
+                "reason": {"type": "string"},
+                "grow_bed_name": {"type": "string"},
+            },
+            "required": ["cell_id", "amount_gallons", "reason"],
+        },
+    },
+    {
+        "name": "add_species",
+        "description": "Add a new species to the knowledge base — use when the user wants to track a plant or fish species that isn't already known.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "common_name": {"type": "string"},
+                "organism_type": {"type": "string", "enum": ["plant", "fish"]},
+                "scientific_name": {"type": "string"},
+                "ph_min": {"type": "number"}, "ph_max": {"type": "number"},
+                "ec_min": {"type": "number"}, "ec_max": {"type": "number"},
+                "notes": {"type": "string"},
+            },
+            "required": ["common_name", "organism_type"],
+        },
+    },
+    {
+        "name": "update_maintenance_task_status",
+        "description": "Change a maintenance task's status — use when the user says a repair is done, in progress, or should be cancelled.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "integer"},
+                "status": {"type": "string", "enum": ["open", "in_progress", "done", "cancelled"]},
+            },
+            "required": ["task_id", "status"],
+        },
+    },
+    {
+        "name": "assign_maintenance_task",
+        "description": "Assign a maintenance task to someone — use when the user tells you who should handle a task.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "integer"},
+                "assigned_to": {"type": "string"},
+            },
+            "required": ["task_id", "assigned_to"],
+        },
+    },
+    {
+        "name": "deny_parameter_change",
+        "description": "Deny a suggested permanent target change from a completed experiment.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"proposal_id": {"type": "integer"}},
+            "required": ["proposal_id"],
+        },
+    },
+    {
+        "name": "complete_experiment_now",
+        "description": "End a running experiment early and get its result summary — use when the user wants to stop an experiment before its planned end date.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"experiment_id": {"type": "integer"}},
+            "required": ["experiment_id"],
+        },
+    },
+    {
+        "name": "get_deadmans_switch_status",
+        "description": "Check how long it's been since a human checked in, and whether the dead-man's-switch has escalated.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_species_profile",
         "description": "Get the ideal pH/EC/temperature range for a species by name.",
         "input_schema": {
@@ -707,6 +805,68 @@ class GreenhouseAssistant:
         )
         self.db.commit()
         return {"planting_id": cur.lastrowid, "grow_bed_name": grow_bed_name, "species": species_name}
+
+    def _tool_mark_planting_harvested(self, planting_id: int) -> dict:
+        self.db.execute("UPDATE bed_plantings SET status = 'harvested' WHERE id = ?", (planting_id,))
+        self.db.commit()
+        return {"planting_id": planting_id, "status": "harvested"}
+
+    def _tool_mark_planting_failed(self, planting_id: int, notes: str | None = None) -> dict:
+        self.db.execute("UPDATE bed_plantings SET status = 'failed', notes = ? WHERE id = ?", (notes, planting_id))
+        self.db.commit()
+        return {"planting_id": planting_id, "status": "failed"}
+
+    def _tool_record_water_usage(self, cell_id: int, amount_gallons: float, reason: str,
+                                   grow_bed_name: str | None = None) -> dict:
+        cur = self.db.execute(
+            "INSERT INTO water_usage_events (cell_id, grow_bed_name, amount_gallons, reason, triggered_by) "
+            "VALUES (?, ?, ?, ?, 'manual_override')",
+            (cell_id, grow_bed_name, amount_gallons, reason),
+        )
+        self.db.commit()
+        return {"event_id": cur.lastrowid, "amount_gallons": amount_gallons, "reason": reason}
+
+    def _tool_add_species(self, common_name: str, organism_type: str, scientific_name: str | None = None,
+                            ph_min: float | None = None, ph_max: float | None = None,
+                            ec_min: float | None = None, ec_max: float | None = None,
+                            notes: str | None = None) -> dict:
+        cur = self.db.execute(
+            "INSERT INTO species_profiles (common_name, organism_type, scientific_name, "
+            "ph_min, ph_max, ec_min, ec_max, notes, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'baseline')",
+            (common_name, organism_type, scientific_name, ph_min, ph_max, ec_min, ec_max, notes),
+        )
+        self.db.commit()
+        return {"species_id": cur.lastrowid, "common_name": common_name}
+
+    def _tool_update_maintenance_task_status(self, task_id: int, status: str) -> dict:
+        completed_at = "datetime('now')" if status == "done" else "NULL"
+        self.db.execute(
+            f"UPDATE maintenance_tasks SET status = ?, completed_at = {completed_at} WHERE id = ?",
+            (status, task_id),
+        )
+        self.db.commit()
+        return {"task_id": task_id, "status": status}
+
+    def _tool_assign_maintenance_task(self, task_id: int, assigned_to: str) -> dict:
+        self.db.execute("UPDATE maintenance_tasks SET assigned_to = ? WHERE id = ?", (assigned_to, task_id))
+        self.db.commit()
+        return {"task_id": task_id, "assigned_to": assigned_to}
+
+    def _tool_deny_parameter_change(self, proposal_id: int) -> dict:
+        from core.experiment_manager import ExperimentManager
+        mgr = ExperimentManager(self.db)
+        mgr.deny_parameter_change(proposal_id)
+        return {"proposal_id": proposal_id, "status": "denied"}
+
+    def _tool_complete_experiment_now(self, experiment_id: int) -> dict:
+        from core.experiment_manager import ExperimentManager
+        mgr = ExperimentManager(self.db)
+        return mgr.complete_experiment(experiment_id)
+
+    def _tool_get_deadmans_switch_status(self) -> dict:
+        from core.deadmans_switch import DeadMansSwitchMonitor
+        mgr = DeadMansSwitchMonitor(self.db)
+        return mgr.get_status()
 
     def _tool_get_species_profile(self, species_name: str) -> dict:
         row = self.db.execute(

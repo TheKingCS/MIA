@@ -96,6 +96,16 @@ Checklist, in order:
    and that if you changed anything about an EXISTING module,
    `get_self_change_history` shows a real entry — not silence, and not
    noise on an unrelated restart with no code changes.
+7. **For every action_possible that's a safe command (not a bypass of
+   the safety architecture), add a matching assistant tool.** Self-audit
+   step 5 flags likely gaps by keyword heuristic — verify each hit by
+   hand, since it's not exact matching, but treat a real hit seriously:
+   this project has caught real, working backend methods with zero
+   conversational path to them (water usage logging, task status
+   updates, species additions, harvest recording) purely because a
+   tool was never added. Deliberately NOT commandable — direct dosing
+   pulses, raw notification sends — should be documented as an
+   intentional exception when the audit flags them, not silently ignored.
 
 If you skip step 2, the module won't run at all — Python enforces this
 before you can even get to step 3. If you skip step 3, step 4 catches
