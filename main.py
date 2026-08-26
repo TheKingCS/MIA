@@ -30,6 +30,9 @@ from core.inventory import InventoryManager
 from core.capability_registry import CapabilityRegistry
 from core.hardware_registry import HardwareRegistry
 from core.device_registry import DeviceRegistry
+from core.species_registry import SpeciesRegistry
+from core.bed_planting import BedPlantingManager
+from core.experiment_manager import ExperimentManager
 from viewer.export_state import export_state
 
 logging.basicConfig(
@@ -85,6 +88,9 @@ def main():
     maintenance = MaintenanceManager(db, notifier=notifier)
     inventory = InventoryManager(db, notifier=notifier)
     devices = DeviceRegistry(db, notifier=notifier)
+    species = SpeciesRegistry(db)
+    bed_planting = BedPlantingManager(db, species, notifier=notifier)
+    experiments = ExperimentManager(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -92,6 +98,8 @@ def main():
     all_describables = [(mod, mid) for mid, mod in registry.modules.items()] + [
         (inventory, "inventory"), (maintenance, "maintenance"),
         (notifier, "notifications"), (devices, "device_registry"),
+        (species, "species_registry"), (bed_planting, "bed_planting"),
+        (experiments, "experiment_manager"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -126,6 +134,9 @@ def main():
                 proposed = inventory.auto_propose_reorders()
                 if proposed:
                     logger.info("Inventory scan proposed %d new order(s) — check the to-order list", proposed)
+                due_experiments = experiments.check_due_experiments()
+                if due_experiments:
+                    logger.info("Completed %d experiment(s): %s — check results", len(due_experiments), due_experiments)
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the

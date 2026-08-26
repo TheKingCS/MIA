@@ -214,6 +214,89 @@ TOOLS = [
         },
     },
     {
+        "name": "get_bed_plantings",
+        "description": "Get what's currently planted in each bed, optionally filtered by cell.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"cell_id": {"type": "integer"}},
+        },
+    },
+    {
+        "name": "record_planting",
+        "description": "Record a new planting in a grow bed — use when the user tells you what they planted.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "grow_bed_name": {"type": "string"},
+                "cell_id": {"type": "integer"},
+                "species_name": {"type": "string", "description": "e.g. 'lettuce', 'tilapia'"},
+                "variety": {"type": "string"},
+            },
+            "required": ["grow_bed_name", "cell_id", "species_name"],
+        },
+    },
+    {
+        "name": "get_species_profile",
+        "description": "Get the ideal pH/EC/temperature range for a species by name.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"species_name": {"type": "string"}},
+            "required": ["species_name"],
+        },
+    },
+    {
+        "name": "list_species",
+        "description": "List all species in the knowledge base.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "propose_experiment",
+        "description": (
+            "Propose a controlled experiment — changing one target variable on a cell for a "
+            "duration to see if it improves yield. Use when the user wants to test/tune conditions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "hypothesis": {"type": "string"},
+                "variable_changed": {"type": "string", "enum": ["ph_target_min", "ph_target_max", "ec_target_min", "ec_target_max"]},
+                "baseline_value": {"type": "number"},
+                "test_value": {"type": "number"},
+                "duration_days": {"type": "integer", "default": 14},
+            },
+            "required": ["cell_id", "hypothesis", "variable_changed", "baseline_value", "test_value"],
+        },
+    },
+    {
+        "name": "start_experiment",
+        "description": "Start a proposed experiment — this actually changes the cell's live dosing target. Only call after explicit user approval.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"experiment_id": {"type": "integer"}},
+            "required": ["experiment_id"],
+        },
+    },
+    {
+        "name": "get_active_experiments",
+        "description": "Get experiments currently proposed or running.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_pending_parameter_changes",
+        "description": "Get evidence-based target changes awaiting approval from completed experiments.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "approve_parameter_change",
+        "description": "Approve a suggested permanent target change from a completed experiment.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"proposal_id": {"type": "integer"}},
+            "required": ["proposal_id"],
+        },
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -365,6 +448,79 @@ class GreenhouseAssistant:
             "bom_summary": HardwareRegistry.render_bom(self.db, group_by_module=False),
             "items": HardwareRegistry.get_all(self.db),
         }
+
+    def _tool_get_bed_plantings(self, cell_id: int | None = None) -> dict:
+        q = """
+            SELECT bp.*, sp.common_name, sp.ph_min, sp.ph_max, sp.ec_min, sp.ec_max
+            FROM bed_plantings bp JOIN species_profiles sp ON sp.id = bp.species_id
+            WHERE bp.status = 'active'
+        """
+        params = ()
+        if cell_id is not None:
+            q += " AND bp.cell_id = ?"
+            params = (cell_id,)
+        rows = self.db.execute(q, params).fetchall()
+        return {"plantings": [dict(r) for r in rows]}
+
+    def _tool_record_planting(self, grow_bed_name: str, cell_id: int, species_name: str, variety: str | None = None) -> dict:
+        species_row = self.db.execute(
+            "SELECT id FROM species_profiles WHERE common_name LIKE ?", (f"%{species_name}%",)
+        ).fetchone()
+        if not species_row:
+            return {"error": f"No species profile found matching '{species_name}'. Use list_species to see options."}
+        species_id = species_row[0]
+        cur = self.db.execute(
+            "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, variety) VALUES (?, ?, ?, ?)",
+            (grow_bed_name, cell_id, species_id, variety),
+        )
+        self.db.commit()
+        return {"planting_id": cur.lastrowid, "grow_bed_name": grow_bed_name, "species": species_name}
+
+    def _tool_get_species_profile(self, species_name: str) -> dict:
+        row = self.db.execute(
+            "SELECT * FROM species_profiles WHERE common_name LIKE ?", (f"%{species_name}%",)
+        ).fetchone()
+        return {"profile": dict(row) if row else None}
+
+    def _tool_list_species(self) -> dict:
+        rows = self.db.execute("SELECT common_name, organism_type, ph_min, ph_max, ec_min, ec_max FROM species_profiles").fetchall()
+        return {"species": [dict(r) for r in rows]}
+
+    def _tool_propose_experiment(self, cell_id: int, hypothesis: str, variable_changed: str,
+                                   baseline_value: float, test_value: float, duration_days: int = 14) -> dict:
+        from datetime import datetime, timedelta
+        planned_end = (datetime.utcnow() + timedelta(days=duration_days)).isoformat()
+        cur = self.db.execute(
+            "INSERT INTO experiments (cell_id, hypothesis, variable_changed, baseline_value, "
+            "test_value, planned_end_date, created_by) VALUES (?, ?, ?, ?, ?, ?, 'assistant')",
+            (cell_id, hypothesis, variable_changed, baseline_value, test_value, planned_end),
+        )
+        self.db.commit()
+        return {"experiment_id": cur.lastrowid, "status": "proposed", "planned_end_date": planned_end}
+
+    def _tool_start_experiment(self, experiment_id: int) -> dict:
+        from core.experiment_manager import ExperimentManager
+        mgr = ExperimentManager(self.db)
+        mgr.start_experiment(experiment_id)
+        return {"experiment_id": experiment_id, "status": "running"}
+
+    def _tool_get_active_experiments(self) -> dict:
+        rows = self.db.execute(
+            "SELECT * FROM experiments WHERE status IN ('proposed', 'approved', 'running')"
+        ).fetchall()
+        return {"experiments": [dict(r) for r in rows]}
+
+    def _tool_get_pending_parameter_changes(self) -> dict:
+        rows = self.db.execute(
+            "SELECT * FROM parameter_change_proposals WHERE status = 'proposed'"
+        ).fetchall()
+        return {"proposals": [dict(r) for r in rows]}
+
+    def _tool_approve_parameter_change(self, proposal_id: int) -> dict:
+        from core.experiment_manager import ExperimentManager
+        mgr = ExperimentManager(self.db)
+        mgr.approve_parameter_change(proposal_id)
+        return {"proposal_id": proposal_id, "status": "approved"}
 
     def _tool_get_active_help_requests(self) -> dict:
         rows = self.db.execute(

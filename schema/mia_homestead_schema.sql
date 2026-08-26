@@ -283,6 +283,103 @@ CREATE TABLE device_registrations (
     paired_at TEXT
 );
 
+-- ============ SPECIES KNOWLEDGE BASE ============
+-- Seeded with baseline horticultural/aquaculture data, refined over
+-- time by the experiment system below. This is the "what does this
+-- organism actually want" reference — separate from what a cell is
+-- CURRENTLY targeting (that's target_overrides, further down).
+
+CREATE TABLE species_profiles (
+    id INTEGER PRIMARY KEY,
+    common_name TEXT NOT NULL,
+    organism_type TEXT NOT NULL,        -- 'plant' or 'fish'
+    scientific_name TEXT,
+    ph_min REAL, ph_max REAL,
+    ec_min REAL, ec_max REAL,           -- uS/cm
+    temp_water_min REAL, temp_water_max REAL,  -- F
+    temp_air_min REAL, temp_air_max REAL,
+    days_to_maturity INTEGER,
+    notes TEXT,
+    source TEXT DEFAULT 'baseline',     -- 'baseline' or 'experiment_derived'
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- ============ WHAT'S PLANTED WHERE ============
+
+CREATE TABLE bed_plantings (
+    id INTEGER PRIMARY KEY,
+    grow_bed_name TEXT NOT NULL,        -- matches grow_beds.name
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    species_id INTEGER NOT NULL REFERENCES species_profiles(id),
+    variety TEXT,
+    planted_date TEXT DEFAULT (datetime('now')),
+    expected_harvest_date TEXT,
+    status TEXT DEFAULT 'active',       -- 'active','harvested','failed'
+    notes TEXT
+);
+CREATE INDEX idx_bed_plantings_active ON bed_plantings(cell_id, status);
+
+-- ============ ACTIVE TARGET OVERRIDES ============
+-- What a cell's control loop is ACTUALLY targeting right now, as
+-- opposed to its config-file defaults. Read live every control cycle
+-- by AquaponicsCell — this is what makes experiments possible without
+-- restarting the process, and what makes "the AI adjusts its own
+-- targets over time" a real, auditable data trail instead of a
+-- silent code change.
+
+CREATE TABLE target_overrides (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    param_name TEXT NOT NULL,           -- 'ph_target_min','ph_target_max','ec_target_min','ec_target_max'
+    value REAL NOT NULL,
+    set_by TEXT NOT NULL,               -- 'experiment','manual'
+    reference_id INTEGER,               -- experiment id, if set_by='experiment'
+    set_at TEXT DEFAULT (datetime('now')),
+    active INTEGER DEFAULT 1,
+    UNIQUE(cell_id, param_name, active)
+);
+
+-- ============ EXPERIMENTS ============
+-- Never auto-applies to the control loop without going through
+-- start_experiment() -> a target_overrides row -> and even the
+-- CONCLUSION (adopt this permanently) requires human approval via the
+-- same queue pattern as inventory ordering. Changing dosing targets is
+-- safety-relevant; it doesn't get to happen silently.
+
+CREATE TABLE experiments (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    hypothesis TEXT NOT NULL,
+    variable_changed TEXT NOT NULL,     -- matches a target_overrides param_name
+    baseline_value REAL NOT NULL,
+    test_value REAL NOT NULL,
+    status TEXT DEFAULT 'proposed',     -- 'proposed','approved','running','completed','aborted'
+    proposed_at TEXT DEFAULT (datetime('now')),
+    started_at TEXT,
+    planned_end_date TEXT,
+    completed_at TEXT,
+    result_summary TEXT,
+    suggested_action TEXT,              -- 'adopt','revert','inconclusive'
+    created_by TEXT DEFAULT 'human'     -- 'human','assistant'
+);
+
+-- ============ PARAMETER CHANGE APPROVAL QUEUE ============
+-- Where a completed experiment's "adopt this permanently" recommendation
+-- waits for a human decision, same pattern as inventory_orders.
+
+CREATE TABLE parameter_change_proposals (
+    id INTEGER PRIMARY KEY,
+    experiment_id INTEGER REFERENCES experiments(id),
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    param_name TEXT NOT NULL,
+    current_value REAL NOT NULL,
+    proposed_value REAL NOT NULL,
+    rationale TEXT NOT NULL,
+    status TEXT DEFAULT 'proposed',     -- 'proposed','approved','denied'
+    proposed_at TEXT DEFAULT (datetime('now')),
+    decided_at TEXT
+);
+
 -- ============ HARDWARE NEEDS REGISTRY ============
 -- Populated at startup from every module's describe_hardware_requirements().
 -- This is the running BOM — see contracts/capability.py and

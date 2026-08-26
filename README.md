@@ -29,6 +29,15 @@ without rearchitecting anything already running.
    fact.** Every module also declares `describe_hardware_requirements()`
    — same enforcement — so the running BOM is accurate from day one,
    not assembled from memory once you're ready to buy.
+7. **Learning is evidence-based and always human-approved.** The
+   experiment system proposes controlled changes to a cell's dosing
+   targets, tracks real yield outcomes, and recommends adopting what
+   works — through the same approval-queue pattern as inventory
+   ordering. It never silently changes what a cell doses toward, and
+   it's explicit that a single home-scale experiment is suggestive
+   evidence, not statistical proof. See `docs/PILOT_VS_SCALE.md` on
+   why running the same experiment across the pilot and full-scale
+   cells is how real confidence actually gets built.
 
 ## Layout
 
@@ -47,7 +56,10 @@ mia-homestead/
 │   ├── hardware_registry.py        # aggregates every module's hardware needs into a running BOM
 │   ├── hardware_bom.py             # CLI to view/export the hardware shopping list
 │   ├── device_registry.py          # plug-and-play MCU recognition/pairing
-│   └── device_setup_cli.py         # zero-technical-knowledge setup walkthrough
+│   ├── device_setup_cli.py         # zero-technical-knowledge setup walkthrough
+│   ├── species_registry.py         # ideal pH/EC/temp ranges per plant/fish species
+│   ├── bed_planting.py             # what's planted where, cell compatibility checks
+│   └── experiment_manager.py       # the aquaponics scientist — proposes/runs/evaluates experiments
 ├── modules/
 │   ├── aquaponics_cell.py          # pH/EC dosing control loop
 │   ├── power_monitor.py            # solar/battery telemetry + load shed
@@ -143,10 +155,22 @@ mia-homestead/
   calibration mode.
 - **Current hardware pricing** — pH and EC kits were re-priced against
   live search results (`docs/HARDWARE_BOM_CURRENT.md`); the running BOM
-  jumped from a rough ~$288 estimate to a real ~$573 once kit pricing
-  replaced circuit-only guesses. This is exactly why the registry
-  exists — the number changed, and every module's declaration updated
-  in one place, not scattered across notes.
+  jumped from a rough ~$288 estimate to a real ~$710 once kit pricing,
+  aeration/circulation pumps, and relay modules (a real gap — GPIO pins
+  can't directly drive a 12V pump, caught and fixed) replaced guesses.
+- **The aquaponics scientist** — `species_registry.py`,
+  `bed_planting.py`, and `experiment_manager.py`, fully proven live:
+  seeded 3 baseline species profiles, planted lettuce + basil in the
+  same cell (no compatibility warning — their ranges overlap), then
+  added a fabricated incompatible species and confirmed the warning
+  fired correctly. Ran a complete experiment lifecycle end to end:
+  proposed a target change, confirmed it took effect on the LIVE
+  control loop with no restart (`cell._current_targets()` picked up
+  the override immediately), logged realistic before/after yield data,
+  completed the experiment, got a correct evidence-based "adopt"
+  recommendation (+32.3% yield), approved it, and confirmed the change
+  correctly promoted from `set_by: experiment` to `set_by: manual` —
+  the exact distinction between "currently testing" and "adopted policy."
 - **Desktop-ready** — `requirements.txt`, `.gitignore`, `SETUP.md` with
   a post-transfer verification step (`scenarios/scenarios.py` should
   print 7/7 passing after moving machines), and an initialized git repo

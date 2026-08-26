@@ -85,7 +85,29 @@ class AquaponicsCell(MiaHomesteadModule):
             self._type_by_sensor[sensor_id] = sensor_type
         return readings
 
+    def _current_targets(self) -> dict:
+        """Live targets — checks target_overrides first (an active
+        experiment or an approved evidence-based change), falls back to
+        the config-file defaults this module was constructed with. This
+        is what makes experiments possible without restarting the
+        process: nothing here changes unless a row in target_overrides
+        says so, and that row only exists because a human (or an
+        approved experiment) put it there."""
+        targets = {
+            "ph_target_min": self.ph_target_min, "ph_target_max": self.ph_target_max,
+            "ec_target_min": self.ec_target_min, "ec_target_max": self.ec_target_max,
+        }
+        rows = self.db.execute(
+            "SELECT param_name, value FROM target_overrides WHERE cell_id = ? AND active = 1",
+            (self.cell_id,),
+        ).fetchall()
+        for param_name, value in rows:
+            if param_name in targets:
+                targets[param_name] = value
+        return targets
+
     def evaluate(self, readings: list[SensorReading]) -> list[ActuatorCommand]:
+        self._targets = self._current_targets()  # refresh every cycle, not just at construction
         commands = []
         ph_reading = self._latest_of_type(readings, "ph")
         ec_reading = self._latest_of_type(readings, "ec")
@@ -130,9 +152,9 @@ class AquaponicsCell(MiaHomesteadModule):
             )
             return []
 
-        if avg < self.ph_target_min:
+        if avg < self._targets["ph_target_min"]:
             return [self._dose_command("ph_up", reading.value)]
-        if avg > self.ph_target_max:
+        if avg > self._targets["ph_target_max"]:
             return [self._dose_command("ph_down", reading.value)]
         return []
 
@@ -144,7 +166,7 @@ class AquaponicsCell(MiaHomesteadModule):
             return []
 
         avg = sum(self._ec_history) / len(self._ec_history)
-        if avg < self.ec_target_min:
+        if avg < self._targets["ec_target_min"]:
             return [self._dose_command("nutrient_concentrate", reading.value)]
         # No auto-correction for EC too high — diluting requires a water
         # change action, which should stay a human-approved/manual step
