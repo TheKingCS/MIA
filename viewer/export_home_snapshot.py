@@ -8,9 +8,15 @@ detail (every sensor's trend history, every open alert, every
 maintenance task) for Homestead's OWN on-site ops console. This script
 reuses that script's queries but summarizes them down, matching the
 shared JSON snapshot shape MIA Home's core/finance_manager.py already
-knows how to ingest (source/generated_at/data — see
-docs/MIA_HOME_SYNC_PLAN.md for the full scoping and why that shape was
-chosen over inventing a new one).
+knows how to ingest: a flat top-level object with `source` and
+`generated_at` (both required — everything else is read verbatim into
+`FinancialSnapshot.data`/`HomesteadSnapshot.data`, `summary` included,
+NOT nested under a `data` key of its own — confirmed 2026-08-30 against
+the real `~/Projects/MIA/gui/home_dashboard.py` formatter code after an
+earlier draft of this script got that nesting wrong and silently failed
+to import; caught by actually running the real MIA-side ingestion
+against a real export, not just by writing to spec). See
+docs/MIA_HOME_SYNC_PLAN.md for the full scoping.
 
 **Delivery to MIA Home is deliberately NOT automated here.** Per the
 plan doc, neither of MIA Home's other two snapshot sources (a Kraken
@@ -117,19 +123,17 @@ def export_home_snapshot(db_path: str, out_path: str) -> None:
     output = {
         "source": "mia_homestead",
         "generated_at": generated_at,
-        "data": {
-            "summary": {
-                "critical_alert_count": critical_count,
-                "warning_alert_count": warning_count,
-                "yield_this_week_kg": round(yield_this_week, 2),
-                "yield_prior_week_kg": round(yield_prior_week, 2),
-                "revenue_mtd": round(revenue_mtd, 2),
-                "open_maintenance_critical": open_maintenance_critical,
-                "open_maintenance_total": open_maintenance_total,
-            },
-            "cells": cells_out,
-            "top_alert": top_alert,
+        "summary": {
+            "critical_alert_count": critical_count,
+            "warning_alert_count": warning_count,
+            "yield_this_week_kg": round(yield_this_week, 2),
+            "yield_prior_week_kg": round(yield_prior_week, 2),
+            "revenue_mtd": round(revenue_mtd, 2),
+            "open_maintenance_critical": open_maintenance_critical,
+            "open_maintenance_total": open_maintenance_total,
         },
+        "cells": cells_out,
+        "top_alert": top_alert,
     }
 
     Path(out_path).write_text(json.dumps(output, indent=2, default=str))

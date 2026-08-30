@@ -111,40 +111,56 @@ checked regularly enough for automation to be worth the setup cost.
 full output (per-sensor trend arrays, every open alert, every
 maintenance task) is built for Homestead's own on-site ops console, not
 a glance-level Home widget. Reuse its data-gathering, don't reuse its
-shape wholesale. Proposed export (new script,
-`viewer/export_home_snapshot.py`, not yet built):
+shape wholesale. Real export (`viewer/export_home_snapshot.py`, built
+2026-08-30):
 
 ```json
 {
   "source": "mia_homestead",
   "generated_at": "2026-08-30T22:15:09Z",
-  "data": {
-    "summary": {
-      "critical_alert_count": 2,
-      "warning_alert_count": 1,
-      "yield_this_week_kg": 7.4,
-      "yield_prior_week_kg": 3.9,
-      "revenue_mtd": 246.0,
-      "open_maintenance_critical": 1,
-      "open_maintenance_total": 3
-    },
-    "cells": [
-      { "name": "Cell A", "status": "warning", "headline_alert": "greenhouse_power: all sensors stale/invalid (x12)" }
-    ],
-    "top_alert": { "severity": "critical", "message": "...", "source": "..." }
-  }
+  "summary": {
+    "critical_alert_count": 2,
+    "warning_alert_count": 1,
+    "yield_this_week_kg": 7.4,
+    "yield_prior_week_kg": 3.9,
+    "revenue_mtd": 246.0,
+    "open_maintenance_critical": 1,
+    "open_maintenance_total": 3
+  },
+  "cells": [
+    { "name": "Cell A", "status": "ok" }
+  ],
+  "top_alert": { "severity": "critical", "message": "...", "source": "..." }
 }
 ```
+
+**Note the flat shape — `summary`/`cells`/`top_alert` sit directly
+beside `source`/`generated_at`, NOT nested under a `data` key.** An
+earlier draft of this doc showed a nested `"data": {...}` wrapper,
+which turned out to be wrong: `core/finance_manager.py`'s
+`FinancialSnapshot.data` field stores the ENTIRE raw parsed document
+(everything in `raw`, `source`/`generated_at` included), and every
+formatter (`format_real_estate_line`, etc.) reads
+`snapshot.data.get("summary", {})` directly off that — a nested
+`"data"` key would just silently produce "no summary data found"
+forever. Caught exactly this way, for real: the first version of the
+MIA-side integration below imported the file successfully but rendered
+"Snapshot imported, but no summary data found" — running the real
+ingestion against a real export surfaced it immediately; reading the
+code for `.data` usage alone might not have.
 
 `summary` mirrors the shared-shape precedent's own `summary` block
 (finance's export has one too — same convention, easy for a future
 combined "how's everything going" rollup to read both the same way).
-Deliberately excludes sensor trend history, full alert lists, full
-inventory — that detail stays one click away in Homestead's own
-dashboard (which would need its own URL/link Home could open, itself
-an open question — is Home ever on the same network as the greenhouse
-Pi to load `dashboard.html` directly? Worth asking rather than
-assuming yes).
+`cells[].status` only reflects an alert when its `source` matches the
+`cell_<slug>` naming convention — whole-system alerts (`greenhouse_power`,
+`greenhouse_self_preservation`) surface via `top_alert` instead of being
+misattributed to a specific cell. Deliberately excludes sensor trend
+history, full alert lists, full inventory — that detail stays one click
+away in Homestead's own dashboard (which would need its own URL/link
+Home could open, itself an open question — is Home ever on the same
+network as the greenhouse Pi to load `dashboard.html` directly? Worth
+asking rather than assuming yes).
 
 ## Hardware target — resolved (2026-08-30)
 
