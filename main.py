@@ -40,6 +40,7 @@ from core.generate_capabilities_doc import generate_and_write as write_capabilit
 from core.generate_bom_doc import generate_and_write as write_bom_doc
 from core.deadmans_switch import DeadMansSwitchMonitor
 from core.report_generator import ReportGenerator
+from core.trend_analyzer import TrendAnalyzer
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
 from viewer.export_home_snapshot import export_home_snapshot
@@ -110,6 +111,7 @@ def main():
     backups = BackupManager(db, notifier=notifier)
     deadmans = DeadMansSwitchMonitor(db, notifier=notifier)
     reports = ReportGenerator(db, notifier=notifier)
+    trend_analyzer = TrendAnalyzer(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -121,7 +123,7 @@ def main():
         (experiments, "experiment_manager"),
         (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
         (backups, "backup_manager"), (deadmans, "deadmans_switch"),
-        (reports, "report_generator"),
+        (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -181,6 +183,9 @@ def main():
                 if hours_since_report is None or hours_since_report >= 24:
                     reports.generate_and_send()
                     logger.info("Periodic report generated and sent")
+                drift_findings = trend_analyzer.check_all_sensors()
+                if drift_findings:
+                    logger.info("Trend analyzer found %d sensor(s) drifting", len(drift_findings))
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the

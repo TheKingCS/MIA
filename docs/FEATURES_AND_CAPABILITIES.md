@@ -1,8 +1,8 @@
 # MIA Homestead — Features & Capabilities
 
-**Auto-generated 2026-08-30T22:49:57.325769Z from `system_capabilities` — never hand-edit this file, it will be overwritten on the next registration pass.**
+**Auto-generated 2026-08-30T22:58:09.605526Z from `system_capabilities` — never hand-edit this file, it will be overwritten on the next registration pass.**
 
-**Verification coverage: 15/15 modules have actual proof behind their claims, not just a description.**
+**Verification coverage: 16/16 modules have actual proof behind their claims, not just a description.**
 
 ---
 
@@ -24,7 +24,7 @@ Snapshots configuration (files + live control parameters, not history) before ch
 **Proof this actually works:**
 - Live manual test 2026-08-26: full end-to-end proof — applied a deliberately dangerous dosing limit change (10ml -> 500ml max per dose), simulated the resulting critical alert spike, and confirmed automatic detection and rollback to the correct baseline value (500 -> 10) with a clear notification
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:09*
 
 ---
 
@@ -48,7 +48,7 @@ Tracks what species is planted in each grow bed, expected vs actual yield, water
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed compatible plantings (lettuce+basil, overlapping ranges) produce no warning; a fabricated incompatible species correctly triggered the warning
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -74,7 +74,7 @@ Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep 
 - scenarios.py::scenario_stale_sensor_freeze — confirmed dosing freezes when a sensor is missing/stale
 - Live manual test 2026-08-26: confirmed target_overrides changes the live control target with zero restart (cell._current_targets() picked up an experiment change immediately)
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -94,7 +94,7 @@ Watches how long it's been since a human demonstrably interacted with the system
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed all states — no check-in ever escalates immediately to level 2, a fresh check-in resets to level 0, backdating past 48h correctly escalates to level 1, checking again immediately does NOT re-escalate (stays at level 1), and backdating past 72h correctly escalates to level 2
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:09*
 
 ---
 
@@ -116,7 +116,7 @@ Recognizes and pairs physical MCU controllers by role (watering, fertilizer dosi
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed a device announcing a known unclaimed role auto-pairs and its actuators get created automatically; confirmed an ambiguous/unlabeled device correctly queues for a human instead of guessing
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -136,7 +136,7 @@ Cross-references alerts against the infrastructure map (wiring, plumbing) to pro
 **Proof this actually works:**
 - Live manual test 2026-08-26: full real-code-path proof — backdated a real sensor reading, ran the actual control cycle, let the base contract raise a genuine staleness alert, then confirmed the diagnosis correctly traced it to the exact MCU (pH Dosing Controller, PORT 2, relay channel 1) and physical mounting location, and auto-filed a maintenance task with that diagnosis attached
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -158,7 +158,7 @@ Proposes and runs controlled changes to one cell's dosing targets, tracks yield 
 **Proof this actually works:**
 - Live manual test 2026-08-26: full lifecycle proven end to end — proposed a target change, confirmed live effect on the control loop with zero restart, logged before/after yield data, completed the experiment, got a correct evidence-based +32.3% adopt recommendation, approved it, and confirmed the change promoted from set_by='experiment' to set_by='manual'
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -178,7 +178,7 @@ Monitors solar/battery telemetry for greenhouse_array and sheds non-critical loa
 **Proof this actually works:**
 - scenarios.py::scenario_power_loss_load_shed — confirmed critical alert and load-shed behavior fire correctly when telemetry is missing entirely
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -200,7 +200,7 @@ Watches for a human presence near the greenhouse while any critical alert is ope
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed all three states — silent while critical and alone, beacon on the moment presence is detected, auto-resolved and beacon off once the critical condition cleared
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -221,7 +221,7 @@ Knows the physical wiring (which relay channel, which MCU, why) and plumbing (wh
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed wiring/plumbing queries return correct, specific data (relay channel, port, mount location, pipe segments) for a real actuator and cell
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -247,7 +247,7 @@ Tracks stock of dosing chemicals, spare sensors, and spare parts. Auto-proposes 
 - Live manual test 2026-08-26: confirmed auto-propose/approve/deny/skip flow works correctly via both assistant tools and the standalone CLI
 - Live manual test 2026-08-26: confirmed consumption-rate forecasting correctly projects days-until-threshold (21.43ml/day -> 18.7 days), correctly withholds an early proposal when outside the warning window, and correctly proposes one with the right rationale when the window is widened to include it
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -271,7 +271,7 @@ Tracks repair/replacement/calibration tasks — created manually (e.g. 'swap the
 - Live manual test 2026-08-26: confirmed manual task creation with priority-based alerting, and auto-generated calibration task correctly created from an overdue sensor calibration_due date
 - Live manual test 2026-08-26: diagnostic engine successfully auto-filed a maintenance task from a real diagnosed alert
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -288,7 +288,7 @@ Escalates alerts to a human: info is logged only, warnings go to email, critical
 **Proof this actually works:**
 - Live manual test 2026-08-26: email dispatch path exercised throughout session logs (no real SMTP credentials configured, so delivery itself unverified — the code path and severity routing are). SMS explicitly UNVERIFIED: no provider is wired, and the code honestly logs 'not sent' rather than faking success.
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
 
 ---
 
@@ -308,7 +308,7 @@ Compiles a state-of-the-greenhouse digest — yields, dosing pattern, open alert
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed the report correctly compiles real yield, dosing, and alert data into one digest, and hours_since_last_report() correctly transitions from None (never sent) to a real elapsed time after generate_and_send()
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:09*
 
 ---
 
@@ -328,6 +328,26 @@ Tracks ideal pH/EC/temperature ranges per plant and fish species, seeded from ba
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed baseline seeding produces 3 correct species profiles (lettuce, basil, tilapia) with real horticultural ranges
 
-*Last updated: 2026-08-30 22:49:56*
+*Last updated: 2026-08-30 22:58:08*
+
+---
+
+## Sensor Trend Analyzer (`trend_analyzer`)
+
+Catches a sensor slowly drifting toward trouble before it crosses a hard threshold — every other check in this project is reactive (alert once already out of range); this one is proactive, comparing a short recent window against each sensor's own longer rolling baseline.
+
+**Can do:**
+- scan all active sensors for drift
+- look up current drift status for a cell
+
+**Tracks/produces:**
+- drift finding: sensor, baseline mean/stdev, recent mean, z-score, direction
+
+**Limits:** Strictly read-only and separate from the control loop — never touches dosing logic, target ranges, or actuators, and only ever raises a WARNING (never critical) since this is an early-warning trend signal, not a confirmed problem. Requires at least 20 baseline readings per sensor before evaluating it at all, specifically to avoid flagging a freshly-added sensor's first few readings as 'drift' against no real history.
+
+**Proof this actually works:**
+- Live manual test 2026-08-30: seeded 26 synthetic readings (20 flat baseline + 6 shifted by +5 std devs) directly into sensor_readings, confirmed check_all_sensors() correctly flagged it (z-score ~5, direction 'up') and raised exactly one deduplicated WARNING alert; confirmed a flat/unchanging series of the same length produces zero findings; confirmed fewer than 26 total readings produces zero findings (insufficient baseline, not a false positive from too little data).
+
+*Last updated: 2026-08-30 22:58:09*
 
 ---

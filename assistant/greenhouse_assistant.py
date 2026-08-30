@@ -67,6 +67,21 @@ TOOLS = [
         },
     },
     {
+        "name": "get_sensor_trends",
+        "description": (
+            "Check whether any sensor is drifting away from its own recent baseline — "
+            "an early-warning signal for something still technically within target range "
+            "but trending toward trouble, distinct from get_current_status's snapshot or "
+            "get_open_alerts's already-out-of-range conditions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer", "description": "Optional cell ID"},
+            },
+        },
+    },
+    {
         "name": "get_open_alerts",
         "description": "Get all unresolved alerts, optionally filtered by minimum severity.",
         "input_schema": {
@@ -606,6 +621,7 @@ ALWAYS_ON_DOMAINS = {"status", "self_knowledge"}
 TOOL_DOMAINS: dict[str, str] = {
     # status — routine state checks, cheap, broadly relevant
     "get_current_status": "status",
+    "get_sensor_trends": "status",
     "get_open_alerts": "status",
     "get_power_status": "status",
     "get_deadmans_switch_status": "status",
@@ -697,17 +713,15 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     ],
     "species": [
         "species", "ideal range", "tolerance", "compatible", "compatibility",
-        # Baseline species names (see core/species_registry.py's
-        # BASELINE_SPECIES) — a real gating gap found via live-model
-        # testing (docs/OFFLINE_ASSISTANT_PLAN.md step 5): "What pH does
-        # lettuce want?" matched no domain at all, so get_species_profile/
-        # list_species were never even offered to the model — not a model
-        # failure, a keyword coverage gap. Known limitation this doesn't
-        # fully solve: a species added later via add_species won't
-        # automatically gate its own name until this list is updated by
-        # hand — the real fix is querying species_profiles.common_name at
-        # gating time instead of a static list, deferred as a documented
-        # gap rather than solved here.
+        # Baseline species names as a static fallback for when no `db` is
+        # passed to relevant_domains() (e.g. a unit test exercising pure
+        # keyword matching). When `db` IS passed — every real call site
+        # does — relevant_domains() also queries species_profiles.common_name
+        # live, so a species added later via add_species gates its own name
+        # automatically. This closes a gap flagged (found via live-model
+        # testing, docs/OFFLINE_ASSISTANT_PLAN.md step 5) but deliberately
+        # deferred at the time: "the real fix is querying species_profiles
+        # at gating time instead of a static list."
         "lettuce", "basil", "tilapia",
     ],
     "experiments": [
@@ -732,16 +746,30 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
 # so they're deliberately absent from this dict; no trigger keywords needed.
 
 
-def relevant_domains(message: str) -> set[str]:
+def relevant_domains(message: str, db: "sqlite3.Connection | None" = None) -> set[str]:
     """Domains a message's keywords plausibly touch, always including
     ALWAYS_ON_DOMAINS. A message can and often will match more than
     one — e.g. 'why does that pump run so much' touches both dosing
-    and infrastructure, and should surface tools from both."""
+    and infrastructure, and should surface tools from both.
+
+    `db`, when given, additionally matches live `species_profiles.common_name`
+    values against the message — a species added later via `add_species`
+    gates its own name with no code change needed, closing the "static list
+    goes stale" gap `DOMAIN_TRIGGER_KEYWORDS["species"]`'s own comment
+    documents. Falls back to the static baseline names when `db` is None
+    (e.g. a pure unit test with no database)."""
     text = message.lower()
     matched = {
         domain for domain, keywords in DOMAIN_TRIGGER_KEYWORDS.items()
         if any(kw in text for kw in keywords)
     }
+    if db is not None:
+        try:
+            names = [row[0] for row in db.execute("SELECT common_name FROM species_profiles").fetchall()]
+        except sqlite3.OperationalError:
+            names = []  # table not created yet (e.g. a fresh, unseeded DB) — fail open, not crash
+        if any(name.lower() in text for name in names):
+            matched.add("species")
     return matched | ALWAYS_ON_DOMAINS
 
 
@@ -955,6 +983,10 @@ class _BaseGreenhouseAssistant:
         # _dispatch_tool()'s _annotate_if_empty() — no per-tool special
         # case needed here anymore, see that method's docstring for why.
         return {"readings": [dict(r) for r in rows]}
+
+    def _tool_get_sensor_trends(self, cell_id: int | None = None) -> dict:
+        from core.trend_analyzer import TrendAnalyzer
+        return {"drift_findings": TrendAnalyzer(self.db).get_drift_status(cell_id)}
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}
@@ -1377,11 +1409,12 @@ class AnthropicGreenhouseAssistant(_BaseGreenhouseAssistant):
         # multi-step reasoning chain doesn't lose access to a tool it
         # legitimately needed just because a later intermediate step's
         # wording drifted off the original keywords.
-        active_tools = tools_for_domains(relevant_domains(message))
+        domains = relevant_domains(message, self.db)
+        active_tools = tools_for_domains(domains)
         if len(active_tools) < len(TOOLS):
             logger.debug(
                 "Gated tools for this turn: %d/%d (domains: %s)",
-                len(active_tools), len(TOOLS), sorted(relevant_domains(message)),
+                len(active_tools), len(TOOLS), sorted(domains),
             )
 
         while True:
@@ -1454,7 +1487,7 @@ class GreenhouseAssistant(_BaseGreenhouseAssistant):
     def ask(self, message: str) -> str:
         self.history.append({"role": "user", "content": message})
 
-        active_tools = tools_for_domains(relevant_domains(message))
+        active_tools = tools_for_domains(relevant_domains(message, self.db))
         ollama_tools = [_anthropic_tool_to_ollama(t) for t in active_tools]
 
         while True:

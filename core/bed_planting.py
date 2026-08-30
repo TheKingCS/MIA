@@ -95,7 +95,8 @@ class BedPlantingManager(Describable):
     def get_current_plantings(self, cell_id: int = None) -> list[dict]:
         self.db.row_factory = sqlite3.Row
         q = """
-            SELECT bp.*, sp.common_name, sp.ph_min, sp.ph_max, sp.ec_min, sp.ec_max
+            SELECT bp.*, sp.common_name, sp.ph_min, sp.ph_max, sp.ec_min, sp.ec_max,
+                   sp.temp_water_min, sp.temp_water_max
             FROM bed_plantings bp
             JOIN species_profiles sp ON sp.id = bp.species_id
             WHERE bp.status = 'active'
@@ -130,17 +131,26 @@ class BedPlantingManager(Describable):
         """Every species sharing this cell's water needs overlapping
         ranges — if two active plantings want genuinely incompatible
         conditions, that's worth surfacing loudly, not discovering when
-        neither one thrives. This doesn't block the planting; it warns."""
+        neither one thrives. This doesn't block the planting; it warns.
+
+        Checks pH AND water temperature independently — a real gap found
+        while seeding a broader species list (core/species_registry.py):
+        Cucumber and Spinach share exactly one point of pH overlap (6.0)
+        so a pH-only check passes them as "compatible", but their water
+        temp ranges (70-80F vs 50-68F) don't overlap at all. Two
+        independent checks, not one combined score, so each warning names
+        the actual dimension that's incompatible rather than a vague
+        "these don't match"."""
         plantings = self.get_current_plantings(cell_id)
         plant_only = [p for p in plantings if p["ph_min"] is not None]
         if len(plant_only) < 2:
             return
 
+        names = ", ".join(p["common_name"] for p in plant_only)
+
         overlap_ph_min = max(p["ph_min"] for p in plant_only)
         overlap_ph_max = min(p["ph_max"] for p in plant_only)
-
         if overlap_ph_min > overlap_ph_max:
-            names = ", ".join(p["common_name"] for p in plant_only)
             message = (
                 f"Cell {cell_id}: plantings ({names}) have NO overlapping pH range — "
                 f"they cannot both thrive sharing this cell's water. Consider moving "
@@ -149,6 +159,21 @@ class BedPlantingManager(Describable):
             logger.warning(message)
             if self.notifier:
                 self.notifier.dispatch("warning", message, source="bed_planting")
+
+        temp_plantings = [p for p in plant_only if p["temp_water_min"] is not None and p["temp_water_max"] is not None]
+        if len(temp_plantings) >= 2:
+            overlap_temp_min = max(p["temp_water_min"] for p in temp_plantings)
+            overlap_temp_max = min(p["temp_water_max"] for p in temp_plantings)
+            if overlap_temp_min > overlap_temp_max:
+                temp_names = ", ".join(p["common_name"] for p in temp_plantings)
+                message = (
+                    f"Cell {cell_id}: plantings ({temp_names}) have NO overlapping water "
+                    f"temperature range — they cannot both thrive sharing this cell's water. "
+                    f"Consider moving one to a separate cell."
+                )
+                logger.warning(message)
+                if self.notifier:
+                    self.notifier.dispatch("warning", message, source="bed_planting")
 
     def describe_capabilities(self):
         from contracts.capability import Capability

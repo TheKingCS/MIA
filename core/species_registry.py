@@ -53,6 +53,89 @@ BASELINE_SPECIES = [
         "notes": "Wide tolerance, hardy — the reason it's a common first fish for aquaponics. "
                  "Water temp matters more than pH for tilapia specifically.",
     },
+    {
+        "common_name": "Kale", "organism_type": "plant",
+        "scientific_name": "Brassica oleracea",
+        "ph_min": 5.5, "ph_max": 6.5, "ec_min": 1250, "ec_max": 1600,
+        "temp_water_min": 60, "temp_water_max": 75,
+        "temp_air_min": 55, "temp_air_max": 75,
+        "days_to_maturity": 60,
+        "notes": "Cool-season leafy green, similar water/EC range to lettuce but tolerates "
+                 "cooler air better — a reasonable companion crop in the same cell.",
+    },
+    {
+        "common_name": "Spinach", "organism_type": "plant",
+        "scientific_name": "Spinacia oleracea",
+        "ph_min": 6.0, "ph_max": 7.0, "ec_min": 1800, "ec_max": 2300,
+        "temp_water_min": 50, "temp_water_max": 68,
+        "temp_air_min": 50, "temp_air_max": 70,
+        "days_to_maturity": 45,
+        "notes": "A heavier feeder than lettuce (higher EC) and genuinely cold-tolerant — "
+                 "the narrowest warm-end temp tolerance of the plants here, worth flagging "
+                 "before pairing with a warm-water fish tank's ambient heat.",
+    },
+    {
+        "common_name": "Swiss Chard", "organism_type": "plant",
+        "scientific_name": "Beta vulgaris subsp. vulgaris",
+        "ph_min": 6.0, "ph_max": 6.5, "ec_min": 1800, "ec_max": 2300,
+        "temp_water_min": 60, "temp_water_max": 75,
+        "temp_air_min": 60, "temp_air_max": 75,
+        "days_to_maturity": 55,
+        "notes": "Similar profile to spinach but more heat-tolerant — a reasonable "
+                 "warm-season substitute where spinach's air-temp ceiling is a problem.",
+    },
+    {
+        "common_name": "Strawberry", "organism_type": "plant",
+        "scientific_name": "Fragaria x ananassa",
+        "ph_min": 5.5, "ph_max": 6.5, "ec_min": 1300, "ec_max": 1800,
+        "temp_water_min": 60, "temp_water_max": 75,
+        "temp_air_min": 60, "temp_air_max": 80,
+        "days_to_maturity": 100,  # to first harvest, not full-season yield — a perennial
+        "notes": "Perennial, not an annual harvest-once crop like the leafy greens above — "
+                 "days_to_maturity here means first harvest, worth stating explicitly since "
+                 "it reads misleadingly next to the others otherwise.",
+    },
+    {
+        "common_name": "Cucumber", "organism_type": "plant",
+        "scientific_name": "Cucumis sativus",
+        "ph_min": 5.5, "ph_max": 6.0, "ec_min": 1700, "ec_max": 2500,
+        "temp_water_min": 70, "temp_water_max": 80,
+        "temp_air_min": 70, "temp_air_max": 85,
+        "days_to_maturity": 60,
+        "notes": "Warm-season, heaviest EC demand of the plants seeded here. Real case this "
+                 "seeding pass found: Cucumber (pH 5.5-6.0) and Spinach (pH 6.0-7.0) share a "
+                 "single point of pH overlap at 6.0, so the old pH-only compatibility check "
+                 "would have passed them as compatible — but their water temps (70-80F vs "
+                 "50-68F) don't overlap AT ALL. Fixed core/bed_planting.py's "
+                 "_check_cell_compatibility() to also check temp_water overlap, not just pH, "
+                 "over exactly this pair.",
+    },
+    {
+        "common_name": "Channel Catfish", "organism_type": "fish",
+        "scientific_name": "Ictalurus punctatus",
+        "ph_min": 6.5, "ph_max": 8.5, "ec_min": None, "ec_max": None,
+        "temp_water_min": 75, "temp_water_max": 85,
+        "temp_air_min": None, "temp_air_max": None,
+        "days_to_maturity": 300,
+        "notes": "Similar warm-water/wide-pH tolerance to tilapia and a common alternative "
+                 "where tilapia farming is regulated or restricted — check local rules before "
+                 "assuming either is legal to stock.",
+    },
+    {
+        "common_name": "Rainbow Trout", "organism_type": "fish",
+        "scientific_name": "Oncorhynchus mykiss",
+        "ph_min": 6.5, "ph_max": 8.0, "ec_min": None, "ec_max": None,
+        "temp_water_min": 50, "temp_water_max": 65,
+        "temp_air_min": None, "temp_air_max": None,
+        "days_to_maturity": 365,
+        "notes": "Cold-water fish — a genuine contrast to tilapia/catfish's warm-water "
+                 "range. NOT checked by core/bed_planting.py's cell-compatibility warning, "
+                 "though — that check only ever sees bed_plantings (grow-bed PLANTS); fish "
+                 "are tracked via tanks.species, a free-text field with no species_profiles "
+                 "link at all right now. This fish's real value here is as documented data, "
+                 "not as an automatically-checked one — see Spinach/Cucumber below for the "
+                 "actual compatibility-check gap this seeding pass found and fixed.",
+    },
 ]
 
 

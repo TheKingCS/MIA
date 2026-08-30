@@ -66,6 +66,56 @@ class DosingLimitExceeded(Exception):
     """Raised when a proposed dose would exceed configured hard limits."""
 
 
+def raise_alert(db, source: str, severity: str, message: str, notifier=None) -> None:
+    """The one place an unresolved (source, message) condition gets
+    deduplicated before hitting the alerts table and a live
+    notification. Lives here (contracts/, not core/) so both
+    MiaHomesteadModule subclasses (modules/*.py, via
+    MiaHomesteadModule._raise_alert() below) and core/*.py services
+    (core/trend_analyzer.py first) can call it without core/ needing to
+    import contracts/ backwards — this project's existing convention is
+    core/ depends on contracts/, never the reverse (contracts/ itself
+    never imports from core/ anywhere).
+
+    Real bug fixed here (2026-08-30): this used to INSERT a fresh row
+    and dispatch a fresh notification EVERY call, even for the exact
+    same still-unresolved condition — a control loop re-evaluating
+    every cycle meant one ongoing problem spammed dozens of identical
+    alert rows and notifications. Now: an unresolved alert with the
+    same (source, message) gets its occurrence_count bumped and
+    last_seen touched instead of a new row, and does NOT re-notify —
+    the human/assistant already knows about it. A genuinely new/
+    different message still inserts and notifies exactly as before.
+    `timestamp` is deliberately never updated on a repeat —
+    core/backup_manager.py's post-update critical-alert-spike check
+    reads `timestamp >= applied_at` to mean "genuinely new since this
+    change", and repeat occurrences of a pre-existing condition must
+    not count toward that."""
+    existing = db.execute(
+        "SELECT id FROM alerts WHERE resolved = 0 AND source = ? AND message = ? "
+        "ORDER BY id DESC LIMIT 1",
+        (source, message),
+    ).fetchone()
+    if existing is not None:
+        db.execute(
+            "UPDATE alerts SET occurrence_count = occurrence_count + 1, "
+            "last_seen = datetime('now') WHERE id = ?",
+            (existing[0],),
+        )
+        db.commit()
+        logger.debug("Alert still ongoing, not re-notifying: %s: %s", source, message)
+        return
+    db.execute(
+        "INSERT INTO alerts (severity, source, message) VALUES (?, ?, ?)",
+        (severity, source, message),
+    )
+    db.commit()
+    if notifier is not None:
+        notifier.dispatch(severity, message, source=source)
+    else:
+        print(f"[{severity.upper()}] {source}: {message}")
+
+
 class MiaHomesteadModule(Describable, ABC):
     """
     Base class for any homestead subsystem module (aquaponics cell,
@@ -183,41 +233,5 @@ class MiaHomesteadModule(Describable, ABC):
         return []
 
     def _raise_alert(self, severity, message: str) -> None:
-        """Real bug fixed here (2026-08-30): this used to INSERT a
-        fresh row and dispatch a fresh notification EVERY call, even
-        for the exact same still-unresolved condition — a control loop
-        re-evaluating every cycle meant one ongoing problem spammed
-        dozens of identical alert rows and notifications. Now: an
-        unresolved alert with the same (source, message) gets its
-        occurrence_count bumped and last_seen touched instead of a new
-        row, and does NOT re-notify — the human/assistant already knows
-        about it. A genuinely new/different message still inserts and
-        notifies exactly as before. `timestamp` is deliberately never
-        updated on a repeat — core/backup_manager.py's post-update
-        critical-alert-spike check reads `timestamp >= applied_at` to
-        mean "genuinely new since this change", and repeat occurrences
-        of a pre-existing condition must not count toward that."""
         sev = severity.value if isinstance(severity, Severity) else severity
-        existing = self.db.execute(
-            "SELECT id FROM alerts WHERE resolved = 0 AND source = ? AND message = ? "
-            "ORDER BY id DESC LIMIT 1",
-            (self.module_id, message),
-        ).fetchone()
-        if existing is not None:
-            self.db.execute(
-                "UPDATE alerts SET occurrence_count = occurrence_count + 1, "
-                "last_seen = datetime('now') WHERE id = ?",
-                (existing[0],),
-            )
-            self.db.commit()
-            logger.debug("Alert still ongoing, not re-notifying: %s: %s", self.module_id, message)
-            return
-        self.db.execute(
-            "INSERT INTO alerts (severity, source, message) VALUES (?, ?, ?)",
-            (sev, self.module_id, message),
-        )
-        self.db.commit()
-        if self.notifier is not None:
-            self.notifier.dispatch(sev, message, source=self.module_id)
-        else:
-            print(f"[{sev.upper()}] {self.module_id}: {message}")
+        raise_alert(self.db, self.module_id, sev, message, self.notifier)
