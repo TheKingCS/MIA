@@ -293,11 +293,13 @@ mia-homestead/
   for full sourcing).
 
 **Not yet built (next steps, roughly in order):**
-1. **Compile and flash-test the Safety MCU firmware** — it's written,
-   not verified. This is the single highest-value next step: it turns
-   the entire two-tier safety architecture from "designed" to "real."
-   See `firmware/safety_mcu/README.md`'s known-gaps list, especially
-   the actuator-ID-to-pin mapping, which needs resolving first.
+1. **Flash-test the Safety MCU firmware on real hardware.** It now
+   **compiles clean** (`pio run` against ESP32 + ArduinoJson 6.21.6,
+   2026-08-30: RAM 6.7%, Flash 21.5%, zero source changes needed) — the
+   remaining gap is a real board, not the code. See
+   `firmware/safety_mcu/README.md`'s known-gaps list before flashing,
+   especially the actuator-ID-to-pin mapping, which needs resolving
+   first.
 2. Real dosing limit values, once dosing pump hardware is chosen and tested
 3. SMS provider wiring (Twilio or similar)
 4. Real ordering integration (currently tracks order intent only —

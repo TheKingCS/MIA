@@ -6,14 +6,18 @@ authority) real in hardware rather than just a design document.
 
 ## Honest status
 
-**This has not been compiled or run on real hardware.** It was written
-in an environment with no ESP32 toolchain and no network access to pull
-the ArduinoJson library or verify a build. It's written carefully
-against the standard Arduino/ESP32 core and the ArduinoJson v6 API, and
-the logic has been reasoned through against every scenario in
-`MCU_PROTOCOL.md` — but "compiles clean and does what the spec says"
-is a claim only a real build on your desktop can confirm. Treat this as
-a strong first draft, not a verified deliverable.
+**Compiles clean; still not run on real hardware.** Verified
+2026-08-30 with `pio run` (PlatformIO, see `platformio.ini` in this
+directory) against `espressif32` / `esp32dev` + ArduinoJson 6.21.6 —
+zero source changes needed. Result: RAM 6.7% (21924/327680 bytes),
+Flash 21.5% (281265/1310720 bytes), `firmware.bin` produced. That
+proves the code is syntactically and API-correct against the real
+Arduino/ESP32 core, not just reasoned-through by eye — but "compiles"
+and "does what the spec says on a real board" are still different
+claims. The known gaps below (especially #1, the actuator-ID mapping)
+are real regardless of the clean compile, and flashing + the LED
+smoke-test in "Testing without real sensors/pumps attached" below is
+still the next real milestone, not this.
 
 ## Known gaps to resolve before real deployment
 
@@ -49,13 +53,13 @@ a strong first draft, not a verified deliverable.
 
 ## Building and flashing
 
-1. Install [Arduino IDE](https://www.arduino.cc/en/software) or
-   [PlatformIO](https://platformio.org/).
-2. Install the ESP32 board package (Arduino IDE: Boards Manager →
-   search "esp32" → install the Espressif package).
-3. Install the **ArduinoJson** library (v6.x — Library Manager → search
-   "ArduinoJson" by Benoit Blanchon).
-4. Edit the configuration block at the top of `safety_mcu.ino`:
+This directory is now a working PlatformIO project (`platformio.ini`,
+targeting `esp32dev` + ArduinoJson ^6 — `src_dir = .` so
+`safety_mcu.ino` stays in place rather than moving into a `src/`
+folder). With PlatformIO installed (`pip install platformio`, or the
+VS Code extension):
+
+1. Edit the configuration block at the top of `safety_mcu.ino`:
    - `REQUESTED_ROLE` — set to match a role id from
      `config/devices/roles/*.yaml` if this board is being pre-flashed
      for a specific job, or leave blank for a generic board a human
@@ -63,10 +67,20 @@ a strong first draft, not a verified deliverable.
    - `actuators[]` pin assignments — match your actual wiring.
    - `dosingLimits[]` — these should match (or be more conservative
      than) the `dosing_limits` table on the Pi side.
-5. Select your board (Tools → Board → your ESP32 variant) and port,
-   then Upload.
-6. Open the Serial Monitor at 115200 baud — you should see `announce`
-   messages every 3 seconds until it's paired from the Pi side.
+   - If your board isn't a generic `esp32dev` (e.g. an ESP32-S3 or
+     -C3 variant), change `board = esp32dev` in `platformio.ini` to
+     match — see [the PlatformIO ESP32 boards list](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards).
+2. `pio run` — compiles only, no board needed; confirms the build is
+   still clean before you touch hardware.
+3. Connect the board over USB, then `pio run --target upload` (add
+   `--upload-port /dev/ttyUSB0` or similar if autodetection picks the
+   wrong port).
+4. `pio device monitor -b 115200` — you should see `announce` messages
+   every 3 seconds until it's paired from the Pi side.
+
+The Arduino IDE path (Boards Manager → esp32, Library Manager →
+ArduinoJson, then Upload from the IDE) still works identically if you
+prefer it — the `.ino` itself is untouched either way.
 
 ## Testing without real sensors/pumps attached
 

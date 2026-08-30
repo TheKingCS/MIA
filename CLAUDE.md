@@ -133,12 +133,14 @@ dead-man's-switch escalation, consumable forecasting, periodic reports,
 self-audit covering registration completeness, verification coverage,
 AND conversational tool coverage.
 
-**Written but unverified against real hardware:**
-`firmware/safety_mcu/safety_mcu.ino` — no ESP32 toolchain was available
-in the environment that wrote it. Known gaps documented in
-`firmware/safety_mcu/README.md`, most importantly the actuator-ID-to-pin
-mapping placeholder that needs resolving before real dosing commands
-should be trusted to it.
+**Compiles clean, unverified on real hardware:**
+`firmware/safety_mcu/safety_mcu.ino` now builds successfully via
+PlatformIO (`platformio.ini` in that directory — `pio run`) against
+ESP32 + ArduinoJson 6.21.6, verified 2026-08-30 with zero source
+changes needed. Still never run on a real board. Known gaps documented
+in `firmware/safety_mcu/README.md`, most importantly the
+actuator-ID-to-pin mapping placeholder that needs resolving before real
+dosing commands should be trusted to it.
 
 **Not started:** anything requiring physical hardware to actually exist
 — the pilot build is the real next milestone, not more software.

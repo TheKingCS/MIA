@@ -12,11 +12,11 @@
  * Library dependency: ArduinoJson (v6.x) — install via Arduino IDE
  * Library Manager or PlatformIO before building.
  *
- * NOT COMPILED/TESTED in the environment that generated this file — no
- * ESP32 toolchain or network access was available there. Written
- * carefully against the standard Arduino/ESP32 core and ArduinoJson v6
- * API, but the first real compile should happen in Arduino IDE or
- * PlatformIO on real hardware. See firmware/safety_mcu/README.md.
+ * Compiles clean as of 2026-08-30 (PlatformIO, espressif32/esp32dev +
+ * ArduinoJson 6.21.6 — see platformio.ini in this directory) but has
+ * NOT been run on real hardware yet. See firmware/safety_mcu/README.md
+ * for the verified build numbers and the known gaps that still apply
+ * regardless of the clean compile.
  *
  * Physical link: UART (Serial) to the Pi, per MCU_PROTOCOL.md — not
  * WiFi. This is deliberate: the safety link should not depend on
