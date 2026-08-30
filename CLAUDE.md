@@ -122,6 +122,7 @@ docs/            everything else - see index below
 - `FEATURES_AND_CAPABILITIES.md` — auto-generated proof document (never hand-edit)
 - `SUSTAINING_FEATURES.md` — brainstormed features not yet built, with effort sizing
 - `OFFLINE_ASSISTANT_PLAN.md` — converting the assistant off the cloud API to a fully local model; the tool-count/gating problem this needs to solve before local rollout
+- `MIA_HOME_SYNC_PLAN.md` — scoping for punch-list item #7 (pushing summarized state to MIA Home); what's real on the MIA-repo side, what's genuinely undecided (transport, hardware target), what's buildable here now vs. needs a session in `~/Projects/MIA`
 
 ## Current state (honest summary)
 
