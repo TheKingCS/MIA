@@ -118,6 +118,7 @@ docs/            everything else - see index below
 - `HARDWARE_BOM_LIVE.md` — auto-generated running BOM (never hand-edit)
 - `FEATURES_AND_CAPABILITIES.md` — auto-generated proof document (never hand-edit)
 - `SUSTAINING_FEATURES.md` — brainstormed features not yet built, with effort sizing
+- `OFFLINE_ASSISTANT_PLAN.md` — converting the assistant off the cloud API to a fully local model; the tool-count/gating problem this needs to solve before local rollout
 
 ## Current state (honest summary)
 

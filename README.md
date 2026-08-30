@@ -344,16 +344,29 @@ python3 core/device_setup_cli.py --db mia_homestead.db
 # View the running hardware shopping list
 python3 core/hardware_bom.py --db mia_homestead.db
 
-export ANTHROPIC_API_KEY=your_key_here
+# No API key, no internet — runs against a local Ollama model by default.
+# Requires Ollama running (`systemctl --user status ollama`) with a
+# tool-capable model pulled (default: llama3.2:latest).
 python3 assistant/greenhouse_assistant.py
 ```
 
 ## Running the assistant (once a populated DB exists)
 
+Local model (default — no API key, no internet dependency, matches this
+system's self-sufficiency principle; see `docs/OFFLINE_ASSISTANT_PLAN.md`):
+
+```bash
+pip install pyyaml --break-system-packages
+python assistant/greenhouse_assistant.py
+```
+
+Cloud (Anthropic) — an explicit opt-in, kept for re-running the local-vs-
+cloud model bake-off, not the recommended default:
+
 ```bash
 pip install anthropic pyyaml --break-system-packages
 export ANTHROPIC_API_KEY=your_key_here
-python assistant/greenhouse_assistant.py
+python assistant/greenhouse_assistant.py --cloud
 ```
 
 ## Setting up the database

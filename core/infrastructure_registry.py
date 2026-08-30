@@ -74,12 +74,26 @@ class InfrastructureRegistry(Describable):
 
     # ---------- Wiring queries ----------
 
+    @staticmethod
+    def _normalize_actuator_name(name: str) -> str:
+        """Case/punctuation-insensitive comparison key so 'pH-up pump',
+        'ph up pump', and the internal 'ph_up_pump' all resolve to the
+        same actuator. Real gap found via live-model testing
+        (docs/OFFLINE_ASSISTANT_PLAN.md step 5): a model correctly
+        grounded on this method's own (wrongly null) result and honestly
+        reported 'not wired' — it wasn't fabricating, the exact-match
+        lookup was just silently failing on a natural-language-formatted
+        name a human or assistant would naturally produce."""
+        import re
+        return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
     def get_wiring_for_actuator(self, actuator_name: str) -> dict | None:
         """Finds which MCU role, port, relay channel, and WHY that
         actuator is wired the way it is."""
+        target = self._normalize_actuator_name(actuator_name)
         for role_id, role in self.roles.items():
             for control in role.get("controls", []):
-                if control["actuator_name"] == actuator_name:
+                if self._normalize_actuator_name(control["actuator_name"]) == target:
                     return {
                         "role_id": role_id,
                         "role_display_name": role["display_name"],
@@ -112,11 +126,18 @@ class InfrastructureRegistry(Describable):
         ).fetchall()]
 
     def get_plumbing_for_actuator(self, actuator_name: str) -> list[dict]:
-        """Which physical pipe segments does this actuator actually drive?"""
+        """Which physical pipe segments does this actuator actually drive?
+        Filters in Python (not SQL) so the same normalized-name matching
+        as get_wiring_for_actuator() applies here too — table size in this
+        project is small enough (per-cell plumbing segments) that this
+        costs nothing real."""
+        target = self._normalize_actuator_name(actuator_name)
         self.db.row_factory = sqlite3.Row
-        return [dict(r) for r in self.db.execute(
-            "SELECT * FROM plumbing_map WHERE driven_by_actuator = ?", (actuator_name,)
-        ).fetchall()]
+        rows = self.db.execute("SELECT * FROM plumbing_map").fetchall()
+        return [
+            dict(r) for r in rows
+            if self._normalize_actuator_name(r["driven_by_actuator"] or "") == target
+        ]
 
     def describe_capabilities(self):
         from contracts.capability import Capability

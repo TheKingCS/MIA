@@ -1,6 +1,6 @@
 """
 MIA Homestead — Greenhouse Assistant
-v0.1
+v0.2
 
 The conversational layer: lets Zac ask the greenhouse natural-language
 questions and get answers grounded in real data via tool use. This is
@@ -8,23 +8,46 @@ NOT a control interface — it cannot bypass dosing limits or the safety
 layer. It reads state and explains it; the module_registry + safety MCU
 own all actual actuation.
 
-Requires: anthropic python SDK (`pip install anthropic --break-system-packages`)
-and ANTHROPIC_API_KEY set in environment.
+As of docs/OFFLINE_ASSISTANT_PLAN.md step 6, `GreenhouseAssistant` (the
+default, what you get from `python assistant/greenhouse_assistant.py`) is
+LOCAL-MODEL-BACKED via Ollama — no API key, no internet dependency,
+matching this project's self-sufficiency principle the same way the
+two-tier Pi/MCU safety architecture does one layer down: any reliance on
+an outside service for the assistant to think would defeat the actual
+point of the system being self-contained. Requires Ollama running locally
+(`systemctl --user status ollama`) with a tool-capable model pulled
+(default `llama3.2:latest`).
+
+`AnthropicGreenhouseAssistant` (cloud, needs `anthropic` python SDK +
+ANTHROPIC_API_KEY) still exists, kept deliberately for re-running the
+model bake-off (see the plan doc) and for cases where cloud is an
+explicit, opted-into choice rather than a default dependency — not
+removed, just no longer what you get without asking for it.
 """
 
 import json
 import logging
 import sqlite3
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
 
-import anthropic
+# anthropic is deliberately NOT imported at module level — GreenhouseAssistant
+# (the default, local-model class) must be importable and usable with zero
+# cloud dependency, including this one. Imported lazily inside
+# AnthropicGreenhouseAssistant.__init__ instead, the only place it's needed.
 
 from core.capability_registry import CapabilityRegistry
 from core.hardware_registry import HardwareRegistry
 
 logger = logging.getLogger("mia_homestead.assistant")
 
-MODEL = "claude-sonnet-5"
+ANTHROPIC_MODEL = "claude-sonnet-5"
+
+OLLAMA_MODEL = "llama3.2:latest"
+OLLAMA_HOST = "http://localhost:11434"
+OLLAMA_REQUEST_TIMEOUT_SECONDS = 120  # generous: a cold model load is much slower than a warm one
 
 PERSONALITY_PATH = Path(__file__).parent / "PERSONALITY.md"
 
@@ -522,6 +545,19 @@ TOOLS = [
         },
     },
     {
+        "name": "send_greenhouse_report",
+        "description": (
+            "Generate the state-of-the-greenhouse report AND actually send it "
+            "via the notification path, not just display it here — use this "
+            "when the user asks you to send/email/deliver the report, as "
+            "opposed to get_greenhouse_report which only shows it in chat."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"days": {"type": "integer", "default": 7}},
+        },
+    },
+    {
         "name": "get_consumable_forecast",
         "description": "Get a projection of when an inventory item will hit its reorder threshold based on real consumption rate.",
         "input_schema": {
@@ -547,50 +583,288 @@ TOOLS = [
     },
 ]
 
+# ---------- Tool domains (see docs/OFFLINE_ASSISTANT_PLAN.md) ----------
+#
+# Groups every tool above by subject area so a future local model isn't
+# handed all of TOOLS on every single message — MIA Homestead's registry is
+# already past the tool count where the sibling M.I.A. project measured
+# real cross-schema tool-calling failures on a small local model. This is
+# step 1 of that plan (tagging) only: a pure data mapping, kept separate
+# from the TOOLS list itself so it can never perturb the Anthropic tool
+# schema those dicts are validated against. Not wired into ask() yet —
+# every message still gets the full tool list until step 2 (the gating
+# classifier) lands.
+#
+# core/self_audit.py enforces that this mapping never silently drifts out
+# of sync with TOOLS as tools are added/renamed/removed.
 
-class GreenhouseAssistant:
-    def __init__(self, db_path: str, api_key: str | None = None):
+ALWAYS_ON_DOMAINS = {"status", "self_knowledge"}
+# Cheap and broadly relevant regardless of what's asked — candidates for
+# always-on attachment once gating is wired in, rather than gated like
+# everything else.
+
+TOOL_DOMAINS: dict[str, str] = {
+    # status — routine state checks, cheap, broadly relevant
+    "get_current_status": "status",
+    "get_open_alerts": "status",
+    "get_power_status": "status",
+    "get_deadmans_switch_status": "status",
+    "get_greenhouse_report": "status",
+    "send_greenhouse_report": "status",
+    "record_human_checkin": "status",
+    "get_last_human_checkin": "status",
+    # dosing — pH/EC dosing history and rationale
+    "get_dosing_history": "dosing",
+    "get_dosing_rationale": "dosing",
+    # yield_planting — what's planted, harvested, watered, and how it did
+    "get_yield_summary": "yield_planting",
+    "get_expected_vs_actual_yield": "yield_planting",
+    "get_water_usage": "yield_planting",
+    "get_bed_plantings": "yield_planting",
+    "record_planting": "yield_planting",
+    "mark_planting_harvested": "yield_planting",
+    "mark_planting_failed": "yield_planting",
+    "record_water_usage": "yield_planting",
+    # species — the "what does this organism want" knowledge base
+    "get_species_profile": "species",
+    "list_species": "species",
+    "add_species": "species",
+    # experiments — the aquaponics-scientist propose/run/evaluate lifecycle
+    "propose_experiment": "experiments",
+    "start_experiment": "experiments",
+    "get_active_experiments": "experiments",
+    "complete_experiment_now": "experiments",
+    "get_pending_parameter_changes": "experiments",
+    "approve_parameter_change": "experiments",
+    "deny_parameter_change": "experiments",
+    # inventory — stock, low-stock, to-order queue, consumption forecasting
+    "get_inventory_status": "inventory",
+    "get_low_stock_items": "inventory",
+    "get_to_order_list": "inventory",
+    "approve_order": "inventory",
+    "deny_order": "inventory",
+    "get_consumable_forecast": "inventory",
+    # maintenance — repair/replacement/calibration tasks
+    "get_open_maintenance_tasks": "maintenance",
+    "create_maintenance_task": "maintenance",
+    "update_maintenance_task_status": "maintenance",
+    "assign_maintenance_task": "maintenance",
+    # infrastructure — wiring/plumbing knowledge and alert diagnosis
+    "get_wiring_info": "infrastructure",
+    "get_plumbing_info": "infrastructure",
+    "diagnose_alert": "infrastructure",
+    # devices — plug-and-play MCU pairing
+    "get_unpaired_devices": "devices",
+    "get_device_setup_instructions": "devices",
+    "pair_device": "devices",
+    # help_requests — self-preservation beacon lifecycle
+    "get_active_help_requests": "help_requests",
+    "acknowledge_help_request": "help_requests",
+    # backups — config snapshot/restore
+    "create_config_snapshot": "backups",
+    "list_config_snapshots": "backups",
+    "restore_config_snapshot": "backups",
+    # revenue — sales/financial tracking
+    "get_revenue_summary": "revenue",
+    # self_knowledge — what the system can do, how it's changed, proof coverage
+    "get_system_capabilities": "self_knowledge",
+    "get_self_change_history": "self_knowledge",
+    "get_verification_coverage": "self_knowledge",
+    "get_recent_automated_actions": "self_knowledge",
+    "get_hardware_needs_list": "self_knowledge",
+}
+
+# ---------- Domain gating classifier (step 2 of docs/OFFLINE_ASSISTANT_PLAN.md) ----------
+#
+# A cheap, deterministic keyword classifier — NOT a model call — deciding
+# which non-always-on domains a message plausibly touches, so a future
+# local model isn't handed all 54 tools on every turn (see the plan doc for
+# why that matters on a small model specifically). Deliberately simple
+# substring matching, not NLP: false positives (an extra domain attached)
+# just mean a few extra tools in the request; false negatives are the real
+# risk, which is why both functions below fail OPEN rather than closed —
+# an ambiguous or unmatched message gets the FULL tool list, never a
+# silently incomplete one. This is not a safety mechanism; it's a
+# tool-count budget. The actual safety net for a model mis-firing a
+# destructive call is step 3 (bundled destructive-call protection),
+# a separate, unrelated mechanism.
+
+DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
+    "dosing": ["dos", "ph up", "ph down", "ph-up", "ph-down", "nutrient", "correction", "pump"],
+    "yield_planting": [
+        "yield", "harvest", "planted", "planting", "grow bed", "watered",
+        "watering", "gallons", "crop", "produce", "expected vs actual",
+    ],
+    "species": [
+        "species", "ideal range", "tolerance", "compatible", "compatibility",
+        # Baseline species names (see core/species_registry.py's
+        # BASELINE_SPECIES) — a real gating gap found via live-model
+        # testing (docs/OFFLINE_ASSISTANT_PLAN.md step 5): "What pH does
+        # lettuce want?" matched no domain at all, so get_species_profile/
+        # list_species were never even offered to the model — not a model
+        # failure, a keyword coverage gap. Known limitation this doesn't
+        # fully solve: a species added later via add_species won't
+        # automatically gate its own name until this list is updated by
+        # hand — the real fix is querying species_profiles.common_name at
+        # gating time instead of a static list, deferred as a documented
+        # gap rather than solved here.
+        "lettuce", "basil", "tilapia",
+    ],
+    "experiments": [
+        "experiment", "hypothesis", "propose", "test value", "baseline",
+        "adopt", "parameter change",
+    ],
+    "inventory": [
+        "stock", "inventory", "low on", "reorder", "order", "chemical",
+        "supply", "supplies", "running out", "buy", "purchase",
+    ],
+    "maintenance": ["maintenance", "repair", "task", "broken", "calibrat", "assign", "leak"],
+    "infrastructure": [
+        "wiring", "wired", "plumbing", "pipe", "relay", "port", "mcu",
+        "diagnose", "diagnosis", "wire", "pump",
+    ],
+    "devices": ["device", "pair", "paired", "unpaired", "plugged in", "controller"],
+    "backups": ["snapshot", "backup", "restore", "rollback", "roll back", "revert"],
+    "help_requests": ["help request", "asking for help", "beacon", "need help", "presence"],
+    "revenue": ["revenue", "sales", "sold", "income", "earned", "market"],
+}
+# status and self_knowledge are ALWAYS_ON_DOMAINS — attached unconditionally,
+# so they're deliberately absent from this dict; no trigger keywords needed.
+
+
+def relevant_domains(message: str) -> set[str]:
+    """Domains a message's keywords plausibly touch, always including
+    ALWAYS_ON_DOMAINS. A message can and often will match more than
+    one — e.g. 'why does that pump run so much' touches both dosing
+    and infrastructure, and should surface tools from both."""
+    text = message.lower()
+    matched = {
+        domain for domain, keywords in DOMAIN_TRIGGER_KEYWORDS.items()
+        if any(kw in text for kw in keywords)
+    }
+    return matched | ALWAYS_ON_DOMAINS
+
+
+def tools_for_domains(domains: set[str]) -> list[dict]:
+    """Filters TOOLS down to the given domains. If nothing beyond the
+    always-on domains matched, falls back to JUST the always-on domains'
+    tools — NOT the full list. This was originally "attach everything" on
+    the theory that an ambiguous message shouldn't risk hiding a real
+    capability, but real testing against llama3.2:3b (2026-08-26,
+    docs/OFFLINE_ASSISTANT_PLAN.md step 4) falsified that: the full
+    55-tool list combined with the full system prompt made this model
+    stop calling tools entirely and just narrate about its own schema —
+    a worse failure than a bounded miss. qwen2.5:7b handled the identical
+    payload fine, so this is a real llama3.2:3b capacity limit at this
+    tool count, not a bad payload — see the plan doc for the full
+    comparison. Any tool missing from TOOL_DOMAINS (shouldn't happen —
+    self_audit.py enforces full coverage) is still included defensively."""
+    if domains <= ALWAYS_ON_DOMAINS:
+        return [t for t in TOOLS if TOOL_DOMAINS.get(t["name"]) in ALWAYS_ON_DOMAINS]
+    return [
+        t for t in TOOLS
+        if TOOL_DOMAINS.get(t["name"]) in domains or t["name"] not in TOOL_DOMAINS
+    ]
+
+
+# ---------- Bundled destructive-call protection (step 3 of docs/OFFLINE_ASSISTANT_PLAN.md) ----------
+#
+# Not hypothetical: the sibling M.I.A. project found, while benchmarking a
+# local model, that it would sometimes return a legitimate read-only tool
+# call bundled with a spurious DESTRUCTIVE one the user never asked for —
+# something the cloud model this assistant currently uses has never done.
+# This app was never designed for multi-intent-per-message, so nothing
+# stops that today. core/self_audit.py enforces this set can't drift from
+# a real tool name (typo or a stale entry after a rename).
+
+DESTRUCTIVE_TOOLS: set[str] = {
+    "approve_order",              # commits to a real purchase decision
+    "deny_order",                 # dismisses a proposed reorder
+    "restore_config_snapshot",    # overwrites current config/control params
+    "start_experiment",           # changes a cell's LIVE dosing target immediately
+    "approve_parameter_change",   # permanently changes a cell's dosing target
+    "deny_parameter_change",      # dismisses an evidence-based target change
+    "acknowledge_help_request",   # suppresses the self-preservation beacon's nudging
+    "pair_device",                # assigns real hardware role, creates live actuators
+    "mark_planting_failed",       # irreversible record correction, no "unfail" tool
+}
+
+
+def split_safe_tool_calls(tool_use_blocks: list) -> tuple[list, list]:
+    """Decides which tool_use blocks from one model response are safe to
+    execute. A single call always executes even if destructive — that's
+    the normal case of a direct request ('approve order 4'). A reply
+    bundling 2+ calls where ANY of them is destructive skips every
+    destructive one and executes only the safe ones, rather than trusting
+    that the model meant to bundle a consequential action in with an
+    unrelated read. Returns (safe_blocks, skipped_blocks)."""
+    if len(tool_use_blocks) <= 1:
+        return tool_use_blocks, []
+    safe = [b for b in tool_use_blocks if b.name not in DESTRUCTIVE_TOOLS]
+    skipped = [b for b in tool_use_blocks if b.name in DESTRUCTIVE_TOOLS]
+    return safe, skipped
+
+
+# ---------- Ollama protocol helpers (local backend, step 4/6) ----------
+
+def _anthropic_tool_to_ollama(tool: dict) -> dict:
+    """Anthropic's {name, description, input_schema} -> Ollama/OpenAI-style
+    {type: function, function: {name, description, parameters}}. Same
+    JSON Schema either way — only the envelope differs."""
+    return {
+        "type": "function",
+        "function": {
+            "name": tool["name"],
+            "description": tool["description"],
+            "parameters": tool["input_schema"],
+        },
+    }
+
+
+@dataclass
+class _OllamaToolCall:
+    """Minimal adapter so split_safe_tool_calls() (which only touches
+    .name) works identically regardless of backend — deliberately not a
+    full reimplementation of Anthropic's tool_use block shape."""
+    name: str
+    input: dict
+    raw: dict
+
+
+def _parse_ollama_tool_calls(raw_tool_calls: list[dict]) -> list[_OllamaToolCall]:
+    parsed = []
+    for tc in raw_tool_calls:
+        fn = tc.get("function", {})
+        name = fn.get("name", "")
+        args = fn.get("arguments", {})
+        # Some Ollama versions return arguments as a JSON string rather
+        # than an already-parsed dict — handle both rather than assume.
+        if isinstance(args, str):
+            try:
+                args = json.loads(args) if args else {}
+            except json.JSONDecodeError:
+                logger.warning("Could not parse tool call arguments as JSON: %r", args)
+                args = {}
+        parsed.append(_OllamaToolCall(name=name, input=args, raw=tc))
+    return parsed
+
+
+class _BaseGreenhouseAssistant:
+    """Shared state and every tool handler (_tool_*), _dispatch_tool, and
+    _system_prompt — no model client, no ask() implementation. Backend
+    subclasses (GreenhouseAssistant for the default local model,
+    AnthropicGreenhouseAssistant for the explicit cloud opt-in) provide
+    only those two backend-specific pieces. See
+    docs/OFFLINE_ASSISTANT_PLAN.md step 6 for why this split exists —
+    duplicating 55 tool handlers across two classes would be exactly the
+    kind of drift-prone duplication this project's whole capability-
+    registry philosophy exists to avoid."""
+
+    def __init__(self, db_path: str):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
-        self.client = anthropic.Anthropic(api_key=api_key)
         self.personality = PERSONALITY_PATH.read_text()
         self.history: list[dict] = []
-
-    # ---------- Public interface ----------
-
-    def ask(self, message: str) -> str:
-        self.history.append({"role": "user", "content": message})
-
-        while True:
-            response = self.client.messages.create(
-                model=MODEL,
-                max_tokens=1024,
-                system=self._system_prompt(),
-                tools=TOOLS,
-                messages=self.history,
-            )
-
-            if response.stop_reason != "tool_use":
-                final_text = "".join(
-                    block.text for block in response.content
-                    if block.type == "text"
-                )
-                self.history.append({"role": "assistant", "content": response.content})
-                return final_text
-
-            # Handle tool calls, feed results back, loop again
-            self.history.append({"role": "assistant", "content": response.content})
-            tool_results = []
-            for block in response.content:
-                if block.type != "tool_use":
-                    continue
-                result = self._dispatch_tool(block.name, block.input)
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": json.dumps(result, default=str),
-                })
-            self.history.append({"role": "user", "content": tool_results})
 
     # ---------- System prompt ----------
 
@@ -601,7 +875,16 @@ class GreenhouseAssistant:
             "aquaponics system called MIA Homestead. You answer questions "
             "about your own state using the tools provided — every factual "
             "claim must come from a tool call, never from assumption or "
-            "prior turns if fresher data might exist. Follow this "
+            "prior turns if fresher data might exist. If a tool call "
+            "returns no data (an empty list, a null value, zero rows), "
+            "say that plainly — 'no data yet' or equivalent — and NEVER "
+            "state a specific number, reading, or event as if it were "
+            "real when the tool told you nothing exists. This includes "
+            "the example exchanges in the personality spec below: those "
+            "numbers (pH 6.9, EC 740, battery 68%, etc.) are STYLE "
+            "reference for a hypothetical scenario, never real data — "
+            "do not state them as fact unless a tool call you just made "
+            "in THIS conversation actually returned them. Follow this "
             "personality and behavior spec exactly:\n\n" + self.personality +
             "\n\n---\n\n"
             "The following is a LIVE, auto-generated list of every module "
@@ -618,10 +901,43 @@ class GreenhouseAssistant:
     def _dispatch_tool(self, name: str, tool_input: dict) -> dict:
         try:
             handler = getattr(self, f"_tool_{name}")
-            return handler(**tool_input)
+            return self._annotate_if_empty(handler(**tool_input))
         except Exception as e:
             logger.exception("Tool %s failed", name)
             return {"error": str(e)}
+
+    @staticmethod
+    def _annotate_if_empty(result: dict) -> dict:
+        """If every list-valued field in a tool result is empty (and no
+        other substantive data is present), inject an explicit in-band
+        'no data' note — directly in the tool result the model is about
+        to reason from, not just a system-prompt-level instruction far
+        away from the actual decision point.
+
+        Found necessary the hard way (docs/OFFLINE_ASSISTANT_PLAN.md step
+        5): a system-prompt-only anti-fabrication instruction was NOT
+        reliable against llama3.2:3b — it fabricated specific numbers
+        copied near-verbatim from PERSONALITY.md's own example exchanges
+        when a tool call correctly returned empty data, and this
+        reproduced on more than one tool (get_current_status,
+        get_dosing_rationale), which ruled out patching individual
+        handlers one at a time as a real strategy for 55 tools. This is
+        the single, centralized fix instead — applies uniformly to every
+        tool's result, at the one place all of them pass through
+        already."""
+        if not isinstance(result, dict) or "error" in result or "note" in result:
+            return result
+        list_fields = {k: v for k, v in result.items() if isinstance(v, list)}
+        if not list_fields or any(list_fields.values()):
+            return result  # nothing list-shaped, or at least one has real content
+        result = dict(result)
+        result["note"] = (
+            "No data exists yet for this — every list field above is empty. Tell the "
+            "user plainly there's nothing to report, and do NOT invent any specific "
+            "number, reading, or event, including anything resembling the example "
+            "exchanges in your personality spec."
+        )
+        return result
 
     def _tool_get_current_status(self, cell_id: int | None = None) -> dict:
         query = """
@@ -635,6 +951,9 @@ class GreenhouseAssistant:
             query += " AND s.cell_id = ?"
             params = (cell_id,)
         rows = self.db.execute(query, params).fetchall()
+        # Empty-result anti-fabrication annotation is applied centrally by
+        # _dispatch_tool()'s _annotate_if_empty() — no per-tool special
+        # case needed here anymore, see that method's docstring for why.
         return {"readings": [dict(r) for r in rows]}
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
@@ -713,6 +1032,21 @@ class GreenhouseAssistant:
         from core.report_generator import ReportGenerator
         gen = ReportGenerator(self.db)
         return {"report": gen.generate_report(days=days)}
+
+    def _tool_send_greenhouse_report(self, days: int = 7) -> dict:
+        from core.report_generator import ReportGenerator
+        gen = ReportGenerator(self.db)
+        report_id = gen.generate_and_send(days=days)
+        return {
+            "report_id": report_id,
+            "actually_emailed": bool(gen.notifier),
+            "note": (
+                "Saved and dispatched via the configured notifier." if gen.notifier else
+                "Saved to daily_reports, but no notifier is configured on this assistant "
+                "session — nothing was actually emailed. Tell the user this honestly rather "
+                "than implying delivery happened."
+            ),
+        }
 
     def _tool_get_consumable_forecast(self, item_id: int) -> dict:
         from core.inventory import InventoryManager
@@ -1023,13 +1357,191 @@ class GreenhouseAssistant:
         return {"transactions": [dict(r) for r in rows], "total": total}
 
 
+class AnthropicGreenhouseAssistant(_BaseGreenhouseAssistant):
+    """Cloud-backed variant using the Anthropic API. Kept deliberately —
+    for re-running the model bake-off against `GreenhouseAssistant`'s
+    local model, and for anyone who explicitly wants cloud — but this is
+    NOT the default and should not become the path of least resistance;
+    see the module docstring and docs/OFFLINE_ASSISTANT_PLAN.md."""
+
+    def __init__(self, db_path: str, api_key: str | None = None):
+        super().__init__(db_path)
+        import anthropic  # lazy — see the module docstring for why
+        self.client = anthropic.Anthropic(api_key=api_key)
+
+    def ask(self, message: str) -> str:
+        self.history.append({"role": "user", "content": message})
+
+        # Gated once per user turn, from the message that started it — not
+        # re-evaluated per tool-calling round-trip within this turn, so a
+        # multi-step reasoning chain doesn't lose access to a tool it
+        # legitimately needed just because a later intermediate step's
+        # wording drifted off the original keywords.
+        active_tools = tools_for_domains(relevant_domains(message))
+        if len(active_tools) < len(TOOLS):
+            logger.debug(
+                "Gated tools for this turn: %d/%d (domains: %s)",
+                len(active_tools), len(TOOLS), sorted(relevant_domains(message)),
+            )
+
+        while True:
+            response = self.client.messages.create(
+                model=ANTHROPIC_MODEL,
+                max_tokens=1024,
+                system=self._system_prompt(),
+                tools=active_tools,
+                messages=self.history,
+            )
+
+            if response.stop_reason != "tool_use":
+                final_text = "".join(
+                    block.text for block in response.content
+                    if block.type == "text"
+                )
+                self.history.append({"role": "assistant", "content": response.content})
+                return final_text
+
+            # Handle tool calls, feed results back, loop again
+            self.history.append({"role": "assistant", "content": response.content})
+            tool_use_blocks = [b for b in response.content if b.type == "tool_use"]
+            safe_blocks, skipped_blocks = split_safe_tool_calls(tool_use_blocks)
+
+            if skipped_blocks:
+                logger.warning(
+                    "Skipped %d destructive tool call(s) bundled with %d other call(s) "
+                    "in one reply: %s",
+                    len(skipped_blocks), len(safe_blocks), [b.name for b in skipped_blocks],
+                )
+
+            tool_results = []
+            for block in safe_blocks:
+                result = self._dispatch_tool(block.name, block.input)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": json.dumps(result, default=str),
+                })
+            for block in skipped_blocks:
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": json.dumps({
+                        "skipped": True,
+                        "reason": (
+                            f"'{block.name}' is a destructive action and was bundled with "
+                            "other tool calls in the same reply, so it was NOT executed as "
+                            "a safety precaution. Tell the user this plainly and ask them to "
+                            "request it again on its own if they still want it done."
+                        ),
+                    }),
+                })
+            self.history.append({"role": "user", "content": tool_results})
+
+
+class GreenhouseAssistant(_BaseGreenhouseAssistant):
+    """The default assistant — local-model-backed via Ollama, no cloud
+    API, no API key, no internet dependency. This is what
+    `python assistant/greenhouse_assistant.py` gives you, and what every
+    other part of this codebase should construct unless there's a
+    specific, explicit reason to reach for AnthropicGreenhouseAssistant
+    instead. See the module docstring and docs/OFFLINE_ASSISTANT_PLAN.md."""
+
+    def __init__(self, db_path: str, model: str = OLLAMA_MODEL, host: str = OLLAMA_HOST):
+        super().__init__(db_path)
+        self.model = model
+        self.host = host
+
+    def ask(self, message: str) -> str:
+        self.history.append({"role": "user", "content": message})
+
+        active_tools = tools_for_domains(relevant_domains(message))
+        ollama_tools = [_anthropic_tool_to_ollama(t) for t in active_tools]
+
+        while True:
+            response = self._call_ollama(ollama_tools)
+            msg = response.get("message", {})
+            raw_tool_calls = msg.get("tool_calls") or []
+
+            if not raw_tool_calls:
+                text = msg.get("content", "")
+                self.history.append({"role": "assistant", "content": text})
+                return text
+
+            self.history.append({
+                "role": "assistant",
+                "content": msg.get("content", ""),
+                "tool_calls": raw_tool_calls,
+            })
+
+            tool_calls = _parse_ollama_tool_calls(raw_tool_calls)
+            safe_calls, skipped_calls = split_safe_tool_calls(tool_calls)
+
+            if skipped_calls:
+                logger.warning(
+                    "Skipped %d destructive tool call(s) bundled with %d other call(s) "
+                    "in one reply: %s",
+                    len(skipped_calls), len(safe_calls), [c.name for c in skipped_calls],
+                )
+
+            for call in safe_calls:
+                result = self._dispatch_tool(call.name, call.input)
+                self.history.append({"role": "tool", "content": json.dumps(result, default=str)})
+            for call in skipped_calls:
+                self.history.append({
+                    "role": "tool",
+                    "content": json.dumps({
+                        "skipped": True,
+                        "reason": (
+                            f"'{call.name}' is a destructive action and was bundled with "
+                            "other tool calls in the same reply, so it was NOT executed as "
+                            "a safety precaution. Tell the user this plainly and ask them to "
+                            "request it again on its own if they still want it done."
+                        ),
+                    }),
+                })
+
+    def _call_ollama(self, tools: list[dict]) -> dict:
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "system", "content": self._system_prompt()}] + self.history,
+            "tools": tools,
+            "stream": False,
+            "options": {"temperature": 0},  # determinism — see docs/OFFLINE_ASSISTANT_PLAN.md
+            "keep_alive": -1,               # never idle-unload mid-conversation
+        }
+        req = urllib.request.Request(
+            f"{self.host}/api/chat",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=OLLAMA_REQUEST_TIMEOUT_SECONDS) as resp:
+                return json.loads(resp.read())
+        except urllib.error.URLError as e:
+            raise RuntimeError(
+                f"Could not reach Ollama at {self.host} — is it running? "
+                f"(systemctl --user status ollama). Original error: {e}"
+            ) from e
+
+
 if __name__ == "__main__":
-    import os
-    assistant = GreenhouseAssistant(
-        db_path="mia_homestead.db",
-        api_key=os.environ.get("ANTHROPIC_API_KEY"),
-    )
-    print("MIA Homestead assistant ready. Ctrl+C to exit.")
+    import sys
+
+    db_path = sys.argv[1] if len(sys.argv) > 1 else "mia_homestead.db"
+
+    if "--cloud" in sys.argv:
+        import os
+        assistant = AnthropicGreenhouseAssistant(
+            db_path=db_path,
+            api_key=os.environ.get("ANTHROPIC_API_KEY"),
+        )
+        print("MIA Homestead assistant ready (cloud: Anthropic). Ctrl+C to exit.")
+    else:
+        assistant = GreenhouseAssistant(db_path=db_path)
+        print(f"MIA Homestead assistant ready (local model: {OLLAMA_MODEL}, no cloud API). "
+              f"Ctrl+C to exit.")
+
     while True:
         try:
             q = input("\nyou: ")

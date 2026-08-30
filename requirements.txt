@@ -1,5 +1,10 @@
 pyyaml>=6.0
-anthropic>=0.40.0
+
+# The assistant's default (GreenhouseAssistant, local via Ollama) needs
+# nothing beyond pyyaml above — no cloud SDK required. anthropic is only
+# needed for AnthropicGreenhouseAssistant, an explicit cloud opt-in kept
+# for bake-off comparison — see docs/OFFLINE_ASSISTANT_PLAN.md.
+# anthropic>=0.40.0
 
 # Real hardware drivers (uncomment once actual sensors are connected —
 # not needed for simulation-only work):

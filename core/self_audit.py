@@ -4,7 +4,7 @@ v0.1
 
 Run this before considering any development change done — it's the
 enforcement mechanism behind "the system's self-understanding stays
-current as the code changes." Three checks:
+current as the code changes." Seven checks:
 
 1. Every MiaHomesteadModule class referenced in config/modules.yaml
    actually imports and exists.
@@ -16,6 +16,17 @@ current as the code changes." Three checks:
    otherwise silently leave a real module invisible to the assistant.
 3. The full scenario regression suite still passes — the safety-net
    check.
+4. Verification coverage — how many registered capabilities actually
+   have proof behind them (informational, not a hard failure).
+5. Conversational coverage (best-effort heuristic) — every declared
+   action_possible should have a matching assistant tool, unless it's
+   a documented, intentional exception (see CLAUDE.md rule 5).
+6. Tool domain coverage — every tool in assistant/greenhouse_assistant.py's
+   TOOLS list has a matching entry in TOOL_DOMAINS, and vice versa. See
+   docs/OFFLINE_ASSISTANT_PLAN.md for why this tagging exists.
+7. Destructive-tool validity — every name in DESTRUCTIVE_TOOLS matches a
+   real tool, so split_safe_tool_calls()'s protection can't silently go
+   stale after a tool is renamed or removed.
 
 Usage:
     python3 core/self_audit.py
@@ -108,7 +119,16 @@ def check_conversational_coverage() -> dict:
     real backend method exists, does something useful, and nobody
     wired a conversational path to it. False positives are expected
     and fine to dismiss after a manual look; false negatives (a real
-    gap this misses) are the risk to watch for."""
+    gap this misses) are the risk to watch for.
+
+    Scans only the real TOOLS definitions (names + descriptions), not the
+    whole source file — scanning the whole file was tried first and broke
+    the moment assistant/greenhouse_assistant.py grew a domain-keyword
+    dict (TOOL_DOMAINS/DOMAIN_TRIGGER_KEYWORDS) full of the same
+    dosing-related vocabulary as the two intentionally-uncommandable dosing
+    actions, which made this heuristic falsely think they were covered.
+    Matching against actual tool text only is also just the more correct
+    check for what this is trying to verify."""
     import json
     import re
     import sqlite3
@@ -118,7 +138,8 @@ def check_conversational_coverage() -> dict:
         return {}
 
     conn = sqlite3.connect(str(db_path))
-    tools_source = (ROOT / "assistant" / "greenhouse_assistant.py").read_text().lower()
+    from assistant.greenhouse_assistant import TOOLS
+    tools_source = " ".join(f"{t['name']} {t['description']}" for t in TOOLS).lower()
 
     # Verb-ish stopwords stripped so "record a new planting" -> {"record","new","planting"}
     # then checked against whether those words appear near a tool name/description.
@@ -141,6 +162,47 @@ def check_conversational_coverage() -> dict:
         if missing:
             gaps[module_id] = missing
     return gaps
+
+
+def check_tool_domain_coverage() -> list[str]:
+    """Every tool in assistant/greenhouse_assistant.py's TOOLS list must
+    have a matching entry in TOOL_DOMAINS, and vice versa — this is what
+    keeps the domain-tagging step of docs/OFFLINE_ASSISTANT_PLAN.md from
+    silently drifting out of sync as tools get added, renamed, or removed.
+    Same discipline this project already applies to capability
+    registration, one layer up: tagging a tool's domain happens in the
+    same sitting as adding the tool, not as a followup someone forgets."""
+    from assistant.greenhouse_assistant import TOOL_DOMAINS, TOOLS
+
+    problems = []
+    tool_names = {t["name"] for t in TOOLS}
+    tagged_names = set(TOOL_DOMAINS.keys())
+
+    for name in sorted(tool_names - tagged_names):
+        problems.append(f"Tool '{name}' exists in TOOLS but has no entry in TOOL_DOMAINS")
+    for name in sorted(tagged_names - tool_names):
+        problems.append(f"TOOL_DOMAINS has an entry for '{name}' which no longer exists in TOOLS")
+    return problems
+
+
+def check_destructive_tools_valid() -> list[str]:
+    """Every name in DESTRUCTIVE_TOOLS must match a real tool in TOOLS —
+    catches a typo or a stale entry left behind after a tool was renamed.
+    Either one would silently leave that tool unprotected by
+    split_safe_tool_calls() with no error to flag it — a much worse
+    failure mode than the tagging drift check 6 guards against, since
+    this one is a safety gap, not just a routing inefficiency."""
+    from assistant.greenhouse_assistant import DESTRUCTIVE_TOOLS, TOOLS
+
+    tool_names = {t["name"] for t in TOOLS}
+    problems = []
+    for name in sorted(DESTRUCTIVE_TOOLS):
+        if name not in tool_names:
+            problems.append(
+                f"DESTRUCTIVE_TOOLS has an entry for '{name}' which doesn't match any real "
+                f"tool in TOOLS — it would silently go unprotected against bundled-call risk"
+            )
+    return problems
 
 
 def check_scenarios() -> tuple[bool, str]:
@@ -210,6 +272,30 @@ def main():
               "assuming a real gap. But every hit so far in this project's history has been real.)")
     else:
         print("   OK — no obvious gaps found")
+
+    print("\n6. Checking every assistant tool has a domain tag (TOOL_DOMAINS)...")
+    try:
+        problems = check_tool_domain_coverage()
+        if problems:
+            all_clear = False
+            for p in problems:
+                print(f"   FAIL: {p}")
+        else:
+            print("   OK")
+    except Exception as e:
+        print(f"   (skipped — {e})")
+
+    print("\n7. Checking every destructive-tool tag matches a real tool...")
+    try:
+        problems = check_destructive_tools_valid()
+        if problems:
+            all_clear = False
+            for p in problems:
+                print(f"   FAIL: {p}")
+        else:
+            print("   OK")
+    except Exception as e:
+        print(f"   (skipped — {e})")
 
     print()
     if all_clear:
