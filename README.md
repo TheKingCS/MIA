@@ -169,6 +169,11 @@ mia-homestead/
   found and fixed during testing)
 - **3D digital twin viewer** — spatial status view, color-coded by live
   data, runnable before any hardware exists
+- **Operations dashboard** (`viewer/dashboard.html`) — data-dense
+  live-data overview (sensor trends, alerts, yield vs. target,
+  experiments, inventory, maintenance, power), distinct from the
+  spatial digital twin above; confirmed against a real seeded DB and
+  screenshotted in a real headless browser, not just eyeballed as code
 - **`main.py`** — the control loop orchestrator, now also runs periodic
   maintenance/calibration scans
 - **Inventory manager** — confirmed: stock adjustments, low-stock
@@ -308,7 +313,15 @@ mia-homestead/
    the logic and DB layer are ready, this is the last missing piece)
 6. Battery bank sizing and pricing, once real greenhouse load is known
 7. MIA Home sync — pushing summarized state to the main dashboard
-8. Local web UI for the on-site dashboard
+8. ~~Local web UI for the on-site dashboard~~ — **done** (2026-08-30),
+   see `viewer/dashboard.html` above. Real gap this surfaced, not yet
+   fixed: `power_telemetry` has no driver at all (neither the
+   simulator nor real hardware writes it), so `greenhouse_power` and
+   `greenhouse_self_preservation` log a genuine recurring critical
+   "sensors stale" alert on every control cycle right now — not a
+   dashboard bug, an honest reflection of a real gap. Also found: the
+   alerting module never de-dupes identical repeated alerts (worked
+   around at export time for the dashboard, not fixed at the source).
 
 ## Full simulation-first workflow (no hardware required)
 
@@ -332,6 +345,10 @@ python3 scenarios/scenarios.py
 python3 viewer/export_state.py --db mia_homestead.db
 python3 -m http.server 8000
 # open http://localhost:8000/viewer/digital_twin.html
+
+# ...or the operations dashboard (same server, different page)
+python3 viewer/export_dashboard_state.py --db mia_homestead.db
+# open http://localhost:8000/viewer/dashboard.html
 
 # Full live loop (Tier 1/2 data + real control logic + live digital twin export)
 python3 drivers/simulator.py --db mia_homestead.db --run &

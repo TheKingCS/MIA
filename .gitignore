@@ -3,8 +3,9 @@
 *.db-journal
 *.db-wal
 
-# Digital twin live state — regenerated every control cycle
+# Digital twin / dashboard live state — regenerated every control cycle
 viewer/state.json
+viewer/dashboard_state.json
 
 # Python
 __pycache__/
