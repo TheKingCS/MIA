@@ -146,15 +146,37 @@ an open question — is Home ever on the same network as the greenhouse
 Pi to load `dashboard.html` directly? Worth asking rather than
 assuming yes).
 
+## Hardware target — resolved (2026-08-30)
+
+User confirmed: MIA Home runs on the Ryzen/Radeon desktop (the compute
+backend, for resource access), accessed from multiple client
+devices/screens through the build — including Pi5s elsewhere in the
+system, not the greenhouse Pi itself. So Homestead's Pi is a producer
+only; it never needs to run Home's own UI. This resolves the
+discrepancy flagged above in Home's favor (Ryzen/Radeon, not Pi5) —
+`docs/OFFLINE_ASSISTANT_PLAN.md`'s "same class as MIA Home" phrasing
+for Homestead's own target hardware is a separate, unrelated claim
+about Hailo-class NPUs and shouldn't be read as saying Homestead's Pi
+and MIA Home are the same machine.
+
 ## Sequencing
 
-1. **Buildable now, this repo, no MIA changes needed**:
-   `viewer/export_home_snapshot.py`, producing the shape above from
-   the same DB queries `export_dashboard_state.py` already proves
-   work. Wire into `main.py` next to the other two exports, same
-   pattern. This is genuinely independent of everything below — it's
-   useful even before Home-side ingestion exists (a human could eyeball
-   the JSON, or drop it in by hand once `homestead_snapshots/` exists).
+1. ~~Buildable now, this repo, no MIA changes needed~~ — **done
+   (2026-08-30)**: `viewer/export_home_snapshot.py`, producing the
+   shape above from the same DB queries `export_dashboard_state.py`
+   already proves work (alert de-dup, yield/revenue rollups). Wired
+   into `main.py` next to the other two exports
+   (`--home-snapshot-out`/`--no-home-snapshot-export`), regenerates
+   every control cycle. Verified against the real seeded DB —
+   `cells[].status` correctly stays `"ok"` for Cell A rather than
+   misattributing the genuinely whole-system `greenhouse_power`/
+   `greenhouse_self_preservation` critical alerts to it (only an
+   alert source matching the `cell_<slug>` naming convention gets
+   attributed to that cell); `top_alert` correctly surfaces the real
+   critical condition instead. `core/self_audit.py` and
+   `scenarios/scenarios.py` both still clean after wiring this in.
+   Writes a local file only (`viewer/home_snapshot.json`, gitignored)
+   — does not attempt any transport, per the "start manual" call above.
 2. **Needs a session in the `MIA` repo**: `core/homestead_manager.py` +
    `homestead_snapshots/` folder (mirroring `finance_manager.py`
    exactly) + a Homestead widget card in `gui/home_dashboard.py`
@@ -168,10 +190,11 @@ assuming yes).
 
 ## Open questions
 
-- Confirm what hardware Homestead is actually meant to sync *to* — the
-  Pi5+AI HAT this repo's own docs mention, or the Ryzen/Radeon desktop
-  VISION.md defines as Home. Don't build step 3's transport around a
-  guess.
+- ~~Confirm what hardware Homestead is actually meant to sync *to*~~ —
+  **resolved 2026-08-30**, see "Hardware target" above: the
+  Ryzen/Radeon desktop, accessed via multiple client screens/devices
+  (including other Pi5s) rather than the greenhouse Pi running Home's
+  UI itself.
 - Automated transport now, or manual-first like the other two sources
   — recommendation above is manual-first, but this is the user's call.
 - Whether Home ever gets a live link into Homestead's own

@@ -42,6 +42,7 @@ from core.deadmans_switch import DeadMansSwitchMonitor
 from core.report_generator import ReportGenerator
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
+from viewer.export_home_snapshot import export_home_snapshot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -84,6 +85,9 @@ def main():
     parser.add_argument("--no-viewer-export", action="store_true", help="Skip auto-exporting digital twin state")
     parser.add_argument("--dashboard-state-out", default="viewer/dashboard_state.json")
     parser.add_argument("--no-dashboard-export", action="store_true", help="Skip auto-exporting ops dashboard state")
+    parser.add_argument("--home-snapshot-out", default="viewer/home_snapshot.json")
+    parser.add_argument("--no-home-snapshot-export", action="store_true",
+                         help="Skip auto-exporting the summarized MIA Home snapshot")
     args = parser.parse_args()
 
     # Notifications are optional and inert until SMTP creds are filled in —
@@ -194,6 +198,16 @@ def main():
                     export_dashboard_state(args.db, args.dashboard_state_out)
                 except Exception:
                     logger.exception("Dashboard state export failed this cycle — continuing control loop regardless")
+
+            # Local file only — getting this onto MIA Home's watched
+            # folder is a deliberately separate, still-manual step (see
+            # docs/MIA_HOME_SYNC_PLAN.md). Cheap enough to just run
+            # every cycle like the other two exports.
+            if not args.no_home_snapshot_export:
+                try:
+                    export_home_snapshot(args.db, args.home_snapshot_out)
+                except Exception:
+                    logger.exception("MIA Home snapshot export failed this cycle — continuing control loop regardless")
 
             time.sleep(args.interval)
     except KeyboardInterrupt:

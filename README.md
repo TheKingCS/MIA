@@ -313,12 +313,14 @@ mia-homestead/
    the logic and DB layer are ready, this is the last missing piece)
 6. Battery bank sizing and pricing, once real greenhouse load is known
 7. MIA Home sync — pushing summarized state to the main dashboard.
-   Scoped 2026-08-30, see `docs/MIA_HOME_SYNC_PLAN.md`: the MIA repo
-   already has a reusable generic snapshot-ingestion mechanism
-   (`core/finance_manager.py`) this can follow the same pattern as, but
-   the cross-machine transport and the exact "MIA Home" hardware target
-   are genuinely undecided, and the MIA-side manager/widget don't exist
-   yet — that half needs its own session in `~/Projects/MIA`.
+   Scoped and partially built 2026-08-30, see
+   `docs/MIA_HOME_SYNC_PLAN.md`. Done: the Homestead-side export
+   (`viewer/export_home_snapshot.py`, wired into `main.py`, matches the
+   shape MIA's existing `core/finance_manager.py` already knows how to
+   ingest). Still needed: the MIA-side ingestion manager + Home
+   dashboard widget (own session in `~/Projects/MIA`), and the
+   cross-machine transport mechanism (deliberately left manual for
+   now, matching MIA Home's other two snapshot sources).
 8. ~~Local web UI for the on-site dashboard~~ — **done** (2026-08-30),
    see `viewer/dashboard.html` above. Real gap this surfaced, not yet
    fixed: `power_telemetry` has no driver at all (neither the
