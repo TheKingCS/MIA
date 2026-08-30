@@ -19,6 +19,7 @@ Usage:
 """
 
 import argparse
+import math
 import random
 import sqlite3
 import time
@@ -33,6 +34,33 @@ SIM_SENSOR_DEFS = [
     ("humidity", "%RH", 55.0, 0.5, 1.5),
     ("level", "in", 24.0, 0.05, 0.1),
 ]
+
+# Power simulation is a real gap this used to leave entirely unfilled —
+# modules/power_monitor.py reads power_telemetry, but nothing wrote to
+# it (no driver, real or simulated), so the power panel of every viewer
+# and any load-shed logic was permanently untestable and the dashboard
+# could only ever show an honest "no data" state. These constants are
+# a reasonable simulated array, not a real system's specs — same
+# "starting point, not gospel" caveat this project already applies to
+# core/species_registry.py's baseline values.
+SOLAR_PANEL_WATT_PEAK = 400.0
+BASE_LOAD_WATTS = 80.0          # aeration/circulation/electronics baseline draw
+SIMULATED_BATTERY_CAPACITY_WH = 2000.0
+SIMULATED_BATTERY_START_SOC = 70.0
+
+
+def _solar_watts_now(now: datetime) -> float:
+    """A simple daylight bell curve (sunrise ~6:00, sunset ~20:00,
+    peak at solar noon) plus noise — not a real solar-position model,
+    just enough day/night variation for load-shed logic and any
+    future daylight-aware scheduling to have something real to react
+    to, instead of flat noise around a constant."""
+    hour = now.hour + now.minute / 60
+    if hour < 6 or hour > 20:
+        base = 0.0
+    else:
+        base = SOLAR_PANEL_WATT_PEAK * max(0.0, math.sin(math.pi * (hour - 6) / 14))
+    return max(0.0, base + random.uniform(-20, 20))
 
 
 def setup_demo_cell(conn: sqlite3.Connection) -> int:
@@ -102,11 +130,13 @@ class Simulator:
     drift, small noise) rather than pure random jitter, so control logic
     gets tested against realistic conditions."""
 
-    def __init__(self, conn: sqlite3.Connection):
+    def __init__(self, conn: sqlite3.Connection, interval_seconds: float = 5.0):
         self.conn = conn
         self.state: dict[int, float] = {}  # sensor_id -> current value
         self.defs: dict[int, tuple] = {}    # sensor_id -> (drift, noise)
         self._load_sensors()
+        self.interval_seconds = interval_seconds
+        self.battery_soc = SIMULATED_BATTERY_START_SOC
 
     def _load_sensors(self):
         rows = self.conn.execute("SELECT id, type FROM sensors WHERE active = 1").fetchall()
@@ -129,7 +159,33 @@ class Simulator:
                 "VALUES (?, ?, 0, 0)",
                 (sensor_id, round(reading, 3)),
             )
+        self._tick_power()
         self.conn.commit()
+
+    def _tick_power(self):
+        """Writes one 'solar' and one 'battery' power_telemetry row per
+        tick — see the module-level comment above SOLAR_PANEL_WATT_PEAK
+        for why this exists at all. Battery SOC is a simple running
+        energy balance (solar in, BASE_LOAD_WATTS constant draw out),
+        clamped to [0, 100] — good enough to exercise
+        modules/power_monitor.py's load-shed logic realistically
+        (charges by day, drains by night), not a claim of physical
+        accuracy."""
+        now = datetime.utcnow()
+        solar_watts = _solar_watts_now(now)
+        net_watts = solar_watts - BASE_LOAD_WATTS
+        delta_wh = net_watts * (self.interval_seconds / 3600)
+        delta_pct = (delta_wh / SIMULATED_BATTERY_CAPACITY_WH) * 100
+        self.battery_soc = max(0.0, min(100.0, self.battery_soc + delta_pct))
+
+        self.conn.execute(
+            "INSERT INTO power_telemetry (source, watts, battery_soc_percent) VALUES ('solar', ?, NULL)",
+            (round(solar_watts, 1),),
+        )
+        self.conn.execute(
+            "INSERT INTO power_telemetry (source, watts, battery_soc_percent) VALUES ('battery', ?, ?)",
+            (round(-BASE_LOAD_WATTS, 1), round(self.battery_soc, 2)),
+        )
 
     def inject_event(self, sensor_type: str, delta: float):
         """Manually nudge a sensor type — useful for testing that dosing
@@ -156,7 +212,7 @@ def main():
         setup_demo_cell(conn)
 
     if args.run:
-        sim = Simulator(conn)
+        sim = Simulator(conn, interval_seconds=args.interval)
         print(f"Simulating {len(sim.state)} sensors every {args.interval}s. Ctrl+C to stop.")
         try:
             while True:

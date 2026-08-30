@@ -530,9 +530,11 @@ function renderPower(data) {
   }
   for (const [source, row] of Object.entries(bySource)) {
     if (source === "battery") continue;
-    body.appendChild(el("div", { class: "row-item flex" }, [
-      el("span", { style: "color:var(--text-dim);" }, [source]),
-      el("span", {}, [`${row.watts != null ? row.watts + "W" : "—"}`]),
+    body.appendChild(el("div", { class: "row-item" }, [
+      el("div", { class: "flex" }, [
+        el("span", { style: "color:var(--text-dim);" }, [source]),
+        el("span", {}, [`${row.watts != null ? row.watts + "W" : "—"}`]),
+      ]),
     ]));
   }
 }
