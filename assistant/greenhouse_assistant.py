@@ -124,6 +124,15 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_power_forecast",
+        "description": (
+            "Project whether/when battery SOC will hit the load-shed threshold at the "
+            "current drain rate — an early warning distinct from get_power_status's "
+            "current-moment snapshot."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_inventory_status",
         "description": "Get current stock levels for all tracked inventory items (sensors, chemicals, spare parts).",
         "input_schema": {"type": "object", "properties": {}},
@@ -624,6 +633,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_sensor_trends": "status",
     "get_open_alerts": "status",
     "get_power_status": "status",
+    "get_power_forecast": "status",
     "get_deadmans_switch_status": "status",
     "get_greenhouse_report": "status",
     "send_greenhouse_report": "status",
@@ -1023,6 +1033,36 @@ class _BaseGreenhouseAssistant:
             "SELECT * FROM power_telemetry ORDER BY timestamp DESC LIMIT 5"
         ).fetchall()
         return {"recent_power_telemetry": [dict(r) for r in row]}
+
+    def _tool_get_power_forecast(self) -> dict:
+        """PowerMonitor.forecast_soc_depletion() needs the array's real
+        configured threshold — reads config/modules.yaml directly for
+        every modules.power_monitor.PowerMonitor entry (there's exactly
+        one, greenhouse_power, today; written to handle more than one
+        without changes since config/modules.yaml's own comments already
+        anticipate a second array for the house) rather than
+        constructing a whole ModuleRegistry (which opens its own
+        separate DB connection) just to read one config value."""
+        import yaml
+        from modules.power_monitor import PowerMonitor
+
+        config_path = Path(__file__).resolve().parent.parent / "config" / "modules.yaml"
+        raw = yaml.safe_load(config_path.read_text())
+        forecasts = []
+        for entry in raw.get("modules", []):
+            if entry.get("class") != "modules.power_monitor.PowerMonitor" or not entry.get("enabled", True):
+                continue
+            params = entry.get("params", {})
+            monitor = PowerMonitor(
+                module_id=entry["id"], cell_id=entry["cell_id"], db_conn=self.db,
+                array_name=params.get("array_name", entry["id"]),
+                battery_capacity_wh=params.get("battery_capacity_wh", 0),
+                low_soc_threshold_pct=params.get("low_soc_threshold_pct", 20),
+            )
+            forecast = monitor.forecast_soc_depletion()
+            forecasts.append({"module_id": entry["id"], "array_name": params.get("array_name", entry["id"]),
+                               "forecast": forecast})
+        return {"forecasts": forecasts}
 
     def _tool_get_last_human_checkin(self) -> dict:
         row = self.db.execute(

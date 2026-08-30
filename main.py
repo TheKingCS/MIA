@@ -41,6 +41,7 @@ from core.generate_bom_doc import generate_and_write as write_bom_doc
 from core.deadmans_switch import DeadMansSwitchMonitor
 from core.report_generator import ReportGenerator
 from core.trend_analyzer import TrendAnalyzer
+from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
 from viewer.export_home_snapshot import export_home_snapshot
@@ -186,6 +187,11 @@ def main():
                 drift_findings = trend_analyzer.check_all_sensors()
                 if drift_findings:
                     logger.info("Trend analyzer found %d sensor(s) drifting", len(drift_findings))
+                for module in registry.modules.values():
+                    if isinstance(module, PowerMonitor):
+                        forecast = module.check_soc_forecast()
+                        if forecast and forecast["hours_to_threshold"] <= SOC_FORECAST_WARNING_HOURS:
+                            logger.info("%s: SOC forecast warning — %s", module.module_id, forecast)
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the
