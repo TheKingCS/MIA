@@ -306,21 +306,36 @@ mia-homestead/
    especially the actuator-ID-to-pin mapping, which needs resolving
    first.
 2. Real dosing limit values, once dosing pump hardware is chosen and tested
-3. SMS provider wiring (Twilio or similar)
-4. Real ordering integration (currently tracks order intent only —
-   no live supplier API)
+3. **SMS wiring** — corrected 2026-08-30: not a Twilio/vendor-API
+   dependency, per the project's own no-outside-dependency stance. Two
+   vendor-free options instead: a carrier email-to-SMS gateway (free,
+   reuses the notification system's already-working SMTP, no
+   signup/API key — e.g. `number@vtext.com`) or a USB GSM modem with a
+   prepaid SIM the owner holds outright (real hardware, no recurring
+   account). Prefer the email gateway first — it's zero new
+   infrastructure.
+4. **Real ordering integration** — corrected 2026-08-30: this was
+   mischaracterized as needing a live vendor checkout API. It doesn't,
+   and shouldn't — `approve_order` only flips a status, and the actual
+   purchase already stays human-executed by design (mirrors the
+   propose-then-approve pattern everywhere else spend is involved).
+   What's actually missing is just enriching a proposal with real
+   current sourcing info for the human to act on, not automating the
+   purchase itself.
 5. Physical beacon hardware for self-preservation (a light/speaker —
    the logic and DB layer are ready, this is the last missing piece)
 6. Battery bank sizing and pricing, once real greenhouse load is known
-7. MIA Home sync — pushing summarized state to the main dashboard.
-   Scoped and partially built 2026-08-30, see
-   `docs/MIA_HOME_SYNC_PLAN.md`. Done: the Homestead-side export
-   (`viewer/export_home_snapshot.py`, wired into `main.py`, matches the
-   shape MIA's existing `core/finance_manager.py` already knows how to
-   ingest). Still needed: the MIA-side ingestion manager + Home
-   dashboard widget (own session in `~/Projects/MIA`), and the
-   cross-machine transport mechanism (deliberately left manual for
-   now, matching MIA Home's other two snapshot sources).
+7. ~~MIA Home sync — pushing summarized state to the main dashboard~~ —
+   **code done on both sides, 2026-08-30** (see
+   `docs/MIA_HOME_SYNC_PLAN.md`): this repo's `viewer/export_home_snapshot.py`
+   (wired into `main.py`) produces the snapshot; `~/Projects/MIA`'s
+   `core/homestead_manager.py` + a "Homestead" dashboard widget ingest
+   it — verified end-to-end with a real exported file, which caught
+   and fixed a real shape mismatch before it shipped (see the plan
+   doc). **The one piece still genuinely open, and it's not code**: how
+   `home_snapshot.json` physically gets from this Pi onto the
+   Ryzen/Radeon desktop's watched folder — deliberately left manual for
+   now, matching how MIA Home's other two snapshot sources already work.
 8. ~~Local web UI for the on-site dashboard~~ — **done** (2026-08-30),
    see `viewer/dashboard.html` above. Real gap this surfaced, not yet
    fixed: `power_telemetry` has no driver at all (neither the
