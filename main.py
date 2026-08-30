@@ -171,6 +171,10 @@ def main():
                 due_experiments = experiments.check_due_experiments()
                 if due_experiments:
                     logger.info("Completed %d experiment(s): %s — check results", len(due_experiments), due_experiments)
+                proposed_from_patterns = experiments.propose_experiments_for_underperformance(species, args.config)
+                if proposed_from_patterns:
+                    logger.info("Proposed %d experiment(s) from an observed underperformance "
+                                "pattern — review before starting: %s", len(proposed_from_patterns), proposed_from_patterns)
                 watch_results = backups.check_update_watches()
                 if watch_results:
                     logger.info("Update watch results: %s", watch_results)

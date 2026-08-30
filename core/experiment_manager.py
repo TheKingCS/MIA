@@ -234,6 +234,130 @@ class ExperimentManager(Describable):
         row = self.db.execute("SELECT * FROM experiments WHERE id = ?", (experiment_id,)).fetchone()
         return dict(row) if row else None
 
+    # ---------- Proactive proposals from observed patterns ----------
+
+    def _current_target(self, cell_id: int, param_name: str, config_path: str = "config/modules.yaml") -> float | None:
+        """The real current effective target for a cell/param — checks
+        target_overrides first (an active experiment/approved change),
+        falls back to config/modules.yaml's baseline, same precedence
+        modules/aquaponics_cell.py's own _current_targets() uses. A
+        proposed experiment's baseline_value must be the REAL current
+        target, not a guess — logging the wrong baseline would make the
+        eventual before/after comparison meaningless."""
+        row = self.db.execute(
+            "SELECT value FROM target_overrides WHERE cell_id = ? AND param_name = ? AND active = 1",
+            (cell_id, param_name),
+        ).fetchone()
+        if row:
+            return row[0]
+        import yaml
+        from pathlib import Path
+        raw = yaml.safe_load(Path(config_path).read_text())
+        for entry in raw.get("modules", []):
+            if entry.get("cell_id") == cell_id and param_name in entry.get("params", {}):
+                return entry["params"][param_name]
+        return None
+
+    def propose_experiments_for_underperformance(self, species_registry, config_path: str = "config/modules.yaml") -> list[int]:
+        """Called periodically (main.py) — the proactive half of this
+        module's "gets better over time" purpose. Everything before this
+        method required a HUMAN to notice underperformance and propose
+        an experiment by hand; this notices the pattern itself. Still
+        stops at proposing, same as every human-authored proposal — the
+        result is a 'proposed' row a human must call start_experiment()
+        on, same safety gate, no bypass.
+
+        Deliberately conservative about what counts as a real signal,
+        to avoid becoming noise:
+        - Only plantings at least 50% through their expected time to
+          harvest — too early to judge a slow start from a real problem.
+        - Only when actual yield-so-far is under half of what a linear
+          pace toward the expected total would predict by now — a
+          meaningful shortfall, not normal variance.
+        - Never proposes a second experiment for a cell that already has
+          one in a non-terminal state (proposed/approved/running) —
+          one live proposal at a time per cell.
+        - The proposed test value is always the species' OWN documented
+          baseline midpoint (core/species_registry.py), never an
+          invented number — this doesn't claim to know a better value
+          than the species knowledge base already records, it only
+          proposes moving toward it when the cell isn't there yet, and
+          skips entirely (nothing to propose) when the cell is already
+          within 1 unit of that midpoint.
+        - Picks EC over pH as the one variable tested per pass — EC is
+          the more commonly cited lever for a yield shortfall
+          specifically (nutrient availability) versus pH's broader
+          water-chemistry role; keeping this to one variable per
+          proposal keeps each experiment interpretable, matching this
+          module's own stated "one variable at a time" design."""
+        proposed_ids = []
+        self.db.row_factory = sqlite3.Row
+        for row in self.db.execute(
+            "SELECT * FROM bed_plantings WHERE status = 'active' "
+            "AND expected_yield_amount IS NOT NULL AND expected_harvest_date IS NOT NULL"
+        ).fetchall():
+            p = dict(row)
+            try:
+                planted = datetime.fromisoformat(p["planted_date"])
+                harvest = datetime.fromisoformat(p["expected_harvest_date"])
+            except (TypeError, ValueError):
+                continue
+            total_days = (harvest - planted).total_seconds() / 86400
+            if total_days <= 0:
+                continue
+            elapsed_fraction = (datetime.utcnow() - planted).total_seconds() / 86400 / total_days
+            if elapsed_fraction < 0.5:
+                continue
+
+            actual = self.db.execute(
+                "SELECT COALESCE(SUM(quantity), 0) FROM yield_events WHERE cell_id = ? AND timestamp >= ?",
+                (p["cell_id"], p["planted_date"]),
+            ).fetchone()[0]
+            expected_by_now = p["expected_yield_amount"] * min(elapsed_fraction, 1.0)
+            if expected_by_now <= 0 or actual >= 0.5 * expected_by_now:
+                continue  # on pace, or no real shortfall signal
+
+            already_active = self.db.execute(
+                "SELECT COUNT(*) FROM experiments WHERE cell_id = ? AND status IN ('proposed', 'approved', 'running')",
+                (p["cell_id"],),
+            ).fetchone()[0]
+            if already_active:
+                continue
+
+            species = species_registry.get_profile(p["species_id"])
+            if not species or species.get("ec_min") is None or species.get("ec_max") is None:
+                continue
+            current_ec = self._current_target(p["cell_id"], "ec_target_max", config_path)
+            if current_ec is None:
+                continue
+            species_mid_ec = (species["ec_min"] + species["ec_max"]) / 2
+            if abs(current_ec - species_mid_ec) < 1:
+                continue  # already at the species' own documented midpoint — nothing to propose
+
+            unit = p["expected_yield_unit"] or ""
+            exp_id = self.propose_experiment(
+                cell_id=p["cell_id"],
+                hypothesis=(
+                    f"System-observed pattern, not a confirmed cause — review before starting. "
+                    f"Planting #{p['id']} ({species['common_name']}) is at {actual:.2f} {unit} vs. "
+                    f"an expected-by-now pace of {expected_by_now:.2f} {unit} "
+                    f"({elapsed_fraction * 100:.0f}% of its time to harvest elapsed). Current EC "
+                    f"target ({current_ec}) sits away from {species['common_name']}'s own documented "
+                    f"midpoint ({species_mid_ec:.0f}, from ec_min {species['ec_min']}-ec_max "
+                    f"{species['ec_max']}) — proposing to test moving toward it."
+                ),
+                variable_changed="ec_target_max",
+                baseline_value=current_ec,
+                test_value=species_mid_ec,
+                created_by="system",
+            )
+            proposed_ids.append(exp_id)
+            logger.info(
+                "Proposed experiment #%s for underperforming planting #%s (%s): "
+                "EC %s -> %s", exp_id, p["id"], species["common_name"], current_ec, species_mid_ec,
+            )
+        return proposed_ids
+
     def describe_capabilities(self):
         from contracts.capability import Capability
         return Capability(
@@ -242,7 +366,9 @@ class ExperimentManager(Describable):
             purpose=(
                 "Proposes and runs controlled changes to one cell's dosing targets, tracks "
                 "yield outcomes during the window, and recommends evidence-based permanent "
-                "changes — through the same human-approval pattern as the inventory reorder queue."
+                "changes — through the same human-approval pattern as the inventory reorder queue. "
+                "Also proactively proposes an experiment itself when a planting's yield is "
+                "significantly behind pace, rather than waiting for a human to notice."
             ),
             data_produced=["experiment history with before/after yield comparisons"],
             actions_possible=[
@@ -250,18 +376,27 @@ class ExperimentManager(Describable):
                 "start an approved experiment (applies live via target_overrides, no restart)",
                 "complete an experiment and generate a result summary",
                 "propose a permanent parameter change for human approval",
+                "scan active plantings for a significant yield shortfall and proactively propose "
+                "an experiment nudging EC toward the species' own documented midpoint",
             ],
             limits_and_safety=(
                 "NEVER applies a permanent target change without human approval. Comparisons "
                 "are single before/after means, not statistically rigorous controlled trials — "
                 "presented as suggestive evidence, explicitly not overstated as proof. Only "
                 "changes pH/EC targets within a cell, never dosing hard limits, which remain "
-                "enforced independently by the safety MCU regardless of any experiment."
+                "enforced independently by the safety MCU regardless of any experiment. The "
+                "proactive proposal path is deliberately conservative — at least 50% through the "
+                "expected time to harvest, actual yield under half of pace, never proposes a "
+                "second experiment for a cell that already has one live, and only ever proposes "
+                "moving toward a value already recorded in the species knowledge base, never an "
+                "invented number. It still only PROPOSES — start_experiment() still requires a "
+                "human, same gate as every other experiment."
             ),
             example_questions=[
                 "Any experiments running right now?",
                 "What did the last EC experiment find?",
                 "Should I approve raising the pH target for Cell A?",
+                "Why did the system propose this experiment?",
             ],
             verification_evidence=[
                 "Live manual test 2026-08-26: full lifecycle proven end to end — proposed a "
@@ -269,6 +404,14 @@ class ExperimentManager(Describable):
                 "logged before/after yield data, completed the experiment, got a correct "
                 "evidence-based +32.3% adopt recommendation, approved it, and confirmed the "
                 "change promoted from set_by='experiment' to set_by='manual'",
+                "Live manual test 2026-08-30 (proactive proposals): seeded a real planting 60% "
+                "through its time to harvest with yield at 20% of expected-by-now pace and a "
+                "config EC target away from the species' documented midpoint — confirmed exactly "
+                "one experiment proposed, correctly attributing baseline_value to the REAL "
+                "config-read current target and test_value to the species' real recorded "
+                "midpoint. Confirmed 3 negative cases produce zero proposals: a planting on pace, "
+                "a planting only 30% through its cycle (too early to judge), and a cell that "
+                "already has a live (non-terminal) experiment — no duplicate proposal.",
             ],
         )
 
