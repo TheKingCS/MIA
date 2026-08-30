@@ -130,6 +130,7 @@ from core.conversation_manager import DEFAULT_TITLE
 from core.daily_occasions import calendar_events_today
 from core.dashboard_widgets import WidgetDescriptor
 from core.finance_manager import FinancialSnapshot
+from core.homestead_manager import HomesteadSnapshot
 from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
 from core.mission_manager import Mission
@@ -169,6 +170,11 @@ _GRID_COLUMNS = 3
 # differs.
 _REAL_ESTATE_SOURCE = "real_estate_portfolio"
 _KRAKEN_SOURCE = "kraken_trading_agent"
+# Confirmed directly from mia-homestead's own
+# viewer/export_home_snapshot.py — unlike Kraken's guessed tag above,
+# this one is real since both sides of this integration are this
+# user's own projects.
+_HOMESTEAD_SOURCE = "mia_homestead"
 
 
 def format_clock_time(now: datetime) -> str:
@@ -291,6 +297,43 @@ def format_net_worth_line(snapshots: list[FinancialSnapshot]) -> str:
     return f"${total:,.0f}  —  from {count} {noun}"
 
 
+def format_homestead_line(snapshot: Optional[HomesteadSnapshot]) -> str:
+    """Pure formatting logic — testable without Qt. Reads
+    mia-homestead's `viewer/export_home_snapshot.py` shape directly
+    (`docs/MIA_HOME_SYNC_PLAN.md` in that repo). Leads with the most
+    urgent real fact — a critical alert beats a warning beats "all
+    clear plus this week's yield" — matching this dashboard's general
+    "surface the summary before the detail" stance for glance-level
+    widgets, same reasoning as format_power_line's plugged-in/on-battery
+    lead. Alert messages are module-authored and can run long, so the
+    widget line is capped rather than risking a card that grows to fit
+    one unusually verbose alert."""
+    if snapshot is None:
+        return "No snapshot imported yet."
+    summary = snapshot.data.get("summary", {})
+    critical = summary.get("critical_alert_count")
+    if critical is None:
+        return "Snapshot imported, but no summary data found."
+    if critical:
+        noun = "critical alert" if critical == 1 else "critical alerts"
+        line = f"{critical} {noun}"
+        top_alert = snapshot.data.get("top_alert") or {}
+        message = top_alert.get("message")
+        if message:
+            if len(message) > 60:
+                message = message[:57] + "..."
+            line += f"  —  {message}"
+        return line
+    warning = summary.get("warning_alert_count") or 0
+    if warning:
+        noun = "warning" if warning == 1 else "warnings"
+        return f"{warning} {noun}, no critical alerts"
+    yield_kg = summary.get("yield_this_week_kg")
+    if yield_kg is not None:
+        return f"All clear  —  {yield_kg:.1f} kg harvested this week"
+    return "All clear"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -321,12 +364,14 @@ class HomeDashboard(QFrame):
             "real_estate": self._build_real_estate_widget,
             "kraken_agent": self._build_kraken_agent_widget,
             "net_worth": self._build_net_worth_widget,
+            "homestead": self._build_homestead_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
             "mission": self._mission_highlight,
             "volume": self._volume_highlight,
             "current_project": self._current_project_highlight,
+            "homestead": self._homestead_highlight,
             # real_estate/kraken_agent/net_worth deliberately have no
             # highlight provider yet — same reasoning as
             # activity_log/quick_bus below: this is genuinely new,
@@ -633,6 +678,16 @@ class HomeDashboard(QFrame):
     def _build_net_worth_widget(self, descriptor: WidgetDescriptor) -> QWidget:
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["net_worth"] = body
+        return card
+
+    def _build_homestead_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        # No on_click — same reasoning as real_estate/kraken_agent
+        # above: no dedicated Homestead module/screen exists in this
+        # repo (the real detail view is mia-homestead's own
+        # viewer/dashboard.html, a separate project/machine, not
+        # something this dashboard opens).
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["homestead"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -969,6 +1024,27 @@ class HomeDashboard(QFrame):
         noun = "project" if count == 1 else "projects"
         return f"{count} {noun} in progress"
 
+    def _homestead_highlight(self) -> Optional[str]:
+        """Unlike the other finance-style snapshot widgets, this one
+        DOES get a highlight provider — a critical greenhouse alert is
+        exactly the kind of proactive, briefing-worthy fact
+        docs/VISION.md's Startup Dashboard Briefing exists for (unlike
+        net worth, which nothing about it is actionable at a glance).
+        Deliberately silent on warnings/all-clear/no-snapshot-yet —
+        only a real critical count is worth interrupting the briefing
+        for, same "silent unless it matters" restraint as the other
+        providers above returning None for their non-notable states."""
+        if self.context.homestead is None:
+            return None
+        snapshot = self.context.homestead.latest_snapshot(_HOMESTEAD_SOURCE)
+        if snapshot is None:
+            return None
+        critical = snapshot.data.get("summary", {}).get("critical_alert_count")
+        if not critical:
+            return None
+        noun = "critical alert" if critical == 1 else "critical alerts"
+        return f"{critical} {noun} at the greenhouse"
+
     def _widget_highlights(self) -> list[str]:
         """The briefing's dashboard-specific content — one highlight
         per currently-*enabled* widget that actually has something to
@@ -1279,6 +1355,8 @@ class HomeDashboard(QFrame):
             self._refresh_kraken_agent()
         if "net_worth" in self._widget_bodies:
             self._refresh_net_worth()
+        if "homestead" in self._widget_bodies:
+            self._refresh_homestead()
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
@@ -1291,6 +1369,10 @@ class HomeDashboard(QFrame):
     def _refresh_net_worth(self) -> None:
         snapshots = self.context.finance.all_latest_snapshots() if self.context.finance else []
         self._set_widget_body_text("net_worth", format_net_worth_line(snapshots))
+
+    def _refresh_homestead(self) -> None:
+        snapshot = self.context.homestead.latest_snapshot(_HOMESTEAD_SOURCE) if self.context.homestead else None
+        self._set_widget_body_text("homestead", format_homestead_line(snapshot))
 
     def _refresh_activity_log(self) -> None:
         entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []

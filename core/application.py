@@ -31,6 +31,7 @@ from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
 from core.finance_manager import FinanceManager
+from core.homestead_manager import HomesteadManager
 from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
@@ -204,6 +205,7 @@ class MIAApplication:
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
+        self.context.homestead = HomesteadManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
@@ -277,6 +279,19 @@ class MIAApplication:
         self._finance_snapshot_timer.timeout.connect(self._check_finance_snapshots)
         self._finance_snapshot_timer.start(60_000)
 
+        # Same "always alive for the whole app session" reasoning as
+        # the finance snapshot timer directly above — MIA Homestead's
+        # watched-folder state snapshot ingestion (core/homestead_manager.py)
+        # must pick up a dropped export regardless of which screen is
+        # open. Same 60s cadence, same reasoning: prompt enough without
+        # polling the filesystem needlessly often for what's normally a
+        # rare (manual) event — see mia-homestead's own
+        # docs/MIA_HOME_SYNC_PLAN.md for why delivery here isn't
+        # automated yet.
+        self._homestead_snapshot_timer = QTimer()
+        self._homestead_snapshot_timer.timeout.connect(self._check_homestead_snapshots)
+        self._homestead_snapshot_timer.start(60_000)
+
         # Same "always alive for the whole app session" reasoning as the
         # timers above — "MIA should assign me missions sometimes"
         # (docs/VISION.md's gamification goal) needs to fire regardless
@@ -308,6 +323,14 @@ class MIAApplication:
         for snapshot in newly_imported:
             self.context.notifications.notify(
                 "New financial snapshot imported",
+                f"Imported an updated snapshot from '{snapshot.source}'.",
+            )
+
+    def _check_homestead_snapshots(self) -> None:
+        newly_imported = self.context.homestead.scan_for_new_snapshots()
+        for snapshot in newly_imported:
+            self.context.notifications.notify(
+                "New homestead snapshot imported",
                 f"Imported an updated snapshot from '{snapshot.source}'.",
             )
 
@@ -480,6 +503,12 @@ class MIAApplication:
         self.context.dashboard_widgets.register(WidgetDescriptor("real_estate", "Real Estate", "\U0001F3D8"))
         self.context.dashboard_widgets.register(WidgetDescriptor("kraken_agent", "Kraken Agent", "\U0001F4C8"))
         self.context.dashboard_widgets.register(WidgetDescriptor("net_worth", "Net Worth", "\U0001F4B0"))
+        # 2026-08-30: MIA Homestead sync (see that repo's own
+        # docs/MIA_HOME_SYNC_PLAN.md) — same watched-folder snapshot
+        # pattern as the finance widgets above, over
+        # core/homestead_manager.py instead. Degrades the same way to
+        # "No snapshot imported yet" until a human drops an export in.
+        self.context.dashboard_widgets.register(WidgetDescriptor("homestead", "Homestead", "\U0001F33F"))
 
     def _register_assistant_actions(self) -> None:
         """

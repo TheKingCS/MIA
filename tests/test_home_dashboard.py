@@ -15,6 +15,7 @@ from datetime import date, datetime
 
 from core.activity_log_manager import ActivityLogEntry
 from core.finance_manager import FinancialSnapshot
+from core.homestead_manager import HomesteadSnapshot
 from core.mission_manager import Mission, Objective
 from core.power_manager import PowerStatus
 from core.project_manager import Project
@@ -25,6 +26,7 @@ from gui.home_dashboard import (
     format_clock_date,
     format_clock_time,
     format_current_project_line,
+    format_homestead_line,
     format_kraken_line,
     format_net_worth_line,
     format_power_line,
@@ -188,3 +190,64 @@ def test_format_net_worth_line_sums_multiple_sources():
         _snapshot("kraken_trading_agent", {"total_value": 8500}),
     ]
     assert format_net_worth_line(snapshots) == "$548,500  —  from 2 sources"
+
+
+def _homestead_snapshot(summary: dict, top_alert: dict | None = None) -> HomesteadSnapshot:
+    return HomesteadSnapshot(
+        source="mia_homestead", generated_at="2026-08-30T22:33:19Z", imported_at="2026-08-30T22:33:19Z",
+        data={"source": "mia_homestead", "summary": summary, "top_alert": top_alert},
+    )
+
+
+def test_format_homestead_line_no_snapshot():
+    assert format_homestead_line(None) == "No snapshot imported yet."
+
+
+def test_format_homestead_line_missing_summary():
+    snapshot = HomesteadSnapshot(
+        source="mia_homestead", generated_at="x", imported_at="x", data={"source": "mia_homestead"}
+    )
+    assert format_homestead_line(snapshot) == "Snapshot imported, but no summary data found."
+
+
+def test_format_homestead_line_all_clear_with_yield():
+    snapshot = _homestead_snapshot({"critical_alert_count": 0, "warning_alert_count": 0, "yield_this_week_kg": 7.4})
+    assert format_homestead_line(snapshot) == "All clear  —  7.4 kg harvested this week"
+
+
+def test_format_homestead_line_all_clear_no_yield_data():
+    snapshot = _homestead_snapshot({"critical_alert_count": 0, "warning_alert_count": 0})
+    assert format_homestead_line(snapshot) == "All clear"
+
+
+def test_format_homestead_line_warnings_only():
+    snapshot = _homestead_snapshot({"critical_alert_count": 0, "warning_alert_count": 2})
+    assert format_homestead_line(snapshot) == "2 warnings, no critical alerts"
+
+
+def test_format_homestead_line_single_warning_uses_singular_noun():
+    snapshot = _homestead_snapshot({"critical_alert_count": 0, "warning_alert_count": 1})
+    assert format_homestead_line(snapshot) == "1 warning, no critical alerts"
+
+
+def test_format_homestead_line_critical_leads_over_warning_and_yield():
+    snapshot = _homestead_snapshot(
+        {"critical_alert_count": 3, "warning_alert_count": 1, "yield_this_week_kg": 7.4},
+        top_alert={"severity": "critical", "source": "greenhouse_power", "message": "power fault"},
+    )
+    assert format_homestead_line(snapshot) == "3 critical alerts  —  power fault"
+
+
+def test_format_homestead_line_single_critical_uses_singular_noun():
+    snapshot = _homestead_snapshot({"critical_alert_count": 1, "warning_alert_count": 0})
+    assert format_homestead_line(snapshot) == "1 critical alert"
+
+
+def test_format_homestead_line_truncates_long_alert_message():
+    long_message = "x" * 80
+    snapshot = _homestead_snapshot(
+        {"critical_alert_count": 1, "warning_alert_count": 0},
+        top_alert={"severity": "critical", "source": "greenhouse_power", "message": long_message},
+    )
+    line = format_homestead_line(snapshot)
+    assert line == "1 critical alert  —  " + "x" * 57 + "..."

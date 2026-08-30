@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from core.device_help_manager import DeviceHelpManager
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
+    from core.homestead_manager import HomesteadManager
     from core.inventory_manager import InventoryManager
     from core.job_manager import JobManager
     from core.journal_manager import JournalManager
@@ -117,6 +118,7 @@ class AppContext:
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)
+    homestead: Optional["HomesteadManager"] = field(default=None, repr=False)
     workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)
     map_tiles: Optional["MapTileCache"] = field(default=None, repr=False)
     trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
