@@ -15,6 +15,7 @@ safety_mcu_protocol.md (TODO once MCU hardware is chosen). The Pi proposes
 actions; the MCU is the final authority on whether they execute.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -22,6 +23,8 @@ from enum import Enum
 from typing import Optional
 
 from contracts.capability import Capability, Describable
+
+logger = logging.getLogger("mia_homestead.contract")
 
 
 class Severity(str, Enum):
@@ -180,7 +183,35 @@ class MiaHomesteadModule(Describable, ABC):
         return []
 
     def _raise_alert(self, severity, message: str) -> None:
+        """Real bug fixed here (2026-08-30): this used to INSERT a
+        fresh row and dispatch a fresh notification EVERY call, even
+        for the exact same still-unresolved condition — a control loop
+        re-evaluating every cycle meant one ongoing problem spammed
+        dozens of identical alert rows and notifications. Now: an
+        unresolved alert with the same (source, message) gets its
+        occurrence_count bumped and last_seen touched instead of a new
+        row, and does NOT re-notify — the human/assistant already knows
+        about it. A genuinely new/different message still inserts and
+        notifies exactly as before. `timestamp` is deliberately never
+        updated on a repeat — core/backup_manager.py's post-update
+        critical-alert-spike check reads `timestamp >= applied_at` to
+        mean "genuinely new since this change", and repeat occurrences
+        of a pre-existing condition must not count toward that."""
         sev = severity.value if isinstance(severity, Severity) else severity
+        existing = self.db.execute(
+            "SELECT id FROM alerts WHERE resolved = 0 AND source = ? AND message = ? "
+            "ORDER BY id DESC LIMIT 1",
+            (self.module_id, message),
+        ).fetchone()
+        if existing is not None:
+            self.db.execute(
+                "UPDATE alerts SET occurrence_count = occurrence_count + 1, "
+                "last_seen = datetime('now') WHERE id = ?",
+                (existing[0],),
+            )
+            self.db.commit()
+            logger.debug("Alert still ongoing, not re-notifying: %s: %s", self.module_id, message)
+            return
         self.db.execute(
             "INSERT INTO alerts (severity, source, message) VALUES (?, ?, ?)",
             (sev, self.module_id, message),

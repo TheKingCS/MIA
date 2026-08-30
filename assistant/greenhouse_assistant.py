@@ -958,7 +958,7 @@ class _BaseGreenhouseAssistant:
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}
-        query = "SELECT * FROM alerts WHERE resolved = 0 ORDER BY timestamp DESC LIMIT 20"
+        query = "SELECT * FROM alerts WHERE resolved = 0 ORDER BY last_seen DESC LIMIT 20"
         rows = [dict(r) for r in self.db.execute(query).fetchall()]
         if min_severity:
             rows = [r for r in rows if order.get(r["severity"], 0) >= order[min_severity]]

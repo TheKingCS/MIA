@@ -49,31 +49,18 @@ def _cell_slug(name: str) -> str:
     return "cell_" + re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 
-def _deduped_open_alerts(conn: sqlite3.Connection) -> list[dict]:
-    """Same collapse-by-(source, message) logic as
-    export_dashboard_state.py, kept independent rather than imported —
-    this script needs only the resulting counts/top alert, not the
-    full ranked top-10 list the dashboard renders."""
-    raw = conn.execute(
-        "SELECT * FROM alerts WHERE resolved = 0 ORDER BY timestamp DESC"
-    ).fetchall()
-    seen: dict[tuple, dict] = {}
-    for r in raw:
-        key = (r["source"], r["message"])
-        if key not in seen:
-            seen[key] = {**dict(r), "repeat_count": 1}
-        else:
-            seen[key]["repeat_count"] += 1
-    return list(seen.values())
-
-
 def export_home_snapshot(db_path: str, out_path: str) -> None:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    alerts = _deduped_open_alerts(conn)
-    severity_order = {"critical": 0, "warning": 1, "info": 2}
-    alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
+    # Alerts are de-duplicated at the source (contracts/
+    # mia_homestead_contract.py's _raise_alert()) — one row per distinct
+    # (source, message) while unresolved, occurrence_count tracks
+    # repeats — no Python-side collapsing needed here anymore.
+    alerts = [dict(r) for r in conn.execute(
+        "SELECT * FROM alerts WHERE resolved = 0 ORDER BY "
+        "CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, last_seen DESC"
+    ).fetchall()]
 
     critical_count = sum(1 for a in alerts if a["severity"] == "critical")
     warning_count = sum(1 for a in alerts if a["severity"] == "warning")
@@ -84,7 +71,7 @@ def export_home_snapshot(db_path: str, out_path: str) -> None:
             "severity": top["severity"],
             "source": top["source"],
             "message": top["message"],
-            "repeat_count": top["repeat_count"],
+            "repeat_count": top["occurrence_count"],
         }
 
     yield_events_7d = conn.execute(

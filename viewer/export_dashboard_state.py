@@ -68,25 +68,20 @@ def export_dashboard_state(db_path: str, out_path: str) -> None:
         cells.append({"id": cell_id, "name": cell["name"], "readings": readings})
     output["cells"] = cells
 
-    # The alerting module doesn't de-dupe repeated identical alerts (a
-    # real gap, out of scope here) — an unresolved condition logs a new
-    # row every control cycle. Collapse by (source, message) so the
-    # dashboard shows one card per distinct condition with a repeat
-    # count, not a wall of near-identical rows.
-    raw_alerts = conn.execute(
-        "SELECT * FROM alerts WHERE resolved = 0 ORDER BY timestamp DESC"
-    ).fetchall()
-    seen = {}
-    for r in raw_alerts:
-        key = (r["source"], r["message"])
-        if key not in seen:
-            seen[key] = {**dict(r), "repeat_count": 1}
-        else:
-            seen[key]["repeat_count"] += 1
-    order = {"critical": 0, "warning": 1, "info": 2}
-    deduped = sorted(seen.values(), key=lambda a: a["timestamp"], reverse=True)
-    deduped.sort(key=lambda a: order.get(a["severity"], 3))
-    output["alerts"] = deduped[:10]
+    # Alerts are de-duplicated at the source now (contracts/
+    # mia_homestead_contract.py's _raise_alert() bumps occurrence_count
+    # instead of re-inserting a repeat) — one row per distinct
+    # (source, message) while unresolved, so this just orders and caps,
+    # no Python-side collapsing needed. Ordered by last_seen (most
+    # recently relevant first), severity-primary.
+    output["alerts"] = [
+        {**dict(r), "repeat_count": r["occurrence_count"]}
+        for r in conn.execute(
+            "SELECT * FROM alerts WHERE resolved = 0 ORDER BY "
+            "CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, "
+            "last_seen DESC LIMIT 10"
+        ).fetchall()
+    ]
 
     yield_events_7d = [
         dict(r) for r in conn.execute(

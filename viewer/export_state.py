@@ -30,7 +30,7 @@ def object_status(conn: sqlite3.Connection, module_id: str) -> dict:
     row = conn.execute(
         "SELECT severity, message FROM alerts WHERE resolved = 0 AND source = ? "
         "ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, "
-        "timestamp DESC LIMIT 1",
+        "last_seen DESC LIMIT 1",
         (module_id,),
     ).fetchone()
     if not row:

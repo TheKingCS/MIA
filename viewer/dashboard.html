@@ -434,7 +434,7 @@ function renderAlerts(data) {
         el("span", { class: "status-dot " + dotClass, style: "margin-top:4px;" }, []),
         el("div", {}, [
           el("div", { class: "line1" }, [a.message + repeat]),
-          el("div", { class: "line2" }, [`${a.source} · ${timeAgo(a.timestamp)} · ${a.acknowledged ? "acknowledged" : "unacknowledged"}`]),
+          el("div", { class: "line2" }, [`${a.source} · ${timeAgo(a.last_seen || a.timestamp)} · ${a.acknowledged ? "acknowledged" : "unacknowledged"}`]),
         ]),
       ]),
     ]));

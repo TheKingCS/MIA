@@ -151,10 +151,21 @@ CREATE TABLE yield_events (
 
 CREATE TABLE alerts (
     id INTEGER PRIMARY KEY,
-    timestamp TEXT DEFAULT (datetime('now')),
+    timestamp TEXT DEFAULT (datetime('now')),  -- when this condition FIRST fired — never
+                                         -- updated on repeat, so backup_manager's
+                                         -- "critical alerts since applied_at" spike
+                                         -- check keeps meaning "genuinely new since
+                                         -- the change", not "still-ongoing pre-existing
+                                         -- issue re-counted"
     severity TEXT NOT NULL,             -- 'info','warning','critical'
     source TEXT,                        -- cell/sensor/actuator ref, free text
     message TEXT NOT NULL,
+    occurrence_count INTEGER DEFAULT 1, -- bumped, not re-inserted, each time the same
+                                         -- (source, message) fires again while still
+                                         -- unresolved — see contract._raise_alert()
+    last_seen TEXT DEFAULT (datetime('now')),  -- most recent occurrence; use this for
+                                         -- "what's relevant right now" ordering,
+                                         -- timestamp for "when did this start"
     acknowledged INTEGER DEFAULT 0,
     acknowledged_at TEXT,
     resolved INTEGER DEFAULT 0,
