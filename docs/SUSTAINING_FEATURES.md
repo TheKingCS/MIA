@@ -313,7 +313,29 @@ instead of nothing.
 **Effort:** small-medium — same pattern as the biofilter model, mostly
 a new table + a service + an assistant tool.
 
-## 15. Fast water-loss / leak detection — not yet built
+## 15. Fast water-loss / leak detection — DONE (2026-08-31)
+Built as `core/leak_detector.py`, called every control-loop cycle from
+`main.py` — deliberately NOT gated to the 60-cycle periodic block every
+other periodic check uses, since detecting within one cycle (not up to
+60 cycles later) is the entire point. Computes rate from real
+wall-clock timestamps between the two most recent `level` readings, not
+a reading-count/tick basis — correct regardless of poll cadence, and
+deliberately decoupled from `drivers/physics_sim.py`'s own evaporation
+simulation, which is a compressed-for-testing rate (~0.24 in/min in
+simulated time), not a real physical one. Threshold (0.02 in/min, ~30x
+a realistic real-world evaporation upper bound) is a real,
+physically-grounded starting point, honestly not yet calibrated
+against real tank geometry, same as `dosing_limits`' own placeholder
+values. Raises CRITICAL (not WARNING) per `SAFETY_SPEC.md`'s own
+explicit framing of water level as a critical-tier condition. New
+`get_leak_status` assistant tool (`status` domain, always-on). Verified
+via `scenarios.py::scenario_leak_detection` (4 checks: a slow
+evaporation-plausible drop over a real 10-minute gap stays silent, a
+fast drop over a real 2-minute gap raises a real CRITICAL alert, a
+level RISE never falsely triggers regardless of magnitude) and a live
+smoke test against the real running system. Original brainstorm text
+kept below for context.
+
 **Problem it solves:** `core/trend_analyzer.py` catches SLOW drift
 against a rolling baseline — it's not built to catch a sudden leak (a
 level sensor dropping fast, right now, not over a multi-reading
@@ -369,20 +391,22 @@ modules, not new tracking.
 
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14 — see
-each entry above for what actually implements it and how it was
-verified. Every item in the originally-picked roadmap is now built.
+**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15 —
+see each entry above for what actually implements it and how it was
+verified. Every item in the originally-picked roadmap is now built,
+and both items this conversation called genuinely necessary (#14, #15)
+are done.
 
 **Newly added 2026-08-31, roughly in priority order** (per a conversation
 about what's still missing for this to be genuinely "useful and
-necessary," not just more of what's already built): **#14 (fish health/
-mortality/feeding tracking) — DONE**, see above. **#15 (fast leak
-detection)** is the other item called genuinely necessary — both are
-about preventing the kind of loss that erodes trust in an unattended
-system, which is the whole premise here. Next up. **#16 (pest/disease
-log)** and **#17 (weather-aware alerts)** are strong seconds. **#18
-(cost accounting)** matters more once selling commercially than for a
-homestead.
+necessary," not just more of what's already built): **#14 (fish
+health/mortality/feeding tracking) — DONE** and **#15 (fast leak
+detection) — DONE**, see above — both were about preventing the kind
+of loss that erodes trust in an unattended system, which is the whole
+premise here. **#16 (pest/disease log)** and **#17 (weather-aware
+alerts)** are strong seconds, not yet built. **#18 (cost accounting)**
+matters more once selling commercially than for a homestead, not yet
+built.
 
 **Still genuinely open from the original roadmap — both correctly
 gated on real hardware/data that doesn't exist yet, not software

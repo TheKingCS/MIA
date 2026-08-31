@@ -717,6 +717,64 @@ def scenario_fish_health_tracking():
     return checks
 
 
+def scenario_leak_detection():
+    """A water level dropping far faster than evaporation could explain
+    should raise a real CRITICAL alert within one check — not the
+    up-to-60-cycle delay every other periodic check tolerates. Uses
+    real wall-clock timestamps (not simulator ticks), so this scenario
+    directly controls elapsed time rather than relying on the
+    simulator's own deliberately-compressed evaporation rate."""
+    from core.leak_detector import LeakDetector
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    ld = LeakDetector(conn)
+
+    level_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'level'", (cell_id,)
+    ).fetchone()[0]
+
+    def seed_two_readings(older_value, newer_value, minutes_apart):
+        conn.execute("DELETE FROM sensor_readings WHERE sensor_id = ?", (level_sensor_id,))
+        older_ts = (datetime.utcnow() - timedelta(minutes=minutes_apart)).isoformat(sep=" ")
+        newer_ts = datetime.utcnow().isoformat(sep=" ")
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, timestamp) VALUES (?, ?, ?)",
+            (level_sensor_id, older_value, older_ts),
+        )
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, timestamp) VALUES (?, ?, ?)",
+            (level_sensor_id, newer_value, newer_ts),
+        )
+        conn.commit()
+
+    # ---- Slow, evaporation-plausible drop over a real 10-minute gap ----
+    seed_two_readings(older_value=24.0, newer_value=23.98, minutes_apart=10)  # 0.002 in/min
+    slow_findings = ld.check_for_leaks()
+
+    # ---- Fast drop over a real 2-minute gap — well past the threshold ----
+    seed_two_readings(older_value=24.0, newer_value=22.5, minutes_apart=2)  # 0.75 in/min
+    fast_findings = ld.check_for_leaks()
+    critical_alert = conn.execute(
+        "SELECT severity, message FROM alerts WHERE source = 'leak_detector' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+
+    # ---- A level RISE (e.g. after a refill) should never falsely trigger ----
+    seed_two_readings(older_value=20.0, newer_value=24.0, minutes_apart=2)  # rising, not falling
+    rise_findings = ld.check_for_leaks()
+
+    checks = [
+        ("a slow, evaporation-plausible drop does NOT trigger", len(slow_findings) == 0),
+        ("a fast, leak-implausible drop DOES trigger", len(fast_findings) == 1
+         and fast_findings[0]["cell_id"] == cell_id),
+        ("the fast-drop alert is real and CRITICAL severity",
+         critical_alert is not None and critical_alert[0] == "critical"),
+        ("a level RISE never falsely triggers, regardless of magnitude", len(rise_findings) == 0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -730,6 +788,7 @@ SCENARIOS = {
     "biofilter_cycle_tracking": scenario_biofilter_cycle_tracking,
     "sensor_confidence": scenario_sensor_confidence,
     "fish_health_tracking": scenario_fish_health_tracking,
+    "leak_detection": scenario_leak_detection,
 }
 
 

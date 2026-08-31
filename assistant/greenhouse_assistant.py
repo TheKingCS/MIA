@@ -97,6 +97,20 @@ TOOLS = [
         },
     },
     {
+        "name": "get_leak_status",
+        "description": (
+            "Get the current water-level drop rate for every cell (or one cell), and whether it "
+            "crosses the fast-leak threshold — distinct from get_sensor_trends' slow-drift "
+            "signal, this catches a sudden leak within one control cycle."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer", "description": "Optional cell ID"},
+            },
+        },
+    },
+    {
         "name": "get_open_alerts",
         "description": "Get all unresolved alerts, optionally filtered by minimum severity.",
         "input_schema": {
@@ -777,6 +791,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_current_status": "status",
     "get_sensor_trends": "status",
     "get_sensor_confidence": "status",
+    "get_leak_status": "status",
     "get_open_alerts": "status",
     "get_power_status": "status",
     "get_power_forecast": "status",
@@ -1190,6 +1205,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_sensor_confidence(self, cell_id: int | None = None) -> dict:
         from core.sensor_confidence import SensorConfidence
         return {"confidence": SensorConfidence(self.db).get_all_confidence(cell_id)}
+
+    def _tool_get_leak_status(self, cell_id: int | None = None) -> dict:
+        from core.leak_detector import LeakDetector
+        return {"level_readings": LeakDetector(self.db).get_leak_status(cell_id)}
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}

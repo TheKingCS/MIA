@@ -47,6 +47,7 @@ from core.activity_journal import ActivityJournal
 from core.biofilter_model import BiofilterModel
 from core.sensor_confidence import SensorConfidence
 from core.fish_health import FishHealth
+from core.leak_detector import LeakDetector
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -136,6 +137,7 @@ def main():
     biofilter = BiofilterModel(db, notifier=notifier)
     sensor_confidence = SensorConfidence(db)
     fish_health = FishHealth(db, notifier=notifier)
+    leak_detector = LeakDetector(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -150,7 +152,7 @@ def main():
         (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
         (deploys, "deploy_manager"), (journal, "activity_journal"),
         (biofilter, "biofilter_model"), (sensor_confidence, "sensor_confidence"),
-        (fish_health, "fish_health"),
+        (fish_health, "fish_health"), (leak_detector, "leak_detector"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -195,6 +197,14 @@ def main():
             if newly_diagnosed:
                 logger.info("Auto-diagnosed %d new alert(s): %s", len(newly_diagnosed),
                             [d.get("likely_cause") for d in newly_diagnosed])
+
+            # Also every cycle, not gated to the 60-cycle block below — a
+            # real leak needs detection within one cycle, not up to 60
+            # cycles later; that delay is the whole gap this module exists
+            # to close (see core/leak_detector.py's own docstring).
+            leak_findings = leak_detector.check_for_leaks()
+            if leak_findings:
+                logger.critical("Possible leak detected in %d cell(s)", len(leak_findings))
 
             # Maintenance/calibration/reorder checks don't need to run every
             # cycle — every 60 cycles is plenty (tune once real interval is set)
