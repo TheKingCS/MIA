@@ -163,7 +163,7 @@ mia-homestead/
 - Working aquaponics cell control logic — confirmed via scenario tests
 - Working power monitor — confirmed via scenario tests
 - Modular registry — proven pattern for adding cells/arrays/subsystems
-- Notification dispatch (email working now; SMS stubbed honestly)
+- Notification dispatch (email + SMS via free carrier email-gateway, both working — see punch-list item #3)
 - **Sensor simulator + closed-loop physics simulator** — proven via a
   full scenario regression suite (7/7 passing, including a real bug
   found and fixed during testing)
@@ -306,14 +306,16 @@ mia-homestead/
    especially the actuator-ID-to-pin mapping, which needs resolving
    first.
 2. Real dosing limit values, once dosing pump hardware is chosen and tested
-3. **SMS wiring** — corrected 2026-08-30: not a Twilio/vendor-API
-   dependency, per the project's own no-outside-dependency stance. Two
-   vendor-free options instead: a carrier email-to-SMS gateway (free,
-   reuses the notification system's already-working SMTP, no
-   signup/API key — e.g. `number@vtext.com`) or a USB GSM modem with a
-   prepaid SIM the owner holds outright (real hardware, no recurring
-   account). Prefer the email gateway first — it's zero new
-   infrastructure.
+3. ~~SMS wiring~~ — **done 2026-08-31** (`core/notifications.py`,
+   `CARRIER_SMS_GATEWAYS`). Corrected 2026-08-30 from an original
+   Twilio/vendor-API-shaped stub, per this project's own
+   no-outside-dependency stance — ships via a free carrier
+   email-to-SMS gateway instead, reusing the already-working SMTP
+   path with zero new account/API key. Set
+   `primary_contact_phone`/`primary_contact_carrier` (a key like
+   `"verizon"`/`"att"`/`"tmobile"`) in `NotificationConfig`. A USB GSM
+   modem with a prepaid SIM remains a real hardware alternative later
+   if gateway reliability ever becomes a problem — not needed now.
 4. **Real ordering integration** — corrected 2026-08-30: this was
    mischaracterized as needing a live vendor checkout API. It doesn't,
    and shouldn't — `approve_order` only flips a status, and the actual
@@ -337,14 +339,13 @@ mia-homestead/
    Ryzen/Radeon desktop's watched folder — deliberately left manual for
    now, matching how MIA Home's other two snapshot sources already work.
 8. ~~Local web UI for the on-site dashboard~~ — **done** (2026-08-30),
-   see `viewer/dashboard.html` above. Real gap this surfaced, not yet
-   fixed: `power_telemetry` has no driver at all (neither the
-   simulator nor real hardware writes it), so `greenhouse_power` and
-   `greenhouse_self_preservation` log a genuine recurring critical
-   "sensors stale" alert on every control cycle right now — not a
-   dashboard bug, an honest reflection of a real gap. Also found: the
-   alerting module never de-dupes identical repeated alerts (worked
-   around at export time for the dashboard, not fixed at the source).
+   see `viewer/dashboard.html` above. Two real gaps this surfaced were
+   both fixed in later commits, not left open: `power_telemetry` had
+   no driver at all — fixed 2026-08-30 (`drivers/simulator.py` now
+   simulates a solar/battery array); the alerting module never
+   de-duped identical repeated alerts — fixed at the actual source
+   2026-08-30/31 (`contracts/mia_homestead_contract.py`'s
+   `raise_alert()`), not just worked around at export time anymore.
 
 ## Full simulation-first workflow (no hardware required)
 
