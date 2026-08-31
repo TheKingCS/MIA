@@ -170,6 +170,42 @@ class DeviceRegistry(Describable):
                 )
         self.db.commit()
 
+    def build_pair_confirm_payload(self, role: str, cell_id: int) -> dict:
+        """Constructs the real pair_confirm message body (see
+        docs/MCU_PROTOCOL.md) for a role/cell — controls carries each
+        actuator's REAL DB id alongside its name, not just the name, so
+        firmware's findActuatorSlotById() can do a real lookup instead
+        of assuming the Pi's actuator_id happens to equal a fixed slot
+        index (real bug, fixed 2026-08-31 — see
+        firmware/safety_mcu/README.md). Reuses the same actuators
+        _ensure_actuators_exist() already creates/looks up, so this is
+        always the real, current DB state, never invented ids.
+
+        Constructs the payload only — does NOT send it. No serial
+        transport is implemented yet (no real MCU hardware exists to
+        pair with); see MCU_PROTOCOL.md's own open items. This exists so
+        the payload is correct and ready the moment a transport layer
+        is built, rather than deferring the id-mapping question to then."""
+        if role not in self.roles:
+            raise ValueError(f"Unknown role '{role}'. Available: {list(self.roles.keys())}")
+        role_def = self.roles[role]
+
+        controls = []
+        for control in role_def.get("controls", []):
+            row = self.db.execute(
+                "SELECT id FROM actuators WHERE cell_id = ? AND name = ?",
+                (cell_id, control["actuator_name"]),
+            ).fetchone()
+            if row is None:
+                raise ValueError(
+                    f"Actuator '{control['actuator_name']}' for role '{role}' cell {cell_id} "
+                    f"doesn't exist yet — pair the device first (creates it) before building "
+                    f"this payload."
+                )
+            controls.append({"actuator_id": row[0], "name": control["actuator_name"]})
+
+        return {"type": "pair_confirm", "role": role, "cell_id": cell_id, "controls": controls}
+
     def list_unpaired(self) -> list[dict]:
         rows = self.db.execute(
             "SELECT hardware_id, role, first_seen FROM device_registrations WHERE status = 'needs_attention'"
@@ -199,6 +235,9 @@ class DeviceRegistry(Describable):
             actions_possible=[
                 "pair a device to a role", "give plain-language setup instructions for a role",
                 "auto-create the actuators a newly paired device controls",
+                "build the real pair_confirm wire payload for a role/cell, carrying each "
+                "actuator's real DB id (not a placeholder/index) so firmware can map "
+                "actuator_id to the correct physical pin",
             ],
             limits_and_safety=(
                 "Never auto-pairs an ambiguous or role-conflicting device — "
@@ -215,6 +254,14 @@ class DeviceRegistry(Describable):
                 "Live manual test 2026-08-26: confirmed a device announcing a known unclaimed "
                 "role auto-pairs and its actuators get created automatically; confirmed an "
                 "ambiguous/unlabeled device correctly queues for a human instead of guessing",
+                "scenarios.py::scenario_pair_confirm_payload_real_ids (2026-08-31): deliberately "
+                "inserted actuators out of order (7 padding rows before the real ones) and "
+                "confirmed build_pair_confirm_payload() returns the REAL DB actuator ids (>3, "
+                "not a coincidental 0/1 match) — proves the fix to firmware's "
+                "findActuatorSlotById() (formerly an index-assumption placeholder, see "
+                "firmware/safety_mcu/README.md) is fed correct data, not just correct in theory. "
+                "Real serial transmission of this payload remains untested — no MCU hardware "
+                "exists yet to send it to.",
             ],
         )
 

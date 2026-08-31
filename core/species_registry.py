@@ -197,22 +197,67 @@ class SpeciesRegistry(Describable):
         self.db.commit()
         return cur.lastrowid
 
-    def refine_from_experiment(self, species_id: int, param_name: str, new_value: float) -> None:
-        """Called when a completed experiment produces strong enough
-        evidence to update the species knowledge base itself, not just
-        one cell's target. Flips source to 'experiment_derived' so it's
-        always clear this number was earned, not looked up."""
+    def refine_from_experiment(self, species_id: int, param_name: str, new_value: float,
+                                evidence_note: str = None) -> bool:
+        """Called when a completed AND human-approved experiment produces
+        real evidence about a species, not just one cell's target
+        (core/experiment_manager.py's approve_parameter_change()) —
+        this is what makes the species knowledge base itself improve
+        from confirmed results, benefiting every future cell/planting of
+        that species, not just the one cell the experiment ran on.
+
+        Self-gating, deliberately: only ever EXTENDS the known-good range
+        (a lower value than the current _min, or a higher value than the
+        current _max), never narrows it. A single before/after comparison
+        moving a value further INTO the already-documented range doesn't
+        teach anything new about the species — it's just fixing one
+        cell's config drift toward what's already known, and blindly
+        overwriting on every call would let one N=1 result silently
+        narrow a range that took several observations to establish.
+        Returns True if it actually updated something, False if the new
+        value didn't extend the range (nothing changed).
+
+        Flips source to 'experiment_derived' so it's always clear this
+        number was earned, not looked up, and appends evidence_note to
+        notes for a human-readable trail of which experiment/cell/result
+        justified the change."""
         column = {"ph_min": "ph_min", "ph_max": "ph_max",
                   "ec_min": "ec_min", "ec_max": "ec_max"}.get(param_name)
         if not column:
-            return
+            return False
+
+        row = self.db.execute(
+            f"SELECT {column}, notes FROM species_profiles WHERE id = ?", (species_id,)
+        ).fetchone()
+        if not row:
+            return False
+        current_value, current_notes = row
+
+        is_min = param_name.endswith("_min")
+        extends_range = (
+            current_value is None
+            or (is_min and new_value < current_value)
+            or (not is_min and new_value > current_value)
+        )
+        if not extends_range:
+            logger.debug(
+                "Species %s %s=%.2f did not extend current range (%.2f) — not updated",
+                species_id, param_name, new_value, current_value if current_value is not None else float("nan"),
+            )
+            return False
+
+        new_notes = current_notes or ""
+        if evidence_note:
+            new_notes = f"{new_notes}\n{evidence_note}".strip()
+
         self.db.execute(
             f"UPDATE species_profiles SET {column} = ?, source = 'experiment_derived', "
-            f"updated_at = datetime('now') WHERE id = ?",
-            (new_value, species_id),
+            f"notes = ?, updated_at = datetime('now') WHERE id = ?",
+            (new_value, new_notes, species_id),
         )
         self.db.commit()
         logger.info("Species %s %s updated to %.2f from experiment evidence", species_id, param_name, new_value)
+        return True
 
     def describe_capabilities(self):
         from contracts.capability import Capability
@@ -235,6 +280,15 @@ class SpeciesRegistry(Describable):
             verification_evidence=[
                 "Live manual test 2026-08-26: confirmed baseline seeding produces 3 correct "
                 "species profiles (lettuce, basil, tilapia) with real horticultural ranges",
+                "Correction 2026-08-31: refine_from_experiment() itself had NO real verification "
+                "evidence despite being named in actions_possible since it was written — the "
+                "entry above only ever proved baseline seeding. It also existed unwired (never "
+                "called from anywhere) until this date. Real evidence now: "
+                "scenarios.py::scenario_closed_loop_species_learning confirms a genuinely "
+                "range-extending value updates ec_max and flips source to 'experiment_derived', "
+                "and confirms the self-gating gate correctly REFUSES a value that doesn't extend "
+                "the range (returns False, no update) — the never-narrow guarantee this method's "
+                "own docstring promises.",
             ],
         )
 

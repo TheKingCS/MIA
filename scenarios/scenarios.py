@@ -14,6 +14,7 @@ Usage:
 import argparse
 import sqlite3
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -329,6 +330,163 @@ def scenario_multi_cell_fault_correlation():
     return checks
 
 
+def scenario_closed_loop_species_learning():
+    """A confirmed, human-approved experiment result on cell_a should
+    both (a) extend the species' own knowledge base, not just that one
+    cell's target, and (b) automatically inform a LATER proactive
+    proposal on a completely different cell (pilot_cell) growing the
+    same species — proving the closed loop actually closes, not just
+    that refine_from_experiment() works in isolation."""
+    from drivers.simulator import setup_pilot_cell
+    from core.species_registry import SpeciesRegistry
+    from core.bed_planting import BedPlantingManager
+    from core.experiment_manager import ExperimentManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_a_id = setup_demo_cell(conn)
+    pilot_id = setup_pilot_cell(conn)
+
+    species_registry = SpeciesRegistry(conn)
+    lettuce = species_registry.find_by_name("Lettuce")
+    lettuce_id = lettuce["id"]
+    baseline_ec_max = lettuce["ec_max"]  # 1400 per BASELINE_SPECIES
+
+    planting_mgr = BedPlantingManager(conn, species_registry)
+    experiments = ExperimentManager(conn, species_registry=species_registry)
+
+    # ---- Cell A: run a real experiment to a confirmed, approved result ----
+    planting_mgr.plant(
+        grow_bed_name="Cell A Tray", cell_id=cell_a_id, species_id=lettuce_id,
+        expected_harvest_date=(datetime.utcnow() + timedelta(days=25)).isoformat(),
+        expected_yield_amount=20, expected_yield_unit="heads",
+    )
+
+    exp_id = experiments.propose_experiment(
+        cell_id=cell_a_id, hypothesis="test EC above species baseline max",
+        variable_changed="ec_target_max", baseline_value=1500, test_value=1600,
+        duration_days=1,
+    )
+    experiments.start_experiment(exp_id)
+    started_at = (datetime.utcnow() - timedelta(days=1)).isoformat()
+    conn.execute("UPDATE experiments SET started_at = ? WHERE id = ?", (started_at, exp_id))
+    conn.commit()
+
+    # Before window (baseline yield, lower) and during window (higher —
+    # a real +40% improvement, comfortably past the >10% "adopt" bar).
+    before_ts = (datetime.utcnow() - timedelta(days=5)).isoformat()
+    during_ts = (datetime.utcnow() - timedelta(hours=2)).isoformat()
+    for ts, qty in [(before_ts, 10), (before_ts, 10), (during_ts, 14), (during_ts, 14)]:
+        conn.execute(
+            "INSERT INTO yield_events (cell_id, timestamp, yield_type, item, quantity) "
+            "VALUES (?, ?, 'harvest_produce', 'lettuce', ?)",
+            (cell_a_id, ts, qty),
+        )
+    conn.commit()
+
+    result = experiments.complete_experiment(exp_id)
+    proposal = conn.execute(
+        "SELECT id FROM parameter_change_proposals WHERE experiment_id = ?", (exp_id,)
+    ).fetchone()
+    experiments.approve_parameter_change(proposal[0])
+
+    refined = species_registry.get_profile(lettuce_id)
+
+    # ---- Pilot cell: a different cell, same species, underperforming ----
+    planting_mgr.plant(
+        grow_bed_name="Pilot Tray", cell_id=pilot_id, species_id=lettuce_id,
+        expected_harvest_date=(datetime.utcnow() + timedelta(days=15)).isoformat(),
+        expected_yield_amount=10, expected_yield_unit="heads",
+    )
+    conn.execute(
+        "UPDATE bed_plantings SET planted_date = ? WHERE cell_id = ?",
+        ((datetime.utcnow() - timedelta(days=20)).isoformat(), pilot_id),
+    )
+    conn.commit()
+
+    proposed_ids = experiments.propose_experiments_for_underperformance(species_registry, str(CONFIG_PATH))
+    pilot_experiment = conn.execute(
+        "SELECT test_value, hypothesis FROM experiments WHERE id IN ({})".format(
+            ",".join("?" * len(proposed_ids))
+        ) if proposed_ids else "SELECT test_value, hypothesis FROM experiments WHERE 0",
+        proposed_ids,
+    ).fetchone()
+
+    # ---- Never-narrow guarantee ----
+    narrow_attempt = species_registry.refine_from_experiment(lettuce_id, "ec_max", 1450)  # inside 1600, not extending
+
+    checks = [
+        ("experiment result was 'adopt' (real +40% yield improvement)", result["suggestion"] == "adopt"),
+        ("species ec_max actually extended past the old baseline (1400 -> beyond)",
+         refined["ec_max"] is not None and refined["ec_max"] > baseline_ec_max),
+        ("species source flipped to 'experiment_derived'", refined["source"] == "experiment_derived"),
+        ("a proposal was made for the underperforming pilot planting", len(proposed_ids) == 1),
+        ("the pilot proposal's test_value matches the NEWLY refined midpoint, not the stale baseline",
+         pilot_experiment is not None
+         and abs(pilot_experiment[0] - (refined["ec_min"] + refined["ec_max"]) / 2) < 0.01),
+        ("the pilot proposal's hypothesis cites the confirmed evidence, not a generic lookup",
+         pilot_experiment is not None and "CONFIRMED EXPERIMENT RESULT" in pilot_experiment[1]),
+        ("refine_from_experiment refuses to narrow the range (returns False, no update)",
+         narrow_attempt is False and species_registry.get_profile(lettuce_id)["ec_max"] == refined["ec_max"]),
+    ]
+    return checks
+
+
+def scenario_pair_confirm_payload_real_ids():
+    """The pair_confirm payload firmware relies on to map actuator_id ->
+    physical pin must carry the REAL DB actuator ids, not ids that
+    happen to be sequential/small by coincidence. Deliberately inserts
+    unrelated actuator rows first so the role's own actuators get
+    non-trivial, out-of-order ids — a test that only passes if the
+    lookup is real, not an accidental match against a 0/1/2 assumption."""
+    from core.device_registry import DeviceRegistry
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+
+    # Deliberately clear what setup_demo_cell already created, then
+    # rebuild with padding rows first so ph_up/ph_down land on ids that
+    # do NOT match the old index-assumption bug (which would silently
+    # "work" only when ids happen to start at 0/1).
+    conn.execute("DELETE FROM actuators WHERE cell_id = ?", (cell_id,))
+    conn.commit()
+    for i in range(7):
+        conn.execute(
+            "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'valve', ?, 'off')",
+            (cell_id, f"padding_actuator_{i}"),
+        )
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'dosing_pump', 'ph_up_pump', 'off')",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'dosing_pump', 'ph_down_pump', 'off')",
+        (cell_id,),
+    )
+    conn.commit()
+
+    real_ph_up_id = conn.execute(
+        "SELECT id FROM actuators WHERE cell_id = ? AND name = 'ph_up_pump'", (cell_id,)
+    ).fetchone()[0]
+    real_ph_down_id = conn.execute(
+        "SELECT id FROM actuators WHERE cell_id = ? AND name = 'ph_down_pump'", (cell_id,)
+    ).fetchone()[0]
+
+    dr = DeviceRegistry(conn)
+    payload = dr.build_pair_confirm_payload("ph_dosing_mcu", cell_id)
+    by_name = {c["name"]: c["actuator_id"] for c in payload["controls"]}
+
+    checks = [
+        ("ph_up_pump's actuator_id is the real DB id, well past a 0/1 assumption",
+         by_name.get("ph_up_pump") == real_ph_up_id and real_ph_up_id > 3),
+        ("ph_down_pump's actuator_id is the real DB id, well past a 0/1 assumption",
+         by_name.get("ph_down_pump") == real_ph_down_id and real_ph_down_id > 3),
+        ("payload has the right message shape", payload["type"] == "pair_confirm" and payload["cell_id"] == cell_id),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -337,6 +495,8 @@ SCENARIOS = {
     "sensor_recovery_ladder_recovers": scenario_sensor_recovery_ladder_recovers,
     "sensor_recovery_exhausted_escalates": scenario_sensor_recovery_exhausted_escalates,
     "multi_cell_fault_correlation": scenario_multi_cell_fault_correlation,
+    "closed_loop_species_learning": scenario_closed_loop_species_learning,
+    "pair_confirm_payload_real_ids": scenario_pair_confirm_payload_real_ids,
 }
 
 

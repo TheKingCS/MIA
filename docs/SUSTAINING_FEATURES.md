@@ -162,15 +162,66 @@ the existing notification path. Almost entirely a matter of composing
 existing data sources — the hard infrastructure work is already done.
 **Effort:** small.
 
+## 11. Closed-loop experiment learning across cells — DONE (2026-08-31)
+`core/species_registry.py::refine_from_experiment()` already existed
+(unused) before this — a confirmed, human-approved experiment result
+now actually flows into it via `core/experiment_manager.py`'s
+`approve_parameter_change()`, extending the species' own known range
+(never narrowing it — self-gating, real evidence only) and flipping
+`species_profiles.source` to `'experiment_derived'`. Because
+`propose_experiments_for_underperformance()` already read
+`species_registry.get_profile()` fresh every call, the cross-cell
+propagation to OTHER cells growing the same species happens for free
+once the feedback loop exists — no separate mechanism needed. Verified
+live end-to-end via `scenarios.py::scenario_closed_loop_species_learning`:
+a confirmed +40% yield result on `cell_a_aquaponics` extends lettuce's
+species-wide `ec_max`, and a separately-seeded underperforming lettuce
+planting on `pilot_cell` then gets proactively proposed the NEWLY
+refined value, not the stale baseline one, with a hypothesis explicitly
+citing the confirmed evidence.
+
+## 12. Digital biofilter / nitrogen-cycle model — not yet built
+**Problem it solves:** the system is entirely threshold/drift-reactive
+about water chemistry — it has no model of the actual nitrogen cycle
+(ammonia→nitrite→nitrate) that governs whether a cell is even safely
+cycled for livestock yet, or how much bioload a cycled biofilter can
+currently handle before a spike.
+**What it'd do:** a proactive model built from existing sensor history
+(pH, temp, feeding-implied bioload) predicting cycling completion and
+warning before a spike shows up as a bad reading, instead of only
+reacting after the fact — the most on-brand "aquaponics scientist"
+feature not yet built. Needs explicit uncertainty bands, not a single
+confident number, matching the experiment system's own honesty
+discipline about not overclaiming precision without real calibration
+data.
+**Effort:** medium-large, software-only (no hardware blocker).
+
+## 13. Optional cloud-escalation for hard questions — not yet built
+**Problem it solves:** directly resolves `docs/OFFLINE_ASSISTANT_PLAN.md`'s
+own flagged, deliberately-undecided open question — the local model
+(now the real default, see that doc) has no path to a bigger model for
+a genuinely hard diagnostic question, even when connectivity happens to
+be available.
+**What it'd do:** local stays the unconditional default for everything;
+a human could explicitly opt in to routing ONE hard question to
+`AnthropicGreenhouseAssistant` (already exists, already the `--cloud`
+opt-in path) when online — never automatic, never required.
+**Effort:** small-medium — mostly wiring an existing sibling class in,
+not new cloud-calling code.
+
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #6, #7, #9, #10 — see each entry above for what
-actually implements it and how it was verified. This recommendation
-section is kept for its original reasoning, now historical.
+**Done:** #1, #2, #3, #6, #7, #9, #10, #11 — see each entry above for
+what actually implements it and how it was verified. The original
+recommendation section below is kept for its reasoning, now historical.
 
 **Still genuinely open:**
 - **#5** (confidence scoring) — its #2 dependency is now satisfied, so
   this is unblocked but not yet built. Reasonable next candidate.
+- **#12** (digital biofilter / nitrogen-cycle model) — software-only,
+  buildable now, not yet started.
+- **#13** (optional cloud-escalation) — software-only, buildable now,
+  not yet started.
 - **#4** (seasonal awareness) — still correctly gated on a full
   seasonal cycle of real data; not build-now regardless.
 - **#8** (firmware OTA rollback safety) — still correctly gated on the

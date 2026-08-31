@@ -121,7 +121,7 @@ def main():
     devices = DeviceRegistry(db, notifier=notifier)
     species = SpeciesRegistry(db)
     bed_planting = BedPlantingManager(db, species, notifier=notifier)
-    experiments = ExperimentManager(db, notifier=notifier)
+    experiments = ExperimentManager(db, notifier=notifier, species_registry=species)
     infrastructure = InfrastructureRegistry(db)
     diagnostics = DiagnosticEngine(db, infrastructure, maintenance=maintenance, notifier=notifier)
     backups = BackupManager(db, notifier=notifier)

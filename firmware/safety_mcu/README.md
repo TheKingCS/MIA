@@ -6,29 +6,37 @@ authority) real in hardware rather than just a design document.
 
 ## Honest status
 
-**Compiles clean; still not run on real hardware.** Verified
-2026-08-30 with `pio run` (PlatformIO, see `platformio.ini` in this
-directory) against `espressif32` / `esp32dev` + ArduinoJson 6.21.6 —
-zero source changes needed. Result: RAM 6.7% (21924/327680 bytes),
-Flash 21.5% (281265/1310720 bytes), `firmware.bin` produced. That
-proves the code is syntactically and API-correct against the real
-Arduino/ESP32 core, not just reasoned-through by eye — but "compiles"
-and "does what the spec says on a real board" are still different
-claims. The known gaps below (especially #1, the actuator-ID mapping)
-are real regardless of the clean compile, and flashing + the LED
-smoke-test in "Testing without real sensors/pumps attached" below is
-still the next real milestone, not this.
+**Compiles clean; still not run on real hardware.** Re-verified
+2026-08-31 with `pio run` after the actuator-ID mapping fix below (gap
+#1) — RAM 6.7% (21940/327680 bytes), Flash 21.5% (281401/1310720
+bytes), `firmware.bin` produced, near-identical footprint to the
+2026-08-30 baseline (21924/281265 bytes) as expected for one added
+`int` field. That proves the code is syntactically and API-correct
+against the real Arduino/ESP32 core, not just reasoned-through by eye —
+but "compiles" and "does what the spec says on a real board" are still
+different claims. Flashing + the LED smoke-test in "Testing without
+real sensors/pumps attached" below is still the next real milestone,
+not this.
 
 ## Known gaps to resolve before real deployment
 
-1. **`findActuatorSlotById()` is a placeholder.** It currently assumes
-   the Pi's `actuator_id` maps directly to this firmware's array index
-   (0-3), which only works if that convention is enforced on the Pi
-   side too — it currently isn't. Real fix: either have the
-   `pair_confirm` message include explicit `actuator_id: pin_slot`
-   pairs, or establish and document a fixed convention both sides agree
-   on. This is the single most important thing to fix before trusting
-   this firmware with real dosing commands.
+1. ~~`findActuatorSlotById()` is a placeholder~~ — **fixed 2026-08-31.**
+   It used to assume the Pi's `actuator_id` mapped directly to this
+   firmware's array index (0-3), which only worked if that convention
+   was enforced on the Pi side too — it wasn't. Real fix landed: the
+   `pair_confirm` message's `controls` field now carries explicit
+   `{"actuator_id": <real DB id>, "name": ...}` pairs (see
+   `docs/MCU_PROTOCOL.md`), `handlePairConfirm()` stores the real id per
+   slot, and `findActuatorSlotById()` does a genuine linear-search
+   lookup instead of an index assumption. `core/device_registry.py`'s
+   new `build_pair_confirm_payload()` constructs this payload from real
+   DB rows — verified via `scenarios.py::scenario_pair_confirm_payload_real_ids`,
+   which deliberately inserts actuators out of order to prove the ids
+   returned are real DB ids, not a coincidental match. **What's still
+   genuinely open**: no serial transport exists yet to actually send
+   this payload (no MCU hardware to send it to), and real-hardware
+   pairing is unverified — both correctly gated on a real board
+   existing, not something to fake here.
 2. **`executePulse()` uses `delay()`,** which blocks the whole loop for
    the pulse duration (up to 3 seconds per the current dosing limits).
    That's a real problem if this MCU is also supposed to be responsive

@@ -128,8 +128,18 @@ wait for a human to assign a role via the setup CLI or the assistant.
 ### Pi → MCU: Pair confirmation
 
 ```json
-{"type":"pair_confirm","role":"watering_mcu","cell_id":1,"controls":["irrigation_valve"]}
+{"type":"pair_confirm","role":"watering_mcu","cell_id":1,"controls":[{"actuator_id":12,"name":"irrigation_valve"}]}
 ```
+
+`controls` carries the REAL Pi-side `actuators.id` alongside each
+name — not just a bare name string. This is load-bearing: `command`
+messages address an actuator by `actuator_id` (see above), and that id
+is an arbitrary DB row id, not a small sequential index. A `pair_confirm`
+that only sent names left the MCU with no way to know which physical
+slot a given `actuator_id` meant except by ASSUMING the Pi's id happened
+to match the slot's array index — real bug, fixed 2026-08-31 (see
+`firmware/safety_mcu/README.md`'s former gap #1). `core/device_registry.py`'s
+`build_pair_confirm_payload()` constructs this shape from the real DB rows.
 
 Once paired, the MCU is now a legitimate target for `command` messages
 per the normal protocol above. An MCU that hasn't been paired should

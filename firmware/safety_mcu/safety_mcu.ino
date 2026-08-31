@@ -41,13 +41,17 @@
 const char* REQUESTED_ROLE = "ph_dosing_mcu";
 
 // ============ ACTUATOR SLOTS ============
-// Physical pin assignment. Names get filled in from the pair_confirm
-// message the Pi sends — this array just reserves the pins. Order
-// here should match the order actuators appear in the role's YAML
-// "controls" list on the Pi side.
+// Physical pin assignment. Name AND the Pi's real actuator_id get
+// filled in from the pair_confirm message — this array just reserves
+// the pins. actuatorId is what makes findActuatorSlotById() below a
+// real lookup instead of assuming the Pi's DB row id happens to equal
+// this array's index (real bug, fixed 2026-08-31 — see
+// docs/MCU_PROTOCOL.md's pair_confirm section and this file's git
+// history for the prior placeholder).
 
 struct ActuatorSlot {
   char name[32];
+  int actuatorId;              // the Pi's actuators.id — NOT this array's index
   int pin;
   char type[16];              // 'dosing_pump','circulation_pump','aerator','valve','alert_beacon'
   char safeDefaultState[8];   // 'on' or 'off'
@@ -55,10 +59,10 @@ struct ActuatorSlot {
 };
 
 ActuatorSlot actuators[MAX_ACTUATORS] = {
-  {"", 25, "", "off", false},
-  {"", 26, "", "off", false},
-  {"", 27, "", "off", false},
-  {"", 32, "", "off", false},
+  {"", -1, 25, "", "off", false},
+  {"", -1, 26, "", "off", false},
+  {"", -1, 27, "", "off", false},
+  {"", -1, 32, "", "off", false},
 };
 
 // ============ LOCAL DOSING LIMITS ============
@@ -174,11 +178,16 @@ void handlePairConfirm(JsonDocument& doc) {
   assignedRole = String((const char*)doc["role"]);
   assignedCellId = doc["cell_id"] | -1;
 
+  // controls is now an array of {"actuator_id":<int>,"name":<string>}
+  // objects, not bare name strings — see docs/MCU_PROTOCOL.md. Storing
+  // the real actuator_id per slot is what makes findActuatorSlotById()
+  // a real lookup instead of an index assumption.
   JsonArray controls = doc["controls"];
   int i = 0;
   for (JsonVariant v : controls) {
     if (i >= MAX_ACTUATORS) break;
-    String name = v.as<String>();
+    actuators[i].actuatorId = v["actuator_id"] | -1;
+    String name = v["name"].as<String>();
     name.toCharArray(actuators[i].name, sizeof(actuators[i].name));
     actuators[i].assigned = true;
     i++;
@@ -339,14 +348,16 @@ String getHardwareId() {
 }
 
 int findActuatorSlotById(int actuatorId) {
-  // NOTE: actuator_id in commands from the Pi refers to the DB row id
-  // in the `actuators` table, not this array's index. A real deployment
-  // needs a mapping table (sent during pairing, or a fixed convention)
-  // between DB actuator_id and physical slot. Left as a TODO — for now
-  // this treats actuator_id as a direct slot index for simplicity,
-  // which only works if that convention is enforced Pi-side too.
-  if (actuatorId >= 0 && actuatorId < MAX_ACTUATORS && actuators[actuatorId].assigned) {
-    return actuatorId;
+  // Real lookup against the actuatorId each slot was assigned during
+  // pairing (handlePairConfirm() above) — actuator_id in commands from
+  // the Pi is the DB row id in the `actuators` table, an arbitrary
+  // integer, never assumed to equal a slot index. Fixed 2026-08-31;
+  // the prior version treated actuatorId as a direct array index,
+  // which only worked by coincidence.
+  for (int i = 0; i < MAX_ACTUATORS; i++) {
+    if (actuators[i].assigned && actuators[i].actuatorId == actuatorId) {
+      return i;
+    }
   }
   return -1;
 }

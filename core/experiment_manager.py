@@ -34,9 +34,13 @@ VALID_PARAMS = ("ph_target_min", "ph_target_max", "ec_target_min", "ec_target_ma
 
 
 class ExperimentManager(Describable):
-    def __init__(self, db_conn: sqlite3.Connection, notifier=None):
+    def __init__(self, db_conn: sqlite3.Connection, notifier=None, species_registry=None):
         self.db = db_conn
         self.notifier = notifier
+        # Optional — when set, an approved parameter change also offers
+        # itself as evidence to the species knowledge base itself (see
+        # approve_parameter_change() below), not just the one cell.
+        self.species_registry = species_registry
 
     # ---------- Proposing and starting ----------
 
@@ -190,12 +194,12 @@ class ExperimentManager(Describable):
 
     def approve_parameter_change(self, proposal_id: int) -> None:
         row = self.db.execute(
-            "SELECT cell_id, param_name, proposed_value FROM parameter_change_proposals WHERE id = ?",
+            "SELECT cell_id, param_name, proposed_value, rationale FROM parameter_change_proposals WHERE id = ?",
             (proposal_id,),
         ).fetchone()
         if not row:
             raise ValueError(f"no proposal {proposal_id}")
-        cell_id, param_name, value = row
+        cell_id, param_name, value, rationale = row
 
         self.db.execute(
             "INSERT INTO target_overrides (cell_id, param_name, value, set_by, active) "
@@ -209,6 +213,49 @@ class ExperimentManager(Describable):
             "WHERE id = ?", (proposal_id,),
         )
         self.db.commit()
+
+        self._offer_as_species_evidence(cell_id, param_name, value, proposal_id, rationale)
+
+    def _offer_as_species_evidence(self, cell_id: int, param_name: str, value: float,
+                                    proposal_id: int, rationale: str) -> None:
+        """A human just confirmed this experiment's result was worth
+        keeping — offer it to the species knowledge base too (see
+        SpeciesRegistry.refine_from_experiment()), not just this one
+        cell's target. Deliberately conservative: only when exactly one
+        species is unambiguously active on this cell (0 or 2+ active
+        plantings makes evidence attribution a guess, so skip rather
+        than misattribute), and refine_from_experiment() itself only
+        ever extends the known range, never narrows it — see that
+        method's own docstring."""
+        if not self.species_registry:
+            return
+        # param_name here is a target_overrides/experiment name
+        # ("ec_target_max"); SpeciesRegistry.refine_from_experiment()
+        # takes species_profiles' own column naming ("ec_max") — no
+        # "_target" infix. Translate, don't assume the two conventions
+        # match (they don't).
+        species_param = param_name.replace("_target", "")
+        if species_param not in ("ph_min", "ph_max", "ec_min", "ec_max"):
+            return
+        species_rows = self.db.execute(
+            "SELECT DISTINCT species_id FROM bed_plantings WHERE cell_id = ? AND status = 'active'",
+            (cell_id,),
+        ).fetchall()
+        if len(species_rows) != 1:
+            return
+        species_id = species_rows[0][0]
+        evidence_note = (
+            f"Parameter change proposal #{proposal_id} (cell {cell_id}) approved "
+            f"{param_name}={value}: {rationale}"
+        )
+        updated = self.species_registry.refine_from_experiment(
+            species_id, species_param, value, evidence_note=evidence_note,
+        )
+        if updated:
+            logger.info(
+                "Approved change for cell %s also extended species %s's %s to %.2f based on real evidence",
+                cell_id, species_id, param_name, value,
+            )
 
     def deny_parameter_change(self, proposal_id: int) -> None:
         self.db.execute(
@@ -335,6 +382,24 @@ class ExperimentManager(Describable):
                 continue  # already at the species' own documented midpoint — nothing to propose
 
             unit = p["expected_yield_unit"] or ""
+            # Closed-loop learning: once a confirmed, human-approved
+            # experiment result has refined this species' own range
+            # (SpeciesRegistry.refine_from_experiment(), triggered from
+            # approve_parameter_change() elsewhere in this file), that's
+            # real evidence, not a generic lookup — say so explicitly
+            # rather than using the same "documented midpoint" phrasing
+            # for both cases.
+            if species.get("source") == "experiment_derived":
+                range_basis = (
+                    f"a range REFINED FROM A CONFIRMED EXPERIMENT RESULT elsewhere in this system "
+                    f"(ec_min {species['ec_min']}-ec_max {species['ec_max']}), not just a generic "
+                    f"baseline lookup"
+                )
+            else:
+                range_basis = (
+                    f"{species['common_name']}'s own documented midpoint "
+                    f"(from ec_min {species['ec_min']}-ec_max {species['ec_max']})"
+                )
             exp_id = self.propose_experiment(
                 cell_id=p["cell_id"],
                 hypothesis=(
@@ -342,9 +407,8 @@ class ExperimentManager(Describable):
                     f"Planting #{p['id']} ({species['common_name']}) is at {actual:.2f} {unit} vs. "
                     f"an expected-by-now pace of {expected_by_now:.2f} {unit} "
                     f"({elapsed_fraction * 100:.0f}% of its time to harvest elapsed). Current EC "
-                    f"target ({current_ec}) sits away from {species['common_name']}'s own documented "
-                    f"midpoint ({species_mid_ec:.0f}, from ec_min {species['ec_min']}-ec_max "
-                    f"{species['ec_max']}) — proposing to test moving toward it."
+                    f"target ({current_ec}) sits away from {range_basis} "
+                    f"({species_mid_ec:.0f}) — proposing to test moving toward it."
                 ),
                 variable_changed="ec_target_max",
                 baseline_value=current_ec,
@@ -377,7 +441,12 @@ class ExperimentManager(Describable):
                 "complete an experiment and generate a result summary",
                 "propose a permanent parameter change for human approval",
                 "scan active plantings for a significant yield shortfall and proactively propose "
-                "an experiment nudging EC toward the species' own documented midpoint",
+                "an experiment nudging EC toward the species' own documented midpoint (or, once "
+                "refined by a confirmed result elsewhere, its evidence-derived midpoint instead)",
+                "when a human approves a parameter change, offer it as evidence to the species "
+                "knowledge base itself (SpeciesRegistry.refine_from_experiment) — closing the "
+                "loop so a confirmed result on one cell can inform every other cell/species "
+                "planting in the future, not just the one cell it ran on",
             ],
             limits_and_safety=(
                 "NEVER applies a permanent target change without human approval. Comparisons "
@@ -390,7 +459,11 @@ class ExperimentManager(Describable):
                 "second experiment for a cell that already has one live, and only ever proposes "
                 "moving toward a value already recorded in the species knowledge base, never an "
                 "invented number. It still only PROPOSES — start_experiment() still requires a "
-                "human, same gate as every other experiment."
+                "human, same gate as every other experiment. The species-knowledge-base feedback "
+                "loop only ever fires as a side effect of an ALREADY human-approved parameter "
+                "change (approve_parameter_change()) — no new autonomous-approval path exists, "
+                "and SpeciesRegistry.refine_from_experiment() itself only ever extends a "
+                "species' known range from real evidence, never narrows it based on one result."
             ),
             example_questions=[
                 "Any experiments running right now?",
@@ -412,6 +485,14 @@ class ExperimentManager(Describable):
                 "midpoint. Confirmed 3 negative cases produce zero proposals: a planting on pace, "
                 "a planting only 30% through its cycle (too early to judge), and a cell that "
                 "already has a live (non-terminal) experiment — no duplicate proposal.",
+                "scenarios.py::scenario_closed_loop_species_learning (2026-08-31): proved the "
+                "full closed loop end to end across two independent cells — a confirmed +40% "
+                "yield result on cell_a_aquaponics (real seeded before/after yield data) got "
+                "approved, which extended lettuce's species-wide ec_max and flipped its source "
+                "to 'experiment_derived'; a separately-seeded underperforming lettuce planting on "
+                "pilot_cell then got proactively proposed an experiment whose test_value matches "
+                "the NEWLY refined midpoint (not the stale baseline one), with a hypothesis that "
+                "explicitly cites the confirmed evidence rather than a generic lookup.",
             ],
         )
 
