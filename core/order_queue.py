@@ -25,11 +25,18 @@ from core.inventory import InventoryManager
 def format_item(item: dict) -> str:
     cost_str = f"~${item['cost']:.2f}" if item["cost"] else "cost unknown"
     supplier = item["supplier"] or "no supplier set"
-    return (
-        f"#{item['order_id']}  {item['name']}  ({item['category']})\n"
-        f"    qty: {item['quantity']}{item['unit'] or ''}   {cost_str}   {supplier}\n"
-        f"    reason: {item['notes'] or '—'}"
-    )
+    lines = [
+        f"#{item['order_id']}  {item['name']}  ({item['category']})",
+        f"    qty: {item['quantity']}{item['unit'] or ''}   {cost_str}   {supplier}",
+    ]
+    # supplier_url is real sourcing info a human can act on directly (not
+    # just a name) -- was fetched by get_to_order_list() but silently
+    # dropped here, found 2026-08-31 while working the "enrich order
+    # proposals with real sourcing info" punch-list item.
+    if item.get("supplier_url"):
+        lines.append(f"    source: {item['supplier_url']}")
+    lines.append(f"    reason: {item['notes'] or '—'}")
+    return "\n".join(lines)
 
 
 def main():

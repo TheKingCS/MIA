@@ -550,13 +550,26 @@ function renderInventory(data) {
   for (const item of data.low_stock) {
     const orderStatus = orderByItem[item.id];
     const badgeText = orderStatus === "ordered" ? "Ordered" : orderStatus === "proposed" ? "Awaiting approval" : "Not yet queued";
-    list.appendChild(el("div", { class: "row-item" }, [
+    const sourcingParts = [];
+    if (item.supplier) sourcingParts.push(item.supplier);
+    if (item.unit_cost != null) sourcingParts.push(`~$${Number(item.unit_cost).toFixed(2)}/${item.unit}`);
+    const rowChildren = [
       el("div", { class: "flex" }, [
         el("span", {}, [item.name]),
         el("span", { class: "badge badge-pending" }, [badgeText]),
       ]),
       el("div", { class: "line2" }, [`${item.quantity_on_hand} ${item.unit} on hand · threshold ${item.reorder_threshold} ${item.unit}`]),
-    ]));
+    ];
+    if (sourcingParts.length || item.supplier_url) {
+      const sourcingLine = el("div", { class: "line2" }, []);
+      if (sourcingParts.length) sourcingLine.appendChild(document.createTextNode(sourcingParts.join("  ·  ")));
+      if (item.supplier_url) {
+        if (sourcingParts.length) sourcingLine.appendChild(document.createTextNode("  ·  "));
+        sourcingLine.appendChild(el("a", { href: item.supplier_url, target: "_blank", rel: "noopener noreferrer" }, ["source link"]));
+      }
+      rowChildren.push(sourcingLine);
+    }
+    list.appendChild(el("div", { class: "row-item" }, rowChildren));
   }
 }
 

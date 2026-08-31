@@ -1364,17 +1364,16 @@ class _BaseGreenhouseAssistant:
         return registry.pair_device(hardware_id, role)
 
     def _tool_get_to_order_list(self) -> dict:
-        rows = self.db.execute(
-            """
-            SELECT io.id AS order_id, ii.name, ii.category, io.quantity, ii.unit,
-                   io.cost, io.notes, ii.supplier
-            FROM inventory_orders io
-            JOIN inventory_items ii ON ii.id = io.item_id
-            WHERE io.status = 'proposed'
-            ORDER BY io.ordered_at ASC
-            """
-        ).fetchall()
-        return {"pending_orders": [dict(r) for r in rows]}
+        # Delegates to InventoryManager rather than a separate hand-copied
+        # query — this tool used to reimplement its own SQL that had quietly
+        # drifted from core/inventory.py's real version and was missing
+        # supplier_url entirely, so a human asking the assistant "what needs
+        # ordering" could never get a sourcing link even when one was
+        # recorded (found 2026-08-31 while working the "enrich order
+        # proposals with real sourcing info" punch-list item). Delegating
+        # means the two can't drift apart again.
+        from core.inventory import InventoryManager
+        return {"pending_orders": InventoryManager(self.db).get_to_order_list()}
 
     def _tool_approve_order(self, order_id: int) -> dict:
         self.db.execute(

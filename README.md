@@ -316,14 +316,27 @@ mia-homestead/
    `"verizon"`/`"att"`/`"tmobile"`) in `NotificationConfig`. A USB GSM
    modem with a prepaid SIM remains a real hardware alternative later
    if gateway reliability ever becomes a problem — not needed now.
-4. **Real ordering integration** — corrected 2026-08-30: this was
-   mischaracterized as needing a live vendor checkout API. It doesn't,
-   and shouldn't — `approve_order` only flips a status, and the actual
-   purchase already stays human-executed by design (mirrors the
-   propose-then-approve pattern everywhere else spend is involved).
-   What's actually missing is just enriching a proposal with real
-   current sourcing info for the human to act on, not automating the
-   purchase itself.
+4. ~~Real ordering integration~~ — **done at the code level, 2026-08-31.**
+   Corrected 2026-08-30: this was mischaracterized as needing a live
+   vendor checkout API. It doesn't, and shouldn't — `approve_order`
+   only flips a status, and the actual purchase stays human-executed
+   by design (mirrors the propose-then-approve pattern everywhere else
+   spend is involved). The real, fixable gap turned out to be smaller
+   and more concrete: `inventory_items.supplier_url`/`unit_cost` were
+   already in the schema and already fetched by
+   `core/inventory.py`'s real `get_to_order_list()` — but three
+   separate consumer surfaces each silently dropped it anyway:
+   `core/order_queue.py`'s CLI display never printed it,
+   `assistant/greenhouse_assistant.py`'s tool had its own hand-copied
+   query that had drifted and never selected it at all (now delegates
+   to `InventoryManager` instead, so it can't drift again), and the
+   dashboard's low-stock panel didn't request or render it. All three
+   fixed and verified end-to-end with a real seeded item (a clickable
+   source link now shows up in the CLI, the assistant's tool result,
+   and the dashboard). What's still genuinely missing — real supplier
+   URLs for real consumables — is data entry that depends on actually
+   choosing real suppliers once real chemicals/feed are being stocked,
+   not a code gap.
 5. Physical beacon hardware for self-preservation (a light/speaker —
    the logic and DB layer are ready, this is the last missing piece)
 6. Battery bank sizing and pricing, once real greenhouse load is known

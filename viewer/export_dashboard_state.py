@@ -132,7 +132,8 @@ def export_dashboard_state(db_path: str, out_path: str) -> None:
 
     output["low_stock"] = [
         dict(r) for r in conn.execute(
-            "SELECT id, name, category, quantity_on_hand, reorder_threshold, unit, supplier "
+            "SELECT id, name, category, quantity_on_hand, reorder_threshold, unit, "
+            "supplier, supplier_url, unit_cost "
             "FROM inventory_items WHERE quantity_on_hand <= reorder_threshold"
         ).fetchall()
     ]
