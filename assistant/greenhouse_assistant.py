@@ -124,6 +124,14 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_deploy_status",
+        "description": (
+            "Get the last known-good code commit and any active post-deploy watch — whether "
+            "a recent code update is still being monitored for an auto-rollback trigger."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_power_forecast",
         "description": (
             "Project whether/when battery SOC will hit the load-shed threshold at the "
@@ -634,6 +642,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_open_alerts": "status",
     "get_power_status": "status",
     "get_power_forecast": "status",
+    "get_deploy_status": "status",
     "get_deadmans_switch_status": "status",
     "get_greenhouse_report": "status",
     "send_greenhouse_report": "status",
@@ -1033,6 +1042,10 @@ class _BaseGreenhouseAssistant:
             "SELECT * FROM power_telemetry ORDER BY timestamp DESC LIMIT 5"
         ).fetchall()
         return {"recent_power_telemetry": [dict(r) for r in row]}
+
+    def _tool_get_deploy_status(self) -> dict:
+        from core.deploy_manager import DeployManager
+        return DeployManager(self.db).get_status()
 
     def _tool_get_power_forecast(self) -> dict:
         """PowerMonitor.forecast_soc_depletion() needs the array's real

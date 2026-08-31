@@ -20,6 +20,7 @@ Usage:
 import argparse
 import logging
 import sqlite3
+import sys
 import time
 from datetime import datetime
 
@@ -41,6 +42,7 @@ from core.generate_bom_doc import generate_and_write as write_bom_doc
 from core.deadmans_switch import DeadMansSwitchMonitor
 from core.report_generator import ReportGenerator
 from core.trend_analyzer import TrendAnalyzer
+from core.deploy_manager import DeployManager
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -110,6 +112,7 @@ def main():
     infrastructure = InfrastructureRegistry(db)
     diagnostics = DiagnosticEngine(db, infrastructure, maintenance=maintenance, notifier=notifier)
     backups = BackupManager(db, notifier=notifier)
+    deploys = DeployManager(db, notifier=notifier)
     deadmans = DeadMansSwitchMonitor(db, notifier=notifier)
     reports = ReportGenerator(db, notifier=notifier)
     trend_analyzer = TrendAnalyzer(db, notifier=notifier)
@@ -125,6 +128,7 @@ def main():
         (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
         (backups, "backup_manager"), (deadmans, "deadmans_switch"),
         (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
+        (deploys, "deploy_manager"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -178,6 +182,20 @@ def main():
                 watch_results = backups.check_update_watches()
                 if watch_results:
                     logger.info("Update watch results: %s", watch_results)
+                deploy_watch_results = deploys.check_deploy_watches()
+                for result in deploy_watch_results:
+                    if result["outcome"] == "auto_rolled_back":
+                        # deploy_manager already reverted the working tree — the
+                        # decision to actually exit belongs HERE (see that
+                        # module's own docstring for why), so the systemd layer
+                        # (deploy/mia-homestead.service, Restart=on-failure) can
+                        # bring the process back up running the reverted code.
+                        # A non-systemd/dev run just stops; a human reruns it.
+                        logger.critical(
+                            "Exiting after an automatic code rollback (watch #%s) — "
+                            "restart required to run the reverted code.", result["watch_id"],
+                        )
+                        sys.exit(1)
                 forecasted = inventory.check_forecasted_shortages()
                 if forecasted:
                     logger.info("Forecasted %d shortage(s) proposed early", forecasted)

@@ -524,6 +524,36 @@ CREATE TABLE update_watches (
     resolution_note TEXT
 );
 
+-- ============ CODE DEPLOY BACKUP & ROLLBACK ============
+-- Same propose/watch/auto-revert shape as config_snapshots/update_watches
+-- above, applied to CODE (git commits) instead of config files — see
+-- core/deploy_manager.py. A separate table pair rather than reusing the
+-- config ones: config_snapshots' pre_update_snapshot_id/snapshot_dir
+-- shape is about restoring files from a directory copy, which doesn't
+-- fit "check out a different git commit" cleanly, and this project's
+-- own convention (core/finance_manager.py vs core/homestead_manager.py)
+-- is a sibling table/module per domain rather than forcing one shape to
+-- cover two.
+
+CREATE TABLE code_deploys (
+    id INTEGER PRIMARY KEY,
+    git_commit TEXT NOT NULL,
+    note TEXT,
+    marked_good_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE code_update_watches (
+    id INTEGER PRIMARY KEY,
+    rollback_git_commit TEXT NOT NULL,   -- the last-known-good commit to revert TO
+    applied_at TEXT DEFAULT (datetime('now')),
+    validation_window_minutes INTEGER DEFAULT 30,
+    critical_alert_baseline INTEGER DEFAULT 0,
+    critical_alert_threshold INTEGER DEFAULT 2,
+    status TEXT DEFAULT 'watching',   -- 'watching','confirmed_good','auto_rolled_back'
+    resolved_at TEXT,
+    resolution_note TEXT
+);
+
 -- ============ SELF-UNDERSTANDING CHANGELOG ============
 -- Every time a module's declared capability or hardware needs differ
 -- from what was stored last time, that's logged here — a real,
