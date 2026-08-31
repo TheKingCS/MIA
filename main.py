@@ -48,6 +48,7 @@ from core.biofilter_model import BiofilterModel
 from core.sensor_confidence import SensorConfidence
 from core.fish_health import FishHealth
 from core.leak_detector import LeakDetector
+from core.pest_disease import PestDisease
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -138,6 +139,7 @@ def main():
     sensor_confidence = SensorConfidence(db)
     fish_health = FishHealth(db, notifier=notifier)
     leak_detector = LeakDetector(db, notifier=notifier)
+    pest_disease = PestDisease(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -153,6 +155,7 @@ def main():
         (deploys, "deploy_manager"), (journal, "activity_journal"),
         (biofilter, "biofilter_model"), (sensor_confidence, "sensor_confidence"),
         (fish_health, "fish_health"), (leak_detector, "leak_detector"),
+        (pest_disease, "pest_disease"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])

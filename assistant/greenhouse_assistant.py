@@ -518,6 +518,42 @@ TOOLS = [
         },
     },
     {
+        "name": "get_pest_disease_info",
+        "description": "Look up known pest/disease symptoms and guidance by name (e.g. 'aphids', 'ich') — use when the user asks what a symptom means or how to treat something.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "organism_type": {"type": "string", "description": "Optional: 'plant' or 'fish', to list everything known for that type instead of one lookup"},
+            },
+        },
+    },
+    {
+        "name": "record_pest_disease_observation",
+        "description": "Log a real pest/disease observation for a cell — use when the user describes seeing a pest, disease symptom, or something concerning on a plant or fish.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "description": {"type": "string"},
+                "category": {"type": "string", "enum": ["pest", "disease", "other"]},
+                "severity": {"type": "string", "enum": ["minor", "moderate", "severe"]},
+                "action_taken": {"type": "string"},
+                "notes": {"type": "string"},
+            },
+            "required": ["cell_id", "description"],
+        },
+    },
+    {
+        "name": "get_pest_disease_history",
+        "description": "Get logged pest/disease observation history for a cell.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"cell_id": {"type": "integer"}},
+            "required": ["cell_id"],
+        },
+    },
+    {
         "name": "add_species",
         "description": "Add a new species to the knowledge base — use when the user wants to track a plant or fish species that isn't already known.",
         "input_schema": {
@@ -819,6 +855,9 @@ TOOL_DOMAINS: dict[str, str] = {
     "record_fish_mortality": "fish_health",
     "record_fish_health_observation": "fish_health",
     "get_fish_health_summary": "fish_health",
+    "get_pest_disease_info": "pest_disease",
+    "record_pest_disease_observation": "pest_disease",
+    "get_pest_disease_history": "pest_disease",
     # species — the "what does this organism want" knowledge base
     "get_species_profile": "species",
     "list_species": "species",
@@ -896,6 +935,11 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "fish_health": [
         "fish", "feed", "feeding", "fed", "mortality", "died", "dead fish",
         "sick", "lethargic", "behavior", "swimming",
+    ],
+    "pest_disease": [
+        "pest", "disease", "aphid", "aphids", "mildew", "mold", "fungus",
+        "rot", "ich", "white spot", "columnaris", "bug", "bugs", "insect",
+        "infestation", "infection", "symptom", "symptoms",
     ],
     "yield_planting": [
         "yield", "harvest", "planted", "planting", "grow bed", "watered",
@@ -1509,6 +1553,27 @@ class _BaseGreenhouseAssistant:
             "mortality_history": fh.get_mortality_history(cell_id),
             "health_observations": fh.get_health_events(cell_id),
         }
+
+    def _tool_get_pest_disease_info(self, name: str | None = None, organism_type: str | None = None) -> dict:
+        from core.pest_disease import PestDisease
+        pd = PestDisease(self.db)
+        if name:
+            return {"match": pd.find_knowledge_by_name(name)}
+        return {"knowledge": pd.list_knowledge(organism_type)}
+
+    def _tool_record_pest_disease_observation(self, cell_id: int, description: str,
+                                                category: str = "other", severity: str | None = None,
+                                                action_taken: str | None = None, notes: str | None = None) -> dict:
+        from core.pest_disease import PestDisease
+        obs_id = PestDisease(self.db).record_observation(
+            cell_id, description, category=category, severity=severity,
+            action_taken=action_taken, notes=notes,
+        )
+        return {"observation_id": obs_id, "cell_id": cell_id}
+
+    def _tool_get_pest_disease_history(self, cell_id: int) -> dict:
+        from core.pest_disease import PestDisease
+        return {"observations": PestDisease(self.db).get_observation_history(cell_id)}
 
     def _tool_add_species(self, common_name: str, organism_type: str, scientific_name: str | None = None,
                             ph_min: float | None = None, ph_max: float | None = None,

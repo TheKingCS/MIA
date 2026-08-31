@@ -351,7 +351,34 @@ focused, safety-relevant in the same category as the stale-sensor
 freeze logic already in `contracts/mia_homestead_contract.py`.
 **Effort:** small — a focused addition, not a new architecture.
 
-## 16. Pest / disease observation log + knowledge base — not yet built
+## 16. Pest / disease observation log + knowledge base — DONE (2026-08-31)
+Built as `core/pest_disease.py`, same two-part shape as
+`core/species_registry.py` — a knowledge base
+(`pest_disease_knowledge`, seeded with 6 real, commonly-documented
+aquaponics/aquarium entries: aphids, powdery mildew, and root rot for
+plants; ich, fin rot, and columnaris for fish, each with real symptoms
+and guidance, not fabricated) plus a log of real observations
+(`pest_disease_observations`) that can link to a known knowledge entry
+or stand alone as something novel. Deliberately NOT an automatic
+closed-loop refinement the way `species_registry.refine_from_experiment()`
+works — a species' pH/EC range is a clean number an experiment can
+confirm or extend, "was this symptom description accurate" is fuzzy
+and textual, so knowledge entries stay a manual `add_knowledge()`
+action, not an automated one, an honest scope decision stated in the
+module's own docstring. Camera-based visual detection remains a real,
+much larger future step (ties into the AI HAT/NPU hardware
+`docs/OFFLINE_ASSISTANT_PLAN.md` already flags as unproven), not this
+version — this is the manual log + lookup half only, as originally
+scoped below. 3 new assistant tools (`get_pest_disease_info`,
+`record_pest_disease_observation`, `get_pest_disease_history`), new
+`pest_disease` domain. Verified via
+`scenarios.py::scenario_pest_disease_tracking` (6 checks: baseline
+seeding with the real entry count and no duplicate re-seeding,
+knowledge lookup/add round-tripping correctly, an observation linking
+to known knowledge vs. a genuinely novel unlinked one both retrieving
+correctly) and a live smoke test against the real running system.
+Original brainstorm text kept below for context.
+
 **Problem it solves:** nothing logs or reasons about plant pests,
 disease symptoms, or fish illness anywhere in this system.
 **What it'd do:** a manual observation log (what was seen, on what
@@ -391,8 +418,8 @@ modules, not new tracking.
 
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15 —
-see each entry above for what actually implements it and how it was
+**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15, #16
+— see each entry above for what actually implements it and how it was
 verified. Every item in the originally-picked roadmap is now built,
 and both items this conversation called genuinely necessary (#14, #15)
 are done.
@@ -400,13 +427,11 @@ are done.
 **Newly added 2026-08-31, roughly in priority order** (per a conversation
 about what's still missing for this to be genuinely "useful and
 necessary," not just more of what's already built): **#14 (fish
-health/mortality/feeding tracking) — DONE** and **#15 (fast leak
-detection) — DONE**, see above — both were about preventing the kind
-of loss that erodes trust in an unattended system, which is the whole
-premise here. **#16 (pest/disease log)** and **#17 (weather-aware
-alerts)** are strong seconds, not yet built. **#18 (cost accounting)**
-matters more once selling commercially than for a homestead, not yet
-built.
+health/mortality/feeding tracking) — DONE**, **#15 (fast leak
+detection) — DONE**, and **#16 (pest/disease log) — DONE**, see above.
+**#17 (weather-aware alerts)** is next — the last item ranked above
+cost accounting. **#18 (cost accounting)** matters more once selling
+commercially than for a homestead, not yet built.
 
 **Still genuinely open from the original roadmap — both correctly
 gated on real hardware/data that doesn't exist yet, not software

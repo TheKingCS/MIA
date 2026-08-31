@@ -775,6 +775,68 @@ def scenario_leak_detection():
     return checks
 
 
+def scenario_pest_disease_tracking():
+    """Baseline pest/disease knowledge (real, common aquaponics symptoms
+    and guidance) seeds correctly, add_knowledge()/find_knowledge_by_name()
+    work, and an observation can log either linked to known knowledge or
+    as a genuinely novel unlinked one — both retrieve correctly."""
+    from core.pest_disease import PestDisease
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    pd = PestDisease(conn)
+
+    baseline = pd.list_knowledge()
+    plant_only = pd.list_knowledge(organism_type="plant")
+    fish_only = pd.list_knowledge(organism_type="fish")
+
+    # ---- No duplicate seeding on a second construction ----
+    PestDisease(conn)
+    baseline_after_reinit = pd.list_knowledge()
+
+    aphids = pd.find_knowledge_by_name("Aphids")
+
+    # ---- Human-added knowledge entry ----
+    new_id = pd.add_knowledge(
+        organism_type="plant", name="Spider Mites",
+        symptoms="Tiny webbing on leaf undersides, stippled/speckled yellowing leaves.",
+        guidance="Increase humidity, introduce predatory mites, spray with water/neem oil.",
+    )
+    spider_mites = pd.find_knowledge_by_name("Spider Mites")
+
+    # ---- Observation linked to known knowledge ----
+    linked_obs_id = pd.record_observation(
+        cell_id, description="Sticky residue and small insects on new lettuce growth",
+        category="pest", knowledge_id=aphids["id"], severity="minor",
+    )
+
+    # ---- Observation with no linked knowledge (novel) ----
+    novel_obs_id = pd.record_observation(
+        cell_id, description="Unusual leaf spotting not matching anything known",
+        category="disease",
+    )
+
+    history = pd.get_observation_history(cell_id)
+
+    checks = [
+        ("baseline knowledge seeds with 6 real entries (3 plant, 3 fish)",
+         len(baseline) == 6 and len(plant_only) == 3 and len(fish_only) == 3),
+        ("re-constructing PestDisease does NOT duplicate the baseline seed",
+         len(baseline_after_reinit) == 6),
+        ("find_knowledge_by_name finds a real baseline entry with real guidance",
+         aphids is not None and "ladybugs" in aphids["guidance"].lower()),
+        ("add_knowledge + find_knowledge_by_name round-trips a human-added entry",
+         spider_mites is not None and spider_mites["id"] == new_id
+         and spider_mites["source"] == "human_added"),
+        ("an observation linked to known knowledge logs and retrieves with that link intact",
+         any(o["id"] == linked_obs_id and o["knowledge_id"] == aphids["id"] for o in history)),
+        ("a novel, unlinked observation logs and retrieves correctly too",
+         any(o["id"] == novel_obs_id and o["knowledge_id"] is None for o in history)),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -789,6 +851,7 @@ SCENARIOS = {
     "sensor_confidence": scenario_sensor_confidence,
     "fish_health_tracking": scenario_fish_health_tracking,
     "leak_detection": scenario_leak_detection,
+    "pest_disease_tracking": scenario_pest_disease_tracking,
 }
 
 

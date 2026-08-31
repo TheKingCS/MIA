@@ -207,6 +207,41 @@ CREATE TABLE fish_health_events (
 );
 CREATE INDEX idx_fish_health_events_cell ON fish_health_events(cell_id, timestamp);
 
+-- ============ PEST / DISEASE ============
+-- Nothing anywhere in this system logs or reasons about plant pests,
+-- disease symptoms, or fish illness. Two tables, same shape as
+-- species_profiles: a knowledge base (real, common symptoms/guidance,
+-- seeded from real horticultural/aquaculture knowledge, refined by
+-- adding entries over time) and a log of real observations against it.
+
+CREATE TABLE pest_disease_knowledge (
+    id INTEGER PRIMARY KEY,
+    organism_type TEXT NOT NULL,        -- 'plant' or 'fish', matches species_profiles.organism_type
+    species_id INTEGER REFERENCES species_profiles(id),  -- nullable: some entries are general,
+                                                           -- not tied to one specific species
+    name TEXT NOT NULL,                 -- e.g. 'aphids', 'ich', 'powdery mildew'
+    symptoms TEXT NOT NULL,
+    guidance TEXT,
+    source TEXT DEFAULT 'baseline',     -- 'baseline' or 'human_added'
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE pest_disease_observations (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    species_id INTEGER REFERENCES species_profiles(id),        -- nullable
+    knowledge_id INTEGER REFERENCES pest_disease_knowledge(id), -- nullable: matched against known
+                                                                  -- knowledge, or logged as novel
+    timestamp TEXT DEFAULT (datetime('now')),
+    category TEXT NOT NULL,             -- 'pest','disease','other'
+    description TEXT NOT NULL,
+    severity TEXT,                      -- 'minor','moderate','severe' — human-assessed, nullable
+    action_taken TEXT,
+    notes TEXT
+);
+CREATE INDEX idx_pest_disease_observations_cell ON pest_disease_observations(cell_id, timestamp);
+
 -- ============ ALERTS ============
 
 CREATE TABLE alerts (
