@@ -634,6 +634,89 @@ def scenario_sensor_confidence():
     return checks
 
 
+def scenario_fish_health_tracking():
+    """Feeding, mortality, and health-observation logging for the fish
+    themselves — the biggest gap in an otherwise water-chemistry/plant-
+    centric system. Proves feeding history/trend, mortality history,
+    and both the population-relative and absolute-count mortality alert
+    paths."""
+    from core.fish_health import FishHealth
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)  # already stocked (tilapia) per setup_demo_cell()
+    fh = FishHealth(conn)
+
+    # ---- Feeding: insufficient data with too few logged ----
+    for _ in range(3):
+        fh.record_feeding(cell_id, amount=4.0, unit="oz")
+    trend_insufficient = fh.get_feeding_trend(cell_id)
+
+    # ---- Feeding: real baseline then a real increase -> 'increasing' ----
+    for _ in range(7):
+        fh.record_feeding(cell_id, amount=4.0, unit="oz")
+    for _ in range(3):
+        fh.record_feeding(cell_id, amount=6.5, unit="oz")  # +62% vs the 4.0 baseline
+    trend_after_increase = fh.get_feeding_trend(cell_id)
+    feeding_history = fh.get_feeding_history(cell_id)
+
+    # ---- Mortality: below both thresholds -> silent ----
+    fh.record_mortality(cell_id, count=1, cause="unknown")
+    silent_findings = fh.check_mortality_spike()
+
+    # ---- Mortality: quantity_stocked known, crosses the % threshold ----
+    conn.execute("UPDATE tanks SET quantity_stocked = 20 WHERE cell_id = ?", (cell_id,))
+    conn.commit()
+    fh.record_mortality(cell_id, count=2, cause="observed disease symptoms")  # 3 total = 15% of 20
+    pct_findings = fh.check_mortality_spike()
+    pct_alert = conn.execute(
+        "SELECT message FROM alerts WHERE source = 'fish_health' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+
+    # ---- Mortality: absolute-count fallback on a DIFFERENT stocked, unknown-quantity cell ----
+    from drivers.simulator import setup_pilot_cell
+    pilot_id = setup_pilot_cell(conn)
+    conn.execute(
+        "INSERT INTO tanks (cell_id, name, capacity_gallons, species, stocked_date) "
+        "VALUES (?, ?, ?, ?, datetime('now'))",
+        (pilot_id, "Pilot Tank", 5, "tilapia"),
+    )
+    conn.commit()
+    fh.record_mortality(pilot_id, count=1)
+    below_absolute = fh.check_mortality_spike()
+    fh.record_mortality(pilot_id, count=2)  # 3 total, no quantity_stocked -> absolute fallback
+    absolute_findings = fh.check_mortality_spike()
+    absolute_alert = conn.execute(
+        "SELECT message FROM alerts WHERE source = 'fish_health' AND message LIKE ? "
+        "ORDER BY id DESC LIMIT 1",
+        (f"%cell {pilot_id}%",),
+    ).fetchone()
+
+    # ---- Health observations ----
+    fh.record_health_observation(cell_id, "Fish appear active and feeding normally")
+    observations = fh.get_health_events(cell_id)
+
+    checks = [
+        ("too few feedings logged -> honestly reports insufficient_data",
+         trend_insufficient["trend"] == "insufficient_data"),
+        ("a real +62% feeding increase -> reports 'increasing'",
+         trend_after_increase["trend"] == "increasing" and trend_after_increase["pct_change"] > 20),
+        ("feeding history returns real logged events", len(feeding_history) == 13),
+        ("mortality below both thresholds stays silent", len(silent_findings) == 0),
+        ("mortality crossing the population-relative threshold (15% of 20) alerts",
+         len(pct_findings) == 1 and pct_alert is not None and "15.0%" in pct_alert[0]),
+        ("pilot cell below the absolute fallback threshold (1 death) doesn't itself trigger "
+         "(only cell_a's still-standing spike from earlier shows up)",
+         len(below_absolute) == 1 and below_absolute[0]["cell_id"] == cell_id),
+        ("pilot cell crossing the absolute fallback threshold (3 deaths, no quantity_stocked) "
+         "alerts too, honestly noting population size isn't tracked",
+         len(absolute_findings) == 2 and absolute_alert is not None
+         and "not tracked" in absolute_alert[0]),
+        ("health observations log and retrieve correctly", len(observations) == 1),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -646,6 +729,7 @@ SCENARIOS = {
     "pair_confirm_payload_real_ids": scenario_pair_confirm_payload_real_ids,
     "biofilter_cycle_tracking": scenario_biofilter_cycle_tracking,
     "sensor_confidence": scenario_sensor_confidence,
+    "fish_health_tracking": scenario_fish_health_tracking,
 }
 
 

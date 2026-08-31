@@ -268,23 +268,133 @@ opt-in path) when online — never automatic, never required.
 **Effort:** small-medium — mostly wiring an existing sibling class in,
 not new cloud-calling code.
 
+## 14. Fish health, mortality, and feeding tracking — DONE (2026-08-31)
+Built as `core/fish_health.py`, two new tables (`feeding_events`,
+`fish_health_events`) plus a small honest addition to an existing one
+(`tanks.quantity_stocked`, nullable — makes mortality alerting a real
+population-relative percentage when known, an explicit absolute-count
+fallback when it isn't, never silently assuming a population size).
+`get_feeding_trend()` gives `core/biofilter_model.py` a real
+recent-vs-baseline feeding-rate signal — explicitly a rate signal, not
+a precise bioload calculation, which would need real fish weight/count
+data this system doesn't have. `check_mortality_spike()` wired into
+`main.py`'s periodic block, same real-deduplicated-alert pattern as
+every other periodic check. 4 new assistant tools (`record_feeding`,
+`record_fish_mortality`, `record_fish_health_observation`,
+`get_fish_health_summary`), new `fish_health` domain. Verified via
+`scenarios.py::scenario_fish_health_tracking` (8 checks: feeding
+history/trend including the honest 'insufficient_data' case, both
+mortality-alert paths — percentage-based and absolute-count fallback —
+correctly firing and staying silent, health observations logged
+separately from mortality) and a live smoke test against the real
+running system. A real bug caught during scenario testing, not assumed
+correct from code review: `get_health_events()` originally returned
+EVERY fish_health_events row regardless of type, duplicating
+`get_mortality_history()`'s data instead of complementing it — fixed
+to filter to observations only, matching its actual role in
+`get_fish_health_summary`. Original brainstorm text kept below for
+context.
+
+**Problem it solves:** this is called an aquaponics manager, but almost
+everything built so far is water-chemistry/plant-centric — there's no
+fish mortality tracking, no feeding log, no fish health observations
+anywhere. That's not just a completeness gap: bioload (how much waste
+the fish are actually producing) is exactly what drives the nitrogen
+cycle, and `core/biofilter_model.py` currently has no real signal for
+it beyond test-kit readings after the fact — a feeding/mortality log
+would give it one.
+**What it'd do:** a manual log (same shape as `water_quality_tests` —
+periodic real entries, not fabricated continuous sensing, since there's
+no cheap way to continuously weigh/count fish either) for feeding
+events (amount, frequency) and mortality/health observations per tank.
+Feeds a real bioload estimate into the biofilter model, and gives the
+assistant something real to answer "how are the fish doing" with,
+instead of nothing.
+**Effort:** small-medium — same pattern as the biofilter model, mostly
+a new table + a service + an assistant tool.
+
+## 15. Fast water-loss / leak detection — not yet built
+**Problem it solves:** `core/trend_analyzer.py` catches SLOW drift
+against a rolling baseline — it's not built to catch a sudden leak (a
+level sensor dropping fast, right now, not over a multi-reading
+window). A major leak is one of the most common real aquaponics
+failure modes, and today it's only as protected as "eventually the
+level looks weird enough to flag as drift," not "a leak was detected
+within one cycle."
+**What it'd do:** a dedicated rate-of-change check on `level` readings
+specifically — compare the most recent 2-3 readings' actual drop
+against a real, physically-implausible-for-evaporation threshold, and
+raise a CRITICAL alert (not just a WARNING drift signal) fast. Small,
+focused, safety-relevant in the same category as the stale-sensor
+freeze logic already in `contracts/mia_homestead_contract.py`.
+**Effort:** small — a focused addition, not a new architecture.
+
+## 16. Pest / disease observation log + knowledge base — not yet built
+**Problem it solves:** nothing logs or reasons about plant pests,
+disease symptoms, or fish illness anywhere in this system.
+**What it'd do:** a manual observation log (what was seen, on what
+plant/tank, when) plus a symptom knowledge base in the same shape as
+`core/species_registry.py` — common pest/disease symptoms per species,
+with guidance, refined over time the same way species ranges are.
+Camera-based visual detection is a real, much bigger stretch goal
+(ties into the AI HAT/NPU hardware `docs/OFFLINE_ASSISTANT_PLAN.md`
+already flags as unproven) — not v1.
+**Effort:** medium for the manual log + knowledge base; large (and
+hardware-gated) for any vision-based version.
+
+## 17. Weather-aware alerts — not yet built
+**Problem it solves:** the whole system reacts to what's happening
+INSIDE the tank/cell — nothing looks outside. A frost or heat wave
+warning, even a day ahead, is the difference between a proactive fix
+and a dead crop.
+**What it'd do:** an opportunistic online check (same "nice when
+connected, never required" posture as SMS delivery and cloud
+escalation — this system's core control loop must never depend on it)
+against a free weather API for the greenhouse's real location, alerting
+on frost/heat-wave conditions relevant to the currently-planted
+species' documented temp ranges.
+**Effort:** small-medium — mostly one new integration point, reuses the
+existing notification path.
+
+## 18. Cost / profitability accounting — not yet built
+**Problem it solves:** yield is tracked; the actual economics (feed,
+nutrient, electricity cost per harvest) aren't. Matters much more once
+this is more than a hobby system.
+**What it'd do:** tie real costs (inventory consumption already tracked
+by `core/inventory.py`, power draw already tracked by
+`modules/power_monitor.py`) to yield events to compute a real
+cost-per-harvest and margin, not just revenue.
+**Effort:** medium — mostly composing data that already exists across
+modules, not new tracking.
+
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13 — see each
-entry above for what actually implements it and how it was verified.
-Every item in the roadmap the user originally picked through is now
-built. The original recommendation section below is kept for its
-reasoning, now historical.
+**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14 — see
+each entry above for what actually implements it and how it was
+verified. Every item in the originally-picked roadmap is now built.
 
-**Still genuinely open — both correctly gated on real hardware/data
-that doesn't exist yet, not software gaps:**
+**Newly added 2026-08-31, roughly in priority order** (per a conversation
+about what's still missing for this to be genuinely "useful and
+necessary," not just more of what's already built): **#14 (fish health/
+mortality/feeding tracking) — DONE**, see above. **#15 (fast leak
+detection)** is the other item called genuinely necessary — both are
+about preventing the kind of loss that erodes trust in an unattended
+system, which is the whole premise here. Next up. **#16 (pest/disease
+log)** and **#17 (weather-aware alerts)** are strong seconds. **#18
+(cost accounting)** matters more once selling commercially than for a
+homestead.
+
+**Still genuinely open from the original roadmap — both correctly
+gated on real hardware/data that doesn't exist yet, not software
+gaps:**
 - **#4** (seasonal awareness) — needs a full seasonal cycle of real data.
 - **#8** (firmware OTA rollback safety) — needs the Safety MCU firmware
   actually deployed and iterated on first.
 
-Next real milestone from here is the physical pilot build, not more
-software — see `docs/PILOT_VS_SCALE.md` and the pilot kit sitting in
-`inventory_orders` as `status='proposed'` (`python3 core/order_queue.py`).
+The physical pilot build (`docs/PILOT_VS_SCALE.md`, pilot kit sitting
+in `inventory_orders` as `status='proposed'`,
+`python3 core/order_queue.py`) remains the real milestone once the
+software side settles, alongside whatever's built from #14-18.
 
 ## Original recommendation on where to start (historical)
 

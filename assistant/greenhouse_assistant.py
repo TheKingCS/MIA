@@ -453,6 +453,57 @@ TOOLS = [
         },
     },
     {
+        "name": "record_feeding",
+        "description": "Log a real feeding event for a cell's fish — use when the user tells you they fed the fish.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "amount": {"type": "number"},
+                "unit": {"type": "string", "description": "Defaults to 'oz'"},
+                "food_type": {"type": "string"},
+                "notes": {"type": "string"},
+            },
+            "required": ["cell_id", "amount"],
+        },
+    },
+    {
+        "name": "record_fish_mortality",
+        "description": "Log real fish mortality for a cell — use when the user tells you fish died.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "count": {"type": "integer"},
+                "cause": {"type": "string", "description": "Suspected cause, if known"},
+                "notes": {"type": "string"},
+            },
+            "required": ["cell_id", "count"],
+        },
+    },
+    {
+        "name": "record_fish_health_observation",
+        "description": "Log a fish health/behavior observation for a cell that isn't a mortality event — use when the user describes how the fish are doing or acting.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "description": {"type": "string"},
+                "notes": {"type": "string"},
+            },
+            "required": ["cell_id", "description"],
+        },
+    },
+    {
+        "name": "get_fish_health_summary",
+        "description": "Get a cell's fish picture: recent feeding history and trend, mortality history, and health observations — everything fish-related in one place.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"cell_id": {"type": "integer"}},
+            "required": ["cell_id"],
+        },
+    },
+    {
         "name": "add_species",
         "description": "Add a new species to the knowledge base — use when the user wants to track a plant or fish species that isn't already known.",
         "input_schema": {
@@ -749,6 +800,10 @@ TOOL_DOMAINS: dict[str, str] = {
     "record_water_usage": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
+    "record_feeding": "fish_health",
+    "record_fish_mortality": "fish_health",
+    "record_fish_health_observation": "fish_health",
+    "get_fish_health_summary": "fish_health",
     # species — the "what does this organism want" knowledge base
     "get_species_profile": "species",
     "list_species": "species",
@@ -822,6 +877,10 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "water_quality": [
         "ammonia", "nitrite", "nitrate", "biofilter", "nitrogen cycle", "cycled",
         "cycling", "test kit", "water test", "stock fish", "stocking",
+    ],
+    "fish_health": [
+        "fish", "feed", "feeding", "fed", "mortality", "died", "dead fish",
+        "sick", "lethargic", "behavior", "swimming",
     ],
     "yield_planting": [
         "yield", "harvest", "planted", "planting", "grow bed", "watered",
@@ -1402,6 +1461,34 @@ class _BaseGreenhouseAssistant:
         return {
             "cycle_status": bm.get_cycle_status(cell_id),
             "livestock_readiness": bm.check_livestock_readiness(cell_id),
+        }
+
+    def _tool_record_feeding(self, cell_id: int, amount: float, unit: str = "oz",
+                               food_type: str | None = None, notes: str | None = None) -> dict:
+        from core.fish_health import FishHealth
+        event_id = FishHealth(self.db).record_feeding(cell_id, amount, unit=unit, food_type=food_type, notes=notes)
+        return {"event_id": event_id, "cell_id": cell_id, "amount": amount, "unit": unit}
+
+    def _tool_record_fish_mortality(self, cell_id: int, count: int, cause: str | None = None,
+                                      notes: str | None = None) -> dict:
+        from core.fish_health import FishHealth
+        event_id = FishHealth(self.db).record_mortality(cell_id, count, cause=cause, notes=notes)
+        return {"event_id": event_id, "cell_id": cell_id, "count": count}
+
+    def _tool_record_fish_health_observation(self, cell_id: int, description: str,
+                                               notes: str | None = None) -> dict:
+        from core.fish_health import FishHealth
+        event_id = FishHealth(self.db).record_health_observation(cell_id, description, notes=notes)
+        return {"event_id": event_id, "cell_id": cell_id}
+
+    def _tool_get_fish_health_summary(self, cell_id: int) -> dict:
+        from core.fish_health import FishHealth
+        fh = FishHealth(self.db)
+        return {
+            "feeding_history": fh.get_feeding_history(cell_id),
+            "feeding_trend": fh.get_feeding_trend(cell_id),
+            "mortality_history": fh.get_mortality_history(cell_id),
+            "health_observations": fh.get_health_events(cell_id),
         }
 
     def _tool_add_species(self, common_name: str, organism_type: str, scientific_name: str | None = None,

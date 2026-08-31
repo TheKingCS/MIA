@@ -21,6 +21,10 @@ CREATE TABLE tanks (
     capacity_gallons REAL,
     species TEXT,                       -- e.g. "tilapia"
     stocked_date TEXT,
+    quantity_stocked INTEGER,           -- nullable — when known, makes mortality
+                                         -- tracking (core/fish_health.py) a real
+                                         -- percentage-of-population signal instead
+                                         -- of only an absolute count
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -173,6 +177,35 @@ CREATE TABLE water_quality_tests (
     notes TEXT
 );
 CREATE INDEX idx_water_quality_tests_cell ON water_quality_tests(cell_id, timestamp);
+
+-- ============ FISH HEALTH, FEEDING, MORTALITY ============
+-- This is called an aquaponics manager, but everything else in this
+-- schema is water-chemistry/plant-centric — nothing tracks the fish
+-- themselves. Two purpose-built tables, same reasoning as
+-- water_quality_tests: real periodic manual entries (no cheap way to
+-- continuously weigh/count fish either), not fabricated continuous data.
+
+CREATE TABLE feeding_events (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    timestamp TEXT DEFAULT (datetime('now')),
+    amount REAL,
+    unit TEXT DEFAULT 'oz',
+    food_type TEXT,
+    notes TEXT
+);
+CREATE INDEX idx_feeding_events_cell ON feeding_events(cell_id, timestamp);
+
+CREATE TABLE fish_health_events (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    timestamp TEXT DEFAULT (datetime('now')),
+    event_type TEXT NOT NULL,           -- 'mortality','observation'
+    count INTEGER,                      -- for mortality: how many; NULL for observation
+    description TEXT NOT NULL,
+    notes TEXT
+);
+CREATE INDEX idx_fish_health_events_cell ON fish_health_events(cell_id, timestamp);
 
 -- ============ ALERTS ============
 

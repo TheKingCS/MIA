@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 38 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 46 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 

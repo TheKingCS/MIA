@@ -46,6 +46,7 @@ from core.deploy_manager import DeployManager
 from core.activity_journal import ActivityJournal
 from core.biofilter_model import BiofilterModel
 from core.sensor_confidence import SensorConfidence
+from core.fish_health import FishHealth
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -134,6 +135,7 @@ def main():
     journal = ActivityJournal(db)
     biofilter = BiofilterModel(db, notifier=notifier)
     sensor_confidence = SensorConfidence(db)
+    fish_health = FishHealth(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -148,6 +150,7 @@ def main():
         (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
         (deploys, "deploy_manager"), (journal, "activity_journal"),
         (biofilter, "biofilter_model"), (sensor_confidence, "sensor_confidence"),
+        (fish_health, "fish_health"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -248,6 +251,9 @@ def main():
                 overdue_tests = biofilter.check_overdue_water_tests()
                 if overdue_tests:
                     logger.info("Biofilter model: %d cell(s) overdue for a water test", len(overdue_tests))
+                mortality_spikes = fish_health.check_mortality_spike()
+                if mortality_spikes:
+                    logger.warning("Fish health: mortality spike in %d cell(s)", len(mortality_spikes))
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the
