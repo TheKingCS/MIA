@@ -98,7 +98,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
     gap: 12px;
-    margin-bottom: 16px;
   }
 
   .stat-tile {
@@ -108,13 +107,67 @@
     padding: 12px 14px;
   }
   .stat-tile.warning { border-color: rgba(232, 163, 61, 0.45); }
+  .stat-tile.critical { border-color: rgba(232, 93, 93, 0.5); }
   .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
   .stat-tile.warning .stat-label { color: var(--warning); }
+  .stat-tile.critical .stat-label { color: var(--critical); }
   .stat-value { font-size: 22px; font-weight: 600; margin-top: 4px; line-height: 1.1; }
   .stat-tile.warning .stat-value { color: var(--warning); }
+  .stat-tile.critical .stat-value { color: var(--critical); }
   .stat-value .unit { font-size: 12px; color: var(--text-dim); font-weight: 400; }
   .stat-delta { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
   .sparkline-wrap { margin-top: 8px; height: 28px; }
+
+  /* Sections — the top-level category grouping. A section-header reads
+     as a real heading (bigger, brighter, full-width rule beneath it),
+     deliberately more prominent than .panel-title below, which is a
+     sub-heading for one panel inside a section, not a category of its
+     own. This distinction (category vs. panel) is the actual fix for
+     "everything looks the same weight." */
+  .section { margin-bottom: 28px; }
+  .section:last-of-type { margin-bottom: 0; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .section-header .count {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text-dim);
+  }
+  .section-header.attention { border-bottom-color: rgba(232, 163, 61, 0.4); color: var(--warning); }
+  .section-header.attention.critical { border-bottom-color: rgba(232, 93, 93, 0.5); color: var(--critical); }
+  .section-header.attention .count { color: inherit; opacity: 0.85; }
+
+  /* Hero tiles — the "status at a glance" row, deliberately larger than
+     the per-sensor stat-tiles below it so the 4 highest-level questions
+     (anything broken? battery? growing anything? anything to buy?) read
+     as more important than any single sensor reading, not equal to it. */
+  .hero-tiles { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .hero-tile { padding: 16px 18px; }
+  .hero-tile .stat-value { font-size: 26px; }
+
+  .cell-group { margin-bottom: 16px; }
+  .cell-group:last-child { margin-bottom: 0; }
+  .cell-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .cell-group-label .status-dot { margin-right: 6px; }
 
   .grid-main {
     display: grid;
@@ -245,29 +298,42 @@
     <div class="chips" id="header-chips"></div>
   </div>
 
-  <div class="tiles" id="sensor-tiles"></div>
+  <div class="section">
+    <div class="section-header"><span>Status at a Glance</span></div>
+    <div class="tiles hero-tiles" id="glance-tiles"></div>
+  </div>
 
-  <div class="grid-main">
-    <div class="col">
-      <div class="panel">
-        <div class="panel-title"><span>Open Alerts</span><span class="count" id="alerts-count"></span></div>
-        <div id="alerts-list"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title"><span>Active Experiments</span></div>
-        <div id="experiments-list"></div>
-      </div>
-    </div>
+  <div class="section">
+    <div class="section-header"><span>Water Quality</span></div>
+    <div id="water-quality-body"></div>
+  </div>
 
-    <div class="panel">
-      <div class="panel-title"><span>Yield &amp; Harvest</span></div>
-      <div id="yield-body"></div>
-    </div>
-
-    <div class="col">
+  <div class="section">
+    <div class="section-header"><span>Power &amp; Yield</span></div>
+    <div class="grid-main">
       <div class="panel">
         <div class="panel-title"><span>Power &amp; Battery</span></div>
         <div id="power-body"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span>Yield &amp; Harvest</span></div>
+        <div id="yield-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" id="attention-header"><span>Needs Attention</span><span class="count" id="attention-count"></span></div>
+    <div class="grid-main">
+      <div class="col">
+        <div class="panel">
+          <div class="panel-title"><span>Open Alerts</span><span class="count" id="alerts-count"></span></div>
+          <div id="alerts-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><span>Active Experiments</span></div>
+          <div id="experiments-list"></div>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-title"><span>Inventory — Reorder Needed</span></div>
@@ -395,36 +461,87 @@ function renderHeader(data) {
   document.getElementById("generated-at").textContent = data.generated_at || "unknown";
 }
 
-function renderSensorTiles(data) {
-  const wrap = document.getElementById("sensor-tiles");
-  // Carry the cell name onto each reading before flattening -- with only
-  // one cell (today's real deployment) two tiles never share a label so
-  // this stays invisible; found necessary the moment a second cell
-  // (docs/PILOT_VS_SCALE.md's pilot_cell) existed for real and produced
-  // two visually-identical "Water pH" tiles with no way to tell which
-  // cell was which.
-  const multiCell = data.cells.length > 1;
-  const readings = data.cells.flatMap(c => c.readings.map(r => ({ ...r, _cellName: c.name })));
-  if (readings.length === 0) {
+function sensorTile(r) {
+  const stale = r.is_stale;
+  const color = stale ? "#E8A33D" : "#4FD1C5";
+  const label = SENSOR_LABELS[r.type] || r.type;
+  return el("div", { class: "stat-tile" + (stale ? " warning" : "") }, [
+    el("div", { class: "stat-label" }, [label]),
+    el("div", { class: "stat-value" }, [
+      String(Math.round(r.value * 100) / 100),
+      " ",
+      el("span", { class: "unit" }, [r.unit || ""]),
+    ]),
+    el("div", { class: "stat-delta" }, [stale ? "Stale reading" : timeAgo(r.timestamp)]),
+    el("div", { class: "sparkline-wrap" }, [sparkline(r.trend, color)]),
+  ]);
+}
+
+function renderWaterQuality(data) {
+  // One labeled group per cell rather than one flat row of tiles --
+  // with two+ cells, a flat row read as one undifferentiated wall of
+  // near-identical tiles with no way to tell which cell was which
+  // (the earlier fix prefixed every tile's own label instead; grouping
+  // is the more legible fix, since the cell only needs to be said once).
+  const wrap = document.getElementById("water-quality-body");
+  const anyReadings = data.cells.some(c => c.readings.length > 0);
+  if (!anyReadings) {
     wrap.appendChild(el("div", { class: "empty-state" }, ["No sensor readings yet — run the simulator or connect real hardware."]));
     return;
   }
-  for (const r of readings) {
-    const stale = r.is_stale;
-    const color = stale ? "#E8A33D" : "#4FD1C5";
-    const label = SENSOR_LABELS[r.type] || r.type;
-    const tile = el("div", { class: "stat-tile" + (stale ? " warning" : "") }, [
-      el("div", { class: "stat-label" }, [multiCell ? `${r._cellName} — ${label}` : label]),
-      el("div", { class: "stat-value" }, [
-        String(Math.round(r.value * 100) / 100),
-        " ",
-        el("span", { class: "unit" }, [r.unit || ""]),
+  for (const cell of data.cells) {
+    if (cell.readings.length === 0) continue;
+    const worstStale = cell.readings.some(r => r.is_stale);
+    wrap.appendChild(el("div", { class: "cell-group" }, [
+      el("div", { class: "cell-group-label" }, [
+        el("span", { class: "status-dot " + (worstStale ? "status-warning" : "status-ok") }, []),
+        cell.name,
       ]),
-      el("div", { class: "stat-delta" }, [stale ? "Stale reading" : timeAgo(r.timestamp)]),
-      el("div", { class: "sparkline-wrap" }, [sparkline(r.trend, color)]),
-    ]);
-    wrap.appendChild(tile);
+      el("div", { class: "tiles" }, cell.readings.map(sensorTile)),
+    ]));
   }
+}
+
+function renderGlanceTiles(data) {
+  // The 4 highest-level questions a person actually wants answered in
+  // two seconds: is anything broken, is there power, is anything
+  // growing, is there anything to buy. Everything else on the page is
+  // detail in service of one of these.
+  const wrap = document.getElementById("glance-tiles");
+
+  const critical = data.alerts.filter(a => a.severity === "critical").length;
+  const warning = data.alerts.filter(a => a.severity === "warning").length;
+  let statusClass = "ok", statusText = "All Clear";
+  if (critical) { statusClass = "critical"; statusText = `${critical} Critical`; }
+  else if (warning) { statusClass = "warning"; statusText = `${warning} Warning${warning > 1 ? "s" : ""}`; }
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" + (statusClass !== "ok" ? " " + statusClass : "") }, [
+    el("div", { class: "stat-label" }, ["System Status"]),
+    el("div", { class: "stat-value" }, [statusText]),
+    el("div", { class: "stat-delta" }, [critical || warning ? "see Needs Attention below" : "no open alerts"]),
+  ]));
+
+  const battery = data.power.find(p => p.source === "battery" && p.battery_soc_percent != null);
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" + (battery && battery.battery_soc_percent < 30 ? " warning" : "") }, [
+    el("div", { class: "stat-label" }, ["Battery"]),
+    el("div", { class: "stat-value" }, battery ? [`${battery.battery_soc_percent}`, el("span", { class: "unit" }, ["%"])] : ["—"]),
+    el("div", { class: "stat-delta" }, [battery ? "" : "no power data yet"]),
+  ]));
+
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" }, [
+    el("div", { class: "stat-label" }, ["Harvested This Week"]),
+    el("div", { class: "stat-value" }, [`${Math.round(data.yield.this_week_total * 10) / 10}`, el("span", { class: "unit" }, [" kg"])]),
+    el("div", { class: "stat-delta" }, [""]),
+  ]));
+
+  const pendingCount = data.pending_orders.filter(o => o.status === "proposed").length;
+  const pendingTotal = data.low_stock
+    .filter(item => data.pending_orders.some(o => o.item_id === item.id && o.status === "proposed"))
+    .reduce((sum, item) => sum + (item.unit_cost || 0), 0);
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" + (pendingCount ? " warning" : "") }, [
+    el("div", { class: "stat-label" }, ["Awaiting Approval"]),
+    el("div", { class: "stat-value" }, [pendingCount ? `${pendingCount}` : "0"]),
+    el("div", { class: "stat-delta" }, [pendingCount ? `~$${pendingTotal.toFixed(2)} total` : "nothing pending"]),
+  ]));
 }
 
 function renderAlerts(data) {
@@ -598,12 +715,32 @@ function renderMaintenance(data) {
   }
 }
 
+function renderAttentionHeader(data) {
+  // The section header itself carries the same urgency signal the old
+  // per-panel badges only showed once you were already looking at that
+  // one panel -- amber/red here means "something in this whole zone
+  // needs you" before reading any of the panels inside it.
+  const header = document.getElementById("attention-header");
+  const count = document.getElementById("attention-count");
+  const critical = data.alerts.filter(a => a.severity === "critical").length;
+  const warning = data.alerts.filter(a => a.severity === "warning").length;
+  const pending = data.pending_orders.filter(o => o.status === "proposed").length;
+  const maint = data.maintenance.length;
+  const total = data.alerts.length + pending + maint;
+  count.textContent = total ? `${total} item${total > 1 ? "s" : ""}` : "all clear";
+  header.classList.remove("attention", "critical");
+  if (critical) header.classList.add("attention", "critical");
+  else if (total) header.classList.add("attention");
+}
+
 fetch("dashboard_state.json")
   .then(r => { if (!r.ok) throw new Error("not found"); return r.json(); })
   .then(data => {
     document.getElementById("app").style.display = "block";
     renderHeader(data);
-    renderSensorTiles(data);
+    renderGlanceTiles(data);
+    renderWaterQuality(data);
+    renderAttentionHeader(data);
     renderAlerts(data);
     renderExperiments(data);
     renderYield(data);

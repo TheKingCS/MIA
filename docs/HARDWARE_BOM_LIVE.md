@@ -1,6 +1,6 @@
 # MIA Homestead — Live Hardware BOM
 
-**Auto-generated 2026-08-31T15:19:38.567132Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
+**Auto-generated 2026-08-31T15:38:21.604032Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
 
 For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM_CURRENT.md`.
 
