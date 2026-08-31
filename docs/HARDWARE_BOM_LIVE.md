@@ -1,6 +1,6 @@
 # MIA Homestead — Live Hardware BOM
 
-**Auto-generated 2026-08-31T20:05:06.326969Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
+**Auto-generated 2026-08-31T20:26:29.649697Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
 
 For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM_CURRENT.md`.
 
@@ -17,6 +17,9 @@ For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM
   1x MCU (Watering Controller) — ~$20.00  (needed by: device_registry)
   1x MCU (pH Dosing Controller) — ~$20.00  (needed by: device_registry)
 
+== OTHER ==
+  1x API Freshwater Master Test Kit (or equivalent liquid ammonia/nitrite/nitrate/pH test kit) — ~$38.99  (needed by: biofilter_model)
+
 == POWER ==
   1x 12V DC power supply (2-3A) — ~$12.00  (needed by: device_registry)
   1x Battery bank (LiFePO4 recommended)  (needed by: greenhouse_power)
@@ -28,5 +31,5 @@ For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM
   2x DS18B20 waterproof temp probe — ~$16.00  (needed by: cell_a_aquaponics,pilot_cell)
   1x PIR motion sensor — ~$5.00  (needed by: greenhouse_self_preservation)
 
-Estimated total: ~$1209.00
+Estimated total: ~$1247.99
 ```

@@ -180,7 +180,34 @@ planting on `pilot_cell` then gets proactively proposed the NEWLY
 refined value, not the stale baseline one, with a hypothesis explicitly
 citing the confirmed evidence.
 
-## 12. Digital biofilter / nitrogen-cycle model — not yet built
+## 12. Digital biofilter / nitrogen-cycle model — DONE (2026-08-31)
+Built as `core/biofilter_model.py`. Real finding that reframed the
+original brainstorm below: no ammonia/nitrite/nitrate sensor exists
+anywhere in `sensors.type`, and real aquaponics testing is a periodic
+manual liquid/strip test kit (e.g. API Freshwater Master Test Kit,
+~$38.99, confirmed live 2026-08-31), not something a cheap continuous
+probe exists for. Built around a new `water_quality_tests` table (real
+logged manual readings, `source` column forward-compatible for a real
+automated probe later) rather than pretending continuous sensor data
+exists. Tracks cycle stage (`not_started` / `insufficient_data` /
+`ammonia_phase` / `nitrite_phase` / `cycled`) from real logged tests —
+`cycled` requires 2 CONSECUTIVE clean tests, not one lucky reading
+(same overclaiming guard as `MIN_CONSISTENT_READINGS_FOR_DOSE` and the
+closed-loop learning work). `check_livestock_readiness()` warns if fish
+are already stocked on an uncycled cell; `check_overdue_water_tests()`
+(wired into `main.py`'s periodic block) nudges when a stocked, uncycled
+cell hasn't had a fresh test logged in 14+ days. Two new assistant
+tools (`record_water_quality_test`, `get_biofilter_cycle_status`, new
+`water_quality` domain). Verified via
+`scenarios.py::scenario_biofilter_cycle_tracking` (9 checks: stage
+transitions, the overclaiming guard, all 3 livestock-readiness
+outcomes, the overdue reminder firing/staying silent correctly) and a
+live smoke test against the real running system. Original brainstorm
+text kept below for context — the "predict a spike before it happens"
+framing wasn't realistic without continuous sensor data, which doesn't
+exist; the livestock-readiness/cycle-stage-from-real-tests framing that
+shipped is the honest version of the same underlying goal.
+
 **Problem it solves:** the system is entirely threshold/drift-reactive
 about water chemistry — it has no model of the actual nitrogen cycle
 (ammonia→nitrite→nitrate) that governs whether a cell is even safely
@@ -211,17 +238,15 @@ not new cloud-calling code.
 
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #6, #7, #9, #10, #11 — see each entry above for
-what actually implements it and how it was verified. The original
+**Done:** #1, #2, #3, #6, #7, #9, #10, #11, #12 — see each entry above
+for what actually implements it and how it was verified. The original
 recommendation section below is kept for its reasoning, now historical.
 
-**Still genuinely open:**
-- **#5** (confidence scoring) — its #2 dependency is now satisfied, so
-  this is unblocked but not yet built. Reasonable next candidate.
-- **#12** (digital biofilter / nitrogen-cycle model) — software-only,
-  buildable now, not yet started.
+**Still genuinely open, in the order the user picked to work through them:**
 - **#13** (optional cloud-escalation) — software-only, buildable now,
-  not yet started.
+  not yet started. Next up.
+- **#5** (confidence scoring) — its #2 dependency is now satisfied, so
+  this is unblocked but not yet built.
 - **#4** (seasonal awareness) — still correctly gated on a full
   seasonal cycle of real data; not build-now regardless.
 - **#8** (firmware OTA rollback safety) — still correctly gated on the

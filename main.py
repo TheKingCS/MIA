@@ -44,6 +44,7 @@ from core.report_generator import ReportGenerator
 from core.trend_analyzer import TrendAnalyzer
 from core.deploy_manager import DeployManager
 from core.activity_journal import ActivityJournal
+from core.biofilter_model import BiofilterModel
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -130,6 +131,7 @@ def main():
     reports = ReportGenerator(db, notifier=notifier)
     trend_analyzer = TrendAnalyzer(db, notifier=notifier)
     journal = ActivityJournal(db)
+    biofilter = BiofilterModel(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -143,6 +145,7 @@ def main():
         (backups, "backup_manager"), (deadmans, "deadmans_switch"),
         (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
         (deploys, "deploy_manager"), (journal, "activity_journal"),
+        (biofilter, "biofilter_model"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -240,6 +243,9 @@ def main():
                         forecast = module.check_soc_forecast()
                         if forecast and forecast["hours_to_threshold"] <= SOC_FORECAST_WARNING_HOURS:
                             logger.info("%s: SOC forecast warning — %s", module.module_id, forecast)
+                overdue_tests = biofilter.check_overdue_water_tests()
+                if overdue_tests:
+                    logger.info("Biofilter model: %d cell(s) overdue for a water test", len(overdue_tests))
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the

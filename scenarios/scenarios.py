@@ -487,6 +487,84 @@ def scenario_pair_confirm_payload_real_ids():
     return checks
 
 
+def scenario_biofilter_cycle_tracking():
+    """The classic aquaponics nitrogen cycle (ammonia -> nitrite ->
+    cycled), tracked from real logged manual test results. Proves the
+    stage classification transitions correctly, the overclaiming guard
+    (2 consecutive clean tests required) actually gates, livestock
+    readiness reflects real cycle state, and the overdue-test reminder
+    fires only when it should. cell_a_aquaponics comes pre-stocked with
+    tilapia from setup_demo_cell() itself (a real, common scenario —
+    fish-in cycling, not just fishless) — used for the "stocked" cases;
+    pilot_cell starts genuinely unstocked — used for the "not stocked
+    yet, safe to add" case."""
+    from drivers.simulator import setup_pilot_cell
+    from core.biofilter_model import BiofilterModel
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)  # already stocked (tilapia) per setup_demo_cell()
+    pilot_id = setup_pilot_cell(conn)  # NOT stocked per setup_pilot_cell()
+    bm = BiofilterModel(conn)
+
+    # ---- cell_a: stage 1, ammonia rising, no nitrite yet ----
+    bm.record_test(cell_id, ammonia_ppm=1.0, nitrite_ppm=0.0, nitrate_ppm=0.0)
+    stage_1 = bm.get_cycle_status(cell_id)["stage"]
+
+    # ---- cell_a: stage 2, ammonia falling, nitrite rising (Nitrosomonas established) ----
+    bm.record_test(cell_id, ammonia_ppm=0.5, nitrite_ppm=1.5, nitrate_ppm=1.0)
+    stage_2 = bm.get_cycle_status(cell_id)["stage"]
+
+    # ---- cell_a: stocked + genuinely not cycled yet -> real warning ----
+    ready_while_stocked_uncycled = bm.check_livestock_readiness(cell_id)
+
+    # ---- cell_a: backdate the latest test so it reads as overdue, confirm
+    # the reminder fires for a real stocked-and-uncycled-and-untested-
+    # recently cell ----
+    conn.execute(
+        "UPDATE water_quality_tests SET timestamp = datetime('now', '-20 days') "
+        "WHERE id = (SELECT MAX(id) FROM water_quality_tests WHERE cell_id = ?)",
+        (cell_id,),
+    )
+    conn.commit()
+    overdue_mid_cycle = {f["cell_id"] for f in bm.check_overdue_water_tests()}
+
+    # ---- cell_a: stage 3, first clean test (ammonia+nitrite ~0, nitrate present) ----
+    bm.record_test(cell_id, ammonia_ppm=0.0, nitrite_ppm=0.0, nitrate_ppm=10.0)
+    single_clean_not_yet_cycled = bm.get_cycle_status(cell_id)["stage"] != "cycled"
+
+    # ---- cell_a: stage 4, SECOND consecutive clean test -> genuinely cycled ----
+    bm.record_test(cell_id, ammonia_ppm=0.0, nitrite_ppm=0.0, nitrate_ppm=15.0)
+    now_cycled = bm.get_cycle_status(cell_id)["stage"] == "cycled"
+    ready_while_stocked_cycled = bm.check_livestock_readiness(cell_id)
+    overdue_after_cycled = {f["cell_id"] for f in bm.check_overdue_water_tests()}
+
+    # ---- pilot: not stocked, cycled from 2 direct clean tests -> safe to stock ----
+    bm.record_test(pilot_id, ammonia_ppm=0.0, nitrite_ppm=0.0, nitrate_ppm=8.0)
+    bm.record_test(pilot_id, ammonia_ppm=0.0, nitrite_ppm=0.0, nitrate_ppm=9.0)
+    ready_not_stocked_cycled = bm.check_livestock_readiness(pilot_id)
+
+    checks = [
+        ("ammonia-rising test classifies as ammonia_phase (real evidence from 1 reading)",
+         stage_1 == "ammonia_phase"),
+        ("nitrite-rising test classifies as nitrite_phase", stage_2 == "nitrite_phase"),
+        ("fish already stocked + genuinely not cycled -> real warning, not silently OK",
+         not ready_while_stocked_uncycled["ready"] and ready_while_stocked_uncycled["stocked"]),
+        ("overdue reminder fires for a stocked, not-yet-cycled cell whose latest test is old",
+         cell_id in overdue_mid_cycle),
+        ("a single clean test alone does NOT yet report cycled (overclaiming guard)",
+         single_clean_not_yet_cycled),
+        ("two CONSECUTIVE clean tests correctly report cycled", now_cycled),
+        ("fish stocked on a NOW-cycled cell -> reports ready/safe",
+         ready_while_stocked_cycled["ready"] and ready_while_stocked_cycled["stocked"]),
+        ("overdue reminder stays silent once the cell is confirmed cycled",
+         cell_id not in overdue_after_cycled),
+        ("cycled + no fish stocked yet -> ready to stock",
+         ready_not_stocked_cycled["ready"] and not ready_not_stocked_cycled["stocked"]),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -497,6 +575,7 @@ SCENARIOS = {
     "multi_cell_fault_correlation": scenario_multi_cell_fault_correlation,
     "closed_loop_species_learning": scenario_closed_loop_species_learning,
     "pair_confirm_payload_real_ids": scenario_pair_confirm_payload_real_ids,
+    "biofilter_cycle_tracking": scenario_biofilter_cycle_tracking,
 }
 
 

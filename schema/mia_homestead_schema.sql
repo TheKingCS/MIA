@@ -147,6 +147,33 @@ CREATE TABLE yield_events (
     notes TEXT
 );
 
+-- ============ WATER QUALITY / NITROGEN CYCLE ============
+-- No continuous ammonia/nitrite/nitrate sensor exists in sensors.type —
+-- real aquaponics test kits (e.g. API Freshwater Master Test Kit) are a
+-- periodic manual liquid/strip test, not something a cheap continuous
+-- probe exists for the way pH/EC do. This is a purpose-built table, not
+-- routed through sensors/sensor_readings — that machinery's staleness
+-- model (10-minute threshold) is built for continuous, frequently-
+-- polled control-loop inputs, not a weekly manual reading.
+
+CREATE TABLE water_quality_tests (
+    id INTEGER PRIMARY KEY,
+    cell_id INTEGER NOT NULL REFERENCES cells(id),
+    timestamp TEXT DEFAULT (datetime('now')),
+    ammonia_ppm REAL,
+    nitrite_ppm REAL,
+    nitrate_ppm REAL,
+    source TEXT DEFAULT 'manual_test_kit',  -- 'manual_test_kit' now; 'sensor'
+                                             -- reserved for if/when a real
+                                             -- automated probe exists later —
+                                             -- same forward-declared-before-
+                                             -- built pattern as
+                                             -- species_profiles.source
+    tested_by TEXT DEFAULT 'human',
+    notes TEXT
+);
+CREATE INDEX idx_water_quality_tests_cell ON water_quality_tests(cell_id, timestamp);
+
 -- ============ ALERTS ============
 
 CREATE TABLE alerts (

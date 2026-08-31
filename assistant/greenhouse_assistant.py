@@ -406,6 +406,38 @@ TOOLS = [
         },
     },
     {
+        "name": "record_water_quality_test",
+        "description": (
+            "Log a real ammonia/nitrite/nitrate water test result (from an actual test kit "
+            "reading) for a cell — use when the user tells you they ran a water test. At least "
+            "one of ammonia_ppm/nitrite_ppm/nitrate_ppm is required."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "ammonia_ppm": {"type": "number"},
+                "nitrite_ppm": {"type": "number"},
+                "nitrate_ppm": {"type": "number"},
+                "notes": {"type": "string"},
+            },
+            "required": ["cell_id"],
+        },
+    },
+    {
+        "name": "get_biofilter_cycle_status",
+        "description": (
+            "Get a cell's nitrogen-cycle status (ammonia/nitrite/nitrate phase, or confirmed "
+            "cycled) from its real logged water tests, and whether it's safe to stock livestock "
+            "there right now."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"cell_id": {"type": "integer"}},
+            "required": ["cell_id"],
+        },
+    },
+    {
         "name": "add_species",
         "description": "Add a new species to the knowledge base — use when the user wants to track a plant or fish species that isn't already known.",
         "input_schema": {
@@ -699,6 +731,8 @@ TOOL_DOMAINS: dict[str, str] = {
     "mark_planting_harvested": "yield_planting",
     "mark_planting_failed": "yield_planting",
     "record_water_usage": "yield_planting",
+    "record_water_quality_test": "water_quality",
+    "get_biofilter_cycle_status": "water_quality",
     # species — the "what does this organism want" knowledge base
     "get_species_profile": "species",
     "list_species": "species",
@@ -769,6 +803,10 @@ TOOL_DOMAINS: dict[str, str] = {
 
 DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "dosing": ["dos", "ph up", "ph down", "ph-up", "ph-down", "nutrient", "correction", "pump"],
+    "water_quality": [
+        "ammonia", "nitrite", "nitrate", "biofilter", "nitrogen cycle", "cycled",
+        "cycling", "test kit", "water test", "stock fish", "stocking",
+    ],
     "yield_planting": [
         "yield", "harvest", "planted", "planting", "grow bed", "watered",
         "watering", "gallons", "crop", "produce", "expected vs actual",
@@ -1303,6 +1341,24 @@ class _BaseGreenhouseAssistant:
         )
         self.db.commit()
         return {"event_id": cur.lastrowid, "amount_gallons": amount_gallons, "reason": reason}
+
+    def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
+                                          nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,
+                                          notes: str | None = None) -> dict:
+        from core.biofilter_model import BiofilterModel
+        test_id = BiofilterModel(self.db).record_test(
+            cell_id, ammonia_ppm=ammonia_ppm, nitrite_ppm=nitrite_ppm, nitrate_ppm=nitrate_ppm,
+            tested_by="human via assistant", notes=notes,
+        )
+        return {"test_id": test_id, "cell_id": cell_id}
+
+    def _tool_get_biofilter_cycle_status(self, cell_id: int) -> dict:
+        from core.biofilter_model import BiofilterModel
+        bm = BiofilterModel(self.db)
+        return {
+            "cycle_status": bm.get_cycle_status(cell_id),
+            "livestock_readiness": bm.check_livestock_readiness(cell_id),
+        }
 
     def _tool_add_species(self, common_name: str, organism_type: str, scientific_name: str | None = None,
                             ph_min: float | None = None, ph_max: float | None = None,
