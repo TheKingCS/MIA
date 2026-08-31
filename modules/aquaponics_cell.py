@@ -37,8 +37,11 @@ class AquaponicsCell(MiaHomesteadModule):
         ec_target_min: float,
         ec_target_max: float,
         notifier=None,
+        force_read_fn=None,
+        recovery_log_fn=None,
     ):
-        super().__init__(module_id, cell_id, db_conn, notifier=notifier)
+        super().__init__(module_id, cell_id, db_conn, notifier=notifier,
+                          force_read_fn=force_read_fn, recovery_log_fn=recovery_log_fn)
         self.ph_target_min = ph_target_min
         self.ph_target_max = ph_target_max
         self.ec_target_min = ec_target_min
@@ -114,20 +117,27 @@ class AquaponicsCell(MiaHomesteadModule):
         # (see _latest_of_type below — now correctly filters by real sensor type)
 
         if ph_reading is None:
-            self._raise_alert(
-                "warning",
-                f"{self.module_id}: no pH reading available at all "
-                f"(sensor missing or producing zero data) — pH dosing held",
-            )
+            # If a pH sensor exists and has reported before but is mid-retry
+            # (see contracts.MiaHomesteadModule's recovery ladder), stay
+            # quiet — the ladder's own alert will fire if it genuinely
+            # exhausts. Only raise immediately for a sensor that's never
+            # produced a reading at all (nothing to retry against).
+            if not self._is_type_mid_retry("ph"):
+                self._raise_alert(
+                    "warning",
+                    f"{self.module_id}: no pH reading available at all "
+                    f"(sensor missing or producing zero data) — pH dosing held",
+                )
         else:
             commands += self._evaluate_ph(ph_reading)
 
         if ec_reading is None:
-            self._raise_alert(
-                "warning",
-                f"{self.module_id}: no EC reading available at all "
-                f"(sensor missing or producing zero data) — nutrient dosing held",
-            )
+            if not self._is_type_mid_retry("ec"):
+                self._raise_alert(
+                    "warning",
+                    f"{self.module_id}: no EC reading available at all "
+                    f"(sensor missing or producing zero data) — nutrient dosing held",
+                )
         else:
             commands += self._evaluate_ec(ec_reading)
 
@@ -250,6 +260,9 @@ class AquaponicsCell(MiaHomesteadModule):
                 "pulse the pH-up dosing pump",
                 "pulse the pH-down dosing pump",
                 "pulse the nutrient concentrate dosing pump",
+                "before alerting on a stale/missing sensor reading: retry via a forced "
+                "immediate reread, then a healthy redundant sensor of the same type if one "
+                "exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles",
             ],
             limits_and_safety=(
                 f"Targets: pH {self.ph_target_min}-{self.ph_target_max}, "
@@ -257,7 +270,11 @@ class AquaponicsCell(MiaHomesteadModule):
                 f"{self.MIN_CONSISTENT_READINGS_FOR_DOSE} consistent readings "
                 "before dosing. Never auto-dilutes high EC (requires manual "
                 "water change). Freezes dosing entirely if sensors are stale "
-                "or missing, rather than guessing."
+                "or missing, rather than guessing — the recovery ladder "
+                "(contracts.MiaHomesteadModule) only changes how fast a GOOD "
+                "reading gets produced before this logic runs; it never loosens "
+                "what counts as safe to dose on, and dosing stays frozen for the "
+                "entire retry window exactly as if no retry existed at all."
             ),
             example_questions=[
                 "How's the pH in Cell A?", "Has it been dosing much lately?",
@@ -273,6 +290,16 @@ class AquaponicsCell(MiaHomesteadModule):
                 "Live manual test 2026-08-26: confirmed target_overrides changes the live control "
                 "target with zero restart (cell._current_targets() picked up an experiment change "
                 "immediately)",
+                "scenarios.py::scenario_sensor_recovery_ladder_recovers — confirmed a forced "
+                "immediate reread recovers a stale-but-still-alive sensor with zero alert raised",
+                "scenarios.py::scenario_sensor_recovery_exhausted_escalates — confirmed no alert "
+                "fires during the retry window, the same alert fires once retries genuinely "
+                "exhaust, and dosing stays frozen throughout (0 doses issued) either way",
+                "Honest gap: the redundant-sensor-substitution step is implemented but genuinely "
+                "untested — confirmed against the real dev DB that no cell currently configures "
+                "two sensors of the same type (SELECT cell_id, type, count(*) FROM sensors GROUP "
+                "BY cell_id, type HAVING count(*) > 1 returns zero rows), so this path has never "
+                "actually executed against real data.",
             ],
         )
 

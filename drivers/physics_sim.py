@@ -156,6 +156,28 @@ class PhysicsSimulator:
 
     # ---------- Fault injection ----------
 
+    def force_read(self, sensor_type: str) -> bool:
+        """Writes one fresh reading for this sensor type immediately,
+        outside the normal tick cadence — the physics-sim side of the
+        recovery ladder's 'force an immediate reread' step
+        (contracts.MiaHomesteadModule._attempt_recovery). Returns False
+        (refuses to recover) for an unknown type or one that's been
+        deliberately dropped via inject_sensor_dropout — a real total
+        sensor failure shouldn't be silently un-dropped by a reread
+        request."""
+        if sensor_type not in self.sensors or sensor_type in self.dropped:
+            return False
+        value = self.state.get(sensor_type)
+        if value is None:
+            return False
+        self.conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) "
+            "VALUES (?, ?, 0, 0)",
+            (self.sensors[sensor_type], round(value, 3)),
+        )
+        self.conn.commit()
+        return True
+
     def inject_sensor_dropout(self, sensor_type: str):
         """Simulates total sensor failure — no new readings written at
         all, so existing rows naturally age past the staleness threshold."""

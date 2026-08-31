@@ -22,6 +22,7 @@ from pathlib import Path
 import yaml
 
 from contracts.mia_homestead_contract import MiaHomesteadModule
+from core.action_log import log_action
 
 logger = logging.getLogger("mia_homestead.registry")
 
@@ -46,10 +47,15 @@ class ModuleRegistry:
     should never be able to stop the aquaponics dosing loop).
     """
 
-    def __init__(self, config_path: str, db_path: str, notifier=None):
+    def __init__(self, config_path: str, db_path: str, notifier=None, force_read_fn=None):
         self.config_path = Path(config_path)
         self.db_conn = sqlite3.connect(db_path)
         self.notifier = notifier
+        # force_read_fn(sensor_id) -> bool: optional, forwarded to every
+        # module so its recovery ladder can request an immediate fresh
+        # read from whatever driver is live. None when there's no
+        # in-process driver — see main.py's own comment on this.
+        self.force_read_fn = force_read_fn
         self.modules: dict[str, MiaHomesteadModule] = {}
 
     def load(self) -> None:
@@ -82,6 +88,9 @@ class ModuleRegistry:
             cell_id=cfg.cell_id,
             db_conn=self.db_conn,
             notifier=self.notifier,
+            force_read_fn=self.force_read_fn,
+            recovery_log_fn=lambda action, rationale, mid=cfg.module_id:
+                log_action(self.db_conn, mid, action, rationale),
             **cfg.params,
         )
         self.modules[cfg.module_id] = instance

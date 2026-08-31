@@ -52,8 +52,11 @@ class PowerMonitor(MiaHomesteadModule):
         battery_capacity_wh: float,
         low_soc_threshold_pct: float,
         notifier=None,
+        force_read_fn=None,
+        recovery_log_fn=None,
     ):
-        super().__init__(module_id, cell_id, db_conn, notifier=notifier)
+        super().__init__(module_id, cell_id, db_conn, notifier=notifier,
+                          force_read_fn=force_read_fn, recovery_log_fn=recovery_log_fn)
         self.array_name = array_name
         self.battery_capacity_wh = battery_capacity_wh
         self.low_soc_threshold_pct = low_soc_threshold_pct

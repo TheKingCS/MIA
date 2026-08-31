@@ -64,6 +64,30 @@ class DiagnosticEngine(Describable):
 
         return diagnosis
 
+    def auto_diagnose_new_alerts(self) -> list[dict]:
+        """Scans for unresolved, not-yet-auto-diagnosed alerts and
+        diagnoses each one, filing a maintenance task where the pattern
+        match is specific enough to. Called every control-loop cycle by
+        main.py (and directly by scenarios.py's recovery-ladder
+        scenario) — the concrete "expanded autonomy" change: diagnosis +
+        a filed maintenance task now happen the moment an alert survives
+        the recovery ladder, instead of only when a human/assistant
+        thinks to ask via diagnose_alert(). Read/diagnose/file-a-task
+        only — never touches dosing, orders, or config rollback."""
+        rows = self.db.execute(
+            "SELECT id FROM alerts WHERE resolved = 0 AND auto_diagnosed_at IS NULL "
+            "AND severity IN ('warning', 'critical')"
+        ).fetchall()
+        results = []
+        for (alert_id,) in rows:
+            diagnosis = self.diagnose_alert(alert_id, create_task=True)
+            self.db.execute(
+                "UPDATE alerts SET auto_diagnosed_at = datetime('now') WHERE id = ?", (alert_id,)
+            )
+            self.db.commit()
+            results.append(diagnosis)
+        return results
+
     def _pattern_match(self, source: str, message: str) -> dict:
         msg_lower = message.lower()
 
@@ -145,12 +169,19 @@ class DiagnosticEngine(Describable):
                 "segment — instead of generic troubleshooting steps."
             ),
             data_produced=["diagnosis: likely cause + specific physical location + guidance"],
-            actions_possible=["diagnose an alert", "optionally file a maintenance task with the diagnosis attached"],
+            actions_possible=[
+                "diagnose an alert", "optionally file a maintenance task with the diagnosis attached",
+                "auto-diagnose every unresolved alert automatically, every control-loop cycle, "
+                "the moment it survives the recovery ladder — not only when asked",
+            ],
             limits_and_safety=(
                 "Pattern-matches against known fault shapes only — a novel failure mode it "
                 "hasn't been told about falls through to a generic 'manual investigation "
                 "needed' response rather than a confident wrong guess. Never attempts an "
-                "autonomous fix, only points a human at the right place."
+                "autonomous fix, only points a human at the right place — the only side effect "
+                "of automatic invocation is filing a maintenance task, exactly what "
+                "diagnose_alert(create_task=True) already does on request; never touches "
+                "dosing targets, orders, or config rollback."
             ),
             example_questions=["Why is the pH sensor stale?", "Diagnose this alert for me"],
             verification_evidence=[
@@ -159,6 +190,11 @@ class DiagnosticEngine(Describable):
                 "genuine staleness alert, then confirmed the diagnosis correctly traced it to "
                 "the exact MCU (pH Dosing Controller, PORT 2, relay channel 1) and physical "
                 "mounting location, and auto-filed a maintenance task with that diagnosis attached",
+                "scenarios.py::scenario_sensor_recovery_exhausted_escalates — confirmed "
+                "auto_diagnose_new_alerts(), called automatically from the control loop with "
+                "zero manual trigger, produces a real diagnosis (not the generic fallback) and "
+                "auto-files a system-created maintenance task the same cycle the alert survives "
+                "the recovery ladder",
             ],
         )
 

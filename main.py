@@ -103,7 +103,15 @@ def main():
     # safe to run with defaults during development.
     notifier = NotificationDispatcher(NotificationConfig())
 
-    registry = ModuleRegistry(args.config, args.db, notifier=notifier)
+    # force_read_fn=None: main.py and drivers/simulator.py --run are
+    # separate processes sharing only the sqlite file, so there's no
+    # live driver object here for a module's recovery ladder to call
+    # for an on-demand reread. Steps 2-4 of the ladder (redundant-sensor
+    # preference, retry-delay, auto-diagnosis) work fully regardless;
+    # step 1 (force-reread) is inert here until real hardware runs
+    # in-process (see docs — driver + control loop share one process on
+    # real hardware, so this gap disappears there for free).
+    registry = ModuleRegistry(args.config, args.db, notifier=notifier, force_read_fn=None)
     registry.load()
     logger.info("Loaded %d module(s): %s", len(registry.modules), list(registry.modules))
 
@@ -167,6 +175,18 @@ def main():
                     execute_command(db, cmd)
                 if not commands:
                     logger.debug("%s: no actions this cycle", module_id)
+
+            # Auto-diagnose any alert that survived the recovery ladder,
+            # every cycle (not gated to the 60-cycle block below) — the
+            # whole point is reacting the instant a real alert exists,
+            # not up to 60 cycles later. Cheap: a handful of indexed
+            # SELECTs, bounded by the tiny number of genuinely new
+            # unresolved alerts (usually zero). Read/diagnose/file-a-task
+            # only — see core/diagnostics.py's own docstring on this.
+            newly_diagnosed = diagnostics.auto_diagnose_new_alerts()
+            if newly_diagnosed:
+                logger.info("Auto-diagnosed %d new alert(s): %s", len(newly_diagnosed),
+                            [d.get("likely_cause") for d in newly_diagnosed])
 
             # Maintenance/calibration/reorder checks don't need to run every
             # cycle — every 60 cycles is plenty (tune once real interval is set)

@@ -361,6 +361,28 @@ class Simulator:
             (round(-BASE_LOAD_WATTS, 1), round(self.battery_soc, 2)),
         )
 
+    def force_read(self, sensor_id: int) -> bool:
+        """Sensor-id-keyed equivalent of drivers/physics_sim.py's
+        force_read() — writes one fresh reading for this specific sensor
+        immediately, outside the normal tick cadence, reusing its
+        existing drift/noise state. Added for parity/testability; not
+        wired to main.py today since main.py and this simulator run as
+        separate processes sharing only the DB (see main.py's own
+        comment on this)."""
+        if sensor_id not in self.state:
+            return False
+        drift, noise = self.defs[sensor_id]
+        value = self.state[sensor_id] + random.uniform(-drift, drift)
+        reading = value + random.uniform(-noise, noise)
+        self.state[sensor_id] = value
+        self.conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) "
+            "VALUES (?, ?, 0, 0)",
+            (sensor_id, round(reading, 3)),
+        )
+        self.conn.commit()
+        return True
+
     def inject_event(self, sensor_type: str, delta: float):
         """Manually nudge a sensor type — useful for testing that dosing
         logic actually triggers (e.g. inject_event('ph', -0.5))."""

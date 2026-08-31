@@ -108,18 +108,24 @@ class AtlasEZODriver:
             raise AtlasReadError(f"Could not parse response as float: {raw!r}")
         return value
 
-    def read_and_store(self) -> None:
+    def read_and_store(self) -> bool:
         """One full cycle: read the probe, validate against the
         physically plausible range for this probe type, write into
         sensor_readings. This is the method the main control loop calls
         — same 'write into sensor_readings' contract as the simulator,
         so modules/aquaponics_cell.py doesn't know or care whether it's
-        reading simulated or real data."""
+        reading simulated or real data. Returns True/False so this is
+        directly usable as contracts.MiaHomesteadModule's force_read_fn
+        (True = a fresh row was written, even if flagged out_of_range;
+        False = the probe genuinely failed to respond at all). This
+        return value used to be implicitly None on every path — real
+        bug, never hit because nothing called this expecting a return
+        value before the recovery ladder existed."""
         try:
             value = self.read()
         except AtlasReadError as e:
             logger.warning("Sensor %s read failed: %s — no row written (correctly treated as stale)", self.sensor_id, e)
-            return
+            return False
 
         out_of_range = 0
         if self.plausible_range and not (self.plausible_range[0] <= value <= self.plausible_range[1]):
@@ -134,6 +140,7 @@ class AtlasEZODriver:
             (self.sensor_id, value, out_of_range),
         )
         self.db.commit()
+        return True
 
     # ---------- Calibration ----------
     # Calibration procedure differs meaningfully by probe type (pH is a

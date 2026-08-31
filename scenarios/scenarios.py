@@ -18,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from contracts.mia_homestead_contract import MiaHomesteadModule
 from core.module_registry import ModuleRegistry
 from core.notifications import NotificationConfig, NotificationDispatcher
 from drivers.physics_sim import PhysicsSimulator
@@ -35,17 +36,24 @@ def fresh_system():
     conn.executescript(SCHEMA_PATH.read_text())
     cell_id = setup_demo_cell(conn)
 
+    sim = PhysicsSimulator(conn, cell_id=cell_id)
+
     # ModuleRegistry normally opens its own connection from a path; for
     # in-memory testing we patch it to reuse this exact connection.
+    # force_read_fn is wired to the physics sim (keyed by sensor_type,
+    # unlike sensor_id everywhere else) so the recovery ladder's
+    # force-reread step is actually exercised by scenarios that need it
+    # — must be set before .load() so _instantiate() sees it.
     notifier = NotificationDispatcher(NotificationConfig())
     registry = ModuleRegistry.__new__(ModuleRegistry)
     registry.config_path = CONFIG_PATH
     registry.db_conn = conn
     registry.notifier = notifier
+    id_to_type = {v: k for k, v in sim.sensors.items()}
+    registry.force_read_fn = lambda sensor_id: sim.force_read(id_to_type.get(sensor_id, ""))
     registry.modules = {}
     registry.load()
 
-    sim = PhysicsSimulator(conn, cell_id=cell_id)
     return conn, registry, sim, cell_id
 
 
@@ -88,15 +96,22 @@ def get_dose_count(conn, dose_type_substr):
 # ---------- Scenarios ----------
 
 def scenario_stale_sensor_freeze():
-    """A pH sensor goes silent after producing readings. Expect: a
-    staleness/missing-data warning is raised, and NO ph_up/ph_down
-    dosing commands are issued during the freeze."""
+    """A pH sensor goes silent after producing readings. Expect: NO
+    ph_up/ph_down dosing commands are issued during the freeze, and once
+    the recovery ladder's retry budget genuinely exhausts (it's dropped,
+    so force-reread correctly can't recover it), a staleness/missing-data
+    warning is raised — same end behavior as before the ladder existed,
+    just after a bounded retry window instead of immediately."""
     conn, registry, sim, cell_id = fresh_system()
     run_cycles(registry, sim, n=2)  # let it establish real readings first
     sim.inject_sensor_dropout("ph")
     run_cycles(registry, sim, n=3)
     sim.force_stale_backdate("ph", minutes_ago=15)  # age the last real reading
-    registry.run_all_cycles()  # one more cycle to react to the now-stale data
+    # Enough cycles for the retry ladder to exhaust (dropped sensor, so
+    # force-reread correctly refuses to recover it every time) and
+    # escalate to the same alert that used to fire immediately.
+    for _ in range(MiaHomesteadModule.MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT):
+        registry.run_all_cycles()
 
     alerts = get_alerts(conn, "warning")
     dose_count = get_dose_count(conn, "ph_")
@@ -173,11 +188,74 @@ def scenario_inconsistent_readings():
     return checks
 
 
+def scenario_sensor_recovery_ladder_recovers():
+    """A pH sensor's reading goes stale for one cycle, but it's still
+    'alive' in the physics sim (not dropped) — the ladder's step 1
+    (forced immediate reread) should recover it before any staleness
+    warning fires at all."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=3)
+    sim.force_stale_backdate("ph", minutes_ago=15)
+    registry.run_all_cycles()
+
+    alerts = get_alerts(conn, "warning")
+    checks = [
+        ("no pH staleness warning fired (force-reread recovered it)",
+         not any("ph" in m.lower() and "stale" in m.lower() for _, _, m in alerts)),
+    ]
+    return checks
+
+
+def scenario_sensor_recovery_exhausted_escalates():
+    """A pH sensor is genuinely gone (dropped, so force-reread correctly
+    can't recover it) and stale. Expect: no warning during the retry
+    window, a warning once retries genuinely exhaust, a real diagnosis
+    (not the generic fallback) auto-produced the same cycle, and a
+    maintenance task auto-filed with it — the concrete proof that
+    'expanded autonomy' (auto-diagnosis) actually fires end to end."""
+    from core.infrastructure_registry import InfrastructureRegistry
+    from core.maintenance import MaintenanceManager
+    from core.diagnostics import DiagnosticEngine
+
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=3)
+    sim.inject_sensor_dropout("ph")
+    sim.force_stale_backdate("ph", minutes_ago=15)
+
+    diagnostics = DiagnosticEngine(conn, InfrastructureRegistry(conn),
+                                    maintenance=MaintenanceManager(conn))
+
+    for _ in range(MiaHomesteadModule.MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT - 1):
+        registry.run_all_cycles()
+        diagnostics.auto_diagnose_new_alerts()
+    early = get_alerts(conn, "warning")
+
+    registry.run_all_cycles()
+    diagnosed = diagnostics.auto_diagnose_new_alerts()
+    late = get_alerts(conn, "warning")
+    task_count = conn.execute(
+        "SELECT COUNT(*) FROM maintenance_tasks WHERE created_by = 'system'"
+    ).fetchone()[0]
+
+    checks = [
+        ("no pH staleness warning during the retry window",
+         not any("ph" in m.lower() and "stale" in m.lower() for _, _, m in early)),
+        ("staleness warning fires once retries genuinely exhaust",
+         any("ph" in m.lower() and "stale" in m.lower() for _, _, m in late)),
+        ("auto-diagnosis produced a real diagnosis, not the generic fallback",
+         any(d.get("actuator_name") for d in diagnosed)),
+        ("a maintenance task was auto-filed with created_by='system'", task_count > 0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
     "power_loss_load_shed": scenario_power_loss_load_shed,
     "inconsistent_readings": scenario_inconsistent_readings,
+    "sensor_recovery_ladder_recovers": scenario_sensor_recovery_ladder_recovers,
+    "sensor_recovery_exhausted_escalates": scenario_sensor_recovery_exhausted_escalates,
 }
 
 

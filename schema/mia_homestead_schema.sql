@@ -169,7 +169,12 @@ CREATE TABLE alerts (
     acknowledged INTEGER DEFAULT 0,
     acknowledged_at TEXT,
     resolved INTEGER DEFAULT 0,
-    resolved_at TEXT
+    resolved_at TEXT,
+    auto_diagnosed_at TEXT               -- set the moment
+                                          -- DiagnosticEngine.auto_diagnose_new_alerts()
+                                          -- has processed this alert, so it's never
+                                          -- re-diagnosed (and never re-files a
+                                          -- duplicate maintenance task) on a later cycle
 );
 CREATE INDEX idx_alerts_unresolved ON alerts(resolved, severity);
 
