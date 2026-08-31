@@ -82,6 +82,21 @@ TOOLS = [
         },
     },
     {
+        "name": "get_sensor_confidence",
+        "description": (
+            "Get a high/medium/low trust level per sensor, combining calibration-due proximity "
+            "and current drift status — distinct from get_sensor_trends (drift only) or "
+            "get_current_status (raw readings), this answers 'how much should I trust this "
+            "sensor right now,' not just what it currently reads."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer", "description": "Optional cell ID"},
+            },
+        },
+    },
+    {
         "name": "get_open_alerts",
         "description": "Get all unresolved alerts, optionally filtered by minimum severity.",
         "input_schema": {
@@ -710,6 +725,7 @@ TOOL_DOMAINS: dict[str, str] = {
     # status — routine state checks, cheap, broadly relevant
     "get_current_status": "status",
     "get_sensor_trends": "status",
+    "get_sensor_confidence": "status",
     "get_open_alerts": "status",
     "get_power_status": "status",
     "get_power_forecast": "status",
@@ -1111,6 +1127,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_sensor_trends(self, cell_id: int | None = None) -> dict:
         from core.trend_analyzer import TrendAnalyzer
         return {"drift_findings": TrendAnalyzer(self.db).get_drift_status(cell_id)}
+
+    def _tool_get_sensor_confidence(self, cell_id: int | None = None) -> dict:
+        from core.sensor_confidence import SensorConfidence
+        return {"confidence": SensorConfidence(self.db).get_all_confidence(cell_id)}
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}

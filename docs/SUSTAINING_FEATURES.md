@@ -70,10 +70,27 @@ and `target_overrides` schemas don't need rework when it's time.
 **Effort:** large, and genuinely gated on having a full seasonal cycle
 of real data first.
 
-## 5. "Confidence" on every reading and decision — still open
-Its stated dependency (#2) is now satisfied by `core/trend_analyzer.py`,
-but confidence scoring itself hasn't been built. Genuinely still open,
-now unblocked.
+## 5. "Confidence" on every reading and decision — DONE (2026-08-31)
+Built as `core/sensor_confidence.py`. Purely informational, exactly as
+originally scoped below — never changes dosing/control-loop behavior;
+`modules/aquaponics_cell.py`'s "3 consistent readings" rule and the
+recovery ladder's retry logic stay unconditional safety gates, not
+tunable by a soft trust score. Synthesizes two signals that already
+alert on their own (`sensors.calibration_due` via
+`core/maintenance.py`, drift via `core/trend_analyzer.py`, its #2
+dependency) into one high/medium/low level with the real factors
+behind it, rather than adding new detection. New assistant tool
+`get_sensor_confidence` (`status` domain, matches `get_sensor_trends`'
+placement). Verified via `scenarios.py::scenario_sensor_confidence` (4
+checks: no-signal defaults to high, calibration-due-soon reports
+medium with a real factor string, overdue calibration reports low,
+active drift reports low regardless of calibration status with the
+real z-score cited) and a live smoke test against the real running
+system (all 6 real sensors correctly and honestly report 'high' —
+no calibration schedule exists yet, matching reality). Closes out
+every item in the roadmap the user originally picked through. Original
+brainstorm text kept below for context.
+
 **Problem it solves:** right now a sensor reading is either used or
 discarded (stale/out-of-range) — there's no middle ground for "this
 reading is probably fine but the sensor is overdue for calibration, so
@@ -253,20 +270,21 @@ not new cloud-calling code.
 
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #6, #7, #9, #10, #11, #12, #13 — see each entry
-above for what actually implements it and how it was verified. The
-original recommendation section below is kept for its reasoning, now
-historical.
+**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13 — see each
+entry above for what actually implements it and how it was verified.
+Every item in the roadmap the user originally picked through is now
+built. The original recommendation section below is kept for its
+reasoning, now historical.
 
-**Still genuinely open, in the order the user picked to work through them:**
-- **#5** (confidence scoring) — its #2 dependency is now satisfied, so
-  this is unblocked but not yet built. Last item in the originally
-  picked order.
-- **#4** (seasonal awareness) — still correctly gated on a full
-  seasonal cycle of real data; not build-now regardless.
-- **#8** (firmware OTA rollback safety) — still correctly gated on the
-  Safety MCU firmware actually being deployed and iterated on first;
-  not build-now regardless.
+**Still genuinely open — both correctly gated on real hardware/data
+that doesn't exist yet, not software gaps:**
+- **#4** (seasonal awareness) — needs a full seasonal cycle of real data.
+- **#8** (firmware OTA rollback safety) — needs the Safety MCU firmware
+  actually deployed and iterated on first.
+
+Next real milestone from here is the physical pilot build, not more
+software — see `docs/PILOT_VS_SCALE.md` and the pilot kit sitting in
+`inventory_orders` as `status='proposed'` (`python3 core/order_queue.py`).
 
 ## Original recommendation on where to start (historical)
 

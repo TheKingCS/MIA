@@ -45,6 +45,7 @@ from core.trend_analyzer import TrendAnalyzer
 from core.deploy_manager import DeployManager
 from core.activity_journal import ActivityJournal
 from core.biofilter_model import BiofilterModel
+from core.sensor_confidence import SensorConfidence
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -132,6 +133,7 @@ def main():
     trend_analyzer = TrendAnalyzer(db, notifier=notifier)
     journal = ActivityJournal(db)
     biofilter = BiofilterModel(db, notifier=notifier)
+    sensor_confidence = SensorConfidence(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -145,7 +147,7 @@ def main():
         (backups, "backup_manager"), (deadmans, "deadmans_switch"),
         (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
         (deploys, "deploy_manager"), (journal, "activity_journal"),
-        (biofilter, "biofilter_model"),
+        (biofilter, "biofilter_model"), (sensor_confidence, "sensor_confidence"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])

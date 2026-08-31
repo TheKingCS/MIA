@@ -565,6 +565,75 @@ def scenario_biofilter_cycle_tracking():
     return checks
 
 
+def scenario_sensor_confidence():
+    """Combines calibration-due proximity and current drift status into
+    one high/medium/low trust signal per sensor. Purely informational —
+    this scenario proves the classification is correct, not that it
+    changes any dosing behavior (it never should, and doesn't)."""
+    from core.sensor_confidence import SensorConfidence
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    sc = SensorConfidence(conn)
+
+    ph_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'ph'", (cell_id,)
+    ).fetchone()[0]
+    ec_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'ec'", (cell_id,)
+    ).fetchone()[0]
+    temp_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'temp_water'", (cell_id,)
+    ).fetchone()[0]
+
+    # ---- high: no calibration_due set, no drift ----
+    high_conf = sc.get_confidence(ph_sensor_id)
+
+    # ---- medium: calibration_due in 3 days ----
+    conn.execute(
+        "UPDATE sensors SET calibration_due = date('now', '+3 days') WHERE id = ?", (ec_sensor_id,)
+    )
+    conn.commit()
+    medium_conf = sc.get_confidence(ec_sensor_id)
+
+    # ---- low: calibration_due already 5 days past ----
+    conn.execute(
+        "UPDATE sensors SET calibration_due = date('now', '-5 days') WHERE id = ?", (temp_sensor_id,)
+    )
+    conn.commit()
+    overdue_conf = sc.get_confidence(temp_sensor_id)
+
+    # ---- low: currently drifting, regardless of calibration status ----
+    # Seed 20 flat baseline readings + 6 readings shifted +5 stdevs,
+    # same real pattern trend_analyzer's own verification uses.
+    conn.execute("DELETE FROM sensor_readings WHERE sensor_id = ?", (ph_sensor_id,))
+    for _ in range(20):
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value) VALUES (?, ?)", (ph_sensor_id, 6.4)
+        )
+    for _ in range(6):
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value) VALUES (?, ?)", (ph_sensor_id, 6.4755)
+        )
+    conn.commit()
+    drifting_conf = sc.get_confidence(ph_sensor_id)
+
+    checks = [
+        ("no calibration due, no drift -> high confidence, no factors",
+         high_conf["level"] == "high" and high_conf["factors"] == []),
+        ("calibration due soon -> medium confidence with a real factor string",
+         medium_conf["level"] == "medium" and len(medium_conf["factors"]) == 1
+         and "3 day" in medium_conf["factors"][0]),
+        ("calibration already overdue -> low confidence",
+         overdue_conf["level"] == "low" and "overdue" in overdue_conf["factors"][0]),
+        ("currently drifting -> low confidence regardless of calibration status, real z-score cited",
+         drifting_conf["level"] == "low" and drifting_conf["drift_flagged"]
+         and any("z-score" in f for f in drifting_conf["factors"])),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -576,6 +645,7 @@ SCENARIOS = {
     "closed_loop_species_learning": scenario_closed_loop_species_learning,
     "pair_confirm_payload_real_ids": scenario_pair_confirm_payload_real_ids,
     "biofilter_cycle_tracking": scenario_biofilter_cycle_tracking,
+    "sensor_confidence": scenario_sensor_confidence,
 }
 
 
