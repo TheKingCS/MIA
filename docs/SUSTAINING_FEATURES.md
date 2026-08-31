@@ -433,7 +433,42 @@ species' documented temp ranges.
 **Effort:** small-medium — mostly one new integration point, reuses the
 existing notification path.
 
-## 18. Cost / profitability accounting — not yet built
+## 18. Cost / profitability accounting — DONE (2026-08-31)
+Built as `core/finance_tracker.py`. Real gap found while building this,
+fixed alongside it: `revenue_transactions` had a full schema and was
+already READ by `viewer/export_dashboard_state.py`/`export_home_snapshot.py`,
+but nothing anywhere WROTE to it — no `record_revenue()` existed, and
+it had zero capability registration (never in `main.py`'s
+`all_describables`, despite CLAUDE.md's own rule 2 that every service
+needs one). Fixed: `record_revenue()` is now the first real write path,
+`_tool_get_revenue_summary` moved from inline SQL in the assistant file
+into this proper backing service, and `finance_tracker` is now
+registered like everything else.
+
+Real, honestly-stated limitation, not glossed over: cost is
+SYSTEM-WIDE, not per-cell — `inventory_transactions` has no `cell_id`
+in this schema, so no per-cell cost breakdown is claimed, even though
+revenue IS cell-attributed. Only counts consumption of items with a
+real known `unit_cost`; items without one are excluded from the total
+and listed separately, never silently treated as $0 (which would
+understate cost, not just omit unknown data). Feeding cost
+(`core/fish_health.py`'s `feeding_events`) is deliberately NOT
+cross-referenced in — `food_type` is free text, not a real foreign key
+into `inventory_items`, and guessing a unit conversion would be a
+fragile estimate dressed up as a real number; stated as a known gap
+in the module's own docstring rather than faked.
+
+3 new assistant tools (`record_revenue`, `get_cost_summary`,
+`get_profitability_summary`), `revenue` domain keywords expanded
+(cost/profit/margin/expenses). Verified via
+`scenarios.py::scenario_cost_profitability` (4 checks: revenue
+computes and records correctly; cost of a known-unit-cost item
+computes correctly from real seeded consumption; an unknown-cost item
+is correctly excluded from the total rather than counted as $0;
+profitability nets real revenue minus real cost correctly) and a live
+smoke test against the real running system. Original brainstorm text
+kept below for context.
+
 **Problem it solves:** yield is tracked; the actual economics (feed,
 nutrient, electricity cost per harvest) aren't. Matters much more once
 this is more than a hobby system.
@@ -447,31 +482,22 @@ modules, not new tracking.
 ## Status as of 2026-08-31
 
 **Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15,
-#16, #17 — see each entry above for what actually implements it and
-how it was verified. Every item in the originally-picked roadmap is
-now built, and both items this conversation called genuinely necessary
-(#14, #15) are done.
+#16, #17, #18 — see each entry above for what actually implements it
+and how it was verified. Every item in the originally-picked roadmap,
+and every item on the expanded "useful and necessary" list from the
+2026-08-31 conversation, is now built (#14-18, all 5, in the priority
+order that conversation set).
 
-**Newly added 2026-08-31, roughly in priority order** (per a conversation
-about what's still missing for this to be genuinely "useful and
-necessary," not just more of what's already built): **#14 (fish
-health/mortality/feeding tracking) — DONE**, **#15 (fast leak
-detection) — DONE**, **#16 (pest/disease log) — DONE**, and **#17
-(weather-aware alerts) — DONE**, see above. **#18 (cost accounting)**
-is the last item on this list — matters more once selling commercially
-than for a homestead, not yet built.
-
-**Still genuinely open from the original roadmap — both correctly
-gated on real hardware/data that doesn't exist yet, not software
-gaps:**
+**Still genuinely open — both correctly gated on real hardware/data
+that doesn't exist yet, not software gaps:**
 - **#4** (seasonal awareness) — needs a full seasonal cycle of real data.
 - **#8** (firmware OTA rollback safety) — needs the Safety MCU firmware
   actually deployed and iterated on first.
 
-The physical pilot build (`docs/PILOT_VS_SCALE.md`, pilot kit sitting
-in `inventory_orders` as `status='proposed'`,
-`python3 core/order_queue.py`) remains the real milestone once the
-software side settles, alongside whatever's built from #14-18.
+Nothing else is currently queued. The physical pilot build
+(`docs/PILOT_VS_SCALE.md`, pilot kit sitting in `inventory_orders` as
+`status='proposed'`, `python3 core/order_queue.py`) is the real
+milestone from here — the software side has caught up to it.
 
 ## Original recommendation on where to start (historical)
 

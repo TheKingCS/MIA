@@ -913,6 +913,66 @@ def scenario_weather_awareness():
     return checks
 
 
+def scenario_cost_profitability():
+    """Real revenue write path (a genuine gap found while building this
+    — revenue_transactions existed and was already read by the
+    dashboard exporter, but nothing ever wrote to it) plus real
+    consumable cost from inventory_transactions x inventory_items.unit_cost.
+    Proves the unknown-cost-item exclusion doesn't silently treat it as
+    $0, and that profitability nets real revenue minus real cost."""
+    from core.finance_tracker import FinanceTracker
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    ft = FinanceTracker(conn)
+
+    # ---- Revenue: a real recorded sale ----
+    txn_id = ft.record_revenue(
+        item="lettuce", quantity=5, unit="lb", unit_price=4.0,
+        cell_id=cell_id, channel="farmers_market",
+    )
+    revenue_summary = ft.get_revenue_summary(days=30)
+
+    # ---- Cost: seed two consumed items — one with a known unit_cost, one without ----
+    conn.execute(
+        "INSERT INTO inventory_items (name, category, unit, unit_cost) VALUES "
+        "('pH-up solution', 'chemical', 'ml', 0.05), ('mystery additive', 'chemical', 'ml', NULL)"
+    )
+    conn.commit()
+    ph_item_id, mystery_item_id = [
+        r[0] for r in conn.execute(
+            "SELECT id FROM inventory_items WHERE name IN ('pH-up solution', 'mystery additive') ORDER BY id"
+        ).fetchall()
+    ]
+    conn.execute(
+        "INSERT INTO inventory_transactions (item_id, change_qty, reason) VALUES (?, -200, 'dosing_consumption')",
+        (ph_item_id,),  # 200ml consumed @ $0.05/ml = $10.00 real cost
+    )
+    conn.execute(
+        "INSERT INTO inventory_transactions (item_id, change_qty, reason) VALUES (?, -50, 'dosing_consumption')",
+        (mystery_item_id,),  # 50ml consumed, but unit_cost is unknown
+    )
+    conn.commit()
+    cost_summary = ft.get_cost_summary(days=30)
+
+    profitability = ft.get_profitability_summary(days=30)
+
+    checks = [
+        ("record_revenue computes total_amount correctly (5 x $4.00 = $20.00)",
+         revenue_summary["total_revenue"] == 20.0 and len(revenue_summary["transactions"]) == 1
+         and revenue_summary["transactions"][0]["id"] == txn_id),
+        ("cost of the known-cost item is correctly computed (200ml x $0.05 = $10.00)",
+         cost_summary["total_cost"] == 10.0 and cost_summary["by_category"].get("chemical") == 10.0),
+        ("the unknown-cost item is excluded from the total, not silently treated as $0",
+         "mystery additive" in cost_summary["items_with_unknown_cost"]),
+        ("profitability nets real revenue minus real cost ($20.00 - $10.00 = $10.00)",
+         profitability["net_margin"] == 10.0 and profitability["total_revenue"] == 20.0
+         and profitability["total_cost"] == 10.0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -929,6 +989,7 @@ SCENARIOS = {
     "leak_detection": scenario_leak_detection,
     "pest_disease_tracking": scenario_pest_disease_tracking,
     "weather_awareness": scenario_weather_awareness,
+    "cost_profitability": scenario_cost_profitability,
 }
 
 

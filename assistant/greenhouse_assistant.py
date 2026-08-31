@@ -218,6 +218,39 @@ TOOLS = [
         },
     },
     {
+        "name": "record_revenue",
+        "description": "Log a real sale — use when the user tells you they sold something.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "item": {"type": "string"},
+                "quantity": {"type": "number"},
+                "unit": {"type": "string"},
+                "unit_price": {"type": "number"},
+                "cell_id": {"type": "integer"},
+                "channel": {"type": "string", "description": "e.g. 'farmers_market','csa','direct','online'"},
+                "notes": {"type": "string"},
+            },
+            "required": ["item", "quantity", "unit", "unit_price"],
+        },
+    },
+    {
+        "name": "get_cost_summary",
+        "description": "Get real consumable cost (system-wide, not per-cell) for a lookback window — what was actually spent on inventory, from real unit costs.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"days": {"type": "integer", "default": 30}},
+        },
+    },
+    {
+        "name": "get_profitability_summary",
+        "description": "Get a combined revenue-minus-cost profitability picture for a lookback window — the real margin, not just revenue or cost alone.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"days": {"type": "integer", "default": 30}},
+        },
+    },
+    {
         "name": "get_to_order_list",
         "description": "Get items awaiting approve/deny decision in the reorder queue — things the system flagged as low stock.",
         "input_schema": {"type": "object", "properties": {}},
@@ -905,6 +938,9 @@ TOOL_DOMAINS: dict[str, str] = {
     "restore_config_snapshot": "backups",
     # revenue — sales/financial tracking
     "get_revenue_summary": "revenue",
+    "record_revenue": "revenue",
+    "get_cost_summary": "revenue",
+    "get_profitability_summary": "revenue",
     # self_knowledge — what the system can do, how it's changed, proof coverage
     "get_system_capabilities": "self_knowledge",
     "get_self_change_history": "self_knowledge",
@@ -984,7 +1020,10 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "devices": ["device", "pair", "paired", "unpaired", "plugged in", "controller"],
     "backups": ["snapshot", "backup", "restore", "rollback", "roll back", "revert"],
     "help_requests": ["help request", "asking for help", "beacon", "need help", "presence"],
-    "revenue": ["revenue", "sales", "sold", "income", "earned", "market"],
+    "revenue": [
+        "revenue", "sales", "sold", "income", "earned", "market",
+        "cost", "costs", "profit", "profitability", "margin", "expenses", "spent",
+    ],
 }
 # status and self_knowledge are ALWAYS_ON_DOMAINS — attached unconditionally,
 # so they're deliberately absent from this dict; no trigger keywords needed.
@@ -1776,13 +1815,25 @@ class _BaseGreenhouseAssistant:
         return {"created_task_id": cur.lastrowid, "title": title, "priority": priority}
 
     def _tool_get_revenue_summary(self, days: int = 30) -> dict:
-        rows = self.db.execute(
-            "SELECT * FROM revenue_transactions WHERE timestamp >= datetime('now', ?) "
-            "ORDER BY timestamp DESC",
-            (f"-{days} days",),
-        ).fetchall()
-        total = sum(r["total_amount"] for r in rows) if rows else 0
-        return {"transactions": [dict(r) for r in rows], "total": total}
+        from core.finance_tracker import FinanceTracker
+        return FinanceTracker(self.db).get_revenue_summary(days)
+
+    def _tool_record_revenue(self, item: str, quantity: float, unit: str, unit_price: float,
+                               cell_id: int | None = None, channel: str | None = None,
+                               notes: str | None = None) -> dict:
+        from core.finance_tracker import FinanceTracker
+        txn_id = FinanceTracker(self.db).record_revenue(
+            item, quantity, unit, unit_price, cell_id=cell_id, channel=channel, notes=notes,
+        )
+        return {"transaction_id": txn_id, "item": item, "total_amount": quantity * unit_price}
+
+    def _tool_get_cost_summary(self, days: int = 30) -> dict:
+        from core.finance_tracker import FinanceTracker
+        return FinanceTracker(self.db).get_cost_summary(days)
+
+    def _tool_get_profitability_summary(self, days: int = 30) -> dict:
+        from core.finance_tracker import FinanceTracker
+        return FinanceTracker(self.db).get_profitability_summary(days)
 
 
 class AnthropicGreenhouseAssistant(_BaseGreenhouseAssistant):
