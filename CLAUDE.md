@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 56 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 61 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -96,7 +96,9 @@ core/            services (inventory, maintenance, registries, diagnostics,
                  backup, species/planting/experiments, assistant support)
 firmware/        ESP32 Safety MCU firmware - compiles clean (platformio.ini),
                  still never run on real hardware
-config/          modules.yaml, layout.json, device roles, plumbing.yaml
+config/          modules.yaml, layout.json, device roles, plumbing.yaml,
+                 location.yaml (optional — real lat/long for weather
+                 awareness only, unset by default, nothing else reads it)
                  (these YAML files ARE the source of truth for physical
                  wiring/plumbing - edit them, not code, for physical changes)
 schema/          single schema.sql, additive - never destructive migrations

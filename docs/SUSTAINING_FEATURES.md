@@ -391,7 +391,35 @@ already flags as unproven) — not v1.
 **Effort:** medium for the manual log + knowledge base; large (and
 hardware-gated) for any vision-based version.
 
-## 17. Weather-aware alerts — not yet built
+## 17. Weather-aware alerts — DONE (2026-08-31)
+Built as `core/weather_awareness.py` + `config/location.yaml`
+(optional, unset by default — nothing else reads it). Uses Open-Meteo
+(free, keyless, no account), matching this project's established
+no-vendor-dependency stance. Two real, physically-grounded signals, not
+invented thresholds: a real 32F frost threshold, and a comparison
+against whatever's ACTUALLY currently planted's real documented
+`temp_air_min`/`temp_air_max` (`species_profiles`, the same ground
+truth `core/experiment_manager.py` and `core/biofilter_model.py` treat
+as real). Deliberately opportunistic — the control loop never depends
+on it; honestly skips (no fabricated forecast, no alert) if no location
+is configured or Open-Meteo isn't reachable, same "nice when connected,
+never required" posture as SMS delivery and cloud escalation. Checked
+periodically (`should_check_now()`, default every 6h), same
+gate-by-elapsed-time pattern `core/report_generator.py`'s
+`hours_since_last_report()` already established. New `get_weather_status`
+tool, new `weather` domain. Verified two ways, matching this feature's
+own real-vs-simulated distinction: a live test against the real
+Open-Meteo API (confirmed real current data for a real coordinate
+pair) and `scenarios.py::scenario_weather_awareness` (5 checks, with
+the network call stubbed at exactly its own boundary so the scenario
+stays fast/deterministic while every other real code path — frost
+math, species-range comparison, alert raising, `weather_checks`
+logging — runs unmocked). Live smoke test against the real running
+system confirmed it honestly reports no check on file, since no real
+location has been configured yet — correct, not a bug; nobody's real
+greenhouse coordinates were guessed. Original brainstorm text kept
+below for context.
+
 **Problem it solves:** the whole system reacts to what's happening
 INSIDE the tank/cell — nothing looks outside. A frost or heat wave
 warning, even a day ahead, is the difference between a proactive fix
@@ -418,20 +446,20 @@ modules, not new tracking.
 
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15, #16
-— see each entry above for what actually implements it and how it was
-verified. Every item in the originally-picked roadmap is now built,
-and both items this conversation called genuinely necessary (#14, #15)
-are done.
+**Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15,
+#16, #17 — see each entry above for what actually implements it and
+how it was verified. Every item in the originally-picked roadmap is
+now built, and both items this conversation called genuinely necessary
+(#14, #15) are done.
 
 **Newly added 2026-08-31, roughly in priority order** (per a conversation
 about what's still missing for this to be genuinely "useful and
 necessary," not just more of what's already built): **#14 (fish
 health/mortality/feeding tracking) — DONE**, **#15 (fast leak
-detection) — DONE**, and **#16 (pest/disease log) — DONE**, see above.
-**#17 (weather-aware alerts)** is next — the last item ranked above
-cost accounting. **#18 (cost accounting)** matters more once selling
-commercially than for a homestead, not yet built.
+detection) — DONE**, **#16 (pest/disease log) — DONE**, and **#17
+(weather-aware alerts) — DONE**, see above. **#18 (cost accounting)**
+is the last item on this list — matters more once selling commercially
+than for a homestead, not yet built.
 
 **Still genuinely open from the original roadmap — both correctly
 gated on real hardware/data that doesn't exist yet, not software

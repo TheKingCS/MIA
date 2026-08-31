@@ -554,6 +554,11 @@ TOOLS = [
         },
     },
     {
+        "name": "get_weather_status",
+        "description": "Get the most recent weather forecast check (frost risk, forecast low/high, and any species-range violation) — returns null if no location is configured or the last check found nothing on file yet.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "add_species",
         "description": "Add a new species to the knowledge base — use when the user wants to track a plant or fish species that isn't already known.",
         "input_schema": {
@@ -858,6 +863,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_pest_disease_info": "pest_disease",
     "record_pest_disease_observation": "pest_disease",
     "get_pest_disease_history": "pest_disease",
+    "get_weather_status": "weather",
     # species — the "what does this organism want" knowledge base
     "get_species_profile": "species",
     "list_species": "species",
@@ -940,6 +946,10 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
         "pest", "disease", "aphid", "aphids", "mildew", "mold", "fungus",
         "rot", "ich", "white spot", "columnaris", "bug", "bugs", "insect",
         "infestation", "infection", "symptom", "symptoms",
+    ],
+    "weather": [
+        "weather", "frost", "forecast", "freeze", "freezing", "heat wave",
+        "cold snap", "outside temperature", "outdoor",
     ],
     "yield_planting": [
         "yield", "harvest", "planted", "planting", "grow bed", "watered",
@@ -1574,6 +1584,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_pest_disease_history(self, cell_id: int) -> dict:
         from core.pest_disease import PestDisease
         return {"observations": PestDisease(self.db).get_observation_history(cell_id)}
+
+    def _tool_get_weather_status(self) -> dict:
+        from core.weather_awareness import WeatherAwareness
+        return {"last_check": WeatherAwareness(self.db).get_last_check()}
 
     def _tool_add_species(self, common_name: str, organism_type: str, scientific_name: str | None = None,
                             ph_min: float | None = None, ph_max: float | None = None,

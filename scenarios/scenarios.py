@@ -837,6 +837,82 @@ def scenario_pest_disease_tracking():
     return checks
 
 
+def scenario_weather_awareness():
+    """Frost/heat-wave forecast awareness, deliberately opportunistic —
+    the real Open-Meteo network call is stubbed at exactly its own
+    boundary (WeatherAwareness._fetch_forecast) so this scenario stays
+    fast/deterministic like every other one here, while every other
+    real code path (frost math, species-range comparison, alert
+    raising, weather_checks logging) runs unmocked, through the real
+    check_weather(). Real network reachability against the live
+    Open-Meteo API is verified separately (see this module's own
+    verification_evidence — a live, non-scenario test)."""
+    import tempfile
+    import yaml
+    from core.species_registry import SpeciesRegistry
+    from core.weather_awareness import WeatherAwareness, FROST_THRESHOLD_F
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    SpeciesRegistry(conn)  # seeds baseline species (Lettuce, Basil, Tilapia) into species_profiles
+
+    # ---- No location configured -> honestly skips, no fabricated forecast ----
+    wa_unconfigured = WeatherAwareness(conn, config_path="/nonexistent/location.yaml")
+    unconfigured_result = wa_unconfigured.check_weather()
+
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
+        yaml.dump({"latitude": 39.0997, "longitude": -94.5786}, f)
+        config_path = f.name
+
+    # A real active planting with a real documented temp_air range —
+    # lettuce, per core/species_registry.py's own BASELINE_SPECIES.
+    lettuce = conn.execute("SELECT id FROM species_profiles WHERE common_name = 'Lettuce'").fetchone()[0]
+    conn.execute(
+        "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, status) VALUES (?, ?, ?, 'active')",
+        ("Cell A Tray", cell_id, lettuce),
+    )
+    conn.commit()
+
+    # ---- A forecast comfortably within lettuce's real range -> no alert ----
+    wa_ok = WeatherAwareness(conn, config_path=config_path)
+    wa_ok._fetch_forecast = lambda lat, lon: {"daily": {"temperature_2m_min": [65.0], "temperature_2m_max": [72.0]}}
+    ok_result = wa_ok.check_weather()
+
+    # ---- A frost-risk forecast -> real WARNING alert, real logged row ----
+    wa_frost = WeatherAwareness(conn, config_path=config_path)
+    wa_frost._fetch_forecast = lambda lat, lon: {"daily": {"temperature_2m_min": [28.0], "temperature_2m_max": [45.0]}}
+    frost_result = wa_frost.check_weather()
+    frost_alert = conn.execute(
+        "SELECT message FROM alerts WHERE source = 'weather_awareness' AND message LIKE '%Frost risk%'"
+    ).fetchone()
+
+    # ---- A forecast outside lettuce's real range but above freezing -> species-range warning ----
+    wa_hot = WeatherAwareness(conn, config_path=config_path)
+    wa_hot._fetch_forecast = lambda lat, lon: {"daily": {"temperature_2m_min": [65.0], "temperature_2m_max": [95.0]}}
+    hot_result = wa_hot.check_weather()
+
+    should_check = wa_ok.should_check_now()
+    last_check = wa_ok.get_last_check()
+
+    checks = [
+        ("no location configured -> honestly returns None, no fabricated forecast",
+         unconfigured_result is None),
+        ("a forecast within lettuce's real documented range raises nothing",
+         ok_result is not None and not ok_result["frost_risk"] and ok_result["species_range_violation"] is None),
+        (f"a forecast at/below {FROST_THRESHOLD_F:.0f}F raises a real frost-risk WARNING",
+         frost_result is not None and frost_result["frost_risk"] and frost_alert is not None),
+        ("a forecast outside lettuce's real range (but above freezing) raises a real, "
+         "correctly-worded species-range violation citing the actual documented max",
+         hot_result is not None and hot_result["species_range_violation"] is not None
+         and "temp_air_max" not in hot_result["species_range_violation"]  # real number cited, not the column name
+         and not hot_result["frost_risk"]),
+        ("get_last_check() and should_check_now() reflect real logged state",
+         last_check is not None and should_check is False),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -852,6 +928,7 @@ SCENARIOS = {
     "fish_health_tracking": scenario_fish_health_tracking,
     "leak_detection": scenario_leak_detection,
     "pest_disease_tracking": scenario_pest_disease_tracking,
+    "weather_awareness": scenario_weather_awareness,
 }
 
 

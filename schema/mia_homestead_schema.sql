@@ -242,6 +242,23 @@ CREATE TABLE pest_disease_observations (
 );
 CREATE INDEX idx_pest_disease_observations_cell ON pest_disease_observations(cell_id, timestamp);
 
+-- ============ WEATHER AWARENESS ============
+-- Everything else in this system reacts to what's happening INSIDE
+-- the tank/cell — nothing looks outside. A real, logged record of each
+-- check performed (whether or not it found anything concerning) —
+-- "nothing concerning" is itself a real finding worth recording, same
+-- honesty-about-empty-results discipline as every other module here.
+
+CREATE TABLE weather_checks (
+    id INTEGER PRIMARY KEY,
+    timestamp TEXT DEFAULT (datetime('now')),
+    forecast_low_f REAL,
+    forecast_high_f REAL,
+    frost_risk INTEGER DEFAULT 0,
+    species_range_violation TEXT,       -- nullable human-readable note, real species/temp cited
+    source TEXT DEFAULT 'open-meteo'
+);
+
 -- ============ ALERTS ============
 
 CREATE TABLE alerts (
