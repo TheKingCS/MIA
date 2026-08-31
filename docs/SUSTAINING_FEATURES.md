@@ -6,7 +6,11 @@ to be trusted unattended for long stretches. Not all of these are
 worth building now — flagged with rough effort and what problem each
 one actually solves, so you can pick.
 
-## 1. Predictive consumable forecasting
+## 1. Predictive consumable forecasting — DONE
+Built as `core/inventory.py`'s `check_forecasted_shortages()`, called
+from `main.py`'s periodic block. Rest of this entry kept for context on
+the original problem statement.
+
 **Problem it solves:** the to-order queue reacts to low stock; it
 doesn't warn you a week ahead that you're trending toward it.
 **What it'd do:** look at `inventory_transactions` consumption rate
@@ -16,7 +20,12 @@ not at it. Cheap to build — it's a linear projection over data
 already being collected.
 **Effort:** small.
 
-## 2. Sensor drift detection (not just failure detection)
+## 2. Sensor drift detection (not just failure detection) — DONE (different mechanism)
+Built as `core/trend_analyzer.py`'s `check_all_sensors()` — a real
+statistical baseline-vs-recent-window z-score comparison per sensor,
+not the `dosing_events.reading_after` approach originally sketched
+below, but it solves the same stated problem (catches drift while
+still "plausible," not just an outright breach). Kept for context.
 **Problem it solves:** the system currently catches sensors that go
 stale or return implausible values — it doesn't catch a probe that's
 slowly drifting while still returning "plausible" numbers, which is
@@ -32,7 +41,10 @@ used for this.
 operation before it's trustworthy, so this is a pilot-hardware-data
 feature, not a build-now one.
 
-## 3. Anomaly detection via rate-of-change, not just thresholds
+## 3. Anomaly detection via rate-of-change, not just thresholds — DONE (same mechanism as #2)
+`core/trend_analyzer.py`'s recent-vs-baseline z-score comparison covers
+this too — a recent-window mean shifted far from the baseline mean IS
+a rate-of-change signal, inside the normal band or not. Kept for context.
 **Problem it solves:** current dosing logic reacts to a value being
 out of range. It doesn't react to a value changing unusually FAST even
 while still in range — which is often the earlier, more useful signal
@@ -58,7 +70,10 @@ and `target_overrides` schemas don't need rework when it's time.
 **Effort:** large, and genuinely gated on having a full seasonal cycle
 of real data first.
 
-## 5. "Confidence" on every reading and decision
+## 5. "Confidence" on every reading and decision — still open
+Its stated dependency (#2) is now satisfied by `core/trend_analyzer.py`,
+but confidence scoring itself hasn't been built. Genuinely still open,
+now unblocked.
 **Problem it solves:** right now a sensor reading is either used or
 discarded (stale/out-of-range) — there's no middle ground for "this
 reading is probably fine but the sensor is overdue for calibration, so
@@ -68,7 +83,14 @@ by `sensors.calibration_due` proximity and recent drift patterns (see
 #2). Dosing decisions could factor confidence in, not just raw value.
 **Effort:** medium — depends on #2 existing first to be worth much.
 
-## 6. Multi-cell correlation for diagnosis
+## 6. Multi-cell correlation for diagnosis — DONE (2026-08-31)
+Built as `core/diagnostics.py`'s `_check_multi_cell_correlation()`,
+checked before the normal per-sensor diagnosis inside
+`diagnose_alert()`/`auto_diagnose_new_alerts()`. Verified live via
+`scenarios.py::scenario_multi_cell_fault_correlation` — cell_a and
+pilot_cell both losing their pH sensor at once now correctly produces
+one "shared infrastructure" diagnosis referencing both cells instead of
+two independent per-sensor diagnoses. Kept for context.
 **Problem it solves:** the diagnostic engine currently reasons about
 one alert in isolation. Once you have 2+ cells (pilot + full scale,
 per `PILOT_VS_SCALE.md`), a fault that shows up on BOTH cells
@@ -81,7 +103,9 @@ separate "pH sensor stale" alerts.
 **Effort:** small once there are 2+ cells to correlate — not useful
 before then.
 
-## 7. Dead-man's-switch escalation ladder
+## 7. Dead-man's-switch escalation ladder — DONE
+Built as `core/deadmans_switch.py`'s `check_escalation()`, called from
+`main.py`'s periodic block. Kept for context.
 **Problem it solves:** `human_checkins` and the 72h dead-man's-switch
 concept already exist in the schema/spec but the actual escalation
 logic (who gets contacted, in what order, after how long) isn't built.
@@ -106,7 +130,14 @@ since it involves re-flashing a physical device, not just files/DB rows.
 **Effort:** large, and gated on the MCU firmware actually being
 deployed and iterated on first.
 
-## 9. Explain-yourself mode for every autonomous action
+## 9. Explain-yourself mode for every autonomous action — DONE
+Dosing (`dosing_events.rationale`), load-shedding
+(`modules/power_monitor.py` via `core/action_log.py`), inventory
+transactions/orders (`reason`/rationale params throughout
+`core/inventory.py`), and the whole recovery ladder
+(`recovery_log_fn` -> `automated_action_log`) all carry a real
+rationale now — surfaced together in `core/activity_journal.py` /
+`viewer/journal.html`. Kept for context.
 **Problem it solves:** dosing events now have a rationale
 (`dosing_events.rationale`), but that's currently the only place this
 pattern lives. Extending "why did you do that" to load-shedding,
@@ -117,7 +148,9 @@ just dosing.
 anywhere an automated action happens and doesn't already have one.
 **Effort:** small, mechanical, high value for trust.
 
-## 10. Periodic self-report ("state of the greenhouse")
+## 10. Periodic self-report ("state of the greenhouse") — DONE
+Built as `core/report_generator.py`'s `generate_and_send()`, called
+from `main.py`'s periodic block once every 24h. Kept for context.
 **Problem it solves:** right now getting a full picture means asking
 several separate questions. A once-daily or once-weekly generated
 summary — yields, dosing pattern, any anomalies, hardware needs,
@@ -129,7 +162,22 @@ the existing notification path. Almost entirely a matter of composing
 existing data sources — the hard infrastructure work is already done.
 **Effort:** small.
 
-## Recommendation on where to start
+## Status as of 2026-08-31
+
+**Done:** #1, #2, #3, #6, #7, #9, #10 — see each entry above for what
+actually implements it and how it was verified. This recommendation
+section is kept for its original reasoning, now historical.
+
+**Still genuinely open:**
+- **#5** (confidence scoring) — its #2 dependency is now satisfied, so
+  this is unblocked but not yet built. Reasonable next candidate.
+- **#4** (seasonal awareness) — still correctly gated on a full
+  seasonal cycle of real data; not build-now regardless.
+- **#8** (firmware OTA rollback safety) — still correctly gated on the
+  Safety MCU firmware actually being deployed and iterated on first;
+  not build-now regardless.
+
+## Original recommendation on where to start (historical)
 
 If you want the highest value for the least effort right now: **#9
 (explain-yourself consistency), #10 (periodic self-report), and #7

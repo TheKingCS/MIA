@@ -33,6 +33,11 @@ SENSOR_TO_DEPENDENT_ACTUATORS = {
 
 
 class DiagnosticEngine(Describable):
+    # How recent a same-type fault on a DIFFERENT cell/module has to be
+    # to count as "probably the same shared cause" rather than an
+    # unrelated coincidence.
+    CORRELATION_WINDOW_MINUTES = 5
+
     def __init__(self, db_conn: sqlite3.Connection, infrastructure, maintenance=None, notifier=None):
         self.db = db_conn
         self.infrastructure = infrastructure
@@ -51,9 +56,18 @@ class DiagnosticEngine(Describable):
             return {"error": f"no alert {alert_id}"}
         severity, source, message = row
 
-        diagnosis = self._pattern_match(source, message)
+        # Multi-cell correlation checked FIRST — the same fault type
+        # appearing on 2+ different cells/modules within a short window
+        # is almost certainly one shared cause (power, the Pi itself,
+        # a shared bus), not that many coincidental independent probe
+        # failures. A much more specific, more useful diagnosis than
+        # "sensor stale" repeated once per cell.
+        diagnosis = self._check_multi_cell_correlation(alert_id, source, message)
+        if diagnosis is None:
+            diagnosis = self._pattern_match(source, message)
 
-        if create_task and self.maintenance and diagnosis.get("actuator_name"):
+        actionable = diagnosis.get("actuator_name") or diagnosis.get("correlated_with")
+        if create_task and self.maintenance and actionable:
             title = f"Investigate: {diagnosis['likely_cause']}"
             description = diagnosis["guidance"]
             task_id = self.maintenance.create_task(
@@ -63,6 +77,42 @@ class DiagnosticEngine(Describable):
             diagnosis["maintenance_task_id"] = task_id
 
         return diagnosis
+
+    def _check_multi_cell_correlation(self, alert_id: int, source: str, message: str) -> dict | None:
+        """Looks for another currently-unresolved alert, on a DIFFERENT
+        source (module/cell), mentioning the same sensor type, raised
+        within CORRELATION_WINDOW_MINUTES of this one. Returns None (no
+        correlation, fall through to the normal per-sensor diagnosis) if
+        nothing matches — never a confident wrong guess, same discipline
+        as _pattern_match's own fallback."""
+        msg_lower = message.lower()
+        for sensor_type in SENSOR_TO_DEPENDENT_ACTUATORS:
+            if sensor_type not in msg_lower:
+                continue
+            if not ("stale" in msg_lower or "missing" in msg_lower or f"no {sensor_type}" in msg_lower):
+                continue
+            others = self.db.execute(
+                "SELECT DISTINCT source FROM alerts WHERE resolved = 0 AND id != ? AND source != ? "
+                "AND lower(message) LIKE ? "
+                "AND timestamp >= datetime('now', ?)",
+                (alert_id, source, f"%{sensor_type}%", f"-{self.CORRELATION_WINDOW_MINUTES} minutes"),
+            ).fetchall()
+            if not others:
+                continue
+            other_sources = sorted(r[0] for r in others)
+            return {
+                "likely_cause": f"Shared infrastructure fault (correlated {sensor_type} failure across cells)",
+                "guidance": (
+                    f"The same {sensor_type} fault is also currently affecting: {', '.join(other_sources)}. "
+                    f"{len(other_sources) + 1} independent probe failures at once is unlikely — check shared "
+                    f"infrastructure first (power, the Pi itself, a shared I2C/serial bus) before investigating "
+                    f"each sensor individually."
+                ),
+                "actuator_name": None,
+                "correlated_with": other_sources,
+                "source_alert": message,
+            }
+        return None
 
     def auto_diagnose_new_alerts(self) -> list[dict]:
         """Scans for unresolved, not-yet-auto-diagnosed alerts and
@@ -173,6 +223,9 @@ class DiagnosticEngine(Describable):
                 "diagnose an alert", "optionally file a maintenance task with the diagnosis attached",
                 "auto-diagnose every unresolved alert automatically, every control-loop cycle, "
                 "the moment it survives the recovery ladder — not only when asked",
+                "correlate the same fault type appearing on 2+ different cells within a short "
+                "window as one likely shared-infrastructure cause, instead of diagnosing each "
+                "cell's alert in isolation",
             ],
             limits_and_safety=(
                 "Pattern-matches against known fault shapes only — a novel failure mode it "
@@ -195,6 +248,10 @@ class DiagnosticEngine(Describable):
                 "zero manual trigger, produces a real diagnosis (not the generic fallback) and "
                 "auto-files a system-created maintenance task the same cycle the alert survives "
                 "the recovery ladder",
+                "scenarios.py::scenario_multi_cell_fault_correlation — confirmed a pH sensor "
+                "failing simultaneously on two independent cells (cell_a_aquaponics + pilot_cell) "
+                "produces a 'shared infrastructure' diagnosis referencing both cells rather than "
+                "two independent per-sensor diagnoses",
             ],
         )
 

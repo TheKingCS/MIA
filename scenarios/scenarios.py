@@ -249,6 +249,86 @@ def scenario_sensor_recovery_exhausted_escalates():
     return checks
 
 
+def scenario_multi_cell_fault_correlation():
+    """Two independent cells (cell_a_aquaponics + pilot_cell) lose their
+    pH sensor at the same time — a shared-infrastructure symptom
+    (power, the Pi itself, a shared bus), not two coincidental probe
+    failures. Expect the diagnostic engine to recognize the correlation
+    and file ONE 'shared infrastructure' diagnosis referencing both
+    cells, instead of two independent 'sensor stale' diagnoses that
+    would send someone chasing two separate probes."""
+    from drivers.simulator import setup_pilot_cell
+    from core.infrastructure_registry import InfrastructureRegistry
+    from core.maintenance import MaintenanceManager
+    from core.diagnostics import DiagnosticEngine
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_a_id = setup_demo_cell(conn)
+    pilot_id = setup_pilot_cell(conn)
+
+    sim_a = PhysicsSimulator(conn, cell_id=cell_a_id)
+    sim_p = PhysicsSimulator(conn, cell_id=pilot_id)
+    id_to_sim_and_type = {}
+    for sim in (sim_a, sim_p):
+        for sensor_type, sensor_id in sim.sensors.items():
+            id_to_sim_and_type[sensor_id] = (sim, sensor_type)
+
+    def force_read_fn(sensor_id):
+        entry = id_to_sim_and_type.get(sensor_id)
+        if not entry:
+            return False
+        sim, sensor_type = entry
+        return sim.force_read(sensor_type)
+
+    notifier = NotificationDispatcher(NotificationConfig())
+    registry = ModuleRegistry.__new__(ModuleRegistry)
+    registry.config_path = CONFIG_PATH
+    registry.db_conn = conn
+    registry.notifier = notifier
+    registry.force_read_fn = force_read_fn
+    registry.modules = {}
+    registry.load()
+
+    for _ in range(3):
+        sim_a.tick(); sim_p.tick()
+        registry.run_all_cycles()
+        sim_a.apply_pending_actuator_events()
+        sim_p.apply_pending_actuator_events()
+
+    sim_a.inject_sensor_dropout("ph")
+    sim_p.inject_sensor_dropout("ph")
+    sim_a.force_stale_backdate("ph", minutes_ago=15)
+    sim_p.force_stale_backdate("ph", minutes_ago=15)
+
+    diagnostics = DiagnosticEngine(conn, InfrastructureRegistry(conn),
+                                    maintenance=MaintenanceManager(conn))
+    for _ in range(MiaHomesteadModule.MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT):
+        registry.run_all_cycles()
+        diagnostics.auto_diagnose_new_alerts()
+
+    exhausted_alerts = conn.execute(
+        "SELECT source, message FROM alerts WHERE resolved = 0 AND message LIKE '%ph sensor%' "
+        "AND message LIKE '%exhausted%'"
+    ).fetchall()
+    correlated_tasks = conn.execute(
+        "SELECT COUNT(*) FROM maintenance_tasks WHERE title LIKE '%Shared infrastructure%'"
+    ).fetchone()[0]
+    isolated_ph_tasks = conn.execute(
+        "SELECT COUNT(*) FROM maintenance_tasks WHERE title LIKE '%Investigate%(ph)%'"
+    ).fetchone()[0]
+
+    checks = [
+        ("both cells' pH sensors independently escalated to a real alert",
+         len({s for s, _ in exhausted_alerts}) == 2),
+        ("a shared-infrastructure diagnosis was filed for the correlated fault",
+         correlated_tasks >= 1),
+        ("no separate isolated per-sensor 'ph' diagnosis task was ALSO filed for these",
+         isolated_ph_tasks == 0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -256,6 +336,7 @@ SCENARIOS = {
     "inconsistent_readings": scenario_inconsistent_readings,
     "sensor_recovery_ladder_recovers": scenario_sensor_recovery_ladder_recovers,
     "sensor_recovery_exhausted_escalates": scenario_sensor_recovery_exhausted_escalates,
+    "multi_cell_fault_correlation": scenario_multi_cell_fault_correlation,
 }
 
 
