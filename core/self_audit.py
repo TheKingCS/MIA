@@ -214,37 +214,48 @@ def check_scenarios() -> tuple[bool, str]:
     return result.returncode == 0, last_line
 
 
-def main():
-    print("=== MIA Homestead Self-Audit ===\n")
+def run_full_diagnostics(print_output: bool = True) -> dict:
+    """Runs all 7 checks and returns a structured result — the single
+    persistent, always-current self-diagnostic suite for this project,
+    usable two ways: the CLI (main(), below — output/exit-code unchanged
+    from before this function existed) and core.self_audit.run_full_diagnostics()
+    called directly by anything else that wants the program to test
+    itself, e.g. assistant/greenhouse_assistant.py's run_self_diagnostics
+    tool, so a human can trigger a real self-check from chat instead of
+    only ever from a developer's terminal. Every check here already
+    re-runs against whatever the code currently is (imports, greps
+    source, executes the real scenario suite) — nothing here is a
+    stale snapshot that needs separate upkeep as the project grows."""
+    def p(line: str = ""):
+        if print_output:
+            print(line)
+
+    p("=== MIA Homestead Self-Audit ===\n")
+    checks = []
     all_clear = True
 
-    print("1. Checking config/modules.yaml classes import correctly...")
+    p("1. Checking config/modules.yaml classes import correctly...")
     problems = check_configured_modules()
-    if problems:
-        all_clear = False
-        for p in problems:
-            print(f"   FAIL: {p}")
-    else:
-        print("   OK")
+    ok = not problems
+    all_clear = all_clear and ok
+    checks.append({"name": "configured_modules_import", "ok": ok, "problems": problems})
+    p("   OK" if ok else "\n".join(f"   FAIL: {x}" for x in problems))
 
-    print("\n2. Checking every Describable class is actually registered...")
+    p("\n2. Checking every Describable class is actually registered...")
     problems = check_all_describables_registered()
-    if problems:
-        all_clear = False
-        for p in problems:
-            print(f"   FAIL: {p}")
-    else:
-        print("   OK")
+    ok = not problems
+    all_clear = all_clear and ok
+    checks.append({"name": "describables_registered", "ok": ok, "problems": problems})
+    p("   OK" if ok else "\n".join(f"   FAIL: {x}" for x in problems))
 
-    print("\n3. Running scenario regression suite...")
+    p("\n3. Running scenario regression suite...")
     passed, summary = check_scenarios()
-    if not passed:
-        all_clear = False
-        print(f"   FAIL: {summary}")
-    else:
-        print(f"   OK: {summary}")
+    all_clear = all_clear and passed
+    checks.append({"name": "scenario_suite", "ok": passed, "summary": summary})
+    p(f"   {'OK' if passed else 'FAIL'}: {summary}")
 
-    print("\n4. Checking verification coverage (claims backed by proof)...")
+    p("\n4. Checking verification coverage (claims backed by proof)...")
+    coverage_check = {"name": "verification_coverage", "ok": True}
     try:
         import sqlite3
         from core.capability_registry import CapabilityRegistry
@@ -253,57 +264,68 @@ def main():
         # a build the way a broken import or a failing scenario does.
         conn = sqlite3.connect(ROOT / "mia_homestead.db")
         coverage = CapabilityRegistry.get_verification_coverage(conn)
+        coverage_check["coverage"] = coverage
         if coverage["total"] == 0:
-            print("   (no capabilities registered yet — run main.py once first)")
+            p("   (no capabilities registered yet — run main.py once first)")
         else:
-            print(f"   {coverage['verified']}/{coverage['total']} modules have verification evidence")
+            p(f"   {coverage['verified']}/{coverage['total']} modules have verification evidence")
             if coverage["unverified_modules"]:
-                print(f"   Unverified (not a failure, just a gap): {', '.join(coverage['unverified_modules'])}")
+                p(f"   Unverified (not a failure, just a gap): {', '.join(coverage['unverified_modules'])}")
     except Exception as e:
-        print(f"   (skipped — {e})")
+        coverage_check["skipped_reason"] = str(e)
+        p(f"   (skipped — {e})")
+    checks.append(coverage_check)
 
-    print("\n5. Checking conversational coverage (best-effort heuristic)...")
+    p("\n5. Checking conversational coverage (best-effort heuristic)...")
     gaps = check_conversational_coverage()
+    checks.append({"name": "conversational_coverage", "ok": True, "gaps": gaps})
     if gaps:
-        print(f"   {len(gaps)} module(s) declare actions with no obviously-matching assistant tool:")
+        p(f"   {len(gaps)} module(s) declare actions with no obviously-matching assistant tool:")
         for module_id, actions in gaps.items():
-            print(f"   - {module_id}: {actions}")
-        print("   (This is a heuristic keyword match, not exhaustive — verify by hand before "
-              "assuming a real gap. But every hit so far in this project's history has been real.)")
+            p(f"   - {module_id}: {actions}")
+        p("   (This is a heuristic keyword match, not exhaustive — verify by hand before "
+          "assuming a real gap. But every hit so far in this project's history has been real.)")
     else:
-        print("   OK — no obvious gaps found")
+        p("   OK — no obvious gaps found")
 
-    print("\n6. Checking every assistant tool has a domain tag (TOOL_DOMAINS)...")
+    p("\n6. Checking every assistant tool has a domain tag (TOOL_DOMAINS)...")
+    domain_check = {"name": "tool_domain_coverage", "ok": True}
     try:
         problems = check_tool_domain_coverage()
-        if problems:
-            all_clear = False
-            for p in problems:
-                print(f"   FAIL: {p}")
-        else:
-            print("   OK")
+        ok = not problems
+        all_clear = all_clear and ok
+        domain_check.update(ok=ok, problems=problems)
+        p("   OK" if ok else "\n".join(f"   FAIL: {x}" for x in problems))
     except Exception as e:
-        print(f"   (skipped — {e})")
+        domain_check.update(skipped_reason=str(e))
+        p(f"   (skipped — {e})")
+    checks.append(domain_check)
 
-    print("\n7. Checking every destructive-tool tag matches a real tool...")
+    p("\n7. Checking every destructive-tool tag matches a real tool...")
+    destructive_check = {"name": "destructive_tools_valid", "ok": True}
     try:
         problems = check_destructive_tools_valid()
-        if problems:
-            all_clear = False
-            for p in problems:
-                print(f"   FAIL: {p}")
-        else:
-            print("   OK")
+        ok = not problems
+        all_clear = all_clear and ok
+        destructive_check.update(ok=ok, problems=problems)
+        p("   OK" if ok else "\n".join(f"   FAIL: {x}" for x in problems))
     except Exception as e:
-        print(f"   (skipped — {e})")
+        destructive_check.update(skipped_reason=str(e))
+        p(f"   (skipped — {e})")
+    checks.append(destructive_check)
 
-    print()
+    p()
     if all_clear:
-        print("All checks passed. Self-understanding is consistent with the code.")
-        sys.exit(0)
+        p("All checks passed. Self-understanding is consistent with the code.")
     else:
-        print("Issues found above — fix before considering this change done.")
-        sys.exit(1)
+        p("Issues found above — fix before considering this change done.")
+
+    return {"all_clear": all_clear, "checks": checks}
+
+
+def main():
+    result = run_full_diagnostics(print_output=True)
+    sys.exit(0 if result["all_clear"] else 1)
 
 
 if __name__ == "__main__":

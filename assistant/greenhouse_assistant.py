@@ -558,6 +558,17 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "run_self_diagnostics",
+        "description": (
+            "Actually run the full self-diagnostic suite right now (the same 7 checks "
+            "core/self_audit.py runs from the terminal, including the real scenario "
+            "regression suite) and report whether everything currently passes. Slower than "
+            "the other self_knowledge tools (runs real checks, not a cached fact) but gives "
+            "a genuine, current answer instead of a static description."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_recent_automated_actions",
         "description": "Get recent automated actions with their rationale (load-shedding, beacon triggers, etc) — the 'why did you do that' log for non-dosing actions.",
         "input_schema": {
@@ -733,6 +744,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_system_capabilities": "self_knowledge",
     "get_self_change_history": "self_knowledge",
     "get_verification_coverage": "self_knowledge",
+    "run_self_diagnostics": "self_knowledge",
     "get_recent_automated_actions": "self_knowledge",
     "get_activity_journal": "self_knowledge",
     "get_control_loop_status": "self_knowledge",
@@ -1139,6 +1151,10 @@ class _BaseGreenhouseAssistant:
 
     def _tool_get_verification_coverage(self) -> dict:
         return CapabilityRegistry.get_verification_coverage(self.db)
+
+    def _tool_run_self_diagnostics(self) -> dict:
+        from core.self_audit import run_full_diagnostics
+        return run_full_diagnostics(print_output=False)
 
     def _tool_get_recent_automated_actions(self, module_id: str | None = None, days: int = 7) -> dict:
         from core.action_log import get_recent_actions
