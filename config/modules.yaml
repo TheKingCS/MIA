@@ -33,6 +33,21 @@ modules:
     cell_id: 1
     params: {}
 
+  # 5-gallon pilot cell (docs/PILOT_VS_SCALE.md) — deliberately enabled
+  # now, in simulation, unlike cell_b_aquaponics below: the pilot
+  # doesn't need a greenhouse to exist, that's the whole point of it.
+  # cell_id 2 row + its sensors/actuators/dosing_limits come from
+  # drivers/simulator.py's setup_pilot_cell() (--setup-pilot).
+  - id: pilot_cell
+    enabled: true
+    class: modules.aquaponics_cell.AquaponicsCell
+    cell_id: 2
+    params:
+      ph_target_min: 6.6
+      ph_target_max: 7.2
+      ec_target_min: 800   # unused until an EC probe exists (phase 2) — no
+      ec_target_max: 1500  # dosing happens without a real reading regardless
+
   # ---- Future modules — uncomment and configure when ready ----
   #
   # - id: house_power
@@ -44,10 +59,12 @@ modules:
   #     battery_capacity_wh: 0
   #     low_soc_threshold_pct: 20
   #
-  # - id: cell_b_aquaponics
+  # - id: cell_b_aquaponics    # a second FULL-SCALE cell, once a greenhouse
+  #                             # exists — distinct from pilot_cell above,
+  #                             # cell_id bumped to 3 so they don't collide
   #   enabled: false
   #   class: modules.aquaponics_cell.AquaponicsCell
-  #   cell_id: 2
+  #   cell_id: 3
   #   params:
   #     ph_target_min: 6.6
   #     ph_target_max: 7.2

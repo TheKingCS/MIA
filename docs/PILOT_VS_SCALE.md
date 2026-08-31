@@ -1,5 +1,30 @@
 # MIA Homestead — Pilot vs. Full Scale
 
+## Status (2026-08-31)
+
+**Software scaffold done, running in simulation now.** `pilot_cell`
+(`config/modules.yaml`, `cell_id: 2`) is enabled today — deliberately
+not gated on "once greenhouse exists" like a second full-scale cell
+would be, since the whole point of the pilot is that it doesn't need
+one. `drivers/simulator.py --setup-pilot` seeds it with exactly the
+trimmed hardware scope below (pH + water-temp sensors only, one pH-up
+pump, always-on aeration/circulation, no EC probe, no fish yet).
+Verified for real, not assumed: ran the actual control loop with both
+`cell_a_aquaponics` and `pilot_cell` live simultaneously — no crash,
+`pilot_cell` correctly raised an honest "no EC reading" warning (not an
+error) exactly as its trimmed scope predicts, and confirmed the two-cell
+case the software was always claimed to support but had never actually
+been run. That check caught one real bug: the dashboard's sensor tiles
+had no cell label, so two cells produced two visually-identical "Water
+pH" tiles — fixed (`viewer/dashboard.html` now prefixes each tile with
+its cell name once more than one cell exists).
+
+**What this does NOT change**: nothing about the physical build below.
+This is the pure-software half — proving the architecture handles a
+second cell correctly before physical hardware ever needs to. The
+buy/flash/wire/calibrate steps are still real-world actions only the
+project owner can take.
+
 ## The core decision: build the pilot now
 
 Simulation validates *logic*. It can't validate real dosing pulse
@@ -43,11 +68,13 @@ of that is needed to validate the core safety-critical loop.
 
 ## What the pilot is FOR (in priority order)
 
-1. **Flash and prove the Safety MCU firmware for real.** This is the
-   single biggest unknown left in the whole system — it's written but
-   never compiled or run. An LED standing in for the relay (per
-   `firmware/safety_mcu/README.md`) gets you most of the way; a real
-   pump gets you the rest.
+1. **Flash and prove the Safety MCU firmware for real.** Half done in
+   software (2026-08-30): it now **compiles clean** against real
+   ESP32 + ArduinoJson toolchains (`firmware/safety_mcu/platformio.ini`,
+   `pio run`) — the remaining unknown is real hardware behavior, not
+   whether the code is even valid. An LED standing in for the relay
+   (per `firmware/safety_mcu/README.md`) gets you most of the way; a
+   real pump gets you the rest.
 2. **Calibrate real dosing pulse magnitudes.** How much does a 1-second
    pulse actually move pH in a 5-gallon volume, at your actual pump's
    flow rate? That number replaces the placeholder in
@@ -97,13 +124,14 @@ fish and real money in it. This is the same simulation-first discipline
 from `docs/SIMULATION_STRATEGY.md`, just extended one more tier: sim →
 scenario tests → pilot hardware → production hardware.
 
-## Software changes needed to represent this
+## Software changes needed to represent this — done (2026-08-31)
 
 The pilot is just another `AquaponicsCell` config entry — the modular
-registry already supports this without new code:
+registry already supported this without new code, and now actually has
+one:
 
 ```yaml
-# config/modules.yaml — add alongside cell_a_aquaponics once greenhouse exists
+# config/modules.yaml — real entry, not a proposal
 - id: pilot_cell
   enabled: true
   class: modules.aquaponics_cell.AquaponicsCell
@@ -111,12 +139,13 @@ registry already supports this without new code:
   params:
     ph_target_min: 6.6
     ph_target_max: 7.2
-    ec_target_min: 800
+    ec_target_min: 800   # unused until an EC probe exists (phase 2)
     ec_target_max: 1500
 ```
 
-And a corresponding `cells` row + `layout.json` entry (position it
-wherever it physically lives — a desk is a valid `position`). This
-also validates something worth validating early: that the modular
-architecture actually handles two simultaneously running cells
-correctly, not just in theory.
+Plus a real `cells` row + `layout.json` entry (`drivers/simulator.py
+--setup-pilot`; positioned off to the side in the digital twin — "a
+desk is a valid position"). This also validated something worth
+validating early, for real: the modular architecture running two
+simultaneous cells correctly, not just in theory — see "Status" above
+for what that check actually found and fixed.

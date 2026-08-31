@@ -397,7 +397,14 @@ function renderHeader(data) {
 
 function renderSensorTiles(data) {
   const wrap = document.getElementById("sensor-tiles");
-  const readings = data.cells.flatMap(c => c.readings);
+  // Carry the cell name onto each reading before flattening -- with only
+  // one cell (today's real deployment) two tiles never share a label so
+  // this stays invisible; found necessary the moment a second cell
+  // (docs/PILOT_VS_SCALE.md's pilot_cell) existed for real and produced
+  // two visually-identical "Water pH" tiles with no way to tell which
+  // cell was which.
+  const multiCell = data.cells.length > 1;
+  const readings = data.cells.flatMap(c => c.readings.map(r => ({ ...r, _cellName: c.name })));
   if (readings.length === 0) {
     wrap.appendChild(el("div", { class: "empty-state" }, ["No sensor readings yet — run the simulator or connect real hardware."]));
     return;
@@ -405,8 +412,9 @@ function renderSensorTiles(data) {
   for (const r of readings) {
     const stale = r.is_stale;
     const color = stale ? "#E8A33D" : "#4FD1C5";
+    const label = SENSOR_LABELS[r.type] || r.type;
     const tile = el("div", { class: "stat-tile" + (stale ? " warning" : "") }, [
-      el("div", { class: "stat-label" }, [SENSOR_LABELS[r.type] || r.type]),
+      el("div", { class: "stat-label" }, [multiCell ? `${r._cellName} — ${label}` : label]),
       el("div", { class: "stat-value" }, [
         String(Math.round(r.value * 100) / 100),
         " ",

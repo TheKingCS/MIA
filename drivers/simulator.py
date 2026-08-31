@@ -124,6 +124,90 @@ def setup_demo_cell(conn: sqlite3.Connection) -> int:
     return cell_id
 
 
+def setup_pilot_cell(conn: sqlite3.Connection) -> int:
+    """Creates the 5-gallon pilot cell (docs/PILOT_VS_SCALE.md) if it
+    doesn't exist yet — a second, independent AquaponicsCell alongside
+    the existing demo cell, deliberately trimmed to the exact hardware
+    subset that doc's own shopping list names: a pH probe + DS18B20
+    temp probe, one pH-up dosing pump, always-on aeration/circulation.
+    No EC probe, no ph-down/nutrient pumps, no fish yet — matches
+    "skip EC/nutrient dosing... none of that is needed to validate the
+    core safety-critical loop" and "fishless-cycle the biofilter first."
+
+    Deliberately NOT gated on real hardware existing — the pilot is
+    buildable in software today (same reasoning the existing demo cell
+    already proves out), and running two AquaponicsCell instances
+    simultaneously in simulation is itself real validation that the
+    modular registry actually handles more than one cell correctly,
+    not just in theory (the doc's own stated reason for setting this
+    up early)."""
+    existing = conn.execute("SELECT id FROM cells WHERE name = 'Pilot Bucket'").fetchone()
+    if existing:
+        return existing[0]
+
+    cur = conn.execute(
+        "INSERT INTO cells (name, description) VALUES (?, ?)",
+        ("Pilot Bucket", "5-gallon pilot cell — see docs/PILOT_VS_SCALE.md. "
+                         "Real target hardware, not simulation-only like the demo cell."),
+    )
+    cell_id = cur.lastrowid
+
+    conn.execute(
+        "INSERT INTO tanks (cell_id, name, capacity_gallons, species, stocked_date) "
+        "VALUES (?, ?, ?, NULL, NULL)",
+        (cell_id, "Pilot Bucket Tank", 5),
+    )
+    conn.execute(
+        "INSERT INTO grow_beds (cell_id, name, sqft, media_type) VALUES (?, ?, ?, ?)",
+        (cell_id, "Pilot Tray", 1.5, "net pots"),
+    )
+
+    # Only pH + water temp — the trimmed pilot BOM doesn't include an EC
+    # probe (PILOT_VS_SCALE.md: "the EC loop can wait for phase 2").
+    # AquaponicsCell.evaluate() already handles a genuinely-missing
+    # sensor correctly (a WARNING, dosing held for that variable, not a
+    # crash) — see that method's own ec_reading is None branch.
+    for sensor_type, unit, start, _, _ in SIM_SENSOR_DEFS:
+        if sensor_type not in ("ph", "temp_water"):
+            continue
+        conn.execute(
+            "INSERT INTO sensors (cell_id, type, unit, location_note, install_date, active) "
+            "VALUES (?, ?, ?, ?, ?, 1)",
+            (cell_id, sensor_type, unit, "pilot — real hardware target", datetime.utcnow().isoformat()),
+        )
+
+    # pH-up only to start (no ph-down, no nutrient/EC pump) — matches
+    # the trimmed BOM exactly. Aeration/circulation always-on, same
+    # safety stance as the demo cell.
+    for name, atype, default in [
+        ("pilot_ph_up_pump", "dosing_pump", "off"),
+        ("pilot_circulation_pump", "circulation_pump", "on"),
+        ("pilot_aerator", "aerator", "on"),
+    ]:
+        conn.execute(
+            "INSERT INTO actuators (cell_id, type, name, safe_default_state) "
+            "VALUES (?, ?, ?, ?)",
+            (cell_id, atype, name, default),
+        )
+
+    # Deliberately conservative starting numbers, NOT derived from the
+    # full-scale limits by any real ratio — PILOT_VS_SCALE.md priority
+    # #2 is calibrating what a real pulse actually does in 5 real
+    # gallons; these exist only so dosing_limits validation has
+    # something to check before that real number exists, same
+    # reasoning setup_demo_cell()'s own limits already document.
+    conn.execute(
+        "INSERT INTO dosing_limits (cell_id, dose_type, max_per_dose_ml, "
+        "max_per_day_ml, min_interval_minutes) VALUES (?, 'ph_up', 0.5, 2, 10)",
+        (cell_id,),
+    )
+
+    conn.commit()
+    print(f"Pilot cell created (cell_id={cell_id}) with 2 sensors (pH, water temp), "
+          f"3 actuators (pH-up pump, circulation, aeration).")
+    return cell_id
+
+
 class Simulator:
     """Maintains slowly-drifting state per sensor type and writes new
     readings on each tick — mimics real-world sensor behavior (gradual
@@ -202,6 +286,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default="mia_homestead.db")
     parser.add_argument("--setup", action="store_true")
+    parser.add_argument("--setup-pilot", action="store_true", help="Also create the 5-gallon pilot cell (docs/PILOT_VS_SCALE.md)")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--interval", type=float, default=5.0, help="seconds between ticks")
     args = parser.parse_args()
@@ -210,6 +295,9 @@ def main():
 
     if args.setup:
         setup_demo_cell(conn)
+
+    if args.setup_pilot:
+        setup_pilot_cell(conn)
 
     if args.run:
         sim = Simulator(conn, interval_seconds=args.interval)
