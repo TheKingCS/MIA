@@ -46,7 +46,7 @@ and every dollar spent on it is reused at full scale, not thrown away.
 | Dosing pumps | 1–2 | 3 per cell |
 | Power | Wall outlet + optional small battery for MCU fallback testing | Real solar array + battery bank, sized to load |
 | Structure | None — a shelf or desk | Real greenhouse |
-| Est. cost | **~$150–200** (pH kit, 1 ESP32, 1 relay module, 1 dosing pump, air pump, circulation pump — reuses the exact "buy first" list) | **~$710+** full BOM (see `docs/HARDWARE_BOM_CURRENT.md`) |
+| Est. cost | **~$256** (real, verified pricing/sourcing as of 2026-08-31 — see below) | **~$710+** full BOM (see `docs/HARDWARE_BOM_CURRENT.md`) |
 | Timeline | Buildable now, no land/greenhouse needed | Gated on greenhouse construction |
 
 ## What the pilot actually needs to buy
@@ -55,16 +55,41 @@ Trimmed from the full BOM to the minimum that proves the whole
 control/safety chain end to end — not a separate shopping list, a
 subset of the same one:
 
-- Atlas Scientific pH kit (~$175) — the EC loop can wait for phase 2
-- 1x ESP32 dev board (~$20) + 1x 4-channel relay module (~$8)
-- 1x peristaltic dosing pump (~$12) — pH-up only to start
-- Aquarium air pump + airstone (~$10) — aeration, wired to always-on
-- Small submersible circulation pump (~$15)
-- DS18B20 temp probe (~$8)
+Real, sourced pricing (WebSearch/WebFetch, 2026-08-31 — see
+`drivers/simulator.py`'s `seed_pilot_shopping_list()` for the full
+sourcing notes and confidence level per item):
 
-**Pilot total: ~$248.** Skip EC/nutrient dosing, the watering/
-fertilizer MCUs, PIR/beacon, and all power-monitoring hardware — none
-of that is needed to validate the core safety-critical loop.
+- Atlas Scientific KIT-101P pH kit — **$174.99** (confirmed direct from
+  atlas-scientific.com) — the EC loop can wait for phase 2
+- Adafruit HUZZAH32 ESP32 (pre-soldered) — **$20.95** (confirmed direct
+  from adafruit.com) + 4-channel relay module — **~$10** (real product,
+  Amazon-listing price estimate)
+- 12V DC peristaltic dosing pump — **~$12** (real product, Amazon-listing
+  price estimate) — pH-up only to start
+- Aquarium air pump + airstone kit — **~$12** (real product, Amazon-listing
+  price estimate) — aeration, wired to always-on
+- Small submersible circulation pump — **~$15** (real product,
+  Amazon-listing price estimate)
+- DS18B20 temp probe — **$10.95** (confirmed direct from sparkfun.com —
+  meaningfully more than this doc's original ~$8 guess)
+
+**Pilot total: ~$256.** (Up modestly from an earlier ~$248 estimate —
+mainly the DS18B20 turning out to cost more than originally guessed,
+now a real confirmed number instead of a guess.) Skip EC/nutrient
+dosing, the watering/fertilizer MCUs, PIR/beacon, and all
+power-monitoring hardware — none of that is needed to validate the
+core safety-critical loop.
+
+**This list is now a real, ready-to-review purchase queue in the app
+itself**, not just this document — run
+`python3 drivers/simulator.py --db mia_homestead.db --seed-pilot-shopping-list`
+once, then `python3 core/order_queue.py --db mia_homestead.db` to
+approve/deny each line item before actually buying anything (same
+propose-then-human-approves gate every purchase in this project goes
+through — nothing here places a real order on its own). The
+Amazon-listing items are real products with real URLs but
+estimated/unconfirmed current prices — confirm at checkout, same as
+this doc has always said.
 
 ## What the pilot is FOR (in priority order)
 

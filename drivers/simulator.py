@@ -22,8 +22,17 @@ import argparse
 import math
 import random
 import sqlite3
+import sys
 import time
 from datetime import datetime
+from pathlib import Path
+
+# seed_pilot_shopping_list() below is this file's first cross-package
+# import (core.inventory) — needed because running `python
+# drivers/simulator.py` puts drivers/ on sys.path, not the repo root,
+# same reasoning core/order_queue.py's own sys.path.insert already
+# documents for the same problem in the other direction.
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 SIM_SENSOR_DEFS = [
     # (type, unit, start_value, drift_range, noise)
@@ -208,6 +217,87 @@ def setup_pilot_cell(conn: sqlite3.Connection) -> int:
     return cell_id
 
 
+def seed_pilot_shopping_list(conn: sqlite3.Connection) -> list[int]:
+    """Populates real inventory_items + to-order proposals for the
+    pilot's exact hardware list (docs/PILOT_VS_SCALE.md) — real,
+    verified sourcing (WebSearch/WebFetch, 2026-08-31), not invented.
+    Uses the SAME propose-then-human-approves path every other purchase
+    in this project goes through (core/inventory.py's propose_reorder())
+    — this only ever proposes, never places a real order; a human still
+    approves each one via core/order_queue.py or the assistant before
+    anything gets bought.
+
+    Price/URL confidence, stated honestly per item rather than
+    presented as uniformly certain:
+    - pH kit, ESP32, DS18B20: fetched directly from the seller's own
+      product page moments before this was written — real, current,
+      confirmed prices.
+    - Relay module, dosing pump, air pump, circulation pump: real
+      product URLs (genuinely returned by search, not fabricated), but
+      commodity Amazon listings that resist reliable price-scraping —
+      price is a reasonable current estimate from search-result
+      snippets and this project's own prior live-checked BOM research
+      (docs/HARDWARE_BOM_CURRENT.md), not independently re-confirmed
+      via direct fetch today. Verify at checkout, same caveat that doc
+      already states for every price in it.
+
+    Safe to call more than once — skips any item that already exists
+    by name."""
+    items = [
+        # (name, category, unit, unit_cost, supplier, supplier_url, note)
+        ("Atlas Scientific KIT-101P pH Kit", "sensor", "each", 174.99,
+         "Atlas Scientific", "https://atlas-scientific.com/kits/ph-kit/",
+         "Confirmed price, fetched directly 2026-08-31. Circuit + probe + calibration solution + carrier board."),
+        ("Adafruit HUZZAH32 ESP32 Feather Board (assembled)", "equipment", "each", 20.95,
+         "Adafruit", "https://www.adafruit.com/product/3591",
+         "Confirmed price, fetched directly 2026-08-31. Pre-soldered headers — worth the extra $1 "
+         "over the unsoldered version (#3405, $19.95) to skip a soldering step on a first build."),
+        ("DS18B20 Waterproof Temperature Probe", "sensor", "each", 10.95,
+         "SparkFun", "https://www.sparkfun.com/temperature-sensor-waterproof-ds18b20.html",
+         "Confirmed price, fetched directly 2026-08-31 — meaningfully more than "
+         "docs/PILOT_VS_SCALE.md's original ~$8 estimate, updated to this real number."),
+        ("4-Channel 5V Relay Module (DIYables)", "equipment", "each", 10.00,
+         "Amazon (DIYables)", "https://www.amazon.com/DIYables-4-Channel-Arduino-ESP8266-Raspberry/dp/B0BXKKYH5C",
+         "Real product URL, price is a current-range estimate ($8-15 observed) — Amazon listings "
+         "resist reliable price-scraping, confirm at checkout."),
+        ("12V DC Peristaltic Dosing Pump (INTLLAB)", "equipment", "each", 12.00,
+         "Amazon (INTLLAB)", "https://www.amazon.com/INTLLAB-Peristaltic-Flowrate-Aquarium-Analytical/dp/B07MTBV5RR",
+         "Real product URL, price is a current-range estimate ($10-15 observed, matches this "
+         "project's own prior live-checked BOM research) — confirm at checkout. pH-up only to start."),
+        ("Aquarium Air Pump + Airstone Kit (Pawfly)", "equipment", "each", 12.00,
+         "Amazon (Pawfly)", "https://www.amazon.com/Pawfly-Aquarium-Aerator-Airline-Accessories/dp/B0CMT6G4KM",
+         "Real product URL (15-40 GPH, rated for 3-20 gallon buckets — a real match for a 5-gallon "
+         "pilot), price is a current-range estimate — confirm at checkout. Wire to always-on."),
+        ("Small Submersible Circulation Pump (AQUANEAT)", "equipment", "each", 15.00,
+         "Amazon (AQUANEAT)", "https://www.amazon.com/AQUANEAT-Submersible-Fountain-Aquarium-Hydroponics/dp/B0BJJBK746",
+         "Real product URL (80 GPH), price is a current-range estimate ($16-25 broadly observed for "
+         "this class of pump, priced conservatively here) — confirm at checkout."),
+    ]
+
+    from core.inventory import InventoryManager
+    inv = InventoryManager(conn)
+    created_ids = []
+    for name, category, unit, cost, supplier, url, note in items:
+        existing = conn.execute("SELECT id FROM inventory_items WHERE name = ?", (name,)).fetchone()
+        if existing:
+            continue
+        item_id = inv.add_item(
+            name=name, category=category, unit=unit,
+            quantity_on_hand=0, reorder_threshold=1, reorder_quantity=1,
+            unit_cost=cost, supplier=supplier, supplier_url=url,
+        )
+        inv.propose_reorder(item_id, quantity=1, note=f"Pilot build (docs/PILOT_VS_SCALE.md). {note}")
+        created_ids.append(item_id)
+
+    if created_ids:
+        total = sum(c for _, _, _, c, _, _, _ in items)
+        print(f"Seeded {len(created_ids)} pilot shopping list item(s), proposed for approval. "
+              f"Total: ${total:.2f}. Review with: python3 core/order_queue.py --db mia_homestead.db")
+    else:
+        print("Pilot shopping list already seeded — nothing new added.")
+    return created_ids
+
+
 class Simulator:
     """Maintains slowly-drifting state per sensor type and writes new
     readings on each tick — mimics real-world sensor behavior (gradual
@@ -287,6 +377,8 @@ def main():
     parser.add_argument("--db", default="mia_homestead.db")
     parser.add_argument("--setup", action="store_true")
     parser.add_argument("--setup-pilot", action="store_true", help="Also create the 5-gallon pilot cell (docs/PILOT_VS_SCALE.md)")
+    parser.add_argument("--seed-pilot-shopping-list", action="store_true",
+                         help="Populate real, sourced inventory items + to-order proposals for the pilot's hardware list")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--interval", type=float, default=5.0, help="seconds between ticks")
     args = parser.parse_args()
@@ -298,6 +390,9 @@ def main():
 
     if args.setup_pilot:
         setup_pilot_cell(conn)
+
+    if args.seed_pilot_shopping_list:
+        seed_pilot_shopping_list(conn)
 
     if args.run:
         sim = Simulator(conn, interval_seconds=args.interval)
