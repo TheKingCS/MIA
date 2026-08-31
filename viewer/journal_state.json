@@ -1,0 +1,188 @@
+{
+  "journal": [
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph sensor (id 1) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ec sensor (id 2) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: temp_water sensor (id 3) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: temp_air sensor (id 4) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: humidity sensor (id 5) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: level sensor (id 6) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Critical alert raised",
+      "detail": "cell_a_aquaponics: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1",
+      "severity": "critical"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "greenhouse_power",
+      "title": "Warning alert raised",
+      "detail": "greenhouse_power: temp_water sensor (id 8) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "greenhouse_power",
+      "title": "Critical alert raised",
+      "detail": "greenhouse_power: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1",
+      "severity": "critical"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph sensor (id 7) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: temp_water sensor (id 8) stale (last update 2026-08-31T15:38:24)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-08-31 17:23:19",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Critical alert raised",
+      "detail": "pilot_cell: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 2",
+      "severity": "critical"
+    },
+    {
+      "timestamp": "2026-08-31 17:19:25",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed 12.0ml ph_up",
+      "detail": "pH read 6.1, below 6.4 target floor for lettuce/tilapia co-culture \u2014 dosed to bring back into range"
+    },
+    {
+      "timestamp": "2026-08-31 17:19:17",
+      "category": "experiment",
+      "source": "cell 1",
+      "title": "Experiment proposed (system)",
+      "detail": "Raising EC target ceiling from 1.4 to 1.6 mS/cm will improve lettuce yield without stressing tilapia"
+    },
+    {
+      "timestamp": "2026-08-31 17:19:17",
+      "category": "experiment",
+      "source": "cell 1",
+      "title": "Experiment started",
+      "detail": "ec_target_max: 1.4 \u2192 1.6"
+    },
+    {
+      "timestamp": "2026-08-31 17:19:17",
+      "category": "yield",
+      "source": "cell 1",
+      "title": "Harvested 2.5lb lettuce",
+      "detail": "First harvest of the pilot run"
+    },
+    {
+      "timestamp": "2026-08-31 17:19:12",
+      "category": "maintenance",
+      "source": "system",
+      "title": "Maintenance task created: Calibrate pH probe (Cell A)",
+      "detail": "Monthly calibration check per SAFETY_SPEC.md drift tolerance"
+    },
+    {
+      "timestamp": "2026-08-31 17:19:12",
+      "category": "maintenance",
+      "source": "human",
+      "title": "Maintenance task completed: Calibrate pH probe (Cell A)",
+      "detail": ""
+    },
+    {
+      "timestamp": "2026-08-31 17:19:03",
+      "category": "maintenance",
+      "source": "system",
+      "title": "Maintenance task created: Calibrate pH probe (Cell A)",
+      "detail": "Monthly calibration check per SAFETY_SPEC.md drift tolerance"
+    },
+    {
+      "timestamp": "2026-08-31 15:38:21",
+      "category": "alert",
+      "source": "greenhouse_self_preservation",
+      "title": "Critical alert raised",
+      "detail": "greenhouse_self_preservation: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1",
+      "severity": "critical"
+    },
+    {
+      "timestamp": "2026-08-31 15:38:21",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held",
+      "severity": "warning"
+    }
+  ],
+  "current_status": {
+    "control_loop_alive": true,
+    "last_heartbeat": "2026-08-31 17:23:31",
+    "monitored_cells": [
+      "Cell A",
+      "Pilot Bucket"
+    ],
+    "most_recent_action": {
+      "cell_id": 1,
+      "dose_type": "ph_up",
+      "rationale": "pH read 6.1, below 6.4 target floor for lettuce/tilapia co-culture \u2014 dosed to bring back into range",
+      "timestamp": "2026-08-31 17:19:25",
+      "kind": "dose"
+    }
+  },
+  "upcoming": [
+    {
+      "what": "Experiment concludes (cell 1): Raising EC target ceiling from 1.4 to 1.6 mS/cm will improve lettuce yield without stressing tilapia",
+      "when": "2026-09-14T17:19:17.929929",
+      "kind": "experiment"
+    }
+  ],
+  "generated_at": "2026-08-31 17:23:31"
+}

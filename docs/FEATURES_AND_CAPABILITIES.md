@@ -1,8 +1,32 @@
 # MIA Homestead — Features & Capabilities
 
-**Auto-generated 2026-08-31T15:38:21.602555Z from `system_capabilities` — never hand-edit this file, it will be overwritten on the next registration pass.**
+**Auto-generated 2026-08-31T17:23:19.105896Z from `system_capabilities` — never hand-edit this file, it will be overwritten on the next registration pass.**
 
-**Verification coverage: 18/18 modules have actual proof behind their claims, not just a description.**
+**Verification coverage: 19/19 modules have actual proof behind their claims, not just a description.**
+
+---
+
+## Activity Journal (`activity_journal`)
+
+Aggregates every domain that already records a real rationale (dosing, alerts, experiments, maintenance, yield, general automated actions) into one chronological narrative, plus a synthesized 'right now' status and 'what's next' forecast — all read-only, all from data other modules already produce for their own reasons.
+
+**Can do:**
+- view the journal
+- check current status
+- check what's planned next
+
+**Tracks/produces:**
+- unified activity journal
+- current control-loop status
+- upcoming scheduled/planned items
+
+**Limits:** Purely a read/aggregation layer — never takes action, never writes anything. get_whats_next() only ever reports a real time already computed/stored elsewhere (a maintenance schedule's next_due_at, an experiment's planned_end_date, an active watch's window) — it does not guess or invent a plan the system doesn't actually have; an empty result honestly means nothing is currently scheduled.
+
+**Proof this actually works:**
+- 2026-08-31: manually seeded real rows via the actual service methods (MaintenanceManager.create_task/update_status, ExperimentManager.propose_experiment/start_experiment, plus a real dosing_event and yield_event) against mia_homestead.db, then ran viewer/export_journal_state.py and confirmed all 9 resulting journal entries appeared correctly categorized (dosing/experiment/yield/maintenance/alert) and correctly ordered newest-first; confirmed get_current_status() correctly reported control_loop_alive=false with an honest last_heartbeat when no live main.py process was running, and correctly flipped to the real most-recent dose once one was inserted; confirmed get_whats_next() correctly surfaced the started experiment's real planned_end_date and stayed empty before it existed — never fabricated a plan.
+- 2026-08-31: rendered viewer/journal.html via headless Chromium (Playwright) against the live exported journal_state.json, zero console/page errors, confirmed the Right Now / What's Next / Journal feed sections all render the real data correctly.
+
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -24,7 +48,7 @@ Snapshots configuration (files + live control parameters, not history) before ch
 **Proof this actually works:**
 - Live manual test 2026-08-26: full end-to-end proof — applied a deliberately dangerous dosing limit change (10ml -> 500ml max per dose), simulated the resulting critical alert spike, and confirmed automatic detection and rollback to the correct baseline value (500 -> 10) with a clear notification
 
-*Last updated: 2026-08-31 15:38:21*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -48,7 +72,7 @@ Tracks what species is planted in each grow bed, expected vs actual yield, water
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed compatible plantings (lettuce+basil, overlapping ranges) produce no warning; a fabricated incompatible species correctly triggered the warning
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -74,7 +98,7 @@ Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep 
 - scenarios.py::scenario_stale_sensor_freeze — confirmed dosing freezes when a sensor is missing/stale
 - Live manual test 2026-08-26: confirmed target_overrides changes the live control target with zero restart (cell._current_targets() picked up an experiment change immediately)
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -94,7 +118,7 @@ Watches how long it's been since a human demonstrably interacted with the system
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed all states — no check-in ever escalates immediately to level 2, a fresh check-in resets to level 0, backdating past 48h correctly escalates to level 1, checking again immediately does NOT re-escalate (stays at level 1), and backdating past 72h correctly escalates to level 2
 
-*Last updated: 2026-08-31 15:38:21*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -117,7 +141,7 @@ The code-level counterpart to core/backup_manager.py's config watch, which expli
 - Live manual test 2026-08-31, against a disposable scratch git repo (never the real project repo): start_deploy_watch() with no known-good commit yet correctly raises rather than watching toward nothing; marked a real 'v1 good' commit as known-good, deployed a real 'v2 buggy' commit, started a watch; one critical alert (below threshold=2) correctly produced no rollback; a second critical alert correctly triggered auto-rollback — confirmed the actual file content on disk reverted to v1's real content, not just a DB status change. Separately confirmed the stash-safety path: seeded real uncommitted changes (a modified tracked file + a new untracked file) at rollback time, confirmed both were stashed (recoverable via git stash pop, visible in git stash list) rather than destroyed, and the rollback still correctly completed. Separately confirmed the confirmed_good path: backdated a watch's applied_at past its validation window with no critical alerts, confirmed it resolved to confirmed_good and recorded a genuine new last-known-good commit (code_deploys count incremented by exactly 1).
 - The systemd layer (deploy/mia-homestead.service, deploy/mia-homestead-rollback.service) was separately verified for real against disposable test units in this machine's actual systemd --user session (cleaned up immediately after, never touching this repo's own unit namespace) — see deploy/README.md for the two real design bugs that testing caught and fixed, and the final clean end-to-end result.
 
-*Last updated: 2026-08-31 15:38:21*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -139,7 +163,7 @@ Recognizes and pairs physical MCU controllers by role (watering, fertilizer dosi
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed a device announcing a known unclaimed role auto-pairs and its actuators get created automatically; confirmed an ambiguous/unlabeled device correctly queues for a human instead of guessing
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -159,7 +183,7 @@ Cross-references alerts against the infrastructure map (wiring, plumbing) to pro
 **Proof this actually works:**
 - Live manual test 2026-08-26: full real-code-path proof — backdated a real sensor reading, ran the actual control cycle, let the base contract raise a genuine staleness alert, then confirmed the diagnosis correctly traced it to the exact MCU (pH Dosing Controller, PORT 2, relay channel 1) and physical mounting location, and auto-filed a maintenance task with that diagnosis attached
 
-*Last updated: 2026-08-31 15:38:21*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -183,7 +207,7 @@ Proposes and runs controlled changes to one cell's dosing targets, tracks yield 
 - Live manual test 2026-08-26: full lifecycle proven end to end — proposed a target change, confirmed live effect on the control loop with zero restart, logged before/after yield data, completed the experiment, got a correct evidence-based +32.3% adopt recommendation, approved it, and confirmed the change promoted from set_by='experiment' to set_by='manual'
 - Live manual test 2026-08-30 (proactive proposals): seeded a real planting 60% through its time to harvest with yield at 20% of expected-by-now pace and a config EC target away from the species' documented midpoint — confirmed exactly one experiment proposed, correctly attributing baseline_value to the REAL config-read current target and test_value to the species' real recorded midpoint. Confirmed 3 negative cases produce zero proposals: a planting on pace, a planting only 30% through its cycle (too early to judge), and a cell that already has a live (non-terminal) experiment — no duplicate proposal.
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -206,7 +230,7 @@ Monitors solar/battery telemetry for greenhouse_array, sheds non-critical loads 
 - scenarios.py::scenario_power_loss_load_shed — confirmed critical alert and load-shed behavior fire correctly when telemetry is missing entirely
 - Live manual test 2026-08-30: seeded 4 real battery-drain scenarios directly into power_telemetry — under 12 readings (correctly None, insufficient history), flat/non-draining SOC (correctly None), a genuine 9%/hr drain landing 3.72h from the 20% threshold (correctly forecast AND correctly raised exactly one WARNING alert via check_soc_forecast()), and a slow 0.3%/hr drain landing 231.5h out (correctly forecast a distant threshold time but correctly raised NO alert, outside the 12h warning window). Also verified the get_power_forecast assistant tool end-to-end against the real config/modules.yaml threshold (20%), not a hardcoded stand-in.
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -228,7 +252,7 @@ Watches for a human presence near the greenhouse while any critical alert is ope
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed all three states — silent while critical and alone, beacon on the moment presence is detected, auto-resolved and beacon off once the critical condition cleared
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -249,7 +273,7 @@ Knows the physical wiring (which relay channel, which MCU, why) and plumbing (wh
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed wiring/plumbing queries return correct, specific data (relay channel, port, mount location, pipe segments) for a real actuator and cell
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -275,7 +299,7 @@ Tracks stock of dosing chemicals, spare sensors, and spare parts. Auto-proposes 
 - Live manual test 2026-08-26: confirmed auto-propose/approve/deny/skip flow works correctly via both assistant tools and the standalone CLI
 - Live manual test 2026-08-26: confirmed consumption-rate forecasting correctly projects days-until-threshold (21.43ml/day -> 18.7 days), correctly withholds an early proposal when outside the warning window, and correctly proposes one with the right rationale when the window is widened to include it
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -299,7 +323,7 @@ Tracks repair/replacement/calibration tasks — created manually (e.g. 'swap the
 - Live manual test 2026-08-26: confirmed manual task creation with priority-based alerting, and auto-generated calibration task correctly created from an overdue sensor calibration_due date
 - Live manual test 2026-08-26: diagnostic engine successfully auto-filed a maintenance task from a real diagnosed alert
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -317,7 +341,7 @@ Escalates alerts to a human: info is logged only, warnings go to email, critical
 - Live manual test 2026-08-26: email dispatch path exercised throughout session logs (no real SMTP credentials configured, so delivery itself unverified — the code path and severity routing are).
 - Live manual test 2026-08-31 (SMS gateway): confirmed _sms_gateway_address() correctly builds e.g. '5551234567@vtext.com' for a real phone+carrier pair, strips non-digit formatting from the phone number, returns None for a missing phone/carrier and for an unrecognized carrier name (with the unrecognized case logging a distinct warning naming the known carriers, not a silent skip), and correctly truncates a body over SMS_MAX_LENGTH. Real SMTP delivery itself is unverified here for the same reason email's is — no real account configured in this dev sandbox — but the address-construction and routing logic, the part unique to this change, is verified directly.
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -343,7 +367,7 @@ Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep 
 - scenarios.py::scenario_stale_sensor_freeze — confirmed dosing freezes when a sensor is missing/stale
 - Live manual test 2026-08-26: confirmed target_overrides changes the live control target with zero restart (cell._current_targets() picked up an experiment change immediately)
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -365,7 +389,7 @@ Compiles a state-of-the-greenhouse digest — yields, dosing pattern, open alert
 - Live manual test 2026-08-26: confirmed the report correctly compiles real yield, dosing, and alert data into one digest, and hours_since_last_report() correctly transitions from None (never sent) to a real elapsed time after generate_and_send()
 - Live manual test 2026-08-30 (narrative rewrite): confirmed generate_narrative_report() against a real Ollama call produces genuine natural-language prose (not the raw digest verbatim) that still contains the real underlying numbers; confirmed pointing at an unreachable host (a closed port) falls back to the exact structured digest with a logged warning, not an exception or a missing report.
 
-*Last updated: 2026-08-31 15:38:21*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -385,7 +409,7 @@ Tracks ideal pH/EC/temperature ranges per plant and fish species, seeded from ba
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed baseline seeding produces 3 correct species profiles (lettuce, basil, tilapia) with real horticultural ranges
 
-*Last updated: 2026-08-31 15:38:20*
+*Last updated: 2026-08-31 17:23:18*
 
 ---
 
@@ -405,6 +429,6 @@ Catches a sensor slowly drifting toward trouble before it crosses a hard thresho
 **Proof this actually works:**
 - Live manual test 2026-08-30: seeded a real pH sensor with 20 baseline readings (mean 6.404, real noise, stdev 0.015) + 6 readings shifted to exactly +5 baseline-stdevs, confirmed check_all_sensors() correctly flagged it (z-score 5.0, direction 'up') and raised exactly one WARNING alert; confirmed a perfectly flat 26-reading series produces zero findings; confirmed fewer than 26 total readings produces zero findings (insufficient baseline, not a false positive from too little data); confirmed calling check_all_sensors() again immediately bumps the existing alert's occurrence_count (2) rather than inserting a second row — the dedup fix in contracts.mia_homestead_contract.raise_alert() composes correctly with this module, its second real caller.
 
-*Last updated: 2026-08-31 15:38:21*
+*Last updated: 2026-08-31 17:23:18*
 
 ---

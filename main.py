@@ -43,10 +43,12 @@ from core.deadmans_switch import DeadMansSwitchMonitor
 from core.report_generator import ReportGenerator
 from core.trend_analyzer import TrendAnalyzer
 from core.deploy_manager import DeployManager
+from core.activity_journal import ActivityJournal
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
 from viewer.export_home_snapshot import export_home_snapshot
+from viewer.export_journal_state import export_journal_state
 
 logging.basicConfig(
     level=logging.INFO,
@@ -92,6 +94,9 @@ def main():
     parser.add_argument("--home-snapshot-out", default="viewer/home_snapshot.json")
     parser.add_argument("--no-home-snapshot-export", action="store_true",
                          help="Skip auto-exporting the summarized MIA Home snapshot")
+    parser.add_argument("--journal-state-out", default="viewer/journal_state.json")
+    parser.add_argument("--no-journal-export", action="store_true",
+                         help="Skip auto-exporting the activity journal state")
     args = parser.parse_args()
 
     # Notifications are optional and inert until SMTP creds are filled in —
@@ -116,6 +121,7 @@ def main():
     deadmans = DeadMansSwitchMonitor(db, notifier=notifier)
     reports = ReportGenerator(db, notifier=notifier)
     trend_analyzer = TrendAnalyzer(db, notifier=notifier)
+    journal = ActivityJournal(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -128,7 +134,7 @@ def main():
         (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
         (backups, "backup_manager"), (deadmans, "deadmans_switch"),
         (reports, "report_generator"), (trend_analyzer, "trend_analyzer"),
-        (deploys, "deploy_manager"),
+        (deploys, "deploy_manager"), (journal, "activity_journal"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -241,6 +247,12 @@ def main():
                     export_home_snapshot(args.db, args.home_snapshot_out)
                 except Exception:
                     logger.exception("MIA Home snapshot export failed this cycle — continuing control loop regardless")
+
+            if not args.no_journal_export:
+                try:
+                    export_journal_state(args.db, args.journal_state_out)
+                except Exception:
+                    logger.exception("Journal state export failed this cycle — continuing control loop regardless")
 
             time.sleep(args.interval)
     except KeyboardInterrupt:

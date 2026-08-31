@@ -569,6 +569,34 @@ TOOLS = [
         },
     },
     {
+        "name": "get_activity_journal",
+        "description": (
+            "Get a unified chronological journal across dosing, alerts, experiments, "
+            "maintenance, and yield — broader than get_recent_automated_actions, which only "
+            "covers general automated actions, not dosing/alerts/experiments/maintenance/yield."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "days": {"type": "integer", "default": 7},
+            },
+        },
+    },
+    {
+        "name": "get_control_loop_status",
+        "description": "Is the control loop actually running right now (heartbeat), and what was the most recent thing it did.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_upcoming_activity",
+        "description": (
+            "What's genuinely scheduled or planned next — a real upcoming maintenance task, "
+            "an experiment's planned end date, an active deploy watch resolving, the next "
+            "periodic report. Never invents a plan the system doesn't actually have."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_greenhouse_report",
         "description": "Get a compiled state-of-the-greenhouse report — yields, dosing, alerts, pending approvals, maintenance, experiments — instead of asking several separate questions.",
         "input_schema": {
@@ -706,6 +734,9 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_self_change_history": "self_knowledge",
     "get_verification_coverage": "self_knowledge",
     "get_recent_automated_actions": "self_knowledge",
+    "get_activity_journal": "self_knowledge",
+    "get_control_loop_status": "self_knowledge",
+    "get_upcoming_activity": "self_knowledge",
     "get_hardware_needs_list": "self_knowledge",
 }
 
@@ -1112,6 +1143,18 @@ class _BaseGreenhouseAssistant:
     def _tool_get_recent_automated_actions(self, module_id: str | None = None, days: int = 7) -> dict:
         from core.action_log import get_recent_actions
         return {"actions": get_recent_actions(self.db, module_id=module_id, days=days)}
+
+    def _tool_get_activity_journal(self, days: int = 7) -> dict:
+        from core.activity_journal import ActivityJournal
+        return {"journal": ActivityJournal(self.db).get_journal(days=days)}
+
+    def _tool_get_control_loop_status(self) -> dict:
+        from core.activity_journal import ActivityJournal
+        return ActivityJournal(self.db).get_current_status()
+
+    def _tool_get_upcoming_activity(self) -> dict:
+        from core.activity_journal import ActivityJournal
+        return {"upcoming": ActivityJournal(self.db).get_whats_next()}
 
     def _tool_get_greenhouse_report(self, days: int = 7) -> dict:
         from core.report_generator import ReportGenerator
