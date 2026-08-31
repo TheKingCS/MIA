@@ -989,6 +989,7 @@ class _BaseGreenhouseAssistant:
     registry philosophy exists to avoid."""
 
     def __init__(self, db_path: str):
+        self.db_path = db_path
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.personality = PERSONALITY_PATH.read_text()
@@ -1036,11 +1037,11 @@ class _BaseGreenhouseAssistant:
 
     @staticmethod
     def _annotate_if_empty(result: dict) -> dict:
-        """If every list-valued field in a tool result is empty (and no
-        other substantive data is present), inject an explicit in-band
-        'no data' note — directly in the tool result the model is about
-        to reason from, not just a system-prompt-level instruction far
-        away from the actual decision point.
+        """If a tool result carries no usable data — either every
+        list-valued field is empty, or the call itself errored — inject
+        an explicit in-band 'no data' note directly in the tool result
+        the model is about to reason from, not just a system-prompt-level
+        instruction far away from the actual decision point.
 
         Found necessary the hard way (docs/OFFLINE_ASSISTANT_PLAN.md step
         5): a system-prompt-only anti-fabrication instruction was NOT
@@ -1052,8 +1053,31 @@ class _BaseGreenhouseAssistant:
         handlers one at a time as a real strategy for 55 tools. This is
         the single, centralized fix instead — applies uniformly to every
         tool's result, at the one place all of them pass through
-        already."""
-        if not isinstance(result, dict) or "error" in result or "note" in result:
+        already.
+
+        Real second reproduction found 2026-08-31, live-model-check re-run
+        while verifying an unrelated change: the ORIGINAL version of this
+        function explicitly skipped annotating error results
+        (`"error" in result: return result`) on the theory an error was
+        self-evidently 'no data' to the model. It wasn't — asked "why
+        does that pump run so much" with no real alert to diagnose, the
+        model called diagnose_alert with a hallucinated alert_id, got
+        back a correctly-honest {"error": "no alert null"}, and then
+        answered anyway with specific wiring facts (relay channel,
+        mounting location) fabricated near-verbatim from PERSONALITY.md's
+        example text — the exact same failure mode as the empty-list
+        case, through a path this function used to explicitly exempt.
+        Errors now get the same explicit grounding note as empty lists."""
+        if not isinstance(result, dict) or "note" in result:
+            return result
+        if "error" in result:
+            result = dict(result)
+            result["note"] = (
+                "This tool call did NOT return usable data (see the error above). Tell the "
+                "user plainly that you don't have this information — do NOT invent any "
+                "specific number, reading, wiring detail, or event, including anything "
+                "resembling the example exchanges in your personality spec."
+            )
             return result
         list_fields = {k: v for k, v in result.items() if isinstance(v, list)}
         if not list_fields or any(list_fields.values()):
@@ -1651,6 +1675,42 @@ class GreenhouseAssistant(_BaseGreenhouseAssistant):
         self.model = model
         self.host = host
 
+    def ask_with_cloud_escalation(self, question: str, api_key: str | None = None) -> str:
+        """Explicit, human-triggered opt-in to route ONE question to
+        AnthropicGreenhouseAssistant instead of the local default —
+        resolves docs/OFFLINE_ASSISTANT_PLAN.md's own flagged, previously
+        undecided open question. Local stays the unconditional default
+        for everything else; this is never automatic and never called
+        by the local model's own reasoning — only a human explicitly
+        asking for it (see the REPL's /cloud prefix below) reaches this
+        method at all.
+
+        A fresh, short conversation for just this one question (no
+        shared history with the ongoing local session — merging two
+        different backends' conversation state is a real correctness
+        trap, not a shortcut worth taking for a rarely-used escape
+        hatch) but the SAME db, so the cloud model answers from real,
+        current data via its own tool calls, not stale context.
+
+        Fails honestly, never silently: if the cloud path genuinely
+        isn't reachable (no API key, no network, a real API error),
+        says so plainly rather than quietly answering locally and
+        letting the user believe they got a cloud answer they didn't."""
+        import os
+        key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not key:
+            return (
+                "Cloud escalation requires ANTHROPIC_API_KEY to be set, and it isn't right now — "
+                "this question was NOT answered by the cloud model. Set the key and try again, "
+                "or ask without cloud escalation to use the local model."
+            )
+        try:
+            cloud = AnthropicGreenhouseAssistant(db_path=self.db_path, api_key=key)
+            return cloud.ask(question)
+        except Exception as e:
+            logger.warning("Cloud escalation failed: %s", e)
+            return f"Cloud escalation failed ({e}) — this question was NOT answered by the cloud model."
+
     def ask(self, message: str) -> str:
         self.history.append({"role": "user", "content": message})
 
@@ -1740,11 +1800,15 @@ if __name__ == "__main__":
     else:
         assistant = GreenhouseAssistant(db_path=db_path)
         print(f"MIA Homestead assistant ready (local model: {OLLAMA_MODEL}, no cloud API). "
-              f"Ctrl+C to exit.")
+              f"Prefix a question with /cloud to explicitly send just that one question to the "
+              f"cloud model instead (requires ANTHROPIC_API_KEY). Ctrl+C to exit.")
 
     while True:
         try:
             q = input("\nyou: ")
-            print(f"\ngreenhouse: {assistant.ask(q)}")
+            if q.startswith("/cloud ") and isinstance(assistant, GreenhouseAssistant):
+                print(f"\ngreenhouse (cloud escalation): {assistant.ask_with_cloud_escalation(q[len('/cloud '):])}")
+            else:
+                print(f"\ngreenhouse: {assistant.ask(q)}")
         except KeyboardInterrupt:
             break

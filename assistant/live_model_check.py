@@ -168,10 +168,32 @@ GOLDEN_CASES: list[GoldenCase] = [
     GoldenCase(
         name="dosing_infrastructure_multi_domain",
         question="Why does that pump run so much?",
+        # diagnose_alert added 2026-08-31: this case's real purpose (see
+        # its own name) is proving BOTH the dosing and infrastructure
+        # domains gated in and got used — not pinning one specific tool.
+        # diagnose_alert is a legitimate infrastructure-domain tool a
+        # model can reasonably reach for on an ambiguous "why is this
+        # happening" question; a real live-model run picked it with no
+        # real alert_id, got back an honest {"error": "no alert null"},
+        # and (once _annotate_if_empty() was fixed the same day to also
+        # cover error results, not just empty lists) correctly answered
+        # "I'm not sure" instead of fabricating wiring facts from
+        # PERSONALITY.md's example text. That's the case this test
+        # actually needs to catch — a defensible tool choice was never
+        # the bug.
         expected_tools={
             "get_dosing_history", "get_dosing_rationale",
-            "get_wiring_info", "get_plumbing_info",
+            "get_wiring_info", "get_plumbing_info", "diagnose_alert",
         },
+        # Real regression guard, not a hypothetical one — this exact
+        # question, against this exact fresh/empty fixture, reproduced
+        # the PERSONALITY.md-verbatim fabrication bug 2026-08-31 (see
+        # _annotate_if_empty()'s own docstring). "relay channel" and
+        # "dosing mcu" are specific enough that a real, tool-grounded
+        # wiring answer would only ever use them after an actual
+        # get_wiring_info() call returned them — this case's fixture
+        # never calls that tool, so their presence at all means fabrication.
+        forbidden_substrings=["relay channel", "dosing mcu", "ph-up/ph-down bottles"],
     ),
     # --- devices: empty ---
     GoldenCase(

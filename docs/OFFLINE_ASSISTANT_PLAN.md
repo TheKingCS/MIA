@@ -390,9 +390,21 @@ Software prep that can happen now, independent of buying anything:
   remote AI provider to think at all"? Current lean: these are different
   concerns; SMTP/SMS reaching a human off-site is fine to depend on
   connectivity, the assistant's core reasoning is not.
-- Whether the local model should ever call out to a cloud model as a
-  fallback/upgrade path when connectivity happens to be available (e.g. for
-  a harder diagnostic question) — deliberately not decided here; adding an
-  optional escape hatch later is easy, building the offline path first and
-  making cloud the exception (rather than the reverse) is the important
-  ordering decision.
+- ~~Whether the local model should ever call out to a cloud model as a
+  fallback/upgrade path when connectivity happens to be available~~ —
+  **resolved 2026-08-31**: yes, as a human-triggered, explicit-opt-in
+  escape hatch only — never automatic, never something the local
+  model's own reasoning decides to reach for. Built as
+  `GreenhouseAssistant.ask_with_cloud_escalation()`
+  (`assistant/greenhouse_assistant.py`), which constructs a fresh, short
+  `AnthropicGreenhouseAssistant` conversation (same db, no shared
+  history with the ongoing local session) for just that one question.
+  The REPL exposes it via a `/cloud <question>` prefix. Fails honestly
+  (no silent local fallback) if `ANTHROPIC_API_KEY` isn't set or the
+  API call itself fails — verified both paths live: a missing key
+  returns a plain "NOT answered by the cloud model" message, and an
+  invalid key surfaces the real 401 from Anthropic's API, neither one
+  silently substituting a local answer. Confirms the local path is
+  untouched by this: re-ran a real question against the local Ollama
+  backend after this change and it answered correctly, grounded in real
+  data, same as before.

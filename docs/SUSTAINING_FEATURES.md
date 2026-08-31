@@ -223,7 +223,22 @@ discipline about not overclaiming precision without real calibration
 data.
 **Effort:** medium-large, software-only (no hardware blocker).
 
-## 13. Optional cloud-escalation for hard questions — not yet built
+## 13. Optional cloud-escalation for hard questions — DONE (2026-08-31)
+Built as `GreenhouseAssistant.ask_with_cloud_escalation()` in
+`assistant/greenhouse_assistant.py` — exactly the existing-sibling-class
+wiring this entry predicted, not new cloud-calling code. Human-triggered
+only (a `/cloud <question>` prefix in the REPL); constructs a fresh,
+short `AnthropicGreenhouseAssistant` conversation for just that one
+question (same db, no shared history — merging two backends'
+conversation state was a real correctness trap not worth taking for a
+rarely-used escape hatch). Fails honestly if `ANTHROPIC_API_KEY` isn't
+set or the call itself fails — verified both live, neither one silently
+substituting a local answer. Confirmed the local Ollama path is
+unaffected by re-running a real question against it after the change.
+Resolves `docs/OFFLINE_ASSISTANT_PLAN.md`'s own flagged open question
+(see that doc's "Open questions" section, now marked resolved). Kept
+below for context.
+
 **Problem it solves:** directly resolves `docs/OFFLINE_ASSISTANT_PLAN.md`'s
 own flagged, deliberately-undecided open question — the local model
 (now the real default, see that doc) has no path to a bigger model for
@@ -238,15 +253,15 @@ not new cloud-calling code.
 
 ## Status as of 2026-08-31
 
-**Done:** #1, #2, #3, #6, #7, #9, #10, #11, #12 — see each entry above
-for what actually implements it and how it was verified. The original
-recommendation section below is kept for its reasoning, now historical.
+**Done:** #1, #2, #3, #6, #7, #9, #10, #11, #12, #13 — see each entry
+above for what actually implements it and how it was verified. The
+original recommendation section below is kept for its reasoning, now
+historical.
 
 **Still genuinely open, in the order the user picked to work through them:**
-- **#13** (optional cloud-escalation) — software-only, buildable now,
-  not yet started. Next up.
 - **#5** (confidence scoring) — its #2 dependency is now satisfied, so
-  this is unblocked but not yet built.
+  this is unblocked but not yet built. Last item in the originally
+  picked order.
 - **#4** (seasonal awareness) — still correctly gated on a full
   seasonal cycle of real data; not build-now regardless.
 - **#8** (firmware OTA rollback safety) — still correctly gated on the
