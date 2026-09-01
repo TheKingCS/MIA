@@ -1,11 +1,24 @@
 """
 MIA Homestead — Bed Planting Tracker
-v0.1
+v0.2
 
 Tracks what's actually planted in each grow bed. The useful thing this
 enables beyond record-keeping: checking whether everything currently
 sharing one cell's water actually wants compatible conditions, since a
 cell has ONE set of water chemistry for every bed on it.
+
+v0.2 adds real PLANNING (2026-09-01, user request): a 'planned' status
+distinct from 'active' — stage a future planting (bed + species +
+target date) before it's physically done, then convert it to active
+once it actually happens. plant() (immediate, already-done planting)
+is unchanged and still the right call for "I just planted this" — plan()
+is for "I intend to plant this on/around this date." Compatibility
+checking (_check_cell_compatibility) runs on ACTIVE plantings only —
+a planned planting doesn't yet compete for the cell's real water
+chemistry, so checking it there would be a false alarm about a
+condition that doesn't exist yet; get_bed_layout() below still surfaces
+a planned planting's species range for the visual to warn about
+up front, just not as a live alert.
 """
 
 import logging
@@ -26,10 +39,14 @@ class BedPlantingManager(Describable):
               variety: str = None, expected_harvest_date: str = None,
               quantity_planted: int = None, expected_yield_amount: float = None,
               expected_yield_unit: str = None) -> int:
+        """Records a planting that has ALREADY happened, right now —
+        planted_date is set to the real current time. For a future
+        planting you're staging ahead of time, use plan() instead."""
         cur = self.db.execute(
             "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, variety, "
-            "expected_harvest_date, quantity_planted, expected_yield_amount, expected_yield_unit) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "expected_harvest_date, quantity_planted, expected_yield_amount, expected_yield_unit, "
+            "planted_date, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 'active')",
             (grow_bed_name, cell_id, species_id, variety, expected_harvest_date,
              quantity_planted, expected_yield_amount, expected_yield_unit),
         )
@@ -38,6 +55,68 @@ class BedPlantingManager(Describable):
 
         self._check_cell_compatibility(cell_id)
         return planting_id
+
+    def plan(self, grow_bed_name: str, cell_id: int, species_id: int,
+             target_plant_date: str = None, variety: str = None,
+             expected_harvest_date: str = None, quantity_planted: int = None,
+             expected_yield_amount: float = None, expected_yield_unit: str = None,
+             notes: str = None) -> int:
+        """Stages a future planting — status 'planned', planted_date
+        explicitly left NULL (nothing's actually gone in the ground/bed
+        yet). Doesn't run the live cell-compatibility check: that's
+        about ACTIVE plantings currently sharing real water chemistry,
+        and a plan doesn't affect that yet. get_bed_layout() still
+        surfaces the planned species' range so the visual can flag an
+        incompatibility before it becomes a real problem."""
+        cur = self.db.execute(
+            "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, variety, "
+            "expected_harvest_date, quantity_planted, expected_yield_amount, expected_yield_unit, "
+            "target_plant_date, planted_date, status, notes) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'planned', ?)",
+            (grow_bed_name, cell_id, species_id, variety, expected_harvest_date,
+             quantity_planted, expected_yield_amount, expected_yield_unit,
+             target_plant_date, notes),
+        )
+        self.db.commit()
+        return cur.lastrowid
+
+    def convert_to_active(self, planting_id: int, quantity_planted: int = None) -> dict:
+        """The real moment a planned planting actually happens — flips
+        'planned' to 'active' and sets the real planted_date to now.
+        quantity_planted can be corrected here if the real count ended
+        up different from what was planned. Raises ValueError for a
+        planting that isn't currently 'planned' — converting an
+        already-active/harvested/failed row would silently rewrite
+        real history, not stage a new plant."""
+        row = self.db.execute(
+            "SELECT status FROM bed_plantings WHERE id = ?", (planting_id,)
+        ).fetchone()
+        if not row:
+            raise ValueError(f"no planting {planting_id}")
+        if row[0] != "planned":
+            raise ValueError(
+                f"planting {planting_id} is '{row[0]}', not 'planned' — "
+                f"only a planned planting can be converted to active"
+            )
+        if quantity_planted is not None:
+            self.db.execute(
+                "UPDATE bed_plantings SET status = 'active', planted_date = datetime('now'), "
+                "quantity_planted = ? WHERE id = ?",
+                (quantity_planted, planting_id),
+            )
+        else:
+            self.db.execute(
+                "UPDATE bed_plantings SET status = 'active', planted_date = datetime('now') "
+                "WHERE id = ?",
+                (planting_id,),
+            )
+        self.db.commit()
+
+        cell_id = self.db.execute(
+            "SELECT cell_id FROM bed_plantings WHERE id = ?", (planting_id,)
+        ).fetchone()[0]
+        self._check_cell_compatibility(cell_id)
+        return {"planting_id": planting_id, "status": "active"}
 
     def mark_harvested(self, planting_id: int) -> None:
         self.db.execute(
@@ -106,6 +185,50 @@ class BedPlantingManager(Describable):
             q += " AND bp.cell_id = ?"
             params = (cell_id,)
         return [dict(r) for r in self.db.execute(q, params).fetchall()]
+
+    def get_planned_plantings(self, cell_id: int = None) -> list[dict]:
+        self.db.row_factory = sqlite3.Row
+        q = """
+            SELECT bp.*, sp.common_name, sp.ph_min, sp.ph_max, sp.ec_min, sp.ec_max,
+                   sp.temp_water_min, sp.temp_water_max
+            FROM bed_plantings bp
+            JOIN species_profiles sp ON sp.id = bp.species_id
+            WHERE bp.status = 'planned'
+        """
+        params = ()
+        if cell_id is not None:
+            q += " AND bp.cell_id = ?"
+            params = (cell_id,)
+        return [dict(r) for r in self.db.execute(q, params).fetchall()]
+
+    def get_bed_layout(self, cell_id: int = None) -> list[dict]:
+        """Every real grow bed, with its planned/active/recent
+        plantings grouped underneath — the data source for the
+        planting-planner visual. Recently harvested/failed plantings
+        (last 30 days) are included too, dimmed by status in the
+        visual, since a bed that just got cleared is still useful
+        context, not just an empty box."""
+        self.db.row_factory = sqlite3.Row
+        bed_q = "SELECT * FROM grow_beds"
+        bed_params = ()
+        if cell_id is not None:
+            bed_q += " WHERE cell_id = ?"
+            bed_params = (cell_id,)
+        beds = [dict(r) for r in self.db.execute(bed_q, bed_params).fetchall()]
+
+        planting_q = """
+            SELECT bp.*, sp.common_name, sp.organism_type, sp.days_to_maturity,
+                   sp.ph_min, sp.ph_max, sp.temp_water_min, sp.temp_water_max
+            FROM bed_plantings bp
+            JOIN species_profiles sp ON sp.id = bp.species_id
+            WHERE bp.status IN ('planned', 'active')
+               OR (bp.status IN ('harvested', 'failed') AND bp.planted_date >= datetime('now', '-30 days'))
+        """
+        plantings = [dict(r) for r in self.db.execute(planting_q).fetchall()]
+
+        for bed in beds:
+            bed["plantings"] = [p for p in plantings if p["grow_bed_name"] == bed["name"]]
+        return beds
 
     def record_water_usage(self, cell_id: int, amount_gallons: float, reason: str,
                             grow_bed_name: str = None, triggered_by: str = "auto_control") -> int:
@@ -184,23 +307,49 @@ class BedPlantingManager(Describable):
                 "Tracks what species is planted in each grow bed, expected vs actual yield, "
                 "water usage with the reason behind each use, and flags when two plantings "
                 "sharing the same cell's water want genuinely incompatible pH/EC ranges — "
-                "since a cell has one water chemistry for every bed on it."
+                "since a cell has one water chemistry for every bed on it. Also supports real "
+                "PLANNING: stage a future planting (bed + species + target date) before it's "
+                "physically done, then convert it to active once it actually happens."
             ),
             data_produced=["current plantings per bed, with species/variety/planted date",
+                            "planned (not-yet-planted) plantings, staged ahead of time",
+                            "every real grow bed with its planned/active/recent plantings grouped, "
+                            "for the planting-planner visual",
                             "expected vs actual yield comparisons", "water usage log with rationale"],
-            actions_possible=["record a new planting", "mark harvested or failed",
+            actions_possible=["record a new planting that's already happened",
+                               "stage a planned future planting (not yet real)",
+                               "convert a planned planting to active once it actually happens",
+                               "mark harvested or failed",
                                "record water usage with a reason",
-                               "check whether current plantings in a cell are chemically compatible"],
+                               "check whether current ACTIVE plantings in a cell are chemically "
+                               "compatible"],
             limits_and_safety=(
                 "Warns, does not block — planting something incompatible is allowed, "
                 "you just get told about it. Compatibility check is a plausibility check "
-                "against known ranges, not a guarantee of real-world outcome."
+                "against known ranges, not a guarantee of real-world outcome. The live "
+                "compatibility check only ever runs against ACTIVE plantings — a planned "
+                "planting doesn't yet compete for the cell's real water chemistry, so it's "
+                "never checked there (a false alarm about a condition that doesn't exist yet); "
+                "the planting-planner visual still surfaces a planned species' documented range "
+                "so an incompatibility can be seen before it's staged for real. "
+                "convert_to_active() refuses (raises) on anything that isn't currently "
+                "'planned' — it can't be used to silently rewrite already-real history."
             ),
-            example_questions=["What's planted in Cell A?", "Can lettuce and basil share a cell?"],
+            example_questions=["What's planted in Cell A?", "Can lettuce and basil share a cell?",
+                                "What's planned for Bed A1?", "Has the lettuce I planned actually gone in yet?"],
             verification_evidence=[
                 "Live manual test 2026-08-26: confirmed compatible plantings (lettuce+basil, "
                 "overlapping ranges) produce no warning; a fabricated incompatible species "
                 "correctly triggered the warning",
+                "scenarios.py::scenario_bed_planting_plan_and_convert — confirmed plan() creates "
+                "a real 'planned' row with planted_date left NULL, convert_to_active() correctly "
+                "flips it to 'active' with a real planted_date set, and the compatibility check "
+                "only fires on the ACTIVE result, not while it was still planned",
+                "scenarios.py::scenario_bed_planting_convert_guards_real_history — confirmed "
+                "convert_to_active() refuses (raises ValueError) on an already-active planting, "
+                "rather than silently rewriting its real planted_date",
+                "scenarios.py::scenario_bed_planting_get_bed_layout — confirmed get_bed_layout() "
+                "correctly groups a real bed's planned AND active plantings together, by bed name",
             ],
         )
 

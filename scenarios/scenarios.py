@@ -1559,6 +1559,93 @@ def scenario_power_monitor_sensor_id_no_collision():
     return checks
 
 
+def scenario_bed_planting_plan_and_convert():
+    """A real planting is planned (staged, not yet real), then
+    converted to active. Expect: the planned row has planted_date NULL
+    and status 'planned'; after conversion, status 'active' with a
+    real planted_date set."""
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    from core.bed_planting import BedPlantingManager
+    from core.species_registry import SpeciesRegistry
+    species = SpeciesRegistry(conn)
+    bp = BedPlantingManager(conn, species)
+
+    lettuce = species.find_by_name("Lettuce")
+    planting_id = bp.plan("Bed A1", cell_id, lettuce["id"], target_plant_date="2026-09-15")
+
+    conn.row_factory = sqlite3.Row
+    planned_row = dict(conn.execute("SELECT * FROM bed_plantings WHERE id = ?", (planting_id,)).fetchone())
+
+    bp.convert_to_active(planting_id, quantity_planted=12)
+    active_row = dict(conn.execute("SELECT * FROM bed_plantings WHERE id = ?", (planting_id,)).fetchone())
+
+    checks = [
+        ("a planned planting has status 'planned' and no planted_date yet",
+         planned_row["status"] == "planned" and planned_row["planted_date"] is None
+         and planned_row["target_plant_date"] == "2026-09-15"),
+        ("converting sets status 'active' with a real planted_date and the corrected quantity",
+         active_row["status"] == "active" and active_row["planted_date"] is not None
+         and active_row["quantity_planted"] == 12),
+    ]
+    return checks
+
+
+def scenario_bed_planting_convert_guards_real_history():
+    """Converting a planting that's already active (not 'planned')
+    must refuse — it would otherwise silently rewrite real history."""
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    from core.bed_planting import BedPlantingManager
+    from core.species_registry import SpeciesRegistry
+    species = SpeciesRegistry(conn)
+    bp = BedPlantingManager(conn, species)
+
+    lettuce = species.find_by_name("Lettuce")
+    planting_id = bp.plant("Bed A1", cell_id, lettuce["id"])  # already active, not planned
+
+    raised = False
+    try:
+        bp.convert_to_active(planting_id)
+    except ValueError:
+        raised = True
+
+    checks = [
+        ("convert_to_active refuses an already-active planting", raised),
+    ]
+    return checks
+
+
+def scenario_bed_planting_get_bed_layout():
+    """A real bed with one active and one planned planting. Expect:
+    get_bed_layout() groups both under the same real bed, by name."""
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    from core.bed_planting import BedPlantingManager
+    from core.species_registry import SpeciesRegistry
+    species = SpeciesRegistry(conn)
+    bp = BedPlantingManager(conn, species)
+
+    lettuce = species.find_by_name("Lettuce")
+    basil = species.find_by_name("Basil")
+    bp.plant("Bed A1", cell_id, lettuce["id"])
+    bp.plan("Bed A1", cell_id, basil["id"], target_plant_date="2026-10-01")
+
+    layout = bp.get_bed_layout(cell_id)
+    bed_a1 = next((b for b in layout if b["name"] == "Bed A1"), None)
+
+    checks = [
+        ("Bed A1 is present in the layout", bed_a1 is not None),
+        ("Bed A1 groups both the active and the planned planting",
+         bed_a1 is not None and len(bed_a1["plantings"]) == 2
+         and {p["status"] for p in bed_a1["plantings"]} == {"active", "planned"}),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1601,6 +1688,9 @@ SCENARIOS = {
     "temp_water_no_cooling_above_max": scenario_temp_water_no_cooling_above_max,
     "temp_water_heater_safety_fallback": scenario_temp_water_heater_safety_fallback,
     "power_monitor_sensor_id_no_collision": scenario_power_monitor_sensor_id_no_collision,
+    "bed_planting_plan_and_convert": scenario_bed_planting_plan_and_convert,
+    "bed_planting_convert_guards_real_history": scenario_bed_planting_convert_guards_real_history,
+    "bed_planting_get_bed_layout": scenario_bed_planting_get_bed_layout,
 }
 
 

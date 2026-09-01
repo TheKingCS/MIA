@@ -6,6 +6,7 @@
   const LINKS = [
     { href: "dashboard.html", label: "Dashboard" },
     { href: "digital_twin.html", label: "Digital Twin" },
+    { href: "planting_planner.html", label: "Planting Planner" },
     { href: "journal.html", label: "Journal" },
   ];
 

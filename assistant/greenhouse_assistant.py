@@ -461,6 +461,41 @@ TOOLS = [
         },
     },
     {
+        "name": "plan_planting",
+        "description": "Stage a FUTURE planting that hasn't happened yet — use when the user is planning ahead, not describing something already planted. Use record_planting instead if it's already in the ground.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "grow_bed_name": {"type": "string"},
+                "cell_id": {"type": "integer"},
+                "species_name": {"type": "string", "description": "e.g. 'lettuce', 'tilapia'"},
+                "target_plant_date": {"type": "string", "description": "When it's intended to go in, e.g. '2026-09-15'"},
+                "variety": {"type": "string"},
+            },
+            "required": ["grow_bed_name", "cell_id", "species_name"],
+        },
+    },
+    {
+        "name": "convert_planting_to_active",
+        "description": "Mark a previously-planned planting as actually planted now — use when the user says a planned planting has actually gone in.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "planting_id": {"type": "integer"},
+                "quantity_planted": {"type": "integer", "description": "Correct the real count here if it ended up different from what was planned"},
+            },
+            "required": ["planting_id"],
+        },
+    },
+    {
+        "name": "get_planned_plantings",
+        "description": "Get plantings that have been staged for the future but haven't actually happened yet, optionally filtered by cell.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"cell_id": {"type": "integer"}},
+        },
+    },
+    {
         "name": "mark_planting_harvested",
         "description": "Mark a planting as harvested — use when the user says they harvested something.",
         "input_schema": {
@@ -919,6 +954,9 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_water_usage": "yield_planting",
     "get_bed_plantings": "yield_planting",
     "record_planting": "yield_planting",
+    "plan_planting": "yield_planting",
+    "convert_planting_to_active": "yield_planting",
+    "get_planned_plantings": "yield_planting",
     "mark_planting_harvested": "yield_planting",
     "mark_planting_failed": "yield_planting",
     "record_water_usage": "yield_planting",
@@ -1604,19 +1642,43 @@ class _BaseGreenhouseAssistant:
         rows = self.db.execute(q, params).fetchall()
         return {"plantings": [dict(r) for r in rows]}
 
-    def _tool_record_planting(self, grow_bed_name: str, cell_id: int, species_name: str, variety: str | None = None) -> dict:
-        species_row = self.db.execute(
+    def _resolve_species_id(self, species_name: str) -> int | None:
+        row = self.db.execute(
             "SELECT id FROM species_profiles WHERE common_name LIKE ?", (f"%{species_name}%",)
         ).fetchone()
-        if not species_row:
+        return row[0] if row else None
+
+    def _bed_planting_manager(self):
+        from core.bed_planting import BedPlantingManager
+        from core.species_registry import SpeciesRegistry
+        return BedPlantingManager(self.db, SpeciesRegistry(self.db))
+
+    def _tool_record_planting(self, grow_bed_name: str, cell_id: int, species_name: str, variety: str | None = None) -> dict:
+        species_id = self._resolve_species_id(species_name)
+        if species_id is None:
             return {"error": f"No species profile found matching '{species_name}'. Use list_species to see options."}
-        species_id = species_row[0]
-        cur = self.db.execute(
-            "INSERT INTO bed_plantings (grow_bed_name, cell_id, species_id, variety) VALUES (?, ?, ?, ?)",
-            (grow_bed_name, cell_id, species_id, variety),
+        planting_id = self._bed_planting_manager().plant(grow_bed_name, cell_id, species_id, variety=variety)
+        return {"planting_id": planting_id, "grow_bed_name": grow_bed_name, "species": species_name}
+
+    def _tool_plan_planting(self, grow_bed_name: str, cell_id: int, species_name: str,
+                              target_plant_date: str | None = None, variety: str | None = None) -> dict:
+        species_id = self._resolve_species_id(species_name)
+        if species_id is None:
+            return {"error": f"No species profile found matching '{species_name}'. Use list_species to see options."}
+        planting_id = self._bed_planting_manager().plan(
+            grow_bed_name, cell_id, species_id, target_plant_date=target_plant_date, variety=variety,
         )
-        self.db.commit()
-        return {"planting_id": cur.lastrowid, "grow_bed_name": grow_bed_name, "species": species_name}
+        return {"planting_id": planting_id, "grow_bed_name": grow_bed_name, "species": species_name,
+                "status": "planned", "target_plant_date": target_plant_date}
+
+    def _tool_convert_planting_to_active(self, planting_id: int, quantity_planted: int | None = None) -> dict:
+        try:
+            return self._bed_planting_manager().convert_to_active(planting_id, quantity_planted=quantity_planted)
+        except ValueError as e:
+            return {"error": str(e)}
+
+    def _tool_get_planned_plantings(self, cell_id: int | None = None) -> dict:
+        return {"planned_plantings": self._bed_planting_manager().get_planned_plantings(cell_id)}
 
     def _tool_mark_planting_harvested(self, planting_id: int) -> dict:
         self.db.execute("UPDATE bed_plantings SET status = 'harvested' WHERE id = ?", (planting_id,))

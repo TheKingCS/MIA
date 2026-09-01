@@ -446,12 +446,13 @@ CREATE TABLE bed_plantings (
     cell_id INTEGER NOT NULL REFERENCES cells(id),
     species_id INTEGER NOT NULL REFERENCES species_profiles(id),
     variety TEXT,
-    quantity_planted INTEGER,           -- how many plants/starts went in
+    quantity_planted INTEGER,           -- how many plants/starts went in (or intend to, while 'planned')
     expected_yield_amount REAL,         -- what a normal harvest of this many should produce
     expected_yield_unit TEXT,
-    planted_date TEXT DEFAULT (datetime('now')),
+    planted_date TEXT DEFAULT (datetime('now')),  -- set only once actually planted — explicitly overridden to NULL by plan()
+    target_plant_date TEXT,             -- for 'planned' rows: when it's intended to go in; irrelevant once active
     expected_harvest_date TEXT,
-    status TEXT DEFAULT 'active',       -- 'active','harvested','failed'
+    status TEXT DEFAULT 'active',       -- 'planned','active','harvested','failed'
     notes TEXT
 );
 CREATE INDEX idx_bed_plantings_active ON bed_plantings(cell_id, status);

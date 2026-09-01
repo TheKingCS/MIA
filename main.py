@@ -58,6 +58,7 @@ from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
 from viewer.export_home_snapshot import export_home_snapshot
 from viewer.export_journal_state import export_journal_state
+from viewer.export_planting_state import export_planting_state
 
 logging.basicConfig(
     level=logging.INFO,
@@ -106,6 +107,9 @@ def main():
     parser.add_argument("--journal-state-out", default="viewer/journal_state.json")
     parser.add_argument("--no-journal-export", action="store_true",
                          help="Skip auto-exporting the activity journal state")
+    parser.add_argument("--planting-state-out", default="viewer/planting_state.json")
+    parser.add_argument("--no-planting-export", action="store_true",
+                         help="Skip auto-exporting the planting planner state")
     args = parser.parse_args()
 
     # Notifications are optional and inert until SMTP creds are filled in —
@@ -326,6 +330,12 @@ def main():
                     export_journal_state(args.db, args.journal_state_out)
                 except Exception:
                     logger.exception("Journal state export failed this cycle — continuing control loop regardless")
+
+            if not args.no_planting_export:
+                try:
+                    export_planting_state(args.db, args.layout, args.planting_state_out)
+                except Exception:
+                    logger.exception("Planting planner state export failed this cycle — continuing control loop regardless")
 
             time.sleep(args.interval)
     except KeyboardInterrupt:
