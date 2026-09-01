@@ -2007,6 +2007,103 @@ def scenario_create_maintenance_task_tool_validates():
     return checks
 
 
+def scenario_add_species_tool_full_fields():
+    """Real bug found live 2026-09-01, checking for the same class of
+    bug that broke create_maintenance_task: the add_species assistant
+    tool used to insert directly via raw SQL, missing temp_water_min/
+    max, temp_air_min/max, and days_to_maturity entirely — not just
+    unvalidated, genuinely unreachable (they weren't even parameters).
+    A species added through chat would silently never get water-temp
+    thermal-stress protection or weather frost/heat checks. Confirms
+    all fields now actually make it into the real row."""
+    from assistant.greenhouse_assistant import GreenhouseAssistant
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    a = GreenhouseAssistant.__new__(GreenhouseAssistant)
+    a.db = conn
+
+    result = a._tool_add_species(
+        common_name="Test Trout", organism_type="fish",
+        temp_water_min=50.0, temp_water_max=65.0,
+        temp_air_min=45.0, temp_air_max=70.0,
+        days_to_maturity=365,
+    )
+    row = dict(zip(
+        ["temp_water_min", "temp_water_max", "temp_air_min", "temp_air_max", "days_to_maturity"],
+        conn.execute(
+            "SELECT temp_water_min, temp_water_max, temp_air_min, temp_air_max, days_to_maturity "
+            "FROM species_profiles WHERE id = ?",
+            (result["species_id"],),
+        ).fetchone(),
+    ))
+
+    checks = [
+        ("temp_water_min/max actually reach the real row, not silently dropped",
+         row["temp_water_min"] == 50.0 and row["temp_water_max"] == 65.0),
+        ("temp_air_min/max actually reach the real row",
+         row["temp_air_min"] == 45.0 and row["temp_air_max"] == 70.0),
+        ("days_to_maturity actually reaches the real row", row["days_to_maturity"] == 365),
+    ]
+    return checks
+
+
+def scenario_update_maintenance_task_status_tool_validates():
+    """Same bug class as create_maintenance_task, found in the same
+    sweep: the update_maintenance_task_status tool used to bypass
+    MaintenanceManager.update_status()'s validation with raw SQL."""
+    from assistant.greenhouse_assistant import GreenhouseAssistant
+    from core.maintenance import MaintenanceManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    a = GreenhouseAssistant.__new__(GreenhouseAssistant)
+    a.db = conn
+    real_task_id = MaintenanceManager(conn).create_task(title="test task", task_type="other")
+
+    invalid = a._tool_update_maintenance_task_status(task_id=real_task_id, status="closed")
+    valid = a._tool_update_maintenance_task_status(task_id=real_task_id, status="done")
+    row = conn.execute("SELECT status, completed_at FROM maintenance_tasks WHERE id = ?", (real_task_id,)).fetchone()
+
+    checks = [
+        ("an invalid status is rejected with a real error, not silently written", "error" in invalid),
+        ("a valid status transition works and sets completed_at for 'done'",
+         row[0] == "done" and row[1] is not None),
+    ]
+    return checks
+
+
+def scenario_propose_experiment_tool_validates():
+    """Same bug class again: the propose_experiment tool used to bypass
+    ExperimentManager.propose_experiment()'s variable_changed
+    validation with raw SQL. The JSON tool schema already constrains
+    this via enum for a well-behaved model call, but the underlying
+    code had no defense of its own — this confirms it does now."""
+    from assistant.greenhouse_assistant import GreenhouseAssistant
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    a = GreenhouseAssistant.__new__(GreenhouseAssistant)
+    a.db = conn
+
+    invalid = a._tool_propose_experiment(
+        cell_id=cell_id, hypothesis="test", variable_changed="not_a_real_variable",
+        baseline_value=1.0, test_value=2.0,
+    )
+    valid = a._tool_propose_experiment(
+        cell_id=cell_id, hypothesis="raise EC a bit", variable_changed="ec_target_min",
+        baseline_value=800.0, test_value=900.0,
+    )
+
+    checks = [
+        ("an invalid variable_changed is rejected with a real error", "error" in invalid),
+        ("a valid experiment proposal works for real, through the real service",
+         "experiment_id" in valid and valid["status"] == "proposed"),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2064,6 +2161,9 @@ SCENARIOS = {
     "alert_manager_recurrence_after_resolution": scenario_alert_manager_recurrence_after_resolution,
     "diagnose_alert_reuses_open_task": scenario_diagnose_alert_reuses_open_task,
     "create_maintenance_task_tool_validates": scenario_create_maintenance_task_tool_validates,
+    "add_species_tool_full_fields": scenario_add_species_tool_full_fields,
+    "update_maintenance_task_status_tool_validates": scenario_update_maintenance_task_status_tool_validates,
+    "propose_experiment_tool_validates": scenario_propose_experiment_tool_validates,
 }
 
 

@@ -697,6 +697,9 @@ TOOLS = [
                 "scientific_name": {"type": "string"},
                 "ph_min": {"type": "number"}, "ph_max": {"type": "number"},
                 "ec_min": {"type": "number"}, "ec_max": {"type": "number"},
+                "temp_water_min": {"type": "number"}, "temp_water_max": {"type": "number"},
+                "temp_air_min": {"type": "number"}, "temp_air_max": {"type": "number"},
+                "days_to_maturity": {"type": "integer"},
                 "notes": {"type": "string"},
             },
             "required": ["common_name", "organism_type"],
@@ -1833,22 +1836,37 @@ class _BaseGreenhouseAssistant:
     def _tool_add_species(self, common_name: str, organism_type: str, scientific_name: str | None = None,
                             ph_min: float | None = None, ph_max: float | None = None,
                             ec_min: float | None = None, ec_max: float | None = None,
+                            temp_water_min: float | None = None, temp_water_max: float | None = None,
+                            temp_air_min: float | None = None, temp_air_max: float | None = None,
+                            days_to_maturity: int | None = None,
                             notes: str | None = None) -> dict:
-        cur = self.db.execute(
-            "INSERT INTO species_profiles (common_name, organism_type, scientific_name, "
-            "ph_min, ph_max, ec_min, ec_max, notes, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'baseline')",
-            (common_name, organism_type, scientific_name, ph_min, ph_max, ec_min, ec_max, notes),
+        from core.species_registry import SpeciesRegistry
+        # Real bug found live 2026-09-01: this used to insert directly
+        # via raw SQL missing temp_water_min/max, temp_air_min/max, and
+        # days_to_maturity entirely — not just unvalidated, genuinely
+        # unreachable, since they weren't even parameters here. A
+        # species added through chat would silently never get water-temp
+        # thermal-stress protection (modules/aquaponics_cell.py) or
+        # weather frost/heat checks (core/weather_awareness.py), both of
+        # which require these fields to be real. Now routes through the
+        # real service so every field a species can have is actually
+        # reachable from the conversational path, not just the seeded
+        # baseline list.
+        species_id = SpeciesRegistry(self.db).add_species(
+            common_name, organism_type, scientific_name=scientific_name,
+            ph_min=ph_min, ph_max=ph_max, ec_min=ec_min, ec_max=ec_max,
+            temp_water_min=temp_water_min, temp_water_max=temp_water_max,
+            temp_air_min=temp_air_min, temp_air_max=temp_air_max,
+            days_to_maturity=days_to_maturity, notes=notes,
         )
-        self.db.commit()
-        return {"species_id": cur.lastrowid, "common_name": common_name}
+        return {"species_id": species_id, "common_name": common_name}
 
     def _tool_update_maintenance_task_status(self, task_id: int, status: str) -> dict:
-        completed_at = "datetime('now')" if status == "done" else "NULL"
-        self.db.execute(
-            f"UPDATE maintenance_tasks SET status = ?, completed_at = {completed_at} WHERE id = ?",
-            (status, task_id),
-        )
-        self.db.commit()
+        from core.maintenance import MaintenanceManager
+        try:
+            MaintenanceManager(self.db).update_status(task_id, status)
+        except ValueError as e:
+            return {"error": str(e)}
         return {"task_id": task_id, "status": status}
 
     def _tool_assign_maintenance_task(self, task_id: int, assigned_to: str) -> dict:
@@ -1884,15 +1902,18 @@ class _BaseGreenhouseAssistant:
 
     def _tool_propose_experiment(self, cell_id: int, hypothesis: str, variable_changed: str,
                                    baseline_value: float, test_value: float, duration_days: int = 14) -> dict:
-        from datetime import datetime, timedelta
-        planned_end = (datetime.utcnow() + timedelta(days=duration_days)).isoformat()
-        cur = self.db.execute(
-            "INSERT INTO experiments (cell_id, hypothesis, variable_changed, baseline_value, "
-            "test_value, planned_end_date, created_by) VALUES (?, ?, ?, ?, ?, ?, 'assistant')",
-            (cell_id, hypothesis, variable_changed, baseline_value, test_value, planned_end),
-        )
-        self.db.commit()
-        return {"experiment_id": cur.lastrowid, "status": "proposed", "planned_end_date": planned_end}
+        from core.experiment_manager import ExperimentManager
+        try:
+            experiment_id = ExperimentManager(self.db).propose_experiment(
+                cell_id, hypothesis, variable_changed, baseline_value, test_value,
+                duration_days=duration_days, created_by="assistant",
+            )
+        except ValueError as e:
+            return {"error": str(e)}
+        planned_end = self.db.execute(
+            "SELECT planned_end_date FROM experiments WHERE id = ?", (experiment_id,)
+        ).fetchone()[0]
+        return {"experiment_id": experiment_id, "status": "proposed", "planned_end_date": planned_end}
 
     def _tool_start_experiment(self, experiment_id: int) -> dict:
         from core.experiment_manager import ExperimentManager

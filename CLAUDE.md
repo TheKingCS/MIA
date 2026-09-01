@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 130 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 137 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -238,6 +238,29 @@ entirely — an invalid value would have silently corrupted a row
 instead of being rejected. Now routes through the real service; a live
 test confirmed an invalid task_type/priority is cleanly rejected where
 it used to just work anyway with a garbage value.
+
+A full sweep for the same pattern across every assistant tool doing a
+raw INSERT/UPDATE (not just waiting to trip over the next one) found
+two more real instances, both fixed the same way: `update_maintenance_
+task_status` bypassed `MaintenanceManager.update_status()`'s status
+validation, and `propose_experiment` bypassed `ExperimentManager.
+propose_experiment()`'s `variable_changed` validation (lower real-world
+severity than the others since both already have an `enum` constraint
+in their JSON tool schema, but the underlying code had no defense of
+its own either way). The most IMPACTFUL find in the sweep: `add_species`
+was missing `temp_water_min/max`, `temp_air_min/max`, and
+`days_to_maturity` entirely — not just unvalidated, genuinely
+unreachable, since they weren't even parameters on the tool. A species
+added through chat would have silently never gotten water-temp
+thermal-stress protection (`modules/aquaponics_cell.py`) or weather
+frost/heat checks (`core/weather_awareness.py`), both of which need
+those fields to be real — closing this makes every field a species can
+have actually reachable from the conversational path, not just the
+seeded baseline list. Checked `assign_task`/`acknowledge_help_request`'s
+same-shaped raw SQL too — left alone, since their "real" service
+methods are functionally identical to the bypass (no validation or
+side effect being skipped), so fixing those would be pure style, not a
+behavioral fix.
 
 scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
 a MiaHomesteadModule, since it's clock-driven with no sensor to go
