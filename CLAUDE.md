@@ -19,9 +19,16 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 110 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 112 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
+
+For a live dev session (not just running scenarios): `python3 main.py --db
+mia_homestead.db` and `python3 drivers/simulator.py --db mia_homestead.db
+--run` are two SEPARATE long-running processes sharing the DB file — the
+simulator writes fake sensor data, main.py's control loop reads it. Run
+both, or every sensor goes stale within `STALE_THRESHOLD` (10 min) and
+every module falls back to its safety state.
 
 If either of those doesn't pass cleanly on a fresh checkout, something
 is wrong with the environment, not necessarily the code — check Python
@@ -251,6 +258,30 @@ dosing commands should be trusted to it.
   real id space (a negative sentinel — `sensors.id` is always a
   positive autoincrement rowid) for any synthetic, non-table-backed
   reading.
+- A new `sensors.type` added to `drivers/simulator.py`'s
+  `SIM_SENSOR_DEFS` (what `Simulator` — the `--run` real-time driver —
+  knows how to drift) is a DIFFERENT question from whether
+  `setup_demo_cell()` should auto-create a sensor row of that type.
+  Optional hardware (DO/flow/light/co2/water_heater) added this session
+  needs the former (so a cell that HAS one stays fed) without the
+  latter (so a cell that doesn't have one stays a true "not bought"
+  test case) — `BASE_CELL_SENSOR_TYPES` is the explicit list
+  `setup_demo_cell()` actually uses, deliberately narrower than
+  `SIM_SENSOR_DEFS`. Caught for real 2026-09-01 before it shipped
+  (would have silently invalidated every "no sensor configured ->
+  stays silent" scenario).
+- Sensor noise/drift values tuned for a quick, visible demo (many
+  simulated ticks in a short scenario run) can be wildly unrealistic at
+  a REAL wall-clock tick interval — `drivers/simulator.py --run`'s
+  `Simulator` class produced `level` noise large enough to imply a
+  leak-detector-triggering rate of change every few real 5-second
+  ticks, with nothing actually wrong. Scenarios never caught this: they
+  call `.tick()` directly with no real elapsed time between calls, so
+  `core/leak_detector.py`'s real-wall-clock-rate math never engaged.
+  Caught for real running `--run` continuously for the first time,
+  2026-09-01. When sizing simulated noise for any value a rate-of-
+  change check reads, work backward from the real threshold at the
+  real tick interval, not from "looks reasonable per-tick."
 
 ## Git conventions used so far
 

@@ -41,8 +41,41 @@ SIM_SENSOR_DEFS = [
     ("temp_water", "F", 74.0, 0.1, 0.3),
     ("temp_air", "F", 78.0, 0.3, 0.8),
     ("humidity", "%RH", 55.0, 0.5, 1.5),
-    ("level", "in", 24.0, 0.05, 0.1),
+    # Real bug found live 2026-09-01: at a real 5-second tick interval,
+    # this used to be (24.0, 0.05, 0.1) — a worst-case consecutive-
+    # reading swing of ~0.3in, which over 5 real seconds is ~3.6 in/min,
+    # 180x core/leak_detector.py's real 0.02 in/min threshold. Produced
+    # constant false CRITICAL "possible leak" alerts running --run
+    # continuously against real wall-clock time (scenarios never hit
+    # this — they call tick() directly, without real elapsed seconds
+    # between readings, so the rate-of-change math never engaged).
+    # Sized so worst-case swing (drift+noise, both maxed, opposite
+    # signs on consecutive reads) stays under the real threshold even
+    # in the unluckiest possible draw: 2*(0.0002+0.0003) = 0.001in over
+    # 5 sec = 0.012 in/min, safely under 0.02.
+    ("level", "in", 24.0, 0.0002, 0.0003),
+    # Added 2026-09-01 — real gap found live: these 4 sensor types
+    # (added across this session's climate-control/DO/circulation work)
+    # were silently skipped by Simulator._load_sensors() ("if
+    # sensor_type not in by_type: continue"), so any cell with one
+    # configured just went stale forever under --run. Values are a
+    # reasonable healthy-steady-state starting point, not calibrated —
+    # same "starting point, not gospel" honesty as everything else here.
+    ("do", "mg/L", 7.5, 0.05, 0.15),
+    ("flow", "GPH", 350, 2, 8),
+    ("light", "lux", 8000, 100, 300),
+    ("co2", "ppm", 1000, 15, 40),
 ]
+
+# What setup_demo_cell() actually creates sensor ROWS for. Deliberately
+# NOT "every type SIM_SENSOR_DEFS knows how to drift" — do/flow/light/
+# co2/water_heater are real, deliberately OPTIONAL hardware (this
+# session's climate-control/DO/circulation work), and a huge number of
+# scenarios specifically test "no sensor configured -> stays silent"
+# for exactly these types. Auto-creating them here would silently
+# invalidate every one of those scenarios by making the demo cell no
+# longer represent an "optional hardware not bought" cell at all.
+BASE_CELL_SENSOR_TYPES = {"ph", "ec", "temp_water", "temp_air", "humidity", "level"}
 
 # Power simulation is a real gap this used to leave entirely unfilled —
 # modules/power_monitor.py reads power_telemetry, but nothing wrote to
@@ -96,6 +129,8 @@ def setup_demo_cell(conn: sqlite3.Connection) -> int:
     )
 
     for sensor_type, unit, start, _, _ in SIM_SENSOR_DEFS:
+        if sensor_type not in BASE_CELL_SENSOR_TYPES:
+            continue
         conn.execute(
             "INSERT INTO sensors (cell_id, type, unit, location_note, install_date, active) "
             "VALUES (?, ?, ?, ?, ?, 1)",

@@ -1646,6 +1646,61 @@ def scenario_bed_planting_get_bed_layout():
     return checks
 
 
+def scenario_simulator_level_realtime_safe():
+    """Real bug, live 2026-09-01: drivers/simulator.py's Simulator class
+    (used by --run for real continuous background operation, distinct
+    from PhysicsSimulator which scenarios use) generated 'level' noise
+    large enough that, at its real 5-second tick interval, consecutive
+    readings implied a rate-of-change past core/leak_detector.py's real
+    threshold — producing constant false 'possible leak' alerts with
+    nothing actually wrong. Scenarios never caught this: they call
+    Simulator.tick() directly with no real elapsed wall-clock time
+    between ticks, so the rate-of-change math never actually engaged.
+    This is an INVARIANT check instead of fixed data, so it can't
+    silently regress if either constant changes later — confirms the
+    worst-case possible consecutive-reading swing, interpreted at
+    Simulator's real default interval, always stays safely under the
+    real leak threshold."""
+    from drivers.simulator import SIM_SENSOR_DEFS
+    from core.leak_detector import LEAK_RATE_THRESHOLD_INCHES_PER_MINUTE
+
+    _, _, _, drift, noise = next(d for d in SIM_SENSOR_DEFS if d[0] == "level")
+    worst_case_swing_inches = 2 * (drift + noise)  # opposite-sign max draws on consecutive reads
+    default_interval_seconds = 5.0
+    implied_rate_per_minute = worst_case_swing_inches / (default_interval_seconds / 60)
+
+    checks = [
+        ("level sensor noise/drift can never imply a rate past the real leak threshold, "
+         "even in the worst-case consecutive draw",
+         implied_rate_per_minute < LEAK_RATE_THRESHOLD_INCHES_PER_MINUTE),
+    ]
+    return checks
+
+
+def scenario_simulator_demo_cell_stays_base_sensors():
+    """Real regression this session's SIM_SENSOR_DEFS additions (do/
+    flow/light/co2) risked: setup_demo_cell() used to iterate the WHOLE
+    list to create sensor rows, so adding entries for optional hardware
+    would have silently auto-created those sensors on the demo cell too
+    — invalidating every 'no sensor configured -> stays silent'
+    scenario across DO/circulation/climate-control. Confirms the demo
+    cell still only gets the original 6 base sensor types, regardless
+    of how many types SIM_SENSOR_DEFS knows how to drift."""
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+
+    types = {row[0] for row in conn.execute(
+        "SELECT type FROM sensors WHERE cell_id = ?", (cell_id,)
+    ).fetchall()}
+
+    checks = [
+        ("the demo cell only gets the 6 base sensor types, not every SIM_SENSOR_DEFS entry",
+         types == {"ph", "ec", "temp_water", "temp_air", "humidity", "level"}),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1691,6 +1746,8 @@ SCENARIOS = {
     "bed_planting_plan_and_convert": scenario_bed_planting_plan_and_convert,
     "bed_planting_convert_guards_real_history": scenario_bed_planting_convert_guards_real_history,
     "bed_planting_get_bed_layout": scenario_bed_planting_get_bed_layout,
+    "simulator_level_realtime_safe": scenario_simulator_level_realtime_safe,
+    "simulator_demo_cell_stays_base_sensors": scenario_simulator_demo_cell_stays_base_sensors,
 }
 
 
