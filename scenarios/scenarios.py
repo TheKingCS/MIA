@@ -1928,6 +1928,59 @@ def scenario_alert_manager_recurrence_after_resolution():
     return checks
 
 
+def scenario_diagnose_alert_reuses_open_task():
+    """Real bug found live 2026-09-01: the same diagnosable condition
+    recurring as a genuinely new alert row (after the prior one
+    resolved — see core/alert_manager.py) used to file a brand new,
+    duplicate maintenance task every single time, even while an
+    identical one was still open. The live DB had 3 duplicate 'ph' and
+    4 duplicate 'ec' investigate tasks from exactly this. Confirms a
+    second diagnosis of the same likely_cause reuses the existing open
+    task instead of creating a duplicate."""
+    from core.infrastructure_registry import InfrastructureRegistry
+    from core.maintenance import MaintenanceManager
+    from core.diagnostics import DiagnosticEngine
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+
+    conn, registry, sim, cell_id = fresh_system()
+    diagnostics = DiagnosticEngine(conn, InfrastructureRegistry(conn),
+                                    maintenance=MaintenanceManager(conn))
+
+    raise_real_alert(conn, "cell_a_aquaponics", "warning",
+                      "cell_a_aquaponics: ph sensor (id 1) stale — retries exhausted")
+    first_alert_id = conn.execute(
+        "SELECT id FROM alerts WHERE message LIKE '%ph sensor%stale%'"
+    ).fetchone()[0]
+    first_diagnosis = diagnostics.diagnose_alert(first_alert_id, create_task=True)
+
+    # Resolve the first alert so a genuine recurrence raises a real NEW
+    # row (raise_alert()'s dedup only matches unresolved rows) — same
+    # real sequence that caused the live duplicate-task bug.
+    conn.execute("UPDATE alerts SET resolved = 1 WHERE id = ?", (first_alert_id,))
+    conn.commit()
+
+    raise_real_alert(conn, "cell_a_aquaponics", "warning",
+                      "cell_a_aquaponics: ph sensor (id 1) stale — retries exhausted")
+    second_alert_id = conn.execute(
+        "SELECT id FROM alerts WHERE message LIKE '%ph sensor%stale%' AND id != ?",
+        (first_alert_id,),
+    ).fetchone()[0]
+    second_diagnosis = diagnostics.diagnose_alert(second_alert_id, create_task=True)
+
+    open_task_count = conn.execute(
+        "SELECT COUNT(*) FROM maintenance_tasks WHERE status IN ('open', 'in_progress')"
+    ).fetchone()[0]
+
+    checks = [
+        ("the first diagnosis creates a real task", first_diagnosis.get("maintenance_task_id") is not None),
+        ("the second diagnosis of the same recurring condition reuses it, doesn't duplicate",
+         second_diagnosis.get("maintenance_task_id") == first_diagnosis.get("maintenance_task_id")
+         and second_diagnosis.get("maintenance_task_reused") is True),
+        ("exactly one open task exists, not two", open_task_count == 1),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1983,6 +2036,7 @@ SCENARIOS = {
     "alert_manager_acknowledge": scenario_alert_manager_acknowledge,
     "alert_manager_stale_sweep": scenario_alert_manager_stale_sweep,
     "alert_manager_recurrence_after_resolution": scenario_alert_manager_recurrence_after_resolution,
+    "diagnose_alert_reuses_open_task": scenario_diagnose_alert_reuses_open_task,
 }
 
 

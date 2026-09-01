@@ -1,710 +1,710 @@
 {
   "journal": [
     {
-      "timestamp": "2026-09-01 06:25:23",
+      "timestamp": "2026-09-01 07:10:15",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.21 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:25:18",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.21 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:25:07",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.21 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:25:02",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.22 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:57",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:52",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.24 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:47",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:47",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Warning alert raised",
-      "detail": "pilot_cell: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held",
-      "severity": "warning"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:47",
-      "category": "maintenance",
-      "source": "system",
-      "title": "Maintenance task created: Investigate: Sensor stale or disconnected (ec)",
-      "detail": "The ec sensor's dosing chain runs through the Fertilizer / Nutrient Dosing Controller (PORT 4 \u2014 FERTILIZER, relay channel 1), mounted: Mount next to the nutrient concentrate reservoir, Cell A.. Check the physical connection there first."
-    },
-    {
-      "timestamp": "2026-09-01 06:24:46",
-      "category": "system",
-      "source": "alert_manager",
-      "title": "alert resolved by human",
-      "detail": "Alert 2 marked resolved \u2014 EC probe genuinely not installed on pilot, expected"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:46",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Alert resolved",
-      "detail": "pilot_cell: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:42",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:37",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:32",
+      "timestamp": "2026-09-01 07:10:10",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
       "detail": "pH 7.25 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:24:31",
+      "timestamp": "2026-09-01 07:10:05",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:59",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.31 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:54",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:49",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:48",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: ph sensor (id 1) stale \u2014 retries exhausted TEST"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:44",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:41",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph sensor (id 1) stale \u2014 retries exhausted TEST",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:39",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:34",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:11",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.31 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:09:09",
       "category": "system",
       "source": "alert_manager",
-      "title": "stale alerts auto resolved",
-      "detail": "Auto-resolved 72 alert(s) not re-raised in over 30 min (heuristic, not a confirmed fix): [9, 11, 14, 26, 30, 34, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 3, 4, 5, 6, 7, 8, 10, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]"
+      "title": "duplicate maintenance tasks cancelled",
+      "detail": "One-time cleanup after fixing core/diagnostics.py's duplicate-task bug: cancelled tasks 5,6 (duplicate of #3, ph sensor investigate) and 7,8,9 (duplicate of #4, ec sensor investigate) \u2014 all created before the fix, from repeated real incidents during this session's testing."
     },
     {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: ph sensor (id 1) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: ec sensor (id 2) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: temp_water sensor (id 3) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: temp_air sensor (id 4) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: humidity sensor (id 5) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: level sensor (id 6) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "greenhouse_power",
-      "title": "Alert resolved",
-      "detail": "greenhouse_power: temp_water sensor (id 8) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "greenhouse_power",
-      "title": "Alert resolved",
-      "detail": "greenhouse_power: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Alert resolved",
-      "detail": "pilot_cell: ph sensor (id 7) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Alert resolved",
-      "detail": "pilot_cell: temp_water sensor (id 8) stale (last update 2026-08-31T15:38:24)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Alert resolved",
-      "detail": "pilot_cell: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 2"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: ph sensor (id 1) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: ec sensor (id 2) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: temp_water sensor (id 3) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: temp_air sensor (id 4) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: humidity sensor (id 5) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: level sensor (id 6) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "greenhouse_power",
-      "title": "Alert resolved",
-      "detail": "greenhouse_power: temp_water sensor (id 8) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Alert resolved",
-      "detail": "pilot_cell: ph sensor (id 7) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "pilot_cell",
-      "title": "Alert resolved",
-      "detail": "pilot_cell: temp_water sensor (id 8) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: temp_air sensor (id 4) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: humidity sensor (id 5) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: no pH reading available at all (sensor missing or producing zero data) \u2014 pH dosing held"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: air temp readings inconsistent (spread 14.0\u00b0F) \u2014 holding heater/fan at current state this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: dissolved oxygen critically low (2.30 mg/L, below 3.0 mg/L) \u2014 fish suffocation risk, confirm aeration is actually running"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: DO readings inconsistent (spread 5.20 mg/L) \u2014 not confident enough to assess oxygen risk this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: do sensor (id 9) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: no DO reading available at all (sensor missing or producing zero data) \u2014 dissolved oxygen monitoring degraded"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "circulation_monitor",
-      "title": "Alert resolved",
-      "detail": "cell 1: circulation pump commanded ON but flow reads near zero (2 consecutive readings <= 1.0) \u2014 probable seized pump or clogged filter, biofilter/aeration flow at risk"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: flow sensor (id 10) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: no air temp reading available at all (sensor missing or producing zero data) \u2014 heater/fan held at current state"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: light readings inconsistent (spread 6500 lux) \u2014 holding grow light at current state this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: CO2 readings inconsistent (spread 450 ppm) \u2014 not confident enough to inject this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: light sensor (id 11) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: co2 sensor (id 12) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: light sensor (id 11) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: co2 sensor (id 12) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: water temp 62.0\u00b0F outside the stocked species' documented range (75-85\u00b0F) \u2014 thermal stress risk, no automated correction exists (water heating/cooling isn't built)"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 16.0\u00b0F) \u2014 not confident enough to assess thermal stress risk this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 17.0\u00b0F) \u2014 holding water heater at current state this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_aquaponics",
-      "title": "Alert resolved",
-      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 18.0\u00b0F) \u2014 holding water heater at current state this cycle"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "greenhouse_power",
-      "title": "Alert resolved",
-      "detail": "greenhouse_power: unknown sensor (id -1) stale \u2014 retries exhausted"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: no light reading available at all (sensor missing or producing zero data) \u2014 grow light held at current state"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Alert resolved",
-      "detail": "cell_a_climate: no CO2 reading available at all (sensor missing or producing zero data) \u2014 CO2 injection held"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.02 -> 24.00 in 0.1 minute(s) (0.228 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.15 -> 24.01 in 0.1 minute(s) (1.668 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.01 -> 23.96 in 0.1 minute(s) (0.576 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.96 -> 23.89 in 0.1 minute(s) (0.888 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.95 -> 23.91 in 0.1 minute(s) (0.360 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.09 -> 23.90 in 0.1 minute(s) (2.256 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.90 -> 23.89 in 0.1 minute(s) (0.108 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.89 -> 23.84 in 0.1 minute(s) (0.696 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.92 in 0.1 minute(s) (0.120 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.92 -> 23.92 in 0.1 minute(s) (0.024 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.78 in 0.1 minute(s) (1.776 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.97 -> 23.90 in 0.1 minute(s) (0.828 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.04 -> 23.91 in 0.1 minute(s) (1.512 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.97 -> 23.94 in 0.1 minute(s) (0.432 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.94 -> 23.90 in 0.1 minute(s) (0.456 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.03 -> 23.93 in 0.1 minute(s) (1.152 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.96 -> 23.75 in 0.1 minute(s) (2.496 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.94 -> 23.93 in 0.1 minute(s) (0.168 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.91 in 0.1 minute(s) (0.204 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.91 -> 23.73 in 0.1 minute(s) (2.160 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.82 -> 23.81 in 0.1 minute(s) (0.144 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.81 -> 23.73 in 0.1 minute(s) (0.972 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.73 -> 23.71 in 0.1 minute(s) (0.252 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.88 in 0.1 minute(s) (0.708 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Alert resolved",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.88 -> 23.71 in 0.1 minute(s) (1.968 in/min) \u2014 far faster than plausible evaporation, possible leak"
-    },
-    {
-      "timestamp": "2026-09-01 06:24:27",
+      "timestamp": "2026-09-01 07:09:06",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.26 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:24:22",
+      "timestamp": "2026-09-01 07:09:01",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.26 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:24:04",
+      "timestamp": "2026-09-01 07:08:56",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:59",
+      "timestamp": "2026-09-01 07:08:51",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:54",
+      "timestamp": "2026-09-01 07:08:46",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:49",
+      "timestamp": "2026-09-01 07:08:41",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:44",
+      "timestamp": "2026-09-01 07:08:35",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:39",
+      "timestamp": "2026-09-01 07:08:30",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.29 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:34",
+      "timestamp": "2026-09-01 07:08:25",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:28",
+      "timestamp": "2026-09-01 07:08:20",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:23",
+      "timestamp": "2026-09-01 07:08:15",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:08:10",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:08:05",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:08:00",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:55",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:50",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:45",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:40",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:35",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:29",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:24",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:19",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:14",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:09",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:07:04",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:59",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:54",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:49",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:44",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:39",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:34",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:28",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:23",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:18",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:13",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:08",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:06:03",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:58",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:53",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:48",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:43",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:38",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:33",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:28",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.40 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:22",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.39 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:17",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:12",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.38 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:07",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:05:02",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:57",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:52",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:47",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:42",
+      "category": "system",
+      "source": "irrigation_scheduler",
+      "title": "scheduled watering",
+      "detail": "Pulsed irrigation_valve for Bed A1 (300s) \u2014 120 min interval, last pulse 125 min ago"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:42",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.37 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:37",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:32",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:27",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:21",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:16",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:11",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.31 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:04:06",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
       "detail": "pH 7.30 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 06:23:18",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.29 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 06:23:13",
+      "timestamp": "2026-09-01 07:04:01",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
       "detail": "pH 7.30 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:56",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.31 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:51",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:46",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:41",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:36",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:31",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.36 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:26",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:21",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:15",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:10",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:05",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:03:00",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:55",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:50",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:45",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:40",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.35 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:35",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:30",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.34 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:25",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:20",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:15",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.31 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:09",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.32 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:02:04",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:01:59",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 07:01:54",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.33 above target range 6.6-7.2, correcting downward"
     }
   ],
   "current_status": {
     "control_loop_alive": true,
-    "last_heartbeat": "2026-09-01 06:25:43",
+    "last_heartbeat": "2026-09-01 07:10:15",
     "monitored_cells": [
       "Cell A",
       "Pilot Bucket"
@@ -712,8 +712,8 @@
     "most_recent_action": {
       "cell_id": 1,
       "dose_type": "ph_down",
-      "rationale": "pH 7.21 above target range 6.6-7.2, correcting downward",
-      "timestamp": "2026-09-01 06:25:23",
+      "rationale": "pH 7.27 above target range 6.6-7.2, correcting downward",
+      "timestamp": "2026-09-01 07:10:15",
       "kind": "dose"
     }
   },
@@ -729,5 +729,5 @@
       "kind": "experiment"
     }
   ],
-  "generated_at": "2026-09-01 06:25:43"
+  "generated_at": "2026-09-01 07:10:15"
 }

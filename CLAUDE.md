@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 125 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 128 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -211,6 +211,22 @@ the 2 genuinely current conditions correctly left alone; manually
 resolving one of those two, then watching the control loop re-raise a
 real NEW row for the same still-true condition on its own, confirmed
 the recurrence behavior for real, not just in a scenario.
+
+That very recurrence behavior exposed one more real bug the same day:
+`core/diagnostics.py`'s `diagnose_alert(create_task=True)` filed a
+brand new maintenance task EVERY time, with no check for an already-open
+one — `auto_diagnose_new_alerts()` only skips re-diagnosing a single
+alert ROW twice, but each genuine recurrence is a real new row that
+lands here fresh. The live DB had 3 duplicate "ph" and 4 duplicate "ec"
+investigate tasks from exactly this, all from real incidents during
+this session's testing. Fixed with the same "check for an existing
+open one first" discipline `raise_alert()` and
+`generate_calibration_tasks()` already use — a second diagnosis of the
+same `likely_cause` now reuses the existing open task
+(`maintenance_task_reused: True`) instead of duplicating. Cleaned up
+the 5 real pre-existing duplicates (cancelled, not silently deleted)
+and confirmed live against the real DB: a genuine recurrence now
+correctly reuses task #3 instead of creating a #10.
 
 scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
 a MiaHomesteadModule, since it's clock-driven with no sensor to go

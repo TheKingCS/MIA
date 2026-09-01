@@ -70,11 +70,35 @@ class DiagnosticEngine(Describable):
         if create_task and self.maintenance and actionable:
             title = f"Investigate: {diagnosis['likely_cause']}"
             description = diagnosis["guidance"]
-            task_id = self.maintenance.create_task(
-                title=title, task_type="repair", priority="high" if severity == "critical" else "medium",
-                description=description, related_asset_type="actuator", created_by="system",
-            )
-            diagnosis["maintenance_task_id"] = task_id
+            # Real bug found live 2026-09-01: this used to call create_task()
+            # unconditionally every time. auto_diagnose_new_alerts() only
+            # skips a single alert ROW it's already diagnosed once
+            # (auto_diagnosed_at), but a genuinely recurring condition
+            # (same sensor type going stale again after a prior alert
+            # resolved — see core/alert_manager.py) raises a real NEW
+            # alert row each time, and each one landed here and filed
+            # ANOTHER task — the live DB had 3 identical "ph" and 4
+            # identical "ec" open tasks from repeated incidents. Same
+            # "check for an existing open one first" discipline this
+            # project already uses everywhere else (raise_alert()'s own
+            # dedup; generate_calibration_tasks()'s existing-task check).
+            # Title is a coarser key than a specific alert/sensor — this
+            # deliberately collapses "the same likely_cause recurred" into
+            # one open task to investigate, rather than one per incident.
+            existing = self.db.execute(
+                "SELECT id FROM maintenance_tasks WHERE title = ? AND status IN ('open', 'in_progress') "
+                "ORDER BY id DESC LIMIT 1",
+                (title,),
+            ).fetchone()
+            if existing:
+                diagnosis["maintenance_task_id"] = existing[0]
+                diagnosis["maintenance_task_reused"] = True
+            else:
+                task_id = self.maintenance.create_task(
+                    title=title, task_type="repair", priority="high" if severity == "critical" else "medium",
+                    description=description, related_asset_type="actuator", created_by="system",
+                )
+                diagnosis["maintenance_task_id"] = task_id
 
         return diagnosis
 
