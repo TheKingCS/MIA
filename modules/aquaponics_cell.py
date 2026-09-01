@@ -38,6 +38,15 @@ DO_WARNING_THRESHOLD_MGL = 5.0
 DO_CRITICAL_THRESHOLD_MGL = 3.0
 DO_SPREAD_TOLERANCE_MGL = 1.5  # wider than pH's 0.5 — DO probes drift more with agitation/temp
 
+# Water-temp range check tolerance — tighter than climate_control.py's
+# air-temp tolerance (5.0°F) since water temp changes far more slowly/
+# is less noisy than air. Real gap found live 2026-08-31 (see
+# read_sensors()'s docstring below): temp_water was sensed and bought
+# hardware (see describe_hardware_requirements) with literally nothing
+# checking it against any target — this closes that, using the actual
+# stocked species' real documented range, not a fixed constant like DO.
+TEMP_WATER_SPREAD_TOLERANCE_F = 3.0
+
 
 class AquaponicsCell(MiaHomesteadModule):
 
@@ -65,6 +74,7 @@ class AquaponicsCell(MiaHomesteadModule):
         self._ph_history: list[float] = []
         self._ec_history: list[float] = []
         self._do_history: list[float] = []
+        self._temp_water_history: list[float] = []
 
     def read_sensors(self) -> list[SensorReading]:
         """
@@ -84,11 +94,9 @@ class AquaponicsCell(MiaHomesteadModule):
         at all — duplicate, misattributed alerts for conditions
         climate_control.py/leak_detector.py/circulation_monitor.py
         already own and alert on correctly. temp_water is the one
-        exception kept in scope: it has no other owner today (nothing
-        yet checks it against species_registry's temp_water_min/max —
-        a real, separate, not-yet-built gap), so filtering it out
-        entirely would silently drop the only staleness alerting it
-        currently gets, not just quiet a duplicate.
+        exception kept in scope: it now has a real owner (see
+        _evaluate_temp_water() below), so filtering it out entirely
+        would drop real, valuable monitoring, not just quiet a duplicate.
         """
         rows = self.db.execute(
             """
@@ -189,6 +197,15 @@ class AquaponicsCell(MiaHomesteadModule):
             else:
                 self._evaluate_do(do_reading)
 
+        # temp_water: staleness alerting already happens unconditionally
+        # via the base retry ladder (read_sensors() includes it in its
+        # filter regardless of stocking status) — this only adds a
+        # SPECIES-RANGE check on top of an already-valid reading, and
+        # only when there's a real stocked species to check it against.
+        temp_water_reading = self._latest_of_type(readings, "temp_water")
+        if temp_water_reading is not None:
+            self._evaluate_temp_water(temp_water_reading)
+
         return commands
 
     def _evaluate_ph(self, reading: SensorReading) -> list[ActuatorCommand]:
@@ -280,6 +297,64 @@ class AquaponicsCell(MiaHomesteadModule):
         ).fetchone()
         return row is not None
 
+    def _evaluate_temp_water(self, reading: SensorReading) -> None:
+        """Alert-only, same reasoning as DO — no actuator exists to
+        correct water temp (a real water heater/chiller for the TANK
+        itself is a genuine, separate, unbuilt gap; modules/
+        climate_control.py only heats/cools greenhouse AIR). Requires a
+        real stocked species with a real documented range — never
+        invents a target, so an empty tank or an unrecognized species
+        name stays silent rather than guessing."""
+        temp_min, temp_max = self._current_species_temp_water_range()
+        if temp_min is None or temp_max is None:
+            return
+
+        self._temp_water_history.append(reading.value)
+        self._temp_water_history = self._temp_water_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
+        if len(self._temp_water_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
+            return
+
+        avg = sum(self._temp_water_history) / len(self._temp_water_history)
+        spread = max(self._temp_water_history) - min(self._temp_water_history)
+        if spread > TEMP_WATER_SPREAD_TOLERANCE_F:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: water temp readings inconsistent (spread {spread:.1f}°F) "
+                f"— not confident enough to assess thermal stress risk this cycle",
+            )
+            return
+
+        if avg < temp_min or avg > temp_max:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: water temp {avg:.1f}°F outside the stocked species' "
+                f"documented range ({temp_min:.0f}-{temp_max:.0f}°F) — thermal stress risk, "
+                f"no automated correction exists (water heating/cooling isn't built)",
+            )
+
+    def _current_species_temp_water_range(self) -> tuple[float | None, float | None]:
+        """The real stocked species' documented water-temp range, if a
+        tank is stocked on this cell and its species is in
+        species_profiles. tanks.species is free text, not a species_id
+        foreign key (a real schema quirk, not something to work around
+        by inventing one) — so this does a LIKE match, same shape as
+        core/species_registry.py's own find_by_name(). Returns (None,
+        None) for an unstocked tank or an unrecognized species name —
+        never guesses a target from nothing."""
+        row = self.db.execute(
+            "SELECT species FROM tanks WHERE cell_id = ? AND species IS NOT NULL LIMIT 1",
+            (self.cell_id,),
+        ).fetchone()
+        if not row or not row[0]:
+            return None, None
+        profile = self.db.execute(
+            "SELECT temp_water_min, temp_water_max FROM species_profiles WHERE common_name LIKE ? LIMIT 1",
+            (f"%{row[0]}%",),
+        ).fetchone()
+        if not profile or profile[0] is None or profile[1] is None:
+            return None, None
+        return profile[0], profile[1]
+
     def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand:
         # Actuator ID lookup would come from the actuators table in a
         # real implementation, keyed by cell_id + dose_type.
@@ -342,11 +417,12 @@ class AquaponicsCell(MiaHomesteadModule):
                 "corrections to keep both within target range, using multiple "
                 "consistent readings before acting and hard dosing limits "
                 "enforced downstream by the safety MCU. Also monitors dissolved "
-                "oxygen (DO), alert-only, if a DO sensor is configured for this cell."
+                "oxygen (DO), alert-only, if a DO sensor is configured for this cell, "
+                "and water temp against the actually-stocked species' documented range."
             ),
             data_produced=[
                 "pH reading history", "EC reading history", "DO reading history (if configured)",
-                "dosing event log (what was dosed, when, why)",
+                "water temp reading history", "dosing event log (what was dosed, when, why)",
             ],
             actions_possible=[
                 "pulse the pH-up dosing pump",
@@ -357,6 +433,9 @@ class AquaponicsCell(MiaHomesteadModule):
                 "exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles",
                 "raise a warning/critical alert on low dissolved oxygen — no automated "
                 "correction exists beyond the aerator, which is already always running",
+                "raise a warning when water temp falls outside the stocked species' "
+                "documented range — no automated correction exists (no tank water "
+                "heater/chiller is built; modules/climate_control.py only handles air)",
             ],
             limits_and_safety=(
                 f"Targets: pH {self.ph_target_min}-{self.ph_target_max}, "
@@ -373,11 +452,15 @@ class AquaponicsCell(MiaHomesteadModule):
                 f"{DO_CRITICAL_THRESHOLD_MGL} mg/L — but ONLY if a DO sensor is actually "
                 "registered for this cell; DO is optional hardware and a cell without "
                 "one stays completely silent rather than alerting on hardware that was "
-                "never installed."
+                "never installed. Water temp check requires BOTH a real stocked tank "
+                "(tanks.species set) AND that species existing in species_profiles — an "
+                "empty tank or an unrecognized species name stays silent, never guesses "
+                "a target range."
             ),
             example_questions=[
                 "How's the pH in Cell A?", "Has it been dosing much lately?",
                 "Why didn't it correct the EC this morning?", "What's the dissolved oxygen at?",
+                "Is the water temperature okay for the fish?",
             ],
             verification_evidence=[
                 "scenarios.py::scenario_ph_crash_response — confirmed dosing triggers after "
@@ -406,6 +489,13 @@ class AquaponicsCell(MiaHomesteadModule):
                 "sensor is configured",
                 "scenarios.py::scenario_do_healthy_no_alert — confirmed a healthy DO reading "
                 "(7.0 mg/L) raises nothing",
+                "scenarios.py::scenario_temp_water_species_range — confirmed a water temp "
+                "reading outside the real stocked species' documented range raises a real "
+                "warning citing the actual reading and range",
+                "scenarios.py::scenario_temp_water_no_species_silent — confirmed an unstocked "
+                "tank raises zero species-range alerts, ever (never guesses a target)",
+                "scenarios.py::scenario_temp_water_in_range_no_alert — confirmed a healthy "
+                "water temp reading raises nothing",
             ],
         )
 
@@ -435,7 +525,8 @@ class AquaponicsCell(MiaHomesteadModule):
             ),
             HardwareRequirement(
                 item="DS18B20 waterproof temp probe", category="sensor",
-                quantity=1, purpose="water temperature monitoring", est_unit_cost=8.0,
+                quantity=1, purpose="water temperature monitoring, checked against the stocked "
+                "species' documented range once one is stocked", est_unit_cost=8.0,
             ),
             HardwareRequirement(
                 item="Atlas Scientific Dissolved Oxygen kit (circuit + probe)", category="sensor",

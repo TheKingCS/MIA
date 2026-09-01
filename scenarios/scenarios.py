@@ -1389,6 +1389,65 @@ def scenario_climate_control_co2_danger_no_inject():
     return checks
 
 
+def scenario_temp_water_species_range():
+    """The demo cell's real stocked tank (species='tilapia', seeded by
+    setup_demo_cell) fed a water temp reading outside Tilapia's real
+    documented range (species_registry's baseline: 75-85F). Expect: a
+    real warning citing the actual reading and range."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.species_registry import SpeciesRegistry
+    SpeciesRegistry(conn)  # seeds baseline species (incl. Tilapia) into species_profiles
+
+    sim.state["temp_water"] = 60.0  # well below Tilapia's 75-85F range
+    run_cycles(registry, sim, n=4)
+
+    warning_alerts = get_alerts(conn, "warning")
+    checks = [
+        ("water temp outside the real stocked species' range raises a real warning",
+         any("water temp" in m.lower() and "outside the stocked species" in m.lower()
+             for _, _, m in warning_alerts)),
+    ]
+    return checks
+
+
+def scenario_temp_water_no_species_silent():
+    """No tank stocked on this cell (species cleared). Expect: zero
+    species-range alerts, ever — never guesses a target."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.species_registry import SpeciesRegistry
+    SpeciesRegistry(conn)
+    conn.execute("UPDATE tanks SET species = NULL WHERE cell_id = ?", (cell_id,))
+    conn.commit()
+
+    sim.state["temp_water"] = 60.0
+    run_cycles(registry, sim, n=4)
+
+    alerts = get_alerts(conn)
+    range_alerts = [m for _, _, m in alerts if "outside the stocked species" in m.lower()]
+    checks = [
+        ("an unstocked tank raises zero species-range alerts", len(range_alerts) == 0),
+    ]
+    return checks
+
+
+def scenario_temp_water_in_range_no_alert():
+    """A healthy water temp reading, well within Tilapia's real
+    documented range. Expect: no species-range alert."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.species_registry import SpeciesRegistry
+    SpeciesRegistry(conn)
+
+    sim.state["temp_water"] = 80.0  # within Tilapia's 75-85F range
+    run_cycles(registry, sim, n=4)
+
+    alerts = get_alerts(conn)
+    range_alerts = [m for _, _, m in alerts if "outside the stocked species" in m.lower()]
+    checks = [
+        ("a healthy, in-range water temp raises no species-range alert", len(range_alerts) == 0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1424,6 +1483,9 @@ SCENARIOS = {
     "climate_control_light_trigger": scenario_climate_control_light_trigger,
     "climate_control_co2_injection": scenario_climate_control_co2_injection,
     "climate_control_co2_danger_no_inject": scenario_climate_control_co2_danger_no_inject,
+    "temp_water_species_range": scenario_temp_water_species_range,
+    "temp_water_no_species_silent": scenario_temp_water_no_species_silent,
+    "temp_water_in_range_no_alert": scenario_temp_water_in_range_no_alert,
 }
 
 
