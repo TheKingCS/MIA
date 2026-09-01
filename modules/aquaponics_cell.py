@@ -239,13 +239,15 @@ class AquaponicsCell(MiaHomesteadModule):
             return []
 
         if avg < self._targets["ph_target_min"]:
-            return [self._dose_command("ph_up", reading.value,
+            cmd = self._dose_command("ph_up", reading.value,
                     f"pH {avg:.2f} below target range {self._targets['ph_target_min']}-"
-                    f"{self._targets['ph_target_max']}, correcting upward")]
+                    f"{self._targets['ph_target_max']}, correcting upward")
+            return [cmd] if cmd else []
         if avg > self._targets["ph_target_max"]:
-            return [self._dose_command("ph_down", reading.value,
+            cmd = self._dose_command("ph_down", reading.value,
                     f"pH {avg:.2f} above target range {self._targets['ph_target_min']}-"
-                    f"{self._targets['ph_target_max']}, correcting downward")]
+                    f"{self._targets['ph_target_max']}, correcting downward")
+            return [cmd] if cmd else []
         return []
 
     def _evaluate_ec(self, reading: SensorReading) -> list[ActuatorCommand]:
@@ -257,9 +259,10 @@ class AquaponicsCell(MiaHomesteadModule):
 
         avg = sum(self._ec_history) / len(self._ec_history)
         if avg < self._targets["ec_target_min"]:
-            return [self._dose_command("nutrient_concentrate", reading.value,
+            cmd = self._dose_command("nutrient_concentrate", reading.value,
                     f"EC {avg:.0f} below target range {self._targets['ec_target_min']}-"
-                    f"{self._targets['ec_target_max']}, correcting upward")]
+                    f"{self._targets['ec_target_max']}, correcting upward")
+            return [cmd] if cmd else []
         # No auto-correction for EC too high — diluting requires a water
         # change action, which should stay a human-approved/manual step
         # in v0.1 rather than an automated dump of fresh water.
@@ -408,7 +411,16 @@ class AquaponicsCell(MiaHomesteadModule):
             return None, None
         return profile[0], profile[1]
 
-    def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand:
+    def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand | None:
+        """Returns None (no dose, nothing logged) if dosing_limits'
+        min_interval_minutes hasn't elapsed since the last dose of this
+        type — see _within_dosing_interval()'s own docstring for why
+        this check has to happen HERE, before logging, not in the base
+        class's _validate_command() hook where it was originally meant
+        to live."""
+        if not self._within_dosing_interval(dose_type):
+            return None
+
         # Actuator ID lookup would come from the actuators table in a
         # real implementation, keyed by cell_id + dose_type.
         actuator_id = self._actuator_id_for(dose_type)
@@ -433,6 +445,62 @@ class AquaponicsCell(MiaHomesteadModule):
             duration_seconds=None,  # duration resolved by dosing_limits
             triggered_by=TriggerSource.AUTO_CONTROL,
         )
+
+    def _within_dosing_interval(self, dose_type: str) -> bool:
+        """Enforces dosing_limits.min_interval_minutes — the Pi-side
+        half of SAFETY_SPEC.md's two-tier dosing safety (the Safety MCU
+        firmware is the other, hardware-level half). Real, safety-
+        relevant gap found live 2026-09-01: contracts.MiaHomesteadModule.
+        _validate_command() — the originally-intended enforcement point
+        — was a literal stub that always returned the command unchanged.
+        The live system had fired 18,415 dosing_events, the vast
+        majority firing every single control-loop cycle (every ~5 REAL
+        seconds) with zero interval enforcement — exactly the
+        "oscillation/overcorrection loop" SAFETY_SPEC.md's dosing rules
+        explicitly exist to prevent, not hypothetical.
+
+        Checked here, before _dose_command() logs anything, rather than
+        in _validate_command() after the fact — _validate_command()
+        runs AFTER a dosing_events row already exists (this module logs
+        the row itself, as the concrete "what was dosed and why"
+        record), so blocking there would still leave a misleading
+        dosing_events row implying a dose happened when the actuator
+        command never actually went out. Blocking here means a refused
+        dose logs nothing at all — genuinely didn't happen.
+
+        Only min_interval_minutes is enforced — max_per_dose_ml and
+        max_per_day_ml stay honestly UNENFORCED: dosing_events.amount_ml
+        is null (the Pi doesn't know real per-pulse volume without real
+        flow-metering hardware — see that column's own schema comment),
+        so faking a volume just to check it against a limit would be
+        fabricating a number, not honoring one. A real, separate,
+        smaller gap than this one — noted, not solved here."""
+        limit_row = self.db.execute(
+            "SELECT min_interval_minutes FROM dosing_limits WHERE cell_id = ? AND dose_type = ?",
+            (self.cell_id, dose_type),
+        ).fetchone()
+        if limit_row is None:
+            return True  # no configured limit for this cell/dose_type — nothing to enforce yet
+        min_interval_minutes = limit_row[0]
+
+        last = self.db.execute(
+            "SELECT timestamp FROM dosing_events WHERE cell_id = ? AND dose_type = ? "
+            "ORDER BY id DESC LIMIT 1",
+            (self.cell_id, dose_type),
+        ).fetchone()
+        if last is None:
+            return True  # never dosed before — nothing to compare against
+
+        elapsed_minutes = (datetime.utcnow() - datetime.fromisoformat(last[0])).total_seconds() / 60
+        if elapsed_minutes < min_interval_minutes:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: {dose_type} dose blocked — only {elapsed_minutes:.1f} min "
+                f"since the last one, minimum interval is {min_interval_minutes} min "
+                f"(SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+            )
+            return False
+        return True
 
     def _actuator_id_for(self, dose_type: str) -> int:
         cur = self.db.execute(

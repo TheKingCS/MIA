@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 137 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 140 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,30 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**The most safety-significant fix in this project's history, found and
+closed 2026-09-01:** dosing had NO minimum-interval enforcement at all.
+`contracts.MiaHomesteadModule._validate_command()` — the place this was
+always meant to live — was a literal stub, unchanged since it was
+written, that always returned the command unmodified. Running the
+system continuously for real (this session's earlier "keep it fed"
+work) surfaced the consequence: the live DB had fired 18,503
+`dosing_events`, the vast majority firing every single control-loop
+cycle (every ~5 REAL seconds) — exactly the "oscillation/
+overcorrection loop" `SAFETY_SPEC.md`'s dosing rules exist to prevent,
+not a hypothetical risk. Fixed in `modules/aquaponics_cell.py`'s
+`_within_dosing_interval()`, checked before `_dose_command()` logs
+anything (not in the base-class hook, which runs after a
+`dosing_events` row already exists — see that method's own docstring
+for exactly why the sequencing matters). Only `min_interval_minutes`
+is enforced; `max_per_dose_ml`/`max_per_day_ml` stay honestly
+unenforced since `dosing_events.amount_ml` is null without real
+flow-metering hardware — a real, smaller, separate gap, not solved
+here. Live-verified, not just tested: restarted the control loop,
+watched the real `dosing_events` count stay frozen (zero new rows)
+across 20+ real seconds where it would previously have grown by
+several, with real "dose blocked" warnings correctly citing the actual
+elapsed time against the actual configured interval for each cell.
 
 **Fully built and proven in software:** control loop, safety fallback,
 simulation (3 tiers), scenario regression suite, digital twin with

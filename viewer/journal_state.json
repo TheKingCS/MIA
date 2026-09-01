@@ -1,709 +1,735 @@
 {
   "journal": [
     {
-      "timestamp": "2026-09-01 22:37:21",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
+      "timestamp": "2026-09-01 22:57:20",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 1.4 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:21",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "timestamp": "2026-09-01 22:57:20",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 1.4 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:16",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "timestamp": "2026-09-01 22:57:09",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 1.3 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:16",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "timestamp": "2026-09-01 22:57:09",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 1.3 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:10",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "timestamp": "2026-09-01 22:57:04",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 1.2 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:10",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "timestamp": "2026-09-01 22:57:04",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 1.2 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:05",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.47 above target range 6.6-7.2, correcting downward"
+      "timestamp": "2026-09-01 22:56:59",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 1.1 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:05",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "timestamp": "2026-09-01 22:56:59",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 1.1 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 22:37:00",
+      "timestamp": "2026-09-01 22:56:53",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 1.0 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:53",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 1.0 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:48",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 0.9 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:48",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 0.9 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:43",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 0.8 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:43",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 0.8 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:38",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 0.7 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:37",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 0.7 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:27",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 0.6 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:27",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: water temp 87.9\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:27",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 0.6 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:22",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 0.5 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:22",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: water temp 87.8\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:22",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 0.5 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:16",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: ph_down dose blocked \u2014 only 0.4 min since the last one, minimum interval is 5 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:56:16",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Warning alert raised",
+      "detail": "pilot_cell: ph_up dose blocked \u2014 only 0.4 min since the last one, minimum interval is 10 min (SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:55:54",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
       "detail": "pH 7.48 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:37:00",
+      "timestamp": "2026-09-01 22:55:54",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.47 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.58 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:55",
+      "timestamp": "2026-09-01 22:55:49",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.47 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.59 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:54",
+      "timestamp": "2026-09-01 22:55:48",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.48 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:55:43",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.48 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:55:43",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.59 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:55:38",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
       "detail": "pH 7.49 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:49",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:36:49",
+      "timestamp": "2026-09-01 22:55:38",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.58 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:44",
+      "timestamp": "2026-09-01 22:55:33",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.49 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:44",
+      "timestamp": "2026-09-01 22:55:33",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.57 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:39",
+      "timestamp": "2026-09-01 22:55:27",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.50 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:39",
+      "timestamp": "2026-09-01 22:55:27",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.57 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:33",
+      "timestamp": "2026-09-01 22:55:22",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.51 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:33",
+      "timestamp": "2026-09-01 22:55:22",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.45 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.56 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:28",
+      "timestamp": "2026-09-01 22:55:17",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.52 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:28",
+      "timestamp": "2026-09-01 22:55:17",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.57 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:23",
+      "timestamp": "2026-09-01 22:55:12",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.54 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:23",
+      "timestamp": "2026-09-01 22:55:12",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.47 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.54 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:18",
+      "timestamp": "2026-09-01 22:55:06",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.53 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:18",
+      "timestamp": "2026-09-01 22:55:06",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.47 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.54 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:12",
+      "timestamp": "2026-09-01 22:55:01",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.43 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.54 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:12",
+      "timestamp": "2026-09-01 22:55:01",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.53 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:07",
+      "timestamp": "2026-09-01 22:54:56",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.42 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.53 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:36:07",
+      "timestamp": "2026-09-01 22:54:56",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.52 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:36:02",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.42 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:36:02",
+      "timestamp": "2026-09-01 22:54:51",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.53 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:35:57",
+      "timestamp": "2026-09-01 22:54:50",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.51 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:45",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.52 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:45",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.53 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:35:56",
+      "timestamp": "2026-09-01 22:54:45",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: water temp 88.0\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:40",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.42 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.52 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:35:51",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.43 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:51",
+      "timestamp": "2026-09-01 22:54:40",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.55 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:35:46",
+      "timestamp": "2026-09-01 22:54:40",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: water temp 88.1\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:35",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.52 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:35:46",
+      "timestamp": "2026-09-01 22:54:35",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.55 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:29",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.53 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:29",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.55 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:24",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.55 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:24",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.55 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:19",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.56 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:19",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.54 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:14",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.55 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:14",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.53 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:08",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.54 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:08",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.52 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:03",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.55 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:54:03",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.52 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:58",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.55 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:58",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.53 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:52",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.56 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:52",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.52 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:47",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.58 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:47",
+      "category": "dosing",
+      "source": "cell 2",
+      "title": "Dosed ph_up",
+      "detail": "pH 6.51 below target range 6.6-7.2, correcting upward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:42",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.59 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:42",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
       "detail": "pH 6.49 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:35:41",
+      "timestamp": "2026-09-01 22:53:37",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.47 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.60 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:35:41",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:35",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.47 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:35",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:30",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:30",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.47 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:25",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:25",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:20",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:20",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.49 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:14",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:35:14",
+      "timestamp": "2026-09-01 22:53:37",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
       "detail": "pH 6.50 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:35:09",
+      "timestamp": "2026-09-01 22:53:31",
+      "category": "system",
+      "source": "alert_manager",
+      "title": "stale alerts auto resolved",
+      "detail": "Auto-resolved 4 alert(s) not re-raised in over 30 min (heuristic, not a confirmed fix): [215, 216, 217, 218]"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:31",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.61 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:35:09",
+      "timestamp": "2026-09-01 22:53:31",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.49 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.52 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:35:04",
+      "timestamp": "2026-09-01 22:53:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp 88.1\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp 88.0\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp 87.9\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp 87.8\u00b0F above the stocked species' documented max (85\u00b0F) \u2014 thermal stress risk, no automated cooling exists (no chiller is built)"
+    },
+    {
+      "timestamp": "2026-09-01 22:53:26",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.62 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:35:04",
+      "timestamp": "2026-09-01 22:53:26",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.48 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.53 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:34:59",
+      "timestamp": "2026-09-01 22:53:21",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.60 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:34:59",
+      "timestamp": "2026-09-01 22:53:21",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.46 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.54 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:34:53",
+      "timestamp": "2026-09-01 22:53:15",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.59 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:34:53",
+      "timestamp": "2026-09-01 22:53:15",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.45 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.54 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:34:48",
+      "timestamp": "2026-09-01 22:53:10",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.58 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:34:48",
+      "timestamp": "2026-09-01 22:53:10",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.44 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.56 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:34:42",
+      "timestamp": "2026-09-01 22:53:05",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.58 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:34:42",
+      "timestamp": "2026-09-01 22:53:05",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.44 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.56 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:34:37",
+      "timestamp": "2026-09-01 22:53:00",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.57 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 22:34:37",
+      "timestamp": "2026-09-01 22:53:00",
       "category": "dosing",
       "source": "cell 2",
       "title": "Dosed ph_up",
-      "detail": "pH 6.45 below target range 6.6-7.2, correcting upward"
+      "detail": "pH 6.55 below target range 6.6-7.2, correcting upward"
     },
     {
-      "timestamp": "2026-09-01 22:34:32",
+      "timestamp": "2026-09-01 22:52:54",
       "category": "dosing",
       "source": "cell 1",
       "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:32",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.43 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:27",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.41 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:26",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.44 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:21",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.45 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:21",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.39 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:16",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.46 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:16",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.38 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:11",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.47 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:11",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.38 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:05",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.47 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:05",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.40 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:00",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.47 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:34:00",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.42 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:55",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.48 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:55",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.43 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:50",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.48 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:50",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.43 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:44",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.49 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:44",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.43 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:39",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.49 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:39",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.44 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:34",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.49 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:34",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.44 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:33",
-      "category": "maintenance",
-      "source": "assistant",
-      "title": "Maintenance task created: TEST \u2014 verify fix",
-      "detail": "live smoke test, will cancel"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:29",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.50 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:29",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.43 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:23",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.51 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:23",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.41 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:18",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.51 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:18",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.41 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:13",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.50 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:13",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.39 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:07",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.49 above target range 6.6-7.2, correcting downward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:07",
-      "category": "dosing",
-      "source": "cell 2",
-      "title": "Dosed ph_up",
-      "detail": "pH 6.40 below target range 6.6-7.2, correcting upward"
-    },
-    {
-      "timestamp": "2026-09-01 22:33:02",
-      "category": "dosing",
-      "source": "cell 1",
-      "title": "Dosed ph_down",
-      "detail": "pH 7.51 above target range 6.6-7.2, correcting downward"
+      "detail": "pH 7.55 above target range 6.6-7.2, correcting downward"
     }
   ],
   "current_status": {
     "control_loop_alive": true,
-    "last_heartbeat": "2026-09-01 22:37:21",
+    "last_heartbeat": "2026-09-01 22:57:20",
     "monitored_cells": [
       "Cell A",
       "Pilot Bucket"
@@ -711,8 +737,8 @@
     "most_recent_action": {
       "cell_id": 2,
       "dose_type": "ph_up",
-      "rationale": "pH 6.46 below target range 6.6-7.2, correcting upward",
-      "timestamp": "2026-09-01 22:37:21",
+      "rationale": "pH 6.58 below target range 6.6-7.2, correcting upward",
+      "timestamp": "2026-09-01 22:55:54",
       "kind": "dose"
     }
   },
@@ -728,5 +754,5 @@
       "kind": "experiment"
     }
   ],
-  "generated_at": "2026-09-01 22:37:21"
+  "generated_at": "2026-09-01 22:57:20"
 }

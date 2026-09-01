@@ -372,14 +372,19 @@ class MiaHomesteadModule(Describable, ABC):
 
     def _validate_command(self, cmd: ActuatorCommand) -> ActuatorCommand:
         """
-        Placeholder for dosing-limit validation. Real implementation queries
-        dosing_limits + recent dosing_events from the DB and raises
-        DosingLimitExceeded if the proposed action would breach max-per-dose,
-        max-per-day, or min-interval constraints. Left as a stub here since
-        it needs the live schema wired in — see mia_homestead_schema.sql.
+        Generic post-decision hook, currently a passthrough. Dosing-
+        limit enforcement (min_interval_minutes — see SAFETY_SPEC.md's
+        dosing rules) was ORIGINALLY meant to live here, but real
+        implementation (2026-09-01) moved it into
+        modules.aquaponics_cell.AquaponicsCell._within_dosing_interval(),
+        checked BEFORE a dosing_events row is logged, not after — this
+        hook runs once a dosing_events row already exists (that module
+        logs it itself, as the "what was dosed and why" record), so
+        blocking here would leave a misleading row implying a dose
+        happened when it didn't. Kept as a real extension point for any
+        future generic (non-dosing-specific) command validation, not
+        removed just because dosing ended up elsewhere.
         """
-        # TODO: query dosing_limits table, compare against dosing_events
-        # for this cell/dose_type within the rolling window.
         return cmd
 
     def _safety_fallback_commands(self) -> list[ActuatorCommand]:

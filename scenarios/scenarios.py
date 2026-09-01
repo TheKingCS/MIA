@@ -2104,6 +2104,42 @@ def scenario_propose_experiment_tool_validates():
     return checks
 
 
+def scenario_dosing_min_interval_enforced():
+    """Real, safety-relevant bug found live 2026-09-01: dosing had NO
+    minimum-interval enforcement at all — contracts.MiaHomesteadModule.
+    _validate_command() (the originally-intended enforcement point) was
+    a literal stub. The live system had fired 18,415 dosing_events, the
+    vast majority every single control-loop cycle (~5 REAL seconds
+    apart), exactly the "oscillation/overcorrection loop"
+    SAFETY_SPEC.md's dosing rules explicitly exist to prevent — not
+    hypothetical. Confirms a second dose attempt of the same type,
+    within milliseconds of the first (real dosing_limits.
+    min_interval_minutes for cell 1's ph_up is 5 real minutes), is
+    correctly blocked and logs nothing."""
+    conn, registry, sim, cell_id = fresh_system()
+    sim.inject_ph_crash(-0.7)
+    run_cycles(registry, sim, n=4)  # the crash response fires at least once
+    dose_count_after_first = get_dose_count(conn, "ph_up")
+
+    # Force pH back below target immediately — no real wall-clock time
+    # has elapsed, so a second attempt this soon must be blocked
+    # regardless of how out-of-range the reading still is.
+    sim.state["ph"] = 6.0
+    run_cycles(registry, sim, n=3)
+    dose_count_after_more = get_dose_count(conn, "ph_up")
+
+    warning_alerts = get_alerts(conn, "warning")
+
+    checks = [
+        ("a dose fired during the initial crash response", dose_count_after_first > 0),
+        ("no additional dose fired within the real 5-minute interval, despite pH still out of range",
+         dose_count_after_more == dose_count_after_first),
+        ("a real 'dose blocked' warning explains why",
+         any("dose blocked" in m.lower() and "minimum interval" in m.lower() for _, _, m in warning_alerts)),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2164,6 +2200,7 @@ SCENARIOS = {
     "add_species_tool_full_fields": scenario_add_species_tool_full_fields,
     "update_maintenance_task_status_tool_validates": scenario_update_maintenance_task_status_tool_validates,
     "propose_experiment_tool_validates": scenario_propose_experiment_tool_validates,
+    "dosing_min_interval_enforced": scenario_dosing_min_interval_enforced,
 }
 
 
