@@ -73,6 +73,22 @@ class AquaponicsCell(MiaHomesteadModule):
         in a separate driver layer that writes into sensor_readings —
         this module only reads what's already been logged, keeping
         control logic decoupled from hardware I/O.
+
+        Filtered to the types this module actually reasons about (ph,
+        ec, do) plus temp_water (see below) — NOT every sensor on the
+        cell. Real bug found live 2026-08-31: an earlier, unfiltered
+        version of this query pulled every sensor type on the cell
+        (temp_air, humidity, light, co2, flow, level too, once those
+        got added), which meant THIS module's own staleness/retry
+        ladder independently alerted on sensor types it never acts on
+        at all — duplicate, misattributed alerts for conditions
+        climate_control.py/leak_detector.py/circulation_monitor.py
+        already own and alert on correctly. temp_water is the one
+        exception kept in scope: it has no other owner today (nothing
+        yet checks it against species_registry's temp_water_min/max —
+        a real, separate, not-yet-built gap), so filtering it out
+        entirely would silently drop the only staleness alerting it
+        currently gets, not just quiet a duplicate.
         """
         rows = self.db.execute(
             """
@@ -80,7 +96,7 @@ class AquaponicsCell(MiaHomesteadModule):
                    sr.is_stale, sr.is_out_of_range
             FROM sensor_readings sr
             JOIN sensors s ON s.id = sr.sensor_id
-            WHERE s.cell_id = ? AND s.active = 1
+            WHERE s.cell_id = ? AND s.active = 1 AND s.type IN ('ph', 'ec', 'do', 'temp_water')
             AND sr.id IN (
                 SELECT MAX(id) FROM sensor_readings GROUP BY sensor_id
             )

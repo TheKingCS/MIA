@@ -216,6 +216,15 @@ dosing commands should be trusted to it.
   Always use `datetime.utcnow()` in Python code that reasons about
   anything SQLite wrote a `now`-based timestamp for. Caught for real in
   `core/sensor_confidence.py`, 2026-08-31.
+- A `MiaHomesteadModule.read_sensors()` that doesn't filter by sensor
+  `type` pulls every sensor on the cell, not just the ones its own
+  `evaluate()` acts on — its inherited staleness/retry ladder then
+  independently alerts on types another module already owns, as
+  duplicate, misattributed alerts. Caught for real in
+  `modules/aquaponics_cell.py` (was alerting on `temp_air`/`humidity`/
+  `light`/`co2`/`flow`/`level` staleness — none of which it ever acts
+  on), 2026-08-31. Filter `read_sensors()`'s query to exactly the types
+  `evaluate()` consumes.
 
 ## Git conventions used so far
 
