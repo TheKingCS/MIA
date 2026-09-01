@@ -1,749 +1,720 @@
 {
   "journal": [
     {
-      "timestamp": "2026-09-01 05:43:47",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.88 -> 23.71 in 0.1 minute(s) (1.968 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:25:23",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.21 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:43:42",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.88 in 0.1 minute(s) (0.708 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:25:18",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.21 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:43:22",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.73 -> 23.71 in 0.1 minute(s) (0.252 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:25:07",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.21 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:43:17",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.81 -> 23.73 in 0.1 minute(s) (0.972 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:25:02",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.22 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:43:12",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.82 -> 23.81 in 0.1 minute(s) (0.144 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:24:57",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:43:01",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.91 -> 23.73 in 0.1 minute(s) (2.160 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:24:52",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.24 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:42:56",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.91 in 0.1 minute(s) (0.204 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
+      "timestamp": "2026-09-01 06:24:47",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
     },
     {
-      "timestamp": "2026-09-01 05:42:51",
+      "timestamp": "2026-09-01 06:24:47",
       "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.94 -> 23.93 in 0.1 minute(s) (0.168 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:42:41",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.96 -> 23.75 in 0.1 minute(s) (2.496 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:42:31",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.03 -> 23.93 in 0.1 minute(s) (1.152 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:42:16",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.94 -> 23.90 in 0.1 minute(s) (0.456 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:42:11",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.97 -> 23.94 in 0.1 minute(s) (0.432 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:42:01",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.04 -> 23.91 in 0.1 minute(s) (1.512 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:41:51",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.97 -> 23.90 in 0.1 minute(s) (0.828 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:41:35",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.78 in 0.1 minute(s) (1.776 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:41:25",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.92 -> 23.92 in 0.1 minute(s) (0.024 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:41:20",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.92 in 0.1 minute(s) (0.120 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:41:10",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.89 -> 23.84 in 0.1 minute(s) (0.696 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:41:00",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.90 -> 23.89 in 0.1 minute(s) (0.108 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:40:55",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.09 -> 23.90 in 0.1 minute(s) (2.256 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:40:39",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.95 -> 23.91 in 0.1 minute(s) (0.360 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:40:24",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 23.96 -> 23.89 in 0.1 minute(s) (0.888 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:40:19",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.01 -> 23.96 in 0.1 minute(s) (0.576 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:40:09",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.15 -> 24.01 in 0.1 minute(s) (1.668 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:39:58",
-      "category": "alert",
-      "source": "leak_detector",
-      "title": "Critical alert raised",
-      "detail": "cell 1: water level sensor (id 6) dropped 24.02 -> 24.00 in 0.1 minute(s) (0.228 in/min) \u2014 far faster than plausible evaporation, possible leak",
-      "severity": "critical"
-    },
-    {
-      "timestamp": "2026-09-01 05:39:53",
-      "category": "alert",
-      "source": "cell_a_climate",
+      "source": "pilot_cell",
       "title": "Warning alert raised",
-      "detail": "cell_a_climate: no light reading available at all (sensor missing or producing zero data) \u2014 grow light held at current state",
+      "detail": "pilot_cell: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held",
       "severity": "warning"
     },
     {
-      "timestamp": "2026-09-01 05:39:53",
-      "category": "alert",
-      "source": "cell_a_climate",
-      "title": "Warning alert raised",
-      "detail": "cell_a_climate: no CO2 reading available at all (sensor missing or producing zero data) \u2014 CO2 injection held",
-      "severity": "warning"
-    },
-    {
-      "timestamp": "2026-09-01 05:39:53",
+      "timestamp": "2026-09-01 06:24:47",
       "category": "maintenance",
       "source": "system",
       "title": "Maintenance task created: Investigate: Sensor stale or disconnected (ec)",
       "detail": "The ec sensor's dosing chain runs through the Fertilizer / Nutrient Dosing Controller (PORT 4 \u2014 FERTILIZER, relay channel 1), mounted: Mount next to the nutrient concentrate reservoir, Cell A.. Check the physical connection there first."
     },
     {
-      "timestamp": "2026-09-01 05:36:46",
+      "timestamp": "2026-09-01 06:24:46",
       "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
+      "source": "alert_manager",
+      "title": "alert resolved by human",
+      "detail": "Alert 2 marked resolved \u2014 EC probe genuinely not installed on pilot, expected"
     },
     {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "do sensor (id 9) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "unknown sensor (id -1) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "light sensor (id 11) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "co2 sensor (id 12) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:46",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "do sensor (id 9) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "unknown sensor (id -1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "light sensor (id 11) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "co2 sensor (id 12) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:36:41",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:20",
+      "timestamp": "2026-09-01 06:24:46",
       "category": "alert",
-      "source": "greenhouse_power",
-      "title": "Warning alert raised",
-      "detail": "greenhouse_power: unknown sensor (id -1) stale \u2014 retries exhausted",
-      "severity": "warning"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "do sensor (id 9) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "unknown sensor (id -1) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "light sensor (id 11) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "co2 sensor (id 12) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:15",
-      "category": "system",
       "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
+      "title": "Alert resolved",
+      "detail": "pilot_cell: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held"
     },
     {
-      "timestamp": "2026-09-01 05:02:15",
+      "timestamp": "2026-09-01 06:24:42",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:37",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.23 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:32",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.25 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
       "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
+      "source": "alert_manager",
+      "title": "stale alerts auto resolved",
+      "detail": "Auto-resolved 72 alert(s) not re-raised in over 30 min (heuristic, not a confirmed fix): [9, 11, 14, 26, 30, 34, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 3, 4, 5, 6, 7, 8, 10, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]"
     },
     {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "do sensor (id 9) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "unknown sensor (id -1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "light sensor (id 11) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "co2 sensor (id 12) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 05:02:10",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:59:44",
-      "category": "system",
-      "source": "irrigation_scheduler",
-      "title": "scheduled watering",
-      "detail": "Pulsed irrigation_valve for Bed A1 (300s) \u2014 120 min interval, last pulse 121 min ago"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "do sensor (id 9) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "light sensor (id 11) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "co2 sensor (id 12) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:14",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "do sensor (id 9) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "light sensor (id 11) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "cell_a_climate",
-      "title": "retry pending",
-      "detail": "co2 sensor (id 12) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 04:32:09",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 03:53:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 03:53:24",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-09-01 03:43:23",
+      "timestamp": "2026-09-01 06:24:31",
       "category": "alert",
       "source": "cell_a_aquaponics",
-      "title": "Warning alert raised",
-      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 18.0\u00b0F) \u2014 holding water heater at current state this cycle",
-      "severity": "warning"
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: ph sensor (id 1) stale (last update 2026-08-31T15:38:24)"
     },
     {
-      "timestamp": "2026-09-01 03:42:41",
+      "timestamp": "2026-09-01 06:24:31",
       "category": "alert",
       "source": "cell_a_aquaponics",
-      "title": "Warning alert raised",
-      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 17.0\u00b0F) \u2014 holding water heater at current state this cycle",
-      "severity": "warning"
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: ec sensor (id 2) stale (last update 2026-08-31T15:38:24)"
     },
     {
-      "timestamp": "2026-09-01 03:42:36",
-      "category": "system",
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
       "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: temp_water sensor (id 3) stale (last update 2026-08-31T15:38:24)"
     },
     {
-      "timestamp": "2026-09-01 03:42:36",
-      "category": "system",
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
       "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: temp_air sensor (id 4) stale (last update 2026-08-31T15:38:24)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: humidity sensor (id 5) stale (last update 2026-08-31T15:38:24)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: level sensor (id 6) stale (last update 2026-08-31T15:38:24)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "greenhouse_power",
+      "title": "Alert resolved",
+      "detail": "greenhouse_power: temp_water sensor (id 8) stale (last update 2026-08-31T15:38:24)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "greenhouse_power",
+      "title": "Alert resolved",
+      "detail": "greenhouse_power: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Alert resolved",
+      "detail": "pilot_cell: ph sensor (id 7) stale (last update 2026-08-31T15:38:24)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Alert resolved",
+      "detail": "pilot_cell: temp_water sensor (id 8) stale (last update 2026-08-31T15:38:24)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Alert resolved",
+      "detail": "pilot_cell: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 2"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: ph sensor (id 1) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: ec sensor (id 2) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: temp_water sensor (id 3) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: temp_air sensor (id 4) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: humidity sensor (id 5) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: level sensor (id 6) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "greenhouse_power",
+      "title": "Alert resolved",
+      "detail": "greenhouse_power: temp_water sensor (id 8) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Alert resolved",
+      "detail": "pilot_cell: ph sensor (id 7) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "pilot_cell",
+      "title": "Alert resolved",
+      "detail": "pilot_cell: temp_water sensor (id 8) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: temp_air sensor (id 4) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: humidity sensor (id 5) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: all sensors stale/invalid \u2014 freezing non-essential actuation for cell 1"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: no pH reading available at all (sensor missing or producing zero data) \u2014 pH dosing held"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: no EC reading available at all (sensor missing or producing zero data) \u2014 nutrient dosing held"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: air temp readings inconsistent (spread 14.0\u00b0F) \u2014 holding heater/fan at current state this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: dissolved oxygen critically low (2.30 mg/L, below 3.0 mg/L) \u2014 fish suffocation risk, confirm aeration is actually running"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: DO readings inconsistent (spread 5.20 mg/L) \u2014 not confident enough to assess oxygen risk this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: do sensor (id 9) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: no DO reading available at all (sensor missing or producing zero data) \u2014 dissolved oxygen monitoring degraded"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "circulation_monitor",
+      "title": "Alert resolved",
+      "detail": "cell 1: circulation pump commanded ON but flow reads near zero (2 consecutive readings <= 1.0) \u2014 probable seized pump or clogged filter, biofilter/aeration flow at risk"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: flow sensor (id 10) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: no air temp reading available at all (sensor missing or producing zero data) \u2014 heater/fan held at current state"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: light readings inconsistent (spread 6500 lux) \u2014 holding grow light at current state this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: CO2 readings inconsistent (spread 450 ppm) \u2014 not confident enough to inject this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: light sensor (id 11) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: co2 sensor (id 12) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: light sensor (id 11) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: co2 sensor (id 12) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp 62.0\u00b0F outside the stocked species' documented range (75-85\u00b0F) \u2014 thermal stress risk, no automated correction exists (water heating/cooling isn't built)"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 16.0\u00b0F) \u2014 not confident enough to assess thermal stress risk this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 17.0\u00b0F) \u2014 holding water heater at current state this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Alert resolved",
+      "detail": "cell_a_aquaponics: water temp readings inconsistent (spread 18.0\u00b0F) \u2014 holding water heater at current state this cycle"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "greenhouse_power",
+      "title": "Alert resolved",
+      "detail": "greenhouse_power: unknown sensor (id -1) stale \u2014 retries exhausted"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: no light reading available at all (sensor missing or producing zero data) \u2014 grow light held at current state"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Alert resolved",
+      "detail": "cell_a_climate: no CO2 reading available at all (sensor missing or producing zero data) \u2014 CO2 injection held"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 24.02 -> 24.00 in 0.1 minute(s) (0.228 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 24.15 -> 24.01 in 0.1 minute(s) (1.668 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 24.01 -> 23.96 in 0.1 minute(s) (0.576 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.96 -> 23.89 in 0.1 minute(s) (0.888 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.95 -> 23.91 in 0.1 minute(s) (0.360 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 24.09 -> 23.90 in 0.1 minute(s) (2.256 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.90 -> 23.89 in 0.1 minute(s) (0.108 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.89 -> 23.84 in 0.1 minute(s) (0.696 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.92 in 0.1 minute(s) (0.120 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.92 -> 23.92 in 0.1 minute(s) (0.024 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.78 in 0.1 minute(s) (1.776 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.97 -> 23.90 in 0.1 minute(s) (0.828 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 24.04 -> 23.91 in 0.1 minute(s) (1.512 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.97 -> 23.94 in 0.1 minute(s) (0.432 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.94 -> 23.90 in 0.1 minute(s) (0.456 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 24.03 -> 23.93 in 0.1 minute(s) (1.152 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.96 -> 23.75 in 0.1 minute(s) (2.496 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.94 -> 23.93 in 0.1 minute(s) (0.168 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.91 in 0.1 minute(s) (0.204 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.91 -> 23.73 in 0.1 minute(s) (2.160 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.82 -> 23.81 in 0.1 minute(s) (0.144 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.81 -> 23.73 in 0.1 minute(s) (0.972 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.73 -> 23.71 in 0.1 minute(s) (0.252 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.93 -> 23.88 in 0.1 minute(s) (0.708 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:31",
+      "category": "alert",
+      "source": "leak_detector",
+      "title": "Alert resolved",
+      "detail": "cell 1: water level sensor (id 6) dropped 23.88 -> 23.71 in 0.1 minute(s) (1.968 in/min) \u2014 far faster than plausible evaporation, possible leak"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:27",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.26 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:22",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.26 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:24:04",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:59",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:54",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:49",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.27 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:44",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:39",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.29 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:34",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:28",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.28 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:23",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.30 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:18",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.29 above target range 6.6-7.2, correcting downward"
+    },
+    {
+      "timestamp": "2026-09-01 06:23:13",
+      "category": "dosing",
+      "source": "cell 1",
+      "title": "Dosed ph_down",
+      "detail": "pH 7.30 above target range 6.6-7.2, correcting downward"
     }
   ],
   "current_status": {
     "control_loop_alive": true,
-    "last_heartbeat": "2026-09-01 06:02:02",
+    "last_heartbeat": "2026-09-01 06:25:43",
     "monitored_cells": [
       "Cell A",
       "Pilot Bucket"
     ],
     "most_recent_action": {
-      "module_id": "pilot_cell",
-      "action": "retry_pending",
-      "rationale": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert",
-      "timestamp": "2026-09-01 05:36:46",
-      "kind": "action"
+      "cell_id": 1,
+      "dose_type": "ph_down",
+      "rationale": "pH 7.21 above target range 6.6-7.2, correcting downward",
+      "timestamp": "2026-09-01 06:25:23",
+      "kind": "dose"
     }
   },
   "upcoming": [
@@ -758,5 +729,5 @@
       "kind": "experiment"
     }
   ],
-  "generated_at": "2026-09-01 06:02:02"
+  "generated_at": "2026-09-01 06:25:43"
 }

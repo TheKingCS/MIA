@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 118 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 125 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -191,6 +191,26 @@ proportionally to duration. Scenario proof, matching
 scenario_ph_crash_response's existing standard: a cold/CO2-depleted
 reading triggers the actuator AND the reading actually recovers over
 subsequent ticks, not just that a command was issued.
+
+Also (2026-09-01, user request): the alert LIFECYCLE, closed for the
+first time — `alerts.acknowledged`/`resolved` existed in the schema
+since the start and `raise_alert()` always read/wrote `resolved=0`,
+but nothing anywhere ever marked one resolved (only the separate
+`help_requests` table, self_preservation.py's beacon, ever got real
+ack/resolve logic). `core/alert_manager.py`: `resolve_alert()`/
+`acknowledge_alert()` for precise human-driven resolution, plus
+`check_stale_alerts()` — a periodic (60-cycle block), honestly-labeled
+HEURISTIC sweep that auto-resolves any alert not re-raised in 30 min,
+logged distinguishably from a human resolving it. A genuine recurrence
+after resolution creates a real new alert row (raise_alert()'s dedup
+only ever matches unresolved rows) — resolving never permanently
+suppresses anything. Live-verified against the real accumulated
+backlog: 74 unresolved alerts before the sweep, 72 correctly
+auto-resolved as genuinely stale (some untouched for many real hours),
+the 2 genuinely current conditions correctly left alone; manually
+resolving one of those two, then watching the control loop re-raise a
+real NEW row for the same still-true condition on its own, confirmed
+the recurrence behavior for real, not just in a scenario.
 
 scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
 a MiaHomesteadModule, since it's clock-driven with no sensor to go

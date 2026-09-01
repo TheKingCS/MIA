@@ -1804,6 +1804,130 @@ def scenario_do_relaxes_toward_temp_equilibrium():
     return checks
 
 
+def scenario_alert_manager_resolve():
+    """A real alert, resolved by a human. Expect: resolved/resolved_at
+    set correctly, and resolving it again is refused rather than
+    silently rewriting resolved_at."""
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+    from core.alert_manager import AlertManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    am = AlertManager(conn)
+
+    raise_real_alert(conn, "test_source", "warning", "a real test condition")
+    alert_id = conn.execute("SELECT id FROM alerts WHERE source = 'test_source'").fetchone()[0]
+
+    am.resolve_alert(alert_id, notes="fixed manually")
+    row = dict(zip(
+        ["resolved", "resolved_at"],
+        conn.execute("SELECT resolved, resolved_at FROM alerts WHERE id = ?", (alert_id,)).fetchone(),
+    ))
+
+    refused = False
+    try:
+        am.resolve_alert(alert_id)
+    except ValueError:
+        refused = True
+
+    checks = [
+        ("resolve_alert sets resolved=1 and a real resolved_at",
+         row["resolved"] == 1 and row["resolved_at"] is not None),
+        ("resolving an already-resolved alert is refused", refused),
+    ]
+    return checks
+
+
+def scenario_alert_manager_acknowledge():
+    """A real alert, acknowledged by a human. Expect: acknowledged/
+    acknowledged_at set, resolved left untouched."""
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+    from core.alert_manager import AlertManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    am = AlertManager(conn)
+
+    raise_real_alert(conn, "test_source", "info", "a real test condition")
+    alert_id = conn.execute("SELECT id FROM alerts WHERE source = 'test_source'").fetchone()[0]
+
+    am.acknowledge_alert(alert_id)
+    row = dict(zip(
+        ["acknowledged", "acknowledged_at", "resolved"],
+        conn.execute(
+            "SELECT acknowledged, acknowledged_at, resolved FROM alerts WHERE id = ?", (alert_id,)
+        ).fetchone(),
+    ))
+
+    checks = [
+        ("acknowledge_alert sets acknowledged=1 and a real acknowledged_at",
+         row["acknowledged"] == 1 and row["acknowledged_at"] is not None),
+        ("acknowledging doesn't also resolve it", row["resolved"] == 0),
+    ]
+    return checks
+
+
+def scenario_alert_manager_stale_sweep():
+    """One alert not re-raised in a long time, one raised just now.
+    Expect: the stale one gets auto-resolved, the recent one is left
+    alone."""
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+    from core.alert_manager import AlertManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    am = AlertManager(conn)
+
+    raise_real_alert(conn, "stale_source", "warning", "an old condition")
+    stale_id = conn.execute("SELECT id FROM alerts WHERE source = 'stale_source'").fetchone()[0]
+    conn.execute(
+        "UPDATE alerts SET last_seen = datetime('now', '-60 minutes') WHERE id = ?", (stale_id,)
+    )
+    conn.commit()
+
+    raise_real_alert(conn, "fresh_source", "warning", "a current condition")
+    fresh_id = conn.execute("SELECT id FROM alerts WHERE source = 'fresh_source'").fetchone()[0]
+
+    resolved = am.check_stale_alerts(stale_after_minutes=30)
+
+    stale_row = conn.execute("SELECT resolved FROM alerts WHERE id = ?", (stale_id,)).fetchone()
+    fresh_row = conn.execute("SELECT resolved FROM alerts WHERE id = ?", (fresh_id,)).fetchone()
+
+    checks = [
+        ("the stale alert (60 min old) was auto-resolved",
+         any(r["alert_id"] == stale_id for r in resolved) and stale_row[0] == 1),
+        ("the fresh alert (just raised) was left alone", fresh_row[0] == 0),
+    ]
+    return checks
+
+
+def scenario_alert_manager_recurrence_after_resolution():
+    """The exact same (source, message) condition recurs after being
+    resolved. Expect: a real NEW alert row, not the old one silently
+    un-resolved — raise_alert()'s own dedup only matches unresolved rows."""
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+    from core.alert_manager import AlertManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    am = AlertManager(conn)
+
+    raise_real_alert(conn, "recur_source", "warning", "a recurring condition")
+    first_id = conn.execute("SELECT id FROM alerts WHERE source = 'recur_source'").fetchone()[0]
+    am.resolve_alert(first_id)
+
+    raise_real_alert(conn, "recur_source", "warning", "a recurring condition")
+    all_rows = conn.execute(
+        "SELECT id, resolved FROM alerts WHERE source = 'recur_source' ORDER BY id"
+    ).fetchall()
+
+    checks = [
+        ("a genuine recurrence creates a real new row, not reusing the resolved one",
+         len(all_rows) == 2 and all_rows[0][1] == 1 and all_rows[1][1] == 0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1855,6 +1979,10 @@ SCENARIOS = {
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,
     "do_relaxes_toward_temp_equilibrium": scenario_do_relaxes_toward_temp_equilibrium,
+    "alert_manager_resolve": scenario_alert_manager_resolve,
+    "alert_manager_acknowledge": scenario_alert_manager_acknowledge,
+    "alert_manager_stale_sweep": scenario_alert_manager_stale_sweep,
+    "alert_manager_recurrence_after_resolution": scenario_alert_manager_recurrence_after_resolution,
 }
 
 

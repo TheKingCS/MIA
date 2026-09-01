@@ -138,6 +138,38 @@ TOOLS = [
         },
     },
     {
+        "name": "acknowledge_alert",
+        "description": "Mark a specific alert as acknowledged — use when the user says they've seen/are aware of an alert, without necessarily meaning it's fixed.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"alert_id": {"type": "integer"}},
+            "required": ["alert_id"],
+        },
+    },
+    {
+        "name": "resolve_alert",
+        "description": "Mark a specific alert as resolved — use when the user confirms the underlying condition is actually fixed. A genuinely recurring condition raises a fresh alert afterward, it isn't suppressed forever.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "alert_id": {"type": "integer"},
+                "notes": {"type": "string"},
+            },
+            "required": ["alert_id"],
+        },
+    },
+    {
+        "name": "get_alert_history",
+        "description": "Get alert history over a real time window (default 7 days), optionally filtered by source — includes resolved alerts, unlike get_open_alerts.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "source": {"type": "string"},
+                "days": {"type": "integer"},
+            },
+        },
+    },
+    {
         "name": "get_dosing_history",
         "description": "Get recent dosing events for a cell, within a lookback window in days.",
         "input_schema": {
@@ -936,6 +968,9 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_leak_status": "status",
     "get_circulation_status": "status",
     "get_open_alerts": "status",
+    "acknowledge_alert": "status",
+    "resolve_alert": "status",
+    "get_alert_history": "status",
     "get_power_status": "status",
     "get_power_forecast": "status",
     "get_climate_status": "status",
@@ -1388,6 +1423,25 @@ class _BaseGreenhouseAssistant:
         if min_severity:
             rows = [r for r in rows if order.get(r["severity"], 0) >= order[min_severity]]
         return {"alerts": rows}
+
+    def _alert_manager(self):
+        from core.alert_manager import AlertManager
+        return AlertManager(self.db)
+
+    def _tool_acknowledge_alert(self, alert_id: int) -> dict:
+        try:
+            return self._alert_manager().acknowledge_alert(alert_id)
+        except ValueError as e:
+            return {"error": str(e)}
+
+    def _tool_resolve_alert(self, alert_id: int, notes: str | None = None) -> dict:
+        try:
+            return self._alert_manager().resolve_alert(alert_id, notes=notes)
+        except ValueError as e:
+            return {"error": str(e)}
+
+    def _tool_get_alert_history(self, source: str | None = None, days: int = 7) -> dict:
+        return {"alert_history": self._alert_manager().get_alert_history(source=source, days=days)}
 
     def _tool_get_dosing_history(self, cell_id: int, days: int = 7) -> dict:
         rows = self.db.execute(
