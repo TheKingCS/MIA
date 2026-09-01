@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 97 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 103 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -156,7 +156,10 @@ optional hardware that was never bought never generates noise), and
 water-temp thermal-stress monitoring (same file — checks a real reading
 against the actually-stocked species' real documented range from
 species_profiles, via tanks.species; unstocked or unrecognized species
-stays silent rather than guessing a target).
+stays silent rather than guessing a target), and a real tank
+water_heater actuator driven off that same check for a low reading (a
+new actuators.type, distinct from climate_control.py's air 'heater' —
+a high reading still only alerts, since no chiller is built).
 
 scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
 a MiaHomesteadModule, since it's clock-driven with no sensor to go

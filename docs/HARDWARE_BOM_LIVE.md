@@ -1,6 +1,6 @@
 # MIA Homestead — Live Hardware BOM
 
-**Auto-generated 2026-09-01T03:36:40.798713Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
+**Auto-generated 2026-09-01T03:42:31.480762Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
 
 For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM_CURRENT.md`.
 
@@ -8,11 +8,12 @@ For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM
 == ACTUATOR ==
   1x 12V solenoid irrigation valve, normally closed — ~$15.00  (needed by: irrigation_scheduler)
   1x 24" shutter-mount exhaust fan, 115V — ~$159.99  (needed by: cell_a_climate)
-  4x 4-channel relay module (5V, optocoupler-isolated) — ~$32.00  (needed by: device_registry)
+  5x 4-channel relay module (5V, optocoupler-isolated) — ~$40.00  (needed by: device_registry)
   1x Alert beacon (light + speaker/buzzer combo) — ~$20.00  (needed by: greenhouse_self_preservation)
   1x CO2 injector / regulator valve (solenoid, food-safe) — ~$35.00  (needed by: cell_a_climate)
   6x Peristaltic dosing pump — ~$72.00  (needed by: cell_a_aquaponics,pilot_cell)
   2x Submersible aquarium air pump + airstone — ~$20.00  (needed by: cell_a_aquaponics,pilot_cell)
+  2x Submersible aquarium heater, relay-controlled — ~$50.00  (needed by: cell_a_aquaponics,pilot_cell)
   2x Submersible circulation pump — ~$30.00  (needed by: cell_a_aquaponics,pilot_cell)
   1x Supplemental grow light fixture (relay-switched) — ~$40.00  (needed by: cell_a_climate)
   1x Thermostatic propane greenhouse heater, 30,000-60,000 BTU — ~$275.00  (needed by: cell_a_climate)
@@ -20,6 +21,7 @@ For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM
 == MCU ==
   1x MCU (Climate Controller) — ~$20.00  (needed by: device_registry)
   1x MCU (Fertilizer / Nutrient Dosing Controller) — ~$20.00  (needed by: device_registry)
+  1x MCU (Tank Water Heater Controller) — ~$20.00  (needed by: device_registry)
   1x MCU (Watering Controller) — ~$20.00  (needed by: device_registry)
   1x MCU (pH Dosing Controller) — ~$20.00  (needed by: device_registry)
 
@@ -42,5 +44,5 @@ For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM
   1x Lux/light sensor (e.g. BH1750 I2C) — ~$6.00  (needed by: cell_a_climate)
   1x PIR motion sensor — ~$5.00  (needed by: greenhouse_self_preservation)
 
-Estimated total: ~$2566.96
+Estimated total: ~$2644.96
 ```

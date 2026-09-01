@@ -1404,7 +1404,7 @@ def scenario_temp_water_species_range():
     warning_alerts = get_alerts(conn, "warning")
     checks = [
         ("water temp outside the real stocked species' range raises a real warning",
-         any("water temp" in m.lower() and "outside the stocked species" in m.lower()
+         any("water temp" in m.lower() and "the stocked species'" in m.lower()
              for _, _, m in warning_alerts)),
     ]
     return checks
@@ -1423,7 +1423,7 @@ def scenario_temp_water_no_species_silent():
     run_cycles(registry, sim, n=4)
 
     alerts = get_alerts(conn)
-    range_alerts = [m for _, _, m in alerts if "outside the stocked species" in m.lower()]
+    range_alerts = [m for _, _, m in alerts if "the stocked species'" in m.lower()]
     checks = [
         ("an unstocked tank raises zero species-range alerts", len(range_alerts) == 0),
     ]
@@ -1441,9 +1441,89 @@ def scenario_temp_water_in_range_no_alert():
     run_cycles(registry, sim, n=4)
 
     alerts = get_alerts(conn)
-    range_alerts = [m for _, _, m in alerts if "outside the stocked species" in m.lower()]
+    range_alerts = [m for _, _, m in alerts if "the stocked species'" in m.lower()]
     checks = [
         ("a healthy, in-range water temp raises no species-range alert", len(range_alerts) == 0),
+    ]
+    return checks
+
+
+def scenario_temp_water_heater_engages():
+    """A real water_heater actuator is configured on the demo cell
+    (real stocked tilapia), fed a low reading. Expect: the heater turns
+    on, with NO alert (it's being handled), and settles with no repeat
+    commands once it's been on for a while."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.species_registry import SpeciesRegistry
+    SpeciesRegistry(conn)
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'water_heater', 'tank_water_heater', 'off')",
+        (cell_id,),
+    )
+    conn.commit()
+
+    sim.state["temp_water"] = 60.0  # well below Tilapia's 75-85F range
+    run_cycles(registry, sim, n=4)
+    heater_count_after_first = get_actuator_event_count(conn, "tank_water_heater")
+    run_cycles(registry, sim, n=3)
+    heater_count_after_more = get_actuator_event_count(conn, "tank_water_heater")
+
+    warning_alerts = get_alerts(conn, "warning")
+    range_alerts = [m for _, _, m in warning_alerts if "below the stocked species" in m.lower()]
+    checks = [
+        ("a configured water heater turns on for a low reading",
+         get_last_actuator_action(conn, "tank_water_heater") == "on"),
+        ("no low-temp alert while a heater is actively handling it", len(range_alerts) == 0),
+        ("no repeat commands once corrected",
+         heater_count_after_first == 1 and heater_count_after_more == 1),
+    ]
+    return checks
+
+
+def scenario_temp_water_no_cooling_above_max():
+    """A configured water heater, fed a HIGH reading (above species
+    max). Expect: a real 'no chiller' warning, and the heater forced
+    off — never on, since heating further would make it worse."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.species_registry import SpeciesRegistry
+    SpeciesRegistry(conn)
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'water_heater', 'tank_water_heater', 'off')",
+        (cell_id,),
+    )
+    conn.commit()
+
+    sim.state["temp_water"] = 95.0  # well above Tilapia's 75-85F range
+    run_cycles(registry, sim, n=4)
+
+    warning_alerts = get_alerts(conn, "warning")
+    checks = [
+        ("a high reading raises a real 'no chiller' warning",
+         any("no chiller is built" in m.lower() for _, _, m in warning_alerts)),
+        ("the heater is never turned on for a high reading",
+         get_last_actuator_action(conn, "tank_water_heater") != "on"),
+    ]
+    return checks
+
+
+def scenario_temp_water_heater_safety_fallback():
+    """A configured water heater, all sensors go stale. Expect: the
+    heater is forced off via the safety fallback path."""
+    conn, registry, sim, cell_id = fresh_system()
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'water_heater', 'tank_water_heater', 'off')",
+        (cell_id,),
+    )
+    conn.commit()
+    run_cycles(registry, sim, n=2)
+    for t in ("ph", "ec", "temp_water"):
+        sim.inject_sensor_dropout(t)
+        sim.force_stale_backdate(t, minutes_ago=15)
+    run_cycles(registry, sim, n=MiaHomesteadModule.MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT + 1)
+
+    checks = [
+        ("water heater forced off during total sensor loss",
+         get_last_actuator_action(conn, "tank_water_heater") == "off"),
     ]
     return checks
 
@@ -1486,6 +1566,9 @@ SCENARIOS = {
     "temp_water_species_range": scenario_temp_water_species_range,
     "temp_water_no_species_silent": scenario_temp_water_no_species_silent,
     "temp_water_in_range_no_alert": scenario_temp_water_in_range_no_alert,
+    "temp_water_heater_engages": scenario_temp_water_heater_engages,
+    "temp_water_no_cooling_above_max": scenario_temp_water_no_cooling_above_max,
+    "temp_water_heater_safety_fallback": scenario_temp_water_heater_safety_fallback,
 }
 
 

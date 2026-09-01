@@ -45,6 +45,16 @@ DO_SPREAD_TOLERANCE_MGL = 1.5  # wider than pH's 0.5 — DO probes drift more wi
 # hardware (see describe_hardware_requirements) with literally nothing
 # checking it against any target — this closes that, using the actual
 # stocked species' real documented range, not a fixed constant like DO.
+#
+# Drives a real actuator ('water_heater' — distinct actuators.type from
+# climate_control.py's air 'heater', to avoid its cell_id+type lookup
+# ever ambiguously matching two different physical heaters on the same
+# cell) for the LOW-temp case only. Never attempts to cool: no chiller
+# is built (a real, separate, genuinely deferred piece of equipment —
+# noticeably pricier and less commonly needed for a first build than a
+# heater), so an above-max reading still only alerts, same as before.
+# water_heater is opt-in, like DO — a cell without one still alerts on
+# a low reading (nothing else can correct it), it just doesn't actuate.
 TEMP_WATER_SPREAD_TOLERANCE_F = 3.0
 
 
@@ -75,6 +85,7 @@ class AquaponicsCell(MiaHomesteadModule):
         self._ec_history: list[float] = []
         self._do_history: list[float] = []
         self._temp_water_history: list[float] = []
+        self._last_water_heater_action: str | None = None
 
     def read_sensors(self) -> list[SensorReading]:
         """
@@ -204,7 +215,7 @@ class AquaponicsCell(MiaHomesteadModule):
         # only when there's a real stocked species to check it against.
         temp_water_reading = self._latest_of_type(readings, "temp_water")
         if temp_water_reading is not None:
-            self._evaluate_temp_water(temp_water_reading)
+            commands += self._evaluate_temp_water(temp_water_reading)
 
         return commands
 
@@ -297,22 +308,25 @@ class AquaponicsCell(MiaHomesteadModule):
         ).fetchone()
         return row is not None
 
-    def _evaluate_temp_water(self, reading: SensorReading) -> None:
-        """Alert-only, same reasoning as DO — no actuator exists to
-        correct water temp (a real water heater/chiller for the TANK
-        itself is a genuine, separate, unbuilt gap; modules/
-        climate_control.py only heats/cools greenhouse AIR). Requires a
-        real stocked species with a real documented range — never
-        invents a target, so an empty tank or an unrecognized species
-        name stays silent rather than guessing."""
+    def _evaluate_temp_water(self, reading: SensorReading) -> list[ActuatorCommand]:
+        """Requires a real stocked species with a real documented range
+        — never invents a target, so an empty tank or an unrecognized
+        species name stays silent rather than guessing. Drives a real
+        water_heater actuator for the low-temp case, if one is
+        configured (opt-in, like DO); a cell without one still alerts,
+        since nothing else can correct the condition. Never attempts to
+        cool an above-max reading — always alerts instead, since no
+        chiller exists to correct it regardless of whether a heater is
+        configured (heating further would make an already-hot tank
+        worse, so the heater is explicitly turned off in that case)."""
         temp_min, temp_max = self._current_species_temp_water_range()
         if temp_min is None or temp_max is None:
-            return
+            return []
 
         self._temp_water_history.append(reading.value)
         self._temp_water_history = self._temp_water_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
         if len(self._temp_water_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
-            return
+            return []
 
         avg = sum(self._temp_water_history) / len(self._temp_water_history)
         spread = max(self._temp_water_history) - min(self._temp_water_history)
@@ -320,17 +334,56 @@ class AquaponicsCell(MiaHomesteadModule):
             self._raise_alert(
                 "warning",
                 f"{self.module_id}: water temp readings inconsistent (spread {spread:.1f}°F) "
-                f"— not confident enough to assess thermal stress risk this cycle",
+                f"— holding water heater at current state this cycle",
             )
-            return
+            return []
 
-        if avg < temp_min or avg > temp_max:
+        heater_configured = self._actuator_id_for_type("water_heater") != -1
+
+        if avg > temp_max:
             self._raise_alert(
                 "warning",
-                f"{self.module_id}: water temp {avg:.1f}°F outside the stocked species' "
-                f"documented range ({temp_min:.0f}-{temp_max:.0f}°F) — thermal stress risk, "
-                f"no automated correction exists (water heating/cooling isn't built)",
+                f"{self.module_id}: water temp {avg:.1f}°F above the stocked species' "
+                f"documented max ({temp_max:.0f}°F) — thermal stress risk, no automated "
+                f"cooling exists (no chiller is built)",
             )
+            return self._set_water_heater("off") if heater_configured else []
+
+        if avg < temp_min:
+            if not heater_configured:
+                self._raise_alert(
+                    "warning",
+                    f"{self.module_id}: water temp {avg:.1f}°F below the stocked species' "
+                    f"documented min ({temp_min:.0f}°F) — thermal stress risk, no automated "
+                    f"correction exists (no water heater is configured)",
+                )
+                return []
+            return self._set_water_heater("on")
+
+        return self._set_water_heater("off") if heater_configured else []
+
+    def _set_water_heater(self, action: str) -> list[ActuatorCommand]:
+        if self._last_water_heater_action == action:
+            return []  # no change — avoids spamming actuator_events every cycle
+        actuator_id = self._actuator_id_for_type("water_heater")
+        if actuator_id == -1:
+            return []
+        self._last_water_heater_action = action
+        logger.info("%s: setting water_heater -> %s", self.module_id, action)
+        return [ActuatorCommand(
+            actuator_id=actuator_id,
+            action=action,
+            duration_seconds=None,
+            triggered_by=TriggerSource.AUTO_CONTROL,
+        )]
+
+    def _actuator_id_for_type(self, actuator_type: str) -> int:
+        cur = self.db.execute(
+            "SELECT id FROM actuators WHERE cell_id = ? AND type = ? LIMIT 1",
+            (self.cell_id, actuator_type),
+        )
+        row = cur.fetchone()
+        return row[0] if row else -1
 
     def _current_species_temp_water_range(self) -> tuple[float | None, float | None]:
         """The real stocked species' documented water-temp range, if a
@@ -404,8 +457,18 @@ class AquaponicsCell(MiaHomesteadModule):
         and aeration running via their independent safety-MCU defaults
         (those actuators aren't touched here at all — they stay on
         because their safe_default_state is 'on', enforced at the MCU,
-        not by this module deciding anything)."""
-        return super()._safety_fallback_commands()
+        not by this module deciding anything). Water heater, if
+        configured, IS explicitly forced off here — a submersible
+        heater stuck on is a real fire/fish-boil hazard, same category
+        as climate_control.py's air heater defaulting off."""
+        commands = super()._safety_fallback_commands()
+        self._last_water_heater_action = None
+        heater_id = self._actuator_id_for_type("water_heater")
+        if heater_id != -1:
+            commands.append(ActuatorCommand(
+                actuator_id=heater_id, action="off", triggered_by=TriggerSource.SAFETY_FALLBACK,
+            ))
+        return commands
 
     def describe_capabilities(self):
         from contracts.capability import Capability
@@ -418,7 +481,9 @@ class AquaponicsCell(MiaHomesteadModule):
                 "consistent readings before acting and hard dosing limits "
                 "enforced downstream by the safety MCU. Also monitors dissolved "
                 "oxygen (DO), alert-only, if a DO sensor is configured for this cell, "
-                "and water temp against the actually-stocked species' documented range."
+                "and water temp against the actually-stocked species' documented range — "
+                "driving a real water heater for a low reading if one is configured, "
+                "alert-only for a high reading (no chiller is built)."
             ),
             data_produced=[
                 "pH reading history", "EC reading history", "DO reading history (if configured)",
@@ -433,9 +498,10 @@ class AquaponicsCell(MiaHomesteadModule):
                 "exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles",
                 "raise a warning/critical alert on low dissolved oxygen — no automated "
                 "correction exists beyond the aerator, which is already always running",
-                "raise a warning when water temp falls outside the stocked species' "
-                "documented range — no automated correction exists (no tank water "
-                "heater/chiller is built; modules/climate_control.py only handles air)",
+                "turn a real water heater on/off when water temp falls below the stocked "
+                "species' documented range, if one is configured for this cell",
+                "raise a warning when water temp is above the stocked species' documented "
+                "max — never attempts to cool (no chiller is built)",
             ],
             limits_and_safety=(
                 f"Targets: pH {self.ph_target_min}-{self.ph_target_max}, "
@@ -455,7 +521,13 @@ class AquaponicsCell(MiaHomesteadModule):
                 "never installed. Water temp check requires BOTH a real stocked tank "
                 "(tanks.species set) AND that species existing in species_profiles — an "
                 "empty tank or an unrecognized species name stays silent, never guesses "
-                "a target range."
+                "a target range. Water heater ('water_heater' actuator type, distinct from "
+                "climate_control.py's air 'heater') is opt-in — a cell without one still "
+                "alerts on a low reading (nothing else can correct it), it just doesn't "
+                "actuate. Never attempts to cool a high reading regardless of hardware — "
+                "no chiller is built, and forcing the heater off in that case prevents it "
+                "from making an already-hot tank worse. On total sensor loss, the water "
+                "heater is explicitly forced off (stuck-on fire/fish-boil hazard)."
             ),
             example_questions=[
                 "How's the pH in Cell A?", "Has it been dosing much lately?",
@@ -496,6 +568,14 @@ class AquaponicsCell(MiaHomesteadModule):
                 "tank raises zero species-range alerts, ever (never guesses a target)",
                 "scenarios.py::scenario_temp_water_in_range_no_alert — confirmed a healthy "
                 "water temp reading raises nothing",
+                "scenarios.py::scenario_temp_water_heater_engages — confirmed a configured "
+                "water heater turns on for a low reading, with NO alert (being handled), and "
+                "settles with no repeat commands once corrected",
+                "scenarios.py::scenario_temp_water_no_cooling_above_max — confirmed a "
+                "high reading raises a real 'no chiller' warning and forces a configured "
+                "heater off, never on",
+                "scenarios.py::scenario_temp_water_heater_safety_fallback — confirmed total "
+                "sensor loss forces a configured water heater off",
             ],
         )
 
@@ -527,6 +607,17 @@ class AquaponicsCell(MiaHomesteadModule):
                 item="DS18B20 waterproof temp probe", category="sensor",
                 quantity=1, purpose="water temperature monitoring, checked against the stocked "
                 "species' documented range once one is stocked", est_unit_cost=8.0,
+            ),
+            HardwareRequirement(
+                item="Submersible aquarium heater, relay-controlled", category="actuator",
+                quantity=1, purpose="corrects water temp below the stocked species' documented "
+                "minimum", est_unit_cost=25.0,
+                notes="Estimate, not independently live-fetched this session — typical current "
+                      "market price for a relay-switchable submersible heater at this scale. "
+                      "Optional — a cell without one still alerts on a low reading, it just "
+                      "doesn't actuate. No chiller is priced or built — cooling stays a real, "
+                      "deferred gap (a chiller is notably pricier and less commonly needed for "
+                      "a first build than a heater).",
             ),
             HardwareRequirement(
                 item="Atlas Scientific Dissolved Oxygen kit (circuit + probe)", category="sensor",
