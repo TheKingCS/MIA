@@ -1528,6 +1528,37 @@ def scenario_temp_water_heater_safety_fallback():
     return checks
 
 
+def scenario_power_monitor_sensor_id_no_collision():
+    """A power_telemetry row's id is deliberately made to collide with
+    a real sensors.id (the demo cell's real temp_water sensor). Expect:
+    PowerMonitor.read_sensors() never reports that colliding id as its
+    own sensor_id — real bug, live 2026-09-01: this exact collision
+    made a stale-power alert incorrectly name the pilot cell's real
+    temp_water sensor instead of the power telemetry it was actually
+    about."""
+    conn, registry, sim, cell_id = fresh_system()
+    from modules.power_monitor import SYNTHETIC_SENSOR_ID
+    real_temp_water_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'temp_water'", (cell_id,)
+    ).fetchone()[0]
+    conn.execute(
+        "INSERT INTO power_telemetry (id, source, watts, battery_soc_percent) VALUES (?, 'battery', -80.0, 70.0)",
+        (real_temp_water_sensor_id,),
+    )
+    conn.commit()
+
+    pm = registry.modules["greenhouse_power"]
+    readings = pm.read_sensors()
+
+    checks = [
+        ("a colliding power_telemetry id never becomes the reported sensor_id",
+         len(readings) == 1 and readings[0].sensor_id != real_temp_water_sensor_id),
+        ("read_sensors() uses the fixed synthetic sentinel, not a real table id",
+         readings[0].sensor_id == SYNTHETIC_SENSOR_ID),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1569,6 +1600,7 @@ SCENARIOS = {
     "temp_water_heater_engages": scenario_temp_water_heater_engages,
     "temp_water_no_cooling_above_max": scenario_temp_water_no_cooling_above_max,
     "temp_water_heater_safety_fallback": scenario_temp_water_heater_safety_fallback,
+    "power_monitor_sensor_id_no_collision": scenario_power_monitor_sensor_id_no_collision,
 }
 
 

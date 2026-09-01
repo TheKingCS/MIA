@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 103 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 105 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -232,6 +232,16 @@ dosing commands should be trusted to it.
   `light`/`co2`/`flow`/`level` staleness — none of which it ever acts
   on), 2026-08-31. Filter `read_sensors()`'s query to exactly the types
   `evaluate()` consumes.
+- A `SensorReading.sensor_id` that isn't a real `sensors.id` (e.g.
+  `modules/power_monitor.py` synthesizing one from `power_telemetry`'s
+  own row id) can numerically collide with a real sensor's id — the
+  base class's staleness machinery looks it up in `sensors` and
+  misattributes the alert to whatever real sensor happens to share
+  that number. Caught for real 2026-09-01 (id 8 collided with the
+  pilot cell's real temp_water sensor). Use a fixed value outside the
+  real id space (a negative sentinel — `sensors.id` is always a
+  positive autoincrement rowid) for any synthetic, non-table-backed
+  reading.
 
 ## Git conventions used so far
 

@@ -25,6 +25,19 @@ from contracts.mia_homestead_contract import (
 # once it's already happened.
 SOC_FORECAST_WARNING_HOURS = 12
 
+# Real bug found live 2026-09-01: read_sensors() below used to pass
+# power_telemetry's own row id as SensorReading.sensor_id. That's a
+# DIFFERENT id space from sensors.id — the base class's staleness
+# machinery (_sensor_type_label() in particular) looks this value up
+# in the `sensors` table, and a power_telemetry row's id can (and did,
+# live: id 8 collided with the pilot cell's real temp_water sensor)
+# numerically coincide with a real sensor's id, producing an alert
+# that names the WRONG sensor entirely. A fixed negative sentinel can
+# never collide with a real sensors.id (always a positive autoincrement
+# rowid) — _sensor_type_label() correctly falls back to "unknown" for
+# it instead of accidentally matching something real.
+SYNTHETIC_SENSOR_ID = -1
+
 
 def _least_squares_slope(xs: list[float], ys: list[float]) -> float:
     """Plain linear regression slope, no dependency beyond stdlib —
@@ -79,10 +92,10 @@ class PowerMonitor(MiaHomesteadModule):
         row = cur.fetchone()
         if not row:
             return []
-        pid, watts, soc, ts = row
+        _pid, watts, soc, ts = row
         return [
             SensorReading(
-                sensor_id=pid,
+                sensor_id=SYNTHETIC_SENSOR_ID,
                 value=soc if soc is not None else watts,
                 timestamp=datetime.fromisoformat(ts),
             )
@@ -257,6 +270,11 @@ class PowerMonitor(MiaHomesteadModule):
                 "time but correctly raised NO alert, outside the 12h warning window). Also "
                 "verified the get_power_forecast assistant tool end-to-end against the real "
                 "config/modules.yaml threshold (20%), not a hardcoded stand-in.",
+                "scenarios.py::scenario_power_monitor_sensor_id_no_collision — confirmed "
+                "read_sensors() never reports a real sensors.id, even when a power_telemetry "
+                "row's id numerically coincides with one (real bug, live 2026-09-01: a stale "
+                "power-telemetry alert incorrectly named the pilot cell's real temp_water "
+                "sensor because the two ids happened to collide).",
             ],
         )
 
