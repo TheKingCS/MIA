@@ -94,6 +94,23 @@ def get_dose_count(conn, dose_type_substr):
     ).fetchone()[0]
 
 
+def get_last_actuator_action(conn, actuator_name_substr):
+    row = conn.execute(
+        "SELECT ae.action FROM actuator_events ae JOIN actuators a "
+        "ON a.id = ae.actuator_id WHERE a.name LIKE ? ORDER BY ae.id DESC LIMIT 1",
+        (f"%{actuator_name_substr}%",),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def get_actuator_event_count(conn, actuator_name_substr):
+    return conn.execute(
+        "SELECT COUNT(*) FROM actuator_events ae JOIN actuators a "
+        "ON a.id = ae.actuator_id WHERE a.name LIKE ?",
+        (f"%{actuator_name_substr}%",),
+    ).fetchone()[0]
+
+
 # ---------- Scenarios ----------
 
 def scenario_stale_sensor_freeze():
@@ -973,6 +990,405 @@ def scenario_cost_profitability():
     return checks
 
 
+def scenario_climate_control_heater_trigger():
+    """Air temp drops well below target (55°F vs. a 65-85 target band).
+    Expect: after enough consistent readings, the heater turns on and
+    the fan does not."""
+    conn, registry, sim, cell_id = fresh_system()
+    sim.state["temp_air"] = 55.0
+    run_cycles(registry, sim, n=4)
+
+    checks = [
+        ("heater turned on", get_last_actuator_action(conn, "greenhouse_heater") == "on"),
+        ("fan did not turn on", get_last_actuator_action(conn, "greenhouse_exhaust_fan") != "on"),
+    ]
+    return checks
+
+
+def scenario_climate_control_fan_trigger_temp():
+    """Air temp climbs well above target (95°F vs. an 85°F max).
+    Expect: after enough consistent readings, the fan turns on and the
+    heater does not."""
+    conn, registry, sim, cell_id = fresh_system()
+    sim.state["temp_air"] = 95.0
+    run_cycles(registry, sim, n=4)
+
+    checks = [
+        ("fan turned on", get_last_actuator_action(conn, "greenhouse_exhaust_fan") == "on"),
+        ("heater did not turn on", get_last_actuator_action(conn, "greenhouse_heater") != "on"),
+    ]
+    return checks
+
+
+def scenario_climate_control_fan_trigger_humidity():
+    """Humidity climbs well above the 75%RH max while temp stays fully
+    in-range (78°F). Expect: the fan turns on from humidity alone —
+    venting isn't gated on temperature also being out of range."""
+    conn, registry, sim, cell_id = fresh_system()
+    sim.state["humidity"] = 90.0
+    run_cycles(registry, sim, n=4)
+
+    checks = [
+        ("fan turned on from high humidity with in-range temp",
+         get_last_actuator_action(conn, "greenhouse_exhaust_fan") == "on"),
+        ("heater stayed off (temp was never out of range)",
+         get_last_actuator_action(conn, "greenhouse_heater") != "on"),
+    ]
+    return checks
+
+
+def scenario_climate_control_no_repeat_commands():
+    """Temp/humidity stay steady and in-range across many cycles.
+    Expect: each actuator gets exactly one command (the initial
+    decision) — no repeat commands for an unchanged steady state,
+    matching AquaponicsCell's own no-op-when-nothing-changed discipline."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=4)
+    heater_count_after_first = get_actuator_event_count(conn, "greenhouse_heater")
+    fan_count_after_first = get_actuator_event_count(conn, "greenhouse_exhaust_fan")
+    run_cycles(registry, sim, n=4)
+    heater_count_after_more = get_actuator_event_count(conn, "greenhouse_heater")
+    fan_count_after_more = get_actuator_event_count(conn, "greenhouse_exhaust_fan")
+
+    checks = [
+        ("heater got exactly one command, not one per cycle",
+         heater_count_after_first == 1 and heater_count_after_more == 1),
+        ("fan got exactly one command, not one per cycle",
+         fan_count_after_first == 1 and fan_count_after_more == 1),
+    ]
+    return checks
+
+
+def scenario_climate_control_safety_fallback():
+    """Both temp_air and humidity sensors go silent and age past
+    staleness. Expect: once retries genuinely exhaust, the heater is
+    forced off (stuck-on fire/scorch risk) and the fan is forced on
+    (safe if stuck on) — never left in whatever state they happened to
+    be in before data was lost."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=2)
+    sim.inject_sensor_dropout("temp_air")
+    sim.inject_sensor_dropout("humidity")
+    sim.force_stale_backdate("temp_air", minutes_ago=15)
+    sim.force_stale_backdate("humidity", minutes_ago=15)
+    run_cycles(registry, sim, n=MiaHomesteadModule.MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT + 1)
+
+    checks = [
+        ("heater forced off during total sensor loss",
+         get_last_actuator_action(conn, "greenhouse_heater") == "off"),
+        ("fan forced on during total sensor loss",
+         get_last_actuator_action(conn, "greenhouse_exhaust_fan") == "on"),
+    ]
+    return checks
+
+
+def scenario_do_no_sensor_silent():
+    """The fresh demo cell has no DO sensor configured (real cell_1 in
+    the live DB doesn't have one either, as of 2026-08-31 — DO is
+    optional hardware). Expect: zero DO-related alerts, ever, across
+    several cycles — not noise for hardware that was never installed."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=4)
+
+    alerts = get_alerts(conn)
+    do_alerts = [m for _, _, m in alerts if "dissolved oxygen" in m.lower() or "do reading" in m.lower()]
+    checks = [
+        ("zero DO-related alerts with no DO sensor configured", len(do_alerts) == 0),
+    ]
+    return checks
+
+
+def scenario_do_critical_alert():
+    """A DO sensor is added mid-run and fed a critically low reading
+    (2.0 mg/L, well below the 3.0 mg/L critical threshold). Expect: a
+    real critical alert citing the actual reading, once enough
+    consistent readings land."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=2)
+
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'do', 'mg/L', 1)",
+        (cell_id,),
+    )
+    do_sensor_id = cur.lastrowid
+    conn.execute(
+        "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) VALUES (?, 2.0, 0, 0)",
+        (do_sensor_id,),
+    )
+    conn.commit()
+    run_cycles(registry, sim, n=3)
+
+    critical_alerts = get_alerts(conn, "critical")
+    checks = [
+        ("critically low DO (2.0 mg/L) raises a real critical alert citing the actual reading",
+         any("dissolved oxygen" in m.lower() and "2.0" in m for _, _, m in critical_alerts)),
+    ]
+    return checks
+
+
+def scenario_do_healthy_no_alert():
+    """A DO sensor reads a healthy value (7.0 mg/L, well above the 5.0
+    mg/L warning threshold). Expect: no DO-related alert at all."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=2)
+
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'do', 'mg/L', 1)",
+        (cell_id,),
+    )
+    do_sensor_id = cur.lastrowid
+    conn.execute(
+        "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) VALUES (?, 7.0, 0, 0)",
+        (do_sensor_id,),
+    )
+    conn.commit()
+    run_cycles(registry, sim, n=3)
+
+    alerts = get_alerts(conn)
+    do_alerts = [m for _, _, m in alerts if "dissolved oxygen" in m.lower()]
+    checks = [
+        ("a healthy DO reading (7.0 mg/L) raises no DO alert", len(do_alerts) == 0),
+    ]
+    return checks
+
+
+def scenario_irrigation_scheduled_pulse():
+    """A configured schedule, never pulsed before. Expect: the check
+    pulses the real irrigation_valve actuator and logs it, citing the
+    real bed/interval."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.irrigation import IrrigationScheduler
+    sched = IrrigationScheduler(conn, [
+        {"grow_bed_name": "Bed A1", "cell_id": cell_id, "actuator_name": "irrigation_valve",
+         "interval_minutes": 120, "pulse_seconds": 300},
+    ])
+    watered = sched.check_scheduled_irrigation()
+
+    last_action = get_last_actuator_action(conn, "irrigation_valve")
+    checks = [
+        ("a due, never-pulsed bed gets watered this check",
+         len(watered) == 1 and watered[0]["grow_bed_name"] == "Bed A1"),
+        ("the real irrigation_valve actuator was pulsed", last_action == "pulse"),
+    ]
+    return checks
+
+
+def scenario_irrigation_not_yet_due():
+    """The same schedule, checked again immediately after a pulse.
+    Expect: no second pulse — interval hasn't elapsed yet."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.irrigation import IrrigationScheduler
+    sched = IrrigationScheduler(conn, [
+        {"grow_bed_name": "Bed A1", "cell_id": cell_id, "actuator_name": "irrigation_valve",
+         "interval_minutes": 120, "pulse_seconds": 300},
+    ])
+    sched.check_scheduled_irrigation()
+    pulse_count_after_first = get_actuator_event_count(conn, "irrigation_valve")
+    watered_again = sched.check_scheduled_irrigation()
+    pulse_count_after_second_check = get_actuator_event_count(conn, "irrigation_valve")
+
+    checks = [
+        ("a recently-pulsed bed is skipped on an immediate re-check", len(watered_again) == 0),
+        ("no second actuator_events row was written",
+         pulse_count_after_first == 1 and pulse_count_after_second_check == 1),
+    ]
+    return checks
+
+
+def scenario_irrigation_missing_actuator():
+    """A schedule references an actuator name that doesn't exist on the
+    cell. Expect: skipped gracefully, no crash, no pulse logged."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.irrigation import IrrigationScheduler
+    sched = IrrigationScheduler(conn, [
+        {"grow_bed_name": "Bed Nonexistent", "cell_id": cell_id, "actuator_name": "not_a_real_actuator",
+         "interval_minutes": 120, "pulse_seconds": 300},
+    ])
+    watered = sched.check_scheduled_irrigation()  # must not raise
+
+    checks = [
+        ("a misconfigured schedule is skipped, not crashed on", watered == []),
+    ]
+    return checks
+
+
+def scenario_circulation_stall_detected():
+    """A flow sensor is added, the pump is commanded on, and flow reads
+    near-zero for 2 consecutive readings. Expect: a real critical alert
+    naming the actual cell."""
+    conn, registry, sim, cell_id = fresh_system()
+    conn.execute(
+        "INSERT INTO actuator_events (actuator_id, action, triggered_by) "
+        "SELECT id, 'on', 'auto_control' FROM actuators WHERE cell_id = ? AND type = 'circulation_pump'",
+        (cell_id,),
+    )
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'flow', 'GPH', 1)",
+        (cell_id,),
+    )
+    flow_sensor_id = cur.lastrowid
+    for _ in range(2):
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) VALUES (?, 0.0, 0, 0)",
+            (flow_sensor_id,),
+        )
+    conn.commit()
+
+    from core.circulation_monitor import CirculationMonitor
+    findings = CirculationMonitor(conn).check_circulation()
+
+    critical_alerts = get_alerts(conn, "critical")
+    checks = [
+        ("a stalled, commanded-on pump is detected", len(findings) == 1 and findings[0]["cell_id"] == cell_id),
+        ("a real critical alert is raised", any("circulation pump commanded on" in m.lower() for _, _, m in critical_alerts)),
+    ]
+    return checks
+
+
+def scenario_circulation_off_no_alert():
+    """The pump is deliberately commanded off (e.g. load-shed) and flow
+    reads zero. Expect: no alert — zero flow is EXPECTED when the pump
+    isn't running."""
+    conn, registry, sim, cell_id = fresh_system()
+    conn.execute(
+        "INSERT INTO actuator_events (actuator_id, action, triggered_by) "
+        "SELECT id, 'off', 'safety_fallback' FROM actuators WHERE cell_id = ? AND type = 'circulation_pump'",
+        (cell_id,),
+    )
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'flow', 'GPH', 1)",
+        (cell_id,),
+    )
+    flow_sensor_id = cur.lastrowid
+    for _ in range(2):
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) VALUES (?, 0.0, 0, 0)",
+            (flow_sensor_id,),
+        )
+    conn.commit()
+
+    from core.circulation_monitor import CirculationMonitor
+    findings = CirculationMonitor(conn).check_circulation()
+
+    checks = [
+        ("a deliberately-off pump with zero flow raises nothing", findings == []),
+    ]
+    return checks
+
+
+def scenario_circulation_no_sensor_silent():
+    """No flow sensor configured on the fresh demo cell. Expect: the
+    check finds nothing at all — optional hardware, not noise."""
+    conn, registry, sim, cell_id = fresh_system()
+
+    from core.circulation_monitor import CirculationMonitor
+    findings = CirculationMonitor(conn).check_circulation()
+
+    checks = [
+        ("no flow sensor configured -> zero findings", findings == []),
+    ]
+    return checks
+
+
+def scenario_climate_control_light_no_sensor_silent():
+    """No light sensor configured on the fresh demo cell. Expect: zero
+    light-related alerts or commands, ever — optional hardware, not noise."""
+    conn, registry, sim, cell_id = fresh_system()
+    run_cycles(registry, sim, n=4)
+
+    alerts = get_alerts(conn)
+    light_alerts = [m for _, _, m in alerts if "light reading" in m.lower()]
+    checks = [
+        ("no light sensor configured -> zero light alerts", len(light_alerts) == 0),
+        ("no light sensor configured -> zero light commands",
+         get_actuator_event_count(conn, "greenhouse_grow_light") == 0),
+    ]
+    return checks
+
+
+def scenario_climate_control_light_trigger():
+    """A light sensor is added and fed a consistently low reading (2000
+    lux vs. a 5000 lux target). Expect: the grow light turns on after
+    enough consistent readings."""
+    conn, registry, sim, cell_id = fresh_system()
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'light', 'lux', 1)",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'grow_light', 'greenhouse_grow_light', 'off')",
+        (cell_id,),
+    )
+    light_sensor_id = cur.lastrowid
+    conn.commit()
+    sim.sensors["light"] = light_sensor_id
+    sim.state["light"] = 2000.0
+    run_cycles(registry, sim, n=4)
+
+    checks = [
+        ("grow light turned on from low, consistent light readings",
+         get_last_actuator_action(conn, "greenhouse_grow_light") == "on"),
+    ]
+    return checks
+
+
+def scenario_climate_control_co2_injection():
+    """A CO2 sensor + injector are added and fed a consistently low
+    reading (500 ppm vs. an 800 ppm target). Expect: exactly one
+    injection pulse, not one per cycle (cooldown enforced)."""
+    conn, registry, sim, cell_id = fresh_system()
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'co2', 'ppm', 1)",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'co2_valve', 'greenhouse_co2_injector', 'off')",
+        (cell_id,),
+    )
+    co2_sensor_id = cur.lastrowid
+    conn.commit()
+    sim.sensors["co2"] = co2_sensor_id
+    sim.state["co2"] = 500.0
+    run_cycles(registry, sim, n=6)
+
+    checks = [
+        ("exactly one CO2 injection pulse across 6 cycles (cooldown enforced)",
+         get_actuator_event_count(conn, "greenhouse_co2_injector") == 1),
+        ("the pulse used the real actuator, action='pulse'",
+         get_last_actuator_action(conn, "greenhouse_co2_injector") == "pulse"),
+    ]
+    return checks
+
+
+def scenario_climate_control_co2_danger_no_inject():
+    """A CO2 sensor reads at the OSHA danger threshold (5000 ppm).
+    Expect: a real critical alert, and zero injection pulses — never
+    inject into already-unsafe air."""
+    conn, registry, sim, cell_id = fresh_system()
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'co2', 'ppm', 1)",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'co2_valve', 'greenhouse_co2_injector', 'off')",
+        (cell_id,),
+    )
+    co2_sensor_id = cur.lastrowid
+    conn.commit()
+    sim.sensors["co2"] = co2_sensor_id
+    sim.state["co2"] = 5200.0
+    run_cycles(registry, sim, n=3)
+
+    critical_alerts = get_alerts(conn, "critical")
+    checks = [
+        ("a dangerously high CO2 reading raises a real critical alert",
+         any("co2 dangerously high" in m.lower() for _, _, m in critical_alerts)),
+        ("zero injection pulses while CO2 is at a dangerous level",
+         get_actuator_event_count(conn, "greenhouse_co2_injector") == 0),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -990,6 +1406,24 @@ SCENARIOS = {
     "pest_disease_tracking": scenario_pest_disease_tracking,
     "weather_awareness": scenario_weather_awareness,
     "cost_profitability": scenario_cost_profitability,
+    "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
+    "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
+    "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,
+    "climate_control_no_repeat_commands": scenario_climate_control_no_repeat_commands,
+    "climate_control_safety_fallback": scenario_climate_control_safety_fallback,
+    "do_no_sensor_silent": scenario_do_no_sensor_silent,
+    "do_critical_alert": scenario_do_critical_alert,
+    "do_healthy_no_alert": scenario_do_healthy_no_alert,
+    "irrigation_scheduled_pulse": scenario_irrigation_scheduled_pulse,
+    "irrigation_not_yet_due": scenario_irrigation_not_yet_due,
+    "irrigation_missing_actuator": scenario_irrigation_missing_actuator,
+    "circulation_stall_detected": scenario_circulation_stall_detected,
+    "circulation_off_no_alert": scenario_circulation_off_no_alert,
+    "circulation_no_sensor_silent": scenario_circulation_no_sensor_silent,
+    "climate_control_light_no_sensor_silent": scenario_climate_control_light_no_sensor_silent,
+    "climate_control_light_trigger": scenario_climate_control_light_trigger,
+    "climate_control_co2_injection": scenario_climate_control_co2_injection,
+    "climate_control_co2_danger_no_inject": scenario_climate_control_co2_danger_no_inject,
 }
 
 

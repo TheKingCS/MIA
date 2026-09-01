@@ -26,7 +26,7 @@ core/diagnostics.py already apply to their own read-only roles.
 
 import logging
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from contracts.capability import Describable
 
@@ -54,7 +54,13 @@ class SensorConfidence(Describable):
         if calibration_due:
             try:
                 due_date = date.fromisoformat(calibration_due)
-                days_until_due = (due_date - date.today()).days
+                # UTC, not local date.today() — calibration_due is always
+                # written via SQLite's date('now', ...), which is UTC.
+                # Near a UTC/local day boundary these disagree by a day —
+                # same class of Python-stdlib-vs-SQLite mismatch as
+                # CLAUDE.md's documented isoformat/space-separator bug,
+                # just the UTC-vs-local variant. Found live, 2026-08-31.
+                days_until_due = (due_date - datetime.utcnow().date()).days
             except ValueError:
                 days_until_due = None
             if days_until_due is not None:

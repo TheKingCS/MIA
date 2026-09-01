@@ -1,8 +1,8 @@
 # MIA Homestead — Features & Capabilities
 
-**Auto-generated 2026-08-31T21:46:27.422794Z from `system_capabilities` — never hand-edit this file, it will be overwritten on the next registration pass.**
+**Auto-generated 2026-09-01T01:20:36.380144Z from `system_capabilities` — never hand-edit this file, it will be overwritten on the next registration pass.**
 
-**Verification coverage: 26/26 modules have actual proof behind their claims, not just a description.**
+**Verification coverage: 29/29 modules have actual proof behind their claims, not just a description.**
 
 ---
 
@@ -26,7 +26,7 @@ Aggregates every domain that already records a real rationale (dosing, alerts, e
 - 2026-08-31: manually seeded real rows via the actual service methods (MaintenanceManager.create_task/update_status, ExperimentManager.propose_experiment/start_experiment, plus a real dosing_event and yield_event) against mia_homestead.db, then ran viewer/export_journal_state.py and confirmed all 9 resulting journal entries appeared correctly categorized (dosing/experiment/yield/maintenance/alert) and correctly ordered newest-first; confirmed get_current_status() correctly reported control_loop_alive=false with an honest last_heartbeat when no live main.py process was running, and correctly flipped to the real most-recent dose once one was inserted; confirmed get_whats_next() correctly surfaced the started experiment's real planned_end_date and stayed empty before it existed — never fabricated a plan.
 - 2026-08-31: rendered viewer/journal.html via headless Chromium (Playwright) against the live exported journal_state.json, zero console/page errors, confirmed the Right Now / What's Next / Journal feed sections all render the real data correctly.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -48,7 +48,7 @@ Snapshots configuration (files + live control parameters, not history) before ch
 **Proof this actually works:**
 - Live manual test 2026-08-26: full end-to-end proof — applied a deliberately dangerous dosing limit change (10ml -> 500ml max per dose), simulated the resulting critical alert spike, and confirmed automatic detection and rollback to the correct baseline value (500 -> 10) with a clear notification
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -72,7 +72,7 @@ Tracks what species is planted in each grow bed, expected vs actual yield, water
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed compatible plantings (lettuce+basil, overlapping ranges) produce no warning; a fabricated incompatible species correctly triggered the warning
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -96,26 +96,28 @@ Tracks the classic aquaponics nitrogen cycle (ammonia -> nitrite -> nitrate) fro
 **Proof this actually works:**
 - scenarios.py::scenario_biofilter_cycle_tracking — confirmed the classic ammonia-phase -> nitrite-phase -> cycled progression classifies correctly as real tests are logged in sequence; confirmed a single clean test alone does NOT yet report 'cycled' (the consecutive-tests overclaiming guard); confirmed check_livestock_readiness() correctly warns when fish are stocked on an uncycled cell and reports safe once cycled; confirmed check_overdue_water_tests() raises a real alert for a stocked, uncycled, test-overdue cell and stays silent for a cell with a recent test.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
 ## Aquaponics Cell Control (`cell_a_aquaponics`)
 
-Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep both within target range, using multiple consistent readings before acting and hard dosing limits enforced downstream by the safety MCU.
+Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep both within target range, using multiple consistent readings before acting and hard dosing limits enforced downstream by the safety MCU. Also monitors dissolved oxygen (DO), alert-only, if a DO sensor is configured for this cell.
 
 **Can do:**
 - pulse the pH-up dosing pump
 - pulse the pH-down dosing pump
 - pulse the nutrient concentrate dosing pump
 - before alerting on a stale/missing sensor reading: retry via a forced immediate reread, then a healthy redundant sensor of the same type if one exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles
+- raise a warning/critical alert on low dissolved oxygen — no automated correction exists beyond the aerator, which is already always running
 
 **Tracks/produces:**
 - pH reading history
 - EC reading history
+- DO reading history (if configured)
 - dosing event log (what was dosed, when, why)
 
-**Limits:** Targets: pH 6.6-7.2, EC 800-1500. Requires 3 consistent readings before dosing. Never auto-dilutes high EC (requires manual water change). Freezes dosing entirely if sensors are stale or missing, rather than guessing — the recovery ladder (contracts.MiaHomesteadModule) only changes how fast a GOOD reading gets produced before this logic runs; it never loosens what counts as safe to dose on, and dosing stays frozen for the entire retry window exactly as if no retry existed at all.
+**Limits:** Targets: pH 6.6-7.2, EC 800-1500. Requires 3 consistent readings before dosing. Never auto-dilutes high EC (requires manual water change). Freezes dosing entirely if sensors are stale or missing, rather than guessing — the recovery ladder (contracts.MiaHomesteadModule) only changes how fast a GOOD reading gets produced before this logic runs; it never loosens what counts as safe to dose on, and dosing stays frozen for the entire retry window exactly as if no retry existed at all. DO: warns below 5.0 mg/L, critical below 3.0 mg/L — but ONLY if a DO sensor is actually registered for this cell; DO is optional hardware and a cell without one stays completely silent rather than alerting on hardware that was never installed.
 
 **Proof this actually works:**
 - scenarios.py::scenario_ph_crash_response — confirmed dosing triggers after 3 consistent readings, closed-loop physics shows pH recovering from the correction
@@ -125,8 +127,65 @@ Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep 
 - scenarios.py::scenario_sensor_recovery_ladder_recovers — confirmed a forced immediate reread recovers a stale-but-still-alive sensor with zero alert raised
 - scenarios.py::scenario_sensor_recovery_exhausted_escalates — confirmed no alert fires during the retry window, the same alert fires once retries genuinely exhaust, and dosing stays frozen throughout (0 doses issued) either way
 - Honest gap: the redundant-sensor-substitution step is implemented but genuinely untested — confirmed against the real dev DB that no cell currently configures two sensors of the same type (SELECT cell_id, type, count(*) FROM sensors GROUP BY cell_id, type HAVING count(*) > 1 returns zero rows), so this path has never actually executed against real data.
+- scenarios.py::scenario_do_no_sensor_silent — confirmed a cell with no DO sensor configured raises zero DO-related alerts, ever (optional hardware, not noise)
+- scenarios.py::scenario_do_critical_alert — confirmed a critically low DO reading (2.0 mg/L) raises a real critical alert citing the actual reading, once a DO sensor is configured
+- scenarios.py::scenario_do_healthy_no_alert — confirmed a healthy DO reading (7.0 mg/L) raises nothing
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
+
+---
+
+## Climate Control (`cell_a_climate`)
+
+Monitors greenhouse air temperature and humidity for one cell/zone and drives a heater and exhaust fan to keep both within target range — heater for low temp, fan for high temp or high humidity, using multiple consistent readings before acting, same as pH/EC dosing. Also drives supplemental grow lighting and CO2 enrichment injection, opt-in per cell, if those sensors exist.
+
+**Can do:**
+- turn the heater on/off
+- turn the exhaust fan on/off (temperature- or humidity-driven)
+- turn supplemental grow lighting on/off
+- pulse a CO2 injector valve, cooldown-limited, when CO2 reads low and isn't already at a dangerous level
+
+**Tracks/produces:**
+- air temp reading history
+- humidity reading history
+- light reading history (if configured)
+- CO2 reading history (if configured)
+
+**Limits:** Targets: temp 65-85°F, humidity below 75%RH, light above 5000 lux, CO2 above 800 ppm. Requires 3 consistent readings before acting on any sensor. Holds current actuator state (never guesses) when readings are missing, inconsistent, or insufficient. On totally stale/missing sensor data: forces heater OFF (stuck-on fire/scorch risk, same category as a stuck-open dosing pump), fan ON (safe if stuck on, same category as aeration), and grow light OFF (no hazard either way, just a conservative no-op) — never left in whatever state they happened to be in before data was lost. CO2 is genuinely different: a reading at/above 5000 ppm (OSHA's 8-hr PEL) raises a critical alert and refuses to inject regardless of any prior low trend; injection is a 30s pulse, never continuous, cooldown-limited to once per 15 minutes; and on total sensor loss, CO2 injection is deliberately withheld entirely (not forced to any state) since injecting blind risks pushing an already-elevated reading into danger unseen. Light/CO2 are both opt-in per cell — a cell with neither sensor configured raises nothing about either, ever.
+
+**Proof this actually works:**
+- scenarios.py::scenario_climate_control_heater_trigger — confirmed heater turns on after 3 consistent below-range temp readings, fan stays off
+- scenarios.py::scenario_climate_control_fan_trigger_temp — confirmed fan turns on after 3 consistent above-range temp readings, heater stays off
+- scenarios.py::scenario_climate_control_fan_trigger_humidity — confirmed fan turns on from high humidity alone even with in-range temperature
+- scenarios.py::scenario_climate_control_no_repeat_commands — confirmed a steady in-range state emits zero repeat commands across multiple cycles (only a real state change produces a command)
+- scenarios.py::scenario_climate_control_safety_fallback — confirmed all-stale sensor data forces heater off, fan on, and light off unconditionally, every cycle the fault persists
+- scenarios.py::scenario_climate_control_light_no_sensor_silent — confirmed a cell with no light sensor configured raises nothing about light, ever
+- scenarios.py::scenario_climate_control_light_trigger — confirmed the grow light turns on after 3 consistent below-target lux readings
+- scenarios.py::scenario_climate_control_co2_injection — confirmed a low, consistent CO2 reading triggers exactly one injection pulse, not one per cycle (cooldown enforced)
+- scenarios.py::scenario_climate_control_co2_danger_no_inject — confirmed a reading at/above the OSHA PEL raises a critical alert and never injects
+
+*Last updated: 2026-09-01 01:20:35*
+
+---
+
+## Circulation Flow Monitor (`circulation_monitor`)
+
+Detects a circulation pump that's commanded on but not actually moving water — a seized impeller or clogged filter that power/level monitoring alone would miss. Distinct from leak_detector.py: this catches stalled-but-sealed circulation, not water loss.
+
+**Can do:**
+- raise a critical alert when a commanded-on pump reads near-zero flow
+
+**Tracks/produces:**
+- flow reading history (if a flow sensor is configured)
+
+**Limits:** Opt-in per cell — silent entirely if no flow sensor is configured (not in any tier's hardware BOM yet). Requires 2 consecutive readings at or below 1.0 before alerting — avoids a single sensor glitch. Never alerts when the pump is deliberately off (e.g. load-shed). Alert-only — no 'restart the pump' actuator exists, and software self-restarting a mechanically-failed pump would be unsafe; a human response is correct here.
+
+**Proof this actually works:**
+- scenarios.py::scenario_circulation_stall_detected — confirmed a pump commanded on with 2 consecutive near-zero flow readings raises a real critical alert
+- scenarios.py::scenario_circulation_off_no_alert — confirmed a deliberately-off pump with zero flow raises nothing
+- scenarios.py::scenario_circulation_no_sensor_silent — confirmed a cell with no flow sensor configured raises zero circulation alerts
+
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -146,7 +205,7 @@ Watches how long it's been since a human demonstrably interacted with the system
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed all states — no check-in ever escalates immediately to level 2, a fresh check-in resets to level 0, backdating past 48h correctly escalates to level 1, checking again immediately does NOT re-escalate (stays at level 1), and backdating past 72h correctly escalates to level 2
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -169,7 +228,7 @@ The code-level counterpart to core/backup_manager.py's config watch, which expli
 - Live manual test 2026-08-31, against a disposable scratch git repo (never the real project repo): start_deploy_watch() with no known-good commit yet correctly raises rather than watching toward nothing; marked a real 'v1 good' commit as known-good, deployed a real 'v2 buggy' commit, started a watch; one critical alert (below threshold=2) correctly produced no rollback; a second critical alert correctly triggered auto-rollback — confirmed the actual file content on disk reverted to v1's real content, not just a DB status change. Separately confirmed the stash-safety path: seeded real uncommitted changes (a modified tracked file + a new untracked file) at rollback time, confirmed both were stashed (recoverable via git stash pop, visible in git stash list) rather than destroyed, and the rollback still correctly completed. Separately confirmed the confirmed_good path: backdated a watch's applied_at past its validation window with no critical alerts, confirmed it resolved to confirmed_good and recorded a genuine new last-known-good commit (code_deploys count incremented by exactly 1).
 - The systemd layer (deploy/mia-homestead.service, deploy/mia-homestead-rollback.service) was separately verified for real against disposable test units in this machine's actual systemd --user session (cleaned up immediately after, never touching this repo's own unit namespace) — see deploy/README.md for the two real design bugs that testing caught and fixed, and the final clean end-to-end result.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -193,7 +252,7 @@ Recognizes and pairs physical MCU controllers by role (watering, fertilizer dosi
 - Live manual test 2026-08-26: confirmed a device announcing a known unclaimed role auto-pairs and its actuators get created automatically; confirmed an ambiguous/unlabeled device correctly queues for a human instead of guessing
 - scenarios.py::scenario_pair_confirm_payload_real_ids (2026-08-31): deliberately inserted actuators out of order (7 padding rows before the real ones) and confirmed build_pair_confirm_payload() returns the REAL DB actuator ids (>3, not a coincidental 0/1 match) — proves the fix to firmware's findActuatorSlotById() (formerly an index-assumption placeholder, see firmware/safety_mcu/README.md) is fed correct data, not just correct in theory. Real serial transmission of this payload remains untested — no MCU hardware exists yet to send it to.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -217,7 +276,7 @@ Cross-references alerts against the infrastructure map (wiring, plumbing) to pro
 - scenarios.py::scenario_sensor_recovery_exhausted_escalates — confirmed auto_diagnose_new_alerts(), called automatically from the control loop with zero manual trigger, produces a real diagnosis (not the generic fallback) and auto-files a system-created maintenance task the same cycle the alert survives the recovery ladder
 - scenarios.py::scenario_multi_cell_fault_correlation — confirmed a pH sensor failing simultaneously on two independent cells (cell_a_aquaponics + pilot_cell) produces a 'shared infrastructure' diagnosis referencing both cells rather than two independent per-sensor diagnoses
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -243,7 +302,7 @@ Proposes and runs controlled changes to one cell's dosing targets, tracks yield 
 - Live manual test 2026-08-30 (proactive proposals): seeded a real planting 60% through its time to harvest with yield at 20% of expected-by-now pace and a config EC target away from the species' documented midpoint — confirmed exactly one experiment proposed, correctly attributing baseline_value to the REAL config-read current target and test_value to the species' real recorded midpoint. Confirmed 3 negative cases produce zero proposals: a planting on pace, a planting only 30% through its cycle (too early to judge), and a cell that already has a live (non-terminal) experiment — no duplicate proposal.
 - scenarios.py::scenario_closed_loop_species_learning (2026-08-31): proved the full closed loop end to end across two independent cells — a confirmed +40% yield result on cell_a_aquaponics (real seeded before/after yield data) got approved, which extended lettuce's species-wide ec_max and flipped its source to 'experiment_derived'; a separately-seeded underperforming lettuce planting on pilot_cell then got proactively proposed an experiment whose test_value matches the NEWLY refined midpoint (not the stale baseline one), with a hypothesis that explicitly cites the confirmed evidence rather than a generic lookup.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -267,7 +326,7 @@ Ties real inventory consumption cost to real recorded revenue for a genuine prof
 **Proof this actually works:**
 - scenarios.py::scenario_cost_profitability — confirmed record_revenue() computes total_amount correctly and get_revenue_summary() reflects it; confirmed get_cost_summary() correctly sums real seeded consumption cost for items with a known unit_cost, correctly EXCLUDES an item with no known unit_cost from the total while listing it separately (not silently treated as $0); confirmed get_profitability_summary() nets real revenue minus real cost correctly.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -293,7 +352,7 @@ Tracks the fish themselves — feeding events, mortality, and health observation
 **Proof this actually works:**
 - scenarios.py::scenario_fish_health_tracking — confirmed feeding events log and summarize correctly; confirmed get_feeding_trend() correctly reports 'increasing' from a real seeded rate change and 'insufficient_data' honestly when too few feedings are logged; confirmed check_mortality_spike() alerts on a real percentage when quantity_stocked is set, alerts on the absolute-count fallback when it isn't, and stays silent below both thresholds; confirmed health observations log and retrieve correctly.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -316,7 +375,7 @@ Monitors solar/battery telemetry for greenhouse_array, sheds non-critical loads 
 - scenarios.py::scenario_power_loss_load_shed — confirmed critical alert and load-shed behavior fire correctly when telemetry is missing entirely
 - Live manual test 2026-08-30: seeded 4 real battery-drain scenarios directly into power_telemetry — under 12 readings (correctly None, insufficient history), flat/non-draining SOC (correctly None), a genuine 9%/hr drain landing 3.72h from the 20% threshold (correctly forecast AND correctly raised exactly one WARNING alert via check_soc_forecast()), and a slow 0.3%/hr drain landing 231.5h out (correctly forecast a distant threshold time but correctly raised NO alert, outside the 12h warning window). Also verified the get_power_forecast assistant tool end-to-end against the real config/modules.yaml threshold (20%), not a hardcoded stand-in.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -338,7 +397,7 @@ Watches for a human presence near the greenhouse while any critical alert is ope
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed all three states — silent while critical and alone, beacon on the moment presence is detected, auto-resolved and beacon off once the critical condition cleared
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -359,7 +418,7 @@ Knows the physical wiring (which relay channel, which MCU, why) and plumbing (wh
 **Proof this actually works:**
 - Live manual test 2026-08-26: confirmed wiring/plumbing queries return correct, specific data (relay channel, port, mount location, pipe segments) for a real actuator and cell
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -385,7 +444,28 @@ Tracks stock of dosing chemicals, spare sensors, and spare parts. Auto-proposes 
 - Live manual test 2026-08-26: confirmed auto-propose/approve/deny/skip flow works correctly via both assistant tools and the standalone CLI
 - Live manual test 2026-08-26: confirmed consumption-rate forecasting correctly projects days-until-threshold (21.43ml/day -> 18.7 days), correctly withholds an early proposal when outside the warning window, and correctly proposes one with the right rationale when the window is widened to include it
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
+
+---
+
+## Irrigation Scheduler (`irrigation_scheduler`)
+
+Pulses a flood/drain grow bed's irrigation valve on a fixed schedule — closes the gap where config/devices/roles/watering_mcu.yaml described scheduled watering but no code ever implemented it. Only for beds configured to need it; a DWC/NFT bed's continuous circulation never needs a separate flood cycle.
+
+**Can do:**
+- pulse a configured irrigation valve when its interval is due
+
+**Tracks/produces:**
+- scheduled watering log (activity journal, via action_log)
+
+**Limits:** Schedule-driven, not sensor-reactive — deliberately NOT a MiaHomesteadModule (see this file's own docstring for why). 'Moisture-triggered' watering (also described in watering_mcu.yaml) is NOT implemented — no moisture sensor type exists in sensors.type yet; only the scheduled half is real. Which beds get scheduled irrigation is config-driven (config/irrigation_schedules.yaml), never inferred from grow_beds.media_type. A schedule referencing an actuator that doesn't exist is skipped with a logged warning, never a crash.
+
+**Proof this actually works:**
+- scenarios.py::scenario_irrigation_scheduled_pulse — confirmed a due bed gets pulsed and logged, citing the real interval and actuator
+- scenarios.py::scenario_irrigation_not_yet_due — confirmed a recently-pulsed bed is correctly skipped until its interval elapses
+- scenarios.py::scenario_irrigation_missing_actuator — confirmed a misconfigured schedule (actuator that doesn't exist) is skipped with a logged warning, not a crash
+
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -405,7 +485,7 @@ Catches a water level dropping far faster than evaporation could explain — wit
 **Proof this actually works:**
 - scenarios.py::scenario_leak_detection — confirmed a slow, evaporation-plausible drop over a real 10-minute gap does NOT trigger; confirmed a fast drop over a real 2-minute gap (well past the threshold) DOES raise a real CRITICAL alert; confirmed a level RISE (e.g. after a refill) never falsely triggers regardless of magnitude.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -429,7 +509,7 @@ Tracks repair/replacement/calibration tasks — created manually (e.g. 'swap the
 - Live manual test 2026-08-26: confirmed manual task creation with priority-based alerting, and auto-generated calibration task correctly created from an overdue sensor calibration_due date
 - Live manual test 2026-08-26: diagnostic engine successfully auto-filed a maintenance task from a real diagnosed alert
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -447,7 +527,7 @@ Escalates alerts to a human: info is logged only, warnings go to email, critical
 - Live manual test 2026-08-26: email dispatch path exercised throughout session logs (no real SMTP credentials configured, so delivery itself unverified — the code path and severity routing are).
 - Live manual test 2026-08-31 (SMS gateway): confirmed _sms_gateway_address() correctly builds e.g. '5551234567@vtext.com' for a real phone+carrier pair, strips non-digit formatting from the phone number, returns None for a missing phone/carrier and for an unrecognized carrier name (with the unrecognized case logging a distinct warning naming the known carriers, not a silent skip), and correctly truncates a body over SMS_MAX_LENGTH. Real SMTP delivery itself is unverified here for the same reason email's is — no real account configured in this dev sandbox — but the address-construction and routing logic, the part unique to this change, is verified directly.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -470,26 +550,28 @@ Tracks plant pest/disease and fish illness observations against a real, seeded k
 **Proof this actually works:**
 - scenarios.py::scenario_pest_disease_tracking — confirmed baseline knowledge seeds with 6 real entries (3 plant, 3 fish) and no duplicate seeding on a second construction; confirmed find_knowledge_by_name() and add_knowledge() work correctly; confirmed an observation can log linked to a known knowledge entry OR as a novel unlinked observation, and both retrieve correctly via get_observation_history().
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
 ## Aquaponics Cell Control (`pilot_cell`)
 
-Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep both within target range, using multiple consistent readings before acting and hard dosing limits enforced downstream by the safety MCU.
+Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep both within target range, using multiple consistent readings before acting and hard dosing limits enforced downstream by the safety MCU. Also monitors dissolved oxygen (DO), alert-only, if a DO sensor is configured for this cell.
 
 **Can do:**
 - pulse the pH-up dosing pump
 - pulse the pH-down dosing pump
 - pulse the nutrient concentrate dosing pump
 - before alerting on a stale/missing sensor reading: retry via a forced immediate reread, then a healthy redundant sensor of the same type if one exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles
+- raise a warning/critical alert on low dissolved oxygen — no automated correction exists beyond the aerator, which is already always running
 
 **Tracks/produces:**
 - pH reading history
 - EC reading history
+- DO reading history (if configured)
 - dosing event log (what was dosed, when, why)
 
-**Limits:** Targets: pH 6.6-7.2, EC 800-1500. Requires 3 consistent readings before dosing. Never auto-dilutes high EC (requires manual water change). Freezes dosing entirely if sensors are stale or missing, rather than guessing — the recovery ladder (contracts.MiaHomesteadModule) only changes how fast a GOOD reading gets produced before this logic runs; it never loosens what counts as safe to dose on, and dosing stays frozen for the entire retry window exactly as if no retry existed at all.
+**Limits:** Targets: pH 6.6-7.2, EC 800-1500. Requires 3 consistent readings before dosing. Never auto-dilutes high EC (requires manual water change). Freezes dosing entirely if sensors are stale or missing, rather than guessing — the recovery ladder (contracts.MiaHomesteadModule) only changes how fast a GOOD reading gets produced before this logic runs; it never loosens what counts as safe to dose on, and dosing stays frozen for the entire retry window exactly as if no retry existed at all. DO: warns below 5.0 mg/L, critical below 3.0 mg/L — but ONLY if a DO sensor is actually registered for this cell; DO is optional hardware and a cell without one stays completely silent rather than alerting on hardware that was never installed.
 
 **Proof this actually works:**
 - scenarios.py::scenario_ph_crash_response — confirmed dosing triggers after 3 consistent readings, closed-loop physics shows pH recovering from the correction
@@ -499,8 +581,11 @@ Monitors pH and EC in one aquaponics cell and issues dosing corrections to keep 
 - scenarios.py::scenario_sensor_recovery_ladder_recovers — confirmed a forced immediate reread recovers a stale-but-still-alive sensor with zero alert raised
 - scenarios.py::scenario_sensor_recovery_exhausted_escalates — confirmed no alert fires during the retry window, the same alert fires once retries genuinely exhaust, and dosing stays frozen throughout (0 doses issued) either way
 - Honest gap: the redundant-sensor-substitution step is implemented but genuinely untested — confirmed against the real dev DB that no cell currently configures two sensors of the same type (SELECT cell_id, type, count(*) FROM sensors GROUP BY cell_id, type HAVING count(*) > 1 returns zero rows), so this path has never actually executed against real data.
+- scenarios.py::scenario_do_no_sensor_silent — confirmed a cell with no DO sensor configured raises zero DO-related alerts, ever (optional hardware, not noise)
+- scenarios.py::scenario_do_critical_alert — confirmed a critically low DO reading (2.0 mg/L) raises a real critical alert citing the actual reading, once a DO sensor is configured
+- scenarios.py::scenario_do_healthy_no_alert — confirmed a healthy DO reading (7.0 mg/L) raises nothing
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -522,7 +607,7 @@ Compiles a state-of-the-greenhouse digest — yields, dosing pattern, open alert
 - Live manual test 2026-08-26: confirmed the report correctly compiles real yield, dosing, and alert data into one digest, and hours_since_last_report() correctly transitions from None (never sent) to a real elapsed time after generate_and_send()
 - Live manual test 2026-08-30 (narrative rewrite): confirmed generate_narrative_report() against a real Ollama call produces genuine natural-language prose (not the raw digest verbatim) that still contains the real underlying numbers; confirmed pointing at an unreachable host (a closed port) falls back to the exact structured digest with a logged warning, not an exception or a missing report.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -542,7 +627,7 @@ Combines a sensor's calibration-due proximity and current drift status (both alr
 **Proof this actually works:**
 - scenarios.py::scenario_sensor_confidence — confirmed a sensor with no calibration_due set and no drift flagged reports 'high'; a sensor with calibration_due within 7 days reports 'medium' with a real factor string; a sensor with calibration_due already past reports 'low'; a sensor currently flagged by trend_analyzer as drifting reports 'low' regardless of its calibration status, with the real z-score cited in its factors.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -563,7 +648,7 @@ Tracks ideal pH/EC/temperature ranges per plant and fish species, seeded from ba
 - Live manual test 2026-08-26: confirmed baseline seeding produces 3 correct species profiles (lettuce, basil, tilapia) with real horticultural ranges
 - Correction 2026-08-31: refine_from_experiment() itself had NO real verification evidence despite being named in actions_possible since it was written — the entry above only ever proved baseline seeding. It also existed unwired (never called from anywhere) until this date. Real evidence now: scenarios.py::scenario_closed_loop_species_learning confirms a genuinely range-extending value updates ec_max and flips source to 'experiment_derived', and confirms the self-gating gate correctly REFUSES a value that doesn't extend the range (returns False, no update) — the never-narrow guarantee this method's own docstring promises.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -583,7 +668,7 @@ Catches a sensor slowly drifting toward trouble before it crosses a hard thresho
 **Proof this actually works:**
 - Live manual test 2026-08-30: seeded a real pH sensor with 20 baseline readings (mean 6.404, real noise, stdev 0.015) + 6 readings shifted to exactly +5 baseline-stdevs, confirmed check_all_sensors() correctly flagged it (z-score 5.0, direction 'up') and raised exactly one WARNING alert; confirmed a perfectly flat 26-reading series produces zero findings; confirmed fewer than 26 total readings produces zero findings (insufficient baseline, not a false positive from too little data); confirmed calling check_all_sensors() again immediately bumps the existing alert's occurrence_count (2) rather than inserting a second row — the dedup fix in contracts.mia_homestead_contract.raise_alert() composes correctly with this module, its second real caller.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---
 
@@ -604,6 +689,6 @@ Checks a real, free weather forecast for frost or heat-wave risk relevant to wha
 - Live test 2026-08-31: confirmed a real call to Open-Meteo's public forecast API (no key) returns real current data for a real coordinate pair.
 - scenarios.py::scenario_weather_awareness — confirmed check_weather() honestly returns None with no config/location.yaml coordinates set (no fabricated forecast, no alert); confirmed a real forecast with a low at/below 32F raises a real frost-risk WARNING; confirmed a forecast within every active planting's documented temp_air range raises nothing; confirmed a forecast outside the coldest active planting's real documented range raises a real, correctly-worded species-range-violation WARNING citing the actual numbers.
 
-*Last updated: 2026-08-31 21:46:27*
+*Last updated: 2026-09-01 01:20:35*
 
 ---

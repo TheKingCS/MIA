@@ -46,7 +46,7 @@ and every dollar spent on it is reused at full scale, not thrown away.
 | Dosing pumps | 1–2 | 3 per cell |
 | Power | Wall outlet + optional small battery for MCU fallback testing | Real solar array + battery bank, sized to load |
 | Structure | None — a shelf or desk | Real greenhouse |
-| Est. cost | **~$256** (real, verified pricing/sourcing as of 2026-08-31 — see below) | **~$710+** full BOM (see `docs/HARDWARE_BOM_CURRENT.md`) |
+| Est. cost | **~$256** (real, verified pricing/sourcing as of 2026-08-31 — see below) | **~$17,400–$23,700** real sourced structure+equipment BOM at N=3 cells (see `docs/HARDWARE_BOM_FULL_TIERS.md`) |
 | Timeline | Buildable now, no land/greenhouse needed | Gated on greenhouse construction |
 
 ## What the pilot actually needs to buy

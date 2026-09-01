@@ -111,6 +111,20 @@ TOOLS = [
         },
     },
     {
+        "name": "get_circulation_status",
+        "description": (
+            "Get the current flow reading and commanded pump state for every cell with a flow "
+            "sensor configured — distinct from get_leak_status, this catches a pump that's "
+            "commanded on but not actually moving water (seized/clogged), not water loss."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer", "description": "Optional cell ID"},
+            },
+        },
+    },
+    {
         "name": "get_open_alerts",
         "description": "Get all unresolved alerts, optionally filtered by minimum severity.",
         "input_schema": {
@@ -151,6 +165,20 @@ TOOLS = [
         "name": "get_power_status",
         "description": "Get the latest power telemetry — solar/battery/generator watts and battery SOC.",
         "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_climate_status",
+        "description": (
+            "Get the latest air temp/humidity/light/CO2 readings and current heater/fan/grow "
+            "light/CO2 injector state for a cell (whichever of the optional sensors are "
+            "actually configured), plus the temp/humidity target range they're controlled against."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer", "description": "Optional cell ID"},
+            },
+        },
     },
     {
         "name": "get_deploy_status",
@@ -829,6 +857,11 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_irrigation_status",
+        "description": "Get every configured scheduled-irrigation grow bed, its interval, and when it last actually watered.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -866,9 +899,11 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_sensor_trends": "status",
     "get_sensor_confidence": "status",
     "get_leak_status": "status",
+    "get_circulation_status": "status",
     "get_open_alerts": "status",
     "get_power_status": "status",
     "get_power_forecast": "status",
+    "get_climate_status": "status",
     "get_deploy_status": "status",
     "get_deadmans_switch_status": "status",
     "get_greenhouse_report": "status",
@@ -887,6 +922,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "mark_planting_harvested": "yield_planting",
     "mark_planting_failed": "yield_planting",
     "record_water_usage": "yield_planting",
+    "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
     "record_feeding": "fish_health",
@@ -1303,6 +1339,10 @@ class _BaseGreenhouseAssistant:
         from core.leak_detector import LeakDetector
         return {"level_readings": LeakDetector(self.db).get_leak_status(cell_id)}
 
+    def _tool_get_circulation_status(self, cell_id: int | None = None) -> dict:
+        from core.circulation_monitor import CirculationMonitor
+        return {"circulation": CirculationMonitor(self.db).get_circulation_status(cell_id)}
+
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}
         query = "SELECT * FROM alerts WHERE resolved = 0 ORDER BY last_seen DESC LIMIT 20"
@@ -1338,6 +1378,47 @@ class _BaseGreenhouseAssistant:
             "SELECT * FROM power_telemetry ORDER BY timestamp DESC LIMIT 5"
         ).fetchall()
         return {"recent_power_telemetry": [dict(r) for r in row]}
+
+    def _tool_get_climate_status(self, cell_id: int | None = None) -> dict:
+        query = """
+            SELECT s.cell_id, s.type, sr.value, sr.timestamp, sr.is_stale
+            FROM sensor_readings sr
+            JOIN sensors s ON s.id = sr.sensor_id
+            WHERE s.type IN ('temp_air', 'humidity', 'light', 'co2')
+            AND sr.id IN (SELECT MAX(id) FROM sensor_readings GROUP BY sensor_id)
+        """
+        params = ()
+        if cell_id is not None:
+            query += " AND s.cell_id = ?"
+            params = (cell_id,)
+        readings = [dict(r) for r in self.db.execute(query, params).fetchall()]
+
+        actuator_query = """
+            SELECT a.cell_id, a.type, a.name, ae.action, ae.timestamp
+            FROM actuators a
+            LEFT JOIN actuator_events ae ON ae.id = (
+                SELECT id FROM actuator_events WHERE actuator_id = a.id ORDER BY id DESC LIMIT 1
+            )
+            WHERE a.type IN ('heater', 'fan', 'grow_light', 'co2_valve')
+        """
+        actuator_params = ()
+        if cell_id is not None:
+            actuator_query += " AND a.cell_id = ?"
+            actuator_params = (cell_id,)
+        actuator_state = [dict(r) for r in self.db.execute(actuator_query, actuator_params).fetchall()]
+
+        targets_query = "SELECT cell_id, param_name, value FROM target_overrides WHERE active = 1 AND param_name IN ('temp_min', 'temp_max', 'humidity_max')"
+        targets_params = ()
+        if cell_id is not None:
+            targets_query += " AND cell_id = ?"
+            targets_params = (cell_id,)
+        target_overrides = [dict(r) for r in self.db.execute(targets_query, targets_params).fetchall()]
+
+        return {
+            "readings": readings,
+            "actuator_state": actuator_state,
+            "active_target_overrides": target_overrides,
+        }
 
     def _tool_get_deploy_status(self) -> dict:
         from core.deploy_manager import DeployManager
@@ -1574,6 +1655,11 @@ class _BaseGreenhouseAssistant:
             "cycle_status": bm.get_cycle_status(cell_id),
             "livestock_readiness": bm.check_livestock_readiness(cell_id),
         }
+
+    def _tool_get_irrigation_status(self) -> dict:
+        from core.irrigation import IrrigationScheduler
+        sched = IrrigationScheduler.from_config("config/irrigation_schedules.yaml", self.db)
+        return {"schedules": sched.get_status()}
 
     def _tool_record_feeding(self, cell_id: int, amount: float, unit: str = "oz",
                                food_type: str | None = None, notes: str | None = None) -> dict:

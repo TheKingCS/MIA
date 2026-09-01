@@ -33,6 +33,15 @@ modules:
     cell_id: 1
     params: {}
 
+  - id: cell_a_climate
+    enabled: true
+    class: modules.climate_control.ClimateControl
+    cell_id: 1
+    params:
+      temp_min: 65
+      temp_max: 85
+      humidity_max: 75   # %RH — above this, vent even if temp is in range (fungal/disease risk)
+
   # 5-gallon pilot cell (docs/PILOT_VS_SCALE.md) — deliberately enabled
   # now, in simulation, unlike cell_b_aquaponics below: the pilot
   # doesn't need a greenhouse to exist, that's the whole point of it.

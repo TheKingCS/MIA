@@ -1,718 +1,728 @@
 {
   "journal": [
     {
-      "timestamp": "2026-08-31 21:46:32",
-      "category": "system",
+      "timestamp": "2026-09-01 01:31:33",
+      "category": "alert",
       "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: light sensor (id 11) stale \u2014 retries exhausted",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-08-31 21:46:32",
-      "category": "system",
+      "timestamp": "2026-09-01 01:31:33",
+      "category": "alert",
       "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: co2 sensor (id 12) stale \u2014 retries exhausted",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-08-31 21:46:32",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
+      "timestamp": "2026-09-01 01:31:33",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Warning alert raised",
+      "detail": "cell_a_climate: light sensor (id 11) stale \u2014 retries exhausted",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-08-31 21:46:32",
+      "timestamp": "2026-09-01 01:31:33",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Warning alert raised",
+      "detail": "cell_a_climate: co2 sensor (id 12) stale \u2014 retries exhausted",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:32",
+      "timestamp": "2026-09-01 01:31:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:32",
+      "timestamp": "2026-09-01 01:31:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
-      "detail": "level sensor (id 6) stale \u2014 retry 2/3, holding off on an alert"
+      "detail": "light sensor (id 11) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:32",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:46:32",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:46:32",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
+      "detail": "co2 sensor (id 12) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:28",
       "category": "system",
-      "source": "cell_a_aquaponics",
+      "source": "cell_a_climate",
       "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:28",
       "category": "system",
-      "source": "cell_a_aquaponics",
+      "source": "cell_a_climate",
       "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:28",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "light sensor (id 11) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:28",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "co2 sensor (id 12) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:23",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:23",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:23",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "light sensor (id 11) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:23",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "co2 sensor (id 12) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:31:22",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:22",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:22",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
-      "detail": "level sensor (id 6) stale \u2014 retry 1/3, holding off on an alert"
+      "detail": "light sensor (id 11) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
+      "timestamp": "2026-09-01 01:31:22",
       "category": "system",
-      "source": "greenhouse_power",
+      "source": "cell_a_aquaponics",
       "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
+      "detail": "co2 sensor (id 12) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
+      "timestamp": "2026-09-01 01:21:23",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Warning alert raised",
+      "detail": "cell_a_climate: light readings inconsistent (spread 6500 lux) \u2014 holding grow light at current state this cycle",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-08-31 21:46:27",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
+      "timestamp": "2026-09-01 01:21:23",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Warning alert raised",
+      "detail": "cell_a_climate: CO2 readings inconsistent (spread 450 ppm) \u2014 not confident enough to inject this cycle",
+      "severity": "warning"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:52",
+      "category": "alert",
+      "source": "cell_a_climate",
+      "title": "Warning alert raised",
+      "detail": "cell_a_climate: no air temp reading available at all (sensor missing or producing zero data) \u2014 heater/fan held at current state",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:45:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "level sensor (id 6) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:41",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "do sensor (id 9) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "flow sensor (id 10) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "greenhouse_power",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:41",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:30",
+      "timestamp": "2026-09-01 01:20:41",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:45:27",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "level sensor (id 6) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "do sensor (id 9) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:36",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "flow sensor (id 10) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:36",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:36",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "greenhouse_power",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:36",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:45:27",
+      "timestamp": "2026-09-01 01:20:36",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:58:46",
       "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
+      "source": "irrigation_scheduler",
+      "title": "scheduled watering",
+      "detail": "Pulsed irrigation_valve for Bed A1 (300s) \u2014 120 min interval, last pulse 122 min ago"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:40:34",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:54:25",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:54:25",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:54:25",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:25",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:20",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:20",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:20",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:20",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:14",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: flow sensor (id 10) stale \u2014 retries exhausted",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:09",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "flow sensor (id 10) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:54:04",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "flow sensor (id 10) stale \u2014 retry 1/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:39",
+      "category": "alert",
+      "source": "cell_a_aquaponics",
+      "title": "Warning alert raised",
+      "detail": "cell_a_aquaponics: no DO reading available at all (sensor missing or producing zero data) \u2014 dissolved oxygen monitoring degraded",
+      "severity": "warning"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:39",
+      "category": "alert",
+      "source": "circulation_monitor",
+      "title": "Critical alert raised",
+      "detail": "cell 1: circulation pump commanded ON but flow reads near zero (2 consecutive readings <= 1.0) \u2014 probable seized pump or clogged filter, biofilter/aeration flow at risk",
+      "severity": "critical"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "level sensor (id 6) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "do sensor (id 9) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
       "category": "system",
       "source": "greenhouse_power",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-09-01 00:43:24",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:34",
+      "timestamp": "2026-09-01 00:43:24",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:29",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:29",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:29",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:40:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:40:29",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "level sensor (id 6) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:40:29",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:40:29",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:40:29",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "level sensor (id 6) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:29",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:26",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:26",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:26",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:26",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:39:26",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:39:26",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
-      "detail": "level sensor (id 6) stale \u2014 retry 1/3, holding off on an alert"
+      "detail": "do sensor (id 9) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:39:26",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "greenhouse_power",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:39:26",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:39:26",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "level sensor (id 6) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:30",
-      "category": "system",
-      "source": "pilot_cell",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:25",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:25",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ec sensor (id 2) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:25",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 3) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:25",
-      "category": "system",
-      "source": "cell_a_aquaponics",
+      "source": "cell_a_climate",
       "title": "retry pending",
       "detail": "temp_air sensor (id 4) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:24:25",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
-      "source": "cell_a_aquaponics",
+      "source": "cell_a_climate",
       "title": "retry pending",
       "detail": "humidity sensor (id 5) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:24:25",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "level sensor (id 6) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:25",
-      "category": "system",
-      "source": "greenhouse_power",
-      "title": "retry pending",
-      "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:24:25",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "ph sensor (id 7) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:24:25",
+      "timestamp": "2026-09-01 00:43:19",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 1/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:50",
+      "category": "system",
+      "source": "irrigation_scheduler",
+      "title": "scheduled watering",
+      "detail": "Pulsed irrigation_valve for Bed A1 (300s) \u2014 120 min interval, first pulse ever"
+    },
+    {
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ph sensor (id 1) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "ec sensor (id 2) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "temp_water sensor (id 3) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:23:35",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "cell_a_aquaponics",
       "title": "retry pending",
       "detail": "level sensor (id 6) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:28",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-08-31 22:56:28",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-08-31 22:56:28",
+      "category": "system",
+      "source": "cell_a_aquaponics",
+      "title": "retry pending",
+      "detail": "do sensor (id 9) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "greenhouse_power",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:28",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "temp_air sensor (id 4) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-08-31 22:56:28",
+      "category": "system",
+      "source": "cell_a_climate",
+      "title": "retry pending",
+      "detail": "humidity sensor (id 5) stale \u2014 retry 2/3, holding off on an alert"
+    },
+    {
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "ph sensor (id 7) stale \u2014 retry 2/3, holding off on an alert"
     },
     {
-      "timestamp": "2026-08-31 21:23:35",
+      "timestamp": "2026-08-31 22:56:28",
       "category": "system",
       "source": "pilot_cell",
       "title": "retry pending",
       "detail": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert"
-    },
-    {
-      "timestamp": "2026-08-31 21:23:32",
-      "category": "system",
-      "source": "cell_a_aquaponics",
-      "title": "retry pending",
-      "detail": "ph sensor (id 1) stale \u2014 retry 1/3, holding off on an alert"
     }
   ],
   "current_status": {
     "control_loop_alive": true,
-    "last_heartbeat": "2026-08-31 21:46:47",
+    "last_heartbeat": "2026-09-01 01:38:01",
     "monitored_cells": [
       "Cell A",
       "Pilot Bucket"
     ],
     "most_recent_action": {
-      "module_id": "pilot_cell",
+      "module_id": "cell_a_climate",
       "action": "retry_pending",
-      "rationale": "temp_water sensor (id 8) stale \u2014 retry 2/3, holding off on an alert",
-      "timestamp": "2026-08-31 21:46:32",
+      "rationale": "co2 sensor (id 12) stale \u2014 retry 2/3, holding off on an alert",
+      "timestamp": "2026-09-01 01:31:28",
       "kind": "action"
     }
   },
@@ -728,5 +738,5 @@
       "kind": "experiment"
     }
   ],
-  "generated_at": "2026-08-31 21:46:48"
+  "generated_at": "2026-09-01 01:38:01"
 }

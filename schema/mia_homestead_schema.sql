@@ -70,7 +70,8 @@ CREATE TABLE actuators (
     id INTEGER PRIMARY KEY,
     cell_id INTEGER NOT NULL REFERENCES cells(id),
     type TEXT NOT NULL,                 -- 'dosing_pump','circulation_pump',
-                                         -- 'aerator','valve','heater','fan'
+                                         -- 'aerator','valve','heater','fan',
+                                         -- 'grow_light','co2_valve'
     name TEXT NOT NULL,
     safe_default_state TEXT NOT NULL,   -- 'off','on' — what MCU falls back to
     created_at TEXT DEFAULT (datetime('now'))

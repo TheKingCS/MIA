@@ -109,6 +109,16 @@ def setup_demo_cell(conn: sqlite3.Connection) -> int:
         ("nutrient_concentrate_pump", "dosing_pump", "off"),
         ("circulation_pump", "circulation_pump", "on"),
         ("aerator", "aerator", "on"),
+        # Heater defaults off (stuck-on fire/scorch risk, dosing_pump's
+        # category), fan defaults on (safe if stuck on, aerator's
+        # category) — see modules/climate_control.py's own docstring
+        # and config/devices/roles/climate_mcu.yaml for the full reasoning.
+        ("greenhouse_heater", "heater", "off"),
+        ("greenhouse_exhaust_fan", "fan", "on"),
+        # Media bed (grow_beds.media_type "expanded clay" above) needs
+        # scheduled flood/drain — see core/irrigation.py + config/
+        # irrigation_schedules.yaml. Off by default like any valve.
+        ("irrigation_valve", "valve", "off"),
     ]:
         conn.execute(
             "INSERT INTO actuators (cell_id, type, name, safe_default_state) "
@@ -129,7 +139,7 @@ def setup_demo_cell(conn: sqlite3.Connection) -> int:
         )
 
     conn.commit()
-    print(f"Demo cell created (cell_id={cell_id}) with 6 sensors, 5 actuators.")
+    print(f"Demo cell created (cell_id={cell_id}) with 6 sensors, 8 actuators.")
     return cell_id
 
 

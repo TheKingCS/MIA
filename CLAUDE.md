@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 65 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 94 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -97,6 +97,9 @@ core/            services (inventory, maintenance, registries, diagnostics,
 firmware/        ESP32 Safety MCU firmware - compiles clean (platformio.ini),
                  still never run on real hardware
 config/          modules.yaml, layout.json, device roles, plumbing.yaml,
+                 irrigation_schedules.yaml (which grow beds get
+                 scheduled flood/drain, and how often — see
+                 core/irrigation.py),
                  location.yaml (optional — real lat/long for weather
                  awareness only, unset by default, nothing else reads it)
                  (these YAML files ARE the source of truth for physical
@@ -124,6 +127,7 @@ docs/            everything else - see index below
 - `CAPABILITY_REGISTRATION.md` — the full new-module checklist (condensed above)
 - `DEVICE_SETUP_GUIDE.md` — zero-technical-knowledge physical setup walkthrough
 - `HARDWARE_BOM_CURRENT.md` — hand-researched pricing/sourcing (static notes)
+- `HARDWARE_BOM_FULL_TIERS.md` — full real sourcing for all three build tiers (test/small/full-scale greenhouse), confirmed-vs-estimated pricing, open sizing/wiring decisions flagged
 - `HARDWARE_BOM_LIVE.md` — auto-generated running BOM (never hand-edit)
 - `FEATURES_AND_CAPABILITIES.md` — auto-generated proof document (never hand-edit)
 - `SUSTAINING_FEATURES.md` — brainstormed features not yet built, with effort sizing
@@ -142,7 +146,45 @@ species/planting/experiment system with live target overrides,
 infrastructure knowledge (wiring/plumbing) feeding real diagnostics,
 dead-man's-switch escalation, consumable forecasting, periodic reports,
 self-audit covering registration completeness, verification coverage,
-AND conversational tool coverage.
+AND conversational tool coverage, greenhouse climate control
+(fan/heater, temp- and humidity-driven, `modules/climate_control.py` —
+closes the gap found during hardware sourcing 2026-08-31 where the
+schema anticipated these actuators but nothing implemented them), and
+dissolved-oxygen monitoring (`modules/aquaponics_cell.py` — alert-only,
+opt-in per cell based on whether a DO sensor is actually registered, so
+optional hardware that was never bought never generates noise).
+
+scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
+a MiaHomesteadModule, since it's clock-driven with no sensor to go
+stale; only the "scheduled" half of watering_mcu.yaml's description is
+built, "moisture-triggered" stays honestly unbuilt since no moisture
+sensor type exists in sensors.type at all), and circulation-stall
+detection (`core/circulation_monitor.py` — a flow sensor reading
+near-zero while the circulation_pump is commanded on means a probable
+seized pump or clogged filter that power/level monitoring alone can't
+see; opt-in per cell like DO, alert-only like leak_detector.py).
+
+While fixing this, found and fixed a real pre-existing bug in
+`core/sensor_confidence.py`: it used Python's local `date.today()`
+against `calibration_due` values written via SQLite's `date('now',
+...)` (UTC) — the two disagree by a day near a UTC/local day boundary,
+which is exactly what made `scenario_sensor_confidence` fail live on
+2026-08-31. Same failure-mode class as the isoformat/space-separator
+bug already documented below, just the UTC-vs-local variant. Fixed by
+using `datetime.utcnow().date()`, matching the rest of the codebase's
+UTC convention.
+
+Also now built (2026-08-31): supplemental grow-light and CO2
+enrichment, folded into `modules/climate_control.py` alongside heater/
+fan/humidity — both opt-in per cell like DO. CO2 is treated more
+conservatively than everything else in that module: injection is a
+short cooldown-limited pulse (never continuous), and a reading at/above
+5000ppm (OSHA's 8-hr PEL) raises a critical alert and refuses to inject
+regardless of trend — this one is a real human-safety concern, not just
+yield optimization. This closes the schema-forward-declared-vs-
+implemented audit's last two items — every `sensors.type`/
+`actuators.type` value declared in the schema now has real code behind
+it.
 
 **Compiles clean, unverified on real hardware:**
 `firmware/safety_mcu/safety_mcu.ino` now builds successfully via
@@ -168,6 +210,12 @@ dosing commands should be trusted to it.
 - Timestamp format mismatches between Python's `.isoformat()` (T
   separator) and SQLite's `datetime('now')` (space separator) when
   hand-constructing test data — caused a real test bug once.
+- Python's local `date.today()`/`datetime.now()` compared against a
+  value written via SQLite's `date('now', ...)`/`datetime('now')`
+  (always UTC) — disagree by a day near a UTC/local day boundary.
+  Always use `datetime.utcnow()` in Python code that reasons about
+  anything SQLite wrote a `now`-based timestamp for. Caught for real in
+  `core/sensor_confidence.py`, 2026-08-31.
 
 ## Git conventions used so far
 

@@ -51,6 +51,8 @@ from core.leak_detector import LeakDetector
 from core.pest_disease import PestDisease
 from core.weather_awareness import WeatherAwareness
 from core.finance_tracker import FinanceTracker
+from core.irrigation import IrrigationScheduler
+from core.circulation_monitor import CirculationMonitor
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -144,6 +146,8 @@ def main():
     pest_disease = PestDisease(db)
     weather = WeatherAwareness(db, notifier=notifier)
     finance = FinanceTracker(db)
+    irrigation = IrrigationScheduler.from_config("config/irrigation_schedules.yaml", db, notifier=notifier)
+    circulation_monitor = CirculationMonitor(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -160,7 +164,8 @@ def main():
         (biofilter, "biofilter_model"), (sensor_confidence, "sensor_confidence"),
         (fish_health, "fish_health"), (leak_detector, "leak_detector"),
         (pest_disease, "pest_disease"), (weather, "weather_awareness"),
-        (finance, "finance_tracker"),
+        (finance, "finance_tracker"), (irrigation, "irrigation_scheduler"),
+        (circulation_monitor, "circulation_monitor"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -213,6 +218,14 @@ def main():
             leak_findings = leak_detector.check_for_leaks()
             if leak_findings:
                 logger.critical("Possible leak detected in %d cell(s)", len(leak_findings))
+
+            # Same urgency reasoning as leak detection above, not the
+            # 60-cycle block below — a stalled circulation pump risks a
+            # biofilter ammonia spike (SAFETY_SPEC.md's #2 priority load)
+            # and needs to surface within one cycle, not up to 60 later.
+            circulation_findings = circulation_monitor.check_circulation()
+            if circulation_findings:
+                logger.critical("Circulation stall detected in %d cell(s)", len(circulation_findings))
 
             # Maintenance/calibration/reorder checks don't need to run every
             # cycle — every 60 cycles is plenty (tune once real interval is set)
@@ -276,6 +289,10 @@ def main():
                     weather_result = weather.check_weather()
                     if weather_result:
                         logger.info("Weather check: %s", weather_result)
+                watered = irrigation.check_scheduled_irrigation()
+                if watered:
+                    logger.info("Irrigation scheduler watered %d bed(s): %s",
+                                len(watered), [w["grow_bed_name"] for w in watered])
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the

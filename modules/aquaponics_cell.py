@@ -24,6 +24,20 @@ from contracts.mia_homestead_contract import (
 
 logger = logging.getLogger("mia_homestead.aquaponics_cell")
 
+# Dissolved oxygen thresholds (mg/L) — standard warmwater aquaculture
+# reference points, not species-tuned. DO crashes are the leading real
+# cause of catastrophic fish loss (docs/HARDWARE_BOM_FULL_TIERS.md,
+# Fork 3 finding, 2026-08-31) — this is alert-only, not a dosing
+# correction: there's no actuator to raise DO beyond the aerator that's
+# already always running (safe_default_state 'on'), so the only
+# meaningful automated response is telling a human fast. DO is real,
+# optional hardware (not every real cell has a probe) — see
+# _has_sensor_type() below for how that's kept from becoming permanent
+# noise on a cell that was never meant to have one.
+DO_WARNING_THRESHOLD_MGL = 5.0
+DO_CRITICAL_THRESHOLD_MGL = 3.0
+DO_SPREAD_TOLERANCE_MGL = 1.5  # wider than pH's 0.5 — DO probes drift more with agitation/temp
+
 
 class AquaponicsCell(MiaHomesteadModule):
 
@@ -50,6 +64,7 @@ class AquaponicsCell(MiaHomesteadModule):
         # before triggering a dose (see SAFETY_SPEC.md).
         self._ph_history: list[float] = []
         self._ec_history: list[float] = []
+        self._do_history: list[float] = []
 
     def read_sensors(self) -> list[SensorReading]:
         """
@@ -141,6 +156,23 @@ class AquaponicsCell(MiaHomesteadModule):
         else:
             commands += self._evaluate_ec(ec_reading)
 
+        # DO is genuinely optional hardware (unlike pH/EC, which every
+        # tier's real BOM assumes) — only evaluate/alert on it at all if
+        # a DO sensor is actually registered for this cell, so a cell
+        # that was never meant to have one stays silent instead of
+        # alerting forever on hardware that was never bought.
+        if self._has_sensor_type("do"):
+            do_reading = self._latest_of_type(readings, "do")
+            if do_reading is None:
+                if not self._is_type_mid_retry("do"):
+                    self._raise_alert(
+                        "warning",
+                        f"{self.module_id}: no DO reading available at all "
+                        f"(sensor missing or producing zero data) — dissolved oxygen monitoring degraded",
+                    )
+            else:
+                self._evaluate_do(do_reading)
+
         return commands
 
     def _evaluate_ph(self, reading: SensorReading) -> list[ActuatorCommand]:
@@ -188,6 +220,49 @@ class AquaponicsCell(MiaHomesteadModule):
         # change action, which should stay a human-approved/manual step
         # in v0.1 rather than an automated dump of fresh water.
         return []
+
+    def _evaluate_do(self, reading: SensorReading) -> None:
+        """Alert-only — no actuator command exists to raise DO beyond
+        the aerator, which is already always running regardless of what
+        this decides (safe_default_state 'on', never touched by control
+        logic). The value here is early/confident warning, same
+        "consistent readings before acting" discipline as pH/EC."""
+        self._do_history.append(reading.value)
+        self._do_history = self._do_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
+
+        if len(self._do_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
+            return
+
+        avg = sum(self._do_history) / len(self._do_history)
+        spread = max(self._do_history) - min(self._do_history)
+        if spread > DO_SPREAD_TOLERANCE_MGL:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: DO readings inconsistent (spread {spread:.2f} mg/L) "
+                f"— not confident enough to assess oxygen risk this cycle",
+            )
+            return
+
+        if avg < DO_CRITICAL_THRESHOLD_MGL:
+            self._raise_alert(
+                "critical",
+                f"{self.module_id}: dissolved oxygen critically low ({avg:.2f} mg/L, "
+                f"below {DO_CRITICAL_THRESHOLD_MGL} mg/L) — fish suffocation risk, "
+                f"confirm aeration is actually running",
+            )
+        elif avg < DO_WARNING_THRESHOLD_MGL:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: dissolved oxygen low ({avg:.2f} mg/L, "
+                f"below {DO_WARNING_THRESHOLD_MGL} mg/L) — worth checking aeration",
+            )
+
+    def _has_sensor_type(self, type_name: str) -> bool:
+        row = self.db.execute(
+            "SELECT 1 FROM sensors WHERE cell_id = ? AND type = ? AND active = 1 LIMIT 1",
+            (self.cell_id, type_name),
+        ).fetchone()
+        return row is not None
 
     def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand:
         # Actuator ID lookup would come from the actuators table in a
@@ -250,10 +325,11 @@ class AquaponicsCell(MiaHomesteadModule):
                 "Monitors pH and EC in one aquaponics cell and issues dosing "
                 "corrections to keep both within target range, using multiple "
                 "consistent readings before acting and hard dosing limits "
-                "enforced downstream by the safety MCU."
+                "enforced downstream by the safety MCU. Also monitors dissolved "
+                "oxygen (DO), alert-only, if a DO sensor is configured for this cell."
             ),
             data_produced=[
-                "pH reading history", "EC reading history",
+                "pH reading history", "EC reading history", "DO reading history (if configured)",
                 "dosing event log (what was dosed, when, why)",
             ],
             actions_possible=[
@@ -263,6 +339,8 @@ class AquaponicsCell(MiaHomesteadModule):
                 "before alerting on a stale/missing sensor reading: retry via a forced "
                 "immediate reread, then a healthy redundant sensor of the same type if one "
                 "exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles",
+                "raise a warning/critical alert on low dissolved oxygen — no automated "
+                "correction exists beyond the aerator, which is already always running",
             ],
             limits_and_safety=(
                 f"Targets: pH {self.ph_target_min}-{self.ph_target_max}, "
@@ -274,11 +352,16 @@ class AquaponicsCell(MiaHomesteadModule):
                 "(contracts.MiaHomesteadModule) only changes how fast a GOOD "
                 "reading gets produced before this logic runs; it never loosens "
                 "what counts as safe to dose on, and dosing stays frozen for the "
-                "entire retry window exactly as if no retry existed at all."
+                "entire retry window exactly as if no retry existed at all. "
+                f"DO: warns below {DO_WARNING_THRESHOLD_MGL} mg/L, critical below "
+                f"{DO_CRITICAL_THRESHOLD_MGL} mg/L — but ONLY if a DO sensor is actually "
+                "registered for this cell; DO is optional hardware and a cell without "
+                "one stays completely silent rather than alerting on hardware that was "
+                "never installed."
             ),
             example_questions=[
                 "How's the pH in Cell A?", "Has it been dosing much lately?",
-                "Why didn't it correct the EC this morning?",
+                "Why didn't it correct the EC this morning?", "What's the dissolved oxygen at?",
             ],
             verification_evidence=[
                 "scenarios.py::scenario_ph_crash_response — confirmed dosing triggers after "
@@ -300,6 +383,13 @@ class AquaponicsCell(MiaHomesteadModule):
                 "two sensors of the same type (SELECT cell_id, type, count(*) FROM sensors GROUP "
                 "BY cell_id, type HAVING count(*) > 1 returns zero rows), so this path has never "
                 "actually executed against real data.",
+                "scenarios.py::scenario_do_no_sensor_silent — confirmed a cell with no DO sensor "
+                "configured raises zero DO-related alerts, ever (optional hardware, not noise)",
+                "scenarios.py::scenario_do_critical_alert — confirmed a critically low DO reading "
+                "(2.0 mg/L) raises a real critical alert citing the actual reading, once a DO "
+                "sensor is configured",
+                "scenarios.py::scenario_do_healthy_no_alert — confirmed a healthy DO reading "
+                "(7.0 mg/L) raises nothing",
             ],
         )
 
@@ -330,6 +420,16 @@ class AquaponicsCell(MiaHomesteadModule):
             HardwareRequirement(
                 item="DS18B20 waterproof temp probe", category="sensor",
                 quantity=1, purpose="water temperature monitoring", est_unit_cost=8.0,
+            ),
+            HardwareRequirement(
+                item="Atlas Scientific Dissolved Oxygen kit (circuit + probe)", category="sensor",
+                quantity=1, purpose="dissolved oxygen monitoring — DO crashes are the leading real "
+                "cause of catastrophic fish loss", est_unit_cost=354.99,
+                notes="Confirmed live-fetch 2026-08-31, atlas-scientific.com. Optional at small "
+                      "scale (low stocking density, continuous aeration substitutes adequately) — "
+                      "recommended at full-scale real stocking density. See "
+                      "docs/HARDWARE_BOM_FULL_TIERS.md. A cell with no DO sensor installed stays "
+                      "completely silent about it, by design — see limits_and_safety above.",
             ),
             HardwareRequirement(
                 item="Submersible aquarium air pump + airstone", category="actuator",
