@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 128 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 130 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -227,6 +227,17 @@ same `likely_cause` now reuses the existing open task
 the 5 real pre-existing duplicates (cancelled, not silently deleted)
 and confirmed live against the real DB: a genuine recurrence now
 correctly reuses task #3 instead of creating a #10.
+
+Checking for the same class of bug elsewhere (raw SQL bypassing a
+service's real validation/logic — the SAME pattern that broke
+record_planting's compatibility check earlier, see the planting-
+planning entry above) found a third instance: the assistant's
+`create_maintenance_task` tool inserted directly via raw SQL, skipping
+`MaintenanceManager.create_task()`'s task_type/priority validation
+entirely — an invalid value would have silently corrupted a row
+instead of being rejected. Now routes through the real service; a live
+test confirmed an invalid task_type/priority is cleanly rejected where
+it used to just work anyway with a garbage value.
 
 scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
 a MiaHomesteadModule, since it's clock-driven with no sensor to go

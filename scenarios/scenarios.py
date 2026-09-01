@@ -1981,6 +1981,32 @@ def scenario_diagnose_alert_reuses_open_task():
     return checks
 
 
+def scenario_create_maintenance_task_tool_validates():
+    """Real bug found live 2026-09-01: the create_maintenance_task
+    assistant tool used to insert directly via raw SQL, bypassing
+    MaintenanceManager.create_task()'s validation entirely — an
+    invalid task_type or priority would silently corrupt a row instead
+    of being rejected. Confirms the tool now validates (by routing
+    through the real service) and a valid call still works correctly."""
+    from assistant.greenhouse_assistant import GreenhouseAssistant
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    a = GreenhouseAssistant.__new__(GreenhouseAssistant)
+    a.db = conn
+
+    invalid = a._tool_create_maintenance_task(title="bad", task_type="not_a_real_type")
+    valid = a._tool_create_maintenance_task(title="Replace tubing", task_type="replacement", priority="high")
+
+    checks = [
+        ("an invalid task_type is rejected with a real error, not silently inserted",
+         "error" in invalid),
+        ("a valid task is created for real, through the real service",
+         "created_task_id" in valid and valid["created_task_id"] is not None),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2037,6 +2063,7 @@ SCENARIOS = {
     "alert_manager_stale_sweep": scenario_alert_manager_stale_sweep,
     "alert_manager_recurrence_after_resolution": scenario_alert_manager_recurrence_after_resolution,
     "diagnose_alert_reuses_open_task": scenario_diagnose_alert_reuses_open_task,
+    "create_maintenance_task_tool_validates": scenario_create_maintenance_task_tool_validates,
 }
 
 

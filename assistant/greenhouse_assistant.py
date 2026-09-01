@@ -2005,16 +2005,16 @@ class _BaseGreenhouseAssistant:
         description: str | None = None, assigned_to: str | None = None,
         due_date: str | None = None,
     ) -> dict:
-        cur = self.db.execute(
-            """
-            INSERT INTO maintenance_tasks
-            (title, description, task_type, priority, assigned_to, due_date, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, 'assistant')
-            """,
-            (title, description, task_type, priority, assigned_to, due_date),
-        )
-        self.db.commit()
-        return {"created_task_id": cur.lastrowid, "title": title, "priority": priority}
+        from core.maintenance import MaintenanceManager
+        try:
+            task_id = MaintenanceManager(self.db).create_task(
+                title=title, task_type=task_type, priority=priority,
+                description=description, assigned_to=assigned_to,
+                due_date=due_date, created_by="assistant",
+            )
+        except ValueError as e:
+            return {"error": str(e)}
+        return {"created_task_id": task_id, "title": title, "priority": priority}
 
     def _tool_get_revenue_summary(self, days: int = 30) -> dict:
         from core.finance_tracker import FinanceTracker
