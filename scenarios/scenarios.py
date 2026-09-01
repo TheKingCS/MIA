@@ -1701,6 +1701,109 @@ def scenario_simulator_demo_cell_stays_base_sensors():
     return checks
 
 
+def scenario_heater_closes_the_loop():
+    """Real closed-loop physics for this session's climate actuators,
+    same standard scenario_ph_crash_response already proves for pH:
+    a cold reading triggers the heater, and running more cycles shows
+    air temp actually recovering from the correction — not just that a
+    command was issued."""
+    conn, registry, sim, cell_id = fresh_system()
+    sim.state["temp_air"] = 55.0  # well below the 65-85 target band
+    run_cycles(registry, sim, n=4)  # long enough for the heater to engage
+    temp_after_engaging = sim.state["temp_air"]
+    run_cycles(registry, sim, n=6)  # let the heater's effect actually accumulate
+    temp_after_more_cycles = sim.state["temp_air"]
+
+    checks = [
+        ("heater engaged for the cold reading", get_last_actuator_action(conn, "greenhouse_heater") == "on"),
+        (f"air temp actually recovered from the correction ({temp_after_engaging:.1f} -> {temp_after_more_cycles:.1f}°F)",
+         temp_after_more_cycles > temp_after_engaging),
+    ]
+    return checks
+
+
+def scenario_water_heater_closes_the_loop():
+    """Same closed-loop proof for the tank water heater — confirms
+    water temp actually rises once the heater engages, not just that
+    the command fired."""
+    conn, registry, sim, cell_id = fresh_system()
+    from core.species_registry import SpeciesRegistry
+    SpeciesRegistry(conn)
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'water_heater', 'tank_water_heater', 'off')",
+        (cell_id,),
+    )
+    conn.commit()
+
+    sim.state["temp_water"] = 60.0  # well below Tilapia's 75-85F range
+    run_cycles(registry, sim, n=4)
+    temp_after_engaging = sim.state["temp_water"]
+    run_cycles(registry, sim, n=8)
+    temp_after_more_cycles = sim.state["temp_water"]
+
+    checks = [
+        ("water heater engaged for the cold reading", get_last_actuator_action(conn, "tank_water_heater") == "on"),
+        (f"water temp actually recovered from the correction ({temp_after_engaging:.1f} -> {temp_after_more_cycles:.1f}°F)",
+         temp_after_more_cycles > temp_after_engaging),
+    ]
+    return checks
+
+
+def scenario_co2_injection_closes_the_loop():
+    """Confirms a CO2 injection pulse actually raises the simulated
+    CO2 reading by a real, proportional amount — not just that the
+    valve fired."""
+    conn, registry, sim, cell_id = fresh_system()
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'co2', 'ppm', 1)",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, 'co2_valve', 'greenhouse_co2_injector', 'off')",
+        (cell_id,),
+    )
+    co2_sensor_id = cur.lastrowid
+    conn.commit()
+    sim.sensors["co2"] = co2_sensor_id
+    sim.state["co2"] = 500.0
+    co2_before = sim.state["co2"]
+    run_cycles(registry, sim, n=4)
+    co2_after = sim.state["co2"]
+
+    checks = [
+        (f"CO2 actually rose from the injection pulse ({co2_before:.0f} -> {co2_after:.0f} ppm)",
+         co2_after > co2_before),
+    ]
+    return checks
+
+
+def scenario_do_relaxes_toward_temp_equilibrium():
+    """Real physics added 2026-09-01: DO relaxes toward a temperature-
+    dependent equilibrium rather than sitting frozen at a fixed value.
+    Confirms a DO reading well below the warm-water equilibrium
+    actually drifts upward over natural ticks, with no dosing/actuator
+    involved at all — pure environmental dynamics."""
+    conn, registry, sim, cell_id = fresh_system()
+    cur = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'do', 'mg/L', 1)",
+        (cell_id,),
+    )
+    do_sensor_id = cur.lastrowid
+    conn.commit()
+    sim.sensors["do"] = do_sensor_id
+    sim.state["do"] = 3.0  # well below the ~7.8 equilibrium at a normal water temp
+    do_before = sim.state["do"]
+    for _ in range(6):
+        sim.tick()
+    do_after = sim.state["do"]
+
+    checks = [
+        (f"DO drifted upward toward its temperature-dependent equilibrium ({do_before:.2f} -> {do_after:.2f} mg/L)",
+         do_after > do_before),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -1748,6 +1851,10 @@ SCENARIOS = {
     "bed_planting_get_bed_layout": scenario_bed_planting_get_bed_layout,
     "simulator_level_realtime_safe": scenario_simulator_level_realtime_safe,
     "simulator_demo_cell_stays_base_sensors": scenario_simulator_demo_cell_stays_base_sensors,
+    "heater_closes_the_loop": scenario_heater_closes_the_loop,
+    "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
+    "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,
+    "do_relaxes_toward_temp_equilibrium": scenario_do_relaxes_toward_temp_equilibrium,
 }
 
 

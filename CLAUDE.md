@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 112 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 118 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -113,8 +113,12 @@ config/          modules.yaml, layout.json, device roles, plumbing.yaml,
                  wiring/plumbing - edit them, not code, for physical changes)
 schema/          single schema.sql, additive - never destructive migrations
 scenarios/       safety regression suite - run before any control-logic change
-drivers/         simulator.py (fake data, incl. simulated power_telemetry),
-                 physics_sim.py (closed-loop),
+drivers/         simulator.py (fake data for --run/setup_demo_cell,
+                 incl. simulated power_telemetry — what the LIVE system
+                 actually uses),
+                 physics_sim.py (closed-loop dosing + climate/DO/CO2
+                 dynamics — scenarios/scenarios.py's test harness ONLY,
+                 never imported by main.py or simulator.py --run),
                  atlas_scientific_driver.py (real I2C, untested on hardware)
 viewer/          3D digital twin (live "go here" fault locator), the
                  ops dashboard (dashboard.html), and the planting
@@ -175,7 +179,18 @@ physically done, then convert it once it actually happens; viewer/
 planting_planner.html visualizes every real grow bed to scale with its
 planned/active/recent plantings, read-only by design (writes go through
 the assistant tools, same propose-then-real pattern as everything else
-here).
+here). Also, `drivers/physics_sim.py`'s closed-loop scenario test
+harness (2026-09-01, user request) now models real cause-and-effect for
+this session's newer actuators the same way it already did for pH/EC
+dosing — heater/fan/water_heater push temp/humidity/CO2 while commanded
+on (tracked as ongoing state, not one-shot pulses), air heat-loss and
+humidity/CO2 rise without ventilation explain why they're needed at
+all, water temp thermally couples to air temp, DO relaxes toward a
+temperature-dependent equilibrium, and a CO2 injector pulse raises CO2
+proportionally to duration. Scenario proof, matching
+scenario_ph_crash_response's existing standard: a cold/CO2-depleted
+reading triggers the actuator AND the reading actually recovers over
+subsequent ticks, not just that a command was issued.
 
 scheduled irrigation (`core/irrigation.py` — a periodic check, NOT
 a MiaHomesteadModule, since it's clock-driven with no sensor to go

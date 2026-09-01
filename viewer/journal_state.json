@@ -733,7 +733,7 @@
   ],
   "current_status": {
     "control_loop_alive": true,
-    "last_heartbeat": "2026-09-01 05:46:13",
+    "last_heartbeat": "2026-09-01 06:02:02",
     "monitored_cells": [
       "Cell A",
       "Pilot Bucket"
@@ -758,5 +758,5 @@
       "kind": "experiment"
     }
   ],
-  "generated_at": "2026-09-01 05:46:13"
+  "generated_at": "2026-09-01 06:02:02"
 }
