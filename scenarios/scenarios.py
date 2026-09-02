@@ -2366,6 +2366,72 @@ def scenario_self_preservation_signals_with_presence():
     return checks
 
 
+def scenario_registry_connection_survives_lock_contention():
+    """Real, actively-manifesting bug found live 2026-09-02: main.py and
+    drivers/simulator.py --run are two independent processes, both
+    writing the same SQLite file on their own 5-second interval, with
+    SQLite's default rollback-journal mode (locks the WHOLE file during
+    a write) and default 5-second busy_timeout. The simulator lost that
+    race after ~2 days of continuous operation and crashed outright on
+    "database is locked", leaving the entire sensor feed dead for over
+    an hour with nothing restarting it. Confirms ModuleRegistry's real
+    __init__ (not the __new__ bypass every other scenario in this file
+    uses) actually enables WAL mode — a database-file-level setting that
+    persists for every future connection from any process, real fix for
+    two always-on daemons sharing one file — and that a second,
+    independent connection to the same file can write concurrently
+    without raising "database is locked" the way the default journal
+    mode would under sustained contention."""
+    import tempfile
+    import threading
+    import os
+
+    tmp_dir = tempfile.mkdtemp()
+    db_path = os.path.join(tmp_dir, "test.db")
+    conn0 = sqlite3.connect(db_path)
+    conn0.executescript(SCHEMA_PATH.read_text())
+    conn0.close()
+
+    registry = ModuleRegistry(str(CONFIG_PATH), db_path)
+    mode = registry.db_conn.execute("PRAGMA journal_mode").fetchone()[0]
+
+    # A second independent connection (standing in for the other daemon
+    # process) hammering writes concurrently with the registry's own
+    # connection — this is exactly the two-daemons-sharing-one-file
+    # shape that crashed live. No exception escaping either thread is
+    # the real proof; WAL mode is what makes that true here.
+    other_errors = []
+
+    def other_writer():
+        conn = sqlite3.connect(db_path, timeout=30.0)
+        try:
+            for i in range(20):
+                conn.execute("INSERT INTO system_heartbeat (component) VALUES ('other_daemon')")
+                conn.commit()
+        except Exception as e:
+            other_errors.append(e)
+        finally:
+            conn.close()
+
+    t = threading.Thread(target=other_writer)
+    t.start()
+    registry_errors = []
+    try:
+        for i in range(20):
+            registry.db_conn.execute("INSERT INTO system_heartbeat (component) VALUES ('registry')")
+            registry.db_conn.commit()
+    except Exception as e:
+        registry_errors.append(e)
+    t.join()
+
+    checks = [
+        ("ModuleRegistry's real __init__ enables WAL mode", mode.lower() == "wal"),
+        ("two concurrent writers to the same file don't raise 'database is locked'",
+         other_errors == [] and registry_errors == []),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2414,6 +2480,7 @@ SCENARIOS = {
     "simulator_level_realtime_safe": scenario_simulator_level_realtime_safe,
     "simulator_demo_cell_stays_base_sensors": scenario_simulator_demo_cell_stays_base_sensors,
     "simulator_walk_stays_physically_plausible": scenario_simulator_walk_stays_physically_plausible,
+    "registry_connection_survives_lock_contention": scenario_registry_connection_survives_lock_contention,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,

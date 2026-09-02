@@ -200,115 +200,136 @@ def main():
     cycle_count = 0
     try:
         while True:
-            record_heartbeat(db, "pi_main_loop")
-            results = registry.run_all_cycles()
-            for module_id, commands in results.items():
-                for cmd in commands:
-                    execute_command(db, cmd)
-                if not commands:
-                    logger.debug("%s: no actions this cycle", module_id)
+            # Real reliability gap found live 2026-09-02: this whole
+            # section (dosing/control decisions, diagnostics, leak/
+            # circulation checks, the 60-cycle maintenance/backup/report
+            # block) had NO exception handling at all, unlike the 5
+            # export calls below which already log-and-continue on
+            # failure. drivers/simulator.py's own tick() loop hit this
+            # exact gap first and crashed outright on a transient
+            # 'database is locked' error (two independent 5-second-interval
+            # processes writing the same SQLite file — see core/module_
+            # registry.py's WAL-mode fix for the root cause), leaving the
+            # whole system's sensor feed dead for over an hour with nothing
+            # restarting it. This loop is meant to run for weeks unattended
+            # (schema/mia_homestead_schema.sql's own promise) — the same
+            # 'log and continue' discipline already used for the exports
+            # below now covers the rest of one cycle's work too. Individual
+            # module isolation (core/module_registry.py's run_all_cycles())
+            # stays as the finer-grained first line of defense; this is the
+            # safety net behind it for everything else in one cycle.
+            try:
+                record_heartbeat(db, "pi_main_loop")
+                results = registry.run_all_cycles()
+                for module_id, commands in results.items():
+                    for cmd in commands:
+                        execute_command(db, cmd)
+                    if not commands:
+                        logger.debug("%s: no actions this cycle", module_id)
 
-            # Auto-diagnose any alert that survived the recovery ladder,
-            # every cycle (not gated to the 60-cycle block below) — the
-            # whole point is reacting the instant a real alert exists,
-            # not up to 60 cycles later. Cheap: a handful of indexed
-            # SELECTs, bounded by the tiny number of genuinely new
-            # unresolved alerts (usually zero). Read/diagnose/file-a-task
-            # only — see core/diagnostics.py's own docstring on this.
-            newly_diagnosed = diagnostics.auto_diagnose_new_alerts()
-            if newly_diagnosed:
-                logger.info("Auto-diagnosed %d new alert(s): %s", len(newly_diagnosed),
-                            [d.get("likely_cause") for d in newly_diagnosed])
+                # Auto-diagnose any alert that survived the recovery ladder,
+                # every cycle (not gated to the 60-cycle block below) — the
+                # whole point is reacting the instant a real alert exists,
+                # not up to 60 cycles later. Cheap: a handful of indexed
+                # SELECTs, bounded by the tiny number of genuinely new
+                # unresolved alerts (usually zero). Read/diagnose/file-a-task
+                # only — see core/diagnostics.py's own docstring on this.
+                newly_diagnosed = diagnostics.auto_diagnose_new_alerts()
+                if newly_diagnosed:
+                    logger.info("Auto-diagnosed %d new alert(s): %s", len(newly_diagnosed),
+                                [d.get("likely_cause") for d in newly_diagnosed])
 
-            # Also every cycle, not gated to the 60-cycle block below — a
-            # real leak needs detection within one cycle, not up to 60
-            # cycles later; that delay is the whole gap this module exists
-            # to close (see core/leak_detector.py's own docstring).
-            leak_findings = leak_detector.check_for_leaks()
-            if leak_findings:
-                logger.critical("Possible leak detected in %d cell(s)", len(leak_findings))
+                # Also every cycle, not gated to the 60-cycle block below — a
+                # real leak needs detection within one cycle, not up to 60
+                # cycles later; that delay is the whole gap this module exists
+                # to close (see core/leak_detector.py's own docstring).
+                leak_findings = leak_detector.check_for_leaks()
+                if leak_findings:
+                    logger.critical("Possible leak detected in %d cell(s)", len(leak_findings))
 
-            # Same urgency reasoning as leak detection above, not the
-            # 60-cycle block below — a stalled circulation pump risks a
-            # biofilter ammonia spike (SAFETY_SPEC.md's #2 priority load)
-            # and needs to surface within one cycle, not up to 60 later.
-            circulation_findings = circulation_monitor.check_circulation()
-            if circulation_findings:
-                logger.critical("Circulation stall detected in %d cell(s)", len(circulation_findings))
+                # Same urgency reasoning as leak detection above, not the
+                # 60-cycle block below — a stalled circulation pump risks a
+                # biofilter ammonia spike (SAFETY_SPEC.md's #2 priority load)
+                # and needs to surface within one cycle, not up to 60 later.
+                circulation_findings = circulation_monitor.check_circulation()
+                if circulation_findings:
+                    logger.critical("Circulation stall detected in %d cell(s)", len(circulation_findings))
 
-            # Maintenance/calibration/reorder checks don't need to run every
-            # cycle — every 60 cycles is plenty (tune once real interval is set)
-            cycle_count += 1
-            if cycle_count % 60 == 0:
-                created = maintenance.generate_calibration_tasks() + maintenance.generate_recurring_tasks()
-                if created:
-                    logger.info("Maintenance scan created %d new task(s)", created)
-                proposed = inventory.auto_propose_reorders()
-                if proposed:
-                    logger.info("Inventory scan proposed %d new order(s) — check the to-order list", proposed)
-                due_experiments = experiments.check_due_experiments()
-                if due_experiments:
-                    logger.info("Completed %d experiment(s): %s — check results", len(due_experiments), due_experiments)
-                proposed_from_patterns = experiments.propose_experiments_for_underperformance(species, args.config)
-                if proposed_from_patterns:
-                    logger.info("Proposed %d experiment(s) from an observed underperformance "
-                                "pattern — review before starting: %s", len(proposed_from_patterns), proposed_from_patterns)
-                watch_results = backups.check_update_watches()
-                if watch_results:
-                    logger.info("Update watch results: %s", watch_results)
-                deploy_watch_results = deploys.check_deploy_watches()
-                for result in deploy_watch_results:
-                    if result["outcome"] == "auto_rolled_back":
-                        # deploy_manager already reverted the working tree — the
-                        # decision to actually exit belongs HERE (see that
-                        # module's own docstring for why), so the systemd layer
-                        # (deploy/mia-homestead.service, Restart=on-failure) can
-                        # bring the process back up running the reverted code.
-                        # A non-systemd/dev run just stops; a human reruns it.
-                        logger.critical(
-                            "Exiting after an automatic code rollback (watch #%s) — "
-                            "restart required to run the reverted code.", result["watch_id"],
-                        )
-                        sys.exit(1)
-                forecasted = inventory.check_forecasted_shortages()
-                if forecasted:
-                    logger.info("Forecasted %d shortage(s) proposed early", forecasted)
-                deadmans_result = deadmans.check_escalation()
-                if deadmans_result.get("escalated"):
-                    logger.warning("Dead-man's-switch escalated: %s", deadmans_result)
-                hours_since_report = reports.hours_since_last_report()
-                if hours_since_report is None or hours_since_report >= 24:
-                    reports.generate_and_send()
-                    logger.info("Periodic report generated and sent")
-                drift_findings = trend_analyzer.check_all_sensors()
-                if drift_findings:
-                    logger.info("Trend analyzer found %d sensor(s) drifting", len(drift_findings))
-                for module in registry.modules.values():
-                    if isinstance(module, PowerMonitor):
-                        forecast = module.check_soc_forecast()
-                        if forecast and forecast["hours_to_threshold"] <= SOC_FORECAST_WARNING_HOURS:
-                            logger.info("%s: SOC forecast warning — %s", module.module_id, forecast)
-                overdue_tests = biofilter.check_overdue_water_tests()
-                if overdue_tests:
-                    logger.info("Biofilter model: %d cell(s) overdue for a water test", len(overdue_tests))
-                mortality_spikes = fish_health.check_mortality_spike()
-                if mortality_spikes:
-                    logger.warning("Fish health: mortality spike in %d cell(s)", len(mortality_spikes))
-                if weather.should_check_now():
-                    weather_result = weather.check_weather()
-                    if weather_result:
-                        logger.info("Weather check: %s", weather_result)
-                watered = irrigation.check_scheduled_irrigation()
-                if watered:
-                    logger.info("Irrigation scheduler watered %d bed(s): %s",
-                                len(watered), [w["grow_bed_name"] for w in watered])
-                auto_resolved = alert_manager.check_stale_alerts()
-                if auto_resolved:
-                    logger.info("Auto-resolved %d stale alert(s) not re-raised recently: %s",
-                                len(auto_resolved), [a["alert_id"] for a in auto_resolved])
-                pruned = data_retention.prune_old_data()
-                if pruned:
-                    logger.info("Pruned old data past the retention window: %s", pruned)
+                # Maintenance/calibration/reorder checks don't need to run every
+                # cycle — every 60 cycles is plenty (tune once real interval is set)
+                cycle_count += 1
+                if cycle_count % 60 == 0:
+                    created = maintenance.generate_calibration_tasks() + maintenance.generate_recurring_tasks()
+                    if created:
+                        logger.info("Maintenance scan created %d new task(s)", created)
+                    proposed = inventory.auto_propose_reorders()
+                    if proposed:
+                        logger.info("Inventory scan proposed %d new order(s) — check the to-order list", proposed)
+                    due_experiments = experiments.check_due_experiments()
+                    if due_experiments:
+                        logger.info("Completed %d experiment(s): %s — check results", len(due_experiments), due_experiments)
+                    proposed_from_patterns = experiments.propose_experiments_for_underperformance(species, args.config)
+                    if proposed_from_patterns:
+                        logger.info("Proposed %d experiment(s) from an observed underperformance "
+                                    "pattern — review before starting: %s", len(proposed_from_patterns), proposed_from_patterns)
+                    watch_results = backups.check_update_watches()
+                    if watch_results:
+                        logger.info("Update watch results: %s", watch_results)
+                    deploy_watch_results = deploys.check_deploy_watches()
+                    for result in deploy_watch_results:
+                        if result["outcome"] == "auto_rolled_back":
+                            # deploy_manager already reverted the working tree — the
+                            # decision to actually exit belongs HERE (see that
+                            # module's own docstring for why), so the systemd layer
+                            # (deploy/mia-homestead.service, Restart=on-failure) can
+                            # bring the process back up running the reverted code.
+                            # A non-systemd/dev run just stops; a human reruns it.
+                            logger.critical(
+                                "Exiting after an automatic code rollback (watch #%s) — "
+                                "restart required to run the reverted code.", result["watch_id"],
+                            )
+                            sys.exit(1)
+                    forecasted = inventory.check_forecasted_shortages()
+                    if forecasted:
+                        logger.info("Forecasted %d shortage(s) proposed early", forecasted)
+                    deadmans_result = deadmans.check_escalation()
+                    if deadmans_result.get("escalated"):
+                        logger.warning("Dead-man's-switch escalated: %s", deadmans_result)
+                    hours_since_report = reports.hours_since_last_report()
+                    if hours_since_report is None or hours_since_report >= 24:
+                        reports.generate_and_send()
+                        logger.info("Periodic report generated and sent")
+                    drift_findings = trend_analyzer.check_all_sensors()
+                    if drift_findings:
+                        logger.info("Trend analyzer found %d sensor(s) drifting", len(drift_findings))
+                    for module in registry.modules.values():
+                        if isinstance(module, PowerMonitor):
+                            forecast = module.check_soc_forecast()
+                            if forecast and forecast["hours_to_threshold"] <= SOC_FORECAST_WARNING_HOURS:
+                                logger.info("%s: SOC forecast warning — %s", module.module_id, forecast)
+                    overdue_tests = biofilter.check_overdue_water_tests()
+                    if overdue_tests:
+                        logger.info("Biofilter model: %d cell(s) overdue for a water test", len(overdue_tests))
+                    mortality_spikes = fish_health.check_mortality_spike()
+                    if mortality_spikes:
+                        logger.warning("Fish health: mortality spike in %d cell(s)", len(mortality_spikes))
+                    if weather.should_check_now():
+                        weather_result = weather.check_weather()
+                        if weather_result:
+                            logger.info("Weather check: %s", weather_result)
+                    watered = irrigation.check_scheduled_irrigation()
+                    if watered:
+                        logger.info("Irrigation scheduler watered %d bed(s): %s",
+                                    len(watered), [w["grow_bed_name"] for w in watered])
+                    auto_resolved = alert_manager.check_stale_alerts()
+                    if auto_resolved:
+                        logger.info("Auto-resolved %d stale alert(s) not re-raised recently: %s",
+                                    len(auto_resolved), [a["alert_id"] for a in auto_resolved])
+                    pruned = data_retention.prune_old_data()
+                    if pruned:
+                        logger.info("Pruned old data past the retention window: %s", pruned)
+            except Exception:
+                logger.exception("Control loop cycle failed — logged, continuing to the next cycle")
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the

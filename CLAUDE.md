@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 158 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 160 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,52 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**The sensor feed died for over an hour with nothing restarting it,
+found and closed 2026-09-02:** `drivers/simulator.py --run` crashed
+outright on `sqlite3.OperationalError: database is locked` after ~2
+real days of continuous operation, and simply stayed dead — found via
+`SELECT MAX(timestamp) FROM sensor_readings` showing the last write was
+1h41m in the past. Root cause: `main.py` and `drivers/simulator.py
+--run` are two independent processes, both writing the same SQLite file
+on their own 5-second interval, under SQLite's default rollback-journal
+mode (locks the WHOLE file during a write) and default 5-second
+busy_timeout — a real, recurring collision risk for two always-on
+daemons, not a one-off fluke, and the simulator's tick() loop had zero
+retry/resilience, unlike main.py's own already-established "log and
+continue" pattern for its 5 export calls. Worse, most of main.py's own
+per-cycle body (dosing/control decisions via registry.run_all_cycles()
+— though that already has real per-module isolation — plus
+diagnostics, leak/circulation checks, and the whole 60-cycle
+maintenance/backup/report block) had no exception handling at all
+either, meaning main.py itself was one unlucky lock collision away from
+the exact same fate.
+
+Fixed with defense in depth, not just a patch on the one thing that
+happened to crash: (1) `core/module_registry.py`'s real `__init__` (the
+connection main.py actually uses) now opens with `timeout=30.0` and
+sets `PRAGMA journal_mode=WAL` — a database-file-level setting that
+persists for every future connection from any process once set, so this
+single change converts the whole file's concurrency model for
+main.py, the simulator, every viewer export, and every CLI tool that
+touches it afterward; (2) `drivers/simulator.py --run`'s own connection
+gets the same WAL/timeout treatment, and its `tick()` call is now
+wrapped so a failure costs one skipped tick, not the whole process; (3)
+main.py's entire per-cycle body (previously-unprotected parts) is now
+wrapped in the same "log and continue" pattern already used for its 5
+export calls, so no single per-cycle exception can kill an unattended
+control loop meant to run for weeks.
+
+Scenario-proven (`scenario_registry_connection_survives_lock_
+contention`: confirms `ModuleRegistry`'s real `__init__` — not the
+`__new__` bypass every other scenario in this file uses — actually
+enables WAL mode, and that two genuinely concurrent writers to the same
+file complete without raising "database is locked"). 160 passed, 0
+failed overall, self_audit clean. Live-verified: killed both daemons,
+relaunched both, confirmed `PRAGMA journal_mode` reports `wal` on the
+real live `mia_homestead.db`, and confirmed fresh sensor data flowing
+again (dead for 1h41m beforehand) with both processes still alive after
+30+ seconds of real concurrent writing.
 
 **Simulated sensor data drifting into physically impossible values,
 found and closed 2026-09-02:** `drivers/simulator.py`'s `Simulator.

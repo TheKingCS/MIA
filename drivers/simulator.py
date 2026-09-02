@@ -482,7 +482,17 @@ def main():
     parser.add_argument("--interval", type=float, default=5.0, help="seconds between ticks")
     args = parser.parse_args()
 
-    conn = sqlite3.connect(args.db)
+    # Real bug found live 2026-09-02: this process crashed outright on
+    # "database is locked" after ~2 days of continuous --run operation
+    # (main.py writes the same file on its own independent 5-second
+    # interval) and, with no retry/resilience in the loop below, stayed
+    # dead — the whole sensor feed went silent for over an hour with
+    # nothing restarting it. WAL mode + a generous busy_timeout are the
+    # same fix applied at core/module_registry.py's connection (see that
+    # comment for the full reasoning); this --run loop is a long-running
+    # daemon just like main.py's, so it needs the same treatment.
+    conn = sqlite3.connect(args.db, timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL")
 
     if args.setup:
         setup_demo_cell(conn)
@@ -498,8 +508,16 @@ def main():
         print(f"Simulating {len(sim.state)} sensors every {args.interval}s. Ctrl+C to stop.")
         try:
             while True:
-                sim.tick()
-                print(f"[{datetime.utcnow().isoformat()}] tick written")
+                # Defense in depth alongside the WAL/busy_timeout fix
+                # above: even a transient failure this doesn't prevent
+                # should cost one skipped tick, not the whole process —
+                # this is exactly what was missing when it actually
+                # crashed live (see the comment on the connection above).
+                try:
+                    sim.tick()
+                    print(f"[{datetime.utcnow().isoformat()}] tick written")
+                except Exception as e:
+                    print(f"[{datetime.utcnow().isoformat()}] tick failed, will retry next interval: {e}")
                 time.sleep(args.interval)
         except KeyboardInterrupt:
             print("\nSimulator stopped.")

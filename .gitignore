@@ -2,6 +2,7 @@
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
 
 # Digital twin / dashboard / home-snapshot live state — regenerated every control cycle
 viewer/state.json

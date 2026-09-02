@@ -49,7 +49,25 @@ class ModuleRegistry:
 
     def __init__(self, config_path: str, db_path: str, notifier=None, force_read_fn=None):
         self.config_path = Path(config_path)
-        self.db_conn = sqlite3.connect(db_path)
+        # Real bug found live 2026-09-02: main.py and drivers/simulator.py
+        # --run are two independent processes both writing the same
+        # SQLite file on their own 5-second interval, with SQLite's
+        # default rollback-journal mode (locks the WHOLE file during a
+        # write) and default 5-second busy_timeout. The simulator lost
+        # that race and crashed outright on "database is locked" after
+        # ~2 days of continuous operation, leaving the entire sensor feed
+        # dead with nothing restarting it until a human noticed.
+        # journal_mode=WAL is a database-file-level setting (persists for
+        # every future connection from any process, not just this one) —
+        # readers no longer block a writer or vice versa, which is the
+        # actual fix for two always-on daemons sharing one file. The
+        # longer busy_timeout is defense in depth for the genuine
+        # writer-vs-writer case WAL doesn't eliminate (both daemons
+        # committing in the same instant) — this connection is a
+        # long-running daemon, not a one-shot CLI tool, so waiting a few
+        # seconds for a lock is free; crashing is not.
+        self.db_conn = sqlite3.connect(db_path, timeout=30.0)
+        self.db_conn.execute("PRAGMA journal_mode=WAL")
         self.notifier = notifier
         # force_read_fn(sensor_id) -> bool: optional, forwarded to every
         # module so its recovery ladder can request an immediate fresh
