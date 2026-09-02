@@ -2874,6 +2874,109 @@ def scenario_mcu_transport_scan_paces_by_interval():
     return checks
 
 
+def _fresh_pilot_system():
+    """Single-cell pilot setup — same shape as fresh_system(), but for
+    docs/PILOT_VS_SCALE.md's real trimmed pilot cell (pH-up only, no
+    ph_down/nutrient pumps) instead of the fully-equipped demo cell."""
+    from drivers.simulator import setup_pilot_cell
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    pilot_id = setup_pilot_cell(conn)
+    sim = PhysicsSimulator(conn, cell_id=pilot_id)
+
+    notifier = NotificationDispatcher(NotificationConfig())
+    registry = ModuleRegistry.__new__(ModuleRegistry)
+    registry.config_path = CONFIG_PATH
+    registry.db_conn = conn
+    registry.notifier = notifier
+    id_to_type = {v: k for k, v in sim.sensors.items()}
+    registry.force_read_fn = lambda sensor_id: sim.force_read(id_to_type.get(sensor_id, ""))
+    registry.modules = {}
+    registry.load()
+
+    return conn, registry, sim, pilot_id
+
+
+def scenario_dosing_no_actuator_alerts_instead_of_faking():
+    """Real, actively-firing bug found live 2026-09-02, via the
+    rendered Journal view (viewer/journal.html) — every one of the
+    most recent 100 journal entries was "Dosed ph_down" for pilot_cell,
+    each ~5 real seconds apart, 668 in the last hour alone.
+    docs/PILOT_VS_SCALE.md's own trimmed pilot scope deliberately has
+    no ph-down pump ("pH-up only to start") — confirmed live: pilot's
+    actuators are ph_up pump + circulation + aerator only, nothing
+    else. But nothing checked for that before proposing a correction
+    in that direction: _dose_command() logged a real dosing_events row
+    and issued a real ActuatorCommand(actuator_id=-1, ...) every single
+    cycle, unconstrained (no dosing_limits row for pilot ph_down either,
+    which used to mean "nothing to enforce" — see the sibling scenario
+    below for that half of the fix). Confirms: a real pH-too-high
+    crash on the pilot cell now raises a real, informative warning
+    instead — no fake dosing_events row, no command for a nonexistent
+    actuator.
+
+    Also confirms the warning message dedups across repeated cycles —
+    caught live immediately after writing the fix below: the first
+    version embedded the live pH value in the message, defeating
+    raise_alert()'s dedup exactly like the already-documented "dose
+    blocked" regression earlier this session (5 distinct rows had
+    already accumulated in the few minutes before that was caught)."""
+    conn, registry, sim, pilot_id = _fresh_pilot_system()
+    sim.inject_ph_crash(0.9)  # pilot's target is 6.6-7.2 — push it high, needing ph_down
+    run_cycles(registry, sim, n=5)
+
+    dose_count = get_dose_count(conn, "ph_down")
+    fake_command_count = conn.execute(
+        "SELECT COUNT(*) FROM actuator_events WHERE actuator_id = -1"
+    ).fetchone()[0]
+    warning_alerts = get_alerts(conn, "warning")
+    matching_rows = conn.execute(
+        "SELECT occurrence_count FROM alerts WHERE message LIKE '%no ph_down pump is configured%' "
+        "AND resolved = 0"
+    ).fetchall()
+
+    checks = [
+        ("no fake ph_down dosing_events were logged for a cell with no ph_down pump", dose_count == 0),
+        ("no command was issued for the actuator_id=-1 sentinel", fake_command_count == 0),
+        ("a real warning explains dosing is held for lack of a real pump",
+         any("no ph_down pump is configured" in m for _, _, m in warning_alerts)),
+        ("repeated cycles collapse into exactly one alert row (dedup works)",
+         len(matching_rows) == 1),
+        ("that one row's occurrence_count reflects more than one cycle",
+         len(matching_rows) == 1 and matching_rows[0][0] > 1),
+    ]
+    return checks
+
+
+def scenario_dosing_no_limit_configured_blocks_and_alerts():
+    """The other half of the same fix, defense in depth: a cell WITH a
+    real actuator but a genuinely missing dosing_limits row (a
+    configuration error, not the normal "no pump built yet" case the
+    scenario above covers) used to mean "nothing to enforce" — allowing
+    unlimited dosing frequency, backwards for a safety gate. Confirms
+    it now fails closed (blocks the dose, real warning alert) instead,
+    matching SAFETY_SPEC.md's own "limits are defined per chemical, per
+    cell," not optional."""
+    conn, registry, sim, cell_id = fresh_system()
+    conn.execute("DELETE FROM dosing_limits WHERE cell_id = ? AND dose_type = 'ph_up'", (cell_id,))
+    conn.commit()
+
+    sim.inject_ph_crash(-0.7)
+    run_cycles(registry, sim, n=5)
+
+    dose_count = get_dose_count(conn, "ph_up")
+    warning_alerts = get_alerts(conn, "warning")
+
+    checks = [
+        ("no dose fired with no dosing_limits row configured, despite pH needing correction",
+         dose_count == 0),
+        ("a real warning explains dosing is blocked for lack of a configured limit",
+         any("no dosing_limits configured" in m for _, _, m in warning_alerts)),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2934,6 +3037,8 @@ SCENARIOS = {
     "mcu_transport_dispatches_real_command": scenario_mcu_transport_dispatches_real_command,
     "mcu_transport_fallback_raises_critical": scenario_mcu_transport_fallback_raises_critical,
     "mcu_transport_scan_paces_by_interval": scenario_mcu_transport_scan_paces_by_interval,
+    "dosing_no_actuator_alerts_instead_of_faking": scenario_dosing_no_actuator_alerts_instead_of_faking,
+    "dosing_no_limit_configured_blocks_and_alerts": scenario_dosing_no_limit_configured_blocks_and_alerts,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,

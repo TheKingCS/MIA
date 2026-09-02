@@ -412,18 +412,54 @@ class AquaponicsCell(MiaHomesteadModule):
         return profile[0], profile[1]
 
     def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand | None:
-        """Returns None (no dose, nothing logged) if dosing_limits'
+        """Returns None (no dose, nothing logged) if no real pump is
+        configured for this dose_type on this cell, or if dosing_limits'
         min_interval_minutes hasn't elapsed since the last dose of this
         type — see _within_dosing_interval()'s own docstring for why
-        this check has to happen HERE, before logging, not in the base
-        class's _validate_command() hook where it was originally meant
-        to live."""
+        the interval check has to happen HERE, before logging, not in
+        the base class's _validate_command() hook where it was
+        originally meant to live.
+
+        Actuator existence checked FIRST, before anything else. Real
+        bug found live 2026-09-02, via the rendered Journal view: this
+        used to skip straight to logging regardless — pilot_cell fired
+        668 fictional "ph_down" dosing_events in one hour alone, every
+        single cycle, commanding actuator_id=-1 (docs/PILOT_VS_SCALE.md's
+        own trimmed pilot scope deliberately has no ph-down pump, "pH-up
+        only to start" — nothing here ever checked for that before
+        proposing a correction in that direction). Same "opt-in
+        hardware, alert instead of faking it" discipline as
+        _evaluate_temp_water()'s water_heater check and _evaluate_ec()'s
+        "no auto-correction for EC too high" below — a cell that
+        physically can't correct in some direction should say so, not
+        pretend to. This is also why the missing-actuator case never
+        reaches _within_dosing_interval()'s own "no configured limit"
+        fallback below — every real actuator in this system has a real
+        configured limit (confirmed live), so that fallback is now only
+        ever a genuine configuration error, not a normal opt-out-of-
+        hardware case."""
+        actuator_id = self._actuator_id_for(dose_type)
+        if actuator_id == -1:
+            # Message text is DELIBERATELY constant — no rationale/reading
+            # value here. Caught live 2026-09-02, immediately after
+            # writing this same check: embedding `rationale` (a live pH/EC
+            # value, different almost every cycle) would have defeated
+            # raise_alert()'s (source, message) dedup exactly like the
+            # already-documented "dose blocked" regression earlier this
+            # session — 5 distinct rows for this one still-ongoing
+            # condition had already accumulated in the few minutes before
+            # this was caught. occurrence_count/last_seen on one row
+            # already show how long and how often this has been true.
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: {dose_type} correction needed but no {dose_type} pump "
+                f"is configured for this cell — dosing held, needs a human",
+            )
+            return None
+
         if not self._within_dosing_interval(dose_type):
             return None
 
-        # Actuator ID lookup would come from the actuators table in a
-        # real implementation, keyed by cell_id + dose_type.
-        actuator_id = self._actuator_id_for(dose_type)
         logger.info(
             "%s: proposing dose %s (current reading %.2f) — %s",
             self.module_id, dose_type, current_value, rationale,
@@ -480,7 +516,24 @@ class AquaponicsCell(MiaHomesteadModule):
             (self.cell_id, dose_type),
         ).fetchone()
         if limit_row is None:
-            return True  # no configured limit for this cell/dose_type — nothing to enforce yet
+            # Real gap found live 2026-09-02, hardened as defense in
+            # depth: this used to return True ("nothing to enforce
+            # yet") — backwards for a safety gate. Confirmed live that
+            # every real actuator in this system already has a real
+            # configured dosing_limits row, so this branch is no longer
+            # a normal "hardware not built yet" case (that's now caught
+            # earlier, in _dose_command()'s own actuator-existence
+            # check, before this method is even called) — it's only
+            # reachable for a genuine configuration error: a real pump
+            # exists with no limit defined for it. SAFETY_SPEC.md is
+            # explicit that limits are "defined per chemical, per
+            # cell," not optional — fail closed, not open, and say why.
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: {dose_type} dose blocked — no dosing_limits configured "
+                f"for this cell/dose_type (SAFETY_SPEC.md requires one before dosing)",
+            )
+            return False
         min_interval_minutes = limit_row[0]
 
         last = self.db.execute(

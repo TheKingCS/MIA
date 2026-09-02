@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 193 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 200 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,54 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**A real bug found by actually looking at the rendered dashboard, found
+and closed 2026-09-02:** the user asked for a visual/dashboard polish
+pass; getting Playwright rendering working (the user installed the
+missing `libnspr4`/`libnss3` system libs) surfaced something a pure DB
+query never would have: `viewer/journal.html`'s most recent 100
+entries were ALL "Dosed ph_down" for pilot_cell, ~5 real seconds apart,
+668 in the last hour alone. Root cause: `docs/PILOT_VS_SCALE.md`'s own
+trimmed pilot scope deliberately has no ph-down pump ("pH-up only to
+start" — confirmed live, pilot's only dosing actuator is `pilot_ph_up_
+pump`), but `modules/aquaponics_cell.py`'s `_dose_command()` never
+checked whether a real actuator existed before proposing a correction
+— it logged a real `dosing_events` row and issued a real
+`ActuatorCommand(actuator_id=-1, ...)` every single cycle, completely
+unconstrained, because `_within_dosing_interval()`'s old "no
+`dosing_limits` row configured" fallback returned `True` ("nothing to
+enforce yet") instead of blocking. Two fixes: (1) `_dose_command()` now
+checks actuator existence FIRST — no real pump means a real, honest
+warning alert instead of a fake dose, same "opt-in hardware, alert
+instead of faking it" discipline already used for
+`_evaluate_temp_water()`'s water_heater check and `_evaluate_ec()`'s
+"no auto-correction for EC too high"; (2) `_within_dosing_interval()`'s
+missing-limit fallback now fails CLOSED (blocks + warns) instead of
+open — confirmed live that every real actuator in this system already
+has a real configured `dosing_limits` row, so this is now only ever a
+genuine configuration-error case, not a normal missing-hardware one.
+
+**Caught immediately, before shipping**: the first version of fix #1's
+warning message embedded the live pH value (from `rationale`),
+defeating `raise_alert()`'s dedup exactly like the already-documented
+"dose blocked" regression from earlier this session — 5-7 distinct
+rows had already accumulated in the few minutes before this was
+caught by re-reading the journal export. Fixed to static text before
+it could spread further, and the scenario strengthened to explicitly
+assert dedup (`occurrence_count` bumps, not new rows) so this specific
+regression class can't slip through unnoticed again.
+
+Verified: 2 new scenarios (`dosing_no_actuator_alerts_instead_of_
+faking`, `dosing_no_limit_configured_blocks_and_alerts`) — 200 passed,
+0 failed overall, self_audit clean. Live-verified in full: restarted
+`main.py`, confirmed the fake-dosing counter froze completely (was
+climbing every ~5s, now static across 15+ real seconds), confirmed the
+real warning alert fires and dedups to one row with `occurrence_count`
+climbing (not new rows), cleaned up 9,997 fictional `dosing_events` +
+9,997 fictional `actuator_events` (`actuator_id=-1`) rows accumulated
+since 03:16 that morning, and the 7-row alert backlog from the
+self-caught regression, both through the real `AlertManager`/direct
+cleanup with a logged rationale — not silently deleted.
 
 **Day-one hardware readiness — all 4 items done (2026-09-02, user
 request, see `docs/DAY_ONE_READINESS.md`):** #4 (override switch),
