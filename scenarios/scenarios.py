@@ -2657,6 +2657,223 @@ def scenario_notification_config_loads_real_values():
     return checks
 
 
+class _FakeSerialPort:
+    """A fake object matching pyserial's Serial interface (.write,
+    .readline, .in_waiting, .close, .port) — same "fake object instead
+    of a mock" precedent drivers/mcu_serial.py's own module docstring
+    describes, and the reason this whole protocol layer is testable
+    with zero real hardware. Feed it a queue of incoming lines (what a
+    real MCU would send); .written records what was sent back to it,
+    for assertions."""
+
+    def __init__(self, device_path, incoming_lines=None):
+        self.port = device_path
+        self._incoming = list(incoming_lines or [])
+        self.written = []
+
+    @property
+    def in_waiting(self):
+        return len(self._incoming[0]) if self._incoming else 0
+
+    def readline(self):
+        return self._incoming.pop(0) if self._incoming else b""
+
+    def write(self, data):
+        self.written.append(data)
+
+    def close(self):
+        pass
+
+
+def scenario_mcu_transport_pairs_over_a_real_link():
+    """Real, actively-missing gap found live 2026-09-02
+    (docs/DAY_ONE_READINESS.md, item #2): confirmed by grep that no
+    code anywhere ever put a byte on a wire — core/device_registry.py
+    built real pair_confirm payloads but announce_device() was
+    explicitly "manual test call today." Confirms a real announce
+    message, heard on a real (fake, for this test) MCU link, results
+    in real auto-pairing AND a real pair_confirm sent back over that
+    same link — the full handshake, not just one half of it."""
+    import json
+    from core.device_registry import DeviceRegistry
+    from core.mcu_transport import McuTransportManager
+    from drivers.mcu_serial import MCULink
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    setup_demo_cell(conn)
+
+    announce = json.dumps({
+        "type": "announce", "hardware_id": "ESP32-TESTAAAA1111", "requested_role": "ph_dosing_mcu",
+    }).encode() + b"\n"
+
+    def fake_open_port(device_path):
+        return MCULink(_FakeSerialPort(device_path, incoming_lines=[announce]))
+
+    registry = DeviceRegistry(conn)
+    mgr = McuTransportManager(conn, registry)
+    paired = mgr.scan_for_new_devices(ports=["/dev/fake0"], open_port_fn=fake_open_port)
+
+    db_row = tuple(conn.execute(
+        "SELECT status, role FROM device_registrations WHERE hardware_id = ?", ("ESP32-TESTAAAA1111",)
+    ).fetchone())
+
+    link = mgr._links.get("ESP32-TESTAAAA1111")
+    sent_pair_confirm = link is not None and any(
+        json.loads(w.decode().strip()).get("type") == "pair_confirm" for w in link.port.written
+    )
+
+    checks = [
+        ("scan_for_new_devices() reports the real pairing", len(paired) == 1 and paired[0]["status"] == "paired"),
+        ("the device is really paired in the DB", db_row == ("paired", "ph_dosing_mcu")),
+        ("a real link is kept open for the newly paired device", link is not None),
+        ("a real pair_confirm was sent back over that same link", sent_pair_confirm),
+    ]
+    return checks
+
+
+def scenario_mcu_transport_dispatches_real_command():
+    """Confirms the other half of what execute_command() needed: a
+    command for an actuator with a real paired MCU is actually sent
+    over its real link (not just logged), and an actuator with no
+    paired MCU correctly signals the caller to fall back — main.py's
+    existing simulated-log behavior, unchanged for every actuator that
+    doesn't have real hardware yet."""
+    import json
+    from contracts.mia_homestead_contract import ActuatorCommand, TriggerSource
+    from core.device_registry import DeviceRegistry
+    from core.mcu_transport import McuTransportManager
+    from drivers.mcu_serial import MCULink
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    ph_up_actuator_id = conn.execute(
+        "SELECT id FROM actuators WHERE cell_id = ? AND name = 'ph_up_pump'", (cell_id,)
+    ).fetchone()[0]
+
+    registry = DeviceRegistry(conn)
+    mgr = McuTransportManager(conn, registry)
+    fake_port = _FakeSerialPort("/dev/fake0")
+    mgr._links["ESP32-TESTBBBB2222"] = MCULink(fake_port, hardware_id="ESP32-TESTBBBB2222")
+    conn.execute(
+        "INSERT INTO device_registrations (hardware_id, role, cell_id, status, paired_at) "
+        "VALUES ('ESP32-TESTBBBB2222', 'ph_dosing_mcu', ?, 'paired', datetime('now'))",
+        (cell_id,),
+    )
+    conn.commit()
+    mgr._rebuild_actuator_map()
+
+    real_cmd = ActuatorCommand(actuator_id=ph_up_actuator_id, action="pulse",
+                                duration_seconds=1.5, triggered_by=TriggerSource.AUTO_CONTROL)
+    unpaired_cmd = ActuatorCommand(actuator_id=999999, action="pulse",
+                                    duration_seconds=1.0, triggered_by=TriggerSource.AUTO_CONTROL)
+
+    sent_real = mgr.dispatch_command(real_cmd)
+    sent_unpaired = mgr.dispatch_command(unpaired_cmd)
+
+    sent_command_msg = any(
+        json.loads(w.decode().strip()).get("type") == "command"
+        and json.loads(w.decode().strip()).get("actuator_id") == ph_up_actuator_id
+        for w in fake_port.written
+    )
+
+    checks = [
+        ("a command for a paired actuator is dispatched over its real link", sent_real is True),
+        ("the real link actually received a real command message", sent_command_msg),
+        ("an actuator with no paired MCU signals the caller to fall back", sent_unpaired is False),
+    ]
+    return checks
+
+
+def scenario_mcu_transport_fallback_raises_critical():
+    """Real, not theoretical, version of SAFETY_SPEC.md's own
+    critical-severity example: "safety MCU failed to hear from Pi."
+    Confirms a real status message reporting fallback_active:true
+    raises a real CRITICAL alert, and that raise_alert()'s own dedup
+    still applies here — a second fallback_active:true poll bumps the
+    same row's occurrence_count rather than creating a new one, same
+    discipline this session's dose-blocked-alert fix already
+    established for exactly this failure mode."""
+    import json
+    from core.device_registry import DeviceRegistry
+    from core.mcu_transport import McuTransportManager
+    from drivers.mcu_serial import MCULink
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    setup_demo_cell(conn)
+
+    status_msg = json.dumps({
+        "type": "status", "battery_mv": 12000, "uptime_s": 500, "fallback_active": True,
+    }).encode() + b"\n"
+
+    registry = DeviceRegistry(conn)
+    mgr = McuTransportManager(conn, registry)
+    fake_port = _FakeSerialPort("/dev/fake0", incoming_lines=[status_msg])
+    mgr._links["ESP32-TESTCCCC3333"] = MCULink(fake_port, hardware_id="ESP32-TESTCCCC3333")
+    conn.execute(
+        "INSERT INTO device_registrations (hardware_id, role, status) "
+        "VALUES ('ESP32-TESTCCCC3333', 'ph_dosing_mcu', 'paired')"
+    )
+    conn.commit()
+
+    mgr.poll_status()
+    alert_row = conn.execute(
+        "SELECT severity, occurrence_count FROM alerts WHERE source = 'mcu_transport'"
+    ).fetchone()
+
+    # A second fallback_active:true poll — dedup should bump, not duplicate.
+    fake_port._incoming.append(status_msg)
+    mgr.poll_status()
+    alert_row_after = conn.execute(
+        "SELECT severity, occurrence_count FROM alerts WHERE source = 'mcu_transport'"
+    ).fetchone()
+    total_rows = conn.execute("SELECT COUNT(*) FROM alerts WHERE source = 'mcu_transport'").fetchone()[0]
+
+    checks = [
+        ("a real CRITICAL alert was raised for a real fallback_active report",
+         alert_row is not None and alert_row[0] == "critical"),
+        ("a repeated fallback report dedups onto the same row (occurrence_count bumps)",
+         total_rows == 1 and alert_row_after[1] > alert_row[1]),
+    ]
+    return checks
+
+
+def scenario_mcu_transport_scan_paces_by_interval():
+    """Confirms scan_interval_seconds is real and enforced, same
+    is_due() pacing pattern core/mia_home_sync.py already established
+    — without this, a real deployment would either hammer every
+    serial port every single control-loop cycle, or never re-check at
+    all."""
+    from core.device_registry import DeviceRegistry
+    from core.mcu_transport import McuTransportManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    setup_demo_cell(conn)
+
+    registry = DeviceRegistry(conn)
+    mgr = McuTransportManager(conn, registry, scan_interval_seconds=60)
+
+    due_with_no_history = mgr._scan_due()
+    mgr._record_scan_attempt()
+    due_right_after_attempt = mgr._scan_due()
+
+    old_ts = (datetime.utcnow() - timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute(
+        "INSERT INTO system_heartbeat (component, last_seen) VALUES ('mcu_transport_scan', ?)", (old_ts,)
+    )
+    due_after_interval_elapsed = mgr._scan_due()
+
+    checks = [
+        ("due immediately with no prior scan attempt", due_with_no_history),
+        ("not due right after a scan attempt, within the configured interval", not due_right_after_attempt),
+        ("due again once scan_interval_seconds has genuinely elapsed", due_after_interval_elapsed),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2713,6 +2930,10 @@ SCENARIOS = {
     "pilot_shopping_list_includes_override_switch": scenario_pilot_shopping_list_includes_override_switch,
     "notification_config_honest_default_when_missing": scenario_notification_config_honest_default_when_missing,
     "notification_config_loads_real_values": scenario_notification_config_loads_real_values,
+    "mcu_transport_pairs_over_a_real_link": scenario_mcu_transport_pairs_over_a_real_link,
+    "mcu_transport_dispatches_real_command": scenario_mcu_transport_dispatches_real_command,
+    "mcu_transport_fallback_raises_critical": scenario_mcu_transport_fallback_raises_critical,
+    "mcu_transport_scan_paces_by_interval": scenario_mcu_transport_scan_paces_by_interval,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,

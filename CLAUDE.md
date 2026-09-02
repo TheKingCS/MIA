@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 181 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 193 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,61 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**Day-one hardware readiness, item #2 — real MCU serial transport
+(2026-09-02, user request, see `docs/DAY_ONE_READINESS.md`):** the
+biggest of the four day-one gaps. Confirmed by grep before touching
+anything: `core/device_registry.py` already built real `pair_confirm`
+payloads (`build_pair_confirm_payload()`) but nothing anywhere ever put
+a byte on a wire — `announce_device()` was explicitly "manual test call
+today," and `main.py`'s `execute_command()` was explicitly a "v0.1
+stand-in for real MCU dispatch," logging only. This sat squarely on the
+critical path for `docs/PILOT_VS_SCALE.md`'s own Priority #1 (flash and
+prove the firmware) and #3 (a real device pairing).
+
+Three new pieces: `drivers/mcu_serial.py` (the wire protocol —
+`MCULink` wraps a duck-typed port object, matching `pyserial`'s
+interface, rather than always constructing a real `serial.Serial`
+itself — same dependency-injection precedent as
+`core/deploy_manager.py`'s `repo_path` override — which is what makes
+the whole protocol layer testable today against a fake in-memory port,
+zero real hardware needed); `core/device_registry.py`'s new
+`listen_for_announce(link)` (reads a real message off a real link,
+routes a real `announce` through the existing `announce_device()`
+pairing logic, sends `pair_confirm` back over that same link once
+paired — closing the actual handshake `build_pair_confirm_payload()`'s
+own docstring said it was "ready the moment a transport layer is
+built" for); `core/mcu_transport.py`'s new `McuTransportManager`
+(scans for and pairs new devices — closing
+`docs/DEVICE_SETUP_GUIDE.md`'s own promise that "the system checks for
+it on its own within a few seconds... within about a minute," which
+nothing actually implemented before this — sends heartbeats, dispatches
+real actuator commands over the correct paired link, and raises a
+real, deduplicated CRITICAL alert on a real `fallback_active:true`
+status report, the actual version of `SAFETY_SPEC.md`'s own "safety MCU
+failed to hear from Pi" critical example). `main.py`'s
+`execute_command()` now tries a real send first, falling back to the
+exact same simulated-log line as before when no real MCU is paired for
+that actuator — unchanged behavior for every actuator in this
+environment today. New `get_mcu_transport_status` assistant tool.
+
+Verified: 4 new scenarios (12 checks) against a real fake in-memory
+serial port — a real `announce` message results in real pairing AND a
+real `pair_confirm` sent back; a command for a paired actuator is
+genuinely sent over its real link while an unpaired one correctly
+signals fallback; a real `fallback_active:true` report raises a real
+deduplicated CRITICAL; scan pacing is real and enforced (same
+`is_due()` pattern `core/mia_home_sync.py` already established). 193
+passed, 0 failed overall, self_audit clean (33/33 verification
+coverage). Live-verified further than the scenarios: restarted
+`main.py` in this actual sandbox, which genuinely has 8 virtual serial
+ports (`/dev/ttyS0`-`7`) — the real scan found them, real
+`open_port()` attempts correctly failed with a real I/O error (no
+functioning UART hardware attached) and logged a warning without
+crashing, normal `EXECUTE (simulated): ...` dispatch continued exactly
+as before, and the scan didn't re-trigger over 20+ real seconds/
+multiple cycles — confirmed the pacing holds under genuine wall-clock
+time, not just a scenario's synthetic backdated timestamp.
 
 **Day-one hardware readiness, item #1 (2026-09-02, user request — see
 `docs/DAY_ONE_READINESS.md`):** critical alerts were silently inert —

@@ -942,6 +942,11 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_mcu_transport_status",
+        "description": "Get which Safety MCUs are currently paired, their role/cell, when each was last heard from, and when the system last scanned for a new device.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -982,6 +987,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_circulation_status": "status",
     "get_data_retention_status": "status",
     "get_mia_home_sync_status": "status",
+    "get_mcu_transport_status": "status",
     "get_open_alerts": "status",
     "acknowledge_alert": "status",
     "resolve_alert": "status",
@@ -1441,6 +1447,11 @@ class _BaseGreenhouseAssistant:
     def _tool_get_mia_home_sync_status(self) -> dict:
         from core.mia_home_sync import MiaHomeSync
         return {"mia_home_sync": MiaHomeSync(self.db).get_status()}
+
+    def _tool_get_mcu_transport_status(self) -> dict:
+        from core.device_registry import DeviceRegistry
+        from core.mcu_transport import McuTransportManager
+        return {"mcu_transport": McuTransportManager(self.db, DeviceRegistry(self.db)).get_status()}
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}

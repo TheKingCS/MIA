@@ -31,6 +31,7 @@ from core.inventory import InventoryManager
 from core.capability_registry import CapabilityRegistry
 from core.hardware_registry import HardwareRegistry
 from core.device_registry import DeviceRegistry
+from core.mcu_transport import McuTransportManager
 from core.species_registry import SpeciesRegistry
 from core.bed_planting import BedPlantingManager
 from core.experiment_manager import ExperimentManager
@@ -70,18 +71,28 @@ logging.basicConfig(
 logger = logging.getLogger("mia_homestead.main")
 
 
-def execute_command(db: sqlite3.Connection, cmd) -> None:
-    """v0.1 stand-in for real MCU dispatch — logs the action that WOULD
-    be sent to the Safety MCU. Replace this function's body only, once
-    real hardware exists."""
+def execute_command(db: sqlite3.Connection, cmd, mcu_transport=None) -> None:
+    """Real MCU dispatch, added 2026-09-02 (docs/DAY_ONE_READINESS.md,
+    item #2) — this used to be a permanent "v0.1 stand-in," logging
+    only, with no code anywhere that could actually reach real
+    hardware. Now tries a real send first (core/mcu_transport.py,
+    correctly a no-op when no MCU is paired for this actuator — every
+    actuator, in this environment, today), falling back to the exact
+    same simulated-log line as before when it isn't. The
+    actuator_events row is written either way — that's the historical
+    record of what was commanded, real hardware or not, and other
+    modules (e.g. modules/aquaponics_cell.py's dosing-interval check)
+    read from it regardless."""
     db.execute(
         "INSERT INTO actuator_events (actuator_id, action, duration_seconds, triggered_by) "
         "VALUES (?, ?, ?, ?)",
         (cmd.actuator_id, cmd.action, cmd.duration_seconds, cmd.triggered_by.value),
     )
     db.commit()
+    sent_real = mcu_transport.dispatch_command(cmd) if mcu_transport else False
     logger.info(
-        "EXECUTE (simulated): actuator=%s action=%s duration=%s trigger=%s",
+        "EXECUTE (%s): actuator=%s action=%s duration=%s trigger=%s",
+        "real MCU" if sent_real else "simulated",
         cmd.actuator_id, cmd.action, cmd.duration_seconds, cmd.triggered_by.value,
     )
 
@@ -135,6 +146,7 @@ def main():
     maintenance = MaintenanceManager(db, notifier=notifier)
     inventory = InventoryManager(db, notifier=notifier)
     devices = DeviceRegistry(db, notifier=notifier)
+    mcu_transport = McuTransportManager(db, devices, notifier=notifier)
     species = SpeciesRegistry(db)
     bed_planting = BedPlantingManager(db, species, notifier=notifier)
     experiments = ExperimentManager(db, notifier=notifier, species_registry=species)
@@ -164,7 +176,7 @@ def main():
     # system starts, so it's never taught anything by hand.
     all_describables = [(mod, mid) for mid, mod in registry.modules.items()] + [
         (inventory, "inventory"), (maintenance, "maintenance"),
-        (notifier, "notifications"), (devices, "device_registry"),
+        (notifier, "notifications"), (devices, "device_registry"), (mcu_transport, "mcu_transport"),
         (species, "species_registry"), (bed_planting, "bed_planting"),
         (experiments, "experiment_manager"),
         (infrastructure, "infrastructure_registry"), (diagnostics, "diagnostics"),
@@ -222,10 +234,26 @@ def main():
             # safety net behind it for everything else in one cycle.
             try:
                 record_heartbeat(db, "pi_main_loop")
+
+                # Real MCU transport, added 2026-09-02 (docs/DAY_ONE_
+                # READINESS.md, item #2). Self-paced (scan_for_new_
+                # devices() only actually opens/listens on ports once
+                # its own interval has elapsed) and always a correct
+                # no-op today — zero serial hardware exists in this
+                # environment, so every actuator command below still
+                # falls back to the exact same simulated-log behavior
+                # as before.
+                paired = mcu_transport.scan_for_new_devices()
+                if paired:
+                    logger.info("Paired %d new device(s) over a real MCU link: %s",
+                                len(paired), [p["hardware_id"][:8] for p in paired])
+                mcu_transport.send_heartbeats()
+                mcu_transport.poll_status()
+
                 results = registry.run_all_cycles()
                 for module_id, commands in results.items():
                     for cmd in commands:
-                        execute_command(db, cmd)
+                        execute_command(db, cmd, mcu_transport=mcu_transport)
                     if not commands:
                         logger.debug("%s: no actions this cycle", module_id)
 

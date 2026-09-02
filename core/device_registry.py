@@ -69,9 +69,12 @@ class DeviceRegistry(Describable):
     # ---------- Announce / pairing ----------
 
     def announce_device(self, hardware_id: str, requested_role: str = None) -> dict:
-        """Called when a device shows up (real handshake later, manual
-        test call today). Auto-pairs if the requested role is known and
-        unclaimed; otherwise queues it for human resolution."""
+        """Called when a device shows up — via listen_for_announce()
+        below reading a real announce message off a real MCU link
+        (drivers/mcu_serial.py, added 2026-09-02), or directly for a
+        manual test/CLI call, same either way. Auto-pairs if the
+        requested role is known and unclaimed; otherwise queues it for
+        human resolution."""
         existing = self.db.execute(
             "SELECT id, role, status FROM device_registrations WHERE hardware_id = ?",
             (hardware_id,),
@@ -112,6 +115,35 @@ class DeviceRegistry(Describable):
                 source="device_registry",
             )
         return {"hardware_id": hardware_id, "status": "needs_attention", "role": requested_role}
+
+    def listen_for_announce(self, link) -> dict | None:
+        """Reads one message off a real (or fake, for tests)
+        drivers.mcu_serial.MCULink; if it's an announce message,
+        routes it through announce_device() — the same real pairing
+        logic above, now actually reachable from a real wire message
+        instead of only a manual call. If that auto-pairs the device,
+        sends pair_confirm back over the SAME link that just
+        announced, closing the handshake for real (the payload
+        build_pair_confirm_payload() below has always constructed
+        correctly, per that method's own docstring, "the moment a
+        transport layer is built" — this is that moment). Returns
+        announce_device()'s result if an announce was heard, None
+        otherwise (nothing waiting, or a non-announce message — ack/
+        status from an already-paired device passes through silently
+        here; that's polled elsewhere, this is specifically for
+        hearing a NEW device)."""
+        msg = link.read_message()
+        if msg is None or msg.get("type") != "announce":
+            return None
+        hardware_id = msg.get("hardware_id")
+        if not hardware_id:
+            logger.warning("Received an announce message with no hardware_id — ignoring: %s", msg)
+            return None
+        result = self.announce_device(hardware_id, requested_role=msg.get("requested_role"))
+        if result.get("status") == "paired":
+            payload = self.build_pair_confirm_payload(result["role"], result["cell_id"])
+            link.send_pair_confirm(payload["role"], payload["cell_id"], payload["controls"])
+        return result
 
     def pair_device(self, hardware_id: str, role: str, cell_id: int = None) -> dict:
         """Manual/assistant-driven pairing — for a device already sitting
@@ -181,11 +213,12 @@ class DeviceRegistry(Describable):
         _ensure_actuators_exist() already creates/looks up, so this is
         always the real, current DB state, never invented ids.
 
-        Constructs the payload only — does NOT send it. No serial
-        transport is implemented yet (no real MCU hardware exists to
-        pair with); see MCU_PROTOCOL.md's own open items. This exists so
-        the payload is correct and ready the moment a transport layer
-        is built, rather than deferring the id-mapping question to then."""
+        Constructs the payload only — does NOT send it (listen_for_
+        announce() above does, over a real MCULink, the moment a device
+        auto-pairs). This still exists as its own method so the id-
+        mapping logic is independently callable/testable — e.g. the
+        assistant, or a human re-confirming an already-paired device
+        without a fresh announce message."""
         if role not in self.roles:
             raise ValueError(f"Unknown role '{role}'. Available: {list(self.roles.keys())}")
         role_def = self.roles[role]

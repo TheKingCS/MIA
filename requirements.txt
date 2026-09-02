@@ -9,4 +9,9 @@ pyyaml>=6.0
 # Real hardware drivers (uncomment once actual sensors are connected —
 # not needed for simulation-only work):
 # smbus2>=0.4.3      # I2C, for Atlas Scientific EZO circuits on Raspberry Pi
-# pyserial>=3.5       # UART, if using EZO circuits in UART mode instead of I2C
+# pyserial>=3.5       # UART — drivers/mcu_serial.py's real Pi<->Safety MCU
+#                     # transport (docs/MCU_PROTOCOL.md), and/or EZO circuits
+#                     # in UART mode instead of I2C. Both open_port()/
+#                     # list_available_ports() degrade gracefully (log +
+#                     # return None/[]) if this isn't installed — never a
+#                     # hard crash, but real hardware pairing needs it.
