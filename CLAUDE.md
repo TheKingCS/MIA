@@ -150,6 +150,28 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
+**Digital Twin's "Cell Status" panel brought up to the dashboard's
+visual standard (2026-09-02, user request, following the visual review
+pass above):** used to be one unstyled line of raw values
+(`ph: 5.18 · ec: 1157.79 · ...`), no units, no trend, no visual
+hierarchy — a rough utilitarian afterthought next to the main
+Dashboard's polished per-metric cards for the exact same data.
+`viewer/digital_twin.html` now fetches `dashboard_state.json` (already
+regenerated every cycle, alongside `state.json`) purely for its richer
+per-sensor unit/trend data — `state.json` stays the only source for the
+3D scene's tank-status coloring, untouched — and renders the same
+`sensorTile()`/`sparkline()` visual language `viewer/dashboard.html`
+already established (same tokens, same card shape, same sparkline
+rendering), sized for the sidebar's narrower width. Real, live-caught
+polish issue along the way: a CSS-only guessed `max-height` for the
+scrollable panel visually overlapped the "Needs Attention" panel below
+it on a shorter viewport — fixed properly with a `ResizeObserver` on
+that panel (not a re-guessed fixed number) so the constraint stays
+correct regardless of why the other panel's size changes, verified by
+directly measuring both panels' real pixel positions in a live
+headless-Chromium render at two different viewport heights, not just
+eyeballing a screenshot.
+
 **A real bug found by actually looking at the rendered dashboard, found
 and closed 2026-09-02:** the user asked for a visual/dashboard polish
 pass; getting Playwright rendering working (the user installed the

@@ -59,14 +59,29 @@
   #status-panel {
     position: absolute;
     top: 24px; right: 24px;
-    width: 280px;
+    width: 328px;
+    /* max-height set in JS (adjustStatusPanelHeight()), not guessed
+       here — a fixed calc() undershot or overshot depending on
+       #go-here-panel's real (content-dependent) height and got caught
+       visually overlapping it on a shorter viewport. This CSS value is
+       only the fallback before JS runs on first paint. */
+    max-height: calc(100vh - 48px);
     background: rgba(16, 22, 29, 0.9);
     border: 1px solid var(--line);
     border-radius: 2px;
     padding: 16px 18px;
     z-index: 10;
     backdrop-filter: blur(6px);
+    overflow-y: auto;
+    pointer-events: auto;
   }
+
+  /* Thin, unobtrusive scrollbar — the panel scrolls internally rather
+     than growing tall enough to overlap #go-here-panel below it, but a
+     default scrollbar would look out of place against this theme. */
+  #status-panel::-webkit-scrollbar { width: 6px; }
+  #status-panel::-webkit-scrollbar-track { background: transparent; }
+  #status-panel::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
   #status-panel .panel-title {
     font-size: 10px;
@@ -78,22 +93,12 @@
     margin-bottom: 10px;
   }
 
-  .cell-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    font-size: 13px;
-    border-bottom: 1px solid var(--grid);
-  }
-
-  .cell-row:last-child { border-bottom: none; }
-
   .status-dot {
     display: inline-block;
     width: 8px; height: 8px;
     border-radius: 50%;
     margin-right: 8px;
+    flex-shrink: 0;
   }
   .status-ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
   .status-warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
@@ -104,6 +109,50 @@
     color: var(--text-dim);
     margin-top: 2px;
   }
+
+  /* Per-sensor tiles + sparklines — same visual language as
+     dashboard.html's .stat-tile/sensorTile() (same tokens, same
+     sparkline() function), sized for this panel's narrower width
+     instead of the main dashboard's full-page tile grid. Brought up
+     to that standard 2026-09-02 (user request) — this used to be a
+     single unstyled line of "ph: 5.18 · ec: 1157.79 · ..." with no
+     units, no trend, no visual hierarchy at all, next to the main
+     dashboard's polished cards for the exact same data. */
+  .cell-group { margin-bottom: 16px; }
+  .cell-group:last-child { margin-bottom: 0; }
+  .cell-group-label {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .mini-tiles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .mini-tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 8px 10px;
+  }
+  .mini-tile.stale { border-color: rgba(232, 163, 61, 0.45); }
+  .mini-label {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .mini-tile.stale .mini-label { color: var(--warning); }
+  .mini-value { font-size: 15px; font-weight: 600; margin-top: 3px; line-height: 1.1; }
+  .mini-tile.stale .mini-value { color: var(--warning); }
+  .mini-value .unit { font-size: 10px; color: var(--text-dim); font-weight: 400; }
+  .mini-sparkline { margin-top: 6px; height: 18px; }
+  .no-readings { font-size: 11px; color: var(--text-dim); }
 
   #footer-note {
     position: absolute;
@@ -393,26 +442,94 @@ function buildScene(layout, state) {
   });
 }
 
-function renderStatusPanel(state) {
+// Same tokens dashboard.html's sensorTile()/sparkline() use, sized for
+// this panel's narrower width instead of the main dashboard's tiles.
+const SENSOR_LABELS = {
+  ph: "Water pH", ec: "EC", temp_water: "Water Temp", temp_air: "Air Temp",
+  humidity: "Humidity", level: "Water Level", do: "Dissolved O2",
+  flow: "Flow", light: "Light", co2: "CO2",
+};
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v;
+    else e.setAttribute(k, v);
+  }
+  for (const c of children || []) {
+    if (c == null) continue;
+    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return e;
+}
+
+function miniSparkline(points, color) {
+  if (!points || points.length < 2) return null;
+  const min = Math.min(...points), max = Math.max(...points);
+  const range = max - min || 1;
+  const w = 100, h = 18, pad = 2;
+  const coords = points.map((v, i) => {
+    const x = (i / (points.length - 1)) * w;
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return [x, y];
+  });
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", h);
+  svg.setAttribute("preserveAspectRatio", "none");
+  const poly = document.createElementNS(svg.namespaceURI, "polyline");
+  poly.setAttribute("points", coords.map(([x, y]) => `${x},${y}`).join(" "));
+  poly.setAttribute("fill", "none");
+  poly.setAttribute("stroke", color);
+  poly.setAttribute("stroke-width", "1.75");
+  poly.setAttribute("stroke-linecap", "round");
+  poly.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(poly);
+  const [lx, ly] = coords[coords.length - 1];
+  const dot = document.createElementNS(svg.namespaceURI, "circle");
+  dot.setAttribute("cx", lx); dot.setAttribute("cy", ly); dot.setAttribute("r", "2");
+  dot.setAttribute("fill", color);
+  svg.appendChild(dot);
+  return svg;
+}
+
+function miniTile(r) {
+  const stale = r.is_stale;
+  const color = stale ? "#E8A33D" : "#4FD1C5";
+  const spark = miniSparkline(r.trend, color);
+  return el("div", { class: "mini-tile" + (stale ? " stale" : "") }, [
+    el("div", { class: "mini-label" }, [SENSOR_LABELS[r.type] || r.type]),
+    el("div", { class: "mini-value" }, [
+      String(Math.round(r.value * 100) / 100),
+      " ",
+      el("span", { class: "unit" }, [r.unit || ""]),
+    ]),
+    spark ? el("div", { class: "mini-sparkline" }, [spark]) : null,
+  ]);
+}
+
+function renderStatusPanel(state, dashboardData) {
   const list = document.getElementById('cell-list');
   list.innerHTML = '';
+  const readingsByCellId = {};
+  (dashboardData && dashboardData.cells || []).forEach(c => readingsByCellId[c.id] = c.readings || []);
+
   (state.cells || []).forEach(cell => {
     const worstTankStatus = (cell.tanks || []).reduce((worst, t) => {
       const rank = { ok: 0, warning: 1, critical: 2 };
       return rank[t.status] > rank[worst] ? t.status : worst;
     }, 'ok');
-    const row = document.createElement('div');
-    row.className = 'cell-row';
-    const readingsStr = Object.entries(cell.readings || {})
-      .map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`)
-      .join('  ·  ');
-    row.innerHTML = `
-      <div>
-        <span class="status-dot status-${worstTankStatus}"></span>${cell.name}
-        <div class="readings">${readingsStr || 'no readings yet'}</div>
-      </div>
-    `;
-    list.appendChild(row);
+    const readings = readingsByCellId[cell.id] || [];
+    list.appendChild(el("div", { class: "cell-group" }, [
+      el("div", { class: "cell-group-label" }, [
+        el("span", { class: `status-dot status-${worstTankStatus}` }, []),
+        cell.name,
+      ]),
+      readings.length
+        ? el("div", { class: "mini-tiles" }, readings.map(miniTile))
+        : el("div", { class: "no-readings" }, ["no readings yet"]),
+    ]));
   });
   if (!state.cells || state.cells.length === 0) {
     list.innerHTML = '<div class="readings">No cells found in state.json</div>';
@@ -436,19 +553,60 @@ function renderGoHerePanel(state) {
   `).join('');
 }
 
+function adjustStatusPanelHeight() {
+  // Measures #go-here-panel's REAL top edge (its height depends on how
+  // many attention items it's showing, which varies) rather than
+  // guessing a fixed CSS max-height — a guessed value visually
+  // overlapped this panel on a shorter viewport with real content in
+  // both panels, since neither panel's true height was known in
+  // advance. A single calculation right after render wasn't reliable
+  // either — caught live, via a real measurement mismatch (the applied
+  // max-height didn't match recomputing the same formula moments
+  // later): something shifted go-here-panel's true layout after this
+  // first ran, even though nothing here obviously triggers a second
+  // layout pass. Rather than chase that exact cause, boot() now wires
+  // this via a ResizeObserver on #go-here-panel itself (see below) —
+  // correct regardless of WHY its size changes (viewport, content,
+  // fonts, or anything else), not just on window resize.
+  const statusPanel = document.getElementById('status-panel');
+  const goHerePanel = document.getElementById('go-here-panel');
+  const topMargin = 24, gapBetweenPanels = 16, bottomMargin = 24;
+  const goHereVisible = goHerePanel.style.display !== 'none';
+  const ceiling = goHereVisible ? goHerePanel.getBoundingClientRect().top - gapBetweenPanels
+                                 : window.innerHeight - bottomMargin;
+  statusPanel.style.maxHeight = Math.max(120, ceiling - topMargin) + 'px';
+}
+
 async function boot() {
   try {
-    const [layoutRes, stateRes] = await Promise.all([
+    // dashboard_state.json fetched separately from state.json (a
+    // sibling export, also regenerated every control cycle) purely for
+    // its richer per-sensor unit/trend data — state.json stays the only
+    // source for the 3D scene's tank-status coloring, untouched. Never
+    // blocks the core view: a missing/failed dashboard_state.json just
+    // means the sidebar falls back to "no readings yet" per cell,
+    // same degrade-gracefully precedent as state.json's own handling
+    // below.
+    const [layoutRes, stateRes, dashboardRes] = await Promise.all([
       fetch('../config/layout.json'),
       fetch('state.json').catch(() => null),
+      fetch('dashboard_state.json').catch(() => null),
     ]);
     const layout = await layoutRes.json();
     const state = stateRes && stateRes.ok ? await stateRes.json() : { cells: [] };
+    const dashboardData = dashboardRes && dashboardRes.ok ? await dashboardRes.json() : null;
 
     initScene();
     buildScene(layout, state);
-    renderStatusPanel(state);
+    renderStatusPanel(state, dashboardData);
     renderGoHerePanel(state);
+    adjustStatusPanelHeight();
+    window.addEventListener('resize', adjustStatusPanelHeight);
+    // Keeps this correct any time #go-here-panel's real size changes,
+    // for any reason — not just a window resize (see
+    // adjustStatusPanelHeight()'s own comment on why a one-shot call
+    // wasn't reliable enough on its own).
+    new ResizeObserver(adjustStatusPanelHeight).observe(document.getElementById('go-here-panel'));
   } catch (err) {
     document.getElementById('load-error').style.display = 'block';
     console.error(err);
