@@ -493,10 +493,21 @@ class AquaponicsCell(MiaHomesteadModule):
 
         elapsed_minutes = (datetime.utcnow() - datetime.fromisoformat(last[0])).total_seconds() / 60
         if elapsed_minutes < min_interval_minutes:
+            # Message text is DELIBERATELY constant — no elapsed_minutes
+            # here. Real regression of an already-documented failure
+            # mode, caught live 2026-09-02: this used to embed
+            # elapsed_minutes (changes every single cycle), which
+            # defeated raise_alert()'s (source, message) dedup — exactly
+            # the "runaway alert row growth" bug _attempt_recovery()'s
+            # own comment above already warns about, reintroduced here.
+            # 150+ distinct alert rows for this one still-ongoing
+            # condition had accumulated live before this fix.
+            # occurrence_count/last_seen on one row already show how
+            # long and how often this has been happening.
             self._raise_alert(
                 "warning",
-                f"{self.module_id}: {dose_type} dose blocked — only {elapsed_minutes:.1f} min "
-                f"since the last one, minimum interval is {min_interval_minutes} min "
+                f"{self.module_id}: {dose_type} dose blocked — waiting for the minimum "
+                f"interval ({min_interval_minutes} min) since the last dose "
                 f"(SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
             )
             return False

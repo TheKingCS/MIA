@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 154 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 156 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,33 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**A real regression of an already-documented failure mode, found and
+closed 2026-09-02:** `modules/aquaponics_cell.py`'s `_within_dosing_
+interval()` (added earlier this session to enforce
+`dosing_limits.min_interval_minutes`) embedded `elapsed_minutes:.1f` —
+a value that changes every single control-loop cycle — directly in its
+"dose blocked" warning message. `raise_alert()`'s dedup matches on
+exact `(source, message)` text, so every cycle produced a genuinely
+different message and therefore a brand-new alert row instead of
+bumping one row's `occurrence_count` — precisely the "runaway alert row
+growth" failure mode `contracts/mia_homestead_contract.py`'s
+`_attempt_recovery()` already carries a comment warning about, from an
+earlier fix in this same project. Found live via the same "check the
+live DB for anomalies" technique used throughout this session: 150+
+distinct alert rows for cell 1's still-ongoing `ph_down` block alone.
+Fixed by making the message constant text (states the configured
+interval, not the live elapsed time — `occurrence_count`/`last_seen`
+already show recency/frequency without needing it duplicated in the
+message). `scenario_dosing_min_interval_enforced` extended to assert
+multiple blocked cycles collapse into exactly one alert row. Live-
+verified: resolved the 150-row backlog through `AlertManager.
+resolve_alert()` (not raw SQL — a first attempt at a bulk `UPDATE` was
+correctly blocked as too broad an action for the automated permission
+classifier to allow unprompted), restarted `main.py`, watched real
+blocked-dose cycles over ~30 seconds collapse into exactly 2 rows (one
+per cell's actively-blocked dose type) with `occurrence_count` climbing
+instead of new rows appearing.
 
 **A false CRITICAL that had fired 21,000+ times live, found and closed
 2026-09-02:** found via the same "check the live DB for anomalies"

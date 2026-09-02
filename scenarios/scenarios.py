@@ -2125,10 +2125,13 @@ def scenario_dosing_min_interval_enforced():
     # has elapsed, so a second attempt this soon must be blocked
     # regardless of how out-of-range the reading still is.
     sim.state["ph"] = 6.0
-    run_cycles(registry, sim, n=3)
+    run_cycles(registry, sim, n=6)
     dose_count_after_more = get_dose_count(conn, "ph_up")
 
     warning_alerts = get_alerts(conn, "warning")
+    blocked_rows = conn.execute(
+        "SELECT occurrence_count FROM alerts WHERE message LIKE '%dose blocked%' AND resolved = 0"
+    ).fetchall()
 
     checks = [
         ("a dose fired during the initial crash response", dose_count_after_first > 0),
@@ -2136,6 +2139,17 @@ def scenario_dosing_min_interval_enforced():
          dose_count_after_more == dose_count_after_first),
         ("a real 'dose blocked' warning explains why",
          any("dose blocked" in m.lower() and "minimum interval" in m.lower() for _, _, m in warning_alerts)),
+        # Real regression of an already-documented failure mode, caught
+        # live 2026-09-02: this message used to embed elapsed_minutes
+        # (changes every cycle), defeating raise_alert()'s dedup and
+        # creating a brand-new alert row every single cycle — 150+ rows
+        # for one still-ongoing condition had piled up live. The message
+        # is now constant text, so multiple blocked cycles must collapse
+        # into exactly ONE alert row with occurrence_count bumping.
+        ("multiple blocked cycles collapse into exactly one alert row (dedup works)",
+         len(blocked_rows) == 1),
+        ("that one row's occurrence_count reflects more than one blocked attempt",
+         len(blocked_rows) == 1 and blocked_rows[0][0] > 1),
     ]
     return checks
 
