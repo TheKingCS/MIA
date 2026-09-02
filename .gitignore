@@ -46,6 +46,16 @@ trip_photos/*
 financial_snapshots/*
 !financial_snapshots/.gitkeep
 
+# MIA Home Homestead snapshot ingestion (core/homestead_manager.py) —
+# same watched-drop-folder pattern as financial_snapshots/ above, for
+# externally-exported mia-homestead JSON snapshots. Real gap found live
+# 2026-09-02: this entry was missing from the original
+# core/homestead_manager.py commit (08d41f4), so imported/failed files
+# would get accidentally tracked, unlike financial_snapshots/'s already-
+# correct handling.
+homestead_snapshots/*
+!homestead_snapshots/.gitkeep
+
 # Trail map PDFs (core/trail_map_library.py, Maps module) — user-added
 # official state park/trail map PDFs, downloaded or copied in by the
 # user. Same "large-ish user-supplied binary, not under data/" reasoning
