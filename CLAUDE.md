@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 173 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 181 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -150,9 +150,30 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
-**Day-one hardware readiness, first item (2026-09-02, user request —
-see `docs/DAY_ONE_READINESS.md` for the full brainstorm and the other
-3 items still to come):** the pilot's own shopping list never included
+**Day-one hardware readiness, item #1 (2026-09-02, user request — see
+`docs/DAY_ONE_READINESS.md`):** critical alerts were silently inert —
+`main.py` constructed `NotificationConfig()` with zero arguments,
+every run, with no way to set real SMTP/contact values short of
+hand-editing `main.py`'s source, unlike every other configurable
+subsystem in this project (`location.yaml`, `irrigation_schedules.yaml`,
+`mia_home_sync.yaml`). Fixed with `NotificationConfig.from_config()`
+(same `from_config()` pattern `core/irrigation.py` already uses),
+reading the new `config/notifications.yaml` — missing/empty values
+behave exactly like the old bare constructor (purely additive, nothing
+that worked before changes), matching `location.yaml`'s honest-null
+precedent. `main.py` now calls `NotificationConfig.from_config()`
+instead of the bare constructor. Two new scenarios (honest default
+when the file's missing; real values from a real file actually reach
+the dataclass, unknown future keys ignored rather than crashing). 181
+passed, 0 failed overall, self_audit clean. Live-verified: restarted
+`main.py`, confirmed clean startup reading the real (still-empty)
+config file, and confirmed a live `dispatch("critical", ...)` call
+against it still safely no-ops without raising — real SMTP delivery is
+correctly still a day-1 human action (a real account/credentials),
+this closes the wiring gap, not that gate.
+
+**Day-one hardware readiness, item #4 (2026-09-02, user request —
+see `docs/DAY_ONE_READINESS.md`):** the pilot's own shopping list never included
 the `SAFETY_SPEC.md`-required physical override switch, despite the
 pilot's whole stated purpose being proving the safety chain end to
 end — `docs/HARDWARE_BOM_FULL_TIERS.md` already priced this for full

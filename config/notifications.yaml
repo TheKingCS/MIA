@@ -1,0 +1,33 @@
+# MIA Homestead — Notifications
+#
+# SAFETY_SPEC.md's alerting escalation requires critical alerts reach
+# a real human (immediate push/SMS to primary + secondary contact).
+# core/notifications.py's NotificationConfig already implements this
+# correctly — email via any SMTP account (a free Gmail app password
+# works), SMS via a carrier email-to-SMS gateway, no vendor lock-in —
+# this file is just where you put the real values.
+#
+# Leave everything blank/missing (as it is now) and notifications stay
+# completely inert — honestly skipped, never guessed, same precedent
+# as config/location.yaml's weather-check gate. Nothing breaks; alerts
+# still show up on the dashboard and in the assistant, they just don't
+# reach anyone automatically until this is filled in.
+
+smtp_host: ""            # e.g. "smtp.gmail.com"
+smtp_port: 587
+smtp_user: ""             # your SMTP account's login (often your full email address)
+smtp_password: ""         # an APP password, not your real account password — Gmail: myaccount.google.com/apppasswords
+from_address: ""          # what shows up in the "From" field, usually the same as smtp_user
+
+primary_contact_email: ""
+secondary_contact_email: ""
+
+# SMS via carrier email gateway — both phone AND carrier are required
+# (the gateway domain is carrier-specific). See
+# core/notifications.py's CARRIER_SMS_GATEWAYS for the supported list
+# (verizon, att, tmobile, sprint, uscellular, boost, cricket, metropcs,
+# googlefi, visible, mint). Leave blank to skip SMS and use email only.
+primary_contact_phone: ""
+primary_contact_carrier: ""
+secondary_contact_phone: ""
+secondary_contact_carrier: ""

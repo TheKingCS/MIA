@@ -117,7 +117,7 @@ def main():
 
     # Notifications are optional and inert until SMTP creds are filled in —
     # safe to run with defaults during development.
-    notifier = NotificationDispatcher(NotificationConfig())
+    notifier = NotificationDispatcher(NotificationConfig.from_config())
 
     # force_read_fn=None: main.py and drivers/simulator.py --run are
     # separate processes sharing only the sqlite file, so there's no

@@ -26,8 +26,9 @@ the wrong one for something safety-certified.
 
 import logging
 import smtplib
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from email.message import EmailMessage
+from pathlib import Path
 
 from contracts.capability import Describable
 
@@ -70,6 +71,28 @@ class NotificationConfig:
     primary_contact_carrier: str = ""    # a key in CARRIER_SMS_GATEWAYS, e.g. "verizon"
     secondary_contact_phone: str = ""
     secondary_contact_carrier: str = ""
+
+    @classmethod
+    def from_config(cls, path: str = "config/notifications.yaml") -> "NotificationConfig":
+        """Real gap found live 2026-09-02 (docs/DAY_ONE_READINESS.md):
+        main.py used to construct NotificationConfig() with zero
+        arguments, every run, with no way to set real values short of
+        hand-editing main.py's source — the one configurable subsystem
+        in this project that didn't follow its own "config IS the
+        source of truth" convention (config/location.yaml,
+        config/irrigation_schedules.yaml, config/mia_home_sync.yaml all
+        do). A missing file or empty values behaves EXACTLY like the
+        old NotificationConfig() default — inert, never guessed at,
+        same precedent as location.yaml's weather-check gate — so this
+        is purely additive: nothing that worked before changes."""
+        import yaml
+        p = Path(path)
+        if not p.exists():
+            logger.info("No notification config at %s — notifications stay inert", path)
+            return cls()
+        raw = yaml.safe_load(p.read_text()) or {}
+        known_fields = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in raw.items() if k in known_fields and v is not None})
 
 
 class NotificationDispatcher(Describable):

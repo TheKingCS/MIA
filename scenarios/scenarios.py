@@ -2604,6 +2604,59 @@ def scenario_pilot_shopping_list_includes_override_switch():
     return checks
 
 
+def scenario_notification_config_honest_default_when_missing():
+    """Real gap found live 2026-09-02 (docs/DAY_ONE_READINESS.md, item
+    #1): main.py used to construct NotificationConfig() with zero
+    arguments — critical alerts (SAFETY_SPEC.md's own escalation
+    requirement) were silently inert with no way to configure real
+    values short of hand-editing main.py's source, unlike every other
+    configurable subsystem in this project. Confirms from_config()
+    with no file present behaves EXACTLY like the old bare
+    NotificationConfig() — purely additive, nothing that worked before
+    changes."""
+    from core.notifications import NotificationConfig
+
+    cfg = NotificationConfig.from_config("/tmp/definitely_does_not_exist_mia_homestead.yaml")
+
+    checks = [
+        ("smtp_host stays empty (inert) with no config file", cfg.smtp_host == ""),
+        ("smtp_port keeps its real default", cfg.smtp_port == 587),
+        ("primary_contact_email stays empty (inert)", cfg.primary_contact_email == ""),
+    ]
+    return checks
+
+
+def scenario_notification_config_loads_real_values():
+    """Confirms a real config file's real values actually reach
+    NotificationConfig — the whole point of closing this gap."""
+    import tempfile
+    from pathlib import Path
+    from core.notifications import NotificationConfig
+
+    tmp_dir = tempfile.mkdtemp()
+    config_path = Path(tmp_dir) / "notifications.yaml"
+    config_path.write_text(
+        "smtp_host: smtp.example.com\n"
+        "smtp_port: 465\n"
+        "primary_contact_email: ops@example.com\n"
+        "primary_contact_phone: '5551234567'\n"
+        "primary_contact_carrier: verizon\n"
+        "unknown_future_field: should be ignored, not crash\n"
+    )
+
+    cfg = NotificationConfig.from_config(str(config_path))
+
+    checks = [
+        ("smtp_host loaded from the real file", cfg.smtp_host == "smtp.example.com"),
+        ("smtp_port overridden from the real file", cfg.smtp_port == 465),
+        ("primary_contact_email loaded", cfg.primary_contact_email == "ops@example.com"),
+        ("primary_contact_carrier loaded", cfg.primary_contact_carrier == "verizon"),
+        ("secondary_contact_email keeps its default when not set in the file",
+         cfg.secondary_contact_email == ""),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2658,6 +2711,8 @@ SCENARIOS = {
     "mia_home_sync_paces_by_interval": scenario_mia_home_sync_paces_by_interval,
     "mia_home_sync_failure_raises_alert": scenario_mia_home_sync_failure_raises_alert,
     "pilot_shopping_list_includes_override_switch": scenario_pilot_shopping_list_includes_override_switch,
+    "notification_config_honest_default_when_missing": scenario_notification_config_honest_default_when_missing,
+    "notification_config_loads_real_values": scenario_notification_config_loads_real_values,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,
