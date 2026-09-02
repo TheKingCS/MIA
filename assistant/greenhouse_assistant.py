@@ -979,28 +979,57 @@ ALWAYS_ON_DOMAINS = {"status", "self_knowledge"}
 # everything else.
 
 TOOL_DOMAINS: dict[str, str] = {
-    # status — routine state checks, cheap, broadly relevant
+    # status (always-on) — kept deliberately small. Real regression found
+    # live 2026-09-02: this domain had grown to 21 tools (every "get_X_
+    # status" tool added across many sessions naturally landed here), and
+    # since status+self_knowledge are BOTH always-on (attached to EVERY
+    # query regardless of gating), that alone pushed the unconditional
+    # baseline to 30 tools — well past what docs/OFFLINE_ASSISTANT_PLAN.md's
+    # own live-model testing (step 4) had verified safe (13 tools: the
+    # original 8 status + 5 self_knowledge). Confirmed via
+    # assistant/live_model_check.py's golden set: 13/16 passed, not the
+    # documented 16/16 baseline — "Any open repair tasks?" and "Why does
+    # that pump run so much?" both called NO tool at all, even though the
+    # right tool WAS in the (now much longer) list, exactly the
+    # capacity-limit failure mode that doc already diagnosed once before
+    # at a different threshold. Trimmed back to the original 8 — every
+    # tool moved out below still exists, just gated behind real keywords
+    # instead of attached to literally every query.
     "get_current_status": "status",
-    "get_sensor_trends": "status",
-    "get_sensor_confidence": "status",
-    "get_leak_status": "status",
-    "get_circulation_status": "status",
-    "get_data_retention_status": "status",
-    "get_mia_home_sync_status": "status",
-    "get_mcu_transport_status": "status",
     "get_open_alerts": "status",
-    "acknowledge_alert": "status",
-    "resolve_alert": "status",
-    "get_alert_history": "status",
     "get_power_status": "status",
-    "get_power_forecast": "status",
-    "get_climate_status": "status",
-    "get_deploy_status": "status",
     "get_deadmans_switch_status": "status",
     "get_greenhouse_report": "status",
     "send_greenhouse_report": "status",
     "record_human_checkin": "status",
     "get_last_human_checkin": "status",
+    # system_health — sensor-meta/environmental diagnostics: real, useful,
+    # but not needed on every single turn the way "is anything wrong"
+    # (get_current_status, still always-on above) is.
+    "get_sensor_trends": "system_health",
+    "get_sensor_confidence": "system_health",
+    "get_leak_status": "system_health",
+    "get_circulation_status": "system_health",
+    "get_climate_status": "system_health",
+    "get_power_forecast": "system_health",
+    # alerts_management — acting on an alert, not just seeing the current
+    # list (get_open_alerts stays always-on; these don't need to be).
+    "acknowledge_alert": "alerts_management",
+    "resolve_alert": "alerts_management",
+    "get_alert_history": "alerts_management",
+    # system_ops — this system's own operational plumbing (data retention,
+    # MIA Home sync, MCU transport, deploys, self-diagnostics) — real,
+    # useful, genuinely niche; nobody asks about these every turn.
+    "get_data_retention_status": "system_ops",
+    "get_mia_home_sync_status": "system_ops",
+    "get_mcu_transport_status": "system_ops",
+    "get_deploy_status": "system_ops",
+    "run_self_diagnostics": "system_ops",
+    # activity — the journal/what's-next view, distinct from the
+    # headline "what's wrong right now" status stays above.
+    "get_activity_journal": "activity",
+    "get_control_loop_status": "activity",
+    "get_upcoming_activity": "activity",
     # dosing — pH/EC dosing history and rationale
     "get_dosing_history": "dosing",
     "get_dosing_rationale": "dosing",
@@ -1071,15 +1100,15 @@ TOOL_DOMAINS: dict[str, str] = {
     "record_revenue": "revenue",
     "get_cost_summary": "revenue",
     "get_profitability_summary": "revenue",
-    # self_knowledge — what the system can do, how it's changed, proof coverage
+    # self_knowledge (always-on) — kept to its original 5: what the system
+    # can do, how it's changed, proof coverage. run_self_diagnostics,
+    # get_activity_journal, get_control_loop_status, and get_upcoming_
+    # activity moved to system_ops/activity above — same always-on-bloat
+    # fix as status above, same reasoning.
     "get_system_capabilities": "self_knowledge",
     "get_self_change_history": "self_knowledge",
     "get_verification_coverage": "self_knowledge",
-    "run_self_diagnostics": "self_knowledge",
     "get_recent_automated_actions": "self_knowledge",
-    "get_activity_journal": "self_knowledge",
-    "get_control_loop_status": "self_knowledge",
-    "get_upcoming_activity": "self_knowledge",
     "get_hardware_needs_list": "self_knowledge",
 }
 
@@ -1153,6 +1182,26 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "revenue": [
         "revenue", "sales", "sold", "income", "earned", "market",
         "cost", "costs", "profit", "profitability", "margin", "expenses", "spent",
+    ],
+    # Four new domains, 2026-09-02 — split out of status/self_knowledge to
+    # fix the always-on tool-count regression (see TOOL_DOMAINS's own
+    # comment above for the full story).
+    "system_health": [
+        "trend", "trending", "drift", "drifting", "confidence", "accuracy",
+        "leak", "circulation", "stall", "stalled", "climate", "temperature",
+        "humidity", "co2", "battery forecast", "power forecast",
+    ],
+    "alerts_management": [
+        "acknowledge", "resolve", "resolved", "dismiss", "alert history",
+        "past alerts", "previous alerts",
+    ],
+    "system_ops": [
+        "sync", "mia home", "data retention", "deploy", "deployment",
+        "self-test", "self test", "self-diagnos", "diagnostics",
+    ],
+    "activity": [
+        "journal", "activity log", "what's next", "whats next", "upcoming",
+        "control loop", "loop running", "loop alive",
     ],
 }
 # status and self_knowledge are ALWAYS_ON_DOMAINS — attached unconditionally,
