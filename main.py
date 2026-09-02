@@ -55,6 +55,7 @@ from core.irrigation import IrrigationScheduler
 from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
 from core.data_retention import DataRetentionManager
+from core.mia_home_sync import MiaHomeSync
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -156,6 +157,7 @@ def main():
     circulation_monitor = CirculationMonitor(db, notifier=notifier)
     alert_manager = AlertManager(db, notifier=notifier)
     data_retention = DataRetentionManager(db, notifier=notifier)
+    mia_home_sync = MiaHomeSync(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -174,7 +176,7 @@ def main():
         (pest_disease, "pest_disease"), (weather, "weather_awareness"),
         (finance, "finance_tracker"), (irrigation, "irrigation_scheduler"),
         (circulation_monitor, "circulation_monitor"), (alert_manager, "alert_manager"),
-        (data_retention, "data_retention"),
+        (data_retention, "data_retention"), (mia_home_sync, "mia_home_sync"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -348,15 +350,19 @@ def main():
                 except Exception:
                     logger.exception("Dashboard state export failed this cycle — continuing control loop regardless")
 
-            # Local file only — getting this onto MIA Home's watched
-            # folder is a deliberately separate, still-manual step (see
-            # docs/MIA_HOME_SYNC_PLAN.md). Cheap enough to just run
-            # every cycle like the other two exports.
+            # Automated 2026-09-02 (docs/MIA_HOME_SYNC_PLAN.md's own
+            # "manual-first, automate later" transport question,
+            # resolved by the user) — core/mia_home_sync.py pushes this
+            # file to MIA Home's watched folder via rsync once
+            # config/mia_home_sync.yaml's destination is set, pacing
+            # itself on interval_minutes; a no-op call every cycle
+            # otherwise (destination unset, or not due yet).
             if not args.no_home_snapshot_export:
                 try:
                     export_home_snapshot(args.db, args.home_snapshot_out)
+                    mia_home_sync.maybe_sync(args.home_snapshot_out)
                 except Exception:
-                    logger.exception("MIA Home snapshot export failed this cycle — continuing control loop regardless")
+                    logger.exception("MIA Home snapshot export/sync failed this cycle — continuing control loop regardless")
 
             if not args.no_journal_export:
                 try:

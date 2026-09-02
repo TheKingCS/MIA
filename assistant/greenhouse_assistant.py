@@ -937,6 +937,11 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_mia_home_sync_status",
+        "description": "Get whether MIA Home sync is configured, when it last attempted/succeeded, and its configured interval — real visibility into whether the automated push to MIA Home is actually working.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -976,6 +981,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_leak_status": "status",
     "get_circulation_status": "status",
     "get_data_retention_status": "status",
+    "get_mia_home_sync_status": "status",
     "get_open_alerts": "status",
     "acknowledge_alert": "status",
     "resolve_alert": "status",
@@ -1431,6 +1437,10 @@ class _BaseGreenhouseAssistant:
             "table_row_counts": DataRetentionManager(self.db).get_table_sizes(),
             "retention_window_days": DEFAULT_RETENTION_DAYS,
         }
+
+    def _tool_get_mia_home_sync_status(self) -> dict:
+        from core.mia_home_sync import MiaHomeSync
+        return {"mia_home_sync": MiaHomeSync(self.db).get_status()}
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}

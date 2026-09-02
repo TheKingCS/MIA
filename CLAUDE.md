@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 160 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 171 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,45 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**MIA Home sync, automated end-to-end (2026-09-02, user request):**
+`docs/MIA_HOME_SYNC_PLAN.md`'s transport step was the one thing left
+manual — a human had to copy `viewer/home_snapshot.json` onto MIA
+Home's watched folder by hand. `core/mia_home_sync.py`'s `MiaHomeSync`
+(a plain `Describable`, not a `MiaHomesteadModule` — same "no sensor
+reading to go stale" reasoning `core/irrigation.py`'s docstring already
+gives for the identical choice) pushes it automatically via `rsync`
+once `config/mia_home_sync.yaml`'s `destination` is set (null =
+honestly skipped, same precedent as `config/location.yaml`), paced by
+a real, enforced `interval_minutes` (backed by one `system_heartbeat`
+row per attempt — the same row paces both "was the last successful
+sync recent enough" and "did we just try and shouldn't hammer an
+unreachable host again yet"). `destination` accepts either a plain
+local path (today's reality — both projects on this one machine) or a
+`user@host:path` remote (real deployment's reality once Homestead's Pi
+and Home's Ryzen/Radeon desktop are physically separate) — the exact
+same `rsync` command handles both, so moving from dev to real
+deployment is a config change, not a code change. A push failure
+(unreachable host, no SSH key yet, destination full) raises a real
+deduplicated warning alert and retries next interval — never crashes
+the control loop over a transport problem, matching this session's
+broader resilience work. New `get_mia_home_sync_status` assistant
+tool for visibility. Four new scenarios, including a real (not mocked)
+`rsync` push to a real local destination and a real failed push
+against an unreachable path. Live-verified further than "the scenario
+passes": restarted `main.py` with `config/mia_home_sync.yaml`'s
+`destination` actually set to this environment's real MIA path,
+watched the very first cycle push for real, confirmed the file landed
+on the MIA side, then ran MIA's own real `HomesteadManager.
+scan_for_new_snapshots()` and confirmed it picked up the freshly-pushed
+file — the whole pipeline, fully automated, proven live in both
+directions. Also found the MIA-side integration
+(`core/homestead_manager.py` + widget) was already built in a prior
+session (MIA commit `08d41f4`) — this repo's own
+`docs/MIA_HOME_SYNC_PLAN.md` was just stale about it, corrected
+alongside a real small gap the first-ever real transport run exposed:
+MIA's `.gitignore` was missing a `homestead_snapshots/*` entry (MIA
+commit `b8727e6`).
 
 **The sensor feed died for over an hour with nothing restarting it,
 found and closed 2026-09-02:** `drivers/simulator.py --run` crashed

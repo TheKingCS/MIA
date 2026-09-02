@@ -2432,6 +2432,149 @@ def scenario_registry_connection_survives_lock_contention():
     return checks
 
 
+def _mia_home_sync_with_config(conn, config_dict, tmp_dir):
+    """Writes a real temp YAML config file and constructs a real
+    MiaHomeSync against it — every scenario below exercises the actual
+    config-loading path, not a hand-constructed object bypassing it."""
+    import yaml
+    from core.mia_home_sync import MiaHomeSync
+
+    config_path = Path(tmp_dir) / "mia_home_sync.yaml"
+    config_path.write_text(yaml.dump(config_dict))
+    return MiaHomeSync(conn, config_path=str(config_path))
+
+
+def scenario_mia_home_sync_honest_skip_when_unconfigured():
+    """User asked to automate the manual transport step
+    docs/MIA_HOME_SYNC_PLAN.md left open (2026-09-02). Confirms the
+    honest-skip half first: with no destination configured (matching
+    config/location.yaml's same precedent for weather checks), maybe_
+    sync() does nothing at all — no rsync attempt, no heartbeat row,
+    no alert — rather than guessing at a destination."""
+    import tempfile
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    tmp_dir = tempfile.mkdtemp()
+
+    sync = _mia_home_sync_with_config(conn, {"destination": None}, tmp_dir)
+    result = sync.maybe_sync(snapshot_path=str(Path(tmp_dir) / "home_snapshot.json"))
+
+    heartbeats = conn.execute(
+        "SELECT COUNT(*) FROM system_heartbeat WHERE component = 'mia_home_sync'"
+    ).fetchone()[0]
+
+    checks = [
+        ("maybe_sync() returns None when unconfigured", result is None),
+        ("no heartbeat row written for a no-op", heartbeats == 0),
+    ]
+    return checks
+
+
+def scenario_mia_home_sync_pushes_via_rsync():
+    """Confirms a real rsync push actually delivers the file — not a
+    mocked subprocess call. Uses a real local destination directory,
+    the same shape config/mia_home_sync.yaml's own real configured
+    value uses today (both projects on one machine in this dev
+    environment)."""
+    import tempfile
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    tmp_dir = Path(tempfile.mkdtemp())
+    src_dir = tmp_dir / "src"
+    dest_dir = tmp_dir / "dest"
+    src_dir.mkdir()
+    dest_dir.mkdir()
+    snapshot_path = src_dir / "home_snapshot.json"
+    snapshot_path.write_text('{"source": "mia_homestead", "generated_at": "2026-09-02T00:00:00Z"}')
+
+    sync = _mia_home_sync_with_config(conn, {"destination": str(dest_dir) + "/"}, str(tmp_dir))
+    result = sync.maybe_sync(snapshot_path=str(snapshot_path))
+
+    delivered = (dest_dir / "home_snapshot.json").exists()
+    delivered_content = (dest_dir / "home_snapshot.json").read_text() if delivered else None
+
+    checks = [
+        ("maybe_sync() reports success for a real reachable local destination",
+         result is not None and result.get("success") is True),
+        ("the file genuinely landed at the destination via rsync", delivered),
+        ("the delivered content matches the source", delivered_content == snapshot_path.read_text()),
+    ]
+    return checks
+
+
+def scenario_mia_home_sync_paces_by_interval():
+    """Confirms interval_minutes is a real, enforced pacing value, not
+    just documentation — the same heartbeat row backs both 'was the
+    last successful sync recent enough' and 'did we just try and
+    shouldn't hammer an unreachable host again yet' (see is_due()'s own
+    docstring)."""
+    import tempfile
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    tmp_dir = tempfile.mkdtemp()
+
+    sync = _mia_home_sync_with_config(
+        conn, {"destination": "/tmp/wherever/", "interval_minutes": 5}, tmp_dir
+    )
+    due_with_no_history = sync.is_due()
+
+    conn.execute(
+        "INSERT INTO system_heartbeat (component, last_seen) VALUES ('mia_home_sync', datetime('now'))"
+    )
+    due_right_after_attempt = sync.is_due()
+
+    old_ts = (datetime.utcnow() - timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute(
+        "INSERT INTO system_heartbeat (component, last_seen) VALUES ('mia_home_sync', ?)", (old_ts,)
+    )
+    due_after_interval_elapsed = sync.is_due()
+
+    checks = [
+        ("due immediately when there's no prior attempt at all", due_with_no_history),
+        ("not due right after an attempt, within the configured interval", not due_right_after_attempt),
+        ("due again once interval_minutes has genuinely elapsed", due_after_interval_elapsed),
+    ]
+    return checks
+
+
+def scenario_mia_home_sync_failure_raises_alert():
+    """A push failure (host unreachable, destination doesn't exist,
+    SSH key not provisioned) is a real, expected operational condition
+    for something depending on a network link between two separate
+    machines — confirms it raises a real, informative warning alert
+    rather than crashing the control loop, matching every other
+    transport/IO failure this session's resilience work covers."""
+    import tempfile
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    tmp_dir = Path(tempfile.mkdtemp())
+    snapshot_path = tmp_dir / "home_snapshot.json"
+    snapshot_path.write_text('{"source": "mia_homestead", "generated_at": "2026-09-02T00:00:00Z"}')
+
+    # A destination whose parent doesn't exist — rsync genuinely fails
+    # against this, the same real failure shape as an unreachable host.
+    bad_destination = str(tmp_dir / "does_not_exist" / "also_does_not_exist") + "/"
+    sync = _mia_home_sync_with_config(conn, {"destination": bad_destination}, str(tmp_dir))
+
+    result = sync.maybe_sync(snapshot_path=str(snapshot_path))
+
+    alert = conn.execute(
+        "SELECT severity, message FROM alerts WHERE source = 'mia_home_sync'"
+    ).fetchone()
+
+    checks = [
+        ("maybe_sync() reports failure rather than raising an exception",
+         result is not None and result.get("success") is False),
+        ("a real warning alert was raised", alert is not None and alert[0] == "warning"),
+        ("the alert names the destination that failed", alert is not None and bad_destination in alert[1]),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2481,6 +2624,10 @@ SCENARIOS = {
     "simulator_demo_cell_stays_base_sensors": scenario_simulator_demo_cell_stays_base_sensors,
     "simulator_walk_stays_physically_plausible": scenario_simulator_walk_stays_physically_plausible,
     "registry_connection_survives_lock_contention": scenario_registry_connection_survives_lock_contention,
+    "mia_home_sync_honest_skip_when_unconfigured": scenario_mia_home_sync_honest_skip_when_unconfigured,
+    "mia_home_sync_pushes_via_rsync": scenario_mia_home_sync_pushes_via_rsync,
+    "mia_home_sync_paces_by_interval": scenario_mia_home_sync_paces_by_interval,
+    "mia_home_sync_failure_raises_alert": scenario_mia_home_sync_failure_raises_alert,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,
