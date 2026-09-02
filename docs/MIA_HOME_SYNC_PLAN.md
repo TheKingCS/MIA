@@ -193,16 +193,32 @@ and MIA Home are the same machine.
    `scenarios/scenarios.py` both still clean after wiring this in.
    Writes a local file only (`viewer/home_snapshot.json`, gitignored)
    — does not attempt any transport, per the "start manual" call above.
-2. **Needs a session in the `MIA` repo**: `core/homestead_manager.py` +
-   `homestead_snapshots/` folder (mirroring `finance_manager.py`
-   exactly) + a Homestead widget card in `gui/home_dashboard.py`
-   (mirroring `_build_real_estate_widget`). Small, well-precedented,
-   but real work in a different codebase with its own layering rules —
-   don't do this from inside a Homestead session.
-3. **Genuinely undecided, needs the user's call, not a default**: the
-   cross-machine transport question above, and the Pi5-vs-Ryzen
-   hardware-class discrepancy in what "MIA Home" even runs on for this
-   project's purposes.
+2. ~~Needs a session in the `MIA` repo~~ — **done (2026-08-30, MIA
+   commit `08d41f4`)**: `core/homestead_manager.py` (a deliberate
+   sibling of `finance_manager.py`, same watched-folder pattern),
+   `homestead_snapshots/` folder, and a "Homestead" widget card in
+   `gui/home_dashboard.py` with its own `_homestead_highlight()` for
+   the startup briefing. 24 tests, full MIA suite 1463/1463 passing.
+   That commit's own verification against a real Homestead export
+   caught and fixed a real shape bug (a nested `"data"` key that
+   doesn't match how `FinancialSnapshot.data` — and every formatter
+   reading it — actually works) before it shipped, which is why this
+   doc's own example above already shows the corrected flat shape.
+3. **Manual transport, exercised for real end-to-end (2026-09-02)**:
+   the watched folder had sat empty except `.gitkeep` since the MIA
+   commit — this transport had never actually been run for real.
+   Copied the live, currently-running `viewer/home_snapshot.json` from
+   this repo into `~/Projects/MIA/homestead_snapshots/`, ran a real
+   `HomesteadManager.scan_for_new_snapshots()` against the actual
+   default folder (not the isolated test fixture), and confirmed it
+   imported correctly, persisted, and `format_homestead_line()`
+   rendered the real current state. Also found and fixed a real gap
+   this exposed: `homestead_snapshots/*` was missing from MIA's
+   `.gitignore` (unlike the matching `financial_snapshots/*` entry),
+   so the imported file would have gotten swept into a commit by
+   `git add -A` — fixed in MIA commit `b8727e6`. Automated transport
+   remains genuinely undecided (see below) — this proves manual works,
+   it doesn't resolve whether to automate it.
 
 ## Open questions
 
@@ -212,7 +228,8 @@ and MIA Home are the same machine.
   (including other Pi5s) rather than the greenhouse Pi running Home's
   UI itself.
 - Automated transport now, or manual-first like the other two sources
-  — recommendation above is manual-first, but this is the user's call.
+  — recommendation above is manual-first (now proven working end-to-end,
+  see #3 above), but automating it is still the user's call, not a default.
 - Whether Home ever gets a live link into Homestead's own
   `dashboard.html` (same network) or stays snapshot-only (summarized,
   periodic, never live) — changes whether "top_alert" above is even
