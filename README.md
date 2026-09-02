@@ -341,16 +341,17 @@ mia-homestead/
    the logic and DB layer are ready, this is the last missing piece)
 6. Battery bank sizing and pricing, once real greenhouse load is known
 7. ~~MIA Home sync — pushing summarized state to the main dashboard~~ —
-   **code done on both sides, 2026-08-30** (see
+   **fully done and automated, 2026-09-02** (see
    `docs/MIA_HOME_SYNC_PLAN.md`): this repo's `viewer/export_home_snapshot.py`
    (wired into `main.py`) produces the snapshot; `~/Projects/MIA`'s
    `core/homestead_manager.py` + a "Homestead" dashboard widget ingest
    it — verified end-to-end with a real exported file, which caught
    and fixed a real shape mismatch before it shipped (see the plan
-   doc). **The one piece still genuinely open, and it's not code**: how
-   `home_snapshot.json` physically gets from this Pi onto the
-   Ryzen/Radeon desktop's watched folder — deliberately left manual for
-   now, matching how MIA Home's other two snapshot sources already work.
+   doc). Transport is now automated too: `core/mia_home_sync.py`'s
+   `MiaHomeSync` pushes the snapshot via `rsync` on a configurable
+   interval (`config/mia_home_sync.yaml`), live-verified pushing to a
+   real local destination and being picked up by MIA's own scanner —
+   no manual copy step left.
 8. ~~Local web UI for the on-site dashboard~~ — **done** (2026-08-30),
    see `viewer/dashboard.html` above. Two real gaps this surfaced were
    both fixed in later commits, not left open: `power_telemetry` had
