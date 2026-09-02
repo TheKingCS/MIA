@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 156 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 158 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,37 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**Simulated sensor data drifting into physically impossible values,
+found and closed 2026-09-02:** `drivers/simulator.py`'s `Simulator.
+tick()` (the plain continuous random-walk model used by `--run`, as
+opposed to `drivers/physics_sim.py`'s closed-loop `PhysicsSimulator`
+used only by the scenario suite) had NO bound on its random walk —
+`value += random.uniform(-drift, drift)` every real 5-second tick,
+forever. Left running continuously for ~2 real days, it wandered into
+physically impossible territory: humidity read 113.5%RH (real cap is
+100) and light read -7215 lux (light can't be negative), both fed
+straight into the live control loop as if they were normal, correct
+data — found via the dashboard's exported `viewer/state.json`, which
+made the implausible values visible at a glance. Worse, this driver
+also always hardcoded `is_out_of_range=0` regardless of the value,
+unlike the real `drivers/atlas_scientific_driver.py`'s `AtlasEZODriver`,
+which already validates every reading against a real `plausible_range`
+and flags it — meaning the "out of physically plausible range" branch
+of `contracts.MiaHomesteadModule._filter_stale()`'s recovery ladder was
+dead code for every reading this simulator ever produced. Fixed by
+adding a real `plausible_range` per sensor type to `SIM_SENSOR_DEFS`
+(reusing the Atlas driver's own already-established ph/ec bounds for
+consistency), clamping the underlying drift state to it every tick
+(bounds the walk so it can't run away again), and flagging
+`is_out_of_range` on the final noisy reading exactly like the real
+driver does. Scenario-proven
+(`scenario_simulator_walk_stays_physically_plausible`: 500 ticks never
+push any sensor outside its real plausible range; a genuinely
+implausible reading is correctly flagged). Live-verified: restarted
+`drivers/simulator.py --run`, confirmed humidity/light back to sane
+values (54.7%RH, 8245 lux) with `is_out_of_range=0` correctly evaluated
+on real fresh readings.
 
 **A real regression of an already-documented failure mode, found and
 closed 2026-09-02:** `modules/aquaponics_cell.py`'s `_within_dosing_

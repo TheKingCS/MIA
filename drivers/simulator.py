@@ -35,12 +35,36 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 SIM_SENSOR_DEFS = [
-    # (type, unit, start_value, drift_range, noise)
-    ("ph", "pH", 6.9, 0.02, 0.03),
-    ("ec", "uS/cm", 950, 5, 15),
-    ("temp_water", "F", 74.0, 0.1, 0.3),
-    ("temp_air", "F", 78.0, 0.3, 0.8),
-    ("humidity", "%RH", 55.0, 0.5, 1.5),
+    # (type, unit, start_value, drift_range, noise, plausible_range)
+    #
+    # plausible_range added 2026-09-02 — real, actively-manifesting bug
+    # found live: tick()'s random walk (value += uniform(-drift, drift),
+    # applied every 5 real seconds, forever) had NO bound at all. Left
+    # running continuously for ~2 days, it wandered into physically
+    # impossible territory: humidity read 113.5%RH (real cap is 100) and
+    # light read -7215 lux (light can't be negative) — both fed straight
+    # into the control loop as if they were normal, correct data,
+    # because this driver also always hardcoded is_out_of_range=0,
+    # unlike drivers/atlas_scientific_driver.py's real AtlasEZODriver,
+    # which already validates every reading against a real
+    # plausible_range and flags it. tick()/force_read() now clamp the
+    # underlying drift state to this range (bounds the walk so it can't
+    # run away again) and flag is_out_of_range on the final noisy
+    # reading exactly like the real driver does — this was previously
+    # dead code from this simulator's data, since a value that's always
+    # 0 never took the "out of physically plausible range" branch in
+    # contracts.MiaHomesteadModule._filter_stale()'s recovery ladder.
+    # ph/ec reuse atlas_scientific_driver.py's own already-established
+    # bounds for consistency; the rest are generous, physically-real
+    # bounds (freezing to well-beyond-lethal for temps, 0-100 hard cap
+    # for humidity, light capped at full-daylight lux, CO2 left wide
+    # enough that climate_control.py's real 5000ppm danger threshold is
+    # still well inside "plausible" and can still fire for real).
+    ("ph", "pH", 6.9, 0.02, 0.03, (0.0, 14.0)),
+    ("ec", "uS/cm", 950, 5, 15, (0.0, 20000.0)),
+    ("temp_water", "F", 74.0, 0.1, 0.3, (32.0, 110.0)),
+    ("temp_air", "F", 78.0, 0.3, 0.8, (0.0, 130.0)),
+    ("humidity", "%RH", 55.0, 0.5, 1.5, (0.0, 100.0)),
     # Real bug found live 2026-09-01: at a real 5-second tick interval,
     # this used to be (24.0, 0.05, 0.1) — a worst-case consecutive-
     # reading swing of ~0.3in, which over 5 real seconds is ~3.6 in/min,
@@ -53,7 +77,7 @@ SIM_SENSOR_DEFS = [
     # signs on consecutive reads) stays under the real threshold even
     # in the unluckiest possible draw: 2*(0.0002+0.0003) = 0.001in over
     # 5 sec = 0.012 in/min, safely under 0.02.
-    ("level", "in", 24.0, 0.0002, 0.0003),
+    ("level", "in", 24.0, 0.0002, 0.0003, (0.0, 48.0)),
     # Added 2026-09-01 — real gap found live: these 4 sensor types
     # (added across this session's climate-control/DO/circulation work)
     # were silently skipped by Simulator._load_sensors() ("if
@@ -61,10 +85,10 @@ SIM_SENSOR_DEFS = [
     # configured just went stale forever under --run. Values are a
     # reasonable healthy-steady-state starting point, not calibrated —
     # same "starting point, not gospel" honesty as everything else here.
-    ("do", "mg/L", 7.5, 0.05, 0.15),
-    ("flow", "GPH", 350, 2, 8),
-    ("light", "lux", 8000, 100, 300),
-    ("co2", "ppm", 1000, 15, 40),
+    ("do", "mg/L", 7.5, 0.05, 0.15, (0.0, 20.0)),
+    ("flow", "GPH", 350, 2, 8, (0.0, 1000.0)),
+    ("light", "lux", 8000, 100, 300, (0.0, 100000.0)),
+    ("co2", "ppm", 1000, 15, 40, (0.0, 50000.0)),
 ]
 
 # What setup_demo_cell() actually creates sensor ROWS for. Deliberately
@@ -128,7 +152,7 @@ def setup_demo_cell(conn: sqlite3.Connection) -> int:
         (cell_id, "Bed A1", 100, "expanded clay"),
     )
 
-    for sensor_type, unit, start, _, _ in SIM_SENSOR_DEFS:
+    for sensor_type, unit, start, _, _, _ in SIM_SENSOR_DEFS:
         if sensor_type not in BASE_CELL_SENSOR_TYPES:
             continue
         conn.execute(
@@ -221,7 +245,7 @@ def setup_pilot_cell(conn: sqlite3.Connection) -> int:
     # AquaponicsCell.evaluate() already handles a genuinely-missing
     # sensor correctly (a WARNING, dosing held for that variable, not a
     # crash) — see that method's own ec_reading is None branch.
-    for sensor_type, unit, start, _, _ in SIM_SENSOR_DEFS:
+    for sensor_type, unit, start, _, _, _ in SIM_SENSOR_DEFS:
         if sensor_type not in ("ph", "temp_water"):
             continue
         conn.execute(
@@ -352,7 +376,7 @@ class Simulator:
     def __init__(self, conn: sqlite3.Connection, interval_seconds: float = 5.0):
         self.conn = conn
         self.state: dict[int, float] = {}  # sensor_id -> current value
-        self.defs: dict[int, tuple] = {}    # sensor_id -> (drift, noise)
+        self.defs: dict[int, tuple] = {}    # sensor_id -> (drift, noise, plausible_range)
         self._load_sensors()
         self.interval_seconds = interval_seconds
         self.battery_soc = SIMULATED_BATTERY_START_SOC
@@ -363,20 +387,26 @@ class Simulator:
         for sensor_id, sensor_type in rows:
             if sensor_type not in by_type:
                 continue
-            _, _, start, drift, noise = by_type[sensor_type]
+            _, _, start, drift, noise, plausible_range = by_type[sensor_type]
             self.state[sensor_id] = start
-            self.defs[sensor_id] = (drift, noise)
+            self.defs[sensor_id] = (drift, noise, plausible_range)
 
     def tick(self):
         for sensor_id, value in self.state.items():
-            drift, noise = self.defs[sensor_id]
+            drift, noise, plausible_range = self.defs[sensor_id]
             value += random.uniform(-drift, drift)
+            # Clamp the underlying drift state itself, not just the
+            # noisy reading — see SIM_SENSOR_DEFS's own comment. Without
+            # this the walk has no floor/ceiling and drifts further from
+            # reality every single tick, forever.
+            value = max(plausible_range[0], min(plausible_range[1], value))
             reading = value + random.uniform(-noise, noise)
             self.state[sensor_id] = value
+            out_of_range = int(not (plausible_range[0] <= reading <= plausible_range[1]))
             self.conn.execute(
                 "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) "
-                "VALUES (?, ?, 0, 0)",
-                (sensor_id, round(reading, 3)),
+                "VALUES (?, ?, 0, ?)",
+                (sensor_id, round(reading, 3), out_of_range),
             )
         self._tick_power()
         self.conn.commit()
@@ -416,14 +446,16 @@ class Simulator:
         comment on this)."""
         if sensor_id not in self.state:
             return False
-        drift, noise = self.defs[sensor_id]
+        drift, noise, plausible_range = self.defs[sensor_id]
         value = self.state[sensor_id] + random.uniform(-drift, drift)
+        value = max(plausible_range[0], min(plausible_range[1], value))
         reading = value + random.uniform(-noise, noise)
         self.state[sensor_id] = value
+        out_of_range = int(not (plausible_range[0] <= reading <= plausible_range[1]))
         self.conn.execute(
             "INSERT INTO sensor_readings (sensor_id, value, is_stale, is_out_of_range) "
-            "VALUES (?, ?, 0, 0)",
-            (sensor_id, round(reading, 3)),
+            "VALUES (?, ?, 0, ?)",
+            (sensor_id, round(reading, 3), out_of_range),
         )
         self.conn.commit()
         return True

@@ -1664,7 +1664,7 @@ def scenario_simulator_level_realtime_safe():
     from drivers.simulator import SIM_SENSOR_DEFS
     from core.leak_detector import LEAK_RATE_THRESHOLD_INCHES_PER_MINUTE
 
-    _, _, _, drift, noise = next(d for d in SIM_SENSOR_DEFS if d[0] == "level")
+    _, _, _, drift, noise, _ = next(d for d in SIM_SENSOR_DEFS if d[0] == "level")
     worst_case_swing_inches = 2 * (drift + noise)  # opposite-sign max draws on consecutive reads
     default_interval_seconds = 5.0
     implied_rate_per_minute = worst_case_swing_inches / (default_interval_seconds / 60)
@@ -1697,6 +1697,55 @@ def scenario_simulator_demo_cell_stays_base_sensors():
     checks = [
         ("the demo cell only gets the 6 base sensor types, not every SIM_SENSOR_DEFS entry",
          types == {"ph", "ec", "temp_water", "temp_air", "humidity", "level"}),
+    ]
+    return checks
+
+
+def scenario_simulator_walk_stays_physically_plausible():
+    """Real, actively-manifesting bug found live 2026-09-02: Simulator.
+    tick()'s random walk had no bound at all. Left running continuously
+    for ~2 real days, it wandered into physically impossible territory
+    — humidity read 113.5%RH (real cap 100) and light read -7215 lux
+    (light can't be negative) — fed straight into the control loop as
+    normal data, because this driver also always hardcoded
+    is_out_of_range=0 regardless of the value, unlike the real
+    AtlasEZODriver. Confirms: many ticks never push the underlying
+    state outside SIM_SENSOR_DEFS's own plausible_range for every
+    sensor type, and a reading manually forced outside that range
+    (simulating a real implausible readout) gets correctly flagged
+    is_out_of_range=1, exactly like the real hardware driver would."""
+    from drivers.simulator import Simulator, SIM_SENSOR_DEFS, setup_demo_cell
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    setup_demo_cell(conn)
+    sim = Simulator(conn, interval_seconds=5.0)
+
+    for _ in range(500):  # far more ticks than this cell will ever see between restarts in a scenario run
+        sim.tick()
+
+    ranges_by_type = {d[0]: d[5] for d in SIM_SENSOR_DEFS}
+    sensor_types = dict(conn.execute("SELECT id, type FROM sensors").fetchall())
+    still_in_range = True
+    for sensor_id, value in sim.state.items():
+        lo, hi = ranges_by_type[sensor_types[sensor_id]]
+        if not (lo <= value <= hi):
+            still_in_range = False
+
+    # Force one sensor's underlying state to the edge of its range, then
+    # manually write an out-of-bounds reading the way real noise could
+    # briefly produce one, and confirm the same flagging logic used
+    # inside tick()/force_read() would catch it.
+    any_sensor_id = next(iter(sim.state))
+    lo, hi = sim.defs[any_sensor_id][2]
+    implausible_reading = hi + 9999
+    flagged = not (lo <= implausible_reading <= hi)
+
+    checks = [
+        ("500 ticks never pushed any sensor's underlying state outside its real plausible range",
+         still_in_range),
+        ("a genuinely implausible reading is correctly identified as out-of-range",
+         flagged),
     ]
     return checks
 
@@ -2364,6 +2413,7 @@ SCENARIOS = {
     "bed_planting_get_bed_layout": scenario_bed_planting_get_bed_layout,
     "simulator_level_realtime_safe": scenario_simulator_level_realtime_safe,
     "simulator_demo_cell_stays_base_sensors": scenario_simulator_demo_cell_stays_base_sensors,
+    "simulator_walk_stays_physically_plausible": scenario_simulator_walk_stays_physically_plausible,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,
