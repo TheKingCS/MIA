@@ -72,13 +72,21 @@ sourcing notes and confidence level per item):
   Amazon-listing price estimate)
 - DS18B20 temp probe — **$10.95** (confirmed direct from sparkfun.com —
   meaningfully more than this doc's original ~$8 guess)
+- Heavy-duty DPST toggle switch, 20A/125V — **~$6.99** (real product,
+  search-result price estimate — Amazon resists reliable
+  price-scraping, same caveat as the pumps/relay above) — the physical
+  safety-spec-required manual override (`SAFETY_SPEC.md`: "kill
+  dosing, force aeration on, independent of the Pi and any software
+  state"). Real gap found live 2026-09-02
+  (`docs/DAY_ONE_READINESS.md`): this list's whole stated purpose is
+  proving the safety chain end to end, and this switch is a named part
+  of that chain — its earlier absence here wasn't a considered trim
+  like EC dosing or the watering MCU below, it was an oversight. Fixed.
 
-**Pilot total: ~$256.** (Up modestly from an earlier ~$248 estimate —
-mainly the DS18B20 turning out to cost more than originally guessed,
-now a real confirmed number instead of a guess.) Skip EC/nutrient
-dosing, the watering/fertilizer MCUs, PIR/beacon, and all
-power-monitoring hardware — none of that is needed to validate the
-core safety-critical loop.
+**Pilot total: ~$263.** (Up from ~$256 — adding the override switch
+above.) Skip EC/nutrient dosing, the watering/fertilizer MCUs,
+PIR/beacon, and all power-monitoring hardware — none of that is needed
+to validate the core safety-critical loop.
 
 **This list is now a real, ready-to-review purchase queue in the app
 itself**, not just this document — run

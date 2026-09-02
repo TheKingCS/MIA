@@ -2575,6 +2575,35 @@ def scenario_mia_home_sync_failure_raises_alert():
     return checks
 
 
+def scenario_pilot_shopping_list_includes_override_switch():
+    """Real gap found live 2026-09-02 (docs/DAY_ONE_READINESS.md): the
+    pilot's shopping list — whose whole stated purpose is proving the
+    safety chain end to end — never included the SAFETY_SPEC.md-
+    required physical override switch. Confirms it's in the seeded
+    list now, and that seed_pilot_shopping_list() is still safe to
+    call twice (its own docstring's claim) without duplicating any
+    item, the new one included."""
+    from drivers.simulator import seed_pilot_shopping_list
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+
+    seed_pilot_shopping_list(conn)
+    seed_pilot_shopping_list(conn)  # deliberately twice
+
+    switch_rows = conn.execute(
+        "SELECT COUNT(*) FROM inventory_items WHERE name LIKE '%Toggle Switch%'"
+    ).fetchone()[0]
+    total_items = conn.execute("SELECT COUNT(*) FROM inventory_items").fetchone()[0]
+
+    checks = [
+        ("the override switch is in the pilot shopping list", switch_rows == 1),
+        ("calling it twice doesn't duplicate the switch or anything else",
+         total_items == 8),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2628,6 +2657,7 @@ SCENARIOS = {
     "mia_home_sync_pushes_via_rsync": scenario_mia_home_sync_pushes_via_rsync,
     "mia_home_sync_paces_by_interval": scenario_mia_home_sync_paces_by_interval,
     "mia_home_sync_failure_raises_alert": scenario_mia_home_sync_failure_raises_alert,
+    "pilot_shopping_list_includes_override_switch": scenario_pilot_shopping_list_includes_override_switch,
     "heater_closes_the_loop": scenario_heater_closes_the_loop,
     "water_heater_closes_the_loop": scenario_water_heater_closes_the_loop,
     "co2_injection_closes_the_loop": scenario_co2_injection_closes_the_loop,

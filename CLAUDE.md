@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 171 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 173 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,22 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**Day-one hardware readiness, first item (2026-09-02, user request —
+see `docs/DAY_ONE_READINESS.md` for the full brainstorm and the other
+3 items still to come):** the pilot's own shopping list never included
+the `SAFETY_SPEC.md`-required physical override switch, despite the
+pilot's whole stated purpose being proving the safety chain end to
+end — `docs/HARDWARE_BOM_FULL_TIERS.md` already priced this for full
+scale citing the same requirement, it just never made it into the
+trimmed pilot list. Added (`drivers/simulator.py`'s
+`seed_pilot_shopping_list()`, real sourced price — Heavy-Duty DPST
+Toggle Switch, 20A/125V, ~$6.99), pilot total now ~$263 (was ~$256).
+Live-verified: ran the seed function against the real `mia_homestead.db`,
+confirmed it added exactly the one new item (the other 7 already
+existed from earlier in the session) with a real `inventory_orders` row
+in `status='proposed'`, same human-approval gate every purchase in this
+project goes through.
 
 **MIA Home sync, automated end-to-end (2026-09-02, user request):**
 `docs/MIA_HOME_SYNC_PLAN.md`'s transport step was the one thing left

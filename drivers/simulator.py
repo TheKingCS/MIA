@@ -341,6 +341,20 @@ def seed_pilot_shopping_list(conn: sqlite3.Connection) -> list[int]:
          "Amazon (AQUANEAT)", "https://www.amazon.com/AQUANEAT-Submersible-Fountain-Aquarium-Hydroponics/dp/B0BJJBK746",
          "Real product URL (80 GPH), price is a current-range estimate ($16-25 broadly observed for "
          "this class of pump, priced conservatively here) — confirm at checkout."),
+        # Real gap found live 2026-09-02 (docs/DAY_ONE_READINESS.md):
+        # SAFETY_SPEC.md requires "a physical local override switch...
+        # independent of the Pi and any software state," and
+        # docs/HARDWARE_BOM_FULL_TIERS.md already prices this for full
+        # scale citing that exact requirement — but this pilot list,
+        # whose whole stated purpose is proving the safety chain end to
+        # end, never picked it up. Fixed.
+        ("Heavy-Duty DPST Toggle Switch, 20A/125V", "equipment", "each", 6.99,
+         "Amazon (Robotzone)", "https://www.amazon.com/DPST-Heavy-Duty-Toggle-Switch/dp/B016CJBQL4",
+         "Real product URL, price is a current-range estimate ($6.99 observed via search, direct "
+         "fetch failed — Amazon listings resist reliable price-scraping, same caveat this list "
+         "already states for the relay module/pumps above) — confirm at checkout. The physical "
+         "safety-spec-required manual override: kill dosing, force aeration on, independent of the "
+         "Pi/MCU entirely — wire in series with the dosing pump relay per SAFETY_SPEC.md."),
     ]
 
     from core.inventory import InventoryManager
