@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 140 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 147 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,33 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**Data retention, found and closed 2026-09-02:** `schema/mia_homestead_
+schema.sql`'s own header promises "this node may run for weeks with no
+human interaction — nothing here should require manual cleanup to keep
+working," but `sensor_readings`, `actuator_events`, `power_telemetry`,
+and `system_heartbeat` — the four highest-frequency, append-only tables
+— had zero pruning anywhere in the codebase (confirmed by grep: no
+DELETE, no VACUUM, nothing). `sensor_readings` alone had 148,240 rows
+after roughly two days of test-churned development, not even a real
+deployment yet — a real unattended multi-month run would mean a
+multi-gigabyte SQLite file and degrading query performance with nothing
+telling anyone it was happening. Fixed with `core/data_retention.py`'s
+`DataRetentionManager`: a deliberately simple periodic DELETE (not
+aggregation/downsampling) of rows older than a configurable window,
+default 90 days — chosen by checking what actually reads these tables
+first, not guessed: `core/trend_analyzer.py`/`modules/power_monitor.py`
+both look back by reading COUNT (a fixed number of recent rows), never
+by date; `core/leak_detector.py` only ever needs the 2 most recent
+readings; every assistant history tool defaults to a 7-30 day lookback.
+Wired into `main.py`'s existing 60-cycle periodic block alongside the
+other housekeeping checks, and into the assistant as a read-only
+`get_data_retention_status` tool. Scenario-proven
+(`scenario_data_retention_prunes_old_rows`,
+`scenario_data_retention_noop_when_nothing_old`): a row genuinely older
+than the window is deleted from all four tables and logged to
+`automated_action_log`, a recent row is always kept, and a run with
+nothing to prune deletes and logs nothing.
 
 **The most safety-significant fix in this project's history, found and
 closed 2026-09-01:** dosing had NO minimum-interval enforcement at all.

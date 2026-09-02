@@ -54,6 +54,7 @@ from core.finance_tracker import FinanceTracker
 from core.irrigation import IrrigationScheduler
 from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
+from core.data_retention import DataRetentionManager
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -154,6 +155,7 @@ def main():
     irrigation = IrrigationScheduler.from_config("config/irrigation_schedules.yaml", db, notifier=notifier)
     circulation_monitor = CirculationMonitor(db, notifier=notifier)
     alert_manager = AlertManager(db, notifier=notifier)
+    data_retention = DataRetentionManager(db, notifier=notifier)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -172,6 +174,7 @@ def main():
         (pest_disease, "pest_disease"), (weather, "weather_awareness"),
         (finance, "finance_tracker"), (irrigation, "irrigation_scheduler"),
         (circulation_monitor, "circulation_monitor"), (alert_manager, "alert_manager"),
+        (data_retention, "data_retention"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -303,6 +306,9 @@ def main():
                 if auto_resolved:
                     logger.info("Auto-resolved %d stale alert(s) not re-raised recently: %s",
                                 len(auto_resolved), [a["alert_id"] for a in auto_resolved])
+                pruned = data_retention.prune_old_data()
+                if pruned:
+                    logger.info("Pruned old data past the retention window: %s", pruned)
 
             # The digital twin is a live feature, not a manual dev tool —
             # keep it current every cycle so anyone walking up to the

@@ -2140,6 +2140,87 @@ def scenario_dosing_min_interval_enforced():
     return checks
 
 
+def scenario_data_retention_prunes_old_rows():
+    """Real gap found live 2026-09-02: sensor_readings, actuator_events,
+    power_telemetry, and system_heartbeat had zero pruning anywhere —
+    sensor_readings alone had 148,240 rows after ~2 days of test churn,
+    despite the schema's own header promising no manual cleanup should
+    ever be required. Confirms a row genuinely older than the retention
+    window is deleted from all four tables, a recent row is kept, and
+    the prune is logged to automated_action_log."""
+    from core.data_retention import DataRetentionManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    sensor_id = conn.execute("SELECT id FROM sensors LIMIT 1").fetchone()[0]
+    actuator_id = conn.execute("SELECT id FROM actuators LIMIT 1").fetchone()[0]
+
+    old_ts = (datetime.utcnow() - timedelta(days=120)).strftime("%Y-%m-%d %H:%M:%S")
+    recent_ts = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+
+    conn.execute("INSERT INTO sensor_readings (sensor_id, timestamp, value) VALUES (?, ?, ?)", (sensor_id, old_ts, 6.5))
+    conn.execute("INSERT INTO sensor_readings (sensor_id, timestamp, value) VALUES (?, ?, ?)", (sensor_id, recent_ts, 6.6))
+    conn.execute("INSERT INTO actuator_events (actuator_id, timestamp, action, triggered_by) VALUES (?, ?, 'on', 'auto_control')", (actuator_id, old_ts))
+    conn.execute("INSERT INTO actuator_events (actuator_id, timestamp, action, triggered_by) VALUES (?, ?, 'on', 'auto_control')", (actuator_id, recent_ts))
+    conn.execute("INSERT INTO power_telemetry (timestamp, source, watts) VALUES (?, 'solar', 50.0)", (old_ts,))
+    conn.execute("INSERT INTO power_telemetry (timestamp, source, watts) VALUES (?, 'solar', 55.0)", (recent_ts,))
+    conn.execute("INSERT INTO system_heartbeat (component, last_seen) VALUES ('pi_main_loop', ?)", (old_ts,))
+    conn.execute("INSERT INTO system_heartbeat (component, last_seen) VALUES ('pi_main_loop', ?)", (recent_ts,))
+    conn.commit()
+
+    mgr = DataRetentionManager(conn)
+    sizes_before = mgr.get_table_sizes()
+    deleted = mgr.prune_old_data(retention_days=90)
+    sizes_after = mgr.get_table_sizes()
+
+    log_hit = conn.execute(
+        "SELECT COUNT(*) FROM automated_action_log WHERE module_id = 'data_retention' AND action = 'old_data_pruned'"
+    ).fetchone()[0]
+
+    checks = [
+        ("get_table_sizes() sees both rows in each table before pruning",
+         all(n >= 2 for n in sizes_before.values())),
+        ("exactly one row deleted per table (the old one)",
+         all(deleted.get(t) == 1 for t, _ in [("sensor_readings", ""), ("actuator_events", ""), ("power_telemetry", ""), ("system_heartbeat", "")])),
+        ("each table has exactly one row left (the recent one)",
+         all(n == 1 for n in sizes_after.values())),
+        ("the prune is logged to automated_action_log for real audit visibility", log_hit == 1),
+    ]
+    return checks
+
+
+def scenario_data_retention_noop_when_nothing_old():
+    """Confirms a run with nothing past the retention window deletes
+    nothing, logs nothing, and doesn't touch recent data — pruning
+    should be silent when there's genuinely nothing to prune, not a
+    no-op that still writes a misleading log entry."""
+    from core.data_retention import DataRetentionManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    setup_demo_cell(conn)
+    sensor_id = conn.execute("SELECT id FROM sensors LIMIT 1").fetchone()[0]
+
+    recent_ts = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("INSERT INTO sensor_readings (sensor_id, timestamp, value) VALUES (?, ?, ?)", (sensor_id, recent_ts, 6.5))
+    conn.commit()
+
+    mgr = DataRetentionManager(conn)
+    deleted = mgr.prune_old_data(retention_days=90)
+    log_hit = conn.execute(
+        "SELECT COUNT(*) FROM automated_action_log WHERE module_id = 'data_retention'"
+    ).fetchone()[0]
+    remaining = conn.execute("SELECT COUNT(*) FROM sensor_readings").fetchone()[0]
+
+    checks = [
+        ("nothing was deleted", deleted == {}),
+        ("no log entry written for a no-op prune", log_hit == 0),
+        ("the recent row is untouched", remaining == 1),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2201,6 +2282,8 @@ SCENARIOS = {
     "update_maintenance_task_status_tool_validates": scenario_update_maintenance_task_status_tool_validates,
     "propose_experiment_tool_validates": scenario_propose_experiment_tool_validates,
     "dosing_min_interval_enforced": scenario_dosing_min_interval_enforced,
+    "data_retention_prunes_old_rows": scenario_data_retention_prunes_old_rows,
+    "data_retention_noop_when_nothing_old": scenario_data_retention_noop_when_nothing_old,
 }
 
 

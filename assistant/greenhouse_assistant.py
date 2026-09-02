@@ -932,6 +932,11 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_data_retention_status",
+        "description": "Get the current row count for each high-frequency data table (sensor readings, actuator events, power telemetry, heartbeats) — real visibility into how much history is accumulating.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_hardware_needs_list",
         "description": "Get the running hardware shopping list — every physical component every module/service has declared it needs, aggregated with estimated cost.",
         "input_schema": {"type": "object", "properties": {}},
@@ -970,6 +975,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_sensor_confidence": "status",
     "get_leak_status": "status",
     "get_circulation_status": "status",
+    "get_data_retention_status": "status",
     "get_open_alerts": "status",
     "acknowledge_alert": "status",
     "resolve_alert": "status",
@@ -1418,6 +1424,13 @@ class _BaseGreenhouseAssistant:
     def _tool_get_circulation_status(self, cell_id: int | None = None) -> dict:
         from core.circulation_monitor import CirculationMonitor
         return {"circulation": CirculationMonitor(self.db).get_circulation_status(cell_id)}
+
+    def _tool_get_data_retention_status(self) -> dict:
+        from core.data_retention import DataRetentionManager, DEFAULT_RETENTION_DAYS
+        return {
+            "table_row_counts": DataRetentionManager(self.db).get_table_sizes(),
+            "retention_window_days": DEFAULT_RETENTION_DAYS,
+        }
 
     def _tool_get_open_alerts(self, min_severity: str | None = None) -> dict:
         order = {"info": 0, "warning": 1, "critical": 2}
