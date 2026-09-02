@@ -150,6 +150,34 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
+**Day-one hardware readiness — all 4 items done (2026-09-02, user
+request, see `docs/DAY_ONE_READINESS.md`):** #4 (override switch),
+#1 (notification config), #2 (serial transport, below) and finally
+**#3 — firmware's blocking pulse, fixed.**
+`firmware/safety_mcu/safety_mcu.ino`'s `executePulse()` used to block
+the whole `loop()` for up to 3 seconds via `delay()` — the firmware
+README's own former gap #2, directly in tension with `SAFETY_SPEC.md`'s
+manual-override requirement, since `readIncomingSerial()` (and, once
+wired, a physical override switch's GPIO read) went unchecked that
+whole window. Rewritten as a per-slot, non-blocking `millis()`-based
+state machine: `executePulse()` starts the pulse and returns
+immediately; a new `checkPulseCompletion()`, called every `loop()`
+iteration, turns it back off and sends the real `"executed":true` ack
+once the actual elapsed time is up — per-slot (not one global flag) so
+two different actuators can legitimately pulse concurrently, and a
+second command for a slot already mid-pulse is correctly rejected
+(`"pulse_already_in_progress"`) rather than starting an overlapping
+pulse on the same relay. `enterFallback()` now also cleanly aborts any
+in-progress pulse rather than leaving a misleading ack pending.
+Re-verified with a real `pio run` (`.venv/bin/platformio`, found after
+`which pio` initially failed — it just wasn't on bare `PATH`): compiles
+clean, RAM 21988/327680 bytes, Flash 281613/1310720 bytes,
+near-identical footprint to the prior baseline as expected. This is the
+one item of the four that couldn't be exercised beyond "compiles
+clean" — no real board exists yet to flash it onto, same honest gate
+the firmware's own README already holds every other claim to. With all
+four done, nothing software-side is left blocking the pilot build.
+
 **Day-one hardware readiness, item #2 — real MCU serial transport
 (2026-09-02, user request, see `docs/DAY_ONE_READINESS.md`):** the
 biggest of the four day-one gaps. Confirmed by grep before touching

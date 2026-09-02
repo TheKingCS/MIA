@@ -7,16 +7,22 @@ authority) real in hardware rather than just a design document.
 ## Honest status
 
 **Compiles clean; still not run on real hardware.** Re-verified
-2026-08-31 with `pio run` after the actuator-ID mapping fix below (gap
-#1) — RAM 6.7% (21940/327680 bytes), Flash 21.5% (281401/1310720
+2026-09-02 with `pio run` after the non-blocking-pulse fix below (gap
+#2) — RAM 6.7% (21988/327680 bytes), Flash 21.5% (281613/1310720
 bytes), `firmware.bin` produced, near-identical footprint to the
-2026-08-30 baseline (21924/281265 bytes) as expected for one added
-`int` field. That proves the code is syntactically and API-correct
-against the real Arduino/ESP32 core, not just reasoned-through by eye —
-but "compiles" and "does what the spec says on a real board" are still
-different claims. Flashing + the LED smoke-test in "Testing without
-real sensors/pumps attached" below is still the next real milestone,
-not this.
+2026-08-31 baseline (21940/281401 bytes) as expected for a handful of
+new per-slot pulse-tracking fields and two small functions. That
+proves the code is syntactically and API-correct against the real
+Arduino/ESP32 core, not just reasoned-through by eye — but "compiles"
+and "does what the spec says on a real board" are still different
+claims. Flashing + the LED smoke-test in "Testing without real
+sensors/pumps attached" below is still the next real milestone, not
+this. The Pi side of the transport this firmware talks to is real now
+too — `drivers/mcu_serial.py` + `core/mcu_transport.py`
+(2026-09-02), scenario-proven against a fake in-memory serial port —
+so a real board is now the ONLY missing piece to prove the full
+announce → pair → command → pulse → fallback cycle end to end, not
+firmware code, not Pi-side transport code.
 
 ## Known gaps to resolve before real deployment
 
@@ -33,16 +39,31 @@ not this.
    DB rows — verified via `scenarios.py::scenario_pair_confirm_payload_real_ids`,
    which deliberately inserts actuators out of order to prove the ids
    returned are real DB ids, not a coincidental match. **What's still
-   genuinely open**: no serial transport exists yet to actually send
-   this payload (no MCU hardware to send it to), and real-hardware
-   pairing is unverified — both correctly gated on a real board
-   existing, not something to fake here.
-2. **`executePulse()` uses `delay()`,** which blocks the whole loop for
-   the pulse duration (up to 3 seconds per the current dosing limits).
-   That's a real problem if this MCU is also supposed to be responsive
-   to a physical emergency-stop input during that window — worth
-   moving to non-blocking timing (`millis()`-based state machine)
-   before deployment, especially once more actuator types get added.
+   genuinely open**: real serial transport now exists on the Pi side
+   (`drivers/mcu_serial.py` + `core/mcu_transport.py`, 2026-09-02,
+   scenario-proven against a fake in-memory port) and sends this exact
+   payload the moment a device auto-pairs — real-hardware pairing is
+   still unverified, correctly gated on a real board existing, not
+   something to fake here.
+2. ~~`executePulse()` uses `delay()`~~ — **fixed 2026-09-02.** Used to
+   block the whole loop for the pulse duration (up to 3 seconds per
+   the current dosing limits) — a real problem for responsiveness to a
+   physical emergency-stop input during that window, directly in
+   tension with `SAFETY_SPEC.md`'s manual-override requirement. Now a
+   non-blocking, per-slot `millis()`-based state machine
+   (`executePulse()` starts the pulse and returns immediately;
+   `checkPulseCompletion()`, called every `loop()` iteration, turns it
+   off and sends the real `"executed":true` ack once the actual
+   elapsed time is up) — `loop()` keeps servicing serial input the
+   entire time a dose is running. Per-slot, not one global flag, so
+   two different actuators can legitimately pulse concurrently; a
+   second command for a slot already mid-pulse is rejected
+   (`"pulse_already_in_progress"`) rather than starting an overlapping
+   pulse on the same relay — the MCU firmware is explicitly the last
+   line of defense here, independent of whatever the Pi's own
+   `min_interval_s` dosing limits already do. `enterFallback()` now
+   also cleanly aborts any in-progress pulse (no misleading
+   `"executed":true` ack for a dose fallback cut short).
 3. **`readBatteryMillivolts()` is a stub** returning -1. Wire to a real
    ADC pin if this specific board runs on battery power; if it's
    Pi-powered via the same rail, this can likely be removed entirely.

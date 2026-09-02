@@ -146,3 +146,28 @@ the bench than to build it under time pressure once one is. **#3
 only matters once a physical override switch exists to actually be
 blocked (see #4) — sequencing #4 before #3 makes #3's fix immediately
 demonstrable end-to-end instead of provably-correct-in-isolation.
+
+## Status — all four done (2026-09-02)
+
+All four closeable-now items are built, verified, and committed, in
+the order above:
+
+- **#4** (override switch) — `723c6fb`.
+- **#1** (notification config) — `57c6b49`.
+- **#2** (serial transport) — `eac7c91`. The biggest of the four:
+  `drivers/mcu_serial.py` + `core/mcu_transport.py`, scenario-proven
+  against a fake in-memory serial port, live-verified against this
+  sandbox's own real (if non-functional) `/dev/ttyS0-7` — real open
+  attempts, real I/O errors, no crash.
+- **#3** (non-blocking pulse) — firmware's `executePulse()` rewritten
+  as a per-slot `millis()`-based state machine; `pio run` re-verified
+  clean (RAM 21988/327680, Flash 281613/1310720 bytes). Firmware
+  compilation is the one piece of this whole readiness pass that
+  couldn't be exercised beyond "compiles clean" — no real board exists
+  to flash it onto yet, same honest gate the firmware README already
+  holds every other firmware claim to.
+
+Everything genuinely gated on real hardware/human decisions (listed
+above) is unchanged by this pass — closing these four didn't remove
+any of those gates, it just means nothing software-side is left
+blocking the pilot build from here.

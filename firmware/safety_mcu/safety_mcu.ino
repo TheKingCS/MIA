@@ -56,13 +56,22 @@ struct ActuatorSlot {
   char type[16];              // 'dosing_pump','circulation_pump','aerator','valve','alert_beacon'
   char safeDefaultState[8];   // 'on' or 'off'
   bool assigned;
+  // Non-blocking pulse state (2026-09-02 — see executePulse()'s own
+  // comment for why this replaced a blocking delay()). Per-slot, not
+  // one global flag: different actuators pulsing concurrently (e.g.
+  // ph_up and a fertilizer pump on separate slots) is a real,
+  // legitimate case a single global would have wrongly serialized.
+  bool pulseActive;
+  unsigned long pulseStartMillis;
+  unsigned long pulseDurationMs;
+  unsigned long pulseSeq;
 };
 
 ActuatorSlot actuators[MAX_ACTUATORS] = {
-  {"", -1, 25, "", "off", false},
-  {"", -1, 26, "", "off", false},
-  {"", -1, 27, "", "off", false},
-  {"", -1, 32, "", "off", false},
+  {"", -1, 25, "", "off", false, false, 0, 0, 0},
+  {"", -1, 26, "", "off", false, false, 0, 0, 0},
+  {"", -1, 27, "", "off", false, false, 0, 0, 0},
+  {"", -1, 32, "", "off", false, false, 0, 0, 0},
 };
 
 // ============ LOCAL DOSING LIMITS ============
@@ -136,6 +145,7 @@ void loop() {
   }
 
   checkHeartbeatTimeout(now);
+  checkPulseCompletion(now);
 
   unsigned long statusInterval = fallbackActive ? STATUS_INTERVAL_FALLBACK_MS : STATUS_INTERVAL_MS;
   if (now - lastStatusSent > statusInterval) {
@@ -236,6 +246,30 @@ void handleCommand(JsonDocument& doc) {
 }
 
 void executePulse(int slot, unsigned long requestedMs, const char* doseType, unsigned long seq) {
+  // Real gap found live 2026-09-02 (docs/DAY_ONE_READINESS.md, item
+  // #3; firmware/safety_mcu/README.md's own former gap #2): this used
+  // to block the WHOLE loop() for up to maxPulseMs (3s) via delay(),
+  // which meant readIncomingSerial() — and, once one exists, a
+  // physical override switch's GPIO read — went unchecked for that
+  // entire window. Directly in tension with SAFETY_SPEC.md's manual-
+  // override requirement, which the README already named as a real
+  // problem, not a hypothetical one. Now non-blocking: turns the
+  // actuator on and records start/duration/seq per-slot,
+  // checkPulseCompletion() (called every loop() iteration) turns it
+  // back off and sends the ack once the real elapsed time is up —
+  // loop() keeps servicing serial input and (once wired) an override
+  // switch the entire time a dose is running.
+
+  if (actuators[slot].pulseActive) {
+    // The Pi's own min_interval_s dosing_limits already make this
+    // rare in practice, but the MCU firmware is explicitly the LAST
+    // line of defense independent of Pi software correctness
+    // (MCU_PROTOCOL.md's own framing) — never start a second
+    // overlapping pulse on a relay that's already mid-dose.
+    sendAck(seq, false, "pulse_already_in_progress");
+    return;
+  }
+
   DosingLimit* limit = findDosingLimit(doseType);
 
   if (limit != nullptr) {
@@ -254,11 +288,24 @@ void executePulse(int slot, unsigned long requestedMs, const char* doseType, uns
   }
 
   digitalWrite(actuators[slot].pin, HIGH);
-  delay(requestedMs);  // acceptable for a short dosing pulse (<3s max);
-                        // a longer-running design would use non-blocking timing
-  digitalWrite(actuators[slot].pin, LOW);
+  actuators[slot].pulseActive = true;
+  actuators[slot].pulseStartMillis = millis();
+  actuators[slot].pulseDurationMs = requestedMs;
+  actuators[slot].pulseSeq = seq;
+  // Ack is sent by checkPulseCompletion() once the pulse actually
+  // finishes — "executed":true (MCU_PROTOCOL.md) means the dose
+  // really completed, not just that it started.
+}
 
-  sendAck(seq, true, "");
+void checkPulseCompletion(unsigned long now) {
+  for (int i = 0; i < MAX_ACTUATORS; i++) {
+    if (!actuators[i].pulseActive) continue;
+    if (now - actuators[i].pulseStartMillis < actuators[i].pulseDurationMs) continue;
+
+    digitalWrite(actuators[i].pin, LOW);
+    actuators[i].pulseActive = false;
+    sendAck(actuators[i].pulseSeq, true, "");
+  }
 }
 
 void handleResumeControl() {
@@ -285,6 +332,15 @@ void enterFallback() {
 
   for (int i = 0; i < MAX_ACTUATORS; i++) {
     if (!actuators[i].assigned) continue;
+
+    // A pulse the non-blocking executePulse() started but hasn't
+    // finished yet gets cut short here, same as the old delay()-based
+    // version would have if fallback could have interrupted it (it
+    // couldn't — the whole point of THIS fix). No "executed":true ack
+    // for a dose that didn't really complete; the Pi already knows
+    // something's wrong the moment it sees fallback_active in the next
+    // status message.
+    actuators[i].pulseActive = false;
 
     bool safeOn = strcmp(actuators[i].safeDefaultState, "on") == 0;
 
