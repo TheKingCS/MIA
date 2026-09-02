@@ -2221,6 +2221,88 @@ def scenario_data_retention_noop_when_nothing_old():
     return checks
 
 
+def scenario_self_preservation_no_presence_sensor_silent():
+    """Real, actively-firing bug found live 2026-09-02: SelfPreservation
+    Module relied on the base class's generic run_cycle(), which treats
+    "read_sensors() returned nothing" as "all sensors stale/invalid" and
+    raises a CRITICAL alert. But this module's only sensor (presence) is
+    genuinely optional hardware most cells never install — on the live
+    system, cell 1 has no presence sensor and never has, and this false
+    CRITICAL had fired 21,000+ times continuously since before this fix,
+    with nothing actually wrong. Confirms: with no presence sensor
+    configured and a real critical alert open elsewhere, a cycle stays
+    completely silent — no new alert, no help request, no commands."""
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+    from modules.self_preservation import SelfPreservationModule
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+
+    raise_real_alert(conn, "cell_a_aquaponics", "critical", "a real unrelated critical condition")
+    alerts_before = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+
+    mod = SelfPreservationModule("greenhouse_self_preservation", cell_id, conn)
+    commands = mod.run_cycle()
+
+    alerts_after = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+    false_critical = conn.execute(
+        "SELECT COUNT(*) FROM alerts WHERE source = 'greenhouse_self_preservation' "
+        "AND message LIKE '%stale/invalid%'"
+    ).fetchone()[0]
+    help_requests = conn.execute("SELECT COUNT(*) FROM help_requests").fetchone()[0]
+
+    checks = [
+        ("no new alert raised (no presence sensor is not a sensor failure)", alerts_after == alerts_before),
+        ("no false 'all sensors stale/invalid' alert exists at all", false_critical == 0),
+        ("no help request created — nothing to signal without a presence reading", help_requests == 0),
+        ("no commands issued", commands == []),
+    ]
+    return checks
+
+
+def scenario_self_preservation_signals_with_presence():
+    """The other half of the same fix, proven so the override above
+    didn't quietly break the module's actual designed behavior: with a
+    real presence sensor installed, a fresh reading showing someone's
+    there, AND a real open critical alert, this still creates a help
+    request and turns the beacon on — bypassing the base class's
+    staleness ladder for this module didn't disable the feature it's
+    actually for."""
+    from contracts.mia_homestead_contract import raise_alert as raise_real_alert
+    from modules.self_preservation import SelfPreservationModule
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+
+    presence_sensor_id = conn.execute(
+        "INSERT INTO sensors (cell_id, type, unit, active) VALUES (?, 'presence', 'bool', 1)",
+        (cell_id,),
+    ).lastrowid
+    conn.execute(
+        "INSERT INTO sensor_readings (sensor_id, value) VALUES (?, 1.0)",
+        (presence_sensor_id,),
+    )
+    raise_real_alert(conn, "cell_a_aquaponics", "critical", "a real unrelated critical condition")
+    conn.commit()
+
+    mod = SelfPreservationModule("greenhouse_self_preservation", cell_id, conn)
+    commands = mod.run_cycle()
+
+    help_request = conn.execute(
+        "SELECT resolved, message FROM help_requests ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+
+    checks = [
+        ("a real help request was created", help_request is not None),
+        ("it's unresolved and carries a real spoken message",
+         help_request is not None and help_request[0] == 0 and len(help_request[1]) > 0),
+        ("a beacon 'on' command was issued", any(c.action == "on" for c in commands)),
+    ]
+    return checks
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -2284,6 +2366,8 @@ SCENARIOS = {
     "dosing_min_interval_enforced": scenario_dosing_min_interval_enforced,
     "data_retention_prunes_old_rows": scenario_data_retention_prunes_old_rows,
     "data_retention_noop_when_nothing_old": scenario_data_retention_noop_when_nothing_old,
+    "self_preservation_no_presence_sensor_silent": scenario_self_preservation_no_presence_sensor_silent,
+    "self_preservation_signals_with_presence": scenario_self_preservation_signals_with_presence,
 }
 
 

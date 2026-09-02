@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
 python3 drivers/simulator.py --db mia_homestead.db --setup
-python3 scenarios/scenarios.py        # must print 147 passed, 0 failed
+python3 scenarios/scenarios.py        # must print 154 passed, 0 failed
 python3 core/self_audit.py            # must say "All checks passed"
 ```
 
@@ -149,6 +149,33 @@ docs/            everything else - see index below
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 
 ## Current state (honest summary)
+
+**A false CRITICAL that had fired 21,000+ times live, found and closed
+2026-09-02:** found via the same "check the live DB for anomalies"
+technique used throughout this session — an unresolved `alerts` row
+from `greenhouse_self_preservation` with `occurrence_count` in the tens
+of thousands, continuously unresolved since 2026-08-31, re-triggering
+every single control-loop cycle. `modules/self_preservation.py`'s only
+sensor is `presence` — genuinely optional hardware (a PIR motion
+sensor) most cells will never install — but it relied on the base
+class's generic `run_cycle()`, which treats "read_sensors() returned
+nothing" as "all sensors stale/invalid" and raises a CRITICAL alert
+("freezing non-essential actuation"). Cell 1 has no presence sensor and
+never has; nothing was actually wrong the entire time. Fixed by
+overriding `run_cycle()` in `SelfPreservationModule` to skip the base
+class's staleness ladder entirely — appropriate here since a missing
+presence reading is already the correct, safe input to `evaluate()`
+(`presence_detected=False`), unlike ph/ec/temp_water where a stale
+reading genuinely changes what's safe to actuate. Scenario-proven both
+directions (`scenario_self_preservation_no_presence_sensor_silent`,
+`scenario_self_preservation_signals_with_presence`) — this module had
+zero scenario coverage before this fix, only a 2026-08-26 manual test
+note, which is exactly why the bug went unfound by the regression
+suite. Live-verified: restarted `main.py`, confirmed the alert's
+`occurrence_count`/`last_seen` froze (previously updating every ~5
+real seconds), manually resolved the 21,393-occurrence backlog row
+with a note explaining the root cause was fixed, not the underlying
+condition.
 
 **Data retention, found and closed 2026-09-02:** `schema/mia_homestead_
 schema.sql`'s own header promises "this node may run for weeks with no

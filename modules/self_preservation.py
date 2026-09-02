@@ -49,6 +49,30 @@ class SelfPreservationModule(MiaHomesteadModule):
         super().__init__(module_id, cell_id, db_conn, notifier=notifier,
                           force_read_fn=force_read_fn, recovery_log_fn=recovery_log_fn)
 
+    def run_cycle(self) -> list[ActuatorCommand]:
+        """Overrides the base class's staleness-panic entry point on
+        purpose. This module's only sensor (presence) is genuinely
+        optional hardware (see describe_hardware_requirements) that most
+        cells will simply never have installed — read_sensors()
+        returning [] here almost always means "no PIR sensor
+        configured," not "sensor went stale/invalid." The base
+        run_cycle() couldn't tell those apart and raised a false
+        CRITICAL "all sensors stale/invalid — freezing non-essential
+        actuation" alert every single cycle, forever, on any cell
+        without one. Real bug found live 2026-09-02: cell 1 has no
+        presence sensor and never has, and this alert had already fired
+        21,000+ times continuously since 2026-08-31 with nothing
+        actually wrong — a scary, permanently-unresolvable false
+        CRITICAL that also drowned out genuine critical alerts in the
+        same list. evaluate() already treats an empty or unreadable
+        presence reading as presence_detected=False, the correct safe
+        default, so the staleness ladder built for dosing-relevant
+        sensors (where a stale reading changes what's safe to actuate)
+        doesn't apply here — there's nothing to freeze."""
+        readings = self.read_sensors()
+        proposed = self.evaluate(readings)
+        return [self._validate_command(cmd) for cmd in proposed]
+
     def read_sensors(self) -> list[SensorReading]:
         row = self.db.execute(
             """
@@ -216,6 +240,13 @@ class SelfPreservationModule(MiaHomesteadModule):
                 "Live manual test 2026-08-26: confirmed all three states — silent while critical "
                 "and alone, beacon on the moment presence is detected, auto-resolved and beacon "
                 "off once the critical condition cleared",
+                "scenarios.py::scenario_self_preservation_no_presence_sensor_silent — confirmed a "
+                "cell with no presence sensor stays silent (no false CRITICAL, no help request) "
+                "even with a real critical alert open, fixing a bug that had fired 21,000+ times "
+                "live before this",
+                "scenarios.py::scenario_self_preservation_signals_with_presence — confirmed the "
+                "fix didn't break the actual signal path: a real presence reading plus an open "
+                "critical alert still creates a help request and turns the beacon on",
             ],
         )
 
