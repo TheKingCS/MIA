@@ -630,6 +630,15 @@ TOOLS = [
         },
     },
     {
+        "name": "search_reference_library",
+        "description": "Search a real, curated aquaponics/greenhouse knowledge base for general science/technique questions (nitrogen cycle, water chemistry, stocking, plant care, climate, troubleshooting) — use this for 'why'/'what causes'/'what's a good' questions that aren't about THIS system's live state. For live readings/history, use the status/history tools instead.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"query": {"type": "string", "description": "The question or topic to search for"}},
+            "required": ["query"],
+        },
+    },
+    {
         "name": "synthesize_voice_briefing",
         "description": "Synthesize the latest daily report into a real local audio file via offline TTS (Piper). Honestly no-ops if voice isn't configured (config/voice.yaml) or no report exists yet.",
         "input_schema": {"type": "object", "properties": {}},
@@ -1179,6 +1188,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_yield_forecast": "yield_planting",
     "get_recommendations": "system_health",
     "synthesize_voice_briefing": "system_ops",
+    "search_reference_library": "reference_library",
     "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
@@ -1262,6 +1272,24 @@ TOOL_DOMAINS: dict[str, str] = {
 # a separate, unrelated mechanism.
 
 DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
+    "reference_library": [
+        # Real gap found live 2026-09-03: "what's a good"/"what is a good"
+        # didn't match a real question phrased "What is a REASONABLE
+        # fish stocking density" — reference_library never got attached,
+        # so search_reference_library was never even an option, and the
+        # model reached for fish_health tools instead and reported "no
+        # data" to a question that was never about live data. Broadened
+        # from a few exact phrases to the real range of ways a general
+        # knowledge question actually gets asked.
+        "why does", "why do", "why is", "what causes", "what's a good", "what is a good",
+        "what's a reasonable", "what is a reasonable", "what's the ideal", "what is the ideal",
+        "explain", "typical range", "guideline", "guidelines", "how does", "how much",
+        "how many", "rule of thumb", "best practice", "recommend", "recommended",
+        "should i", "is it normal", "general",
+        "algae", "die off", "die-off", "dying", "deficiency", "chlorosis",
+        "dissolved oxygen", "ventilation", "humidity", "frost", "co2 enrichment",
+        "media bed", "dwc", "nft", "raft", "alkalinity", "hardness", "stocking density",
+    ],
     "dosing": ["dos", "ph up", "ph down", "ph-up", "ph-down", "nutrient", "correction", "pump"],
     "water_quality": [
         "ammonia", "nitrite", "nitrate", "biofilter", "nitrogen cycle", "cycled",
@@ -1517,7 +1545,16 @@ class _BaseGreenhouseAssistant:
             "numbers (pH 6.9, EC 740, battery 68%, etc.) are STYLE "
             "reference for a hypothetical scenario, never real data — "
             "do not state them as fact unless a tool call you just made "
-            "in THIS conversation actually returned them. Follow this "
+            "in THIS conversation actually returned them. Not every "
+            "question is about live system state, though — a general "
+            "aquaponics/greenhouse science question ('why does pH "
+            "matter', 'what's a reasonable stocking density', 'what "
+            "causes algae blooms') should be answered by calling "
+            "search_reference_library, not by guessing from your own "
+            "training and not by wrongly saying 'no data' — that tool "
+            "exists specifically so those questions have a real, "
+            "grounded source too, distinct from this system's live "
+            "sensor/status tools. Follow this "
             "personality and behavior spec exactly:\n\n" + self.personality +
             "\n\n---\n\n"
             "The following is a LIVE, auto-generated list of every module "
@@ -1545,11 +1582,33 @@ class _BaseGreenhouseAssistant:
             # actually declares drops a hallucinated extra key instead of
             # crashing the call on it — no handler here uses **kwargs, so
             # this is a safe, complete filter, not a partial one.
-            valid_params = set(inspect.signature(handler).parameters)
+            sig = inspect.signature(handler)
+            valid_params = set(sig.parameters)
             extra = set(tool_input) - valid_params
             if extra:
                 logger.info("Tool %s: dropping hallucinated argument(s) not in its schema: %s", name, sorted(extra))
             filtered_input = {k: v for k, v in tool_input.items() if k in valid_params}
+            # Real failure found live 2026-09-03, the opposite direction of
+            # the one above: search_reference_library called with an EMPTY
+            # tool_input, omitting its required 'query' argument entirely.
+            # handler(**filtered_input) then raised a bare TypeError
+            # ("missing 1 required positional argument: 'query'") — caught
+            # by the except below same as any other error, but that raw
+            # Python message wasn't an actionable instruction, and
+            # llama3.2:latest responded with a long, unhelpful tangent
+            # instead of retrying with a real query. Detecting a missing
+            # required argument here means the error text handed back can
+            # just say what to do, in the model's own vocabulary — the
+            # tool's name and the missing parameter — rather than leak a
+            # Python-internal message and hope a small model parses it.
+            missing = [
+                p.name for p in sig.parameters.values()
+                if p.default is inspect.Parameter.empty
+                and p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)
+                and p.name not in filtered_input
+            ]
+            if missing:
+                return {"error": f"{name} requires {', '.join(missing)} — retry the call with that argument set to the real value."}
             return self._annotate_if_empty(handler(**filtered_input))
         except Exception as e:
             logger.exception("Tool %s failed", name)
@@ -2063,6 +2122,28 @@ class _BaseGreenhouseAssistant:
     def _tool_synthesize_voice_briefing(self) -> dict:
         from core.voice_briefing import VoiceBriefing
         return VoiceBriefing(self.db).synthesize_latest_report()
+
+    def _tool_search_reference_library(self, query: str | None = None) -> dict:
+        # Real gap found live 2026-09-03: query is required in the tool
+        # schema, but llama3.2:latest called this with an empty
+        # tool_input, then didn't reliably retry even after getting a
+        # clear "requires query" error back — a small-model limitation,
+        # not something a better error message alone fixes. Since the
+        # query is almost always just what the user actually asked,
+        # falling back to the most recent real user turn (skipping
+        # tool-result-shaped history entries) turns a dropped argument
+        # into a still-useful search instead of a dead end.
+        if not query:
+            query = next(
+                (h["content"] for h in reversed(self.history)
+                 if h.get("role") == "user" and isinstance(h.get("content"), str)),
+                None,
+            )
+            if not query:
+                return {"results": [], "note": "no query provided and no prior user message to fall back to"}
+        from core.reference_library import ReferenceLibrary
+        results = ReferenceLibrary(self.db).search(query)
+        return {"results": results}
 
     def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
                                           nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,

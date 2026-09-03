@@ -58,6 +58,7 @@ from core.succession_planner import SuccessionPlanner
 from core.yield_forecaster import YieldForecaster
 from core.dosing_recommendations import RecommendationEngine
 from core.voice_briefing import VoiceBriefing
+from core.reference_library import ReferenceLibrary
 from core.irrigation import IrrigationScheduler
 from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
@@ -182,6 +183,7 @@ def main():
     yield_forecaster = YieldForecaster(db)
     recommendations = RecommendationEngine(db)
     voice_briefing = VoiceBriefing(db)
+    reference_library = ReferenceLibrary(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -204,6 +206,7 @@ def main():
         (traceability, "traceability"), (sustainability, "sustainability_report"),
         (succession, "succession_planner"), (yield_forecaster, "yield_forecaster"),
         (recommendations, "dosing_recommendations"), (voice_briefing, "voice_briefing"),
+        (reference_library, "reference_library"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])

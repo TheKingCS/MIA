@@ -1483,6 +1483,54 @@ def scenario_voice_briefing():
     return checks
 
 
+def scenario_reference_library_search():
+    """Real gap: general aquaponics/greenhouse science questions had no
+    grounded source — the model either wrongly said 'no data' (this was
+    never a live-data question) or freelanced from its own pretraining.
+    Proves: a real multi-word query finds the actually-relevant topic
+    first (not just any keyword hit), a query matching nothing returns
+    an honest empty list rather than an error, seeding is real (baseline
+    topics exist across multiple categories) and doesn't duplicate on a
+    second init, and a human-added topic is immediately searchable."""
+    from core.reference_library import ReferenceLibrary
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    lib = ReferenceLibrary(conn)
+
+    total_after_first_seed = conn.execute("SELECT COUNT(*) FROM reference_topics").fetchone()[0]
+    ReferenceLibrary(conn)  # a second init must not re-seed
+    total_after_second_init = conn.execute("SELECT COUNT(*) FROM reference_topics").fetchone()[0]
+
+    categories = {r[0] for r in conn.execute("SELECT DISTINCT category FROM reference_topics").fetchall()}
+
+    ph_results = lib.search("why does pH matter for my fish")
+    algae_results = lib.search("what causes algae blooms in my tank")
+    nonsense_results = lib.search("xyzzy quantum blockchain")
+
+    new_id = lib.add_topic(
+        category="troubleshooting", title="Test Topic — Overflow Valve Stuck",
+        summary="A real human-added test entry.", keywords="overflow valve stuck test",
+    )
+    overflow_results = lib.search("overflow valve stuck")
+
+    checks = [
+        ("baseline seeding populated multiple real categories, not just one",
+         len(categories) >= 5),
+        ("a second ReferenceLibrary init against the same db does not duplicate the seed",
+         total_after_first_seed == total_after_second_init and total_after_first_seed > 15),
+        ("a real pH question finds the actual pH topic first, not an unrelated one",
+         len(ph_results) > 0 and "pH" in ph_results[0]["title"]),
+        ("a real algae question finds the actual algae topic first",
+         len(algae_results) > 0 and "Algae" in algae_results[0]["title"]),
+        ("a query matching nothing returns an honest empty list, not an error",
+         nonsense_results == []),
+        ("a human-added topic is immediately searchable",
+         len(overflow_results) > 0 and overflow_results[0]["id"] == new_id),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -3494,6 +3542,7 @@ SCENARIOS = {
     "yield_forecasting": scenario_yield_forecasting,
     "dosing_recommendations": scenario_dosing_recommendations,
     "voice_briefing": scenario_voice_briefing,
+    "reference_library_search": scenario_reference_library_search,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,

@@ -272,6 +272,30 @@ CREATE TABLE pest_disease_observations (
 );
 CREATE INDEX idx_pest_disease_observations_cell ON pest_disease_observations(cell_id, timestamp);
 
+-- ============ REFERENCE LIBRARY ============
+-- A real, curated aquaponics/greenhouse knowledge base — general
+-- domain science and technique (nitrogen cycle, water chemistry,
+-- stocking guidelines, plant care, greenhouse climate, troubleshooting)
+-- distinct from pest_disease_knowledge's symptom-diagnosis focus.
+-- Exists so a general "why does X matter" or "what's a good Y"
+-- question has a real, curated source to answer from instead of the
+-- model either fabricating from its own uncontrolled pretraining or
+-- wrongly saying "no data" to a question that was never about live
+-- system state in the first place.
+
+CREATE TABLE reference_topics (
+    id INTEGER PRIMARY KEY,
+    category TEXT NOT NULL,             -- 'nitrogen_cycle','water_chemistry','stocking',
+                                         -- 'plant_care','fish_care','climate','troubleshooting'
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,               -- 1-2 sentence direct answer
+    detail TEXT,                         -- longer explanation
+    keywords TEXT,                       -- comma-separated, for search matching
+    source TEXT DEFAULT 'baseline',      -- 'baseline' or 'human_added'
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_reference_topics_category ON reference_topics(category);
+
 -- ============ WEATHER AWARENESS ============
 -- Everything else in this system reacts to what's happening INSIDE
 -- the tank/cell — nothing looks outside. A real, logged record of each
