@@ -94,9 +94,17 @@
   .status-warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
   .status-critical { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
 
+  /* Flex, not grid — deliberately. A sensor count that isn't a clean
+     multiple of the column count (e.g. 9 readings) left a single tile
+     stranded alone on its own row, grid-left-aligned under a full row
+     above it. Grid can't center a ragged last row on its own (empty
+     tracks stay empty, items don't reflow); flex-wrap can, for any
+     tile count, without hardcoding a column number that would only be
+     right for one specific cell's sensor mix. Found live 2026-09-03. */
   .tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 12px;
   }
 
@@ -105,6 +113,8 @@
     border: 1px solid var(--line);
     border-radius: 2px;
     padding: 12px 14px;
+    flex: 1 1 148px;
+    max-width: 220px;
   }
   .stat-tile.warning { border-color: rgba(232, 163, 61, 0.45); }
   .stat-tile.critical { border-color: rgba(232, 93, 93, 0.5); }
@@ -155,8 +165,7 @@
      the per-sensor stat-tiles below it so the 4 highest-level questions
      (anything broken? battery? growing anything? anything to buy?) read
      as more important than any single sensor reading, not equal to it. */
-  .hero-tiles { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-  .hero-tile { padding: 16px 18px; }
+  .hero-tile { padding: 16px 18px; flex-basis: 180px; max-width: 280px; }
   .hero-tile .stat-value { font-size: 26px; }
 
   .cell-group { margin-bottom: 16px; }
