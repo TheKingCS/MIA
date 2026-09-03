@@ -29,10 +29,20 @@ import inspect
 import json
 import logging
 import sqlite3
+import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+
+# Real bug found live 2026-09-03, running the exact command README.md
+# documents (`python3 assistant/greenhouse_assistant.py`): running a
+# script directly puts its OWN directory (assistant/) on sys.path, not
+# the repo root, so `from core...` below failed with ModuleNotFoundError
+# every time — this file never actually had the fix core/order_queue.py
+# and drivers/simulator.py already needed for the identical issue. Same
+# fix, same reasoning: insert the repo root before any core/ import.
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # anthropic is deliberately NOT imported at module level — GreenhouseAssistant
 # (the default, local-model class) must be importable and usable with zero
@@ -2564,7 +2574,24 @@ class GreenhouseAssistant(_BaseGreenhouseAssistant):
 if __name__ == "__main__":
     import sys
 
-    db_path = sys.argv[1] if len(sys.argv) > 1 else "mia_homestead.db"
+    # Real target hardware is a Pi 5 (4-8GB RAM) — OLLAMA_MODEL's default
+    # (llama3.2:latest, ~2GB) is what's proven to fit it. qwen2.5:7b gives
+    # noticeably better answers (found live 2026-09-03) but used ~9GB on
+    # an 11GB dev machine and crashed Ollama once under concurrent load —
+    # too heavy to hardcode as the default until real target-hardware
+    # headroom is confirmed. --model makes trying it a flag, not a code
+    # edit: `python3 assistant/greenhouse_assistant.py --model qwen2.5:7b`
+    model = OLLAMA_MODEL
+    args = sys.argv[1:]
+    if "--model" in args:
+        idx = args.index("--model")
+        if idx + 1 < len(args):
+            model = args[idx + 1]
+            del args[idx:idx + 2]
+        else:
+            del args[idx]
+
+    db_path = next((a for a in args if not a.startswith("--")), "mia_homestead.db")
 
     if "--cloud" in sys.argv:
         import os
@@ -2574,8 +2601,8 @@ if __name__ == "__main__":
         )
         print("MIA Homestead assistant ready (cloud: Anthropic). Ctrl+C to exit.")
     else:
-        assistant = GreenhouseAssistant(db_path=db_path)
-        print(f"MIA Homestead assistant ready (local model: {OLLAMA_MODEL}, no cloud API). "
+        assistant = GreenhouseAssistant(db_path=db_path, model=model)
+        print(f"MIA Homestead assistant ready (local model: {model}, no cloud API). "
               f"Prefix a question with /cloud to explicitly send just that one question to the "
               f"cloud model instead (requires ANTHROPIC_API_KEY). Ctrl+C to exit.")
 

@@ -417,6 +417,19 @@ pip install pyyaml --break-system-packages
 python assistant/greenhouse_assistant.py
 ```
 
+Want a bigger local model than the default (`llama3.2:latest`, ~2GB —
+sized to fit the real Pi 5 target hardware)? Pass `--model`:
+
+```bash
+python assistant/greenhouse_assistant.py --model qwen2.5:7b
+```
+
+Noticeably better answers in testing (2026-09-03), but real numbers to
+know before making it your default: ~9GB RAM used on an 11GB dev
+machine (it crashed Ollama once under concurrent load at that level),
+and much slower per response. Not hardcoded as the default until real
+headroom on actual target hardware is confirmed.
+
 Cloud (Anthropic) — an explicit opt-in, kept for re-running the local-vs-
 cloud model bake-off, not the recommended default:
 
