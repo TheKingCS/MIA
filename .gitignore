@@ -33,3 +33,10 @@ backups/
 .pio/
 .pioenvs/
 .piolibdeps/
+
+# Voice briefing (core/voice_briefing.py) — real downloaded TTS voice
+# models are 60MB+ binaries, re-downloadable via
+# `python3 -m piper.download_voices`, and the synthesized output itself
+# is regenerated every daily report
+voices/
+viewer/daily_briefing.wav

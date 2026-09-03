@@ -1,0 +1,25 @@
+# MIA Homestead — Spoken Daily Briefing
+#
+# Pipes report_generator.py's existing natural-language daily report
+# through Piper (github.com/rhasspy/piper) — a small, fully offline,
+# locally-run TTS engine, matching this project's local-first assistant
+# stance (docs/OFFLINE_ASSISTANT_PLAN.md). No cloud TTS API, no vendor
+# account.
+#
+# Leave voice_model_path null and voice briefing simply doesn't run —
+# honestly skipped, never guessed, same precedent as
+# config/location.yaml and config/mia_home_sync.yaml.
+#
+# Setup once you want this running for real:
+#   pip install piper-tts
+#   python3 -m piper.download_voices en_US-lessac-medium --data-dir voices/
+#   then set voice_model_path below to voices/en_US-lessac-medium.onnx
+#
+# Producing the audio file needs no hardware beyond the Pi's own CPU —
+# actually PLAYING it through a physical speaker needs the beacon
+# hardware (README punch-list #5), not bought yet.
+
+voice_model_path: null
+# voice_model_path: "voices/en_US-lessac-medium.onnx"
+
+output_path: "viewer/daily_briefing.wav"

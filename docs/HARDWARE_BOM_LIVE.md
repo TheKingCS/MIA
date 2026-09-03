@@ -1,6 +1,6 @@
 # MIA Homestead — Live Hardware BOM
 
-**Auto-generated 2026-09-03T03:07:23.186706Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
+**Auto-generated 2026-09-03T03:11:34.314312Z from `hardware_requirements` — never hand-edit this file, it will be overwritten every startup.**
 
 For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM_CURRENT.md`.
 
@@ -12,6 +12,7 @@ For pricing research/sourcing notes (not auto-derivable), see `docs/HARDWARE_BOM
   1x Alert beacon (light + speaker/buzzer combo) — ~$20.00  (needed by: greenhouse_self_preservation)
   1x CO2 injector / regulator valve (solenoid, food-safe) — ~$35.00  (needed by: cell_a_climate)
   6x Peristaltic dosing pump — ~$72.00  (needed by: cell_a_aquaponics,pilot_cell)
+  1x Speaker (self-preservation beacon hardware, README punch-list #5)  (needed by: voice_briefing)
   2x Submersible aquarium air pump + airstone — ~$20.00  (needed by: cell_a_aquaponics,pilot_cell)
   2x Submersible aquarium heater, relay-controlled — ~$50.00  (needed by: cell_a_aquaponics,pilot_cell)
   2x Submersible circulation pump — ~$30.00  (needed by: cell_a_aquaponics,pilot_cell)

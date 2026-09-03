@@ -57,6 +57,7 @@ from core.sustainability_report import SustainabilityReport
 from core.succession_planner import SuccessionPlanner
 from core.yield_forecaster import YieldForecaster
 from core.dosing_recommendations import RecommendationEngine
+from core.voice_briefing import VoiceBriefing
 from core.irrigation import IrrigationScheduler
 from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
@@ -180,6 +181,7 @@ def main():
     succession = SuccessionPlanner(db)
     yield_forecaster = YieldForecaster(db)
     recommendations = RecommendationEngine(db)
+    voice_briefing = VoiceBriefing(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -201,7 +203,7 @@ def main():
         (data_retention, "data_retention"), (mia_home_sync, "mia_home_sync"),
         (traceability, "traceability"), (sustainability, "sustainability_report"),
         (succession, "succession_planner"), (yield_forecaster, "yield_forecaster"),
-        (recommendations, "dosing_recommendations"),
+        (recommendations, "dosing_recommendations"), (voice_briefing, "voice_briefing"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
@@ -342,6 +344,12 @@ def main():
                     if hours_since_report is None or hours_since_report >= 24:
                         reports.generate_and_send()
                         logger.info("Periodic report generated and sent")
+                        voice_result = voice_briefing.synthesize_latest_report()
+                        if voice_result.get("synthesized"):
+                            logger.info("Voice briefing synthesized: %s", voice_result["output_path"])
+                        # else: honestly no-ops when voice_model_path isn't configured —
+                        # not logged as a warning, same "nice when connected, never
+                        # required" posture as weather/cloud-escalation/SMS.
                     drift_findings = trend_analyzer.check_all_sensors()
                     if drift_findings:
                         logger.info("Trend analyzer found %d sensor(s) drifting", len(drift_findings))

@@ -619,6 +619,11 @@ TOOLS = [
         },
     },
     {
+        "name": "synthesize_voice_briefing",
+        "description": "Synthesize the latest daily report into a real local audio file via offline TTS (Piper). Honestly no-ops if voice isn't configured (config/voice.yaml) or no report exists yet.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_recommendations",
         "description": "Get proactive, data-driven advisories composed from current drift and weather-forecast signals — a 'worth a look before it becomes a problem' layer, distinct from reactive alerts. Never changes any setting.",
         "input_schema": {
@@ -1162,6 +1167,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_succession_suggestions": "yield_planting",
     "get_yield_forecast": "yield_planting",
     "get_recommendations": "system_health",
+    "synthesize_voice_briefing": "system_ops",
     "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
@@ -1322,6 +1328,7 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "system_ops": [
         "sync", "mia home", "data retention", "deploy", "deployment",
         "self-test", "self test", "self-diagnos", "diagnostics",
+        "voice", "briefing", "spoken", "read me the report", "audio",
     ],
     "activity": [
         "journal", "activity log", "what's next", "whats next", "upcoming",
@@ -2025,6 +2032,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_recommendations(self, cell_id: int | None = None) -> dict:
         from core.dosing_recommendations import RecommendationEngine
         return {"recommendations": RecommendationEngine(self.db).get_recommendations(cell_id=cell_id)}
+
+    def _tool_synthesize_voice_briefing(self) -> dict:
+        from core.voice_briefing import VoiceBriefing
+        return VoiceBriefing(self.db).synthesize_latest_report()
 
     def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
                                           nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,
