@@ -342,6 +342,14 @@ CREATE TABLE inventory_items (
 CREATE TABLE inventory_transactions (
     id INTEGER PRIMARY KEY,
     item_id INTEGER NOT NULL REFERENCES inventory_items(id),
+    cell_id INTEGER REFERENCES cells(id),  -- nullable — real for dosing consumption
+                                         -- (traced back through dosing_events), honestly
+                                         -- NULL for anything not tied to one cell (a
+                                         -- restock, a repair part) or a historical row
+                                         -- from before this column existed. This is what
+                                         -- makes finance_tracker.py's per-crop cost
+                                         -- breakdown (docs/SUSTAINING_FEATURES.md #24)
+                                         -- real instead of system-wide-only.
     timestamp TEXT DEFAULT (datetime('now')),
     change_qty REAL NOT NULL,           -- negative = consumed, positive = restocked
     reason TEXT NOT NULL,               -- 'dosing_consumption','restock',

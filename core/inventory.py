@@ -47,15 +47,16 @@ class InventoryManager(Describable):
         self.db.commit()
         return cur.lastrowid
 
-    def adjust_stock(self, item_id: int, delta: float, reason: str, reference: str = None) -> None:
+    def adjust_stock(self, item_id: int, delta: float, reason: str, reference: str = None,
+                      cell_id: int = None) -> None:
         self.db.execute(
             "UPDATE inventory_items SET quantity_on_hand = quantity_on_hand + ? WHERE id = ?",
             (delta, item_id),
         )
         self.db.execute(
-            "INSERT INTO inventory_transactions (item_id, change_qty, reason, reference) "
-            "VALUES (?, ?, ?, ?)",
-            (item_id, delta, reason, reference),
+            "INSERT INTO inventory_transactions (item_id, change_qty, reason, reference, cell_id) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (item_id, delta, reason, reference, cell_id),
         )
         self.db.commit()
         self._check_reorder(item_id)
@@ -65,14 +66,22 @@ class InventoryManager(Describable):
         keyed by item name containing the dose_type string. If no
         matching inventory item exists, this is a no-op — inventory
         tracking is opt-in per chemical, not mandatory for control logic
-        to function."""
+        to function. Looks up the real cell_id from the dosing_events
+        row itself so the resulting inventory_transactions row is
+        genuinely cell-attributed, not guessed — the source of a real
+        per-crop cost breakdown (docs/SUSTAINING_FEATURES.md #24)."""
         row = self.db.execute(
             "SELECT id FROM inventory_items WHERE name LIKE ? AND category = 'chemical' LIMIT 1",
             (f"%{dose_type}%",),
         ).fetchone()
         if row:
+            cell_row = self.db.execute(
+                "SELECT cell_id FROM dosing_events WHERE id = ?", (dosing_event_id,)
+            ).fetchone()
+            cell_id = cell_row[0] if cell_row else None
             self.adjust_stock(
-                row[0], -amount_ml, "dosing_consumption", f"dosing_event:{dosing_event_id}"
+                row[0], -amount_ml, "dosing_consumption", f"dosing_event:{dosing_event_id}",
+                cell_id=cell_id,
             )
 
     def _check_reorder(self, item_id: int) -> None:

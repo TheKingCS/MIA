@@ -11,13 +11,17 @@ record_revenue() existed, and it had zero capability registration
 own rule 2 exists to prevent. Fixed here, not just cost/profitability
 added alongside it.
 
-Real, honest limitation stated plainly, not glossed over:
-inventory_transactions has no cell_id — consumable cost in this schema
-is tracked per-ITEM, never per-CELL. get_cost_summary() and
-get_profitability_summary() are therefore SYSTEM-WIDE, not a per-cell
-breakdown; revenue (which IS cell-attributed via yield_events/
-revenue_transactions.cell_id) doesn't get artificially forced into a
-per-cell cost comparison the underlying data can't actually support.
+v0.2 (docs/SUSTAINING_FEATURES.md #24, 2026-09-03): inventory_transactions
+now has a real, nullable cell_id (traced through dosing_events for the
+one consumption path that's genuinely per-cell — dosing). Passing
+cell_id to get_cost_summary()/get_profitability_summary() now gives a
+REAL per-cell breakdown, honestly scoped to dosing consumption only —
+a restock, repair part, or any pre-migration historical transaction
+has no cell_id and is correctly excluded from a per-cell view, not
+silently folded in. Omit cell_id for the original system-wide total,
+unaffected by any of this. Revenue was already cell-attributed via
+yield_events/revenue_transactions.cell_id.
+
 Feeding cost (core/fish_health.py's feeding_events) is deliberately NOT
 cross-referenced into cost here either — food_type is free text, not a
 real foreign key into inventory_items, and guessing a unit conversion
@@ -53,31 +57,42 @@ class FinanceTracker(Describable):
         logger.info("Revenue recorded: %s x%s %s @ %s = $%.2f", item, quantity, unit, unit_price, total_amount)
         return cur.lastrowid
 
-    def get_revenue_summary(self, days: int = 30) -> dict:
+    def get_revenue_summary(self, days: int = 30, cell_id: int = None) -> dict:
         self.db.row_factory = sqlite3.Row
-        rows = self.db.execute(
-            "SELECT * FROM revenue_transactions WHERE timestamp >= datetime('now', ?) "
-            "ORDER BY timestamp DESC",
-            (f"-{days} days",),
-        ).fetchall()
+        q = "SELECT * FROM revenue_transactions WHERE timestamp >= datetime('now', ?)"
+        params = [f"-{days} days"]
+        if cell_id is not None:
+            q += " AND cell_id = ?"
+            params.append(cell_id)
+        q += " ORDER BY timestamp DESC"
+        rows = self.db.execute(q, params).fetchall()
         total = sum(r["total_amount"] for r in rows)
         return {"transactions": [dict(r) for r in rows], "total_revenue": total, "window_days": days}
 
     # ---------- Cost ----------
 
-    def get_cost_summary(self, days: int = 30) -> dict:
-        """SYSTEM-WIDE, not per-cell — see this module's own docstring
-        for why. Only counts consumption (change_qty < 0) of items with
-        a real, known unit_cost; items consumed without a known cost
-        are excluded from the total and listed separately, never
-        silently treated as $0 (that would understate cost, not just
-        omit unknown data)."""
-        rows = self.db.execute(
-            "SELECT ii.category, ii.name, ii.unit_cost, -it.change_qty as consumed "
-            "FROM inventory_transactions it JOIN inventory_items ii ON ii.id = it.item_id "
-            "WHERE it.change_qty < 0 AND it.timestamp >= datetime('now', ?)",
-            (f"-{days} days",),
-        ).fetchall()
+    def get_cost_summary(self, days: int = 30, cell_id: int = None) -> dict:
+        """Real per-cell breakdown when cell_id is given (docs/
+        SUSTAINING_FEATURES.md #24) — inventory_transactions.cell_id is
+        real for dosing consumption (traced through dosing_events),
+        honestly NULL for anything not tied to one cell (a restock, a
+        repair part) or a historical row from before this column
+        existed. A cell_id filter therefore only ever sees dosing-
+        consumption cost for that cell, explicitly noted below, not
+        silently presented as total cost for that cell. Omitting
+        cell_id keeps the original system-wide total, unaffected by
+        this. Only counts consumption (change_qty < 0) of items with a
+        real, known unit_cost; items consumed without a known cost are
+        excluded from the total and listed separately, never silently
+        treated as $0."""
+        q = ("SELECT ii.category, ii.name, ii.unit_cost, -it.change_qty as consumed "
+             "FROM inventory_transactions it JOIN inventory_items ii ON ii.id = it.item_id "
+             "WHERE it.change_qty < 0 AND it.timestamp >= datetime('now', ?)")
+        params = [f"-{days} days"]
+        if cell_id is not None:
+            q += " AND it.cell_id = ?"
+            params.append(cell_id)
+        rows = self.db.execute(q, params).fetchall()
 
         total_cost = 0.0
         by_category: dict[str, float] = {}
@@ -95,24 +110,38 @@ class FinanceTracker(Describable):
             "by_category": {k: round(v, 2) for k, v in by_category.items()},
             "items_with_unknown_cost": sorted(unknown_cost_items),
             "window_days": days,
+            "cell_id": cell_id,
+            "note": (
+                "system-wide total across all consumption" if cell_id is None else
+                "only dosing consumption attributed to this cell — a restock, repair part, or "
+                "any pre-migration historical row has no cell_id and is correctly excluded here, "
+                "not silently folded into this cell's total"
+            ),
         }
 
-    def get_profitability_summary(self, days: int = 30) -> dict:
-        revenue = self.get_revenue_summary(days)
-        cost = self.get_cost_summary(days)
+    def get_profitability_summary(self, days: int = 30, cell_id: int = None) -> dict:
+        revenue = self.get_revenue_summary(days, cell_id=cell_id)
+        cost = self.get_cost_summary(days, cell_id=cell_id)
         return {
             "total_revenue": revenue["total_revenue"],
             "total_cost": cost["total_cost"],
             "net_margin": round(revenue["total_revenue"] - cost["total_cost"], 2),
             "items_with_unknown_cost": cost["items_with_unknown_cost"],
             "window_days": days,
+            "cell_id": cell_id,
             "note": (
-                "Cost is system-wide, not per-cell — inventory consumption isn't tracked "
-                "per-cell in this schema. Revenue IS cell-attributed where recorded with a "
-                "cell_id, but isn't broken out that way here to avoid implying a per-cell "
-                "margin the cost side can't actually support. Feeding costs "
-                "(core/fish_health.py) aren't included — no reliable unit-cost link exists "
-                "from feeding_events to inventory_items yet."
+                (
+                    "System-wide: revenue and cost both cover every cell. Feeding costs "
+                    "(core/fish_health.py) aren't included — no reliable unit-cost link exists "
+                    "from feeding_events to inventory_items yet."
+                ) if cell_id is None else (
+                    "Per-cell (docs/SUSTAINING_FEATURES.md #24): revenue is real cell-attributed "
+                    "revenue; cost is ONLY dosing consumption traced to this cell — a restock, "
+                    "repair part, or pre-migration historical transaction has no cell_id and is "
+                    "correctly excluded, so this margin may overstate profitability if real "
+                    "non-dosing costs (e.g. a repair) were actually attributable to this cell. "
+                    "Feeding costs aren't included here either, same reason as system-wide."
+                )
             ),
         }
 
@@ -127,17 +156,19 @@ class FinanceTracker(Describable):
                 "real write path for revenue_transactions — that table existed and was already "
                 "read by the dashboard/home-snapshot exporters, but nothing ever wrote to it."
             ),
-            data_produced=["revenue transactions", "consumable cost by category", "net margin over a window"],
+            data_produced=["revenue transactions", "consumable cost by category (system-wide or per-cell)", "net margin over a window"],
             actions_possible=[
-                "record a real revenue transaction", "get revenue for a window",
-                "get consumable cost for a window (system-wide, by category)",
-                "get a combined profitability summary (revenue - cost) for a window",
+                "record a real revenue transaction", "get revenue for a window (system-wide or per-cell)",
+                "get consumable cost for a window (system-wide or per-cell, by category)",
+                "get a combined profitability summary (revenue - cost) for a window, system-wide or per-cell",
             ],
             limits_and_safety=(
                 "Purely a logging/reasoning layer — never touches dosing, actuators, or any "
-                "control-loop decision. Cost is honestly system-wide, not per-cell — "
-                "inventory_transactions has no cell_id in this schema, so no per-cell cost "
-                "breakdown is claimed. Items consumed without a known unit_cost are excluded "
+                "control-loop decision. Per-cell cost (v0.2) is honestly scoped to dosing "
+                "consumption only — inventory_transactions.cell_id is real for dosing (traced "
+                "through dosing_events) but NULL for a restock, repair part, or pre-migration "
+                "historical row, all correctly excluded from a per-cell total rather than "
+                "silently folded in. Items consumed without a known unit_cost are excluded "
                 "from the total and listed separately, never silently counted as $0. Feeding "
                 "costs are deliberately not included — no reliable link from feeding_events' "
                 "free-text food_type to a real inventory_items unit cost exists yet."
@@ -153,7 +184,11 @@ class FinanceTracker(Describable):
                 "get_cost_summary() correctly sums real seeded consumption cost for items with a "
                 "known unit_cost, correctly EXCLUDES an item with no known unit_cost from the "
                 "total while listing it separately (not silently treated as $0); confirmed "
-                "get_profitability_summary() nets real revenue minus real cost correctly.",
+                "get_profitability_summary() nets real revenue minus real cost correctly. "
+                "scenarios.py::scenario_per_crop_profitability — confirmed a per-cell cost/"
+                "profitability breakdown correctly isolates one cell's real dosing consumption "
+                "from another's, and correctly excludes a non-cell-attributed transaction "
+                "(e.g. a restock) from a per-cell total.",
             ],
         )
 

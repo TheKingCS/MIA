@@ -1227,6 +1227,63 @@ def scenario_succession_planning():
     return checks
 
 
+def scenario_per_crop_profitability():
+    """docs/SUSTAINING_FEATURES.md #24: inventory_transactions now has a
+    real, nullable cell_id (traced through dosing_events for dosing
+    consumption specifically). Proves: two cells' dosing consumption is
+    correctly isolated from each other in a per-cell cost breakdown; a
+    non-cell-attributed transaction (a restock) is correctly excluded
+    from BOTH cells' per-cell totals, not folded into either; and
+    omitting cell_id still returns the original system-wide total,
+    unaffected."""
+    from core.finance_tracker import FinanceTracker
+    from core.inventory import InventoryManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_a = setup_demo_cell(conn)
+    cell_b = conn.execute("INSERT INTO cells (name) VALUES ('Cell B')").lastrowid
+    inv = InventoryManager(conn)
+    ft = FinanceTracker(conn)
+
+    item_id = inv.add_item("pH-up solution", "chemical", "ml", unit_cost=0.10)
+
+    # A dosing event on cell A, consumption traced back to cell A.
+    dose_a = conn.execute(
+        "INSERT INTO dosing_events (cell_id, dose_type, triggered_by) VALUES (?, 'ph_up', 'auto_control')",
+        (cell_a,),
+    ).lastrowid
+    conn.commit()
+    inv.record_consumption_from_dose("ph_up", 100, dose_a)  # 100ml @ $0.10 = $10 on cell A
+
+    # A dosing event on cell B, consumption traced back to cell B.
+    dose_b = conn.execute(
+        "INSERT INTO dosing_events (cell_id, dose_type, triggered_by) VALUES (?, 'ph_up', 'auto_control')",
+        (cell_b,),
+    ).lastrowid
+    conn.commit()
+    inv.record_consumption_from_dose("ph_up", 40, dose_b)  # 40ml @ $0.10 = $4 on cell B
+
+    # A restock — not tied to any cell, must not leak into either cell's total.
+    inv.adjust_stock(item_id, 500, "restock", "order:1")
+
+    cost_a = ft.get_cost_summary(days=30, cell_id=cell_a)
+    cost_b = ft.get_cost_summary(days=30, cell_id=cell_b)
+    cost_system = ft.get_cost_summary(days=30)
+
+    checks = [
+        ("cell A's per-cell cost is exactly its own $10 dosing consumption",
+         cost_a["total_cost"] == 10.0),
+        ("cell B's per-cell cost is exactly its own $4 dosing consumption, not cell A's",
+         cost_b["total_cost"] == 4.0),
+        ("the restock (positive change_qty) doesn't appear in either cell's cost total",
+         cost_a["total_cost"] == 10.0 and cost_b["total_cost"] == 4.0),
+        ("the system-wide total (no cell_id) still sums both cells' real consumption ($14 total)",
+         cost_system["total_cost"] == 14.0),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -3234,6 +3291,7 @@ SCENARIOS = {
     "yield_recording_and_lot_traceability": scenario_yield_recording_and_lot_traceability,
     "water_efficiency_reporting": scenario_water_efficiency_reporting,
     "succession_planning": scenario_succession_planning,
+    "per_crop_profitability": scenario_per_crop_profitability,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,

@@ -271,10 +271,13 @@ TOOLS = [
     },
     {
         "name": "get_revenue_summary",
-        "description": "Get revenue transactions within a lookback window in days.",
+        "description": "Get revenue transactions within a lookback window in days, optionally scoped to one cell.",
         "input_schema": {
             "type": "object",
-            "properties": {"days": {"type": "integer", "default": 30}},
+            "properties": {
+                "days": {"type": "integer", "default": 30},
+                "cell_id": {"type": "integer"},
+            },
         },
     },
     {
@@ -296,18 +299,24 @@ TOOLS = [
     },
     {
         "name": "get_cost_summary",
-        "description": "Get real consumable cost (system-wide, not per-cell) for a lookback window — what was actually spent on inventory, from real unit costs.",
+        "description": "Get real consumable cost for a lookback window — what was actually spent on inventory, from real unit costs. System-wide by default; pass cell_id for a per-cell breakdown (dosing consumption only — a restock or repair part isn't cell-attributed).",
         "input_schema": {
             "type": "object",
-            "properties": {"days": {"type": "integer", "default": 30}},
+            "properties": {
+                "days": {"type": "integer", "default": 30},
+                "cell_id": {"type": "integer"},
+            },
         },
     },
     {
         "name": "get_profitability_summary",
-        "description": "Get a combined revenue-minus-cost profitability picture for a lookback window — the real margin, not just revenue or cost alone.",
+        "description": "Get a combined revenue-minus-cost profitability picture for a lookback window — the real margin, not just revenue or cost alone. System-wide by default; pass cell_id for a real per-crop breakdown.",
         "input_schema": {
             "type": "object",
-            "properties": {"days": {"type": "integer", "default": 30}},
+            "properties": {
+                "days": {"type": "integer", "default": 30},
+                "cell_id": {"type": "integer"},
+            },
         },
     },
     {
@@ -1274,6 +1283,7 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "revenue": [
         "revenue", "sales", "sold", "income", "earned", "market",
         "cost", "costs", "profit", "profitability", "margin", "expenses", "spent",
+        "per crop", "per cell", "most profitable",
     ],
     # Four new domains, 2026-09-02 — split out of status/self_knowledge to
     # fix the always-on tool-count regression (see TOOL_DOMAINS's own
@@ -2266,9 +2276,9 @@ class _BaseGreenhouseAssistant:
             return {"error": str(e)}
         return {"created_task_id": task_id, "title": title, "priority": priority}
 
-    def _tool_get_revenue_summary(self, days: int = 30) -> dict:
+    def _tool_get_revenue_summary(self, days: int = 30, cell_id: int | None = None) -> dict:
         from core.finance_tracker import FinanceTracker
-        return FinanceTracker(self.db).get_revenue_summary(days)
+        return FinanceTracker(self.db).get_revenue_summary(days, cell_id=cell_id)
 
     def _tool_record_revenue(self, item: str, quantity: float, unit: str, unit_price: float,
                                cell_id: int | None = None, channel: str | None = None,
@@ -2279,13 +2289,13 @@ class _BaseGreenhouseAssistant:
         )
         return {"transaction_id": txn_id, "item": item, "total_amount": quantity * unit_price}
 
-    def _tool_get_cost_summary(self, days: int = 30) -> dict:
+    def _tool_get_cost_summary(self, days: int = 30, cell_id: int | None = None) -> dict:
         from core.finance_tracker import FinanceTracker
-        return FinanceTracker(self.db).get_cost_summary(days)
+        return FinanceTracker(self.db).get_cost_summary(days, cell_id=cell_id)
 
-    def _tool_get_profitability_summary(self, days: int = 30) -> dict:
+    def _tool_get_profitability_summary(self, days: int = 30, cell_id: int | None = None) -> dict:
         from core.finance_tracker import FinanceTracker
-        return FinanceTracker(self.db).get_profitability_summary(days)
+        return FinanceTracker(self.db).get_profitability_summary(days, cell_id=cell_id)
 
 
 class AnthropicGreenhouseAssistant(_BaseGreenhouseAssistant):
