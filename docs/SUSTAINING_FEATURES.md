@@ -495,7 +495,15 @@ hardware), real but correctly hardware-gated, and out-of-scope-for-now
 
 ### Tier 1 — buildable now, software-only, genuinely new
 
-## 19. Succession/rotation planning
+## 19. Succession/rotation planning — DONE (2026-09-03)
+Built as `core/succession_planner.py`. Scoped as succession (what/when
+to plant next), not true crop-family rotation science — see the
+module's own docstring for why that distinction matters. Verified via
+`scenarios.py::scenario_succession_planning` (9 checks, including a
+real exclusion case reusing the documented Cucumber/Spinach
+zero-temp-overlap pair) and a live smoke test. Original brainstorm
+kept below for context.
+
 **Problem it solves:** `core/bed_planting.py` tracks current and planned
 plantings but never proactively suggests what comes next — a bed
 approaching its `expected_harvest_date` just... becomes empty, with no
@@ -511,7 +519,18 @@ through the same human-approval-adjacent pattern as
 **Effort:** small-medium — composes `bed_planting.py` +
 `species_registry.py`, no new architecture.
 
-## 20. Resource-efficiency / sustainability reporting
+## 20. Resource-efficiency / sustainability reporting — DONE (2026-09-03)
+Built as `core/sustainability_report.py`, water-only (see the module's
+own docstring for why energy is honestly excluded — no real load
+telemetry exists, only solar generation and battery SOC). Real bug
+caught by a live smoke test, not just scenarios: real yield with ZERO
+water logged computed a literal 0.0 ratio, misleadingly reading as
+"perfect efficiency" — fixed to report unavailable, same as the
+zero-yield case. Verified via
+`scenarios.py::scenario_water_efficiency_reporting` (4 checks) and a
+live smoke test, twice (before and after the fix). Original brainstorm
+kept below for context.
+
 **Problem it solves:** water usage is already logged
 (`bed_planting.record_water_usage()`/`get_water_usage()`) and power
 draw is already tracked (`modules/power_monitor.py`), but nothing
@@ -528,7 +547,18 @@ already holds cost estimates to).
 **Effort:** small — same "compose data that already exists" pattern as
 `finance_tracker.py`.
 
-## 21. Harvest-to-sale lot traceability ledger
+## 21. Harvest-to-sale lot traceability ledger — DONE (2026-09-03)
+Built as `core/traceability.py`. Real gap found while scoping this:
+`yield_events` had a full schema and was read everywhere but nothing
+ever wrote to it, same shape as the `revenue_transactions` bug fixed
+earlier — `record_yield()` is the first real write path. Also fixed
+`_tool_mark_planting_harvested` bypassing `BedPlantingManager.
+mark_harvested()` via raw SQL (same bug class caught 3 times before).
+Verified via `scenarios.py::scenario_yield_recording_and_lot_
+traceability` (9 checks including real tamper detection on the hash
+chain) and a live smoke test against the real dev DB (migrated
+non-destructively). Original brainstorm kept below for context.
+
 **Problem it solves:** commercial ag-tech increasingly advertises
 blockchain-based farm-to-fork traceability (TraceX, Transgenie) — "which
 batch was this, what was it dosed with, when was it harvested, who
@@ -551,7 +581,17 @@ from," without an external chain, gas fees, or vendor account.
 hash-chaining is a small, well-understood pattern (same idea
 `core/deploy_manager.py`'s rollback-history already uses informally).
 
-## 22. Multi-week yield forecasting
+## 22. Multi-week yield forecasting — DONE (2026-09-03)
+Built as `core/yield_forecaster.py`. Real, explicit uncertainty bands
+(never a single fabricated date) widened by real signals
+(`sensor_confidence`, real stress alerts), capped rather than
+unbounded. Real bug caught before the scenario even ran: the first
+draft queried a nonexistent `alerts.cell_id` — fixed with a real
+module-id-to-cell mapping read from `config/modules.yaml`. Verified
+via `scenarios.py::scenario_yield_forecasting` (6 checks) and a live
+smoke test (correctly capped a 21-day band from 177 real accumulated
+alerts in the dev DB). Original brainstorm kept below for context.
+
 **Problem it solves:** commercial "crop intelligence" platforms (IUNU
 LUNA, Root AI) advertise multi-week-ahead yield forecasting from sensor
 + growth data. This system currently only compares expected vs. actual
@@ -568,7 +608,16 @@ data to calibrate against, so this is a build-the-framework-now,
 trust-it-once-the-pilot/first-real-harvests-exist feature, same
 sequencing as drift detection was.
 
-## 23. Data-driven dosing/climate recommendation layer
+## 23. Data-driven dosing/climate recommendation layer — DONE (2026-09-03)
+Built as `core/dosing_recommendations.py`. Advisory-only by
+construction — composes `trend_analyzer`'s real drift signal and
+`weather_awareness`'s real forecast, never touches `dosing_limits` or
+`target_overrides`. Verified via
+`scenarios.py::scenario_dosing_recommendations` (5 checks, including
+proving those two tables are provably untouched by calling it) and a
+live smoke test (honestly empty — no location configured, no current
+drift). Original brainstorm kept below for context.
+
 **Problem it solves:** Priva's own marketing leads with "AI-automated
 irrigation... data-driven recommendations" layered on top of climate
 computers. This system's control loop is real but purely
@@ -588,7 +637,17 @@ not around it.
 **Effort:** medium — a genuine new reasoning layer, but composes three
 already-built signal sources rather than adding new sensing.
 
-## 24. Per-crop (not just system-wide) profitability
+## 24. Per-crop (not just system-wide) profitability — DONE (2026-09-03)
+The one real schema change on this list:
+`inventory_transactions.cell_id`, traced through `dosing_events` for
+the one consumption path that's genuinely per-cell. `get_cost_summary()`/
+`get_profitability_summary()` gained an optional `cell_id`, honestly
+scoped to dosing consumption only (a restock or repair part has no
+`cell_id` and is correctly excluded). Verified via
+`scenarios.py::scenario_per_crop_profitability` (4 checks) and a live
+smoke test against the real dev DB (migrated non-destructively).
+Original brainstorm kept below for context.
+
 **Problem it solves:** `finance_tracker.py`'s own docstring already
 names this gap honestly — cost is system-wide only because
 `inventory_transactions` has no `cell_id`, so margin can't be broken out
@@ -603,7 +662,18 @@ the data exists to support it.
 **Effort:** medium-large — the one item here that's a real schema
 change, not just composing existing columns.
 
-## 25. Spoken daily briefing at the beacon
+## 25. Spoken daily briefing at the beacon — DONE (2026-09-03)
+Built as `core/voice_briefing.py`, using Piper (fully offline TTS,
+matching this project's local-first stance) — confirmed installable
+and working in this environment before building around it, not
+assumed. Config-gated the same null-safe way as `location.yaml`/
+`mia_home_sync.yaml`. Stops at producing a real audio file — actual
+playback needs the beacon hardware (punch-list #5), not bought yet.
+Verified via `scenarios.py::scenario_voice_briefing` (3 checks,
+including real end-to-end synthesis when Piper is actually present)
+and a live smoke test (a real 1.8MB `.wav` from a real report).
+Original brainstorm kept below for context.
+
 **Problem it solves:** `report_generator.py` already writes a real
 natural-language daily report via the local model
 (`generate_and_send()`); `self_preservation.py`'s beacon is real
@@ -675,6 +745,16 @@ target, not before.
   (punch-list #7, done) — a second Homestead site to sync would need
   this project's own multi-site version of that, not relevant unless a
   second physical location is real.
+
+## Status as of 2026-09-03
+
+**All 7 Tier-1 items from round 2 (#19, #20, #21, #22, #23, #24, #25)
+are now DONE** — see each entry above for what actually implements it,
+what real bug it caught along the way, and how it was verified. Every
+one shipped with a new scenario, a clean `self_audit.py` run, and a
+live smoke test against the real dev DB, not just unit-level scenario
+coverage. Tier 2 (camera/NPU-gated) and the explicitly-out-of-scope
+items are unchanged — still real, still correctly not built yet.
 
 ## Status as of 2026-08-31
 
