@@ -25,6 +25,7 @@ explicit, opted-into choice rather than a default dependency — not
 removed, just no longer what you get without asking for it.
 """
 
+import inspect
 import json
 import logging
 import sqlite3
@@ -1523,7 +1524,23 @@ class _BaseGreenhouseAssistant:
     def _dispatch_tool(self, name: str, tool_input: dict) -> dict:
         try:
             handler = getattr(self, f"_tool_{name}")
-            return self._annotate_if_empty(handler(**tool_input))
+            # Real failure found live 2026-09-03: llama3.2:latest called
+            # get_greenhouse_report with a hallucinated 'type' argument —
+            # plausible-sounding, but not in that tool's real schema
+            # (only 'days' exists). handler(**tool_input) then raised a
+            # bare TypeError, which _dispatch_tool already caught, but
+            # only after the call failed outright and the model produced
+            # a confused fallback response instead of the real report.
+            # Filtering tool_input to only the parameters the handler
+            # actually declares drops a hallucinated extra key instead of
+            # crashing the call on it — no handler here uses **kwargs, so
+            # this is a safe, complete filter, not a partial one.
+            valid_params = set(inspect.signature(handler).parameters)
+            extra = set(tool_input) - valid_params
+            if extra:
+                logger.info("Tool %s: dropping hallucinated argument(s) not in its schema: %s", name, sorted(extra))
+            filtered_input = {k: v for k, v in tool_input.items() if k in valid_params}
+            return self._annotate_if_empty(handler(**filtered_input))
         except Exception as e:
             logger.exception("Tool %s failed", name)
             return {"error": str(e)}
