@@ -1146,6 +1146,87 @@ def scenario_water_efficiency_reporting():
     return checks
 
 
+def scenario_succession_planning():
+    """Real gap: bed_planting.py tracks current/planned plantings but
+    never proactively suggests what comes next. Proves: a planting
+    nearing harvest surfaces a suggestion; one already past its
+    expected date is flagged overdue, not hidden; a bed that already
+    has a planned next planting is flagged so it isn't double-suggested;
+    a species incompatible with a co-located planting's water is
+    correctly excluded from the candidate list; and an isolated cell
+    (no other active planting left) reports itself unconstrained."""
+    from core.bed_planting import BedPlantingManager
+    from core.species_registry import SpeciesRegistry
+    from core.succession_planner import SuccessionPlanner
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    species = SpeciesRegistry(conn)
+    bp = BedPlantingManager(conn, species)
+    planner = SuccessionPlanner(conn)
+
+    lettuce_id = conn.execute("SELECT id FROM species_profiles WHERE common_name = 'Lettuce'").fetchone()[0]
+    cucumber_id = conn.execute("SELECT id FROM species_profiles WHERE common_name = 'Cucumber'").fetchone()[0]
+
+    # A permanent Cucumber planting sharing this cell's water (temp_water 70-80F) —
+    # real case already documented in species_registry.py: Spinach (50-68F) shares
+    # zero temp overlap with Cucumber, so it must be excluded from any candidate
+    # list for a bed sharing this cell, even though Swiss Chard (60-75F) still fits.
+    bp.plant("Bed A3", cell_id, cucumber_id, quantity_planted=4)
+
+    # A planting nearing harvest (within the default 14-day window), no plan staged yet.
+    near_id = bp.plant("Bed A1", cell_id, lettuce_id, quantity_planted=10)
+    conn.execute(
+        "UPDATE bed_plantings SET expected_harvest_date = datetime('now', '+5 days') WHERE id = ?",
+        (near_id,),
+    )
+    # A second bed, same cell, already OVERDUE — must be flagged, not hidden.
+    overdue_id = bp.plant("Bed A2", cell_id, lettuce_id, quantity_planted=8)
+    conn.execute(
+        "UPDATE bed_plantings SET expected_harvest_date = datetime('now', '-3 days') WHERE id = ?",
+        (overdue_id,),
+    )
+    conn.commit()
+
+    suggestions = planner.get_succession_suggestions(days_ahead=14, cell_id=cell_id)
+    by_bed = {s["grow_bed_name"]: s for s in suggestions}
+
+    # Stage a real planned next planting for Bed A1 — should now be flagged as already covered.
+    bp.plan("Bed A1", cell_id, lettuce_id, target_plant_date="2026-09-10")
+    suggestions_after_plan = planner.get_succession_suggestions(days_ahead=14, cell_id=cell_id)
+    by_bed_after = {s["grow_bed_name"]: s for s in suggestions_after_plan}
+
+    # An isolated single-bed cell — no other active planting remains once this one's harvested.
+    solo_cell_id = conn.execute("INSERT INTO cells (name) VALUES ('Solo Cell')").lastrowid
+    solo_id = bp.plant("Solo Bed", solo_cell_id, lettuce_id, quantity_planted=1)
+    conn.execute(
+        "UPDATE bed_plantings SET expected_harvest_date = datetime('now', '+1 day') WHERE id = ?",
+        (solo_id,),
+    )
+    conn.commit()
+    solo_suggestions = planner.get_succession_suggestions(days_ahead=14, cell_id=solo_cell_id)
+
+    checks = [
+        ("Spinach (zero water-temp overlap with the co-located Cucumber) is excluded from Bed A1's candidates",
+         "Spinach" not in by_bed["Bed A1"]["other_compatible_species"]),
+        ("Swiss Chard (real water-temp overlap with Cucumber) is still offered as a candidate",
+         "Swiss Chard" in by_bed["Bed A1"]["other_compatible_species"]),
+        ("both beds (near and overdue) surface a suggestion", len(suggestions) == 2),
+        ("Bed A1 (5 days out) is NOT flagged overdue", by_bed["Bed A1"]["overdue"] is False),
+        ("Bed A2 (3 days past) IS flagged overdue", by_bed["Bed A2"]["overdue"] is True),
+        ("neither bed shows an already-planned next planting before one exists",
+         by_bed["Bed A1"]["already_has_next_planned"] is False),
+        ("replant_same_species suggests the real current species",
+         by_bed["Bed A1"]["replant_same_species"] == "Lettuce"),
+        ("after staging a real plan for Bed A1, it's correctly flagged as already covered",
+         by_bed_after["Bed A1"]["already_has_next_planned"] is True),
+        ("an isolated single-bed cell reports itself unconstrained once vacated",
+         "any known plant species is compatible" in solo_suggestions[0]["compatibility_note"]),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -3152,6 +3233,7 @@ SCENARIOS = {
     "cost_profitability": scenario_cost_profitability,
     "yield_recording_and_lot_traceability": scenario_yield_recording_and_lot_traceability,
     "water_efficiency_reporting": scenario_water_efficiency_reporting,
+    "succession_planning": scenario_succession_planning,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,

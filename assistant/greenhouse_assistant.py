@@ -610,6 +610,17 @@ TOOLS = [
         },
     },
     {
+        "name": "get_succession_suggestions",
+        "description": "Suggest what to plant next in beds whose current planting is nearing (or past) its expected harvest date — replanting the same species, or another species compatible with the cell's remaining shared water.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "days_ahead": {"type": "integer", "default": 14, "description": "How many days ahead to look for approaching harvests"},
+                "cell_id": {"type": "integer"},
+            },
+        },
+    },
+    {
         "name": "get_water_efficiency",
         "description": "Get real water-use efficiency (gallons used per lb yielded) for a cell or the whole system, over a lookback window.",
         "input_schema": {
@@ -1122,6 +1133,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "mark_planting_failed": "yield_planting",
     "record_water_usage": "yield_planting",
     "get_water_efficiency": "yield_planting",
+    "get_succession_suggestions": "yield_planting",
     "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
@@ -1228,6 +1240,7 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
         "watering", "gallons", "crop", "produce", "expected vs actual",
         "traceability", "lot record", "ledger", "batch", "tamper",
         "efficiency", "efficient", "water use", "water usage",
+        "succession", "what to plant next", "next planting", "rotation",
     ],
     "species": [
         "species", "ideal range", "tolerance", "compatible", "compatibility",
@@ -1968,6 +1981,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_water_efficiency(self, cell_id: int | None = None, days: int = 30) -> dict:
         from core.sustainability_report import SustainabilityReport
         return SustainabilityReport(self.db).get_water_efficiency(cell_id=cell_id, days=days)
+
+    def _tool_get_succession_suggestions(self, days_ahead: int = 14, cell_id: int | None = None) -> dict:
+        from core.succession_planner import SuccessionPlanner
+        return {"suggestions": SuccessionPlanner(self.db).get_succession_suggestions(days_ahead=days_ahead, cell_id=cell_id)}
 
     def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
                                           nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,
