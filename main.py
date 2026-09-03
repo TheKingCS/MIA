@@ -56,6 +56,7 @@ from core.traceability import TraceabilityManager
 from core.sustainability_report import SustainabilityReport
 from core.succession_planner import SuccessionPlanner
 from core.yield_forecaster import YieldForecaster
+from core.dosing_recommendations import RecommendationEngine
 from core.irrigation import IrrigationScheduler
 from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
@@ -178,6 +179,7 @@ def main():
     sustainability = SustainabilityReport(db)
     succession = SuccessionPlanner(db)
     yield_forecaster = YieldForecaster(db)
+    recommendations = RecommendationEngine(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -199,6 +201,7 @@ def main():
         (data_retention, "data_retention"), (mia_home_sync, "mia_home_sync"),
         (traceability, "traceability"), (sustainability, "sustainability_report"),
         (succession, "succession_planner"), (yield_forecaster, "yield_forecaster"),
+        (recommendations, "dosing_recommendations"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])

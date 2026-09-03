@@ -1356,6 +1356,74 @@ def scenario_yield_forecasting():
     return checks
 
 
+def scenario_dosing_recommendations():
+    """docs/SUSTAINING_FEATURES.md #23. Proves: a clean system with no
+    drift and no adverse weather check produces zero recommendations
+    (honest silence, not manufactured advisories); a real detected
+    drift produces a real drift_advisory citing the actual z-score and
+    direction; a real logged frost-risk weather check produces a real
+    weather_advisory citing the actual forecast low; and this module
+    never touches dosing_limits, target_overrides, or any actuator
+    table — advisory only, confirmed by checking those tables are
+    unchanged after calling it."""
+    from core.dosing_recommendations import RecommendationEngine
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    engine = RecommendationEngine(conn)
+
+    # ---- Clean baseline: nothing to recommend ----
+    clean_recs = engine.get_recommendations(cell_id=cell_id)
+
+    # ---- Real drift: enough readings for trend_analyzer's real baseline+recent window ----
+    ph_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'ph'", (cell_id,)
+    ).fetchone()[0]
+    for _ in range(20):
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, is_out_of_range) VALUES (?, 6.8, 0)",
+            (ph_sensor_id,),
+        )
+    for _ in range(6):
+        conn.execute(
+            "INSERT INTO sensor_readings (sensor_id, value, is_out_of_range) VALUES (?, 6.2, 0)",
+            (ph_sensor_id,),
+        )
+    conn.commit()
+    drift_recs = engine.get_recommendations(cell_id=cell_id)
+    drift_advisories = [r for r in drift_recs if r["type"] == "drift_advisory"]
+
+    # ---- Real logged frost-risk weather check ----
+    dosing_limits_before = conn.execute("SELECT COUNT(*) FROM dosing_limits").fetchone()[0]
+    target_overrides_before = conn.execute("SELECT COUNT(*) FROM target_overrides").fetchone()[0]
+
+    conn.execute(
+        "INSERT INTO weather_checks (forecast_low_f, forecast_high_f, frost_risk) VALUES (28, 45, 1)"
+    )
+    conn.commit()
+    weather_recs = engine.get_recommendations(cell_id=cell_id)
+    weather_advisories = [r for r in weather_recs if r["type"] == "weather_advisory"]
+
+    dosing_limits_after = conn.execute("SELECT COUNT(*) FROM dosing_limits").fetchone()[0]
+    target_overrides_after = conn.execute("SELECT COUNT(*) FROM target_overrides").fetchone()[0]
+
+    checks = [
+        ("a clean system with no drift and no weather check produces zero recommendations",
+         clean_recs == []),
+        ("a real detected pH drift produces a real drift_advisory citing 'down' and a z-score",
+         len(drift_advisories) == 1 and drift_advisories[0]["sensor_type"] == "ph"
+         and "down" in drift_advisories[0]["message"] and drift_advisories[0]["z_score"] < 0),
+        ("a real frost-risk weather check produces a real weather_advisory citing the actual low",
+         len(weather_advisories) == 1 and "28" in weather_advisories[0]["message"]),
+        ("dosing_limits is completely untouched by this advisory-only module",
+         dosing_limits_before == dosing_limits_after),
+        ("target_overrides is completely untouched by this advisory-only module",
+         target_overrides_before == target_overrides_after),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -3365,6 +3433,7 @@ SCENARIOS = {
     "succession_planning": scenario_succession_planning,
     "per_crop_profitability": scenario_per_crop_profitability,
     "yield_forecasting": scenario_yield_forecasting,
+    "dosing_recommendations": scenario_dosing_recommendations,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,

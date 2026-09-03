@@ -619,6 +619,14 @@ TOOLS = [
         },
     },
     {
+        "name": "get_recommendations",
+        "description": "Get proactive, data-driven advisories composed from current drift and weather-forecast signals — a 'worth a look before it becomes a problem' layer, distinct from reactive alerts. Never changes any setting.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"cell_id": {"type": "integer"}},
+        },
+    },
+    {
         "name": "get_yield_forecast",
         "description": "Forecast when an active planting is likely to be ready to harvest, with a real earliest/latest range widened by real sensor-confidence and stress-alert signals — never a single fabricated confident date.",
         "input_schema": {
@@ -1153,6 +1161,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "get_water_efficiency": "yield_planting",
     "get_succession_suggestions": "yield_planting",
     "get_yield_forecast": "yield_planting",
+    "get_recommendations": "system_health",
     "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
@@ -1303,6 +1312,8 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
         "trend", "trending", "drift", "drifting", "confidence", "accuracy",
         "leak", "circulation", "stall", "stalled", "climate", "temperature",
         "humidity", "co2", "battery forecast", "power forecast",
+        "recommend", "recommendation", "proactive", "advisory", "advisories",
+        "should i be worried", "anything to watch",
     ],
     "alerts_management": [
         "acknowledge", "resolve", "resolved", "dismiss", "alert history",
@@ -2010,6 +2021,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_yield_forecast(self, planting_id: int) -> dict:
         from core.yield_forecaster import YieldForecaster
         return YieldForecaster(self.db).get_yield_forecast(planting_id)
+
+    def _tool_get_recommendations(self, cell_id: int | None = None) -> dict:
+        from core.dosing_recommendations import RecommendationEngine
+        return {"recommendations": RecommendationEngine(self.db).get_recommendations(cell_id=cell_id)}
 
     def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
                                           nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,
