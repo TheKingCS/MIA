@@ -479,6 +479,203 @@ cost-per-harvest and margin, not just revenue.
 **Effort:** medium — mostly composing data that already exists across
 modules, not new tracking.
 
+## 2026-09-03 — brainstorm round 2: what commercial ag-tech advertises that this doesn't have yet
+
+User's framing: build toward "the most advanced, useful, self-sustaining,
+knowledgeable, and perfect system for agricultural production... the
+brain behind revolutionary smart agricultural technology," explicitly
+drawing on what real competing products advertise. Researched current
+(2026) commercial greenhouse/aquaponics/precision-ag platforms — Priva,
+Argus, Autogrow, IUNU LUNA, Root AI, and the broader precision-ag/
+vertical-farming/traceability literature — before brainstorming, same
+"ground it, don't invent blind" discipline as every prior round in this
+doc. Sorted into three honest tiers: buildable now (software, no new
+hardware), real but correctly hardware-gated, and out-of-scope-for-now
+(named so nothing gets silently forgotten, not proposed to build blind).
+
+### Tier 1 — buildable now, software-only, genuinely new
+
+## 19. Succession/rotation planning
+**Problem it solves:** `core/bed_planting.py` tracks current and planned
+plantings but never proactively suggests what comes next — a bed
+approaching its `expected_harvest_date` just... becomes empty, with no
+forward-looking suggestion, unlike commercial platforms' "crop
+intelligence" scheduling.
+**What it'd do:** watch `get_current_plantings()`'s harvest dates; as one
+approaches, propose a next planting for that bed via the same
+`_check_cell_compatibility()` logic `record_planting()` already
+enforces, informed by `species_registry`'s real known-good ranges and
+(once #22 exists) recent profitability by species. Proposal only — goes
+through the same human-approval-adjacent pattern as
+`propose_experiments_for_underperformance()`, never auto-plants.
+**Effort:** small-medium — composes `bed_planting.py` +
+`species_registry.py`, no new architecture.
+
+## 20. Resource-efficiency / sustainability reporting
+**Problem it solves:** water usage is already logged
+(`bed_planting.record_water_usage()`/`get_water_usage()`) and power
+draw is already tracked (`modules/power_monitor.py`), but nothing
+computes efficiency from either — no gallons-per-lb-yield, no
+kWh-per-harvest, no trend on either. Every commercial sustainability/
+traceability platform researched (TraceX, Farmonaut) leads with exactly
+this kind of resource-efficiency metric.
+**What it'd do:** a new `core/sustainability_report.py` composing
+existing `water_usage`, `power_telemetry`, and `yield_events` data into
+a real efficiency report (gallons/lb, kWh/lb, trend over time) — no
+carbon-accounting or emissions-factor guessing, which would be a
+fabricated number dressed as real (same discipline `finance_tracker.py`
+already holds cost estimates to).
+**Effort:** small — same "compose data that already exists" pattern as
+`finance_tracker.py`.
+
+## 21. Harvest-to-sale lot traceability ledger
+**Problem it solves:** commercial ag-tech increasingly advertises
+blockchain-based farm-to-fork traceability (TraceX, Transgenie) — "which
+batch was this, what was it dosed with, when was it harvested, who
+bought it." This system has all the underlying data (`dosing_events`,
+`bed_plantings`, `yield_events`, `revenue_transactions`) but nothing
+links them into one queryable lot record.
+**What it'd do:** NOT a real blockchain — this project's own established
+no-vendor-dependency stance (`CLAUDE.md`, the SMS/ordering corrections
+earlier this project) argues against taking on an external chain/wallet
+dependency for what's fundamentally a local record-linking problem.
+Real equivalent: a `harvest_lots` table tying a `yield_event` back to
+its originating `bed_planting_id` (and therefore every `dosing_event`/
+`water_quality_test`/`pest_disease_observation` during that planting's
+life) plus forward to any `revenue_transaction` it was sold in, with
+each lot record hash-chained to the previous one (each row's hash
+includes the prior row's hash) for local tamper-evidence — genuinely
+useful if a customer or inspector ever asks "where did this batch come
+from," without an external chain, gas fees, or vendor account.
+**Effort:** medium — mostly a new linking table + query methods; the
+hash-chaining is a small, well-understood pattern (same idea
+`core/deploy_manager.py`'s rollback-history already uses informally).
+
+## 22. Multi-week yield forecasting
+**Problem it solves:** commercial "crop intelligence" platforms (IUNU
+LUNA, Root AI) advertise multi-week-ahead yield forecasting from sensor
++ growth data. This system currently only compares expected vs. actual
+AFTER harvest (`get_expected_vs_actual()`) — nothing projects forward.
+**What it'd do:** a real statistical projection (not a fabricated
+confident number) from `species_profiles.days_to_maturity` combined
+with actual real-time growth signals this system already has (dosing
+consistency, sensor confidence, water-quality-test cycle status) to
+widen or narrow the harvest-date estimate as a planting progresses —
+explicit uncertainty bands, same honesty discipline
+`core/biofilter_model.py` already established for exactly this reason.
+**Effort:** medium — genuinely needs real historical yield-vs-conditions
+data to calibrate against, so this is a build-the-framework-now,
+trust-it-once-the-pilot/first-real-harvests-exist feature, same
+sequencing as drift detection was.
+
+## 23. Data-driven dosing/climate recommendation layer
+**Problem it solves:** Priva's own marketing leads with "AI-automated
+irrigation... data-driven recommendations" layered on top of climate
+computers. This system's control loop is real but purely
+reactive/threshold-based (dose when out of range, hold when
+inconsistent) — there's no layer that looks at trend + weather forecast
++ season and suggests a proactive adjustment before a threshold is even
+crossed.
+**What it'd do:** a new advisory layer reading `trend_analyzer.py`'s
+existing drift signal, `weather_awareness.py`'s forecast, and time of
+season, to generate a real suggestion ("pH trending toward the low end
+and a cold front is forecast — consider an earlier proactive dose") —
+surfaced via the assistant and the daily report, but explicitly
+suggestion-only. **Never auto-executes** — dosing targets changing is
+already gated behind `approve_parameter_change()`/experiments by this
+project's own non-negotiable rules, and this stays inside that gate,
+not around it.
+**Effort:** medium — a genuine new reasoning layer, but composes three
+already-built signal sources rather than adding new sensing.
+
+## 24. Per-crop (not just system-wide) profitability
+**Problem it solves:** `finance_tracker.py`'s own docstring already
+names this gap honestly — cost is system-wide only because
+`inventory_transactions` has no `cell_id`, so margin can't be broken out
+per species/crop the way commercial farm-management software
+(KhetiBuddy, Farmonaut) advertises.
+**What it'd do:** add `cell_id` to `inventory_transactions` (a real,
+additive schema change — `schema/mia_homestead_schema.sql`'s own
+convention is additive-never-destructive migrations), backfill nothing
+(historical rows honestly stay unattributed rather than guessed), and
+extend `get_profitability_summary()` to break out by cell/species once
+the data exists to support it.
+**Effort:** medium-large — the one item here that's a real schema
+change, not just composing existing columns.
+
+## 25. Spoken daily briefing at the beacon
+**Problem it solves:** `report_generator.py` already writes a real
+natural-language daily report via the local model
+(`generate_and_send()`); `self_preservation.py`'s beacon is real
+hardware-adjacent (light/speaker) but only ever driven as an on/off
+relay — the two have never been connected, even though "the AI speaks
+the state of the greenhouse aloud" is exactly the kind of thing
+"revolutionary" ag-tech marketing leads with.
+**What it'd do:** pipe the already-generated report text through a
+local TTS engine (e.g. Piper — small, fully offline, matches this
+project's whole local-first assistant stance) out to the beacon's
+speaker channel when someone's physically present
+(`self_preservation.py` already knows this).
+**Effort:** small-medium for the software (TTS pipeline + wiring) —
+genuinely gated on the beacon hardware existing to hear it on, same as
+punch-list item #5.
+
+### Tier 2 — real, valuable, correctly gated on camera/NPU hardware
+
+## 26. Computer-vision plant health / disease detection
+Every 2026 precision-ag source researched leads with this — EfficientNetB0-class
+disease classifiers reporting >99% test accuracy in the literature. This
+project's own `pest_disease.py` docstring already names this as the
+deliberate v2 step, tied to the AI HAT/NPU hardware
+`docs/OFFLINE_ASSISTANT_PLAN.md` already flags as unproven in this
+project's own environment. Not proposing to build blind — flagging that
+the manual log/knowledge-base half (already done) is the correct v1,
+and the camera half is real future work once NPU inference is proven,
+not before.
+
+## 27. Computer-vision fish health, behavior, and appetite-based feeding
+Commercial aquaponics/aquaculture tech (per the research above) uses
+camera modules + CV to detect fish disease symptoms and auto-adjust
+feeding to observed appetite. This project's `fish_health.py` is
+real but manual-log-only by design (same "no cheap way to continuously
+weigh/count fish" reasoning already in that module's docstring). Same
+NPU-hardware gate as #26 — naming it so it's not forgotten, not
+proposing to fake camera data.
+
+## 28. Camera-based ripeness/yield estimation
+Vertical-farming platforms researched (IUNU, Root AI-class systems) use
+computer vision to estimate ripeness/yield per plant, ahead of harvest.
+Same NPU-hardware gate as #26/#27 — a real, named future capability
+once vision inference is proven on this project's actual hardware
+target, not before.
+
+### Named but out of scope for now — flagged so they're not silently forgotten, not proposed to build blind
+
+- **Robotic harvesting / autonomous guided vehicles.** Real 2026
+  vertical-farming platforms researched (Octinion Rubion, Agrobot
+  E-Series) deploy purpose-built harvesting robots costing far more than
+  this entire pilot/full-scale BOM combined — genuinely a different
+  capital-equipment category than a control/monitoring "brain" software
+  system, not something to scope here without an explicit decision that
+  this project should grow into hardware manufacturing/integration at
+  that scale.
+- **CSA / customer order management / storefront.** Revenue recording
+  exists (`finance_tracker.py`) but nothing tracks customers, CSA
+  shares, or order fulfillment — that's a farm-business/CRM layer
+  adjacent to this project's actual scope (growing food with near-zero
+  intervention), not core ag-intelligence. Worth a real scoping
+  conversation before starting, not assumed wanted.
+- **Regulatory/certification compliance documentation** (organic
+  certification, food-safety audit logs). Real feature in commercial
+  farm software, but genuinely speculative to build without knowing
+  which certification (if any) is actually being pursued — the
+  requirements differ by program and jurisdiction.
+- **True multi-facility cloud sync** (Priva's cross-site Azure
+  migration). This project already has single-site-to-MIA-Home sync
+  (punch-list #7, done) — a second Homestead site to sync would need
+  this project's own multi-site version of that, not relevant unless a
+  second physical location is real.
+
 ## Status as of 2026-08-31
 
 **Done:** #1, #2, #3, #5, #6, #7, #9, #10, #11, #12, #13, #14, #15,
