@@ -610,6 +610,17 @@ TOOLS = [
         },
     },
     {
+        "name": "get_water_efficiency",
+        "description": "Get real water-use efficiency (gallons used per lb yielded) for a cell or the whole system, over a lookback window.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "days": {"type": "integer", "default": 30},
+            },
+        },
+    },
+    {
         "name": "record_water_usage",
         "description": "Log water usage with a reason — use when the user tells you they watered something, or to record a manual watering.",
         "input_schema": {
@@ -1110,6 +1121,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "verify_traceability_ledger": "yield_planting",
     "mark_planting_failed": "yield_planting",
     "record_water_usage": "yield_planting",
+    "get_water_efficiency": "yield_planting",
     "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
@@ -1215,6 +1227,7 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
         "yield", "harvest", "planted", "planting", "grow bed", "watered",
         "watering", "gallons", "crop", "produce", "expected vs actual",
         "traceability", "lot record", "ledger", "batch", "tamper",
+        "efficiency", "efficient", "water use", "water usage",
     ],
     "species": [
         "species", "ideal range", "tolerance", "compatible", "compatibility",
@@ -1951,6 +1964,10 @@ class _BaseGreenhouseAssistant:
         )
         self.db.commit()
         return {"event_id": cur.lastrowid, "amount_gallons": amount_gallons, "reason": reason}
+
+    def _tool_get_water_efficiency(self, cell_id: int | None = None, days: int = 30) -> dict:
+        from core.sustainability_report import SustainabilityReport
+        return SustainabilityReport(self.db).get_water_efficiency(cell_id=cell_id, days=days)
 
     def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
                                           nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,

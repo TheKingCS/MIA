@@ -1082,6 +1082,70 @@ def scenario_yield_recording_and_lot_traceability():
     return checks
 
 
+def scenario_water_efficiency_reporting():
+    """Real gap: water_usage_events and yield_events were both already
+    logged elsewhere, but nothing computed efficiency from either.
+    Proves the gallons-per-lb math, that a zero-yield window reports
+    unavailable (not a fake zero or divide-by-zero crash), and that a
+    non-lb yield (e.g. fish by count) is excluded from the ratio and
+    listed separately rather than silently dropped or converted."""
+    from core.sustainability_report import SustainabilityReport
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    report = SustainabilityReport(conn)
+
+    # No usage/yield logged yet — must not crash or fabricate a ratio.
+    empty = report.get_water_efficiency(cell_id=cell_id, days=30)
+
+    conn.execute(
+        "INSERT INTO water_usage_events (cell_id, amount_gallons, reason) VALUES (?, 20, 'scheduled_watering')",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO yield_events (cell_id, yield_type, item, quantity, unit) VALUES (?, 'harvest_produce', 'lettuce', 4.0, 'lb')",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO yield_events (cell_id, yield_type, item, quantity, unit) VALUES (?, 'harvest_fish', 'tilapia', 2, 'count')",
+        (cell_id,),
+    )
+    conn.commit()
+
+    result = report.get_water_efficiency(cell_id=cell_id, days=30)
+
+    # Real bug caught by a live smoke test against the real dev DB, not by this
+    # scenario originally: real yield with ZERO water logged computed a literal
+    # 0.0 ratio — mathematically correct, but reads as "perfect efficiency" when
+    # the truth is "no water usage has been logged at all." A second real cell,
+    # isolated from the water/yield seeded above, reproduces exactly that case.
+    second_cell_id = conn.execute(
+        "INSERT INTO cells (name) VALUES ('Isolated Test Cell')"
+    ).lastrowid
+    conn.execute(
+        "INSERT INTO yield_events (cell_id, yield_type, item, quantity, unit) VALUES (?, 'harvest_produce', 'basil', 1.0, 'lb')",
+        (second_cell_id,),
+    )
+    conn.commit()
+    yield_no_water = report.get_water_efficiency(cell_id=second_cell_id, days=30)
+
+    checks = [
+        ("an empty window reports gallons_per_lb as unavailable, not 0 or a crash",
+         empty["gallons_per_lb"] is None and empty["gallons_used"] == 0 and empty["lb_yielded"] == 0),
+        ("20 gallons / 4 lb computes correctly to 5.0 gallons/lb",
+         result["gallons_per_lb"] == 5.0 and result["gallons_used"] == 20.0 and result["lb_yielded"] == 4.0),
+        ("the count-unit fish yield is excluded from the ratio, listed separately",
+         len(result["excluded_non_lb_yield"]) == 1
+         and result["excluded_non_lb_yield"][0]["item"] == "tilapia"
+         and result["excluded_non_lb_yield"][0]["quantity"] == 2),
+        ("real yield (1 lb basil) with zero water logged reports unavailable, not a fake 0.0",
+         yield_no_water["lb_yielded"] == 1.0 and yield_no_water["gallons_used"] == 0
+         and yield_no_water["gallons_per_lb"] is None),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -3087,6 +3151,7 @@ SCENARIOS = {
     "weather_awareness": scenario_weather_awareness,
     "cost_profitability": scenario_cost_profitability,
     "yield_recording_and_lot_traceability": scenario_yield_recording_and_lot_traceability,
+    "water_efficiency_reporting": scenario_water_efficiency_reporting,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,
