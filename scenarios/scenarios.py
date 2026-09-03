@@ -1284,6 +1284,78 @@ def scenario_per_crop_profitability():
     return checks
 
 
+def scenario_yield_forecasting():
+    """docs/SUSTAINING_FEATURES.md #22. Proves: a clean planting with no
+    degrading signals gets the minimum real uncertainty band, not a
+    fabricated single-day estimate; a planting with a real logged
+    calibration-overdue sensor and a real stress alert gets a
+    correctly WIDER band citing both as real factors; a harvested (not
+    active) planting is correctly refused, not forecast; and a planting
+    with no days_to_maturity/expected_harvest_date honestly reports
+    insufficient_data instead of guessing."""
+    from core.bed_planting import BedPlantingManager
+    from core.species_registry import SpeciesRegistry
+    from core.yield_forecaster import YieldForecaster
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    species = SpeciesRegistry(conn)
+    bp = BedPlantingManager(conn, species)
+    forecaster = YieldForecaster(conn)
+
+    lettuce_id = conn.execute("SELECT id FROM species_profiles WHERE common_name = 'Lettuce'").fetchone()[0]
+
+    # ---- Clean planting: no degrading signals ----
+    clean_id = bp.plant("Bed A1", cell_id, lettuce_id, quantity_planted=10)
+    clean_forecast = forecaster.get_yield_forecast(clean_id)
+
+    # ---- Degraded planting: a real overdue-calibration sensor + a real stress alert ----
+    degraded_id = bp.plant("Bed A2", cell_id, lettuce_id, quantity_planted=10)
+    ph_sensor_id = conn.execute(
+        "SELECT id FROM sensors WHERE cell_id = ? AND type = 'ph'", (cell_id,)
+    ).fetchone()[0]
+    conn.execute(
+        "UPDATE sensors SET calibration_due = date('now', '-5 days') WHERE id = ?", (ph_sensor_id,)
+    )
+    conn.execute(
+        "INSERT INTO alerts (source, severity, message) VALUES "
+        "('cell_a_aquaponics', 'warning', "
+        "'water temp above the stocked species documented max — thermal stress risk')"
+    )
+    conn.commit()
+    degraded_forecast = forecaster.get_yield_forecast(degraded_id)
+
+    # ---- Not active: refused, not forecast ----
+    harvested_id = bp.plant("Bed A3", cell_id, lettuce_id, quantity_planted=5)
+    bp.mark_harvested(harvested_id)
+    harvested_forecast = forecaster.get_yield_forecast(harvested_id)
+
+    # ---- Insufficient data: no expected_harvest_date, species has no days_to_maturity ----
+    unknown_species_id = conn.execute(
+        "INSERT INTO species_profiles (common_name, organism_type) VALUES ('Mystery Plant', 'plant')"
+    ).lastrowid
+    conn.commit()
+    unknown_id = bp.plant("Bed A4", cell_id, unknown_species_id, quantity_planted=1)
+    unknown_forecast = forecaster.get_yield_forecast(unknown_id)
+
+    checks = [
+        ("a clean planting gets exactly the minimum real uncertainty band (3 days), not 0",
+         clean_forecast["band_days"] == 3),
+        ("a degraded planting's band is wider than the clean baseline",
+         degraded_forecast["band_days"] > clean_forecast["band_days"]),
+        ("the degraded forecast's factors cite the real overdue calibration",
+         any("overdue" in f for f in degraded_forecast["factors"])),
+        ("the degraded forecast's factors cite the real stress alert",
+         any("stress" in f.lower() for f in degraded_forecast["factors"])),
+        ("a harvested (non-active) planting is refused, not forecast",
+         "error" in harvested_forecast),
+        ("a species with no days_to_maturity and no expected_harvest_date honestly reports insufficient_data",
+         unknown_forecast.get("status") == "insufficient_data"),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -3292,6 +3364,7 @@ SCENARIOS = {
     "water_efficiency_reporting": scenario_water_efficiency_reporting,
     "succession_planning": scenario_succession_planning,
     "per_crop_profitability": scenario_per_crop_profitability,
+    "yield_forecasting": scenario_yield_forecasting,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,

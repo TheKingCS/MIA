@@ -619,6 +619,15 @@ TOOLS = [
         },
     },
     {
+        "name": "get_yield_forecast",
+        "description": "Forecast when an active planting is likely to be ready to harvest, with a real earliest/latest range widened by real sensor-confidence and stress-alert signals — never a single fabricated confident date.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"planting_id": {"type": "integer"}},
+            "required": ["planting_id"],
+        },
+    },
+    {
         "name": "get_succession_suggestions",
         "description": "Suggest what to plant next in beds whose current planting is nearing (or past) its expected harvest date — replanting the same species, or another species compatible with the cell's remaining shared water.",
         "input_schema": {
@@ -1143,6 +1152,7 @@ TOOL_DOMAINS: dict[str, str] = {
     "record_water_usage": "yield_planting",
     "get_water_efficiency": "yield_planting",
     "get_succession_suggestions": "yield_planting",
+    "get_yield_forecast": "yield_planting",
     "get_irrigation_status": "yield_planting",
     "record_water_quality_test": "water_quality",
     "get_biofilter_cycle_status": "water_quality",
@@ -1250,6 +1260,7 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
         "traceability", "lot record", "ledger", "batch", "tamper",
         "efficiency", "efficient", "water use", "water usage",
         "succession", "what to plant next", "next planting", "rotation",
+        "forecast", "when will", "ready to harvest", "how confident",
     ],
     "species": [
         "species", "ideal range", "tolerance", "compatible", "compatibility",
@@ -1995,6 +2006,10 @@ class _BaseGreenhouseAssistant:
     def _tool_get_succession_suggestions(self, days_ahead: int = 14, cell_id: int | None = None) -> dict:
         from core.succession_planner import SuccessionPlanner
         return {"suggestions": SuccessionPlanner(self.db).get_succession_suggestions(days_ahead=days_ahead, cell_id=cell_id)}
+
+    def _tool_get_yield_forecast(self, planting_id: int) -> dict:
+        from core.yield_forecaster import YieldForecaster
+        return YieldForecaster(self.db).get_yield_forecast(planting_id)
 
     def _tool_record_water_quality_test(self, cell_id: int, ammonia_ppm: float | None = None,
                                           nitrite_ppm: float | None = None, nitrate_ppm: float | None = None,
