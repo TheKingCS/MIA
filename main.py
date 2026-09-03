@@ -52,6 +52,7 @@ from core.leak_detector import LeakDetector
 from core.pest_disease import PestDisease
 from core.weather_awareness import WeatherAwareness
 from core.finance_tracker import FinanceTracker
+from core.traceability import TraceabilityManager
 from core.irrigation import IrrigationScheduler
 from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
@@ -170,6 +171,7 @@ def main():
     alert_manager = AlertManager(db, notifier=notifier)
     data_retention = DataRetentionManager(db, notifier=notifier)
     mia_home_sync = MiaHomeSync(db, notifier=notifier)
+    traceability = TraceabilityManager(db)
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -189,6 +191,7 @@ def main():
         (finance, "finance_tracker"), (irrigation, "irrigation_scheduler"),
         (circulation_monitor, "circulation_monitor"), (alert_manager, "alert_manager"),
         (data_retention, "data_retention"), (mia_home_sync, "mia_home_sync"),
+        (traceability, "traceability"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])

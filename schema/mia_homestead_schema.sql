@@ -144,6 +144,13 @@ CREATE INDEX idx_power_time ON power_telemetry(timestamp);
 CREATE TABLE yield_events (
     id INTEGER PRIMARY KEY,
     cell_id INTEGER NOT NULL REFERENCES cells(id),
+    bed_planting_id INTEGER REFERENCES bed_plantings(id),  -- nullable — links a
+                                         -- harvest back to the specific planting
+                                         -- that produced it, when known. NULL for
+                                         -- yield not tied to a tracked planting
+                                         -- (e.g. fish harvests, which aren't
+                                         -- bed_plantings rows) or historical rows
+                                         -- from before this column existed.
     timestamp TEXT DEFAULT (datetime('now')),
     yield_type TEXT NOT NULL,           -- 'harvest_produce','harvest_fish'
     item TEXT NOT NULL,                 -- e.g. 'lettuce','tilapia'
@@ -151,6 +158,28 @@ CREATE TABLE yield_events (
     unit TEXT,                          -- 'lb','count','oz'
     notes TEXT
 );
+
+-- ============ TRACEABILITY LEDGER ============
+-- Real farm-to-sale lot traceability, WITHOUT taking on an external
+-- blockchain/vendor dependency — this project's own established
+-- no-vendor-dependency stance (see CLAUDE.md, the SMS/ordering
+-- corrections in docs/SUSTAINING_FEATURES.md #21). Each row hash-chains
+-- to the previous one (sha256(prev_hash + record_json)), giving local
+-- tamper-evidence: editing or deleting a historical row breaks the
+-- chain, verifiably, without needing an external ledger.
+
+CREATE TABLE traceability_ledger (
+    id INTEGER PRIMARY KEY,
+    yield_event_id INTEGER NOT NULL REFERENCES yield_events(id),
+    created_at TEXT DEFAULT (datetime('now')),
+    record_json TEXT NOT NULL,          -- the full assembled lot record at
+                                         -- finalize time (dosing/water-quality/
+                                         -- feeding/pest history + revenue, if any)
+    prev_hash TEXT NOT NULL,            -- previous row's record_hash, or
+                                         -- 'GENESIS' for the first row
+    record_hash TEXT NOT NULL           -- sha256(prev_hash + record_json)
+);
+CREATE INDEX idx_traceability_ledger_yield_event ON traceability_ledger(yield_event_id);
 
 -- ============ WATER QUALITY / NITROGEN CYCLE ============
 -- No continuous ammonia/nitrite/nitrate sensor exists in sensors.type —

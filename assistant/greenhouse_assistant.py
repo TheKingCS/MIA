@@ -529,12 +529,73 @@ TOOLS = [
     },
     {
         "name": "mark_planting_harvested",
-        "description": "Mark a planting as harvested — use when the user says they harvested something.",
+        "description": (
+            "Mark a planting as harvested — use when the user says they harvested something. "
+            "Optionally pass the actual amount harvested to also record a real yield event "
+            "linked to this planting (recommended — otherwise the harvest itself is never logged, "
+            "only the planting's status changes)."
+        ),
         "input_schema": {
             "type": "object",
-            "properties": {"planting_id": {"type": "integer"}},
+            "properties": {
+                "planting_id": {"type": "integer"},
+                "actual_yield_amount": {"type": "number", "description": "How much was actually harvested"},
+                "actual_yield_unit": {"type": "string", "description": "e.g. 'lb', 'count', 'oz'"},
+            },
             "required": ["planting_id"],
         },
+    },
+    {
+        "name": "record_yield",
+        "description": (
+            "Record a real harvest/yield event directly — use for a fish harvest (not tied to a "
+            "bed planting) or any yield not associated with mark_planting_harvested. This is the "
+            "only way yield actually gets logged if not going through mark_planting_harvested."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cell_id": {"type": "integer"},
+                "yield_type": {"type": "string", "enum": ["harvest_produce", "harvest_fish"]},
+                "item": {"type": "string", "description": "e.g. 'lettuce', 'tilapia'"},
+                "quantity": {"type": "number"},
+                "unit": {"type": "string", "description": "e.g. 'lb', 'count', 'oz'"},
+                "notes": {"type": "string"},
+            },
+            "required": ["cell_id", "yield_type", "item"],
+        },
+    },
+    {
+        "name": "get_lot_record",
+        "description": (
+            "Get the full traceability record for one harvest — its originating planting (if "
+            "known), the cell's dosing/water-quality/feeding/pest history during that planting's "
+            "life, and any revenue it was sold in. Use for 'where did this batch come from' "
+            "questions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"yield_event_id": {"type": "integer"}},
+            "required": ["yield_event_id"],
+        },
+    },
+    {
+        "name": "finalize_harvest_lot",
+        "description": (
+            "Finalize a harvest's lot record into the permanent, tamper-evident traceability "
+            "ledger. Use when a harvest is being exported/sold and its record should be locked in, "
+            "not for routine yield logging (record_yield/mark_planting_harvested already do that)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"yield_event_id": {"type": "integer"}},
+            "required": ["yield_event_id"],
+        },
+    },
+    {
+        "name": "verify_traceability_ledger",
+        "description": "Check whether the traceability ledger's hash chain is intact — confirms no finalized lot record has been altered.",
+        "input_schema": {"type": "object", "properties": {}},
     },
     {
         "name": "mark_planting_failed",
@@ -1043,6 +1104,10 @@ TOOL_DOMAINS: dict[str, str] = {
     "convert_planting_to_active": "yield_planting",
     "get_planned_plantings": "yield_planting",
     "mark_planting_harvested": "yield_planting",
+    "record_yield": "yield_planting",
+    "get_lot_record": "yield_planting",
+    "finalize_harvest_lot": "yield_planting",
+    "verify_traceability_ledger": "yield_planting",
     "mark_planting_failed": "yield_planting",
     "record_water_usage": "yield_planting",
     "get_irrigation_status": "yield_planting",
@@ -1149,6 +1214,7 @@ DOMAIN_TRIGGER_KEYWORDS: dict[str, list[str]] = {
     "yield_planting": [
         "yield", "harvest", "planted", "planting", "grow bed", "watered",
         "watering", "gallons", "crop", "produce", "expected vs actual",
+        "traceability", "lot record", "ledger", "batch", "tamper",
     ],
     "species": [
         "species", "ideal range", "tolerance", "compatible", "compatibility",
@@ -1820,10 +1886,56 @@ class _BaseGreenhouseAssistant:
     def _tool_get_planned_plantings(self, cell_id: int | None = None) -> dict:
         return {"planned_plantings": self._bed_planting_manager().get_planned_plantings(cell_id)}
 
-    def _tool_mark_planting_harvested(self, planting_id: int) -> dict:
-        self.db.execute("UPDATE bed_plantings SET status = 'harvested' WHERE id = ?", (planting_id,))
-        self.db.commit()
-        return {"planting_id": planting_id, "status": "harvested"}
+    def _traceability_manager(self):
+        from core.traceability import TraceabilityManager
+        return TraceabilityManager(self.db)
+
+    def _tool_mark_planting_harvested(self, planting_id: int, actual_yield_amount: float | None = None,
+                                       actual_yield_unit: str | None = None) -> dict:
+        # Used to be a raw SQL UPDATE here, bypassing BedPlantingManager.mark_harvested()
+        # entirely — same class of bug already found and fixed 3 times in this project
+        # (create_maintenance_task, update_maintenance_task_status, propose_experiment).
+        # Now also the first real place a harvest can be logged as an actual yield_event —
+        # previously nothing anywhere ever wrote to yield_events at all.
+        try:
+            self._bed_planting_manager().mark_harvested(planting_id)
+        except ValueError as e:
+            return {"error": str(e)}
+
+        result = {"planting_id": planting_id, "status": "harvested"}
+        if actual_yield_amount is not None:
+            row = self.db.execute(
+                "SELECT bp.cell_id, sp.common_name FROM bed_plantings bp "
+                "JOIN species_profiles sp ON sp.id = bp.species_id WHERE bp.id = ?",
+                (planting_id,),
+            ).fetchone()
+            if row:
+                cell_id, common_name = row
+                yield_event_id = self._traceability_manager().record_yield(
+                    cell_id=cell_id, yield_type="harvest_produce", item=common_name,
+                    quantity=actual_yield_amount, unit=actual_yield_unit,
+                    bed_planting_id=planting_id,
+                )
+                result["yield_event_id"] = yield_event_id
+        return result
+
+    def _tool_record_yield(self, cell_id: int, yield_type: str, item: str,
+                            quantity: float | None = None, unit: str | None = None,
+                            notes: str | None = None) -> dict:
+        yield_event_id = self._traceability_manager().record_yield(
+            cell_id=cell_id, yield_type=yield_type, item=item,
+            quantity=quantity, unit=unit, notes=notes,
+        )
+        return {"yield_event_id": yield_event_id, "cell_id": cell_id, "item": item}
+
+    def _tool_get_lot_record(self, yield_event_id: int) -> dict:
+        return self._traceability_manager().get_lot_record(yield_event_id)
+
+    def _tool_finalize_harvest_lot(self, yield_event_id: int) -> dict:
+        return self._traceability_manager().finalize_lot(yield_event_id)
+
+    def _tool_verify_traceability_ledger(self) -> dict:
+        return self._traceability_manager().verify_ledger()
 
     def _tool_mark_planting_failed(self, planting_id: int, notes: str | None = None) -> dict:
         self.db.execute("UPDATE bed_plantings SET status = 'failed', notes = ? WHERE id = ?", (notes, planting_id))

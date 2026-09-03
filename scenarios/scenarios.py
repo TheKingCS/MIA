@@ -990,6 +990,98 @@ def scenario_cost_profitability():
     return checks
 
 
+def scenario_yield_recording_and_lot_traceability():
+    """Real yield write path (a genuine gap found while building this —
+    yield_events existed and was already read everywhere, but nothing
+    ever wrote to it, same shape as the revenue_transactions gap fixed
+    earlier). Proves: a harvest linked to a planting assembles a real
+    lot record with its dosing/water-quality history; a harvest NOT
+    linked to a planting (fish) honestly reports no growth history;
+    finalizing writes a real hash-chained ledger row; the ledger
+    verifies intact; and tampering with a finalized record is detected."""
+    from core.bed_planting import BedPlantingManager
+    from core.species_registry import SpeciesRegistry
+    from core.traceability import TraceabilityManager
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA_PATH.read_text())
+    cell_id = setup_demo_cell(conn)
+    species = SpeciesRegistry(conn)
+    bp = BedPlantingManager(conn, species)
+    trace = TraceabilityManager(conn)
+
+    lettuce_id = conn.execute(
+        "SELECT id FROM species_profiles WHERE common_name = 'Lettuce'"
+    ).fetchone()[0]
+
+    # ---- A real planting, dosed and water-tested during its life, then harvested ----
+    planting_id = bp.plant("Bed A1", cell_id, lettuce_id, quantity_planted=12)
+    conn.execute(
+        "UPDATE bed_plantings SET planted_date = datetime('now', '-20 days') WHERE id = ?",
+        (planting_id,),
+    )
+    conn.execute(
+        "INSERT INTO dosing_events (cell_id, timestamp, dose_type, amount_ml, rationale, triggered_by) "
+        "VALUES (?, datetime('now', '-10 days'), 'ph_up', 5.0, 'pH below target', 'auto_control')",
+        (cell_id,),
+    )
+    conn.execute(
+        "INSERT INTO water_quality_tests (cell_id, timestamp, ammonia_ppm, nitrite_ppm, nitrate_ppm) "
+        "VALUES (?, datetime('now', '-5 days'), 0.0, 0.0, 10.0)",
+        (cell_id,),
+    )
+    conn.commit()
+
+    bp.mark_harvested(planting_id)
+    yield_event_id = trace.record_yield(
+        cell_id=cell_id, yield_type="harvest_produce", item="lettuce",
+        quantity=3.5, unit="lb", bed_planting_id=planting_id,
+    )
+
+    lot = trace.get_lot_record(yield_event_id)
+
+    # ---- A fish harvest, NOT linked to any bed_planting ----
+    fish_yield_id = trace.record_yield(
+        cell_id=cell_id, yield_type="harvest_fish", item="tilapia", quantity=2, unit="count",
+    )
+    fish_lot = trace.get_lot_record(fish_yield_id)
+
+    # ---- Finalize the lettuce lot, verify the chain, then tamper ----
+    finalize_result = trace.finalize_lot(yield_event_id)
+    verify_before = trace.verify_ledger()
+    conn.execute(
+        "UPDATE traceability_ledger SET record_json = '{\"tampered\": true}' WHERE id = ?",
+        (finalize_result["ledger_id"],),
+    )
+    conn.commit()
+    verify_after_tamper = trace.verify_ledger()
+
+    checks = [
+        ("record_yield actually writes a row (yield_events had no write path before this)",
+         yield_event_id is not None and lot["yield_event"]["item"] == "lettuce"
+         and lot["yield_event"]["quantity"] == 3.5),
+        ("the lettuce lot links back to its real planting",
+         lot["planting"] is not None and lot["planting"]["grow_bed_name"] == "Bed A1"),
+        ("the lettuce lot's dosing history includes the real dose during its window",
+         len(lot["dosing_history"]) == 1 and lot["dosing_history"][0]["dose_type"] == "ph_up"),
+        ("the lettuce lot's water-quality history includes the real test during its window",
+         len(lot["water_quality_history"]) == 1),
+        ("isolated_to_this_planting is True — no other planting shared this cell's water",
+         lot["isolated_to_this_planting"] is True),
+        ("a fish harvest with no bed_planting_id honestly reports no growth history",
+         fish_lot["planting"] is None and fish_lot["dosing_history"] == []
+         and "no growth/dosing history" in fish_lot["precision_note"]),
+        ("finalize_lot writes a real ledger row chained from GENESIS",
+         finalize_result["ledger_id"] is not None and finalize_result["record_hash"] is not None),
+        ("a freshly finalized single-entry ledger verifies intact",
+         verify_before == {"intact": True, "chain_length": 1}),
+        ("tampering with a finalized record is detected by verify_ledger",
+         verify_after_tamper["intact"] is False
+         and verify_after_tamper["broken_at_ledger_id"] == finalize_result["ledger_id"]),
+    ]
+    return checks
+
+
 def scenario_climate_control_heater_trigger():
     """Air temp drops well below target (55°F vs. a 65-85 target band).
     Expect: after enough consistent readings, the heater turns on and
@@ -2994,6 +3086,7 @@ SCENARIOS = {
     "pest_disease_tracking": scenario_pest_disease_tracking,
     "weather_awareness": scenario_weather_awareness,
     "cost_profitability": scenario_cost_profitability,
+    "yield_recording_and_lot_traceability": scenario_yield_recording_and_lot_traceability,
     "climate_control_heater_trigger": scenario_climate_control_heater_trigger,
     "climate_control_fan_trigger_temp": scenario_climate_control_fan_trigger_temp,
     "climate_control_fan_trigger_humidity": scenario_climate_control_fan_trigger_humidity,
