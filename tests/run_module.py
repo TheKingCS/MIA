@@ -46,6 +46,7 @@ from core.expedition_manager import ExpeditionManager  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
 from core.llm_manager import LLMManager  # noqa: E402
+from core.maintenance_manager import MaintenanceManager  # noqa: E402
 from core.map_tile_cache import MapTileCache  # noqa: E402
 from core.mission_manager import MissionManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
@@ -84,6 +85,7 @@ def main() -> int:
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)
     context.journal = JournalManager(context)
+    context.maintenance = MaintenanceManager(context)
     context.inventory = InventoryManager(context)
     context.data_logger = DataLoggerManager(context)
     context.components = ComponentManager(context)

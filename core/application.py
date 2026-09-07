@@ -56,6 +56,7 @@ from core.expedition_manager import ExpeditionManager
 from core.hash_identifier import identify_hash
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
+from core.maintenance_manager import MaintenanceManager
 from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.map_tile_cache import MapTileCache
@@ -206,6 +207,7 @@ class MIAApplication:
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
+        self.context.maintenance = MaintenanceManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
@@ -509,6 +511,10 @@ class MIAApplication:
         # core/homestead_manager.py instead. Degrades the same way to
         # "No snapshot imported yet" until a human drops an export in.
         self.context.dashboard_widgets.register(WidgetDescriptor("homestead", "Homestead", "\U0001F33F"))
+        # 2026-09-07: Maintenance tracking (core/maintenance_manager.py)
+        # for vehicles/power equipment/appliances/property/tools —
+        # degrades to "All caught up" until a real asset/task is added.
+        self.context.dashboard_widgets.register(WidgetDescriptor("maintenance", "Maintenance", "\U0001F527"))
 
     def _register_assistant_actions(self) -> None:
         """

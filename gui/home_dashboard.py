@@ -131,6 +131,7 @@ from core.daily_occasions import calendar_events_today
 from core.dashboard_widgets import WidgetDescriptor
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
+from core.maintenance_manager import MaintenanceTask, days_until_due
 from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
 from core.mission_manager import Mission
@@ -334,6 +335,42 @@ def format_homestead_line(snapshot: Optional[HomesteadSnapshot]) -> str:
     return "All clear"
 
 
+_MAINTENANCE_DUE_SOON_DAYS = 7
+
+
+def format_maintenance_line(tasks: list[MaintenanceTask], today: date) -> str:
+    """Pure formatting logic — testable without Qt. Leads with overdue
+    (most urgent), then due-soon, then an honest "all caught up" —
+    same "surface the summary before the detail" stance as
+    format_homestead_line/format_power_line above. Never fabricates a
+    count from an empty task list; "no tasks tracked yet" is a
+    distinct, honest state from "all caught up"."""
+    if not tasks:
+        return "No maintenance tasks tracked yet."
+
+    overdue = 0
+    due_soon = 0
+    for task in tasks:
+        remaining = days_until_due(task, today)
+        if remaining is None:
+            continue
+        if remaining < 0:
+            overdue += 1
+        elif remaining <= _MAINTENANCE_DUE_SOON_DAYS:
+            due_soon += 1
+
+    if overdue:
+        noun = "task" if overdue == 1 else "tasks"
+        line = f"{overdue} overdue {noun}"
+        if due_soon:
+            line += f", {due_soon} due soon"
+        return line
+    if due_soon:
+        noun = "task" if due_soon == 1 else "tasks"
+        return f"{due_soon} {noun} due within {_MAINTENANCE_DUE_SOON_DAYS} days"
+    return "All caught up"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -365,6 +402,7 @@ class HomeDashboard(QFrame):
             "kraken_agent": self._build_kraken_agent_widget,
             "net_worth": self._build_net_worth_widget,
             "homestead": self._build_homestead_widget,
+            "maintenance": self._build_maintenance_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -688,6 +726,15 @@ class HomeDashboard(QFrame):
         # something this dashboard opens).
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["homestead"] = body
+        return card
+
+    def _build_maintenance_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("maintenance"),
+        )
+        self._widget_bodies["maintenance"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1357,6 +1404,8 @@ class HomeDashboard(QFrame):
             self._refresh_net_worth()
         if "homestead" in self._widget_bodies:
             self._refresh_homestead()
+        if "maintenance" in self._widget_bodies:
+            self._refresh_maintenance()
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
@@ -1373,6 +1422,10 @@ class HomeDashboard(QFrame):
     def _refresh_homestead(self) -> None:
         snapshot = self.context.homestead.latest_snapshot(_HOMESTEAD_SOURCE) if self.context.homestead else None
         self._set_widget_body_text("homestead", format_homestead_line(snapshot))
+
+    def _refresh_maintenance(self) -> None:
+        tasks = self.context.maintenance.all_tasks() if self.context.maintenance else []
+        self._set_widget_body_text("maintenance", format_maintenance_line(tasks, date.today()))
 
     def _refresh_activity_log(self) -> None:
         entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []

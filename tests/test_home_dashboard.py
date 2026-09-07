@@ -16,6 +16,7 @@ from datetime import date, datetime
 from core.activity_log_manager import ActivityLogEntry
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
+from core.maintenance_manager import MaintenanceTask
 from core.mission_manager import Mission, Objective
 from core.power_manager import PowerStatus
 from core.project_manager import Project
@@ -28,6 +29,7 @@ from gui.home_dashboard import (
     format_current_project_line,
     format_homestead_line,
     format_kraken_line,
+    format_maintenance_line,
     format_net_worth_line,
     format_power_line,
     format_real_estate_line,
@@ -251,3 +253,45 @@ def test_format_homestead_line_truncates_long_alert_message():
     )
     line = format_homestead_line(snapshot)
     assert line == "1 critical alert  —  " + "x" * 57 + "..."
+
+
+def _task(interval_days=None, last_completed=None):
+    return MaintenanceTask(
+        task_id="t1", asset_id="a1", title="Oil change",
+        interval_days=interval_days, last_completed=last_completed,
+    )
+
+
+def test_format_maintenance_line_no_tasks():
+    assert format_maintenance_line([], date(2026, 9, 7)) == "No maintenance tasks tracked yet."
+
+
+def test_format_maintenance_line_all_caught_up():
+    # Recurring, completed today — not due for a long while.
+    tasks = [_task(interval_days=90, last_completed="2026-09-07")]
+    assert format_maintenance_line(tasks, date(2026, 9, 7)) == "All caught up"
+
+
+def test_format_maintenance_line_due_soon():
+    tasks = [_task(interval_days=30, last_completed="2026-08-10")]  # due 2026-09-09, 2 days out
+    assert format_maintenance_line(tasks, date(2026, 9, 7)) == "1 task due within 7 days"
+
+
+def test_format_maintenance_line_overdue():
+    tasks = [_task(interval_days=30, last_completed="2026-07-01")]  # due 2026-07-31, well overdue
+    assert format_maintenance_line(tasks, date(2026, 9, 7)) == "1 overdue task"
+
+
+def test_format_maintenance_line_overdue_and_due_soon_combined():
+    tasks = [
+        _task(interval_days=30, last_completed="2026-07-01"),  # overdue
+        _task(interval_days=30, last_completed="2026-08-10"),  # due soon
+    ]
+    assert format_maintenance_line(tasks, date(2026, 9, 7)) == "1 overdue task, 1 due soon"
+
+
+def test_format_maintenance_line_one_time_and_never_completed_are_not_due():
+    # Neither a one-time task nor a never-completed recurring task has
+    # a computable next_due_date — neither should count as due/overdue.
+    tasks = [_task(interval_days=None, last_completed=None), _task(interval_days=90, last_completed=None)]
+    assert format_maintenance_line(tasks, date(2026, 9, 7)) == "All caught up"

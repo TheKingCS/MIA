@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from core.avatar_manager import AvatarManager
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
+    from core.maintenance_manager import MaintenanceManager
     from core.material_manager import MaterialManager
     from core.conversation_manager import ConversationManager
     from core.dashboard_widgets import DashboardWidgetRegistry
@@ -119,6 +120,7 @@ class AppContext:
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)
     homestead: Optional["HomesteadManager"] = field(default=None, repr=False)
+    maintenance: Optional["MaintenanceManager"] = field(default=None, repr=False)
     workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)
     map_tiles: Optional["MapTileCache"] = field(default=None, repr=False)
     trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
