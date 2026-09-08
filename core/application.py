@@ -30,6 +30,7 @@ from PySide6.QtWidgets import QApplication
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
+from core.budget_manager import BudgetManager
 from core.finance_manager import FinanceManager
 from core.homestead_manager import HomesteadManager
 from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
@@ -215,6 +216,7 @@ class MIAApplication:
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
         self.context.maintenance = MaintenanceManager(self.context)
+        self.context.budget = BudgetManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
@@ -522,6 +524,7 @@ class MIAApplication:
         # for vehicles/power equipment/appliances/property/tools —
         # degrades to "All caught up" until a real asset/task is added.
         self.context.dashboard_widgets.register(WidgetDescriptor("maintenance", "Maintenance", "\U0001F527"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("budget", "Budget", "\U0001F4B0"))
 
     def _register_assistant_actions(self) -> None:
         """

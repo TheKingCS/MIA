@@ -16,7 +16,7 @@ from datetime import date
 
 import core.calendar_manager as calendar_manager_module
 from core.app_context import AppContext
-from core.calendar_manager import CalendarEvent, CalendarManager, occurs_on
+from core.calendar_manager import CalendarEvent, CalendarManager, date_recurs_on, occurs_on
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 
@@ -126,6 +126,28 @@ def test_load_handles_corrupt_json_gracefully(isolated_paths):
 
     manager = _make_manager()
     assert manager.all_events() == []
+
+
+# ------------------------------------------------------------------
+# date_recurs_on — the shared primitive occurs_on() and
+# core.budget_manager's Bill logic both build on
+# ------------------------------------------------------------------
+
+def test_date_recurs_on_non_recurring_only_matches_exact_date():
+    anchor = date(2026, 6, 15)
+    assert date_recurs_on(anchor, None, date(2026, 6, 15)) is True
+    assert date_recurs_on(anchor, None, date(2026, 6, 16)) is False
+
+
+def test_date_recurs_on_never_fires_before_the_anchor():
+    anchor = date(2026, 6, 15)
+    assert date_recurs_on(anchor, "yearly", date(2025, 6, 15)) is False
+
+
+def test_date_recurs_on_yearly_monthly_weekly():
+    assert date_recurs_on(date(2020, 6, 15), "yearly", date(2026, 6, 15)) is True
+    assert date_recurs_on(date(2026, 1, 5), "monthly", date(2026, 3, 5)) is True
+    assert date_recurs_on(date(2026, 6, 15), "weekly", date(2026, 6, 29)) is True
 
 
 # ------------------------------------------------------------------

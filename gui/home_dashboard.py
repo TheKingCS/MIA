@@ -127,6 +127,7 @@ from core.assistant_chat import (
 )
 from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
+from core.budget_manager import Bill, days_until_bill_due
 from core.daily_occasions import calendar_events_today
 from core.dashboard_widgets import WidgetDescriptor
 from core.finance_manager import FinancialSnapshot
@@ -397,6 +398,27 @@ def format_maintenance_line(
     return "All caught up"
 
 
+def format_budget_line(bills: list[Bill], today: date) -> str:
+    """Pure formatting logic — testable without Qt. Same "surface the
+    summary before the detail, distinct empty-vs-caught-up states" stance
+    as format_maintenance_line above."""
+    if not bills:
+        return "No bills tracked yet."
+
+    overdue = sum(1 for b in bills if (remaining := days_until_bill_due(b, today)) is not None and remaining < 0)
+    due_today_or_later_within_week = sum(
+        1 for b in bills
+        if (remaining := days_until_bill_due(b, today)) is not None and 0 <= remaining <= 7
+    )
+    if overdue:
+        noun = "bill" if overdue == 1 else "bills"
+        return f"{overdue} overdue {noun}"
+    if due_today_or_later_within_week:
+        noun = "bill" if due_today_or_later_within_week == 1 else "bills"
+        return f"{due_today_or_later_within_week} {noun} due within 7 days"
+    return "All bills paid"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -429,6 +451,7 @@ class HomeDashboard(QFrame):
             "net_worth": self._build_net_worth_widget,
             "homestead": self._build_homestead_widget,
             "maintenance": self._build_maintenance_widget,
+            "budget": self._build_budget_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -761,6 +784,15 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("maintenance"),
         )
         self._widget_bodies["maintenance"] = body
+        return card
+
+    def _build_budget_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("budget"),
+        )
+        self._widget_bodies["budget"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1432,6 +1464,12 @@ class HomeDashboard(QFrame):
             self._refresh_homestead()
         if "maintenance" in self._widget_bodies:
             self._refresh_maintenance()
+        if "budget" in self._widget_bodies:
+            self._refresh_budget()
+
+    def _refresh_budget(self) -> None:
+        bills = self.context.budget.all_bills() if self.context.budget else []
+        self._set_widget_body_text("budget", format_budget_line(bills, date.today()))
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None

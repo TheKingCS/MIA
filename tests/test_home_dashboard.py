@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date, datetime
 
 from core.activity_log_manager import ActivityLogEntry
+from core.budget_manager import Bill
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
 from core.data_logger_manager import Reading
@@ -27,6 +28,7 @@ from gui.home_dashboard import (
     format_activity_log_line,
     format_clock_date,
     format_clock_time,
+    format_budget_line,
     format_current_project_line,
     format_homestead_line,
     format_kraken_line,
@@ -326,3 +328,26 @@ def test_format_maintenance_line_meter_task_with_no_readings_is_all_caught_up():
     # Honest — no logged reading means no evidence it's due, not a fabricated overdue count.
     tasks = [_meter_task()]
     assert format_maintenance_line(tasks, date(2026, 9, 7), {}) == "All caught up"
+
+
+def _bill(due_date="2026-09-07", recurrence=None, last_paid_date=None):
+    return Bill(bill_id="b1", name="Electric", amount=120.0, due_date=due_date, recurrence=recurrence, last_paid_date=last_paid_date)
+
+
+def test_format_budget_line_no_bills():
+    assert format_budget_line([], date(2026, 9, 7)) == "No bills tracked yet."
+
+
+def test_format_budget_line_all_paid():
+    bills = [_bill(due_date="2026-09-01", recurrence="monthly", last_paid_date="2026-09-01")]
+    assert format_budget_line(bills, date(2026, 9, 7)) == "All bills paid"
+
+
+def test_format_budget_line_overdue():
+    bills = [_bill(due_date="2026-08-01")]
+    assert format_budget_line(bills, date(2026, 9, 7)) == "1 overdue bill"
+
+
+def test_format_budget_line_due_soon():
+    bills = [_bill(due_date="2026-09-10")]
+    assert format_budget_line(bills, date(2026, 9, 7)) == "1 bill due within 7 days"

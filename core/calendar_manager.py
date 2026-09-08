@@ -78,35 +78,49 @@ class CalendarEvent:
         )
 
 
+def date_recurs_on(anchor: date, recurrence: Optional[str], check_date: date) -> bool:
+    """
+    True if a thing anchored on `anchor` with `recurrence` (None/
+    "yearly"/"monthly"/"weekly") occurs on `check_date`. The shared
+    recurrence primitive underneath both `occurs_on()` below (Calendar
+    events) and `core.budget_manager`'s Bill due-date logic — extracted
+    here rather than reimplemented a second time, since it's plain date
+    arithmetic with no Calendar-specific concept in it at all. A `core/`
+    module importing another `core/` module is unrestricted (only
+    `modules/` has the no-cross-import layering rule).
+
+    No recurrence: only the anchor date itself. Recurring: the anchor
+    date and every matching anniversary AFTER it — never retroactively
+    before the anchor. Monthly recurrence on a day that doesn't exist
+    in a given month (the 31st in February) simply doesn't occur that
+    month — never fabricated onto a nearby date.
+    """
+    if check_date < anchor:
+        return False
+    if recurrence is None:
+        return check_date == anchor
+    if recurrence == "yearly":
+        return (check_date.month, check_date.day) == (anchor.month, anchor.day)
+    if recurrence == "monthly":
+        return check_date.day == anchor.day
+    if recurrence == "weekly":
+        return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 7 == 0
+    return check_date == anchor  # unknown recurrence value — fail safe to exact-date-only
+
+
 def occurs_on(event: CalendarEvent, check_date: date) -> bool:
     """
     True if `event` occurs on `check_date`, accounting for recurrence —
     same "take the date as an explicit parameter" testability
     convention as core.alarm_manager.Alarm.check_due/
-    core.maintenance_manager's recurrence functions.
-
-    A non-recurring event only occurs on its own exact anchor date. A
-    recurring event occurs on its anchor date and every matching
-    anniversary AFTER it — never retroactively before the anchor (an
-    event doesn't recur into the past). Monthly recurrence on a day
-    that doesn't exist in a given month (the 31st in February) simply
-    doesn't occur that month — never fabricated onto a nearby date.
+    core.maintenance_manager's recurrence functions. See
+    date_recurs_on() above for the actual comparison logic.
     """
     try:
         anchor = date.fromisoformat(event.date)
     except ValueError:
         return False
-    if check_date < anchor:
-        return False
-    if event.recurrence is None:
-        return check_date == anchor
-    if event.recurrence == "yearly":
-        return (check_date.month, check_date.day) == (anchor.month, anchor.day)
-    if event.recurrence == "monthly":
-        return check_date.day == anchor.day
-    if event.recurrence == "weekly":
-        return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 7 == 0
-    return check_date == anchor  # unknown recurrence value — fail safe to exact-date-only
+    return date_recurs_on(anchor, event.recurrence, check_date)
 
 
 class CalendarManager:
