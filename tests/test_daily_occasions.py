@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Optional
 
 from core.daily_occasions import (
     calendar_events_today,
@@ -55,6 +56,7 @@ def test_is_birthday_today_invalid_format():
 class _FakeEvent:
     date: str
     title: str = "Event"
+    recurrence: Optional[str] = None
 
 
 def test_calendar_events_today_filters_matching_date():
@@ -66,6 +68,24 @@ def test_calendar_events_today_filters_matching_date():
 def test_calendar_events_today_no_matches():
     events = [_FakeEvent(date="2026-07-15")]
     assert calendar_events_today(events, "2026-07-14") == []
+
+
+def test_calendar_events_today_surfaces_yearly_recurring_anniversary():
+    # Entered last year, no recurrence field at all before this fix would
+    # have meant "Our Anniversary" never showed up again after 2025-07-14.
+    events = [_FakeEvent(date="2025-07-14", title="Our Anniversary", recurrence="yearly")]
+    result = calendar_events_today(events, "2026-07-14")
+    assert result == [events[0]]
+
+
+def test_calendar_events_today_recurring_event_not_due_yet_this_year():
+    events = [_FakeEvent(date="2025-07-14", title="Our Anniversary", recurrence="yearly")]
+    assert calendar_events_today(events, "2026-07-13") == []
+
+
+def test_calendar_events_today_recurring_event_never_fires_before_its_anchor():
+    events = [_FakeEvent(date="2026-07-14", title="Our Anniversary", recurrence="yearly")]
+    assert calendar_events_today(events, "2025-07-14") == []
 
 
 def test_calendar_events_today_empty_list():

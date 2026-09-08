@@ -198,19 +198,25 @@ route through a Windows/WSLg bridge at all — this whole chain is a
 WSL2-dev-environment-specific quirk, not something to replicate in
 `deploy/install_kiosk.sh`.
 
-## Open: Calendar has no recurring-event support, so "anniversaries" don't repeat automatically (2026-07-14 aesthetic pass part 5)
+## Closed: Calendar has no recurring-event support, so "anniversaries" don't repeat automatically (2026-07-14 aesthetic pass part 5)
 
-The daily occasion-check timer (`core/application.py`'s
-`_check_daily_occasions()`) surfaces today's Calendar events as part of
-"remind them of anniversaries" — but `core/calendar_manager.py`'s
-`CalendarEvent` has no recurrence field at all. A user-created "Our
-Anniversary" event only fires this reminder on the exact date it was
-entered; it will not automatically reappear next year unless the user
-(or the Assistant) adds a fresh event for it annually. Real recurring
-events (yearly/monthly/weekly) would need a genuine `CalendarEvent`
-schema change plus UI for it — not built here, since it's a separate
-feature from the daily-digest mechanism itself. Revisit if recurring
-reminders turn out to matter enough to justify that change.
+Resolved 2026-09-08 as the last item from a full-registry/known-issues
+audit (the same audit that added Assistant actions for Maintenance and
+Lab). `core/calendar_manager.py`'s `CalendarEvent` gained a
+`recurrence` field (`None`/`"yearly"`/`"monthly"`/`"weekly"`) plus a
+pure `occurs_on(event, check_date)` function that `events_for_date()`/
+`events_for_month()` and `core/daily_occasions.py`'s
+`calendar_events_today()` all resolve through — a user-created "Our
+Anniversary" event now surfaces on the digest every matching
+anniversary, not just the exact date it was originally entered. UI:
+`gui/add_edit_event_dialog.py` gained a "Repeats" combo box; the
+Assistant's `add_calendar_event` action gained an optional
+`recurrence` parameter, verified live to extract correctly from
+natural phrasing ("Add a yearly event for our anniversary on
+2026-06-15"). Deliberately no custom/complex recurrence rules (every N
+days, specific weekdays, end-after-N-occurrences, single-occurrence
+exceptions) — yearly/monthly/weekly covers the real stated need
+without a full RRULE engine.
 
 ## Closed: Home dashboard's volume control unverified on real audio hardware (2026-07-14 aesthetic pass part 3)
 

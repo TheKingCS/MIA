@@ -3,8 +3,8 @@ core.calendar_manager
 ========================
 
 Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a
-plain CRUD event store, persisted to data/calendar_events.json so
-events survive a restart, same durability guarantee
+CRUD event store, persisted to data/calendar_events.json so events
+survive a restart, same durability guarantee
 core.notification_manager.NotificationManager gives notifications.
 
 Lives in core/ (not modules/toolbox/) even though only the Calendar
@@ -13,13 +13,26 @@ only ever written to by core/ services (profile_manager,
 notification_manager, backup_manager) — this also means calendar
 events are automatically swept up by backup_manager's data/ rglob,
 with no backup/restore code changes needed.
+
+Recurring events (2026-09-08, closing a real documented gap —
+docs/KNOWN_ISSUES.md's "Calendar has no recurring-event support"):
+a CalendarEvent's `date` is always its one stored anchor date;
+`recurrence` (None/"yearly"/"monthly"/"weekly") plus the pure
+occurs_on() function below determine whether it ALSO occurs on any
+other date being asked about. This is the one place that logic lives —
+events_for_date()/events_for_month() and
+core.daily_occasions.calendar_events_today() all resolve through it,
+so an anniversary now surfaces every year, not just on the day it was
+originally entered.
 """
 
 from __future__ import annotations
 
 import json
 import uuid
+from calendar import monthrange
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Optional
 
@@ -31,14 +44,17 @@ log = get_logger(__name__)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _EVENTS_FILE = _DATA_DIR / "calendar_events.json"
 
+RECURRENCE_TYPES = ["yearly", "monthly", "weekly"]
+
 
 @dataclass
 class CalendarEvent:
     event_id: str
     title: str
-    date: str  # ISO "YYYY-MM-DD"
+    date: str  # ISO "YYYY-MM-DD" — the anchor date; see occurs_on() for recurrence
     time: Optional[str] = None  # "HH:MM", or None for an all-day event
     notes: str = ""
+    recurrence: Optional[str] = None  # None, or one of RECURRENCE_TYPES
 
     def to_dict(self) -> dict:
         return {
@@ -47,6 +63,7 @@ class CalendarEvent:
             "date": self.date,
             "time": self.time,
             "notes": self.notes,
+            "recurrence": self.recurrence,
         }
 
     @staticmethod
@@ -57,7 +74,39 @@ class CalendarEvent:
             date=data.get("date", ""),
             time=data.get("time"),
             notes=data.get("notes", ""),
+            recurrence=data.get("recurrence"),
         )
+
+
+def occurs_on(event: CalendarEvent, check_date: date) -> bool:
+    """
+    True if `event` occurs on `check_date`, accounting for recurrence —
+    same "take the date as an explicit parameter" testability
+    convention as core.alarm_manager.Alarm.check_due/
+    core.maintenance_manager's recurrence functions.
+
+    A non-recurring event only occurs on its own exact anchor date. A
+    recurring event occurs on its anchor date and every matching
+    anniversary AFTER it — never retroactively before the anchor (an
+    event doesn't recur into the past). Monthly recurrence on a day
+    that doesn't exist in a given month (the 31st in February) simply
+    doesn't occur that month — never fabricated onto a nearby date.
+    """
+    try:
+        anchor = date.fromisoformat(event.date)
+    except ValueError:
+        return False
+    if check_date < anchor:
+        return False
+    if event.recurrence is None:
+        return check_date == anchor
+    if event.recurrence == "yearly":
+        return (check_date.month, check_date.day) == (anchor.month, anchor.day)
+    if event.recurrence == "monthly":
+        return check_date.day == anchor.day
+    if event.recurrence == "weekly":
+        return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 7 == 0
+    return check_date == anchor  # unknown recurrence value — fail safe to exact-date-only
 
 
 class CalendarManager:
@@ -92,13 +141,21 @@ class CalendarManager:
     # Writing
     # ------------------------------------------------------------------
 
-    def add_event(self, title: str, date: str, time: Optional[str] = None, notes: str = "") -> CalendarEvent:
+    def add_event(
+        self,
+        title: str,
+        date: str,
+        time: Optional[str] = None,
+        notes: str = "",
+        recurrence: Optional[str] = None,
+    ) -> CalendarEvent:
         event = CalendarEvent(
             event_id=uuid.uuid4().hex[:10],
             title=title,
             date=date,
             time=time,
             notes=notes,
+            recurrence=recurrence,
         )
         self._events.append(event)
         self._save()
@@ -133,18 +190,27 @@ class CalendarManager:
     def all_events(self) -> list[CalendarEvent]:
         return list(self._events)
 
-    def events_for_date(self, date: str) -> list[CalendarEvent]:
-        """Events on `date` (ISO "YYYY-MM-DD"), all-day events first, then sorted by time."""
-        matches = [e for e in self._events if e.date == date]
+    def events_for_date(self, date_str: str) -> list[CalendarEvent]:
+        """Events occurring on `date_str` (ISO "YYYY-MM-DD"), all-day
+        events first, then sorted by time. Accounts for recurrence via
+        occurs_on() — a recurring event surfaces here on every matching
+        anniversary, not just the exact date it was originally entered."""
+        check_date = date.fromisoformat(date_str)
+        matches = [e for e in self._events if occurs_on(e, check_date)]
         return sorted(matches, key=lambda e: (e.time is not None, e.time or ""))
 
     def events_for_month(self, year: int, month: int) -> dict[str, list["CalendarEvent"]]:
-        """All events in `year`-`month`, grouped by ISO date, each list in events_for_date order."""
-        prefix = f"{year:04d}-{month:02d}-"
+        """Every real day in `year`-`month`, grouped by ISO date (only
+        dates with at least one occurrence included), each list in
+        events_for_date order. Walks real calendar days rather than
+        string-matching stored dates, since a recurring event's
+        anchor date can be in a completely different month/year from
+        an occurrence being displayed here."""
+        days_in_month = monthrange(year, month)[1]
         grouped: dict[str, list[CalendarEvent]] = {}
-        for event in self._events:
-            if event.date.startswith(prefix):
-                grouped.setdefault(event.date, []).append(event)
-        for date in grouped:
-            grouped[date] = self.events_for_date(date)
+        for day in range(1, days_in_month + 1):
+            date_str = date(year, month, day).isoformat()
+            matches = self.events_for_date(date_str)
+            if matches:
+                grouped[date_str] = matches
         return grouped

@@ -20,17 +20,19 @@ midnight, while the check-in deliberately waits until evening (see
 scold the user for not having chatted yet.
 
 **"Anniversaries" reuses the existing Calendar module rather than being
-a new concept** — Calendar has no recurrence feature yet (a real,
-separate gap, not addressed here), so a user-created "Our Anniversary"
-event only surfaces via this digest on the exact date it was entered,
-not automatically next year. Flagged in docs/KNOWN_ISSUES.md rather
-than silently assumed to work indefinitely.
+a new concept.** Calendar gained real recurrence support (2026-09-08,
+core.calendar_manager's `occurs_on()`) — a user-created "Our
+Anniversary" event now surfaces via this digest every matching
+anniversary, not just the exact date it was originally entered,
+closing the gap docs/KNOWN_ISSUES.md used to document here.
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Optional
+
+from core.calendar_manager import occurs_on
 
 
 def is_birthday_today(birthday_iso: Optional[str], today: date) -> bool:
@@ -45,8 +47,12 @@ def is_birthday_today(birthday_iso: Optional[str], today: date) -> bool:
 
 
 def calendar_events_today(events: list, today_iso: str) -> list:
-    """Pure logic — testable without Qt. `events` are anything with a `.date` attribute (core.calendar_manager.CalendarEvent)."""
-    return [event for event in events if event.date == today_iso]
+    """Pure logic — testable without Qt. `events` are anything with
+    `.date`/`.recurrence` attributes (core.calendar_manager.CalendarEvent)
+    — a recurring event surfaces here on every matching anniversary via
+    occurs_on(), not just the exact date it was originally entered."""
+    today = date.fromisoformat(today_iso)
+    return [event for event in events if occurs_on(event, today)]
 
 
 def should_run_once_daily(last_run_date: Optional[str], today_iso: str) -> bool:

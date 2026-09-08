@@ -12,9 +12,11 @@ from __future__ import annotations
 
 import pytest
 
+from datetime import date
+
 import core.calendar_manager as calendar_manager_module
 from core.app_context import AppContext
-from core.calendar_manager import CalendarManager
+from core.calendar_manager import CalendarEvent, CalendarManager, occurs_on
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 
@@ -124,3 +126,89 @@ def test_load_handles_corrupt_json_gracefully(isolated_paths):
 
     manager = _make_manager()
     assert manager.all_events() == []
+
+
+# ------------------------------------------------------------------
+# occurs_on / recurrence
+# ------------------------------------------------------------------
+
+def _event(event_date: str, recurrence=None) -> CalendarEvent:
+    return CalendarEvent(event_id="e1", title="Event", date=event_date, recurrence=recurrence)
+
+
+def test_occurs_on_non_recurring_only_matches_exact_date():
+    event = _event("2026-06-15")
+    assert occurs_on(event, date(2026, 6, 15)) is True
+    assert occurs_on(event, date(2027, 6, 15)) is False
+    assert occurs_on(event, date(2026, 6, 16)) is False
+
+
+def test_occurs_on_yearly_matches_month_and_day_every_year_after_anchor():
+    event = _event("2020-06-15", recurrence="yearly")
+    assert occurs_on(event, date(2020, 6, 15)) is True  # the anchor itself
+    assert occurs_on(event, date(2026, 6, 15)) is True  # years later
+    assert occurs_on(event, date(2026, 6, 16)) is False
+
+
+def test_occurs_on_yearly_never_fires_before_the_anchor_date():
+    event = _event("2026-06-15", recurrence="yearly")
+    assert occurs_on(event, date(2025, 6, 15)) is False
+
+
+def test_occurs_on_monthly_matches_day_of_month_after_anchor():
+    event = _event("2026-01-05", recurrence="monthly")
+    assert occurs_on(event, date(2026, 3, 5)) is True
+    assert occurs_on(event, date(2026, 3, 6)) is False
+
+
+def test_occurs_on_monthly_does_not_fabricate_a_day_that_does_not_exist():
+    # The 31st has no February occurrence — never silently moved to the 28th.
+    event = _event("2026-01-31", recurrence="monthly")
+    assert occurs_on(event, date(2026, 2, 28)) is False
+    assert occurs_on(event, date(2026, 3, 31)) is True
+
+
+def test_occurs_on_weekly_matches_same_weekday_every_7_days():
+    event = _event("2026-06-15", recurrence="weekly")  # a Monday
+    assert occurs_on(event, date(2026, 6, 22)) is True
+    assert occurs_on(event, date(2026, 6, 29)) is True
+    assert occurs_on(event, date(2026, 6, 23)) is False  # right weekday-adjacent day, wrong offset
+
+
+def test_occurs_on_unknown_recurrence_value_falls_back_to_exact_date():
+    event = _event("2026-06-15", recurrence="daily")  # not a supported value
+    assert occurs_on(event, date(2026, 6, 15)) is True
+    assert occurs_on(event, date(2026, 6, 22)) is False
+
+
+def test_events_for_date_finds_a_yearly_recurring_event_on_a_future_anniversary(isolated_paths):
+    manager = _make_manager()
+    manager.add_event(title="Our Anniversary", date="2020-06-15", recurrence="yearly")
+
+    found = manager.events_for_date("2026-06-15")
+    assert [e.title for e in found] == ["Our Anniversary"]
+    assert manager.events_for_date("2026-06-16") == []
+
+
+def test_events_for_month_finds_a_recurring_event_whose_anchor_is_a_different_year(isolated_paths):
+    manager = _make_manager()
+    manager.add_event(title="Our Anniversary", date="2020-06-15", recurrence="yearly")
+
+    grouped = manager.events_for_month(2026, 6)
+    assert set(grouped.keys()) == {"2026-06-15"}
+    assert [e.title for e in grouped["2026-06-15"]] == ["Our Anniversary"]
+
+
+def test_events_for_month_still_ignores_other_months_for_recurring_events(isolated_paths):
+    manager = _make_manager()
+    manager.add_event(title="Our Anniversary", date="2020-06-15", recurrence="yearly")
+
+    assert manager.events_for_month(2026, 7) == {}
+
+
+def test_add_event_recurrence_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    manager.add_event(title="Our Anniversary", date="2020-06-15", recurrence="yearly")
+
+    reloaded = _make_manager()
+    assert reloaded.all_events()[0].recurrence == "yearly"

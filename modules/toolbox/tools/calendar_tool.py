@@ -16,6 +16,15 @@ deleted event would otherwise persist when paging back to that month —
 _refresh_markers() clears every custom format first (setDateTextFormat
 with a default-constructed, i.e. invalid, QDate resets all of them)
 before reapplying marks for the month currently on screen.
+
+Recurring events (core.calendar_manager's `occurs_on()`): a recurring
+event's agenda entry, on ANY of its virtual occurrence dates, is the
+same real CalendarEvent object with the same event_id — there's no
+separate "this occurrence" concept. Editing one always edits the true
+stored anchor date/recurrence for the whole series (moves every future
+occurrence), and deleting one removes the entire series, not just the
+occurrence being viewed — no single-occurrence exception support,
+by design (see the recurrence rollout's plan notes).
 """
 
 from __future__ import annotations
@@ -131,7 +140,8 @@ class CalendarTool(ToolboxTool):
 
         for event in events:
             time_label = event.time if event.time else "All day"
-            item = QListWidgetItem(f"{time_label} — {event.title}")
+            recurrence_suffix = f"  (repeats {event.recurrence})" if event.recurrence else ""
+            item = QListWidgetItem(f"{time_label} — {event.title}{recurrence_suffix}")
             item.setData(Qt.ItemDataRole.UserRole, event.event_id)
             self._agenda_list.addItem(item)
 
@@ -156,6 +166,7 @@ class CalendarTool(ToolboxTool):
             date=dialog.entered_date,
             time=dialog.entered_time,
             notes=dialog.entered_notes,
+            recurrence=dialog.entered_recurrence,
         )
         self._calendar.setSelectedDate(QDate.fromString(dialog.entered_date, _ISO_DATE_FORMAT))
         self._refresh_markers()
@@ -178,6 +189,7 @@ class CalendarTool(ToolboxTool):
             date=dialog.entered_date,
             time=dialog.entered_time,
             notes=dialog.entered_notes,
+            recurrence=dialog.entered_recurrence,
         )
         self._calendar.setSelectedDate(QDate.fromString(dialog.entered_date, _ISO_DATE_FORMAT))
         self._refresh_markers()

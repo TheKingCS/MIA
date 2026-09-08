@@ -35,7 +35,7 @@ from core.homestead_manager import HomesteadManager
 from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
-from core.calendar_manager import CalendarManager
+from core.calendar_manager import RECURRENCE_TYPES as CALENDAR_RECURRENCE_TYPES, CalendarManager
 from core.component_manager import ComponentManager
 from core.boot_sound import write_boot_sound_wav
 from core.boot_sound_worker import BootSoundWorker
@@ -1173,7 +1173,7 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_calendar_event",
             domain="calendar",
-            description="Add a new event to MIA's Calendar.",
+            description="Add a new event to MIA's Calendar, optionally repeating yearly/monthly/weekly.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -1181,6 +1181,13 @@ class MIAApplication:
                     "date": {"type": "string", "description": "Date in YYYY-MM-DD format."},
                     "time": {"type": "string", "description": "Optional time in 24-hour HH:MM format. Leave empty for an all-day event."},
                     "notes": {"type": "string", "description": "Optional notes."},
+                    "recurrence": {
+                        "type": "string",
+                        "description": (
+                            "Optional: 'yearly', 'monthly', or 'weekly' for a repeating event (e.g. a "
+                            "birthday or anniversary). Leave empty for a one-time event."
+                        ),
+                    },
                 },
                 "required": ["title", "date"],
             },
@@ -2757,16 +2764,23 @@ class MIAApplication:
             return "I need a date (YYYY-MM-DD) to add a calendar event."
         time_str = str(arguments.get("time", "") or "").strip() or None
         notes = str(arguments.get("notes", "") or "")
-        event = context.calendar.add_event(title=title, date=date_str, time=time_str, notes=notes)
+        recurrence = str(arguments.get("recurrence", "") or "").strip().lower() or None
+        if recurrence not in (None, *CALENDAR_RECURRENCE_TYPES):
+            recurrence = None
+        event = context.calendar.add_event(title=title, date=date_str, time=time_str, notes=notes, recurrence=recurrence)
         time_part = f" at {event.time}" if event.time else ""
-        return f"Calendar event '{event.title}' added for {event.date}{time_part}."
+        recurrence_part = f", repeating {event.recurrence}" if event.recurrence else ""
+        return f"Calendar event '{event.title}' added for {event.date}{time_part}{recurrence_part}."
 
     @staticmethod
     def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:
         events = context.calendar.all_events()
         if not events:
             return "You have no calendar events."
-        lines = [f"- '{e.title}' on {e.date}" + (f" at {e.time}" if e.time else "") for e in events]
+        lines = [
+            f"- '{e.title}' on {e.date}" + (f" at {e.time}" if e.time else "") + (f" (repeats {e.recurrence})" if e.recurrence else "")
+            for e in events
+        ]
         return "Your calendar events:\n" + "\n".join(lines)
 
     @staticmethod

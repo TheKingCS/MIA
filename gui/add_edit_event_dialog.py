@@ -16,6 +16,7 @@ from typing import Optional
 from PySide6.QtCore import QDate, QTime
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDateEdit,
     QDialog,
     QDialogButtonBox,
@@ -26,10 +27,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from core.calendar_manager import CalendarEvent
+from core.calendar_manager import RECURRENCE_TYPES, CalendarEvent
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 _TIME_FORMAT = "HH:mm"
+# Display label -> stored recurrence value, "None" first (not recurring).
+_RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENCE_TYPES]
 
 
 class AddEditEventDialog(QDialog):
@@ -41,7 +44,7 @@ class AddEditEventDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Event" if event is not None else "New Event")
-        self.setFixedSize(360, 400)
+        self.setFixedSize(360, 440)
 
         layout = QVBoxLayout(self)
 
@@ -65,6 +68,12 @@ class AddEditEventDialog(QDialog):
         self.time_edit.setDisplayFormat(_TIME_FORMAT)
         layout.addWidget(self.time_edit)
 
+        layout.addWidget(QLabel("Repeats:"))
+        self.recurrence_combo = QComboBox()
+        for label, _value in _RECURRENCE_LABELS:
+            self.recurrence_combo.addItem(label)
+        layout.addWidget(self.recurrence_combo)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -84,6 +93,7 @@ class AddEditEventDialog(QDialog):
         self._date: str = ""
         self._time: Optional[str] = None
         self._notes: str = ""
+        self._recurrence: Optional[str] = None
 
     def _prefill(self, default_date: Optional[str], event: Optional[CalendarEvent]) -> None:
         if event is not None:
@@ -95,6 +105,10 @@ class AddEditEventDialog(QDialog):
                 self.time_edit.setTime(QTime.fromString(event.time, _TIME_FORMAT))
             else:
                 self.all_day_checkbox.setChecked(True)
+            recurrence_index = next(
+                (i for i, (_label, value) in enumerate(_RECURRENCE_LABELS) if value == event.recurrence), 0
+            )
+            self.recurrence_combo.setCurrentIndex(recurrence_index)
         else:
             date_str = default_date or QDate.currentDate().toString(_ISO_DATE_FORMAT)
             self.date_edit.setDate(QDate.fromString(date_str, _ISO_DATE_FORMAT))
@@ -115,6 +129,7 @@ class AddEditEventDialog(QDialog):
         self._date = self.date_edit.date().toString(_ISO_DATE_FORMAT)
         self._time = None if self.all_day_checkbox.isChecked() else self.time_edit.time().toString(_TIME_FORMAT)
         self._notes = self.notes_edit.toPlainText().strip()
+        self._recurrence = _RECURRENCE_LABELS[self.recurrence_combo.currentIndex()][1]
         self.accept()
 
     @property
@@ -132,3 +147,7 @@ class AddEditEventDialog(QDialog):
     @property
     def entered_notes(self) -> str:
         return self._notes
+
+    @property
+    def entered_recurrence(self) -> Optional[str]:
+        return self._recurrence
