@@ -2,10 +2,10 @@
 modules.budget.module
 ========================
 
-Budget: household bills, income, and expenses. Four tabs (Bills,
-Income, Expenses, Summary) — same `QTabWidget` multi-feature-in-one-
-module shape as modules/maintenance/module.py and
-modules/workshop/module.py, since these are four closely-related views
+Budget: household bills, income, and expenses. Five tabs (Bills,
+Income, Expenses, Summary, Bank Sync) — same `QTabWidget` multi-
+feature-in-one-module shape as modules/maintenance/module.py and
+modules/workshop/module.py, since these are closely-related views
 over one connected data set rather than separate top-level modules.
 
 All persistence/recurrence/reporting logic lives in
@@ -19,10 +19,18 @@ self.context.budget.mark_bill_paid(...), which both records a real
 Expense entry AND advances the bill's own due date — one click, two
 real effects, same shape as Maintenance's "Mark Complete" for a meter
 task.
+
+The Bank Sync tab is the GUI half of core/plaid_manager.py — see that
+module's own docstring for the full "why Hosted Link + browser +
+polling, why an encrypted passphrase-locked vault" reasoning. "Connect
+a Bank" is deliberately never exposed as an Assistant action: a real
+credential/consent flow needs the user physically watching their own
+browser, not something a stray chat phrase could trigger.
 """
 
 from __future__ import annotations
 
+import webbrowser
 from datetime import date
 from typing import Optional
 
@@ -43,10 +51,14 @@ from PySide6.QtWidgets import (
 
 from core.budget_manager import Bill, ExpenseEntry, IncomeEntry, days_until_bill_due
 from core.search_manager import SearchResult
+from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.mark_bill_paid_dialog import MarkBillPaidDialog
+from gui.password_dialog import PasswordPromptDialog
+from gui.plaid_connect_progress_dialog import PlaidConnectProgressDialog
+from gui.plaid_setup_dialog import PlaidSetupDialog
 from modules.module_base import ModuleBase
 
 
@@ -97,6 +109,13 @@ class BudgetModule(ModuleBase):
         self._summary_start_date: Optional[str] = None
         self._summary_end_date: Optional[str] = None
 
+        self._plaid_status_label: Optional[QLabel] = None
+        self._plaid_accounts_list: Optional[QListWidget] = None
+        self._plaid_setup_button: Optional[QPushButton] = None
+        self._plaid_unlock_button: Optional[QPushButton] = None
+        self._plaid_connect_button: Optional[QPushButton] = None
+        self._plaid_sync_button: Optional[QPushButton] = None
+
     def on_load(self) -> None:
         super().on_load()
         self.context.search.register_provider("budget", self._search)
@@ -120,6 +139,7 @@ class BudgetModule(ModuleBase):
         tabs.addTab(self._build_income_tab(), "Income")
         tabs.addTab(self._build_expenses_tab(), "Expenses")
         tabs.addTab(self._build_summary_tab(), "Summary")
+        tabs.addTab(self._build_bank_sync_tab(), "Bank Sync")
         layout.addWidget(tabs, stretch=1)
 
         return widget
@@ -529,6 +549,142 @@ class BudgetModule(ModuleBase):
         self._summary_net_label.setText(f"Net: ${income - expenses:,.2f}")
         self._summary_tax_income_label.setText(f"Tax-relevant income: ${tax_income:,.2f}")
         self._summary_tax_expenses_label.setText(f"Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}")
+
+    # ------------------------------------------------------------------
+    # Bank Sync tab — GUI half of core/plaid_manager.py, see that
+    # module's docstring for the full design reasoning.
+    # ------------------------------------------------------------------
+
+    def _build_bank_sync_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        intro = QLabel(
+            "Connect a real bank or brokerage account via Plaid to pull balances into MIA. "
+            "This is a real third-party service — see Settings for the offline-first tradeoff this accepts."
+        )
+        intro.setWordWrap(True)
+        intro.setObjectName("SubtitleLabel")
+        layout.addWidget(intro)
+
+        self._plaid_status_label = QLabel("")
+        layout.addWidget(self._plaid_status_label)
+
+        self._plaid_accounts_list = QListWidget()
+        layout.addWidget(self._plaid_accounts_list, stretch=1)
+
+        button_row = QHBoxLayout()
+        self._plaid_setup_button = QPushButton("Set Up Plaid…")
+        self._plaid_setup_button.clicked.connect(self._on_plaid_setup)
+        button_row.addWidget(self._plaid_setup_button)
+
+        self._plaid_unlock_button = QPushButton("Unlock…")
+        self._plaid_unlock_button.clicked.connect(self._on_plaid_unlock)
+        button_row.addWidget(self._plaid_unlock_button)
+
+        self._plaid_connect_button = QPushButton("Connect a Bank…")
+        self._plaid_connect_button.clicked.connect(self._on_plaid_connect)
+        button_row.addWidget(self._plaid_connect_button)
+
+        self._plaid_sync_button = QPushButton("Sync Now")
+        self._plaid_sync_button.clicked.connect(self._on_plaid_sync)
+        button_row.addWidget(self._plaid_sync_button)
+
+        layout.addLayout(button_row)
+
+        self._refresh_plaid_tab()
+        return tab
+
+    def _refresh_plaid_tab(self) -> None:
+        plaid = self.context.plaid
+        configured = plaid.is_configured()
+        unlocked = plaid.is_unlocked()
+
+        self._plaid_setup_button.setEnabled(not configured)
+        self._plaid_unlock_button.setEnabled(configured and not unlocked)
+        self._plaid_connect_button.setEnabled(unlocked)
+        self._plaid_sync_button.setEnabled(unlocked)
+
+        if not configured:
+            self._plaid_status_label.setText("Not set up yet.")
+        elif not unlocked:
+            self._plaid_status_label.setText("Set up, locked — unlock to connect or sync.")
+        else:
+            count = len(plaid.connected_items())
+            noun = "account" if count == 1 else "accounts"
+            self._plaid_status_label.setText(f"Unlocked — {count} connected {noun}.")
+
+        self._plaid_accounts_list.clear()
+        if unlocked:
+            for item in plaid.connected_items():
+                self._plaid_accounts_list.addItem(f"{item.institution_name}  —  connected {item.connected_at}")
+        else:
+            self._plaid_accounts_list.addItem("Unlock to see connected accounts.")
+
+    def _on_plaid_setup(self) -> None:
+        dialog = PlaidSetupDialog()
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.plaid.setup(
+            client_id=dialog.entered_client_id,
+            secret=dialog.entered_secret,
+            environment=dialog.entered_environment,
+            passphrase=dialog.entered_passphrase,
+        )
+        QMessageBox.information(None, "Plaid Set Up", "Plaid is set up and unlocked for this session.")
+        self._refresh_plaid_tab()
+
+    def _on_plaid_unlock(self) -> None:
+        dialog = PasswordPromptDialog("your Plaid vault", prompt="Enter the passphrase for")
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        try:
+            self.context.plaid.unlock(dialog.entered_password)
+        except SecretsError as exc:
+            QMessageBox.warning(None, "Couldn't Unlock", str(exc))
+            return
+        self._refresh_plaid_tab()
+
+    def _on_plaid_connect(self) -> None:
+        try:
+            link_token, hosted_link_url = self.context.plaid.create_hosted_link_session()
+        except Exception as exc:  # noqa: BLE001 — surface any real Plaid API error to the user
+            QMessageBox.warning(None, "Couldn't Start Connection", str(exc))
+            return
+
+        webbrowser.open(hosted_link_url)
+
+        progress = PlaidConnectProgressDialog(self.context.plaid, link_token)
+        if progress.exec() != QDialog.DialogCode.Accepted or not progress.entered_public_token:
+            return
+
+        try:
+            self.context.plaid.finish_connection(progress.entered_public_token)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Finish Connecting", str(exc))
+            return
+
+        save_dialog = PasswordPromptDialog("your Plaid vault", prompt="Re-enter the passphrase for")
+        if save_dialog.exec() == QDialog.DialogCode.Accepted:
+            try:
+                self.context.plaid.save_current_vault(save_dialog.entered_password)
+            except SecretsError as exc:
+                QMessageBox.warning(None, "Couldn't Save", f"Bank connected for this session, but saving failed: {exc}")
+        self._refresh_plaid_tab()
+
+    def _on_plaid_sync(self) -> None:
+        try:
+            snapshots = self.context.plaid.sync()
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Sync Failed", str(exc))
+            return
+
+        if not snapshots:
+            QMessageBox.information(None, "Nothing to Sync", "No connected accounts to sync yet.")
+            return
+        QMessageBox.information(None, "Synced", f"Synced {len(snapshots)} connected account(s).")
 
     # ------------------------------------------------------------------
     # Search

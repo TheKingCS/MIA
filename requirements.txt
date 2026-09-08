@@ -58,5 +58,13 @@ astral>=3.2,<4.0
 # (already present on any Linux target, no Python binding needed).
 pyserial>=3.5,<4.0
 
+# Bank/brokerage connectivity (core/plaid_manager.py, 2026-09-08) — the
+# official Plaid SDK, over hand-rolled urllib calls (this project's
+# usual convention for external APIs, e.g. map tiles). This touches
+# live financial credentials; correctness/well-tested auth handling
+# matters more here than it did for the stdlib-urllib precedent.
+# Version pin confirmed by actually installing it, not guessed.
+plaid-python>=44,<45
+
 # Testing
 pytest>=7.4

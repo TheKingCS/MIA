@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from core.alarm_manager import AlarmManager
     from core.avatar_manager import AvatarManager
     from core.budget_manager import BudgetManager
+    from core.plaid_manager import PlaidManager
     from core.real_estate_manager import RealEstateManager
     from core.calendar_manager import CalendarManager
     from core.component_manager import ComponentManager
@@ -125,6 +126,7 @@ class AppContext:
     maintenance: Optional["MaintenanceManager"] = field(default=None, repr=False)
     budget: Optional["BudgetManager"] = field(default=None, repr=False)
     real_estate: Optional["RealEstateManager"] = field(default=None, repr=False)
+    plaid: Optional["PlaidManager"] = field(default=None, repr=False)
     workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)
     map_tiles: Optional["MapTileCache"] = field(default=None, repr=False)
     trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
