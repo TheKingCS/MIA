@@ -699,6 +699,18 @@ class BudgetManager:
             totals[expense.category] = totals.get(expense.category, 0.0) + expense.amount
         return totals
 
+    def total_income_by_category(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> dict[str, float]:
+        """Actual income per category over a date range — the income-side
+        counterpart to total_expenses_by_category(). Only categories with
+        at least one matching income entry are present (no zero-filled
+        entries for untouched categories)."""
+        totals: dict[str, float] = {}
+        for entry in self._income:
+            if not _in_range(entry.date, start_date, end_date):
+                continue
+            totals[entry.category] = totals.get(entry.category, 0.0) + entry.amount
+        return totals
+
     # ------------------------------------------------------------------
     # Budget targets — planned monthly spending per category, deliberately
     # minimal (no yearly overrides, no envelope rollover), see module docstring

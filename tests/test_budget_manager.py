@@ -235,6 +235,34 @@ def test_total_expenses_by_category_groups_and_omits_untouched_categories(isolat
     assert "Insurance" not in totals
 
 
+def test_total_income_by_category_only_includes_categories_with_entries(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=3000.0, category="Salary", date="2026-09-01")
+    manager.add_income(amount=500.0, category="Investment", date="2026-09-05")
+
+    totals = manager.total_income_by_category()
+    assert totals == {"Salary": 3000.0, "Investment": 500.0}
+    assert "Rental Income" not in totals
+
+
+def test_total_income_by_category_sums_multiple_entries_same_category(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=1500.0, category="Rental Income", date="2026-09-01")
+    manager.add_income(amount=1500.0, category="Rental Income", date="2026-09-15")
+
+    totals = manager.total_income_by_category()
+    assert totals == {"Rental Income": 3000.0}
+
+
+def test_total_income_by_category_respects_date_range(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=3000.0, category="Salary", date="2026-08-01")
+    manager.add_income(amount=3000.0, category="Salary", date="2026-09-01")
+
+    totals = manager.total_income_by_category(start_date="2026-09-01", end_date="2026-09-30")
+    assert totals == {"Salary": 3000.0}
+
+
 # ------------------------------------------------------------------
 # IncomeSource — next_income_due_date / days_until_income_due
 # ------------------------------------------------------------------

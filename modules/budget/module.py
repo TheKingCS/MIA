@@ -27,6 +27,13 @@ proactive nudges feature (core/budget_nudges.py) — it's the same
 planned-vs-actual comparison the daily nudge checks, made visible and
 editable on demand rather than only surfaced as a notification.
 
+The Summary tab's "Export Business Report" button composes a real PDF
+via core/business_report.py (pure HTML composition) + Qt's own
+QTextDocument/QPrinter (no new dependency) — combines this tab's
+household finance figures with the Real Estate portfolio (both are
+plain sibling AppContext fields) into one document, reusing whichever
+date range is currently selected here rather than a second picker.
+
 The Bank Sync tab is the GUI half of core/plaid_manager.py — see that
 module's own docstring for the full "why Hosted Link + browser +
 polling, why an encrypted passphrase-locked vault" reasoning. "Connect
@@ -38,13 +45,16 @@ browser, not something a stray chat phrase could trigger.
 from __future__ import annotations
 
 import webbrowser
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QMarginsF
+from PySide6.QtGui import QPageLayout, QPageSize, QTextDocument
+from PySide6.QtPrintSupport import QPrinter
 from PySide6.QtWidgets import (
     QDialog,
     QDoubleSpinBox,
+    QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -59,6 +69,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.business_report import build_business_report_html
 from core.budget_manager import (
     Bill,
     EXPENSE_CATEGORIES,
@@ -68,6 +79,7 @@ from core.budget_manager import (
     days_until_bill_due,
     days_until_income_due,
 )
+from core.real_estate_manager import equity as property_equity
 from core.search_manager import SearchResult
 from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
@@ -686,6 +698,11 @@ class BudgetModule(ModuleBase):
         layout.addWidget(self._summary_tax_expenses_label)
 
         layout.addWidget(self._build_budget_targets_group())
+
+        export_button = QPushButton("Export Business Report (PDF)…")
+        export_button.clicked.connect(self._on_export_business_report)
+        layout.addWidget(export_button)
+
         layout.addStretch(1)
 
         self._on_summary_this_month()
@@ -764,6 +781,73 @@ class BudgetModule(ModuleBase):
         self._summary_net_label.setText(f"Net: ${income - expenses:,.2f}")
         self._summary_tax_income_label.setText(f"Tax-relevant income: ${tax_income:,.2f}")
         self._summary_tax_expenses_label.setText(f"Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}")
+
+    def _on_export_business_report(self) -> None:
+        """Composes a real PDF from core.business_report.build_business_
+        report_html() — fetches plain data from context.budget/
+        context.real_estate here, keeping the composition function
+        itself pure and Qt-free. Reuses the Summary tab's own already-
+        selected range rather than a second, redundant date picker."""
+        start, end = self._summary_start_date, self._summary_end_date
+        range_label = self._summary_range_label.text()
+        budget = self.context.budget
+        real_estate = self.context.real_estate
+
+        # Budget Targets vs. Actual only makes honest sense for "This
+        # Month" — BudgetTarget.monthly_amount has no yearly-aggregation
+        # concept (see its own docstring in core/budget_manager.py).
+        budget_targets = budget.all_budget_targets() if range_label == "This Month" else []
+
+        properties = []
+        for prop in real_estate.all_properties():
+            properties.append({
+                "name": prop.name,
+                "type": prop.property_type,
+                "current_value": prop.current_value,
+                "mortgage_balance": prop.mortgage_balance,
+                "equity": property_equity(prop),
+                "noi": real_estate.net_operating_income(prop.property_id, start, end),
+                "cap_rate": real_estate.cap_rate(prop.property_id, start, end),
+            })
+
+        html = build_business_report_html(
+            range_label=range_label,
+            start_date=start,
+            end_date=end,
+            income_total=budget.total_income(start, end),
+            expenses_total=budget.total_expenses(start, end),
+            tax_income_total=budget.total_income(start, end, tax_relevant_only=True),
+            tax_expenses_total=budget.total_expenses(start, end, tax_relevant_only=True),
+            income_by_category=budget.total_income_by_category(start, end),
+            expenses_by_category=budget.total_expenses_by_category(start, end),
+            budget_targets=budget_targets,
+            actual_by_category=budget.total_expenses_by_category(start, end),
+            properties=properties,
+            generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+        )
+
+        suggested_name = f"Business_Report_{datetime.now():%Y-%m-%d}.pdf"
+        file_path, _ = QFileDialog.getSaveFileName(None, "Export Business Report", suggested_name, "PDF files (*.pdf)")
+        if not file_path:
+            return
+        if not file_path.lower().endswith(".pdf"):
+            file_path += ".pdf"
+
+        try:
+            document = QTextDocument()
+            document.setHtml(html)
+
+            printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+            printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+            printer.setOutputFileName(file_path)
+            printer.setPageSize(QPageSize(QPageSize.PageSizeId.Letter))
+            printer.setPageMargins(QMarginsF(15, 15, 15, 15), QPageLayout.Unit.Millimeter)
+            document.print_(printer)
+        except Exception as exc:  # noqa: BLE001 — surface any real rendering/write error to the user
+            QMessageBox.warning(None, "Export Failed", f"Could not export the report: {exc}")
+            return
+
+        QMessageBox.information(None, "Business Report Exported", f"Saved to {file_path}")
 
     # ------------------------------------------------------------------
     # Bank Sync tab — GUI half of core/plaid_manager.py, see that
