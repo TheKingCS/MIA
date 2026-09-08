@@ -51,6 +51,7 @@ import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
 import core.ledger_manager as ledger_manager_module
 import core.budget_manager as budget_manager_module
+import core.real_estate_manager as real_estate_manager_module
 import core.maintenance_manager as maintenance_manager_module
 import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
@@ -92,6 +93,8 @@ budget_manager_module._DATA_DIR = _TEMP_DATA_DIR
 budget_manager_module._BILLS_FILE = _TEMP_DATA_DIR / "bills.json"
 budget_manager_module._INCOME_FILE = _TEMP_DATA_DIR / "income.json"
 budget_manager_module._EXPENSES_FILE = _TEMP_DATA_DIR / "budget_expenses.json"
+real_estate_manager_module._DATA_DIR = _TEMP_DATA_DIR
+real_estate_manager_module._PROPERTIES_FILE = _TEMP_DATA_DIR / "properties.json"
 data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
 data_logger_manager_module._READINGS_FILE = _TEMP_DATA_DIR / "data_logger_readings.json"
 component_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -139,6 +142,7 @@ from core.job_manager import JobManager
 from core.journal_manager import JournalManager
 from core.ledger_manager import LedgerManager
 from core.budget_manager import BudgetManager
+from core.real_estate_manager import RealEstateManager
 from core.maintenance_manager import MaintenanceManager
 from core.llm_manager import LLMManager
 from core.material_manager import MaterialManager
@@ -455,6 +459,33 @@ GOLDEN_CASES = [
         "Can you bill me for that later, just kidding",
         "safe",
     ),
+    # --- 2026-09-08: Real Estate (property portfolio) — same planning
+    # session as Property/Budget. Real collision risk tested explicitly:
+    # record_rental_income shares "rental income" vocabulary with
+    # Budget's own add_income; both legitimately attach on ambiguous
+    # phrasing, disambiguated by description (a specific tracked
+    # property vs. plain household income) — same pattern proven for
+    # every other real collision this session.
+    ("add a property", "Add a rental property called 123 Main St", "add_property"),
+    ("list properties", "What properties do I have?", "list_properties"),
+    (
+        "known accepted trade-off: 'rental income' + a named property still sometimes resolves to plain "
+        "add_income instead of record_rental_income (see that action's own registration comment — three "
+        "description phrasings tried, none fully fixed this direction, non-destructive either way)",
+        "Record rental income of $1800 for 123 Main St",
+        "safe",
+    ),
+    (
+        "collision risk: same shared 'rental income' phrasing, but no specific property named — must pick plain add_income",
+        "Record $1500 of rental income",
+        "add_income",
+    ),
+    ("property summary", "How is my 123 Main St property doing?", "get_property_summary"),
+    (
+        "false-positive sanity: ordinary use of 'property' unrelated to Real Estate",
+        "That's a really useful property of this material",
+        None,
+    ),
 ]
 
 
@@ -485,6 +516,7 @@ def _build_context() -> AppContext:
     context.calendar = CalendarManager(context)
     context.maintenance = MaintenanceManager(context)
     context.budget = BudgetManager(context)
+    context.real_estate = RealEstateManager(context)
     context.data_logger = DataLoggerManager(context)
     context.components = ComponentManager(context)
     context.scripts = ScriptLibraryManager(context)
@@ -541,6 +573,8 @@ def _seed_fixtures(context: AppContext) -> None:
     context.data_logger.add_reading(series_id="Soil Moisture", value=42.0, unit="%", note="raised bed 1")
     context.budget.add_bill(name="Electric", amount=120.0, due_date="2026-08-01", category="Utilities", recurrence="monthly")
     context.budget.add_income(amount=3000.0, category="Salary", date="2026-08-01")
+    rental_property = context.real_estate.add_property(name="123 Main St", property_type="Rental", current_value=280000.0, mortgage_balance=150000.0)
+    context.real_estate.record_rental_income(rental_property.property_id, amount=1800.0, date_str="2026-08-01")
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
     context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
     context.profiles.create_profile(name="Zac", make_active=True)

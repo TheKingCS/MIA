@@ -82,7 +82,7 @@ from core.port_scanner import scan_ports
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
-from core.real_estate_manager import RealEstateManager
+from core.real_estate_manager import Property, RealEstateManager, equity as property_equity
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.subnet_calculator import calculate_subnet
@@ -2340,7 +2340,10 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_income",
             domain="budget",
-            description="Record a household income entry in MIA (salary, rental income, etc.) — NOT a Workshop sale, use record_sale for that.",
+            description=(
+                "When no specific property/address is mentioned, record general household income in MIA — "
+                "salary, investment income, or rental income. A Workshop business sale uses record_sale instead."
+            ),
             parameters={
                 "type": "object",
                 "properties": {
@@ -2396,6 +2399,92 @@ class MIAApplication:
             trigger_phrases=(
                 "budget summary", "how much have i spent", "how much did i make", "net cash flow",
                 "my cash flow", "how much income", "tax summary",
+            ),
+        ))
+        # --- Real Estate (property portfolio) — 2026-09-08, same
+        # planning session as Property/Budget. record_rental_income
+        # deliberately shares "rental income" vocabulary with Budget's
+        # own add_income (both legitimately attach; disambiguated by
+        # description — a property-scoped entry vs. a plain household
+        # one — same collision-resolution pattern proven all session).
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_property",
+            domain="real_estate",
+            description="Add a new real estate property to MIA's portfolio (value, mortgage balance, purchase info).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name, e.g. '123 Main St', 'Lake Cabin'."},
+                    "property_type": {"type": "string", "description": "One of: Primary Residence, Rental, Investment, Land, Other. Defaults to 'Rental'."},
+                    "current_value": {"type": "number", "description": "Optional current estimated value in dollars."},
+                    "mortgage_balance": {"type": "number", "description": "Optional current mortgage balance in dollars."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_property,
+            trigger_phrases=("add a property", "new property", "add a rental property", "track a property", "add my house"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_properties",
+            domain="real_estate",
+            description="List every property in MIA's real estate portfolio with its equity (value minus mortgage).",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_properties,
+            trigger_phrases=("list my properties", "what properties do i have", "show my properties", "my property portfolio"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="record_rental_income",
+            domain="real_estate",
+            # Known, accepted live-model limitation (llama3.2): "Record
+            # rental income of $1800 for 123 Main St" — a named property
+            # right in the sentence — still sometimes resolves to
+            # add_income instead of this one. Tried three description
+            # phrasings (negation-based, positive-only, condition-first,
+            # this one) — the negation attempt actively regressed to
+            # zero tool calls on unrelated cases, so it was reverted;
+            # none of the three fully fixed this specific direction.
+            # Non-destructive, low-impact when it happens (the income is
+            # still recorded, just as a plain Budget entry instead of
+            # linked to the property via property_id) — accepted rather
+            # than chased further, same trade-off class as this
+            # registry's "log " reversion.
+            description=(
+                "When a specific property/address (e.g. '123 Main St') is mentioned, record rental income "
+                "for it in MIA's real estate portfolio by that property's name."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "property_name": {"type": "string", "description": "The exact name of the existing property."},
+                    "amount": {"type": "number", "description": "The rental income amount in dollars."},
+                    "date": {"type": "string", "description": "Optional date in YYYY-MM-DD format. Defaults to today."},
+                },
+                "required": ["property_name", "amount"],
+            },
+            handler=self._action_record_rental_income,
+            trigger_phrases=("record rental income for", "got rent for", "received rent for", "rent payment for"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_property_summary",
+            domain="real_estate",
+            description="Get net operating income, cap rate, and equity for one property in MIA's real estate portfolio, by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "property_name": {"type": "string", "description": "The exact name of the existing property."},
+                },
+                "required": ["property_name"],
+            },
+            handler=self._action_get_property_summary,
+            # The property's own name sits between "my" and "property"
+            # in real phrasing ("How is my 123 Main St property
+            # doing?") — same name-before-noun gap as every other
+            # trigger-phrase fix this session. "property doing" alone
+            # (not the fuller "how is my property doing") survives that
+            # insertion without resorting to a riskier bare "how is my".
+            trigger_phrases=(
+                "property summary", "how is my property doing", "cap rate for", "how much equity",
+                "property doing",
             ),
         ))
 
@@ -3700,6 +3789,75 @@ class MIAApplication:
         return (
             f"Income: ${income:,.2f}. Expenses: ${expenses:,.2f}. Net: ${income - expenses:,.2f}. "
             f"Tax-relevant income: ${tax_income:,.2f}. Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}."
+        )
+
+    # ------------------------------------------------------------------
+    # Real Estate actions
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _resolve_property(context: AppContext, name: str) -> tuple[Optional[Property], Optional[str]]:
+        """Exact case-insensitive name match — never fuzzy, same
+        fail-closed discipline as every other name-resolution action
+        this session."""
+        match = next((p for p in context.real_estate.all_properties() if p.name.lower() == name.lower()), None)
+        if match is None:
+            return None, f"I don't have a property called '{name}'."
+        return match, None
+
+    @staticmethod
+    def _action_add_property(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a property."
+        property_type = str(arguments.get("property_type", "") or "Rental").strip()
+        current_value = arguments.get("current_value")
+        mortgage_balance = arguments.get("mortgage_balance")
+        prop = context.real_estate.add_property(
+            name=name,
+            property_type=property_type,
+            current_value=float(current_value) if current_value not in (None, "") else 0.0,
+            mortgage_balance=float(mortgage_balance) if mortgage_balance not in (None, "") else 0.0,
+        )
+        return f"Property '{prop.name}' added ({prop.property_type})."
+
+    @staticmethod
+    def _action_list_properties(context: AppContext, arguments: dict) -> str:
+        properties = context.real_estate.all_properties()
+        if not properties:
+            return "You have no properties tracked."
+        lines = [f"- {p.name} ({p.property_type}): ${property_equity(p):,.2f} equity" for p in properties]
+        return "Your properties:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_record_rental_income(context: AppContext, arguments: dict) -> str:
+        property_name = str(arguments.get("property_name", "")).strip()
+        if not property_name:
+            return "I need a property name to record rental income."
+        amount = arguments.get("amount")
+        if amount is None:
+            return "I need an amount to record rental income."
+        prop, error = MIAApplication._resolve_property(context, property_name)
+        if error:
+            return error
+        date_str = str(arguments.get("date", "") or "").strip() or None
+        entry = context.real_estate.record_rental_income(prop.property_id, amount=float(amount), date_str=date_str)
+        return f"Recorded ${entry.amount:.2f} rental income for '{prop.name}'."
+
+    @staticmethod
+    def _action_get_property_summary(context: AppContext, arguments: dict) -> str:
+        property_name = str(arguments.get("property_name", "")).strip()
+        if not property_name:
+            return "I need a property name."
+        prop, error = MIAApplication._resolve_property(context, property_name)
+        if error:
+            return error
+        noi = context.real_estate.net_operating_income(prop.property_id)
+        cap_rate = context.real_estate.cap_rate(prop.property_id)
+        cap_rate_text = f"{cap_rate * 100:.2f}%" if cap_rate is not None else "n/a (no current value set)"
+        return (
+            f"'{prop.name}': equity ${property_equity(prop):,.2f}, "
+            f"net operating income ${noi:,.2f}, cap rate {cap_rate_text}."
         )
 
     def _search_modules(self, query: str) -> list[SearchResult]:
