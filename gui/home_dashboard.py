@@ -128,6 +128,7 @@ from core.assistant_chat import (
 from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
 from core.budget_manager import Bill, days_until_bill_due
+from core.real_estate_manager import Property, equity as property_equity
 from core.daily_occasions import calendar_events_today
 from core.dashboard_widgets import WidgetDescriptor
 from core.finance_manager import FinancialSnapshot
@@ -419,6 +420,18 @@ def format_budget_line(bills: list[Bill], today: date) -> str:
     return "All bills paid"
 
 
+def format_property_portfolio_line(properties: list[Property]) -> str:
+    """Pure formatting logic — testable without Qt. Total equity across
+    every tracked property — the one number that answers "how's the
+    portfolio doing" at a glance; per-property/cap-rate detail lives in
+    the module itself, not squeezed into a dashboard card."""
+    if not properties:
+        return "No properties tracked yet."
+    total_equity = sum(property_equity(p) for p in properties)
+    noun = "property" if len(properties) == 1 else "properties"
+    return f"{len(properties)} {noun}  —  ${total_equity:,.0f} total equity"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -452,6 +465,7 @@ class HomeDashboard(QFrame):
             "homestead": self._build_homestead_widget,
             "maintenance": self._build_maintenance_widget,
             "budget": self._build_budget_widget,
+            "property_portfolio": self._build_property_portfolio_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -793,6 +807,15 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("budget"),
         )
         self._widget_bodies["budget"] = body
+        return card
+
+    def _build_property_portfolio_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("real_estate"),
+        )
+        self._widget_bodies["property_portfolio"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1466,10 +1489,16 @@ class HomeDashboard(QFrame):
             self._refresh_maintenance()
         if "budget" in self._widget_bodies:
             self._refresh_budget()
+        if "property_portfolio" in self._widget_bodies:
+            self._refresh_property_portfolio()
 
     def _refresh_budget(self) -> None:
         bills = self.context.budget.all_bills() if self.context.budget else []
         self._set_widget_body_text("budget", format_budget_line(bills, date.today()))
+
+    def _refresh_property_portfolio(self) -> None:
+        properties = self.context.real_estate.all_properties() if self.context.real_estate else []
+        self._set_widget_body_text("property_portfolio", format_property_portfolio_line(properties))
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None

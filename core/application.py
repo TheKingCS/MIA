@@ -532,6 +532,13 @@ class MIAApplication:
         # degrades to "All caught up" until a real asset/task is added.
         self.context.dashboard_widgets.register(WidgetDescriptor("maintenance", "Maintenance", "\U0001F527"))
         self.context.dashboard_widgets.register(WidgetDescriptor("budget", "Budget", "\U0001F4B0"))
+        # "real_estate" is already taken by the pre-existing Kraken-style
+        # external ingestion widget (core.finance_manager's snapshot
+        # import) — "property_portfolio" is this session's NEW native
+        # module (modules/real_estate/module.py), deliberately named/
+        # labeled to avoid two same-named "Real Estate" cards confusing
+        # which is which.
+        self.context.dashboard_widgets.register(WidgetDescriptor("property_portfolio", "My Properties", "\U0001F3D8"))
 
     def _register_assistant_actions(self) -> None:
         """

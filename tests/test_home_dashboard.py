@@ -15,6 +15,7 @@ from datetime import date, datetime
 
 from core.activity_log_manager import ActivityLogEntry
 from core.budget_manager import Bill
+from core.real_estate_manager import Property
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
 from core.data_logger_manager import Reading
@@ -29,6 +30,7 @@ from gui.home_dashboard import (
     format_clock_date,
     format_clock_time,
     format_budget_line,
+    format_property_portfolio_line,
     format_current_project_line,
     format_homestead_line,
     format_kraken_line,
@@ -351,3 +353,15 @@ def test_format_budget_line_overdue():
 def test_format_budget_line_due_soon():
     bills = [_bill(due_date="2026-09-10")]
     assert format_budget_line(bills, date(2026, 9, 7)) == "1 bill due within 7 days"
+
+
+def test_format_property_portfolio_line_no_properties():
+    assert format_property_portfolio_line([]) == "No properties tracked yet."
+
+
+def test_format_property_portfolio_line_sums_equity_across_properties():
+    properties = [
+        Property(property_id="p1", name="123 Main St", current_value=280000.0, mortgage_balance=150000.0),
+        Property(property_id="p2", name="456 Oak Ave", current_value=200000.0, mortgage_balance=200000.0),
+    ]
+    assert format_property_portfolio_line(properties) == "2 properties  —  $130,000 total equity"
