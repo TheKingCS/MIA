@@ -2,11 +2,12 @@
 modules.budget.module
 ========================
 
-Budget: household bills, income, and expenses. Five tabs (Bills,
-Income, Expenses, Summary, Bank Sync) — same `QTabWidget` multi-
-feature-in-one-module shape as modules/maintenance/module.py and
-modules/workshop/module.py, since these are closely-related views
-over one connected data set rather than separate top-level modules.
+Budget: household bills, income, expenses, and expected/recurring
+income. Six tabs (Bills, Income Sources, Income, Expenses, Summary,
+Bank Sync) — same `QTabWidget` multi-feature-in-one-module shape as
+modules/maintenance/module.py and modules/workshop/module.py, since
+these are closely-related views over one connected data set rather
+than separate top-level modules.
 
 All persistence/recurrence/reporting logic lives in
 core/budget_manager.py (self.context.budget) — this module is the
@@ -18,7 +19,13 @@ opens gui/mark_bill_paid_dialog.py, then calls
 self.context.budget.mark_bill_paid(...), which both records a real
 Expense entry AND advances the bill's own due date — one click, two
 real effects, same shape as Maintenance's "Mark Complete" for a meter
-task.
+task. The Income Sources tab's "Mark Received" action mirrors this
+exactly via mark_income_received().
+
+The Summary tab's Budget Targets section is the GUI half of the
+proactive nudges feature (core/budget_nudges.py) — it's the same
+planned-vs-actual comparison the daily nudge checks, made visible and
+editable on demand rather than only surfaced as a notification.
 
 The Bank Sync tab is the GUI half of core/plaid_manager.py — see that
 module's own docstring for the full "why Hosted Link + browser +
@@ -37,6 +44,9 @@ from typing import Optional
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
+    QDoubleSpinBox,
+    QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -49,13 +59,23 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.budget_manager import Bill, ExpenseEntry, IncomeEntry, days_until_bill_due
+from core.budget_manager import (
+    Bill,
+    EXPENSE_CATEGORIES,
+    ExpenseEntry,
+    IncomeEntry,
+    IncomeSource,
+    days_until_bill_due,
+    days_until_income_due,
+)
 from core.search_manager import SearchResult
 from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_income_dialog import AddEditIncomeDialog
+from gui.add_edit_income_source_dialog import AddEditIncomeSourceDialog
 from gui.mark_bill_paid_dialog import MarkBillPaidDialog
+from gui.mark_income_received_dialog import MarkIncomeReceivedDialog
 from gui.password_dialog import PasswordPromptDialog
 from gui.plaid_connect_progress_dialog import PlaidConnectProgressDialog
 from gui.plaid_setup_dialog import PlaidSetupDialog
@@ -74,6 +94,20 @@ def format_bill_row(bill: Bill, today: date) -> str:
     else:
         status = f"[DUE IN {remaining}d]"
     return f"{status}  {bill.name}   ${bill.amount:.2f}  [{bill.category}]"
+
+
+def format_income_source_row(source: IncomeSource, today: date) -> str:
+    """Pure formatting logic — testable without Qt (see tests/test_budget_module.py)."""
+    remaining = days_until_income_due(source, today)
+    if remaining is None:
+        status = "[NO SCHEDULE]"
+    elif remaining < 0:
+        status = f"[OVERDUE {-remaining}d]"
+    elif remaining == 0:
+        status = "[DUE TODAY]"
+    else:
+        status = f"[DUE IN {remaining}d]"
+    return f"{status}  {source.name}   ${source.expected_amount:.2f}  [{source.category}]"
 
 
 def format_income_row(entry: IncomeEntry) -> str:
@@ -98,6 +132,8 @@ class BudgetModule(ModuleBase):
         super().__init__(context)
         self._bill_filter_edit: Optional[QLineEdit] = None
         self._bill_list: Optional[QListWidget] = None
+        self._income_source_filter_edit: Optional[QLineEdit] = None
+        self._income_source_list: Optional[QListWidget] = None
         self._income_list: Optional[QListWidget] = None
         self._expense_list: Optional[QListWidget] = None
         self._summary_range_label: Optional[QLabel] = None
@@ -108,6 +144,8 @@ class BudgetModule(ModuleBase):
         self._summary_tax_expenses_label: Optional[QLabel] = None
         self._summary_start_date: Optional[str] = None
         self._summary_end_date: Optional[str] = None
+        self._budget_target_spins: dict[str, QDoubleSpinBox] = {}
+        self._budget_target_actual_labels: dict[str, QLabel] = {}
 
         self._plaid_status_label: Optional[QLabel] = None
         self._plaid_accounts_list: Optional[QListWidget] = None
@@ -136,6 +174,7 @@ class BudgetModule(ModuleBase):
 
         tabs = QTabWidget()
         tabs.addTab(self._build_bills_tab(), "Bills")
+        tabs.addTab(self._build_income_sources_tab(), "Income Sources")
         tabs.addTab(self._build_income_tab(), "Income")
         tabs.addTab(self._build_expenses_tab(), "Expenses")
         tabs.addTab(self._build_summary_tab(), "Summary")
@@ -275,6 +314,140 @@ class BudgetModule(ModuleBase):
 
         self.context.budget.delete_bill(bill_id)
         self._refresh_bill_list()
+
+    # ------------------------------------------------------------------
+    # Income Sources tab — expected/recurring income (paychecks, rental
+    # income), same shape as the Bills tab above. Distinct from the
+    # Income tab below, which is real received income entries.
+    # ------------------------------------------------------------------
+
+    def _build_income_sources_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        self._income_source_filter_edit = QLineEdit()
+        self._income_source_filter_edit.setPlaceholderText("Filter by name or category…")
+        self._income_source_filter_edit.textChanged.connect(lambda _text: self._refresh_income_source_list())
+        layout.addWidget(self._income_source_filter_edit)
+
+        self._income_source_list = QListWidget()
+        layout.addWidget(self._income_source_list, stretch=1)
+
+        button_row = QHBoxLayout()
+        add_button = QPushButton("Add Income Source")
+        add_button.clicked.connect(self._on_add_income_source)
+        button_row.addWidget(add_button)
+
+        edit_button = QPushButton("Edit Selected")
+        edit_button.clicked.connect(self._on_edit_income_source)
+        button_row.addWidget(edit_button)
+
+        received_button = QPushButton("Mark Received")
+        received_button.clicked.connect(self._on_mark_income_received)
+        button_row.addWidget(received_button)
+
+        delete_button = QPushButton("Delete Selected")
+        delete_button.clicked.connect(self._on_delete_income_source)
+        button_row.addWidget(delete_button)
+
+        layout.addLayout(button_row)
+
+        self._refresh_income_source_list()
+        return tab
+
+    def _refresh_income_source_list(self) -> None:
+        query = self._income_source_filter_edit.text().strip().lower()
+        today = date.today()
+        sources = self.context.budget.all_income_sources()
+
+        self._income_source_list.clear()
+        for source in sources:
+            if query and query not in source.name.lower() and query not in source.category.lower():
+                continue
+            row_text = format_income_source_row(source, today)
+            item = QListWidgetItem(row_text)
+            item.setData(Qt.ItemDataRole.UserRole, source.source_id)
+            self._income_source_list.addItem(item)
+
+    def _selected_income_source_id(self) -> Optional[str]:
+        item = self._income_source_list.currentItem()
+        if item is None:
+            return None
+        return item.data(Qt.ItemDataRole.UserRole)
+
+    def _on_add_income_source(self) -> None:
+        dialog = AddEditIncomeSourceDialog()
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.budget.add_income_source(
+            name=dialog.entered_name,
+            expected_amount=dialog.entered_amount,
+            next_date=dialog.entered_next_date,
+            category=dialog.entered_category,
+            recurrence=dialog.entered_recurrence,
+            notes=dialog.entered_notes,
+        )
+        self._refresh_income_source_list()
+
+    def _on_edit_income_source(self) -> None:
+        source_id = self._selected_income_source_id()
+        if source_id is None:
+            QMessageBox.information(None, "No Income Source Selected", "Select an income source to edit.")
+            return
+
+        source = self.context.budget.get_income_source(source_id)
+        dialog = AddEditIncomeSourceDialog(income_source=source)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.budget.update_income_source(
+            source_id,
+            name=dialog.entered_name,
+            expected_amount=dialog.entered_amount,
+            next_date=dialog.entered_next_date,
+            category=dialog.entered_category,
+            recurrence=dialog.entered_recurrence,
+            notes=dialog.entered_notes,
+        )
+        self._refresh_income_source_list()
+
+    def _on_mark_income_received(self) -> None:
+        source_id = self._selected_income_source_id()
+        if source_id is None:
+            QMessageBox.information(None, "No Income Source Selected", "Select an income source to mark received.")
+            return
+
+        source = self.context.budget.get_income_source(source_id)
+        dialog = MarkIncomeReceivedDialog(default_amount=source.expected_amount)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.budget.mark_income_received(
+            source_id, received_date=dialog.entered_received_date, amount=dialog.entered_amount
+        )
+        self._refresh_income_source_list()
+        self._refresh_income_list()
+
+    def _on_delete_income_source(self) -> None:
+        source_id = self._selected_income_source_id()
+        if source_id is None:
+            QMessageBox.information(None, "No Income Source Selected", "Select an income source to delete.")
+            return
+
+        source = self.context.budget.get_income_source(source_id)
+        confirm = QMessageBox.question(
+            None,
+            "Delete Income Source",
+            f"Delete '{source.name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        self.context.budget.delete_income_source(source_id)
+        self._refresh_income_source_list()
 
     # ------------------------------------------------------------------
     # Income tab
@@ -512,10 +685,52 @@ class BudgetModule(ModuleBase):
         self._summary_tax_expenses_label = QLabel()
         layout.addWidget(self._summary_tax_expenses_label)
 
+        layout.addWidget(self._build_budget_targets_group())
         layout.addStretch(1)
 
         self._on_summary_this_month()
         return tab
+
+    def _build_budget_targets_group(self) -> QGroupBox:
+        """One row per EXPENSE_CATEGORIES entry: an editable planned
+        monthly amount alongside this month's actual spend, reusing
+        total_expenses_by_category() for the "actual" side. Same
+        planned-vs-actual comparison core/budget_nudges.py's daily
+        check makes — this is the on-demand, editable view of it."""
+        group = QGroupBox("Budget Targets (this month)")
+        form = QFormLayout(group)
+
+        targets_by_category = {t.category: t.monthly_amount for t in self.context.budget.all_budget_targets()}
+        today = date.today()
+        actual_by_category = self.context.budget.total_expenses_by_category(today.replace(day=1).isoformat(), None)
+
+        self._budget_target_spins = {}
+        self._budget_target_actual_labels = {}
+        for category in EXPENSE_CATEGORIES:
+            spin = QDoubleSpinBox()
+            spin.setRange(0.0, 1_000_000.0)
+            spin.setDecimals(2)
+            spin.setValue(targets_by_category.get(category, 0.0))
+            spin.editingFinished.connect(lambda cat=category: self._on_budget_target_changed(cat))
+            self._budget_target_spins[category] = spin
+
+            actual_label = QLabel(f"actual: ${actual_by_category.get(category, 0.0):,.2f}")
+            actual_label.setObjectName("SubtitleLabel")
+            self._budget_target_actual_labels[category] = actual_label
+
+            row = QHBoxLayout()
+            row.addWidget(spin)
+            row.addWidget(actual_label)
+            form.addRow(f"{category}:", row)
+
+        return group
+
+    def _on_budget_target_changed(self, category: str) -> None:
+        amount = self._budget_target_spins[category].value()
+        if amount <= 0.0:
+            self.context.budget.delete_budget_target(category)
+        else:
+            self.context.budget.set_budget_target(category, amount)
 
     def _on_summary_this_month(self) -> None:
         today = date.today()

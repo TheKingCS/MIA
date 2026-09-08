@@ -93,6 +93,8 @@ budget_manager_module._DATA_DIR = _TEMP_DATA_DIR
 budget_manager_module._BILLS_FILE = _TEMP_DATA_DIR / "bills.json"
 budget_manager_module._INCOME_FILE = _TEMP_DATA_DIR / "income.json"
 budget_manager_module._EXPENSES_FILE = _TEMP_DATA_DIR / "budget_expenses.json"
+budget_manager_module._INCOME_SOURCES_FILE = _TEMP_DATA_DIR / "income_sources.json"
+budget_manager_module._BUDGET_TARGETS_FILE = _TEMP_DATA_DIR / "budget_targets.json"
 real_estate_manager_module._DATA_DIR = _TEMP_DATA_DIR
 real_estate_manager_module._PROPERTIES_FILE = _TEMP_DATA_DIR / "properties.json"
 data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -459,6 +461,35 @@ GOLDEN_CASES = [
         "Can you bill me for that later, just kidding",
         "safe",
     ),
+    # --- 2026-09-08: Proactive nudges follow-up — expected/recurring
+    # income (IncomeSource) vs. a one-off add_income entry vs. a
+    # recurring-obligation add_bill. All three share "recurring thing
+    # with an amount and a schedule" surface phrasing, so this is a
+    # real three-way collision risk tested explicitly, same discipline
+    # as the add_bill/add_maintenance_task collision above.
+    (
+        "collision risk: recurring EXPECTED income vs. add_bill (an obligation) — must pick add_income_source",
+        "Add my paycheck as an income source — $2400 every two weeks starting 2026-09-08",
+        "add_income_source",
+    ),
+    (
+        "collision risk: recurring expected income vs. a one-off add_income — must pick add_income_source",
+        "Track my rental income of $1500 a month starting 2026-09-01",
+        "add_income_source",
+    ),
+    (
+        "collision risk: income ALREADY received right now vs. add_income_source — must pick add_income",
+        "I got paid $3000 today",
+        "add_income",
+    ),
+    ("mark income source received", "My paycheck came in", "mark_income_received"),
+    ("financial check-in", "How are we doing financially?", "get_financial_checkin"),
+    ("financial check-in phrasing 2", "Are we on budget this month?", "get_financial_checkin"),
+    (
+        "false-positive sanity: 'paycheck' mentioned without any add/track/received intent",
+        "What's a good way to budget my paycheck?",
+        None,
+    ),
     # --- 2026-09-08: Real Estate (property portfolio) — same planning
     # session as Property/Budget. Real collision risk tested explicitly:
     # record_rental_income shares "rental income" vocabulary with
@@ -573,6 +604,7 @@ def _seed_fixtures(context: AppContext) -> None:
     context.data_logger.add_reading(series_id="Soil Moisture", value=42.0, unit="%", note="raised bed 1")
     context.budget.add_bill(name="Electric", amount=120.0, due_date="2026-08-01", category="Utilities", recurrence="monthly")
     context.budget.add_income(amount=3000.0, category="Salary", date="2026-08-01")
+    context.budget.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-08-15", category="Salary", recurrence="biweekly")
     rental_property = context.real_estate.add_property(name="123 Main St", property_type="Rental", current_value=280000.0, mortgage_balance=150000.0)
     context.real_estate.record_rental_income(rental_property.property_id, amount=1800.0, date_str="2026-08-01")
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
