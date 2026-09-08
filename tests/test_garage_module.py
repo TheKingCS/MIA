@@ -10,9 +10,13 @@ from __future__ import annotations
 
 from datetime import date
 
+from core.app_context import AppContext
+from core.config_manager import ConfigManager
 from core.data_logger_manager import Reading
+from core.event_bus import EventBus
 from core.maintenance_manager import MaintenanceAsset, MaintenanceTask
 from modules.garage.module import (
+    GarageModule,
     format_attention_line,
     format_glance_next_up,
     format_task_status_line,
@@ -152,3 +156,20 @@ def test_format_glance_next_up_single_item_names_it():
 
 def test_format_glance_next_up_multiple_items_shows_count():
     assert format_glance_next_up(3, _calendar_task()) == "3 items"
+
+
+# ------------------------------------------------------------------
+# Click-through navigation — no Qt widget needed, same "call the
+# handler directly" approach as tests/test_field_kit_module.py's
+# open_module_requested checks.
+# ------------------------------------------------------------------
+
+def test_manage_in_maintenance_publishes_open_module_event():
+    context = AppContext(config=ConfigManager(), events=EventBus())
+    navigated_to = []
+    context.events.subscribe("assistant.open_module_requested", lambda module_id: navigated_to.append(module_id))
+
+    module = GarageModule(context)
+    module._on_manage_in_maintenance()
+
+    assert navigated_to == ["maintenance"]

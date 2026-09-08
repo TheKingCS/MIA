@@ -10,6 +10,15 @@ view over core.maintenance_manager (self.context.maintenance) — same
 managing an asset or task still happens in Maintenance, this just
 answers "how's the truck doing" faster.
 
+A "Manage in Maintenance" button navigates there via the existing
+"assistant.open_module_requested" event (gui/main_window.py already
+subscribes to it — same mechanism gui/home_dashboard.py's cards and
+modules/field_kit/module.py's docked-Core auto-navigate use). This is
+module-level navigation only, not a deep link to a specific asset/task
+— no module in this codebase has ever supported "open X pre-selected on
+record Y," so this doesn't invent that here either; a real limitation,
+not silently glossed over.
+
 Filtered to GARAGE_CATEGORIES (Vehicle, Power Equipment) — the "cars and
 motorized things" the user asked this view to cover, not every
 maintenance category (Appliance/Property/Tool stay in the general
@@ -46,7 +55,7 @@ from datetime import date
 from typing import Optional
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
 from core.data_logger_manager import Reading
 from core.maintenance_manager import (
@@ -178,6 +187,10 @@ class GarageModule(ModuleBase):
         subtitle.setObjectName("SubtitleLabel")
         outer.addWidget(subtitle)
 
+        manage_button = QPushButton("Manage in Maintenance →")
+        manage_button.clicked.connect(self._on_manage_in_maintenance)
+        outer.addWidget(manage_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
         glance_row = QHBoxLayout()
         glance_row.setSpacing(24)
         self._tracked_value_label = self._build_glance_tile(glance_row, "Tracked")
@@ -198,6 +211,9 @@ class GarageModule(ModuleBase):
 
         self._refresh()
         return page
+
+    def _on_manage_in_maintenance(self) -> None:
+        self.context.events.publish("assistant.open_module_requested", module_id="maintenance")
 
     def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str) -> QLabel:
         tile = QVBoxLayout()
