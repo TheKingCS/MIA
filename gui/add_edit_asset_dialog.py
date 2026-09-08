@@ -55,7 +55,7 @@ class AddEditAssetDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Asset" if asset is not None else "New Asset")
-        self.setFixedSize(380, 560)
+        self.setFixedSize(380, 600)
         self._asset = asset
         self._maintenance = maintenance
 
@@ -108,6 +108,15 @@ class AddEditAssetDialog(QDialog):
         layout.addWidget(self.notes_edit)
 
         if asset is not None:
+            layout.addWidget(QLabel("Latest Usage:"))
+            self._usage_label = QLabel("")
+            self._usage_label.setWordWrap(True)
+            self._usage_label.setObjectName("SubtitleLabel")
+            layout.addWidget(self._usage_label)
+        else:
+            self._usage_label = None
+
+        if asset is not None:
             documents_title = QLabel("Documents (receipts, warranties, manuals):")
             layout.addWidget(documents_title)
 
@@ -140,6 +149,7 @@ class AddEditAssetDialog(QDialog):
         self._prefill(asset)
         if asset is not None:
             self._refresh_document_list()
+            self._refresh_usage_label()
 
         self._name: str = ""
         self._category: str = ASSET_CATEGORIES[0]
@@ -170,6 +180,27 @@ class AddEditAssetDialog(QDialog):
         self.purchase_date_edit.setDate(QDate.currentDate())
         self.purchase_date_edit.blockSignals(False)
         self._purchase_date_cleared = True
+
+    def _refresh_usage_label(self) -> None:
+        """Read-only glance at every meter this asset has logged usage
+        under (via modules/maintenance/module.py's "Log Usage…" action) —
+        not editable here, just a summary; logging happens on the Assets
+        tab, not inside this dialog."""
+        if self._usage_label is None or self._asset is None or self._maintenance is None:
+            return
+        names = self._maintenance.asset_meter_names(self._asset.asset_id)
+        if not names:
+            self._usage_label.setText("No usage logged yet.")
+            return
+        parts = []
+        for name in names:
+            readings = self._maintenance.asset_readings(self._asset.asset_id, name)
+            if not readings:
+                continue
+            latest = readings[-1]
+            unit = f" {latest.unit}" if latest.unit else ""
+            parts.append(f"{name}: {latest.value:g}{unit} ({latest.timestamp[:10]})")
+        self._usage_label.setText("  ·  ".join(parts) if parts else "No usage logged yet.")
 
     def _refresh_document_list(self) -> None:
         self._document_list.clear()

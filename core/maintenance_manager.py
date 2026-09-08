@@ -608,6 +608,40 @@ class MaintenanceManager:
         return self.context.data_logger.readings_for(task.series_id)
 
     # ------------------------------------------------------------------
+    # Asset-level usage stats (fuel consumption, general odometer/hours
+    # tracking, ...) — independent of any maintenance task's due-date
+    # calculation. Named freely by the user (e.g. "Fuel", "Odometer");
+    # same Data Logger series storage as task readings, just keyed by
+    # asset + meter name instead of by task_id, so "how much fuel does
+    # the mower use" is answerable even when no task is currently tied
+    # to a fuel-based recurrence.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _asset_series_id(asset_id: str, meter_name: str) -> str:
+        return f"maintenance_asset_{asset_id}_{meter_name}"
+
+    def log_asset_reading(self, asset_id: str, meter_name: str, value: float, unit: str = "", note: str = "") -> Reading:
+        if self.get_asset(asset_id) is None:
+            raise ValueError(f"No maintenance asset with id '{asset_id}'.")
+        return self.context.data_logger.add_reading(
+            series_id=self._asset_series_id(asset_id, meter_name), value=value, unit=unit, note=note
+        )
+
+    def asset_meter_names(self, asset_id: str) -> list[str]:
+        """Every meter name this asset has at least one logged reading
+        under, derived from Data Logger series ids rather than stored
+        separately — same "a series exists implicitly the moment it has
+        a reading" convention DataLoggerManager itself uses."""
+        prefix = self._asset_series_id(asset_id, "")
+        return sorted(
+            series_id[len(prefix):] for series_id in self.context.data_logger.list_series() if series_id.startswith(prefix)
+        )
+
+    def asset_readings(self, asset_id: str, meter_name: str) -> list[Reading]:
+        return self.context.data_logger.readings_for(self._asset_series_id(asset_id, meter_name))
+
+    # ------------------------------------------------------------------
     # Calendar integration
     # ------------------------------------------------------------------
 

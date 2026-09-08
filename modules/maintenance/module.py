@@ -54,6 +54,7 @@ from core.maintenance_manager import (
 from core.search_manager import SearchResult
 from gui.add_edit_asset_dialog import AddEditAssetDialog
 from gui.add_edit_maintenance_task_dialog import AddEditMaintenanceTaskDialog
+from gui.log_asset_reading_dialog import LogAssetReadingDialog
 from gui.log_reading_dialog import LogReadingDialog
 from gui.mark_complete_dialog import MarkCompleteDialog
 from gui.schedule_task_dialog import ScheduleTaskDialog
@@ -195,6 +196,10 @@ class MaintenanceModule(ModuleBase):
         edit_button.clicked.connect(self._on_edit_asset)
         button_row.addWidget(edit_button)
 
+        log_usage_button = QPushButton("Log Usage…")
+        log_usage_button.clicked.connect(self._on_log_asset_reading)
+        button_row.addWidget(log_usage_button)
+
         delete_button = QPushButton("Delete Selected")
         delete_button.clicked.connect(self._on_delete_asset)
         button_row.addWidget(delete_button)
@@ -284,6 +289,21 @@ class MaintenanceModule(ModuleBase):
         self.context.maintenance.delete_asset(asset_id)
         self._refresh_asset_list()
         self._refresh_task_list()
+
+    def _on_log_asset_reading(self) -> None:
+        asset_id = self._selected_asset_id()
+        if asset_id is None:
+            QMessageBox.information(None, "No Asset Selected", "Select an asset to log usage for.")
+            return
+
+        known_names = self.context.maintenance.asset_meter_names(asset_id)
+        dialog = LogAssetReadingDialog(known_meter_names=known_names)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.maintenance.log_asset_reading(
+            asset_id, dialog.entered_meter_name, dialog.entered_value, unit=dialog.entered_unit, note=dialog.entered_note
+        )
 
     # ------------------------------------------------------------------
     # Tasks tab
