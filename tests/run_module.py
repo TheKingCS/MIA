@@ -35,6 +35,7 @@ from core.alarm_manager import AlarmManager  # noqa: E402
 from core.app_context import AppContext  # noqa: E402
 from core.activity_log_manager import ActivityLogManager  # noqa: E402
 from core.budget_manager import BudgetManager  # noqa: E402
+from core.real_estate_manager import RealEstateManager  # noqa: E402
 from core.calendar_manager import CalendarManager  # noqa: E402
 from core.component_manager import ComponentManager  # noqa: E402
 from core.config_manager import ConfigManager  # noqa: E402
@@ -88,6 +89,7 @@ def main() -> int:
     context.journal = JournalManager(context)
     context.maintenance = MaintenanceManager(context)
     context.budget = BudgetManager(context)
+    context.real_estate = RealEstateManager(context)
     context.inventory = InventoryManager(context)
     context.data_logger = DataLoggerManager(context)
     context.components = ComponentManager(context)

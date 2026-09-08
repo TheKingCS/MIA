@@ -67,6 +67,7 @@ class IncomeEntry:
     description: str = ""
     date: str = ""  # ISO date — when the income was received
     tax_relevant: bool = True  # most income is taxable by default
+    property_id: str = ""  # set when this is rental income for a core.real_estate_manager.Property
     notes: str = ""
     created_at: str = ""  # ISO datetime — when this entry was recorded
 
@@ -74,7 +75,7 @@ class IncomeEntry:
         return {
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
-            "notes": self.notes, "created_at": self.created_at,
+            "property_id": self.property_id, "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -86,6 +87,7 @@ class IncomeEntry:
             description=data.get("description", ""),
             date=data.get("date", ""),
             tax_relevant=data.get("tax_relevant", True),
+            property_id=data.get("property_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -100,6 +102,7 @@ class ExpenseEntry:
     date: str = ""  # ISO date
     tax_relevant: bool = False  # most household expenses aren't deductible; user opts in
     bill_id: str = ""  # set when this entry came from BudgetManager.mark_bill_paid()
+    property_id: str = ""  # set when this is an expense for a core.real_estate_manager.Property
     notes: str = ""
     created_at: str = ""  # ISO datetime
 
@@ -107,7 +110,7 @@ class ExpenseEntry:
         return {
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
-            "bill_id": self.bill_id, "notes": self.notes, "created_at": self.created_at,
+            "bill_id": self.bill_id, "property_id": self.property_id, "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -120,6 +123,7 @@ class ExpenseEntry:
             date=data.get("date", ""),
             tax_relevant=data.get("tax_relevant", False),
             bill_id=data.get("bill_id", ""),
+            property_id=data.get("property_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -361,6 +365,7 @@ class BudgetManager:
         description: str = "",
         date: Optional[str] = None,
         tax_relevant: bool = True,
+        property_id: str = "",
         notes: str = "",
     ) -> IncomeEntry:
         entry = IncomeEntry(
@@ -370,6 +375,7 @@ class BudgetManager:
             description=description,
             date=date or _today_iso(),
             tax_relevant=tax_relevant,
+            property_id=property_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -420,6 +426,7 @@ class BudgetManager:
         date: Optional[str] = None,
         tax_relevant: bool = False,
         bill_id: str = "",
+        property_id: str = "",
         notes: str = "",
     ) -> ExpenseEntry:
         entry = ExpenseEntry(
@@ -430,6 +437,7 @@ class BudgetManager:
             date=date or _today_iso(),
             tax_relevant=tax_relevant,
             bill_id=bill_id,
+            property_id=property_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )

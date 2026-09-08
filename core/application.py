@@ -82,6 +82,7 @@ from core.port_scanner import scan_ports
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
+from core.real_estate_manager import RealEstateManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.script_library_manager import ScriptLibraryManager
 from core.subnet_calculator import calculate_subnet
@@ -222,6 +223,7 @@ class MIAApplication:
         self.context.homestead = HomesteadManager(self.context)
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.budget = BudgetManager(self.context)
+        self.context.real_estate = RealEstateManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
