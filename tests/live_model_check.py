@@ -50,6 +50,7 @@ import core.data_logger_manager as data_logger_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
 import core.ledger_manager as ledger_manager_module
+import core.budget_manager as budget_manager_module
 import core.maintenance_manager as maintenance_manager_module
 import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
@@ -87,6 +88,10 @@ calendar_manager_module._EVENTS_FILE = _TEMP_DATA_DIR / "calendar_events.json"
 maintenance_manager_module._DATA_DIR = _TEMP_DATA_DIR
 maintenance_manager_module._MAINTENANCE_FILE = _TEMP_DATA_DIR / "maintenance.json"
 maintenance_manager_module._DOCUMENT_ROOT = _TEMP_DATA_DIR / "maintenance_documents"
+budget_manager_module._DATA_DIR = _TEMP_DATA_DIR
+budget_manager_module._BILLS_FILE = _TEMP_DATA_DIR / "bills.json"
+budget_manager_module._INCOME_FILE = _TEMP_DATA_DIR / "income.json"
+budget_manager_module._EXPENSES_FILE = _TEMP_DATA_DIR / "budget_expenses.json"
 data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
 data_logger_manager_module._READINGS_FILE = _TEMP_DATA_DIR / "data_logger_readings.json"
 component_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -133,6 +138,7 @@ from core.data_logger_manager import DataLoggerManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
 from core.ledger_manager import LedgerManager
+from core.budget_manager import BudgetManager
 from core.maintenance_manager import MaintenanceManager
 from core.llm_manager import LLMManager
 from core.material_manager import MaterialManager
@@ -420,6 +426,35 @@ GOLDEN_CASES = [
         "I just finished watching a great TV series",
         None,
     ),
+    # --- 2026-09-08: Budget (household bills, income, expenses) — same
+    # planning session that added Property. Real collision risk tested
+    # explicitly: add_bill vs. add_maintenance_task both cover "a
+    # recurring thing due on a schedule" and legitimately both attach
+    # on ambiguous phrasing — disambiguated by description, same
+    # pattern already proven for the alarm/maintenance-task collision.
+    ("add a bill", "Add a monthly electric bill for $120, due 2026-09-01", "add_bill"),
+    (
+        "collision risk: recurring bill vs. recurring maintenance task — must pick add_bill for a dollar amount",
+        "Add a bill called Internet for $80 due on the 1st of every month",
+        "add_bill",
+    ),
+    (
+        "collision risk: same shared 'recurring thing due' shape, but for real asset upkeep — must pick add_maintenance_task",
+        "Remind me to change my Truck's oil every 180 days",
+        "add_maintenance_task",
+    ),
+    ("list bills", "What bills do I have?", "list_bills"),
+    ("bill overdue question", "Is anything overdue?", "list_bills"),
+    ("mark a bill paid", "I paid my Electric bill", "mark_bill_paid"),
+    ("record income", "I got paid $3000 for my paycheck", "add_income"),
+    ("record rental income", "Record $1500 of rental income", "add_income"),
+    ("record an expense", "I spent $85 on groceries", "add_expense"),
+    ("budget summary", "What's my net cash flow this month?", "get_budget_summary"),
+    (
+        "false-positive sanity: ordinary use of 'bill' unrelated to Budget",
+        "Can you bill me for that later, just kidding",
+        "safe",
+    ),
 ]
 
 
@@ -449,6 +484,7 @@ def _build_context() -> AppContext:
     context.trips = TripManager(context)
     context.calendar = CalendarManager(context)
     context.maintenance = MaintenanceManager(context)
+    context.budget = BudgetManager(context)
     context.data_logger = DataLoggerManager(context)
     context.components = ComponentManager(context)
     context.scripts = ScriptLibraryManager(context)
@@ -503,6 +539,8 @@ def _seed_fixtures(context: AppContext) -> None:
     )
     context.maintenance.mark_complete(mileage_task.task_id, meter_value=40000)
     context.data_logger.add_reading(series_id="Soil Moisture", value=42.0, unit="%", note="raised bed 1")
+    context.budget.add_bill(name="Electric", amount=120.0, due_date="2026-08-01", category="Utilities", recurrence="monthly")
+    context.budget.add_income(amount=3000.0, category="Salary", date="2026-08-01")
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
     context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
     context.profiles.create_profile(name="Zac", make_active=True)

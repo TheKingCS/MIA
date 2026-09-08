@@ -30,7 +30,12 @@ from PySide6.QtWidgets import QApplication
 from core.activity_log_manager import ActivityLogManager
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
-from core.budget_manager import BudgetManager
+from core.budget_manager import (
+    EXPENSE_CATEGORIES as BUDGET_EXPENSE_CATEGORIES,
+    Bill,
+    BudgetManager,
+    days_until_bill_due,
+)
 from core.finance_manager import FinanceManager
 from core.homestead_manager import HomesteadManager
 from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
@@ -2252,6 +2257,138 @@ class MIAApplication:
             handler=self._action_list_lab_readings,
             trigger_phrases=("show me the readings for", "what are my readings for", "readings for", "history for", "show my data for"),
         ))
+        # --- Budget (household bills, income, expenses) — 2026-09-08,
+        # the second item from the same planning session that added
+        # Property. Real collision risk, deliberately not evaded:
+        # add_bill vs. add_maintenance_task (both "recurring thing due
+        # on a schedule") — resolved via distinct descriptions, same
+        # pattern already proven for the alarm/maintenance-task
+        # collision, verified live rather than assumed safe.
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_bill",
+            domain="budget",
+            description=(
+                "Add a recurring or one-time household BILL (e.g. electric, mortgage, insurance) to MIA's "
+                "Budget tracker — a dollar amount due on a schedule. NOT a Maintenance task (an asset's "
+                "physical upkeep) — use add_maintenance_task for that instead."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name, e.g. 'Electric', 'Mortgage'."},
+                    "amount": {"type": "number", "description": "The bill amount in dollars."},
+                    "due_date": {"type": "string", "description": "Due date in YYYY-MM-DD format."},
+                    "category": {
+                        "type": "string",
+                        "description": f"One of: {', '.join(BUDGET_EXPENSE_CATEGORIES)}. Defaults to 'Utilities'.",
+                    },
+                    "recurrence": {
+                        "type": "string",
+                        "description": "Optional: 'yearly', 'monthly', or 'weekly' for a repeating bill. Leave empty for a one-time bill.",
+                    },
+                },
+                "required": ["name", "amount", "due_date"],
+            },
+            handler=self._action_add_bill,
+            # A bill's own descriptor word ("monthly", "electric") sits
+            # between "add a"/"a" and "bill" in real phrasing ("Add a
+            # monthly electric bill for $120") — same name-before-noun
+            # gap as delete_alarm's "alarm " fix. Covers common bill-
+            # type nouns directly rather than a fully bare "bill "
+            # (too collision-prone — "foot the bill", "dollar bill").
+            trigger_phrases=(
+                "add a bill", "new bill", "track a bill", "add a household bill",
+                "add my electric bill", "add my mortgage", "electric bill", "gas bill",
+                "water bill", "utility bill", "internet bill", "add a bill for",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_bills",
+            domain="budget",
+            description="List MIA's household bills and their real due/overdue status, most urgent first.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_bills,
+            trigger_phrases=(
+                "list my bills", "what bills do i have", "what's due", "is anything overdue",
+                "what bills are due", "show my bills",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="mark_bill_paid",
+            domain="budget",
+            description="Mark a household bill paid in MIA by name — records a real expense and advances a recurring bill's next due date.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The bill's name, e.g. 'Electric'."},
+                    "amount": {"type": "number", "description": "Optional — the actual amount paid, if different from the bill's usual amount."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_mark_bill_paid,
+            trigger_phrases=("i paid my", "paid the bill", "mark my bill paid", "mark the bill paid", "i paid the"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_income",
+            domain="budget",
+            description="Record a household income entry in MIA (salary, rental income, etc.) — NOT a Workshop sale, use record_sale for that.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "amount": {"type": "number", "description": "The income amount in dollars."},
+                    "category": {"type": "string", "description": "One of: Salary, Rental Income, Investment, Other. Defaults to 'Other'."},
+                    "description": {"type": "string", "description": "Optional description."},
+                    "date": {"type": "string", "description": "Optional date in YYYY-MM-DD format. Defaults to today."},
+                },
+                "required": ["amount"],
+            },
+            handler=self._action_add_income,
+            # A dollar amount sits between "record"/"of" and "income" in
+            # real phrasing ("Record $1500 of rental income") — same
+            # name-before-noun gap as add_bill's fix above.
+            trigger_phrases=(
+                "record income", "add income", "i got paid", "received rent", "got my paycheck",
+                "log my paycheck", "record my rental income", "rental income", "of income", "income of",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_expense",
+            domain="budget",
+            description="Record a household expense entry in MIA (groceries, car repair, etc.) — NOT a bill (a recurring scheduled obligation, use add_bill) and NOT a Workshop job cost.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "amount": {"type": "number", "description": "The expense amount in dollars."},
+                    "category": {"type": "string", "description": "One of: Utilities, Mortgage/Rent, Insurance, Groceries, Maintenance, Transportation, Taxes, Other. Defaults to 'Other'."},
+                    "description": {"type": "string", "description": "Optional description."},
+                    "date": {"type": "string", "description": "Optional date in YYYY-MM-DD format. Defaults to today."},
+                },
+                "required": ["amount"],
+            },
+            handler=self._action_add_expense,
+            trigger_phrases=("record an expense", "add an expense", "log an expense", "i spent", "bought groceries"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_budget_summary",
+            domain="budget",
+            description=(
+                "Get MIA's total household income, expenses, and net cash flow for a date range "
+                "(e.g. this month, this year, or all time), including tax-relevant subtotals."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "start_date": {"type": "string", "description": "Optional start date, YYYY-MM-DD. Leave empty for no lower bound."},
+                    "end_date": {"type": "string", "description": "Optional end date, YYYY-MM-DD. Leave empty for no upper bound."},
+                },
+                "required": [],
+            },
+            handler=self._action_get_budget_summary,
+            trigger_phrases=(
+                "budget summary", "how much have i spent", "how much did i make", "net cash flow",
+                "my cash flow", "how much income", "tax summary",
+            ),
+        ))
 
     @staticmethod
     def _action_open_module(context: AppContext, arguments: dict) -> str:
@@ -3455,6 +3592,106 @@ class MIAApplication:
             for r in readings
         ]
         return f"Readings for '{series}':\n" + "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # Budget actions
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _resolve_bill(context: AppContext, name: str) -> tuple[Optional[Bill], Optional[str]]:
+        """Exact case-insensitive name match — never fuzzy, same
+        fail-closed discipline as _resolve_maintenance_task above."""
+        match = next((b for b in context.budget.all_bills() if b.name.lower() == name.lower()), None)
+        if match is None:
+            return None, f"I don't have a bill called '{name}'."
+        return match, None
+
+    @staticmethod
+    def _action_add_bill(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a bill."
+        amount = arguments.get("amount")
+        if amount is None:
+            return "I need an amount to add a bill."
+        due_date = str(arguments.get("due_date", "") or "").strip()
+        if not due_date:
+            return "I need a due date (YYYY-MM-DD) to add a bill."
+        category = str(arguments.get("category", "") or "Utilities").strip()
+        recurrence = str(arguments.get("recurrence", "") or "").strip().lower() or None
+        bill = context.budget.add_bill(
+            name=name, amount=float(amount), due_date=due_date, category=category, recurrence=recurrence,
+        )
+        recurrence_part = f", repeating {bill.recurrence}" if bill.recurrence else ""
+        return f"Bill '{bill.name}' added for ${bill.amount:.2f} due {bill.due_date}{recurrence_part}."
+
+    @staticmethod
+    def _action_list_bills(context: AppContext, arguments: dict) -> str:
+        bills = context.budget.all_bills()
+        if not bills:
+            return "You have no bills tracked."
+        today = date.today()
+        lines = []
+        for bill in bills:
+            remaining = days_until_bill_due(bill, today)
+            if remaining is None:
+                status = "paid"
+            elif remaining < 0:
+                status = f"overdue by {-remaining} days"
+            elif remaining == 0:
+                status = "due today"
+            else:
+                status = f"due in {remaining} days"
+            lines.append(f"- {bill.name} (${bill.amount:.2f}, {bill.category}): {status}")
+        return "Your bills:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_mark_bill_paid(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a bill name to mark paid."
+        bill, error = MIAApplication._resolve_bill(context, name)
+        if error:
+            return error
+        amount = arguments.get("amount")
+        amount = float(amount) if amount not in (None, "") else None
+        entry = context.budget.mark_bill_paid(bill.bill_id, amount=amount)
+        return f"Marked '{bill.name}' paid — recorded ${entry.amount:.2f}."
+
+    @staticmethod
+    def _action_add_income(context: AppContext, arguments: dict) -> str:
+        amount = arguments.get("amount")
+        if amount is None:
+            return "I need an amount to record income."
+        category = str(arguments.get("category", "") or "Other").strip()
+        description = str(arguments.get("description", "") or "")
+        date_str = str(arguments.get("date", "") or "").strip() or None
+        entry = context.budget.add_income(amount=float(amount), category=category, description=description, date=date_str)
+        return f"Recorded ${entry.amount:.2f} of income ({entry.category})."
+
+    @staticmethod
+    def _action_add_expense(context: AppContext, arguments: dict) -> str:
+        amount = arguments.get("amount")
+        if amount is None:
+            return "I need an amount to record an expense."
+        category = str(arguments.get("category", "") or "Other").strip()
+        description = str(arguments.get("description", "") or "")
+        date_str = str(arguments.get("date", "") or "").strip() or None
+        entry = context.budget.add_expense(amount=float(amount), category=category, description=description, date=date_str)
+        return f"Recorded ${entry.amount:.2f} expense ({entry.category})."
+
+    @staticmethod
+    def _action_get_budget_summary(context: AppContext, arguments: dict) -> str:
+        start_date = str(arguments.get("start_date", "") or "").strip() or None
+        end_date = str(arguments.get("end_date", "") or "").strip() or None
+        income = context.budget.total_income(start_date, end_date)
+        expenses = context.budget.total_expenses(start_date, end_date)
+        tax_income = context.budget.total_income(start_date, end_date, tax_relevant_only=True)
+        tax_expenses = context.budget.total_expenses(start_date, end_date, tax_relevant_only=True)
+        return (
+            f"Income: ${income:,.2f}. Expenses: ${expenses:,.2f}. Net: ${income - expenses:,.2f}. "
+            f"Tax-relevant income: ${tax_income:,.2f}. Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}."
+        )
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()
