@@ -44,7 +44,7 @@ log = get_logger(__name__)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _EVENTS_FILE = _DATA_DIR / "calendar_events.json"
 
-RECURRENCE_TYPES = ["yearly", "monthly", "weekly"]
+RECURRENCE_TYPES = ["yearly", "monthly", "weekly", "biweekly"]
 
 
 @dataclass
@@ -81,7 +81,7 @@ class CalendarEvent:
 def date_recurs_on(anchor: date, recurrence: Optional[str], check_date: date) -> bool:
     """
     True if a thing anchored on `anchor` with `recurrence` (None/
-    "yearly"/"monthly"/"weekly") occurs on `check_date`. The shared
+    "yearly"/"monthly"/"weekly"/"biweekly") occurs on `check_date`. The shared
     recurrence primitive underneath both `occurs_on()` below (Calendar
     events) and `core.budget_manager`'s Bill due-date logic — extracted
     here rather than reimplemented a second time, since it's plain date
@@ -105,6 +105,8 @@ def date_recurs_on(anchor: date, recurrence: Optional[str], check_date: date) ->
         return check_date.day == anchor.day
     if recurrence == "weekly":
         return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 7 == 0
+    if recurrence == "biweekly":
+        return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 14 == 0
     return check_date == anchor  # unknown recurrence value — fail safe to exact-date-only
 
 

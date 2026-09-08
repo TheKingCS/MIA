@@ -32,8 +32,10 @@ from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
 from core.budget_manager import (
     EXPENSE_CATEGORIES as BUDGET_EXPENSE_CATEGORIES,
+    INCOME_CATEGORIES as BUDGET_INCOME_CATEGORIES,
     Bill,
     BudgetManager,
+    IncomeSource,
     days_until_bill_due,
 )
 from core.finance_manager import FinanceManager
@@ -51,6 +53,7 @@ from core.ledger_manager import LedgerManager
 from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
+from core.budget_nudges import build_nudge_message
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
 from core.dashboard_widgets import DashboardWidgetRegistry, WidgetDescriptor
 from core.data_logger_manager import DataLoggerManager
@@ -403,6 +406,23 @@ class MIAApplication:
                 )
                 config.set("system.last_checkin_date", today_iso)
                 config.save()
+
+        if should_run_once_daily(config.get("system.last_budget_nudge_date"), today_iso) and self.context.budget is not None:
+            bills = self.context.budget.all_bills()
+            income_sources = self.context.budget.all_income_sources()
+            targets = self.context.budget.all_budget_targets()
+            month_start = now.date().replace(day=1).isoformat()
+            actual_by_category = self.context.budget.total_expenses_by_category(month_start, None)
+            message = build_nudge_message(bills, income_sources, targets, actual_by_category, now.date())
+            if message:
+                self.context.notifications.notify(
+                    title="Budget check-in",
+                    message=message,
+                    level="info",
+                    source="system",
+                )
+            config.set("system.last_budget_nudge_date", today_iso)
+            config.save()
 
     def _display(self, widget) -> None:
         """
@@ -2343,8 +2363,11 @@ class MIAApplication:
             name="add_income",
             domain="budget",
             description=(
-                "When no specific property/address is mentioned, record general household income in MIA — "
-                "salary, investment income, or rental income. A Workshop business sale uses record_sale instead."
+                "When the user states a specific new dollar amount of income received (e.g. 'I got paid $3000', "
+                "'record $1500 of rental income') and no specific property/address is mentioned, record general "
+                "household income in MIA — salary, investment income, or rental income. A Workshop business sale "
+                "uses record_sale instead. When a tracked recurring income source (e.g. 'my paycheck') arrives "
+                "WITHOUT the user restating a dollar amount, use mark_income_received instead."
             ),
             parameters={
                 "type": "object",
@@ -2386,8 +2409,10 @@ class MIAApplication:
             name="get_budget_summary",
             domain="budget",
             description=(
-                "Get MIA's total household income, expenses, and net cash flow for a date range "
-                "(e.g. this month, this year, or all time), including tax-relevant subtotals."
+                "When the user wants specific TOTALS or NUMBERS — how much income, how much spent, net cash flow, "
+                "or tax-relevant subtotals — for a date range (e.g. this month, this year, or all time), get that "
+                "here. For a general status question like 'how are we doing' or 'are we on budget' rather than a "
+                "request for specific totals, use get_financial_checkin instead."
             ),
             parameters={
                 "type": "object",
@@ -2401,6 +2426,92 @@ class MIAApplication:
             trigger_phrases=(
                 "budget summary", "how much have i spent", "how much did i make", "net cash flow",
                 "my cash flow", "how much income", "tax summary",
+            ),
+        ))
+        # --- Proactive nudges follow-up (2026-09-08): expected/recurring
+        # income (IncomeSource) is a distinct concept from a one-off
+        # add_income entry, so it needs its own action rather than
+        # overloading add_income. Real collision risk with both add_income
+        # (both take "amount") and add_bill (both take "amount" + a
+        # schedule) — resolved by leading each description with the
+        # condition that picks it ("a RECURRING/EXPECTED source" vs. "a
+        # one-off actual" vs. "an obligation you OWE"), same positive/
+        # condition-first phrasing this session's lesson established
+        # (a negated description caused a real regression on add_income
+        # vs. record_sale earlier this session — never repeat that).
+        # list_income_sources/set_budget_target deliberately stay GUI-only
+        # this pass, same stated scope limit as Real Estate's first slice.
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_income_source",
+            domain="budget",
+            description=(
+                "Add a RECURRING or EXPECTED income source to MIA — a paycheck, rental income, or other income "
+                "that arrives on a schedule (a future expectation, not money already received). For income "
+                "already received right now, use add_income instead."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name, e.g. 'Paycheck', 'Rental — 123 Main St'."},
+                    "expected_amount": {"type": "number", "description": "The expected amount in dollars."},
+                    "next_date": {"type": "string", "description": "The next expected date in YYYY-MM-DD format."},
+                    "category": {
+                        "type": "string",
+                        "description": f"One of: {', '.join(BUDGET_INCOME_CATEGORIES)}. Defaults to 'Salary'.",
+                    },
+                    "recurrence": {
+                        "type": "string",
+                        "description": "Optional: 'yearly', 'monthly', 'biweekly', or 'weekly' for a repeating income source. Leave empty for a one-time expectation.",
+                    },
+                },
+                "required": ["name", "expected_amount", "next_date"],
+            },
+            handler=self._action_add_income_source,
+            trigger_phrases=(
+                "add an income source", "new income source", "track my paycheck", "add my paycheck",
+                "set up my paycheck", "expect income", "track expected income", "add a recurring income source",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="mark_income_received",
+            domain="budget",
+            description=(
+                "When a tracked, recurring income source (a paycheck, rent, or similar already set up in MIA) has "
+                "arrived and the user does NOT restate a new dollar amount (e.g. 'my paycheck came in', 'got my "
+                "paycheck', 'received my rent'), mark it received here by name — records a real income entry using "
+                "the source's known expected amount and advances its next expected date. If the user states a new "
+                "specific dollar amount instead, use add_income."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The income source's name, e.g. 'Paycheck'."},
+                    "amount": {"type": "number", "description": "Optional — the actual amount received, if different from the expected amount."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_mark_income_received,
+            trigger_phrases=(
+                "got paid", "my paycheck came in", "received my paycheck", "mark my paycheck received",
+                "i got my paycheck", "received my income",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_financial_checkin",
+            domain="budget",
+            description=(
+                "When the user asks a general STATUS question about their finances — 'how are we doing "
+                "financially', 'are we on budget', 'are we ok with money' — rather than asking for specific "
+                "totals, get MIA's proactive financial check-in here: overdue/upcoming bills, when the next "
+                "paycheck is expected and for how much, and any budget categories running over plan this month. "
+                "For a request for specific totals (income, expenses, net cash flow, tax subtotals), use "
+                "get_budget_summary instead."
+            ),
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_financial_checkin,
+            trigger_phrases=(
+                "financial check-in", "how are we doing financially", "are we on budget", "financial checkin",
+                "how's our budget", "money check-in", "how are we doing with money",
             ),
         ))
         # --- Real Estate (property portfolio) — 2026-09-08, same
@@ -3792,6 +3903,58 @@ class MIAApplication:
             f"Income: ${income:,.2f}. Expenses: ${expenses:,.2f}. Net: ${income - expenses:,.2f}. "
             f"Tax-relevant income: ${tax_income:,.2f}. Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}."
         )
+
+    @staticmethod
+    def _resolve_income_source(context: AppContext, name: str) -> tuple[Optional[IncomeSource], Optional[str]]:
+        """Exact case-insensitive name match — never fuzzy, same
+        fail-closed discipline as _resolve_bill above."""
+        match = next((s for s in context.budget.all_income_sources() if s.name.lower() == name.lower()), None)
+        if match is None:
+            return None, f"I don't have an income source called '{name}'."
+        return match, None
+
+    @staticmethod
+    def _action_add_income_source(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add an income source."
+        expected_amount = arguments.get("expected_amount")
+        if expected_amount is None:
+            return "I need an expected amount to add an income source."
+        next_date = str(arguments.get("next_date", "") or "").strip()
+        if not next_date:
+            return "I need a next expected date (YYYY-MM-DD) to add an income source."
+        category = str(arguments.get("category", "") or "Salary").strip()
+        recurrence = str(arguments.get("recurrence", "") or "").strip().lower() or None
+        source = context.budget.add_income_source(
+            name=name, expected_amount=float(expected_amount), next_date=next_date, category=category, recurrence=recurrence,
+        )
+        recurrence_part = f", repeating {source.recurrence}" if source.recurrence else ""
+        return f"Income source '{source.name}' added — ${source.expected_amount:.2f} expected {source.next_date}{recurrence_part}."
+
+    @staticmethod
+    def _action_mark_income_received(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need an income source name to mark received."
+        source, error = MIAApplication._resolve_income_source(context, name)
+        if error:
+            return error
+        amount = arguments.get("amount")
+        amount = float(amount) if amount not in (None, "") else None
+        entry = context.budget.mark_income_received(source.source_id, amount=amount)
+        return f"Marked '{source.name}' received — recorded ${entry.amount:.2f}."
+
+    @staticmethod
+    def _action_get_financial_checkin(context: AppContext, arguments: dict) -> str:
+        today = date.today()
+        bills = context.budget.all_bills()
+        income_sources = context.budget.all_income_sources()
+        targets = context.budget.all_budget_targets()
+        month_start = today.replace(day=1).isoformat()
+        actual_by_category = context.budget.total_expenses_by_category(month_start, None)
+        message = build_nudge_message(bills, income_sources, targets, actual_by_category, today)
+        return message or "Everything looks on track — no overdue bills, nothing due soon, and no categories over budget."
 
     # ------------------------------------------------------------------
     # Real Estate actions

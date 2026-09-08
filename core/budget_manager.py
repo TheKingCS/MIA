@@ -33,6 +33,21 @@ estimate, no filing support. `tax_relevant` is just a flag on income/
 expense entries and the reporting functions can subtotal by it, same
 honest boundary Maintenance's Prediction feature draws around
 fabricated precision it doesn't actually have.
+
+**IncomeSource** (2026-09-08, added for proactive nudges) is the
+expected/recurring counterpart to `IncomeEntry` — a real paycheck
+schedule to compute "when's the next payday" from, the exact gap
+`Bill` already closed for expenses. Same shape, same due-date math
+(`date_recurs_on()`, including "biweekly" — common enough for real
+paychecks that it was added to `core.calendar_manager.RECURRENCE_TYPES`
+itself, not a Budget-only special case). `mark_income_received()`
+mirrors `mark_bill_paid()`'s "one action, two real effects" shape.
+
+**BudgetTarget** is a plain planned-monthly-amount per expense
+category — the one new concept with no existing precedent to mirror,
+kept deliberately minimal (no yearly overrides, no envelope rollover)
+to match the honest "budgeted amount per category" ask rather than
+building a full budgeting system.
 """
 
 from __future__ import annotations
@@ -54,6 +69,8 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _BILLS_FILE = _DATA_DIR / "bills.json"
 _INCOME_FILE = _DATA_DIR / "income.json"
 _EXPENSES_FILE = _DATA_DIR / "budget_expenses.json"
+_INCOME_SOURCES_FILE = _DATA_DIR / "income_sources.json"
+_BUDGET_TARGETS_FILE = _DATA_DIR / "budget_targets.json"
 
 INCOME_CATEGORIES = ["Salary", "Rental Income", "Investment", "Other"]
 EXPENSE_CATEGORIES = ["Utilities", "Mortgage/Rent", "Insurance", "Groceries", "Maintenance", "Transportation", "Taxes", "Other"]
@@ -228,12 +245,95 @@ def is_bill_due(bill: Bill, today: date) -> bool:
     return remaining is not None and remaining <= 0
 
 
+@dataclass
+class IncomeSource:
+    source_id: str
+    name: str  # "Paycheck", "Rental — 123 Main St"
+    expected_amount: float
+    category: str = "Salary"  # one of INCOME_CATEGORIES
+    next_date: str = ""  # ISO anchor date — same role as Bill.due_date
+    recurrence: Optional[str] = None  # None, or one of core.calendar_manager.RECURRENCE_TYPES
+    last_received_date: Optional[str] = None
+    notes: str = ""
+    created_at: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "source_id": self.source_id, "name": self.name, "expected_amount": self.expected_amount,
+            "category": self.category, "next_date": self.next_date, "recurrence": self.recurrence,
+            "last_received_date": self.last_received_date, "notes": self.notes, "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "IncomeSource":
+        return IncomeSource(
+            source_id=data.get("source_id", uuid.uuid4().hex[:10]),
+            name=data.get("name", ""),
+            expected_amount=data.get("expected_amount", 0.0),
+            category=data.get("category", "Salary"),
+            next_date=data.get("next_date", ""),
+            recurrence=data.get("recurrence"),
+            last_received_date=data.get("last_received_date"),
+            notes=data.get("notes", ""),
+            created_at=data.get("created_at", ""),
+        )
+
+
+@dataclass
+class BudgetTarget:
+    category: str  # one of EXPENSE_CATEGORIES, one target per category
+    monthly_amount: float
+
+    def to_dict(self) -> dict:
+        return {"category": self.category, "monthly_amount": self.monthly_amount}
+
+    @staticmethod
+    def from_dict(data: dict) -> "BudgetTarget":
+        return BudgetTarget(category=data.get("category", "Other"), monthly_amount=data.get("monthly_amount", 0.0))
+
+
+def next_income_due_date(source: IncomeSource) -> Optional[date]:
+    """Pure logic — testable without Qt. Exact mirror of
+    next_bill_due_date()'s shape, same bounded-forward-walk over
+    date_recurs_on() — None once a one-time source has already been
+    received, the anchor next_date if never received, otherwise the
+    next occurrence after last_received_date."""
+    try:
+        anchor = date.fromisoformat(source.next_date)
+    except ValueError:
+        return None
+    if source.last_received_date is None:
+        return anchor
+    if source.recurrence is None:
+        return None  # one-time income, already received — nothing more expected
+    try:
+        last_received = date.fromisoformat(source.last_received_date)
+    except ValueError:
+        last_received = anchor
+    candidate = max(anchor, last_received) + timedelta(days=1)
+    for _ in range(370):
+        if date_recurs_on(anchor, source.recurrence, candidate):
+            return candidate
+        candidate += timedelta(days=1)
+    return None  # unreachable for any of the real RECURRENCE_TYPES values
+
+
+def days_until_income_due(source: IncomeSource, today: date) -> Optional[int]:
+    """Pure logic — testable without Qt. Negative = overdue (expected but not yet received) by that many days."""
+    due = next_income_due_date(source)
+    if due is None:
+        return None
+    return (due - today).days
+
+
 class BudgetManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._bills: list[Bill] = []
         self._income: list[IncomeEntry] = []
         self._expenses: list[ExpenseEntry] = []
+        self._income_sources: list[IncomeSource] = []
+        self._budget_targets: list[BudgetTarget] = []
         self._load()
 
     # ------------------------------------------------------------------
@@ -244,6 +344,8 @@ class BudgetManager:
         self._bills = self._load_file(_BILLS_FILE, Bill.from_dict)
         self._income = self._load_file(_INCOME_FILE, IncomeEntry.from_dict)
         self._expenses = self._load_file(_EXPENSES_FILE, ExpenseEntry.from_dict)
+        self._income_sources = self._load_file(_INCOME_SOURCES_FILE, IncomeSource.from_dict)
+        self._budget_targets = self._load_file(_BUDGET_TARGETS_FILE, BudgetTarget.from_dict)
 
     @staticmethod
     def _load_file(path: Path, from_dict) -> list:
@@ -267,6 +369,14 @@ class BudgetManager:
     def _save_expenses(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _EXPENSES_FILE.write_text(json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
+
+    def _save_income_sources(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        _INCOME_SOURCES_FILE.write_text(json.dumps([s.to_dict() for s in self._income_sources], indent=2), encoding="utf-8")
+
+    def _save_budget_targets(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        _BUDGET_TARGETS_FILE.write_text(json.dumps([t.to_dict() for t in self._budget_targets], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Bills
@@ -352,6 +462,88 @@ class BudgetManager:
         bill.last_paid_date = paid_date
         self._save_bills()
         log.info("Bill paid: '%s' $%.2f on %s", bill.name, paid_amount, paid_date)
+        return entry
+
+    # ------------------------------------------------------------------
+    # Income sources — expected/recurring income, the counterpart to
+    # Bills for the money coming IN (2026-09-08, added for proactive
+    # nudges — "when's the next paycheck" needs this exact shape).
+    # ------------------------------------------------------------------
+
+    def add_income_source(
+        self,
+        name: str,
+        expected_amount: float,
+        next_date: str,
+        category: str = "Salary",
+        recurrence: Optional[str] = None,
+        notes: str = "",
+    ) -> IncomeSource:
+        source = IncomeSource(
+            source_id=uuid.uuid4().hex[:10],
+            name=name,
+            expected_amount=max(0.0, expected_amount),
+            category=category if category in INCOME_CATEGORIES else "Other",
+            next_date=next_date,
+            recurrence=recurrence if recurrence in RECURRENCE_TYPES else None,
+            notes=notes,
+            created_at=datetime.now().isoformat(timespec="seconds"),
+        )
+        self._income_sources.append(source)
+        self._save_income_sources()
+        log.info("Income source added: '%s' $%.2f expected %s", source.name, source.expected_amount, source.next_date)
+        return source
+
+    def update_income_source(self, source_id: str, **fields) -> IncomeSource:
+        source = self.get_income_source(source_id)
+        if source is None:
+            raise ValueError(f"No income source with id '{source_id}'.")
+        for key, value in fields.items():
+            if not hasattr(source, key):
+                raise ValueError(f"IncomeSource has no field '{key}'.")
+            setattr(source, key, value)
+        if source.expected_amount < 0:
+            source.expected_amount = 0
+        if source.category not in INCOME_CATEGORIES:
+            source.category = "Other"
+        if source.recurrence not in (None, *RECURRENCE_TYPES):
+            source.recurrence = None
+        self._save_income_sources()
+        return source
+
+    def delete_income_source(self, source_id: str) -> None:
+        self._income_sources = [s for s in self._income_sources if s.source_id != source_id]
+        self._save_income_sources()
+
+    def get_income_source(self, source_id: str) -> Optional[IncomeSource]:
+        for source in self._income_sources:
+            if source.source_id == source_id:
+                return source
+        return None
+
+    def all_income_sources(self) -> list[IncomeSource]:
+        return sorted(self._income_sources, key=lambda s: s.next_date)
+
+    def mark_income_received(self, source_id: str, received_date: Optional[str] = None, amount: Optional[float] = None) -> IncomeEntry:
+        """Records a real IncomeEntry (category inherited from the
+        source, amount overridable for a paycheck that varies) AND
+        updates last_received_date — exact mirror of mark_bill_paid()'s
+        "one action, two real effects" shape."""
+        source = self.get_income_source(source_id)
+        if source is None:
+            raise ValueError(f"No income source with id '{source_id}'.")
+        received_date = received_date or _today_iso()
+        received_amount = source.expected_amount if amount is None else max(0.0, amount)
+
+        entry = self.add_income(
+            amount=received_amount,
+            category=source.category,
+            description=source.name,
+            date=received_date,
+        )
+        source.last_received_date = received_date
+        self._save_income_sources()
+        log.info("Income received: '%s' $%.2f on %s", source.name, received_amount, received_date)
         return entry
 
     # ------------------------------------------------------------------
@@ -494,3 +686,45 @@ class BudgetManager:
 
     def net_cash_flow(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
         return self.total_income(start_date, end_date) - self.total_expenses(start_date, end_date)
+
+    def total_expenses_by_category(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> dict[str, float]:
+        """Actual spending per category over a date range — the
+        "actual" half of a budget-target comparison. Only categories
+        with at least one matching expense are present in the result
+        (no zero-filled entries for untouched categories)."""
+        totals: dict[str, float] = {}
+        for expense in self._expenses:
+            if not _in_range(expense.date, start_date, end_date):
+                continue
+            totals[expense.category] = totals.get(expense.category, 0.0) + expense.amount
+        return totals
+
+    # ------------------------------------------------------------------
+    # Budget targets — planned monthly spending per category, deliberately
+    # minimal (no yearly overrides, no envelope rollover), see module docstring
+    # ------------------------------------------------------------------
+
+    def set_budget_target(self, category: str, monthly_amount: float) -> BudgetTarget:
+        """Upsert — one target per category; calling again for the same category replaces it."""
+        if category not in EXPENSE_CATEGORIES:
+            raise ValueError(f"Unknown expense category '{category}'.")
+        existing = self.get_budget_target(category)
+        if existing is not None:
+            existing.monthly_amount = max(0.0, monthly_amount)
+        else:
+            self._budget_targets.append(BudgetTarget(category=category, monthly_amount=max(0.0, monthly_amount)))
+        self._save_budget_targets()
+        return self.get_budget_target(category)
+
+    def delete_budget_target(self, category: str) -> None:
+        self._budget_targets = [t for t in self._budget_targets if t.category != category]
+        self._save_budget_targets()
+
+    def get_budget_target(self, category: str) -> Optional[BudgetTarget]:
+        for target in self._budget_targets:
+            if target.category == category:
+                return target
+        return None
+
+    def all_budget_targets(self) -> list[BudgetTarget]:
+        return sorted(self._budget_targets, key=lambda t: t.category)

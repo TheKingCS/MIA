@@ -20,8 +20,10 @@ from core.budget_manager import (
     Bill,
     BudgetManager,
     days_until_bill_due,
+    days_until_income_due,
     is_bill_due,
     next_bill_due_date,
+    next_income_due_date,
 )
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
@@ -34,6 +36,8 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(budget_manager_module, "_BILLS_FILE", data_dir / "bills.json")
     monkeypatch.setattr(budget_manager_module, "_INCOME_FILE", data_dir / "income.json")
     monkeypatch.setattr(budget_manager_module, "_EXPENSES_FILE", data_dir / "budget_expenses.json")
+    monkeypatch.setattr(budget_manager_module, "_INCOME_SOURCES_FILE", data_dir / "income_sources.json")
+    monkeypatch.setattr(budget_manager_module, "_BUDGET_TARGETS_FILE", data_dir / "budget_targets.json")
     return data_dir
 
 
@@ -218,3 +222,133 @@ def test_net_cash_flow_is_income_minus_expenses(isolated_paths):
     manager.add_income(amount=3000.0, date="2026-09-01")
     manager.add_expense(amount=1200.0, date="2026-09-02")
     assert manager.net_cash_flow() == 1800.0
+
+
+def test_total_expenses_by_category_groups_and_omits_untouched_categories(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=100.0, category="Groceries", date="2026-09-01")
+    manager.add_expense(amount=50.0, category="Groceries", date="2026-09-05")
+    manager.add_expense(amount=200.0, category="Utilities", date="2026-09-03")
+
+    totals = manager.total_expenses_by_category()
+    assert totals == {"Groceries": 150.0, "Utilities": 200.0}
+    assert "Insurance" not in totals
+
+
+# ------------------------------------------------------------------
+# IncomeSource — next_income_due_date / days_until_income_due
+# ------------------------------------------------------------------
+
+def _income_source(next_date="2026-09-01", recurrence=None, last_received_date=None, expected_amount=2400.0):
+    return budget_manager_module.IncomeSource(
+        source_id="s1", name="Paycheck", expected_amount=expected_amount,
+        category="Salary", next_date=next_date, recurrence=recurrence, last_received_date=last_received_date,
+    )
+
+
+def test_next_income_due_date_never_received_is_the_anchor():
+    assert next_income_due_date(_income_source(next_date="2026-09-01")) == date(2026, 9, 1)
+
+
+def test_next_income_due_date_one_time_received_is_none():
+    source = _income_source(next_date="2026-09-01", recurrence=None, last_received_date="2026-09-01")
+    assert next_income_due_date(source) is None
+
+
+def test_next_income_due_date_biweekly_steps_14_days_after_received():
+    source = _income_source(next_date="2026-06-15", recurrence="biweekly", last_received_date="2026-08-24")
+    assert next_income_due_date(source) == date(2026, 9, 7)
+
+
+def test_days_until_income_due_negative_when_overdue():
+    source = _income_source(next_date="2026-08-01")
+    assert days_until_income_due(source, date(2026, 9, 7)) == -37
+
+
+# ------------------------------------------------------------------
+# IncomeSource CRUD + mark_income_received
+# ------------------------------------------------------------------
+
+def test_add_income_source_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05", recurrence="biweekly")
+
+    reloaded = _make_manager()
+    sources = reloaded.all_income_sources()
+    assert len(sources) == 1
+    assert sources[0].name == "Paycheck"
+    assert sources[0].recurrence == "biweekly"
+
+
+def test_add_income_source_rejects_unknown_category_and_recurrence(isolated_paths):
+    manager = _make_manager()
+    source = manager.add_income_source(name="X", expected_amount=100.0, next_date="2026-09-01", category="Nonsense", recurrence="daily")
+    assert source.category == "Other"
+    assert source.recurrence is None
+
+
+def test_mark_income_received_creates_real_income_and_updates_last_received(isolated_paths):
+    manager = _make_manager()
+    source = manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05", category="Salary", recurrence="biweekly")
+
+    entry = manager.mark_income_received(source.source_id, received_date="2026-09-05")
+
+    assert entry.amount == 2400.0
+    assert entry.category == "Salary"
+    assert manager.get_income_source(source.source_id).last_received_date == "2026-09-05"
+    assert len(manager.all_income()) == 1
+
+
+def test_mark_income_received_amount_override_for_a_variable_paycheck(isolated_paths):
+    manager = _make_manager()
+    source = manager.add_income_source(name="Freelance", expected_amount=1000.0, next_date="2026-09-01")
+    entry = manager.mark_income_received(source.source_id, amount=1250.0)
+    assert entry.amount == 1250.0
+
+
+def test_mark_income_received_unknown_id_raises(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.mark_income_received("does-not-exist")
+
+
+def test_delete_income_source_removes_it(isolated_paths):
+    manager = _make_manager()
+    source = manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05")
+    manager.delete_income_source(source.source_id)
+    assert manager.get_income_source(source.source_id) is None
+
+
+# ------------------------------------------------------------------
+# BudgetTarget CRUD
+# ------------------------------------------------------------------
+
+def test_set_budget_target_creates_then_upserts(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)
+    manager.set_budget_target("Groceries", 450.0)
+
+    targets = manager.all_budget_targets()
+    assert len(targets) == 1
+    assert targets[0].monthly_amount == 450.0
+
+
+def test_set_budget_target_rejects_unknown_category(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.set_budget_target("Nonsense Category", 100.0)
+
+
+def test_set_budget_target_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)
+
+    reloaded = _make_manager()
+    assert reloaded.get_budget_target("Groceries").monthly_amount == 400.0
+
+
+def test_delete_budget_target_removes_it(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)
+    manager.delete_budget_target("Groceries")
+    assert manager.get_budget_target("Groceries") is None

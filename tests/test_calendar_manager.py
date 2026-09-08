@@ -150,6 +150,19 @@ def test_date_recurs_on_yearly_monthly_weekly():
     assert date_recurs_on(date(2026, 6, 15), "weekly", date(2026, 6, 29)) is True
 
 
+def test_date_recurs_on_biweekly_matches_every_14_days():
+    anchor = date(2026, 6, 15)  # a real payday anchor
+    assert date_recurs_on(anchor, "biweekly", date(2026, 6, 29)) is True
+    assert date_recurs_on(anchor, "biweekly", date(2026, 7, 13)) is True
+
+
+def test_date_recurs_on_biweekly_does_not_match_the_off_week():
+    anchor = date(2026, 6, 15)
+    # Same weekday, but only 7 days later — the "off" week of a
+    # biweekly schedule, not a real occurrence.
+    assert date_recurs_on(anchor, "biweekly", date(2026, 6, 22)) is False
+
+
 # ------------------------------------------------------------------
 # occurs_on / recurrence
 # ------------------------------------------------------------------
