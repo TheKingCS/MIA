@@ -41,15 +41,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.data_logger_manager import Reading
 from core.maintenance_manager import (
     MaintenanceAsset,
     MaintenanceTask,
     days_until_due,
     is_overdue,
+    is_sensor_task_due,
+    meter_used_since_last,
+    predicted_due_date,
 )
 from core.search_manager import SearchResult
 from gui.add_edit_asset_dialog import AddEditAssetDialog
 from gui.add_edit_maintenance_task_dialog import AddEditMaintenanceTaskDialog
+from gui.log_reading_dialog import LogReadingDialog
+from gui.mark_complete_dialog import MarkCompleteDialog
 from gui.schedule_task_dialog import ScheduleTaskDialog
 from modules.module_base import ModuleBase
 
@@ -59,27 +65,70 @@ def format_asset_row(asset: MaintenanceAsset) -> str:
     return f"{asset.name}   [{asset.category}]"
 
 
-def format_task_row(task: MaintenanceTask, asset: Optional[MaintenanceAsset], today: date) -> str:
+def format_task_row(
+    task: MaintenanceTask,
+    asset: Optional[MaintenanceAsset],
+    today: date,
+    readings: Optional[list[Reading]] = None,
+) -> str:
     """Pure formatting logic — testable without Qt. Status prefix leads
     with the most urgent real fact (overdue beats due-soon beats
-    on-schedule beats one-time/never-completed), matching this app's
-    general "surface the summary before the detail" dashboard-card
-    convention applied here to a list row instead."""
+    on-schedule beats one-time/never-completed/no-data), matching this
+    app's general "surface the summary before the detail" dashboard-card
+    convention applied here to a list row instead. `readings` is only
+    consulted for meter/sensor tasks — pass core.maintenance_manager
+    .MaintenanceManager.readings_for_task(task.task_id) for those; a
+    calendar task ignores it entirely."""
     asset_name = asset.name if asset is not None else "Unknown asset"
-    remaining = days_until_due(task, today)
+    readings = readings or []
 
-    if remaining is None:
-        if task.interval_days is None:
-            status = "[ONE-TIME]" if not task.last_completed else "[DONE]"
+    if task.trigger_type == "calendar":
+        remaining = days_until_due(task, today)
+        if remaining is None:
+            if task.interval_days is None:
+                status = "[ONE-TIME]" if not task.last_completed else "[DONE]"
+            else:
+                status = "[NEVER DONE]"
+        elif remaining < 0:
+            status = f"[OVERDUE {-remaining}d]"
+        elif remaining == 0:
+            status = "[DUE TODAY]"
         else:
-            status = "[NEVER DONE]"
-    elif remaining < 0:
-        status = f"[OVERDUE {-remaining}d]"
-    elif remaining == 0:
-        status = "[DUE TODAY]"
-    else:
-        status = f"[DUE IN {remaining}d]"
+            status = f"[DUE IN {remaining}d]"
+        return f"{status}  {task.title}   ({asset_name})"
 
+    if task.is_meter_task:
+        unit = task.meter_unit or "units"
+        if task.last_completed_meter_value is None:
+            status = "[NEVER DONE]"
+        elif not readings:
+            status = "[NO READINGS LOGGED]"
+        else:
+            used = meter_used_since_last(task, readings) or 0.0
+            interval = task.meter_interval or 0.0
+            remaining_units = interval - used
+            if remaining_units <= 0:
+                status = f"[OVERDUE {-remaining_units:.0f} {unit}]"
+            else:
+                status = f"[{used:.0f}/{interval:.0f} {unit}]"
+                prediction = predicted_due_date(task, readings, today)
+                if prediction is not None:
+                    _estimated, caveat = prediction
+                    status += f"  ({caveat})"
+                elif len(readings) < 2:
+                    status += "  (not enough data logged yet)"
+        return f"{status}  {task.title}   ({asset_name})"
+
+    # Sensor (threshold) task.
+    if not readings:
+        status = "[NO READINGS LOGGED]"
+    else:
+        latest = readings[-1].value
+        unit = task.meter_unit or ""
+        if is_sensor_task_due(task, readings):
+            status = f"[DUE — {latest:g}{unit} {task.threshold_direction} {task.threshold_value:g}{unit}]"
+        else:
+            status = f"[OK — {latest:g}{unit}]"
     return f"{status}  {task.title}   ({asset_name})"
 
 
@@ -182,6 +231,10 @@ class MaintenanceModule(ModuleBase):
             name=dialog.entered_name,
             category=dialog.entered_category,
             notes=dialog.entered_notes,
+            purchase_date=dialog.entered_purchase_date,
+            serial_number=dialog.entered_serial_number,
+            manufacturer=dialog.entered_manufacturer,
+            model=dialog.entered_model,
         )
         self._refresh_asset_list()
 
@@ -192,7 +245,7 @@ class MaintenanceModule(ModuleBase):
             return
 
         asset = self.context.maintenance.get_asset(asset_id)
-        dialog = AddEditAssetDialog(asset=asset)
+        dialog = AddEditAssetDialog(asset=asset, maintenance=self.context.maintenance)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -201,6 +254,10 @@ class MaintenanceModule(ModuleBase):
             name=dialog.entered_name,
             category=dialog.entered_category,
             notes=dialog.entered_notes,
+            purchase_date=dialog.entered_purchase_date,
+            serial_number=dialog.entered_serial_number,
+            manufacturer=dialog.entered_manufacturer,
+            model=dialog.entered_model,
         )
         self._refresh_asset_list()
         self._refresh_task_list()
@@ -261,6 +318,10 @@ class MaintenanceModule(ModuleBase):
         schedule_button.clicked.connect(self._on_schedule_task)
         button_row.addWidget(schedule_button)
 
+        log_reading_button = QPushButton("Log Reading…")
+        log_reading_button.clicked.connect(self._on_log_reading)
+        button_row.addWidget(log_reading_button)
+
         delete_button = QPushButton("Delete Selected")
         delete_button.clicked.connect(self._on_delete_task)
         button_row.addWidget(delete_button)
@@ -278,7 +339,12 @@ class MaintenanceModule(ModuleBase):
         self._task_list.clear()
         for task in tasks:
             asset = self.context.maintenance.get_asset(task.asset_id)
-            row_text = format_task_row(task, asset, today)
+            readings = (
+                self.context.maintenance.readings_for_task(task.task_id)
+                if task.trigger_type != "calendar"
+                else None
+            )
+            row_text = format_task_row(task, asset, today, readings)
             if query and query not in row_text.lower():
                 continue
             item = QListWidgetItem(row_text)
@@ -306,6 +372,12 @@ class MaintenanceModule(ModuleBase):
             title=dialog.entered_title,
             interval_days=dialog.entered_interval_days,
             notes=dialog.entered_notes,
+            trigger_type=dialog.entered_trigger_type,
+            meter_unit=dialog.entered_meter_unit,
+            meter_interval=dialog.entered_meter_interval,
+            threshold_value=dialog.entered_threshold_value,
+            threshold_direction=dialog.entered_threshold_direction,
+            auto_schedule=dialog.entered_auto_schedule,
         )
         self._refresh_task_list()
 
@@ -327,6 +399,12 @@ class MaintenanceModule(ModuleBase):
             title=dialog.entered_title,
             interval_days=dialog.entered_interval_days,
             notes=dialog.entered_notes,
+            trigger_type=dialog.entered_trigger_type,
+            meter_unit=dialog.entered_meter_unit,
+            meter_interval=dialog.entered_meter_interval,
+            threshold_value=dialog.entered_threshold_value,
+            threshold_direction=dialog.entered_threshold_direction,
+            auto_schedule=dialog.entered_auto_schedule,
         )
         self._refresh_task_list()
 
@@ -336,7 +414,36 @@ class MaintenanceModule(ModuleBase):
             QMessageBox.information(None, "No Task Selected", "Select a task to mark complete.")
             return
 
-        self.context.maintenance.mark_complete(task_id)
+        task = self.context.maintenance.get_task(task_id)
+        if task.is_meter_task:
+            latest = self.context.maintenance.readings_for_task(task_id)
+            default_value = latest[-1].value if latest else None
+            dialog = MarkCompleteDialog(unit=task.meter_unit, default_value=default_value)
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return
+            self.context.maintenance.mark_complete(task_id, meter_value=dialog.entered_value)
+        else:
+            self.context.maintenance.mark_complete(task_id)
+        self._refresh_task_list()
+
+    def _on_log_reading(self) -> None:
+        task_id = self._selected_task_id()
+        if task_id is None:
+            QMessageBox.information(None, "No Task Selected", "Select a task to log a reading for.")
+            return
+
+        task = self.context.maintenance.get_task(task_id)
+        if not (task.is_meter_task or task.is_sensor_task):
+            QMessageBox.information(
+                None, "Not a Meter/Sensor Task", "Only Runtime, Mileage, Cycles, Condition, and Sensor tasks take logged readings."
+            )
+            return
+
+        dialog = LogReadingDialog(unit=task.meter_unit)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.maintenance.log_reading(task_id, dialog.entered_value, note=dialog.entered_note)
         self._refresh_task_list()
 
     def _on_schedule_task(self) -> None:

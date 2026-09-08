@@ -16,6 +16,7 @@ from datetime import date, datetime
 from core.activity_log_manager import ActivityLogEntry
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
+from core.data_logger_manager import Reading
 from core.maintenance_manager import MaintenanceTask
 from core.mission_manager import Mission, Objective
 from core.power_manager import PowerStatus
@@ -295,3 +296,33 @@ def test_format_maintenance_line_one_time_and_never_completed_are_not_due():
     # a computable next_due_date — neither should count as due/overdue.
     tasks = [_task(interval_days=None, last_completed=None), _task(interval_days=90, last_completed=None)]
     assert format_maintenance_line(tasks, date(2026, 9, 7)) == "All caught up"
+
+
+def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0):
+    return MaintenanceTask(
+        task_id="tm1", asset_id="a1", title="Oil change", trigger_type="mileage",
+        meter_unit="miles", meter_interval=meter_interval,
+        last_completed_meter_value=last_completed_meter_value, last_completed="2026-08-01",
+    )
+
+
+def _reading(value, task_id="tm1"):
+    return Reading(reading_id="r", series_id=f"maintenance_{task_id}", value=value, unit="", note="", timestamp="2026-09-01T00:00:00")
+
+
+def test_format_maintenance_line_meter_task_overdue_counts():
+    tasks = [_meter_task()]
+    readings = {"tm1": [_reading(46000)]}  # 6000 used, interval 5000 -> overdue
+    assert format_maintenance_line(tasks, date(2026, 9, 7), readings) == "1 overdue task"
+
+
+def test_format_maintenance_line_meter_task_not_due_is_all_caught_up():
+    tasks = [_meter_task()]
+    readings = {"tm1": [_reading(42000)]}  # 2000 used, interval 5000 -> not due
+    assert format_maintenance_line(tasks, date(2026, 9, 7), readings) == "All caught up"
+
+
+def test_format_maintenance_line_meter_task_with_no_readings_is_all_caught_up():
+    # Honest — no logged reading means no evidence it's due, not a fabricated overdue count.
+    tasks = [_meter_task()]
+    assert format_maintenance_line(tasks, date(2026, 9, 7), {}) == "All caught up"
