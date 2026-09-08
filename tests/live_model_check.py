@@ -389,6 +389,37 @@ GOLDEN_CASES = [
         "What tasks do I have?",
         "list_tasks",
     ),
+    # --- 2026-09-08: Lab (Data Logger) — same audit as Maintenance,
+    # found zero Assistant actions for manual sensor/experiment
+    # readings. Real collision risk: "log a reading" is deliberately
+    # shared vocabulary with log_maintenance_reading (both legitimately
+    # attach; the model disambiguates via series vs. task/asset in each
+    # tool's own description, same pattern as every other real
+    # multi-domain collision in this registry) — tested explicitly below
+    # rather than assumed safe.
+    ("log a lab reading", "Log a reading of 65 for soil moisture", "log_lab_reading"),
+    (
+        "collision risk: 'log a reading' shared with log_maintenance_reading — must pick the Lab one for a series, not a task",
+        "Log a reading of 12.4 volts for my multimeter test",
+        "log_lab_reading",
+    ),
+    (
+        "collision risk: same shared phrasing, but for a real tracked Maintenance task — must pick log_maintenance_reading",
+        "Log a reading of 47000 miles for the Oil Change on my Truck",
+        "log_maintenance_reading",
+    ),
+    ("list lab series", "What data series am I logging in the Lab?", "list_lab_series"),
+    ("list lab readings for one series", "Show me the readings for Soil Moisture", "list_lab_readings"),
+    (
+        "false-positive sanity: ordinary use of 'reading' unrelated to Data Logger",
+        "I'm reading a really good book right now",
+        None,
+    ),
+    (
+        "false-positive sanity: 'series' unrelated to Data Logger (TV series)",
+        "I just finished watching a great TV series",
+        None,
+    ),
 ]
 
 
@@ -471,6 +502,7 @@ def _seed_fixtures(context: AppContext) -> None:
         truck.asset_id, "Oil Change", trigger_type="mileage", meter_unit="miles", meter_interval=5000
     )
     context.maintenance.mark_complete(mileage_task.task_id, meter_value=40000)
+    context.data_logger.add_reading(series_id="Soil Moisture", value=42.0, unit="%", note="raised bed 1")
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
     context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
     context.profiles.create_profile(name="Zac", make_active=True)

@@ -2174,6 +2174,74 @@ class MIAApplication:
             handler=self._action_delete_maintenance_task,
             trigger_phrases=("delete a maintenance task", "remove a maintenance task", "delete the maintenance task"),
         ))
+        # --- Lab (Data Logger) — 2026-09-08, same audit that found
+        # Maintenance had zero Assistant actions also flagged Lab
+        # (modules/lab/module.py, core/data_logger_manager.py): manual
+        # sensor/experiment reading entry, zero actions. A series_id is
+        # an arbitrary freeform string (no separate registry file — see
+        # that manager's own docstring), so "log a reading" here means
+        # something genuinely different from Maintenance's version
+        # (a specific tracked task's meter, resolved by title/asset) —
+        # both tools' descriptions say so explicitly, same
+        # disambiguation approach as every other legitimate multi-domain
+        # collision in this registry.
+        self.context.assistant_actions.register(AssistantAction(
+            name="log_lab_reading",
+            domain="lab",
+            description=(
+                "Log a manual sensor/experiment/measurement reading in MIA's Lab (Data Logger) under a "
+                "named series (e.g. 'soil moisture', 'multimeter voltage', 'greenhouse temp') — general "
+                "experiment/sensor-testing data. NOT for a specific tracked Maintenance task's mileage/"
+                "engine hours/sensor value — use log_maintenance_reading for that instead."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "series": {"type": "string", "description": "The series name, e.g. 'soil moisture'."},
+                    "value": {"type": "number", "description": "The reading's numeric value."},
+                    "unit": {"type": "string", "description": "Optional unit, e.g. '%', 'V', 'F'."},
+                    "note": {"type": "string", "description": "Optional note about this reading."},
+                },
+                "required": ["series", "value"],
+            },
+            handler=self._action_log_lab_reading,
+            trigger_phrases=(
+                "log a reading", "log a measurement", "log a value", "record a reading", "add a reading",
+                "log this reading",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_lab_series",
+            domain="lab",
+            description="List every Data Logger series name in MIA's Lab module that has at least one logged reading.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_lab_series,
+            # "data series" often has words inserted before "am i
+            # logging" ("What data series am I logging in the Lab?") —
+            # same name/noun-insertion gap as several other bare
+            # triggers in this registry. Added narrower but still
+            # distinctive compounds rather than a fully generic bare
+            # "series" (too easy to collide with an unrelated "TV
+            # series"/"a series of events").
+            trigger_phrases=(
+                "what series do i have", "list my data series", "what am i logging", "list lab series",
+                "show my series", "what series", "data series", "my series",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_lab_readings",
+            domain="lab",
+            description="List the logged readings for one Data Logger series in MIA's Lab module, oldest first.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "series": {"type": "string", "description": "The series name to list readings for."},
+                },
+                "required": ["series"],
+            },
+            handler=self._action_list_lab_readings,
+            trigger_phrases=("show me the readings for", "what are my readings for", "readings for", "history for", "show my data for"),
+        ))
 
     @staticmethod
     def _action_open_module(context: AppContext, arguments: dict) -> str:
@@ -3313,6 +3381,63 @@ class MIAApplication:
             return error
         context.maintenance.delete_task(task.task_id)
         return f"Deleted the maintenance task '{task.title}'."
+
+    # ------------------------------------------------------------------
+    # Lab (Data Logger) actions
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _resolve_lab_series(context: AppContext, requested: str) -> str:
+        """Case-insensitive match against existing series names, reusing
+        the exact stored id if one matches — so 'Soil Moisture' and
+        'soil moisture' don't silently fragment into two series. Falls
+        back to the requested string verbatim when nothing matches yet
+        (a brand-new series, created implicitly on first reading — same
+        "no separate series-registry file" convention as
+        core.data_logger_manager's own design)."""
+        canonical = next((s for s in context.data_logger.list_series() if s.lower() == requested.lower()), None)
+        return canonical or requested
+
+    @staticmethod
+    def _action_log_lab_reading(context: AppContext, arguments: dict) -> str:
+        series = str(arguments.get("series", "")).strip()
+        if not series:
+            return "I need a series name to log a reading under."
+        value = arguments.get("value")
+        if value is None:
+            return "I need a value to log."
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            return "That value doesn't look like a number."
+        series = MIAApplication._resolve_lab_series(context, series)
+        unit = str(arguments.get("unit", "") or "")
+        note = str(arguments.get("note", "") or "")
+        reading = context.data_logger.add_reading(series_id=series, value=value, unit=unit, note=note)
+        unit_part = f" {reading.unit}" if reading.unit else ""
+        return f"Logged {reading.value:g}{unit_part} to '{series}'."
+
+    @staticmethod
+    def _action_list_lab_series(context: AppContext, arguments: dict) -> str:
+        series = context.data_logger.list_series()
+        if not series:
+            return "You have no Data Logger series yet."
+        return "Data Logger series:\n" + "\n".join(f"- {s}" for s in series)
+
+    @staticmethod
+    def _action_list_lab_readings(context: AppContext, arguments: dict) -> str:
+        series = str(arguments.get("series", "")).strip()
+        if not series:
+            return "I need a series name to list readings for."
+        series = MIAApplication._resolve_lab_series(context, series)
+        readings = context.data_logger.readings_for(series)
+        if not readings:
+            return f"No readings logged for '{series}' yet."
+        lines = [
+            f"- {r.timestamp}: {r.value:g}" + (f" {r.unit}" if r.unit else "") + (f" — {r.note}" if r.note else "")
+            for r in readings
+        ]
+        return f"Readings for '{series}':\n" + "\n".join(lines)
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()
