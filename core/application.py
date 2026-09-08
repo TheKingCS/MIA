@@ -20,7 +20,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import urllib.error
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
@@ -56,7 +56,14 @@ from core.expedition_manager import ExpeditionManager
 from core.hash_identifier import identify_hash
 from core.inventory_manager import InventoryManager
 from core.journal_manager import JournalManager
-from core.maintenance_manager import MaintenanceManager
+from core.maintenance_manager import (
+    ASSET_CATEGORIES as MAINTENANCE_ASSET_CATEGORIES,
+    MaintenanceManager,
+    MaintenanceTask,
+    days_until_due as maintenance_days_until_due,
+    is_sensor_task_due,
+    meter_used_since_last,
+)
 from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.map_tile_cache import MapTileCache
@@ -552,7 +559,11 @@ class MIAApplication:
         self.context.assistant_actions.register(AssistantAction(
             name="add_alarm",
             domain="alarms",
-            description="Create a new alarm in MIA",
+            description=(
+                "Create a new alarm in MIA for a specific clock time (e.g. wake up at 07:00). "
+                "NOT for recurring vehicle/equipment upkeep on a day interval (e.g. 'change the oil "
+                "every 6 months') — use add_maintenance_task for that instead."
+            ),
             parameters={
                 "type": "object",
                 "properties": {
@@ -1939,6 +1950,230 @@ class MIAApplication:
                 "what's the voltage", "what is the voltage",
             ),
         ))
+        # --- Maintenance (vehicles, power equipment, appliances,
+        # property, tools) — 2026-09-07, closing the gap found in a
+        # full-registry audit: 76 actions existed across 19 domains and
+        # Maintenance (built the same session, a substantial new
+        # feature — assets, 6 trigger types, documents, meter/sensor
+        # logging) had zero. Real collision risk against two existing
+        # domains, deliberately not avoided by picking evasive trigger
+        # phrases but resolved the same way this registry always has —
+        # distinct tool descriptions + live-model verification
+        # (tests/live_model_check.py): "projects" already owns generic
+        # "add/list/delete a task" phrasing (core.task_manager.Task,
+        # under a Project) — a maintenance task is a DIFFERENT concept
+        # (recurring upkeep tied to an asset), so both domains
+        # legitimately attach together on ambiguous phrasing and the
+        # model disambiguates via description, same pattern as the
+        # existing add_note/add_trip_log_entry collision. "alarms"
+        # already owns "remind me" — a real "remind me to change the
+        # oil every 6 months" phrasing plausibly attaches both domains
+        # too; verified live rather than assumed safe.
+        #
+        # add_maintenance_task is deliberately calendar-trigger-only —
+        # asking the model to correctly extract a meter unit/interval/
+        # threshold/direction from a sentence is a much riskier parse
+        # than this registry's established 1-2-field extractions, and
+        # every existing action here favors that same "one clean field
+        # or two" shape (add_alarm: label+time; add_task: project+title).
+        # Runtime/Mileage/Cycles/Condition/Sensor tasks still need the
+        # Maintenance module's own dialog, where the interval/threshold/
+        # direction fields are all visible together — stated plainly in
+        # this tool's own description, not silently unsupported.
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_maintenance_asset",
+            domain="maintenance",
+            description=(
+                "Add a new vehicle, power equipment, appliance, property item, or tool to MIA's "
+                "Maintenance tracker (not Inventory, and not Workshop's electronics parts)."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "A short name, e.g. '2019 Ford F-150', 'Lawn Mower'."},
+                    "category": {
+                        "type": "string",
+                        "description": f"One of: {', '.join(MAINTENANCE_ASSET_CATEGORIES)}. Defaults to 'Other' if unclear.",
+                    },
+                },
+                "required": ["name"],
+            },
+            handler=self._action_add_maintenance_asset,
+            trigger_phrases=(
+                "track my", "start tracking", "add a vehicle", "add an asset to maintenance", "add to maintenance",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_maintenance_assets",
+            domain="maintenance",
+            description="List every vehicle, power equipment, appliance, property item, and tool tracked in MIA's Maintenance tracker.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_maintenance_assets,
+            trigger_phrases=(
+                "what vehicles", "list my vehicles", "list my equipment", "what am i tracking",
+                "list maintenance assets", "show my assets", "what's in my garage",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_maintenance_asset",
+            domain="maintenance",
+            destructive=True,
+            description="Delete a vehicle/equipment/appliance/property/tool from MIA's Maintenance tracker by name (also deletes its tasks).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "The exact name of the asset to delete."},
+                },
+                "required": ["name"],
+            },
+            handler=self._action_delete_maintenance_asset,
+            trigger_phrases=("delete a vehicle", "remove a vehicle", "delete an asset", "stop tracking", "remove from maintenance"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="add_maintenance_task",
+            domain="maintenance",
+            description=(
+                "Add a recurring or one-time CALENDAR-based maintenance task tied to an existing vehicle/"
+                "equipment/appliance/property/tool asset in MIA (e.g. 'change the truck's oil every 90 "
+                "days', 'renew tags every year'). NOT a clock-time alarm — use this whenever the task "
+                "repeats on a day interval for a specific owned asset, even if phrased as 'remind me to'. "
+                "Only for day-interval recurrence — mileage/engine-hour/start-count/sensor-triggered tasks "
+                "need the Maintenance module's own screen, not this tool. Only for SETTING UP a new task — "
+                "if the user is reporting they already did something (past tense, e.g. 'I renewed the "
+                "tags'), use complete_maintenance_task instead, not this."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "asset_name": {"type": "string", "description": "The exact name of the existing asset this task is for."},
+                    "title": {"type": "string", "description": "A short task title, e.g. 'Oil change', 'Renew tags'."},
+                    "interval_days": {
+                        "type": "integer",
+                        "description": "Repeat every N days. Omit for a one-time task.",
+                    },
+                },
+                "required": ["asset_name", "title"],
+            },
+            handler=self._action_add_maintenance_task,
+            trigger_phrases=(
+                "add a maintenance task", "schedule maintenance", "set up maintenance",
+                "add an oil change", "maintenance task", "service reminder", "remind me to service",
+                # Broadened from the too-narrow "remind me to change the
+                # oil" — real phrasing inserts the asset's own name/
+                # possessive between verb and noun ("remind me to
+                # change my Truck's oil"), same class of gap as
+                # delete_alarm's name-before-noun fix. A strict superset
+                # of alarms' own bare "remind me" trigger, so this adds
+                # no new false-positive surface beyond what that
+                # already accepts.
+                "remind me to change", "every months",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="list_maintenance_tasks",
+            domain="maintenance",
+            description=(
+                "List MIA's maintenance tasks and their real due/overdue status, optionally filtered by a "
+                "keyword matching the task title or asset name. Leave query empty to list everything."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional keyword to filter by task title or asset name."},
+                },
+                "required": [],
+            },
+            handler=self._action_list_maintenance_tasks,
+            trigger_phrases=(
+                "what maintenance is due", "what's due for maintenance", "list maintenance tasks",
+                "what maintenance do i have", "is anything overdue", "maintenance status", "what needs maintenance",
+                "what maintenance is overdue",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="complete_maintenance_task",
+            domain="maintenance",
+            description=(
+                "Mark an EXISTING maintenance task complete/done in MIA by title, because the user is "
+                "reporting they already did it (past tense — 'I renewed the tags', 'I changed the oil'). "
+                "Optionally name the asset to disambiguate. Do NOT use this to set up a new task — use "
+                "add_maintenance_task for that instead."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The task's title, e.g. 'Oil change'."},
+                    "asset_name": {"type": "string", "description": "Optional — the asset's name, needed only if more than one asset has a same-titled task."},
+                    "meter_value": {
+                        "type": "number",
+                        "description": "For a mileage/runtime/cycles/condition task, the meter reading at completion. Omit to use the latest logged reading.",
+                    },
+                },
+                "required": ["title"],
+            },
+            handler=self._action_complete_maintenance_task,
+            # No fixed phrase list can enumerate every task-specific way
+            # to say "I did the thing" ("I renewed the tags", "I rotated
+            # the tires", "I inspected the brakes", ...) — same real
+            # limitation this registry already accepts for "note "
+            # (core/application.py's delete_note trigger comment).
+            # Covers the common maintenance completion verbs found via
+            # live-model testing rather than guessing further ones.
+            trigger_phrases=(
+                "i changed the oil", "i finished the maintenance", "mark maintenance done",
+                "completed the maintenance", "did the oil change", "serviced my", "maintenance complete",
+                "finished servicing", "i renewed", "i replaced", "i repaired", "i rotated", "i inspected",
+                "i fixed my", "just did the",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="log_maintenance_reading",
+            domain="maintenance",
+            description=(
+                "Log a meter/sensor reading (mileage, engine hours, start count, a sensor value like battery "
+                "voltage) for an existing mileage/runtime/cycles/condition/sensor-triggered maintenance task."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The task's title, e.g. 'Oil change'."},
+                    "asset_name": {"type": "string", "description": "Optional — the asset's name, needed only if more than one asset has a same-titled task."},
+                    "value": {"type": "number", "description": "The current reading value, e.g. 46000 for miles."},
+                    "unit": {"type": "string", "description": "Optional unit, e.g. 'miles', 'hours', 'V'."},
+                },
+                "required": ["title", "value"],
+            },
+            handler=self._action_log_maintenance_reading,
+            # Tried a bare "log " (trailing space) here to catch "Log
+            # 46000 miles" (a real number always sits between "log" and
+            # the unit, so no fixed compound can match it) — live-model
+            # testing found it made an UNRELATED "I need to log off for
+            # the night" gate open and hallucinate set_birthday. Reverted:
+            # same accepted trade-off this registry already made for
+            # "note " (too common a word to gate safely) — "log <value>
+            # <unit>" with no other maintenance-specific wording is a
+            # known, real gap, not silently assumed fixed.
+            trigger_phrases=(
+                "log the mileage", "log miles", "log a reading", "log the odometer",
+                "update the mileage", "log engine hours", "log the voltage",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="delete_maintenance_task",
+            domain="maintenance",
+            destructive=True,
+            description="Delete a maintenance task in MIA by title (optionally naming the asset to disambiguate).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "The task's title to delete."},
+                    "asset_name": {"type": "string", "description": "Optional — the asset's name, needed only if more than one asset has a same-titled task."},
+                },
+                "required": ["title"],
+            },
+            handler=self._action_delete_maintenance_task,
+            trigger_phrases=("delete a maintenance task", "remove a maintenance task", "delete the maintenance task"),
+        ))
 
     @staticmethod
     def _action_open_module(context: AppContext, arguments: dict) -> str:
@@ -2906,6 +3141,178 @@ class MIAApplication:
             return f"I don't have a mission called '{arguments.get('name', '')}'."
         context.missions.update_mission(match.mission_id, status="completed")
         return f"Marked the mission '{match.name}' as completed. Nice work!"
+
+    # ------------------------------------------------------------------
+    # Maintenance actions — see the registration block's comment above
+    # for the collision-risk/scope-limitation reasoning.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _resolve_maintenance_task(context: AppContext, title: str, asset_name: str) -> tuple[Optional[MaintenanceTask], Optional[str]]:
+        """Exact case-insensitive title match, optionally narrowed by
+        asset name — never fuzzy, same fail-closed name-resolution
+        discipline as every other write/destructive action in this
+        registry. Returns (task, None) on a unique match, or
+        (None, error_message) otherwise — including "multiple assets
+        share this task title," which asks the user to disambiguate
+        rather than guessing which one they meant."""
+        candidates = [t for t in context.maintenance.all_tasks() if t.title.lower() == title.lower()]
+        if asset_name:
+            asset = next((a for a in context.maintenance.all_assets() if a.name.lower() == asset_name.lower()), None)
+            if asset is None:
+                return None, f"I don't have a maintenance asset called '{asset_name}'."
+            candidates = [t for t in candidates if t.asset_id == asset.asset_id]
+        if not candidates:
+            return None, f"I don't have a maintenance task called '{title}'" + (f" for {asset_name}." if asset_name else ".")
+        if len(candidates) > 1:
+            names = sorted({
+                (context.maintenance.get_asset(t.asset_id).name if context.maintenance.get_asset(t.asset_id) else "Unknown asset")
+                for t in candidates
+            })
+            return None, f"Multiple assets have a task called '{title}' ({', '.join(names)}) — tell me which one."
+        return candidates[0], None
+
+    @staticmethod
+    def _action_add_maintenance_asset(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip()
+        if not name:
+            return "I need a name to add a maintenance asset."
+        category = str(arguments.get("category", "") or "Other").strip()
+        if category not in MAINTENANCE_ASSET_CATEGORIES:
+            category = "Other"
+        asset = context.maintenance.add_asset(name=name, category=category)
+        return f"Added '{asset.name}' to Maintenance as a {asset.category}."
+
+    @staticmethod
+    def _action_list_maintenance_assets(context: AppContext, arguments: dict) -> str:
+        assets = context.maintenance.all_assets()
+        if not assets:
+            return "You have no vehicles or equipment tracked in Maintenance yet."
+        lines = [f"- {a.name} [{a.category}]" for a in assets]
+        return "Tracked in Maintenance:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_delete_maintenance_asset(context: AppContext, arguments: dict) -> str:
+        name = str(arguments.get("name", "")).strip().lower()
+        match = next((a for a in context.maintenance.all_assets() if a.name.lower() == name), None)
+        if match is None:
+            return f"I don't have a maintenance asset called '{arguments.get('name', '')}'."
+        context.maintenance.delete_asset(match.asset_id)
+        return f"Deleted '{match.name}' from Maintenance."
+
+    @staticmethod
+    def _action_add_maintenance_task(context: AppContext, arguments: dict) -> str:
+        asset_name = str(arguments.get("asset_name", "")).strip()
+        asset = next((a for a in context.maintenance.all_assets() if a.name.lower() == asset_name.lower()), None)
+        if asset is None:
+            return f"I don't have a maintenance asset called '{asset_name}'."
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a task title."
+        interval_days = arguments.get("interval_days")
+        interval_days = int(interval_days) if interval_days not in (None, "") else None
+        task = context.maintenance.add_task(asset_id=asset.asset_id, title=title, interval_days=interval_days)
+        if interval_days:
+            return f"Added '{task.title}' for {asset.name}, repeating every {interval_days} days."
+        return f"Added '{task.title}' for {asset.name} (one-time)."
+
+    @staticmethod
+    def _action_list_maintenance_tasks(context: AppContext, arguments: dict) -> str:
+        query = str(arguments.get("query", "") or "").strip().lower()
+        today = date.today()
+        lines = []
+        for task in context.maintenance.all_tasks():
+            asset = context.maintenance.get_asset(task.asset_id)
+            asset_name = asset.name if asset is not None else "Unknown asset"
+            if query and query not in task.title.lower() and query not in asset_name.lower():
+                continue
+
+            if task.trigger_type == "calendar":
+                remaining = maintenance_days_until_due(task, today)
+                if remaining is None:
+                    status = "one-time" if task.interval_days is None else "never done"
+                elif remaining < 0:
+                    status = f"overdue by {-remaining} days"
+                elif remaining == 0:
+                    status = "due today"
+                else:
+                    status = f"due in {remaining} days"
+            elif task.is_meter_task:
+                unit = task.meter_unit or "units"
+                readings = context.maintenance.readings_for_task(task.task_id)
+                if task.last_completed_meter_value is None:
+                    status = "never done"
+                elif not readings:
+                    status = "no readings logged"
+                else:
+                    used = meter_used_since_last(task, readings) or 0.0
+                    interval = task.meter_interval or 0.0
+                    remaining_units = interval - used
+                    status = (
+                        f"overdue by {-remaining_units:.0f} {unit}"
+                        if remaining_units <= 0
+                        else f"{used:.0f}/{interval:.0f} {unit} used"
+                    )
+            elif task.is_sensor_task:
+                readings = context.maintenance.readings_for_task(task.task_id)
+                if not readings:
+                    status = "no readings logged"
+                else:
+                    latest = readings[-1].value
+                    unit = task.meter_unit or ""
+                    status = "due" if is_sensor_task_due(task, readings) else f"ok ({latest:g}{unit})"
+            else:
+                status = "unknown"
+
+            lines.append(f"- {task.title} ({asset_name}): {status}")
+
+        if not lines:
+            return "No maintenance tasks match that." if query else "You have no maintenance tasks tracked yet."
+        return "Maintenance tasks:\n" + "\n".join(lines)
+
+    @staticmethod
+    def _action_complete_maintenance_task(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a task title to mark complete."
+        task, error = MIAApplication._resolve_maintenance_task(context, title, str(arguments.get("asset_name", "") or "").strip())
+        if error:
+            return error
+        meter_value = arguments.get("meter_value")
+        meter_value = float(meter_value) if meter_value not in (None, "") else None
+        context.maintenance.mark_complete(task.task_id, meter_value=meter_value)
+        return f"Marked '{task.title}' complete."
+
+    @staticmethod
+    def _action_log_maintenance_reading(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a task title to log a reading for."
+        value = arguments.get("value")
+        if value is None:
+            return "I need a value to log."
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            return "That value doesn't look like a number."
+        task, error = MIAApplication._resolve_maintenance_task(context, title, str(arguments.get("asset_name", "") or "").strip())
+        if error:
+            return error
+        unit = str(arguments.get("unit", "") or "")
+        reading = context.maintenance.log_reading(task.task_id, value, unit=unit)
+        unit_part = f" {reading.unit}" if reading.unit else ""
+        return f"Logged {reading.value:g}{unit_part} for '{task.title}'."
+
+    @staticmethod
+    def _action_delete_maintenance_task(context: AppContext, arguments: dict) -> str:
+        title = str(arguments.get("title", "")).strip()
+        if not title:
+            return "I need a task title to delete."
+        task, error = MIAApplication._resolve_maintenance_task(context, title, str(arguments.get("asset_name", "") or "").strip())
+        if error:
+            return error
+        context.maintenance.delete_task(task.task_id)
+        return f"Deleted the maintenance task '{task.title}'."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

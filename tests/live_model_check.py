@@ -46,9 +46,11 @@ import core.config_manager as config_manager_module
 import core.conversation_manager as conversation_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
+import core.data_logger_manager as data_logger_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
 import core.ledger_manager as ledger_manager_module
+import core.maintenance_manager as maintenance_manager_module
 import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
 import core.product_manager as product_manager_module
@@ -82,6 +84,11 @@ trip_manager_module._DATA_DIR = _TEMP_DATA_DIR
 trip_manager_module._TRIPS_FILE = _TEMP_DATA_DIR / "trips.json"
 calendar_manager_module._DATA_DIR = _TEMP_DATA_DIR
 calendar_manager_module._EVENTS_FILE = _TEMP_DATA_DIR / "calendar_events.json"
+maintenance_manager_module._DATA_DIR = _TEMP_DATA_DIR
+maintenance_manager_module._MAINTENANCE_FILE = _TEMP_DATA_DIR / "maintenance.json"
+maintenance_manager_module._DOCUMENT_ROOT = _TEMP_DATA_DIR / "maintenance_documents"
+data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
+data_logger_manager_module._READINGS_FILE = _TEMP_DATA_DIR / "data_logger_readings.json"
 component_manager_module._DATA_DIR = _TEMP_DATA_DIR
 component_manager_module._COMPONENTS_FILE = _TEMP_DATA_DIR / "components.json"
 script_library_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -122,9 +129,11 @@ from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
+from core.data_logger_manager import DataLoggerManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
 from core.ledger_manager import LedgerManager
+from core.maintenance_manager import MaintenanceManager
 from core.llm_manager import LLMManager
 from core.material_manager import MaterialManager
 from core.memory_manager import MemoryManager
@@ -340,6 +349,46 @@ GOLDEN_CASES = [
     ),
     ("delete a trail map", "Delete my trail map for Mammoth Cave", "delete_trail_map"),
     ("false-positive sanity: ordinary use of the word 'map'", "I can't map out my whole week right now", None),
+    # --- 2026-09-07: Maintenance module had zero Assistant actions
+    # until now — real gap found via a full-registry coverage audit
+    # (76 actions across 19 domains, Maintenance had none despite being
+    # a substantial feature: assets, 6 trigger types, documents,
+    # meter/sensor readings). Two real collision risks tested below
+    # rather than assumed safe: "projects" already owns generic
+    # "add/list a task" phrasing, and "alarms" already owns bare
+    # "remind me" — a maintenance task is a legitimately different
+    # concept from either, so both domains attaching together and the
+    # model disambiguating via tool description is expected, same
+    # pattern as the existing add_note/add_trip_log_entry collision.
+    ("add maintenance asset", "Track my Truck as a vehicle in Maintenance", "add_maintenance_asset"),
+    ("list maintenance assets", "What vehicles and equipment am I tracking in Maintenance?", "list_maintenance_assets"),
+    ("delete maintenance asset", "Stop tracking my Truck in Maintenance", "delete_maintenance_asset"),
+    (
+        "add maintenance task, collision risk vs. add_alarm's bare 'remind me'",
+        "Remind me to change my Truck's oil every 180 days",
+        "add_maintenance_task",
+    ),
+    ("list maintenance tasks, due question", "What maintenance is due on my Truck?", "list_maintenance_tasks"),
+    ("list maintenance tasks, overdue question", "Is anything overdue for maintenance?", "list_maintenance_tasks"),
+    ("complete maintenance task", "I renewed the tags on my Truck", "complete_maintenance_task"),
+    ("log a meter reading", "Log a reading of 46000 miles for the Oil Change on my Truck", "log_maintenance_reading"),
+    (
+        "known accepted gap: bare 'Log <value> <unit>' with no other maintenance wording doesn't gate open "
+        "(same trade-off this registry already accepts for 'note ' — too common a word to match safely)",
+        "Log 46000 miles for the Oil Change on my Truck",
+        None,
+    ),
+    ("delete maintenance task", "Delete the Renew Tags maintenance task", "delete_maintenance_task"),
+    (
+        "false-positive sanity: ordinary use of the word 'service' unrelated to maintenance",
+        "I volunteered to do community service this weekend",
+        None,
+    ),
+    (
+        "collision risk: 'what tasks' must still resolve to Project Manager's list_tasks, not maintenance",
+        "What tasks do I have?",
+        "list_tasks",
+    ),
 ]
 
 
@@ -368,6 +417,8 @@ def _build_context() -> AppContext:
     context.expeditions = ExpeditionManager(context)
     context.trips = TripManager(context)
     context.calendar = CalendarManager(context)
+    context.maintenance = MaintenanceManager(context)
+    context.data_logger = DataLoggerManager(context)
     context.components = ComponentManager(context)
     context.scripts = ScriptLibraryManager(context)
     context.profiles = ProfileManager(context)
@@ -414,6 +465,12 @@ def _seed_fixtures(context: AppContext) -> None:
     trip = context.trips.add_trip(expedition_id=expedition.expedition_id, name="Day 1", activity_type="Hiking")
     context.trips.add_gear_item(trip.trip_id, label="First aid kit")
     context.calendar.add_event(title="Doctor Appointment", date="2026-08-14", time="09:00")
+    truck = context.maintenance.add_asset(name="Truck", category="Vehicle")
+    context.maintenance.add_task(truck.asset_id, "Renew Tags", interval_days=365, last_completed="2026-01-01")
+    mileage_task = context.maintenance.add_task(
+        truck.asset_id, "Oil Change", trigger_type="mileage", meter_unit="miles", meter_interval=5000
+    )
+    context.maintenance.mark_complete(mileage_task.task_id, meter_value=40000)
     context.components.add_component(name="M3 bolts", quantity=25, category="Fastener")
     context.scripts.add_script(name="Backup", interpreter="shell", category="Maintenance")
     context.profiles.create_profile(name="Zac", make_active=True)
