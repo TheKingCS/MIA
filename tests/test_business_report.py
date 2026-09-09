@@ -13,7 +13,10 @@ from core.budget_manager import BudgetTarget
 from core.business_report import build_business_report_html
 
 
-def _property(name="123 Main St", current_value=280000.0, mortgage_balance=150000.0, noi=12000.0, cap_rate=0.0429):
+def _property(
+    name="123 Main St", current_value=280000.0, mortgage_balance=150000.0, noi=12000.0, cap_rate=0.0429,
+    annual_depreciation=8000.0,
+):
     return {
         "name": name,
         "type": "Rental",
@@ -22,6 +25,7 @@ def _property(name="123 Main St", current_value=280000.0, mortgage_balance=15000
         "equity": current_value - mortgage_balance,
         "noi": noi,
         "cap_rate": cap_rate,
+        "annual_depreciation": annual_depreciation,
     }
 
 
@@ -97,9 +101,25 @@ def test_property_row_includes_equity_noi_cap_rate():
     prop = _property(name="123 Main St", current_value=280000.0, mortgage_balance=150000.0, noi=12000.0, cap_rate=0.0429)
     html = _build(properties=[prop])
     assert "123 Main St" in html
-    assert "$130,000.00" in html  # equity
-    assert "$12,000.00" in html  # noi
+    assert "$130,000" in html  # equity — whole-dollar in this table, see _money_whole()
+    assert "$12,000" in html  # noi — also whole-dollar, see _portfolio_table()'s own comment on why
     assert "4.3%" in html  # cap rate
+
+
+def test_property_row_includes_annual_depreciation():
+    prop = _property(name="123 Main St", annual_depreciation=8181.82)
+    html = _build(properties=[prop])
+    assert "Annual" in html and "Depreciation" in html  # header renders as "Annual<br>Depreciation"
+    assert "$8,181.82" in html
+
+
+def test_portfolio_totals_row_sums_annual_depreciation():
+    props = [
+        _property(name="A", annual_depreciation=5000.0),
+        _property(name="B", annual_depreciation=3000.0),
+    ]
+    html = _build(properties=props)
+    assert "$8,000.00" in html  # total annual depreciation
 
 
 def test_property_row_shows_dash_for_none_cap_rate():
@@ -115,10 +135,10 @@ def test_portfolio_totals_row_sums_value_mortgage_equity():
         _property(name="B", current_value=100000.0, mortgage_balance=50000.0, noi=4000.0, cap_rate=0.04),
     ]
     html = _build(properties=props)
-    assert "$300,000.00" in html  # total current value
-    assert "$150,000.00" in html  # total mortgage balance
-    assert "$150,000.00" in html  # total equity (also 150,000 here, both present)
-    assert "$12,000.00" in html  # total noi
+    assert "$300,000" in html  # total current value — whole-dollar in this table
+    assert "$150,000" in html  # total mortgage balance
+    assert "$150,000" in html  # total equity (also 150,000 here, both present)
+    assert "$12,000" in html  # total noi — also whole-dollar
 
 
 def test_no_properties_shows_empty_state():

@@ -87,7 +87,7 @@ from core.budget_manager import (
     days_until_bill_due,
     days_until_income_due,
 )
-from core.real_estate_manager import equity as property_equity
+from core.real_estate_manager import annual_depreciation, equity as property_equity
 from core.search_manager import SearchResult
 from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
@@ -921,6 +921,7 @@ class BudgetModule(ModuleBase):
                 "equity": property_equity(prop),
                 "noi": real_estate.net_operating_income(prop.property_id, start, end),
                 "cap_rate": real_estate.cap_rate(prop.property_id, start, end),
+                "annual_depreciation": annual_depreciation(prop),
             })
 
         html = build_business_report_html(

@@ -38,7 +38,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -67,6 +67,13 @@ class Property:
     mortgage_balance: float = 0.0
     entity_id: str = ""  # set when this property belongs to a core.budget_manager.BusinessEntity (LLC/etc.)
     maintenance_asset_id: str = ""  # optional link to a core.maintenance_manager.MaintenanceAsset (category="Property")
+    # 2026-09-09: depreciation tracking. land_value is the portion of
+    # purchase_price that's NOT depreciable (land itself never
+    # depreciates under US tax law); placed_in_service_date is when
+    # depreciation starts — "" falls back to purchase_date, see
+    # annual_depreciation()/accumulated_depreciation() below.
+    land_value: float = 0.0
+    placed_in_service_date: str = ""
     notes: str = ""
     created_at: str = ""
 
@@ -76,7 +83,9 @@ class Property:
             "purchase_date": self.purchase_date, "purchase_price": self.purchase_price,
             "current_value": self.current_value, "mortgage_balance": self.mortgage_balance,
             "entity_id": self.entity_id,
-            "maintenance_asset_id": self.maintenance_asset_id, "notes": self.notes, "created_at": self.created_at,
+            "maintenance_asset_id": self.maintenance_asset_id,
+            "land_value": self.land_value, "placed_in_service_date": self.placed_in_service_date,
+            "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -91,6 +100,8 @@ class Property:
             mortgage_balance=data.get("mortgage_balance", 0.0),
             entity_id=data.get("entity_id", ""),
             maintenance_asset_id=data.get("maintenance_asset_id", ""),
+            land_value=data.get("land_value", 0.0),
+            placed_in_service_date=data.get("placed_in_service_date", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -99,6 +110,57 @@ class Property:
 def equity(property_: Property) -> float:
     """Pure logic — testable without Qt."""
     return property_.current_value - property_.mortgage_balance
+
+
+# US IRS Publication 946's straight-line MACRS period for residential
+# rental real property. Only Rental/Investment property types are
+# eligible for depreciation at all — a Primary Residence is never
+# depreciated for tax purposes even if it has a real depreciable basis.
+RESIDENTIAL_USEFUL_LIFE_YEARS = 27.5
+_DEPRECIABLE_PROPERTY_TYPES = {"Rental", "Investment"}
+
+
+def depreciable_basis(property_: Property) -> float:
+    """Pure logic — testable without Qt. Land is never depreciable —
+    the depreciable basis is purchase price minus the land's own
+    value, never negative (a land_value entered larger than
+    purchase_price clamps to a $0 basis rather than going negative)."""
+    return max(0.0, property_.purchase_price - property_.land_value)
+
+
+def annual_depreciation(property_: Property, useful_life_years: float = RESIDENTIAL_USEFUL_LIFE_YEARS) -> float:
+    """Pure logic — testable without Qt. Straight-line depreciation
+    (basis / useful life) — a real, honest approximation, not a full
+    tax-filing computation: it doesn't implement the mid-month
+    convention IRS Form 4562 technically requires for the placed-in-
+    service/disposal years, same "real correct-shaped number, not
+    fabricated precision" boundary core.maintenance_manager's
+    Prediction feature already draws."""
+    if property_.property_type not in _DEPRECIABLE_PROPERTY_TYPES or useful_life_years <= 0:
+        return 0.0
+    return depreciable_basis(property_) / useful_life_years
+
+
+def accumulated_depreciation(
+    property_: Property, as_of: date, useful_life_years: float = RESIDENTIAL_USEFUL_LIFE_YEARS
+) -> float:
+    """Pure logic — testable without Qt. Years elapsed since the
+    property was placed in service (placed_in_service_date, falling
+    back to purchase_date if never set) times the annual rate, clamped
+    to [0, depreciable_basis] — never negative (as_of before the start
+    date) and never past the full basis (fully depreciated)."""
+    annual = annual_depreciation(property_, useful_life_years)
+    if annual <= 0.0:
+        return 0.0
+    start_str = property_.placed_in_service_date or property_.purchase_date
+    try:
+        start = date.fromisoformat(start_str)
+    except ValueError:
+        return 0.0
+    years_elapsed = (as_of - start).days / 365.25
+    if years_elapsed <= 0:
+        return 0.0
+    return min(depreciable_basis(property_), annual * years_elapsed)
 
 
 def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str]) -> bool:
@@ -151,6 +213,8 @@ class RealEstateManager:
         current_value: float = 0.0,
         mortgage_balance: float = 0.0,
         entity_id: str = "",
+        land_value: float = 0.0,
+        placed_in_service_date: str = "",
         notes: str = "",
     ) -> Property:
         prop = Property(
@@ -162,6 +226,8 @@ class RealEstateManager:
             current_value=max(0.0, current_value),
             mortgage_balance=max(0.0, mortgage_balance),
             entity_id=entity_id,
+            land_value=max(0.0, land_value),
+            placed_in_service_date=placed_in_service_date,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -180,7 +246,7 @@ class RealEstateManager:
             setattr(prop, key, value)
         if prop.property_type not in PROPERTY_TYPES:
             prop.property_type = "Other"
-        for numeric_field in ("purchase_price", "current_value", "mortgage_balance"):
+        for numeric_field in ("purchase_price", "current_value", "mortgage_balance", "land_value"):
             if getattr(prop, numeric_field) < 0:
                 setattr(prop, numeric_field, 0.0)
         self._save()

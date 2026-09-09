@@ -34,9 +34,10 @@ class AddEditPropertyDialog(QDialog):
     def __init__(self, parent=None, property_: Optional[Property] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Property" if property_ is not None else "New Property")
-        self.setFixedSize(360, 540)
+        self.setFixedSize(360, 640)
 
         self._entities = entities or []
+        self._is_new = property_ is None
 
         layout = QVBoxLayout(self)
 
@@ -54,13 +55,26 @@ class AddEditPropertyDialog(QDialog):
         self.purchase_date_edit = QDateEdit()
         self.purchase_date_edit.setCalendarPopup(True)
         self.purchase_date_edit.setDisplayFormat(_ISO_DATE_FORMAT)
+        self.purchase_date_edit.dateChanged.connect(self._on_purchase_date_changed)
         layout.addWidget(self.purchase_date_edit)
+
+        layout.addWidget(QLabel("Placed in Service Date:"))
+        self.placed_in_service_date_edit = QDateEdit()
+        self.placed_in_service_date_edit.setCalendarPopup(True)
+        self.placed_in_service_date_edit.setDisplayFormat(_ISO_DATE_FORMAT)
+        layout.addWidget(self.placed_in_service_date_edit)
 
         layout.addWidget(QLabel("Purchase Price ($):"))
         self.purchase_price_spin = QDoubleSpinBox()
         self.purchase_price_spin.setRange(0.0, 100_000_000.0)
         self.purchase_price_spin.setDecimals(2)
         layout.addWidget(self.purchase_price_spin)
+
+        layout.addWidget(QLabel("Land Value ($):"))
+        self.land_value_spin = QDoubleSpinBox()
+        self.land_value_spin.setRange(0.0, 100_000_000.0)
+        self.land_value_spin.setDecimals(2)
+        layout.addWidget(self.land_value_spin)
 
         layout.addWidget(QLabel("Current Value ($):"))
         self.current_value_spin = QDoubleSpinBox()
@@ -103,6 +117,8 @@ class AddEditPropertyDialog(QDialog):
         self._current_value: float = 0.0
         self._mortgage_balance: float = 0.0
         self._entity_id: str = ""
+        self._land_value: float = 0.0
+        self._placed_in_service_date: str = ""
         self._notes: str = ""
 
     def _prefill(self, property_: Optional[Property]) -> None:
@@ -112,7 +128,11 @@ class AddEditPropertyDialog(QDialog):
                 self.type_combo.setCurrentText(property_.property_type)
             if property_.purchase_date:
                 self.purchase_date_edit.setDate(QDate.fromString(property_.purchase_date, _ISO_DATE_FORMAT))
+            placed_in_service = property_.placed_in_service_date or property_.purchase_date
+            if placed_in_service:
+                self.placed_in_service_date_edit.setDate(QDate.fromString(placed_in_service, _ISO_DATE_FORMAT))
             self.purchase_price_spin.setValue(property_.purchase_price)
+            self.land_value_spin.setValue(property_.land_value)
             self.current_value_spin.setValue(property_.current_value)
             self.mortgage_balance_spin.setValue(property_.mortgage_balance)
             if property_.entity_id:
@@ -121,6 +141,15 @@ class AddEditPropertyDialog(QDialog):
             self.notes_edit.setPlainText(property_.notes)
         else:
             self.purchase_date_edit.setDate(QDate.currentDate())
+            self.placed_in_service_date_edit.setDate(QDate.currentDate())
+
+    def _on_purchase_date_changed(self, new_date: QDate) -> None:
+        """Keeps Placed in Service Date tracking Purchase Date for a
+        brand-new property (no real value to override yet) — once the
+        dialog is editing an existing property, the two are independent
+        and this sync never fires again (see _is_new)."""
+        if self._is_new:
+            self.placed_in_service_date_edit.setDate(new_date)
 
     def _on_accept(self) -> None:
         name = self.name_edit.text().strip()
@@ -135,6 +164,8 @@ class AddEditPropertyDialog(QDialog):
         self._current_value = self.current_value_spin.value()
         self._mortgage_balance = self.mortgage_balance_spin.value()
         self._entity_id = self.entity_combo.currentData()
+        self._land_value = self.land_value_spin.value()
+        self._placed_in_service_date = self.placed_in_service_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
 
@@ -165,6 +196,14 @@ class AddEditPropertyDialog(QDialog):
     @property
     def entered_entity_id(self) -> str:
         return self._entity_id
+
+    @property
+    def entered_land_value(self) -> float:
+        return self._land_value
+
+    @property
+    def entered_placed_in_service_date(self) -> str:
+        return self._placed_in_service_date
 
     @property
     def entered_notes(self) -> str:

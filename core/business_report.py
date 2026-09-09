@@ -30,6 +30,17 @@ def _money(amount: float) -> str:
     return f"${amount:,.2f}"
 
 
+def _money_whole(amount: float) -> str:
+    """Whole-dollar formatting — used only for the portfolio table's
+    Current Value/Mortgage Balance/Equity columns, which are already
+    manually-entered estimates (see core/real_estate_manager.py's own
+    docstring on current_value) — cents there are false precision, not
+    real data, and dropping them is what actually keeps those wide
+    6-7-figure columns from wrapping on a real rendered page (confirmed
+    visually, not assumed)."""
+    return f"${amount:,.0f}"
+
+
 def _category_table(title: str, totals: dict[str, float], empty_message: str) -> str:
     """One <h2> heading + a Category/Amount table sorted descending by
     amount, with a Total row — or a plain empty-state line instead of a
@@ -56,43 +67,68 @@ def _portfolio_table(properties: list[dict]) -> str:
         html.append("<p>No properties tracked.</p>")
         return "\n".join(html)
 
-    html.append(_TABLE_OPEN)
+    # 2026-09-09: adding the Annual Depreciation column pushed this to 8
+    # columns. Neither `nowrap` alone nor a smaller font size alone was
+    # enough to stop real wrapping (confirmed via real rendered PDFs at
+    # each step, not assumed) — content-based auto-sizing under real
+    # space pressure still squeezed columns below what their own text
+    # needed. Qt's QTextDocument HTML engine also silently ignores
+    # <colgroup>/<col width=...> entirely (confirmed by a real byte-for-
+    # byte-identical render before/after changing those values) — the
+    # `width` attribute has to go directly on each <th> in the header
+    # row instead, which Qt's renderer does honor. Also switched Current
+    # Value/Mortgage Balance/Equity to whole-dollar formatting — those
+    # are already manually-entered estimates (see
+    # core/real_estate_manager.py's own docstring on current_value), so
+    # cents there were false precision, not real data.
+    html.append(_TABLE_OPEN.replace("<table ", '<table style="font-size:8pt; table-layout:fixed" '))
     html.append(
-        "<tr><th>Property</th><th>Type</th><th>Current Value</th><th>Mortgage Balance</th>"
-        "<th>Equity</th><th>NOI</th><th>Cap Rate</th></tr>"
+        '<tr><th width="15%">Property</th><th width="11%">Type</th>'
+        '<th width="13%">Current<br>Value</th><th width="13%">Mortgage<br>Balance</th>'
+        '<th width="12%">Equity</th><th width="11%">NOI</th>'
+        '<th width="7%">Cap Rate</th><th width="18%">Annual<br>Depreciation</th></tr>'
     )
-    total_value = total_mortgage = total_equity = total_noi = 0.0
+    total_value = total_mortgage = total_equity = total_noi = total_depreciation = 0.0
     for prop in properties:
         cap_rate = prop["cap_rate"]
         cap_rate_text = f"{cap_rate * 100:.1f}%" if cap_rate is not None else "—"
         html.append(
             f'<tr><td>{prop["name"]}</td><td>{prop["type"]}</td>'
-            f'<td align="right" nowrap>{_money(prop["current_value"])}</td>'
-            f'<td align="right" nowrap>{_money(prop["mortgage_balance"])}</td>'
-            f'<td align="right" nowrap>{_money(prop["equity"])}</td>'
-            f'<td align="right" nowrap>{_money(prop["noi"])}</td>'
-            f'<td align="right" nowrap>{cap_rate_text}</td></tr>'
+            f'<td align="right" nowrap>{_money_whole(prop["current_value"])}</td>'
+            f'<td align="right" nowrap>{_money_whole(prop["mortgage_balance"])}</td>'
+            f'<td align="right" nowrap>{_money_whole(prop["equity"])}</td>'
+            f'<td align="right" nowrap>{_money_whole(prop["noi"])}</td>'
+            f'<td align="right" nowrap>{cap_rate_text}</td>'
+            f'<td align="right" nowrap>{_money(prop["annual_depreciation"])}</td></tr>'
         )
         total_value += prop["current_value"]
         total_mortgage += prop["mortgage_balance"]
         total_equity += prop["equity"]
         total_noi += prop["noi"]
+        total_depreciation += prop["annual_depreciation"]
 
     # Numeric cells here are deliberately NOT bold, unlike _category_table's
-    # Total row — this table's 7 narrow columns leave no headroom for bold
+    # Total row — this table's narrow columns leave no headroom for bold
     # glyphs' slightly wider metrics, which was empirically found (via a
     # real rendered PDF, not assumed) to push "$280,000.00" one character
     # past the column width Qt auto-sized from the (non-bold) data row,
     # wrapping it mid-number. Bolding only the row label avoids the wrap
-    # without needing an explicit column-width hack.
+    # without needing an explicit column-width hack. Re-verified visually
+    # after adding the Annual Depreciation column (2026-09-09) — the same
+    # risk class, now with one more narrow column to fit; NOI also
+    # switched to whole-dollar (a display-rounding choice for this
+    # summary table only — the real IncomeEntry/ExpenseEntry data behind
+    # it keeps full cent precision everywhere else in the app) once real
+    # rendering showed cents were the difference between wrapping and not.
     aggregate_cap_rate_text = f"{(total_noi / total_value) * 100:.1f}%" if total_value > 0 else "—"
     html.append(
         f'<tr><td nowrap><b>Totals</b></td><td></td>'
-        f'<td align="right" nowrap>{_money(total_value)}</td>'
-        f'<td align="right" nowrap>{_money(total_mortgage)}</td>'
-        f'<td align="right" nowrap>{_money(total_equity)}</td>'
-        f'<td align="right" nowrap>{_money(total_noi)}</td>'
-        f'<td align="right" nowrap>{aggregate_cap_rate_text}</td></tr>'
+        f'<td align="right" nowrap>{_money_whole(total_value)}</td>'
+        f'<td align="right" nowrap>{_money_whole(total_mortgage)}</td>'
+        f'<td align="right" nowrap>{_money_whole(total_equity)}</td>'
+        f'<td align="right" nowrap>{_money_whole(total_noi)}</td>'
+        f'<td align="right" nowrap>{aggregate_cap_rate_text}</td>'
+        f'<td align="right" nowrap>{_money(total_depreciation)}</td></tr>'
     )
     html.append("</table>")
     return "\n".join(html)
@@ -135,7 +171,8 @@ def build_business_report_html(
 ) -> str:
     """Pure logic — testable without Qt. properties is a list of plain
     dicts: {"name", "type", "current_value", "mortgage_balance",
-    "equity", "noi", "cap_rate": Optional[float]}. budget_targets should
+    "equity", "noi", "cap_rate": Optional[float], "annual_depreciation"}.
+    budget_targets should
     be passed as [] for any range other than "This Month" — see module
     docstring for why that decision belongs to the caller. entity_label
     is the selected BusinessEntity's name (or "(Unassigned)"), already

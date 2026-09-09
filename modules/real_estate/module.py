@@ -53,7 +53,7 @@ from PySide6.QtWidgets import (
 
 from core.budget_manager import ExpenseEntry, IncomeEntry
 from core.maintenance_manager import MaintenanceTask, days_until_due, is_meter_task_due, is_sensor_task_due, meter_used_since_last
-from core.real_estate_manager import Property, equity
+from core.real_estate_manager import Property, accumulated_depreciation, annual_depreciation, equity
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_property_dialog import AddEditPropertyDialog
@@ -142,6 +142,8 @@ class RealEstateModule(ModuleBase):
         self._detail_maintenance_list: Optional[QListWidget] = None
         self._detail_noi_label: Optional[QLabel] = None
         self._detail_cap_rate_label: Optional[QLabel] = None
+        self._detail_annual_depreciation_label: Optional[QLabel] = None
+        self._detail_accumulated_depreciation_label: Optional[QLabel] = None
         self._detail_range_label: Optional[QLabel] = None
         self._detail_start_date: Optional[str] = None
         self._detail_end_date: Optional[str] = None
@@ -284,6 +286,8 @@ class RealEstateModule(ModuleBase):
             current_value=dialog.entered_current_value,
             mortgage_balance=dialog.entered_mortgage_balance,
             entity_id=dialog.entered_entity_id,
+            land_value=dialog.entered_land_value,
+            placed_in_service_date=dialog.entered_placed_in_service_date,
             notes=dialog.entered_notes,
         )
         self._refresh_list()
@@ -308,6 +312,8 @@ class RealEstateModule(ModuleBase):
             current_value=dialog.entered_current_value,
             mortgage_balance=dialog.entered_mortgage_balance,
             entity_id=dialog.entered_entity_id,
+            land_value=dialog.entered_land_value,
+            placed_in_service_date=dialog.entered_placed_in_service_date,
             notes=dialog.entered_notes,
         )
         self._refresh_list()
@@ -536,6 +542,10 @@ class RealEstateModule(ModuleBase):
         layout.addWidget(self._detail_noi_label)
         self._detail_cap_rate_label = QLabel()
         layout.addWidget(self._detail_cap_rate_label)
+        self._detail_annual_depreciation_label = QLabel()
+        layout.addWidget(self._detail_annual_depreciation_label)
+        self._detail_accumulated_depreciation_label = QLabel()
+        layout.addWidget(self._detail_accumulated_depreciation_label)
 
         self._refresh_summary(prop.property_id, "This Month", self._month_start(), None)
         return section
@@ -560,3 +570,12 @@ class RealEstateModule(ModuleBase):
         self._detail_noi_label.setText(f"Net Operating Income: ${noi:,.2f}")
         cap_rate_text = f"{cap_rate * 100:.2f}%" if cap_rate is not None else "n/a (set a current value)"
         self._detail_cap_rate_label.setText(f"Cap Rate: {cap_rate_text}")
+
+        # Depreciation is a property-level figure, not date-range scoped
+        # like NOI/cap rate — recomputed here anyway (harmless) so it
+        # stays in one refresh path rather than needing separate wiring.
+        prop = self.context.real_estate.get_property(property_id)
+        if prop is not None:
+            self._detail_annual_depreciation_label.setText(f"Annual Depreciation: ${annual_depreciation(prop):,.2f}")
+            accumulated = accumulated_depreciation(prop, date.today())
+            self._detail_accumulated_depreciation_label.setText(f"Accumulated Depreciation: ${accumulated:,.2f}")

@@ -5741,3 +5741,58 @@ the entity filter correctly showed $400/$0 (household) vs. $0/$250
 (LLC) with the group title updating to name the selected entity, and
 each side's actual-spend figure correctly excluded the other entity's
 expenses. 1913 tests passing.
+
+## Financial deep-dive, part 4: real estate depreciation tracking (2026-09-09)
+
+Fourth item in the sequence. `core/real_estate_manager.py` tracked
+current value, mortgage balance, and equity but had no depreciation
+concept at all — a standard, expected piece of real estate accounting
+that was simply never built. Added `land_value`/`placed_in_service_date`
+to `Property` and three new pure functions — `depreciable_basis()`,
+`annual_depreciation()`, `accumulated_depreciation()` — computing real
+straight-line depreciation (the standard MACRS method for residential
+rental real property, 27.5 years, IRS Publication 946). **Deliberately
+does not implement the mid-month convention** IRS Form 4562 technically
+requires for the placed-in-service/disposal years — same "real correct-
+shaped number, not fabricated precision" boundary
+`core.maintenance_manager`'s Prediction feature already draws. Only
+Rental/Investment property types are eligible — a Primary Residence
+returns `$0` even with a real depreciable basis, since it's never
+depreciated for tax purposes. New Land Value/Placed in Service Date
+fields on the Add/Edit Property dialog (the latter auto-syncing to
+Purchase Date for a brand-new property, adjustable if it genuinely
+differs); two new labels on the property detail view; a new "Annual
+Depreciation" column on the Business Report's portfolio table.
+
+**A real, multi-round rendering bug found and fixed through iterative
+visual verification, not assumed fixed after one pass**: adding an 8th
+column to the portfolio table (already known-fragile — it had one real
+bold-glyph wrapping bug fixed earlier this session) broke wrapping
+badly enough that even the Property name column wrapped, not just
+numeric cells. `nowrap` alone didn't fix it; a smaller font size alone
+didn't fix it; `<colgroup>`/`<col width=...>` (both CSS `style` and
+plain HTML `width` attribute forms) turned out to be **silently
+ignored entirely** by Qt's `QTextDocument` HTML engine — confirmed by
+a real, byte-for-byte-identical rendered PDF before and after changing
+those values, not assumed. The actual fix: `width="X%"` set directly
+on each `<th>` in the header row (which Qt *does* honor), combined
+with switching Current Value/Mortgage Balance/Equity/NOI to whole-
+dollar formatting — legitimate for Current Value/Mortgage/Equity since
+those are already manually-entered estimates (cents there were false
+precision, not real data), and a deliberate summary-table display-
+rounding choice for NOI (the underlying real transaction data keeps
+full cent precision everywhere else in the app). Stress-tested with
+7-figure property values ($1.28M) after the realistic-scale case
+looked clean, to confirm the fix generalizes rather than just
+happening to work for the one dataset tried first.
+
+**Verified for real**: 32 new tests for the three depreciation
+functions (Rental/Investment eligibility, Primary Residence/Land
+returning $0, the `placed_in_service_date`-falls-back-to-`purchase_date`
+rule, clamping at $0 before the start date and at the full basis once
+fully depreciated); multiple real rendered-PDF-to-PNG visual passes
+(not just unit tests) confirming the portfolio table's final form at
+both realistic and stress-test dollar magnitudes; a real headless-Qt
+script confirming the Add/Edit Property dialog's new fields round-trip
+correctly and the detail view's two new labels show real, correctly-
+computed figures. 1929 tests passing.

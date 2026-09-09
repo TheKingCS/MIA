@@ -19,7 +19,14 @@ from core.app_context import AppContext
 from core.budget_manager import BudgetManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
-from core.real_estate_manager import RealEstateManager, equity
+from core.real_estate_manager import (
+    Property,
+    RealEstateManager,
+    accumulated_depreciation,
+    annual_depreciation,
+    depreciable_basis,
+    equity,
+)
 
 
 @pytest.fixture
@@ -51,9 +58,108 @@ def _make_manager(context: AppContext) -> RealEstateManager:
 # ------------------------------------------------------------------
 
 def test_equity_is_value_minus_mortgage():
-    from core.real_estate_manager import Property
     prop = Property(property_id="p1", name="123 Main St", current_value=300000.0, mortgage_balance=180000.0)
     assert equity(prop) == 120000.0
+
+
+def test_property_from_dict_backward_compatible_defaults_depreciation_fields():
+    prop = Property.from_dict({"property_id": "p1", "name": "123 Main St"})
+    assert prop.land_value == 0.0
+    assert prop.placed_in_service_date == ""
+
+
+# ------------------------------------------------------------------
+# depreciable_basis / annual_depreciation / accumulated_depreciation
+# ------------------------------------------------------------------
+
+def _rental(**overrides) -> Property:
+    defaults = dict(
+        property_id="p1", name="123 Main St", property_type="Rental",
+        purchase_price=275000.0, land_value=0.0,
+        purchase_date="2020-01-01", placed_in_service_date="",
+    )
+    defaults.update(overrides)
+    return Property(**defaults)
+
+
+def test_depreciable_basis_subtracts_land_value():
+    prop = _rental(purchase_price=275000.0, land_value=50000.0)
+    assert depreciable_basis(prop) == 225000.0
+
+
+def test_depreciable_basis_zero_land_value_is_full_price():
+    prop = _rental(purchase_price=275000.0, land_value=0.0)
+    assert depreciable_basis(prop) == 275000.0
+
+
+def test_depreciable_basis_land_value_exceeding_price_clamps_to_zero():
+    prop = _rental(purchase_price=100000.0, land_value=150000.0)
+    assert depreciable_basis(prop) == 0.0
+
+
+def test_annual_depreciation_rental_computes_real_figure():
+    prop = _rental(purchase_price=275000.0, land_value=0.0)
+    assert annual_depreciation(prop) == pytest.approx(275000.0 / 27.5)
+
+
+def test_annual_depreciation_investment_type_also_eligible():
+    prop = _rental(property_type="Investment", purchase_price=275000.0, land_value=0.0)
+    assert annual_depreciation(prop) == pytest.approx(275000.0 / 27.5)
+
+
+def test_annual_depreciation_primary_residence_is_zero_even_with_real_basis():
+    prop = _rental(property_type="Primary Residence", purchase_price=275000.0, land_value=0.0)
+    assert annual_depreciation(prop) == 0.0
+
+
+def test_annual_depreciation_land_type_is_zero():
+    prop = _rental(property_type="Land", purchase_price=100000.0, land_value=0.0)
+    assert annual_depreciation(prop) == 0.0
+
+
+def test_annual_depreciation_custom_useful_life():
+    prop = _rental(purchase_price=390000.0, land_value=0.0)
+    assert annual_depreciation(prop, useful_life_years=39.0) == pytest.approx(10000.0)
+
+
+def test_accumulated_depreciation_falls_back_to_purchase_date_when_unset():
+    from datetime import date
+    prop = _rental(purchase_price=275000.0, land_value=0.0, purchase_date="2020-01-01", placed_in_service_date="")
+    # Exactly 2 years after purchase_date, no separate placed_in_service_date set.
+    result = accumulated_depreciation(prop, date(2022, 1, 1))
+    expected_annual = 275000.0 / 27.5
+    assert result == pytest.approx(expected_annual * 2, rel=0.01)
+
+
+def test_accumulated_depreciation_uses_placed_in_service_date_when_set():
+    from datetime import date
+    prop = _rental(
+        purchase_price=275000.0, land_value=0.0,
+        purchase_date="2018-01-01", placed_in_service_date="2020-01-01",
+    )
+    # 1 year after placed_in_service_date (not purchase_date, which was 2 years earlier).
+    result = accumulated_depreciation(prop, date(2021, 1, 1))
+    expected_annual = 275000.0 / 27.5
+    assert result == pytest.approx(expected_annual, rel=0.01)
+
+
+def test_accumulated_depreciation_zero_before_start_date():
+    from datetime import date
+    prop = _rental(purchase_price=275000.0, land_value=0.0, purchase_date="2025-01-01")
+    assert accumulated_depreciation(prop, date(2024, 1, 1)) == 0.0
+
+
+def test_accumulated_depreciation_clamps_at_full_basis_once_fully_depreciated():
+    from datetime import date
+    prop = _rental(purchase_price=275000.0, land_value=0.0, purchase_date="2000-01-01")
+    # Well past 27.5 years — must clamp at the full depreciable basis, not overshoot.
+    assert accumulated_depreciation(prop, date(2050, 1, 1)) == 275000.0
+
+
+def test_accumulated_depreciation_zero_for_non_depreciable_property_type():
+    from datetime import date
+    prop = _rental(property_type="Primary Residence", purchase_price=275000.0, purchase_date="2000-01-01")
+    assert accumulated_depreciation(prop, date(2024, 1, 1)) == 0.0
 
 
 # ------------------------------------------------------------------
