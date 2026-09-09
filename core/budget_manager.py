@@ -85,6 +85,7 @@ class IncomeEntry:
     date: str = ""  # ISO date — when the income was received
     tax_relevant: bool = True  # most income is taxable by default
     property_id: str = ""  # set when this is rental income for a core.real_estate_manager.Property
+    plaid_transaction_id: str = ""  # set when imported by core.plaid_manager — the dedup key on repeat sync
     notes: str = ""
     created_at: str = ""  # ISO datetime — when this entry was recorded
 
@@ -92,7 +93,8 @@ class IncomeEntry:
         return {
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
-            "property_id": self.property_id, "notes": self.notes, "created_at": self.created_at,
+            "property_id": self.property_id, "plaid_transaction_id": self.plaid_transaction_id,
+            "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -105,6 +107,7 @@ class IncomeEntry:
             date=data.get("date", ""),
             tax_relevant=data.get("tax_relevant", True),
             property_id=data.get("property_id", ""),
+            plaid_transaction_id=data.get("plaid_transaction_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -120,6 +123,7 @@ class ExpenseEntry:
     tax_relevant: bool = False  # most household expenses aren't deductible; user opts in
     bill_id: str = ""  # set when this entry came from BudgetManager.mark_bill_paid()
     property_id: str = ""  # set when this is an expense for a core.real_estate_manager.Property
+    plaid_transaction_id: str = ""  # set when imported by core.plaid_manager — the dedup key on repeat sync
     notes: str = ""
     created_at: str = ""  # ISO datetime
 
@@ -127,7 +131,8 @@ class ExpenseEntry:
         return {
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
-            "bill_id": self.bill_id, "property_id": self.property_id, "notes": self.notes, "created_at": self.created_at,
+            "bill_id": self.bill_id, "property_id": self.property_id,
+            "plaid_transaction_id": self.plaid_transaction_id, "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -141,6 +146,7 @@ class ExpenseEntry:
             tax_relevant=data.get("tax_relevant", False),
             bill_id=data.get("bill_id", ""),
             property_id=data.get("property_id", ""),
+            plaid_transaction_id=data.get("plaid_transaction_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -558,6 +564,7 @@ class BudgetManager:
         date: Optional[str] = None,
         tax_relevant: bool = True,
         property_id: str = "",
+        plaid_transaction_id: str = "",
         notes: str = "",
     ) -> IncomeEntry:
         entry = IncomeEntry(
@@ -568,6 +575,7 @@ class BudgetManager:
             date=date or _today_iso(),
             tax_relevant=tax_relevant,
             property_id=property_id,
+            plaid_transaction_id=plaid_transaction_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -603,6 +611,16 @@ class BudgetManager:
                 return entry
         return None
 
+    def get_income_by_plaid_transaction_id(self, transaction_id: str) -> Optional[IncomeEntry]:
+        """The dedup lookup a repeat core.plaid_manager sync uses before
+        deciding whether to add a new entry or update an existing one."""
+        if not transaction_id:
+            return None
+        for entry in self._income:
+            if entry.plaid_transaction_id == transaction_id:
+                return entry
+        return None
+
     def all_income(self) -> list[IncomeEntry]:
         return sorted(self._income, key=lambda i: i.date, reverse=True)
 
@@ -619,6 +637,7 @@ class BudgetManager:
         tax_relevant: bool = False,
         bill_id: str = "",
         property_id: str = "",
+        plaid_transaction_id: str = "",
         notes: str = "",
     ) -> ExpenseEntry:
         entry = ExpenseEntry(
@@ -630,6 +649,7 @@ class BudgetManager:
             tax_relevant=tax_relevant,
             bill_id=bill_id,
             property_id=property_id,
+            plaid_transaction_id=plaid_transaction_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -662,6 +682,16 @@ class BudgetManager:
     def get_expense(self, entry_id: str) -> Optional[ExpenseEntry]:
         for entry in self._expenses:
             if entry.entry_id == entry_id:
+                return entry
+        return None
+
+    def get_expense_by_plaid_transaction_id(self, transaction_id: str) -> Optional[ExpenseEntry]:
+        """The dedup lookup a repeat core.plaid_manager sync uses before
+        deciding whether to add a new entry or update an existing one."""
+        if not transaction_id:
+            return None
+        for entry in self._expenses:
+            if entry.plaid_transaction_id == transaction_id:
                 return entry
         return None
 

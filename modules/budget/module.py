@@ -39,7 +39,14 @@ module's own docstring for the full "why Hosted Link + browser +
 polling, why an encrypted passphrase-locked vault" reasoning. "Connect
 a Bank" is deliberately never exposed as an Assistant action: a real
 credential/consent flow needs the user physically watching their own
-browser, not something a stray chat phrase could trigger.
+browser, not something a stray chat phrase could trigger. "Add
+Transaction Access…" is the same real browser-consent flow for an
+already-connected account (Plaid's "update mode" Link) — same
+reasoning, also never an Assistant action. Real bank transactions
+imported this way land as genuine Income/Expense entries via
+context.plaid.sync(), not a separate read-only list — they show up in
+the Income/Expenses tabs, the Summary tab, proactive nudges, and the
+Business Report exactly like a manually-entered one.
 """
 
 from __future__ import annotations
@@ -164,6 +171,7 @@ class BudgetModule(ModuleBase):
         self._plaid_setup_button: Optional[QPushButton] = None
         self._plaid_unlock_button: Optional[QPushButton] = None
         self._plaid_connect_button: Optional[QPushButton] = None
+        self._plaid_add_transactions_button: Optional[QPushButton] = None
         self._plaid_sync_button: Optional[QPushButton] = None
 
     def on_load(self) -> None:
@@ -885,11 +893,17 @@ class BudgetModule(ModuleBase):
         self._plaid_connect_button.clicked.connect(self._on_plaid_connect)
         button_row.addWidget(self._plaid_connect_button)
 
+        self._plaid_add_transactions_button = QPushButton("Add Transaction Access…")
+        self._plaid_add_transactions_button.clicked.connect(self._on_plaid_add_transactions)
+        button_row.addWidget(self._plaid_add_transactions_button)
+
         self._plaid_sync_button = QPushButton("Sync Now")
         self._plaid_sync_button.clicked.connect(self._on_plaid_sync)
         button_row.addWidget(self._plaid_sync_button)
 
         layout.addLayout(button_row)
+
+        self._plaid_accounts_list.currentItemChanged.connect(lambda *_: self._refresh_plaid_tab())
 
         self._refresh_plaid_tab()
         return tab
@@ -903,6 +917,7 @@ class BudgetModule(ModuleBase):
         self._plaid_unlock_button.setEnabled(configured and not unlocked)
         self._plaid_connect_button.setEnabled(unlocked)
         self._plaid_sync_button.setEnabled(unlocked)
+        self._plaid_add_transactions_button.setEnabled(unlocked and self._selected_plaid_item_needs_upgrade())
 
         if not configured:
             self._plaid_status_label.setText("Not set up yet.")
@@ -913,12 +928,29 @@ class BudgetModule(ModuleBase):
             noun = "account" if count == 1 else "accounts"
             self._plaid_status_label.setText(f"Unlocked — {count} connected {noun}.")
 
+        self._plaid_accounts_list.blockSignals(True)
         self._plaid_accounts_list.clear()
         if unlocked:
             for item in plaid.connected_items():
-                self._plaid_accounts_list.addItem(f"{item.institution_name}  —  connected {item.connected_at}")
+                suffix = "  ·  transactions enabled" if item.transactions_enabled else ""
+                list_item = QListWidgetItem(f"{item.institution_name}  —  connected {item.connected_at}{suffix}")
+                list_item.setData(Qt.ItemDataRole.UserRole, item.item_id)
+                self._plaid_accounts_list.addItem(list_item)
         else:
             self._plaid_accounts_list.addItem("Unlock to see connected accounts.")
+        self._plaid_accounts_list.blockSignals(False)
+
+    def _selected_plaid_item_id(self) -> Optional[str]:
+        item = self._plaid_accounts_list.currentItem()
+        if item is None:
+            return None
+        return item.data(Qt.ItemDataRole.UserRole)
+
+    def _selected_plaid_item_needs_upgrade(self) -> bool:
+        item_id = self._selected_plaid_item_id()
+        if item_id is None or not self.context.plaid.is_unlocked():
+            return False
+        return any(i.item_id == item_id and not i.transactions_enabled for i in self.context.plaid.connected_items())
 
     def _on_plaid_setup(self) -> None:
         dialog = PlaidSetupDialog()
@@ -973,17 +1005,70 @@ class BudgetModule(ModuleBase):
                 QMessageBox.warning(None, "Couldn't Save", f"Bank connected for this session, but saving failed: {exc}")
         self._refresh_plaid_tab()
 
-    def _on_plaid_sync(self) -> None:
+    def _on_plaid_add_transactions(self) -> None:
+        """Update-mode counterpart to _on_plaid_connect() — adds
+        Transactions consent to an item that was connected before this
+        feature existed, without a full disconnect/reconnect. Reuses
+        PlaidConnectProgressDialog unchanged; it only depends on
+        check_public_token_once(link_token), which works identically
+        for an update-mode token."""
+        item_id = self._selected_plaid_item_id()
+        if item_id is None:
+            QMessageBox.information(None, "No Account Selected", "Select a connected account to add transaction access to.")
+            return
+
         try:
-            snapshots = self.context.plaid.sync()
+            link_token, hosted_link_url = self.context.plaid.create_update_mode_session(item_id)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Start", str(exc))
+            return
+
+        webbrowser.open(hosted_link_url)
+
+        progress = PlaidConnectProgressDialog(self.context.plaid, link_token)
+        if progress.exec() != QDialog.DialogCode.Accepted or not progress.entered_public_token:
+            return
+
+        try:
+            self.context.plaid.finish_transactions_upgrade(item_id, progress.entered_public_token)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Finish", str(exc))
+            return
+
+        save_dialog = PasswordPromptDialog("your Plaid vault", prompt="Re-enter the passphrase for")
+        if save_dialog.exec() == QDialog.DialogCode.Accepted:
+            try:
+                self.context.plaid.save_current_vault(save_dialog.entered_password)
+            except SecretsError as exc:
+                QMessageBox.warning(None, "Couldn't Save", f"Transaction access granted for this session, but saving failed: {exc}")
+        self._refresh_plaid_tab()
+
+    def _on_plaid_sync(self) -> None:
+        passphrase = None
+        if any(i.transactions_enabled for i in self.context.plaid.connected_items()):
+            pw_dialog = PasswordPromptDialog("your Plaid vault", prompt="Re-enter the passphrase for")
+            if pw_dialog.exec() != QDialog.DialogCode.Accepted:
+                return
+            passphrase = pw_dialog.entered_password
+
+        try:
+            result = self.context.plaid.sync(passphrase=passphrase)
         except Exception as exc:  # noqa: BLE001
             QMessageBox.warning(None, "Sync Failed", str(exc))
             return
 
-        if not snapshots:
+        if not result.snapshots:
             QMessageBox.information(None, "Nothing to Sync", "No connected accounts to sync yet.")
             return
-        QMessageBox.information(None, "Synced", f"Synced {len(snapshots)} connected account(s).")
+
+        message = f"Synced {len(result.snapshots)} connected account(s)."
+        if result.transactions_added or result.transactions_updated:
+            message += f" Imported {result.transactions_added} new transaction(s)"
+            if result.transactions_updated:
+                message += f", updated {result.transactions_updated}"
+            message += "."
+        QMessageBox.information(None, "Synced", message)
+        self._refresh_plaid_tab()
 
     # ------------------------------------------------------------------
     # Search

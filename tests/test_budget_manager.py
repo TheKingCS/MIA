@@ -264,6 +264,53 @@ def test_total_income_by_category_respects_date_range(isolated_paths):
 
 
 # ------------------------------------------------------------------
+# plaid_transaction_id — the dedup key core.plaid_manager uses on
+# repeat sync (2026-09-08, full Plaid transaction history)
+# ------------------------------------------------------------------
+
+def test_add_income_stores_plaid_transaction_id(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_income(amount=1200.0, category="Salary", date="2026-09-01", plaid_transaction_id="txn-abc")
+    assert entry.plaid_transaction_id == "txn-abc"
+
+
+def test_add_expense_stores_plaid_transaction_id(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_expense(amount=45.0, category="Groceries", date="2026-09-01", plaid_transaction_id="txn-def")
+    assert entry.plaid_transaction_id == "txn-def"
+
+
+def test_get_income_by_plaid_transaction_id_found_not_found_and_empty_input(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=1200.0, plaid_transaction_id="txn-abc")
+
+    assert manager.get_income_by_plaid_transaction_id("txn-abc").amount == 1200.0
+    assert manager.get_income_by_plaid_transaction_id("txn-nonexistent") is None
+    assert manager.get_income_by_plaid_transaction_id("") is None
+
+
+def test_get_expense_by_plaid_transaction_id_found_not_found_and_empty_input(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=45.0, plaid_transaction_id="txn-def")
+
+    assert manager.get_expense_by_plaid_transaction_id("txn-def").amount == 45.0
+    assert manager.get_expense_by_plaid_transaction_id("txn-nonexistent") is None
+    assert manager.get_expense_by_plaid_transaction_id("") is None
+
+
+def test_income_entry_from_dict_backward_compatible_without_plaid_field():
+    old_shape = {"entry_id": "i1", "amount": 3000.0, "category": "Salary", "date": "2026-09-01"}
+    entry = budget_manager_module.IncomeEntry.from_dict(old_shape)
+    assert entry.plaid_transaction_id == ""
+
+
+def test_expense_entry_from_dict_backward_compatible_without_plaid_field():
+    old_shape = {"entry_id": "e1", "amount": 45.0, "category": "Groceries", "date": "2026-09-01"}
+    entry = budget_manager_module.ExpenseEntry.from_dict(old_shape)
+    assert entry.plaid_transaction_id == ""
+
+
+# ------------------------------------------------------------------
 # IncomeSource — next_income_due_date / days_until_income_due
 # ------------------------------------------------------------------
 

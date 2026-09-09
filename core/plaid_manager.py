@@ -74,12 +74,15 @@ from typing import TYPE_CHECKING, Callable, Optional
 import plaid
 from plaid.api import plaid_api
 from plaid.model.accounts_get_request import AccountsGetRequest
+from plaid.model.country_code import CountryCode
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.link_token_get_request import LinkTokenGetRequest
 from plaid.model.products import Products
+from plaid.model.transactions_sync_request import TransactionsSyncRequest
+from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
 
 from core.app_context import AppContext
 from core.logger import get_logger
@@ -102,11 +105,14 @@ class PlaidItem:
     access_token: str
     institution_name: str
     connected_at: str  # ISO datetime
+    transactions_enabled: bool = False  # Transactions product consent granted
+    transactions_cursor: str = ""  # last next_cursor from /transactions/sync — "" means never synced yet
 
     def to_dict(self) -> dict:
         return {
             "item_id": self.item_id, "access_token": self.access_token,
             "institution_name": self.institution_name, "connected_at": self.connected_at,
+            "transactions_enabled": self.transactions_enabled, "transactions_cursor": self.transactions_cursor,
         }
 
     @staticmethod
@@ -116,6 +122,8 @@ class PlaidItem:
             access_token=data.get("access_token", ""),
             institution_name=data.get("institution_name", ""),
             connected_at=data.get("connected_at", ""),
+            transactions_enabled=data.get("transactions_enabled", False),
+            transactions_cursor=data.get("transactions_cursor", ""),
         )
 
 
@@ -155,6 +163,71 @@ def extract_completed_public_token(get_response: "LinkTokenGetResponse") -> Opti
             if item_result.public_token:
                 return item_result.public_token
     return None
+
+
+@dataclass
+class PlaidSyncResult:
+    snapshots: list[dict]
+    transactions_added: int = 0
+    transactions_updated: int = 0
+
+
+def map_plaid_category(primary: str, detailed: str, is_income: bool) -> Optional[str]:
+    """Pure logic — testable without Qt or a real Plaid client. Maps a
+    Plaid personal_finance_category (primary/detailed strings — see
+    https://plaid.com/documents/pfc-taxonomy-all.csv, fetched live
+    2026-09-08, not assumed from memory) onto MIA's own fixed
+    INCOME_CATEGORIES/EXPENSE_CATEGORIES lists.
+
+    Returns None to mean "skip this transaction entirely" — used only
+    for TRANSFER_IN/TRANSFER_OUT, an internal transfer between the
+    user's own linked accounts, which would otherwise double-count as
+    fake income on one side and a fake expense on the other.
+
+    Deliberately conservative: only primary categories with a clear,
+    defensible MIA-category correspondence get a specific mapping;
+    everything else — including any primary value Plaid adds in the
+    future that this function doesn't recognize (the SDK does not
+    locally enforce the taxonomy, it's validated server-side only) —
+    falls through to "Other", never a guessed category. "Rental Income"
+    is never auto-assigned here: Plaid's PFC has no reliable landlord
+    signal, so rental income stays a manual-entry-only category via
+    core.budget_manager's IncomeSource/property_id path."""
+    primary = (primary or "").upper()
+    detailed = (detailed or "").upper()
+
+    if is_income:
+        if primary == "INCOME":
+            if "DIVIDEND" in detailed or "INTEREST" in detailed:
+                return "Investment"
+            return "Salary"
+        if primary == "TRANSFER_IN":
+            return None
+        return "Other"  # LOAN_DISBURSEMENTS and anything unrecognized
+
+    if primary == "RENT_AND_UTILITIES":
+        # NOT "RENT" in detailed — the primary category name itself
+        # contains "RENT" ("RENT_AND_UTILITIES"), and every detailed
+        # value under it is prefixed with the primary name (e.g.
+        # "RENT_AND_UTILITIES_GAS_AND_ELECTRICITY"), so a plain
+        # substring check always matched. Plaid's real "it's actually
+        # rent" detailed value ends with "_RENT" specifically.
+        return "Mortgage/Rent" if detailed.endswith("_RENT") else "Utilities"
+    if primary == "FOOD_AND_DRINK":
+        return "Groceries"
+    if primary == "TRANSPORTATION":
+        return "Transportation"
+    if primary == "HOME_IMPROVEMENT":
+        return "Maintenance"
+    if primary == "GENERAL_SERVICES":
+        return "Insurance" if "INSURANCE" in detailed else "Other"
+    if primary == "GOVERNMENT_AND_NON_PROFIT":
+        return "Taxes" if "TAX" in detailed else "Other"
+    if primary == "LOAN_PAYMENTS":
+        return "Mortgage/Rent" if "MORTGAGE" in detailed else "Other"
+    if primary == "TRANSFER_OUT":
+        return None
+    return "Other"  # MEDICAL, PERSONAL_CARE, GENERAL_MERCHANDISE, BANK_FEES, ENTERTAINMENT, TRAVEL, OTHER, unrecognized
 
 
 class PlaidManager:
@@ -227,9 +300,35 @@ class PlaidManager:
         request = LinkTokenCreateRequest(
             client_name="MIA Home",
             language="en",
-            country_codes=["US"],
+            country_codes=[CountryCode("US")],
             user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
-            products=[Products("balance")],
+            products=[Products("balance"), Products("transactions")],
+            hosted_link=LinkTokenCreateHostedLink(),
+        )
+        response = self._client.link_token_create(request)
+        return response.link_token, response.hosted_link_url
+
+    def create_update_mode_session(self, item_id: str) -> tuple[str, str]:
+        """Same shape as create_hosted_link_session(), but for an
+        ALREADY-connected item that was linked before Transactions was
+        requested (e.g. before this feature existed) — Plaid's
+        documented "update mode" Link flow: pass the existing item's
+        access_token plus additional_consented_products, completed via
+        the exact same Hosted-Link-URL + check_public_token_once()
+        polling as a fresh connection, then finish_transactions_upgrade()
+        below (not finish_connection(), which would create a duplicate
+        PlaidItem for an access_token MIA already has)."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        request = LinkTokenCreateRequest(
+            client_name="MIA Home",
+            language="en",
+            country_codes=[CountryCode("US")],
+            user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
+            access_token=item.access_token,
+            additional_consented_products=[Products("transactions")],
             hosted_link=LinkTokenCreateHostedLink(),
         )
         response = self._client.link_token_create(request)
@@ -298,10 +397,27 @@ class PlaidManager:
         new_item = PlaidItem(
             item_id=item_id, access_token=access_token, institution_name=institution_name,
             connected_at=datetime.now().isoformat(timespec="seconds"),
+            transactions_enabled=True,  # new connections always request both products now (see create_hosted_link_session)
         )
         self._vault.items.append(new_item)
         log.info("Connected Plaid item: '%s' (%s)", new_item.institution_name, new_item.item_id)
         return new_item
+
+    def finish_transactions_upgrade(self, item_id: str, public_token: str) -> None:
+        """The update-mode counterpart to finish_connection() — for an
+        item that was connected before Transactions was requested.
+        Exchanges the update-mode public_token (no new access_token or
+        PlaidItem — the item already has one) and flips
+        transactions_enabled True on the IN-MEMORY item only, same
+        two-step "caller still calls save_current_vault(passphrase)"
+        discipline as finish_connection()."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        self._client.item_public_token_exchange(ItemPublicTokenExchangeRequest(public_token=public_token))
+        item.transactions_enabled = True
+        log.info("Transactions access added for Plaid item '%s'.", item.institution_name)
 
     def save_current_vault(self, passphrase: str) -> None:
         """Re-encrypts and persists the in-memory vault (e.g. after
@@ -317,20 +433,41 @@ class PlaidManager:
         self._require_unlocked()
         return list(self._vault.items)
 
+    def _get_item(self, item_id: str) -> Optional[PlaidItem]:
+        self._require_unlocked()
+        for item in self._vault.items:
+            if item.item_id == item_id:
+                return item
+        return None
+
     # ------------------------------------------------------------------
-    # Sync — writes into core.finance_manager's existing watched folder,
-    # never hands live data straight to a widget (see module docstring)
+    # Sync — balances write into core.finance_manager's existing watched
+    # folder (never hands live data straight to a widget, see module
+    # docstring); transactions flow directly into core.budget_manager's
+    # real IncomeEntry/ExpenseEntry records instead, since the whole
+    # point is real transactions driving the SAME reporting (Summary,
+    # nudges, Business Report) manual entries already do — a separate
+    # read-only transaction list would defeat that.
     # ------------------------------------------------------------------
 
-    def sync(self) -> list[dict]:
-        """Fetches current balances for every connected item and writes
-        one real snapshot file per item into
-        context.finance.import_folder_path, then triggers an immediate
-        scan so it's picked up without waiting for the periodic timer.
-        Returns the snapshot dicts written, for the caller to show a
-        real confirmation rather than a generic "done"."""
+    def sync(self, passphrase: Optional[str] = None) -> PlaidSyncResult:
+        """Fetches current balances for every connected item (unchanged
+        behavior) and, for any item with transactions_enabled, also
+        imports real transactions via _sync_transactions_for_item().
+        passphrase is only needed when at least one item has
+        transactions_enabled (its sync cursor needs persisting) —
+        balance-only users see no new passphrase prompt at all. Without
+        a passphrase, an advanced cursor stays in-memory only for this
+        run; safe by construction, since _import_transaction()'s
+        plaid_transaction_id dedup means re-fetching the same history
+        next time never creates duplicate budget entries, just wastes
+        an API round trip."""
         self._require_unlocked()
         written = []
+        total_added = 0
+        total_updated = 0
+        cursor_changed = False
+
         for item in self._vault.items:
             accounts_response = self._client.accounts_get(AccountsGetRequest(access_token=item.access_token))
             snapshot_data = {
@@ -342,9 +479,110 @@ class PlaidManager:
             self._write_snapshot_file(snapshot_data)
             written.append(snapshot_data)
 
+            if item.transactions_enabled:
+                if self.context.budget is None:
+                    log.warning(
+                        "Item '%s' has transactions access but context.budget is unavailable — skipping import.",
+                        item.institution_name,
+                    )
+                else:
+                    added, updated = self._sync_transactions_for_item(item)
+                    total_added += added
+                    total_updated += updated
+                    cursor_changed = True
+
         if written and self.context.finance is not None:
             self.context.finance.scan_for_new_snapshots()
-        return written
+
+        if cursor_changed:
+            if passphrase:
+                self._save_vault(self._vault, passphrase)
+            else:
+                log.warning(
+                    "Transaction sync cursor(s) advanced but no passphrase was given — not persisted to disk. "
+                    "The next sync will re-fetch from the start of history; the plaid_transaction_id dedup "
+                    "prevents duplicate budget entries, but wastes time and API calls."
+                )
+
+        return PlaidSyncResult(snapshots=written, transactions_added=total_added, transactions_updated=total_updated)
+
+    def _sync_transactions_for_item(self, item: PlaidItem) -> tuple[int, int]:
+        """Loops /transactions/sync until has_more is False (Plaid's own
+        documented cursor-based pagination), importing every added/
+        modified transaction via _import_transaction(), then stores the
+        final next_cursor on `item` IN-MEMORY only — sync() above
+        decides whether/how to persist it. removed transactions are
+        logged, never auto-deleted from the budget (see module
+        docstring for why: auto-deleting a household's financial
+        records off a bank's own reversal signal doesn't fit this
+        project's no-silent-delete discipline elsewhere)."""
+        added_count = 0
+        updated_count = 0
+        # TransactionsSyncRequest.cursor requires a plain str, never None
+        # (confirmed against the real SDK model) — "" (the field's own
+        # default) means "no cursor yet, start from the beginning".
+        cursor = item.transactions_cursor
+        while True:
+            response = self._client.transactions_sync(TransactionsSyncRequest(
+                access_token=item.access_token,
+                cursor=cursor,
+                options=TransactionsSyncRequestOptions(include_personal_finance_category=True),
+            ))
+            for txn in list(response.added) + list(response.modified):
+                outcome = self._import_transaction(txn)
+                if outcome == "added":
+                    added_count += 1
+                elif outcome == "updated":
+                    updated_count += 1
+            for removed in response.removed or []:
+                log.info(
+                    "Plaid reported a removed transaction (%s) on '%s' — not auto-deleted, see module docstring.",
+                    removed.transaction_id, item.institution_name,
+                )
+            cursor = response.next_cursor
+            if not response.has_more:
+                break
+        item.transactions_cursor = cursor
+        return added_count, updated_count
+
+    def _import_transaction(self, txn) -> str:
+        """One Plaid Transaction -> one budget.add_income()/
+        add_expense() call, or an update to an already-imported one.
+        Returns "added"/"updated"/"skipped". Dedup key is
+        transaction_id (not which Plaid batch — added vs. modified — it
+        arrived in), which uniformly handles a genuinely new
+        transaction, a real edit to one already imported, and the
+        repeat-sync safety-net case the same way."""
+        if txn.amount == 0:
+            return "skipped"
+        is_income = txn.amount < 0
+
+        pfc = txn.personal_finance_category
+        primary = pfc.primary if pfc is not None else ""
+        detailed = pfc.detailed if pfc is not None else ""
+        category = map_plaid_category(primary, detailed, is_income)
+        if category is None:
+            return "skipped"
+
+        description = txn.merchant_name or txn.name or ""
+        txn_date = txn.date.isoformat() if hasattr(txn.date, "isoformat") else str(txn.date)
+        amount = abs(txn.amount)
+        budget = self.context.budget
+
+        if is_income:
+            existing = budget.get_income_by_plaid_transaction_id(txn.transaction_id)
+            if existing is not None:
+                budget.update_income(existing.entry_id, amount=amount, category=category, description=description, date=txn_date)
+                return "updated"
+            budget.add_income(amount=amount, category=category, description=description, date=txn_date, plaid_transaction_id=txn.transaction_id)
+            return "added"
+
+        existing = budget.get_expense_by_plaid_transaction_id(txn.transaction_id)
+        if existing is not None:
+            budget.update_expense(existing.entry_id, amount=amount, category=category, description=description, date=txn_date)
+            return "updated"
+        budget.add_expense(amount=amount, category=category, description=description, date=txn_date, plaid_transaction_id=txn.transaction_id)
+        return "added"
 
     @staticmethod
     def _account_to_dict(account) -> dict:
