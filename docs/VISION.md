@@ -617,8 +617,13 @@ architecture call in this codebase, not guessed at here.
 2. ~~Build the real estate + Kraken ingestion widgets~~ — **done
    2026-07-16**, `gui/home_dashboard.py`'s Real Estate/Kraken Agent/Net
    Worth cards.
-3. Confirm what Fidelity actually exposes before committing to a
-   brokerage widget approach.
+3. ~~Confirm what Fidelity actually exposes before committing to a
+   brokerage widget approach~~ — **done 2026-09-09**: Fidelity IS
+   supported via Plaid's Investments product, but on Plaid's free/
+   Pay-as-you-go tier it needs a manual support-ticket request for
+   Investments access first. Built as `core/plaid_manager.py`'s
+   holdings sync + `modules/budget/module.py`'s Holdings list, see
+   `docs/ROADMAP.md`.
 4. ~~Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
    concept relates to this repo's existing `ModuleBase`~~ — **done
    2026-07-16**: a sibling concept, not a specialization — see

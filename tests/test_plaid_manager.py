@@ -29,7 +29,14 @@ from core.app_context import AppContext
 from core.budget_manager import BudgetManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
-from core.plaid_manager import PlaidItem, PlaidManager, PlaidVault, extract_completed_public_token, map_plaid_category
+from core.plaid_manager import (
+    PlaidItem,
+    PlaidManager,
+    PlaidVault,
+    compute_net_balance_total,
+    extract_completed_public_token,
+    map_plaid_category,
+)
 from core.secrets_manager import SecretsError
 
 
@@ -156,6 +163,7 @@ def test_finish_connection_appends_item_and_save_persists_it(isolated_paths, mon
     assert item.access_token == "access-sandbox-abc"
     assert item.institution_name == "Chase"
     assert item.transactions_enabled is True
+    assert item.investments_enabled is True
     assert len(manager.connected_items()) == 1
 
     manager.save_current_vault("hunter2")
@@ -166,6 +174,7 @@ def test_finish_connection_appends_item_and_save_persists_it(isolated_paths, mon
     assert reloaded.connected_items()[0].institution_name == "Chase"
     assert reloaded.connected_items()[0].access_token == "access-sandbox-abc"
     assert reloaded.connected_items()[0].transactions_enabled is True
+    assert reloaded.connected_items()[0].investments_enabled is True
 
 
 # ------------------------------------------------------------------
@@ -270,7 +279,7 @@ def test_create_hosted_link_session_requests_both_products(isolated_paths):
     link_token, hosted_link_url = manager.create_hosted_link_session()
     assert link_token == "link-token-1"
     assert hosted_link_url == "https://hosted.plaid.com/abc"
-    assert [str(p) for p in captured["request"].products] == ["balance", "transactions"]
+    assert [str(p) for p in captured["request"].products] == ["balance", "transactions", "investments"]
 
 
 def test_create_update_mode_session_passes_access_token_and_additional_products(isolated_paths):
@@ -324,6 +333,236 @@ def test_finish_transactions_upgrade_flips_flag_in_memory_only(isolated_paths):
     reloaded_after_save = _make_manager()
     reloaded_after_save.unlock("hunter2")
     assert reloaded_after_save.connected_items()[0].transactions_enabled is True
+
+
+def test_plaid_item_from_dict_backward_compatible_with_old_shape_defaults_investments_false():
+    old_shape = {
+        "item_id": "item-1", "access_token": "access-abc", "institution_name": "Chase",
+        "connected_at": "2026-09-01T00:00:00",
+    }
+    item = PlaidItem.from_dict(old_shape)
+    assert item.investments_enabled is False
+
+
+def test_create_investments_upgrade_session_passes_access_token_and_additional_products(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+    ))
+
+    captured = {}
+    fake_response = SimpleNamespace(link_token="link-token-3", hosted_link_url="https://hosted.plaid.com/ghi")
+
+    def _fake_link_token_create(req):
+        captured["request"] = req
+        return fake_response
+
+    manager._client = SimpleNamespace(link_token_create=_fake_link_token_create)
+
+    link_token, hosted_link_url = manager.create_investments_upgrade_session("item-1")
+    assert link_token == "link-token-3"
+    assert captured["request"].access_token == "access-abc"
+    assert [str(p) for p in captured["request"].additional_consented_products] == ["investments"]
+
+
+def test_create_investments_upgrade_session_raises_for_unknown_item(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    with pytest.raises(ValueError):
+        manager.create_investments_upgrade_session("no-such-item")
+
+
+def test_finish_investments_upgrade_flips_flag_in_memory_only(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+        investments_enabled=False,
+    ))
+    manager.save_current_vault("hunter2")
+    manager._client = SimpleNamespace(item_public_token_exchange=lambda req: SimpleNamespace())
+
+    manager.finish_investments_upgrade("item-1", "public-token-upgrade")
+    assert manager.connected_items()[0].investments_enabled is True
+
+    reloaded = _make_manager()
+    reloaded.unlock("hunter2")
+    assert reloaded.connected_items()[0].investments_enabled is False
+
+    manager.save_current_vault("hunter2")
+    reloaded_after_save = _make_manager()
+    reloaded_after_save.unlock("hunter2")
+    assert reloaded_after_save.connected_items()[0].investments_enabled is True
+
+
+# ------------------------------------------------------------------
+# Real (non-mocked) SDK construction — same discipline that caught the
+# CountryCode/cursor bugs earlier this session: build the actual plaid-
+# python model classes, don't assume the shape from memory.
+# ------------------------------------------------------------------
+
+def test_investments_holdings_get_request_constructs_from_real_sdk():
+    from plaid.model.investment_holdings_get_request_options import InvestmentHoldingsGetRequestOptions
+    from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
+
+    request = InvestmentsHoldingsGetRequest(access_token="access-abc")
+    assert request.access_token == "access-abc"
+
+    request_with_options = InvestmentsHoldingsGetRequest(
+        access_token="access-abc", options=InvestmentHoldingsGetRequestOptions()
+    )
+    assert request_with_options.access_token == "access-abc"
+
+
+# ------------------------------------------------------------------
+# _holdings_snapshot_for_item — resolves security names, sums the
+# total, and treats a fallback/empty response as "nothing to show yet"
+# ------------------------------------------------------------------
+
+def _fake_holding(account_id="acct-1", security_id="sec-1", quantity=10.0, institution_price=150.0,
+                   institution_value=1500.0, iso_currency_code="USD"):
+    return SimpleNamespace(
+        account_id=account_id, security_id=security_id, quantity=quantity,
+        institution_price=institution_price, institution_value=institution_value,
+        iso_currency_code=iso_currency_code,
+    )
+
+
+def _fake_security(security_id="sec-1", name="Apple Inc.", ticker_symbol="AAPL"):
+    return SimpleNamespace(security_id=security_id, name=name, ticker_symbol=ticker_symbol)
+
+
+def test_holdings_snapshot_for_item_resolves_names_and_sums_total(isolated_paths):
+    manager = _make_manager()
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Fidelity",
+                      connected_at="2026-09-01T00:00:00", investments_enabled=True)
+
+    response = SimpleNamespace(
+        is_investments_fallback_item=False,
+        holdings=[_fake_holding(institution_value=1500.0), _fake_holding(account_id="acct-1", security_id="sec-2", institution_value=250.0)],
+        securities=[_fake_security(), _fake_security(security_id="sec-2", name="Vanguard Total Bond", ticker_symbol="BND")],
+    )
+    manager._client = SimpleNamespace(investments_holdings_get=lambda req: response)
+
+    snapshot = manager._holdings_snapshot_for_item(item)
+    assert snapshot is not None
+    assert snapshot["source"] == "plaid_investments_item-1"
+    assert snapshot["holdings_total_value"] == 1750.0
+    assert "summary" not in snapshot  # regression guard: never double-counts against sync()'s balance total
+    names = {h["ticker_symbol"] for h in snapshot["holdings"]}
+    assert names == {"AAPL", "BND"}
+
+
+def test_holdings_snapshot_for_item_none_on_fallback_item(isolated_paths):
+    manager = _make_manager()
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Fidelity",
+                      connected_at="2026-09-01T00:00:00", investments_enabled=True)
+    response = SimpleNamespace(is_investments_fallback_item=True, holdings=[], securities=[])
+    manager._client = SimpleNamespace(investments_holdings_get=lambda req: response)
+    assert manager._holdings_snapshot_for_item(item) is None
+
+
+def test_holdings_snapshot_for_item_none_on_empty_holdings(isolated_paths):
+    manager = _make_manager()
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Fidelity",
+                      connected_at="2026-09-01T00:00:00", investments_enabled=True)
+    response = SimpleNamespace(is_investments_fallback_item=False, holdings=[], securities=[])
+    manager._client = SimpleNamespace(investments_holdings_get=lambda req: response)
+    assert manager._holdings_snapshot_for_item(item) is None
+
+
+# ------------------------------------------------------------------
+# compute_net_balance_total — pure logic
+# ------------------------------------------------------------------
+
+def test_compute_net_balance_total_nets_credit_and_loan_as_liabilities():
+    accounts = [
+        {"type": "depository", "balances": {"current": 1000.0}},
+        {"type": "credit", "balances": {"current": 200.0}},
+        {"type": "investment", "balances": {"current": 5000.0}},
+    ]
+    assert compute_net_balance_total(accounts) == 5800.0
+
+
+def test_compute_net_balance_total_none_when_all_balances_missing():
+    accounts = [{"type": "depository", "balances": {}}, {"type": "credit", "balances": None}]
+    assert compute_net_balance_total(accounts) is None
+
+
+def test_compute_net_balance_total_real_zero_is_not_none():
+    accounts = [{"type": "depository", "balances": {"current": 0.0}}]
+    assert compute_net_balance_total(accounts) == 0.0
+
+
+# ------------------------------------------------------------------
+# sync() — investments integration
+# ------------------------------------------------------------------
+
+def test_sync_writes_summary_total_value_on_balance_snapshot(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+    ))
+    fake_account = SimpleNamespace(
+        account_id="acct-1", name="Checking", official_name=None, type="depository", subtype="checking",
+        mask="1234", balances=SimpleNamespace(to_dict=lambda: {"current": 1234.56}),
+    )
+    fake_accounts_response = SimpleNamespace(item=SimpleNamespace(institution_name="Chase"), accounts=[fake_account])
+    manager._client = SimpleNamespace(accounts_get=lambda req: fake_accounts_response)
+    manager.context.finance = SimpleNamespace(
+        import_folder_path=isolated_paths / "finance_import", scan_for_new_snapshots=lambda: None,
+    )
+
+    result = manager.sync()
+    assert result.snapshots[0]["summary"]["total_value"] == 1234.56
+
+
+def test_sync_fetches_holdings_only_for_investments_enabled_items(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Fidelity", connected_at="2026-09-01T00:00:00",
+        investments_enabled=True,
+    ))
+    fake_accounts_response = SimpleNamespace(item=SimpleNamespace(institution_name="Fidelity"), accounts=[])
+    holdings_response = SimpleNamespace(
+        is_investments_fallback_item=False,
+        holdings=[_fake_holding(institution_value=1500.0)],
+        securities=[_fake_security()],
+    )
+    manager._client = SimpleNamespace(
+        accounts_get=lambda req: fake_accounts_response,
+        investments_holdings_get=lambda req: holdings_response,
+    )
+    manager.context.finance = SimpleNamespace(
+        import_folder_path=isolated_paths / "finance_import", scan_for_new_snapshots=lambda: None,
+    )
+
+    result = manager.sync()
+    assert result.investment_accounts_synced == 1
+    assert len(result.snapshots) == 2
+    holdings_snapshot = next(s for s in result.snapshots if s["source"] == "plaid_investments_item-1")
+    assert holdings_snapshot["holdings_total_value"] == 1500.0
+
+
+def test_sync_skips_holdings_write_for_non_investments_item(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+        investments_enabled=False,
+    ))
+    fake_accounts_response = SimpleNamespace(item=SimpleNamespace(institution_name="Chase"), accounts=[])
+    manager._client = SimpleNamespace(accounts_get=lambda req: fake_accounts_response)
+    manager.context.finance = SimpleNamespace(
+        import_folder_path=isolated_paths / "finance_import", scan_for_new_snapshots=lambda: None,
+    )
+
+    result = manager.sync()
+    assert result.investment_accounts_synced == 0
+    assert len(result.snapshots) == 1
 
 
 # ------------------------------------------------------------------

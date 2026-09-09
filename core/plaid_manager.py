@@ -59,6 +59,16 @@ doesn't need live credentials (the vault crypto round-trip, the polling
 stopping logic, the snapshot-shape building) is unit-tested; the real
 network calls are not, and are flagged as such rather than assumed
 correct.
+
+**Investments/holdings (added 2026-09-09)**: real research confirmed
+Fidelity IS supported via Plaid, but on Plaid's free/Pay-as-you-go
+tier, actually seeing Fidelity holdings requires the user to file a
+support ticket with Plaid requesting Investments product access for
+their account first — Plaid's API itself doesn't error on a
+non-qualifying item, it just returns `is_investments_fallback_item=True`
+with no holdings. `_holdings_snapshot_for_item()` below treats that
+response (and a genuinely empty `holdings` list) as "nothing to show
+yet" and writes no snapshot at all, rather than surfacing it as a bug.
 """
 
 from __future__ import annotations
@@ -75,6 +85,7 @@ import plaid
 from plaid.api import plaid_api
 from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.country_code import CountryCode
+from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
@@ -107,12 +118,14 @@ class PlaidItem:
     connected_at: str  # ISO datetime
     transactions_enabled: bool = False  # Transactions product consent granted
     transactions_cursor: str = ""  # last next_cursor from /transactions/sync — "" means never synced yet
+    investments_enabled: bool = False  # Investments product consent granted
 
     def to_dict(self) -> dict:
         return {
             "item_id": self.item_id, "access_token": self.access_token,
             "institution_name": self.institution_name, "connected_at": self.connected_at,
             "transactions_enabled": self.transactions_enabled, "transactions_cursor": self.transactions_cursor,
+            "investments_enabled": self.investments_enabled,
         }
 
     @staticmethod
@@ -124,6 +137,7 @@ class PlaidItem:
             connected_at=data.get("connected_at", ""),
             transactions_enabled=data.get("transactions_enabled", False),
             transactions_cursor=data.get("transactions_cursor", ""),
+            investments_enabled=data.get("investments_enabled", False),
         )
 
 
@@ -170,6 +184,31 @@ class PlaidSyncResult:
     snapshots: list[dict]
     transactions_added: int = 0
     transactions_updated: int = 0
+    investment_accounts_synced: int = 0
+
+
+_LIABILITY_ACCOUNT_TYPES = {"credit", "loan"}
+
+
+def compute_net_balance_total(accounts: list[dict]) -> Optional[float]:
+    """Pure logic — testable without a real Plaid client. Sums each
+    account's balances["current"] (never "available") as an asset,
+    except for credit/loan accounts which are subtracted as
+    liabilities — real assets-minus-liabilities math for one
+    institution's snapshot. Returns None only when every account lacks
+    a usable current balance, so a genuine $0 net total is never
+    confused with "no data" — same convention
+    gui.home_dashboard.format_net_worth_line() already applies to a
+    missing summary.total_value."""
+    total = 0.0
+    saw_any = False
+    for account in accounts:
+        current = (account.get("balances") or {}).get("current")
+        if current is None:
+            continue
+        saw_any = True
+        total += -current if account.get("type") in _LIABILITY_ACCOUNT_TYPES else current
+    return total if saw_any else None
 
 
 def map_plaid_category(primary: str, detailed: str, is_income: bool) -> Optional[str]:
@@ -302,7 +341,7 @@ class PlaidManager:
             language="en",
             country_codes=[CountryCode("US")],
             user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
-            products=[Products("balance"), Products("transactions")],
+            products=[Products("balance"), Products("transactions"), Products("investments")],
             hosted_link=LinkTokenCreateHostedLink(),
         )
         response = self._client.link_token_create(request)
@@ -329,6 +368,27 @@ class PlaidManager:
             user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
             access_token=item.access_token,
             additional_consented_products=[Products("transactions")],
+            hosted_link=LinkTokenCreateHostedLink(),
+        )
+        response = self._client.link_token_create(request)
+        return response.link_token, response.hosted_link_url
+
+    def create_investments_upgrade_session(self, item_id: str) -> tuple[str, str]:
+        """Same shape as create_update_mode_session() above, but for
+        Investments — a separate method (not a generalized one) so the
+        already-tested Transactions upgrade path stays untouched. See
+        that method's docstring for the full update-mode reasoning."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        request = LinkTokenCreateRequest(
+            client_name="MIA Home",
+            language="en",
+            country_codes=[CountryCode("US")],
+            user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
+            access_token=item.access_token,
+            additional_consented_products=[Products("investments")],
             hosted_link=LinkTokenCreateHostedLink(),
         )
         response = self._client.link_token_create(request)
@@ -397,7 +457,9 @@ class PlaidManager:
         new_item = PlaidItem(
             item_id=item_id, access_token=access_token, institution_name=institution_name,
             connected_at=datetime.now().isoformat(timespec="seconds"),
-            transactions_enabled=True,  # new connections always request both products now (see create_hosted_link_session)
+            # new connections always request all three products now (see create_hosted_link_session)
+            transactions_enabled=True,
+            investments_enabled=True,
         )
         self._vault.items.append(new_item)
         log.info("Connected Plaid item: '%s' (%s)", new_item.institution_name, new_item.item_id)
@@ -418,6 +480,18 @@ class PlaidManager:
         self._client.item_public_token_exchange(ItemPublicTokenExchangeRequest(public_token=public_token))
         item.transactions_enabled = True
         log.info("Transactions access added for Plaid item '%s'.", item.institution_name)
+
+    def finish_investments_upgrade(self, item_id: str, public_token: str) -> None:
+        """The update-mode counterpart to finish_connection() for
+        Investments — same shape as finish_transactions_upgrade()
+        above, kept as a separate method for the same reason."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        self._client.item_public_token_exchange(ItemPublicTokenExchangeRequest(public_token=public_token))
+        item.investments_enabled = True
+        log.info("Investments access added for Plaid item '%s'.", item.institution_name)
 
     def save_current_vault(self, passphrase: str) -> None:
         """Re-encrypts and persists the in-memory vault (e.g. after
@@ -466,18 +540,28 @@ class PlaidManager:
         written = []
         total_added = 0
         total_updated = 0
+        investment_accounts_synced = 0
         cursor_changed = False
 
         for item in self._vault.items:
             accounts_response = self._client.accounts_get(AccountsGetRequest(access_token=item.access_token))
+            accounts = [self._account_to_dict(a) for a in accounts_response.accounts]
             snapshot_data = {
                 "source": f"plaid_{item.item_id}",
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "institution_name": item.institution_name,
-                "accounts": [self._account_to_dict(a) for a in accounts_response.accounts],
+                "accounts": accounts,
+                "summary": {"total_value": compute_net_balance_total(accounts)},
             }
             self._write_snapshot_file(snapshot_data)
             written.append(snapshot_data)
+
+            if item.investments_enabled:
+                holdings_snapshot = self._holdings_snapshot_for_item(item)
+                if holdings_snapshot is not None:
+                    self._write_snapshot_file(holdings_snapshot)
+                    written.append(holdings_snapshot)
+                    investment_accounts_synced += 1
 
             if item.transactions_enabled:
                 if self.context.budget is None:
@@ -504,7 +588,56 @@ class PlaidManager:
                     "prevents duplicate budget entries, but wastes time and API calls."
                 )
 
-        return PlaidSyncResult(snapshots=written, transactions_added=total_added, transactions_updated=total_updated)
+        return PlaidSyncResult(
+            snapshots=written, transactions_added=total_added, transactions_updated=total_updated,
+            investment_accounts_synced=investment_accounts_synced,
+        )
+
+    def _holdings_snapshot_for_item(self, item: PlaidItem) -> Optional[dict]:
+        """Full-snapshot refetch every sync — unlike transactions,
+        holdings has no cursor/state to persist, same cost/shape as the
+        accounts_get call right above it in sync(). Returns None
+        (writes nothing) when is_investments_fallback_item is True
+        (Plaid's own signal this item doesn't actually have Investments
+        access — e.g. Fidelity Pay-as-you-go without the support-ticket
+        grant, see module docstring) or holdings is empty, rather than
+        writing an empty snapshot every sync.
+
+        Deliberately does NOT include its own summary.total_value —
+        each holding's institution_value is already reflected in that
+        same account's balances.current, which sync()'s own
+        compute_net_balance_total() already sums above; adding a second
+        total here would double-count. holdings_total_value exists only
+        for the Bank Sync tab's holdings display."""
+        response = self._client.investments_holdings_get(
+            InvestmentsHoldingsGetRequest(access_token=item.access_token)
+        )
+        if response.is_investments_fallback_item or not response.holdings:
+            return None
+
+        securities_by_id = {s.security_id: s for s in response.securities}
+        holdings = []
+        total = 0.0
+        for h in response.holdings:
+            security = securities_by_id.get(h.security_id)
+            holdings.append({
+                "account_id": h.account_id,
+                "security_name": security.name if security else None,
+                "ticker_symbol": security.ticker_symbol if security else None,
+                "quantity": h.quantity,
+                "institution_price": h.institution_price,
+                "institution_value": h.institution_value,
+                "iso_currency_code": h.iso_currency_code,
+            })
+            total += h.institution_value or 0.0
+
+        return {
+            "source": f"plaid_investments_{item.item_id}",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "institution_name": item.institution_name,
+            "holdings": holdings,
+            "holdings_total_value": total,
+        }
 
     def _sync_transactions_for_item(self, item: PlaidItem) -> tuple[int, int]:
         """Loops /transactions/sync until has_more is False (Plaid's own

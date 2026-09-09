@@ -199,6 +199,16 @@ def test_format_net_worth_line_sums_multiple_sources():
     assert format_net_worth_line(snapshots) == "$548,500  —  from 2 sources"
 
 
+def test_format_net_worth_line_includes_plaid_snapshot():
+    """core.plaid_manager.sync() now writes summary.total_value on its
+    balance snapshots (added 2026-09-09, see core/plaid_manager.py's
+    compute_net_balance_total) — this generic formatter needed no code
+    change to pick it up, since it already reads any source's
+    summary.total_value the same way."""
+    snapshots = [_snapshot("plaid_item-1", {"total_value": 12345.0})]
+    assert format_net_worth_line(snapshots) == "$12,345  —  from 1 source"
+
+
 def _homestead_snapshot(summary: dict, top_alert: dict | None = None) -> HomesteadSnapshot:
     return HomesteadSnapshot(
         source="mia_homestead", generated_at="2026-08-30T22:33:19Z", imported_at="2026-08-30T22:33:19Z",

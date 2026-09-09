@@ -3517,8 +3517,10 @@ milestones yet; tracked as real follow-up work, not just aspiration:
 - [x] Build real estate + Kraken ingestion widgets (hardware-independent,
       safe to build now, pre-Project-2-migration) — **built 2026-07-16,
       see the dedicated entry below**
-- [ ] Confirm what Fidelity actually exposes before committing to a
-      brokerage widget approach
+- [x] Confirm what Fidelity actually exposes before committing to a
+      brokerage widget approach — **Fidelity IS supported via Plaid's
+      Investments product; Pay-as-you-go tier needs a manual support
+      ticket for Investments access, see the dedicated entry below**
 - [x] Decide how `mia_module_contract.py`'s workshop-hardware `MIAModule`
       concept relates to this repo's existing `ModuleBase`/`MODULE_SPEC.md`
       — **a sibling concept, built 2026-07-16 as `core/workshop_machine.py`,
@@ -5451,3 +5453,58 @@ file; a real headless-Qt boot screenshot at 1491×1027 confirms the
 restored layout; a real interactive test confirmed the character panel
 starts visible and a full send-through-the-dashboard's-own-chat-bar
 round trip against the live Ollama server completes with no crash.
+
+## Plaid Investments product: Fidelity/brokerage holdings + a real net-worth fix (2026-09-09)
+
+Closes the outstanding "Confirm what Fidelity actually exposes" item
+tracked above and in `docs/VISION.md`'s Immediate follow-up list.
+`core/plaid_manager.py`'s `create_hosted_link_session()` now requests
+the Investments product alongside `balance`/`transactions` for every
+new connection, plus an update-mode twin
+(`create_investments_upgrade_session()`/`finish_investments_upgrade()`,
+same shape as the existing Transactions upgrade path) for accounts
+connected before this existed. `sync()` fetches each investments-
+enabled item's real holdings via `investments_holdings_get`
+(`_holdings_snapshot_for_item()`), writing a `plaid_investments_<item_id>`
+snapshot into the same watched-folder mechanism balances already use —
+no new ingestion code. Confirmed real, easy-to-get-wrong SDK naming:
+`InvestmentHoldingsGetRequestOptions` lives under the **singular**
+`plaid.model.investment_holdings_get_request_options`, while
+`InvestmentsHoldingsGetRequest` itself is **plural** — verified by
+direct construction against the installed SDK, not assumed.
+
+**Real, honest limitation, documented in `core/plaid_manager.py`'s own
+docstring and the Bank Sync tab's intro text**: Fidelity IS supported
+via Plaid, but on Plaid's free/Pay-as-you-go tier, actually seeing
+Fidelity holdings requires the user to file a support ticket with
+Plaid requesting Investments access first — Plaid's API itself doesn't
+error on a non-qualifying item, it returns
+`is_investments_fallback_item=True` with no holdings, which
+`_holdings_snapshot_for_item()` treats as "nothing to show yet," not a
+bug.
+
+**A real, separate, pre-existing gap found while building this, fixed
+as part of it**: `sync()`'s balance snapshots never carried a
+`summary.total_value` field, meaning Plaid-synced balances contributed
+nothing to `gui/home_dashboard.py`'s Net Worth widget — regardless of
+Investments. Fixed via a new pure `compute_net_balance_total()`
+(assets minus credit/loan liabilities, using each account's
+`balances.current`), now written into every balance snapshot.
+Deliberately does NOT double-count with the holdings snapshot: a
+brokerage account's own `balances.current` already includes its
+holdings' value, so the holdings snapshot uses a differently-named
+`holdings_total_value` key instead of its own `summary`, read only by
+`modules/budget/module.py`'s new Holdings list on the Bank Sync tab
+(`format_holding_row()`, an "Add Investments Access…" button, no chart
+— a plain list, matching this session's own restraint on not building
+visualization nobody asked for).
+
+**Verified for real**: all 1773 pytest tests pass, including a real
+(non-mocked) SDK construction test for
+`InvestmentsHoldingsGetRequest`/`InvestmentHoldingsGetRequestOptions` —
+same discipline that caught two real bugs earlier this session
+(`CountryCode` objects vs. plain strings; `TransactionsSyncRequest
+.cursor` needing `""` not `None`). No live Plaid credentials exist in
+this sandbox, so the real network calls themselves remain unverified
+against Plaid's actual API, same honest caveat as every other Plaid
+entry above.

@@ -143,6 +143,20 @@ def format_expense_row(entry: ExpenseEntry) -> str:
     return f"{entry.date}   ${entry.amount:.2f}  [{entry.category}]{description_part}"
 
 
+def format_holding_row(holding: dict) -> str:
+    """Pure formatting logic — testable without Qt (see
+    tests/test_budget_module.py). holding is one entry from a
+    core.plaid_manager plaid_investments_* snapshot's "holdings" list."""
+    name = holding.get("security_name") or "Unknown security"
+    ticker = holding.get("ticker_symbol")
+    label = f"{name} ({ticker})" if ticker else name
+    quantity = holding.get("quantity")
+    value = holding.get("institution_value")
+    qty_part = f"{quantity:,.4g} sh  —  " if quantity is not None else ""
+    value_part = f"${value:,.2f}" if value is not None else "value unknown"
+    return f"{label}   {qty_part}{value_part}"
+
+
 class BudgetModule(ModuleBase):
     module_id = "budget"
     display_name = "Budget"
@@ -175,7 +189,9 @@ class BudgetModule(ModuleBase):
         self._plaid_unlock_button: Optional[QPushButton] = None
         self._plaid_connect_button: Optional[QPushButton] = None
         self._plaid_add_transactions_button: Optional[QPushButton] = None
+        self._plaid_add_investments_button: Optional[QPushButton] = None
         self._plaid_sync_button: Optional[QPushButton] = None
+        self._plaid_holdings_list: Optional[QListWidget] = None
 
     def on_load(self) -> None:
         super().on_load()
@@ -916,7 +932,9 @@ class BudgetModule(ModuleBase):
 
         intro = QLabel(
             "Connect a real bank or brokerage account via Plaid to pull balances into MIA. "
-            "This is a real third-party service — see Settings for the offline-first tradeoff this accepts."
+            "This is a real third-party service — see Settings for the offline-first tradeoff this accepts. "
+            "Fidelity is supported, but on Plaid's free/Pay-as-you-go tier, seeing Fidelity holdings here "
+            "requires filing a support ticket with Plaid requesting Investments access for your account first."
         )
         intro.setWordWrap(True)
         intro.setObjectName("SubtitleLabel")
@@ -945,11 +963,21 @@ class BudgetModule(ModuleBase):
         self._plaid_add_transactions_button.clicked.connect(self._on_plaid_add_transactions)
         button_row.addWidget(self._plaid_add_transactions_button)
 
+        self._plaid_add_investments_button = QPushButton("Add Investments Access…")
+        self._plaid_add_investments_button.clicked.connect(self._on_plaid_add_investments)
+        button_row.addWidget(self._plaid_add_investments_button)
+
         self._plaid_sync_button = QPushButton("Sync Now")
         self._plaid_sync_button.clicked.connect(self._on_plaid_sync)
         button_row.addWidget(self._plaid_sync_button)
 
         layout.addLayout(button_row)
+
+        holdings_label = QLabel("Holdings:")
+        holdings_label.setObjectName("SubtitleLabel")
+        layout.addWidget(holdings_label)
+        self._plaid_holdings_list = QListWidget()
+        layout.addWidget(self._plaid_holdings_list, stretch=1)
 
         self._plaid_accounts_list.currentItemChanged.connect(lambda *_: self._refresh_plaid_tab())
 
@@ -966,6 +994,7 @@ class BudgetModule(ModuleBase):
         self._plaid_connect_button.setEnabled(unlocked)
         self._plaid_sync_button.setEnabled(unlocked)
         self._plaid_add_transactions_button.setEnabled(unlocked and self._selected_plaid_item_needs_upgrade())
+        self._plaid_add_investments_button.setEnabled(unlocked and self._selected_plaid_item_needs_investments_upgrade())
 
         if not configured:
             self._plaid_status_label.setText("Not set up yet.")
@@ -976,17 +1005,46 @@ class BudgetModule(ModuleBase):
             noun = "account" if count == 1 else "accounts"
             self._plaid_status_label.setText(f"Unlocked — {count} connected {noun}.")
 
+        # Rebuilding the list below (clear() + re-add) would otherwise wipe
+        # the current selection right back out on every call — including
+        # the very currentItemChanged-triggered call a user's own click
+        # causes — so the previously-selected item_id is captured first and
+        # restored after repopulating, still under blockSignals to avoid a
+        # second, redundant currentItemChanged firing from that restore.
+        previously_selected_item_id = self._selected_plaid_item_id()
         self._plaid_accounts_list.blockSignals(True)
         self._plaid_accounts_list.clear()
         if unlocked:
             for item in plaid.connected_items():
-                suffix = "  ·  transactions enabled" if item.transactions_enabled else ""
+                suffix_parts = []
+                if item.transactions_enabled:
+                    suffix_parts.append("transactions enabled")
+                if item.investments_enabled:
+                    suffix_parts.append("investments enabled")
+                suffix = f"  ·  {', '.join(suffix_parts)}" if suffix_parts else ""
                 list_item = QListWidgetItem(f"{item.institution_name}  —  connected {item.connected_at}{suffix}")
                 list_item.setData(Qt.ItemDataRole.UserRole, item.item_id)
                 self._plaid_accounts_list.addItem(list_item)
+                if item.item_id == previously_selected_item_id:
+                    self._plaid_accounts_list.setCurrentItem(list_item)
         else:
             self._plaid_accounts_list.addItem("Unlock to see connected accounts.")
         self._plaid_accounts_list.blockSignals(False)
+
+        self._plaid_holdings_list.clear()
+        item_id = self._selected_plaid_item_id()
+        if item_id and self.context.finance is not None:
+            snapshot = self.context.finance.latest_snapshot(f"plaid_investments_{item_id}")
+            if snapshot is None:
+                self._plaid_holdings_list.addItem("No holdings synced for this account yet.")
+            else:
+                for holding in snapshot.data.get("holdings", []):
+                    self._plaid_holdings_list.addItem(format_holding_row(holding))
+                total = snapshot.data.get("holdings_total_value")
+                if total is not None:
+                    self._plaid_holdings_list.addItem(f"Total holdings value: ${total:,.2f}")
+        else:
+            self._plaid_holdings_list.addItem("Select a connected account to see its holdings.")
 
     def _selected_plaid_item_id(self) -> Optional[str]:
         item = self._plaid_accounts_list.currentItem()
@@ -999,6 +1057,12 @@ class BudgetModule(ModuleBase):
         if item_id is None or not self.context.plaid.is_unlocked():
             return False
         return any(i.item_id == item_id and not i.transactions_enabled for i in self.context.plaid.connected_items())
+
+    def _selected_plaid_item_needs_investments_upgrade(self) -> bool:
+        item_id = self._selected_plaid_item_id()
+        if item_id is None or not self.context.plaid.is_unlocked():
+            return False
+        return any(i.item_id == item_id and not i.investments_enabled for i in self.context.plaid.connected_items())
 
     def _on_plaid_setup(self) -> None:
         dialog = PlaidSetupDialog()
@@ -1091,6 +1155,40 @@ class BudgetModule(ModuleBase):
                 QMessageBox.warning(None, "Couldn't Save", f"Transaction access granted for this session, but saving failed: {exc}")
         self._refresh_plaid_tab()
 
+    def _on_plaid_add_investments(self) -> None:
+        """Update-mode counterpart to _on_plaid_connect() for
+        Investments — same shape as _on_plaid_add_transactions() above."""
+        item_id = self._selected_plaid_item_id()
+        if item_id is None:
+            QMessageBox.information(None, "No Account Selected", "Select a connected account to add investments access to.")
+            return
+
+        try:
+            link_token, hosted_link_url = self.context.plaid.create_investments_upgrade_session(item_id)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Start", str(exc))
+            return
+
+        webbrowser.open(hosted_link_url)
+
+        progress = PlaidConnectProgressDialog(self.context.plaid, link_token)
+        if progress.exec() != QDialog.DialogCode.Accepted or not progress.entered_public_token:
+            return
+
+        try:
+            self.context.plaid.finish_investments_upgrade(item_id, progress.entered_public_token)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Finish", str(exc))
+            return
+
+        save_dialog = PasswordPromptDialog("your Plaid vault", prompt="Re-enter the passphrase for")
+        if save_dialog.exec() == QDialog.DialogCode.Accepted:
+            try:
+                self.context.plaid.save_current_vault(save_dialog.entered_password)
+            except SecretsError as exc:
+                QMessageBox.warning(None, "Couldn't Save", f"Investments access granted for this session, but saving failed: {exc}")
+        self._refresh_plaid_tab()
+
     def _on_plaid_sync(self) -> None:
         passphrase = None
         if any(i.transactions_enabled for i in self.context.plaid.connected_items()):
@@ -1115,6 +1213,8 @@ class BudgetModule(ModuleBase):
             if result.transactions_updated:
                 message += f", updated {result.transactions_updated}"
             message += "."
+        if result.investment_accounts_synced:
+            message += f" Synced holdings for {result.investment_accounts_synced} investment account(s)."
         QMessageBox.information(None, "Synced", message)
         self._refresh_plaid_tab()
 

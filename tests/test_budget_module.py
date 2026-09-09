@@ -14,6 +14,7 @@ from core.budget_manager import Bill, ExpenseEntry, IncomeEntry, IncomeSource
 from modules.budget.module import (
     format_bill_row,
     format_expense_row,
+    format_holding_row,
     format_income_row,
     format_income_source_row,
 )
@@ -68,6 +69,23 @@ def test_format_income_row_without_description():
 def test_format_expense_row_with_description():
     entry = ExpenseEntry(entry_id="e1", amount=85.5, category="Groceries", description="Weekly shop", date="2026-09-05")
     assert format_expense_row(entry) == "2026-09-05   $85.50  [Groceries]  Weekly shop"
+
+
+def test_format_holding_row_with_ticker_and_quantity():
+    holding = {"security_name": "Apple Inc.", "ticker_symbol": "AAPL", "quantity": 10.0, "institution_value": 1500.0}
+    assert format_holding_row(holding) == "Apple Inc. (AAPL)   10 sh  —  $1,500.00"
+
+
+def test_format_holding_row_without_ticker():
+    holding = {"security_name": "Private Fund X", "quantity": 3.0, "institution_value": 900.0}
+    row = format_holding_row(holding)
+    assert row.startswith("Private Fund X   ")
+    assert "(" not in row
+
+
+def test_format_holding_row_without_quantity_or_value():
+    holding = {"security_name": "Mystery Security"}
+    assert format_holding_row(holding) == "Mystery Security   value unknown"
 
 
 def test_format_income_source_row_overdue():
