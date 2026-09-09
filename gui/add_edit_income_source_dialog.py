@@ -34,10 +34,12 @@ _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENC
 
 
 class AddEditIncomeSourceDialog(QDialog):
-    def __init__(self, parent=None, income_source: Optional[IncomeSource] = None) -> None:
+    def __init__(self, parent=None, income_source: Optional[IncomeSource] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Income Source" if income_source is not None else "New Income Source")
-        self.setFixedSize(360, 460)
+        self.setFixedSize(360, 500)
+
+        self._entities = entities or []
 
         layout = QVBoxLayout(self)
 
@@ -69,6 +71,13 @@ class AddEditIncomeSourceDialog(QDialog):
             self.recurrence_combo.addItem(label)
         layout.addWidget(self.recurrence_combo)
 
+        layout.addWidget(QLabel("Entity:"))
+        self.entity_combo = QComboBox()
+        self.entity_combo.addItem("(Unassigned)", "")
+        for ent in self._entities:
+            self.entity_combo.addItem(ent.name, ent.entity_id)
+        layout.addWidget(self.entity_combo)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -89,6 +98,7 @@ class AddEditIncomeSourceDialog(QDialog):
         self._category: str = INCOME_CATEGORIES[0]
         self._next_date: str = ""
         self._recurrence: Optional[str] = None
+        self._entity_id: str = ""
         self._notes: str = ""
 
     def _prefill(self, income_source: Optional[IncomeSource]) -> None:
@@ -103,6 +113,9 @@ class AddEditIncomeSourceDialog(QDialog):
                 (i for i, (_label, value) in enumerate(_RECURRENCE_LABELS) if value == income_source.recurrence), 0
             )
             self.recurrence_combo.setCurrentIndex(recurrence_index)
+            if income_source.entity_id:
+                idx = self.entity_combo.findData(income_source.entity_id)
+                self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.notes_edit.setPlainText(income_source.notes)
         else:
             self.next_date_edit.setDate(QDate.currentDate())
@@ -118,6 +131,7 @@ class AddEditIncomeSourceDialog(QDialog):
         self._category = self.category_combo.currentText()
         self._next_date = self.next_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._recurrence = _RECURRENCE_LABELS[self.recurrence_combo.currentIndex()][1]
+        self._entity_id = self.entity_combo.currentData()
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
 
@@ -140,6 +154,10 @@ class AddEditIncomeSourceDialog(QDialog):
     @property
     def entered_recurrence(self) -> Optional[str]:
         return self._recurrence
+
+    @property
+    def entered_entity_id(self) -> str:
+        return self._entity_id
 
     @property
     def entered_notes(self) -> str:

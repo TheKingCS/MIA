@@ -286,7 +286,9 @@ def format_kraken_line(snapshot: Optional[FinancialSnapshot]) -> str:
     return line
 
 
-def format_net_worth_line(snapshots: list[FinancialSnapshot]) -> str:
+def format_net_worth_line(
+    snapshots: list[FinancialSnapshot], property_portfolio_equity: Optional[float] = None
+) -> str:
     """Pure formatting logic — testable without Qt. Deliberately sums
     each snapshot's own `summary.total_value` rather than reusing any
     snapshot's self-reported `combined_net_worth` field — per
@@ -295,11 +297,22 @@ def format_net_worth_line(snapshots: list[FinancialSnapshot]) -> str:
     whatever it didn't have real data for, not a value meant to be
     re-summed across sources. Snapshots missing `total_value` are
     excluded (not treated as zero) and the source count is shown so
-    this never silently overstates itself as more complete than it is."""
+    this never silently overstates itself as more complete than it is.
+
+    property_portfolio_equity (2026-09-09) adds the NATIVE Real Estate
+    module's own tracked-property equity as one more contribution —
+    without this, a user who never imports an external real-estate/
+    Kraken/Plaid snapshot saw a flatly wrong "No financial snapshots
+    imported yet." even with real tracked properties. Pass None (never
+    0.0) when there are no properties at all, same "missing means
+    excluded, not a fabricated zero" convention every contribution here
+    already follows."""
     contributions = [
         (snapshot.source, snapshot.data.get("summary", {}).get("total_value")) for snapshot in snapshots
     ]
     contributions = [(source, value) for source, value in contributions if value is not None]
+    if property_portfolio_equity is not None:
+        contributions.append(("property_portfolio", property_portfolio_equity))
     if not contributions:
         return "No financial snapshots imported yet."
     total = sum(value for _, value in contributions)
@@ -1540,7 +1553,9 @@ class HomeDashboard(QFrame):
 
     def _refresh_net_worth(self) -> None:
         snapshots = self.context.finance.all_latest_snapshots() if self.context.finance else []
-        self._set_widget_body_text("net_worth", format_net_worth_line(snapshots))
+        properties = self.context.real_estate.all_properties() if self.context.real_estate else []
+        property_equity_total = sum(property_equity(p) for p in properties) if properties else None
+        self._set_widget_body_text("net_worth", format_net_worth_line(snapshots, property_equity_total))
 
     def _refresh_homestead(self) -> None:
         snapshot = self.context.homestead.latest_snapshot(_HOMESTEAD_SOURCE) if self.context.homestead else None

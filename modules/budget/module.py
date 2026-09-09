@@ -281,7 +281,7 @@ class BudgetModule(ModuleBase):
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_bill(self) -> None:
-        dialog = AddEditBillDialog()
+        dialog = AddEditBillDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -292,6 +292,7 @@ class BudgetModule(ModuleBase):
             category=dialog.entered_category,
             recurrence=dialog.entered_recurrence,
             tax_relevant=dialog.entered_tax_relevant,
+            entity_id=dialog.entered_entity_id,
             notes=dialog.entered_notes,
         )
         self._refresh_bill_list()
@@ -303,7 +304,7 @@ class BudgetModule(ModuleBase):
             return
 
         bill = self.context.budget.get_bill(bill_id)
-        dialog = AddEditBillDialog(bill=bill)
+        dialog = AddEditBillDialog(bill=bill, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -315,6 +316,7 @@ class BudgetModule(ModuleBase):
             category=dialog.entered_category,
             recurrence=dialog.entered_recurrence,
             tax_relevant=dialog.entered_tax_relevant,
+            entity_id=dialog.entered_entity_id,
             notes=dialog.entered_notes,
         )
         self._refresh_bill_list()
@@ -415,7 +417,7 @@ class BudgetModule(ModuleBase):
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_income_source(self) -> None:
-        dialog = AddEditIncomeSourceDialog()
+        dialog = AddEditIncomeSourceDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -425,6 +427,7 @@ class BudgetModule(ModuleBase):
             next_date=dialog.entered_next_date,
             category=dialog.entered_category,
             recurrence=dialog.entered_recurrence,
+            entity_id=dialog.entered_entity_id,
             notes=dialog.entered_notes,
         )
         self._refresh_income_source_list()
@@ -436,7 +439,7 @@ class BudgetModule(ModuleBase):
             return
 
         source = self.context.budget.get_income_source(source_id)
-        dialog = AddEditIncomeSourceDialog(income_source=source)
+        dialog = AddEditIncomeSourceDialog(income_source=source, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -447,6 +450,7 @@ class BudgetModule(ModuleBase):
             next_date=dialog.entered_next_date,
             category=dialog.entered_category,
             recurrence=dialog.entered_recurrence,
+            entity_id=dialog.entered_entity_id,
             notes=dialog.entered_notes,
         )
         self._refresh_income_source_list()

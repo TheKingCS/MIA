@@ -379,6 +379,25 @@ def test_format_property_portfolio_line_sums_equity_across_properties():
     assert format_property_portfolio_line(properties) == "2 properties  —  $130,000 total equity"
 
 
+def test_format_net_worth_line_property_portfolio_equity_alone():
+    assert format_net_worth_line([], property_portfolio_equity=130000.0) == "$130,000  —  from 1 source"
+
+
+def test_format_net_worth_line_combines_snapshots_and_property_portfolio_equity():
+    snapshots = [_snapshot("kraken_trading_agent", {"total_value": 8500})]
+    result = format_net_worth_line(snapshots, property_portfolio_equity=130000.0)
+    assert result == "$138,500  —  from 2 sources"
+
+
+def test_format_net_worth_line_none_property_equity_behaves_as_before():
+    snapshots = [_snapshot("real_estate_portfolio", {"total_value": 540000})]
+    assert format_net_worth_line(snapshots, property_portfolio_equity=None) == "$540,000  —  from 1 source"
+
+
+def test_format_net_worth_line_no_data_at_all_still_says_no_snapshots():
+    assert format_net_worth_line([], property_portfolio_equity=None) == "No financial snapshots imported yet."
+
+
 def test_format_music_line_nothing_playing():
     assert format_music_line(None) == "Nothing playing"
 

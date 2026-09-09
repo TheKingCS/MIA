@@ -169,6 +169,7 @@ class Bill:
     recurrence: Optional[str] = None  # None, or one of core.calendar_manager.RECURRENCE_TYPES
     last_paid_date: Optional[str] = None
     tax_relevant: bool = False
+    entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     notes: str = ""
     created_at: str = ""
 
@@ -176,7 +177,8 @@ class Bill:
         return {
             "bill_id": self.bill_id, "name": self.name, "amount": self.amount, "category": self.category,
             "due_date": self.due_date, "recurrence": self.recurrence, "last_paid_date": self.last_paid_date,
-            "tax_relevant": self.tax_relevant, "notes": self.notes, "created_at": self.created_at,
+            "tax_relevant": self.tax_relevant, "entity_id": self.entity_id,
+            "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -190,6 +192,7 @@ class Bill:
             recurrence=data.get("recurrence"),
             last_paid_date=data.get("last_paid_date"),
             tax_relevant=data.get("tax_relevant", False),
+            entity_id=data.get("entity_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -267,6 +270,7 @@ class IncomeSource:
     next_date: str = ""  # ISO anchor date — same role as Bill.due_date
     recurrence: Optional[str] = None  # None, or one of core.calendar_manager.RECURRENCE_TYPES
     last_received_date: Optional[str] = None
+    entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     notes: str = ""
     created_at: str = ""
 
@@ -274,7 +278,8 @@ class IncomeSource:
         return {
             "source_id": self.source_id, "name": self.name, "expected_amount": self.expected_amount,
             "category": self.category, "next_date": self.next_date, "recurrence": self.recurrence,
-            "last_received_date": self.last_received_date, "notes": self.notes, "created_at": self.created_at,
+            "last_received_date": self.last_received_date, "entity_id": self.entity_id,
+            "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -287,6 +292,7 @@ class IncomeSource:
             next_date=data.get("next_date", ""),
             recurrence=data.get("recurrence"),
             last_received_date=data.get("last_received_date"),
+            entity_id=data.get("entity_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -434,6 +440,7 @@ class BudgetManager:
         category: str = "Utilities",
         recurrence: Optional[str] = None,
         tax_relevant: bool = False,
+        entity_id: str = "",
         notes: str = "",
     ) -> Bill:
         bill = Bill(
@@ -444,6 +451,7 @@ class BudgetManager:
             due_date=due_date,
             recurrence=recurrence if recurrence in RECURRENCE_TYPES else None,
             tax_relevant=tax_relevant,
+            entity_id=entity_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -502,6 +510,7 @@ class BudgetManager:
             date=paid_date,
             tax_relevant=bill.tax_relevant,
             bill_id=bill.bill_id,
+            entity_id=bill.entity_id,
         )
         bill.last_paid_date = paid_date
         self._save_bills()
@@ -521,6 +530,7 @@ class BudgetManager:
         next_date: str,
         category: str = "Salary",
         recurrence: Optional[str] = None,
+        entity_id: str = "",
         notes: str = "",
     ) -> IncomeSource:
         source = IncomeSource(
@@ -530,6 +540,7 @@ class BudgetManager:
             category=category if category in INCOME_CATEGORIES else "Other",
             next_date=next_date,
             recurrence=recurrence if recurrence in RECURRENCE_TYPES else None,
+            entity_id=entity_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -584,6 +595,7 @@ class BudgetManager:
             category=source.category,
             description=source.name,
             date=received_date,
+            entity_id=source.entity_id,
         )
         source.last_received_date = received_date
         self._save_income_sources()

@@ -5610,3 +5610,49 @@ QtMultimedia/FFmpeg backend — real position genuinely advanced in real
 wall-clock time (0.371s → 0.835s across a pause/resume gap), confirming
 this isn't just "the objects construct," it's "real audio decode and
 timing actually works" in this sandbox. 1810 tests passing.
+
+## Financial deep-dive, part 1: two real bugs fixed (2026-09-09)
+
+A brainstorm on "perfecting" the financial side (grounded in a real
+survey of `core/budget_manager.py`/`core/real_estate_manager.py`/
+`core/plaid_manager.py`/`core/business_report.py`, not guessed) found
+two real bugs worth fixing before any bigger feature work.
+
+**(1) `Bill`/`IncomeSource` never had an `entity_id` field at all** —
+`IncomeEntry`/`ExpenseEntry` got one when LLC tagging shipped
+(2026-09-08), but `Bill`/`IncomeSource` were a real, deliberate scope
+cut at the time (confirmed, not silently redone). That meant the two
+*automated* recording paths, `mark_bill_paid()`/`mark_income_received()`
+— the ones that actually fire for a recurring bill/paycheck — could
+never attribute anything to an LLC, only ad-hoc manual entries could.
+Added `entity_id: str = ""` to both dataclasses, wired `add_bill()`/
+`add_income_source()`, and both auto-recording methods now pass the
+bill's/source's own `entity_id` through to the `ExpenseEntry`/
+`IncomeEntry` they create. New Entity combo on `gui/add_edit_bill_dialog
+.py`/`gui/add_edit_income_source_dialog.py`, same shape `gui/add_edit_
+income_dialog.py`'s combo already established. **Deliberately entity_id
+only, not property_id** — mirrors exactly what the generic Income/
+Expense dialogs already expose; a property-linked entry only ever gets
+`property_id` through `RealEstateManager`'s own rental-income/expense
+flow, which has no analog for Bills/IncomeSources.
+
+**(2) The dashboard's Net Worth card silently excluded the native Real
+Estate module's own tracked-property equity** — it only ever summed
+external `FinancialSnapshot` sources (Kraken/Plaid/Homestead/real-
+estate-export). A user who only used the native module and never
+imported an external snapshot saw "No financial snapshots imported
+yet." even with real tracked properties — flatly wrong, not just
+incomplete. `format_net_worth_line()` gained a `property_portfolio_equity`
+parameter (`None`, never a fabricated `0.0`, when there are no
+properties — same "missing means excluded" convention every other
+contribution here already follows); `_refresh_net_worth()` now computes
+it from `context.real_estate.all_properties()` via the same
+`property_equity()` function `format_property_portfolio_line()` already
+uses.
+
+**Verified for real**: `mark_bill_paid()`/`mark_income_received()`
+copying a real `BusinessEntity`'s id onto the resulting expense/income
+entry, both dialogs' Entity combo round-tripping through a real seeded
+entity list, and the Net Worth card showing a real dollar figure for
+properties-only data with zero external snapshots — all confirmed via
+isolated headless-Qt scripts, not just unit tests. 1902 tests passing.

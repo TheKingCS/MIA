@@ -37,10 +37,12 @@ _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENC
 
 
 class AddEditBillDialog(QDialog):
-    def __init__(self, parent=None, bill: Optional[Bill] = None) -> None:
+    def __init__(self, parent=None, bill: Optional[Bill] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Bill" if bill is not None else "New Bill")
-        self.setFixedSize(360, 480)
+        self.setFixedSize(360, 520)
+
+        self._entities = entities or []
 
         layout = QVBoxLayout(self)
 
@@ -75,6 +77,13 @@ class AddEditBillDialog(QDialog):
         self.tax_relevant_checkbox = QCheckBox("Tax relevant")
         layout.addWidget(self.tax_relevant_checkbox)
 
+        layout.addWidget(QLabel("Entity:"))
+        self.entity_combo = QComboBox()
+        self.entity_combo.addItem("(Unassigned)", "")
+        for ent in self._entities:
+            self.entity_combo.addItem(ent.name, ent.entity_id)
+        layout.addWidget(self.entity_combo)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -96,6 +105,7 @@ class AddEditBillDialog(QDialog):
         self._due_date: str = ""
         self._recurrence: Optional[str] = None
         self._tax_relevant: bool = False
+        self._entity_id: str = ""
         self._notes: str = ""
 
     def _prefill(self, bill: Optional[Bill]) -> None:
@@ -111,6 +121,9 @@ class AddEditBillDialog(QDialog):
             )
             self.recurrence_combo.setCurrentIndex(recurrence_index)
             self.tax_relevant_checkbox.setChecked(bill.tax_relevant)
+            if bill.entity_id:
+                idx = self.entity_combo.findData(bill.entity_id)
+                self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.notes_edit.setPlainText(bill.notes)
         else:
             self.due_date_edit.setDate(QDate.currentDate())
@@ -127,6 +140,7 @@ class AddEditBillDialog(QDialog):
         self._due_date = self.due_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._recurrence = _RECURRENCE_LABELS[self.recurrence_combo.currentIndex()][1]
         self._tax_relevant = self.tax_relevant_checkbox.isChecked()
+        self._entity_id = self.entity_combo.currentData()
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
 
@@ -153,6 +167,10 @@ class AddEditBillDialog(QDialog):
     @property
     def entered_tax_relevant(self) -> bool:
         return self._tax_relevant
+
+    @property
+    def entered_entity_id(self) -> str:
+        return self._entity_id
 
     @property
     def entered_notes(self) -> str:

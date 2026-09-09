@@ -19,6 +19,7 @@ from core.app_context import AppContext
 from core.budget_manager import (
     Bill,
     BudgetManager,
+    IncomeSource,
     days_until_bill_due,
     days_until_income_due,
     is_bill_due,
@@ -164,6 +165,33 @@ def test_mark_bill_paid_unknown_id_raises(isolated_paths):
     manager = _make_manager()
     with pytest.raises(ValueError):
         manager.mark_bill_paid("does-not-exist")
+
+
+def test_add_bill_with_entity_id_persists(isolated_paths):
+    manager = _make_manager()
+    manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01", entity_id="ent1")
+
+    reloaded = _make_manager()
+    assert reloaded.all_bills()[0].entity_id == "ent1"
+
+
+def test_bill_from_dict_backward_compatible_with_old_shape_defaults_entity_id():
+    bill = Bill.from_dict({"bill_id": "b1", "name": "Electric", "amount": 120.0})
+    assert bill.entity_id == ""
+
+
+def test_mark_bill_paid_copies_entity_id_onto_the_expense(isolated_paths):
+    manager = _make_manager()
+    bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01", entity_id="ent1")
+    entry = manager.mark_bill_paid(bill.bill_id)
+    assert entry.entity_id == "ent1"
+
+
+def test_mark_bill_paid_without_entity_leaves_expense_unassigned(isolated_paths):
+    manager = _make_manager()
+    bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
+    entry = manager.mark_bill_paid(bill.bill_id)
+    assert entry.entity_id == ""
 
 
 # ------------------------------------------------------------------
@@ -507,6 +535,33 @@ def test_mark_income_received_unknown_id_raises(isolated_paths):
     manager = _make_manager()
     with pytest.raises(ValueError):
         manager.mark_income_received("does-not-exist")
+
+
+def test_add_income_source_with_entity_id_persists(isolated_paths):
+    manager = _make_manager()
+    manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05", entity_id="ent1")
+
+    reloaded = _make_manager()
+    assert reloaded.all_income_sources()[0].entity_id == "ent1"
+
+
+def test_income_source_from_dict_backward_compatible_with_old_shape_defaults_entity_id():
+    source = IncomeSource.from_dict({"source_id": "s1", "name": "Paycheck", "expected_amount": 2400.0})
+    assert source.entity_id == ""
+
+
+def test_mark_income_received_copies_entity_id_onto_the_income(isolated_paths):
+    manager = _make_manager()
+    source = manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05", entity_id="ent1")
+    entry = manager.mark_income_received(source.source_id)
+    assert entry.entity_id == "ent1"
+
+
+def test_mark_income_received_without_entity_leaves_income_unassigned(isolated_paths):
+    manager = _make_manager()
+    source = manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05")
+    entry = manager.mark_income_received(source.source_id)
+    assert entry.entity_id == ""
 
 
 def test_delete_income_source_removes_it(isolated_paths):
