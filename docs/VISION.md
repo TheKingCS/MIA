@@ -628,10 +628,11 @@ architecture call in this codebase, not guessed at here.
    concept relates to this repo's existing `ModuleBase`~~ — **done
    2026-07-16**: a sibling concept, not a specialization — see
    `core/workshop_machine.py`.
-5. Decide whether `mia_home_schema.sql` (a real SQL layer) gets adopted
-   as-is, adapted to this project's existing persisted-JSON-manager
-   convention, or something in between — don't silently default to
-   either.
+5. ~~Decide whether `mia_home_schema.sql` (a real SQL layer) gets
+   adopted as-is, adapted to this project's existing persisted-JSON-
+   manager convention, or something in between~~ — **done 2026-07-16**:
+   adapted to JSON (`core/material_manager.py` + the rest of the
+   production pipeline), see `docs/ROADMAP.md`.
 
 ## Why this is a separate document from ROADMAP.md
 

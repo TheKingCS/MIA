@@ -95,6 +95,7 @@ from core.search_manager import SearchManager, SearchResult
 from core.system_health import format_system_health, read_system_health
 from core.task_manager import TaskManager
 from core.trail_map_library import NotAPdfError, TrailMapLibrary
+from core.music_manager import MusicManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.voice_manager import VoiceManager
@@ -233,6 +234,7 @@ class MIAApplication:
         self.context.plaid = PlaidManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
+        self.context.music = MusicManager(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
         # Registered by default so the registry has something real to
         # demonstrate end-to-end — it's a stub (no real driver), not a
@@ -2602,6 +2604,98 @@ class MIAApplication:
                 "property doing",
             ),
         ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="play_track",
+            domain="music",
+            description="Play a specific song from MIA's local music library, by title or artist.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "track_name": {"type": "string", "description": "Title or artist to search for."},
+                },
+                "required": ["track_name"],
+            },
+            handler=self._action_play_track,
+            trigger_phrases=("play ", "play the song", "queue up"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="play_playlist",
+            domain="music",
+            description="Play one of MIA's saved music playlists, by name.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "playlist_name": {"type": "string", "description": "The exact name of the existing playlist."},
+                },
+                "required": ["playlist_name"],
+            },
+            handler=self._action_play_playlist,
+            trigger_phrases=("play my playlist", "play the playlist", "play my music"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="pause_music",
+            domain="music",
+            description="Pause the currently playing music.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_pause_music,
+            trigger_phrases=("pause the music", "pause music", "pause the song"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="resume_music",
+            domain="music",
+            description="Resume/unpause the currently paused music.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_resume_music,
+            trigger_phrases=("resume the music", "unpause the music", "continue playing", "resume music"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="stop_music",
+            domain="music",
+            # Deliberately never a bare "stop" — that already means
+            # "stop tracking" under the maintenance domain.
+            description="Stop music playback entirely (clears the play queue, unlike pause).",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_stop_music,
+            trigger_phrases=("stop the music", "stop playing", "stop the song", "stop music"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="next_track",
+            domain="music",
+            description="Skip to the next track in the current music queue.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_next_track,
+            trigger_phrases=("next song", "next track", "skip this song", "skip track"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="previous_track",
+            domain="music",
+            description="Go back to the previous track in the current music queue.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_previous_track,
+            trigger_phrases=("previous song", "previous track", "go back a song"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="set_music_volume",
+            domain="music",
+            description="Set the music player's own playback volume (separate from the device's system volume).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "percent": {"type": "integer", "description": "Volume percent, 0-100."},
+                },
+                "required": ["percent"],
+            },
+            handler=self._action_set_music_volume,
+            trigger_phrases=("music volume", "turn up the music", "turn down the music"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_now_playing",
+            domain="music",
+            description="Get the title/artist and playback position of whatever song is currently playing.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_now_playing,
+            trigger_phrases=("what's playing", "now playing", "what song is this", "what song is playing"),
+        ))
 
     @staticmethod
     def _action_open_module(context: AppContext, arguments: dict) -> str:
@@ -4026,6 +4120,80 @@ class MIAApplication:
             f"'{prop.name}': equity ${property_equity(prop):,.2f}, "
             f"net operating income ${noi:,.2f}, cap rate {cap_rate_text}."
         )
+
+    @staticmethod
+    def _action_play_track(context: AppContext, arguments: dict) -> str:
+        track_name = str(arguments.get("track_name", "")).strip()
+        if not track_name:
+            return "I need a song or artist name to play."
+        matches = context.music.search_tracks(track_name)
+        if not matches:
+            return f"I couldn't find a song matching '{track_name}'."
+        track = matches[0]
+        context.music.play_track(track.track_id)
+        artist_part = f" by {track.artist}" if track.artist else ""
+        return f"Playing '{track.title}'{artist_part}."
+
+    @staticmethod
+    def _action_play_playlist(context: AppContext, arguments: dict) -> str:
+        playlist_name = str(arguments.get("playlist_name", "")).strip()
+        if not playlist_name:
+            return "I need a playlist name to play."
+        playlist = next(
+            (p for p in context.music.all_playlists() if p.name.lower() == playlist_name.lower()), None
+        )
+        if playlist is None:
+            return f"I couldn't find a playlist called '{playlist_name}'."
+        if not context.music.play_playlist(playlist.playlist_id):
+            return f"'{playlist.name}' doesn't have any tracks yet."
+        return f"Playing playlist '{playlist.name}'."
+
+    @staticmethod
+    def _action_pause_music(context: AppContext, arguments: dict) -> str:
+        context.music.pause()
+        return "Paused."
+
+    @staticmethod
+    def _action_resume_music(context: AppContext, arguments: dict) -> str:
+        context.music.resume()
+        return "Resumed."
+
+    @staticmethod
+    def _action_stop_music(context: AppContext, arguments: dict) -> str:
+        context.music.stop()
+        return "Stopped."
+
+    @staticmethod
+    def _action_next_track(context: AppContext, arguments: dict) -> str:
+        if not context.music.next_track():
+            return "There's no next track in the queue."
+        now_playing = context.music.now_playing()
+        return f"Now playing '{now_playing.title}'." if now_playing else "Skipped."
+
+    @staticmethod
+    def _action_previous_track(context: AppContext, arguments: dict) -> str:
+        if not context.music.previous_track():
+            return "There's no previous track in the queue."
+        now_playing = context.music.now_playing()
+        return f"Now playing '{now_playing.title}'." if now_playing else "Went back a track."
+
+    @staticmethod
+    def _action_set_music_volume(context: AppContext, arguments: dict) -> str:
+        percent = arguments.get("percent")
+        if percent is None:
+            return "I need a volume percent."
+        percent = max(0, min(100, int(percent)))
+        context.music.set_volume(percent)
+        return f"Music volume set to {percent}%."
+
+    @staticmethod
+    def _action_get_now_playing(context: AppContext, arguments: dict) -> str:
+        now_playing = context.music.now_playing()
+        if now_playing is None:
+            return "Nothing is currently playing."
+        artist_part = f" by {now_playing.artist}" if now_playing.artist else ""
+        state = "Playing" if now_playing.is_playing else "Paused"
+        return f"{state}: '{now_playing.title}'{artist_part}."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
         query_lower = query.lower()

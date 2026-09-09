@@ -135,7 +135,9 @@ subnet calculator, and a pure-Python TCP connect-scan port scanner
 of `nmap`, `john`, `hashcat`, `scapy` (the Python package), `aircrack-ng`,
 or `hydra` are installed in this dev sandbox, and none can be installed
 without root (the same "no sudo" wall Ollama's portable-binary install
-and Media/Music's missing `libpulse` already hit). This blocks:
+once hit — Media/Music's own `libpulse` wall, previously cited here
+too, is resolved as of 2026-09-09; see the Closed entry below). This
+blocks:
 - **Wi-Fi/network analyzer** — needs `aircrack-ng`/raw-socket
   packet capture, both root-gated.
 - **Active tooling** (hash cracking via John/Hashcat, packet crafting
@@ -148,6 +150,29 @@ Re-test once MIA actually runs on real Pi 5 + AI HAT+ 2 hardware (or
 any environment with these tools installed and root available) —
 nothing about the *design* is blocked, only this dev sandbox's ability
 to verify it.
+
+## Closed: Media/Music's QtMultimedia/libpulse blocker resolved
+
+Music was documented (docs/ROADMAP.md, multiple entries, and this
+file's own Security Toolkit entry above) as blocked on a missing
+`libpulse`/PortAudio system dependency with no sudo access — as far
+back as the v0.10 breakdown (2026-07). Re-verified directly, in this
+exact dev sandbox, on 2026-09-09 before building the real Music
+module: `from PySide6 import QtMultimedia` now imports cleanly (only
+harmless pipewire-symbol warnings on stderr); `QMediaDevices
+.audioOutputs()` returns a real, non-empty device list; `QMediaPlayer()`
++ `QAudioOutput()` construct with `player.error() == Error.NoError`,
+running on a real bundled FFmpeg 7.1.3 backend; `import sounddevice`
+now also succeeds, listing two real ALSA devices. `dpkg -l` confirms
+`libpulse0`, `pulseaudio-utils`, `libasound2t64`, and `libportaudio2`
+are all now installed in this sandbox — they weren't when the original
+blocker was documented. Real end-to-end playback (not just device
+construction) was further confirmed via `tests/core_live_music_check.py`:
+a synthesized WAV's playback position genuinely advances in real
+wall-clock time, pause/resume/seek/volume all behave correctly.
+
+Built as the Music module, `core/music_manager.py` +
+`modules/music/module.py`, v0.20 (see docs/ROADMAP.md).
 
 ## Closed: TTS playback unverified on real audio hardware (2026-07-15, spoken startup briefing + selectable voices)
 

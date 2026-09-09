@@ -40,6 +40,13 @@ piper-tts>=1.4,<2.0
 sounddevice>=0.5,<0.6
 numpy>=1.26,<3.0
 
+# Music module's audio tag reading (core/music_manager.py, 2026-09-09)
+# — pure Python, prebuilt wheels, no system library. QtMultimedia
+# itself (real playback) needs no separate entry here — it ships
+# inside the already-pinned PySide6 requirement above. Confirmed
+# installable in this dev sandbox.
+mutagen>=1.48,<2.0
+
 # Diagnostics System Health panel + Power monitoring (v0.7 milestones
 # 7.1/7.2) — cross-platform CPU/RAM/disk/network/battery stats. No
 # stdlib equivalent gives this in a cross-platform way; has prebuilt

@@ -107,7 +107,7 @@ testing guide accompanies each milestone as it's built — see
 | **v0.13** | Device Profile + Theme System — one codebase, config-driven Core (Pi 5 + AI HAT+ 2) vs. Home (desktop) editions, plus a selectable theme system (Dark Field, Low Energy, Colored, Anime Monochrome) applied at the QApplication level so it can differ in weight between editions |
 | **v0.14** | Pi 5 + AI HAT+ 2 deployment readiness — documentation/code-audit pass only (no physical hardware yet): deploy script review, flagged the open AI-HAT-inference-path question and polling-interval power budget as real unknowns to revisit once real hardware exists |
 | **v0.15** | Expedition data sync — Pi ("Core") exports Expedition Mode data (expeditions/trips/waypoints/journal/inventory/photos) to a docked USB drive via the Field Kit's existing device detection; Home merges it in by record id (no duplication on re-import) |
-| **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Agriculture, Medical, Smart Home, Media, Project Manager — added incrementally as real hardware for each is acquired (Media/Music specifically also needs `libpulse`, a system package not installable without sudo in this dev sandbox — confirmed blocked, not just deferred) |
+| **v1.0+** | Fleet (Robots/Drones/Vehicle), Communications, Agriculture, Medical, Smart Home, Project Manager — added incrementally as real hardware for each is acquired (Media/Music built as **v0.20**, 2026-09-09 — the `libpulse` blocker this row used to cite is gone, see that section) |
 
 ## Self-Modification / Dev Mode (staged, deliberately separate from the Assistant phase)
 
@@ -1090,11 +1090,13 @@ Navigation: Waypoints + Sun/Moon calculator — the second
 v1.0+-bucket slice buildable with zero real hardware (no GPS chip
 needed for either piece; "offline maps, trails, elevation" wait for
 real GPS/mapping hardware/data this project doesn't have yet). Media/
-Music was considered first but is blocked here: `PySide6.QtMultimedia`
-fails to import in this dev sandbox at all (missing `libpulse.so.0`, a
+Music was considered first but was blocked at the time: `PySide6.QtMultimedia`
+failed to import in this dev sandbox at all (missing `libpulse.so.0`, a
 system package, same "no sudo" wall as `sounddevice`/PortAudio in
-milestone 5.3) — confirmed blocked, not just deferred, so nothing in
-that section can be verified here right now.
+milestone 5.3) — confirmed blocked, not just deferred, at the time, so
+nothing in that section could be verified here then. **2026-09-09: no
+longer true** — the sandbox now has `libpulse0`/`libportaudio2`
+installed; see the Music module built as v0.20.
 
 - [x] **10.1 Waypoints core service** — `core/waypoint_manager.py`
       (`AppContext.waypoints`): named locations (name, latitude,
@@ -1352,8 +1354,10 @@ pentesting toolkit assumes of its operator.
       not just deferred: none of `nmap`/`john`/`hashcat`/`scapy`/
       `aircrack-ng`/`hydra` are installed in this dev sandbox, and none
       can be added without root, the same "no sudo" wall Ollama's
-      portable-binary install and Media/Music's missing `libpulse` both
-      already hit. The Security tab itself shows this limitation
+      portable-binary install once hit (Media/Music's own `libpulse`
+      wall — cited here previously — is gone as of 2026-09-09, see the
+      Music module built as v0.20; these tools remain genuinely
+      blocked). The Security tab itself shows this limitation
       directly to the user rather than silently omitting those
       features. See `docs/KNOWN_ISSUES.md`. Network-facing recon
       (packet sniffer, wifi/BT scanning) remains reconciled with, not
@@ -1958,10 +1962,12 @@ New `modules/dashboard/module.py` (auto-discovered, module #21): a
 read-only aggregation view — recent Activity Log entries, active
 Missions with objective progress, recent Memories (Expedition recaps),
 upcoming Calendar events, active Projects/open Tasks. **Deliberately
-excludes "recently played music"** from the original vision — Media/Music
-isn't a built module yet (confirmed blocked on missing `libpulse` in
-this dev sandbox), so there's no real data source for it; add that
-section once Media actually exists, not before. Writes its own small
+excludes "recently played music"** from the original vision — at the
+time, Media/Music wasn't a built module yet (confirmed blocked on
+missing `libpulse` in this dev sandbox then). **2026-09-09: Music now
+exists (v0.20)**, but a dashboard now-playing widget remains a
+separate, still-unbuilt follow-up — this exclusion is a scoping
+decision, not a data-availability one anymore. Writes its own small
 summary-line formatting rather than importing `modules.missions.module`/
 `modules.memories.module`'s formatting helpers — modules never import
 another module directly (`CLAUDE.md`'s one-directional layering rule).
@@ -2371,8 +2377,9 @@ data in this codebase:
   `core/volume_manager.py` — same `VolumeBackend` Protocol / concrete-
   backend split as `core/power_manager.py`, `AmixerVolumeBackend`
   shelling out to ALSA's `amixer` CLI (no Python audio binding, so it
-  doesn't hit the `libpulse`/`libportaudio2` wall that blocks Media/
-  Voice). `parse_amixer_output()` is a pure function, unit-tested
+  doesn't hit the `libpulse`/`libportaudio2` wall that blocked Media/
+  Voice at the time — both are resolved as of 2026-09-09, see the
+  Music module built as v0.20). `parse_amixer_output()` is a pure function, unit-tested
   against captured sample `amixer` text without needing the real
   binary. Flagged in `docs/KNOWN_ISSUES.md` alongside the existing
   Security Toolkit entry, not silently assumed to work.
@@ -4182,9 +4189,10 @@ passing.
 Picked as the top item from a full project audit (roadmap/known-issues/
 vision/git-log/grep sweep) of "what still needs work" — of everything
 flagged, this was the one item that was both real and immediately
-buildable with zero hardware or open decisions blocking it (`music` is
-the only other pure-stub module, and it's confirmed blocked on missing
-`libpulse` without root).
+buildable with zero hardware or open decisions blocking it (`music` was
+the only other pure-stub module at the time, confirmed blocked on
+missing `libpulse` without root then — that blocker is gone as of
+2026-09-09, see the Music module built as v0.20).
 
 **Deliberately not real cartography** — `modules/navigation/module.py`'s
 own docstring already scoped "offline maps, trails, elevation" as
@@ -4231,8 +4239,10 @@ rather than guessing:
   `curl`) and ample disk space, so real map data fetching is possible.
 - **`PySide6.QtWebEngineWidgets` (the easy path to an embedded
   Leaflet.js slippy map) fails to import** — missing `libnspr4.so`, no
-  sudo, the same class of blocked system dependency as
-  `libportaudio2`/`libpulse` before it. Ruled out, not worked around.
+  sudo, the same class of blocked system dependency `libportaudio2`/
+  `libpulse` used to be before those got resolved (2026-09-09, see the
+  Music module built as v0.20) — `libnspr4.so` itself remains genuinely
+  blocked, unrelated to that fix. Ruled out, not worked around.
 - **OpenStreetMap's own tile server explicitly prohibits bulk/
   automated downloading for offline caching** — exactly the "download
   this region" feature being built — so it was deliberately not used
@@ -5508,3 +5518,95 @@ same discipline that caught two real bugs earlier this session
 this sandbox, so the real network calls themselves remain unverified
 against Plaid's actual API, same honest caveat as every other Plaid
 entry above.
+
+## v0.20 — Music module: real local library + playback (2026-09-09)
+
+A "broader project punch list" survey of ROADMAP/KNOWN_ISSUES/VISION
+found no other ready-to-build gap this round (the two remaining
+ROADMAP checkboxes are genuinely hardware-blocked; the open
+KNOWN_ISSUES items all need the user's real machine). User picked
+"Revisit the Music module stub" — `modules/music/module.py` was the
+last remaining pure-placeholder module, historically documented (as
+far back as the v0.10 breakdown above) as blocked on a missing
+`libpulse`/PortAudio system dependency with no sudo access.
+
+**That blocker no longer holds — re-verified directly, not assumed**:
+`PySide6.QtMultimedia` imports cleanly, `QMediaDevices.audioOutputs()`
+returns a real device, `QMediaPlayer`/`QAudioOutput` construct with
+zero error on a real bundled FFmpeg 7.1.3 backend; `sounddevice` also
+now works. `dpkg -l` confirms `libpulse0`/`pulseaudio-utils`/
+`libasound2t64`/`libportaudio2` are all now installed where they
+weren't before — see `docs/KNOWN_ISSUES.md`'s matching Closed entry.
+User confirmed, given this: full local library + real playback, not a
+browsing-only slice.
+
+New `core/music_manager.py` (`AppContext.music`): `Track`/`Playlist`
+persisted-JSON records (two sibling files, same "one manager, several
+lists" convention as `core/budget_manager.py`), `scan_library()`
+walking a configured `music.library_root_path` (same empty-string-
+default pattern as `maps.trail_map_root_path`) for `.mp3`/`.flac`/
+`.ogg`/`.m4a`/`.opus`/`.wav` files, reading tags via the new `mutagen`
+dependency. **Deliberate divergence from `core/trail_map_library.py`**:
+files are referenced at their real path, never copied into an app-
+owned root — a personal music library already exists elsewhere on
+disk, often many GB. `scan_library()` skips re-reading tags for a
+file whose `(size, mtime)` hasn't changed since the last scan (the
+real cost a large library needs to avoid), and **never auto-creates or
+touches the index if `root_path` is missing** — a temporarily-
+unmounted drive must never look like "the whole library vanished."
+
+**Playback owns a real, lazily-constructed `QMediaPlayer`/
+`QAudioOutput` directly in `core/`**, matching `core.voice_manager
+.VoiceManager`'s own precedent of owning real non-widget audio
+playback in `core/` (not `core.avatar_manager.AvatarManager`'s
+stricter "gui/ owns rendering" split, which is specifically about
+widget/video-surface rendering — `QMediaPlayer` has no widget at all).
+Construction is lazy so `scan_library()`/CRUD tests stay entirely
+Qt-free. **Real, honest limitation, documented in the module's own
+docstring**: `core/voice_loop.py` (the headless MIA Core entry point)
+runs with no Qt event loop at all — `VoiceManager` uses `sounddevice`
+instead of Qt for exactly that reason — so if `context.music` is ever
+driven from that headless path, `QMediaPlayer` would silently produce
+no audio even though the calls return success. The normal GUI boot
+path and the GUI's own Assistant chat path (confirmed: the handler
+call happens on the main GUI thread, not inside `ChatWorker`'s
+`QThread`) are both safe.
+
+`modules/music/module.py`: Library tab (search + scan + play/add-to-
+playlist) and Playlists tab (create/rename/delete + per-playlist track
+list), plus a persistent transport bar (survives tab switches and
+navigating to a different module entirely, since `gui/main_window.py`
+caches module widgets forever) with play/pause/stop/previous/next, a
+seek slider and a volume slider both drag-guarded with the exact
+`isSliderDown()` pattern `gui/home_dashboard.py`'s Volume card already
+established — Music's own volume is deliberately separate from
+`context.volume` (system-wide ALSA), a standard per-player concept.
+New `gui/add_edit_playlist_dialog.py`, minimal single-field dialog.
+
+9 new Assistant actions, `domain="music"` (`play_track`/`play_playlist`/
+`pause_music`/`resume_music`/`stop_music`/`next_track`/`previous_track`/
+`set_music_volume`/`get_now_playing`) — confirmed via direct grep, zero
+existing trigger-phrase collisions for play/pause/skip/volume/next/
+previous anywhere in the registry; the only real risk was an unscoped
+bare `"stop"` (already means `"stop tracking"` under `maintenance`),
+avoided by keeping every Music trigger specific ("stop the music").
+Verified against the real, fully-wired registry (`object.__new__
+(MIAApplication)` + `_register_assistant_actions()`, same construction
+`tests/live_model_check.py` already uses): all 9 real prompts attach
+only the `music` domain, and "stop tracking my truck" attaches only
+`maintenance` — zero collision, confirmed not assumed.
+
+**Verified for real, multiple layers**: `tests/test_music_manager.py`
+(37 new tests, Qt-free — CRUD/`scan_library()` against real synthesized
+WAV files with real mutagen-written ID3 tags, playback logic against a
+monkeypatched fake player, matching `tests/test_avatar_manager.py`'s
+established convention of keeping Qt out of pytest entirely) +
+`tests/test_music_module.py` (pure formatting functions). New
+`tests/core_live_music_check.py` (manual, not pytest, mirrors
+`tests/core_live_voice_check.py`'s "real hardware, run by hand" shape
+but needs no Ollama/LLM at all) drove a full real play → pause →
+resume → seek → set_volume → stop round trip against the actual
+QtMultimedia/FFmpeg backend — real position genuinely advanced in real
+wall-clock time (0.371s → 0.835s across a pause/resume gap), confirming
+this isn't just "the objects construct," it's "real audio decode and
+timing actually works" in this sandbox. 1810 tests passing.

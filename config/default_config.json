@@ -22,6 +22,9 @@
     "maps": {
         "trail_map_root_path": ""
     },
+    "music": {
+        "library_root_path": ""
+    },
     "llm": {
         "base_url": "http://localhost:11434",
         "model": "llama3.2",
