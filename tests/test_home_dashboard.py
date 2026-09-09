@@ -21,6 +21,7 @@ from core.homestead_manager import HomesteadSnapshot
 from core.data_logger_manager import Reading
 from core.maintenance_manager import MaintenanceTask
 from core.mission_manager import Mission, Objective
+from core.music_manager import NowPlaying
 from core.power_manager import PowerStatus
 from core.project_manager import Project
 from core.volume_manager import VolumeStatus
@@ -35,6 +36,7 @@ from gui.home_dashboard import (
     format_homestead_line,
     format_kraken_line,
     format_maintenance_line,
+    format_music_line,
     format_net_worth_line,
     format_power_line,
     format_real_estate_line,
@@ -375,3 +377,31 @@ def test_format_property_portfolio_line_sums_equity_across_properties():
         Property(property_id="p2", name="456 Oak Ave", current_value=200000.0, mortgage_balance=200000.0),
     ]
     assert format_property_portfolio_line(properties) == "2 properties  —  $130,000 total equity"
+
+
+def test_format_music_line_nothing_playing():
+    assert format_music_line(None) == "Nothing playing"
+
+
+def test_format_music_line_playing_with_artist():
+    now_playing = NowPlaying(
+        track_id="t1", title="Blue Skies", artist="Sam", album="Weather",
+        position_seconds=10, duration_seconds=200, is_playing=True, volume_percent=70,
+    )
+    assert format_music_line(now_playing) == "Playing: Blue Skies — Sam"
+
+
+def test_format_music_line_paused():
+    now_playing = NowPlaying(
+        track_id="t1", title="Blue Skies", artist="Sam", album="Weather",
+        position_seconds=10, duration_seconds=200, is_playing=False, volume_percent=70,
+    )
+    assert format_music_line(now_playing) == "Paused: Blue Skies — Sam"
+
+
+def test_format_music_line_no_artist_omits_dash():
+    now_playing = NowPlaying(
+        track_id="t1", title="Untitled Track", artist="", album="",
+        position_seconds=0, duration_seconds=200, is_playing=True, volume_percent=70,
+    )
+    assert format_music_line(now_playing) == "Playing: Untitled Track"

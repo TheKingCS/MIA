@@ -565,6 +565,9 @@ class MIAApplication:
         # labeled to avoid two same-named "Real Estate" cards confusing
         # which is which.
         self.context.dashboard_widgets.register(WidgetDescriptor("property_portfolio", "My Properties", "\U0001F3D8"))
+        # 2026-09-09: Music (core/music_manager.py) — degrades to
+        # "Nothing playing" until the user actually plays a track.
+        self.context.dashboard_widgets.register(WidgetDescriptor("music", "Music", "\U0001F3B5"))
 
     def _register_assistant_actions(self) -> None:
         """

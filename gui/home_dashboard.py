@@ -144,6 +144,7 @@ from core.maintenance_manager import (
 from core.generate_worker import GenerateWorker
 from core.llm_manager import ChatReply
 from core.mission_manager import Mission
+from core.music_manager import NowPlaying
 from core.power_manager import PowerStatus
 from core.project_manager import Project
 from core.push_to_talk_trigger import PushToTalkTrigger
@@ -432,6 +433,19 @@ def format_property_portfolio_line(properties: list[Property]) -> str:
     return f"{len(properties)} {noun}  —  ${total_equity:,.0f} total equity"
 
 
+def format_music_line(now_playing: Optional[NowPlaying]) -> str:
+    """Pure formatting logic — testable without Qt. Deliberately terse
+    (title + artist only, no position/duration) — this is a glance
+    card, not a transport bar; modules/music/module.py's own
+    format_now_playing_line() covers the fuller live view, one click
+    away via this card's on_click."""
+    if now_playing is None:
+        return "Nothing playing"
+    artist_part = f" — {now_playing.artist}" if now_playing.artist else ""
+    state = "Playing" if now_playing.is_playing else "Paused"
+    return f"{state}: {now_playing.title}{artist_part}"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -466,6 +480,7 @@ class HomeDashboard(QFrame):
             "maintenance": self._build_maintenance_widget,
             "budget": self._build_budget_widget,
             "property_portfolio": self._build_property_portfolio_widget,
+            "music": self._build_music_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -816,6 +831,15 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("real_estate"),
         )
         self._widget_bodies["property_portfolio"] = body
+        return card
+
+    def _build_music_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("music"),
+        )
+        self._widget_bodies["music"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1491,6 +1515,8 @@ class HomeDashboard(QFrame):
             self._refresh_budget()
         if "property_portfolio" in self._widget_bodies:
             self._refresh_property_portfolio()
+        if "music" in self._widget_bodies:
+            self._refresh_music()
 
     def _refresh_budget(self) -> None:
         bills = self.context.budget.all_bills() if self.context.budget else []
@@ -1499,6 +1525,10 @@ class HomeDashboard(QFrame):
     def _refresh_property_portfolio(self) -> None:
         properties = self.context.real_estate.all_properties() if self.context.real_estate else []
         self._set_widget_body_text("property_portfolio", format_property_portfolio_line(properties))
+
+    def _refresh_music(self) -> None:
+        now_playing = self.context.music.now_playing() if self.context.music else None
+        self._set_widget_body_text("music", format_music_line(now_playing))
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
