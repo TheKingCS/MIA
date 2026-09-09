@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from core.data_logger_manager import DataLoggerManager
     from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
+    from core.energy_manager import EnergyManager
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
     from core.homestead_manager import HomesteadManager
@@ -98,6 +99,7 @@ class AppContext:
     device_help: Optional["DeviceHelpManager"] = field(default=None, repr=False)
     power: Optional["PowerManager"] = field(default=None, repr=False)
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
+    energy: Optional["EnergyManager"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
     materials: Optional["MaterialManager"] = field(default=None, repr=False)
     jobs: Optional["JobManager"] = field(default=None, repr=False)

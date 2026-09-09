@@ -82,6 +82,7 @@ from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.password_strength import assess_password
 from core.port_scanner import scan_ports
+from core.energy_manager import EnergyManager
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
@@ -228,6 +229,7 @@ class MIAApplication:
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.budget = BudgetManager(self.context)
         self.context.real_estate = RealEstateManager(self.context)
+        self.context.energy = EnergyManager(self.context)
         self.context.plaid = PlaidManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
