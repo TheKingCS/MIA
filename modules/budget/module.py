@@ -726,6 +726,7 @@ class BudgetModule(ModuleBase):
         self._summary_entity_combo = QComboBox()
         self._refresh_entity_combo()
         self._summary_entity_combo.currentIndexChanged.connect(lambda _idx: self._refresh_summary())
+        self._summary_entity_combo.currentIndexChanged.connect(lambda _idx: self._refresh_budget_targets())
         entity_row.addWidget(self._summary_entity_combo, stretch=1)
 
         manage_entities_button = QPushButton("Manage Entities…")
@@ -755,18 +756,28 @@ class BudgetModule(ModuleBase):
         self._on_summary_this_month()
         return tab
 
+    def _budget_target_entity_id(self) -> str:
+        """Budget Targets are always edited for one specific entity
+        context — "All Entities" (None) has no single sensible planned
+        amount to show per category (more than one entity could have
+        its own target for the same category name), so it collapses to
+        the household/unassigned bucket, same as explicitly picking
+        "(Unassigned)"."""
+        return self._summary_entity_combo.currentData() or ""
+
     def _build_budget_targets_group(self) -> QGroupBox:
         """One row per EXPENSE_CATEGORIES entry: an editable planned
         monthly amount alongside this month's actual spend, reusing
         total_expenses_by_category() for the "actual" side. Same
         planned-vs-actual comparison core/budget_nudges.py's daily
-        check makes — this is the on-demand, editable view of it."""
-        group = QGroupBox("Budget Targets (this month)")
-        form = QFormLayout(group)
-
-        targets_by_category = {t.category: t.monthly_amount for t in self.context.budget.all_budget_targets()}
-        today = date.today()
-        actual_by_category = self.context.budget.total_expenses_by_category(today.replace(day=1).isoformat(), None)
+        check makes — this is the on-demand, editable view of it.
+        Scoped to whatever entity the Summary tab's own filter currently
+        selects (see _budget_target_entity_id()) — refreshed in place
+        by _refresh_budget_targets() rather than rebuilt, so the entity
+        combo's change handler doesn't need to tear down/recreate this
+        whole group."""
+        self._budget_targets_group = QGroupBox()
+        form = QFormLayout(self._budget_targets_group)
 
         self._budget_target_spins = {}
         self._budget_target_actual_labels = {}
@@ -774,11 +785,10 @@ class BudgetModule(ModuleBase):
             spin = QDoubleSpinBox()
             spin.setRange(0.0, 1_000_000.0)
             spin.setDecimals(2)
-            spin.setValue(targets_by_category.get(category, 0.0))
             spin.editingFinished.connect(lambda cat=category: self._on_budget_target_changed(cat))
             self._budget_target_spins[category] = spin
 
-            actual_label = QLabel(f"actual: ${actual_by_category.get(category, 0.0):,.2f}")
+            actual_label = QLabel("")
             actual_label.setObjectName("SubtitleLabel")
             self._budget_target_actual_labels[category] = actual_label
 
@@ -787,14 +797,38 @@ class BudgetModule(ModuleBase):
             row.addWidget(actual_label)
             form.addRow(f"{category}:", row)
 
-        return group
+        self._refresh_budget_targets()
+        return self._budget_targets_group
+
+    def _refresh_budget_targets(self) -> None:
+        entity_id = self._budget_target_entity_id()
+        title = "Budget Targets (this month)"
+        if entity_id:
+            entity = self.context.budget.get_business_entity(entity_id)
+            if entity is not None:
+                title += f" — {entity.name}"
+        self._budget_targets_group.setTitle(title)
+
+        targets_by_category = {
+            t.category: t.monthly_amount for t in self.context.budget.all_budget_targets(entity_id=entity_id)
+        }
+        today = date.today()
+        actual_by_category = self.context.budget.total_expenses_by_category(
+            today.replace(day=1).isoformat(), None, entity_id=entity_id,
+        )
+        for category, spin in self._budget_target_spins.items():
+            spin.blockSignals(True)
+            spin.setValue(targets_by_category.get(category, 0.0))
+            spin.blockSignals(False)
+            self._budget_target_actual_labels[category].setText(f"actual: ${actual_by_category.get(category, 0.0):,.2f}")
 
     def _on_budget_target_changed(self, category: str) -> None:
+        entity_id = self._budget_target_entity_id()
         amount = self._budget_target_spins[category].value()
         if amount <= 0.0:
-            self.context.budget.delete_budget_target(category)
+            self.context.budget.delete_budget_target(category, entity_id=entity_id)
         else:
-            self.context.budget.set_budget_target(category, amount)
+            self.context.budget.set_budget_target(category, amount, entity_id=entity_id)
 
     def _refresh_entity_combo(self) -> None:
         """Re-populates the Summary tab's entity filter — None ("All
@@ -869,7 +903,11 @@ class BudgetModule(ModuleBase):
         # Budget Targets vs. Actual only makes honest sense for "This
         # Month" — BudgetTarget.monthly_amount has no yearly-aggregation
         # concept (see its own docstring in core/budget_manager.py).
-        budget_targets = budget.all_budget_targets() if range_label == "This Month" else []
+        # "All Entities" (entity_id is None) collapses to the household/
+        # unassigned bucket, same as the Summary tab's own Budget
+        # Targets section — an unfiltered mix could have more than one
+        # target for the same category name.
+        budget_targets = budget.all_budget_targets(entity_id=entity_id or "") if range_label == "This Month" else []
 
         properties = []
         for prop in real_estate.all_properties():
@@ -896,7 +934,11 @@ class BudgetModule(ModuleBase):
             income_by_category=budget.total_income_by_category(start, end, entity_id=entity_id),
             expenses_by_category=budget.total_expenses_by_category(start, end, entity_id=entity_id),
             budget_targets=budget_targets,
-            actual_by_category=budget.total_expenses_by_category(start, end, entity_id=entity_id),
+            # Matches budget_targets' own entity resolution above (not
+            # the raw entity_id the other totals/breakdowns use) — the
+            # Budget Targets vs. Actual comparison needs both sides
+            # computed against the same filter to mean anything.
+            actual_by_category=budget.total_expenses_by_category(start, end, entity_id=entity_id or ""),
             properties=properties,
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
             entity_label=entity_label,

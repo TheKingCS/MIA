@@ -308,15 +308,25 @@ class IncomeSource:
 
 @dataclass
 class BudgetTarget:
-    category: str  # one of EXPENSE_CATEGORIES, one target per category
+    category: str  # one of EXPENSE_CATEGORIES
     monthly_amount: float
+    # 2026-09-09: one target per (category, entity_id) pair, not per
+    # category alone — "" (default) is the household/no-specific-entity
+    # bucket, same "" convention every other entity_id field in this
+    # codebase already uses. Lets a household and an LLC sharing one
+    # Budget keep separate planned amounts for the same category name.
+    entity_id: str = ""
 
     def to_dict(self) -> dict:
-        return {"category": self.category, "monthly_amount": self.monthly_amount}
+        return {"category": self.category, "monthly_amount": self.monthly_amount, "entity_id": self.entity_id}
 
     @staticmethod
     def from_dict(data: dict) -> "BudgetTarget":
-        return BudgetTarget(category=data.get("category", "Other"), monthly_amount=data.get("monthly_amount", 0.0))
+        return BudgetTarget(
+            category=data.get("category", "Other"),
+            monthly_amount=data.get("monthly_amount", 0.0),
+            entity_id=data.get("entity_id", ""),
+        )
 
 
 @dataclass
@@ -824,30 +834,46 @@ class BudgetManager:
     # minimal (no yearly overrides, no envelope rollover), see module docstring
     # ------------------------------------------------------------------
 
-    def set_budget_target(self, category: str, monthly_amount: float) -> BudgetTarget:
-        """Upsert — one target per category; calling again for the same category replaces it."""
+    def set_budget_target(self, category: str, monthly_amount: float, entity_id: str = "") -> BudgetTarget:
+        """Upsert — one target per (category, entity_id) pair; calling
+        again for the same pair replaces it. entity_id="" (default) is
+        the household/no-specific-entity bucket."""
         if category not in EXPENSE_CATEGORIES:
             raise ValueError(f"Unknown expense category '{category}'.")
-        existing = self.get_budget_target(category)
+        existing = self.get_budget_target(category, entity_id)
         if existing is not None:
             existing.monthly_amount = max(0.0, monthly_amount)
         else:
-            self._budget_targets.append(BudgetTarget(category=category, monthly_amount=max(0.0, monthly_amount)))
+            self._budget_targets.append(
+                BudgetTarget(category=category, monthly_amount=max(0.0, monthly_amount), entity_id=entity_id)
+            )
         self._save_budget_targets()
-        return self.get_budget_target(category)
+        return self.get_budget_target(category, entity_id)
 
-    def delete_budget_target(self, category: str) -> None:
-        self._budget_targets = [t for t in self._budget_targets if t.category != category]
+    def delete_budget_target(self, category: str, entity_id: str = "") -> None:
+        self._budget_targets = [
+            t for t in self._budget_targets if not (t.category == category and t.entity_id == entity_id)
+        ]
         self._save_budget_targets()
 
-    def get_budget_target(self, category: str) -> Optional[BudgetTarget]:
+    def get_budget_target(self, category: str, entity_id: str = "") -> Optional[BudgetTarget]:
         for target in self._budget_targets:
-            if target.category == category:
+            if target.category == category and target.entity_id == entity_id:
                 return target
         return None
 
-    def all_budget_targets(self) -> list[BudgetTarget]:
-        return sorted(self._budget_targets, key=lambda t: t.category)
+    def all_budget_targets(self, entity_id: Optional[str] = None) -> list[BudgetTarget]:
+        """entity_id=None (default) returns every stored target across
+        every entity, unfiltered — same "None means no filter"
+        convention total_income()/total_expenses() already use. Pass an
+        explicit entity_id (including "" for the household/unassigned
+        bucket) to scope to one entity's own target set — callers that
+        display "one row per category" (the Summary tab's Budget
+        Targets section, the Business Report) always pass an explicit
+        value, since an unfiltered mix could have more than one target
+        for the same category name."""
+        targets = self._budget_targets if entity_id is None else [t for t in self._budget_targets if t.entity_id == entity_id]
+        return sorted(targets, key=lambda t: t.category)
 
     # ------------------------------------------------------------------
     # Business entities (LLCs/sole props/etc.) — a real, user-named record

@@ -19,6 +19,7 @@ from core.app_context import AppContext
 from core.budget_manager import (
     Bill,
     BudgetManager,
+    BudgetTarget,
     IncomeSource,
     days_until_bill_due,
     days_until_income_due,
@@ -604,3 +605,51 @@ def test_delete_budget_target_removes_it(isolated_paths):
     manager.set_budget_target("Groceries", 400.0)
     manager.delete_budget_target("Groceries")
     assert manager.get_budget_target("Groceries") is None
+
+
+def test_budget_target_from_dict_backward_compatible_defaults_entity_id_empty():
+    target = BudgetTarget.from_dict({"category": "Groceries", "monthly_amount": 400.0})
+    assert target.entity_id == ""
+
+
+def test_set_budget_target_same_category_different_entities_are_independent(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)  # household/unassigned
+    manager.set_budget_target("Groceries", 150.0, entity_id="ent1")
+
+    assert manager.get_budget_target("Groceries").monthly_amount == 400.0
+    assert manager.get_budget_target("Groceries", entity_id="ent1").monthly_amount == 150.0
+
+
+def test_delete_budget_target_only_removes_the_matching_entity(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)
+    manager.set_budget_target("Groceries", 150.0, entity_id="ent1")
+
+    manager.delete_budget_target("Groceries", entity_id="ent1")
+
+    assert manager.get_budget_target("Groceries") is not None
+    assert manager.get_budget_target("Groceries", entity_id="ent1") is None
+
+
+def test_all_budget_targets_no_filter_returns_everything(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)
+    manager.set_budget_target("Groceries", 150.0, entity_id="ent1")
+    manager.set_budget_target("Utilities", 100.0, entity_id="ent2")
+
+    assert len(manager.all_budget_targets()) == 3
+
+
+def test_all_budget_targets_filters_to_one_entity(isolated_paths):
+    manager = _make_manager()
+    manager.set_budget_target("Groceries", 400.0)
+    manager.set_budget_target("Groceries", 150.0, entity_id="ent1")
+
+    household_only = manager.all_budget_targets(entity_id="")
+    assert len(household_only) == 1
+    assert household_only[0].monthly_amount == 400.0
+
+    ent1_only = manager.all_budget_targets(entity_id="ent1")
+    assert len(ent1_only) == 1
+    assert ent1_only[0].monthly_amount == 150.0

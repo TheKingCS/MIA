@@ -5690,3 +5690,54 @@ switching that test to a clearly-fictional placeholder category
 is really about — "any primary value Plaid adds in the future that
 this function doesn't recognize"), and added 6 new tests for the real
 categories themselves. 1908 tests passing.
+
+## Financial deep-dive, part 3: per-entity Budget Targets (2026-09-09)
+
+Third item in the sequence. `BudgetTarget` was one global planned-
+amount per category — a household and an LLC sharing one Budget
+couldn't have separate targets for the same category name (e.g.
+"Utilities"). Added `entity_id: str = ""` to `BudgetTarget` (`""` is
+the household/unassigned bucket, same convention every other
+`entity_id` field here already uses) and re-keyed the upsert from
+`category` alone to the `(category, entity_id)` pair —
+`set_budget_target()`/`get_budget_target()`/`delete_budget_target()`
+all take an optional `entity_id` (default `""`). `all_budget_targets()`
+gained the same `entity_id` parameter, with `None` (default) meaning
+"no filter, return everything across every entity" — same convention
+`total_income()`/`total_expenses()` already use — while every caller
+that needs a single, well-defined row-per-category view (the Summary
+tab's Budget Targets section, the Business Report) always passes an
+explicit value.
+
+**A real design decision, not left implicit**: "All Entities" in the
+Summary tab's entity filter has no sensible single planned-amount to
+show per category once more than one entity can have its own target
+for the same name — so the Budget Targets section (and the Business
+Report's Budget-Targets-vs-Actual comparison) deliberately collapses
+"All Entities" down to the household/unassigned bucket, same as
+explicitly picking "(Unassigned)". Refactored the section to refresh
+in place (`_refresh_budget_targets()` — updates spin values, actual-
+spend labels, and the group's own title to show which entity it's
+scoped to) rather than rebuild, wired to the same entity-combo change
+signal the Summary labels already refresh on.
+
+**A real bug caught and fixed before it shipped, not after**: the
+Business Report's own "actual" spend for the targets comparison
+originally still used the *raw*, unfiltered `entity_id` (`None` under
+"All Entities") while `budget_targets` used the newly-collapsed
+household-only value — under "All Entities" this would have shown a
+household-only target next to an actual figure summed across every
+entity, a confusing apples-to-oranges mismatch. Caught by reasoning
+through the two numbers' consistency before running anything, not by
+a failing test — fixed by resolving both sides through the same
+collapsed `entity_id` (the report's other totals/breakdowns
+deliberately keep the raw, unfiltered `entity_id` — only this one
+comparison needed the collapse).
+
+**Verified for real**: a real isolated headless-Qt script seeded a
+household Groceries target ($400, $120 actual) and a separate LLC
+Utilities target ($250, $80 actual) sharing the same Budget — switching
+the entity filter correctly showed $400/$0 (household) vs. $0/$250
+(LLC) with the group title updating to name the selected entity, and
+each side's actual-spend figure correctly excluded the other entity's
+expenses. 1913 tests passing.
