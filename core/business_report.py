@@ -131,17 +131,27 @@ def build_business_report_html(
     actual_by_category: dict[str, float],
     properties: list[dict],
     generated_at: str,
+    entity_label: Optional[str] = None,
 ) -> str:
     """Pure logic — testable without Qt. properties is a list of plain
     dicts: {"name", "type", "current_value", "mortgage_balance",
     "equity", "noi", "cap_rate": Optional[float]}. budget_targets should
     be passed as [] for any range other than "This Month" — see module
-    docstring for why that decision belongs to the caller."""
+    docstring for why that decision belongs to the caller. entity_label
+    is the selected BusinessEntity's name (or "(Unassigned)"), already
+    resolved by the caller — omitted entirely from the title block when
+    None (no entity filter applied), same "don't render a misleading
+    empty line" convention as this module's other optional sections."""
     net_cash_flow = income_total - expenses_total
+
+    title_line = f"<p><b>Range:</b> {range_label}"
+    if entity_label:
+        title_line += f"<br><b>Entity:</b> {entity_label}"
+    title_line += f"<br><b>Generated:</b> {generated_at}</p>"
 
     sections = [
         "<h1>Business Report</h1>",
-        f"<p><b>Range:</b> {range_label}<br><b>Generated:</b> {generated_at}</p>",
+        title_line,
         "<h2>Household Finance Summary</h2>",
         "<p>"
         f"Total Income: {_money(income_total)}<br>"

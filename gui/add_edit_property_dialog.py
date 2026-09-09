@@ -31,10 +31,12 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditPropertyDialog(QDialog):
-    def __init__(self, parent=None, property_: Optional[Property] = None) -> None:
+    def __init__(self, parent=None, property_: Optional[Property] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Property" if property_ is not None else "New Property")
-        self.setFixedSize(360, 500)
+        self.setFixedSize(360, 540)
+
+        self._entities = entities or []
 
         layout = QVBoxLayout(self)
 
@@ -72,6 +74,13 @@ class AddEditPropertyDialog(QDialog):
         self.mortgage_balance_spin.setDecimals(2)
         layout.addWidget(self.mortgage_balance_spin)
 
+        layout.addWidget(QLabel("Entity:"))
+        self.entity_combo = QComboBox()
+        self.entity_combo.addItem("(Unassigned)", "")
+        for ent in self._entities:
+            self.entity_combo.addItem(ent.name, ent.entity_id)
+        layout.addWidget(self.entity_combo)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -93,6 +102,7 @@ class AddEditPropertyDialog(QDialog):
         self._purchase_price: float = 0.0
         self._current_value: float = 0.0
         self._mortgage_balance: float = 0.0
+        self._entity_id: str = ""
         self._notes: str = ""
 
     def _prefill(self, property_: Optional[Property]) -> None:
@@ -105,6 +115,9 @@ class AddEditPropertyDialog(QDialog):
             self.purchase_price_spin.setValue(property_.purchase_price)
             self.current_value_spin.setValue(property_.current_value)
             self.mortgage_balance_spin.setValue(property_.mortgage_balance)
+            if property_.entity_id:
+                idx = self.entity_combo.findData(property_.entity_id)
+                self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.notes_edit.setPlainText(property_.notes)
         else:
             self.purchase_date_edit.setDate(QDate.currentDate())
@@ -121,6 +134,7 @@ class AddEditPropertyDialog(QDialog):
         self._purchase_price = self.purchase_price_spin.value()
         self._current_value = self.current_value_spin.value()
         self._mortgage_balance = self.mortgage_balance_spin.value()
+        self._entity_id = self.entity_combo.currentData()
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
 
@@ -147,6 +161,10 @@ class AddEditPropertyDialog(QDialog):
     @property
     def entered_mortgage_balance(self) -> float:
         return self._mortgage_balance
+
+    @property
+    def entered_entity_id(self) -> str:
+        return self._entity_id
 
     @property
     def entered_notes(self) -> str:

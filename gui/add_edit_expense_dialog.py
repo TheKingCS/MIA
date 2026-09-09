@@ -6,7 +6,8 @@ Small dialog for creating or editing a single expense entry, used by
 modules/budget/module.py. Same shape as gui/add_edit_income_dialog.py —
 EXPENSE_CATEGORIES instead of INCOME_CATEGORIES, tax_relevant defaults
 False (most household expenses aren't deductible; the user opts in),
-otherwise identical.
+otherwise identical, including the optional Entity combo (2026-09-08,
+LLC tagging).
 """
 
 from __future__ import annotations
@@ -33,10 +34,12 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditExpenseDialog(QDialog):
-    def __init__(self, parent=None, entry: Optional[ExpenseEntry] = None) -> None:
+    def __init__(self, parent=None, entry: Optional[ExpenseEntry] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Expense" if entry is not None else "New Expense")
-        self.setFixedSize(360, 440)
+        self.setFixedSize(360, 480)
+
+        self._entities = entities or []
 
         layout = QVBoxLayout(self)
 
@@ -62,6 +65,13 @@ class AddEditExpenseDialog(QDialog):
         self.date_edit.setDisplayFormat(_ISO_DATE_FORMAT)
         layout.addWidget(self.date_edit)
 
+        layout.addWidget(QLabel("Entity:"))
+        self.entity_combo = QComboBox()
+        self.entity_combo.addItem("(Unassigned)", "")
+        for ent in self._entities:
+            self.entity_combo.addItem(ent.name, ent.entity_id)
+        layout.addWidget(self.entity_combo)
+
         self.tax_relevant_checkbox = QCheckBox("Tax relevant")
         layout.addWidget(self.tax_relevant_checkbox)
 
@@ -84,6 +94,7 @@ class AddEditExpenseDialog(QDialog):
         self._category: str = EXPENSE_CATEGORIES[0]
         self._description: str = ""
         self._date: str = ""
+        self._entity_id: str = ""
         self._tax_relevant: bool = False
         self._notes: str = ""
 
@@ -95,6 +106,9 @@ class AddEditExpenseDialog(QDialog):
             self.description_edit.setText(entry.description)
             if entry.date:
                 self.date_edit.setDate(QDate.fromString(entry.date, _ISO_DATE_FORMAT))
+            if entry.entity_id:
+                idx = self.entity_combo.findData(entry.entity_id)
+                self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.tax_relevant_checkbox.setChecked(entry.tax_relevant)
             self.notes_edit.setPlainText(entry.notes)
         else:
@@ -105,6 +119,7 @@ class AddEditExpenseDialog(QDialog):
         self._category = self.category_combo.currentText()
         self._description = self.description_edit.text().strip()
         self._date = self.date_edit.date().toString(_ISO_DATE_FORMAT)
+        self._entity_id = self.entity_combo.currentData()
         self._tax_relevant = self.tax_relevant_checkbox.isChecked()
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
@@ -124,6 +139,10 @@ class AddEditExpenseDialog(QDialog):
     @property
     def entered_date(self) -> str:
         return self._date
+
+    @property
+    def entered_entity_id(self) -> str:
+        return self._entity_id
 
     @property
     def entered_tax_relevant(self) -> bool:

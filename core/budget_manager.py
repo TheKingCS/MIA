@@ -71,9 +71,11 @@ _INCOME_FILE = _DATA_DIR / "income.json"
 _EXPENSES_FILE = _DATA_DIR / "budget_expenses.json"
 _INCOME_SOURCES_FILE = _DATA_DIR / "income_sources.json"
 _BUDGET_TARGETS_FILE = _DATA_DIR / "budget_targets.json"
+_BUSINESS_ENTITIES_FILE = _DATA_DIR / "business_entities.json"
 
 INCOME_CATEGORIES = ["Salary", "Rental Income", "Investment", "Other"]
 EXPENSE_CATEGORIES = ["Utilities", "Mortgage/Rent", "Insurance", "Groceries", "Maintenance", "Transportation", "Taxes", "Other"]
+BUSINESS_ENTITY_TYPES = ["LLC", "Sole Proprietorship", "Other"]
 
 
 @dataclass
@@ -85,6 +87,7 @@ class IncomeEntry:
     date: str = ""  # ISO date — when the income was received
     tax_relevant: bool = True  # most income is taxable by default
     property_id: str = ""  # set when this is rental income for a core.real_estate_manager.Property
+    entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     plaid_transaction_id: str = ""  # set when imported by core.plaid_manager — the dedup key on repeat sync
     notes: str = ""
     created_at: str = ""  # ISO datetime — when this entry was recorded
@@ -93,7 +96,8 @@ class IncomeEntry:
         return {
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
-            "property_id": self.property_id, "plaid_transaction_id": self.plaid_transaction_id,
+            "property_id": self.property_id, "entity_id": self.entity_id,
+            "plaid_transaction_id": self.plaid_transaction_id,
             "notes": self.notes, "created_at": self.created_at,
         }
 
@@ -107,6 +111,7 @@ class IncomeEntry:
             date=data.get("date", ""),
             tax_relevant=data.get("tax_relevant", True),
             property_id=data.get("property_id", ""),
+            entity_id=data.get("entity_id", ""),
             plaid_transaction_id=data.get("plaid_transaction_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
@@ -123,6 +128,7 @@ class ExpenseEntry:
     tax_relevant: bool = False  # most household expenses aren't deductible; user opts in
     bill_id: str = ""  # set when this entry came from BudgetManager.mark_bill_paid()
     property_id: str = ""  # set when this is an expense for a core.real_estate_manager.Property
+    entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     plaid_transaction_id: str = ""  # set when imported by core.plaid_manager — the dedup key on repeat sync
     notes: str = ""
     created_at: str = ""  # ISO datetime
@@ -131,7 +137,7 @@ class ExpenseEntry:
         return {
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
-            "bill_id": self.bill_id, "property_id": self.property_id,
+            "bill_id": self.bill_id, "property_id": self.property_id, "entity_id": self.entity_id,
             "plaid_transaction_id": self.plaid_transaction_id, "notes": self.notes, "created_at": self.created_at,
         }
 
@@ -146,6 +152,7 @@ class ExpenseEntry:
             tax_relevant=data.get("tax_relevant", False),
             bill_id=data.get("bill_id", ""),
             property_id=data.get("property_id", ""),
+            entity_id=data.get("entity_id", ""),
             plaid_transaction_id=data.get("plaid_transaction_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
@@ -298,6 +305,31 @@ class BudgetTarget:
         return BudgetTarget(category=data.get("category", "Other"), monthly_amount=data.get("monthly_amount", 0.0))
 
 
+@dataclass
+class BusinessEntity:
+    entity_id: str
+    name: str  # "Sunrise Rentals LLC" — arbitrary, user-defined, no fixed universe
+    entity_type: str = "LLC"  # one of BUSINESS_ENTITY_TYPES
+    notes: str = ""
+    created_at: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "entity_id": self.entity_id, "name": self.name, "entity_type": self.entity_type,
+            "notes": self.notes, "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "BusinessEntity":
+        return BusinessEntity(
+            entity_id=data.get("entity_id", uuid.uuid4().hex[:10]),
+            name=data.get("name", ""),
+            entity_type=data.get("entity_type", "LLC"),
+            notes=data.get("notes", ""),
+            created_at=data.get("created_at", ""),
+        )
+
+
 def next_income_due_date(source: IncomeSource) -> Optional[date]:
     """Pure logic — testable without Qt. Exact mirror of
     next_bill_due_date()'s shape, same bounded-forward-walk over
@@ -340,6 +372,7 @@ class BudgetManager:
         self._expenses: list[ExpenseEntry] = []
         self._income_sources: list[IncomeSource] = []
         self._budget_targets: list[BudgetTarget] = []
+        self._business_entities: list[BusinessEntity] = []
         self._load()
 
     # ------------------------------------------------------------------
@@ -352,6 +385,7 @@ class BudgetManager:
         self._expenses = self._load_file(_EXPENSES_FILE, ExpenseEntry.from_dict)
         self._income_sources = self._load_file(_INCOME_SOURCES_FILE, IncomeSource.from_dict)
         self._budget_targets = self._load_file(_BUDGET_TARGETS_FILE, BudgetTarget.from_dict)
+        self._business_entities = self._load_file(_BUSINESS_ENTITIES_FILE, BusinessEntity.from_dict)
 
     @staticmethod
     def _load_file(path: Path, from_dict) -> list:
@@ -383,6 +417,10 @@ class BudgetManager:
     def _save_budget_targets(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         _BUDGET_TARGETS_FILE.write_text(json.dumps([t.to_dict() for t in self._budget_targets], indent=2), encoding="utf-8")
+
+    def _save_business_entities(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        _BUSINESS_ENTITIES_FILE.write_text(json.dumps([e.to_dict() for e in self._business_entities], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Bills
@@ -564,6 +602,7 @@ class BudgetManager:
         date: Optional[str] = None,
         tax_relevant: bool = True,
         property_id: str = "",
+        entity_id: str = "",
         plaid_transaction_id: str = "",
         notes: str = "",
     ) -> IncomeEntry:
@@ -575,6 +614,7 @@ class BudgetManager:
             date=date or _today_iso(),
             tax_relevant=tax_relevant,
             property_id=property_id,
+            entity_id=entity_id,
             plaid_transaction_id=plaid_transaction_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
@@ -637,6 +677,7 @@ class BudgetManager:
         tax_relevant: bool = False,
         bill_id: str = "",
         property_id: str = "",
+        entity_id: str = "",
         plaid_transaction_id: str = "",
         notes: str = "",
     ) -> ExpenseEntry:
@@ -649,6 +690,7 @@ class BudgetManager:
             tax_relevant=tax_relevant,
             bill_id=bill_id,
             property_id=property_id,
+            entity_id=entity_id,
             plaid_transaction_id=plaid_transaction_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
@@ -702,22 +744,32 @@ class BudgetManager:
     # Reporting — computed on demand, never persisted (see module docstring)
     # ------------------------------------------------------------------
 
-    def total_income(self, start_date: Optional[str] = None, end_date: Optional[str] = None, tax_relevant_only: bool = False) -> float:
+    def total_income(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None,
+        tax_relevant_only: bool = False, entity_id: Optional[str] = None,
+    ) -> float:
         return sum(
             i.amount for i in self._income
             if _in_range(i.date, start_date, end_date) and (not tax_relevant_only or i.tax_relevant)
+            and (entity_id is None or i.entity_id == entity_id)
         )
 
-    def total_expenses(self, start_date: Optional[str] = None, end_date: Optional[str] = None, tax_relevant_only: bool = False) -> float:
+    def total_expenses(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None,
+        tax_relevant_only: bool = False, entity_id: Optional[str] = None,
+    ) -> float:
         return sum(
             e.amount for e in self._expenses
             if _in_range(e.date, start_date, end_date) and (not tax_relevant_only or e.tax_relevant)
+            and (entity_id is None or e.entity_id == entity_id)
         )
 
     def net_cash_flow(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
         return self.total_income(start_date, end_date) - self.total_expenses(start_date, end_date)
 
-    def total_expenses_by_category(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> dict[str, float]:
+    def total_expenses_by_category(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None, entity_id: Optional[str] = None,
+    ) -> dict[str, float]:
         """Actual spending per category over a date range — the
         "actual" half of a budget-target comparison. Only categories
         with at least one matching expense are present in the result
@@ -726,10 +778,14 @@ class BudgetManager:
         for expense in self._expenses:
             if not _in_range(expense.date, start_date, end_date):
                 continue
+            if entity_id is not None and expense.entity_id != entity_id:
+                continue
             totals[expense.category] = totals.get(expense.category, 0.0) + expense.amount
         return totals
 
-    def total_income_by_category(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> dict[str, float]:
+    def total_income_by_category(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None, entity_id: Optional[str] = None,
+    ) -> dict[str, float]:
         """Actual income per category over a date range — the income-side
         counterpart to total_expenses_by_category(). Only categories with
         at least one matching income entry are present (no zero-filled
@@ -737,6 +793,8 @@ class BudgetManager:
         totals: dict[str, float] = {}
         for entry in self._income:
             if not _in_range(entry.date, start_date, end_date):
+                continue
+            if entity_id is not None and entry.entity_id != entity_id:
                 continue
             totals[entry.category] = totals.get(entry.category, 0.0) + entry.amount
         return totals
@@ -770,3 +828,55 @@ class BudgetManager:
 
     def all_budget_targets(self) -> list[BudgetTarget]:
         return sorted(self._budget_targets, key=lambda t: t.category)
+
+    # ------------------------------------------------------------------
+    # Business entities (LLCs/sole props/etc.) — a real, user-named record
+    # with a stable generated id, same shape as Property/IncomeSource, NOT
+    # BudgetTarget's "upsert keyed by a fixed category" shape (an entity
+    # name has no fixed universe to key off).
+    # ------------------------------------------------------------------
+
+    def add_business_entity(self, name: str, entity_type: str = "LLC", notes: str = "") -> BusinessEntity:
+        entity = BusinessEntity(
+            entity_id=uuid.uuid4().hex[:10],
+            name=name,
+            entity_type=entity_type if entity_type in BUSINESS_ENTITY_TYPES else "Other",
+            notes=notes,
+            created_at=datetime.now().isoformat(timespec="seconds"),
+        )
+        self._business_entities.append(entity)
+        self._save_business_entities()
+        log.info("Business entity added: '%s' (%s)", entity.name, entity.entity_type)
+        return entity
+
+    def update_business_entity(self, entity_id: str, **fields) -> BusinessEntity:
+        entity = self.get_business_entity(entity_id)
+        if entity is None:
+            raise ValueError(f"No business entity with id '{entity_id}'.")
+        for key, value in fields.items():
+            if not hasattr(entity, key):
+                raise ValueError(f"BusinessEntity has no field '{key}'.")
+            setattr(entity, key, value)
+        if entity.entity_type not in BUSINESS_ENTITY_TYPES:
+            entity.entity_type = "Other"
+        self._save_business_entities()
+        return entity
+
+    def delete_business_entity(self, entity_id: str) -> None:
+        """Deletes the BusinessEntity record only — does NOT touch any
+        Income/Expense/Property rows already tagged with this entity_id
+        (same 'deleting a parent doesn't delete real history' stance
+        RealEstateManager.delete_property() already takes). Those rows
+        are left pointing at a now-nonexistent id; every reader (GUI
+        combos, filters) treats that the same as unassigned."""
+        self._business_entities = [e for e in self._business_entities if e.entity_id != entity_id]
+        self._save_business_entities()
+
+    def get_business_entity(self, entity_id: str) -> Optional[BusinessEntity]:
+        for entity in self._business_entities:
+            if entity.entity_id == entity_id:
+                return entity
+        return None
+
+    def all_business_entities(self) -> list[BusinessEntity]:
+        return sorted(self._business_entities, key=lambda e: e.name.lower())

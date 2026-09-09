@@ -51,6 +51,17 @@ def test_includes_range_label_and_generated_at():
     assert "2026-09-08 06:00" in html
 
 
+def test_includes_entity_label_when_given():
+    html = _build(entity_label="Sunrise Rentals LLC")
+    assert "Entity:" in html
+    assert "Sunrise Rentals LLC" in html
+
+
+def test_omits_entity_line_when_entity_label_is_none():
+    html = _build(entity_label=None)
+    assert "Entity:" not in html
+
+
 def test_includes_household_summary_figures():
     html = _build(income_total=5000.0, expenses_total=3200.0)
     assert "$5,000.00" in html

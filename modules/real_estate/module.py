@@ -37,6 +37,7 @@ from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QInputDialog,
@@ -130,6 +131,7 @@ class RealEstateModule(ModuleBase):
         self._detail_property_id: Optional[str] = None
 
         self._property_list: Optional[QListWidget] = None
+        self._entity_filter_combo: Optional[QComboBox] = None
         self._tracked_label: Optional[QLabel] = None
         self._equity_label: Optional[QLabel] = None
         self._rental_label: Optional[QLabel] = None
@@ -168,6 +170,14 @@ class RealEstateModule(ModuleBase):
         subtitle = QLabel(self.description)
         subtitle.setObjectName("SubtitleLabel")
         layout.addWidget(subtitle)
+
+        entity_row = QHBoxLayout()
+        entity_row.addWidget(QLabel("Entity:"))
+        self._entity_filter_combo = QComboBox()
+        self._refresh_entity_filter_combo()
+        self._entity_filter_combo.currentIndexChanged.connect(lambda _idx: self._refresh_list())
+        entity_row.addWidget(self._entity_filter_combo, stretch=1)
+        layout.addLayout(entity_row)
 
         glance_row = QHBoxLayout()
         glance_row.setSpacing(24)
@@ -214,8 +224,28 @@ class RealEstateModule(ModuleBase):
         row_layout.addLayout(tile)
         return value_label
 
+    def _refresh_entity_filter_combo(self) -> None:
+        """Read-only consumer of core.budget_manager's BusinessEntity
+        list — this module never manages entities itself, only Budget's
+        Summary tab does ("Manage Entities…"), to avoid two management
+        entry points for the same list."""
+        current = self._entity_filter_combo.currentData() if self._entity_filter_combo.count() else None
+        self._entity_filter_combo.blockSignals(True)
+        self._entity_filter_combo.clear()
+        self._entity_filter_combo.addItem("All Entities", None)
+        self._entity_filter_combo.addItem("(Unassigned)", "")
+        for ent in self.context.budget.all_business_entities():
+            self._entity_filter_combo.addItem(ent.name, ent.entity_id)
+        idx = self._entity_filter_combo.findData(current)
+        self._entity_filter_combo.setCurrentIndex(idx if idx >= 0 else 0)
+        self._entity_filter_combo.blockSignals(False)
+
     def _refresh_list(self) -> None:
-        properties = self.context.real_estate.all_properties()
+        selected_entity = self._entity_filter_combo.currentData()
+        properties = [
+            p for p in self.context.real_estate.all_properties()
+            if selected_entity is None or p.entity_id == selected_entity
+        ]
 
         self._tracked_label.setText(str(len(properties)))
         total_equity = sum(equity(p) for p in properties)
@@ -242,7 +272,7 @@ class RealEstateModule(ModuleBase):
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_property(self) -> None:
-        dialog = AddEditPropertyDialog()
+        dialog = AddEditPropertyDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -253,6 +283,7 @@ class RealEstateModule(ModuleBase):
             purchase_price=dialog.entered_purchase_price,
             current_value=dialog.entered_current_value,
             mortgage_balance=dialog.entered_mortgage_balance,
+            entity_id=dialog.entered_entity_id,
             notes=dialog.entered_notes,
         )
         self._refresh_list()
@@ -264,7 +295,7 @@ class RealEstateModule(ModuleBase):
             return
 
         prop = self.context.real_estate.get_property(property_id)
-        dialog = AddEditPropertyDialog(property_=prop)
+        dialog = AddEditPropertyDialog(property_=prop, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -276,6 +307,7 @@ class RealEstateModule(ModuleBase):
             purchase_price=dialog.entered_purchase_price,
             current_value=dialog.entered_current_value,
             mortgage_balance=dialog.entered_mortgage_balance,
+            entity_id=dialog.entered_entity_id,
             notes=dialog.entered_notes,
         )
         self._refresh_list()
@@ -347,10 +379,13 @@ class RealEstateModule(ModuleBase):
         header.setObjectName("TitleLabel")
         layout.addWidget(header)
 
+        entity = self.context.budget.get_business_entity(prop.entity_id) if prop.entity_id else None
+        entity_name = entity.name if entity is not None else "(Unassigned)"
         info = QLabel(
             f"{prop.property_type}   —   Purchased {prop.purchase_date or 'unknown'} for ${prop.purchase_price:,.2f}\n"
             f"Current value: ${prop.current_value:,.2f}   Mortgage balance: ${prop.mortgage_balance:,.2f}   "
-            f"Equity: ${equity(prop):,.2f}"
+            f"Equity: ${equity(prop):,.2f}\n"
+            f"Entity: {entity_name}"
         )
         info.setWordWrap(True)
         layout.addWidget(info)

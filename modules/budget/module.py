@@ -59,6 +59,7 @@ from PySide6.QtCore import Qt, QMarginsF
 from PySide6.QtGui import QPageLayout, QPageSize, QTextDocument
 from PySide6.QtPrintSupport import QPrinter
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QDoubleSpinBox,
     QFileDialog,
@@ -93,6 +94,7 @@ from gui.add_edit_bill_dialog import AddEditBillDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_income_source_dialog import AddEditIncomeSourceDialog
+from gui.manage_business_entities_dialog import ManageBusinessEntitiesDialog
 from gui.mark_bill_paid_dialog import MarkBillPaidDialog
 from gui.mark_income_received_dialog import MarkIncomeReceivedDialog
 from gui.password_dialog import PasswordPromptDialog
@@ -156,6 +158,7 @@ class BudgetModule(ModuleBase):
         self._income_list: Optional[QListWidget] = None
         self._expense_list: Optional[QListWidget] = None
         self._summary_range_label: Optional[QLabel] = None
+        self._summary_entity_combo: Optional[QComboBox] = None
         self._summary_income_label: Optional[QLabel] = None
         self._summary_expenses_label: Optional[QLabel] = None
         self._summary_net_label: Optional[QLabel] = None
@@ -512,7 +515,7 @@ class BudgetModule(ModuleBase):
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_income(self) -> None:
-        dialog = AddEditIncomeDialog()
+        dialog = AddEditIncomeDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -521,6 +524,7 @@ class BudgetModule(ModuleBase):
             category=dialog.entered_category,
             description=dialog.entered_description,
             date=dialog.entered_date,
+            entity_id=dialog.entered_entity_id,
             tax_relevant=dialog.entered_tax_relevant,
             notes=dialog.entered_notes,
         )
@@ -533,7 +537,7 @@ class BudgetModule(ModuleBase):
             return
 
         entry = self.context.budget.get_income(entry_id)
-        dialog = AddEditIncomeDialog(entry=entry)
+        dialog = AddEditIncomeDialog(entry=entry, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -543,6 +547,7 @@ class BudgetModule(ModuleBase):
             category=dialog.entered_category,
             description=dialog.entered_description,
             date=dialog.entered_date,
+            entity_id=dialog.entered_entity_id,
             tax_relevant=dialog.entered_tax_relevant,
             notes=dialog.entered_notes,
         )
@@ -610,7 +615,7 @@ class BudgetModule(ModuleBase):
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_expense(self) -> None:
-        dialog = AddEditExpenseDialog()
+        dialog = AddEditExpenseDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -619,6 +624,7 @@ class BudgetModule(ModuleBase):
             category=dialog.entered_category,
             description=dialog.entered_description,
             date=dialog.entered_date,
+            entity_id=dialog.entered_entity_id,
             tax_relevant=dialog.entered_tax_relevant,
             notes=dialog.entered_notes,
         )
@@ -631,7 +637,7 @@ class BudgetModule(ModuleBase):
             return
 
         entry = self.context.budget.get_expense(entry_id)
-        dialog = AddEditExpenseDialog(entry=entry)
+        dialog = AddEditExpenseDialog(entry=entry, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -641,6 +647,7 @@ class BudgetModule(ModuleBase):
             category=dialog.entered_category,
             description=dialog.entered_description,
             date=dialog.entered_date,
+            entity_id=dialog.entered_entity_id,
             tax_relevant=dialog.entered_tax_relevant,
             notes=dialog.entered_notes,
         )
@@ -693,6 +700,18 @@ class BudgetModule(ModuleBase):
         all_time_button.clicked.connect(self._on_summary_all_time)
         range_row.addWidget(all_time_button)
         layout.addLayout(range_row)
+
+        entity_row = QHBoxLayout()
+        entity_row.addWidget(QLabel("Entity:"))
+        self._summary_entity_combo = QComboBox()
+        self._refresh_entity_combo()
+        self._summary_entity_combo.currentIndexChanged.connect(lambda _idx: self._refresh_summary())
+        entity_row.addWidget(self._summary_entity_combo, stretch=1)
+
+        manage_entities_button = QPushButton("Manage Entities…")
+        manage_entities_button.clicked.connect(self._on_manage_entities)
+        entity_row.addWidget(manage_entities_button)
+        layout.addLayout(entity_row)
 
         self._summary_income_label = QLabel()
         layout.addWidget(self._summary_income_label)
@@ -757,6 +776,26 @@ class BudgetModule(ModuleBase):
         else:
             self.context.budget.set_budget_target(category, amount)
 
+    def _refresh_entity_combo(self) -> None:
+        """Re-populates the Summary tab's entity filter — None ("All
+        Entities") is the default/off state matching total_income()'s
+        own entity_id=None contract; "" filters to unassigned entries."""
+        current = self._summary_entity_combo.currentData() if self._summary_entity_combo.count() else None
+        self._summary_entity_combo.blockSignals(True)
+        self._summary_entity_combo.clear()
+        self._summary_entity_combo.addItem("All Entities", None)
+        self._summary_entity_combo.addItem("(Unassigned)", "")
+        for ent in self.context.budget.all_business_entities():
+            self._summary_entity_combo.addItem(ent.name, ent.entity_id)
+        idx = self._summary_entity_combo.findData(current)
+        self._summary_entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
+        self._summary_entity_combo.blockSignals(False)
+
+    def _on_manage_entities(self) -> None:
+        dialog = ManageBusinessEntitiesDialog(self.context)
+        dialog.exec()
+        self._refresh_entity_combo()
+
     def _on_summary_this_month(self) -> None:
         today = date.today()
         start = today.replace(day=1).isoformat()
@@ -778,11 +817,12 @@ class BudgetModule(ModuleBase):
 
     def _refresh_summary(self) -> None:
         start, end = self._summary_start_date, self._summary_end_date
+        entity_id = self._summary_entity_combo.currentData()
         budget = self.context.budget
-        income = budget.total_income(start, end)
-        expenses = budget.total_expenses(start, end)
-        tax_income = budget.total_income(start, end, tax_relevant_only=True)
-        tax_expenses = budget.total_expenses(start, end, tax_relevant_only=True)
+        income = budget.total_income(start, end, entity_id=entity_id)
+        expenses = budget.total_expenses(start, end, entity_id=entity_id)
+        tax_income = budget.total_income(start, end, tax_relevant_only=True, entity_id=entity_id)
+        tax_expenses = budget.total_expenses(start, end, tax_relevant_only=True, entity_id=entity_id)
 
         self._summary_income_label.setText(f"Income: ${income:,.2f}")
         self._summary_expenses_label.setText(f"Expenses: ${expenses:,.2f}")
@@ -798,8 +838,13 @@ class BudgetModule(ModuleBase):
         selected range rather than a second, redundant date picker."""
         start, end = self._summary_start_date, self._summary_end_date
         range_label = self._summary_range_label.text()
+        entity_id = self._summary_entity_combo.currentData()
         budget = self.context.budget
         real_estate = self.context.real_estate
+
+        entity_label = None
+        if entity_id is not None:
+            entity_label = "(Unassigned)" if entity_id == "" else budget.get_business_entity(entity_id).name
 
         # Budget Targets vs. Actual only makes honest sense for "This
         # Month" — BudgetTarget.monthly_amount has no yearly-aggregation
@@ -808,6 +853,8 @@ class BudgetModule(ModuleBase):
 
         properties = []
         for prop in real_estate.all_properties():
+            if entity_id is not None and prop.entity_id != entity_id:
+                continue
             properties.append({
                 "name": prop.name,
                 "type": prop.property_type,
@@ -822,16 +869,17 @@ class BudgetModule(ModuleBase):
             range_label=range_label,
             start_date=start,
             end_date=end,
-            income_total=budget.total_income(start, end),
-            expenses_total=budget.total_expenses(start, end),
-            tax_income_total=budget.total_income(start, end, tax_relevant_only=True),
-            tax_expenses_total=budget.total_expenses(start, end, tax_relevant_only=True),
-            income_by_category=budget.total_income_by_category(start, end),
-            expenses_by_category=budget.total_expenses_by_category(start, end),
+            income_total=budget.total_income(start, end, entity_id=entity_id),
+            expenses_total=budget.total_expenses(start, end, entity_id=entity_id),
+            tax_income_total=budget.total_income(start, end, tax_relevant_only=True, entity_id=entity_id),
+            tax_expenses_total=budget.total_expenses(start, end, tax_relevant_only=True, entity_id=entity_id),
+            income_by_category=budget.total_income_by_category(start, end, entity_id=entity_id),
+            expenses_by_category=budget.total_expenses_by_category(start, end, entity_id=entity_id),
             budget_targets=budget_targets,
-            actual_by_category=budget.total_expenses_by_category(start, end),
+            actual_by_category=budget.total_expenses_by_category(start, end, entity_id=entity_id),
             properties=properties,
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+            entity_label=entity_label,
         )
 
         suggested_name = f"Business_Report_{datetime.now():%Y-%m-%d}.pdf"

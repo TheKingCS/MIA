@@ -38,6 +38,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(budget_manager_module, "_EXPENSES_FILE", data_dir / "budget_expenses.json")
     monkeypatch.setattr(budget_manager_module, "_INCOME_SOURCES_FILE", data_dir / "income_sources.json")
     monkeypatch.setattr(budget_manager_module, "_BUDGET_TARGETS_FILE", data_dir / "budget_targets.json")
+    monkeypatch.setattr(budget_manager_module, "_BUSINESS_ENTITIES_FILE", data_dir / "business_entities.json")
     return data_dir
 
 
@@ -308,6 +309,127 @@ def test_expense_entry_from_dict_backward_compatible_without_plaid_field():
     old_shape = {"entry_id": "e1", "amount": 45.0, "category": "Groceries", "date": "2026-09-01"}
     entry = budget_manager_module.ExpenseEntry.from_dict(old_shape)
     assert entry.plaid_transaction_id == ""
+
+
+# ------------------------------------------------------------------
+# BusinessEntity — LLC/sole-prop tagging (2026-09-08)
+# ------------------------------------------------------------------
+
+def test_add_business_entity_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    entity = manager.add_business_entity(name="Sunrise Rentals LLC", entity_type="LLC", notes="123 Main St")
+
+    reloaded = _make_manager()
+    found = reloaded.get_business_entity(entity.entity_id)
+    assert found is not None
+    assert found.name == "Sunrise Rentals LLC"
+    assert found.entity_type == "LLC"
+    assert found.notes == "123 Main St"
+
+
+def test_add_business_entity_coerces_unknown_entity_type_to_other(isolated_paths):
+    manager = _make_manager()
+    entity = manager.add_business_entity(name="Side Gig", entity_type="Not A Real Type")
+    assert entity.entity_type == "Other"
+
+
+def test_update_business_entity_rejects_unknown_field(isolated_paths):
+    manager = _make_manager()
+    entity = manager.add_business_entity(name="Sunrise Rentals LLC")
+    with pytest.raises(ValueError):
+        manager.update_business_entity(entity.entity_id, not_a_real_field="x")
+
+
+def test_update_business_entity_coerces_unknown_entity_type_to_other(isolated_paths):
+    manager = _make_manager()
+    entity = manager.add_business_entity(name="Sunrise Rentals LLC")
+    updated = manager.update_business_entity(entity.entity_id, entity_type="Not A Real Type")
+    assert updated.entity_type == "Other"
+
+
+def test_delete_business_entity_removes_it(isolated_paths):
+    manager = _make_manager()
+    entity = manager.add_business_entity(name="Sunrise Rentals LLC")
+    manager.delete_business_entity(entity.entity_id)
+    assert manager.get_business_entity(entity.entity_id) is None
+
+
+def test_get_business_entity_found_and_not_found(isolated_paths):
+    manager = _make_manager()
+    entity = manager.add_business_entity(name="Sunrise Rentals LLC")
+    assert manager.get_business_entity(entity.entity_id) is not None
+    assert manager.get_business_entity("no-such-id") is None
+
+
+def test_all_business_entities_sorted_by_name(isolated_paths):
+    manager = _make_manager()
+    manager.add_business_entity(name="Zed Holdings LLC")
+    manager.add_business_entity(name="Aquaponics R&D LLC")
+    names = [e.name for e in manager.all_business_entities()]
+    assert names == ["Aquaponics R&D LLC", "Zed Holdings LLC"]
+
+
+def test_add_income_stores_entity_id(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_income(amount=1200.0, entity_id="ent-1")
+    assert entry.entity_id == "ent-1"
+
+
+def test_add_expense_stores_entity_id(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_expense(amount=45.0, entity_id="ent-1")
+    assert entry.entity_id == "ent-1"
+
+
+def test_income_entry_from_dict_backward_compatible_without_entity_field():
+    old_shape = {"entry_id": "i1", "amount": 3000.0, "category": "Salary", "date": "2026-09-01"}
+    entry = budget_manager_module.IncomeEntry.from_dict(old_shape)
+    assert entry.entity_id == ""
+
+
+def test_expense_entry_from_dict_backward_compatible_without_entity_field():
+    old_shape = {"entry_id": "e1", "amount": 45.0, "category": "Groceries", "date": "2026-09-01"}
+    entry = budget_manager_module.ExpenseEntry.from_dict(old_shape)
+    assert entry.entity_id == ""
+
+
+def test_total_income_entity_filter_matches_only_that_entity(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=3000.0, entity_id="ent-1", date="2026-09-01")
+    manager.add_income(amount=1500.0, entity_id="ent-2", date="2026-09-01")
+    assert manager.total_income(entity_id="ent-1") == 3000.0
+    assert manager.total_income(entity_id="ent-2") == 1500.0
+    assert manager.total_income() == 4500.0
+
+
+def test_total_expenses_entity_filter_matches_only_that_entity(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=100.0, entity_id="ent-1", date="2026-09-01")
+    manager.add_expense(amount=50.0, entity_id="ent-2", date="2026-09-01")
+    assert manager.total_expenses(entity_id="ent-1") == 100.0
+    assert manager.total_expenses(entity_id="ent-2") == 50.0
+
+
+def test_total_income_entity_filter_with_no_matches_returns_zero(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=3000.0, entity_id="ent-1", date="2026-09-01")
+    assert manager.total_income(entity_id="ent-nonexistent") == 0.0
+
+
+def test_total_income_by_category_entity_filter_only_includes_matching_entries(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=3000.0, category="Salary", entity_id="ent-1", date="2026-09-01")
+    manager.add_income(amount=1500.0, category="Rental Income", entity_id="ent-2", date="2026-09-01")
+    totals = manager.total_income_by_category(entity_id="ent-1")
+    assert totals == {"Salary": 3000.0}
+
+
+def test_total_expenses_by_category_entity_filter_only_includes_matching_entries(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=100.0, category="Groceries", entity_id="ent-1", date="2026-09-01")
+    manager.add_expense(amount=50.0, category="Utilities", entity_id="ent-2", date="2026-09-01")
+    totals = manager.total_expenses_by_category(entity_id="ent-1")
+    assert totals == {"Groceries": 100.0}
 
 
 # ------------------------------------------------------------------

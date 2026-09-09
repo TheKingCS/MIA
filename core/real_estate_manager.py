@@ -65,6 +65,7 @@ class Property:
     purchase_price: float = 0.0
     current_value: float = 0.0  # manually updated estimate — no live valuation feed
     mortgage_balance: float = 0.0
+    entity_id: str = ""  # set when this property belongs to a core.budget_manager.BusinessEntity (LLC/etc.)
     maintenance_asset_id: str = ""  # optional link to a core.maintenance_manager.MaintenanceAsset (category="Property")
     notes: str = ""
     created_at: str = ""
@@ -74,6 +75,7 @@ class Property:
             "property_id": self.property_id, "name": self.name, "property_type": self.property_type,
             "purchase_date": self.purchase_date, "purchase_price": self.purchase_price,
             "current_value": self.current_value, "mortgage_balance": self.mortgage_balance,
+            "entity_id": self.entity_id,
             "maintenance_asset_id": self.maintenance_asset_id, "notes": self.notes, "created_at": self.created_at,
         }
 
@@ -87,6 +89,7 @@ class Property:
             purchase_price=data.get("purchase_price", 0.0),
             current_value=data.get("current_value", 0.0),
             mortgage_balance=data.get("mortgage_balance", 0.0),
+            entity_id=data.get("entity_id", ""),
             maintenance_asset_id=data.get("maintenance_asset_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
@@ -147,6 +150,7 @@ class RealEstateManager:
         purchase_price: float = 0.0,
         current_value: float = 0.0,
         mortgage_balance: float = 0.0,
+        entity_id: str = "",
         notes: str = "",
     ) -> Property:
         prop = Property(
@@ -157,6 +161,7 @@ class RealEstateManager:
             purchase_price=max(0.0, purchase_price),
             current_value=max(0.0, current_value),
             mortgage_balance=max(0.0, mortgage_balance),
+            entity_id=entity_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -211,11 +216,12 @@ class RealEstateManager:
     def record_rental_income(
         self, property_id: str, amount: float, date_str: Optional[str] = None, description: str = "", notes: str = ""
     ) -> "IncomeEntry":
-        if self.get_property(property_id) is None:
+        prop = self.get_property(property_id)
+        if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
         return self.context.budget.add_income(
             amount=amount, category="Rental Income", description=description, date=date_str,
-            property_id=property_id, notes=notes,
+            property_id=property_id, entity_id=prop.entity_id, notes=notes,
         )
 
     def record_property_expense(
@@ -227,11 +233,12 @@ class RealEstateManager:
         description: str = "",
         notes: str = "",
     ) -> "ExpenseEntry":
-        if self.get_property(property_id) is None:
+        prop = self.get_property(property_id)
+        if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
         return self.context.budget.add_expense(
             amount=amount, category=category, description=description, date=date_str,
-            property_id=property_id, notes=notes,
+            property_id=property_id, entity_id=prop.entity_id, notes=notes,
         )
 
     def income_for_property(self, property_id: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list["IncomeEntry"]:

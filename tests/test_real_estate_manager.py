@@ -79,6 +79,20 @@ def test_add_property_rejects_unknown_type(isolated_paths):
     assert prop.property_type == "Other"
 
 
+def test_add_property_stores_entity_id(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    prop = manager.add_property(name="123 Main St", entity_id="ent-1")
+    assert prop.entity_id == "ent-1"
+
+
+def test_property_from_dict_backward_compatible_without_entity_field():
+    from core.real_estate_manager import Property
+    old_shape = {"property_id": "p1", "name": "123 Main St", "current_value": 300000.0}
+    prop = Property.from_dict(old_shape)
+    assert prop.entity_id == ""
+
+
 def test_delete_property_removes_the_record_only(isolated_paths):
     context = _make_context()
     manager = _make_manager(context)
@@ -124,6 +138,24 @@ def test_record_property_expense_sets_property_id(isolated_paths):
 
     assert entry.property_id == prop.property_id
     assert entry.category == "Maintenance"
+
+
+def test_record_rental_income_inherits_property_entity_id(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    prop = manager.add_property(name="123 Main St", entity_id="ent-1")
+
+    entry = manager.record_rental_income(prop.property_id, amount=1500.0, date_str="2026-09-01")
+    assert entry.entity_id == "ent-1"
+
+
+def test_record_property_expense_inherits_property_entity_id(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    prop = manager.add_property(name="123 Main St", entity_id="ent-1")
+
+    entry = manager.record_property_expense(prop.property_id, amount=200.0, date_str="2026-09-05")
+    assert entry.entity_id == "ent-1"
 
 
 def test_income_for_property_only_returns_that_propertys_entries(isolated_paths):
