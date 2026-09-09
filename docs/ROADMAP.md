@@ -5656,3 +5656,37 @@ entry, both dialogs' Entity combo round-tripping through a real seeded
 entity list, and the Net Worth card showing a real dollar figure for
 properties-only data with zero external snapshots — all confirmed via
 isolated headless-Qt scripts, not just unit tests. 1902 tests passing.
+
+## Financial deep-dive, part 2: Plaid category coverage (2026-09-09)
+
+Second item in the same brainstorm sequence. Six real Plaid primary
+categories — `MEDICAL`, `PERSONAL_CARE`, `GENERAL_MERCHANDISE`,
+`BANK_FEES`, `ENTERTAINMENT`, `TRAVEL` — had no matching entry in
+`core.budget_manager.EXPENSE_CATEGORIES`, so `map_plaid_category()`
+fell every one of them through to `"Other"` (confirmed directly in the
+function's own pre-existing fallthrough comment, which already named
+all six). For anyone with real Plaid-synced spending, a meaningful
+fraction of actual transactions were landing in a single catch-all
+bucket, weakening both budget-target comparison and the Business
+Report's per-category breakdown.
+
+Added six new `EXPENSE_CATEGORIES` entries (`Medical`, `Personal Care`,
+`Shopping`, `Bank Fees`, `Entertainment`, `Travel` — `GENERAL_MERCHANDISE`
+maps to `"Shopping"`, the more natural household-budgeting term) and a
+matching branch in `map_plaid_category()` for each. No other code
+needed updating — every consumer of `EXPENSE_CATEGORIES` (the Bill/
+Expense dialogs' category combo, the Budget Targets section's one-row-
+per-category loop, the Business Report's category breakdown table)
+already iterates the list generically rather than hardcoding its
+contents, confirmed by grep before assuming so.
+
+One existing test corrected, not just extended: `test_map_plaid_
+category_unrecognized_expense_primary_is_other` had been using real
+`"ENTERTAINMENT"` as its example of an unrecognized category — now
+genuinely recognized, so it failed once this landed (a real, caught-
+by-the-test-suite signal, not silently papered over). Fixed by
+switching that test to a clearly-fictional placeholder category
+(matching what the function's own docstring already says that test
+is really about — "any primary value Plaid adds in the future that
+this function doesn't recognize"), and added 6 new tests for the real
+categories themselves. 1908 tests passing.

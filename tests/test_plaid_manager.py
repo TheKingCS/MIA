@@ -255,7 +255,34 @@ def test_map_plaid_category_transfer_out_is_skipped():
 
 
 def test_map_plaid_category_unrecognized_expense_primary_is_other():
-    assert map_plaid_category("ENTERTAINMENT", "", is_income=False) == "Other"
+    # A value Plaid might add in the future that this function doesn't
+    # recognize yet — real ENTERTAINMENT/MEDICAL/etc. now have their own
+    # explicit mapping, see the tests below.
+    assert map_plaid_category("SOME_FUTURE_EXPENSE_CATEGORY", "", is_income=False) == "Other"
+
+
+def test_map_plaid_category_medical_is_medical():
+    assert map_plaid_category("MEDICAL", "", is_income=False) == "Medical"
+
+
+def test_map_plaid_category_personal_care_is_personal_care():
+    assert map_plaid_category("PERSONAL_CARE", "", is_income=False) == "Personal Care"
+
+
+def test_map_plaid_category_general_merchandise_is_shopping():
+    assert map_plaid_category("GENERAL_MERCHANDISE", "", is_income=False) == "Shopping"
+
+
+def test_map_plaid_category_bank_fees_is_bank_fees():
+    assert map_plaid_category("BANK_FEES", "", is_income=False) == "Bank Fees"
+
+
+def test_map_plaid_category_entertainment_is_entertainment():
+    assert map_plaid_category("ENTERTAINMENT", "", is_income=False) == "Entertainment"
+
+
+def test_map_plaid_category_travel_is_travel():
+    assert map_plaid_category("TRAVEL", "", is_income=False) == "Travel"
 
 
 # ------------------------------------------------------------------

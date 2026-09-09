@@ -266,7 +266,23 @@ def map_plaid_category(primary: str, detailed: str, is_income: bool) -> Optional
         return "Mortgage/Rent" if "MORTGAGE" in detailed else "Other"
     if primary == "TRANSFER_OUT":
         return None
-    return "Other"  # MEDICAL, PERSONAL_CARE, GENERAL_MERCHANDISE, BANK_FEES, ENTERTAINMENT, TRAVEL, OTHER, unrecognized
+    # 2026-09-09: these six previously fell through to "Other" — a real
+    # gap for anyone with actual Plaid-synced spending, since a
+    # meaningful fraction of real transactions land in exactly these
+    # categories. EXPENSE_CATEGORIES grew a matching entry for each.
+    if primary == "MEDICAL":
+        return "Medical"
+    if primary == "PERSONAL_CARE":
+        return "Personal Care"
+    if primary == "GENERAL_MERCHANDISE":
+        return "Shopping"
+    if primary == "BANK_FEES":
+        return "Bank Fees"
+    if primary == "ENTERTAINMENT":
+        return "Entertainment"
+    if primary == "TRAVEL":
+        return "Travel"
+    return "Other"  # OTHER, and any future Plaid category this function doesn't yet recognize
 
 
 class PlaidManager:

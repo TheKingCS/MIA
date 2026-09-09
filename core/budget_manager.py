@@ -74,7 +74,15 @@ _BUDGET_TARGETS_FILE = _DATA_DIR / "budget_targets.json"
 _BUSINESS_ENTITIES_FILE = _DATA_DIR / "business_entities.json"
 
 INCOME_CATEGORIES = ["Salary", "Rental Income", "Investment", "Other"]
-EXPENSE_CATEGORIES = ["Utilities", "Mortgage/Rent", "Insurance", "Groceries", "Maintenance", "Transportation", "Taxes", "Other"]
+EXPENSE_CATEGORIES = [
+    "Utilities", "Mortgage/Rent", "Insurance", "Groceries", "Maintenance", "Transportation", "Taxes",
+    # 2026-09-09: added so core.plaid_manager.map_plaid_category() has a
+    # real home for these six real Plaid primary categories — previously
+    # all fell through to "Other", which meant a meaningful fraction of
+    # real synced bank spending was invisible to category budgeting.
+    "Medical", "Personal Care", "Shopping", "Bank Fees", "Entertainment", "Travel",
+    "Other",
+]
 BUSINESS_ENTITY_TYPES = ["LLC", "Sole Proprietorship", "Other"]
 
 
