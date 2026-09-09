@@ -44,6 +44,7 @@ from core.conversation_manager import ConversationManager  # noqa: E402
 from core.data_logger_manager import DataLoggerManager  # noqa: E402
 from core.device_framework import DeviceFramework  # noqa: E402
 from core.device_help_manager import DeviceHelpManager  # noqa: E402
+from core.energy_manager import EnergyManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
 from core.expedition_manager import ExpeditionManager  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
@@ -90,6 +91,7 @@ def main() -> int:
     context.alarms = AlarmManager(context)
     context.journal = JournalManager(context)
     context.maintenance = MaintenanceManager(context)
+    context.energy = EnergyManager(context)
     context.budget = BudgetManager(context)
     context.real_estate = RealEstateManager(context)
     context.plaid = PlaidManager(context)
