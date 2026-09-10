@@ -17,6 +17,7 @@ from modules.budget.module import (
     format_holding_row,
     format_income_row,
     format_income_source_row,
+    month_buckets,
 )
 
 
@@ -106,3 +107,47 @@ def test_format_income_source_row_due_in_future():
 def test_format_income_source_row_no_schedule_after_one_time_received():
     source = _income_source(next_date="2026-09-01", last_received_date="2026-09-01")
     assert format_income_source_row(source, date(2026, 9, 7)) == "[NO SCHEDULE]  Paycheck   $2400.00  [Salary]"
+
+
+# ------------------------------------------------------------------
+# month_buckets — pure trend-view helper
+# ------------------------------------------------------------------
+
+def test_month_buckets_returns_requested_count():
+    buckets = month_buckets(date(2026, 9, 9), count=12)
+    assert len(buckets) == 12
+
+
+def test_month_buckets_oldest_first_ending_at_todays_month():
+    buckets = month_buckets(date(2026, 9, 9), count=3)
+    labels = [label for label, _, _ in buckets]
+    assert labels == ["Jul 2026", "Aug 2026", "Sep 2026"]
+
+
+def test_month_buckets_start_and_end_dates_for_a_known_month():
+    buckets = month_buckets(date(2026, 9, 9), count=1)
+    label, start, end = buckets[0]
+    assert label == "Sep 2026"
+    assert start == "2026-09-01"
+    assert end == "2026-09-30"
+
+
+def test_month_buckets_handles_december_to_january_year_boundary():
+    buckets = month_buckets(date(2026, 1, 15), count=2)
+    assert [label for label, _, _ in buckets] == ["Dec 2025", "Jan 2026"]
+    dec_start, dec_end = buckets[0][1], buckets[0][2]
+    assert dec_start == "2025-12-01"
+    assert dec_end == "2025-12-31"
+
+
+def test_month_buckets_handles_leap_year_february():
+    buckets = month_buckets(date(2024, 2, 10), count=1)
+    _, start, end = buckets[0]
+    assert start == "2024-02-01"
+    assert end == "2024-02-29"  # 2024 is a leap year
+
+
+def test_month_buckets_handles_non_leap_year_february():
+    buckets = month_buckets(date(2026, 2, 10), count=1)
+    _, start, end = buckets[0]
+    assert end == "2026-02-28"  # 2026 is not a leap year

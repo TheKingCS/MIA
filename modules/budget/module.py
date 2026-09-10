@@ -3,11 +3,11 @@ modules.budget.module
 ========================
 
 Budget: household bills, income, expenses, and expected/recurring
-income. Six tabs (Bills, Income Sources, Income, Expenses, Summary,
-Bank Sync) — same `QTabWidget` multi-feature-in-one-module shape as
-modules/maintenance/module.py and modules/workshop/module.py, since
-these are closely-related views over one connected data set rather
-than separate top-level modules.
+income. Seven tabs (Bills, Income Sources, Income, Expenses, Summary,
+Trends, Bank Sync) — same `QTabWidget` multi-feature-in-one-module
+shape as modules/maintenance/module.py and modules/workshop/module.py,
+since these are closely-related views over one connected data set
+rather than separate top-level modules.
 
 All persistence/recurrence/reporting logic lives in
 core/budget_manager.py (self.context.budget) — this module is the
@@ -34,6 +34,15 @@ household finance figures with the Real Estate portfolio (both are
 plain sibling AppContext fields) into one document, reusing whichever
 date range is currently selected here rather than a second picker.
 
+The Trends tab charts Income vs. Expenses for the last 12 calendar
+months via QtCharts (QChart/QChartView/QBarSeries/QBarSet/
+QBarCategoryAxis — the same native-charting precedent already
+established in modules/lab/module.py, extended here to a grouped bar
+chart with real month labels instead of a bare index-based line). Each
+month bucket is computed on demand from BudgetManager.total_income()/
+total_expenses() — no new historical-snapshot storage, since real
+Income/Expense entries already carry real dates.
+
 The Bank Sync tab is the GUI half of core/plaid_manager.py — see that
 module's own docstring for the full "why Hosted Link + browser +
 polling, why an encrypted passphrase-locked vault" reasoning. "Connect
@@ -51,12 +60,14 @@ Business Report exactly like a manually-entered one.
 
 from __future__ import annotations
 
+import calendar
 import webbrowser
 from datetime import date, datetime
 from typing import Optional
 
+from PySide6.QtCharts import QBarCategoryAxis, QBarSeries, QBarSet, QChart, QChartView, QValueAxis
 from PySide6.QtCore import Qt, QMarginsF
-from PySide6.QtGui import QPageLayout, QPageSize, QTextDocument
+from PySide6.QtGui import QColor, QPageLayout, QPageSize, QPainter, QTextDocument
 from PySide6.QtPrintSupport import QPrinter
 from PySide6.QtWidgets import (
     QComboBox,
@@ -157,6 +168,28 @@ def format_holding_row(holding: dict) -> str:
     return f"{label}   {qty_part}{value_part}"
 
 
+def month_buckets(today: date, count: int = 12) -> list[tuple[str, str, str]]:
+    """Pure logic — testable without Qt (see tests/test_budget_module.py).
+    Last `count` calendar months ending at today's month, oldest first —
+    e.g. [("Oct 2025", "2025-10-01", "2025-10-31"), ..., ("Sep 2026",
+    "2026-09-01", "2026-09-30")] for today=2026-09-09. Each (start, end)
+    pair is ready to pass straight into BudgetManager.total_income()/
+    total_expenses()."""
+    buckets = []
+    year, month = today.year, today.month
+    for _ in range(count):
+        start = date(year, month, 1)
+        last_day = calendar.monthrange(year, month)[1]
+        end = date(year, month, last_day)
+        buckets.append((start.strftime("%b %Y"), start.isoformat(), end.isoformat()))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    buckets.reverse()
+    return buckets
+
+
 class BudgetModule(ModuleBase):
     module_id = "budget"
     display_name = "Budget"
@@ -182,6 +215,10 @@ class BudgetModule(ModuleBase):
         self._summary_end_date: Optional[str] = None
         self._budget_target_spins: dict[str, QDoubleSpinBox] = {}
         self._budget_target_actual_labels: dict[str, QLabel] = {}
+
+        self._trends_entity_combo: Optional[QComboBox] = None
+        self._trends_chart_view: Optional[QChartView] = None
+        self._trends_net_label: Optional[QLabel] = None
 
         self._plaid_status_label: Optional[QLabel] = None
         self._plaid_accounts_list: Optional[QListWidget] = None
@@ -217,6 +254,7 @@ class BudgetModule(ModuleBase):
         tabs.addTab(self._build_income_tab(), "Income")
         tabs.addTab(self._build_expenses_tab(), "Expenses")
         tabs.addTab(self._build_summary_tab(), "Summary")
+        tabs.addTab(self._build_trends_tab(), "Trends")
         tabs.addTab(self._build_bank_sync_tab(), "Bank Sync")
         layout.addWidget(tabs, stretch=1)
 
@@ -758,6 +796,74 @@ class BudgetModule(ModuleBase):
         self._on_summary_this_month()
         return tab
 
+    # ------------------------------------------------------------------
+    # Trends tab
+    # ------------------------------------------------------------------
+
+    def _build_trends_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        entity_row = QHBoxLayout()
+        entity_row.addWidget(QLabel("Entity:"))
+        self._trends_entity_combo = QComboBox()
+        self._populate_entity_combo(self._trends_entity_combo)
+        self._trends_entity_combo.currentIndexChanged.connect(lambda _idx: self._refresh_trends_chart())
+        entity_row.addWidget(self._trends_entity_combo, stretch=1)
+        layout.addLayout(entity_row)
+
+        self._trends_chart_view = QChartView()
+        self._trends_chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self._trends_chart_view.setMinimumHeight(320)
+        layout.addWidget(self._trends_chart_view, stretch=1)
+
+        self._trends_net_label = QLabel()
+        layout.addWidget(self._trends_net_label)
+
+        self._refresh_trends_chart()
+        return tab
+
+    def _refresh_trends_chart(self) -> None:
+        entity_id = self._trends_entity_combo.currentData()
+        buckets = month_buckets(date.today(), count=12)
+
+        income_set = QBarSet("Income")
+        expenses_set = QBarSet("Expenses")
+        income_set.setColor(QColor("#4A90D9"))  # deliberate, fixed pair — not Qt's auto-cycled series colors
+        expenses_set.setColor(QColor("#E8934A"))
+        categories = []
+        net_total = 0.0
+        for label, start, end in buckets:
+            income = self.context.budget.total_income(start, end, entity_id=entity_id)
+            expenses = self.context.budget.total_expenses(start, end, entity_id=entity_id)
+            income_set.append(income)
+            expenses_set.append(expenses)
+            categories.append(label)
+            net_total += income - expenses
+
+        series = QBarSeries()
+        series.append(income_set)
+        series.append(expenses_set)
+
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setTitle("Income vs. Expenses — Last 12 Months")
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignmentFlag.AlignBottom)
+
+        axis_x = QBarCategoryAxis()
+        axis_x.append(categories)
+        chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
+        series.attachAxis(axis_x)
+
+        axis_y = QValueAxis()
+        axis_y.setTitleText("Amount ($)")
+        chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
+        series.attachAxis(axis_y)
+
+        self._trends_chart_view.setChart(chart)
+        self._trends_net_label.setText(f"Net cash flow (last 12 months): ${net_total:,.2f}")
+
     def _budget_target_entity_id(self) -> str:
         """Budget Targets are always edited for one specific entity
         context — "All Entities" (None) has no single sensible planned
@@ -832,20 +938,27 @@ class BudgetModule(ModuleBase):
         else:
             self.context.budget.set_budget_target(category, amount, entity_id=entity_id)
 
-    def _refresh_entity_combo(self) -> None:
-        """Re-populates the Summary tab's entity filter — None ("All
-        Entities") is the default/off state matching total_income()'s
-        own entity_id=None contract; "" filters to unassigned entries."""
-        current = self._summary_entity_combo.currentData() if self._summary_entity_combo.count() else None
-        self._summary_entity_combo.blockSignals(True)
-        self._summary_entity_combo.clear()
-        self._summary_entity_combo.addItem("All Entities", None)
-        self._summary_entity_combo.addItem("(Unassigned)", "")
+    def _populate_entity_combo(self, combo: QComboBox) -> None:
+        """None ("All Entities") is the default/off state matching
+        total_income()'s own entity_id=None contract; "" filters to
+        unassigned entries. Shared by every entity-filter combo this
+        module owns (Summary, Trends) so they all stay in sync."""
+        current = combo.currentData() if combo.count() else None
+        combo.blockSignals(True)
+        combo.clear()
+        combo.addItem("All Entities", None)
+        combo.addItem("(Unassigned)", "")
         for ent in self.context.budget.all_business_entities():
-            self._summary_entity_combo.addItem(ent.name, ent.entity_id)
-        idx = self._summary_entity_combo.findData(current)
-        self._summary_entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
-        self._summary_entity_combo.blockSignals(False)
+            combo.addItem(ent.name, ent.entity_id)
+        idx = combo.findData(current)
+        combo.setCurrentIndex(idx if idx >= 0 else 0)
+        combo.blockSignals(False)
+
+    def _refresh_entity_combo(self) -> None:
+        """Re-populates every entity-filter combo this module owns."""
+        self._populate_entity_combo(self._summary_entity_combo)
+        if self._trends_entity_combo is not None:
+            self._populate_entity_combo(self._trends_entity_combo)
 
     def _on_manage_entities(self) -> None:
         dialog = ManageBusinessEntitiesDialog(self.context)

@@ -5893,3 +5893,37 @@ semantics for both annual sections (a real gap in the existing test
 suite, now covered), a headless-Qt check of the new Payee field
 round-tripping through the dialog, and a real rendered PDF showing
 both 1099 payees sorted correctly with no wrapping. 1954 tests passing.
+
+## Financial deep-dive, part 7: trend/history views (2026-09-09)
+
+Budget module gained a 7th tab, Trends, charting Income vs. Expenses
+for the last 12 calendar months as a grouped bar chart — the Summary
+tab only ever showed a single-range snapshot (This Month/Year/All
+Time), with no way to see whether spending or income was actually
+trending. Reuses the `QtCharts` precedent already established in
+`modules/lab/module.py`, extended from a bare index-based line to a
+categorical axis with real month labels and two side-by-side series
+(`QChart`/`QChartView`/`QBarSeries`/`QBarSet`/`QBarCategoryAxis`/
+`QValueAxis`) — confirmed these constructs cleanly in the installed
+PySide6 version before building. No new historical-snapshot storage:
+each month bucket is computed on demand from the existing
+`BudgetManager.total_income()`/`total_expenses()`, since real Income/
+Expense entries already carry real dates.
+
+New pure `month_buckets(today, count=12)` helper (module.py) returns
+oldest-first `(label, start_date, end_date)` tuples, handling
+leap-year February and year-boundary rollover correctly. The Trends
+tab reuses the same entity-filter convention as the Summary tab
+(`_populate_entity_combo()` was factored out of `_refresh_entity_combo()`
+so both combos stay in sync); Income/Expenses get a deliberate, fixed
+blue/orange color pair — not Qt's auto-cycled series colors — chosen to
+avoid the classic red/green colorblind-ambiguous pairing while staying
+intuitive, with a legend so identity never depends on color alone. A
+net-cash-flow label sums the displayed window.
+
+**Verified for real**: new `month_buckets()` tests (count, ordering,
+exact start/end dates, Dec→Jan rollover, leap and non-leap February).
+1960 tests passing. Manual headless-Qt screenshot with real seeded
+income/expense data spanning 12 months confirmed the chart renders
+correctly — real month labels, both series visible with legend, correct
+totals — and that switching the entity filter works without error.
