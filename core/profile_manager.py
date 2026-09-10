@@ -216,6 +216,28 @@ class ProfileManager:
         self.context.events.publish("profile.switched", profile_id=profile_id)
         log.info("Switched active profile to '%s'", profile_id)
 
+    def rename_profile(self, profile_id: str, new_name: str) -> bool:
+        """Rename an existing profile. Returns False if the profile
+        doesn't exist or new_name is blank after stripping."""
+        new_name = new_name.strip()
+        if not new_name:
+            return False
+
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to rename unknown profile_id '%s'", profile_id)
+            return False
+
+        old_name = raw.get("name", "Unknown")
+        record = dict(raw)
+        record["name"] = new_name
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        self.context.events.publish("profile.renamed", profile_id=profile_id, old_name=old_name, new_name=new_name)
+        log.info("Renamed profile '%s' -> '%s'", old_name, new_name)
+        return True
+
     def set_birthday(self, profile_id: str, birthday: str) -> bool:
         """Set a profile's birthday (ISO "YYYY-MM-DD"). Returns False if the profile doesn't exist."""
         config = self.context.config

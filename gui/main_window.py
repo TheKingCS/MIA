@@ -146,9 +146,23 @@ class MainWindow(QMainWindow):
         # above; re-emits the existing switch_profile_requested signal so
         # core/application.py's handler needs no changes.
         self.context.events.subscribe("profile.switch_requested", self._on_profile_switch_requested)
+        # 2026-09-10 — Settings' new "Rename Profile" button. A plain
+        # in-place rename never fires profile.switch_requested (no
+        # actual switch happens), so the header's avatar button
+        # (built once in _build_header(), never rebuilt afterward)
+        # would otherwise show the OLD name/initial until the app
+        # restarts — update it directly here instead.
+        self.context.events.subscribe("profile.renamed", self._on_profile_renamed)
 
     def _on_modules_changed(self, **kwargs) -> None:
         self._rebuild_menu()
+
+    def _on_profile_renamed(self, profile_id: str, old_name: str, new_name: str) -> None:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        if active_profile is None or active_profile.profile_id != profile_id:
+            return
+        self._profile_button.setText(new_name[0].upper() if new_name else "?")
+        self._profile_button.setToolTip(new_name or "Profile")
 
     def _on_assistant_open_module_requested(self, module_id: str) -> None:
         self.open_module(module_id)

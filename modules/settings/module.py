@@ -17,8 +17,19 @@ model file is actually present in `voice_models/` — see
 `deploy/download_voice_models.sh`), speaking a short preview line
 through `core/tts_worker.py` immediately on selection so the change is
 heard, not just saved silently.
-User info and module toggles remain a placeholder for a future
-milestone.
+
+Module toggles live on the Modules screen instead
+(modules/module_browser/module.py, via ModuleManager.set_enabled()) —
+not duplicated here. Account (2026-09-10) closes the "user info is a
+placeholder" gap that remained: Rename Profile
+(core.profile_manager.rename_profile()) and Change Password reuse
+gui/password_dialog.py's prompt_for_password()/verify_password() to
+confirm the CURRENT password first (same two-call pattern
+gui/profile_select.py's own profile-switch login flow already uses)
+before ever showing a "set a new one" field — core/profile_manager.py's
+existing set_password() (no verification of its own — it's also the
+raw primitive create_profile() uses, where there's no old password to
+check) does the actual set/remove.
 """
 
 from __future__ import annotations
@@ -31,6 +42,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDialog,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -48,7 +60,9 @@ from core.tts_worker import TTSWorker
 from core.voice_manager import DEFAULT_PLAYBACK_VOLUME, MAX_PLAYBACK_VOLUME, MIN_PLAYBACK_VOLUME
 from core.update_manager import apply_update_package, peek_update_manifest
 from gui.backup_dialog import BackupPassphraseDialog
-from gui.password_dialog import PasswordPromptDialog
+from gui.password_dialog import PasswordPromptDialog, prompt_for_password
+from gui.rename_profile_dialog import RenameProfileDialog
+from gui.set_password_dialog import SetPasswordDialog
 from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES
 from modules.module_base import ModuleBase
 
@@ -68,6 +82,7 @@ class SettingsModule(ModuleBase):
         super().__init__(context)
         self._status_label: QLabel | None = None
         self._tts_worker: Optional[TTSWorker] = None
+        self._account_desc_label: Optional[QLabel] = None
 
     def get_widget(self) -> QWidget:
         widget = QWidget()
@@ -88,16 +103,26 @@ class SettingsModule(ModuleBase):
         outer.addWidget(account_section)
 
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
-        account_desc = QLabel(
+        self._account_desc_label = QLabel(
             f"Signed in as {active_profile.name}." if active_profile else "No active profile."
         )
-        account_desc.setObjectName("SubtitleLabel")
-        outer.addWidget(account_desc)
+        self._account_desc_label.setObjectName("SubtitleLabel")
+        outer.addWidget(self._account_desc_label)
 
         switch_user_button = QPushButton("⇄ Switch User")
         switch_user_button.setObjectName("ModuleButton")
         switch_user_button.clicked.connect(self._on_switch_user_clicked)
         outer.addWidget(switch_user_button)
+
+        rename_profile_button = QPushButton("Rename Profile")
+        rename_profile_button.setObjectName("ModuleButton")
+        rename_profile_button.clicked.connect(self._on_rename_profile_clicked)
+        outer.addWidget(rename_profile_button)
+
+        change_password_button = QPushButton("Change Password")
+        change_password_button.setObjectName("ModuleButton")
+        change_password_button.clicked.connect(self._on_change_password_clicked)
+        outer.addWidget(change_password_button)
 
         appearance_section = QLabel("Appearance & Device Profile")
         appearance_section.setObjectName("SettingsSectionHeader")
@@ -252,6 +277,53 @@ class SettingsModule(ModuleBase):
         as the Assistant's open_module action.
         """
         self.context.events.publish("profile.switch_requested")
+
+    def _on_rename_profile_clicked(self) -> None:
+        profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        if profile is None:
+            QMessageBox.information(None, "No Active Profile", "There's no active profile to rename.")
+            return
+
+        dialog = RenameProfileDialog(current_name=profile.name)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.profiles.rename_profile(profile.profile_id, dialog.entered_name)
+        self._account_desc_label.setText(f"Signed in as {dialog.entered_name}.")
+
+    def _on_change_password_clicked(self) -> None:
+        """Verifies the CURRENT password first (same two-call
+        prompt_for_password()/verify_password() pattern
+        gui/profile_select.py's own profile-switch login flow already
+        uses) before ever showing SetPasswordDialog — a wrong current
+        password never reaches the "set a new one" step."""
+        profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        if profile is None:
+            QMessageBox.information(None, "No Active Profile", "There's no active profile to update.")
+            return
+
+        current_password = ""
+        if profile.has_password:
+            cancelled, current_password = prompt_for_password(profile, prompt="Enter current password for")
+            if cancelled:
+                return
+            if not self.context.profiles.verify_password(profile.profile_id, current_password):
+                QMessageBox.warning(None, "Incorrect Password", "That password doesn't match your current one.")
+                return
+
+        dialog = SetPasswordDialog(has_password=profile.has_password)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        if not dialog.entered_wants_password:
+            if profile.has_password:
+                self.context.profiles.set_password(profile.profile_id, None)
+                QMessageBox.information(None, "Password Removed", "Password protection removed.")
+            return
+
+        new_password = dialog.entered_new_password or current_password
+        self.context.profiles.set_password(profile.profile_id, new_password)
+        QMessageBox.information(None, "Password Updated", "Password updated.")
 
     # ------------------------------------------------------------------
     # Backup

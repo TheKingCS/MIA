@@ -104,3 +104,75 @@ def test_new_profile_starts_with_zero_xp_and_credits(isolated_paths):
     profile = manager.create_profile(name="Alex")
     assert profile.total_xp == 0
     assert profile.total_credits == 0
+
+
+# ------------------------------------------------------------------
+# rename_profile (2026-09-10, Settings' "Rename Profile" button)
+# ------------------------------------------------------------------
+
+def test_rename_profile_updates_name(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert manager.rename_profile(profile.profile_id, "Alexandra") is True
+
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.name == "Alexandra"
+
+
+def test_rename_profile_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.rename_profile(profile.profile_id, "Alexandra")
+
+    reloaded_manager = _make_manager()
+    assert reloaded_manager.list_profiles()[0].name == "Alexandra"
+
+
+def test_rename_profile_strips_whitespace(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.rename_profile(profile.profile_id, "  Alexandra  ")
+    assert manager.list_profiles()[0].name == "Alexandra"
+
+
+def test_rename_profile_rejects_blank_name(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert manager.rename_profile(profile.profile_id, "   ") is False
+    assert manager.list_profiles()[0].name == "Alex"
+
+
+def test_rename_profile_unknown_profile_returns_false(isolated_paths):
+    manager = _make_manager()
+    assert manager.rename_profile("does-not-exist", "Alexandra") is False
+
+
+def test_rename_profile_publishes_event(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+
+    received = {}
+    manager.context.events.subscribe(
+        "profile.renamed",
+        lambda profile_id, old_name, new_name: received.update(
+            profile_id=profile_id, old_name=old_name, new_name=new_name
+        ),
+    )
+    manager.rename_profile(profile.profile_id, "Alexandra")
+
+    assert received == {"profile_id": profile.profile_id, "old_name": "Alex", "new_name": "Alexandra"}
+
+
+def test_rename_profile_preserves_other_fields(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex", password="hunter2")
+    manager.set_birthday(profile.profile_id, "1990-03-03")
+    manager.add_xp(profile.profile_id, 100)
+
+    manager.rename_profile(profile.profile_id, "Alexandra")
+
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.name == "Alexandra"
+    assert reloaded.has_password is True
+    assert reloaded.birthday == "1990-03-03"
+    assert reloaded.total_xp == 100

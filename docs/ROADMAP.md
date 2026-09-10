@@ -6027,3 +6027,56 @@ the actual rendered number, not just the code path. A headless-Qt
 screenshot of the dialog's four new fields confirmed clean layout with
 no clipping and a correct round-trip through the dialog's own
 `entered_*` properties.
+
+## Settings: profile rename + password change (2026-09-10)
+
+Closes the last real gap behind `modules/settings/module.py`'s own
+long-standing "User info and module toggles remain a placeholder for a
+future milestone" docstring note — module toggles already existed
+elsewhere (the Modules screen), but there was genuinely no way anywhere
+in the app to rename a profile or change its password after initial
+setup. New `core.profile_manager.rename_profile()` (same CRUD shape as
+`set_birthday()`/`add_xp()`), publishing a new `"profile.renamed"`
+event. No new password-manager method was needed — the existing
+`set_password()` (set-or-remove, no verification of its own — it's
+also the raw primitive `create_profile()` uses) plus `verify_password()`
+were enough once the module layer does the "confirm the current
+password first" step itself, reusing `gui/password_dialog.py`'s
+existing `prompt_for_password()` the exact same two-call way
+`gui/profile_select.py`'s own profile-switch login flow already does.
+
+Two new small dialogs mirroring `gui/add_profile_dialog.py`'s exact
+shape: `gui/rename_profile_dialog.py` (one name field) and
+`gui/set_password_dialog.py` (a "protect with a password" checkbox +
+field; blank means "keep the current password unchanged" when one
+already exists, required when setting one for the first time — this
+dialog never sees or checks the *current* password itself, since
+that's already verified before it's ever opened). Both wired into
+Settings' existing "Account" section as new "Rename Profile"/"Change
+Password" buttons right under "⇄ Switch User".
+
+**A small, honest propagation fix included in the same pass**:
+`gui/main_window.py`'s header avatar button shows the active profile's
+first initial + a tooltip with the full name, built once at window
+construction — a plain in-place rename never fires the existing
+`"profile.switch_requested"` event (no actual switch happens), so the
+header would otherwise show the stale old name until the app restarts.
+Subscribed to the new `"profile.renamed"` event instead and update the
+button directly when the renamed profile is the active one — scoped
+exactly to the staleness this new feature introduces, not a broader
+audit of every other place a profile name might be cached.
+
+**Verified for real**: 7 new tests in `tests/test_profile_manager.py`
+(rename persists across a fresh load, strips whitespace, rejects a
+blank name, returns `False` for an unknown id, publishes
+`"profile.renamed"` with the right payload, preserves every other
+profile field — password/birthday/XP — across a rename). 1999 tests
+passing. A headless-Qt screenshot of the Account section showing both
+new buttons; both dialogs screenshotted in isolation (with and without
+an existing password) confirming clean layout; and a full manual
+walk-through via direct manager calls in an isolated `ConfigManager`
+covering every real path: wrong current password rejected, correct
+current password + blank new password leaves the old one working,
+correct current password + a real new password changes it (old one
+stops verifying, new one works), and removing protection entirely
+makes `verify_password()` auto-pass again.
