@@ -240,6 +240,46 @@ _IDENTITY_APP_FLUENCY = (
     "specific familiarity of someone describing their own house, not a stranger guessing from the outside."
 )
 
+# 2026-09-10 "Interactive onboarding + modular tutorial system"
+# (docs/VISION.md) — a third conversation path alongside action-request/
+# info-question, for when the user explicitly wants a slower, step-by-
+# step walkthrough rather than a quick fact. Deliberately narrow/
+# explicit trigger phrases (VISION's own example: "Teach me how quests
+# work") — NOT a broad reclassification of every "how do I" question,
+# which core.device_help_manager's existing grounded-answer path
+# already handles well; teaching mode only fires when the user
+# unambiguously asks to be taught.
+_TEACHING_TRIGGER_PHRASES = (
+    "teach me how",
+    "teach me about",
+    "walk me through",
+    "give me a walkthrough",
+    "give me a tutorial",
+    "show me how to use",
+)
+
+
+def looks_like_teaching_request(prompt: str) -> bool:
+    """Pure logic — testable without an LLM (see tests/test_assistant_chat.py)."""
+    prompt_lower = prompt.lower()
+    return any(phrase in prompt_lower for phrase in _TEACHING_TRIGGER_PHRASES)
+
+
+# Swapped in for GROUNDING_INSTRUCTION (never both at once — one
+# system message, one job) when looks_like_teaching_request() fires.
+# Same "keep it short, don't over-qualify" discipline GROUNDING_
+# INSTRUCTION's own comment already established for this exact model
+# (a longer, more-qualifying preamble measurably made llama3.2:3b MORE
+# likely to falsely say "I don't know") — any future wording edit here
+# should be re-verified against the live model the same way, not
+# assumed safe.
+_TEACHING_INSTRUCTION = (
+    "The user explicitly asked to be taught how something in MIA works, step by step — not just a quick "
+    "fact. Using ONLY the reference material below, walk them through it like a patient guide: a short "
+    "intro, concrete steps in order, then one real thing they could try right now. If the material doesn't "
+    "actually cover this, say so honestly rather than inventing steps — do not use outside knowledge."
+)
+
 _MAX_HISTORY_MESSAGES = 12  # 6 exchanges — bounds prompt growth/latency on CPU-only Pi-class hardware
 
 _MAX_INJECTED_MEMORIES = 20  # most recent — bounds prompt growth as the memory store grows over months of use
@@ -336,19 +376,27 @@ def format_birthday(iso_date: str) -> str:
     return f"{parsed.strftime('%B')} {parsed.day}"
 
 
-def build_system_message(context, is_action_request: bool) -> str:
+def build_system_message(context, is_action_request: bool, is_teaching_request: bool = False) -> str:
     """
     The system-role message for one chat turn — pulled out as its own
     function so `build_chat_request()` stays readable and this is
     independently testable. Action requests get the bare identity line
     only; information questions additionally get the warmth framing,
-    the user-context block, and `core.device_help_manager.GROUNDING_INSTRUCTION`
-    — see this module's docstring for why the split.
+    the user-context block, and a closing instruction — see this
+    module's docstring for why the split. That closing instruction is
+    `_TEACHING_INSTRUCTION` when `is_teaching_request` (2026-09-10,
+    "teach me how X works"), otherwise
+    `core.device_help_manager.GROUNDING_INSTRUCTION` — never both;
+    `is_action_request` always wins over `is_teaching_request` if
+    somehow both were true (callers shouldn't produce that combination
+    — see `build_chat_request()`, which checks teaching status first
+    and skips action-matching entirely when it fires).
     """
     if is_action_request:
         return _IDENTITY_LINE
 
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context), GROUNDING_INSTRUCTION]
+    closing_instruction = _TEACHING_INSTRUCTION if is_teaching_request else GROUNDING_INSTRUCTION
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context), closing_instruction]
     return "\n\n".join(parts)
 
 
@@ -371,10 +419,20 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     entries are the plain, human-readable text as actually
     displayed/stored, never a past turn's grounded/augmented version, so
     old retrieval material doesn't pile up turn after turn.
+
+    `looks_like_teaching_request()` (2026-09-10) is checked BEFORE
+    action-matching and, if it fires, action-matching is skipped
+    entirely — an explicit "teach me how to add a mission" must never
+    be treated as a literal request to execute `add_mission`. Teaching
+    requests still get grounded material from `context.device_help`
+    (reusing self-knowledge's existing retrieval), just with
+    `_TEACHING_INSTRUCTION` framing instead of `GROUNDING_INSTRUCTION`,
+    and — like any other info question — never get tools attached.
     """
+    is_teaching_request = looks_like_teaching_request(prompt)
     matched_actions = (
         context.assistant_actions.matching_actions(prompt)
-        if context.assistant_actions is not None
+        if context.assistant_actions is not None and not is_teaching_request
         else []
     )
     is_action_request = bool(matched_actions)
@@ -384,7 +442,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         llm_prompt = context.device_help.build_grounded_prompt(prompt)
 
     history = trim_history(conversation.messages) if conversation is not None else []
-    messages = [{"role": "system", "content": build_system_message(context, is_action_request)}]
+    messages = [{"role": "system", "content": build_system_message(context, is_action_request, is_teaching_request)}]
     messages.extend({"role": m.role, "content": m.content} for m in history)
     messages.append({"role": "user", "content": llm_prompt})
 

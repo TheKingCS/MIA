@@ -44,6 +44,7 @@ from PySide6.QtWidgets import (
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.module_manager import ModuleManager
+from core.onboarding import build_first_run_welcome_message
 from gui.character_panel import CharacterPanel
 from gui.easter_egg import EasterEggDialog
 from gui.home_dashboard import HomeDashboard
@@ -368,7 +369,46 @@ class MainWindow(QMainWindow):
             self._orb_timer.timeout.connect(self._update_corner_orb)
             self._orb_timer.start(50)
 
+        self._inject_first_run_welcome()
+
         root_layout.addWidget(body)
+
+    def _inject_first_run_welcome(self) -> None:
+        """Fires exactly once, ever — gated on system.onboarding_shown,
+        a NEW flag distinct from config.is_first_run/system.setup_complete
+        (already True by the time MainWindow is ever constructed, since
+        gui/setup_wizard.py flips it before this screen exists).
+
+        Deliberately placed here, not inside HomeDashboard/CharacterPanel
+        themselves — both independently call start_new_active_conversation()
+        on their own construction (CharacterPanel's is the documented
+        2026-07-18 "always start fresh, not whatever was last active"
+        behavior), so whichever one runs LAST wins the active-conversation
+        pointer and orphans anything appended to the other's. Since this
+        method runs after both are already fully constructed, reading
+        context.conversations.get_active_conversation_id() here always
+        finds whichever conversation actually ended up active — correct
+        whether or not gui.show_character_panel is enabled — rather than
+        guessing which widget "should" own this from inside either one."""
+        if self.context.config.get("system.onboarding_shown", False):
+            return
+        if self.context.conversations is None:
+            return
+        conversation_id = self.context.conversations.get_active_conversation_id()
+        if conversation_id is None:
+            return
+
+        profile_name = "there"
+        if self.context.profiles is not None:
+            active_profile = self.context.profiles.get_active_profile()
+            if active_profile is not None:
+                profile_name = active_profile.name
+
+        self.context.conversations.add_message(
+            conversation_id, role="assistant", content=build_first_run_welcome_message(profile_name),
+        )
+        self.context.config.set("system.onboarding_shown", True)
+        self.context.config.save()
 
     def _toggle_character_panel(self) -> None:
         if self._character_panel is None:

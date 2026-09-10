@@ -1257,6 +1257,15 @@ class HomeDashboard(QFrame):
         self._briefing_label.setWordWrap(True)
         layout.addWidget(self._briefing_label)
 
+        button_row = QHBoxLayout()
+        button_row.addStretch(1)
+        self._replay_briefing_button = QPushButton("\U0001F50A  Replay")
+        self._replay_briefing_button.setObjectName("ReplayBriefingButton")
+        self._replay_briefing_button.setToolTip("Have MIA read the briefing above aloud again")
+        self._replay_briefing_button.clicked.connect(self._on_replay_briefing)
+        button_row.addWidget(self._replay_briefing_button)
+        layout.addLayout(button_row)
+
         shadow = QGraphicsDropShadowEffect(card)
         shadow.setBlurRadius(16)
         shadow.setXOffset(0)
@@ -1627,12 +1636,17 @@ class HomeDashboard(QFrame):
         self._tts_worker.finished.connect(self._on_tts_finished)
         self._tts_worker.start()
         self._stop_speaking_button.setEnabled(True)
+        self._replay_briefing_button.setEnabled(False)
 
     def _on_tts_finished(self) -> None:
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
         self._stop_speaking_button.setEnabled(False)
+        self._replay_briefing_button.setEnabled(True)
+
+    def _on_replay_briefing(self) -> None:
+        self._speak(self._briefing_label.text())
 
     def _on_stop_speaking(self) -> None:
         """Cuts MIA off mid-sentence — same real ask (2026-07-18) already

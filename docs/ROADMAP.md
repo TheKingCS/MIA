@@ -6571,3 +6571,105 @@ bill, 1 pantry item expiring soon, 5 days since your last workout, 1
 maintenance task needing attention, and Jamie's birthday in 3 days" —
 screenshotted alongside the dashboard's own widget tiles, confirming
 both surfaces agree on the same underlying facts.
+
+## Interactive onboarding + modular tutorial system: a teaching-mode conversation path + first-run welcome + a briefing Replay button (2026-09-10)
+
+User picked "Interactive onboarding + modular tutorial system" from
+VISION.md's remaining unbuilt list. Given two earlier "unbuilt" picks
+this session (Self-knowledge, Startup Dashboard Briefing) turned out to
+already exist in some form, researched skeptically before planning —
+**confirmed genuinely unbuilt this time**: no tour/coach-mark/feature-
+usage-tracking system exists anywhere; `gui/setup_wizard.py` is purely
+account setup (name + date/time, zero teaching content);
+`core/assistant_chat.py`'s `build_chat_request()` had exactly two
+conversation paths (action-request/info-question); `docs/user_help/getting_started.md`
+reads like onboarding copy but was never surfaced proactively.
+VISION's fuller framing (lines 99-147) says self-knowledge, the
+tutorial system, and Intelligent UI Navigation are "really one
+capability — 'MIA as tutor'... not scoped or sequenced yet." Matching
+this session's own "pick one self-contained slice" discipline, this
+pass deliberately built only what the table row's own summary says —
+"a new 'teaching mode' conversation path, not a new backend" — and
+explicitly did NOT attempt Intelligent UI Navigation (separate,
+bigger, not picked) or proactive "suggest a walkthrough for never-used
+features" (needs a real, new per-feature usage-tracking subsystem that
+doesn't exist anywhere today).
+
+**Teaching-mode conversation path** (`core/assistant_chat.py`): new
+`looks_like_teaching_request()`, a deliberately narrow/explicit
+trigger set (VISION's own example: "Teach me how quests work") — NOT
+a broad reclassification of every "how do I" question, which self-
+knowledge's existing grounded-answer path already handles well.
+Checked *before* action-matching in `build_chat_request()`, and skips
+action-matching entirely when it fires — a real, direct collision-risk
+fix: "teach me how to add a mission" must never be treated as a
+literal request to execute `add_mission`. Still uses
+`context.device_help.build_grounded_prompt()` for retrieval (reuses
+self-knowledge's existing grounding, including this session's own
+confident-match fix), just swaps in a new `_TEACHING_INSTRUCTION`
+system-message framing (patient, step-by-step, "one real thing to try
+right now") instead of `GROUNDING_INSTRUCTION`. Never attaches tools —
+teaching mode explains, never executes.
+
+**First-run welcome** (new `core/onboarding.py`): pure,
+`build_first_run_welcome_message()`, deliberately template-based not
+an LLM call — same "start boring, not clever" reasoning
+`core/startup_briefing.py` already established, even more warranted
+here since this fires exactly once, ever, at the single highest-stakes
+moment possible. Reuses `core.assistant_chat.suggested_prompts_for_module(None)`
+(the same chips `gui/character_panel.py`'s sidebar already shows) for
+"things to try," rather than a second, driftable list.
+
+**Real sequencing bug found and fixed during implementation, not
+assumed correct from the plan**: the original plan called for
+injecting the welcome message inside `gui/home_dashboard.py`'s own
+`__init__`, right after its `start_new_active_conversation()` call.
+Manual verification caught this doesn't work — `gui/character_panel.py`'s
+sidebar *also* independently calls `start_new_active_conversation()`
+on its own construction (a real, deliberate 2026-07-18 behavior: "start
+fresh on every launch, don't show yesterday's long chat history" —
+confirmed real users had complained about long stale history — not a
+bug), and since `MainWindow` constructs `HomeDashboard` before
+`CharacterPanel`, the sidebar's own fresh-start call was silently
+discarding HomeDashboard's conversation — and my welcome message with
+it — before the sidebar ever rendered it. Fixed by moving the
+injection to `gui/main_window.py`, called once after *both* widgets
+are fully constructed, reading `context.conversations.get_active_conversation_id()`
+at that point to find whichever conversation actually ended up active
+— correct regardless of which widget set it last, and correct even
+when `gui.show_character_panel` is disabled (HomeDashboard's own
+conversation is then the one that persists, uncontested).
+
+**A small, real, user-requested addition mid-plan**: a "🔊 Replay"
+button on the briefing banner (`gui/home_dashboard.py`) — the
+automatic briefing only ever spoke once, at construction, with no way
+to hear it again without restarting. Reuses the exact existing
+`_speak()`/`TTSWorker`/`_on_tts_finished()` machinery already driving
+both the automatic briefing and the chat bar's own spoken replies, no
+new playback path; disables alongside the existing `_stop_speaking_button`
+while something's already playing.
+
+**Verified for real, not just green tests**: 2179 tests passing (13
+new — `looks_like_teaching_request()` positive/negative/collision-risk
+cases, the teaching-vs-plain system-message split, `build_first_run_welcome_message()`).
+`tests/live_model_check.py` golden set (158 real Ollama calls) gained
+2 new cases (a plain teaching request and the explicit "teach me how
+to add a mission" collision case, both expecting no tool call) — both
+passed cleanly. 157/158 overall; the one failure ("Is anything
+overdue?" resolving to `get_system_health` instead of `list_bills`) is
+a pre-existing, unrelated case — that phrasing matches none of the new
+teaching trigger phrases, so this change cannot have caused it; not
+fixed here, out of scope for this pass. Real manual live-model
+comparison: the SAME underlying
+question ("how do missions work") asked plainly vs. with "Teach me
+how..." produced genuinely different answers — the plain path gave one
+short paragraph; the teaching path gave a numbered step-by-step
+walkthrough plus a concrete "real thing to try right now" and a
+closing engagement question, confirming this is a real behavioral
+difference, not just an internal routing change. Manual screenshot
+verification against a real `gui.main_window.MainWindow` (not a stub):
+a fresh profile's first construction correctly injected the welcome
+message as the sole first message, rendered in the real sidebar; a
+second `MainWindow` construction (same profile) correctly did NOT
+repeat it; the Replay button correctly disables while speaking and
+re-enables once playback finishes.

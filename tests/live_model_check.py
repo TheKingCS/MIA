@@ -517,6 +517,15 @@ GOLDEN_CASES = [
         "That's a really useful property of this material",
         None,
     ),
+    # --- 2026-09-10: teaching-mode conversation path (docs/VISION.md's
+    # "Interactive onboarding + modular tutorial system") ---
+    ("teaching request must not call a tool", "Teach me how missions work", None),
+    (
+        "collision risk: an explicit 'teach me how to X' must not execute X, "
+        "even though its own trigger keyword ('add a mission') is present",
+        "Teach me how to add a mission",
+        None,
+    ),
 ]
 
 

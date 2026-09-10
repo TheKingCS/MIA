@@ -27,6 +27,7 @@ from core.assistant_chat import (
     format_birthday,
     format_chat_line,
     looks_like_action_request,
+    looks_like_teaching_request,
     parse_extracted_memories,
     split_safe_tool_calls,
     suggested_prompts_for_module,
@@ -207,6 +208,79 @@ def test_build_chat_request_history_never_includes_grounded_augmentation():
     messages, _ = build_chat_request(context, conversation, "Anything else I should know?")
     assert messages[1] == {"role": "user", "content": "What are the symptoms of hypothermia?"}
     assert "GROUNDED[" not in messages[1]["content"]
+
+
+# ----------------------------------------------------------------------
+# looks_like_teaching_request / teaching-mode conversation path
+# (2026-09-10 — docs/VISION.md's "Interactive onboarding + modular
+# tutorial system")
+# ----------------------------------------------------------------------
+
+def test_looks_like_teaching_request_true_for_teach_me_how():
+    assert looks_like_teaching_request("Teach me how quests work") is True
+
+
+def test_looks_like_teaching_request_true_for_walk_me_through():
+    assert looks_like_teaching_request("Walk me through adding a waypoint") is True
+
+
+def test_looks_like_teaching_request_false_for_plain_info_question():
+    """A plain "how do I" question stays on self-knowledge's existing
+    grounded-answer path — teaching mode is only for an explicit ask."""
+    assert looks_like_teaching_request("How do I log a workout") is False
+
+
+def test_looks_like_teaching_request_false_for_unrelated_text():
+    assert looks_like_teaching_request("What's my battery level?") is False
+
+
+def test_build_chat_request_teaching_prompt_never_attaches_tools():
+    context = _FakeContext(
+        assistant_actions=_FakeAssistantActions(keywords=["mission"], tools=[{"type": "function"}]),
+        device_help=_FakeDeviceHelp(),
+    )
+    messages, tools = build_chat_request(context, _empty_conversation(), "Teach me how missions work")
+    assert tools == []
+
+
+def test_build_chat_request_teaching_prompt_uses_teaching_instruction_not_grounding():
+    context = _FakeContext(
+        assistant_actions=_FakeAssistantActions(keywords=[], tools=[]),
+        device_help=_FakeDeviceHelp(),
+    )
+    messages, _ = build_chat_request(context, _empty_conversation(), "Teach me how missions work")
+    system_message = messages[0]["content"]
+    assert system_message == build_system_message(context, is_action_request=False, is_teaching_request=True)
+    assert system_message != build_system_message(context, is_action_request=False, is_teaching_request=False)
+
+
+def test_build_chat_request_teaching_prompt_still_uses_grounded_material():
+    context = _FakeContext(assistant_actions=None, device_help=_FakeDeviceHelp())
+    messages, _ = build_chat_request(context, _empty_conversation(), "Teach me how missions work")
+    assert messages[-1] == {"role": "user", "content": "GROUNDED[Teach me how missions work]"}
+
+
+def test_build_chat_request_teaching_phrasing_beats_a_colliding_action_trigger():
+    """Collision-risk regression: an explicit 'teach me how to X' must
+    never be treated as a literal request to execute X, even when X's
+    own trigger keyword is present in the same sentence."""
+    context = _FakeContext(
+        assistant_actions=_FakeAssistantActions(keywords=["add a mission"], tools=[{"type": "function"}]),
+        device_help=_FakeDeviceHelp(),
+    )
+    messages, tools = build_chat_request(context, _empty_conversation(), "Teach me how to add a mission")
+    assert tools == []
+    assert messages[0]["content"] == build_system_message(context, is_action_request=False, is_teaching_request=True)
+
+
+def test_build_chat_request_plain_action_request_unaffected_by_teaching_check():
+    """A real action request (no teaching phrasing) still works exactly as before."""
+    context = _FakeContext(
+        assistant_actions=_FakeAssistantActions(keywords=["add a mission"], tools=[{"type": "function"}]),
+        device_help=_FakeDeviceHelp(),
+    )
+    messages, tools = build_chat_request(context, _empty_conversation(), "Add a mission called Kayak Explorer")
+    assert tools == [{"type": "function"}]
 
 
 # ----------------------------------------------------------------------
