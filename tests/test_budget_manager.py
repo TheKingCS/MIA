@@ -130,6 +130,18 @@ def test_add_bill_rejects_unknown_category_and_recurrence(isolated_paths):
     assert bill.recurrence is None
 
 
+def test_add_bill_rejects_negative_amount(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.add_bill(name="X", amount=-10.0, due_date="2026-09-01")
+
+
+def test_add_bill_accepts_zero_amount(isolated_paths):
+    manager = _make_manager()
+    bill = manager.add_bill(name="X", amount=0.0, due_date="2026-09-01")
+    assert bill.amount == 0.0
+
+
 def test_delete_bill_removes_it(isolated_paths):
     manager = _make_manager()
     bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
@@ -215,6 +227,30 @@ def test_add_expense_defaults_tax_relevant_false_and_income_defaults_true(isolat
     expense = manager.add_expense(amount=50.0)
     assert income.tax_relevant is True
     assert expense.tax_relevant is False
+
+
+def test_add_income_rejects_negative_amount(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.add_income(amount=-100.0)
+
+
+def test_add_income_accepts_zero_amount(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_income(amount=0.0)
+    assert entry.amount == 0.0
+
+
+def test_add_expense_rejects_negative_amount(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.add_expense(amount=-50.0)
+
+
+def test_add_expense_accepts_zero_amount(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_expense(amount=0.0)
+    assert entry.amount == 0.0
 
 
 def test_update_income_rejects_unknown_field(isolated_paths):
@@ -595,6 +631,12 @@ def test_add_income_source_rejects_unknown_category_and_recurrence(isolated_path
     assert source.recurrence is None
 
 
+def test_add_income_source_rejects_negative_expected_amount(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.add_income_source(name="X", expected_amount=-100.0, next_date="2026-09-01")
+
+
 def test_mark_income_received_creates_real_income_and_updates_last_received(isolated_paths):
     manager = _make_manager()
     source = manager.add_income_source(name="Paycheck", expected_amount=2400.0, next_date="2026-09-05", category="Salary", recurrence="biweekly")
@@ -672,6 +714,12 @@ def test_set_budget_target_rejects_unknown_category(isolated_paths):
     manager = _make_manager()
     with pytest.raises(ValueError):
         manager.set_budget_target("Nonsense Category", 100.0)
+
+
+def test_set_budget_target_rejects_negative_monthly_amount(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.set_budget_target("Groceries", -100.0)
 
 
 def test_set_budget_target_persists_across_a_fresh_load(isolated_paths):

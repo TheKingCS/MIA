@@ -111,6 +111,7 @@ from gui.add_edit_bill_dialog import AddEditBillDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_income_source_dialog import AddEditIncomeSourceDialog
+from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from gui.manage_business_entities_dialog import ManageBusinessEntitiesDialog
 from gui.mark_bill_paid_dialog import MarkBillPaidDialog
 from gui.mark_income_received_dialog import MarkIncomeReceivedDialog
@@ -262,9 +263,24 @@ class BudgetModule(ModuleBase):
         tabs.addTab(self._build_summary_tab(), "Summary")
         tabs.addTab(self._build_trends_tab(), "Trends")
         tabs.addTab(self._build_bank_sync_tab(), "Bank Sync")
+        # 2026-09-10: Bills/Income Sources/Income/Expenses' own add/
+        # edit/delete/mark-paid/mark-received handlers only ever
+        # refresh their own tab's list — Summary/Trends/Budget Targets
+        # would otherwise show stale figures (even $0/an empty chart)
+        # until the user happened to re-click a Summary range button
+        # or change the entity filter themselves. All three refreshes
+        # are cheap in-memory recomputations over already-loaded data,
+        # so redoing them on every tab switch (regardless of which tab)
+        # is simpler and safer than tracking which tab needs it.
+        tabs.currentChanged.connect(self._on_tab_changed)
         layout.addWidget(tabs, stretch=1)
 
         return widget
+
+    def _on_tab_changed(self, index: int) -> None:
+        self._refresh_summary()
+        self._refresh_budget_targets()
+        self._refresh_trends_chart()
 
     # ------------------------------------------------------------------
     # Bills tab
@@ -317,12 +333,12 @@ class BudgetModule(ModuleBase):
             item = QListWidgetItem(row_text)
             item.setData(Qt.ItemDataRole.UserRole, bill.bill_id)
             self._bill_list.addItem(item)
+        if self._bill_list.count() == 0:
+            message = "No bills match your filter." if bills else "No bills tracked yet — click Add Bill to get started."
+            add_empty_state_item(self._bill_list, message)
 
     def _selected_bill_id(self) -> Optional[str]:
-        item = self._bill_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+        return selected_item_data(self._bill_list)
 
     def _on_add_bill(self) -> None:
         dialog = AddEditBillDialog(entities=self.context.budget.all_business_entities())
@@ -453,12 +469,12 @@ class BudgetModule(ModuleBase):
             item = QListWidgetItem(row_text)
             item.setData(Qt.ItemDataRole.UserRole, source.source_id)
             self._income_source_list.addItem(item)
+        if self._income_source_list.count() == 0:
+            message = "No income sources match your filter." if sources else "No income sources tracked yet — click Add Income Source to get started."
+            add_empty_state_item(self._income_source_list, message)
 
     def _selected_income_source_id(self) -> Optional[str]:
-        item = self._income_source_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+        return selected_item_data(self._income_source_list)
 
     def _on_add_income_source(self) -> None:
         dialog = AddEditIncomeSourceDialog(entities=self.context.budget.all_business_entities())
@@ -571,12 +587,11 @@ class BudgetModule(ModuleBase):
             item = QListWidgetItem(format_income_row(entry))
             item.setData(Qt.ItemDataRole.UserRole, entry.entry_id)
             self._income_list.addItem(item)
+        if self._income_list.count() == 0:
+            add_empty_state_item(self._income_list, "No income recorded yet — click Add Income to get started.")
 
     def _selected_income_id(self) -> Optional[str]:
-        item = self._income_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+        return selected_item_data(self._income_list)
 
     def _on_add_income(self) -> None:
         dialog = AddEditIncomeDialog(entities=self.context.budget.all_business_entities())
@@ -671,12 +686,11 @@ class BudgetModule(ModuleBase):
             item = QListWidgetItem(format_expense_row(entry))
             item.setData(Qt.ItemDataRole.UserRole, entry.entry_id)
             self._expense_list.addItem(item)
+        if self._expense_list.count() == 0:
+            add_empty_state_item(self._expense_list, "No expenses recorded yet — click Add Expense to get started.")
 
     def _selected_expense_id(self) -> Optional[str]:
-        item = self._expense_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+        return selected_item_data(self._expense_list)
 
     def _on_add_expense(self) -> None:
         dialog = AddEditExpenseDialog(entities=self.context.budget.all_business_entities())
@@ -1386,10 +1400,7 @@ class BudgetModule(ModuleBase):
             self._plaid_holdings_list.addItem("Select a connected account to see its holdings.")
 
     def _selected_plaid_item_id(self) -> Optional[str]:
-        item = self._plaid_accounts_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+        return selected_item_data(self._plaid_accounts_list)
 
     def _selected_plaid_item_needs_upgrade(self) -> bool:
         item_id = self._selected_plaid_item_id()

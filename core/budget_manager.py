@@ -470,10 +470,12 @@ class BudgetManager:
         entity_id: str = "",
         notes: str = "",
     ) -> Bill:
+        if amount < 0:
+            raise ValueError(f"amount must not be negative, got {amount}")
         bill = Bill(
             bill_id=uuid.uuid4().hex[:10],
             name=name,
-            amount=max(0.0, amount),
+            amount=amount,
             category=category if category in EXPENSE_CATEGORIES else "Other",
             due_date=due_date,
             recurrence=recurrence if recurrence in RECURRENCE_TYPES else None,
@@ -560,10 +562,12 @@ class BudgetManager:
         entity_id: str = "",
         notes: str = "",
     ) -> IncomeSource:
+        if expected_amount < 0:
+            raise ValueError(f"expected_amount must not be negative, got {expected_amount}")
         source = IncomeSource(
             source_id=uuid.uuid4().hex[:10],
             name=name,
-            expected_amount=max(0.0, expected_amount),
+            expected_amount=expected_amount,
             category=category if category in INCOME_CATEGORIES else "Other",
             next_date=next_date,
             recurrence=recurrence if recurrence in RECURRENCE_TYPES else None,
@@ -645,9 +649,11 @@ class BudgetManager:
         plaid_transaction_id: str = "",
         notes: str = "",
     ) -> IncomeEntry:
+        if amount < 0:
+            raise ValueError(f"amount must not be negative, got {amount}")
         entry = IncomeEntry(
             entry_id=uuid.uuid4().hex[:10],
-            amount=max(0.0, amount),
+            amount=amount,
             category=category if category in INCOME_CATEGORIES else "Other",
             description=description,
             date=date or _today_iso(),
@@ -721,9 +727,11 @@ class BudgetManager:
         payee: str = "",
         notes: str = "",
     ) -> ExpenseEntry:
+        if amount < 0:
+            raise ValueError(f"amount must not be negative, got {amount}")
         entry = ExpenseEntry(
             entry_id=uuid.uuid4().hex[:10],
-            amount=max(0.0, amount),
+            amount=amount,
             category=category if category in EXPENSE_CATEGORIES else "Other",
             description=description,
             date=date or _today_iso(),
@@ -887,12 +895,14 @@ class BudgetManager:
         the household/no-specific-entity bucket."""
         if category not in EXPENSE_CATEGORIES:
             raise ValueError(f"Unknown expense category '{category}'.")
+        if monthly_amount < 0:
+            raise ValueError(f"monthly_amount must not be negative, got {monthly_amount}")
         existing = self.get_budget_target(category, entity_id)
         if existing is not None:
-            existing.monthly_amount = max(0.0, monthly_amount)
+            existing.monthly_amount = monthly_amount
         else:
             self._budget_targets.append(
-                BudgetTarget(category=category, monthly_amount=max(0.0, monthly_amount), entity_id=entity_id)
+                BudgetTarget(category=category, monthly_amount=monthly_amount, entity_id=entity_id)
             )
         self._save_budget_targets()
         return self.get_budget_target(category, entity_id)

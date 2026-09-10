@@ -66,6 +66,7 @@ from core.real_estate_manager import (
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_property_dialog import AddEditPropertyDialog
+from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from modules.module_base import ModuleBase
 
 
@@ -278,12 +279,14 @@ class RealEstateModule(ModuleBase):
             item = QListWidgetItem(format_property_glance_line(prop, equity(prop)))
             item.setData(Qt.ItemDataRole.UserRole, prop.property_id)
             self._property_list.addItem(item)
+        if self._property_list.count() == 0:
+            if selected_entity is not None:
+                add_empty_state_item(self._property_list, "No properties for this entity.")
+            else:
+                add_empty_state_item(self._property_list, "No properties tracked yet — click Add Property to get started.")
 
     def _selected_property_id(self) -> Optional[str]:
-        item = self._property_list.currentItem()
-        if item is None:
-            return None
-        return item.data(Qt.ItemDataRole.UserRole)
+        return selected_item_data(self._property_list)
 
     def _on_add_property(self) -> None:
         dialog = AddEditPropertyDialog(entities=self.context.budget.all_business_entities())
@@ -506,8 +509,12 @@ class RealEstateModule(ModuleBase):
 
         for entry in self.context.real_estate.income_for_property(prop.property_id):
             self._detail_income_list.addItem(format_income_row(entry))
+        if self._detail_income_list.count() == 0:
+            add_empty_state_item(self._detail_income_list, "No rental income recorded yet.")
         for entry in self.context.real_estate.expenses_for_property(prop.property_id):
             self._detail_expense_list.addItem(format_expense_row(entry))
+        if self._detail_expense_list.count() == 0:
+            add_empty_state_item(self._detail_expense_list, "No expenses recorded yet.")
 
         return section
 
@@ -602,9 +609,17 @@ class RealEstateModule(ModuleBase):
         # stays in one refresh path rather than needing separate wiring.
         prop = self.context.real_estate.get_property(property_id)
         if prop is not None:
-            self._detail_annual_depreciation_label.setText(f"Annual Depreciation: ${annual_depreciation(prop):,.2f}")
+            annual = annual_depreciation(prop)
+            # Real, honest caveat: an unset Land Value (0.0, the field's
+            # own default) means depreciable_basis() treats the FULL
+            # purchase price as depreciable, inflating this real-looking
+            # number — same "flag a real-but-possibly-misleading figure"
+            # convention Cap Rate's own "n/a (set a current value)" text
+            # already uses on this exact view.
+            land_value_caveat = " (land value not set — this may overstate depreciation)" if annual > 0 and prop.land_value <= 0 else ""
+            self._detail_annual_depreciation_label.setText(f"Annual Depreciation: ${annual:,.2f}{land_value_caveat}")
             accumulated = accumulated_depreciation(prop, date.today())
-            self._detail_accumulated_depreciation_label.setText(f"Accumulated Depreciation: ${accumulated:,.2f}")
+            self._detail_accumulated_depreciation_label.setText(f"Accumulated Depreciation: ${accumulated:,.2f}{land_value_caveat}")
 
             # Loan terms are a separate, optional concept from the
             # manually-tracked mortgage_balance shown elsewhere — this

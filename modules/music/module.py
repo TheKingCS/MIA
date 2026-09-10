@@ -47,6 +47,7 @@ from PySide6.QtWidgets import (
 
 from core.music_manager import NowPlaying, ScanResult, Track
 from gui.add_edit_playlist_dialog import AddEditPlaylistDialog
+from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from modules.module_base import ModuleBase
 
 _TRANSPORT_REFRESH_MS = 500
@@ -170,14 +171,19 @@ class MusicModule(ModuleBase):
     def _refresh_library_list(self) -> None:
         self._library_list.clear()
         query = self._search_edit.text() if self._search_edit is not None else ""
-        for track in self.context.music.search_tracks(query):
+        tracks = self.context.music.search_tracks(query)
+        for track in tracks:
             item = QListWidgetItem(format_track_row(track))
             item.setData(Qt.ItemDataRole.UserRole, track.track_id)
             self._library_list.addItem(item)
+        if self._library_list.count() == 0:
+            if query:
+                add_empty_state_item(self._library_list, "No tracks match your search.")
+            else:
+                add_empty_state_item(self._library_list, "No tracks in your library yet — click Scan Library to get started.")
 
     def _selected_library_track_id(self) -> Optional[str]:
-        item = self._library_list.currentItem()
-        return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        return selected_item_data(self._library_list)
 
     def _on_scan_library(self) -> None:
         result = self.context.music.scan_library()
@@ -263,28 +269,33 @@ class MusicModule(ModuleBase):
         previously_selected_id = self._selected_playlist_id()
         self._playlist_list.blockSignals(True)
         self._playlist_list.clear()
-        for playlist in self.context.music.all_playlists():
+        playlists = self.context.music.all_playlists()
+        for playlist in playlists:
             item = QListWidgetItem(f"{playlist.name}   ({len(playlist.track_ids)} tracks)")
             item.setData(Qt.ItemDataRole.UserRole, playlist.playlist_id)
             self._playlist_list.addItem(item)
             if playlist.playlist_id == previously_selected_id:
                 self._playlist_list.setCurrentItem(item)
+        if not playlists:
+            add_empty_state_item(self._playlist_list, "No playlists yet — click New Playlist to get started.")
         self._playlist_list.blockSignals(False)
         self._refresh_playlist_tracks_list()
 
     def _selected_playlist_id(self) -> Optional[str]:
-        item = self._playlist_list.currentItem()
-        return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        return selected_item_data(self._playlist_list)
 
     def _refresh_playlist_tracks_list(self) -> None:
         self._playlist_tracks_list.clear()
         playlist_id = self._selected_playlist_id()
         if playlist_id is None:
             return
-        for track in self.context.music.tracks_for_playlist(playlist_id):
+        tracks = self.context.music.tracks_for_playlist(playlist_id)
+        for track in tracks:
             item = QListWidgetItem(format_track_row(track))
             item.setData(Qt.ItemDataRole.UserRole, track.track_id)
             self._playlist_tracks_list.addItem(item)
+        if not tracks:
+            add_empty_state_item(self._playlist_tracks_list, "No tracks in this playlist yet.")
 
     def _on_new_playlist(self) -> None:
         dialog = AddEditPlaylistDialog()
@@ -321,11 +332,10 @@ class MusicModule(ModuleBase):
 
     def _on_remove_track_from_playlist(self) -> None:
         playlist_id = self._selected_playlist_id()
-        item = self._playlist_tracks_list.currentItem()
-        if playlist_id is None or item is None:
+        track_id = selected_item_data(self._playlist_tracks_list)
+        if playlist_id is None or track_id is None:
             QMessageBox.information(None, "No Track Selected", "Select a track to remove from this playlist.")
             return
-        track_id = item.data(Qt.ItemDataRole.UserRole)
         self.context.music.remove_track_from_playlist(playlist_id, track_id)
         self._refresh_playlist_list()
 

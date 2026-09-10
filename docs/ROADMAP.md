@@ -6080,3 +6080,76 @@ current password + blank new password leaves the old one working,
 correct current password + a real new password changes it (old one
 stops verifying, new one works), and removing protection entirely
 makes `verify_password()` auto-pass again.
+
+## New-user exploration follow-up: 5 fixes (2026-09-10)
+
+Acted as a brand-new user across Music/Real Estate/Budget this session
+(isolated data dirs, real interaction, real screenshots) specifically
+to find rough edges — five real, reproduced findings, all fixed:
+
+1. **Budget's Summary/Trends tabs went stale.** None of Bills/Income
+   Sources/Income/Expenses' add/edit/delete/mark-paid/mark-received
+   handlers ever refreshed Summary or Trends — only their own tab's
+   list. Confirmed: add a real Expense, switch to Trends, see a
+   completely empty chart despite real data existing (the exported PDF
+   was always correct — it queries fresh data directly — only these
+   two on-screen tabs lied). Fixed with one `tabs.currentChanged`
+   connection refreshing Summary/Budget Targets/Trends on every tab
+   switch — all three are cheap in-memory recomputations, and none of
+   them reset the user's chosen range/entity filter.
+2. **Empty lists showed a blank void.** Bills, Real Estate's property
+   list and its Rental Income/Expenses sub-lists, and Music's Library/
+   Playlists/playlist-tracks all rendered as a totally empty rectangle
+   on first use, with zero guidance — unlike the Home Dashboard's own
+   widgets, which already say "No X tracked yet." New
+   `gui/list_widget_helpers.add_empty_state_item()` (a single,
+   disabled, non-selectable placeholder row) applied across all 10
+   call sites, each with a tailored message — including a real/honest
+   distinction between "genuinely empty" and "filtered to zero
+   results" where a search box is involved (Bills, Income Sources,
+   Music Library).
+3. **Real Estate depreciation could silently mislead.** An unset Land
+   Value (`0.0`, the field's own default) means the FULL purchase
+   price is treated as depreciable — a real, inflated number shown
+   with zero caveat. Fixed by appending "(land value not set — this
+   may overstate depreciation)" to the Annual/Accumulated Depreciation
+   labels whenever this applies — same honest-caveat convention this
+   exact view's Cap Rate figure already uses.
+4. **`currentItem()` vs. actual selection mismatch, ~26 call sites.**
+   Qt's default `ExtendedSelection` mode keeps `currentItem()` set even
+   after a Ctrl+click deselects that row (`clearSelection()` doesn't
+   clear it) — every "Edit Selected"/"Play"/"Remove"-style button
+   across the app could silently act on a row that no longer looks
+   selected. New `gui/list_widget_helpers.selected_item_data()`
+   (requires `.isSelected()`, not just "is current") replaces every
+   `_selected_*_id()`-style method's own `currentItem()` body across
+   Budget/Real Estate/Music — confirmed via a direct repro (select a
+   track, `clearSelection()`, click Play — now correctly shows "No
+   Track Selected" instead of silently replaying).
+5. **Negative amounts silently clamped to $0.00 and still created a
+   phantom record.** `add_bill()`/`add_income()`/`add_expense()`/
+   `add_income_source()`/`set_budget_target()` all did
+   `max(0.0, amount)` rather than rejecting bad input. Confirmed
+   unreachable through any real GUI path today (every relevant spin
+   box already floors at 0) and confirmed Plaid sync already does
+   `amount = abs(txn.amount)` and skips `txn.amount == 0` before ever
+   calling these — pure defensive dead code today, fixed anyway so it
+   can't quietly bite a future caller (a new Assistant action, a
+   future import source). Now `raise ValueError` for a genuinely
+   negative amount; exactly `0.0` stays allowed (a real, reachable
+   value through the GUI's own spin box floor).
+
+**Verified for real**: 8 new tests in `tests/test_budget_manager.py`
+(each of the 5 methods rejects negative, still accepts `0.0` and
+positive values). 2007 tests passing. Re-ran the same isolated "new
+user" exploration scripts that found these issues in the first place
+to directly confirm each fix — adding an Expense now updates
+Summary/Trends immediately, every previously-blank list now shows its
+message, a property with no Land Value shows the new caveat, the
+Ctrl+click-deselect repro now correctly blocks Play, and a negative
+`add_expense()` call now raises. This codebase's pytest suite stays
+deliberately Qt-widget-free (confirmed by checking existing module
+test files before adding new ones) — `add_empty_state_item()`/
+`selected_item_data()` are exactly the kind of real-widget-behavior
+code this project verifies via manual headless-Qt scripts instead,
+not new pytest coverage.
