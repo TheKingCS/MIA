@@ -153,6 +153,100 @@ def _budget_targets_table(budget_targets: list, actual_by_category: dict[str, fl
     return "\n".join(html)
 
 
+# 2026-09-09: Schedule E prep view — real IRS Schedule E (Supplemental
+# Income and Loss, rental real estate), Part I line structure, stable
+# across recent tax years. This is real per-property income/expense
+# data reorganized to match that structure, for the user/their
+# accountant's reference — never a computed tax liability or a
+# filing-ready form, stated directly in the rendered report itself.
+_SCHEDULE_E_LINE_ORDER = [
+    "Advertising", "Auto and Travel", "Cleaning and Maintenance", "Commissions",
+    "Insurance", "Legal and Professional Fees", "Management Fees",
+    "Mortgage Interest", "Other Interest", "Repairs", "Supplies", "Taxes",
+    "Utilities", "Depreciation", "Other",
+]
+# Deliberately conservative, same "unmapped falls to Other" precedent
+# core.plaid_manager.map_plaid_category() already established — MIA's
+# household categories (Groceries/Transportation/Medical/Personal Care/
+# Shopping/Bank Fees/Entertainment/Travel/Other) have no real Schedule E
+# correspondence and fall to "Other" rather than a guessed line.
+_CATEGORY_TO_SCHEDULE_E_LINE = {
+    "Insurance": "Insurance",
+    "Maintenance": "Repairs",
+    "Taxes": "Taxes",
+    "Utilities": "Utilities",
+    # Real, honest limitation: MIA doesn't track a mortgage payment's
+    # principal/interest split (see Property's own mortgage_balance —
+    # a flat manually-updated number, no amortization schedule), so this
+    # is the FULL Mortgage/Rent category amount, which likely includes
+    # non-deductible principal. The rendered report states this
+    # directly rather than silently mislabeling it as validated interest.
+    "Mortgage/Rent": "Mortgage Interest",
+}
+
+
+def category_to_schedule_e_line(category: str) -> str:
+    """Pure logic — testable without Qt."""
+    return _CATEGORY_TO_SCHEDULE_E_LINE.get(category, "Other")
+
+
+def _schedule_e_table(properties: list[dict]) -> str:
+    """properties: list of {"name", "rents_received", "expenses_by_category":
+    dict[str, float], "depreciation"}. One sub-table per property — real
+    Schedule E is filed per property, not as one combined form."""
+    html = ["<h2>Schedule E Summary (This Year)</h2>"]
+    html.append(
+        "<p><i>Real income/expense data reorganized to match IRS Schedule E's "
+        "line structure, for your or your accountant's reference — this is "
+        "not a computed tax liability or a filing-ready form. \"Mortgage "
+        "Interest\" below is the full Mortgage/Rent category amount; MIA "
+        "doesn't yet track the principal/interest split, so this may "
+        "overstate the actual deductible interest portion.</i></p>"
+    )
+    if not properties:
+        html.append("<p>No Rental/Investment properties tracked.</p>")
+        return "\n".join(html)
+
+    for prop in properties:
+        html.append(f'<h3>{prop["name"]}</h3>')
+        html.append(_TABLE_OPEN.replace("<table ", '<table style="font-size:9pt" '))
+        html.append('<tr><th width="70%">Line</th><th width="30%">Amount</th></tr>')
+        html.append(
+            f'<tr><td>Rents Received</td>'
+            f'<td align="right" nowrap>{_money(prop["rents_received"])}</td></tr>'
+        )
+
+        line_totals: dict[str, float] = {}
+        for category, amount in prop["expenses_by_category"].items():
+            line = category_to_schedule_e_line(category)
+            line_totals[line] = line_totals.get(line, 0.0) + amount
+        line_totals["Depreciation"] = line_totals.get("Depreciation", 0.0) + prop["depreciation"]
+
+        total_expenses = 0.0
+        for line in _SCHEDULE_E_LINE_ORDER:
+            amount = line_totals.get(line, 0.0)
+            if amount == 0.0:
+                continue  # same "don't show an untouched zero row" convention as total_expenses_by_category()
+            html.append(f'<tr><td>{line}</td><td align="right" nowrap>{_money(amount)}</td></tr>')
+            total_expenses += amount
+
+        html.append(
+            f'<tr><td nowrap><b>Total Expenses</b></td>'
+            f'<td align="right" nowrap><b>{_money(total_expenses)}</b></td></tr>'
+        )
+        net = prop["rents_received"] - total_expenses
+        # Standard accounting convention for a loss — this document is
+        # explicitly for the user's/their accountant's reference, so a
+        # real negative figure should read as "($881.82)", not "$-881.82".
+        net_text = f"({_money(abs(net))})" if net < 0 else _money(net)
+        html.append(
+            f'<tr><td nowrap><b>Net Income (Loss)</b></td>'
+            f'<td align="right" nowrap><b>{net_text}</b></td></tr>'
+        )
+        html.append("</table>")
+    return "\n".join(html)
+
+
 def build_business_report_html(
     range_label: str,
     start_date: Optional[str],
@@ -168,6 +262,7 @@ def build_business_report_html(
     properties: list[dict],
     generated_at: str,
     entity_label: Optional[str] = None,
+    schedule_e_properties: Optional[list[dict]] = None,
 ) -> str:
     """Pure logic — testable without Qt. properties is a list of plain
     dicts: {"name", "type", "current_value", "mortgage_balance",
@@ -178,7 +273,13 @@ def build_business_report_html(
     is the selected BusinessEntity's name (or "(Unassigned)"), already
     resolved by the caller — omitted entirely from the title block when
     None (no entity filter applied), same "don't render a misleading
-    empty line" convention as this module's other optional sections."""
+    empty line" convention as this module's other optional sections.
+    schedule_e_properties (2026-09-09) is a list of {"name",
+    "rents_received", "expenses_by_category": dict[str, float],
+    "depreciation"} dicts — same "caller passes [] for any range where
+    this doesn't apply" convention as budget_targets; Schedule E is an
+    annual form, so the caller should only ever populate this for
+    "This Year"."""
     net_cash_flow = income_total - expenses_total
 
     title_line = f"<p><b>Range:</b> {range_label}"
@@ -203,5 +304,7 @@ def build_business_report_html(
     ]
     if budget_targets:
         sections.append(_budget_targets_table(budget_targets, actual_by_category))
+    if schedule_e_properties:
+        sections.append(_schedule_e_table(schedule_e_properties))
 
     return "\n".join(sections)

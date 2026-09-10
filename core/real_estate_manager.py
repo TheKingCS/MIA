@@ -117,7 +117,11 @@ def equity(property_: Property) -> float:
 # eligible for depreciation at all — a Primary Residence is never
 # depreciated for tax purposes even if it has a real depreciable basis.
 RESIDENTIAL_USEFUL_LIFE_YEARS = 27.5
-_DEPRECIABLE_PROPERTY_TYPES = {"Rental", "Investment"}
+# Public (not the original _DEPRECIABLE_PROPERTY_TYPES name) since
+# 2026-09-09: depreciation eligibility and Schedule E eligibility are
+# the same real tax-law rule — core/business_report.py's Schedule E
+# section shares this constant rather than hardcoding it a second time.
+SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES = {"Rental", "Investment"}
 
 
 def depreciable_basis(property_: Property) -> float:
@@ -136,7 +140,7 @@ def annual_depreciation(property_: Property, useful_life_years: float = RESIDENT
     service/disposal years, same "real correct-shaped number, not
     fabricated precision" boundary core.maintenance_manager's
     Prediction feature already draws."""
-    if property_.property_type not in _DEPRECIABLE_PROPERTY_TYPES or useful_life_years <= 0:
+    if property_.property_type not in SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES or useful_life_years <= 0:
         return 0.0
     return depreciable_basis(property_) / useful_life_years
 

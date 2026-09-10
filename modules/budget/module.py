@@ -87,7 +87,7 @@ from core.budget_manager import (
     days_until_bill_due,
     days_until_income_due,
 )
-from core.real_estate_manager import annual_depreciation, equity as property_equity
+from core.real_estate_manager import SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES, annual_depreciation, equity as property_equity
 from core.search_manager import SearchResult
 from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
@@ -924,6 +924,30 @@ class BudgetModule(ModuleBase):
                 "annual_depreciation": annual_depreciation(prop),
             })
 
+        # Schedule E is inherently an annual form — only populate this
+        # for "This Year", same "caller decides, not the report module"
+        # gating budget_targets already uses for its own "This Month
+        # only" restriction.
+        schedule_e_properties = []
+        if range_label == "This Year":
+            for prop in real_estate.all_properties():
+                if entity_id is not None and prop.entity_id != entity_id:
+                    continue
+                if prop.property_type not in SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES:
+                    continue
+                expenses_by_category: dict[str, float] = {}
+                for expense in real_estate.expenses_for_property(prop.property_id, start, end):
+                    expenses_by_category[expense.category] = expenses_by_category.get(expense.category, 0.0) + expense.amount
+                rents_received = sum(
+                    i.amount for i in real_estate.income_for_property(prop.property_id, start, end)
+                )
+                schedule_e_properties.append({
+                    "name": prop.name,
+                    "rents_received": rents_received,
+                    "expenses_by_category": expenses_by_category,
+                    "depreciation": annual_depreciation(prop),
+                })
+
         html = build_business_report_html(
             range_label=range_label,
             start_date=start,
@@ -943,6 +967,7 @@ class BudgetModule(ModuleBase):
             properties=properties,
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
             entity_label=entity_label,
+            schedule_e_properties=schedule_e_properties,
         )
 
         suggested_name = f"Business_Report_{datetime.now():%Y-%m-%d}.pdf"

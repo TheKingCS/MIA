@@ -5796,3 +5796,57 @@ both realistic and stress-test dollar magnitudes; a real headless-Qt
 script confirming the Add/Edit Property dialog's new fields round-trip
 correctly and the detail view's two new labels show real, correctly-
 computed figures. 1929 tests passing.
+
+## Financial deep-dive, part 5: Schedule E prep view (2026-09-09)
+
+Fifth item — "tax support," the vaguest brainstorm item, deliberately
+narrowed with the user first: a Schedule E prep view now, 1099/
+contractor tracking as an immediate follow-up. Stays inside this
+app's own stated boundary ("no tax computation... no brackets, no
+liability estimate, no filing support," `core/budget_manager.py`'s own
+docstring) — real per-property income/expense data reorganized into
+the actual IRS Schedule E (rental real estate) line structure, for the
+user/their accountant to transcribe directly. Never a computed tax
+liability, never filing-ready, and the rendered report says so
+directly in its own caveat paragraph.
+
+New `core.business_report.category_to_schedule_e_line()` maps MIA's
+own `EXPENSE_CATEGORIES` onto real Schedule E lines (Insurance→
+Insurance, Maintenance→Repairs, Taxes→Taxes, Utilities→Utilities,
+Mortgage/Rent→Mortgage Interest) — deliberately conservative, same
+"unmapped falls to Other" precedent `core.plaid_manager
+.map_plaid_category()` already established, since MIA's household
+categories (Groceries/Transportation/Medical/etc.) have no real
+Schedule E correspondence. **A real, honest limitation stated directly
+in the rendered report**: the Mortgage Interest line is the FULL
+Mortgage/Rent category amount, since MIA doesn't track a mortgage
+payment's principal/interest split yet (that's the separate, later
+mortgage-amortization item) — likely overstates deductible interest,
+and says so in plain language rather than silently mislabeling it.
+Renamed `core.real_estate_manager._DEPRECIABLE_PROPERTY_TYPES` to
+public `SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES` — depreciation eligibility
+and Schedule E eligibility are the same real tax-law rule (only
+Rental/Investment types), so both now share one constant instead of
+the same rule living under two different names in two files.
+
+New per-property Schedule E section on the Business Report, gated to
+`range_label == "This Year"` only (Schedule E is inherently an annual
+form — showing a partial month or a multi-year range would never map
+to one real filing year), mirroring exactly how Budget Targets is
+already gated to "This Month" only.
+
+**A real, deliberate accounting-convention fix, caught by actually
+looking at a rendered loss, not assumed correct**: a negative Net
+Income (Loss) first rendered as "$-881.82" — technically correct but
+not how an accountant reads a loss. Fixed to the real "($881.82)"
+parenthesized convention, since this document is explicitly framed as
+being for the user's/their accountant's reference.
+
+**Verified for real**: new tests for every real category mapping and
+the Other fallback, zero-amount line suppression, Total Expenses/Net
+Income (Loss) math, the not-tax-advice and mortgage-interest caveat
+text, and the accounting-parens loss format; a real rendered PDF
+(`QtPdf`-to-PNG) with 2 eligible properties (one showing a real loss,
+one a real gain) plus one excluded Primary Residence, confirmed
+rendering cleanly with no wrapping on the same page that already
+proved fragile earlier this session. 1937 tests passing.

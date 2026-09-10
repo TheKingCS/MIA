@@ -10,7 +10,7 @@ HTML string's real content rather than just "it doesn't crash."
 from __future__ import annotations
 
 from core.budget_manager import BudgetTarget
-from core.business_report import build_business_report_html
+from core.business_report import build_business_report_html, category_to_schedule_e_line
 
 
 def _property(
@@ -164,3 +164,80 @@ def test_multiple_properties_all_present():
     html = _build(properties=props)
     assert "123 Main St" in html
     assert "Lake Cabin" in html
+
+
+# ------------------------------------------------------------------
+# category_to_schedule_e_line — pure mapping
+# ------------------------------------------------------------------
+
+def test_category_to_schedule_e_line_real_mappings():
+    assert category_to_schedule_e_line("Insurance") == "Insurance"
+    assert category_to_schedule_e_line("Maintenance") == "Repairs"
+    assert category_to_schedule_e_line("Taxes") == "Taxes"
+    assert category_to_schedule_e_line("Utilities") == "Utilities"
+    assert category_to_schedule_e_line("Mortgage/Rent") == "Mortgage Interest"
+
+
+def test_category_to_schedule_e_line_unmapped_falls_to_other():
+    for category in ("Groceries", "Transportation", "Medical", "Personal Care", "Shopping", "Bank Fees", "Entertainment", "Travel", "Other"):
+        assert category_to_schedule_e_line(category) == "Other"
+
+
+# ------------------------------------------------------------------
+# Schedule E section
+# ------------------------------------------------------------------
+
+def _schedule_e_property(name="123 Main St", rents_received=24000.0, expenses_by_category=None, depreciation=8181.82):
+    return {
+        "name": name,
+        "rents_received": rents_received,
+        "expenses_by_category": expenses_by_category or {"Insurance": 1200.0, "Maintenance": 800.0, "Groceries": 50.0},
+        "depreciation": depreciation,
+    }
+
+
+def test_schedule_e_section_omitted_when_no_properties_passed():
+    html = _build(range_label="This Year", schedule_e_properties=[])
+    assert "Schedule E Summary" not in html
+
+
+def test_schedule_e_section_shows_mapped_lines_and_totals():
+    html = _build(range_label="This Year", schedule_e_properties=[_schedule_e_property()])
+    assert "Schedule E Summary" in html
+    assert "Rents Received" in html
+    assert "$24,000.00" in html
+    assert "Insurance" in html and "$1,200.00" in html
+    assert "Repairs" in html and "$800.00" in html  # Maintenance -> Repairs
+    assert "Depreciation" in html and "$8,181.82" in html
+    # Groceries (50.0) maps to "Other" — its amount should still show under that line
+    assert "Other" in html and "$50.00" in html
+    total_expenses = 1200.0 + 800.0 + 50.0 + 8181.82
+    assert f"${total_expenses:,.2f}" in html  # Total Expenses row
+    net = 24000.0 - total_expenses
+    assert f"${net:,.2f}" in html  # Net Income (Loss) row
+
+
+def test_schedule_e_section_skips_zero_amount_lines():
+    prop = _schedule_e_property(expenses_by_category={"Insurance": 1200.0}, depreciation=0.0)
+    html = _build(range_label="This Year", schedule_e_properties=[prop])
+    assert "Repairs" not in html
+    assert "Taxes" not in html
+    assert "Depreciation" not in html
+
+
+def test_schedule_e_section_mentions_not_tax_advice_and_mortgage_caveat():
+    html = _build(range_label="This Year", schedule_e_properties=[_schedule_e_property()])
+    assert "not a computed tax liability" in html
+    assert "principal/interest split" in html
+
+
+def test_schedule_e_section_shows_a_loss_in_accounting_parens_not_a_minus_sign():
+    prop = _schedule_e_property(rents_received=1000.0, expenses_by_category={"Insurance": 2000.0}, depreciation=0.0)
+    html = _build(range_label="This Year", schedule_e_properties=[prop])
+    assert "($1,000.00)" in html
+    assert "$-1,000.00" not in html
+
+
+def test_schedule_e_section_includes_property_name_heading():
+    html = _build(range_label="This Year", schedule_e_properties=[_schedule_e_property(name="Lake Cabin")])
+    assert "<h3>Lake Cabin</h3>" in html
