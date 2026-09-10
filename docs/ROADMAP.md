@@ -6437,3 +6437,83 @@ across both tabs; a direct call to the real `_check_daily_occasions()`
 with two people at exactly 7 days out confirmed a real gift-reminder
 notification fired naming both people and their real stored gift
 ideas.
+
+## Self-knowledge: real per-module help coverage + a confident-match bug fix (2026-09-10)
+
+User picked "Self-knowledge" from VISION.md's remaining unbuilt
+subsystems list. Researched the current `core/device_help_manager.py`
+system fully before touching it (forked agent + direct reads):
+`DeviceHelpManager` retrieves from `docs/user_help/*.md` (hand-authored,
+plain-language) plus an auto-generated one-sentence chunk per discovered
+module (`ModuleBase.description`, the tooltip-length string). Found a
+real, confirmed coverage gap: 15 of 28 modules had no dedicated help doc
+at all — including Kitchen, Workout, and Relationships, all three built
+earlier this session.
+
+**Real bug found by reading the actual scoring code, the load-bearing
+finding of this pass**: `_scored_doc_and_module_chunks()`'s module-name
+confidence bonus (`_MODULE_NAME_MATCH_BONUS`, +10) only ever applied to
+the auto-generated one-liner, never to `docs/user_help/*.md` chunks —
+and `build_grounded_prompt()`'s confident-match short-circuit keeps
+*only* the single top-scoring chunk once anything crosses that
+threshold. Net effect: whenever a query named a module by its display
+name (the single most natural way to ask — "how do I log a workout"),
+the generic one-liner always won and any richer doc content was
+silently dropped — even for modules that already had a real
+`docs/user_help/*.md` file (missions.md, workshop.md, etc.). Simply
+adding new doc files for Kitchen/Workout/Relationships would not have
+fixed this on its own.
+
+Fixed via a filename convention: a `docs/user_help/*.md` file whose
+filename stem exactly equals a real `module_id` (e.g. `workout.md` for
+module_id `"workout"`) has every one of its chunks earn the same
+module-name bonus the auto-generated chunk gets. `build_grounded_prompt()`
+then deterministically prefers a real, bonus-qualifying doc chunk over
+the generic one-liner when both qualify, rather than leaving it to a
+raw-score coin-flip (a hand-written doc chunk's heading doesn't always
+happen to repeat the module's exact display name, so it can't reliably
+out-score the one-liner's built-in heading-match edge on points alone).
+This also retroactively repairs the same suppression bug for every
+module that already had a doc file before this fix, not just the new
+ones — confirmed live: a query like "how do I start a mission" now
+surfaces missions.md's real content instead of the terse one-liner.
+
+New `docs/user_help/*.md` files, each named after its module's
+`module_id` so they benefit from the fix: `budget.md`, `real_estate.md`,
+`maintenance.md` (includes a cross-reference explaining Garage/Property
+are read-only filtered views into this same Maintenance data, confirmed
+via their own module docstrings, rather than fabricating separate files
+for them), `kitchen.md`, `workout.md`, `relationships.md`, `music.md`,
+`memories.md`. One new shared file for smaller/system-tier modules
+(same "several modules, one file" precedent `organizing.md` already
+established) — `system_and_files.md` (Dashboard, Diagnostics, Files,
+Modules, The Lab) — deliberately doesn't get the filename-bonus
+treatment, same as `organizing.md` today. One content addition to an
+already-working file: `home_and_power.md` gained an "Energy Sources"
+section documenting the tab shipped 2026-09-09, which the file
+predated. `docs/ASSISTANT_CAPABILITIES.md` got a short addendum
+documenting the new filename-must-equal-`module_id` convention for
+future contributors.
+
+**Verified for real, not just green tests**: 4 new regression tests in
+`tests/test_device_help_manager.py` (a matching-filename doc chunk
+earns the bonus and can win the confident match; an unrelated
+multi-module file does NOT get boosted just because a module is named
+in the query; all pre-existing regression tests re-run and confirmed
+still passing) — full suite 2166 passing, zero regressions. Real manual
+live-model check (llama3.2, real Ollama, real `ModuleManager.discover()`
+— not a stub) against 4 real questions: "how do I log a workout"
+correctly answered by naming the real Log Session tab; "how do I add a
+person" correctly answered by naming the real People tab and Add
+Person button; "how do I use the Kitchen module" correctly listed all
+5 real tabs; "how do I start a mission" (an already-covered module, the
+regression check) answered correctly with the real trigger phrasing.
+**Real limitation found and left as-is, not a regression from this
+fix**: the confidence bonus still requires an exact-substring match of
+a module's full display name against the query (a pre-existing property
+of the original mechanism, unchanged by this pass) — "a person" doesn't
+substring-match "People & Pets," and "a mission" (singular) doesn't
+substring-match "Missions" (plural), so the confident short-circuit
+didn't fire for those two queries either before or after this fix; both
+still got correct answers via the existing multi-chunk fallback path,
+so this wasn't worth fixing as part of this pass's approved scope.

@@ -1,0 +1,30 @@
+# Maintenance: upkeep tracking for vehicles, equipment, appliances, and tools
+
+## Assets and tasks
+
+Maintenance has two tabs: Assets (the things you own — a truck, a
+generator, a fridge) and Tasks (the upkeep each one needs). Add Asset
+records purchase date, serial number, and receipts/warranties/manuals;
+Add Task attaches a recurring upkeep item to one.
+
+## The six trigger types
+
+A Task can trigger six different ways: Calendar (a real date, repeats
+on a schedule), Runtime/Mileage/Cycles (a cumulative meter — logged
+readings add up toward a threshold), Condition (a manual meter you
+update yourself), and Sensor (a live reading crossing a threshold).
+Log Reading… on the Tasks tab records a new reading for a meter/sensor
+task; Log Usage… on the Assets tab logs general usage against the
+asset itself. Mark Complete resets a due task; Schedule… puts a
+calendar-triggered task on your actual Calendar.
+
+## Garage and Property are quick status views into this same data
+
+The Garage and Property modules aren't separate systems — they're
+read-only, at-a-glance filtered views over this same Maintenance data.
+Garage shows just Vehicle and Power Equipment assets ("how's the
+truck doing" without digging through everything else); Property shows
+just Appliance/Property/Tool assets. Both have a "Manage in
+Maintenance" button, because adding, editing, or completing a task
+always happens here in Maintenance itself — Garage and Property never
+add or edit anything on their own.

@@ -38,6 +38,24 @@ registration-callback shape as core/search_manager.py's
 internals. core/application.py wires the real `ModuleManager.all` in,
 mirroring its own `_register_search_providers`.
 
+**2026-09-10 self-knowledge pass — real bug found and fixed**: the
+module-name confidence bonus (`_MODULE_NAME_MATCH_BONUS`) used to apply
+ONLY to the auto-generated one-line module chunk, never to
+`docs/user_help/*.md` chunks — so a query naming a module by name (the
+single most natural way to ask, e.g. "how do I log a workout") always
+let the generic one-liner win the confident-match short-circuit below,
+silently dropping any richer doc content that file actually had, even
+for modules with a real, already-existing help doc. Fixed via a simple
+naming convention: a `docs/user_help/*.md` file whose filename stem
+exactly equals a real `module_id` (e.g. `workout.md` for module_id
+`"workout"`) has every one of its chunks treated as "about" that module
+for bonus purposes too — see `_scored_doc_and_module_chunks()`. Keep
+this convention in mind when adding a new per-module doc: name the file
+after the module's `module_id`, not a prettier/different name, or its
+content won't benefit from the bonus (multi-module files like
+`organizing.md`/`system_and_files.md` are a deliberate exception — no
+single module_id to key off, same as before this fix).
+
 `register_reference_library()` (docs/ROADMAP.md milestone 5.6, added
 at the user's request after using the app) is the same shape again:
 `build_grounded_prompt()` blends in short plain-text snippets from
@@ -266,17 +284,18 @@ class DeviceHelpManager:
                 chunks.extend(split_into_chunks(text, source=f"user_help/{doc_path.name}"))
         self._doc_chunks = chunks
 
-    def _module_chunks(self) -> list[HelpChunk]:
+    def _safe_list_modules(self) -> list:
         if self._module_lister is None:
             return []
         try:
-            modules = self._module_lister()
+            return self._module_lister()
         except Exception:
             log.exception("Module lister raised an error — skipping module metadata for device-help.")
             return []
 
+    def _module_chunks(self) -> list[HelpChunk]:
         chunks = []
-        for module in modules:
+        for module in self._safe_list_modules():
             # Explicitly says "The <Name> module" in the body text, not
             # just a "## <Name>" heading — verified against the live
             # model that this matters a lot: llama3.2:3b reliably
@@ -304,7 +323,30 @@ class DeviceHelpManager:
         self._ensure_docs_loaded()
         query_lower = query.lower()
 
-        scored = [(score_chunk(query_words, chunk), chunk) for chunk in self._doc_chunks]
+        # A docs/user_help/*.md file whose OWN filename is a real
+        # module's module_id (e.g. "workout.md" for module_id "workout")
+        # is entirely about that module — every chunk from it earns the
+        # same module-name confidence bonus the module's own one-line
+        # description chunk gets below. Without this, a query naming the
+        # module ("how do I log a workout") always lets the generic
+        # one-liner win on the +10 bonus alone, silently dropping a
+        # richer, more specific doc chunk that could actually answer the
+        # question — even for modules whose docs/user_help file already
+        # existed before this fix (missions.md, workshop.md, ...).
+        display_name_by_module_id = {
+            getattr(module, "module_id", ""): module.display_name
+            for module in self._safe_list_modules()
+        }
+
+        scored = []
+        for chunk in self._doc_chunks:
+            score = score_chunk(query_words, chunk)
+            doc_module_id = Path(chunk.source).stem
+            display_name = display_name_by_module_id.get(doc_module_id)
+            if display_name and display_name.lower() in query_lower:
+                score += _MODULE_NAME_MATCH_BONUS
+            scored.append((score, chunk))
+
         for chunk in self._module_chunks():
             score = score_chunk(query_words, chunk)
             if chunk.heading.lower() in query_lower:
@@ -425,12 +467,32 @@ class DeviceHelpManager:
         verbatim. A confident, specific match doesn't need or benefit
         from extra "maybe related" context; a small model finds it
         actively distracting.
+
+        **2026-09-10 self-knowledge fix**: when several chunks clear the
+        confidence threshold for the SAME named module — the terse
+        auto-generated one-liner and a real docs/user_help/*.md chunk
+        both can, once a doc file earns the bonus too (see
+        `_scored_doc_and_module_chunks()`) — prefer the real doc chunk
+        deterministically, not by raw score. Relying on score alone
+        would make specific doc content win or lose a near-coin-flip
+        against the one-liner depending on incidental heading wording
+        (the one-liner's heading is always exactly the module's display
+        name, giving it a built-in scoring edge a hand-written doc
+        section's own heading may not happen to share) — since a real,
+        hand-written doc chunk is always more useful than the terse
+        fallback once we already know it's confidently about the named
+        module, prefer it outright rather than leaving that to chance.
         """
         scored = self._scored_doc_and_module_chunks(query)
         top_score = scored[0][0] if scored else 0
         is_confident_match = top_score >= _MODULE_NAME_MATCH_BONUS
 
-        doc_chunks = [chunk for _, chunk in scored[:1]] if is_confident_match else [chunk for _, chunk in scored[:limit]]
+        if is_confident_match:
+            bonus_qualifying = [(score, chunk) for score, chunk in scored if score >= _MODULE_NAME_MATCH_BONUS]
+            doc_hit = next((chunk for _, chunk in bonus_qualifying if not chunk.source.startswith("Module: ")), None)
+            doc_chunks = [doc_hit if doc_hit is not None else bonus_qualifying[0][1]]
+        else:
+            doc_chunks = [chunk for _, chunk in scored[:limit]]
         reference_chunks = [] if is_confident_match else self._reference_library_chunks(query)
         chunks = doc_chunks + reference_chunks
         if not chunks:

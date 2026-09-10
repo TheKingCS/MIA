@@ -16,6 +16,15 @@ battery percentage and plugged-in status. You'll get a low-battery
 notification automatically if it drops below the configured threshold
 while unplugged.
 
+## Energy Sources
+
+The Power module's Energy Sources tab tracks other power sources by
+hand — a solar array, a generator, a propane tank, anything you'd
+otherwise have to remember on your own. Add Source names a new one;
+Log Reading… records a manual reading against it (fuel level, output,
+whatever that source tracks); Edit Selected and Delete Selected manage
+existing sources.
+
 ## Volume
 
 Volume lives in the header now, not on the Home screen — tap your

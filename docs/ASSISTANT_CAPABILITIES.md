@@ -92,6 +92,19 @@ standing policy going forward:**
   retrieval** — cheap to extend (add a paragraph to a help file, no
   prompt-length cost on unrelated questions), and already the
   established pattern.
+- **2026-09-10 addendum — name a new per-module doc file after its
+  `module_id`, not a prettier name.** `device_help_manager.py` used to
+  give the module-name confidence bonus only to the auto-generated
+  one-line module description, never to `docs/user_help/*.md` content —
+  so a query naming a module always preferred the terse one-liner over
+  a real, richer doc chunk, even when one existed. Fixed by keying the
+  same bonus off a filename convention: a file named exactly
+  `<module_id>.md` (e.g. `workout.md` for module_id `"workout"`) has
+  every one of its chunks treated as being about that module. A shared
+  file covering several modules at once (`organizing.md`,
+  `system_and_files.md`) deliberately doesn't get this — keep those for
+  genuinely small/system-tier modules without much real workflow
+  content of their own.
 - **Only a handful of the most foundational, near-universal-to-ask
   facts belong hardcoded directly in the system prompt** — currently
   just "you can speak your replies aloud"

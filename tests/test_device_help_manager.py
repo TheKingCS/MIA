@@ -24,9 +24,10 @@ class _FakeConfig:
 
 
 class _FakeModule:
-    def __init__(self, display_name: str, description: str) -> None:
+    def __init__(self, display_name: str, description: str, module_id: str = "") -> None:
         self.display_name = display_name
         self.description = description
+        self.module_id = module_id
 
 
 class _FakeReferenceLibrary:
@@ -154,6 +155,78 @@ def test_retrieve_boosts_module_named_in_query_over_generic_docs_mentioning_modu
 
     results = manager.retrieve("what does the notes module do", limit=5)
     assert results[0].source == "Module: Notes"
+
+
+def test_retrieve_boosts_doc_chunk_whose_filename_matches_the_named_modules_id():
+    """
+    2026-09-10 self-knowledge fix: a docs/user_help/*.md file whose
+    filename stem is a real module_id (here "user_help/workout.md" for
+    module_id "workout") must earn the same module-name confidence
+    bonus the module's own auto-generated one-liner gets — proven here
+    by it clearing the bonus threshold and appearing in the ranked
+    results at all (raw retrieve() score ordering between it and the
+    generic one-liner isn't guaranteed — see the dedicated
+    build_grounded_prompt test below for the behavior that actually
+    matters: the real doc chunk winning the final answer)."""
+    manager = _make_manager()
+    manager._doc_chunks = [
+        HelpChunk(
+            source="user_help/workout.md",
+            heading="Logging a Session",
+            text="## Logging a Session\nStart a session from the Log Session tab, log each set, then Finish.",
+        ),
+    ]
+    manager.register_module_lister(
+        lambda: [_FakeModule("Workout", "Exercises, templates, guided sessions, and progress.", module_id="workout")]
+    )
+
+    results = manager.retrieve("how do I log a workout")
+    assert any(chunk.source == "user_help/workout.md" for chunk in results)
+
+
+def test_build_grounded_prompt_prefers_module_matched_doc_chunk_over_generic_one_liner():
+    manager = _make_manager()
+    manager._doc_chunks = [
+        HelpChunk(
+            source="user_help/workout.md",
+            heading="Logging a Session",
+            text="## Logging a Session\nStart a session from the Log Session tab, log each set, then Finish.",
+        ),
+    ]
+    manager.register_module_lister(
+        lambda: [_FakeModule("Workout", "Exercises, templates, guided sessions, and progress.", module_id="workout")]
+    )
+
+    prompt = manager.build_grounded_prompt("how do I log a workout")
+    assert "user_help/workout.md" in prompt
+    assert "Log Session tab" in prompt
+    # Confident-match short-circuit: only one chunk should survive, and
+    # the generic module one-liner should have lost the tie.
+    assert "Module: Workout" not in prompt
+
+
+def test_retrieve_does_not_boost_doc_chunk_from_a_file_not_named_after_a_module_id():
+    """A doc file whose filename stem doesn't match any real module_id
+    (e.g. a shared multi-module file like organizing.md/system_and_files.md)
+    must not get the bonus just because a module happens to be named in
+    the query — same as before this fix."""
+    manager = _make_manager()
+    manager._doc_chunks = [
+        HelpChunk(
+            source="user_help/organizing.md",
+            heading="Workout mentioned in passing",
+            text="## Workout mentioned in passing\nWorkout is referenced here but this file isn't about it.",
+        ),
+    ]
+    manager.register_module_lister(
+        lambda: [_FakeModule("Workout", "Exercises, templates, guided sessions, and progress.", module_id="workout")]
+    )
+
+    prompt = manager.build_grounded_prompt("how do I log a workout")
+    # The generic module one-liner (which DOES get the bonus) should win
+    # the confident match, not the unrelated file's incidental mention.
+    assert "Module: Workout" in prompt
+    assert "user_help/organizing.md" not in prompt
 
 
 def test_retrieve_module_lister_error_does_not_crash():
