@@ -84,6 +84,9 @@ EXPENSE_CATEGORIES = [
     "Other",
 ]
 BUSINESS_ENTITY_TYPES = ["LLC", "Sole Proprietorship", "Other"]
+# Real, stable IRS 1099-NEC threshold (years running) — see
+# payees_over_1099_threshold() below.
+US_1099_NEC_THRESHOLD = 600.0
 
 
 @dataclass
@@ -138,6 +141,10 @@ class ExpenseEntry:
     property_id: str = ""  # set when this is an expense for a core.real_estate_manager.Property
     entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     plaid_transaction_id: str = ""  # set when imported by core.plaid_manager — the dedup key on repeat sync
+    # 2026-09-09: who was paid — distinct from `description` (what the
+    # expense was for). Only used for 1099-NEC threshold tracking, see
+    # payees_over_1099_threshold() below.
+    payee: str = ""
     notes: str = ""
     created_at: str = ""  # ISO datetime
 
@@ -146,7 +153,8 @@ class ExpenseEntry:
             "entry_id": self.entry_id, "amount": self.amount, "category": self.category,
             "description": self.description, "date": self.date, "tax_relevant": self.tax_relevant,
             "bill_id": self.bill_id, "property_id": self.property_id, "entity_id": self.entity_id,
-            "plaid_transaction_id": self.plaid_transaction_id, "notes": self.notes, "created_at": self.created_at,
+            "plaid_transaction_id": self.plaid_transaction_id, "payee": self.payee,
+            "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -162,6 +170,7 @@ class ExpenseEntry:
             property_id=data.get("property_id", ""),
             entity_id=data.get("entity_id", ""),
             plaid_transaction_id=data.get("plaid_transaction_id", ""),
+            payee=data.get("payee", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -709,6 +718,7 @@ class BudgetManager:
         property_id: str = "",
         entity_id: str = "",
         plaid_transaction_id: str = "",
+        payee: str = "",
         notes: str = "",
     ) -> ExpenseEntry:
         entry = ExpenseEntry(
@@ -722,6 +732,7 @@ class BudgetManager:
             property_id=property_id,
             entity_id=entity_id,
             plaid_transaction_id=plaid_transaction_id,
+            payee=payee,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -828,6 +839,42 @@ class BudgetManager:
                 continue
             totals[entry.category] = totals.get(entry.category, 0.0) + entry.amount
         return totals
+
+    def payees_over_1099_threshold(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        entity_id: Optional[str] = None,
+        threshold: float = US_1099_NEC_THRESHOLD,
+    ) -> dict[str, float]:
+        """Real IRS 1099-NEC threshold applied to real business-tagged
+        payments — a factual comparison, never a computed tax liability
+        or a "you must file" directive. Only expenses tied to a
+        property (property_id) or a BusinessEntity (entity_id) count —
+        1099-NEC obligations arise from payments made in the course of
+        a trade or business; a household's personal payment to a
+        contractor for their own primary residence generally doesn't
+        trigger one. Grouped case-insensitively by payee (trimmed) so
+        "Ace Plumbing"/"ace plumbing" aggregate together; the first-
+        seen exact casing is used for display. Only payees at or over
+        threshold are returned — an empty dict is a real "nobody's
+        crossed it yet" answer, not "nothing computed"."""
+        totals: dict[str, float] = {}
+        display_names: dict[str, str] = {}
+        for expense in self._expenses:
+            payee = expense.payee.strip()
+            if not payee:
+                continue
+            if not (expense.property_id or expense.entity_id):
+                continue
+            if entity_id is not None and expense.entity_id != entity_id:
+                continue
+            if not _in_range(expense.date, start_date, end_date):
+                continue
+            key = payee.lower()
+            totals[key] = totals.get(key, 0.0) + expense.amount
+            display_names.setdefault(key, payee)
+        return {display_names[key]: amount for key, amount in totals.items() if amount >= threshold}
 
     # ------------------------------------------------------------------
     # Budget targets — planned monthly spending per category, deliberately

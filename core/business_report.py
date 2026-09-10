@@ -25,6 +25,14 @@ from typing import Optional
 
 _TABLE_OPEN = '<table border="1" cellspacing="0" cellpadding="4" width="100%" style="border-collapse:collapse">'
 
+# Real, stable IRS 1099-NEC threshold (years running) — a local copy,
+# not an import from core.budget_manager, matching this module's own
+# stated design (never touches BudgetManager directly, only already-
+# fetched plain data). BudgetManager.payees_over_1099_threshold()
+# already filters to this same value before this module ever sees the
+# data; this copy is purely for describing the number in the caveat text.
+_US_1099_NEC_THRESHOLD = 600.0
+
 
 def _money(amount: float) -> str:
     return f"${amount:,.2f}"
@@ -247,6 +255,32 @@ def _schedule_e_table(properties: list[dict]) -> str:
     return "\n".join(html)
 
 
+def _payees_over_threshold_table(payees: dict[str, float], threshold: float) -> str:
+    """payees: real business-tagged payment totals per payee, already
+    filtered to those at/over threshold by
+    core.budget_manager.BudgetManager.payees_over_1099_threshold() — a
+    factual comparison against the real IRS 1099-NEC threshold, never
+    a computed tax liability or a "you must file" directive."""
+    html = ["<h2>1099-NEC Threshold Check (This Year)</h2>"]
+    html.append(
+        "<p><i>Real business-tagged payments (a property or LLC set) to a "
+        f"named payee that reached or exceeded the {_money_whole(threshold)} IRS "
+        "1099-NEC threshold this year — a factual comparison, not tax advice. "
+        "Confirm with your accountant whether a 1099-NEC is actually required "
+        "(e.g. the payee's own business structure can exempt them).</i></p>"
+    )
+    if not payees:
+        html.append(f"<p>No payee has reached the {_money_whole(threshold)} threshold this year.</p>")
+        return "\n".join(html)
+
+    html.append(_TABLE_OPEN)
+    html.append("<tr><th>Payee</th><th>Total Paid</th></tr>")
+    for payee, amount in sorted(payees.items(), key=lambda item: item[1], reverse=True):
+        html.append(f'<tr><td>{payee}</td><td align="right" nowrap>{_money(amount)}</td></tr>')
+    html.append("</table>")
+    return "\n".join(html)
+
+
 def build_business_report_html(
     range_label: str,
     start_date: Optional[str],
@@ -263,6 +297,7 @@ def build_business_report_html(
     generated_at: str,
     entity_label: Optional[str] = None,
     schedule_e_properties: Optional[list[dict]] = None,
+    payees_over_threshold: Optional[dict[str, float]] = None,
 ) -> str:
     """Pure logic — testable without Qt. properties is a list of plain
     dicts: {"name", "type", "current_value", "mortgage_balance",
@@ -274,12 +309,19 @@ def build_business_report_html(
     resolved by the caller — omitted entirely from the title block when
     None (no entity filter applied), same "don't render a misleading
     empty line" convention as this module's other optional sections.
+
     schedule_e_properties (2026-09-09) is a list of {"name",
     "rents_received", "expenses_by_category": dict[str, float],
-    "depreciation"} dicts — same "caller passes [] for any range where
-    this doesn't apply" convention as budget_targets; Schedule E is an
-    annual form, so the caller should only ever populate this for
-    "This Year"."""
+    "depreciation"} dicts; payees_over_threshold (2026-09-09) is a
+    dict[payee, amount] from BudgetManager.payees_over_1099_threshold().
+    Both are annual concepts — the caller should only ever populate
+    them for "This Year". Both use an explicit None-vs-real-value
+    sentinel, NOT None-vs-empty-list/dict: None means "not this range,
+    omit the section entirely"; an empty list/dict means "this range
+    applies, but nothing to show" and still renders the section's own
+    honest empty-state message (e.g. "No Rental/Investment properties
+    tracked", "No payee has reached the threshold this year") — an
+    empty container is a real, meaningful answer, not "not computed"."""
     net_cash_flow = income_total - expenses_total
 
     title_line = f"<p><b>Range:</b> {range_label}"
@@ -304,7 +346,9 @@ def build_business_report_html(
     ]
     if budget_targets:
         sections.append(_budget_targets_table(budget_targets, actual_by_category))
-    if schedule_e_properties:
+    if schedule_e_properties is not None:
         sections.append(_schedule_e_table(schedule_e_properties))
+    if payees_over_threshold is not None:
+        sections.append(_payees_over_threshold_table(payees_over_threshold, _US_1099_NEC_THRESHOLD))
 
     return "\n".join(sections)

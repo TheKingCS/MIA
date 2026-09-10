@@ -196,9 +196,19 @@ def _schedule_e_property(name="123 Main St", rents_received=24000.0, expenses_by
     }
 
 
-def test_schedule_e_section_omitted_when_no_properties_passed():
-    html = _build(range_label="This Year", schedule_e_properties=[])
+def test_schedule_e_section_omitted_when_not_this_year():
+    # None (not []) means "not this range" — the section is fully omitted.
+    html = _build(range_label="This Month", schedule_e_properties=None)
     assert "Schedule E Summary" not in html
+
+
+def test_schedule_e_section_shows_empty_state_when_this_year_but_no_properties():
+    # [] (an empty list, not None) means "This Year applies, but nothing
+    # to show" — the section still renders with its own honest empty state,
+    # a real distinction from "not this range at all" (fixed 2026-09-09).
+    html = _build(range_label="This Year", schedule_e_properties=[])
+    assert "Schedule E Summary" in html
+    assert "No Rental/Investment properties tracked." in html
 
 
 def test_schedule_e_section_shows_mapped_lines_and_totals():
@@ -241,3 +251,34 @@ def test_schedule_e_section_shows_a_loss_in_accounting_parens_not_a_minus_sign()
 def test_schedule_e_section_includes_property_name_heading():
     html = _build(range_label="This Year", schedule_e_properties=[_schedule_e_property(name="Lake Cabin")])
     assert "<h3>Lake Cabin</h3>" in html
+
+
+# ------------------------------------------------------------------
+# 1099-NEC threshold section
+# ------------------------------------------------------------------
+
+def test_payees_section_omitted_when_none_passed():
+    html = _build(range_label="This Month", payees_over_threshold=None)
+    assert "1099-NEC Threshold Check" not in html
+
+
+def test_payees_section_shows_empty_state_when_empty_dict_passed():
+    html = _build(range_label="This Year", payees_over_threshold={})
+    assert "1099-NEC Threshold Check" in html
+    assert "No payee has reached the $600 threshold this year." in html
+
+
+def test_payees_section_lists_real_payees_sorted_by_amount():
+    html = _build(range_label="This Year", payees_over_threshold={"Ace Plumbing": 700.0, "Bob's Landscaping": 1200.0})
+    assert "Ace Plumbing" in html
+    assert "Bob's Landscaping" in html
+    assert "$700.00" in html
+    assert "$1,200.00" in html
+    # Sorted descending by amount — Bob's Landscaping (1200) should appear before Ace Plumbing (700).
+    assert html.index("Bob's Landscaping") < html.index("Ace Plumbing")
+
+
+def test_payees_section_mentions_not_tax_advice():
+    html = _build(range_label="This Year", payees_over_threshold={"Ace Plumbing": 700.0})
+    assert "not tax advice" in html
+    assert "confirm with your accountant" in html.lower()

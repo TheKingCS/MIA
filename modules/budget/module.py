@@ -646,6 +646,7 @@ class BudgetModule(ModuleBase):
             date=dialog.entered_date,
             entity_id=dialog.entered_entity_id,
             tax_relevant=dialog.entered_tax_relevant,
+            payee=dialog.entered_payee,
             notes=dialog.entered_notes,
         )
         self._refresh_expense_list()
@@ -669,6 +670,7 @@ class BudgetModule(ModuleBase):
             date=dialog.entered_date,
             entity_id=dialog.entered_entity_id,
             tax_relevant=dialog.entered_tax_relevant,
+            payee=dialog.entered_payee,
             notes=dialog.entered_notes,
         )
         self._refresh_expense_list()
@@ -924,12 +926,16 @@ class BudgetModule(ModuleBase):
                 "annual_depreciation": annual_depreciation(prop),
             })
 
-        # Schedule E is inherently an annual form — only populate this
-        # for "This Year", same "caller decides, not the report module"
-        # gating budget_targets already uses for its own "This Month
-        # only" restriction.
-        schedule_e_properties = []
+        # Schedule E and 1099 tracking are both inherently annual — only
+        # populate them for "This Year", same "caller decides, not the
+        # report module" gating budget_targets already uses for its own
+        # "This Month only" restriction. None (not []/{}) means "not
+        # this range, omit the section" — see build_business_report_html()'s
+        # own docstring for why that's distinct from a real empty result.
+        schedule_e_properties = None
+        payees_over_threshold = None
         if range_label == "This Year":
+            schedule_e_properties = []
             for prop in real_estate.all_properties():
                 if entity_id is not None and prop.entity_id != entity_id:
                     continue
@@ -947,6 +953,7 @@ class BudgetModule(ModuleBase):
                     "expenses_by_category": expenses_by_category,
                     "depreciation": annual_depreciation(prop),
                 })
+            payees_over_threshold = budget.payees_over_1099_threshold(start, end, entity_id=entity_id or "")
 
         html = build_business_report_html(
             range_label=range_label,
@@ -968,6 +975,7 @@ class BudgetModule(ModuleBase):
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
             entity_label=entity_label,
             schedule_e_properties=schedule_e_properties,
+            payees_over_threshold=payees_over_threshold,
         )
 
         suggested_name = f"Business_Report_{datetime.now():%Y-%m-%d}.pdf"

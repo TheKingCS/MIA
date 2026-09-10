@@ -5850,3 +5850,46 @@ text, and the accounting-parens loss format; a real rendered PDF
 one a real gain) plus one excluded Primary Residence, confirmed
 rendering cleanly with no wrapping on the same page that already
 proved fragile earlier this session. 1937 tests passing.
+
+## Financial deep-dive, part 6: 1099/contractor payment tracking (2026-09-09)
+
+Confirmed follow-up to Schedule E: real payments to contractors/
+vendors checked against the real, stable IRS 1099-NEC threshold
+($600/year) — a factual comparison, never a computed tax liability or
+a "you must file" directive. `ExpenseEntry` gained `payee: str = ""`
+(distinct from `description` — who was paid, not what the expense was
+for) and a new `BudgetManager.payees_over_1099_threshold()` sums
+payments per payee (case-insensitive grouping, first-seen casing
+preserved for display) and returns only those at/over threshold.
+**Real IRS rule applied, not guessed**: only expenses tagged with a
+`property_id` or `entity_id` count — 1099-NEC obligations arise from
+payments made in the course of a trade or business, so a purely
+personal household payment (no property/LLC tag) is correctly
+excluded even if the payee name matches a real contractor. New
+optional Payee field on the Add/Edit Expense dialog.
+
+New "1099-NEC Threshold Check (This Year)" Business Report section,
+gated to "This Year" (annual, same reasoning as Schedule E), listing
+payees sorted by amount with a caveat that this is a factual threshold
+check, not tax advice, and that the payee's own business structure can
+still exempt them.
+
+**A real consistency fix made while designing this, not shipped
+twice**: `schedule_e_properties` previously used a bare truthy check
+(`if schedule_e_properties:`), meaning "This Year, zero eligible
+properties" was indistinguishable from "not This Year at all" — and
+`_schedule_e_table()`'s own "No Rental/Investment properties tracked."
+empty-state message was unreachable dead code as a result. Both
+`schedule_e_properties` and the new `payees_over_threshold` now use an
+explicit `None`-vs-real-value sentinel: `None` omits the section
+entirely (not this range), a real empty list/dict still renders the
+section with its own honest "nothing to show" message (a genuinely
+different, meaningful state).
+
+**Verified for real**: new tests for the threshold check (below/at/
+over threshold, personal-payment exclusion, case-insensitive grouping,
+entity/date filtering, custom thresholds), the corrected `None`-vs-`[]`
+semantics for both annual sections (a real gap in the existing test
+suite, now covered), a headless-Qt check of the new Payee field
+round-tripping through the dialog, and a real rendered PDF showing
+both 1099 payees sorted correctly with no wrapping. 1954 tests passing.

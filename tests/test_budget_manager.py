@@ -422,6 +422,88 @@ def test_expense_entry_from_dict_backward_compatible_without_entity_field():
     assert entry.entity_id == ""
 
 
+def test_expense_entry_from_dict_backward_compatible_defaults_payee_empty():
+    old_shape = {"entry_id": "e1", "amount": 45.0, "category": "Groceries", "date": "2026-09-01"}
+    entry = budget_manager_module.ExpenseEntry.from_dict(old_shape)
+    assert entry.payee == ""
+
+
+def test_add_expense_stores_payee(isolated_paths):
+    manager = _make_manager()
+    entry = manager.add_expense(amount=800.0, payee="Ace Plumbing LLC")
+    assert entry.payee == "Ace Plumbing LLC"
+
+
+# ------------------------------------------------------------------
+# payees_over_1099_threshold — real IRS threshold check, business-tagged only
+# ------------------------------------------------------------------
+
+def test_payees_over_1099_threshold_excludes_below_threshold(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=500.0, payee="Ace Plumbing", property_id="p1")
+    assert manager.payees_over_1099_threshold() == {}
+
+
+def test_payees_over_1099_threshold_includes_at_or_over_threshold(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=600.0, payee="Ace Plumbing", property_id="p1")
+    assert manager.payees_over_1099_threshold() == {"Ace Plumbing": 600.0}
+
+
+def test_payees_over_1099_threshold_sums_multiple_payments_to_same_payee(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=300.0, payee="Ace Plumbing", property_id="p1", date="2026-01-01")
+    manager.add_expense(amount=350.0, payee="Ace Plumbing", property_id="p1", date="2026-06-01")
+    assert manager.payees_over_1099_threshold() == {"Ace Plumbing": 650.0}
+
+
+def test_payees_over_1099_threshold_excludes_purely_personal_payments(isolated_paths):
+    manager = _make_manager()
+    # No property_id or entity_id — a personal household payment, not business-tagged.
+    manager.add_expense(amount=1000.0, payee="Ace Plumbing")
+    assert manager.payees_over_1099_threshold() == {}
+
+
+def test_payees_over_1099_threshold_entity_tagged_counts(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=700.0, payee="Ace Plumbing", entity_id="ent-1")
+    assert manager.payees_over_1099_threshold() == {"Ace Plumbing": 700.0}
+
+
+def test_payees_over_1099_threshold_ignores_blank_payee(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=1000.0, property_id="p1")  # no payee set
+    assert manager.payees_over_1099_threshold() == {}
+
+
+def test_payees_over_1099_threshold_groups_case_insensitively_keeps_first_seen_casing(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=400.0, payee="Ace Plumbing", property_id="p1", date="2026-01-01")
+    manager.add_expense(amount=300.0, payee="ACE PLUMBING", property_id="p1", date="2026-06-01")
+    result = manager.payees_over_1099_threshold()
+    assert result == {"Ace Plumbing": 700.0}  # first-seen casing preserved
+
+
+def test_payees_over_1099_threshold_filters_by_entity_id(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=700.0, payee="Ace Plumbing", entity_id="ent-1")
+    manager.add_expense(amount=800.0, payee="Bob's Landscaping", entity_id="ent-2")
+    assert manager.payees_over_1099_threshold(entity_id="ent-1") == {"Ace Plumbing": 700.0}
+
+
+def test_payees_over_1099_threshold_respects_date_range(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=700.0, payee="Ace Plumbing", property_id="p1", date="2025-01-01")
+    assert manager.payees_over_1099_threshold(start_date="2026-01-01") == {}
+
+
+def test_payees_over_1099_threshold_custom_threshold(isolated_paths):
+    manager = _make_manager()
+    manager.add_expense(amount=200.0, payee="Ace Plumbing", property_id="p1")
+    assert manager.payees_over_1099_threshold(threshold=100.0) == {"Ace Plumbing": 200.0}
+    assert manager.payees_over_1099_threshold(threshold=500.0) == {}
+
+
 def test_total_income_entity_filter_matches_only_that_entity(isolated_paths):
     manager = _make_manager()
     manager.add_income(amount=3000.0, entity_id="ent-1", date="2026-09-01")

@@ -37,7 +37,7 @@ class AddEditExpenseDialog(QDialog):
     def __init__(self, parent=None, entry: Optional[ExpenseEntry] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Expense" if entry is not None else "New Expense")
-        self.setFixedSize(360, 480)
+        self.setFixedSize(360, 540)
 
         self._entities = entities or []
 
@@ -75,6 +75,11 @@ class AddEditExpenseDialog(QDialog):
         self.tax_relevant_checkbox = QCheckBox("Tax relevant")
         layout.addWidget(self.tax_relevant_checkbox)
 
+        layout.addWidget(QLabel("Payee:"))
+        self.payee_edit = QLineEdit()
+        self.payee_edit.setPlaceholderText("e.g. Ace Plumbing LLC — only needed for business-related payments")
+        layout.addWidget(self.payee_edit)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -96,6 +101,7 @@ class AddEditExpenseDialog(QDialog):
         self._date: str = ""
         self._entity_id: str = ""
         self._tax_relevant: bool = False
+        self._payee: str = ""
         self._notes: str = ""
 
     def _prefill(self, entry: Optional[ExpenseEntry]) -> None:
@@ -110,6 +116,7 @@ class AddEditExpenseDialog(QDialog):
                 idx = self.entity_combo.findData(entry.entity_id)
                 self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.tax_relevant_checkbox.setChecked(entry.tax_relevant)
+            self.payee_edit.setText(entry.payee)
             self.notes_edit.setPlainText(entry.notes)
         else:
             self.date_edit.setDate(QDate.currentDate())
@@ -121,6 +128,7 @@ class AddEditExpenseDialog(QDialog):
         self._date = self.date_edit.date().toString(_ISO_DATE_FORMAT)
         self._entity_id = self.entity_combo.currentData()
         self._tax_relevant = self.tax_relevant_checkbox.isChecked()
+        self._payee = self.payee_edit.text().strip()
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
 
@@ -147,6 +155,10 @@ class AddEditExpenseDialog(QDialog):
     @property
     def entered_tax_relevant(self) -> bool:
         return self._tax_relevant
+
+    @property
+    def entered_payee(self) -> str:
+        return self._payee
 
     @property
     def entered_notes(self) -> str:
