@@ -16,7 +16,13 @@ import core.user_memory_manager as user_memory_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
-from core.user_memory_manager import MEMORY_CATEGORIES, UserMemory, UserMemoryManager, is_duplicate_memory
+from core.user_memory_manager import (
+    MEMORY_CATEGORIES,
+    UserMemory,
+    UserMemoryManager,
+    is_duplicate_memory,
+    related_memories,
+)
 
 
 @pytest.fixture
@@ -49,6 +55,73 @@ def test_is_duplicate_memory_not_a_match():
 
 def test_is_duplicate_memory_empty_existing_list():
     assert is_duplicate_memory("Loves hiking", []) is False
+
+
+# ----------------------------------------------------------------------
+# related_memories (pure, 2026-09-10 "Memory Palace" cross-linking)
+# ----------------------------------------------------------------------
+
+def _memory(memory_id: str, text: str, category: str = "Other") -> UserMemory:
+    return UserMemory(memory_id=memory_id, text=text, category=category)
+
+
+def test_related_memories_finds_a_shared_proper_noun():
+    sister = _memory("m1", "The user's sister is named Jamie.", category="Family")
+    party = _memory("m2", "The user is planning a birthday party for Jamie next month.", category="Family")
+    unrelated = _memory("m3", "The user enjoys fly fishing on weekends.", category="Fishing")
+
+    results = related_memories(sister, [sister, party, unrelated])
+    assert results == [party]
+
+
+def test_related_memories_a_single_shared_generic_word_is_not_enough():
+    """Both facts happen to use the word "named" — one weak, generic
+    shared word alone must not count as a real relation (the whole
+    reason for the minimum-score threshold)."""
+    dog = _memory("m1", "The user has a dog named Rex.", category="Pets")
+    sister = _memory("m2", "The user's sister is named Jamie.", category="Family")
+
+    assert related_memories(dog, [dog, sister]) == []
+
+
+def test_related_memories_excludes_the_target_itself():
+    only = _memory("m1", "The user has a dog named Rex.", category="Pets")
+    assert related_memories(only, [only]) == []
+
+
+def test_related_memories_the_word_user_never_counts_toward_a_relation():
+    """core.assistant_chat's extraction prompt always says "the user"
+    instead of he/she — a universal overlap across this whole corpus,
+    not a real signal."""
+    a = _memory("m1", "The user likes coffee.", category="Other")
+    b = _memory("m2", "The user likes tea.", category="Other")
+    assert related_memories(a, [a, b]) == []
+
+
+def test_related_memories_respects_limit():
+    target = _memory("m1", "The user's sister is named Jamie.", category="Family")
+    others = [
+        _memory("m2", "The user is planning a party for Jamie.", category="Family"),
+        _memory("m3", "The user is buying a gift for Jamie.", category="Family"),
+        _memory("m4", "The user is calling Jamie this weekend.", category="Family"),
+    ]
+    results = related_memories(target, [target] + others, limit=2)
+    assert len(results) == 2
+
+
+def test_related_memories_sorted_highest_score_first():
+    target = _memory("m1", "The user's sister Jamie lives in Denver.", category="Family")
+    weak = _memory("m2", "The user is planning a trip to Denver.", category="Travel")  # shares "Denver" only
+    strong = _memory("m3", "The user is calling Jamie about the Denver trip.", category="Family")  # shares both
+
+    results = related_memories(target, [target, weak, strong])
+    assert results[0] == strong
+
+
+def test_related_memories_empty_when_nothing_qualifies():
+    target = _memory("m1", "The user enjoys fly fishing on weekends.", category="Fishing")
+    other = _memory("m2", "The user works as a backend engineer.", category="Work")
+    assert related_memories(target, [target, other]) == []
 
 
 # ----------------------------------------------------------------------

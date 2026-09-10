@@ -32,14 +32,28 @@ by adding a real `category` field instead: `core.assistant_chat`'s
 memory-extraction prompt now asks the LLM for a category per fact
 (`Category: Fact` per line), and `add_memory()` stores it, falling back
 to "Other" for anything unrecognized so a formatting slip never loses
-a real fact. "Interconnected" (cross-linking related memories) is a
-real, separate, bigger feature deferred for now — this data model has
-no "related to" concept yet.
+a real fact.
+
+**"Interconnected" memories, also 2026-09-10**: `related_memories()`
+below — deliberately a pure, on-demand, UNPERSISTED computation, not a
+new `related_memory_ids` field with LLM-inferred links written at
+extraction time. That richer design was considered and set aside: it
+would need a new async LLM call wired into all 4 real memory-extraction
+call sites (mirroring the existing conversation-title-generation
+worker) for real added latency/complexity, whereas a simple keyword-
+overlap score over the already-small memory store — the exact same
+"don't build a heavier retrieval stack than this corpus needs"
+reasoning `core.device_help_manager`'s own docstring already applies to
+doc retrieval — delivers the real substance (memories connect to each
+other, discoverable in `gui/user_memory_dialog.py`) with no schema
+change and no new I/O. A fuller graph/tree *visualization* is real,
+separate UI scope, not attempted here.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -92,6 +106,73 @@ def is_duplicate_memory(text: str, existing_texts: list[str]) -> bool:
     """Pure logic — testable without touching the filesystem. Case/whitespace-insensitive exact match."""
     normalized = text.strip().lower()
     return any(normalized == existing.strip().lower() for existing in existing_texts)
+
+
+# 2026-09-10 "Memory Palace" cross-linking. Word-overlap scoring, same
+# shape as core.device_help_manager.score_chunk() but independently
+# owned — a different domain, not something this module should import
+# from (same "modules never share private logic" precedent
+# modules/garage/module.py and modules/property/module.py already
+# follow for their own independently-owned task_needs_attention()).
+_WORD_RE = re.compile(r"[a-zA-Z0-9]+")
+
+# The standard short stopword list PLUS "user"/"users" — a real,
+# corpus-specific quirk, not general-English noise: core.assistant_chat's
+# own memory-extraction prompt explicitly instructs the LLM to always
+# say "the user" instead of he/she/his/her, so that word is a universal
+# false-positive overlap across EVERY memory in this specific corpus.
+_RELATED_MEMORY_STOPWORDS = {
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "has", "have", "had",
+    "to", "of", "in", "on", "and", "or", "for", "with", "about", "at", "as", "user", "users",
+}
+
+
+def _related_memory_words(text: str) -> set[str]:
+    """Lowercase, stopword-stripped words — the "does this overlap at
+    all" half of the score."""
+    return {w.lower() for w in _WORD_RE.findall(text)} - _RELATED_MEMORY_STOPWORDS
+
+
+def _related_memory_proper_nouns(text: str) -> set[str]:
+    """Words that were capitalized in the ORIGINAL text — a cheap, real
+    proxy for "shared proper noun" (a person's name, a place), not
+    "shared generic word." Lowercased for comparison since two mentions
+    of the same name could differ in surrounding case."""
+    return {w.lower() for w in _WORD_RE.findall(text) if w[:1].isupper()} - _RELATED_MEMORY_STOPWORDS
+
+
+def _related_memory_score(a: "UserMemory", b: "UserMemory") -> int:
+    """Shared generic words count once each; shared proper nouns count
+    double — the same "give the stronger signal extra weight" idea
+    core.device_help_manager.score_chunk()'s heading-match doubling
+    already establishes, adapted to this corpus's own real signal
+    (names) rather than doc headings."""
+    shared_words = _related_memory_words(a.text) & _related_memory_words(b.text)
+    shared_proper_nouns = _related_memory_proper_nouns(a.text) & _related_memory_proper_nouns(b.text)
+    return len(shared_words) + 2 * len(shared_proper_nouns)
+
+
+# A single shared generic word (score 1) is too weak to call "related" —
+# real MIA memories are short, single-sentence facts, so one incidental
+# shared word (e.g. both happen to say "named") isn't a meaningful
+# connection. A single shared proper noun alone (score 2) already
+# clears this — the threshold is what lets proper-noun overlaps qualify
+# without needing to hand-blacklist individual generic words.
+_RELATED_MEMORY_MIN_SCORE = 2
+
+
+def related_memories(target: "UserMemory", all_memories: list["UserMemory"], limit: int = 3) -> list["UserMemory"]:
+    """Pure logic — testable without touching the filesystem. Other
+    memories that share enough real signal (see _related_memory_score())
+    with `target`, highest-scoring first, `target` itself excluded."""
+    scored = [
+        (_related_memory_score(target, other), other)
+        for other in all_memories
+        if other.memory_id != target.memory_id
+    ]
+    scored = [(score, other) for score, other in scored if score >= _RELATED_MEMORY_MIN_SCORE]
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [other for _, other in scored[:limit]]
 
 
 class UserMemoryManager:

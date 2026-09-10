@@ -6673,3 +6673,64 @@ message as the sole first message, rendered in the real sidebar; a
 second `MainWindow` construction (same profile) correctly did NOT
 repeat it; the Replay button correctly disables while speaking and
 re-enables once playback finishes.
+
+## Memory Palace: cross-linking related memories (2026-09-10)
+
+User picked "Memory Palace cross-linking" — the deferred half of this
+session's earlier categorization work. `core/user_memory_manager.py`'s
+own docstring already said plainly this was still fully unbuilt, and
+VISION.md's own critical-evaluation note confirms it doesn't concretely
+specify a design either — genuine open design work, not a stale-docs
+gap like the two previous picks this session.
+
+**Deliberately scoped narrow**: considered LLM-inferred links persisted
+at write time (a new `related_memory_ids` field + an async LLM call
+wired into all 4 real memory-extraction call sites, mirroring the
+existing conversation-title-generation worker) against a pure, on-
+demand, unpersisted computation. Chose the latter — no schema change
+(sidesteps the exact "real data-model migration" risk VISION's own note
+warns about), no new LLM call/latency/call-site wiring, and it directly
+reuses `core.device_help_manager`'s own already-established precedent
+in this codebase: keyword-overlap scoring over a small corpus,
+explicitly preferred there over embeddings. The memory store is
+similarly small. A fuller graph/tree *visualization* is real, separate
+UI scope, not attempted here — this delivers the actual substance
+("memories connect to each other, discoverable in the UI"), not the
+full visual metaphor.
+
+New `related_memories()` in `core/user_memory_manager.py` — word-
+overlap scoring, independently owned (not imported from
+`device_help_manager`, a different domain — same "own small copy"
+precedent Garage/Property's `task_needs_attention()` and Workout's
+`format_elapsed()` already established this session). Shared generic
+words count once each; shared PROPER NOUNS (words capitalized in the
+original text — a cheap, real proxy for a shared name or place) count
+double, mirroring `score_chunk()`'s own heading-match-doubling idea. A
+minimum score threshold (2) is what lets a genuine shared name qualify
+on its own while a single incidental shared generic word (both facts
+happening to use "named," say) does not — no hand-blacklisting of
+individual words needed. `"user"`/`"users"` are excluded from scoring
+entirely — a real, corpus-specific quirk: `core.assistant_chat`'s own
+extraction prompt always says "the user" instead of he/she, so that
+word would otherwise falsely overlap with literally every memory.
+
+Surfaced in `gui/user_memory_dialog.py`: each row gains a "Related:
+..." line whenever a real relation exists, computed against the full
+memory list regardless of the active category filter (a real relation
+can span categories) — silent otherwise, same "never show an empty/
+zero-state filler line" restraint this session's daily-nudge/highlight-
+provider work has used repeatedly. Respects the dialog's own stated
+"no add/edit UI, memories are learned through conversation, not hand-
+authored" principle — the relation is discovered automatically, never
+manually curated.
+
+**Verified for real**: 2186 tests passing (7 new — a genuine proper-
+noun overlap qualifies, a single shared generic word does not, "user"/
+"users" never count, limit/sort/self-exclusion all correct). Manual
+screenshot verification with a realistic 5-memory fixture set: the two
+memories both mentioning "Jamie" (a birthday-party plan and a sibling
+fact, different categories — Family/Family here, but the computation
+doesn't care) show reciprocal "Related:" lines naming each other, while
+the Pets/Fishing/Work memories — genuinely unrelated to anything else
+in the set — stay completely silent, confirming the threshold holds in
+a real render, not just in unit tests.

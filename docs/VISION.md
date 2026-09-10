@@ -763,11 +763,18 @@ the other.
   radius (10 files reference the system, 4 are live call sites touching
   both the GUI and headless Core conversation pipelines) and judged a
   full rename as pure ceremony/risk for zero functional gain once the
-  real categorization existed. Cross-referencing memories to each other
-  ("interconnected... memory trees") is still fully unbuilt — a real,
-  separate, much bigger feature (needs a linking UI and a "related to"
-  concept the data model doesn't have) that this document doesn't
-  concretely specify, deliberately not attempted against a guess.
+  real categorization existed. **Cross-referencing memories to each
+  other built 2026-09-10** — `related_memories()`, a pure keyword-
+  overlap function (weighted toward shared proper nouns, e.g. two facts
+  both naming the same person), surfaced as a "Related:" line in
+  `gui/user_memory_dialog.py`. Deliberately does NOT add the "related
+  to" concept this note originally said the data model was missing —
+  no new persisted field, no linking UI, no LLM call at write time; the
+  relation is computed fresh each time the dialog opens, same "don't
+  build a heavier retrieval stack than a small corpus needs" reasoning
+  `core/device_help_manager.py`'s own docstring already applies to doc
+  retrieval. A fuller graph/tree *visualization* is real, separate UI
+  scope, still unbuilt.
 - **This update's own scope is, by a wide margin, the largest single
   addition to this document since the 2026-07-14 wearable-companion
   pass** — voice-first primacy, intelligent UI navigation, proactive
@@ -799,7 +806,7 @@ the other.
 | **Home Dock auto-launch Dashboard** (2026-07-14 addition: docking Core to the Home desktop opens MIA automatically to a dashboard of recent events/objectives/photos/music/projects and upcoming items) | Project 1/2 boundary. Extends v0.13's Core/Home device-profile split and v0.15's Expedition-sync docking detection (Field Kit already detects a docked Core) — mostly orchestration (launch-on-dock, a new Dashboard view) rather than new architecture. |
 | **Vitals/Stats logging** (2026-07-14 addition: maximalist local logging of user activity/position/pace/biometrics as hardware allows) | Project 1, new core service. Deliberately maximalist rather than category-limited, per the Mission section's reconciliation with "privacy-first" above — the only real ceiling is hardware capability (GPS, IMU, camera, mic), not self-imposed scope. |
 | **Modular wearable backpack form factor** (2026-07-14 addition: camera/speaker/mic on the strap, Pi5+HAT+battery on the pack, plug-and-play expansion modules) | Physical/industrial design work, not software — tracked in `HARDWARE.md`'s new "Modular Backpack" section as its own parallel track, same way Fleet/Communications hardware choices are deferred until acquired. |
-| **Memory Palace** (2026-07-15 addition: categorized, cross-referenced memory trees instead of a flat fact list) | Project 1. A schema/migration on `core/user_memory_manager.py`, not a new service — see the critical-evaluation note above on why this isn't purely additive. **Categorization half built 2026-09-10** (real `category` field, LLM-tagged at extraction time, filterable in `gui/user_memory_dialog.py`); cross-referencing memories to each other is still unbuilt. |
+| **Memory Palace** (2026-07-15 addition: categorized, cross-referenced memory trees instead of a flat fact list) | Project 1. A schema/migration on `core/user_memory_manager.py`, not a new service — see the critical-evaluation note above on why this isn't purely additive. **Categorization half built 2026-09-10** (real `category` field, LLM-tagged at extraction time, filterable in `gui/user_memory_dialog.py`). **Cross-linking also built 2026-09-10** — `related_memories()`, a pure keyword-overlap computation (weighted toward shared proper nouns), surfaced as a "Related:" line per memory in the dialog; deliberately unpersisted (no new field, no LLM call at write time) — see the critical-evaluation note above and `docs/ROADMAP.md`'s dated entry for why that scope was chosen over a richer, persisted-link design. A fuller graph/tree visualization is still unbuilt. |
 | **Intelligent UI Navigation** (2026-07-15 addition: the GUI opens the right module and fills in a form live while the conversation continues) | Project 1. A new tool category alongside the existing domain-scoped data tools (2026-07-14) — see the critical-evaluation note above; needed before voice-first can feel seamless rather than "chat, then go check the screen." |
 | **Voice-first primacy** (2026-07-15 addition: voice becomes the primary interface, GUI a supporting visual) | Project 1. UX-sequencing principle applied to every future module's design, not a new service — today's push-to-talk Assistant voice path (v0.5+) is the existing foundation. |
 | **Startup Dashboard Briefing** (2026-07-15 addition: an intelligent spoken/written summary at launch instead of a static dashboard) | Project 1. **Built 2026-07-15** — `core/startup_briefing.py` + `gui/home_dashboard.py`'s `_build_briefing_text()`/`_speak()`, spoken aloud via TTS automatically at every launch (human-confirmed audio output, `docs/KNOWN_ISSUES.md`), genuinely reflects live dashboard-widget state via a `_<widget_id>_highlight()` provider per widget rather than a separately-maintained list. **Extended 2026-09-10** as newer domains shipped real data — Budget/Maintenance/Kitchen/Workout/Relationships all gained a highlight provider (only Music and the native Real Estate portfolio widget remain deliberate exclusions, documented inline at their own registration point). Deliberately still template-based, not an LLM call — `core/startup_briefing.py`'s own docstring states this explicitly as a considered latency trade-off, not an oversight; revisit if a template ever stops feeling "intelligent enough." |

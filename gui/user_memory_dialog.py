@@ -22,6 +22,15 @@ client-side over the small, already-loaded `all_memories()` list, same
 as every other small filterable list in this app (e.g. Budget's own
 filter edits) — no manager-level filtering method needed for a list
 this size.
+
+**Also 2026-09-10, "interconnected" memories**: each row shows a
+"Related: ..." line via `core.user_memory_manager.related_memories()`
+whenever a real relation exists (word-overlap scoring, weighted toward
+shared proper nouns — see that function's own docstring) — computed
+against the FULL memory list regardless of the active category filter,
+since a real relation can span categories. Silent otherwise, same "no
+add/edit UI, no manual curation" stance as the rest of this dialog —
+the relation is discovered automatically, never hand-authored.
 """
 
 from __future__ import annotations
@@ -41,7 +50,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
-from core.user_memory_manager import MEMORY_CATEGORIES
+from core.user_memory_manager import MEMORY_CATEGORIES, related_memories
 
 
 class UserMemoryDialog(QDialog):
@@ -124,14 +133,15 @@ class UserMemoryDialog(QDialog):
             return
 
         for memory in memories:
-            self._list_layout.addWidget(self._build_row(memory))
+            self._list_layout.addWidget(self._build_row(memory, all_memories))
 
-    def _build_row(self, memory) -> QWidget:
+    def _build_row(self, memory, all_memories: list) -> QWidget:
         card = QFrame()
         card.setObjectName("DashboardCard")
-        row = QHBoxLayout(card)
-        row.setContentsMargins(14, 10, 14, 10)
+        column = QVBoxLayout(card)
+        column.setContentsMargins(14, 10, 14, 10)
 
+        row = QHBoxLayout()
         text_label = QLabel(f"[{memory.category}]  {memory.text}")
         text_label.setObjectName("DashboardSectionBody")
         text_label.setWordWrap(True)
@@ -142,6 +152,22 @@ class UserMemoryDialog(QDialog):
         delete_button.setToolTip("Forget this")
         delete_button.clicked.connect(lambda _checked=False, m=memory: self._on_delete(m))
         row.addWidget(delete_button)
+        column.addLayout(row)
+
+        # 2026-09-10 "Memory Palace" cross-linking — computed against
+        # the FULL memory list, not just whatever category is currently
+        # filtered, since a real related memory can live in a different
+        # category (e.g. a Family memory and a Travel memory both about
+        # the same trip). Silent whenever nothing real qualifies — same
+        # "never show an empty/zero-state filler line" restraint every
+        # other proactive surface in this app already follows.
+        related = related_memories(memory, all_memories, limit=2)
+        if related:
+            related_text = "; ".join(r.text for r in related)
+            related_label = QLabel(f"Related: {related_text}")
+            related_label.setObjectName("SubtitleLabel")
+            related_label.setWordWrap(True)
+            column.addWidget(related_label)
 
         return card
 
