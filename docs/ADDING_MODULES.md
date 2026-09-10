@@ -111,6 +111,28 @@ module" (e.g. "open this specific note"), you'll need a new
 will need a branch for it — see `gui/main_window.py` for the existing
 `"open_module"` / `"switch_profile"` cases as a model.
 
+## 5b. Giving MIA real self-knowledge about it (recommended)
+
+Without any extra work, `core/device_help_manager.py` already lets MIA
+answer "what does the `<Your Module>` module do" with your one-line
+`description` — but that's it, a single sentence, not real "how do I
+use X" workflow help. If your module has real workflows worth
+explaining (not just a status view), add a
+`docs/user_help/<your_module_id>.md` file — **name it exactly after
+your `module_id`**, not a prettier name, so it earns the same
+module-name confidence bonus your module's auto-generated one-liner
+already gets (see that file's own docstring, 2026-09-10 entry, for why
+this naming convention matters — a mismatched filename silently loses
+that bonus). Follow the existing corpus's style: a `#` title, then
+`##` sections each answering one real "how do I..." question in plain,
+second-person prose with your module's actual button/tab labels —
+`docs/user_help/missions.md` or `docs/user_help/workout.md` are good
+templates. A handful of smaller, mostly-status modules share one file
+instead (`docs/user_help/organizing.md`, `docs/user_help/system_and_files.md`)
+— that's fine for a module with little real workflow of its own, but
+it won't get the filename confidence bonus, so prefer a dedicated file
+whenever there's real content to write.
+
 ## 6. Enabling, disabling, and rescanning
 
 Every module can be turned off from the **Modules** screen without
