@@ -6517,3 +6517,57 @@ substring-match "Missions" (plural), so the confident short-circuit
 didn't fire for those two queries either before or after this fix; both
 still got correct answers via the existing multi-chunk fallback path,
 so this wasn't worth fixing as part of this pass's approved scope.
+
+## Startup Dashboard Briefing: wired in the 5 newest widgets + fixed a stale doc (2026-09-10)
+
+User picked "Startup Dashboard Briefing" from VISION.md's remaining
+unbuilt subsystems list — **but it wasn't actually unbuilt.** Researched
+before planning and found VISION.md's table row was simply stale:
+`core/startup_briefing.py` + `gui/home_dashboard.py`'s `_build_briefing_text()`/
+`_speak()` were designed, built, made to speak aloud via TTS, and
+connected to real widget data across three entries between 2026-07-15
+and 2026-07-19, with a human confirming they actually heard it
+(`docs/KNOWN_ISSUES.md`). Unlike this table row, its siblings (Smart
+Suggestions, Workout, Kitchen, Relationship Profiles) all carry a
+"Built 2026-09-10" annotation — a real doc-hygiene gap, not missing
+work. Fixed both VISION.md mentions to say so.
+
+**What was genuinely still open**: `_widget_highlights()` pulls one
+highlight phrase per enabled dashboard widget via
+`self._widget_highlight_providers`, but only 5 of 16 registered
+widgets had one wired. Reading the code's own comments, 5 of the 11
+silent widgets already had documented, deliberate exclusion reasoning
+(`real_estate`/`kraken_agent`/`net_worth`: "not yet meaningful";
+`activity_log`/`quick_bus`: "isn't a meaningful spoken highlight") —
+leaving Budget, Maintenance, Kitchen, Workout, and Relationships simply
+never revisited (the latter three postdate the 2026-07-15 build
+entirely, built earlier this session). Added a `_<id>_highlight()` for
+each, mirroring each widget's own existing `format_*_line()` "notable"
+branch (`_budget_highlight()`/`_maintenance_highlight()` mirror
+`format_budget_line()`/`format_maintenance_line()`'s overdue-count
+logic but return a bare noun phrase, not that function's full
+sentence — `build_startup_briefing()` joins every highlight into ONE
+sentence via `_join_with_and()`, so a highlight can never carry its own
+punctuation). Workout/Relationships are gated to a real "worth
+mentioning" threshold (`_BRIEFING_WORKOUT_STALE_AFTER_DAYS = 3`,
+`_BRIEFING_BIRTHDAY_LEAD_DAYS = 7`) — deliberately more conservative
+than their own dashboard TILE's always-show-the-latest-fact threshold,
+since the briefing is spoken/read aloud every single launch, not just
+glanced at. `property_portfolio` and `music` are newly, deliberately
+still excluded too, with the same inline documented-reasoning
+convention the existing 5 already use.
+
+**Verified for real**: full suite still 2166 passing, zero regressions
+(confirmed no existing test touches any `_<id>_highlight()` method — a
+real, matching precedent already established by the 4 pre-existing
+ones, none of which have dedicated unit tests either). Manual live
+verification via the shared isolated scratchpad setup script: a quiet
+cold-open case confirmed the existing "Nothing new to report today — a
+clean slate" fallback still holds with no notable data anywhere; a
+realistic case (an overdue bill, an overdue maintenance task, a pantry
+item expiring in 2 days, a workout logged 5 days ago, a birthday in 3
+days) produced a real, correctly-joined sentence: "You have 1 overdue
+bill, 1 pantry item expiring soon, 5 days since your last workout, 1
+maintenance task needing attention, and Jamie's birthday in 3 days" —
+screenshotted alongside the dashboard's own widget tiles, confirming
+both surfaces agree on the same underlying facts.

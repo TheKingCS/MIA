@@ -188,6 +188,17 @@ _KRAKEN_SOURCE = "kraken_trading_agent"
 # user's own projects.
 _HOMESTEAD_SOURCE = "mia_homestead"
 
+# Thresholds for the spoken/written briefing's own highlight providers
+# (below, on HomeDashboard) — deliberately more conservative than the
+# dashboard TILES' own always-show-the-latest-fact thresholds
+# (format_workout_line/format_relationships_line above show ANY days-
+# since-last-workout or ANY upcoming birthday, however far off), since
+# a highlight is spoken/read aloud every single launch and needs a real
+# "is this actually worth mentioning right now" bar, not just "is there
+# data."
+_BRIEFING_WORKOUT_STALE_AFTER_DAYS = 3
+_BRIEFING_BIRTHDAY_LEAD_DAYS = 7  # same lead time core.smart_suggestions' gift reminder already uses
+
 
 def format_clock_time(now: datetime) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_home_dashboard.py)."""
@@ -554,6 +565,11 @@ class HomeDashboard(QFrame):
             "volume": self._volume_highlight,
             "current_project": self._current_project_highlight,
             "homestead": self._homestead_highlight,
+            "budget": self._budget_highlight,
+            "maintenance": self._maintenance_highlight,
+            "kitchen": self._kitchen_highlight,
+            "workout": self._workout_highlight,
+            "relationships": self._relationships_highlight,
             # real_estate/kraken_agent/net_worth deliberately have no
             # highlight provider yet — same reasoning as
             # activity_log/quick_bus below: this is genuinely new,
@@ -564,6 +580,16 @@ class HomeDashboard(QFrame):
             # provider — "3 recent activity items" isn't a meaningful
             # spoken briefing highlight the way a mission/project count
             # is, same reasoning as volume's None provider below.
+            # property_portfolio deliberately has no highlight provider
+            # either, same "not yet meaningful" bar as net_worth/
+            # real_estate above — nothing about it is routinely
+            # actionable at a glance the way an overdue bill or an
+            # expiring pantry item is.
+            # music deliberately has no highlight provider — unlike
+            # every other highlight here, "what's currently playing"
+            # isn't a persisted fact known at construction time; the
+            # briefing is computed once per launch, before the user has
+            # started anything.
         }
 
         outer = QVBoxLayout(self)
@@ -1290,6 +1316,111 @@ class HomeDashboard(QFrame):
         noun = "critical alert" if critical == 1 else "critical alerts"
         return f"{critical} {noun} at the greenhouse"
 
+    def _budget_highlight(self) -> Optional[str]:
+        """Mirrors format_budget_line()'s own overdue-count computation
+        above — deliberately not that function's full return value,
+        since build_startup_briefing() joins every highlight into one
+        sentence ("You have {a}, {b}, and {c}.") and needs a bare noun
+        phrase, not format_budget_line()'s "All bills paid"/"N bills due
+        within 7 days" branches, which would read oddly mid-sentence.
+        Silent unless something's actually overdue — a due-soon bill
+        isn't urgent enough to interrupt a launch greeting for."""
+        if self.context.budget is None:
+            return None
+        today = date.today()
+        overdue = sum(
+            1 for bill in self.context.budget.all_bills()
+            if (remaining := days_until_bill_due(bill, today)) is not None and remaining < 0
+        )
+        if not overdue:
+            return None
+        noun = "bill" if overdue == 1 else "bills"
+        return f"{overdue} overdue {noun}"
+
+    def _maintenance_highlight(self) -> Optional[str]:
+        """Mirrors format_maintenance_line()'s own "overdue" bucket
+        above — calendar tasks past due plus any meter/sensor task
+        that's crossed its trigger — same reasoning as
+        _budget_highlight() for why this isn't that function's full
+        return value. Silent unless something needs real attention;
+        "due soon" isn't worth a launch-greeting mention."""
+        if self.context.maintenance is None:
+            return None
+        today = date.today()
+        overdue = 0
+        for task in self.context.maintenance.all_tasks():
+            if task.trigger_type == "calendar":
+                remaining = days_until_due(task, today)
+                if remaining is not None and remaining < 0:
+                    overdue += 1
+            elif task.is_meter_task:
+                if is_meter_task_due(task, self.context.maintenance.readings_for_task(task.task_id)):
+                    overdue += 1
+            elif task.is_sensor_task:
+                if is_sensor_task_due(task, self.context.maintenance.readings_for_task(task.task_id)):
+                    overdue += 1
+        if not overdue:
+            return None
+        noun = "task" if overdue == 1 else "tasks"
+        return f"{overdue} maintenance {noun} needing attention"
+
+    def _kitchen_highlight(self) -> Optional[str]:
+        """Same expiring-within-3-days computation _refresh_kitchen()
+        already does for the widget tile (format_kitchen_line()'s own
+        leading branch) — reused verbatim here since that branch is
+        already a bare noun phrase, unlike budget/maintenance above."""
+        if self.context.kitchen is None:
+            return None
+        today = date.today()
+        expiring = sum(
+            1 for item in self.context.kitchen.all_pantry_items()
+            if (days := days_until_expiration(item, today)) is not None and days <= 3
+        )
+        if not expiring:
+            return None
+        noun = "item" if expiring == 1 else "items"
+        return f"{expiring} pantry {noun} expiring soon"
+
+    def _workout_highlight(self) -> Optional[str]:
+        """Same days-since-last-session math as format_workout_line()
+        above, but gated to _BRIEFING_WORKOUT_STALE_AFTER_DAYS — that
+        tile shows ANY days-since count (a routine, always-on fact
+        worth glancing at); the spoken briefing only mentions it once
+        it's genuinely been a while, never "1 day since your last
+        workout" as a nag the morning after a normal rest day."""
+        if self.context.workout is None:
+            return None
+        last_session_date = self.context.workout.last_session_date()
+        if not last_session_date:
+            return None
+        try:
+            days = (date.today() - date.fromisoformat(last_session_date)).days
+        except ValueError:
+            return None
+        if days <= _BRIEFING_WORKOUT_STALE_AFTER_DAYS:
+            return None
+        return f"{days} days since your last workout"
+
+    def _relationships_highlight(self) -> Optional[str]:
+        """Same nearest_upcoming_birthday() call format_relationships_line()
+        above already makes, but gated to _BRIEFING_BIRTHDAY_LEAD_DAYS —
+        that tile always shows the nearest birthday, however far off;
+        the spoken briefing only mentions one close enough to actually
+        act on, same lead time core.smart_suggestions' own gift-reminder
+        check already uses."""
+        if self.context.relationships is None:
+            return None
+        nearest = self.context.relationships.nearest_upcoming_birthday(date.today())
+        if nearest is None:
+            return None
+        person, days = nearest
+        if days > _BRIEFING_BIRTHDAY_LEAD_DAYS:
+            return None
+        if days == 0:
+            return f"{person.name}'s birthday today"
+        noun = "day" if days == 1 else "days"
+        return f"{person.name}'s birthday in {days} {noun}"
+
     def _widget_highlights(self) -> list[str]:
         """The briefing's dashboard-specific content — one highlight
         per currently-*enabled* widget that actually has something to
@@ -1315,12 +1446,15 @@ class HomeDashboard(QFrame):
     def _build_briefing_text(self) -> str:
         """Computed once at construction (not on the 5s data-refresh
         timer below) — this is a "welcome back" greeting, not a live
-        ticker. See this module's docstring for what's deliberately
-        omitted (weather/workout/finance/smart home — no real widget
-        yet) and where to extend this as those subsystems land: add a
-        _<widget_id>_highlight() method and register it in
-        self._widget_highlight_providers alongside the widget's builder,
-        same as the four already there."""
+        ticker. 9 of the 16 registered dashboard widgets have a real
+        highlight provider as of 2026-09-10 (power/mission/current_project/
+        homestead from 2026-07-15, budget/maintenance/kitchen/workout/
+        relationships added once those modules existed) — the rest are
+        deliberate exclusions, see the comments in
+        self._widget_highlight_providers itself, right where each one is
+        registered (or pointedly isn't), for the reasoning per widget.
+        Extend this as a new subsystem lands: add a _<widget_id>_highlight()
+        method and register it there alongside the widget's builder."""
         profile_name = "there"
         if self.context.profiles is not None:
             active_profile = self.context.profiles.get_active_profile()
