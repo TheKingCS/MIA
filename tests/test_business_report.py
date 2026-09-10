@@ -242,7 +242,7 @@ def test_schedule_e_section_skips_zero_amount_lines():
 def test_schedule_e_section_mentions_not_tax_advice_and_mortgage_caveat():
     html = _build(range_label="This Year", schedule_e_properties=[_schedule_e_property()])
     assert "not a computed tax liability" in html
-    assert "principal/interest split" in html
+    assert "may overstate the actual deductible interest" in html
 
 
 def test_schedule_e_section_shows_a_loss_in_accounting_parens_not_a_minus_sign():

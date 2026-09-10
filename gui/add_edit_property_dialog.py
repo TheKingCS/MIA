@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QLabel,
     QLineEdit,
+    QSpinBox,
     QTextEdit,
     QVBoxLayout,
 )
@@ -34,7 +35,7 @@ class AddEditPropertyDialog(QDialog):
     def __init__(self, parent=None, property_: Optional[Property] = None, entities: Optional[list] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Property" if property_ is not None else "New Property")
-        self.setFixedSize(360, 640)
+        self.setFixedSize(360, 860)
 
         self._entities = entities or []
         self._is_new = property_ is None
@@ -88,6 +89,30 @@ class AddEditPropertyDialog(QDialog):
         self.mortgage_balance_spin.setDecimals(2)
         layout.addWidget(self.mortgage_balance_spin)
 
+        layout.addWidget(QLabel("Original Loan Amount ($):"))
+        self.original_loan_amount_spin = QDoubleSpinBox()
+        self.original_loan_amount_spin.setRange(0.0, 100_000_000.0)
+        self.original_loan_amount_spin.setDecimals(2)
+        layout.addWidget(self.original_loan_amount_spin)
+
+        layout.addWidget(QLabel("Interest Rate (% APR):"))
+        self.interest_rate_spin = QDoubleSpinBox()
+        self.interest_rate_spin.setRange(0.0, 25.0)
+        self.interest_rate_spin.setDecimals(3)
+        self.interest_rate_spin.setSingleStep(0.125)
+        layout.addWidget(self.interest_rate_spin)
+
+        layout.addWidget(QLabel("Loan Term (months, e.g. 360 for 30 years):"))
+        self.loan_term_months_spin = QSpinBox()
+        self.loan_term_months_spin.setRange(0, 600)
+        layout.addWidget(self.loan_term_months_spin)
+
+        layout.addWidget(QLabel("Loan Start Date:"))
+        self.loan_start_date_edit = QDateEdit()
+        self.loan_start_date_edit.setCalendarPopup(True)
+        self.loan_start_date_edit.setDisplayFormat(_ISO_DATE_FORMAT)
+        layout.addWidget(self.loan_start_date_edit)
+
         layout.addWidget(QLabel("Entity:"))
         self.entity_combo = QComboBox()
         self.entity_combo.addItem("(Unassigned)", "")
@@ -119,6 +144,10 @@ class AddEditPropertyDialog(QDialog):
         self._entity_id: str = ""
         self._land_value: float = 0.0
         self._placed_in_service_date: str = ""
+        self._original_loan_amount: float = 0.0
+        self._interest_rate_pct: float = 0.0
+        self._loan_term_months: int = 0
+        self._loan_start_date: str = ""
         self._notes: str = ""
 
     def _prefill(self, property_: Optional[Property]) -> None:
@@ -135,6 +164,12 @@ class AddEditPropertyDialog(QDialog):
             self.land_value_spin.setValue(property_.land_value)
             self.current_value_spin.setValue(property_.current_value)
             self.mortgage_balance_spin.setValue(property_.mortgage_balance)
+            self.original_loan_amount_spin.setValue(property_.original_loan_amount)
+            self.interest_rate_spin.setValue(property_.interest_rate_pct)
+            self.loan_term_months_spin.setValue(property_.loan_term_months)
+            loan_start = property_.loan_start_date or property_.purchase_date
+            if loan_start:
+                self.loan_start_date_edit.setDate(QDate.fromString(loan_start, _ISO_DATE_FORMAT))
             if property_.entity_id:
                 idx = self.entity_combo.findData(property_.entity_id)
                 self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
@@ -142,14 +177,17 @@ class AddEditPropertyDialog(QDialog):
         else:
             self.purchase_date_edit.setDate(QDate.currentDate())
             self.placed_in_service_date_edit.setDate(QDate.currentDate())
+            self.loan_start_date_edit.setDate(QDate.currentDate())
 
     def _on_purchase_date_changed(self, new_date: QDate) -> None:
-        """Keeps Placed in Service Date tracking Purchase Date for a
-        brand-new property (no real value to override yet) — once the
-        dialog is editing an existing property, the two are independent
-        and this sync never fires again (see _is_new)."""
+        """Keeps Placed in Service Date AND Loan Start Date tracking
+        Purchase Date for a brand-new property (no real value to
+        override yet) — once the dialog is editing an existing
+        property, all three are independent and this sync never fires
+        again (see _is_new)."""
         if self._is_new:
             self.placed_in_service_date_edit.setDate(new_date)
+            self.loan_start_date_edit.setDate(new_date)
 
     def _on_accept(self) -> None:
         name = self.name_edit.text().strip()
@@ -166,6 +204,10 @@ class AddEditPropertyDialog(QDialog):
         self._entity_id = self.entity_combo.currentData()
         self._land_value = self.land_value_spin.value()
         self._placed_in_service_date = self.placed_in_service_date_edit.date().toString(_ISO_DATE_FORMAT)
+        self._original_loan_amount = self.original_loan_amount_spin.value()
+        self._interest_rate_pct = self.interest_rate_spin.value()
+        self._loan_term_months = self.loan_term_months_spin.value()
+        self._loan_start_date = self.loan_start_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._notes = self.notes_edit.toPlainText().strip()
         self.accept()
 
@@ -204,6 +246,22 @@ class AddEditPropertyDialog(QDialog):
     @property
     def entered_placed_in_service_date(self) -> str:
         return self._placed_in_service_date
+
+    @property
+    def entered_original_loan_amount(self) -> float:
+        return self._original_loan_amount
+
+    @property
+    def entered_interest_rate_pct(self) -> float:
+        return self._interest_rate_pct
+
+    @property
+    def entered_loan_term_months(self) -> int:
+        return self._loan_term_months
+
+    @property
+    def entered_loan_start_date(self) -> str:
+        return self._loan_start_date
 
     @property
     def entered_notes(self) -> str:

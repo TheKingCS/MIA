@@ -74,6 +74,15 @@ class Property:
     # annual_depreciation()/accumulated_depreciation() below.
     land_value: float = 0.0
     placed_in_service_date: str = ""
+    # 2026-09-09: mortgage amortization. All four are optional — 0.0/""
+    # means "not entered," and every function below (has_loan_terms()
+    # etc.) treats that as "no amortization data," never a guess.
+    # loan_start_date falls back to purchase_date, same convention
+    # placed_in_service_date uses.
+    original_loan_amount: float = 0.0
+    interest_rate_pct: float = 0.0  # annual rate, e.g. 6.5 for 6.5% APR
+    loan_term_months: int = 0
+    loan_start_date: str = ""
     notes: str = ""
     created_at: str = ""
 
@@ -85,6 +94,8 @@ class Property:
             "entity_id": self.entity_id,
             "maintenance_asset_id": self.maintenance_asset_id,
             "land_value": self.land_value, "placed_in_service_date": self.placed_in_service_date,
+            "original_loan_amount": self.original_loan_amount, "interest_rate_pct": self.interest_rate_pct,
+            "loan_term_months": self.loan_term_months, "loan_start_date": self.loan_start_date,
             "notes": self.notes, "created_at": self.created_at,
         }
 
@@ -102,6 +113,10 @@ class Property:
             maintenance_asset_id=data.get("maintenance_asset_id", ""),
             land_value=data.get("land_value", 0.0),
             placed_in_service_date=data.get("placed_in_service_date", ""),
+            original_loan_amount=data.get("original_loan_amount", 0.0),
+            interest_rate_pct=data.get("interest_rate_pct", 0.0),
+            loan_term_months=data.get("loan_term_months", 0),
+            loan_start_date=data.get("loan_start_date", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -167,6 +182,123 @@ def accumulated_depreciation(
     return min(depreciable_basis(property_), annual * years_elapsed)
 
 
+def has_loan_terms(property_: Property) -> bool:
+    """Pure logic — testable without Qt. True only when all three real
+    inputs an amortization schedule needs are actually entered — every
+    function below treats a missing/zero value as "no amortization
+    data," never guesses a default rate/term."""
+    return (
+        property_.original_loan_amount > 0
+        and property_.interest_rate_pct > 0
+        and property_.loan_term_months > 0
+    )
+
+
+def monthly_payment(property_: Property) -> float:
+    """Pure logic — testable without Qt. Standard fixed-rate
+    amortization formula: M = P*r(1+r)^n / ((1+r)^n - 1), where r is
+    the monthly interest rate and n the term in months. Returns 0.0
+    when has_loan_terms() is False."""
+    if not has_loan_terms(property_):
+        return 0.0
+    monthly_rate = property_.interest_rate_pct / 100 / 12
+    n = property_.loan_term_months
+    principal = property_.original_loan_amount
+    if monthly_rate == 0:
+        return principal / n
+    factor = (1 + monthly_rate) ** n
+    return principal * monthly_rate * factor / (factor - 1)
+
+
+def amortization_schedule(property_: Property) -> list[dict]:
+    """Pure logic — testable without Qt. Full month-by-month schedule
+    from loan_start_date (falling back to purchase_date, same
+    convention placed_in_service_date uses) for loan_term_months
+    payments — real fixed-rate amortization math, not an
+    approximation: each month's interest = remaining balance * monthly
+    rate, principal = payment - interest (clamped to the remaining
+    balance on the final payment so real rounding never drives the
+    balance negative). Returns [] when has_loan_terms() is False or
+    loan_start_date/purchase_date can't be parsed."""
+    if not has_loan_terms(property_):
+        return []
+    start_str = property_.loan_start_date or property_.purchase_date
+    try:
+        start = date.fromisoformat(start_str)
+    except ValueError:
+        return []
+
+    payment = monthly_payment(property_)
+    monthly_rate = property_.interest_rate_pct / 100 / 12
+    balance = property_.original_loan_amount
+    schedule = []
+    year, month = start.year, start.month
+    for _ in range(property_.loan_term_months):
+        interest = balance * monthly_rate
+        principal = min(payment - interest, balance)
+        balance = max(0.0, balance - principal)
+        schedule.append({
+            "date": date(year, month, 1).isoformat(),
+            "payment": principal + interest,
+            "principal": principal,
+            "interest": interest,
+            "balance": balance,
+        })
+        month += 1
+        if month == 13:
+            month = 1
+            year += 1
+    return schedule
+
+
+def interest_paid_in_range(property_: Property, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
+    """Pure logic — testable without Qt. The real interest-only
+    portion of this property's mortgage payments over a date range —
+    used by core/business_report.py's Schedule E section to replace
+    the full Mortgage/Rent category amount (which includes non-
+    deductible principal) once real loan terms are entered."""
+    return sum(
+        entry["interest"] for entry in amortization_schedule(property_)
+        if _in_range(entry["date"], start_date, end_date)
+    )
+
+
+def principal_paid_in_range(property_: Property, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
+    """Pure logic — testable without Qt."""
+    return sum(
+        entry["principal"] for entry in amortization_schedule(property_)
+        if _in_range(entry["date"], start_date, end_date)
+    )
+
+
+def remaining_balance_as_of(property_: Property, as_of: date) -> Optional[float]:
+    """Pure logic — testable without Qt. None when has_loan_terms() is
+    False. This is a PROJECTION from the entered loan terms, not the
+    same number as Property.mortgage_balance (the manually-tracked
+    figure equity()/net_operating_income()/the portfolio table already
+    use) — a real mortgage can diverge from a clean amortization
+    schedule (extra principal payments, a refinance), so the two are
+    deliberately never conflated. Before the first payment, the full
+    original_loan_amount is still owed; after the last payment, 0.0."""
+    schedule = amortization_schedule(property_)
+    if not schedule:
+        return None
+    as_of_str = as_of.isoformat()
+    balance = property_.original_loan_amount
+    for entry in schedule:
+        if entry["date"] > as_of_str:
+            break
+        balance = entry["balance"]
+    return balance
+
+
+def payoff_date(property_: Property) -> Optional[str]:
+    """Pure logic — testable without Qt. None when has_loan_terms() is
+    False."""
+    schedule = amortization_schedule(property_)
+    return schedule[-1]["date"] if schedule else None
+
+
 def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str]) -> bool:
     """Pure logic — testable without I/O. Same ISO-date-string-compare
     shape as core.ledger_manager/core.budget_manager's own _in_range()."""
@@ -219,6 +351,10 @@ class RealEstateManager:
         entity_id: str = "",
         land_value: float = 0.0,
         placed_in_service_date: str = "",
+        original_loan_amount: float = 0.0,
+        interest_rate_pct: float = 0.0,
+        loan_term_months: int = 0,
+        loan_start_date: str = "",
         notes: str = "",
     ) -> Property:
         prop = Property(
@@ -232,6 +368,10 @@ class RealEstateManager:
             entity_id=entity_id,
             land_value=max(0.0, land_value),
             placed_in_service_date=placed_in_service_date,
+            original_loan_amount=max(0.0, original_loan_amount),
+            interest_rate_pct=max(0.0, interest_rate_pct),
+            loan_term_months=max(0, loan_term_months),
+            loan_start_date=loan_start_date,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -250,9 +390,14 @@ class RealEstateManager:
             setattr(prop, key, value)
         if prop.property_type not in PROPERTY_TYPES:
             prop.property_type = "Other"
-        for numeric_field in ("purchase_price", "current_value", "mortgage_balance", "land_value"):
+        for numeric_field in (
+            "purchase_price", "current_value", "mortgage_balance", "land_value",
+            "original_loan_amount", "interest_rate_pct",
+        ):
             if getattr(prop, numeric_field) < 0:
                 setattr(prop, numeric_field, 0.0)
+        if prop.loan_term_months < 0:
+            prop.loan_term_months = 0
         self._save()
         return prop
 

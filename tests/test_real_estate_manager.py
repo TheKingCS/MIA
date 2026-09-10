@@ -23,9 +23,16 @@ from core.real_estate_manager import (
     Property,
     RealEstateManager,
     accumulated_depreciation,
+    amortization_schedule,
     annual_depreciation,
     depreciable_basis,
     equity,
+    has_loan_terms,
+    interest_paid_in_range,
+    monthly_payment,
+    payoff_date,
+    principal_paid_in_range,
+    remaining_balance_as_of,
 )
 
 
@@ -334,3 +341,159 @@ def test_cap_rate_none_for_unknown_property(isolated_paths):
     context = _make_context()
     manager = _make_manager(context)
     assert manager.cap_rate("does-not-exist") is None
+
+
+# ------------------------------------------------------------------
+# Mortgage amortization
+# ------------------------------------------------------------------
+
+def _financed(**overrides) -> Property:
+    defaults = dict(
+        property_id="p1", name="123 Main St", property_type="Rental",
+        purchase_date="2020-01-01",
+        original_loan_amount=10000.0, interest_rate_pct=12.0, loan_term_months=12,
+        loan_start_date="2026-01-01",
+    )
+    defaults.update(overrides)
+    return Property(**defaults)
+
+
+def test_has_loan_terms_false_when_any_field_is_unset():
+    assert has_loan_terms(_financed(original_loan_amount=0.0)) is False
+    assert has_loan_terms(_financed(interest_rate_pct=0.0)) is False
+    assert has_loan_terms(_financed(loan_term_months=0)) is False
+
+
+def test_has_loan_terms_true_when_all_set():
+    assert has_loan_terms(_financed()) is True
+
+
+def test_monthly_payment_matches_real_amortization_math():
+    # $300,000 at 6.5% APR over 360 months — a real, hand-verified figure.
+    prop = _financed(original_loan_amount=300000.0, interest_rate_pct=6.5, loan_term_months=360)
+    assert monthly_payment(prop) == pytest.approx(1896.20, abs=0.01)
+
+
+def test_monthly_payment_zero_when_loan_terms_not_set():
+    assert monthly_payment(_financed(loan_term_months=0)) == 0.0
+
+
+def test_amortization_schedule_length_matches_term():
+    assert len(amortization_schedule(_financed())) == 12
+
+
+def test_amortization_schedule_first_month_interest_and_principal():
+    schedule = amortization_schedule(_financed())
+    first = schedule[0]
+    assert first["date"] == "2026-01-01"
+    assert first["interest"] == pytest.approx(100.0, abs=0.01)  # 10000 * 1%/mo
+    assert first["principal"] == pytest.approx(788.49, abs=0.01)
+    assert first["balance"] == pytest.approx(9211.51, abs=0.01)
+
+
+def test_amortization_schedule_final_balance_is_zero():
+    schedule = amortization_schedule(_financed())
+    assert schedule[-1]["balance"] == pytest.approx(0.0, abs=0.01)
+
+
+def test_amortization_schedule_total_principal_equals_loan_amount():
+    schedule = amortization_schedule(_financed())
+    assert sum(entry["principal"] for entry in schedule) == pytest.approx(10000.0, abs=0.01)
+    assert sum(entry["interest"] for entry in schedule) == pytest.approx(661.85, abs=0.01)
+
+
+def test_amortization_schedule_empty_when_no_loan_terms():
+    assert amortization_schedule(_financed(original_loan_amount=0.0)) == []
+
+
+def test_amortization_schedule_falls_back_to_purchase_date_when_loan_start_unset():
+    prop = _financed(purchase_date="2026-03-01", loan_start_date="")
+    schedule = amortization_schedule(prop)
+    assert schedule[0]["date"] == "2026-03-01"
+
+
+def test_interest_paid_in_range_sums_a_partial_window():
+    prop = _financed()
+    total = interest_paid_in_range(prop, "2026-01-01", "2026-03-01")
+    schedule = amortization_schedule(prop)
+    expected = sum(e["interest"] for e in schedule[:3])
+    assert total == pytest.approx(expected, abs=0.01)
+
+
+def test_interest_paid_in_range_zero_when_no_loan_terms():
+    assert interest_paid_in_range(_financed(original_loan_amount=0.0), "2026-01-01", "2026-12-01") == 0.0
+
+
+def test_principal_paid_in_range_sums_a_partial_window():
+    prop = _financed()
+    total = principal_paid_in_range(prop, "2026-01-01", "2026-03-01")
+    schedule = amortization_schedule(prop)
+    expected = sum(e["principal"] for e in schedule[:3])
+    assert total == pytest.approx(expected, abs=0.01)
+
+
+def test_remaining_balance_as_of_before_loan_start_is_full_amount():
+    from datetime import date
+    prop = _financed()
+    assert remaining_balance_as_of(prop, date(2025, 6, 1)) == 10000.0
+
+
+def test_remaining_balance_as_of_mid_schedule():
+    from datetime import date
+    prop = _financed()
+    balance = remaining_balance_as_of(prop, date(2026, 1, 1))
+    assert balance == pytest.approx(9211.51, abs=0.01)
+
+
+def test_remaining_balance_as_of_after_payoff_is_zero():
+    from datetime import date
+    prop = _financed()
+    assert remaining_balance_as_of(prop, date(2030, 1, 1)) == pytest.approx(0.0, abs=0.01)
+
+
+def test_remaining_balance_as_of_none_when_no_loan_terms():
+    from datetime import date
+    assert remaining_balance_as_of(_financed(original_loan_amount=0.0), date(2026, 1, 1)) is None
+
+
+def test_payoff_date_is_last_schedule_entry():
+    prop = _financed()
+    assert payoff_date(prop) == "2026-12-01"
+
+
+def test_payoff_date_none_when_no_loan_terms():
+    assert payoff_date(_financed(original_loan_amount=0.0)) is None
+
+
+def test_property_from_dict_backward_compatible_defaults_loan_fields():
+    prop = Property.from_dict({"property_id": "p1", "name": "123 Main St"})
+    assert prop.original_loan_amount == 0.0
+    assert prop.interest_rate_pct == 0.0
+    assert prop.loan_term_months == 0
+    assert prop.loan_start_date == ""
+
+
+def test_add_property_persists_loan_terms(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    manager.add_property(
+        name="123 Main St", original_loan_amount=300000.0, interest_rate_pct=6.5,
+        loan_term_months=360, loan_start_date="2020-01-01",
+    )
+    reloaded = RealEstateManager(context)
+    prop = reloaded.all_properties()[0]
+    assert prop.original_loan_amount == 300000.0
+    assert prop.interest_rate_pct == 6.5
+    assert prop.loan_term_months == 360
+    assert prop.loan_start_date == "2020-01-01"
+
+
+def test_update_property_clamps_negative_loan_fields(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    prop = manager.add_property(name="123 Main St")
+    manager.update_property(prop.property_id, original_loan_amount=-5.0, interest_rate_pct=-1.0, loan_term_months=-3)
+    updated = manager.get_property(prop.property_id)
+    assert updated.original_loan_amount == 0.0
+    assert updated.interest_rate_pct == 0.0
+    assert updated.loan_term_months == 0

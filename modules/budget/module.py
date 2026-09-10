@@ -98,7 +98,13 @@ from core.budget_manager import (
     days_until_bill_due,
     days_until_income_due,
 )
-from core.real_estate_manager import SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES, annual_depreciation, equity as property_equity
+from core.real_estate_manager import (
+    SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES,
+    annual_depreciation,
+    equity as property_equity,
+    has_loan_terms,
+    interest_paid_in_range,
+)
 from core.search_manager import SearchResult
 from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
@@ -1060,6 +1066,16 @@ class BudgetModule(ModuleBase):
                 expenses_by_category: dict[str, float] = {}
                 for expense in real_estate.expenses_for_property(prop.property_id, start, end):
                     expenses_by_category[expense.category] = expenses_by_category.get(expense.category, 0.0) + expense.amount
+                # Real fix (2026-09-09): the logged "Mortgage/Rent"
+                # total is a full P&I payment, but only the interest
+                # portion is ever deductible on Schedule E — principal
+                # repayment is a balance-sheet reduction, never an
+                # expense line. Once this property has real loan terms
+                # entered, substitute the actual interest-only portion;
+                # otherwise keep the old full-amount behavior (with its
+                # existing overstatement caveat in _schedule_e_table()).
+                if "Mortgage/Rent" in expenses_by_category and has_loan_terms(prop):
+                    expenses_by_category["Mortgage/Rent"] = interest_paid_in_range(prop, start, end)
                 rents_received = sum(
                     i.amount for i in real_estate.income_for_property(prop.property_id, start, end)
                 )

@@ -216,9 +216,11 @@ def _schedule_e_table(properties: list[dict]) -> str:
         "<p><i>Real income/expense data reorganized to match IRS Schedule E's "
         "line structure, for your or your accountant's reference — this is "
         "not a computed tax liability or a filing-ready form. \"Mortgage "
-        "Interest\" below is the full Mortgage/Rent category amount; MIA "
-        "doesn't yet track the principal/interest split, so this may "
-        "overstate the actual deductible interest portion.</i></p>"
+        "Interest\" below is the real interest-only portion for any property "
+        "with loan terms entered (see the property's own Amortization "
+        "fields), and the full Mortgage/Rent category amount otherwise — "
+        "which may overstate the actual deductible interest for a property "
+        "without loan terms entered yet.</i></p>"
     )
     if not properties:
         html.append("<p>No Rental/Investment properties tracked.</p>")

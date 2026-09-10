@@ -53,7 +53,16 @@ from PySide6.QtWidgets import (
 
 from core.budget_manager import ExpenseEntry, IncomeEntry
 from core.maintenance_manager import MaintenanceTask, days_until_due, is_meter_task_due, is_sensor_task_due, meter_used_since_last
-from core.real_estate_manager import Property, accumulated_depreciation, annual_depreciation, equity
+from core.real_estate_manager import (
+    Property,
+    accumulated_depreciation,
+    annual_depreciation,
+    equity,
+    has_loan_terms,
+    monthly_payment,
+    payoff_date,
+    remaining_balance_as_of,
+)
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_property_dialog import AddEditPropertyDialog
@@ -144,6 +153,9 @@ class RealEstateModule(ModuleBase):
         self._detail_cap_rate_label: Optional[QLabel] = None
         self._detail_annual_depreciation_label: Optional[QLabel] = None
         self._detail_accumulated_depreciation_label: Optional[QLabel] = None
+        self._detail_monthly_payment_label: Optional[QLabel] = None
+        self._detail_loan_balance_label: Optional[QLabel] = None
+        self._detail_payoff_date_label: Optional[QLabel] = None
         self._detail_range_label: Optional[QLabel] = None
         self._detail_start_date: Optional[str] = None
         self._detail_end_date: Optional[str] = None
@@ -288,6 +300,10 @@ class RealEstateModule(ModuleBase):
             entity_id=dialog.entered_entity_id,
             land_value=dialog.entered_land_value,
             placed_in_service_date=dialog.entered_placed_in_service_date,
+            original_loan_amount=dialog.entered_original_loan_amount,
+            interest_rate_pct=dialog.entered_interest_rate_pct,
+            loan_term_months=dialog.entered_loan_term_months,
+            loan_start_date=dialog.entered_loan_start_date,
             notes=dialog.entered_notes,
         )
         self._refresh_list()
@@ -314,6 +330,10 @@ class RealEstateModule(ModuleBase):
             entity_id=dialog.entered_entity_id,
             land_value=dialog.entered_land_value,
             placed_in_service_date=dialog.entered_placed_in_service_date,
+            original_loan_amount=dialog.entered_original_loan_amount,
+            interest_rate_pct=dialog.entered_interest_rate_pct,
+            loan_term_months=dialog.entered_loan_term_months,
+            loan_start_date=dialog.entered_loan_start_date,
             notes=dialog.entered_notes,
         )
         self._refresh_list()
@@ -546,6 +566,12 @@ class RealEstateModule(ModuleBase):
         layout.addWidget(self._detail_annual_depreciation_label)
         self._detail_accumulated_depreciation_label = QLabel()
         layout.addWidget(self._detail_accumulated_depreciation_label)
+        self._detail_monthly_payment_label = QLabel()
+        layout.addWidget(self._detail_monthly_payment_label)
+        self._detail_loan_balance_label = QLabel()
+        layout.addWidget(self._detail_loan_balance_label)
+        self._detail_payoff_date_label = QLabel()
+        layout.addWidget(self._detail_payoff_date_label)
 
         self._refresh_summary(prop.property_id, "This Month", self._month_start(), None)
         return section
@@ -579,3 +605,19 @@ class RealEstateModule(ModuleBase):
             self._detail_annual_depreciation_label.setText(f"Annual Depreciation: ${annual_depreciation(prop):,.2f}")
             accumulated = accumulated_depreciation(prop, date.today())
             self._detail_accumulated_depreciation_label.setText(f"Accumulated Depreciation: ${accumulated:,.2f}")
+
+            # Loan terms are a separate, optional concept from the
+            # manually-tracked mortgage_balance shown elsewhere — this
+            # is a PROJECTION from the entered loan terms, so the
+            # labels say so explicitly rather than implying they're the
+            # same authoritative figure (see remaining_balance_as_of()'s
+            # own docstring in core/real_estate_manager.py).
+            if has_loan_terms(prop):
+                self._detail_monthly_payment_label.setText(f"Monthly Payment (P&I): ${monthly_payment(prop):,.2f}")
+                balance = remaining_balance_as_of(prop, date.today())
+                self._detail_loan_balance_label.setText(f"Est. Remaining Loan Balance (per loan terms): ${balance:,.2f}")
+                self._detail_payoff_date_label.setText(f"Est. Payoff Date: {payoff_date(prop)}")
+            else:
+                self._detail_monthly_payment_label.setText("Monthly Payment: enter loan terms to calculate")
+                self._detail_loan_balance_label.setText("")
+                self._detail_payoff_date_label.setText("")

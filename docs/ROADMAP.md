@@ -5974,3 +5974,56 @@ table's totals are correct, Net Worth/Investments appear exactly once,
 each entity gets its own page via a real page break, and the zero-
 activity LLC still renders its own honest empty-state report rather
 than being silently dropped.
+
+## Financial deep-dive, part 9 (final): mortgage amortization (2026-09-09)
+
+Last item in the financial deep-dive sequence. `Property` gains four
+optional loan-term fields (`original_loan_amount`, `interest_rate_pct`,
+`loan_term_months`, `loan_start_date` — falls back to `purchase_date`,
+same convention `placed_in_service_date` uses) and
+`core/real_estate_manager.py` gains real fixed-rate amortization math:
+`monthly_payment()` (the standard `M = P·r(1+r)^n / ((1+r)^n − 1)`
+formula, hand-verified against a real $300k/6.5%/360mo figure),
+`amortization_schedule()` (a full month-by-month principal/interest/
+balance breakdown), `interest_paid_in_range()`/`principal_paid_in_range()`,
+`remaining_balance_as_of()`, and `payoff_date()`. All treat missing
+loan terms (`has_loan_terms()` false) as "no amortization data," never
+a guessed default. The projected remaining balance is deliberately kept
+separate from `Property.mortgage_balance` (the manually-tracked figure
+equity/NOI/the portfolio table already use) — a real mortgage can
+diverge from a clean schedule (extra principal, a refinance), so the
+two are never conflated; the Real Estate module's detail page labels
+the new figures "(per loan terms)" to keep that honest.
+
+`gui/add_edit_property_dialog.py` gained the four matching fields;
+`modules/real_estate/module.py`'s detail page now shows Monthly Payment
+(P&I), Est. Remaining Loan Balance, and Est. Payoff Date (or "enter
+loan terms to calculate" when unset).
+
+**The real Schedule E fix this was all building toward**: the Schedule
+E view has carried a caveat since it shipped that its "Mortgage
+Interest" line uses the FULL Mortgage/Rent category amount because MIA
+didn't track the principal/interest split — real IRS rule: only the
+interest portion is ever deductible, principal repayment is a balance-
+sheet reduction, never a Schedule E expense line. `modules/budget/module.py`'s
+`_gather_entity_report_kwargs()` now substitutes the real interest-only
+figure (`interest_paid_in_range()`) whenever a property has loan terms
+entered, falling back to the old full-amount behavior otherwise — the
+caveat text in `core/business_report.py` was updated to describe both
+cases honestly rather than unconditionally warning about a gap that no
+longer always exists.
+
+**Verified for real**: 27 new tests in `tests/test_real_estate_manager.py`
+(monthly payment against a hand-verified real figure, full schedule
+correctness — first-month interest/principal, final balance reaches
+zero, total principal equals the loan amount — range-scoped interest/
+principal sums, remaining balance before/mid/after the term, payoff
+date, backward-compat defaults, negative-value clamping). 1992 tests
+passing. A real rendered PDF comparing a property with loan terms
+entered (correctly showing $14,839.23 real interest instead of a
+$16,780 full payment — a genuine ~$1,940 difference this fix corrects)
+against one without (old behavior, unchanged) confirmed the fix changes
+the actual rendered number, not just the code path. A headless-Qt
+screenshot of the dialog's four new fields confirmed clean layout with
+no clipping and a correct round-trip through the dialog's own
+`entered_*` properties.
