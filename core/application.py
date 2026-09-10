@@ -55,6 +55,7 @@ from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
+from core.smart_suggestions import build_smart_suggestions_message
 from core.dashboard_widgets import DashboardWidgetRegistry, WidgetDescriptor
 from core.data_logger_manager import DataLoggerManager
 from core.device_framework import DeviceFramework
@@ -430,6 +431,20 @@ class MIAApplication:
                     source="system",
                 )
             config.set("system.last_budget_nudge_date", today_iso)
+            config.save()
+
+        if should_run_once_daily(config.get("system.last_smart_suggestion_date"), today_iso):
+            last_session_date = self.context.workout.last_session_date() if self.context.workout is not None else None
+            pantry_items = self.context.kitchen.all_pantry_items() if self.context.kitchen is not None else []
+            message = build_smart_suggestions_message(last_session_date, pantry_items, now.date())
+            if message:
+                self.context.notifications.notify(
+                    title="Smart Suggestion",
+                    message=message,
+                    level="info",
+                    source="system",
+                )
+            config.set("system.last_smart_suggestion_date", today_iso)
             config.save()
 
     def _display(self, widget) -> None:

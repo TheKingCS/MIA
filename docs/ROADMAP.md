@@ -6306,3 +6306,49 @@ session with a real elapsed duration and an entered calories estimate,
 confirmed History showed the exact real session, and confirmed
 Progress showed the correct PR and — after the axis-range fix — an
 actually visible chart point.
+
+## Smart Suggestions: proactive, unprompted, actually-useful nudges (2026-09-10)
+
+Third VISION.md principle-3 item this session, after Kitchen and
+Workout. VISION.md names three concrete examples: "recovery after
+intense workouts, a grocery trip when supplies run low, a birthday
+gift reminder before the date." Checked what's honestly buildable
+today: recovery and grocery/pantry both have real data behind them
+(`WorkoutManager`/`KitchenManager`, both shipped earlier this session)
+— a birthday-gift reminder needs "Relationship Profiles" (people MIA
+knows, with their own birthdays), a real, separate, still-unbuilt
+subsystem with no data source today. Built the two that are real,
+explicitly deferred the third rather than faking it.
+
+New `core/smart_suggestions.py` — pure, Qt-free decision-logic
+functions, same shape `core/daily_occasions.py`/`core/budget_nudges.py`
+already established (unit-testable without a real clock or running
+app). `build_recovery_suggestion()` fires exactly once, the day after
+a real logged session — not for "intensity" (no HR/soreness data
+exists to measure that honestly) and not every day after, which would
+be naggy rather than helpful. `build_pantry_suggestion()` names real
+items expiring within 3 days or already expired (reuses
+`core.kitchen_manager.days_until_expiration()`) — a real "grocery trip
+when supplies run low" signal, not a guessed low-stock heuristic
+(`PantryItem` has no reorder-threshold concept). `build_smart_suggestions_message()`
+joins whichever have something real to say and returns `None` (no
+notification) when both are quiet, the same restraint
+`build_nudge_message()` already takes for an empty day.
+
+`core/application.py`'s `_check_daily_occasions()` gained one more
+`if should_run_once_daily(...)` block, identical shape to the existing
+budget-nudge block right above it — gathers
+`context.workout.last_session_date()`/`context.kitchen.all_pantry_items()`,
+notifies via the existing `context.notifications.notify()` mechanism.
+No new manager, module, or UI — purely a decision-logic layer reading
+two already-built managers.
+
+**Verified for real**: 15 new tests (`tests/test_smart_suggestions.py`).
+2112 tests passing. A direct call to the real `_check_daily_occasions()`
+(via `object.__new__(MIAApplication)`, the same construction
+`tests/live_model_check.py` already uses to skip the full boot
+sequence) against a real isolated context — a session logged
+yesterday, a pantry item expiring tomorrow — confirmed exactly one
+real "Smart Suggestion" notification fired with the correct combined
+message, and a second same-day call correctly produced no further
+notification (the `system.last_smart_suggestion_date` gate held).
