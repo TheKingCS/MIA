@@ -99,6 +99,7 @@ from core.trail_map_library import NotAPdfError, TrailMapLibrary
 from core.music_manager import MusicManager
 from core.kitchen_manager import KitchenManager
 from core.workout_manager import WorkoutManager
+from core.relationships_manager import RelationshipsManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.voice_manager import VoiceManager
@@ -240,6 +241,7 @@ class MIAApplication:
         self.context.music = MusicManager(self.context)
         self.context.kitchen = KitchenManager(self.context)
         self.context.workout = WorkoutManager(self.context)
+        self.context.relationships = RelationshipsManager(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
         # Registered by default so the registry has something real to
         # demonstrate end-to-end — it's a stub (no real driver), not a
@@ -436,7 +438,8 @@ class MIAApplication:
         if should_run_once_daily(config.get("system.last_smart_suggestion_date"), today_iso):
             last_session_date = self.context.workout.last_session_date() if self.context.workout is not None else None
             pantry_items = self.context.kitchen.all_pantry_items() if self.context.kitchen is not None else []
-            message = build_smart_suggestions_message(last_session_date, pantry_items, now.date())
+            people = self.context.relationships.all_people() if self.context.relationships is not None else []
+            message = build_smart_suggestions_message(last_session_date, pantry_items, people, now.date())
             if message:
                 self.context.notifications.notify(
                     title="Smart Suggestion",
@@ -589,6 +592,7 @@ class MIAApplication:
         self.context.dashboard_widgets.register(WidgetDescriptor("music", "Music", "\U0001F3B5"))
         self.context.dashboard_widgets.register(WidgetDescriptor("kitchen", "Kitchen", "\U0001F373"))
         self.context.dashboard_widgets.register(WidgetDescriptor("workout", "Workout", "\U0001F3CB"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("relationships", "People & Pets", "\U0001F465"))
 
     def _register_assistant_actions(self) -> None:
         """

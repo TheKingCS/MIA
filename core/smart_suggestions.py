@@ -7,13 +7,13 @@ docs/VISION.md's principle 3 ("Proactive, not just reactive") names
 three concrete examples: "recovery after intense workouts, a grocery
 trip when supplies run low, a birthday gift reminder before the date."
 
-Only the first two are built here — both have real, already-tracked
-data behind them (core.workout_manager.WorkoutManager/
-core.kitchen_manager.KitchenManager). A birthday-gift reminder needs
-"Relationship Profiles" (people MIA knows, with their own birthdays) —
-a real, separate, still-unbuilt subsystem with no data source today;
-faking one against data that doesn't exist would be worse than not
-building it yet.
+All three are built here now. Recovery/pantry shipped first, reading
+real data from core.workout_manager.WorkoutManager/
+core.kitchen_manager.KitchenManager. The gift reminder was deliberately
+deferred at first — it needed "Relationship Profiles" (people MIA
+knows, with their own birthdays), which didn't exist yet; now that
+core.relationships_manager.RelationshipsManager does, it has real data
+behind it too.
 
 Same split as core.daily_occasions/core.budget_nudges (both established
 this exact "pure functions, no Qt, no manager instances, wired into
@@ -25,9 +25,11 @@ notification at all) when everything's quiet — the same "don't notify
 just to say nothing's wrong" restraint build_nudge_message() already
 takes, and the concrete mechanism behind VISION's own "calibrated to
 feel helpful, never naggy" standard: recovery fires exactly once (the
-day after a real session, not every day after), and the pantry check
-only ever names real expiring/expired items, never a guessed low-stock
-heuristic (PantryItem has no reorder-threshold concept).
+day after a real session, not every day after), the pantry check only
+ever names real expiring/expired items (never a guessed low-stock
+heuristic — PantryItem has no reorder-threshold concept), and the gift
+reminder fires exactly once, exactly 7 days before the birthday (real
+lead time to actually get a gift, not a same-day notice).
 """
 
 from __future__ import annotations
@@ -36,8 +38,10 @@ from datetime import date, timedelta
 from typing import Optional
 
 from core.kitchen_manager import PantryItem, days_until_expiration
+from core.relationships_manager import Person, days_until_birthday
 
 _EXPIRING_WITHIN_DAYS = 3
+_GIFT_REMINDER_LEAD_DAYS = 7
 
 
 def build_recovery_suggestion(last_session_date: Optional[str], today: date) -> Optional[str]:
@@ -72,8 +76,26 @@ def build_pantry_suggestion(pantry_items: list[PantryItem], today: date) -> Opti
     return f"Pantry items expiring soon: {names} — might be time for a grocery trip."
 
 
+def build_gift_reminder_suggestion(people: list[Person], today: date) -> Optional[str]:
+    """Pure logic — testable without Qt. Names anyone whose birthday is
+    exactly _GIFT_REMINDER_LEAD_DAYS away — real lead time to actually
+    get a gift, not a same-day notice — including their stored gift
+    ideas when present. Fires once per person per year (the date math
+    only matches on the one exact day), never a repeating nag."""
+    parts = []
+    for person in people:
+        days = days_until_birthday(person.birthday, today)
+        if days != _GIFT_REMINDER_LEAD_DAYS:
+            continue
+        gift_part = f" Gift ideas: {person.gift_ideas}." if person.gift_ideas else ""
+        parts.append(f"{person.name}'s birthday is in {_GIFT_REMINDER_LEAD_DAYS} days.{gift_part}")
+    if not parts:
+        return None
+    return " ".join(parts)
+
+
 def build_smart_suggestions_message(
-    last_session_date: Optional[str], pantry_items: list[PantryItem], today: date,
+    last_session_date: Optional[str], pantry_items: list[PantryItem], people: list[Person], today: date,
 ) -> Optional[str]:
     """Pure logic — testable without Qt. Joins whichever checks above
     have something real to say; None (no notification) when
@@ -82,6 +104,7 @@ def build_smart_suggestions_message(
         message for message in (
             build_recovery_suggestion(last_session_date, today),
             build_pantry_suggestion(pantry_items, today),
+            build_gift_reminder_suggestion(people, today),
         )
         if message is not None
     ]

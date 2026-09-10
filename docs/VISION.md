@@ -151,11 +151,21 @@ warrant its own `core/*_manager.py` + module, roughly in the same shape
 as Missions/Expedition Mode/Field Kit before them: a **Memory Palace**
 (categorized, interconnected memory — Family/Programming/Fitness/
 Fishing/Projects/Travel/Cooking/Finance/Pets/Education/Work — replacing
-today's flat `UserMemory` list, not just extending it), **Relationship
+today's flat `UserMemory` list, not just extending it — categorization
+half built 2026-09-10 as a real `category` field + LLM-based
+extraction-time tagging on the existing `core/user_memory_manager.py`,
+deliberately not a rename, see the critical-evaluation note below;
+cross-linking memories to each other is still unbuilt), **Relationship
 Profiles** (people MIA knows — birthdays, favorite things, gift
 ideas, shared memories, optionally tied to visual recognition when
-hardware supports it) and **Pet Profiles** (names, photos, medical
-history, vet visits) as structured extensions of the same idea, a
+hardware supports it — text-only profiles built 2026-09-10,
+`core/relationships_manager.py` + `modules/relationships/module.py`;
+visual recognition still needs the camera hardware this vision already
+flags as its biggest open question) and **Pet Profiles** (names,
+photos, medical history, vet visits — medical-history/notes built
+2026-09-10 alongside Relationship Profiles; photos deliberately
+deferred, real file-import scope beyond that pass) as structured
+extensions of the same idea, a
 **Workout Module** (personal-trainer-style guided sessions: sets, reps,
 weight, rest timers, calorie estimates, PRs, progress charts — built
 2026-09-10, `modules/workout/module.py`), a
@@ -170,7 +180,8 @@ already-planned Agriculture/Smart Home sections below), a **Smart
 Suggestions** engine (the proactive-recommendation half of principle 3
 above — built 2026-09-10, `core/smart_suggestions.py`, covering the
 recovery/grocery-trip examples; the birthday-gift-reminder example
-still needs Relationship Profiles, not yet built), a **Startup
+closed the same day once Relationship Profiles shipped, all 3 of
+VISION's own named examples now built), a **Startup
 Dashboard Briefing** (the proactive half of the
 existing Home Dashboard), an **interactive first-time onboarding**
 (MIA teaches herself through real conversation and real tasks, not
@@ -735,7 +746,23 @@ the other.
   memory trees") needs a schema change and a migration path for
   whatever memories already exist in a user's real `data/*.json` before
   this ships — don't design it as a pure addition on top of the current
-  shape.
+  shape. **Categorization half built 2026-09-10**: a real `category`
+  field + backward-compatible default landed on the existing
+  `UserMemory`/`add_memory()` shape (an in-place schema addition, not a
+  rewrite — every existing un-categorized record still loads, just
+  defaulted to "Other"), and `core/assistant_chat.py`'s extraction
+  prompt now asks the LLM to tag each fact by category at capture time.
+  Deliberately did NOT rename `UserMemoryManager`/
+  `core/user_memory_manager.py` despite this note's own framing and the
+  bullet above calling it a "replacing" — measured the real blast
+  radius (10 files reference the system, 4 are live call sites touching
+  both the GUI and headless Core conversation pipelines) and judged a
+  full rename as pure ceremony/risk for zero functional gain once the
+  real categorization existed. Cross-referencing memories to each other
+  ("interconnected... memory trees") is still fully unbuilt — a real,
+  separate, much bigger feature (needs a linking UI and a "related to"
+  concept the data model doesn't have) that this document doesn't
+  concretely specify, deliberately not attempted against a guess.
 - **This update's own scope is, by a wide margin, the largest single
   addition to this document since the 2026-07-14 wearable-companion
   pass** — voice-first primacy, intelligent UI navigation, proactive
@@ -767,11 +794,11 @@ the other.
 | **Home Dock auto-launch Dashboard** (2026-07-14 addition: docking Core to the Home desktop opens MIA automatically to a dashboard of recent events/objectives/photos/music/projects and upcoming items) | Project 1/2 boundary. Extends v0.13's Core/Home device-profile split and v0.15's Expedition-sync docking detection (Field Kit already detects a docked Core) — mostly orchestration (launch-on-dock, a new Dashboard view) rather than new architecture. |
 | **Vitals/Stats logging** (2026-07-14 addition: maximalist local logging of user activity/position/pace/biometrics as hardware allows) | Project 1, new core service. Deliberately maximalist rather than category-limited, per the Mission section's reconciliation with "privacy-first" above — the only real ceiling is hardware capability (GPS, IMU, camera, mic), not self-imposed scope. |
 | **Modular wearable backpack form factor** (2026-07-14 addition: camera/speaker/mic on the strap, Pi5+HAT+battery on the pack, plug-and-play expansion modules) | Physical/industrial design work, not software — tracked in `HARDWARE.md`'s new "Modular Backpack" section as its own parallel track, same way Fleet/Communications hardware choices are deferred until acquired. |
-| **Memory Palace** (2026-07-15 addition: categorized, cross-referenced memory trees instead of a flat fact list) | Project 1. A schema/migration on `core/user_memory_manager.py`, not a new service — see the critical-evaluation note above on why this isn't purely additive. |
+| **Memory Palace** (2026-07-15 addition: categorized, cross-referenced memory trees instead of a flat fact list) | Project 1. A schema/migration on `core/user_memory_manager.py`, not a new service — see the critical-evaluation note above on why this isn't purely additive. **Categorization half built 2026-09-10** (real `category` field, LLM-tagged at extraction time, filterable in `gui/user_memory_dialog.py`); cross-referencing memories to each other is still unbuilt. |
 | **Intelligent UI Navigation** (2026-07-15 addition: the GUI opens the right module and fills in a form live while the conversation continues) | Project 1. A new tool category alongside the existing domain-scoped data tools (2026-07-14) — see the critical-evaluation note above; needed before voice-first can feel seamless rather than "chat, then go check the screen." |
 | **Voice-first primacy** (2026-07-15 addition: voice becomes the primary interface, GUI a supporting visual) | Project 1. UX-sequencing principle applied to every future module's design, not a new service — today's push-to-talk Assistant voice path (v0.5+) is the existing foundation. |
 | **Startup Dashboard Briefing** (2026-07-15 addition: an intelligent spoken/written summary at launch instead of a static dashboard) | Project 1. Extends `gui/home_dashboard.py` (2026-07-14) and the Assistant's info-question path (2026-07-14 part 5) — an aggregation + summarization layer over data that mostly already exists (quests/Missions, Calendar, Memories, Projects, notifications), plus whatever new domains (weather, workout, finance, smart home) ship first. |
-| **Smart Suggestions** (2026-07-15 addition: proactive, unprompted recommendations from recent activity) | **Built 2026-09-10** — `core/smart_suggestions.py`, wired into `core/application.py`'s existing daily-check timer (`_check_daily_occasions()`), same shape `core/daily_occasions.py` (2026-07-14) established, confirming that was the right precedent. Covers 2 of VISION's own 3 named examples (workout recovery, grocery trip when pantry items expire soon); the birthday-gift-reminder example is explicitly deferred — it needs Relationship Profiles (people MIA knows, with their own birthdays), which doesn't exist yet. Maintenance-overdue/Missions-stale suggestions are natural, cheap future extensions of this same engine, not built in this pass. |
+| **Smart Suggestions** (2026-07-15 addition: proactive, unprompted recommendations from recent activity) | **Built 2026-09-10** — `core/smart_suggestions.py`, wired into `core/application.py`'s existing daily-check timer (`_check_daily_occasions()`), same shape `core/daily_occasions.py` (2026-07-14) established, confirming that was the right precedent. All 3 of VISION's own named examples now built: workout recovery and grocery-trip-when-pantry-expires shipped first; the birthday-gift-reminder example (`build_gift_reminder_suggestion()`) closed the same day once Relationship Profiles shipped and gave it real birthday data to read. Maintenance-overdue/Missions-stale suggestions are natural, cheap future extensions of this same engine, not built in this pass. |
 | **Workout Module** (2026-07-15 addition: personal-trainer-style guided sessions, PRs, progress charts) | **Built 2026-09-10** — `core/workout_manager.py` + `modules/workout/module.py` (Exercises/Templates/Log Session/History/Progress tabs). The live session's real elapsed-time stopwatches (session + independent rest timer) reuse `time.monotonic()` + a 100ms `QTimer`, the exact precedent `modules/toolbox/tools/stopwatch_tool.py` already established — closer and more direct than Expedition Mode's speed/splits tracking, which this build didn't end up needing as a model. PRs are the heaviest weight ever logged (no fabricated 1RM-estimate formula); calorie estimates are manual entry only. |
 | **Kitchen Module** (2026-07-15 addition: recipes, inventory, grocery lists, nutrition, meal suggestions) | **Built 2026-09-10** — `core/kitchen_manager.py` + `modules/kitchen/module.py` (Recipes/Pantry/Grocery List/Meal Log/Suggestions tabs). Deliberately its own manager, not a reuse of `core/inventory_manager.py`'s generic Toolbox Inventory tool — same reasoning `docs/ROADMAP.md` milestone 8.3 already gave for Workshop's own component DB. Nutrition is manual entry only (no USDA lookup); units are freeform strings (no conversion system). Still overlaps in spirit with the already-planned Agriculture section (garden → kitchen supply chain is a natural future link, not built yet). |
 | **Finance** (2026-07-15 addition: budgets, savings, mortgage/loan payoff, real estate, crypto, stocks, net worth, cash flow, projections) | **Corrected 2026-07-16: Home (Project 2), not Project 1.** See the dedicated "MIA Home's expanded scope" section above — this is a real, substantially-planned body of work (three financial widget sources, a live Kraken trading agent, a real estate dashboard), not a lightweight read/tracking add-on, and it's desktop-class scope, not field-device scope. |
@@ -779,8 +806,8 @@ the other.
 | **Real Estate Portfolio** (2026-07-16 addition: per-property income/expense/payoff/cap-rate tracking, CSV bank-statement import) | **Superseded 2026-09-08**: rather than the separate sandboxed React dashboard originally planned here, the user chose a native Home module instead (`modules/real_estate/module.py`, `core/real_estate_manager.py`) once per-property Maintenance-history linking mattered — properties, equity, cap rate, and rental income (linked to `core/budget_manager.py` entries) all live in Home directly now. The external React dashboard's JSON-export ingestion path (`core/finance_manager.py`, `_REAL_ESTATE_SOURCE`) still exists as a separate, still-valid widget for that other tool if it's ever used — the two are intentionally distinct ("Real Estate" vs. "My Properties" on the dashboard), not a replacement of one by the other. |
 | **Workshop Hardware Module Framework** (2026-07-16 addition: a standard `MIAModule` interface — get_status/send_job/pause/stop — for fab-shop hardware like laser engravers/CNC) | Home (Project 2), see the expanded-scope section above. A real open question on how it relates to this repo's existing `ModuleBase` contract — not yet reconciled. |
 | **Smart Home & Homestead** (2026-07-15 addition: lighting, cameras, doors, sensors, garden automation, solar, weather stations) | Project 1/3 boundary — merges into the already-planned Smart Home/Agriculture sections in `ROADMAP.md`'s v1.0+ bucket and Project 3 ("The Senses") above; all genuinely hardware-gated, same treatment as Fleet/Communications. |
-| **Relationship Profiles** (2026-07-15 addition: people MIA knows — birthdays, gift ideas, shared memories, optional visual recognition) | Project 1, new core service, a structured extension of Memory Palace scoped to people specifically. Visual recognition ("who am I looking at") needs the camera hardware/on-device classification already flagged as this vision's biggest open hardware question above — text-only profiles (no recognition) are buildable now; recognition is not. |
-| **Pet Profiles** (2026-07-15 addition: names, photos, medical history, vet visits) | Project 1, same shape as Relationship Profiles, camera-independent (no recognition implied) so fully buildable now. |
+| **Relationship Profiles** (2026-07-15 addition: people MIA knows — birthdays, gift ideas, shared memories, optional visual recognition) | Project 1, new core service, a structured extension of Memory Palace scoped to people specifically. **Text-only profiles built 2026-09-10** — `core/relationships_manager.py` (`Person`) + `modules/relationships/module.py`'s People tab; feeds `build_gift_reminder_suggestion()` directly. Visual recognition ("who am I looking at") still needs the camera hardware/on-device classification already flagged as this vision's biggest open hardware question above — not attempted. |
+| **Pet Profiles** (2026-07-15 addition: names, photos, medical history, vet visits) | Project 1, same shape as Relationship Profiles, camera-independent (no recognition implied) so fully buildable now. **Built 2026-09-10 minus photos** — `core/relationships_manager.py` (`Pet`) + `modules/relationships/module.py`'s Pets tab; name/species/birthday/medical-notes/notes all buildable and built. Photos deliberately deferred — real file-import handling (configurable photo root, import dialog, orphaned-file cleanup, the exact `core.trip_manager.TripManager.add_photo()` precedent) is real added scope beyond an already-large pass. |
 | **Interactive onboarding + modular tutorial system** (2026-07-15 addition: MIA teaches herself through real conversation and real tasks, always available via "teach me how X works") | Project 1. Builds on the existing Assistant conversation/personality pipeline (2026-07-14 part 5) plus `looks_like_action_request()`-style intent classification — a new "teaching mode" conversation path, not a new backend. |
 | **Self-knowledge** (2026-07-15 addition: MIA can explain any of her own modules/features/workflows conversationally) | Project 1. Directly extends `core/device_help_manager.py`'s existing end-user-docs grounding (2026-07-14 part 4) — that system already answers "how do I use X"; this generalizes its coverage and hooks it into the tutorial system above rather than replacing it. |
 | **Multi-platform architecture + browser/XR support** (2026-07-15 addition: the same assistant/memory/modules reachable from desktop, web, mobile, wearable, voice-only, and future AR/XR) | **Resolved 2026-07-15** — see the dedicated "Core/Home split" section above. Core stays fully offline-capable (Project 1); Home (Project 2) gets both a deep-reasoning hand-off and a separate browser/app streaming access mode. Neither built yet, but the architecture question itself is no longer open. |

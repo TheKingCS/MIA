@@ -151,8 +151,10 @@ class VoiceLoopController:
             return
         prompt = build_memory_extraction_prompt(user_message)
         raw = self.context.llm.generate(prompt)
-        for fact in parse_extracted_memories(raw):
-            self.context.user_memories.add_memory(fact, source_conversation_id=self._conversation.conversation_id)
+        for category, fact in parse_extracted_memories(raw):
+            self.context.user_memories.add_memory(
+                fact, category=category, source_conversation_id=self._conversation.conversation_id,
+            )
 
     def _add_message(self, role: str, content: str) -> None:
         self._conversation.messages.append(

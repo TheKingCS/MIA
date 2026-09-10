@@ -22,6 +22,19 @@ project has already decided against building for a much bigger corpus
 in core/device_help_manager.py's own docstring) rather than letting the
 same fact accumulate a new row every time it comes up again in
 conversation.
+
+**2026-09-10 "Memory Palace"**: categorization, not a rename — VISION.md
+asks for "categorized, interconnected memory... replacing today's flat
+UserMemory list," but a full rename would touch 10 real call sites
+across the live GUI and headless Core conversation flows for zero
+functional gain. The real substance (flat -> categorized) is delivered
+by adding a real `category` field instead: `core.assistant_chat`'s
+memory-extraction prompt now asks the LLM for a category per fact
+(`Category: Fact` per line), and `add_memory()` stores it, falling back
+to "Other" for anything unrecognized so a formatting slip never loses
+a real fact. "Interconnected" (cross-linking related memories) is a
+real, separate, bigger feature deferred for now — this data model has
+no "related to" concept yet.
 """
 
 from __future__ import annotations
@@ -41,6 +54,11 @@ log = get_logger(__name__)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _USER_MEMORIES_FILE = _DATA_DIR / "user_memories.json"
 
+MEMORY_CATEGORIES = [
+    "Family", "Programming", "Fitness", "Fishing", "Projects", "Travel",
+    "Cooking", "Finance", "Pets", "Education", "Work", "Other",
+]
+
 
 @dataclass
 class UserMemory:
@@ -48,6 +66,7 @@ class UserMemory:
     text: str
     created_at: str = ""
     source_conversation_id: Optional[str] = None
+    category: str = "Other"  # one of MEMORY_CATEGORIES — "Other" for pre-Memory-Palace records too
 
     def to_dict(self) -> dict:
         return {
@@ -55,6 +74,7 @@ class UserMemory:
             "text": self.text,
             "created_at": self.created_at,
             "source_conversation_id": self.source_conversation_id,
+            "category": self.category,
         }
 
     @staticmethod
@@ -64,6 +84,7 @@ class UserMemory:
             text=data.get("text", ""),
             created_at=data.get("created_at", ""),
             source_conversation_id=data.get("source_conversation_id"),
+            category=data.get("category", "Other"),
         )
 
 
@@ -109,7 +130,9 @@ class UserMemoryManager:
         """Newest first — matches the conversation list's own ordering convention."""
         return sorted(self._memories, key=lambda m: m.created_at, reverse=True)
 
-    def add_memory(self, text: str, source_conversation_id: Optional[str] = None) -> Optional[UserMemory]:
+    def add_memory(
+        self, text: str, category: str = "Other", source_conversation_id: Optional[str] = None,
+    ) -> Optional[UserMemory]:
         text = text.strip()
         if not text:
             return None
@@ -120,6 +143,7 @@ class UserMemoryManager:
             text=text,
             created_at=datetime.now().isoformat(timespec="seconds"),
             source_conversation_id=source_conversation_id,
+            category=category if category in MEMORY_CATEGORIES else "Other",
         )
         self._memories.append(memory)
         self._save()

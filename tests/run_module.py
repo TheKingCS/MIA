@@ -57,6 +57,7 @@ from core.module_manager import ModuleManager  # noqa: E402
 from core.music_manager import MusicManager  # noqa: E402
 from core.kitchen_manager import KitchenManager  # noqa: E402
 from core.workout_manager import WorkoutManager  # noqa: E402
+from core.relationships_manager import RelationshipsManager  # noqa: E402
 from core.power_manager import PowerManager  # noqa: E402
 from core.profile_manager import ProfileManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
@@ -119,6 +120,7 @@ def main() -> int:
     context.music = MusicManager(context)
     context.kitchen = KitchenManager(context)
     context.workout = WorkoutManager(context)
+    context.relationships = RelationshipsManager(context)
     manager = ModuleManager(context)
     manager.discover()
     context.device_help.register_module_lister(manager.all)

@@ -498,8 +498,8 @@ class AssistantModule(ModuleBase):
         self._memory_worker.start()
 
     def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
-        for fact in parse_extracted_memories(raw_text):
-            self.context.user_memories.add_memory(fact, source_conversation_id=conversation_id)
+        for category, fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, category=category, source_conversation_id=conversation_id)
 
     def _on_memory_worker_finished(self) -> None:
         if self._memory_worker is not None:

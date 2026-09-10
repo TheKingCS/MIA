@@ -16,7 +16,7 @@ import core.user_memory_manager as user_memory_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
-from core.user_memory_manager import UserMemoryManager, is_duplicate_memory
+from core.user_memory_manager import MEMORY_CATEGORIES, UserMemory, UserMemoryManager, is_duplicate_memory
 
 
 @pytest.fixture
@@ -95,6 +95,45 @@ def test_add_memory_records_source_conversation(isolated_paths):
     manager = _make_manager()
     memory = manager.add_memory("Has a dog named Rex.", source_conversation_id="conv123")
     assert memory.source_conversation_id == "conv123"
+
+
+def test_add_memory_defaults_to_other_category(isolated_paths):
+    manager = _make_manager()
+    memory = manager.add_memory("Has a dog named Rex.")
+    assert memory.category == "Other"
+
+
+def test_add_memory_stores_a_real_category(isolated_paths):
+    manager = _make_manager()
+    memory = manager.add_memory("Has a dog named Rex.", category="Pets")
+    assert memory.category == "Pets"
+
+
+def test_add_memory_falls_back_to_other_for_unknown_category(isolated_paths):
+    manager = _make_manager()
+    memory = manager.add_memory("Plays tennis.", category="Sports")
+    assert memory.category == "Other"
+
+
+def test_add_memory_category_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    manager.add_memory("Has a dog named Rex.", category="Pets")
+
+    reloaded = _make_manager()
+    assert reloaded.all_memories()[0].category == "Pets"
+
+
+def test_user_memory_from_dict_backward_compatible_without_category_field():
+    # Pre-Memory-Palace records on disk never had a "category" key at all.
+    memory = UserMemory.from_dict({"memory_id": "m1", "text": "Loves hiking."})
+    assert memory.category == "Other"
+
+
+def test_add_memory_accepts_every_real_category(isolated_paths):
+    manager = _make_manager()
+    for category in MEMORY_CATEGORIES:
+        memory = manager.add_memory(f"A fact filed under {category}.", category=category)
+        assert memory.category == category
 
 
 def test_delete_memory(isolated_paths):

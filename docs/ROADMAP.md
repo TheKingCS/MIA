@@ -6352,3 +6352,88 @@ yesterday, a pantry item expiring tomorrow — confirmed exactly one
 real "Smart Suggestion" notification fired with the correct combined
 message, and a second same-day call correctly produced no further
 notification (the `system.last_smart_suggestion_date` gate held).
+
+## Memory Palace + Relationship Profiles + Pet Profiles (2026-09-10)
+
+User picked the full VISION.md bundle — "Memory Palace, Relationship
+Profiles, and Pet Profiles" together, described there as "structured
+extensions of the same idea." The biggest-blast-radius change this
+session: Memory Palace touches a *live* system, the Assistant's
+real-time memory-extraction pipeline, rather than being a pure
+addition like Kitchen/Workout/Smart Suggestions were. Researched the
+real blast radius before touching it: `core.user_memory_manager` is
+genuinely the flat list VISION means; `core/memory_manager.py` is a
+completely unrelated system (Expedition Recap aggregation) with a
+confusingly similar name — not touched here. A first grep for
+`add_memory(` calls found only 2 real callers; a broader grep for
+`parse_extracted_memories(` specifically caught 2 more
+(`gui/character_panel.py`, `gui/home_dashboard.py`) before any code
+shipped — all 4 updated.
+
+**Deliberately did NOT rename** `UserMemoryManager`/
+`core/user_memory_manager.py` despite VISION's "replacing... not just
+extending" wording — a full rename touching ~10 files is pure risk to
+a live pipeline for zero functional gain (same data, same behavior,
+new name). The real substance of "flat → categorized" is delivered by
+adding an actual `category` field, not by renaming the file that holds
+it.
+
+`UserMemory` gained `category: str = "Other"` (backward-compatible
+default for existing un-categorized records) and a new
+`MEMORY_CATEGORIES` list (VISION's own vocabulary + "Other" fallback).
+`core/assistant_chat.py`'s extraction prompt now asks the LLM for one
+`"Category: Fact"` line per fact; `parse_extracted_memories()`'s return
+type changed from `list[str]` to `list[tuple[str, str]]`. Chose an
+LLM-based categorizer over a keyword heuristic — a keyword approach
+hits real collisions (e.g. "fish" is ambiguous between Pets and
+Fishing) that would visibly undermine the feature, while the LLM
+approach, paired with a safe fallback, produces genuinely better
+categorization. A malformed or unrecognized category prefix never
+costs the underlying fact — it falls back to `("Other", <whole
+original line>)`, the same belt-and-suspenders caution the existing
+NONE/hedge-phrase detection right above it already uses.
+`gui/user_memory_dialog.py` gained a category filter combo and a
+`[Category]` tag on each row — the actual "categorized, not just a
+flat list" payoff in the one place a user browses these. Deliberately
+deferred: cross-linking related memories to each other ("interconnected"
+memory) — a real, separate, much bigger feature VISION doesn't
+concretely specify, not attempted against a guess.
+
+New `core/relationships_manager.py` — one manager, two related
+dataclasses (`Person`, `Pet`), same shape as `core/kitchen_manager.py`.
+"Favorite things"/"gift ideas"/"notes"/"medical notes" are freeform
+text fields, not structured sub-lists — the same "don't force premature
+structure" call made throughout this session. New
+`modules/relationships/module.py` ("People & Pets", 👥) — a People/Pets
+`QTabWidget`, same filterable-list + Add/Edit/Delete shape as Kitchen's
+own Pantry tab, with `gui/add_edit_person_dialog.py`/
+`gui/add_edit_pet_dialog.py`. Deliberately deferred: pet photos (real
+file-import handling — a configurable photo root, an import dialog,
+orphaned-file cleanup — is real added scope beyond an already-large
+pass; `medical_notes` covers the real "have this on hand" need in text
+form today) and visual recognition (VISION itself frames this as
+hardware-optional/future).
+
+Wired `context.relationships` into `core/app_context.py`/
+`core/application.py`, plus a new dashboard widget showing the nearest
+upcoming birthday if any. Closed the loop on Smart Suggestions' own
+deferred item: `build_gift_reminder_suggestion()` fires when a
+person's birthday is exactly 7 days away (real lead time, not a
+same-day notice), naming their stored gift ideas if any —
+`build_smart_suggestions_message()` now joins all three VISION
+principle-3 examples.
+
+**Verified for real**: full suite grew from 2122 to 2163 tests, all
+passing (Memory Palace categorization tests, `tests/test_relationships_manager.py`,
+`tests/test_relationships_module.py`, new gift-reminder cases in
+`tests/test_smart_suggestions.py`). Manual headless-Qt verification:
+the categorized memory dialog screenshotted with 5 real memories
+across 4 real categories plus one deliberate fallback-to-Other case,
+and the category filter combo confirmed to actually filter; the
+People/Pets module screenshotted cold (empty state) and populated
+(birthday tags, relationship/species tags, correct name-sorted order)
+across both tabs; a direct call to the real `_check_daily_occasions()`
+(via `object.__new__(MIAApplication)`) against a real isolated context
+with two people at exactly 7 days out confirmed a real gift-reminder
+notification fired naming both people and their real stored gift
+ideas.

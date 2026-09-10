@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING, Iterable, Optional
 
 from core.device_help_manager import GROUNDING_INSTRUCTION
 from core.llm_manager import ToolCall
+from core.user_memory_manager import MEMORY_CATEGORIES
 
 if TYPE_CHECKING:
     from core.conversation_manager import Conversation, ConversationMessage
@@ -259,12 +260,23 @@ _MAX_INJECTED_MEMORIES = 20  # most recent — bounds prompt growth as the memor
 # over fabricating one (a false positive) — for a feature whose whole
 # point is trustworthy long-term memory, a wrong invented "fact" is far
 # worse than an occasional missed one.
+# 2026-09-10 "Memory Palace": each fact now also gets a category, in
+# the same message, rather than a second LLM call — a category is a
+# simple classification of text the model already has to read anyway,
+# not a separate reasoning task, so this doesn't add real fragility on
+# top of the existing NONE-detection risk documented above.
+# parse_extracted_memories() is still forgiving of a malformed/missing
+# category (falls back to "Other" and keeps the whole line as the
+# fact) — never lets a formatting slip cost a real fact.
+_MEMORY_CATEGORY_LIST = ", ".join(c for c in MEMORY_CATEGORIES if c != "Other")
 _MEMORY_EXTRACTION_PROMPT_TEMPLATE = (
     "The user just sent this message to their personal assistant:\n\n"
     "\"{user_message}\"\n\n"
     "List every fact it EXPLICITLY states about the user themselves (name, birthday, a relationship, a "
-    "stated preference, or a stated ongoing interest/hobby) — one short sentence per fact, using the "
-    "words \"the user\" instead of he/she/his/her, e.g. \"The user has a dog named Rex.\" Never add "
+    "stated preference, or a stated ongoing interest/hobby). One fact per line, in the exact form "
+    "\"Category: Fact\", using the words \"the user\" instead of he/she/his/her, e.g. "
+    "\"Pets: The user has a dog named Rex.\" Category must be exactly one of: "
+    f"{_MEMORY_CATEGORY_LIST}, Other — pick Other if nothing else fits. Never add "
     "a detail that wasn't actually said, and never guess at anything (gender, age, routine, schedule) "
     "that wasn't stated. If it's a question, a one-time request/command, or states no personal fact, "
     "reply with exactly: NONE"
@@ -409,14 +421,32 @@ _NO_FACT_HEDGE_PHRASES = (
 )
 
 
-def parse_extracted_memories(raw_text: Optional[str]) -> list[str]:
+def _split_category_and_fact(line: str) -> tuple[str, str]:
+    """Pure logic. "Category: Fact" -> (category, fact) once the text
+    before the first colon exactly matches a real category
+    (case-insensitive, normalized to the real casing); anything else
+    -> ("Other", line) with the WHOLE original line preserved as the
+    fact — a formatting slip must never cost a real fact, same
+    belt-and-suspenders caution as the NONE/hedge detection below."""
+    if ":" in line:
+        prefix, rest = line.split(":", 1)
+        prefix = prefix.strip()
+        for category in MEMORY_CATEGORIES:
+            if prefix.lower() == category.lower() and rest.strip():
+                return category, rest.strip()
+    return "Other", line
+
+
+def parse_extracted_memories(raw_text: Optional[str]) -> list[tuple[str, str]]:
     """
-    Pure parsing logic — one fact per non-empty line, stripping common
-    bullet/numbering prefixes, dropping a bare "NONE" (case-insensitive)
-    line and any line that reads as a hedge/explanation rather than a
-    stated fact (see `_NO_FACT_HEDGE_PHRASES`). Returns [] for
-    None/empty input rather than raising, since the LLM backend being
-    unreachable is an expected, non-fatal case for a background
+    Pure parsing logic — one (category, fact) pair per non-empty line,
+    stripping common bullet/numbering prefixes, dropping a bare "NONE"
+    (case-insensitive) line and any line that reads as a hedge/
+    explanation rather than a stated fact (see `_NO_FACT_HEDGE_PHRASES`).
+    See `_split_category_and_fact()` for how the "Category: Fact" line
+    shape is parsed (and how a malformed one degrades safely). Returns
+    [] for None/empty input rather than raising, since the LLM backend
+    being unreachable is an expected, non-fatal case for a background
     enhancement like this — memory extraction failing should never
     disrupt the actual chat reply already shown to the user.
     """
@@ -437,7 +467,7 @@ def parse_extracted_memories(raw_text: Optional[str]) -> list[str]:
         lowered = line.lower()
         if any(phrase in lowered for phrase in _NO_FACT_HEDGE_PHRASES):
             continue
-        facts.append(line)
+        facts.append(_split_category_and_fact(line))
     return facts
 
 

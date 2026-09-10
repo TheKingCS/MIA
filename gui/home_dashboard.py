@@ -495,6 +495,20 @@ def format_workout_line(last_session_date: Optional[str], today: date) -> str:
     return f"{days} {noun} since last workout"
 
 
+def format_relationships_line(nearest_birthday: Optional[tuple]) -> str:
+    """Pure formatting logic — testable without Qt. nearest_birthday is
+    (Person, days_until) or None — the real fact this widget leads
+    with, same "one real, actionable fact" precedent as
+    format_workout_line()/format_kitchen_line()."""
+    if nearest_birthday is None:
+        return "No birthdays tracked yet"
+    person, days = nearest_birthday
+    if days == 0:
+        return f"{person.name}'s birthday is today!"
+    noun = "day" if days == 1 else "days"
+    return f"{person.name}'s birthday in {days} {noun}"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -532,6 +546,7 @@ class HomeDashboard(QFrame):
             "music": self._build_music_widget,
             "kitchen": self._build_kitchen_widget,
             "workout": self._build_workout_widget,
+            "relationships": self._build_relationships_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -909,6 +924,15 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("workout"),
         )
         self._widget_bodies["workout"] = body
+        return card
+
+    def _build_relationships_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("relationships"),
+        )
+        self._widget_bodies["relationships"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1453,8 +1477,8 @@ class HomeDashboard(QFrame):
         self._memory_worker.start()
 
     def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
-        for fact in parse_extracted_memories(raw_text):
-            self.context.user_memories.add_memory(fact, source_conversation_id=conversation_id)
+        for category, fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, category=category, source_conversation_id=conversation_id)
 
     def _on_memory_worker_finished(self) -> None:
         if self._memory_worker is not None:
@@ -1590,6 +1614,8 @@ class HomeDashboard(QFrame):
             self._refresh_kitchen()
         if "workout" in self._widget_bodies:
             self._refresh_workout()
+        if "relationships" in self._widget_bodies:
+            self._refresh_relationships()
 
     def _refresh_budget(self) -> None:
         bills = self.context.budget.all_bills() if self.context.budget else []
@@ -1619,6 +1645,12 @@ class HomeDashboard(QFrame):
     def _refresh_workout(self) -> None:
         last_session_date = self.context.workout.last_session_date() if self.context.workout else None
         self._set_widget_body_text("workout", format_workout_line(last_session_date, date.today()))
+
+    def _refresh_relationships(self) -> None:
+        nearest_birthday = (
+            self.context.relationships.nearest_upcoming_birthday(date.today()) if self.context.relationships else None
+        )
+        self._set_widget_body_text("relationships", format_relationships_line(nearest_birthday))
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None

@@ -329,21 +329,42 @@ def test_parse_extracted_memories_none_case_insensitive_with_period():
 
 
 def test_parse_extracted_memories_single_fact():
-    assert parse_extracted_memories("The user's name is Alex.") == ["The user's name is Alex."]
+    assert parse_extracted_memories("The user's name is Alex.") == [("Other", "The user's name is Alex.")]
 
 
 def test_parse_extracted_memories_multiple_lines():
     raw = "The user's name is Alex.\nLoves hiking in the Cascades."
-    assert parse_extracted_memories(raw) == ["The user's name is Alex.", "Loves hiking in the Cascades."]
+    assert parse_extracted_memories(raw) == [("Other", "The user's name is Alex."), ("Other", "Loves hiking in the Cascades.")]
 
 
 def test_parse_extracted_memories_strips_bullets_and_numbering():
     raw = "- Loves hiking.\n1. Has a dog named Rex.\n2) Works as a nurse."
-    assert parse_extracted_memories(raw) == ["Loves hiking.", "Has a dog named Rex.", "Works as a nurse."]
+    assert parse_extracted_memories(raw) == [("Other", "Loves hiking."), ("Other", "Has a dog named Rex."), ("Other", "Works as a nurse.")]
 
 
 def test_parse_extracted_memories_drops_blank_lines():
-    assert parse_extracted_memories("Loves hiking.\n\n\nHas a dog.") == ["Loves hiking.", "Has a dog."]
+    assert parse_extracted_memories("Loves hiking.\n\n\nHas a dog.") == [("Other", "Loves hiking."), ("Other", "Has a dog.")]
+
+
+def test_parse_extracted_memories_parses_a_real_category_prefix():
+    assert parse_extracted_memories("Pets: The user has a dog named Rex.") == [("Pets", "The user has a dog named Rex.")]
+
+
+def test_parse_extracted_memories_category_prefix_is_case_insensitive():
+    assert parse_extracted_memories("pets: The user has a dog named Rex.") == [("Pets", "The user has a dog named Rex.")]
+
+
+def test_parse_extracted_memories_unrecognized_category_prefix_falls_back_to_other_with_full_line_kept():
+    raw = "Sports: The user plays tennis."
+    assert parse_extracted_memories(raw) == [("Other", "Sports: The user plays tennis.")]
+
+
+def test_parse_extracted_memories_mixed_categories_across_lines():
+    raw = "Pets: The user has a dog named Rex.\nFitness: The user runs marathons."
+    assert parse_extracted_memories(raw) == [
+        ("Pets", "The user has a dog named Rex."),
+        ("Fitness", "The user runs marathons."),
+    ]
 
 
 def test_parse_extracted_memories_none_input():
@@ -374,7 +395,7 @@ def test_parse_extracted_memories_rejects_does_not_state_phrasing():
 
 def test_parse_extracted_memories_hedge_phrase_does_not_swallow_other_real_facts():
     raw = "The user has a dog named Rex.\nThere is no new information about anything else."
-    assert parse_extracted_memories(raw) == ["The user has a dog named Rex."]
+    assert parse_extracted_memories(raw) == [("Other", "The user has a dog named Rex.")]
 
 
 # ----------------------------------------------------------------------

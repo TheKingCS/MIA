@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from core.product_manager import ProductManager
     from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
+    from core.relationships_manager import RelationshipsManager
     from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
     from core.task_manager import TaskManager
@@ -138,6 +139,7 @@ class AppContext:
     music: Optional["MusicManager"] = field(default=None, repr=False)
     kitchen: Optional["KitchenManager"] = field(default=None, repr=False)
     workout: Optional["WorkoutManager"] = field(default=None, repr=False)
+    relationships: Optional["RelationshipsManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only
