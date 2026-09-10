@@ -6243,3 +6243,66 @@ manager, logging a meal updated `last_made_date`/`times_made`
 immediately, and the Dashboard widget correctly led with "1 pantry
 item expiring soon" over the routine "recipes ready" count once a
 near-expiration item existed.
+
+## Workout module: guided sessions, rest timers, PRs, progress charts (2026-09-10)
+
+Next VISION.md subsystem picked by the user after Kitchen. New
+`core/workout_manager.py` — `Exercise`/`WorkoutTemplate`/`WorkoutSession`,
+same one-manager-several-dataclasses shape as `core/kitchen_manager.py`.
+Template exercises and a session's logged sets are plain dicts on
+their parent record, same `Recipe.ingredients` precedent. Personal
+records use the single most honest metric — heaviest weight ever
+logged (ties broken by higher reps) — never a fabricated 1RM-estimate
+formula; calorie estimates are manual entry only, no MET-based formula
+exists here to compute one honestly.
+
+`modules/workout/module.py`: five tabs (Exercises/Templates/Log
+Session/History/Progress), same shape as Kitchen's own module,
+including the same proactive "every tab refreshes on every
+`tabs.currentChanged`" fix. **The one genuinely new interaction in
+this app**: the Log Session tab is a live, in-memory state machine —
+nothing is written to `core/workout_manager.py` until "Finish
+Session." Real elapsed time (both the overall session and an
+independent rest timer) comes from `time.monotonic()` deltas plus a
+100ms `QTimer`, directly reusing `modules/toolbox/tools/stopwatch_tool.py`'s
+own precedent — confirmed by reading that file first, not guessed.
+`format_elapsed()` is deliberately its own independently-owned copy in
+`modules/workout/module.py` rather than a cross-module import,
+matching `modules/real_estate/module.py`'s own stated reasoning for
+its nearly-identical formatters. The rest timer is a real elapsed-time
+readout, not a countdown against a fabricated target — an honest v1.
+The Progress tab's per-exercise weight-over-time chart reuses
+`modules/lab/module.py`'s `QChart`/`QLineSeries` precedent (a closer
+fit than Budget's grouped-bar Trends chart, since this is a single
+continuous progression) combined with Budget Trends' own
+`QBarCategoryAxis` date-labeling technique.
+
+**A real bug caught only by looking at the actual rendered chart, not
+by the passing tests**: with just one logged session (the very first
+thing every new user would see), the Progress chart rendered
+completely blank — no point, no axis scale. Confirmed directly (not
+assumed) that Qt Charts' auto-ranging for a `QValueAxis` attached via
+`addAxis()`/`attachAxis()` (rather than `createDefaultAxes()`)
+collapses to a zero-height `[weight, weight]` range whenever every
+logged weight is identical, including the single-point case. Fixed
+with an explicit `axis_y.setRange(0.0, max(max_weight * 1.2, 10.0))`
+and `series.setPointsVisible(True)` (a bare `QLineSeries` draws
+nothing at all for a single point — no line to connect) — the exact
+kind of bug this project's own "always look at the real rendered
+output" discipline exists to catch, and did.
+
+**Verified for real**: 40 new tests (`tests/test_workout_manager.py`,
+`tests/test_workout_module.py`) — CRUD + persistence-across-fresh-load
+for all three record types, `personal_record()`'s tie-breaking and
+none-when-never-logged cases, `weight_progression()`'s per-day-max
+grouping, and `format_elapsed()`'s branches (mirrors
+`tests/test_stopwatch_format.py` exactly). 2097 tests passing. A full
+manual headless-Qt walkthrough drove the real live-session state
+machine end-to-end: started a session from a real template, logged a
+real set, started resting and confirmed the rest label actually
+advanced to "00:01" across a real `time.sleep(1.2)` (not a mocked
+timer), logged a second set on a different exercise, finished the
+session with a real elapsed duration and an entered calories estimate,
+confirmed History showed the exact real session, and confirmed
+Progress showed the correct PR and — after the axis-range fix — an
+actually visible chart point.

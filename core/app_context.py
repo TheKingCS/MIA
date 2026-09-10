@@ -75,6 +75,7 @@ if TYPE_CHECKING:
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
+    from core.workout_manager import WorkoutManager
     from core.workshop_machine import WorkshopMachineRegistry
 
 
@@ -136,6 +137,7 @@ class AppContext:
     trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
     music: Optional["MusicManager"] = field(default=None, repr=False)
     kitchen: Optional["KitchenManager"] = field(default=None, repr=False)
+    workout: Optional["WorkoutManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only

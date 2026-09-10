@@ -477,6 +477,24 @@ def format_kitchen_line(expiring_count: int, makeable_count: int, has_pantry: bo
     return f"{makeable_count} {noun} ready to make right now"
 
 
+def format_workout_line(last_session_date: Optional[str], today: date) -> str:
+    """Pure formatting logic — testable without Qt. Leads with days
+    since the last logged session — a real, honest nudge — else "No
+    workouts logged yet" for a fresh install, same
+    format_kitchen_line()/format_homestead_line() "critical/actionable
+    fact first, never a fabricated status" precedent."""
+    if not last_session_date:
+        return "No workouts logged yet"
+    try:
+        days = (today - date.fromisoformat(last_session_date)).days
+    except ValueError:
+        return "No workouts logged yet"
+    if days <= 0:
+        return "Worked out today"
+    noun = "day" if days == 1 else "days"
+    return f"{days} {noun} since last workout"
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -513,6 +531,7 @@ class HomeDashboard(QFrame):
             "property_portfolio": self._build_property_portfolio_widget,
             "music": self._build_music_widget,
             "kitchen": self._build_kitchen_widget,
+            "workout": self._build_workout_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -881,6 +900,15 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("kitchen"),
         )
         self._widget_bodies["kitchen"] = body
+        return card
+
+    def _build_workout_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("workout"),
+        )
+        self._widget_bodies["workout"] = body
         return card
 
     def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1560,6 +1588,8 @@ class HomeDashboard(QFrame):
             self._refresh_music()
         if "kitchen" in self._widget_bodies:
             self._refresh_kitchen()
+        if "workout" in self._widget_bodies:
+            self._refresh_workout()
 
     def _refresh_budget(self) -> None:
         bills = self.context.budget.all_bills() if self.context.budget else []
@@ -1585,6 +1615,10 @@ class HomeDashboard(QFrame):
             makeable = sum(1 for _, missing in kitchen.recipes_makeable_now() if not missing)
             has_pantry = bool(kitchen.all_pantry_items())
         self._set_widget_body_text("kitchen", format_kitchen_line(expiring, makeable, has_pantry))
+
+    def _refresh_workout(self) -> None:
+        last_session_date = self.context.workout.last_session_date() if self.context.workout else None
+        self._set_widget_body_text("workout", format_workout_line(last_session_date, date.today()))
 
     def _refresh_real_estate(self) -> None:
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
