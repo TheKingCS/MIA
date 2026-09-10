@@ -6153,3 +6153,93 @@ test files before adding new ones) — `add_empty_state_item()`/
 `selected_item_data()` are exactly the kind of real-widget-behavior
 code this project verifies via manual headless-Qt scripts instead,
 not new pytest coverage.
+
+## Kitchen module: recipes, pantry, grocery list, nutrition, meal-frequency, suggestions (2026-09-10)
+
+Closes `docs/VISION.md`'s Kitchen Module bullet — the last remaining
+named module from that list — at the user's explicit request to build
+the full scope (recipes, pantry inventory, grocery lists, nutrition,
+meal-frequency tracking, and suggestions from what's on hand) rather
+than a narrower slice.
+
+New `core/kitchen_manager.py` — one manager, several related
+dataclasses (`Recipe`/`PantryItem`/`GroceryListItem`/`MealLogEntry`),
+same shape as `core/budget_manager.py`. Deliberately its own manager,
+not a reuse of `core/inventory_manager.py`'s generic Toolbox Inventory
+tool — direct precedent from `docs/ROADMAP.md` milestone 8.3, which
+rejected exactly that reuse for Workshop's own component DB ("mixing
+kitchen supplies and resistor stock into one list serves neither
+well"). Ingredients are plain dicts on `Recipe.ingredients`
+(`{"name","quantity","unit","notes"}`), edited one at a time from the
+recipe's own detail page via `gui/add_edit_ingredient_dialog.py` — the
+real, confirmed codebase convention (`gui/pick_item_quantity_dialog.py`'s
+own docstring, and `gui/add_edit_job_dialog.py`'s own docstring
+explicitly rejecting an embedded list editor for the directly
+analogous Job→materials-consumed relationship) rather than an embedded
+multi-row table editor. Units are freeform strings — no conversion
+system; nutrition facts are manual entry only — no USDA/nutrition-API
+lookup, same "manual now, real integration later" precedent as Energy
+tracking and Real Estate's own manually-updated `current_value`.
+
+`recipe_missing_ingredients()` does a case-insensitive name match
+against the pantry, and only compares quantities when a matching
+pantry item's unit equals the ingredient's unit exactly — otherwise it
+falls back to presence-only, a real, honest simplification rather than
+fabricating a cross-unit quantity comparison (same boundary
+`annual_depreciation()`'s own docstring already draws elsewhere in
+this app). `recipes_makeable_from_pantry()` sorts fewest-missing-first,
+the engine behind the Suggestions tab.
+`add_missing_ingredients_to_grocery_list()` is the real suggestions-
+to-action link, skipping ingredients already on the list so repeated
+use never piles up duplicates.
+
+`modules/kitchen/module.py`: five tabs (Recipes/Pantry/Grocery List/
+Meal Log/Suggestions), `QTabWidget`, same shape as Budget's own
+7-tab module. Recipes is itself a `QStackedWidget` list↔detail page,
+mirroring `modules/real_estate/module.py`'s exact pattern. Applied the
+Summary/Trends staleness fix's own lesson (this same session, Budget
+module) proactively from the start here: every tab refreshes on every
+`tabs.currentChanged`, since Pantry/Grocery List/Meal Log changes all
+affect what Suggestions (and a recipe's own "missing ingredients"
+list) shows. Reuses `gui/list_widget_helpers.py`'s
+`add_empty_state_item()`/`selected_item_data()` (this same session's
+own new-user-exploration fixes) throughout. New dashboard widget
+(`format_kitchen_line()` in `gui/home_dashboard.py`) leads with pantry
+items expiring within 3 days if any exist, else how many recipes are
+ready to make right now, else an honest "no pantry items tracked yet"
+— same "critical beats routine status" precedent `format_homestead_line()`
+already established.
+
+Five new dialogs (`gui/add_edit_recipe_dialog.py`,
+`gui/add_edit_ingredient_dialog.py`, `gui/add_edit_pantry_item_dialog.py`,
+`gui/add_edit_grocery_item_dialog.py`, `gui/log_meal_dialog.py`), all
+the same `QDialog` + `QDialogButtonBox` + validate-then-expose-via-
+`entered_*`-properties shape every dialog in this app already uses.
+
+**Deliberately deferred, not part of this pass**: Assistant actions
+(domain="kitchen") — every comparable module this session (Maintenance,
+Lab, Music) shipped its module first and got Assistant-wired in a
+separate later pass; a Ctrl+K search provider (`on_load()`) — most
+recently-built modules (Real Estate, Music) skip this too, it's
+explicitly optional per `CLAUDE.md`.
+
+**Verified for real**: 50 new tests (`tests/test_kitchen_manager.py`,
+`tests/test_kitchen_module.py`) — CRUD + persistence-across-fresh-load
+for all four record types, `days_until_expiration()`'s four real
+branches, `recipe_missing_ingredients()`'s exact-unit-match-compares-
+quantity vs. mismatched-unit-falls-back-to-presence-only behavior,
+`recipes_makeable_from_pantry()`'s sort order, duplicate-skipping in
+`add_missing_ingredients_to_grocery_list()`, meal-frequency queries,
+and every pure row formatter. 2057 tests passing. A full manual
+headless-Qt walkthrough (isolated data dir, same pattern used all
+session) confirmed the real end-to-end flow on the first run: two real
+recipes with real ingredients, one confirmed fully makeable and one
+correctly showing exactly one missing ingredient (a deliberate unit
+mismatch on Flour correctly fell back to presence-only rather than
+wrongly flagging it missing), "Add Missing Ingredients to Grocery
+List" added exactly the one real missing item and correctly no-opped
+on a second call, a checked grocery item persisted through the
+manager, logging a meal updated `last_made_date`/`times_made`
+immediately, and the Dashboard widget correctly led with "1 pantry
+item expiring soon" over the routine "recipes ready" count once a
+near-expiration item existed.

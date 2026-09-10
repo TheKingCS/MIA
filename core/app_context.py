@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from core.inventory_manager import InventoryManager
     from core.job_manager import JobManager
     from core.journal_manager import JournalManager
+    from core.kitchen_manager import KitchenManager
     from core.ledger_manager import LedgerManager
     from core.llm_manager import LLMManager
     from core.map_tile_cache import MapTileCache
@@ -134,6 +135,7 @@ class AppContext:
     map_tiles: Optional["MapTileCache"] = field(default=None, repr=False)
     trail_maps: Optional["TrailMapLibrary"] = field(default=None, repr=False)
     music: Optional["MusicManager"] = field(default=None, repr=False)
+    kitchen: Optional["KitchenManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only

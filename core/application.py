@@ -96,6 +96,7 @@ from core.system_health import format_system_health, read_system_health
 from core.task_manager import TaskManager
 from core.trail_map_library import NotAPdfError, TrailMapLibrary
 from core.music_manager import MusicManager
+from core.kitchen_manager import KitchenManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.voice_manager import VoiceManager
@@ -235,6 +236,7 @@ class MIAApplication:
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
         self.context.music = MusicManager(self.context)
+        self.context.kitchen = KitchenManager(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
         # Registered by default so the registry has something real to
         # demonstrate end-to-end — it's a stub (no real driver), not a
@@ -568,6 +570,7 @@ class MIAApplication:
         # 2026-09-09: Music (core/music_manager.py) — degrades to
         # "Nothing playing" until the user actually plays a track.
         self.context.dashboard_widgets.register(WidgetDescriptor("music", "Music", "\U0001F3B5"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("kitchen", "Kitchen", "\U0001F373"))
 
     def _register_assistant_actions(self) -> None:
         """
