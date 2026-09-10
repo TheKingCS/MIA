@@ -5927,3 +5927,50 @@ exact start/end dates, Dec→Jan rollover, leap and non-leap February).
 income/expense data spanning 12 months confirmed the chart renders
 correctly — real month labels, both series visible with legend, correct
 totals — and that switching the entity filter works without error.
+
+## Financial deep-dive, part 8: Business Report consolidation (2026-09-09)
+
+Last two real gaps from the financial-manager brainstorm for the
+Business Report: no Investments/Net Worth section at all (despite this
+app tracking Plaid balances, Plaid investment holdings, Kraken crypto,
+and native Real Estate equity), and the report always being scoped to
+exactly one entity/household bucket per run. New "Net Worth by Source"
+section (reuses the existing `_category_table()` as-is) and new
+"Investment Holdings" table (institution/security/ticker/quantity/
+value, sorted by value, real empty state) — both household-wide, since
+`FinancialSnapshot` has no entity concept at all in this codebase, so
+they're shown once per document rather than filtered per LLC.
+
+New `build_consolidated_business_report_html()` in
+`core/business_report.py` composes one document covering every entity/
+household bucket at once: a comparison table (Entity/Income/Expenses/
+Net Cash Flow/Property Equity with a bold Total row) followed by each
+bucket's own ordinary per-entity report body, page-broken between them
+— confirmed via a real rendered PDF that Qt's `page-break-before: always`
+actually works (unlike `<colgroup>` width, found earlier this session
+to be silently ignored). `include_net_worth_section: bool = True` is a
+new, deliberately separate mechanism from the existing `None`-vs-empty
+gating `schedule_e_properties`/`payees_over_threshold` use — this one's
+a structural "don't repeat this shared section per entity" concern, not
+a "this doesn't apply to the selected range" business rule.
+
+`modules/budget/module.py`'s existing per-entity gathering logic
+(budget targets, properties, Schedule E, 1099) was extracted into
+`_gather_entity_report_kwargs()` — used by both the existing single-
+entity export and each bucket of the new "Export Consolidated Report
+(All Entities)…" button, so the real logic lives in one place instead
+of being duplicated. Every bucket is always included in the
+consolidated document, even one with zero activity — same "never
+silently drop, show the honest empty state" convention already used
+everywhere else in this report.
+
+**Verified for real**: 10 new tests (Net Worth/Investments rendering
+and empty states, `include_net_worth_section` suppression, the
+consolidated builder's comparison-table totals and per-entity bodies).
+1970 tests passing. A real rendered PDF with 3 buckets (household +
+2 LLCs, one deliberately left with zero activity), real Plaid balance/
+holdings-shaped data, and a tracked property confirmed: the comparison
+table's totals are correct, Net Worth/Investments appear exactly once,
+each entity gets its own page via a real page break, and the zero-
+activity LLC still renders its own honest empty-state report rather
+than being silently dropped.

@@ -88,7 +88,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.business_report import build_business_report_html
+from core.business_report import build_business_report_html, build_consolidated_business_report_html
 from core.budget_manager import (
     Bill,
     EXPENSE_CATEGORIES,
@@ -791,6 +791,10 @@ class BudgetModule(ModuleBase):
         export_button.clicked.connect(self._on_export_business_report)
         layout.addWidget(export_button)
 
+        consolidated_export_button = QPushButton("Export Consolidated Report (All Entities)…")
+        consolidated_export_button.clicked.connect(self._on_export_consolidated_report)
+        layout.addWidget(consolidated_export_button)
+
         layout.addStretch(1)
 
         self._on_summary_this_month()
@@ -999,21 +1003,20 @@ class BudgetModule(ModuleBase):
         self._summary_tax_income_label.setText(f"Tax-relevant income: ${tax_income:,.2f}")
         self._summary_tax_expenses_label.setText(f"Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}")
 
-    def _on_export_business_report(self) -> None:
-        """Composes a real PDF from core.business_report.build_business_
-        report_html() — fetches plain data from context.budget/
-        context.real_estate here, keeping the composition function
-        itself pure and Qt-free. Reuses the Summary tab's own already-
-        selected range rather than a second, redundant date picker."""
-        start, end = self._summary_start_date, self._summary_end_date
-        range_label = self._summary_range_label.text()
-        entity_id = self._summary_entity_combo.currentData()
+    def _gather_entity_report_kwargs(
+        self, entity_id: Optional[str], start: Optional[str], end: Optional[str], range_label: str,
+    ) -> dict:
+        """Every build_business_report_html() kwarg that depends on one
+        entity/household scope — shared between a standalone single-
+        entity export and each per-entity section of the consolidated
+        (all-entities) export, so the real gathering logic (budget
+        targets, properties, Schedule E, 1099) lives in exactly one
+        place. entity_id follows the Summary tab's own convention: None
+        ("All Entities", single-entity export only — never passed by
+        the consolidated export, which always loops concrete buckets),
+        "" (Unassigned), or a real BusinessEntity id."""
         budget = self.context.budget
         real_estate = self.context.real_estate
-
-        entity_label = None
-        if entity_id is not None:
-            entity_label = "(Unassigned)" if entity_id == "" else budget.get_business_entity(entity_id).name
 
         # Budget Targets vs. Actual only makes honest sense for "This
         # Month" — BudgetTarget.monthly_amount has no yearly-aggregation
@@ -1068,10 +1071,7 @@ class BudgetModule(ModuleBase):
                 })
             payees_over_threshold = budget.payees_over_1099_threshold(start, end, entity_id=entity_id or "")
 
-        html = build_business_report_html(
-            range_label=range_label,
-            start_date=start,
-            end_date=end,
+        return dict(
             income_total=budget.total_income(start, end, entity_id=entity_id),
             expenses_total=budget.total_expenses(start, end, entity_id=entity_id),
             tax_income_total=budget.total_income(start, end, tax_relevant_only=True, entity_id=entity_id),
@@ -1085,14 +1085,63 @@ class BudgetModule(ModuleBase):
             # computed against the same filter to mean anything.
             actual_by_category=budget.total_expenses_by_category(start, end, entity_id=entity_id or ""),
             properties=properties,
-            generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
-            entity_label=entity_label,
             schedule_e_properties=schedule_e_properties,
             payees_over_threshold=payees_over_threshold,
         )
 
-        suggested_name = f"Business_Report_{datetime.now():%Y-%m-%d}.pdf"
-        file_path, _ = QFileDialog.getSaveFileName(None, "Export Business Report", suggested_name, "PDF files (*.pdf)")
+    def _gather_net_worth_by_source(self) -> dict[str, float]:
+        """Household-wide, never scoped to the Summary tab's entity
+        filter — Plaid/Kraken snapshots and native Real Estate equity
+        have no entity concept in this app at all (a real fact, not a
+        simplification: FinancialSnapshot carries no entity_id). Same
+        "missing means excluded, not a fabricated zero" convention
+        gui/home_dashboard.py's format_net_worth_line() already
+        established — reimplemented here (not imported) since core/
+        cannot depend on gui/."""
+        finance = self.context.finance
+        real_estate = self.context.real_estate
+        contributions: dict[str, float] = {}
+        if finance is not None:
+            for snapshot in finance.all_latest_snapshots():
+                total_value = snapshot.data.get("summary", {}).get("total_value")
+                if total_value is None:
+                    continue
+                label = snapshot.data.get("institution_name") or snapshot.source
+                contributions[label] = contributions.get(label, 0.0) + total_value
+        properties = real_estate.all_properties()
+        if properties:
+            contributions["Property Portfolio"] = sum(property_equity(p) for p in properties)
+        return contributions
+
+    def _gather_investment_holdings(self) -> list[dict]:
+        """Household-wide, same reasoning as _gather_net_worth_by_source()
+        above. Flattens every connected Plaid item's real holdings
+        snapshot (core/plaid_manager.py's "plaid_investments_<item_id>"
+        source) into the shape core.business_report._investments_table()
+        expects."""
+        finance = self.context.finance
+        holdings: list[dict] = []
+        if finance is None:
+            return holdings
+        for snapshot in finance.all_latest_snapshots():
+            if not snapshot.source.startswith("plaid_investments_"):
+                continue
+            institution_name = snapshot.data.get("institution_name") or "Unknown institution"
+            for holding in snapshot.data.get("holdings", []):
+                holdings.append({
+                    "institution_name": institution_name,
+                    "security_name": holding.get("security_name") or "Unknown security",
+                    "ticker_symbol": holding.get("ticker_symbol"),
+                    "quantity": holding.get("quantity"),
+                    "value": holding.get("institution_value"),
+                })
+        return holdings
+
+    def _export_report_html_to_pdf(self, html: str, dialog_title: str, filename_prefix: str) -> None:
+        """Shared QTextDocument/QPrinter export flow for both the
+        single-entity and consolidated Business Report buttons."""
+        suggested_name = f"{filename_prefix}_{datetime.now():%Y-%m-%d}.pdf"
+        file_path, _ = QFileDialog.getSaveFileName(None, dialog_title, suggested_name, "PDF files (*.pdf)")
         if not file_path:
             return
         if not file_path.lower().endswith(".pdf"):
@@ -1113,6 +1162,87 @@ class BudgetModule(ModuleBase):
             return
 
         QMessageBox.information(None, "Business Report Exported", f"Saved to {file_path}")
+
+    def _on_export_business_report(self) -> None:
+        """Composes a real PDF from core.business_report.build_business_
+        report_html() — fetches plain data from context.budget/
+        context.real_estate here, keeping the composition function
+        itself pure and Qt-free. Reuses the Summary tab's own already-
+        selected range rather than a second, redundant date picker."""
+        start, end = self._summary_start_date, self._summary_end_date
+        range_label = self._summary_range_label.text()
+        entity_id = self._summary_entity_combo.currentData()
+        budget = self.context.budget
+
+        entity_label = None
+        if entity_id is not None:
+            entity_label = "(Unassigned)" if entity_id == "" else budget.get_business_entity(entity_id).name
+
+        html = build_business_report_html(
+            range_label=range_label,
+            start_date=start,
+            end_date=end,
+            generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+            entity_label=entity_label,
+            net_worth_by_source=self._gather_net_worth_by_source(),
+            investment_holdings=self._gather_investment_holdings(),
+            **self._gather_entity_report_kwargs(entity_id, start, end, range_label),
+        )
+        self._export_report_html_to_pdf(html, "Export Business Report", "Business_Report")
+
+    def _on_export_consolidated_report(self) -> None:
+        """One document covering every entity/household bucket at once
+        — a household running multiple LLCs otherwise has no way to
+        compare them side-by-side (the single-entity export above is
+        always scoped to whatever the Summary tab's entity combo
+        currently selects). Reuses the Summary tab's own already-
+        selected range, same as the single-entity export. Every bucket
+        is always included, even with zero activity — this report's
+        own consistent "never silently drop, show the honest empty
+        state" convention, same as an individual bucket's own empty
+        income/properties tables would already show in a standalone
+        export."""
+        start, end = self._summary_start_date, self._summary_end_date
+        range_label = self._summary_range_label.text()
+        budget = self.context.budget
+        real_estate = self.context.real_estate
+
+        buckets = [("(Unassigned)", "")] + [(ent.name, ent.entity_id) for ent in budget.all_business_entities()]
+
+        entity_comparisons = []
+        entity_report_bodies = []
+        for label, bucket_entity_id in buckets:
+            kwargs = self._gather_entity_report_kwargs(bucket_entity_id, start, end, range_label)
+            properties = [p for p in real_estate.all_properties() if p.entity_id == bucket_entity_id]
+            entity_comparisons.append({
+                "label": label,
+                "income_total": kwargs["income_total"],
+                "expenses_total": kwargs["expenses_total"],
+                "property_equity_total": sum(property_equity(p) for p in properties),
+            })
+            entity_report_bodies.append(build_business_report_html(
+                range_label=range_label,
+                start_date=start,
+                end_date=end,
+                generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                entity_label=label,
+                include_net_worth_section=False,
+                **kwargs,
+            ))
+
+        html = build_consolidated_business_report_html(
+            range_label=range_label,
+            start_date=start,
+            end_date=end,
+            generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+            net_worth_by_source=self._gather_net_worth_by_source(),
+            investment_holdings=self._gather_investment_holdings(),
+            entity_comparisons=entity_comparisons,
+            entity_report_bodies=entity_report_bodies,
+        )
+        self._export_report_html_to_pdf(
+            html, "Export Consolidated Report", "Consolidated_Business_Report",
+        )
 
     # ------------------------------------------------------------------
     # Bank Sync tab — GUI half of core/plaid_manager.py, see that

@@ -11,6 +11,15 @@ plain data (dicts/lists/primitives) in, a complete HTML string out,
 ready for QTextDocument.setHtml() — modules/budget/module.py is the
 thin "fetch from context, call this, render via QPrinter" wrapper.
 
+Net Worth/Investment Holdings (2026-09-09) are household-wide figures
+(Plaid/Kraken snapshots and native Real Estate equity have no entity
+concept in this codebase) — see build_business_report_html()'s own
+docstring for why `include_net_worth_section` is a structural opt-out,
+not the same None-vs-empty gating pattern schedule_e_properties/
+payees_over_threshold use. build_consolidated_business_report_html()
+(2026-09-09) composes one document covering every entity/household
+bucket at once, for a household running multiple LLCs.
+
 Budget Targets vs. Actual is only meaningful for a "This Month" range
 (BudgetTarget.monthly_amount has no yearly-aggregation concept, per its
 own docstring in core/budget_manager.py) — the caller passes
@@ -255,6 +264,75 @@ def _schedule_e_table(properties: list[dict]) -> str:
     return "\n".join(html)
 
 
+def _investments_table(holdings: list[dict]) -> str:
+    """holdings: flattened real Plaid investment holdings across every
+    connected item — {"institution_name", "security_name",
+    "ticker_symbol", "quantity", "value"}. Same field-naming precedent
+    as modules/budget/module.py's format_holding_row(), just plural."""
+    html = ["<h2>Investment Holdings</h2>"]
+    if not holdings:
+        html.append("<p>No investment holdings synced.</p>")
+        return "\n".join(html)
+
+    html.append(_TABLE_OPEN)
+    html.append("<tr><th>Institution</th><th>Security</th><th>Ticker</th><th>Quantity</th><th>Value</th></tr>")
+    total = 0.0
+    for holding in sorted(holdings, key=lambda h: h.get("value") or 0.0, reverse=True):
+        value = holding.get("value")
+        quantity = holding.get("quantity")
+        ticker = holding.get("ticker_symbol") or "—"
+        quantity_text = f"{quantity:,.4g}" if quantity is not None else "—"
+        value_text = _money(value) if value is not None else "—"
+        html.append(
+            f'<tr><td>{holding["institution_name"]}</td><td>{holding["security_name"]}</td>'
+            f'<td>{ticker}</td><td align="right" nowrap>{quantity_text}</td>'
+            f'<td align="right" nowrap>{value_text}</td></tr>'
+        )
+        total += value or 0.0
+    html.append(f'<tr><td colspan="4"><b>Total</b></td><td align="right" nowrap><b>{_money(total)}</b></td></tr>')
+    html.append("</table>")
+    return "\n".join(html)
+
+
+def _entity_comparison_table(entities: list[dict]) -> str:
+    """entities: {"label", "income_total", "expenses_total",
+    "property_equity_total"} per entity/household bucket — the actual
+    at-a-glance value of a consolidated multi-entity report."""
+    html = ["<h2>Entity Comparison</h2>"]
+    if not entities:
+        html.append("<p>No entities to compare.</p>")
+        return "\n".join(html)
+
+    html.append(_TABLE_OPEN)
+    html.append(
+        "<tr><th>Entity</th><th>Income</th><th>Expenses</th>"
+        "<th>Net Cash Flow</th><th>Property Equity</th></tr>"
+    )
+    total_income = total_expenses = total_equity = 0.0
+    for entity in entities:
+        net = entity["income_total"] - entity["expenses_total"]
+        html.append(
+            f'<tr><td>{entity["label"]}</td>'
+            f'<td align="right" nowrap>{_money(entity["income_total"])}</td>'
+            f'<td align="right" nowrap>{_money(entity["expenses_total"])}</td>'
+            f'<td align="right" nowrap>{_money(net)}</td>'
+            f'<td align="right" nowrap>{_money_whole(entity["property_equity_total"])}</td></tr>'
+        )
+        total_income += entity["income_total"]
+        total_expenses += entity["expenses_total"]
+        total_equity += entity["property_equity_total"]
+    total_net = total_income - total_expenses
+    html.append(
+        f'<tr><td><b>Total (All Entities)</b></td>'
+        f'<td align="right" nowrap><b>{_money(total_income)}</b></td>'
+        f'<td align="right" nowrap><b>{_money(total_expenses)}</b></td>'
+        f'<td align="right" nowrap><b>{_money(total_net)}</b></td>'
+        f'<td align="right" nowrap><b>{_money_whole(total_equity)}</b></td></tr>'
+    )
+    html.append("</table>")
+    return "\n".join(html)
+
+
 def _payees_over_threshold_table(payees: dict[str, float], threshold: float) -> str:
     """payees: real business-tagged payment totals per payee, already
     filtered to those at/over threshold by
@@ -298,6 +376,9 @@ def build_business_report_html(
     entity_label: Optional[str] = None,
     schedule_e_properties: Optional[list[dict]] = None,
     payees_over_threshold: Optional[dict[str, float]] = None,
+    net_worth_by_source: Optional[dict[str, float]] = None,
+    investment_holdings: Optional[list[dict]] = None,
+    include_net_worth_section: bool = True,
 ) -> str:
     """Pure logic — testable without Qt. properties is a list of plain
     dicts: {"name", "type", "current_value", "mortgage_balance",
@@ -321,7 +402,18 @@ def build_business_report_html(
     applies, but nothing to show" and still renders the section's own
     honest empty-state message (e.g. "No Rental/Investment properties
     tracked", "No payee has reached the threshold this year") — an
-    empty container is a real, meaningful answer, not "not computed"."""
+    empty container is a real, meaningful answer, not "not computed".
+
+    net_worth_by_source/investment_holdings (2026-09-09) are household-
+    wide figures — Plaid/Kraken snapshots and native Real Estate equity
+    have no entity concept in this codebase at all, so these are never
+    scoped to whichever entity filter the caller applied to the rest of
+    this report. include_net_worth_section (default True) is a
+    structural opt-out, NOT the same None-vs-empty gating
+    schedule_e_properties/payees_over_threshold use above — it exists
+    only so build_consolidated_business_report_html() can render these
+    two sections exactly once at the top of a multi-entity document
+    instead of once per entity sub-report."""
     net_cash_flow = income_total - expenses_total
 
     title_line = f"<p><b>Range:</b> {range_label}"
@@ -344,6 +436,11 @@ def build_business_report_html(
         _category_table("Expenses by Category", expenses_by_category, "No expenses recorded for this range."),
         _portfolio_table(properties),
     ]
+    if include_net_worth_section:
+        sections.append(_category_table(
+            "Net Worth by Source", net_worth_by_source or {}, "No financial snapshots imported yet.",
+        ))
+        sections.append(_investments_table(investment_holdings or []))
     if budget_targets:
         sections.append(_budget_targets_table(budget_targets, actual_by_category))
     if schedule_e_properties is not None:
@@ -351,4 +448,39 @@ def build_business_report_html(
     if payees_over_threshold is not None:
         sections.append(_payees_over_threshold_table(payees_over_threshold, _US_1099_NEC_THRESHOLD))
 
+    return "\n".join(sections)
+
+
+def build_consolidated_business_report_html(
+    range_label: str,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    generated_at: str,
+    net_worth_by_source: dict[str, float],
+    investment_holdings: list[dict],
+    entity_comparisons: list[dict],
+    entity_report_bodies: list[str],
+) -> str:
+    """Pure logic — testable without Qt. A single document covering
+    every entity/household bucket at once — a household running
+    multiple LLCs otherwise has no way to compare them side-by-side
+    (the ordinary build_business_report_html() above is always scoped
+    to one entity per run). entity_comparisons: {"label",
+    "income_total", "expenses_total", "property_equity_total"} per
+    bucket, for the top-level comparison table. entity_report_bodies:
+    each a full build_business_report_html() output for one bucket
+    (built with include_net_worth_section=False, since net worth has no
+    entity concept and is shown here exactly once instead of once per
+    bucket) — this function just concatenates them, each already
+    self-identifying via its own "Entity:" title line."""
+    sections = [
+        "<h1>Consolidated Business Report — All Entities</h1>",
+        f"<p><b>Range:</b> {range_label}<br><b>Generated:</b> {generated_at}</p>",
+        _category_table("Net Worth by Source", net_worth_by_source, "No financial snapshots imported yet."),
+        _investments_table(investment_holdings),
+        _entity_comparison_table(entity_comparisons),
+    ]
+    for body in entity_report_bodies:
+        sections.append('<div style="page-break-before: always;"></div>')
+        sections.append(body)
     return "\n".join(sections)

@@ -10,7 +10,11 @@ HTML string's real content rather than just "it doesn't crash."
 from __future__ import annotations
 
 from core.budget_manager import BudgetTarget
-from core.business_report import build_business_report_html, category_to_schedule_e_line
+from core.business_report import (
+    build_business_report_html,
+    build_consolidated_business_report_html,
+    category_to_schedule_e_line,
+)
 
 
 def _property(
@@ -282,3 +286,119 @@ def test_payees_section_mentions_not_tax_advice():
     html = _build(range_label="This Year", payees_over_threshold={"Ace Plumbing": 700.0})
     assert "not tax advice" in html
     assert "confirm with your accountant" in html.lower()
+
+
+# ------------------------------------------------------------------
+# Net Worth / Investment Holdings sections
+# ------------------------------------------------------------------
+
+def _holding(institution_name="Fidelity", security_name="Apple Inc.", ticker_symbol="AAPL", quantity=10.0, value=1750.0):
+    return {
+        "institution_name": institution_name,
+        "security_name": security_name,
+        "ticker_symbol": ticker_symbol,
+        "quantity": quantity,
+        "value": value,
+    }
+
+
+def test_net_worth_section_included_by_default():
+    html = _build(net_worth_by_source={"Chase Checking": 5000.0, "Property Portfolio": 130000.0})
+    assert "Net Worth by Source" in html
+    assert "Chase Checking" in html
+    assert "$135,000.00" in html  # total row
+
+
+def test_net_worth_section_shows_empty_state_when_no_sources():
+    html = _build(net_worth_by_source={})
+    assert "Net Worth by Source" in html
+    assert "No financial snapshots imported yet." in html
+
+
+def test_net_worth_and_investments_omitted_when_include_net_worth_section_is_false():
+    html = _build(include_net_worth_section=False, net_worth_by_source={"Chase Checking": 5000.0})
+    assert "Net Worth by Source" not in html
+    assert "Investment Holdings" not in html
+
+
+def test_investments_section_lists_holdings_sorted_by_value_with_total():
+    html = _build(investment_holdings=[
+        _holding(security_name="Apple Inc.", value=1750.0),
+        _holding(security_name="Berkshire Hathaway", ticker_symbol="BRK.B", value=9000.0),
+    ])
+    assert "Investment Holdings" in html
+    assert "Apple Inc." in html
+    assert "Berkshire Hathaway" in html
+    assert "$10,750.00" in html  # total row
+    assert html.index("Berkshire Hathaway") < html.index("Apple Inc.")
+
+
+def test_investments_section_shows_empty_state_when_no_holdings():
+    html = _build(investment_holdings=[])
+    assert "Investment Holdings" in html
+    assert "No investment holdings synced." in html
+
+
+def test_investments_section_shows_dash_for_missing_quantity():
+    html = _build(investment_holdings=[_holding(quantity=None)])
+    assert "—" in html
+
+
+# ------------------------------------------------------------------
+# Consolidated (all-entities) business report
+# ------------------------------------------------------------------
+
+def _entity_comparison(label="Sunrise Rentals LLC", income_total=8000.0, expenses_total=3000.0, property_equity_total=130000.0):
+    return {
+        "label": label, "income_total": income_total, "expenses_total": expenses_total,
+        "property_equity_total": property_equity_total,
+    }
+
+
+def test_consolidated_report_includes_title_range_and_generated_at():
+    html = build_consolidated_business_report_html(
+        range_label="This Year", start_date="2026-01-01", end_date="2026-12-31",
+        generated_at="2026-09-09 06:00", net_worth_by_source={}, investment_holdings=[],
+        entity_comparisons=[], entity_report_bodies=[],
+    )
+    assert "Consolidated Business Report" in html
+    assert "This Year" in html
+    assert "2026-09-09 06:00" in html
+
+
+def test_consolidated_report_shows_net_worth_and_investments_once():
+    html = build_consolidated_business_report_html(
+        range_label="This Year", start_date=None, end_date=None, generated_at="2026-09-09 06:00",
+        net_worth_by_source={"Chase Checking": 5000.0}, investment_holdings=[_holding()],
+        entity_comparisons=[], entity_report_bodies=[],
+    )
+    assert html.count("Net Worth by Source") == 1
+    assert html.count("Investment Holdings") == 1
+
+
+def test_consolidated_report_entity_comparison_table_sums_totals():
+    entities = [
+        _entity_comparison(label="Household", income_total=6000.0, expenses_total=4000.0, property_equity_total=0.0),
+        _entity_comparison(label="Sunrise Rentals LLC", income_total=8000.0, expenses_total=3000.0, property_equity_total=130000.0),
+    ]
+    html = build_consolidated_business_report_html(
+        range_label="This Year", start_date=None, end_date=None, generated_at="2026-09-09 06:00",
+        net_worth_by_source={}, investment_holdings=[], entity_comparisons=entities, entity_report_bodies=[],
+    )
+    assert "Entity Comparison" in html
+    assert "Household" in html
+    assert "Sunrise Rentals LLC" in html
+    assert "$14,000.00" in html  # total income row (6000 + 8000)
+    assert "$7,000.00" in html  # total expenses row (4000 + 3000)
+    assert "$130,000" in html  # total property equity row (whole-dollar)
+
+
+def test_consolidated_report_includes_each_entity_report_body():
+    bodies = ["<h1>Business Report</h1><p>Entity A content</p>", "<h1>Business Report</h1><p>Entity B content</p>"]
+    html = build_consolidated_business_report_html(
+        range_label="This Year", start_date=None, end_date=None, generated_at="2026-09-09 06:00",
+        net_worth_by_source={}, investment_holdings=[], entity_comparisons=[], entity_report_bodies=bodies,
+    )
+    assert "Entity A content" in html
+    assert "Entity B content" in html
+    assert html.index("Entity A content") < html.index("Entity B content")
