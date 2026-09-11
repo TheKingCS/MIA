@@ -7034,13 +7034,37 @@ pass above), not just from reading the code:
    removal for a future event-loop cycle but doesn't detach the widget
    from view immediately; fixed by calling `widget.hide()` +
    `widget.setParent(None)` before `deleteLater()`.
-2. The lock glyph (U+1F512) isn't in this app's font fallback chain
-   the way the rest of its emoji vocabulary is — one unsupported
-   codepoint in a `QLabel` poisoned font shaping for the *entire*
-   string (every character rendered in a wrong fallback font, not just
-   the missing glyph), visible as a garbled strikethrough-looking
-   render. Fixed by using a plain ASCII `"(Locked)"` text marker
-   instead of gambling on emoji coverage for a state indicator.
+2. Long skill names and "Requires: ..." lines clipped at the card edge
+   instead of wrapping — `QLabel.setWordWrap(True)` alone isn't
+   reliable inside a `QGridLayout` nested in a `QScrollArea` (a known
+   Qt heightForWidth-propagation gap: without a concrete width to wrap
+   against, a label just reports its unwrapped single-line sizeHint).
+   Fixed by capping each label's own `setMaximumWidth()` (not the
+   card's — an earlier attempt fixed the card's own width instead and
+   that overflowed the scroll viewport, which was worse) so wrapping
+   engages against a known width.
+
+**A real methodology lesson from chasing this, worth remembering**:
+the first few verification screenshots showed what looked like a
+*third* bug — locked-card text rendering as a garbled, strikethrough-
+looking mess, which was initially (wrongly) diagnosed as the lock
+emoji (U+1F512) poisoning font shaping for the whole label. Swapping
+to plain "(Locked)" text didn't actually fix it (re-verified after,
+still garbled), which disproved that diagnosis. The real cause: a
+single `app.processEvents()` call after opening the module wasn't
+enough event-loop time for Qt's nested word-wrap/heightForWidth
+layout to fully converge before `grab()` captured it — a screenshot-
+timing artifact of the *verification script*, not the shipped code.
+Confirmed by giving the same scene ~20 `processEvents()` cycles before
+grabbing: renders perfectly, every locked card wraps cleanly to 2
+lines. Real takeaway: a garbled-looking headless-Qt screenshot after a
+freshly-opened, layout-heavy widget is reason to suspect the capture
+timing before suspecting the widget code — spin the event loop more
+before concluding a render is actually broken. Kept the "(Locked)"
+plain-text marker anyway (harmless, still avoids gambling on emoji
+coverage on real target hardware this sandbox can't verify), but the
+font-poisoning theory itself was wrong and is not a real, general
+lesson about this app's emoji rendering.
 
 **Verification**: 46 new tests (`test_skill_leveling.py`,
 `test_skill_manager.py`, `test_skills_module.py`, extended
@@ -7050,10 +7074,11 @@ verification against a throwaway repo copy: real Workout session +
 completed Mission with skill_rewards granted XP to the right skills
 (Strength, Aquaponics, Fabrication, Hydroponics), `is_unlocked()`
 correctly gated Irrigation/Hydroponics while Aquaponics correctly
-unlocked once Hydroponics had any XP, the Skills screen rendered
-correctly across categories after both fixes above, and the header
-Level badge + Skills screen both refreshed live with no window
-rebuild.
+unlocked once Hydroponics had any XP, every category (including the
+longest wrapped names — "Greenhouse Automation," "Closed-Loop
+Agriculture") rendered cleanly with a properly-settled event loop, and
+the header Level badge + Skills screen both refreshed live with no
+window rebuild.
 
 **Explicitly deferred, stated plainly** (per the approved plan):
 Projects as the bridge (`quest_ids`/`skill_weights` on the existing
@@ -7065,7 +7090,4 @@ progression, rule-based (explicitly not LLM-driven) Discovery, and
 sensor/IoT evidence via `core/data_logger_manager.py`. A true
 graphical tree view (nodes connected by lines) is also deferred — this
 pass ships the same information as a scannable categorized grid
-instead. A known minor cosmetic issue: a few of the longest compound
-locked skill names (e.g. "Greenhouse Automation") clip within the
-3-column grid rather than wrapping cleanly — real, not blocking,
-flagged for whenever the Skills screen gets revisited.
+instead.

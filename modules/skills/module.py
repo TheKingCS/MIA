@@ -44,6 +44,18 @@ from core.skill_manager import SkillDefinition
 from modules.missions.module import format_level_footer_line
 from modules.module_base import ModuleBase
 
+# Maximum width for a skill card's wrapping labels (see
+# _build_skill_card()'s own comment on why this is needed at all — Qt
+# word-wrap inside a QGridLayout/QScrollArea needs a concrete width to
+# wrap against, or long text just clips instead of flowing to a second
+# line). Deliberately capped on the LABELS, not the card itself — a
+# card's own width still comes from the grid as before, so this can
+# never force the grid wider than the scroll area actually has room
+# for (an earlier version of this fix set a fixed card width instead
+# and that overflowed the viewport, producing a horizontal scrollbar
+# and visually overlapping cards — worse than the bug it fixed).
+_LABEL_MAX_WIDTH = 230
+
 
 def format_skill_subtitle(level: int, xp_into_level: int, xp_needed: int) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_skills_module.py)."""
@@ -227,6 +239,14 @@ class SkillsModule(ModuleBase):
         name_label = QLabel(name_text)
         name_label.setObjectName("SkillCardTitle")
         name_label.setWordWrap(True)
+        # QLabel word-wrap doesn't reliably compute its wrapped height
+        # inside a QGridLayout nested in a QScrollArea (a known Qt
+        # heightForWidth-propagation gap) — without a concrete width to
+        # wrap against, long text just clips at the card edge instead
+        # of flowing to a second line. Capping the LABEL's own max
+        # width (not the card's — see _LABEL_MAX_WIDTH's own comment)
+        # sidesteps that.
+        name_label.setMaximumWidth(_LABEL_MAX_WIDTH)
         card_layout.addWidget(name_label)
 
         progress = self.context.skills.get_progress(profile_id, definition.skill_id) if profile_id else None
@@ -235,6 +255,8 @@ class SkillsModule(ModuleBase):
 
         subtitle = QLabel(format_skill_subtitle(level, xp_into, xp_needed))
         subtitle.setObjectName("SubtitleLabel")
+        subtitle.setWordWrap(True)
+        subtitle.setMaximumWidth(_LABEL_MAX_WIDTH)
         card_layout.addWidget(subtitle)
 
         bar = QProgressBar()
@@ -252,6 +274,7 @@ class SkillsModule(ModuleBase):
             prereq_label = QLabel(format_prerequisites_line(prereq_names))
             prereq_label.setObjectName("SkillCardPrereq")
             prereq_label.setWordWrap(True)
+            prereq_label.setMaximumWidth(_LABEL_MAX_WIDTH)
             card_layout.addWidget(prereq_label)
 
         return card
