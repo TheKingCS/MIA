@@ -40,7 +40,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.achievements import crossed_a_level, format_profile_level_up
 from core.app_context import AppContext
+from core.leveling import compute_level_progress
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -272,12 +274,20 @@ class ProfileManager:
             return None
 
         record = dict(raw)
-        new_total = record.get("total_xp", 0) + amount
+        old_total = record.get("total_xp", 0)
+        new_total = old_total + amount
         record["total_xp"] = new_total
         config.set(f"profiles.{profile_id}", record)
         config.save()
         log.info("Profile '%s' earned %d XP (total now %d)", profile_id, amount, new_total)
         self.context.events.publish("profile.xp_changed", profile_id=profile_id)
+        # Achievements/Milestones (2026-09-11) — see core/achievements.py's
+        # own docstring; graceful no-op with no notifications service.
+        if self.context.notifications is not None:
+            leveled_up, new_level = crossed_a_level(old_total, new_total, compute_level_progress)
+            if leveled_up:
+                title, message = format_profile_level_up(new_level)
+                self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
         return new_total
 
     def add_credits(self, profile_id: str, amount: int) -> Optional[int]:

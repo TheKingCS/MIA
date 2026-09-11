@@ -41,6 +41,19 @@ def _make_context() -> AppContext:
     return AppContext(config=ConfigManager(), events=EventBus())
 
 
+class _FakeNotifications:
+    """Same "fake just what's used" shape as
+    tests/test_gamification.py's own _FakeNotifications — records
+    every notify() call so achievement-firing tests can assert on
+    title/message/source without a real NotificationManager."""
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def notify(self, title, message, level="info", source="system"):
+        self.calls.append({"title": title, "message": message, "level": level, "source": source})
+
+
 # ------------------------------------------------------------------
 # Definitions
 # ------------------------------------------------------------------
@@ -277,3 +290,129 @@ def test_add_skill_xp_grants_even_when_locked(isolated_paths):
 
     assert manager.add_skill_xp("p1", "cad", 10) == 10
     assert manager.get_progress("p1", "cad").total_xp == 10
+
+
+# ------------------------------------------------------------------
+# Achievements/Milestones (2026-09-11) — level-up + unlock notifications
+# ------------------------------------------------------------------
+
+def test_add_skill_xp_fires_level_up_notification(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = SkillManager(context)
+
+    # Level 1 needs 20 XP -- 25 crosses into level 2.
+    manager.add_skill_xp("p1", "strength", 25)
+
+    level_up_calls = [c for c in context.notifications.calls if c["source"] == "achievements"]
+    assert len(level_up_calls) == 1
+    assert level_up_calls[0]["title"] == "\U0001F393 Skill level up!"
+    assert level_up_calls[0]["message"] == "Strength reached Level 2!"
+
+
+def test_add_skill_xp_does_not_fire_level_up_when_staying_in_the_same_level(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = SkillManager(context)
+
+    manager.add_skill_xp("p1", "strength", 5)  # well under the 20 XP needed for level 2
+
+    assert context.notifications.calls == []
+
+
+def test_add_skill_xp_fires_unlock_notification_for_a_real_dependent(isolated_paths):
+    _write_definitions(
+        isolated_paths,
+        [
+            {"skill_id": "3d_printing", "name": "3D Printing", "category": "Maker"},
+            {
+                "skill_id": "cad",
+                "name": "CAD",
+                "category": "Maker",
+                "prerequisite_skill_ids": ["3d_printing"],
+            },
+        ],
+    )
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = SkillManager(context)
+
+    manager.add_skill_xp("p1", "3d_printing", 1)  # first-ever XP -- unlocks CAD
+
+    unlock_calls = [c for c in context.notifications.calls if c["title"] == "\U0001F513 New skill unlocked!"]
+    assert len(unlock_calls) == 1
+    assert unlock_calls[0]["message"] == "You've unlocked CAD — take a look."
+    assert unlock_calls[0]["source"] == "achievements"
+
+
+def test_add_skill_xp_does_not_fire_unlock_when_a_skill_has_no_dependents(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = SkillManager(context)
+
+    manager.add_skill_xp("p1", "strength", 1)
+
+    unlock_calls = [c for c in context.notifications.calls if "unlocked" in c["title"]]
+    assert unlock_calls == []
+
+
+def test_add_skill_xp_does_not_refire_unlock_on_a_second_grant(isolated_paths):
+    """A dependent's unlock condition can only ever transition once
+    (locked -> unlocked) since is_unlocked() only checks whether a
+    prerequisite has ANY xp — a second grant to an already-trained
+    prerequisite must not re-fire the unlock notification."""
+    _write_definitions(
+        isolated_paths,
+        [
+            {"skill_id": "3d_printing", "name": "3D Printing", "category": "Maker"},
+            {
+                "skill_id": "cad",
+                "name": "CAD",
+                "category": "Maker",
+                "prerequisite_skill_ids": ["3d_printing"],
+            },
+        ],
+    )
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = SkillManager(context)
+
+    manager.add_skill_xp("p1", "3d_printing", 1)
+    manager.add_skill_xp("p1", "3d_printing", 5)  # second grant to the same, already-trained skill
+
+    unlock_calls = [c for c in context.notifications.calls if "unlocked" in c["title"]]
+    assert len(unlock_calls) == 1
+
+
+def test_add_skill_xp_does_not_fire_unlock_when_other_prerequisites_still_missing(isolated_paths):
+    _write_definitions(
+        isolated_paths,
+        [
+            {"skill_id": "automation", "name": "Automation", "category": "Technology"},
+            {"skill_id": "fabrication", "name": "Fabrication", "category": "Maker"},
+            {
+                "skill_id": "robotics",
+                "name": "Robotics",
+                "category": "Technology",
+                "prerequisite_skill_ids": ["automation", "fabrication"],
+            },
+        ],
+    )
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = SkillManager(context)
+
+    manager.add_skill_xp("p1", "automation", 1)  # fabrication still untrained -- robotics stays locked
+
+    unlock_calls = [c for c in context.notifications.calls if "unlocked" in c["title"]]
+    assert unlock_calls == []
+
+
+def test_add_skill_xp_with_no_notifications_service_does_not_crash(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    manager = SkillManager(context)
+    manager.add_skill_xp("p1", "strength", 100)  # must not raise, context.notifications is None

@@ -31,6 +31,19 @@ def _make_manager() -> ProfileManager:
     return ProfileManager(context)
 
 
+class _FakeNotifications:
+    """Same "fake just what's used" shape as
+    tests/test_gamification.py's own _FakeNotifications — records
+    every notify() call so achievement-firing tests can assert on
+    title/message/source without a real NotificationManager."""
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def notify(self, title, message, level="info", source="system"):
+        self.calls.append({"title": title, "message": message, "level": level, "source": source})
+
+
 def test_new_profile_has_no_birthday_by_default(isolated_paths):
     manager = _make_manager()
     profile = manager.create_profile(name="Alex")
@@ -211,3 +224,37 @@ def test_rename_profile_preserves_other_fields(isolated_paths):
     assert reloaded.has_password is True
     assert reloaded.birthday == "1990-03-03"
     assert reloaded.total_xp == 100
+
+
+# ------------------------------------------------------------------
+# Achievements/Milestones (2026-09-11) — profile level-up notification
+# ------------------------------------------------------------------
+
+def test_add_xp_fires_level_up_notification(isolated_paths):
+    manager = _make_manager()
+    manager.context.notifications = _FakeNotifications()
+    profile = manager.create_profile(name="Alex")
+
+    # Level 1 needs 100 XP -- 130 crosses into level 2.
+    manager.add_xp(profile.profile_id, 130)
+
+    level_up_calls = [c for c in manager.context.notifications.calls if c["source"] == "achievements"]
+    assert len(level_up_calls) == 1
+    assert level_up_calls[0]["title"] == "\U00002B50 Level up!"
+    assert level_up_calls[0]["message"] == "You reached Level 2!"
+
+
+def test_add_xp_does_not_fire_level_up_when_staying_in_the_same_level(isolated_paths):
+    manager = _make_manager()
+    manager.context.notifications = _FakeNotifications()
+    profile = manager.create_profile(name="Alex")
+
+    manager.add_xp(profile.profile_id, 50)  # well under the 100 XP needed for level 2
+
+    assert manager.context.notifications.calls == []
+
+
+def test_add_xp_with_no_notifications_service_does_not_crash(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, 500)  # must not raise, context.notifications is None

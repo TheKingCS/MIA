@@ -7209,3 +7209,71 @@ and re-completed it (confirmed the exploit-prevention flag holds —
 still no double-credit), created a Mission linked to the Project, and
 screenshotted the Intent tool, Project tool, Manage Skills dialog, and
 both updated creation dialogs — all rendered correctly.
+
+## Connective infrastructure, phase 2: Achievements/Milestones (2026-09-11)
+
+The next bounded slice of the connective-infrastructure work (phase 1:
+commit `5231828`), user-confirmed over the Activity index and Mission's
+own skill-management UI (both still deferred). Closes a gap flagged
+repeatedly across the "My Hero's Path" plan and the architecture-review
+discussion: leveling up a skill, the whole profile, or newly satisfying
+a skill's prerequisites previously only updated numbers silently —
+nothing celebrated it.
+
+**No new persisted entity** — every achievement here is a real,
+already-derivable fact (did a level number increase, did a
+prerequisite condition just become satisfied), computed as a pure
+before/after comparison, same "derive, don't persist a second copy
+that can drift" philosophy `core/leveling.py`/`core/skill_leveling.py`
+already use. Delivered through the existing
+`NotificationManager.notify()` (already both a toast and a persisted
+record) with a new `source="achievements"` — no new UI needed, the
+existing toast/notification-center already render any source.
+
+**New `core/achievements.py`** — pure functions only: `crossed_a_level
+(old_total, new_total, compute_progress)` takes either
+`core.leveling.compute_level_progress` or
+`core.skill_leveling.compute_skill_level_progress` (both share the
+same `(level, xp_into, xp_needed)` shape, so one comparison covers
+both the profile-wide Level and any individual Skill's level) plus
+three `format_*()` functions supplying the notification text, matching
+this codebase's established `format_X_row()`
+tested-without-Qt convention, just applied to notification copy.
+
+**Three real triggers, wired into the exact methods that already
+mutate XP** — no new call sites elsewhere:
+- `SkillManager.add_skill_xp()` — skill level-up (before/after level
+  comparison) and skill unlock. The unlock check has a real insight
+  worth remembering: a skill only ever transitions locked → unlocked
+  at the exact moment one of its prerequisites goes from 0 XP to any
+  XP (`is_unlocked()` requires every prerequisite to have *any* XP, so
+  once a prerequisite already has XP, further grants to it can never
+  flip a dependent's unlock state again) — so the unlock scan only
+  ever needs to run when `old_total == 0 and new_total > 0`, and it
+  can never cascade to a second level of dependents from one grant
+  (`is_unlocked()` checks a prerequisite's XP, not whether the
+  prerequisite is itself "unlocked").
+- `ProfileManager.add_xp()` — the same before/after comparison for the
+  profile-wide Level.
+
+**Notification voice** (emoji-led, second-person, matching the
+established convention exactly): `"🎓 Skill level up!"` /
+`"{skill} reached Level {n}!"`; `"🔓 New skill unlocked!"` /
+`"You've unlocked {skill} — take a look."`; `"⭐ Level up!"` /
+`"You reached Level {n}!"`.
+
+**Verification**: 18 new tests (`test_achievements.py` — 8 pure
+function tests including a caught-and-fixed multi-level-jump math
+error in my own first draft; extended `test_skill_manager.py` — 7
+achievement-firing tests including "no re-fire on a second grant to an
+already-trained prerequisite" and "no fire when other prerequisites
+are still missing"; extended `test_profile_manager.py` — 3) — full
+suite 2377 passing, zero regressions. Manual headless-Qt verification
+against a throwaway repo copy: granted skill XP crossing a level
+boundary (confirmed the level-up toast), granted a skill's first-ever
+XP as the last prerequisite a real dependent needed (confirmed the
+unlock toast, using the real seeded `data/skill_definitions.json` —
+"3d_printing" unlocking "CAD / 3D Design"), granted profile XP crossing
+a level boundary (confirmed that toast too) — all three fired with the
+exact expected title/message/source, and the header Level badge
+reflected the change live in a real `MainWindow` instance.

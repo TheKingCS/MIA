@@ -40,8 +40,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from core.achievements import crossed_a_level, format_skill_level_up, format_skill_unlocked
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.skill_leveling import compute_skill_level_progress
 
 log = get_logger(__name__)
 
@@ -205,12 +207,42 @@ class SkillManager:
             return None
         key = (profile_id, skill_id)
         existing = self._progress.get(key)
-        new_total = (existing.total_xp if existing else 0) + amount
+        old_total = existing.total_xp if existing else 0
+        new_total = old_total + amount
         self._progress[key] = SkillProgress(profile_id=profile_id, skill_id=skill_id, total_xp=new_total)
         self._save_progress()
         log.info("Profile '%s' earned %d XP in skill '%s' (total now %d)", profile_id, amount, skill_id, new_total)
         self.context.events.publish("profile.skill_xp_changed", profile_id=profile_id, skill_id=skill_id)
+        self._notify_achievements(profile_id, skill_id, old_total, new_total)
         return new_total
+
+    def _notify_achievements(self, profile_id: str, skill_id: str, old_total: int, new_total: int) -> None:
+        """Achievements/Milestones (2026-09-11) — the deterministic
+        "you unlocked something" narration layer over add_skill_xp().
+        See core/achievements.py's own docstring for why this is a
+        pure before/after comparison rather than a new persisted
+        entity. Graceful no-op with no notifications service, same
+        stance as every other optional-service check in this codebase."""
+        if self.context.notifications is None:
+            return
+
+        leveled_up, new_level = crossed_a_level(old_total, new_total, compute_skill_level_progress)
+        if leveled_up:
+            title, message = format_skill_level_up(self._definitions[skill_id].name, new_level)
+            self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
+
+        # A skill only ever transitions locked -> unlocked at the exact
+        # moment one of its prerequisites goes from 0 XP to any XP —
+        # once a prerequisite already has XP, later grants to it can
+        # never flip a dependent's unlock state again (is_unlocked()
+        # checks a prerequisite's XP, not whether IT is "unlocked," so
+        # this can never cascade to a second level of dependents from
+        # one grant). Only worth scanning for on that one transition.
+        if old_total == 0 and new_total > 0:
+            for other in self._definitions.values():
+                if skill_id in other.prerequisite_skill_ids and self.is_unlocked(profile_id, other.skill_id):
+                    title, message = format_skill_unlocked(other.name)
+                    self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
 
     def is_unlocked(self, profile_id: str, skill_id: str) -> bool:
         """A skill with no prerequisites is always unlocked. Unknown
