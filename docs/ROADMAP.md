@@ -6734,3 +6734,53 @@ doesn't care) show reciprocal "Related:" lines naming each other, while
 the Pets/Fishing/Work memories — genuinely unrelated to anything else
 in the set — stay completely silent, confirming the threshold holds in
 a real render, not just in unit tests.
+
+## Cleanup pass: real test coverage added for core/core_runtime.py (2026-09-11)
+
+Forked a broad audit (layering violations, missing test coverage, dead
+code, TODO markers, dashboard-widget registration completeness, and a
+fresh skeptical check of everything built earlier this session) rather
+than doing it inline — same "keep the noisy grep/read output out of
+the main context" reasoning as the earlier 2026-09-09 cleanup pass.
+User picked the test-coverage gap to act on, same shape and severity
+as that earlier pass's own `maintenance_manager.py`/`search_manager.py`
+findings: `core/core_runtime.py` — headless MIA Core's `build_core_context()`
+and its ~24 curated Assistant action handlers (alarms, notes,
+inventory, calendar, waypoints, missions, power, system health, recent
+activity) — had zero automated test coverage at all, only a manual/
+live script requiring real Ollama + voice hardware.
+
+New `tests/test_core_runtime.py` (69 tests), mirroring
+`tests/test_assistant_action_handlers.py`'s exact established pattern
+(real manager instances, data dirs isolated to `tmp_path`, no Qt/LLM
+needed) — but using the real `build_core_context()` entry point itself
+as the fixture rather than hand-wiring each manager individually, so a
+wiring mistake in that function gets caught here too, not just in the
+handler tests. Beyond per-handler coverage, added tests confirming the
+real registry wiring itself: every expected action name is actually
+registered, the deliberately-excluded GUI-only actions
+(`open_module`/`set_theme`) are correctly absent, and one action
+dispatches correctly through the real `registry.execute()` path (not
+just the handler function called directly) — none of which any
+existing test anywhere covered before.
+
+**Other audit findings, not acted on this pass, worth resurfacing
+later**: the Avatar Camera dashboard widget is fully built
+(`_build_avatar_camera_widget`) but was never actually registered via
+`WidgetDescriptor` in `core/application.py` — same bug class as the
+earlier Power-module `context.energy` crash, a real feature that has
+likely never been visible in the running app. A real layering
+violation in `gui/widgets/tile_map_view.py` (imports
+`modules.maps.tile_fetch_worker` directly — looks like a misplaced
+file, not a deep coupling problem). Dead code:
+`_build_volume_widget`/`_volume_highlight` in `gui/home_dashboard.py`,
+superseded by Volume's 2026-07-18 move into the header profile menu
+but never removed. `tests/run_module.py`'s manual context wiring is
+missing a few managers (Workshop/Toolbox) — checked for crash risk,
+all are properly `is None`-guarded in the real module code, so no
+urgency, just incompleteness. `core/user_memory_manager.py`'s
+`related_memories()` is O(n²) as actually called (once per displayed
+row) — almost certainly fine for this project's small memory corpus,
+just undocumented as a deliberate tradeoff.
+
+**Verified for real**: 2255 tests passing (69 new), zero regressions.
