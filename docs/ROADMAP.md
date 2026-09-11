@@ -6801,3 +6801,32 @@ last time... more headache than it was worth") rather than accepting
 the audit's framing at face value. Lesson: check for an explanatory
 comment at the exact site before reporting a missing-registration
 finding as a bug.
+
+## Cleanup pass, continued: fixed the real tile_fetch_worker.py layering violation (2026-09-11)
+
+`gui/widgets/tile_map_view.py` (pure `gui/` code) imported
+`modules.maps.tile_fetch_worker.TileFetchWorker` directly — a real
+violation of `CLAUDE.md`'s strict one-directional layering rule
+(`gui/` may only reach `modules/` through `ModuleBase.get_widget()`).
+Confirmed the file had zero real Maps-module business logic of its
+own — it only wraps `core.map_tile_cache.MapTileCache` in a `QThread`,
+the exact same shape as `core/tts_worker.py`/`core/chat_worker.py`/
+`core/generate_worker.py` — so the real fix was relocating it to
+`core/tile_fetch_worker.py`, not just re-routing the import.
+
+Its sibling, `modules/maps/tile_prefetch_worker.py`, deliberately
+stays exactly where it is — confirmed via grep that it's only ever
+constructed by `modules/maps/module.py` itself, a legitimate module-
+internal use, not the same violation. Updated its own docstring
+comment (which referenced the old file as "this package's own
+TileFetchWorker") to point at the new location instead.
+
+**Verified for real**: full suite still 2255 passing (no test file
+existed for this worker before or after — confirmed via grep, matching
+the audit's own original finding), and a real import smoke test
+(`import gui.widgets.tile_map_view`, `import core.tile_fetch_worker`,
+`import modules.maps.tile_prefetch_worker`, all under the real
+offscreen QPA platform) confirms the whole chain actually resolves,
+not just parses — a file move is exactly the kind of change where a
+typo'd import path would only show up at runtime, not at syntax-check
+time.

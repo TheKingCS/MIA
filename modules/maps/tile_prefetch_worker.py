@@ -6,10 +6,12 @@ Runs core.map_tile_cache.MapTileCache.ensure_region_cached() off the
 GUI thread — the explicit, user-initiated "download this region for
 offline use" action can fetch hundreds of tiles and take real time, so
 this is the same one-shot QThread-per-run pattern as
-modules/field_kit/script_worker.py's ScriptWorker, distinct from this
-package's own TileFetchWorker (a persistent queue-processor for
-individual on-demand tiles during live panning, not a single bulk job
-with a progress bar).
+modules/field_kit/script_worker.py's ScriptWorker, distinct from
+core.tile_fetch_worker.TileFetchWorker (a persistent queue-processor
+for individual on-demand tiles during live panning, not a single bulk
+job with a progress bar — moved out of this package 2026-09-11, since
+unlike this file it's only ever consumed by gui/ code, not modules/maps
+itself).
 """
 
 from __future__ import annotations

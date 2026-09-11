@@ -1,6 +1,6 @@
 """
-modules.maps.tile_fetch_worker
-=================================
+core.tile_fetch_worker
+=========================
 
 Fetches individual missing basemap tiles off the GUI thread for
 gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never
@@ -9,6 +9,18 @@ modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a
 long-lived queue-processing thread rather than a one-shot run(), since
 tile requests arrive continuously while panning/zooming rather than
 from a single button click.
+
+**2026-09-11: relocated from modules.maps.tile_fetch_worker** — a real
+layering violation (gui/widgets/tile_map_view.py, pure gui/ code,
+importing a modules/ file directly, against CLAUDE.md's strict
+one-directional layering rule) found during a cleanup/audit pass. This
+file has zero Maps-module business logic of its own — it only wraps
+core.map_tile_cache.MapTileCache in a QThread, exactly the same shape
+as core/tts_worker.py, core/chat_worker.py, core/generate_worker.py —
+so it belongs alongside those, not inside modules/maps/. Its sibling,
+modules/maps/tile_prefetch_worker.py, stays exactly where it is — that
+one is only ever constructed by modules/maps/module.py itself, a
+legitimate module-internal use, not a layering violation.
 
 **stop() must be called before this widget/thread is torn down** — a
 QThread has no Qt-parent-driven automatic cleanup, same explicit-

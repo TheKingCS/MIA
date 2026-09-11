@@ -7,8 +7,8 @@ imagery, unlike gui/widgets/waypoint_map_canvas.py's schematic
 waypoint plot (which deliberately has no basemap imagery at all; see
 that module's docstring for why). Renders tiles from
 core.map_tile_cache.MapTileCache, fetching whatever's missing for the
-current view through modules.maps.tile_fetch_worker.TileFetchWorker
-rather than blocking the paint/input thread on network I/O.
+current view through core.tile_fetch_worker.TileFetchWorker rather
+than blocking the paint/input thread on network I/O.
 
 **No QtWebEngine/Leaflet.js here** — confirmed directly that
 `PySide6.QtWebEngineWidgets` fails to import in this dev sandbox
@@ -38,7 +38,7 @@ from PySide6.QtWidgets import QWidget
 
 from core.map_tile_cache import MapTileCache
 from core.map_tile_math import lat_lon_to_world_pixel, world_pixel_to_lat_lon
-from modules.maps.tile_fetch_worker import TileFetchWorker
+from core.tile_fetch_worker import TileFetchWorker
 
 _TILE_SIZE = 256
 _MIN_ZOOM = 0
