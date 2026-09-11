@@ -18,6 +18,7 @@ import pytest
 import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.mission_manager as mission_manager_module
+import core.skill_manager as skill_manager_module
 import core.task_manager as task_manager_module
 import core.trip_manager as trip_manager_module
 import core.waypoint_manager as waypoint_manager_module
@@ -25,8 +26,10 @@ from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
+from core.gamification import SkillWeight
 from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
+from core.skill_manager import SkillManager
 from core.task_manager import TaskManager
 from core.trip_manager import TripManager
 from core.waypoint_manager import WaypointManager
@@ -46,6 +49,9 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(waypoint_manager_module, "_WAYPOINTS_FILE", data_dir / "waypoints.json")
     monkeypatch.setattr(task_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(task_manager_module, "_TASKS_FILE", data_dir / "tasks.json")
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
 
 
 def _make_context() -> AppContext:
@@ -72,6 +78,23 @@ def _make_context_with_profiles() -> AppContext:
     existing tests here have no need for a ProfileManager at all."""
     context = _make_context()
     context.profiles = ProfileManager(context)
+    return context
+
+
+def _make_context_with_profiles_and_skills(skill_ids: list[str]) -> AppContext:
+    """"My Hero's Path" skill_rewards tests need both context.profiles
+    and a context.skills with real definitions for skill_ids (a
+    skill_reward pointing to an unknown skill_id is silently dropped
+    by SkillManager.add_skill_xp() by design, so a test proving XP
+    actually lands needs the skill defined first)."""
+    import json
+
+    context = _make_context_with_profiles()
+    skill_manager_module._DATA_DIR.mkdir(parents=True, exist_ok=True)
+    skill_manager_module._SKILL_DEFINITIONS_FILE.write_text(
+        json.dumps({"skills": [{"skill_id": sid, "name": sid, "category": "Test"} for sid in skill_ids]})
+    )
+    context.skills = SkillManager(context)
     return context
 
 
@@ -380,6 +403,67 @@ def test_recompleting_a_mission_does_not_double_credit(isolated_paths):
     reloaded = context.profiles.list_profiles()[0]
     assert reloaded.total_xp == 160
     assert reloaded.total_credits == 25
+
+
+# ----------------------------------------------------------------------
+# skill_rewards — "My Hero's Path" (2026-09-11)
+# ----------------------------------------------------------------------
+
+def test_completing_a_mission_credits_skill_rewards(isolated_paths):
+    context = _make_context_with_profiles_and_skills(["aquaponics", "fabrication"])
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(
+        name="Aquaponics Pilot",
+        skill_rewards=[SkillWeight("aquaponics", 120), SkillWeight("fabrication", 40)],
+    )
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    active = context.profiles.get_active_profile()
+    assert context.skills.get_progress(active.profile_id, "aquaponics").total_xp == 120
+    assert context.skills.get_progress(active.profile_id, "fabrication").total_xp == 40
+
+
+def test_completing_a_mission_with_no_skill_rewards_credits_no_skills(isolated_paths):
+    context = _make_context_with_profiles_and_skills(["aquaponics"])
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="X")
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    active = context.profiles.get_active_profile()
+    assert context.skills.get_progress(active.profile_id, "aquaponics").total_xp == 0
+
+
+def test_completing_a_mission_with_skill_rewards_and_no_skills_service_does_not_crash(isolated_paths):
+    context = _make_context_with_profiles()
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="X", skill_rewards=[SkillWeight("aquaponics", 120)])
+
+    context.missions.update_mission(mission.mission_id, status="completed")  # should not raise
+
+
+def test_mission_skill_rewards_persist_across_a_fresh_load(isolated_paths):
+    context = _make_context_with_profiles_and_skills(["aquaponics"])
+    context.missions.add_mission(name="Aquaponics Pilot", skill_rewards=[SkillWeight("aquaponics", 120)])
+
+    reloaded = MissionManager(context)
+    mission = reloaded.all_missions()[0]
+    assert mission.skill_rewards == [SkillWeight("aquaponics", 120)]
+
+
+def test_mission_with_no_skill_rewards_deserializes_to_empty_list(isolated_paths):
+    """Backward compatibility: old missions.json rows with no
+    skill_rewards key at all must still deserialize cleanly."""
+    import json
+
+    mission_manager_module._DATA_DIR.mkdir(parents=True, exist_ok=True)
+    mission_manager_module._MISSIONS_FILE.write_text(
+        json.dumps([{"mission_id": "m1", "name": "Old Mission", "reward_xp": 50}])
+    )
+    context = _make_context()
+    mission = context.missions.get_mission("m1")
+    assert mission.skill_rewards == []
 
 
 def test_objective_progress_tally_returns_stored_value(isolated_paths):

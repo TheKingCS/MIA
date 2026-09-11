@@ -14,8 +14,11 @@ from datetime import date
 
 import pytest
 
+import json
+
 import core.budget_manager as budget_manager_module
 import core.config_manager as config_manager_module
+import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
 from core.budget_manager import (
     Bill,
@@ -31,6 +34,7 @@ from core.budget_manager import (
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.profile_manager import ProfileManager
+from core.skill_manager import SkillManager
 
 
 @pytest.fixture
@@ -47,6 +51,11 @@ def isolated_paths(tmp_path, monkeypatch):
     # gamification hook tests below) — see test_workout_manager.py's
     # own isolated_paths for the identical reasoning.
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    # "My Hero's Path" (2026-09-11) — needed once a test constructs a
+    # real SkillManager too, same reasoning as config_manager above.
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
     return data_dir
 
 
@@ -199,6 +208,25 @@ def test_mark_bill_paid_grants_xp_with_no_active_profile_does_not_raise(isolated
     manager.context.profiles = ProfileManager(manager.context)
     bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
     manager.mark_bill_paid(bill.bill_id)  # must not raise
+
+
+def test_mark_bill_paid_grants_household_management_skill_xp(isolated_paths):
+    """"My Hero's Path" (2026-09-11)."""
+    isolated_paths.mkdir(parents=True, exist_ok=True)
+    (isolated_paths / "skill_definitions.json").write_text(
+        json.dumps(
+            {"skills": [{"skill_id": "household_management", "name": "Household Management", "category": "Social"}]}
+        )
+    )
+    manager = _make_manager()
+    manager.context.profiles = ProfileManager(manager.context)
+    manager.context.skills = SkillManager(manager.context)
+    profile = manager.context.profiles.create_profile(name="Alex", make_active=True)
+    bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
+
+    manager.mark_bill_paid(bill.bill_id)
+
+    assert manager.context.skills.get_progress(profile.profile_id, "household_management").total_xp == 5
 
 
 def test_mark_bill_paid_unknown_id_raises(isolated_paths):

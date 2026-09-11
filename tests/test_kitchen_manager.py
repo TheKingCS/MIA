@@ -9,12 +9,14 @@ monkeypatch pattern as test_real_estate_manager.py's isolated_paths.
 
 from __future__ import annotations
 
+import json
 from datetime import date
 
 import pytest
 
 import core.config_manager as config_manager_module
 import core.kitchen_manager as kitchen_manager_module
+import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
@@ -28,6 +30,7 @@ from core.kitchen_manager import (
     recipes_makeable_from_pantry,
 )
 from core.profile_manager import ProfileManager
+from core.skill_manager import SkillManager
 
 
 @pytest.fixture
@@ -42,6 +45,11 @@ def isolated_paths(tmp_path, monkeypatch):
     # gamification hook tests below) — see test_workout_manager.py's
     # own isolated_paths for the identical reasoning.
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    # "My Hero's Path" (2026-09-11) — needed once a test constructs a
+    # real SkillManager too, same reasoning as config_manager above.
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
     return data_dir
 
 
@@ -377,6 +385,24 @@ def test_log_meal_grants_xp_with_no_active_profile_does_not_raise(isolated_paths
     context.profiles = ProfileManager(context)
     recipe = manager.add_recipe(name="X")
     manager.log_meal(recipe.recipe_id)  # must not raise
+
+
+def test_log_meal_grants_nutrition_skill_xp(isolated_paths):
+    """"My Hero's Path" (2026-09-11)."""
+    isolated_paths.mkdir(parents=True, exist_ok=True)
+    (isolated_paths / "skill_definitions.json").write_text(
+        json.dumps({"skills": [{"skill_id": "nutrition", "name": "Nutrition", "category": "Body"}]})
+    )
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    recipe = manager.add_recipe(name="X")
+
+    manager.log_meal(recipe.recipe_id)
+
+    assert context.skills.get_progress(profile.profile_id, "nutrition").total_xp == 5
 
 
 def test_times_made_counts_within_range(isolated_paths):

@@ -61,7 +61,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.calendar_manager import RECURRENCE_TYPES, date_recurs_on
-from core.gamification import grant_xp
+from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -551,7 +551,15 @@ class BudgetManager:
         # Hooked here, not inside add_expense() above — a plain expense
         # entry isn't a "completion" the way deliberately marking a bill
         # paid is.
-        grant_xp(self.context, 5, "\U0001F4B0 Bill paid!", f"'{bill.name}' is squared away.")
+        # "My Hero's Path" (2026-09-11) — Household Management (Social
+        # category) is the natural skill for staying on top of bills.
+        grant_xp(
+            self.context,
+            5,
+            "\U0001F4B0 Bill paid!",
+            f"'{bill.name}' is squared away.",
+            skill_weights=[SkillWeight("household_management", 5)],
+        )
         return entry
 
     # ------------------------------------------------------------------

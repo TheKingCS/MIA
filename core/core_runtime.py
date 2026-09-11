@@ -70,6 +70,7 @@ from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
+from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.power_manager import PowerManager
@@ -112,6 +113,11 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.expeditions = ExpeditionManager(context)
     context.trips = TripManager(context)
     context.memories = MemoryManager(context)
+    # "My Hero's Path" — constructed before Missions since
+    # _credit_mission_rewards() now optionally credits skill XP
+    # through it (Mission.skill_rewards), same ordering rule as
+    # core/application.py.
+    context.skills = SkillManager(context)
     context.missions = MissionManager(context)
     context.user_memories = UserMemoryManager(context)
 

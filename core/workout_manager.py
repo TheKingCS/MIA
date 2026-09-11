@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
-from core.gamification import grant_xp
+from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -342,7 +342,18 @@ class WorkoutManager:
         # completion moment, not something that could double-grant.
         set_count = len(session.sets_logged)
         set_note = f"{set_count} set{'s' if set_count != 1 else ''} in the books." if set_count else "Session logged."
-        grant_xp(self.context, 10, "\U0001F4AA Workout logged!", f"Nice work — {set_note}")
+        # "My Hero's Path" (2026-09-11) — the first real proof a single
+        # activity can train a Skill alongside the flat profile XP
+        # above. Strength (core/skill_manager.py, data/skill_definitions
+        # .json) is a broad first cut; a finer split (Calisthenics vs.
+        # Endurance by session type) is real future scope, not done here.
+        grant_xp(
+            self.context,
+            10,
+            "\U0001F4AA Workout logged!",
+            f"Nice work — {set_note}",
+            skill_weights=[SkillWeight("strength", 10)],
+        )
         return session
 
     def delete_session(self, session_id: str) -> None:

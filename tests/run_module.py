@@ -58,6 +58,7 @@ from core.map_tile_cache import MapTileCache  # noqa: E402
 from core.material_manager import MaterialManager  # noqa: E402
 from core.memory_manager import MemoryManager  # noqa: E402
 from core.mission_manager import MissionManager  # noqa: E402
+from core.skill_manager import SkillManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.music_manager import MusicManager  # noqa: E402
 from core.kitchen_manager import KitchenManager  # noqa: E402
@@ -113,6 +114,11 @@ def main() -> int:
     # real objects on every AppContext without any wiring at all.)
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)
+    # "My Hero's Path" — constructed before Missions since
+    # _credit_mission_rewards() now optionally credits skill XP
+    # through it (Mission.skill_rewards), same ordering rule as
+    # core/application.py.
+    context.skills = SkillManager(context)
     context.missions = MissionManager(context)
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)

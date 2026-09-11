@@ -13,6 +13,12 @@ env/
 config/config.json
 data/*
 !data/.gitkeep
+# "My Hero's Path" skill taxonomy (core/skill_manager.py) — a seed data
+# file meant to ship with the codebase and be hand-edited, same
+# "tracked exception under data/" reasoning as .gitkeep above, NOT
+# runtime/user state like everything else data/* excludes (that's
+# data/skill_progress.json, which stays ignored).
+!data/skill_definitions.json
 logs/*
 !logs/.gitkeep
 

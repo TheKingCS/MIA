@@ -79,6 +79,7 @@ from core.logger import get_logger
 from core.map_tile_cache import MapTileCache
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
+from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.password_strength import assess_password
@@ -222,8 +223,13 @@ class MIAApplication:
         # Waypoints/Journal, so it's constructed after all four are
         # already on the context, same reasoning as Trips above.
         self.context.memories = MemoryManager(self.context)
+        # "My Hero's Path" — constructed before Missions since
+        # _credit_mission_rewards() now optionally credits skill XP
+        # through it (Mission.skill_rewards).
+        self.context.skills = SkillManager(self.context)
         # Missions references trips (for the trip_duration_hours metric
-        # type), so it's constructed after trips already is.
+        # type) and skills (for skill_rewards crediting), so it's
+        # constructed after both already are.
         self.context.missions = MissionManager(self.context)
         self.context.conversations = ConversationManager(self.context)
         self.context.user_memories = UserMemoryManager(self.context)

@@ -5,13 +5,13 @@ tests.test_gamification
 Unit tests for core.gamification.grant_xp() — the shared "credit XP/
 credits + raise a real notification" helper every routine-completion
 hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed;
-fakes stand in for context.profiles/context.notifications, same shape
-as tests/test_assistant_chat.py's own _FakeProfiles precedent.
+fakes stand in for context.profiles/context.notifications/context.skills,
+same shape as tests/test_assistant_chat.py's own _FakeProfiles precedent.
 """
 
 from __future__ import annotations
 
-from core.gamification import grant_xp
+from core.gamification import SkillWeight, grant_xp
 
 
 class _FakeProfile:
@@ -45,20 +45,30 @@ class _FakeNotifications:
         self.calls.append({"title": title, "message": message, "level": level, "source": source})
 
 
+class _FakeSkills:
+    def __init__(self):
+        self.calls: list[tuple[str, str, int]] = []
+
+    def add_skill_xp(self, profile_id, skill_id, amount):
+        self.calls.append((profile_id, skill_id, amount))
+        return amount
+
+
 class _FakeContext:
     """A plain stand-in, not the real AppContext — grant_xp() only ever
-    touches .profiles/.notifications, same "fake just what's used"
-    precedent tests/test_assistant_chat.py's own _FakeContext already
-    establishes, rather than constructing a real AppContext with None
-    for its actually-required config/events fields."""
+    touches .profiles/.notifications/.skills, same "fake just what's
+    used" precedent tests/test_assistant_chat.py's own _FakeContext
+    already establishes, rather than constructing a real AppContext
+    with None for its actually-required config/events fields."""
 
-    def __init__(self, profiles=None, notifications=None):
+    def __init__(self, profiles=None, notifications=None, skills=None):
         self.profiles = profiles
         self.notifications = notifications
+        self.skills = skills
 
 
-def _make_context(profiles=None, notifications=None) -> _FakeContext:
-    return _FakeContext(profiles=profiles, notifications=notifications)
+def _make_context(profiles=None, notifications=None, skills=None) -> _FakeContext:
+    return _FakeContext(profiles=profiles, notifications=notifications, skills=skills)
 
 
 def test_grant_xp_credits_the_active_profile():
@@ -129,3 +139,52 @@ def test_grant_xp_zero_amount_does_not_call_add_xp():
     grant_xp(context, 0, "Title", "Message")
 
     assert profiles.xp_calls == []
+
+
+# ------------------------------------------------------------------
+# skill_weights — "My Hero's Path" (2026-09-11)
+# ------------------------------------------------------------------
+
+def test_grant_xp_credits_each_skill_weight():
+    profiles = _FakeProfiles(active=_FakeProfile("p1"))
+    skills = _FakeSkills()
+    context = _make_context(profiles=profiles, notifications=_FakeNotifications(), skills=skills)
+
+    grant_xp(
+        context,
+        10,
+        "Title",
+        "Message",
+        skill_weights=[SkillWeight("strength", 10), SkillWeight("endurance", 4)],
+    )
+
+    assert skills.calls == [("p1", "strength", 10), ("p1", "endurance", 4)]
+
+
+def test_grant_xp_skill_weights_none_calls_no_skill_xp():
+    profiles = _FakeProfiles(active=_FakeProfile("p1"))
+    skills = _FakeSkills()
+    context = _make_context(profiles=profiles, notifications=_FakeNotifications(), skills=skills)
+
+    grant_xp(context, 10, "Title", "Message")
+
+    assert skills.calls == []
+
+
+def test_grant_xp_skill_weights_no_skills_service_does_not_raise():
+    profiles = _FakeProfiles(active=_FakeProfile("p1"))
+    context = _make_context(profiles=profiles, notifications=_FakeNotifications(), skills=None)
+
+    grant_xp(context, 10, "Title", "Message", skill_weights=[SkillWeight("strength", 10)])  # must not raise
+
+    assert profiles.xp_calls == [("p1", 10)]
+
+
+def test_grant_xp_skill_weights_no_active_profile_does_not_raise():
+    profiles = _FakeProfiles(active=None)
+    skills = _FakeSkills()
+    context = _make_context(profiles=profiles, notifications=_FakeNotifications(), skills=skills)
+
+    grant_xp(context, 10, "Title", "Message", skill_weights=[SkillWeight("strength", 10)])  # must not raise
+
+    assert skills.calls == []

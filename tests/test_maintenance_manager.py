@@ -27,10 +27,13 @@ from datetime import date
 
 import pytest
 
+import json
+
 import core.calendar_manager as calendar_manager_module
 import core.config_manager as config_manager_module
 import core.data_logger_manager as data_logger_manager_module
 import core.maintenance_manager as maintenance_manager_module
+import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
 from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
@@ -49,6 +52,7 @@ from core.maintenance_manager import (
     predicted_due_date,
 )
 from core.profile_manager import ProfileManager
+from core.skill_manager import SkillManager
 
 
 @pytest.fixture
@@ -65,6 +69,11 @@ def isolated_paths(tmp_path, monkeypatch):
     # gamification hook tests below) — see test_workout_manager.py's
     # own isolated_paths for the identical reasoning.
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    # "My Hero's Path" (2026-09-11) — needed once a test constructs a
+    # real SkillManager too, same reasoning as config_manager above.
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
     return data_dir
 
 
@@ -591,6 +600,25 @@ def test_mark_complete_grants_xp_with_no_active_profile_does_not_raise(isolated_
     asset = manager.add_asset(name="Truck")
     task = manager.add_task(asset_id=asset.asset_id, title="Oil change", trigger_type="calendar")
     manager.mark_complete(task.task_id)  # must not raise
+
+
+def test_mark_complete_grants_home_maintenance_skill_xp(isolated_paths):
+    """"My Hero's Path" (2026-09-11)."""
+    isolated_paths.mkdir(parents=True, exist_ok=True)
+    (isolated_paths / "skill_definitions.json").write_text(
+        json.dumps({"skills": [{"skill_id": "home_maintenance", "name": "Home Maintenance", "category": "Homestead"}]})
+    )
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Oil change", trigger_type="calendar")
+
+    manager.mark_complete(task.task_id)
+
+    assert context.skills.get_progress(profile.profile_id, "home_maintenance").total_xp == 10
 
 
 def test_mark_complete_meter_task_with_explicit_value(isolated_paths):

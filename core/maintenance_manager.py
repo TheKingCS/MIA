@@ -63,7 +63,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.data_logger_manager import Reading
-from core.gamification import grant_xp
+from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -589,7 +589,15 @@ class MaintenanceManager:
         # re-completion on schedule (same reasoning as a recurring
         # Bill's mark_bill_paid() below — re-granting XP each real
         # completion is correct, not a bug).
-        grant_xp(self.context, 10, "\U0001F527 Task complete!", f"'{task.title}' is done.")
+        # "My Hero's Path" (2026-09-11) — Home Maintenance (Homestead
+        # category) is the natural skill for a completed maintenance task.
+        grant_xp(
+            self.context,
+            10,
+            "\U0001F527 Task complete!",
+            f"'{task.title}' is done.",
+            skill_weights=[SkillWeight("home_maintenance", 10)],
+        )
         return task
 
     # ------------------------------------------------------------------

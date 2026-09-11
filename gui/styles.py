@@ -227,6 +227,55 @@ QFrame#HeaderBar QLabel#HeaderLevelBadge {
     font-weight: 600;
 }
 
+/* 2026-09-11 "My Hero's Path" — modules/skills/module.py's category
+tab row (unscoped variant of QFrame#HeaderBar QPushButton#NavTab
+above, since this one lives inside a module screen, not the header)
+and skill cards (reuse QFrame#DashboardCard's base look, dimmed via
+the [locked="true"] property set on skills whose prerequisites aren't
+met yet — is_unlocked() is a display concern, never a gate on earning
+the XP itself; see core/skill_manager.py's own docstring). */
+QPushButton#SkillCategoryTab {
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 7px;
+    padding: 6px 14px;
+    color: #7c8798;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#SkillCategoryTab:hover {
+    color: #c3ccd9;
+    border: 1px solid #38d9c9;
+}
+
+QPushButton#SkillCategoryTab[active="true"] {
+    color: #e7ecf3;
+    border: 1px solid #38d9c9;
+    background-color: #142027;
+}
+
+QFrame#DashboardCard[locked="true"] {
+    background-color: #0c1119;
+    border: 1px solid #161c24;
+}
+
+QLabel#SkillCardTitle {
+    color: #e7ecf3;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QFrame#DashboardCard[locked="true"] QLabel#SkillCardTitle {
+    color: #5a6472;
+}
+
+QLabel#SkillCardPrereq {
+    color: #5a6472;
+    font-size: 11px;
+    font-style: italic;
+}
+
 QFrame#CharacterPanel {
     background-color: #0c1017;
     border: 1px solid #1b222e;

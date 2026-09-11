@@ -88,6 +88,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.gamification import SkillWeight
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -188,6 +189,15 @@ class Mission:
     mission_type: str = "OPTIONAL MISSION"  # e.g. "OPTIONAL MISSION", "DAILY MISSION" — free text, shown as-is
     reward_xp: int = 0
     reward_credits: int = 0
+    # "My Hero's Path" (2026-09-11) — optional per-skill XP a completed
+    # Mission also grants, alongside its existing flat reward_xp, via
+    # the same core.gamification.grant_xp() path every routine-
+    # completion hook already uses. Empty by default: every Mission
+    # created before this pass deserializes with skill_rewards=[] and
+    # behaves exactly as it did — no migration needed. Same "a record
+    # owns its own nested list of sub-items" shape as `objectives`
+    # above, not a separate top-level manager.
+    skill_rewards: list[SkillWeight] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -207,6 +217,7 @@ class Mission:
             "mission_type": self.mission_type,
             "reward_xp": self.reward_xp,
             "reward_credits": self.reward_credits,
+            "skill_rewards": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_rewards],
         }
 
     @staticmethod
@@ -228,6 +239,9 @@ class Mission:
             mission_type=data.get("mission_type", "OPTIONAL MISSION"),
             reward_xp=data.get("reward_xp", 0),
             reward_credits=data.get("reward_credits", 0),
+            skill_rewards=[
+                SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_rewards", [])
+            ],
         )
 
 
@@ -279,6 +293,7 @@ class MissionManager:
         mission_type: str = "OPTIONAL MISSION",
         reward_xp: int = 0,
         reward_credits: int = 0,
+        skill_rewards: Optional[list[SkillWeight]] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -296,6 +311,7 @@ class MissionManager:
             mission_type=mission_type,
             reward_xp=reward_xp,
             reward_credits=reward_credits,
+            skill_rewards=list(skill_rewards) if skill_rewards else [],
         )
         self._missions.append(mission)
         self._save()
@@ -331,8 +347,18 @@ class MissionManager:
         effort, same graceful-degradation stance as everything else here
         that depends on another manager (no active profile yet, e.g.
         during first-run setup, just means no one to credit).
+
+        "My Hero's Path" (2026-09-11): also credits mission.skill_rewards
+        to context.skills, if wired — a completed Mission is a real,
+        deliberate completion, not routine CRUD, so it always uses its
+        own credit-and-notify logic here rather than routing through
+        core.gamification.grant_xp() (which would also fire a second,
+        redundant notification on top of _notify_mission_completed()'s
+        own).
         """
-        if self.context.profiles is None or (mission.reward_xp == 0 and mission.reward_credits == 0):
+        if self.context.profiles is None or (
+            mission.reward_xp == 0 and mission.reward_credits == 0 and not mission.skill_rewards
+        ):
             return
         active_profile = self.context.profiles.get_active_profile()
         if active_profile is None:
@@ -341,6 +367,9 @@ class MissionManager:
             self.context.profiles.add_xp(active_profile.profile_id, mission.reward_xp)
         if mission.reward_credits:
             self.context.profiles.add_credits(active_profile.profile_id, mission.reward_credits)
+        if mission.skill_rewards and self.context.skills is not None:
+            for weight in mission.skill_rewards:
+                self.context.skills.add_skill_xp(active_profile.profile_id, weight.skill_id, weight.xp)
 
     def delete_mission(self, mission_id: str) -> None:
         self._missions = [m for m in self._missions if m.mission_id != mission_id]

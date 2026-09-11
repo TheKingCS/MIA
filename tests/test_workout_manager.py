@@ -11,12 +11,16 @@ from __future__ import annotations
 
 import pytest
 
+import json
+
 import core.config_manager as config_manager_module
+import core.skill_manager as skill_manager_module
 import core.workout_manager as workout_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.profile_manager import ProfileManager
+from core.skill_manager import SkillManager
 from core.workout_manager import (
     WorkoutManager,
     WorkoutSession,
@@ -37,6 +41,11 @@ def isolated_paths(tmp_path, monkeypatch):
     # ProfileManager too (2026-09-11 gamification hook tests below) —
     # without this, that would write to the actual config/config.json.
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    # "My Hero's Path" (2026-09-11) — needed once a test constructs a
+    # real SkillManager too, same reasoning as config_manager above.
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
     return data_dir
 
 
@@ -211,6 +220,24 @@ def test_add_session_grants_xp_with_no_active_profile_does_not_raise(isolated_pa
     manager = _make_manager(context)
     context.profiles = ProfileManager(context)  # constructed, but no profile created/active
     manager.add_session()  # must not raise
+
+
+def test_add_session_grants_strength_skill_xp(isolated_paths):
+    """"My Hero's Path" (2026-09-11) — the first real proof one
+    activity can train a Skill alongside the flat profile XP above."""
+    isolated_paths.mkdir(parents=True, exist_ok=True)
+    (isolated_paths / "skill_definitions.json").write_text(
+        json.dumps({"skills": [{"skill_id": "strength", "name": "Strength", "category": "Body"}]})
+    )
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+
+    manager.add_session()
+
+    assert context.skills.get_progress(profile.profile_id, "strength").total_xp == 10
 
 
 def test_all_sessions_sorted_newest_first(isolated_paths):

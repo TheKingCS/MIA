@@ -6952,3 +6952,120 @@ and the header badge updated live from "Lv. 1" to "Lv. 2" on crossing
 the 100-XP threshold with no window rebuild — while a second,
 never-activated profile's XP stayed at 0, confirming per-profile
 isolation holds.
+
+## "My Hero's Path": a skill-tree layer under Missions/gamification, Phase 0+1 (2026-09-11)
+
+The user proposed "My Hero's Path" — a deeper RPG-style progression
+system (skills, skill trees, multi-skill projects, quest scales,
+character stats, even MIA's own capability growth) to layer *under*
+the gamification pass above, explicitly not replacing it. Two research
+passes (forked, read-only) audited MIA's real gamification/data-model
+architecture and the separate mia-homestead repo before any design —
+full findings and the approved architecture are in the plan file this
+session used (`/home/creator/.claude/plans/tranquil-floating-hennessy.md`
+as of this entry). Only Phase 0 (foundations) and Phase 1 (first real
+multi-skill grants + a Skills screen) were built this pass; Phases
+2-7 (Projects as the bridge, quest scale/prerequisites, Homestead tech
+tree, MIA's own derived progression, rule-based Discovery, sensor/IoT
+evidence) are a roadmap to re-scope with the user phase-by-phase, not
+built here.
+
+**New `core/skill_manager.py`**: `SkillDefinition` (the taxonomy —
+skill_id/name/category/icon/prerequisite_skill_ids/tier) and
+`SkillProgress` (per-profile total_xp) are deliberately two separate
+concerns in two separate files. Definitions live in
+`data/skill_definitions.json` — a seed file, tracked in git (a new
+`!data/skill_definitions.json` exception to the `data/*` gitignore
+rule, same "tracked exception" shape as `!data/.gitkeep`), meant to be
+hand-edited directly to add/remove/split/merge/reorganize skills
+without touching any code — the user's own explicit requirement.
+Progress lives in `data/skill_progress.json`, real per-profile runtime
+state, gitignored like every other manager's data file. A skill's
+level is never stored, only derived from total_xp via new
+`core/skill_leveling.py` (mirrors `core/leveling.py`'s exact shape,
+gentler curve: `20 * level` vs. the profile-wide Level's `100 * level`,
+since a single skill only ever gets a slice of any one activity's XP).
+A skill's "unlocked" state is likewise derived at read time — every
+prerequisite must have ANY xp at all, never a stored boolean — same
+"derive, don't persist a second copy that can drift" philosophy as
+everything else in this codebase's leveling/objective-progress code.
+**Seeded 80 skills across the user's own 8 named categories** (Body/
+Mind/Maker/Homestead/Technology/Outdoor/Creative/Social), with real
+prerequisite chains including 3 genuine cross-category unlocks
+(Robotics requires both Automation [Technology] and Fabrication
+[Maker]; Autonomous Systems requires AI + Robotics; Greenhouse
+Automation requires Aquaponics + Automation; Teaching requires
+Communication + Learning) — a real demonstration of "activities are
+skill intersections," not just a flat list.
+
+**`core/gamification.py`'s `grant_xp()` gained an optional
+`skill_weights` param** (`list[SkillWeight]`, a new `NamedTuple`) —
+backward compatible by construction (defaults to `None`), so all 4
+existing call sites kept working unmodified. Wired real skill_weights
+into all 4 as the first proof: Workout finish-session → Strength (+10),
+Kitchen log-meal → Nutrition (+5), Maintenance mark-complete → Home
+Maintenance (+10), Budget mark-bill-paid → Household Management (+5).
+
+**`core/mission_manager.py`'s `Mission` gained `skill_rewards:
+list[SkillWeight] = []`** — empty by default, zero migration needed
+for existing `data/missions.json` (verified via a real backward-
+compat test constructing a Mission from a raw dict with no
+`skill_rewards` key at all). `_credit_mission_rewards()` now also
+credits skill_rewards through `context.skills`, using Missions' own
+existing credit-and-notify logic (not routed through `grant_xp()`,
+which would double-notify).
+
+**New `modules/skills/module.py`** — a categorized grid of skill cards
+(icon, name, level, XP progress bar), locked skills dimmed with a
+plain "(Locked)" text marker (not an emoji — see below), naming their
+missing prerequisites. Character-level readout in the header reuses
+`modules/missions/module.py`'s own `format_level_footer_line()`
+rather than duplicating it. Refreshes live via the existing
+`"profile.xp_changed"` event plus a new `"profile.skill_xp_changed"`
+event (published by `SkillManager.add_skill_xp()`, same convention as
+`ProfileManager.add_xp()`'s own event) — subscribed in `on_load()`,
+not `__init__`, so an unopened Skills module costs nothing at boot.
+
+**Two real bugs caught and fixed during manual headless-Qt
+verification** (same throwaway-repo-copy technique as the gamification
+pass above), not just from reading the code:
+1. Switching skill categories left a stale card behind from the
+   previous category — `QLayoutItem.deleteLater()` alone schedules
+   removal for a future event-loop cycle but doesn't detach the widget
+   from view immediately; fixed by calling `widget.hide()` +
+   `widget.setParent(None)` before `deleteLater()`.
+2. The lock glyph (U+1F512) isn't in this app's font fallback chain
+   the way the rest of its emoji vocabulary is — one unsupported
+   codepoint in a `QLabel` poisoned font shaping for the *entire*
+   string (every character rendered in a wrong fallback font, not just
+   the missing glyph), visible as a garbled strikethrough-looking
+   render. Fixed by using a plain ASCII `"(Locked)"` text marker
+   instead of gambling on emoji coverage for a state indicator.
+
+**Verification**: 46 new tests (`test_skill_leveling.py`,
+`test_skill_manager.py`, `test_skills_module.py`, extended
+`test_gamification.py`/`test_mission_manager.py`/4 manager test
+files) — full suite 2318 passing, zero regressions. Manual headless-Qt
+verification against a throwaway repo copy: real Workout session +
+completed Mission with skill_rewards granted XP to the right skills
+(Strength, Aquaponics, Fabrication, Hydroponics), `is_unlocked()`
+correctly gated Irrigation/Hydroponics while Aquaponics correctly
+unlocked once Hydroponics had any XP, the Skills screen rendered
+correctly across categories after both fixes above, and the header
+Level badge + Skills screen both refreshed live with no window
+rebuild.
+
+**Explicitly deferred, stated plainly** (per the approved plan):
+Projects as the bridge (`quest_ids`/`skill_weights` on the existing
+`core/project_manager.py`), Quest scale (Daily/Project/Epic/Life) and
+mission prerequisites, a Homestead tech-tree view derived from the
+real, already-automated `home_snapshot.json` bridge
+(`core/homestead_manager.py`), MIA's own derived capability-tier
+progression, rule-based (explicitly not LLM-driven) Discovery, and
+sensor/IoT evidence via `core/data_logger_manager.py`. A true
+graphical tree view (nodes connected by lines) is also deferred — this
+pass ships the same information as a scannable categorized grid
+instead. A known minor cosmetic issue: a few of the longest compound
+locked skill names (e.g. "Greenhouse Automation") clip within the
+3-column grid rather than wrapping cleanly — real, not blocking,
+flagged for whenever the Skills screen gets revisited.

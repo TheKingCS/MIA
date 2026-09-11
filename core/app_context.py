@@ -69,6 +69,7 @@ if TYPE_CHECKING:
     from core.relationships_manager import RelationshipsManager
     from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
+    from core.skill_manager import SkillManager
     from core.task_manager import TaskManager
     from core.trail_map_library import TrailMapLibrary
     from core.trip_manager import TripManager
@@ -119,6 +120,11 @@ class AppContext:
     tasks: Optional["TaskManager"] = field(default=None, repr=False)
     memories: Optional["MemoryManager"] = field(default=None, repr=False)
     missions: Optional["MissionManager"] = field(default=None, repr=False)
+    # "My Hero's Path" (2026-09-11) — the skill-tree layer underneath
+    # Missions/the profile-wide Level above. See core/skill_manager.py's
+    # own docstring for why definitions/progress are deliberately split
+    # into two files instead of living on this one service alone.
+    skills: Optional["SkillManager"] = field(default=None, repr=False)
     volume: Optional["VolumeManager"] = field(default=None, repr=False)
     conversations: Optional["ConversationManager"] = field(default=None, repr=False)
     # Named user_memories, not memories, to stay distinct from the
