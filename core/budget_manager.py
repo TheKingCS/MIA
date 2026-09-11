@@ -61,6 +61,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.calendar_manager import RECURRENCE_TYPES, date_recurs_on
+from core.gamification import grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -544,6 +545,13 @@ class BudgetManager:
         bill.last_paid_date = paid_date
         self._save_bills()
         log.info("Bill paid: '%s' $%.2f on %s", bill.name, paid_amount, paid_date)
+        # 2026-09-11 gamification pass — same "recurring completion is a
+        # real, distinct event each time" reasoning as
+        # core.maintenance_manager.MaintenanceManager.mark_complete().
+        # Hooked here, not inside add_expense() above — a plain expense
+        # entry isn't a "completion" the way deliberately marking a bill
+        # paid is.
+        grant_xp(self.context, 5, "\U0001F4B0 Bill paid!", f"'{bill.name}' is squared away.")
         return entry
 
     # ------------------------------------------------------------------

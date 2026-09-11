@@ -254,7 +254,17 @@ class ProfileManager:
         return True
 
     def add_xp(self, profile_id: str, amount: int) -> Optional[int]:
-        """Credits `amount` XP to a profile's lifetime total. Returns the new total, or None if the profile doesn't exist."""
+        """Credits `amount` XP to a profile's lifetime total. Returns the
+        new total, or None if the profile doesn't exist. Publishes
+        "profile.xp_changed" (2026-09-11, added alongside
+        core.gamification.grant_xp()) so any UI showing a Level/XP
+        readout outside the Missions module — e.g. gui/main_window.py's
+        header badge — can refresh live instead of only updating the
+        next time that screen happens to rebuild. A real, latent gap
+        this closes: core.mission_manager.MissionManager's own reward
+        crediting never published anything either, so even Mission-
+        earned XP was invisible anywhere but the Missions module until
+        it was reopened."""
         config = self.context.config
         raw = config.get(f"profiles.{profile_id}")
         if raw is None:
@@ -267,10 +277,15 @@ class ProfileManager:
         config.set(f"profiles.{profile_id}", record)
         config.save()
         log.info("Profile '%s' earned %d XP (total now %d)", profile_id, amount, new_total)
+        self.context.events.publish("profile.xp_changed", profile_id=profile_id)
         return new_total
 
     def add_credits(self, profile_id: str, amount: int) -> Optional[int]:
-        """Credits `amount` credits to a profile's lifetime total. Returns the new total, or None if the profile doesn't exist."""
+        """Credits `amount` credits to a profile's lifetime total. Returns
+        the new total, or None if the profile doesn't exist. Publishes
+        "profile.xp_changed" too — see add_xp()'s own docstring; shared
+        event name since both are "this profile's stats changed,
+        re-check whatever you're showing" from a UI listener's view."""
         config = self.context.config
         raw = config.get(f"profiles.{profile_id}")
         if raw is None:
@@ -283,6 +298,7 @@ class ProfileManager:
         config.set(f"profiles.{profile_id}", record)
         config.save()
         log.info("Profile '%s' earned %d credits (total now %d)", profile_id, amount, new_total)
+        self.context.events.publish("profile.xp_changed", profile_id=profile_id)
         return new_total
 
     def has_any_profiles(self) -> bool:

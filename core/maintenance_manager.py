@@ -63,6 +63,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.data_logger_manager import Reading
+from core.gamification import grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -583,6 +584,12 @@ class MaintenanceManager:
                 task.last_completed_meter_value = _latest_reading_value(self.readings_for_task(task_id))
         self._save()
         log.info("Maintenance task completed: '%s' on %s", task.title, task.last_completed)
+        # 2026-09-11 gamification pass — a real, distinct completion
+        # event each call, including a recurring task's own legitimate
+        # re-completion on schedule (same reasoning as a recurring
+        # Bill's mark_bill_paid() below — re-granting XP each real
+        # completion is correct, not a bug).
+        grant_xp(self.context, 10, "\U0001F527 Task complete!", f"'{task.title}' is done.")
         return task
 
     # ------------------------------------------------------------------

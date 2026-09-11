@@ -213,6 +213,20 @@ QFrame#HeaderBar QPushButton#ProfileAvatarButton[hasUnread="true"] {
     color: #38d9c9;
 }
 
+/* 2026-09-11 gamification pass — the header's Level badge, the
+"visible everywhere" counterpart to the Missions module's own
+Level/XP readout. Reuses the same accent teal as the avatar's
+hasUnread state above, since both mean "something to notice." */
+QFrame#HeaderBar QLabel#HeaderLevelBadge {
+    background-color: #111722;
+    border: 1px solid #1b222e;
+    border-radius: 12px;
+    padding: 4px 12px;
+    color: #38d9c9;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 QFrame#CharacterPanel {
     background-color: #0c1017;
     border: 1px solid #1b222e;

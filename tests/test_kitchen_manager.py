@@ -13,6 +13,7 @@ from datetime import date
 
 import pytest
 
+import core.config_manager as config_manager_module
 import core.kitchen_manager as kitchen_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
@@ -26,6 +27,7 @@ from core.kitchen_manager import (
     recipe_missing_ingredients,
     recipes_makeable_from_pantry,
 )
+from core.profile_manager import ProfileManager
 
 
 @pytest.fixture
@@ -36,6 +38,10 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(kitchen_manager_module, "_PANTRY_FILE", data_dir / "kitchen_pantry.json")
     monkeypatch.setattr(kitchen_manager_module, "_GROCERY_LIST_FILE", data_dir / "kitchen_grocery_list.json")
     monkeypatch.setattr(kitchen_manager_module, "_MEAL_LOG_FILE", data_dir / "kitchen_meal_log.json")
+    # Real once a test constructs a real ProfileManager too (2026-09-11
+    # gamification hook tests below) — see test_workout_manager.py's
+    # own isolated_paths for the identical reasoning.
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     return data_dir
 
 
@@ -349,6 +355,28 @@ def test_log_meal_defaults_to_today(isolated_paths):
     recipe = manager.add_recipe(name="X")
     entry = manager.log_meal(recipe.recipe_id)
     assert entry.date == date.today().isoformat()
+
+
+def test_log_meal_grants_xp_to_the_active_profile(isolated_paths):
+    """2026-09-11 gamification pass — logging a meal is a fresh entry
+    every call, never an idempotency risk."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    context.profiles.create_profile(name="Alex", make_active=True)
+    recipe = manager.add_recipe(name="X")
+
+    manager.log_meal(recipe.recipe_id)
+
+    assert context.profiles.get_active_profile().total_xp == 5
+
+
+def test_log_meal_grants_xp_with_no_active_profile_does_not_raise(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    recipe = manager.add_recipe(name="X")
+    manager.log_meal(recipe.recipe_id)  # must not raise
 
 
 def test_times_made_counts_within_range(isolated_paths):

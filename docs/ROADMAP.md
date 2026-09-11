@@ -6880,3 +6880,75 @@ Qt-parent-driven cleanup outliving a script that stubs `exec()` instead
 of running a real event loop; the real app never hits this). Not a
 regression from this pass, not fixed here — out of scope, flagged for
 awareness only. Full suite: 2255 passing, zero regressions.
+
+## Game-like framing across modules: routine actions grant XP (2026-09-11)
+
+The user's own explicit "gamify life" direction, extended: asked for
+MIA to feel more like a LitRPG "System" narrator (the example given was
+Vincent from *My Vampire System*), and picked "game-like framing
+everywhere" as the concrete direction — the existing Missions/XP/Level
+language (`core/mission_manager.py`, `core/leveling.py`, iterated on 3
+times already since 2026-07-14) extended out past the dedicated
+Missions screen into routine completion moments in other domains, not
+just goal-tracking in one place.
+
+**New shared helper**: `core/gamification.py`'s `grant_xp(context,
+amount, title, message, credits=0)` wraps the exact crediting call
+Missions itself already uses (`context.profiles.add_xp()`/
+`add_credits()` against the active profile) plus a
+`context.notifications.notify()` call in Missions' own established
+voice (emoji-led title, second-person, `source="gamification"`).
+Gracefully no-ops with no active profile or `context.profiles is None`
+— mirrors `MissionManager._credit_mission_rewards()`'s own stance
+exactly, never raises.
+
+**Fixed a real latent gap while here**: `ProfileManager.add_xp()`/
+`add_credits()` never published anything before — meaning even
+Mission-earned XP never refreshed any UI outside the Missions module
+itself. Both now publish `"profile.xp_changed"` (profile_id) at the end,
+matching the existing `"profile.renamed"` precedent for "something
+about a profile changed, header needs to know."
+
+**Four real hook points**, at the manager level (matching where
+Missions grants its own rewards), all deliberately flat/modest (5-10
+XP, no credits — Missions stays the "main quest," these stay "side
+activity"), all real *completion* moments rather than routine CRUD:
+
+- `WorkoutManager.add_session()` — finishing a session: +10 XP
+- `KitchenManager.log_meal()` — logging a meal: +5 XP
+- `MaintenanceManager.mark_complete()` — completing a task (including a
+  recurring task's legitimate re-completion): +10 XP
+- `BudgetManager.mark_bill_paid()` — marking a bill paid (not its
+  internal `add_expense()` call — a plain expense entry isn't a
+  deliberate "completion"): +5 XP
+
+**Level badge in the header**: `gui/main_window.py`'s header (next to
+the profile avatar button) now shows a live `"Lv. N"` badge
+(`core.leveling.compute_level_progress()` against the active profile's
+`total_xp`), subscribed to `"profile.xp_changed"` so it refreshes the
+instant any of the 4 hooks — or a Mission — grants XP, with no window
+rebuild required. Hidden with no active profile, matching the header's
+existing empty-`user_name` convention. New `QLabel#HeaderLevelBadge`
+QSS rule reuses the same teal accent (`#38d9c9`) as the avatar's
+`hasUnread` state.
+
+**Deliberately deferred**: Music/Real Estate/Relationships/the
+Assistant's own conversational tone (real candidates for a second
+wave, not forgotten); a tuned/difficulty-scaled XP economy (flat values
+only — no existing formula to inherit, confirmed via research); rate-
+limiting (all 4 hook points are already-infrequent, deliberate user
+actions, not spammable loops).
+
+**Verification**: 18 new tests across `tests/test_gamification.py`
+(new, 7 tests), `tests/test_profile_manager.py` (+3), and each of
+`test_workout_manager.py`/`test_kitchen_manager.py`/
+`test_maintenance_manager.py`/`test_budget_manager.py` (+2 each) — full
+suite 2273 passing, zero regressions. Manual, isolated-headless-Qt
+verification against a throwaway repo copy (never touched real
+config/data): a real workout session, meal log, maintenance
+completion, and bill payment against one profile granted exactly
+10+5+10+5=30 XP, fired all 4 toast notifications with the right text,
+and the header badge updated live from "Lv. 1" to "Lv. 2" on crossing
+the 100-XP threshold with no window rebuild — while a second,
+never-activated profile's XP stayed at 0, confirming per-profile
+isolation holds.

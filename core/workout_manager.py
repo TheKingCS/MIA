@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.gamification import grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -335,6 +336,13 @@ class WorkoutManager:
         self._sessions.append(session)
         self._save_sessions()
         log.info("Workout session logged: %s (%d sets)", session.date, len(session.sets_logged))
+        # 2026-09-11 gamification pass — a session is only ever added
+        # once, at "Finish Session" (see this file's own docstring on
+        # the live in-memory state machine), so this is a real, one-time
+        # completion moment, not something that could double-grant.
+        set_count = len(session.sets_logged)
+        set_note = f"{set_count} set{'s' if set_count != 1 else ''} in the books." if set_count else "Session logged."
+        grant_xp(self.context, 10, "\U0001F4AA Workout logged!", f"Nice work — {set_note}")
         return session
 
     def delete_session(self, session_id: str) -> None:

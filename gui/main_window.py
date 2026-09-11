@@ -42,6 +42,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
+from core.leveling import compute_level_progress
 from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.onboarding import build_first_run_welcome_message
@@ -154,6 +155,13 @@ class MainWindow(QMainWindow):
         # would otherwise show the OLD name/initial until the app
         # restarts — update it directly here instead.
         self.context.events.subscribe("profile.renamed", self._on_profile_renamed)
+        # 2026-09-11 gamification pass — core/gamification.py's grant_xp()
+        # (and any direct core.profile_manager.ProfileManager.add_xp()/
+        # add_credits() call, Mission rewards included) publishes this so
+        # the header's Level badge (_build_header()) can refresh live
+        # instead of only updating the next time MainWindow happens to be
+        # rebuilt.
+        self.context.events.subscribe("profile.xp_changed", self._on_profile_xp_changed)
 
     def _on_modules_changed(self, **kwargs) -> None:
         self._rebuild_menu()
@@ -164,6 +172,16 @@ class MainWindow(QMainWindow):
             return
         self._profile_button.setText(new_name[0].upper() if new_name else "?")
         self._profile_button.setToolTip(new_name or "Profile")
+
+    def _on_profile_xp_changed(self, profile_id: str) -> None:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        if active_profile is None or active_profile.profile_id != profile_id:
+            return
+        self._refresh_level_badge(active_profile.total_xp)
+
+    def _refresh_level_badge(self, total_xp: int) -> None:
+        level, _xp_into_level, _xp_needed = compute_level_progress(total_xp)
+        self._level_badge.setText(f"Lv. {level}")
 
     def _on_assistant_open_module_requested(self, module_id: str) -> None:
         self.open_module(module_id)
@@ -576,7 +594,23 @@ class MainWindow(QMainWindow):
         self._profile_menu.aboutToShow.connect(self._volume_quick_control.refresh)
         self._profile_button.setMenu(self._profile_menu)
 
+        # 2026-09-11 gamification pass — makes the Level/XP system (until
+        # now only visible inside the Missions module) visible everywhere,
+        # the concrete answer to "make MIA feel like a System, not buried
+        # in one screen." Refreshed live by _on_profile_xp_changed()
+        # whenever core.gamification.grant_xp() (or a Mission reward, or
+        # any other ProfileManager.add_xp()/add_credits() call) fires.
+        # Hidden with no active profile, matching this header's own
+        # "" user_name fallback just above for that same state.
+        self._level_badge = QLabel()
+        self._level_badge.setObjectName("HeaderLevelBadge")
+        if active_profile is not None:
+            self._refresh_level_badge(active_profile.total_xp)
+        else:
+            self._level_badge.hide()
+
         layout.addWidget(self._search_bar)
+        layout.addWidget(self._level_badge)
         layout.addWidget(self._profile_button)
 
         return header

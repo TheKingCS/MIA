@@ -99,6 +99,41 @@ def test_add_credits_unknown_profile_returns_none(isolated_paths):
     assert manager.add_credits("does-not-exist", 25) is None
 
 
+def test_add_xp_publishes_profile_xp_changed(isolated_paths):
+    """2026-09-11 gamification pass — a real, previously-missing event,
+    added so any UI showing Level/XP outside the Missions module (e.g.
+    gui/main_window.py's header badge) can refresh live."""
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    received = []
+    manager.context.events.subscribe("profile.xp_changed", lambda **kwargs: received.append(kwargs))
+
+    manager.add_xp(profile.profile_id, 100)
+
+    assert received == [{"profile_id": profile.profile_id}]
+
+
+def test_add_credits_publishes_profile_xp_changed(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    received = []
+    manager.context.events.subscribe("profile.xp_changed", lambda **kwargs: received.append(kwargs))
+
+    manager.add_credits(profile.profile_id, 25)
+
+    assert received == [{"profile_id": profile.profile_id}]
+
+
+def test_add_xp_unknown_profile_does_not_publish(isolated_paths):
+    manager = _make_manager()
+    received = []
+    manager.context.events.subscribe("profile.xp_changed", lambda **kwargs: received.append(kwargs))
+
+    manager.add_xp("does-not-exist", 100)
+
+    assert received == []
+
+
 def test_new_profile_starts_with_zero_xp_and_credits(isolated_paths):
     manager = _make_manager()
     profile = manager.create_profile(name="Alex")

@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.gamification import grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -530,6 +531,12 @@ class KitchenManager:
         )
         self._meal_log.append(entry)
         self._save_meal_log()
+        # 2026-09-11 gamification pass — a fresh log entry every call,
+        # never an idempotency risk (unlike, say, re-marking something
+        # already complete).
+        recipe = self.get_recipe(recipe_id)
+        recipe_note = f"'{recipe.name}' logged for today." if recipe is not None else "Logged for today."
+        grant_xp(self.context, 5, "\U0001F373 Meal logged!", recipe_note)
         return entry
 
     def delete_meal_log_entry(self, entry_id: str) -> None:

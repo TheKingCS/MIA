@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import pytest
 
+import core.config_manager as config_manager_module
 import core.workout_manager as workout_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+from core.profile_manager import ProfileManager
 from core.workout_manager import (
     WorkoutManager,
     WorkoutSession,
@@ -30,6 +32,11 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(workout_manager_module, "_EXERCISES_FILE", data_dir / "workout_exercises.json")
     monkeypatch.setattr(workout_manager_module, "_TEMPLATES_FILE", data_dir / "workout_templates.json")
     monkeypatch.setattr(workout_manager_module, "_SESSIONS_FILE", data_dir / "workout_sessions.json")
+    # Not needed by any pre-existing test here (WorkoutManager never
+    # touches context.config), but real once a test constructs a real
+    # ProfileManager too (2026-09-11 gamification hook tests below) —
+    # without this, that would write to the actual config/config.json.
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     return data_dir
 
 
@@ -182,6 +189,28 @@ def test_add_session_clamps_negative_duration(isolated_paths):
     manager = _make_manager(context)
     session = manager.add_session(duration_minutes=-5.0)
     assert session.duration_minutes == 0.0
+
+
+def test_add_session_grants_xp_to_the_active_profile(isolated_paths):
+    """2026-09-11 gamification pass — finishing a session is a real,
+    one-time completion moment (see core.workout_manager's own
+    docstring on the live in-memory state machine)."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+
+    manager.add_session()
+
+    assert context.profiles.get_active_profile().total_xp == 10
+    assert profile.profile_id == context.profiles.get_active_profile().profile_id
+
+
+def test_add_session_grants_xp_with_no_active_profile_does_not_raise(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)  # constructed, but no profile created/active
+    manager.add_session()  # must not raise
 
 
 def test_all_sessions_sorted_newest_first(isolated_paths):

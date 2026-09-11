@@ -15,6 +15,7 @@ from datetime import date
 import pytest
 
 import core.budget_manager as budget_manager_module
+import core.config_manager as config_manager_module
 from core.app_context import AppContext
 from core.budget_manager import (
     Bill,
@@ -29,6 +30,7 @@ from core.budget_manager import (
 )
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+from core.profile_manager import ProfileManager
 
 
 @pytest.fixture
@@ -41,6 +43,10 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(budget_manager_module, "_INCOME_SOURCES_FILE", data_dir / "income_sources.json")
     monkeypatch.setattr(budget_manager_module, "_BUDGET_TARGETS_FILE", data_dir / "budget_targets.json")
     monkeypatch.setattr(budget_manager_module, "_BUSINESS_ENTITIES_FILE", data_dir / "business_entities.json")
+    # Real once a test constructs a real ProfileManager too (2026-09-11
+    # gamification hook tests below) — see test_workout_manager.py's
+    # own isolated_paths for the identical reasoning.
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     return data_dir
 
 
@@ -172,6 +178,27 @@ def test_mark_bill_paid_amount_override_for_a_variable_bill(isolated_paths):
     bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
     entry = manager.mark_bill_paid(bill.bill_id, amount=145.50)
     assert entry.amount == 145.50
+
+
+def test_mark_bill_paid_grants_xp_to_the_active_profile(isolated_paths):
+    """2026-09-11 gamification pass — same "recurring completion is a
+    real, distinct event each time" reasoning as
+    core.maintenance_manager.MaintenanceManager.mark_complete()."""
+    manager = _make_manager()
+    manager.context.profiles = ProfileManager(manager.context)
+    manager.context.profiles.create_profile(name="Alex", make_active=True)
+    bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
+
+    manager.mark_bill_paid(bill.bill_id)
+
+    assert manager.context.profiles.get_active_profile().total_xp == 5
+
+
+def test_mark_bill_paid_grants_xp_with_no_active_profile_does_not_raise(isolated_paths):
+    manager = _make_manager()
+    manager.context.profiles = ProfileManager(manager.context)
+    bill = manager.add_bill(name="Electric", amount=120.0, due_date="2026-09-01")
+    manager.mark_bill_paid(bill.bill_id)  # must not raise
 
 
 def test_mark_bill_paid_unknown_id_raises(isolated_paths):

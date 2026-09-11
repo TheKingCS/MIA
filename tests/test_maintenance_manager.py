@@ -28,6 +28,7 @@ from datetime import date
 import pytest
 
 import core.calendar_manager as calendar_manager_module
+import core.config_manager as config_manager_module
 import core.data_logger_manager as data_logger_manager_module
 import core.maintenance_manager as maintenance_manager_module
 from core.app_context import AppContext
@@ -47,6 +48,7 @@ from core.maintenance_manager import (
     next_due_date,
     predicted_due_date,
 )
+from core.profile_manager import ProfileManager
 
 
 @pytest.fixture
@@ -59,6 +61,10 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(data_logger_manager_module, "_READINGS_FILE", data_dir / "data_logger_readings.json")
     monkeypatch.setattr(calendar_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(calendar_manager_module, "_EVENTS_FILE", data_dir / "calendar_events.json")
+    # Real once a test constructs a real ProfileManager too (2026-09-11
+    # gamification hook tests below) — see test_workout_manager.py's
+    # own isolated_paths for the identical reasoning.
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     return data_dir
 
 
@@ -560,6 +566,31 @@ def test_mark_complete_defaults_to_today(isolated_paths):
     task = manager.add_task(asset_id=asset.asset_id, title="Oil change")
     manager.mark_complete(task.task_id)
     assert manager.get_task(task.task_id).last_completed == date.today().isoformat()
+
+
+def test_mark_complete_grants_xp_to_the_active_profile(isolated_paths):
+    """2026-09-11 gamification pass — a real, distinct completion event
+    each call, including a recurring task's own legitimate
+    re-completion on schedule."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    context.profiles.create_profile(name="Alex", make_active=True)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Oil change", trigger_type="calendar")
+
+    manager.mark_complete(task.task_id)
+
+    assert context.profiles.get_active_profile().total_xp == 10
+
+
+def test_mark_complete_grants_xp_with_no_active_profile_does_not_raise(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Oil change", trigger_type="calendar")
+    manager.mark_complete(task.task_id)  # must not raise
 
 
 def test_mark_complete_meter_task_with_explicit_value(isolated_paths):
