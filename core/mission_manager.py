@@ -351,6 +351,12 @@ class MissionManager:
         if not was_completed and mission.status == "completed":
             self._notify_mission_completed(mission)
             self._credit_mission_rewards(mission)
+            # Mission Pathways (2026-09-11) — a real, previously-missing
+            # gap this closes independent of that feature: nothing in
+            # this codebase reacted to a Mission actually finishing
+            # before this. Fires exactly once, on the same real
+            # transition as the celebration/reward-crediting above.
+            self.context.events.publish("mission.completed", mission_id=mission.mission_id)
         return mission
 
     def _credit_mission_rewards(self, mission: Mission) -> None:

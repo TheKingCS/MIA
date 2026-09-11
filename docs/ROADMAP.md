@@ -7419,3 +7419,93 @@ correctly show "(Locked)" despite already having their own XP, since
 `concrete` — their shared prerequisite — has none yet, proving Phase
 1's "grant XP even when locked" design still holds exactly as
 documented.
+
+## Mission Pathways: skill-guided quest sequences (2026-09-11)
+
+The user-driven counterpart to the architecture-review's "Discovery"
+idea (Phase 6, still deferred): instead of MIA inferring a pattern from
+history, the user picks a skill and gets a pre-authored sequence of
+real Missions that build it, each completion unlocking the next.
+Deliberately rule-based/hand-authored, not AI-generated — same stance
+as Missions' own existing auto-assignment rules, and every other
+gamification mechanic built this session.
+
+**Verified before designing, not assumed**: `core/mission_manager.py`
+published **no event at all** on mission completion before this pass —
+a real, useful gap independent of this feature (nothing in the
+codebase reacted to a Mission finishing at all), closed the same way
+`"profile.xp_changed"`/`"profile.skill_xp_changed"` closed the
+equivalent gap for XP earlier this session. `core.kitchen_manager.
+Recipe` has no lock/unlock concept — confirms the user's own "Recipe
+Unlocked" reward idea is a real, separate Kitchen data-model change,
+deliberately deferred rather than folded in here.
+
+**New `core/pathway_manager.py`** — `Pathway`/`PathwayStep` (read-only
+definitions in `data/mission_pathways.json`, same "hand-edited,
+never written by code" spirit as `data/skill_definitions.json`) +
+`PathwayProgress` (real per-profile state — which pathway, which step,
+which real Mission is currently tracked — in
+`data/pathway_progress.json`) + `PathwayManager`. `start_pathway()`
+creates the first step's real Mission via the existing
+`context.missions.add_mission(..., assigned_by="mia")` — no new
+Mission-creation logic, just templated. Advancing is entirely event-
+driven: subscribes to the new `"mission.completed"` event at
+construction, and when the completed mission matches some profile's
+tracked step, either creates the next step's Mission (firing
+`"🔓 New Mission Unlocked!"`, `source="pathways"` — the precise version
+of the user's own "Skill Unlocked: Build a Garden Bed" example, worded
+to not collide with `core/achievements.py`'s own real Skill-unlock
+notifications) or, on the last step, marks the pathway `"completed"`
+(`"🏆 Pathway complete!"`). Only a genuine completion advances it —
+abandoning or deleting the generated Mission leaves it stalled, never
+auto-advanced. A completed pathway can be started again (a fresh run).
+
+**New `data/mission_pathways.json`** — 4 real pilot pathways, one per
+domain the user named plus the trade-skill angle from the Construction
+pass: **Carpentry Fundamentals** (Build a Birdhouse → Build a Garden
+Bed → Frame a Small Wall Section), **Backyard Growing** (Start a Seed
+Tray → Prepare a Garden Bed → Harvest Your First Crop), **Foundational
+Strength** (Complete Your First Full Workout → Log 5 Workout Sessions
+→ Set a New Personal Record), **Kitchen Explorer** (Cook a New Recipe
+→ Cook 5 Different Meals This Month → Host a Meal for Someone Else) —
+each step deliberately cross-trains a second real skill (e.g. building
+a garden bed trains both `carpentry` and `gardening`), matching the
+multi-skill-activity spirit already established. Cross-referenced
+every `skill_id` against the real `data/skill_definitions.json` before
+committing — all 10 referenced skills exist.
+
+**New `modules/toolbox/tools/pathway_tool.py`** — a `ToolboxTool`
+(same shape as `IntentTool`/`ProjectTool`), a flat list of all defined
+Pathways with the active profile's real status (Not Started/Step X of
+N/Completed) and a Start button. No skill-card-level integration into
+`modules/skills/module.py` this pass (still pure read-only display) —
+left for later.
+
+Both new data files needed the same `.gitignore` treatment
+`skill_definitions.json` did — `data/*` is ignored by default (runtime
+state), so `data/mission_pathways.json` needed its own tracked
+exception (`data/pathway_progress.json`, the real per-profile state,
+correctly stays ignored).
+
+**Verification**: 26 new tests (`test_pathway_manager.py` — 18,
+`test_pathway_tool.py` — 5, plus 3 extending `test_mission_manager.py`
+for the new event) — full suite 2437 passing, zero regressions. Manual
+headless-Qt verification against a throwaway repo copy running the
+REAL seeded pathway content end to end was unusually satisfying: one
+mission completion cascaded through every system built this session at
+once — the existing Mission-complete celebration, a real
+`core/achievements.py` skill level-up, a real skill *unlock*
+(completing step 1 gave Carpentry enough XP to unlock Framing), AND the
+new Pathway "next mission unlocked" notification, all in one real,
+correctly-ordered chain, with the exact right XP landing in each
+skill (Carpentry 120, Framing 40, Gardening 15 from cross-training)
+after all 3 steps. Completing the final step correctly fired "Pathway
+complete!" instead of another unlock notification. Screenshotted the
+Toolbox Pathways tool showing all 4 pathways with correct real status.
+
+**Deferred, stated plainly**: "Recipe Unlocked" (a real, separate
+Kitchen data-model change); auto-tracked objectives on pathway-
+generated missions (v1 missions are plain, user marks them complete
+manually); AI-generated pathway content; skill-card-level "start this
+pathway" integration in the Skills module; more pathways beyond the 4
+piloted here.

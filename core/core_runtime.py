@@ -70,6 +70,7 @@ from core.llm_manager import LLMManager
 from core.logger import get_logger
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
+from core.pathway_manager import PathwayManager
 from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
@@ -119,6 +120,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     # core/application.py.
     context.skills = SkillManager(context)
     context.missions = MissionManager(context)
+    # Mission Pathways — subscribes to Missions' "mission.completed"
+    # event at construction, same ordering rule as core/application.py.
+    context.pathways = PathwayManager(context)
     context.user_memories = UserMemoryManager(context)
 
     # Constructed but never `.discover()`-ed — stays empty for the life

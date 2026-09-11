@@ -406,6 +406,44 @@ def test_recompleting_a_mission_does_not_double_credit(isolated_paths):
 
 
 # ----------------------------------------------------------------------
+# "mission.completed" event — Mission Pathways (2026-09-11)
+# ----------------------------------------------------------------------
+
+def test_completing_a_mission_publishes_mission_completed(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.completed", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert received == [{"mission_id": mission.mission_id}]
+
+
+def test_recompleting_a_mission_does_not_republish_mission_completed(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.completed", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert len(received) == 1
+
+
+def test_other_field_changes_do_not_publish_mission_completed(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.completed", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, name="Renamed")
+
+    assert received == []
+
+
+# ----------------------------------------------------------------------
 # skill_rewards — "My Hero's Path" (2026-09-11)
 # ----------------------------------------------------------------------
 

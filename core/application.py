@@ -80,6 +80,7 @@ from core.logger import get_logger
 from core.map_tile_cache import MapTileCache
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
+from core.pathway_manager import PathwayManager
 from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
@@ -235,6 +236,13 @@ class MIAApplication:
         # type) and skills (for skill_rewards crediting), so it's
         # constructed after both already are.
         self.context.missions = MissionManager(self.context)
+        # Mission Pathways — subscribes to Missions' new
+        # "mission.completed" event at construction, so it must be
+        # constructed after context.missions already exists (the
+        # subscription itself doesn't need Missions to exist yet, but
+        # this ordering matches every other "reacts to X" manager's
+        # own construction-order convention).
+        self.context.pathways = PathwayManager(self.context)
         self.context.conversations = ConversationManager(self.context)
         self.context.user_memories = UserMemoryManager(self.context)
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)

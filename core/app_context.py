@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from core.module_manager import ModuleManager
     from core.music_manager import MusicManager
     from core.notification_manager import NotificationManager
+    from core.pathway_manager import PathwayManager
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
     from core.product_manager import ProductManager
@@ -139,6 +140,10 @@ class AppContext:
     # own docstring for why definitions/progress are deliberately split
     # into two files instead of living on this one service alone.
     skills: Optional["SkillManager"] = field(default=None, repr=False)
+    # Mission Pathways (2026-09-11) — user picks a skill, MIA hands
+    # them a pre-authored sequence of real Missions that build it. See
+    # core/pathway_manager.py's own docstring.
+    pathways: Optional["PathwayManager"] = field(default=None, repr=False)
     volume: Optional["VolumeManager"] = field(default=None, repr=False)
     conversations: Optional["ConversationManager"] = field(default=None, repr=False)
     # Named user_memories, not memories, to stay distinct from the

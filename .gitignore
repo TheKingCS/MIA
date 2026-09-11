@@ -19,6 +19,11 @@ data/*
 # runtime/user state like everything else data/* excludes (that's
 # data/skill_progress.json, which stays ignored).
 !data/skill_definitions.json
+# Mission Pathways (core/pathway_manager.py) — same "tracked seed
+# content, hand-edited, not runtime state" reasoning as
+# skill_definitions.json above. data/pathway_progress.json (real
+# per-profile state) stays ignored.
+!data/mission_pathways.json
 logs/*
 !logs/.gitkeep
 

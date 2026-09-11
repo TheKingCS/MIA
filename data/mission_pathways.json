@@ -1,0 +1,133 @@
+{
+  "_comment": "Mission Pathways (core/pathway_manager.py). Hand-edited directly -- add more pathways or steps without touching any code. Each pathway trains one primary skill_id (must exist in data/skill_definitions.json); each step's skill_rewards can name other skills too, for real cross-training. Steps are plain Missions (no auto-tracked objectives) -- the user marks each complete once they've genuinely done the real-world thing, same as any other Mission.",
+  "pathways": [
+    {
+      "pathway_id": "carpentry_fundamentals",
+      "skill_id": "carpentry",
+      "name": "Carpentry Fundamentals",
+      "description": "Three real builds that take you from first cuts to framing a wall.",
+      "steps": [
+        {
+          "name": "Build a Birdhouse",
+          "icon": "🪚",
+          "summary": "A small, low-stakes first project to practice measuring, cutting, and assembling.",
+          "difficulty": "EASY",
+          "reward_xp": 20,
+          "skill_rewards": [{"skill_id": "carpentry", "xp": 20}]
+        },
+        {
+          "name": "Build a Garden Bed",
+          "icon": "🌱",
+          "summary": "A raised bed teaches square corners and real outdoor-lumber joinery -- and feeds the homestead too.",
+          "difficulty": "NORMAL",
+          "reward_xp": 30,
+          "skill_rewards": [{"skill_id": "carpentry", "xp": 40}, {"skill_id": "gardening", "xp": 15}]
+        },
+        {
+          "name": "Frame a Small Wall Section",
+          "icon": "📐",
+          "summary": "Studs, plates, and real structural framing -- the first genuine step toward building a room.",
+          "difficulty": "HARD",
+          "reward_xp": 50,
+          "skill_rewards": [{"skill_id": "carpentry", "xp": 60}, {"skill_id": "framing", "xp": 40}]
+        }
+      ]
+    },
+    {
+      "pathway_id": "backyard_growing",
+      "skill_id": "gardening",
+      "name": "Backyard Growing",
+      "description": "From a seed tray to your first real harvest.",
+      "steps": [
+        {
+          "name": "Start a Seed Tray",
+          "icon": "🌿",
+          "summary": "Get something real growing -- the first step of any garden.",
+          "difficulty": "EASY",
+          "reward_xp": 15,
+          "skill_rewards": [{"skill_id": "gardening", "xp": 15}, {"skill_id": "seed_starting", "xp": 15}]
+        },
+        {
+          "name": "Prepare a Garden Bed",
+          "icon": "🪱",
+          "summary": "Real soil work -- testing, amending, and preparing ground worth planting in.",
+          "difficulty": "NORMAL",
+          "reward_xp": 25,
+          "skill_rewards": [{"skill_id": "gardening", "xp": 30}, {"skill_id": "soil_science", "xp": 25}]
+        },
+        {
+          "name": "Harvest Your First Crop",
+          "icon": "🌽",
+          "summary": "The real payoff -- something you grew, ready to eat.",
+          "difficulty": "NORMAL",
+          "reward_xp": 40,
+          "skill_rewards": [{"skill_id": "gardening", "xp": 50}, {"skill_id": "food_production", "xp": 30}]
+        }
+      ]
+    },
+    {
+      "pathway_id": "foundational_strength",
+      "skill_id": "strength",
+      "name": "Foundational Strength",
+      "description": "Build a real, sustained workout habit and hit a genuine milestone.",
+      "steps": [
+        {
+          "name": "Complete Your First Full Workout",
+          "icon": "💪",
+          "summary": "One real session, start to finish -- everything else builds from here.",
+          "difficulty": "EASY",
+          "reward_xp": 15,
+          "skill_rewards": [{"skill_id": "strength", "xp": 15}]
+        },
+        {
+          "name": "Log 5 Workout Sessions",
+          "icon": "🏋️",
+          "summary": "Consistency over any single session -- five real workouts logged.",
+          "difficulty": "NORMAL",
+          "reward_xp": 30,
+          "skill_rewards": [{"skill_id": "strength", "xp": 40}]
+        },
+        {
+          "name": "Set a New Personal Record",
+          "icon": "🏆",
+          "summary": "Real, measurable progress -- beat a number you've actually logged before.",
+          "difficulty": "HARD",
+          "reward_xp": 50,
+          "skill_rewards": [{"skill_id": "strength", "xp": 60}, {"skill_id": "endurance", "xp": 30}]
+        }
+      ]
+    },
+    {
+      "pathway_id": "kitchen_explorer",
+      "skill_id": "cooking",
+      "name": "Kitchen Explorer",
+      "description": "From one new recipe to cooking for someone else.",
+      "steps": [
+        {
+          "name": "Cook a New Recipe",
+          "icon": "🍳",
+          "summary": "Something you haven't made before -- real practice, not a repeat.",
+          "difficulty": "EASY",
+          "reward_xp": 15,
+          "skill_rewards": [{"skill_id": "cooking", "xp": 15}]
+        },
+        {
+          "name": "Cook 5 Different Meals This Month",
+          "icon": "🍽️",
+          "summary": "Real variety in the kitchen, not the same three meals on repeat.",
+          "difficulty": "NORMAL",
+          "reward_xp": 30,
+          "skill_rewards": [{"skill_id": "cooking", "xp": 40}]
+        },
+        {
+          "name": "Host a Meal for Someone Else",
+          "icon": "🍽️",
+          "summary": "Cooking for someone else raises the bar -- and it's real hospitality practice too.",
+          "difficulty": "NORMAL",
+          "reward_xp": 40,
+          "skill_rewards": [{"skill_id": "cooking", "xp": 50}, {"skill_id": "hospitality", "xp": 30}]
+        }
+      ]
+    }
+  ]
+}
