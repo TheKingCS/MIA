@@ -19,19 +19,23 @@ notification config, non-blocking firmware pulses) — none of that
 depended on tank size. What changes is the physical BOM and the
 fishless-cycle-then-stock timeline below.
 
-## Fish: species still open, two real candidates researched
+## Fish: bluegill/sunfish — decided 2026-09-10
 
-The tank owner is deciding between two species suited to a 55-gallon
-system — not tilapia, which the full-scale plan is built around but
-which needs more room and warmer water than this tank/climate
-comfortably supports at real stocking density:
+**Bluegill / sunfish (*Lepomis macrochirus*)** — chosen over both
+goldfish (ornamental, disproportionately high-bioload per pound — see
+below) and tilapia (the full-scale plan's species, but needs more room
+and warmer water than this tank/climate comfortably supports at real
+stocking density). Real, cited profile now in `core/species_registry.py`'s
+`BASELINE_SPECIES` (`common_name: "Bluegill"`) so
+`modules/aquaponics_cell.py`'s water-temp thermal-stress monitoring has
+a real range to check against once fish are actually stocked:
 
-**Bluegill / sunfish (*Lepomis* spp.)** — a real local/native food
-fish, not ornamental:
 - Ideal range 68-79°F (20-26°C); tolerates a wider swing than a
   tropical species like tilapia — likely no water heater needed for
   most indoor/climate-controlled setups, confirm against your actual
   ambient conditions before assuming.
+- pH tolerance 6.5-8.5 — matches this pilot's existing `ph_target_min`/
+  `ph_target_max` (6.6-7.2) comfortably.
 - Real stocking rule of thumb: ~1 lb of bluegill per 10 gallons in a
   system with adequate filtration. At 55 gallons, that supports
   roughly 3-5 adult bluegill (bluegill can reach ~12 inches / ~1 lb) —
@@ -39,27 +43,17 @@ fish, not ornamental:
 - A real, harvestable food fish — keeps this pilot representative of
   the eventual full-scale food-production goal, unlike an ornamental
   species.
+- Real, honest caveat on timeline: grow-out to a marketable ~3/4-1.25
+  lb fish is commonly cited as 12-24+ months depending on conditions —
+  this is a multi-season commitment, not a quick harvest.
 
-**Goldfish** — the fallback "something smaller" option:
-- Extremely cold-hardy and forgiving of water-quality swings — the
-  most beginner-forgiving option, useful if this is also meant to
-  de-risk early dosing/calibration mistakes.
-- Real caveat: goldfish are a disproportionately HIGH-bioload fish for
-  their size (a single goldfish can out-produce several small tropical
-  fish combined in ammonia output) — the grow bed/plant uptake needs to
-  be sized for that, not for the fish's modest size alone. Rule of
-  thumb: ~1 inch of goldfish per gallon.
-- Ornamental, not a food fish — doesn't validate real edible-species
-  growth/stocking dynamics the way bluegill would.
-
-**Recommendation, not a decision made for you**: bluegill/sunfish is
-the better proof-of-concept match for a FOOD-production full-scale
-system (real food fish, native/no-heater-likely, real stocking density
-fits 55 gallons cleanly per the math above). Goldfish is the safer
-first-timer's choice if minimizing livestock risk during dosing
-calibration matters more than production realism this round. Either
-way: **fishless-cycle first** (see priorities below) — no fish go in
-until the biofilter is proven, regardless of species.
+**Not done yet, a real physical step for later**: once fish are
+actually stocked, set the pilot tank's `tanks.species` to `"Bluegill"`
+(matches `species_profiles.common_name`) so the thermal-stress
+monitoring picks up this real range automatically — no code change
+needed, just real data entry once the tank has real fish in it.
+**Fishless-cycle first** (see priorities below) — no fish go in until
+the biofilter is proven, regardless of species.
 
 ## Side-by-side
 
@@ -67,7 +61,7 @@ until the biofilter is proven, regardless of species.
 |---|---|---|
 | Tank | 55-gal | 500–1,000 gal, split across 2+ tanks |
 | Grow bed | Small media bed or raft, sized to real bioload — not yet purchased, see below | 1:1–2:1 sqft-to-gallons, media bed |
-| Fish | 3-5 bluegill, or a smaller number of goldfish (species still open, see above) | Tilapia, real stocking density |
+| Fish | 3-5 bluegill (*Lepomis macrochirus*) — decided, see above | Tilapia, real stocking density |
 | Cells (software) | 1 (`pilot_cell`) | 2–3, modular — each an independent `AquaponicsCell` config entry |
 | MCUs | 1 (covers pH dosing; add a 2nd for fertilizer once EC loop is added) | 3 per cell (watering, fertilizer, pH dosing) |
 | Dosing pumps | 1 (pH-up) today; pH-down likely needed once real fish bioload is observed — not yet bought | 3 per cell |
@@ -120,9 +114,9 @@ specific product without verifying it first)**:
   was pushing pH down); real fish bioload may change that. Recommend
   waiting for real pH-drift data from the fishless-cycle period before
   buying a second pump you might not need.
-- **The fish themselves** — species TBD per above; cost depends on the
-  final choice and local source (bait shop/hatchery for bluegill vs.
-  pet store for goldfish), not researched here.
+- **The fish themselves** — bluegill, 3-5 of them per the stocking math
+  above; real cost depends on local source (bait shop/hatchery/local
+  fishing, common for bluegill specifically), not researched here.
 
 ## What the pilot is FOR (in priority order) — fish-inclusive revision
 
@@ -165,7 +159,7 @@ specific product without verifying it first)**:
   500-gallon pulse are not the same number, but 55 gallons is a much
   closer real analog to full scale than 5 gallons was
 - `physics_sim.py`'s drift constants — same mechanism, new numbers
-- Fish stocking density/species — bluegill/goldfish inform the general
+- Fish stocking density/species — bluegill informs the general
   husbandry practice; full scale still plans around tilapia specifically
 
 **Genuinely new:**

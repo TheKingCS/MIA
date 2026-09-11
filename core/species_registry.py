@@ -130,11 +130,38 @@ BASELINE_SPECIES = [
         "days_to_maturity": 365,
         "notes": "Cold-water fish — a genuine contrast to tilapia/catfish's warm-water "
                  "range. NOT checked by core/bed_planting.py's cell-compatibility warning, "
-                 "though — that check only ever sees bed_plantings (grow-bed PLANTS); fish "
-                 "are tracked via tanks.species, a free-text field with no species_profiles "
-                 "link at all right now. This fish's real value here is as documented data, "
-                 "not as an automatically-checked one — see Spinach/Cucumber below for the "
-                 "actual compatibility-check gap this seeding pass found and fixed.",
+                 "though — that check only ever sees bed_plantings (grow-bed PLANTS). Fish are "
+                 "tracked via tanks.species, a free-text field — modules/aquaponics_cell.py's "
+                 "water-temp thermal-stress monitoring DOES resolve it against species_profiles "
+                 "(a LIKE match on common_name, see that file's own docstring), added after this "
+                 "entry was first written; this note originally said no such link existed at "
+                 "all, corrected 2026-09-10 while adding the Bluegill entry below. This fish's "
+                 "real value here is still mostly as documented reference data for this project "
+                 "today, since no cell has ever actually been stocked with one.",
+    },
+    {
+        "common_name": "Bluegill", "organism_type": "fish",
+        "scientific_name": "Lepomis macrochirus",
+        "ph_min": 6.5, "ph_max": 8.5, "ec_min": None, "ec_max": None,
+        "temp_water_min": 68, "temp_water_max": 79,
+        "temp_air_min": None, "temp_air_max": None,
+        "days_to_maturity": 365,
+        "notes": "2026-09-10: added for the pilot's revised 55-gallon, fish-inclusive scope "
+                 "(docs/PILOT_VS_SCALE.md) — the project owner's chosen species, over tilapia "
+                 "at this tank size (tilapia needs more room and warmer water than 55 gallons "
+                 "comfortably supports) and over goldfish (ornamental, disproportionately "
+                 "high-bioload per pound). A real local/native food fish. Tolerates a much wider "
+                 "temperature range than tilapia/catfish — likely no water heater needed for "
+                 "most indoor setups, unlike this project's other warm-water fish entries. Real "
+                 "stocking rule of thumb: ~1 lb bluegill per 10 gallons with adequate filtration "
+                 "— supports roughly 3-5 adult bluegill in a 55-gallon tank. Grow-out time to "
+                 "harvest size varies widely by conditions (commonly cited as 12-24+ months for "
+                 "a marketable ~3/4-1.25 lb fish; up to 1 lb in a year is achievable under "
+                 "optimal feeding/temperature) — 365 days here is a representative, optimistic "
+                 "figure, not a guarantee. Once real fish are physically stocked, set the "
+                 "pilot tank's tanks.species to 'Bluegill' (matches this common_name) so "
+                 "aquaponics_cell.py's thermal-stress monitoring picks up this real range "
+                 "automatically — not done yet, since no fish exist in the tank today.",
     },
 ]
 
