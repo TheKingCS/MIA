@@ -87,6 +87,22 @@
     { "skill_id": "teaching", "name": "Teaching", "category": "Social", "icon": "🎓", "tier": 2, "prerequisite_skill_ids": ["communication", "learning"] },
     { "skill_id": "organization", "name": "Organization", "category": "Social", "icon": "🗂️", "tier": 1 },
     { "skill_id": "cooking", "name": "Cooking", "category": "Social", "icon": "🍳", "tier": 1 },
-    { "skill_id": "household_management", "name": "Household Management", "category": "Social", "icon": "🏡", "tier": 2, "prerequisite_skill_ids": ["organization", "cooking"] }
+    { "skill_id": "household_management", "name": "Household Management", "category": "Social", "icon": "🏡", "tier": 2, "prerequisite_skill_ids": ["organization", "cooking"] },
+
+    { "skill_id": "carpentry", "name": "Carpentry", "category": "Construction", "icon": "🪚", "tier": 1 },
+    { "skill_id": "plumbing", "name": "Plumbing", "category": "Construction", "icon": "🚿", "tier": 1 },
+    { "skill_id": "concrete", "name": "Concrete", "category": "Construction", "icon": "🪨", "tier": 1 },
+    { "skill_id": "hvac", "name": "HVAC", "category": "Construction", "icon": "🌡️", "tier": 1 },
+    { "skill_id": "drywall", "name": "Drywall", "category": "Construction", "icon": "⬜", "tier": 1 },
+    { "skill_id": "code_standards", "name": "Code Standards", "category": "Construction", "icon": "📋", "tier": 1 },
+    { "skill_id": "electrical_wiring", "name": "Electrical Wiring", "category": "Construction", "icon": "💡", "tier": 1 },
+    { "skill_id": "insulation", "name": "Insulation", "category": "Construction", "icon": "🛡️", "tier": 1 },
+    { "skill_id": "painting_finishing", "name": "Painting & Finishing", "category": "Construction", "icon": "🎨", "tier": 1 },
+    { "skill_id": "framing", "name": "Framing", "category": "Construction", "icon": "📐", "tier": 2, "prerequisite_skill_ids": ["carpentry"] },
+    { "skill_id": "foundation_work", "name": "Foundation Work", "category": "Construction", "icon": "🧱", "tier": 2, "prerequisite_skill_ids": ["concrete"] },
+    { "skill_id": "masonry", "name": "Masonry", "category": "Construction", "icon": "🏛️", "tier": 2, "prerequisite_skill_ids": ["concrete"] },
+    { "skill_id": "roofing", "name": "Roofing", "category": "Construction", "icon": "🏠", "tier": 2, "prerequisite_skill_ids": ["framing"] },
+    { "skill_id": "permitting_inspection", "name": "Permitting & Inspection", "category": "Construction", "icon": "📝", "tier": 2, "prerequisite_skill_ids": ["code_standards"] },
+    { "skill_id": "home_building", "name": "Home Building", "category": "Construction", "icon": "🏡", "tier": 3, "prerequisite_skill_ids": ["carpentry", "framing", "plumbing", "electrical_wiring", "hvac", "code_standards", "foundation_work"] }
   ]
 }

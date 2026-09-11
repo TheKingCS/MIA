@@ -7375,3 +7375,47 @@ Recommendations (they surface through the existing toast/notification
 center, same as Smart Suggestions); generalizing beyond Maintenance to
 other domains; the Activity index; `context_assembler.py`; Mission's
 own deferred "Manage Skills" UI; multi-model AI routing.
+
+## My Hero's Path: a "Construction" skill category (2026-09-11)
+
+User's own real goal — progression in home-building trade skills
+(carpentry, plumbing, concrete, HVAC, drywall, code standards, etc.) —
+scoped via `AskUserQuestion` to exactly one thing: a new skill category
+in the existing tree, not a dedicated module/section. Confirmed
+deliberately: this is pure data added to `data/skill_definitions.json`,
+zero new code — `core/skill_manager.py`, `is_unlocked()`,
+`core.gamification.grant_xp()`, and `modules/skills/module.py`'s
+category-tabbed UI already handle any well-formed category
+automatically, and did, verified below.
+
+**15 new skills** (95 total, up from 80): `carpentry`, `plumbing`,
+`concrete`, `hvac`, `drywall`, `code_standards`, `electrical_wiring`
+(deliberately distinct from Maker's `electronics` — house wiring is a
+different trade from circuit-level electronics), `insulation`,
+`painting_finishing` (all tier 1); `framing` (needs carpentry),
+`foundation_work`/`masonry` (both need concrete), `roofing` (needs
+framing), `permitting_inspection` (needs code_standards) (tier 2); and
+one real capstone, `home_building` (tier 3, needs all of carpentry,
+framing, plumbing, electrical_wiring, hvac, code_standards, and
+foundation_work — the first 7-way prerequisite in this taxonomy,
+directly modeling "these are the trades that actually go into building
+a home," same cross-category-unlock spirit as the original seed's
+`robotics`/`autonomous_systems`).
+
+**Verification**: same validation script used when the taxonomy was
+first seeded (no duplicate skill_ids across all 95, no dangling
+prerequisites) plus the full test suite (2411 passing, unchanged count
+— pure data, no new tests needed since the consuming code was already
+covered). Manual headless-Qt verification against a throwaway repo
+copy: confirmed `home_building` stays locked until all 7 prerequisite
+trades have real XP then unlocks the moment the last one does; confirmed
+`framing`/`roofing`'s 2-level chain requires each prerequisite to have
+its *own* XP, not just be itself unlocked (a second profile made this
+concrete: framing unlocked once carpentry had XP, but roofing stayed
+locked until framing itself — not just carpentry — had real XP);
+screenshotted the new Construction tab rendering all 15 skills
+correctly, including two skills (`foundation_work`/`masonry`) that
+correctly show "(Locked)" despite already having their own XP, since
+`concrete` — their shared prerequisite — has none yet, proving Phase
+1's "grant XP even when locked" design still holds exactly as
+documented.
