@@ -444,6 +444,97 @@ def test_other_field_changes_do_not_publish_mission_completed(isolated_paths):
 
 
 # ----------------------------------------------------------------------
+# abandon_reason / "mission.abandoned" event — mission failure/struggle
+# signal (2026-09-11)
+# ----------------------------------------------------------------------
+
+def test_abandon_reason_defaults_to_empty_string(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+
+    assert mission.abandon_reason == ""
+
+
+def test_abandon_reason_round_trips_through_to_dict_from_dict(isolated_paths):
+    from core.mission_manager import Mission
+
+    mission = Mission(mission_id="m1", name="X", status="abandoned", abandon_reason="too_hard")
+
+    reloaded = Mission.from_dict(mission.to_dict())
+
+    assert reloaded.abandon_reason == "too_hard"
+
+
+def test_old_missions_without_abandon_reason_deserialize_fine(isolated_paths):
+    from core.mission_manager import Mission
+
+    data = {"mission_id": "m1", "name": "X", "status": "abandoned"}  # no "abandon_reason" key at all
+
+    reloaded = Mission.from_dict(data)
+
+    assert reloaded.abandon_reason == ""
+
+
+def test_abandoning_a_mission_publishes_mission_abandoned(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.abandoned", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+
+    assert received == [{"mission_id": mission.mission_id, "reason": "too_hard"}]
+
+
+def test_reabandoning_a_mission_does_not_republish_mission_abandoned(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.abandoned", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+
+    assert len(received) == 1
+
+
+def test_reactivating_then_reabandoning_refires_mission_abandoned(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.abandoned", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+    context.missions.update_mission(mission.mission_id, status="active")
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="not_interested")
+
+    assert received == [
+        {"mission_id": mission.mission_id, "reason": "too_hard"},
+        {"mission_id": mission.mission_id, "reason": "not_interested"},
+    ]
+
+
+def test_other_field_changes_do_not_publish_mission_abandoned(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    received = []
+    context.events.subscribe("mission.abandoned", lambda **kwargs: received.append(kwargs))
+
+    context.missions.update_mission(mission.mission_id, name="Renamed")
+
+    assert received == []
+
+
+def test_unrecognized_abandon_reason_is_stored_as_is(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+
+    updated = context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="weather")
+
+    assert updated.abandon_reason == "weather"
+
+
+# ----------------------------------------------------------------------
 # skill_rewards — "My Hero's Path" (2026-09-11)
 # ----------------------------------------------------------------------
 

@@ -92,6 +92,7 @@ _MAX_SKILL_XP_PER_PROPOSAL_ENTRY = 50
 _MAX_TRAINED_SKILLS_IN_PROMPT = 20
 _MAX_FRONTIER_SKILLS_IN_PROMPT = 15
 _MAX_RECENT_MISSIONS_IN_PROMPT = 5
+_MAX_STRUGGLED_MISSIONS_IN_PROMPT = 5
 
 _PROPOSAL_TAGS = ("Mission", "Summary", "Difficulty", "Skills", "Rationale")
 
@@ -316,6 +317,7 @@ class DiscoveryManager:
                 lines.append("Active projects:")
                 lines.extend(f"- {p.name}" for p in active_projects)
 
+        struggled_with_a_skill = False
         if self.context.missions is not None:
             recent_completed = [m for m in self.context.missions.all_missions() if m.status == "completed"]
             recent_completed = recent_completed[:_MAX_RECENT_MISSIONS_IN_PROMPT]
@@ -323,14 +325,44 @@ class DiscoveryManager:
                 lines.append("Recently completed missions (don't just repeat one of these):")
                 lines.extend(f"- {m.name}" for m in recent_completed)
 
+            # "Mission failure/struggle signal" (2026-09-11) — the real,
+            # deterministic "learns why" step: a mission the user
+            # themselves marked too hard is real evidence a skill area
+            # needs an easier or prerequisite step next, not a harder
+            # one. Only "too_hard" is looked for here — the other
+            # ABANDON_REASONS values are recorded on the Mission but
+            # don't (yet) change what gets proposed.
+            struggled = [
+                m
+                for m in self.context.missions.all_missions()
+                if m.status == "abandoned" and m.abandon_reason == "too_hard" and m.skill_rewards
+            ]
+            struggled = struggled[:_MAX_STRUGGLED_MISSIONS_IN_PROMPT]
+            if struggled:
+                struggled_with_a_skill = True
+                lines.append(
+                    "Found too difficult recently (consider something easier in these skill "
+                    "areas, or a prerequisite step, instead):"
+                )
+                lines.extend(
+                    f"- {m.name} (targeted: {', '.join(w.skill_id for w in m.skill_rewards)})"
+                    for m in struggled
+                )
+
         reference_block = "\n".join(lines) if lines else "No real progress recorded yet — this is a fresh start."
         allowed_ids_text = ", ".join(allowed_skill_ids) if allowed_skill_ids else "(none available)"
+        struggle_instruction = (
+            " If a skill appears in the 'found too difficult' list, prefer an easier step in "
+            "that same skill area, or one that builds a prerequisite, over a harder one."
+            if struggled_with_a_skill
+            else ""
+        )
 
         return (
             "You are MIA, a personal capability-building assistant. Based on the real "
             "information below about what this user has actually done, propose ONE new "
             "mission -- a concrete, real-world action -- that would be a useful next step "
-            "for them.\n\n"
+            f"for them.{struggle_instruction}\n\n"
             f"{reference_block}\n\n"
             f"You may ONLY reference these exact skill ids in your answer: {allowed_ids_text}. "
             "Never invent a new skill id, and never claim the user has already done something "

@@ -23,6 +23,7 @@ from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.discovery_manager import DiscoveryManager
 from core.event_bus import EventBus
+from core.gamification import SkillWeight
 from core.intent_manager import IntentManager
 from core.mission_manager import MissionManager
 from core.project_manager import ProjectManager
@@ -137,6 +138,47 @@ def test_prompt_includes_recently_completed_missions(isolated_paths):
 
     assert "Recently completed missions" in prompt
     assert "Build a Birdhouse" in prompt
+
+
+def test_prompt_flags_a_too_hard_abandoned_mission_and_its_skill(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    mission = context.missions.add_mission(
+        name="Frame a Small Wall Section", skill_rewards=[SkillWeight("framing", 40)]
+    )
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Found too difficult recently" in prompt
+    assert "Frame a Small Wall Section (targeted: framing)" in prompt
+    assert "prefer an easier step" in prompt
+
+
+def test_prompt_ignores_a_mission_abandoned_for_another_reason(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    mission = context.missions.add_mission(name="Frame a Small Wall Section", skill_rewards=[SkillWeight("framing", 40)])
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="not_interested")
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Found too difficult recently" not in prompt
+    assert "prefer an easier step" not in prompt
+
+
+def test_prompt_ignores_a_too_hard_mission_with_no_skill_rewards(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    mission = context.missions.add_mission(name="Some Generic Goal")
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Found too difficult recently" not in prompt
 
 
 def test_prompt_degrades_gracefully_with_no_projects_or_intents_wired(isolated_paths):

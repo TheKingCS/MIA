@@ -40,10 +40,11 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
-from core.mission_manager import DIFFICULTY_LEVELS, Mission
+from core.mission_manager import ABANDON_REASONS, DIFFICULTY_LEVELS, Mission
 
 _STATUSES = ("active", "completed", "abandoned")
 _MISSION_TYPES = ("OPTIONAL MISSION", "DAILY MISSION", "MAIN MISSION")
+_NO_ABANDON_REASON = "(none)"
 
 
 class AddEditMissionDialog(QDialog):
@@ -113,11 +114,23 @@ class AddEditMissionDialog(QDialog):
             layout.addRow("Linked Project (optional):", self.project_combo)
 
         self.status_combo: Optional[QComboBox] = None
+        self.abandon_reason_combo: Optional[QComboBox] = None
         if self._editing:
             self.status_combo = QComboBox()
             for status in _STATUSES:
                 self.status_combo.addItem(status.capitalize(), status)
             layout.addRow("Status:", self.status_combo)
+
+            # "Mission failure/struggle signal" (2026-09-11) — only
+            # meaningful when Status is "Abandoned"; _on_accept() below
+            # forces this back to "" whenever the chosen status isn't
+            # abandoned, so a stray selection here never sticks to a
+            # mission that isn't actually abandoned.
+            self.abandon_reason_combo = QComboBox()
+            self.abandon_reason_combo.addItem(_NO_ABANDON_REASON, "")
+            for reason in ABANDON_REASONS:
+                self.abandon_reason_combo.addItem(reason.replace("_", " ").capitalize(), reason)
+            layout.addRow("Abandon reason:", self.abandon_reason_combo)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -139,6 +152,7 @@ class AddEditMissionDialog(QDialog):
         self._mission_type: str = "OPTIONAL MISSION"
         self._reward_xp: int = 0
         self._reward_credits: int = 0
+        self._abandon_reason: str = ""
 
     def _prefill(self, mission: Optional[Mission]) -> None:
         if mission is None:
@@ -156,6 +170,9 @@ class AddEditMissionDialog(QDialog):
         if self.status_combo is not None:
             status_index = self.status_combo.findData(mission.status)
             self.status_combo.setCurrentIndex(status_index if status_index != -1 else 0)
+        if self.abandon_reason_combo is not None:
+            reason_index = self.abandon_reason_combo.findData(mission.abandon_reason)
+            self.abandon_reason_combo.setCurrentIndex(reason_index if reason_index != -1 else 0)
 
     def _on_accept(self) -> None:
         name = self.name_edit.text().strip()
@@ -177,6 +194,11 @@ class AddEditMissionDialog(QDialog):
             self._project_id = self.project_combo.currentData()
         if self.status_combo is not None:
             self._status = self.status_combo.currentData()
+        self._abandon_reason = (
+            self.abandon_reason_combo.currentData()
+            if self.abandon_reason_combo is not None and self._status == "abandoned"
+            else ""
+        )
         self.accept()
 
     @property
@@ -222,3 +244,7 @@ class AddEditMissionDialog(QDialog):
     @property
     def entered_reward_credits(self) -> int:
         return self._reward_credits
+
+    @property
+    def entered_abandon_reason(self) -> str:
+        return self._abandon_reason

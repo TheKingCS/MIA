@@ -7603,3 +7603,70 @@ Separately verified the LLM-unavailable path (pointed `llm.base_url`
 at an unreachable port): logged a warning, degraded to `None` at every
 layer, no crash. Screenshotted the Discovery tool in both its
 propose-button and pending-proposal-with-accept/reject states.
+
+## Mission failure/struggle signal (2026-09-11)
+
+The user's own follow-up request mid-Discovery-build: "if we fail a
+mission it learns why and maybe there be a mission to cover the
+lacking area." Flagged then, not folded in — `Mission.status` had
+only ever been `active`/`completed`/`abandoned`, with no real signal
+anywhere for *why*, so nothing existed yet for adaptive remediation to
+key off. This pass builds that missing signal and feeds it into
+Discovery as real context, deliberately stopping short of a hard-coded
+"auto-generate a prerequisite mission" rule — that would be exactly
+the premature adaptive-branching logic already deferred in the
+Discovery/Pathways plans (no real failure signal existed to justify it
+until now).
+
+New `core/mission_manager.py`: `ABANDON_REASONS = ("too_hard",
+"not_interested", "no_time", "other")` (a suggested vocabulary, same
+"unrecognized/blank just means unspecified" spirit as
+`DIFFICULTY_LEVELS` — not hard-enforced) and `Mission.abandon_reason:
+str = ""`. `update_mission()` now fires a new `"mission.abandoned"`
+event (`mission_id`, `reason`) on a genuine transition into
+`"abandoned"`, mirroring `"mission.completed"`'s own transition-
+detection exactly (fires once per real transition, refires on a later
+re-abandon with a different reason). No dedicated method needed —
+confirmed first that `gui/add_edit_mission_dialog.py`'s status combo
+already lets a user abandon a mission today (edit-only, via
+`modules/missions/module.py`'s `_on_edit_mission()`); `abandon_reason`
+is just one more plain field through the same `update_mission(**fields)`
+path. New "Abandon reason" combo in that dialog (edit-only, matching
+the status combo's own gating) — `_on_accept()` forces the reason back
+to `""` whenever the chosen status isn't actually `"abandoned"`, so a
+stray selection never sticks to a mission that isn't abandoned.
+
+`core/discovery_manager.py`'s `build_discovery_prompt()` gains the
+actual "learns why" behavior: missions abandoned specifically with
+`abandon_reason == "too_hard"` (the only reason anything reacts to —
+the other three are recorded but inert for now) surface as a "Found
+too difficult recently" section naming the skill(s) they targeted,
+plus one instruction line asking the model to prefer an easier or
+prerequisite step in that skill area over a harder one. Nothing is
+hard-coded to force a remediation mission — this is real information
+reaching the LLM's reasoning, still fully gated by the existing,
+unchanged `parse_and_validate_proposal()`.
+
+**Verified for real**: 11 new tests (8 in `test_mission_manager.py`,
+3 in `test_discovery_manager.py`) — full suite 2474 passing, zero
+regressions. Manual end-to-end verification against a throwaway repo
+copy: abandoned a real Mission ("Frame a Small Wall Section," targeting
+`framing`) as "Too hard" through the actual edit dialog (screenshotted),
+confirmed `abandon_reason` persisted, then generated a real Discovery
+prompt and confirmed it contained the exact "Found too difficult
+recently" section and instruction line. **Honest, real observation,
+not a bug in this pass**: in that same run, `framing` itself didn't
+appear in the prompt's own "available next" skill list at all — not
+because it was locked (its only prerequisite, `carpentry`, already had
+real XP), but because `build_discovery_prompt()`'s existing
+`_MAX_FRONTIER_SKILLS_IN_PROMPT` cap (15, from the original Discovery
+pass) filled up with other categories first in `all_skills()`'s
+definition order before reaching Construction skills. The struggle
+section still surfaced correctly regardless (it isn't limited to the
+capped frontier list), and the model responded with a different,
+still-sensible proposal — but a real future refinement worth noting:
+the frontier list could prioritize skills named in the struggle
+section so the model can actually consider proposing something in that
+same skill area, not just avoid repeating the exact abandoned mission.
+Not fixed this pass — flagged honestly rather than silently left for
+someone to rediscover.

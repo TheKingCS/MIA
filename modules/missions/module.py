@@ -433,6 +433,7 @@ class MissionsModule(ModuleBase):
             mission_type=dialog.entered_mission_type,
             reward_xp=dialog.entered_reward_xp,
             reward_credits=dialog.entered_reward_credits,
+            abandon_reason=dialog.entered_abandon_reason,
         )
         self._refresh()
 

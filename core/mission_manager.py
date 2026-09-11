@@ -165,6 +165,15 @@ class Objective:
 #: core/trip_manager.py's ACTIVITY_TYPES.
 DIFFICULTY_LEVELS: tuple[str, ...] = ("EASY", "NORMAL", "HARD")
 
+#: Suggested vocabulary for Mission.abandon_reason (2026-09-11, the
+#: "mission failure/struggle signal" pass) — same "unrecognized/blank
+#: just means unspecified" spirit as DIFFICULTY_LEVELS above, not a
+#: hard-enforced enum. "too_hard" is the one core/discovery_manager.py
+#: actually looks for (a real signal that a skill area needs an easier
+#: or prerequisite step next) — the others exist so the reason is at
+#: least recorded, even though nothing reacts to them yet.
+ABANDON_REASONS: tuple[str, ...] = ("too_hard", "not_interested", "no_time", "other")
+
 
 @dataclass
 class Mission:
@@ -181,6 +190,13 @@ class Mission:
     # rule trip_id already follows.
     project_id: Optional[str] = None
     status: str = "active"  # "active" | "completed" | "abandoned"
+    # The "mission failure/struggle signal" pass (2026-09-11) — why an
+    # abandoned mission was abandoned, one of ABANDON_REASONS above (or
+    # "" — no reason recorded, e.g. every mission abandoned before this
+    # field existed). Only meaningful when status == "abandoned"; see
+    # gui/add_edit_mission_dialog.py for how the UI keeps a stray value
+    # here from sticking to a mission that isn't actually abandoned.
+    abandon_reason: str = ""
     assigned_by: str = "user"  # "user" | "mia" — see module docstring's "2026-07-16 gamification pass"
     objectives: list[Objective] = field(default_factory=list)
     created_at: str = ""  # ISO datetime
@@ -215,6 +231,7 @@ class Mission:
             "task_id": self.task_id,
             "project_id": self.project_id,
             "status": self.status,
+            "abandon_reason": self.abandon_reason,
             "assigned_by": self.assigned_by,
             "objectives": [o.to_dict() for o in self.objectives],
             "created_at": self.created_at,
@@ -238,6 +255,7 @@ class Mission:
             task_id=data.get("task_id"),
             project_id=data.get("project_id"),
             status=data.get("status", "active"),
+            abandon_reason=data.get("abandon_reason", ""),
             assigned_by=data.get("assigned_by", "user"),
             objectives=[Objective.from_dict(d) for d in data.get("objectives", [])],
             created_at=data.get("created_at", ""),
@@ -335,6 +353,7 @@ class MissionManager:
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
         was_completed = mission.status == "completed"
+        was_abandoned = mission.status == "abandoned"
         for key, value in fields.items():
             if key in ("created_at", "trip_id", "project_id"):
                 raise ValueError(f"'{key}' can't be set through update_mission().")
@@ -357,6 +376,17 @@ class MissionManager:
             # before this. Fires exactly once, on the same real
             # transition as the celebration/reward-crediting above.
             self.context.events.publish("mission.completed", mission_id=mission.mission_id)
+        # "Mission failure/struggle signal" (2026-09-11) — same
+        # transition-detection shape as mission.completed above, fires
+        # once per genuine active/completed -> abandoned transition
+        # (and again on a later re-abandon, same re-triggering
+        # semantics mission.completed already has). Lets
+        # core/discovery_manager.py react to *why* without this module
+        # needing to know Discovery exists.
+        if not was_abandoned and mission.status == "abandoned":
+            self.context.events.publish(
+                "mission.abandoned", mission_id=mission.mission_id, reason=mission.abandon_reason
+            )
         return mission
 
     def _credit_mission_rewards(self, mission: Mission) -> None:
