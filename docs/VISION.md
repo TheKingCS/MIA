@@ -655,6 +655,111 @@ architecture call in this codebase, not guessed at here.
    adapted to JSON (`core/material_manager.py` + the rest of the
    production pipeline), see `docs/ROADMAP.md`.
 
+## MIA as a Personal "User OS" — AR/XR as a future interface target (2026-09-11)
+
+Extends, rather than replaces, the "Multi-platform architecture +
+browser/XR support" concept already resolved above (2026-07-15: Core
+stays offline-capable, Home gets a deep-reasoning hand-off plus a
+streaming access mode). This section names the destination more
+concretely: MIA eventually becomes a persistent personal capability
+layer — a "User OS" — that the user can reach from anywhere, with an
+AR/XR HUD (loosely inspired by *Free Guy*'s overlay feel and *My
+Vampire System*'s "Inspect" ability, neither literally copied) as one
+future interface among several, never the only one.
+
+**The architectural constraint this section exists to state, explicitly
+not a build request**: the intelligence/data layer this session's
+"Hero's Path" work has been building all along — Skills, Missions,
+Pathways, Projects, Intent, and now Discovery's proposal loop
+(`core/skill_manager.py`, `core/mission_manager.py`,
+`core/pathway_manager.py`, `core/project_manager.py`,
+`core/intent_manager.py`, `core/discovery_manager.py`, all `docs/
+ROADMAP.md` 2026-09-11) — must stay interface-agnostic. None of it may
+assume the desktop GUI is its only or final consumer:
+
+```
+MIA Core / User Model
+    -> Context + Knowledge + Skills + Projects + Activities + Insights + Recommendations
+    -> Interfaces: Desktop, Mobile, Voice, Wearable, AR/XR HUD, eventually other devices/robots
+```
+
+This is already largely true by construction, not by new design effort:
+every manager built this session takes an `AppContext` and returns
+plain dataclasses — nothing in `core/` imports `gui/` or `PySide6`
+(the existing layering rule, `CLAUDE.md`), and Core's own headless
+voice-loop entry point (`core/core_runtime.py`) already proves the same
+manager stack runs with zero GUI at all. A future AR/XR HUD is, in
+architectural terms, just another thin client alongside `gui/` and
+`core/core_runtime.py`'s voice loop — not a rewrite of anything below
+that line. The discipline going forward is negative, not additive: keep
+resisting the temptation to let a new manager reach into `gui/` for
+convenience, the same discipline already enforced everywhere else in
+this codebase.
+
+### "Inspect" — a future query capability, not started
+
+The user wants an eventual `"Inspect me"` / `"Inspect [object]"`
+capability: a structured self-report (Knowledge / Capabilities / Active
+/ Potential, mapped directly onto Skills + demonstrated capabilities +
+current Intent/Projects/Missions + Discovery's "what's next" reasoning)
+and, later, a contextual version (AR glasses looking at a real object —
+what it is, what project/mission it belongs to, safety info, relevant
+skills, next actions). This is explicitly **not** scoped for
+implementation now — it depends on capability-status tracking
+(Locked/Learning/Practiced/Demonstrated, itself already flagged as
+deferred in `docs/ROADMAP.md`'s Mission Pathways/Discovery entries) and,
+for the contextual/object-recognition version, camera hardware and
+on-device classification this document already flags as the single
+biggest open hardware question (see the "Camera + on-device species/
+plant identification" critical-evaluation bullet above — the identical
+capability, different subject). Recorded here so the eventual
+`"Inspect"` command has an obvious home once those prerequisites exist,
+not designed further.
+
+### Classroom as the future knowledge/education layer
+
+The user wants an existing "Classroom module" (K-12 homeschooling +
+trades education) to become the knowledge layer of this loop —
+recognizing "I want to accomplish X but lack knowledge Y" and connecting
+Missions/Pathways/Discovery proposals to real lessons, tutorials,
+reference material, and practice exercises.
+
+**Confirmed via direct search, not assumed: no Classroom module exists
+anywhere in this repository** — zero matches for "classroom" across
+`core/`, `modules/`, or any doc in this repo. Same "confirm before
+building on top of it" discipline as the MIA Home handoff-doc audit
+above. This doesn't mean the idea is wrong — it means either it lives
+in a separate, not-yet-merged project, or it's genuinely unbuilt and
+should be tracked as a new future module here rather than an
+integration point that already exists. Worth resolving directly with
+the user before any future phase assumes a real Classroom module to
+connect to.
+
+The envisioned full loop, for when both a real Classroom module and
+real capability-status tracking exist:
+
+```
+Intent (what do I ultimately want?)
+  -> Path/Skill Tree (what capabilities do I need?)
+  -> Classroom/Knowledge (what do I need to learn?)
+  -> Mission (what should I actually do?)
+  -> Activity (what did I actually do?)
+  -> Assessment/Evidence (can I demonstrate it?)
+  -> Skill/Capability (what have I become capable of?)
+  -> Insight (what did MIA notice about my development?)
+  -> Recommendation (what's next?)
+  -> New Mission (repeat)
+```
+
+This is a real extension of the loop `docs/ROADMAP.md`'s Discovery entry
+already implements a first slice of (state -> proposal -> validation ->
+accept -> completion -> new state -> next proposal) — Classroom would
+sit between "Path/Skill Tree" and "Mission" as a new knowledge-gap-
+detection step, not a parallel system. Not designed further here; the
+same "prove the smaller loop first" discipline that shaped Discovery's
+v1 scope applies again once a real Classroom module exists to reason
+about.
+
 ## Why this is a separate document from ROADMAP.md
 
 This vision includes ideas (a multi-agent "Expert Council," genetic
@@ -775,6 +880,11 @@ the other.
   `core/device_help_manager.py`'s own docstring already applies to doc
   retrieval. A fuller graph/tree *visualization* is real, separate UI
   scope, still unbuilt.
+- **The Classroom module the "User OS" vision wants to connect
+  everything to does not exist in this repository — confirmed by
+  direct search, not assumed.** See the dedicated section above. Any
+  future phase that treats Classroom as an integration point rather
+  than a from-scratch build needs this resolved with the user first.
 - **This update's own scope is, by a wide margin, the largest single
   addition to this document since the 2026-07-14 wearable-companion
   pass** — voice-first primacy, intelligent UI navigation, proactive
@@ -824,6 +934,9 @@ the other.
 | **Self-knowledge** (2026-07-15 addition: MIA can explain any of her own modules/features/workflows conversationally) | Project 1. Directly extends `core/device_help_manager.py`'s existing end-user-docs grounding (2026-07-14 part 4) — that system already answers "how do I use X"; this generalizes its coverage and hooks it into the tutorial system above rather than replacing it. **Not a one-time "done" item — ongoing per-module upkeep.** 2026-09-10 fixed a real bug in `core/device_help_manager.py` that was silently suppressing hand-written `docs/user_help/*.md` content whenever a query named its module by name (see `docs/ROADMAP.md`'s dated entry), and backfilled real workflow docs for the 8 modules that had none at the time (Budget, Real Estate, Maintenance, Kitchen, Workout, Relationships, Music, Memories) plus a shared file for smaller system-tier ones. But coverage isn't a checklist that gets fully checked off — **every new module this project ships from here on needs its own `docs/user_help/<module_id>.md` companion, or MIA can only give a one-sentence gloss for it**; revisit this any time a module ships without one. **Hooked into the tutorial/teaching-mode conversation path 2026-09-10** — see the separate "Interactive onboarding + modular tutorial system" row below. |
 | **Multi-platform architecture + browser/XR support** (2026-07-15 addition: the same assistant/memory/modules reachable from desktop, web, mobile, wearable, voice-only, and future AR/XR) | **Resolved 2026-07-15** — see the dedicated "Core/Home split" section above. Core stays fully offline-capable (Project 1); Home (Project 2) gets both a deep-reasoning hand-off and a separate browser/app streaming access mode. Neither built yet, but the architecture question itself is no longer open. |
 | **Educational games** (2026-07-19 addition: games that teach real engineering concepts, homesteading, tool use, electronics, mechanics, and more) | Home (Project 2), new module(s) — desktop-class scope (real game-loop/rendering work), not a Core/field-device feature. Natural links to existing systems rather than a standalone content silo: Workshop & Electronics' component/machine data, the Missions/Gamification engine's objective-tracking primitives, and the Interactive onboarding/tutorial system above ("MIA teaches herself through real conversation and real tasks") are all plausible foundations once this is scoped for real. Not designed yet — flagged here so it isn't lost, same "don't build blind" discipline as everything else in this document. |
+| **MIA as a "User OS" / AR-XR HUD interface** (2026-09-11 addition: a persistent capability layer eventually reachable through an AR/XR contextual HUD, desktop/mobile/voice/wearable all as equal clients of the same core) | See the dedicated section above. Architectural constraint, not new work: the Skills/Missions/Pathways/Projects/Intent/Discovery stack built this session already satisfies it by construction (no `core/` file imports `gui/`; `core/core_runtime.py` already proves the same manager stack runs headless). Extends, doesn't replace, the already-resolved "Multi-platform architecture + browser/XR support" row below. |
+| **"Inspect" capability** (2026-09-11 addition: query MIA about your own capability state, or — later — a real-world object via AR glasses) | Project 1/2, future. Depends on capability-status tracking (Locked/Learning/Practiced/Demonstrated, itself still deferred — see `docs/ROADMAP.md`'s Discovery/Pathways entries) for the self-query form, and on the same camera/on-device-classification hardware question already flagged above for the contextual/object-recognition form. Not designed further. |
+| **Classroom as the knowledge/education layer** (2026-09-11 addition: connect Missions/Pathways/Discovery to real lessons/tutorials/reference material when a capability gap is identified) | **No Classroom module exists in this repository — confirmed by direct search.** See the dedicated section above and its critical-evaluation bullet. Needs resolving with the user (separate unmerged project, or genuinely unbuilt) before this becomes an integration point rather than a from-scratch build. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 
