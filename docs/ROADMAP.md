@@ -6784,3 +6784,20 @@ row) — almost certainly fine for this project's small memory corpus,
 just undocumented as a deliberate tradeoff.
 
 **Verified for real**: 2255 tests passing (69 new), zero regressions.
+
+**Correction (2026-09-11, same day): the Avatar Camera finding above
+was wrong.** It's not a bug — `core/application.py:553-562` (right at
+the registration site the audit was checking) has an explicit comment
+explaining this is a **deliberate** 2026-07-16 pause: VMagicMirror (the
+avatar renderer) is Windows-only, but Project 2's planned Home Cloud
+machine runs Ubuntu for ROCm support — a real architecture conflict,
+not a missing wiring line. Code is deliberately left in place
+unregistered, not deleted, pending one of 3 real options (a Linux-
+native VRM renderer, network-streaming VMagicMirror from a separate
+Windows box, or reconsidering Project 2's OS) — see that entry's own
+`docs/ROADMAP.md` history for the full writeup. Caught when the user
+pushed back with their own memory of the feature ("worked like crap
+last time... more headache than it was worth") rather than accepting
+the audit's framing at face value. Lesson: check for an explanatory
+comment at the exact site before reporting a missing-registration
+finding as a bug.
