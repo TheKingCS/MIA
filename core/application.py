@@ -55,6 +55,7 @@ from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
+from core.maintenance_insights import format_maintenance_insights_message, scan_maintenance_insights
 from core.smart_suggestions import build_smart_suggestions_message
 from core.dashboard_widgets import DashboardWidgetRegistry, WidgetDescriptor
 from core.data_logger_manager import DataLoggerManager
@@ -87,6 +88,7 @@ from core.port_scanner import scan_ports
 from core.energy_manager import EnergyManager
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
+from core.insight_manager import InsightManager
 from core.intent_manager import IntentManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
 from core.plaid_manager import PlaidManager
@@ -240,6 +242,7 @@ class MIAApplication:
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
         self.context.maintenance = MaintenanceManager(self.context)
+        self.context.insights = InsightManager(self.context)
         self.context.budget = BudgetManager(self.context)
         self.context.real_estate = RealEstateManager(self.context)
         self.context.energy = EnergyManager(self.context)
@@ -456,6 +459,23 @@ class MIAApplication:
                     source="system",
                 )
             config.set("system.last_smart_suggestion_date", today_iso)
+            config.save()
+
+        # "Connective infrastructure" phase 3 (2026-09-11) — the first
+        # real observe->insight->recommend scan, piloted in Maintenance.
+        # Same should_run_once_daily()-gated, batched-into-one-message
+        # shape as the Smart Suggestions block right above.
+        if should_run_once_daily(config.get("system.last_maintenance_insight_date"), today_iso):
+            new_insights = scan_maintenance_insights(self.context, now.date())
+            message = format_maintenance_insights_message(new_insights)
+            if message:
+                self.context.notifications.notify(
+                    title="\U0001F527 Maintenance check",
+                    message=message,
+                    level="info",
+                    source="insights",
+                )
+            config.set("system.last_maintenance_insight_date", today_iso)
             config.save()
 
     def _display(self, widget) -> None:

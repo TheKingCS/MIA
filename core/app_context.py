@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from core.finance_manager import FinanceManager
     from core.homestead_manager import HomesteadManager
     from core.intent_manager import IntentManager
+    from core.insight_manager import InsightManager
     from core.inventory_manager import InventoryManager
     from core.job_manager import JobManager
     from core.journal_manager import JournalManager
@@ -99,6 +100,12 @@ class AppContext:
     alarms: Optional["AlarmManager"] = field(default=None, repr=False)
     journal: Optional["JournalManager"] = field(default=None, repr=False)
     inventory: Optional["InventoryManager"] = field(default=None, repr=False)
+    # Connective-infrastructure pass, phase 3 (2026-09-11) — the
+    # observe->insight->recommend layer, piloted in Maintenance
+    # (core/maintenance_insights.py). See core/insight_manager.py's own
+    # docstring for why Insight/Recommendation are real new entities
+    # rather than derived like everything else in that pass.
+    insights: Optional["InsightManager"] = field(default=None, repr=False)
     reference_library: Optional["ReferenceLibraryManager"] = field(default=None, repr=False)
     llm: Optional["LLMManager"] = field(default=None, repr=False)
     voice: Optional["VoiceManager"] = field(default=None, repr=False)

@@ -7277,3 +7277,101 @@ unlock toast, using the real seeded `data/skill_definitions.json` —
 a level boundary (confirmed that toast too) — all three fired with the
 exact expected title/message/source, and the header Level badge
 reflected the change live in a real `MainWindow` instance.
+
+## Connective infrastructure, phase 3: Insight + Recommendation, piloted in Maintenance (2026-09-11)
+
+The first real piece of the observe→understand→insight→recommend→act→
+result→learn loop from the architecture-review discussion — user-
+confirmed as the next slice over the Activity index and Mission's own
+deferred skill-management UI, deliberately piloted in one domain
+(Maintenance) before any generalization.
+
+Research (forked, read-only) before any design found the real starting
+state: Maintenance already has rich, tested pure due-date/trend logic
+(`is_overdue`, `days_until_due`, `is_meter_task_due`,
+`is_sensor_task_due`, and `predicted_due_date` — the last one already
+does real linear usage-rate projection) — but **none of it was ever
+stored or pushed**. It's recomputed fresh every time the Tasks tab
+renders, and zero `notify()` calls existed anywhere in that file. The
+closest existing precedent for "notice something, tell the user, stay
+non-naggy" was `core/smart_suggestions.py`: pure functions, no
+manager, gated by one shared `should_run_once_daily()` check, invoked
+from `core/application.py`'s daily-check timer, batched into one
+notification. This phase reuses that exact proven shape.
+
+**Two small new entities, one manager, no new UI.** New
+`core/insight_manager.py` — `Insight` (a durable "the system noticed
+X" record, deliberately distinct from a `Notification`, which is
+ephemeral/UI-focused) and `Recommendation` ("given this Insight, here's
+a suggested next step"), persisted in `data/insights.json` +
+`data/recommendations.json`. Unlike Achievements (phase 2, which
+needed no new entity — every fact there was derivable from a single
+number), a real-world Insight like "this task is overdue" needs to be
+looked back on, deduplicated against, and resolved later — there's no
+single number to derive it from on demand, so these are genuinely new,
+persisted state.
+
+**Idempotent creation is the whole "never naggy" mechanism.** Unlike
+Smart Suggestions' checks (self-resolving by date-exact math — a
+birthday reminder is only ever true one day a year), a real condition
+like "overdue" stays true for many days running, so naive re-scanning
+would spam a new Insight daily. `create_insight_if_new(source_type,
+source_id, kind, ...)` only creates a new Insight when no `"open"` one
+already exists for that exact triple — a second scan of an unchanged,
+still-overdue task is a no-op, not a duplicate.
+`resolve_insight()` (called once the condition stops holding) is where
+the loop's RESULT step lands, automatically, the moment a real
+completion happens through the *existing* Maintenance UI — no new
+"mark resolved" interaction was built or needed.
+
+**New `core/maintenance_insights.py`** — one scan function,
+`scan_maintenance_insights(context, today)`, reusing Maintenance's
+existing due-date functions verbatim (invents no new due-date math):
+calendar tasks flag `"overdue"` or `"due_soon"` (0-3 days out, same
+window Smart Suggestions' own `_EXPIRING_WITHIN_DAYS` uses); meter
+tasks flag `"due"` via `is_meter_task_due()`. **A real subtlety caught
+before writing tests around a wrong assumption**: `predicted_due_date()`
+only ever returns a projection when a meter task is *not yet* due (it
+explicitly returns `None` once already-due — there's nothing left to
+project). The original plan's framing ("fold the trend caveat into the
+due message") would never have actually fired anything. Fixed by using
+it correctly as meter tasks' own forward-looking `"due_soon"` signal,
+mirroring calendar's own due_soon concept, rather than a decoration on
+an already-true condition. Sensor tasks flag `"due"` via
+`is_sensor_task_due()`. Any task no longer flagged (or whose flagged
+*kind* changed, e.g. due_soon escalating to overdue) gets its stale
+open Insight(s) resolved. `format_maintenance_insights_message()`
+joins newly-created Insights into one message, same "join multiple
+true sub-checks, `None` when quiet" shape
+`build_smart_suggestions_message()` already uses.
+
+**Wiring**: `core/application.py`'s existing daily-check block gained
+one more `should_run_once_daily()`-guarded call (new config key
+`system.last_maintenance_insight_date`), sitting right beside the
+Smart Suggestions/budget-nudge calls it mirrors. Home-only — this
+timer doesn't exist in `core/core_runtime.py`'s headless Core, and
+Maintenance itself isn't wired there either (confirmed, not assumed).
+
+**Verification**: 34 new tests (`test_insight_manager.py` — 18 CRUD/
+idempotency/resolution tests, `test_maintenance_insights.py` — 16,
+covering every trigger type, idempotency, resolution-on-completion,
+and stale-kind escalation) — full suite 2411 passing, zero
+regressions. Manual headless-Qt verification against a throwaway repo
+copy (with its own real, isolated data directory per run — an earlier
+version of this same verification script accidentally reused the
+copy's persistent `data/` across repeated executions and saw 9
+accumulated insights instead of 3, a script-isolation bug caught and
+fixed before trusting the result, not a feature bug): a real overdue
+calendar task, due-soon calendar task, and a meter task with 2 logged
+readings all correctly produced Insights + Recommendations and one
+batched notification; a second, unchanged scan produced zero new
+insights and zero notifications (idempotency and never-naggy both
+holding); marking the overdue task complete and re-scanning correctly
+resolved both its Insight and linked Recommendation while the other
+two stayed open.
+
+**Deferred, stated plainly**: any dedicated UI for browsing Insights/
+Recommendations (they surface through the existing toast/notification
+center, same as Smart Suggestions); generalizing beyond Maintenance to
+other domains; the Activity index; `context_assembler.py`; Mission's
+own deferred "Manage Skills" UI; multi-model AI routing.
