@@ -728,12 +728,11 @@ reference material, and practice exercises.
 anywhere in this repository** — zero matches for "classroom" across
 `core/`, `modules/`, or any doc in this repo. Same "confirm before
 building on top of it" discipline as the MIA Home handoff-doc audit
-above. This doesn't mean the idea is wrong — it means either it lives
-in a separate, not-yet-merged project, or it's genuinely unbuilt and
-should be tracked as a new future module here rather than an
-integration point that already exists. Worth resolving directly with
-the user before any future phase assumes a real Classroom module to
-connect to.
+above. **Resolved directly with the user (2026-09-11): it was never
+actually built** — genuinely new scope, not a separate project to bring
+in. Track it here as a future new module (K-12 homeschooling + trades
+content, connected into the loop below), not an integration point that
+already exists.
 
 The envisioned full loop, for when both a real Classroom module and
 real capability-status tracking exist:
@@ -881,10 +880,10 @@ the other.
   retrieval. A fuller graph/tree *visualization* is real, separate UI
   scope, still unbuilt.
 - **The Classroom module the "User OS" vision wants to connect
-  everything to does not exist in this repository — confirmed by
-  direct search, not assumed.** See the dedicated section above. Any
-  future phase that treats Classroom as an integration point rather
-  than a from-scratch build needs this resolved with the user first.
+  everything to does not exist in this repository, and never was
+  built** — confirmed by direct search, then resolved directly with
+  the user. See the dedicated section above. Treat it as genuinely new
+  scope whenever it's picked up, not an existing integration point.
 - **This update's own scope is, by a wide margin, the largest single
   addition to this document since the 2026-07-14 wearable-companion
   pass** — voice-first primacy, intelligent UI navigation, proactive
@@ -936,7 +935,7 @@ the other.
 | **Educational games** (2026-07-19 addition: games that teach real engineering concepts, homesteading, tool use, electronics, mechanics, and more) | Home (Project 2), new module(s) — desktop-class scope (real game-loop/rendering work), not a Core/field-device feature. Natural links to existing systems rather than a standalone content silo: Workshop & Electronics' component/machine data, the Missions/Gamification engine's objective-tracking primitives, and the Interactive onboarding/tutorial system above ("MIA teaches herself through real conversation and real tasks") are all plausible foundations once this is scoped for real. Not designed yet — flagged here so it isn't lost, same "don't build blind" discipline as everything else in this document. |
 | **MIA as a "User OS" / AR-XR HUD interface** (2026-09-11 addition: a persistent capability layer eventually reachable through an AR/XR contextual HUD, desktop/mobile/voice/wearable all as equal clients of the same core) | See the dedicated section above. Architectural constraint, not new work: the Skills/Missions/Pathways/Projects/Intent/Discovery stack built this session already satisfies it by construction (no `core/` file imports `gui/`; `core/core_runtime.py` already proves the same manager stack runs headless). Extends, doesn't replace, the already-resolved "Multi-platform architecture + browser/XR support" row below. |
 | **"Inspect" capability** (2026-09-11 addition: query MIA about your own capability state, or — later — a real-world object via AR glasses) | Project 1/2, future. Depends on capability-status tracking (Locked/Learning/Practiced/Demonstrated, itself still deferred — see `docs/ROADMAP.md`'s Discovery/Pathways entries) for the self-query form, and on the same camera/on-device-classification hardware question already flagged above for the contextual/object-recognition form. Not designed further. |
-| **Classroom as the knowledge/education layer** (2026-09-11 addition: connect Missions/Pathways/Discovery to real lessons/tutorials/reference material when a capability gap is identified) | **No Classroom module exists in this repository — confirmed by direct search.** See the dedicated section above and its critical-evaluation bullet. Needs resolving with the user (separate unmerged project, or genuinely unbuilt) before this becomes an integration point rather than a from-scratch build. |
+| **Classroom as the knowledge/education layer** (2026-09-11 addition: connect Missions/Pathways/Discovery to real lessons/tutorials/reference material when a capability gap is identified) | Project 1, new module — **confirmed by direct search and then with the user directly: never actually built.** See the dedicated section above. Genuinely new scope (K-12 homeschooling + trades content) whenever it's picked up, not an existing module to integrate with. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 
