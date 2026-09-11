@@ -10,7 +10,9 @@ what's mandatory, not to explain why at length.
 A homestead greenhouse aquaponics control/monitoring system, built
 simulation-first. Currently fully proven in software (scenario suite,
 live-tested modules) with zero real hardware deployed yet. The next
-real milestone is a 5-gallon pilot build — see `docs/PILOT_VS_SCALE.md`.
+real milestone is a 55-gallon, fish-inclusive pilot build (revised
+2026-09-10 from an earlier 5-gallon fishless plan) — see
+`docs/PILOT_VS_SCALE.md`.
 
 ## Before you touch anything
 
@@ -136,7 +138,7 @@ docs/            everything else - see index below
 - `SAFETY_SPEC.md` — failsafe philosophy, read before touching anything dosing/power-related
 - `MCU_PROTOCOL.md` — Pi<->Safety MCU wire format + device pairing handshake
 - `SIMULATION_STRATEGY.md` — the four-tier simulate-before-hardware process
-- `PILOT_VS_SCALE.md` — 5-gallon pilot plan vs. full build, what carries over
+- `PILOT_VS_SCALE.md` — 55-gallon, fish-inclusive pilot plan vs. full build, what carries over
 - `CAPABILITY_REGISTRATION.md` — the full new-module checklist (condensed above)
 - `DEVICE_SETUP_GUIDE.md` — zero-technical-knowledge physical setup walkthrough
 - `HARDWARE_BOM_CURRENT.md` — hand-researched pricing/sourcing (static notes)

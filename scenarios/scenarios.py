@@ -3123,7 +3123,12 @@ def scenario_pilot_shopping_list_includes_override_switch():
     required physical override switch. Confirms it's in the seeded
     list now, and that seed_pilot_shopping_list() is still safe to
     call twice (its own docstring's claim) without duplicating any
-    item, the new one included."""
+    item, the new one included.
+
+    Total item count (10, not the original 8) reflects the 2026-09-10
+    scope change (docs/PILOT_VS_SCALE.md): the pilot is now a 55-gallon
+    fish-inclusive tank, which added a real EC kit and DO kit to the
+    shopping list."""
     from drivers.simulator import seed_pilot_shopping_list
 
     conn = sqlite3.connect(":memory:")
@@ -3140,7 +3145,7 @@ def scenario_pilot_shopping_list_includes_override_switch():
     checks = [
         ("the override switch is in the pilot shopping list", switch_rows == 1),
         ("calling it twice doesn't duplicate the switch or anything else",
-         total_items == 8),
+         total_items == 10),
     ]
     return checks
 

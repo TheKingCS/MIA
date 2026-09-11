@@ -42,11 +42,13 @@ modules:
       temp_max: 85
       humidity_max: 75   # %RH — above this, vent even if temp is in range (fungal/disease risk)
 
-  # 5-gallon pilot cell (docs/PILOT_VS_SCALE.md) — deliberately enabled
-  # now, in simulation, unlike cell_b_aquaponics below: the pilot
-  # doesn't need a greenhouse to exist, that's the whole point of it.
-  # cell_id 2 row + its sensors/actuators/dosing_limits come from
-  # drivers/simulator.py's setup_pilot_cell() (--setup-pilot).
+  # 55-gallon, fish-inclusive pilot cell (docs/PILOT_VS_SCALE.md,
+  # revised 2026-09-10 — supersedes the earlier 5-gallon fishless plan,
+  # same cell_id/role) — deliberately enabled now, in simulation, unlike
+  # cell_b_aquaponics below: the pilot doesn't need a greenhouse to
+  # exist, that's the whole point of it. cell_id 2 row + its
+  # sensors/actuators/dosing_limits come from drivers/simulator.py's
+  # setup_pilot_cell() (--setup-pilot).
   - id: pilot_cell
     enabled: true
     class: modules.aquaponics_cell.AquaponicsCell
@@ -54,8 +56,8 @@ modules:
     params:
       ph_target_min: 6.6
       ph_target_max: 7.2
-      ec_target_min: 800   # unused until an EC probe exists (phase 2) — no
-      ec_target_max: 1500  # dosing happens without a real reading regardless
+      ec_target_min: 800   # now genuinely relevant once the EC kit is bought/wired —
+      ec_target_max: 1500  # real fish bioload changes nutrient dynamics; alert-only, no auto-dosing yet
 
   # ---- Future modules — uncomment and configure when ready ----
   #

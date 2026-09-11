@@ -1,131 +1,155 @@
 # MIA Homestead — Pilot vs. Full Scale
 
-## Status (2026-08-31)
+## Status (2026-09-10)
 
-**Software scaffold done, running in simulation now.** `pilot_cell`
-(`config/modules.yaml`, `cell_id: 2`) is enabled today — deliberately
-not gated on "once greenhouse exists" like a second full-scale cell
-would be, since the whole point of the pilot is that it doesn't need
-one. `drivers/simulator.py --setup-pilot` seeds it with exactly the
-trimmed hardware scope below (pH + water-temp sensors only, one pH-up
-pump, always-on aeration/circulation, no EC probe, no fish yet).
-Verified for real, not assumed: ran the actual control loop with both
-`cell_a_aquaponics` and `pilot_cell` live simultaneously — no crash,
-`pilot_cell` correctly raised an honest "no EC reading" warning (not an
-error) exactly as its trimmed scope predicts, and confirmed the two-cell
-case the software was always claimed to support but had never actually
-been run. That check caught one real bug: the dashboard's sensor tiles
-had no cell label, so two cells produced two visually-identical "Water
-pH" tiles — fixed (`viewer/dashboard.html` now prefixes each tile with
-its cell name once more than one cell exists).
+**Scope change: the pilot is now a 55-gallon tank, fish-inclusive —
+supersedes the earlier 5-gallon fishless plan.** The project owner
+acquired a real 55-gallon tank and wants this pilot to double as a
+genuine proof-of-concept for full-scale fish stocking, not just a
+cheap safety-chain proof with no livestock. This replaces the prior
+"5-gallon bucket, no fish or 1-2 hardy guppies" plan entirely — same
+`pilot_cell` (`config/modules.yaml`, `cell_id: 2`), same role (prove
+the control/safety chain, calibrate real dosing), now scaled up and
+scoped to include real fish from the start.
 
-**What this does NOT change**: nothing about the physical build below.
-This is the pure-software half — proving the architecture handles a
-second cell correctly before physical hardware ever needs to. The
-buy/flash/wire/calibrate steps are still real-world actions only the
-project owner can take.
+**What carries over unchanged from the 5-gallon plan**: everything
+software-side already proven — the control loop, safety fallback, MCU
+serial transport, day-one hardware readiness (override switch,
+notification config, non-blocking firmware pulses) — none of that
+depended on tank size. What changes is the physical BOM and the
+fishless-cycle-then-stock timeline below.
 
-## The core decision: build the pilot now
+## Fish: species still open, two real candidates researched
 
-Simulation validates *logic*. It can't validate real dosing pulse
-magnitudes, real nitrification drift rates, real firmware behavior, or
-real device pairing — those numbers in `physics_sim.py` are explicitly
-labeled placeholders until something real produces data to replace
-them. A 5-gallon pilot is the cheapest possible way to get that data,
-and every dollar spent on it is reused at full scale, not thrown away.
+The tank owner is deciding between two species suited to a 55-gallon
+system — not tilapia, which the full-scale plan is built around but
+which needs more room and warmer water than this tank/climate
+comfortably supports at real stocking density:
+
+**Bluegill / sunfish (*Lepomis* spp.)** — a real local/native food
+fish, not ornamental:
+- Ideal range 68-79°F (20-26°C); tolerates a wider swing than a
+  tropical species like tilapia — likely no water heater needed for
+  most indoor/climate-controlled setups, confirm against your actual
+  ambient conditions before assuming.
+- Real stocking rule of thumb: ~1 lb of bluegill per 10 gallons in a
+  system with adequate filtration. At 55 gallons, that supports
+  roughly 3-5 adult bluegill (bluegill can reach ~12 inches / ~1 lb) —
+  consistent with the tank owner's own conservative "about 3" estimate.
+- A real, harvestable food fish — keeps this pilot representative of
+  the eventual full-scale food-production goal, unlike an ornamental
+  species.
+
+**Goldfish** — the fallback "something smaller" option:
+- Extremely cold-hardy and forgiving of water-quality swings — the
+  most beginner-forgiving option, useful if this is also meant to
+  de-risk early dosing/calibration mistakes.
+- Real caveat: goldfish are a disproportionately HIGH-bioload fish for
+  their size (a single goldfish can out-produce several small tropical
+  fish combined in ammonia output) — the grow bed/plant uptake needs to
+  be sized for that, not for the fish's modest size alone. Rule of
+  thumb: ~1 inch of goldfish per gallon.
+- Ornamental, not a food fish — doesn't validate real edible-species
+  growth/stocking dynamics the way bluegill would.
+
+**Recommendation, not a decision made for you**: bluegill/sunfish is
+the better proof-of-concept match for a FOOD-production full-scale
+system (real food fish, native/no-heater-likely, real stocking density
+fits 55 gallons cleanly per the math above). Goldfish is the safer
+first-timer's choice if minimizing livestock risk during dosing
+calibration matters more than production realism this round. Either
+way: **fishless-cycle first** (see priorities below) — no fish go in
+until the biofilter is proven, regardless of species.
 
 ## Side-by-side
 
-| | **Pilot (5-gallon)** | **Full scale** |
+| | **Pilot (55-gallon, fish-inclusive)** | **Full scale** |
 |---|---|---|
-| Tank | 5-gal bucket | 500–1,000 gal, split across 2+ tanks |
-| Grow bed | 1 small tray, 2–4 net pots | 1:1–2:1 sqft-to-gallons, media bed |
-| Fish | None, or 1–2 hardy guppies | Tilapia, real stocking density |
+| Tank | 55-gal | 500–1,000 gal, split across 2+ tanks |
+| Grow bed | Small media bed or raft, sized to real bioload — not yet purchased, see below | 1:1–2:1 sqft-to-gallons, media bed |
+| Fish | 3-5 bluegill, or a smaller number of goldfish (species still open, see above) | Tilapia, real stocking density |
 | Cells (software) | 1 (`pilot_cell`) | 2–3, modular — each an independent `AquaponicsCell` config entry |
 | MCUs | 1 (covers pH dosing; add a 2nd for fertilizer once EC loop is added) | 3 per cell (watering, fertilizer, pH dosing) |
-| Dosing pumps | 1–2 | 3 per cell |
+| Dosing pumps | 1 (pH-up) today; pH-down likely needed once real fish bioload is observed — not yet bought | 3 per cell |
+| Water quality monitoring | pH + water-temp (existing) + **EC now recommended** (real fish bioload/nutrient dynamics, unlike the fishless plan) + **DO strongly recommended** (real animal welfare — DO crashes are the leading cause of fish loss) | Full pH/EC/DO suite |
 | Power | Wall outlet + optional small battery for MCU fallback testing | Real solar array + battery bank, sized to load |
-| Structure | None — a shelf or desk | Real greenhouse |
-| Est. cost | **~$256** (real, verified pricing/sourcing as of 2026-08-31 — see below) | **~$17,400–$23,700** real sourced structure+equipment BOM at N=3 cells (see `docs/HARDWARE_BOM_FULL_TIERS.md`) |
-| Timeline | Buildable now, no land/greenhouse needed | Gated on greenhouse construction |
+| Structure | None — a shelf, stand, or desk | Real greenhouse |
+| Est. cost | **~$848** (real, verified against `seed_pilot_shopping_list()` — the original ~$263 pilot BOM plus a confirmed-price EC kit and DO kit; tank/pump upsizing/biofilter media/fish are real additional cost not yet priced, see below) | **~$17,400–$23,700** real sourced structure+equipment BOM at N=3 cells (see `docs/HARDWARE_BOM_FULL_TIERS.md`) |
+| Timeline | Buildable now; fishless-cycle (4-6 weeks) before any fish go in | Gated on greenhouse construction |
 
-## What the pilot actually needs to buy
+## What changes in the shopping list
 
-Trimmed from the full BOM to the minimum that proves the whole
-control/safety chain end to end — not a separate shopping list, a
-subset of the same one:
+The existing ~$263 pilot list (pH kit, ESP32, DS18B20 temp probe, relay,
+pH-up dosing pump, air pump, circulation pump, override switch — see
+`drivers/simulator.py`'s `seed_pilot_shopping_list()`) was sized for a
+fishless 5-gallon bucket. Real changes for 55 gallons with fish:
 
-Real, sourced pricing (WebSearch/WebFetch, 2026-08-31 — see
-`drivers/simulator.py`'s `seed_pilot_shopping_list()` for the full
-sourcing notes and confidence level per item):
+**Added to the shopping list now** (real, already-confirmed pricing —
+reused from `docs/HARDWARE_BOM_FULL_TIERS.md`'s small-tier research,
+not re-guessed):
+- **Atlas Scientific EC-KIT-1.0 — $230** (confirmed, atlas-scientific.com).
+  Real fish bioload changes nutrient dynamics enough to be worth
+  reading, even though EC has no automated dosing built yet (alert-only,
+  same as DO below).
+- **Atlas Scientific DO Kit — $354.99** (confirmed, atlas-scientific.com).
+  Recommended, not just optional the way it was for the small tier's
+  lower stocking density — this pilot now has real animals in it, and
+  DO crashes are the single leading cause of catastrophic fish loss.
+  Your call on budget, but flagged here plainly rather than left out
+  quietly.
 
-- Atlas Scientific KIT-101P pH kit — **$174.99** (confirmed direct from
-  atlas-scientific.com) — the EC loop can wait for phase 2
-- Adafruit HUZZAH32 ESP32 (pre-soldered) — **$20.95** (confirmed direct
-  from adafruit.com) + 4-channel relay module — **~$10** (real product,
-  Amazon-listing price estimate)
-- 12V DC peristaltic dosing pump — **~$12** (real product, Amazon-listing
-  price estimate) — pH-up only to start
-- Aquarium air pump + airstone kit — **~$12** (real product, Amazon-listing
-  price estimate) — aeration, wired to always-on
-- Small submersible circulation pump — **~$15** (real product,
-  Amazon-listing price estimate)
-- DS18B20 temp probe — **$10.95** (confirmed direct from sparkfun.com —
-  meaningfully more than this doc's original ~$8 guess)
-- Heavy-duty DPST toggle switch, 20A/125V — **~$6.99** (real product,
-  search-result price estimate — Amazon resists reliable
-  price-scraping, same caveat as the pumps/relay above) — the physical
-  safety-spec-required manual override (`SAFETY_SPEC.md`: "kill
-  dosing, force aeration on, independent of the Pi and any software
-  state"). Real gap found live 2026-09-02
-  (`docs/DAY_ONE_READINESS.md`): this list's whole stated purpose is
-  proving the safety chain end to end, and this switch is a named part
-  of that chain — its earlier absence here wasn't a considered trim
-  like EC dosing or the watering MCU below, it was an oversight. Fixed.
+**Flagged as needing real re-sourcing, NOT yet added (don't guess a
+specific product without verifying it first)**:
+- **Aeration and circulation pump sizing.** The current pilot's air
+  pump (rated 15-40 GPH, "3-20 gallon buckets") and circulation pump
+  (80 GPH) were sized for a 5-gallon bucket and are very likely
+  undersized for 55 gallons. Real aquaponics sizing guidance: circulate
+  the full tank volume at least twice an hour (~110 GPH minimum for 55
+  gallons), with 100-300 GPH commonly recommended for a complete small
+  aquaponics system. `HARDWARE_BOM_FULL_TIERS.md`'s small-tier BOM
+  already has a confirmed, same-brand option one size up (Active Aqua
+  AAPW1000, 1000 GPH, $69.65, confirmed) that would comfortably cover
+  this — real oversizing headroom at a low price, a defensible choice
+  if you'd rather not shop further — but a properly-sized option
+  in-between hasn't been individually sourced/confirmed yet.
+- **A real biofilter media quantity for 55 gallons.** The small-tier
+  BOM's bio balls (900-count, $119.99, confirmed) are sized for 500
+  gallons — real overkill at this scale, but no smaller confirmed
+  listing has been sourced yet for a 55-gallon-appropriate quantity.
+- **A pH-down dosing pump.** Not needed for a fishless system (nothing
+  was pushing pH down); real fish bioload may change that. Recommend
+  waiting for real pH-drift data from the fishless-cycle period before
+  buying a second pump you might not need.
+- **The fish themselves** — species TBD per above; cost depends on the
+  final choice and local source (bait shop/hatchery for bluegill vs.
+  pet store for goldfish), not researched here.
 
-**Pilot total: ~$263.** (Up from ~$256 — adding the override switch
-above.) Skip EC/nutrient dosing, the watering/fertilizer MCUs,
-PIR/beacon, and all power-monitoring hardware — none of that is needed
-to validate the core safety-critical loop.
+## What the pilot is FOR (in priority order) — fish-inclusive revision
 
-**This list is now a real, ready-to-review purchase queue in the app
-itself**, not just this document — run
-`python3 drivers/simulator.py --db mia_homestead.db --seed-pilot-shopping-list`
-once, then `python3 core/order_queue.py --db mia_homestead.db` to
-approve/deny each line item before actually buying anything (same
-propose-then-human-approves gate every purchase in this project goes
-through — nothing here places a real order on its own). The
-Amazon-listing items are real products with real URLs but
-estimated/unconfirmed current prices — confirm at checkout, same as
-this doc has always said.
-
-## What the pilot is FOR (in priority order)
-
-1. **Flash and prove the Safety MCU firmware for real.** Half done in
-   software (2026-08-30): it now **compiles clean** against real
-   ESP32 + ArduinoJson toolchains (`firmware/safety_mcu/platformio.ini`,
-   `pio run`) — the remaining unknown is real hardware behavior, not
-   whether the code is even valid. An LED standing in for the relay
-   (per `firmware/safety_mcu/README.md`) gets you most of the way; a
-   real pump gets you the rest.
-2. **Calibrate real dosing pulse magnitudes.** How much does a 1-second
-   pulse actually move pH in a 5-gallon volume, at your actual pump's
-   flow rate? That number replaces the placeholder in
-   `physics_sim.py`'s `DOSE_EFFECT_PER_SECOND`, which makes every future
-   scenario test more trustworthy, not just the pilot itself.
-3. **Run a real device pairing.** Confirm the announce → pair →
+1. **Fishless-cycle the biofilter FIRST.** Now the load-bearing first
+   step, not priority #4 — real animals don't go in until this is
+   done. Standard aquaponics practice: dose ammonia and track the
+   nitrogen cycle establishing (~4–6 weeks) before any livestock goes
+   in. Doing this before fish arrive means recognizing what a healthy
+   cycle looks like before it matters with real animals in the tank.
+2. **Flash and prove the Safety MCU firmware for real.** Compiles clean
+   against real ESP32 + ArduinoJson toolchains
+   (`firmware/safety_mcu/platformio.ini`, `pio run`) — the remaining
+   unknown is real hardware behavior, not whether the code is valid.
+3. **Calibrate real dosing pulse magnitudes** — now at 55-gallon
+   volume, not 5-gallon. How much does a 1-second pulse actually move
+   pH in a 55-gallon volume, at your actual pump's flow rate? That
+   number replaces the placeholder in `physics_sim.py`'s
+   `DOSE_EFFECT_PER_SECOND`.
+4. **Run a real device pairing.** Confirm the announce → pair →
    actuator-creation flow in `device_registry.py` actually works
-   against firmware, not just `announce_device()` called directly from
-   a test script.
-4. **Fishless-cycle the biofilter.** Standard aquaponics practice —
-   dose ammonia and track the nitrogen cycle establishing (~4–6 weeks)
-   before any livestock goes in, at either scale. Doing this on the
-   pilot first means you'll recognize what a healthy cycle looks like
-   before it matters on a system with real fish in it.
-5. **Stress-test the actual failure modes**, not just simulated ones —
-   physically unplug the Pi mid-dose and watch the MCU fall back for
-   real; physically disconnect the pH probe and confirm the staleness
-   alert fires on schedule, not just in `scenarios/scenarios.py`.
+   against firmware, not just `announce_device()` called directly.
+5. **Stress-test the actual failure modes** — physically unplug the Pi
+   mid-dose and watch the MCU fall back for real; physically disconnect
+   the pH probe and confirm the staleness alert fires on schedule.
+6. **Once cycled: stock the chosen fish species at real, conservative
+   density** and observe real bioload effects on pH/EC/DO — the actual
+   proof-of-concept payoff for full-scale planning.
 
 ## What changes when scaling up — and what doesn't
 
@@ -137,14 +161,16 @@ this doc has always said.
   just more of each
 
 **Recalibrated, not rebuilt:**
-- Dosing pulse durations and `dosing_limits` — a 5-gallon pulse and a
-  500-gallon pulse are not the same number; the pilot gives you a
-  starting ratio, not a final answer
+- Dosing pulse durations and `dosing_limits` — a 55-gallon pulse and a
+  500-gallon pulse are not the same number, but 55 gallons is a much
+  closer real analog to full scale than 5 gallons was
 - `physics_sim.py`'s drift constants — same mechanism, new numbers
+- Fish stocking density/species — bluegill/goldfish inform the general
+  husbandry practice; full scale still plans around tilapia specifically
 
 **Genuinely new:**
 - Real greenhouse structure, solar/battery sizing against real load,
-  multiple tank cells, fish stocking
+  multiple tank cells, tilapia-specific stocking density at full scale
 
 ## The recommendation worth calling out explicitly
 
@@ -152,19 +178,22 @@ this doc has always said.
 Keep it running permanently as a staging cell — the same role a
 staging server plays for software. Any future control-logic change
 gets proven on the pilot (which now has real historical data behind
-it, not just simulation) before it ever touches the tank with real
-fish and real money in it. This is the same simulation-first discipline
-from `docs/SIMULATION_STRATEGY.md`, just extended one more tier: sim →
-scenario tests → pilot hardware → production hardware.
+it, not just simulation, AND real fish husbandry experience) before it
+ever touches the full-scale tanks. This is the same simulation-first
+discipline from `docs/SIMULATION_STRATEGY.md`, just extended one more
+tier: sim → scenario tests → pilot hardware → production hardware.
 
-## Software changes needed to represent this — done (2026-08-31)
+## Software changes needed to represent this
 
-The pilot is just another `AquaponicsCell` config entry — the modular
-registry already supported this without new code, and now actually has
-one:
+Same `pilot_cell` entry, `config/modules.yaml` — no structural change
+needed, the modular registry already supports this without new code.
+`ec_target_min`/`ec_target_max` move from "unused until an EC probe
+exists (phase 2)" to genuinely relevant once the EC kit above is
+bought and wired — still alert-only (no automated EC dosing exists),
+same as DO once that kit is added too:
 
 ```yaml
-# config/modules.yaml — real entry, not a proposal
+# config/modules.yaml — real entry
 - id: pilot_cell
   enabled: true
   class: modules.aquaponics_cell.AquaponicsCell
@@ -172,13 +201,11 @@ one:
   params:
     ph_target_min: 6.6
     ph_target_max: 7.2
-    ec_target_min: 800   # unused until an EC probe exists (phase 2)
+    ec_target_min: 800   # now relevant once the EC kit above is wired in
     ec_target_max: 1500
 ```
 
-Plus a real `cells` row + `layout.json` entry (`drivers/simulator.py
---setup-pilot`; positioned off to the side in the digital twin — "a
-desk is a valid position"). This also validated something worth
-validating early, for real: the modular architecture running two
-simultaneous cells correctly, not just in theory — see "Status" above
-for what that check actually found and fixed.
+A DO sensor, once bought and registered, is picked up automatically by
+`modules/aquaponics_cell.py`'s existing opt-in DO monitoring (warning
+below 5.0 mg/L, critical below 3.0 mg/L) — no config change needed
+beyond registering the real sensor once it exists.

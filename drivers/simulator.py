@@ -289,18 +289,19 @@ def setup_pilot_cell(conn: sqlite3.Connection) -> int:
 def seed_pilot_shopping_list(conn: sqlite3.Connection) -> list[int]:
     """Populates real inventory_items + to-order proposals for the
     pilot's exact hardware list (docs/PILOT_VS_SCALE.md) — real,
-    verified sourcing (WebSearch/WebFetch, 2026-08-31), not invented.
-    Uses the SAME propose-then-human-approves path every other purchase
-    in this project goes through (core/inventory.py's propose_reorder())
-    — this only ever proposes, never places a real order; a human still
-    approves each one via core/order_queue.py or the assistant before
-    anything gets bought.
+    verified sourcing (WebSearch/WebFetch, 2026-08-31, EC/DO kits added
+    2026-09-10 for the pilot's revised 55-gallon fish-inclusive scope),
+    not invented. Uses the SAME propose-then-human-approves path every
+    other purchase in this project goes through
+    (core/inventory.py's propose_reorder()) — this only ever proposes,
+    never places a real order; a human still approves each one via
+    core/order_queue.py or the assistant before anything gets bought.
 
     Price/URL confidence, stated honestly per item rather than
     presented as uniformly certain:
-    - pH kit, ESP32, DS18B20: fetched directly from the seller's own
-      product page moments before this was written — real, current,
-      confirmed prices.
+    - pH kit, ESP32, DS18B20, EC kit, DO kit: fetched directly from the
+      seller's own product page moments before this was written — real,
+      current, confirmed prices.
     - Relay module, dosing pump, air pump, circulation pump: real
       product URLs (genuinely returned by search, not fabricated), but
       commodity Amazon listings that resist reliable price-scraping —
@@ -355,6 +356,23 @@ def seed_pilot_shopping_list(conn: sqlite3.Connection) -> list[int]:
          "already states for the relay module/pumps above) — confirm at checkout. The physical "
          "safety-spec-required manual override: kill dosing, force aeration on, independent of the "
          "Pi/MCU entirely — wire in series with the dosing pump relay per SAFETY_SPEC.md."),
+        # 2026-09-10 scope change (docs/PILOT_VS_SCALE.md): the pilot is
+        # now a 55-gallon, fish-inclusive tank, not a 5-gallon fishless
+        # bucket — real fish bioload makes EC/DO monitoring genuinely
+        # worth having, not just a phase-2 nice-to-have. Both prices
+        # confirmed via a direct fetch of the seller's own product page
+        # today, reused from docs/HARDWARE_BOM_FULL_TIERS.md's earlier
+        # small-tier research (same real kits, same real prices).
+        ("Atlas Scientific Conductivity K 1.0 Kit (EC-KIT-1.0)", "sensor", "each", 229.99,
+         "Atlas Scientific", "https://atlas-scientific.com/kits/conductivity-k-1-0-kit/",
+         "Confirmed price, fetched directly 2026-09-10. EZO conductivity circuit + probe + "
+         "carrier board + calibration solutions. Alert-only — no automated EC dosing exists yet."),
+        ("Atlas Scientific Dissolved Oxygen Kit (Kit-103DX)", "sensor", "each", 354.99,
+         "Atlas Scientific", "https://atlas-scientific.com/kits/dissolved-oxygen-kit/",
+         "Confirmed price, fetched directly 2026-09-10. Strongly recommended now that this pilot "
+         "has real fish in it — DO crashes are the leading cause of catastrophic fish loss. "
+         "Picked up automatically by modules/aquaponics_cell.py's existing opt-in DO monitoring "
+         "(warning below 5.0 mg/L, critical below 3.0 mg/L) once registered — no code change needed."),
     ]
 
     from core.inventory import InventoryManager

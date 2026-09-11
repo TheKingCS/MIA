@@ -11,8 +11,10 @@ product doesn't exist). Never treat an Estimated number as a quote —
 confirm at checkout, same discipline as `HARDWARE_BOM_CURRENT.md`.
 
 Three tiers, matching the codebase's own scale:
-- **Test** = the existing 5-gallon pilot (`pilot_cell` in
-  `config/modules.yaml`) — already fully priced, see `PILOT_VS_SCALE.md`.
+- **Test** = the pilot (`pilot_cell` in `config/modules.yaml`) —
+  revised 2026-09-10 to a 55-gallon, fish-inclusive tank (was a
+  5-gallon fishless bucket) — already fully priced, see
+  `PILOT_VS_SCALE.md`.
 - **Small** = one ~500-gallon cell, matching the already-simulated
   `cell_a_aquaponics`.
 - **Full-scale** = a real greenhouse structure housing multiple such
@@ -20,13 +22,16 @@ Three tiers, matching the codebase's own scale:
 
 ---
 
-## Test tier — 5-gallon pilot
+## Test tier — 55-gallon, fish-inclusive pilot
 
-**~$256 total.** Already fully priced and sourced — see
-`docs/PILOT_VS_SCALE.md` for the itemized list and
+**~$848 total, real and verified against `seed_pilot_shopping_list()`**
+— see `docs/PILOT_VS_SCALE.md` for the full itemized list (including
+what's still flagged as needing real re-sourcing: upsized aeration/
+circulation pumps, biofilter media, the fish themselves) and
 `drivers/simulator.py --seed-pilot-shopping-list` for the live
-purchase-queue version. Not re-priced in this pass; nothing here
-changes it.
+purchase-queue version. Revised 2026-09-10 from the original 5-gallon/
+~$256 fishless plan — see `PILOT_VS_SCALE.md`'s own Status section for
+why.
 
 ---
 
