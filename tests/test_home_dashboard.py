@@ -24,7 +24,6 @@ from core.mission_manager import Mission, Objective
 from core.music_manager import NowPlaying
 from core.power_manager import PowerStatus
 from core.project_manager import Project
-from core.volume_manager import VolumeStatus
 from gui.home_dashboard import (
     format_active_mission_line,
     format_activity_log_line,
@@ -40,7 +39,6 @@ from gui.home_dashboard import (
     format_net_worth_line,
     format_power_line,
     format_real_estate_line,
-    format_volume_line,
 )
 
 
@@ -85,18 +83,6 @@ def test_format_active_mission_line_with_progress():
         ],
     )
     assert format_active_mission_line(mission, 1, 2) == "Scout the ridge  —  1 of 2 objectives complete"
-
-
-def test_format_volume_line_unavailable():
-    assert format_volume_line(None) == "Not available on this device."
-
-
-def test_format_volume_line_normal():
-    assert format_volume_line(VolumeStatus(percent=62, muted=False)) == "62%"
-
-
-def test_format_volume_line_muted():
-    assert format_volume_line(VolumeStatus(percent=62, muted=True)) == "62%  —  Muted"
 
 
 def test_format_current_project_line_none():

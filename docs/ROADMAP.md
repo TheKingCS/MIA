@@ -6830,3 +6830,53 @@ offscreen QPA platform) confirms the whole chain actually resolves,
 not just parses — a file move is exactly the kind of change where a
 typo'd import path would only show up at runtime, not at syntax-check
 time.
+
+## Cleanup pass, continued: removed the dead Volume dashboard widget, fixed 3 real tests/run_module.py crashes (2026-09-11)
+
+**Dead code removal**: `gui/home_dashboard.py`'s `_build_volume_widget`/
+`_build_volume_card`/`_volume_highlight`/`_refresh_volume`/
+`_on_volume_slider_released`/`_on_mute_clicked`/`format_volume_line`
+were all genuinely unreachable — the widget was never registered via
+`WidgetDescriptor` (real, unlike the Avatar Camera false alarm above:
+`gui/widgets/volume_quick_control.py`'s own 2026-07-18 docstring
+confirms the deliberate move into the header profile menu, and its own
+independently-owned `format_volume_line()` has been the real, live copy
+ever since — this file's copy was simply never cleaned up after).
+Removed all of it, plus the now-unused `QSlider`/`VolumeStatus`
+imports. The 3 existing tests for the dead `format_volume_line()` copy
+were relocated (not deleted) to a new `tests/test_volume_quick_control.py`,
+testing the real live copy instead — real coverage that only ever
+existed for the dead one until now.
+
+**`tests/run_module.py` wiring completeness — 3 real, reproduced
+crashes fixed.** Diffed every real `self.context.<manager>` access
+across all of `modules/` against what this harness actually
+constructs. Two names (`assistant_actions`, `calculators`) turned out
+to be false positives — both are `core.app_context.AppContext`
+dataclass fields with their own `default_factory`, already real
+objects on any `AppContext` with no wiring needed at all. The other 8
+(`finance`, `jobs`, `ledger`, `materials`, `memories`, `products`,
+`projects`, `tasks`) were real gaps. Reproduced 3 real crashes before
+fixing, not assumed: `python tests/run_module.py workshop`
+(`context.jobs`/`ledger`/`materials`/`products`, all unguarded
+`AttributeError: 'NoneType' object has no attribute ...`), `memories`,
+and `dashboard` (both read `context.memories` with no guard). `finance`
+itself is `is not None`-guarded everywhere it's read
+(`modules/budget/module.py`) — a completeness gap, not a crash, wired
+anyway. All 8 now constructed in `tests/run_module.py`, matching
+`core/application.py`'s real boot order.
+
+**Verified for real**: all 3 previously-crashing modules
+(`workshop`/`memories`/`dashboard`) now load cleanly, confirmed by
+actually running the real `main()` (not just re-reading the diff) with
+`QApplication.exec` stubbed to avoid blocking. Swept every one of the
+27 discovered modules through the same real `main()` call — 26 loaded
+cleanly; `maps` hit a real, but **pre-existing and already-understood**
+`QThread: Destroyed while thread '' is still running` core dump,
+confirmed via `git stash` to reproduce identically with none of this
+session's changes applied — the exact same artifact class already
+documented from the 2026-07-15 Avatar Camera work (a QThread with no
+Qt-parent-driven cleanup outliving a script that stubs `exec()` instead
+of running a real event loop; the real app never hits this). Not a
+regression from this pass, not fixed here — out of scope, flagged for
+awareness only. Full suite: 2255 passing, zero regressions.

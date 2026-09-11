@@ -47,11 +47,16 @@ from core.device_help_manager import DeviceHelpManager  # noqa: E402
 from core.energy_manager import EnergyManager  # noqa: E402
 from core.event_bus import EventBus  # noqa: E402
 from core.expedition_manager import ExpeditionManager  # noqa: E402
+from core.finance_manager import FinanceManager  # noqa: E402
 from core.inventory_manager import InventoryManager  # noqa: E402
+from core.job_manager import JobManager  # noqa: E402
 from core.journal_manager import JournalManager  # noqa: E402
+from core.ledger_manager import LedgerManager  # noqa: E402
 from core.llm_manager import LLMManager  # noqa: E402
 from core.maintenance_manager import MaintenanceManager  # noqa: E402
 from core.map_tile_cache import MapTileCache  # noqa: E402
+from core.material_manager import MaterialManager  # noqa: E402
+from core.memory_manager import MemoryManager  # noqa: E402
 from core.mission_manager import MissionManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.music_manager import MusicManager  # noqa: E402
@@ -59,10 +64,13 @@ from core.kitchen_manager import KitchenManager  # noqa: E402
 from core.workout_manager import WorkoutManager  # noqa: E402
 from core.relationships_manager import RelationshipsManager  # noqa: E402
 from core.power_manager import PowerManager  # noqa: E402
+from core.product_manager import ProductManager  # noqa: E402
 from core.profile_manager import ProfileManager  # noqa: E402
+from core.project_manager import ProjectManager  # noqa: E402
 from core.reference_library_manager import ReferenceLibraryManager  # noqa: E402
 from core.script_library_manager import ScriptLibraryManager  # noqa: E402
 from core.search_manager import SearchManager  # noqa: E402
+from core.task_manager import TaskManager  # noqa: E402
 from core.trail_map_library import TrailMapLibrary  # noqa: E402
 from core.trip_manager import TripManager  # noqa: E402
 from core.user_memory_manager import UserMemoryManager  # noqa: E402
@@ -87,6 +95,22 @@ def main() -> int:
     # this fix. ProfileManager moved from "deliberately omitted" to wired
     # for real once modules/missions/module.py's 2026-07-18 redesign
     # started reading context.profiles for its Level/XP footer.
+    #
+    # 2026-09-11 cleanup pass: finance/jobs/ledger/materials/memories/
+    # products/projects/tasks were all missing here too — a real audit
+    # found this the same way the Notes/context.search gap above was
+    # originally found, and reproducing it confirmed 3 real, immediate
+    # crashes: `python tests/run_module.py workshop` (jobs/ledger/
+    # materials/products, all unguarded), `memories` and `dashboard`
+    # (both read context.memories with no guard). finance itself is
+    # None-guarded everywhere it's read (modules/budget/module.py), so
+    # it was a completeness gap, not a crash — wired anyway for the same
+    # "don't run any module against a silently-incomplete context"
+    # reasoning as everything else here. (assistant_actions/calculators
+    # are NOT missing despite showing up in the same grep this audit
+    # started from — both are core.app_context.AppContext dataclass
+    # fields with their own default_factory, so they're already
+    # real objects on every AppContext without any wiring at all.)
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)
     context.missions = MissionManager(context)
@@ -98,9 +122,16 @@ def main() -> int:
     context.budget = BudgetManager(context)
     context.real_estate = RealEstateManager(context)
     context.plaid = PlaidManager(context)
+    context.finance = FinanceManager(context)
     context.inventory = InventoryManager(context)
     context.data_logger = DataLoggerManager(context)
     context.components = ComponentManager(context)
+    context.jobs = JobManager(context)
+    context.ledger = LedgerManager(context)
+    context.materials = MaterialManager(context)
+    context.products = ProductManager(context)
+    context.projects = ProjectManager(context)
+    context.tasks = TaskManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.voice = VoiceManager(context)
@@ -110,6 +141,7 @@ def main() -> int:
     context.scripts = ScriptLibraryManager(context)
     context.expeditions = ExpeditionManager(context)
     context.trips = TripManager(context)
+    context.memories = MemoryManager(context)
     context.search = SearchManager(context)
     context.device_help = DeviceHelpManager(context)
     context.activity_log = ActivityLogManager(context)

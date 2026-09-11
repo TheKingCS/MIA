@@ -76,8 +76,12 @@ slider's live behavior on real Pi hardware before trusting it further
 than "the code path is exercised."
 
 format_clock_time()/format_clock_date()/format_power_line()/
-format_active_mission_line()/format_volume_line() are free functions
-(not methods) — testable without Qt, see tests/test_home_dashboard.py.
+format_active_mission_line() are free functions (not methods) —
+testable without Qt, see tests/test_home_dashboard.py. (Volume's own
+format_volume_line() moved out to gui/widgets/volume_quick_control.py
+2026-07-18 along with the rest of Volume's dashboard presence — see
+that module's docstring, and this file's 2026-09-11 cleanup-pass entry
+below for the dead code that removal left behind here.)
 
 **2026-07-16: Companion Avatar widget** — a new registered dashboard
 widget (`avatar_camera`) showing a live camera feed via
@@ -110,7 +114,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMenu,
     QPushButton,
-    QSlider,
     QVBoxLayout,
     QWidget,
 )
@@ -151,7 +154,6 @@ from core.project_manager import Project
 from core.push_to_talk_trigger import PushToTalkTrigger
 from core.startup_briefing import build_stat_highlights, build_startup_briefing
 from core.tts_worker import TTSWorker
-from core.volume_manager import VolumeStatus
 from gui.dashboard_customize_dialog import DashboardCustomizeDialog
 from gui.widgets.avatar_camera_widget import AvatarCameraWidget
 from gui.widgets.toggle_switch import ToggleSwitch
@@ -227,15 +229,6 @@ def format_active_mission_line(mission: Optional[Mission], completed: int, total
     if total == 0:
         return f"{mission.name}  (no objectives yet)"
     return f"{mission.name}  —  {completed} of {total} objectives complete"
-
-
-def format_volume_line(status: Optional[VolumeStatus]) -> str:
-    """Pure formatting logic — testable without Qt."""
-    if status is None:
-        return "Not available on this device."
-    if status.muted:
-        return f"{status.percent}%  —  Muted"
-    return f"{status.percent}%"
 
 
 def format_current_project_line(project: Optional[Project], active_count: int) -> str:
@@ -536,13 +529,10 @@ class HomeDashboard(QFrame):
         self._conversation = None
         self._recording = False
         self._widget_bodies: dict[str, QLabel] = {}
-        self._volume_slider: Optional[QSlider] = None
-        self._mute_button: Optional[QPushButton] = None
         self._avatar_camera_widget: Optional[AvatarCameraWidget] = None
         self._widget_builders = {
             "power": self._build_power_widget,
             "mission": self._build_mission_widget,
-            "volume": self._build_volume_widget,
             "current_project": self._build_current_project_widget,
             "activity_log": self._build_activity_log_widget,
             "quick_bus": self._build_quick_bus_widget,
@@ -562,7 +552,6 @@ class HomeDashboard(QFrame):
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
             "mission": self._mission_highlight,
-            "volume": self._volume_highlight,
             "current_project": self._current_project_highlight,
             "homestead": self._homestead_highlight,
             "budget": self._budget_highlight,
@@ -789,8 +778,6 @@ class HomeDashboard(QFrame):
                 widget.deleteLater()
 
         self._widget_bodies = {}
-        self._volume_slider = None
-        self._mute_button = None
         if self._avatar_camera_widget is not None:
             # A live QCamera has no Qt-parent-driven cleanup — unlike
             # every other widget cleared above, it needs an explicit
@@ -961,18 +948,6 @@ class HomeDashboard(QFrame):
         self._widget_bodies["relationships"] = body
         return card
 
-    def _build_volume_widget(self, descriptor: WidgetDescriptor) -> QWidget:
-        # No on_click here — the dedicated mute button already covers
-        # this widget's one real action, and there's no related module
-        # to open (unlike Power/Mission/Current Project); making the
-        # whole card a button would conflict with the slider/mute
-        # button already living inside it.
-        card, body, slider, mute_button = self._build_volume_card(descriptor.icon, descriptor.display_name)
-        self._widget_bodies["volume"] = body
-        self._volume_slider = slider
-        self._mute_button = mute_button
-        return card
-
     def _build_activity_log_widget(self, descriptor: WidgetDescriptor) -> QWidget:
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         # The "ForMIA" stencil's log/feed variant is monospace, unlike
@@ -1101,9 +1076,9 @@ class HomeDashboard(QFrame):
     def _build_widget_header(
         self, icon: str, title: str, menu_actions: Optional[list[tuple[str, Callable[[], None]]]] = None
     ) -> QHBoxLayout:
-        """Shared by _build_simple_card()/_build_volume_card() — the
-        eyebrow-label+stretch+optional "⋯" menu button row every widget
-        card starts with.
+        """Shared by every widget card builder — the eyebrow-label+
+        stretch+optional "⋯" menu button row every widget card starts
+        with.
 
         **2026-07-15 "ForMIA" design handoff**: widget cards no longer
         show an icon badge — just a small uppercase "eyebrow" label
@@ -1204,48 +1179,6 @@ class HomeDashboard(QFrame):
 
         return card, body_label
 
-    def _build_volume_card(self, icon: str, title: str) -> tuple[QFrame, QLabel, QSlider, QPushButton]:
-        card = QFrame()
-        card.setObjectName("DashboardCard")
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(18, 16, 18, 16)
-        layout.setSpacing(10)
-
-        header = self._build_widget_header(icon, title)
-
-        # 2026-07-16: this used to show a bare, never-updated "🔇"
-        # regardless of actual mute state — the user couldn't tell what
-        # it did or whether they were currently muted. _refresh_volume()
-        # now swaps the icon (🔊 unmuted / 🔇 muted) and sets an explicit
-        # tooltip on every refresh, same "state should be visible, not
-        # just clickable" bar the recording-state Talk button and the
-        # notification bell's hasUnread accent already set elsewhere.
-        mute_button = QPushButton("\U0001F50A")
-        mute_button.setObjectName("HeaderButton")
-        mute_button.setToolTip("Mute")
-        mute_button.clicked.connect(self._on_mute_clicked)
-        header.addWidget(mute_button)
-        layout.addLayout(header)
-
-        slider = QSlider(Qt.Orientation.Horizontal)
-        slider.setRange(0, 100)
-        slider.sliderReleased.connect(self._on_volume_slider_released)
-        layout.addWidget(slider)
-
-        body_label = QLabel()
-        body_label.setObjectName("DashboardSectionBody")
-        body_label.setWordWrap(True)
-        layout.addWidget(body_label)
-
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(16)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        card.setGraphicsEffect(shadow)
-
-        return card, body_label, slider, mute_button
-
     def _build_briefing_banner(self) -> QWidget:
         card = QFrame()
         card.setObjectName("DashboardCard")
@@ -1291,9 +1224,6 @@ class HomeDashboard(QFrame):
             return None
         noun = "mission" if count == 1 else "missions"
         return f"{count} active {noun}"
-
-    def _volume_highlight(self) -> Optional[str]:
-        return None  # not meaningful for a spoken dashboard summary
 
     def _current_project_highlight(self) -> Optional[str]:
         if self.context.projects is None:
@@ -1735,8 +1665,6 @@ class HomeDashboard(QFrame):
             self._refresh_mission()
         if "current_project" in self._widget_bodies:
             self._refresh_current_project()
-        if "volume" in self._widget_bodies:
-            self._refresh_volume()
         if "activity_log" in self._widget_bodies:
             self._refresh_activity_log()
         # quick_bus has no refresh — its two toggles reflect config
@@ -1889,30 +1817,3 @@ class HomeDashboard(QFrame):
             if active_projects:
                 project = active_projects[0]
         self._set_widget_body_text("current_project", format_current_project_line(project, active_count))
-
-    def _refresh_volume(self) -> None:
-        if self._volume_slider is None or self._mute_button is None:
-            return
-        available = self.context.volume is not None and self.context.volume.is_available()
-        status = self.context.volume.read() if available else None
-        self._set_widget_body_text("volume", format_volume_line(status))
-        self._volume_slider.setEnabled(available)
-        self._mute_button.setEnabled(available)
-        if status is not None and not self._volume_slider.isSliderDown():
-            self._volume_slider.setValue(status.percent)
-
-        muted = status is not None and status.muted
-        self._mute_button.setText("\U0001F507" if muted else "\U0001F50A")
-        self._mute_button.setToolTip("Unmute" if muted else "Mute")
-
-    def _on_volume_slider_released(self) -> None:
-        if self._volume_slider is None:
-            return
-        if self.context.volume is not None:
-            self.context.volume.set_volume(self._volume_slider.value())
-        self._refresh_volume()
-
-    def _on_mute_clicked(self) -> None:
-        if self.context.volume is not None:
-            self.context.volume.toggle_mute()
-        self._refresh_volume()
