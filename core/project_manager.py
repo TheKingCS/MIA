@@ -21,12 +21,13 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -46,6 +47,26 @@ class Project:
     description: str = ""
     created_at: str = ""  # ISO datetime
     updated_at: str = ""  # ISO datetime
+    # Connective-infrastructure pass (2026-09-11) — both optional, both
+    # empty/None by default so every existing data/projects.json row
+    # deserializes unchanged, zero migration needed.
+    intent_id: Optional[str] = None  # the "why" this Project serves, see core/intent_manager.py
+    # "My Hero's Path" Phase 2 — same shape as Mission.skill_rewards,
+    # granted once on the Planning/Active/On Hold -> Complete transition
+    # (see ProjectManager.update_project()), plus retroactively via
+    # add_skill_weight().
+    skill_weights: list[SkillWeight] = field(default_factory=list)
+    # True once skill_weights has been bulk-credited at least once.
+    # Real, deliberately added after a test caught the gap: unlike
+    # Mission's status (active/completed/abandoned, no going back),
+    # PROJECT_STATUSES allows Complete -> Active -> Complete again —
+    # without this flag, toggling status back and forth would re-grant
+    # the same skill_weights every time, a real exploit vector, not a
+    # theoretical one. Never reset once True. Doesn't gate
+    # add_skill_weight()'s own single-new-weight crediting path — that
+    # one's safe by construction (it only ever credits the ONE weight
+    # just appended, never the whole list).
+    skill_weights_credited: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -56,6 +77,9 @@ class Project:
             "description": self.description,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "intent_id": self.intent_id,
+            "skill_weights": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_weights],
+            "skill_weights_credited": self.skill_weights_credited,
         }
 
     @staticmethod
@@ -68,6 +92,11 @@ class Project:
             description=data.get("description", ""),
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
+            intent_id=data.get("intent_id"),
+            skill_weights=[
+                SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_weights", [])
+            ],
+            skill_weights_credited=bool(data.get("skill_weights_credited", False)),
         )
 
 
@@ -109,6 +138,8 @@ class ProjectManager:
         status: str = "Planning",
         due_date: str = "",
         description: str = "",
+        intent_id: Optional[str] = None,
+        skill_weights: Optional[list[SkillWeight]] = None,
     ) -> Project:
         now = datetime.now().isoformat(timespec="seconds")
         project = Project(
@@ -119,6 +150,8 @@ class ProjectManager:
             description=description,
             created_at=now,
             updated_at=now,
+            intent_id=intent_id,
+            skill_weights=list(skill_weights) if skill_weights else [],
         )
         self._projects.append(project)
         self._save()
@@ -129,14 +162,66 @@ class ProjectManager:
         project = self.get_project(project_id)
         if project is None:
             raise ValueError(f"No project with id '{project_id}'.")
+        was_complete = project.status == "Complete"
         for key, value in fields.items():
             if key == "created_at":
                 raise ValueError("'created_at' can't be set through update_project().")
+            if key == "skill_weights_credited":
+                raise ValueError("'skill_weights_credited' can't be set through update_project().")
             if not hasattr(project, key):
                 raise ValueError(f"Project has no field '{key}'.")
             setattr(project, key, value)
         project.updated_at = datetime.now().isoformat(timespec="seconds")
+        # "My Hero's Path" Phase 2 (2026-09-11) — fires at most once per
+        # Project, the first time it newly becomes Complete, same
+        # "detect the transition, not just the state" pattern
+        # core.mission_manager.MissionManager.update_mission() already
+        # uses. Also gated on skill_weights_credited (not just the
+        # transition) — unlike Mission's status, PROJECT_STATUSES
+        # allows Complete -> Active -> Complete again, and without this
+        # guard re-completing would re-grant the same weights every
+        # time (a real exploit vector, caught by a test during
+        # implementation, not theoretical).
+        if not was_complete and project.status == "Complete" and not project.skill_weights_credited:
+            self._credit_project_skill_weights(project)
+            project.skill_weights_credited = True
         self._save()
+        return project
+
+    def _credit_project_skill_weights(self, project: Project) -> None:
+        if not project.skill_weights:
+            return
+        grant_xp(
+            self.context,
+            0,  # no flat profile XP for a Project completion — that stays Mission-exclusive
+            "\U0001F3D7 Project complete!",
+            f"'{project.name}' is done.",
+            skill_weights=project.skill_weights,
+        )
+
+    def add_skill_weight(self, project_id: str, skill_id: str, xp: int) -> Project:
+        """Declares (or retroactively adds) a skill this Project trains.
+        If the Project is still in progress, this weight is simply
+        appended and gets credited normally when it later transitions
+        to Complete (see update_project()). If the Project is ALREADY
+        Complete, this credits just this one new weight immediately —
+        never the whole list, so an earlier completion's already-
+        granted weights are never double-credited."""
+        project = self.get_project(project_id)
+        if project is None:
+            raise ValueError(f"No project with id '{project_id}'.")
+        weight = SkillWeight(skill_id=skill_id, xp=xp)
+        project.skill_weights.append(weight)
+        project.updated_at = datetime.now().isoformat(timespec="seconds")
+        self._save()
+        if project.status == "Complete":
+            grant_xp(
+                self.context,
+                0,
+                "\U0001F4DD Skill credited!",
+                f"'{project.name}' also taught you something — crediting it now.",
+                skill_weights=[weight],
+            )
         return project
 
     def delete_project(self, project_id: str) -> None:

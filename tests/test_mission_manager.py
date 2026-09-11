@@ -466,6 +466,46 @@ def test_mission_with_no_skill_rewards_deserializes_to_empty_list(isolated_paths
     assert mission.skill_rewards == []
 
 
+# ----------------------------------------------------------------------
+# project_id — connective-infrastructure pass (2026-09-11)
+# ----------------------------------------------------------------------
+
+def test_add_mission_with_project_id_persists(isolated_paths):
+    context = _make_context()
+    added = context.missions.add_mission(name="Aquaponics Pilot", project_id="proj1")
+
+    reloaded = MissionManager(context)
+    assert reloaded.get_mission(added.mission_id).project_id == "proj1"
+
+
+def test_add_mission_project_id_defaults_to_none(isolated_paths):
+    context = _make_context()
+    added = context.missions.add_mission(name="X")
+    assert added.project_id is None
+
+
+def test_update_mission_rejects_project_id(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    with pytest.raises(ValueError):
+        context.missions.update_mission(mission.mission_id, project_id="different")
+
+
+def test_mission_with_no_project_id_key_deserializes_to_none(isolated_paths):
+    """Backward compatibility: old missions.json rows with no
+    project_id key at all must still deserialize cleanly."""
+    import json
+
+    mission_manager_module._DATA_DIR.mkdir(parents=True, exist_ok=True)
+    mission_manager_module._MISSIONS_FILE.write_text(
+        json.dumps([{"mission_id": "m1", "name": "Old Mission"}])
+    )
+    context = _make_context()
+    mission = context.missions.get_mission("m1")
+    assert mission.project_id is None
+    assert mission.skill_rewards == []
+
+
 def test_objective_progress_tally_returns_stored_value(isolated_paths):
     context = _make_context()
     mission = context.missions.add_mission(name="X")

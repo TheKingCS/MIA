@@ -7091,3 +7091,121 @@ sensor/IoT evidence via `core/data_logger_manager.py`. A true
 graphical tree view (nodes connected by lines) is also deferred — this
 pass ships the same information as a scannable categorized grid
 instead.
+
+## Connective infrastructure, phase 1: Intent + Project↔Skills bridge + Mission↔Project link (2026-09-11)
+
+Two long conversations with the user (an independent AI audit of the
+whole MIA codebase, then an architecture-vision discussion building on
+it — both captured in this session's own history, not re-derived here)
+converged on one concrete direction: stop adding modules, start
+connecting the ones that exist. The user's own framing: "the 28
+modules aren't necessarily the problem — the problem is that they
+currently resemble 28 organs that don't yet have a fully developed
+nervous system connecting them." This is the first deliberately
+bounded phase of that connective work — re-scope before the next one,
+per the user's own explicitly endorsed engineering discipline (prove
+one loop before generalizing). Explicitly OUT of scope this phase (and
+every later phase discussed but not committed to): an Activity index,
+Insight/Recommendation entities, a `context_assembler.py` world-model
+query layer, multi-model AI routing, Achievements/Milestones,
+rule-based Discovery.
+
+**New `core/intent_manager.py`** — `Intent`, the "why" layer: a
+long-running, open-ended goal ("Homestead Independence") a Project can
+optionally serve. Deliberately its own small manager (same
+dataclass+JSON-file+thin-CRUD-class pattern as every other manager in
+this codebase) rather than a flag on `Project` — structurally similar
+but semantically different (open-ended, not discretely completed the
+way a bounded Project is). One extra field, `primary: bool`, with its
+own `set_primary()` method (flips one on, every other off) — same
+"exactly one active thing" shape `core.profile_manager`'s
+active-profile tracking already uses — so the UI has an unambiguous
+answer to "what's the current focus" when several Intents are open at
+once.
+
+**`core/project_manager.py`'s `Project` gains two optional fields**,
+both empty/None by default (zero migration needed for existing
+`data/projects.json`): `intent_id` (the Intent this Project serves,
+freely reassignable later — unlike Mission's trip/project links, an
+Intent connection is meant to be light and adjustable, not fixed at
+creation) and `skill_weights` ("My Hero's Path" Phase 2, same shape as
+`Mission.skill_rewards`, granted once on the first
+Planning/Active/On&nbsp;Hold&nbsp;→&nbsp;Complete transition via
+`core.gamification.grant_xp()` with `amount=0` — no flat profile XP
+for a Project completion, that stays Mission-exclusive, preserving
+"Missions are the main quest").
+
+**A real exploit vector caught by a test during implementation, not
+speculated about**: unlike `Mission.status` (active → completed →
+abandoned, no going back), `PROJECT_STATUSES` allows
+Complete → Active → Complete again. The first version of the
+completion-crediting logic re-granted the full `skill_weights` list on
+every re-completion — toggle a Project's status back and forth, farm
+XP. Fixed with one more field, `Project.skill_weights_credited: bool`
+(persisted, never reset once True, not settable through
+`update_project()`), gating the bulk-crediting path specifically. This
+is the one place this phase's own design doc undersold — "no new
+tracking field needed" turned out to need exactly one, found by
+writing the reactivate-and-recomplete test the design doc itself
+called for, not by guessing.
+
+**Retrospective tagging** — the real gap the architecture review
+flagged (a Project often teaches skills nobody anticipated at
+creation) — is one method, `ProjectManager.add_skill_weight(project_id,
+skill_id, xp)`, not a new subsystem: appends the weight; if the
+Project is still in progress, it waits and gets credited normally at
+completion; if the Project is *already* Complete, it credits just that
+one new weight immediately — never the whole list, so nothing already
+granted is ever double-credited (verified by a dedicated test:
+retroactively tagging a skill on an already-complete Project, then
+reactivating and re-completing it, credits the retroactive tag exactly
+once).
+
+**`core/mission_manager.py`'s `Mission` gains `project_id: Optional[str]
+= None`** — a Mission can now be the optional gamified "face" of a
+Project, revising the original Hero's Path plan's "quest_ids on
+Project" idea (a second competing hierarchy) toward one clean, mostly-
+optional chain: `Intent → Project → Task / Mission → (future) Activity
+→ Skill XP`. Creation-only, same `trip_id`-precedent scoping
+(`update_mission()` already rejected reassigning `trip_id`; extended to
+reject `project_id` too).
+
+**UI**: a new `IntentTool` (`modules/toolbox/tools/intent_tool.py`,
+registered alongside `ProjectTool`) — single-panel CRUD, Intent has no
+children the way Project has Tasks. `AddEditProjectDialog` now takes
+`context` (it didn't before) and offers an Intent picker, always
+defaulting to "(None)" — nothing forces every Project to have one.
+`AddEditMissionDialog` gains a `project_combo`, mirroring its existing
+`trip_combo` exactly. A new `ManageProjectSkillsDialog`
+(`gui/manage_project_skills_dialog.py`) is the one small dialog reused
+for *both* upfront and retroactive skill-tagging, since
+`add_skill_weight()` already handles both cases correctly on its own —
+deliberately a "live action" dialog (each "Add" click credits
+immediately, same shape as `VolumeQuickControl`'s pattern), not a
+collect-then-submit form. No "remove" in this pass, deliberately
+deferred (matches the codebase's existing non-destructive-reward bias
+— a Mission's reward fields can be edited, but nothing anywhere
+retroactively revokes already-granted XP either).
+
+**Deliberately deferred, stated plainly**: a "Manage Skills" UI for
+`Mission.skill_rewards` (the field has existed since the earlier
+Hero's Path pass but has never had upfront or retroactive UI — real
+gap, not blocking, small follow-up). Everything past this phase
+(Activity index, Insight/Recommendation, `context_assembler.py`,
+multi-model AI routing, Achievements, Discovery) per the architecture
+discussion's own agreed phasing — re-scope with the user before each.
+
+**Verification**: 4 new test files/extensions
+(`test_intent_manager.py` — 15 tests, `test_intent_tool.py`,
+`test_manage_project_skills_dialog.py`, extended
+`test_project_manager.py` and `test_mission_manager.py`) — full suite
+2359 passing, zero regressions. Manual headless-Qt verification
+against a throwaway repo copy: created an Intent and made it primary,
+created a Project linked to it, added skill weights before completion
+(confirmed 0 XP until completion), marked it Complete (confirmed exact
+XP landed), retroactively tagged a new skill afterward (confirmed
+immediate credit with no double-credit of the earlier ones), reactivated
+and re-completed it (confirmed the exploit-prevention flag holds —
+still no double-credit), created a Mission linked to the Project, and
+screenshotted the Intent tool, Project tool, Manage Skills dialog, and
+both updated creation dialogs — all rendered correctly.

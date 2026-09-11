@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
     from core.homestead_manager import HomesteadManager
+    from core.intent_manager import IntentManager
     from core.inventory_manager import InventoryManager
     from core.job_manager import JobManager
     from core.journal_manager import JournalManager
@@ -117,6 +118,12 @@ class AppContext:
     expeditions: Optional["ExpeditionManager"] = field(default=None, repr=False)
     trips: Optional["TripManager"] = field(default=None, repr=False)
     projects: Optional["ProjectManager"] = field(default=None, repr=False)
+    # Connective-infrastructure pass (2026-09-11, post Hero's Path
+    # architecture review) — the "why" layer a Project can optionally
+    # link to via Project.intent_id. See core/intent_manager.py's own
+    # docstring for why this is a separate small manager rather than a
+    # flag on Project.
+    intents: Optional["IntentManager"] = field(default=None, repr=False)
     tasks: Optional["TaskManager"] = field(default=None, repr=False)
     memories: Optional["MemoryManager"] = field(default=None, repr=False)
     missions: Optional["MissionManager"] = field(default=None, repr=False)

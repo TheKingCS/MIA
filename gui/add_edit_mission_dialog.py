@@ -10,6 +10,13 @@ changed after creation (mirrors `update_mission()`'s own rejection of a
 `trip_id` field change, same reasoning as Trip's fixed `expedition_id`)
 — editing an existing Mission shows name/status only, no trip picker.
 
+Connective-infrastructure pass (2026-09-11): gained an optional linked
+Project picker, same shape/scoping as the trip picker above — a
+Mission can be the gamified "face" of a Project rather than the two
+staying unrelated containers for structured work
+(core.mission_manager.Mission.project_id). Creation-only, same
+reasoning as the trip link.
+
 **2026-07-18 design handoff** (CCH.zip's Mission Log screen): gained
 fields for the redesigned detail card/rewards footer — icon (single
 emoji glyph, matches this project's icon convention), region (a short
@@ -96,6 +103,15 @@ class AddEditMissionDialog(QDialog):
                 self.trip_combo.addItem(trip.name, trip.trip_id)
             layout.addRow("Linked Trip (optional):", self.trip_combo)
 
+        self.project_combo: Optional[QComboBox] = None
+        if not self._editing:
+            self.project_combo = QComboBox()
+            self.project_combo.addItem("(None — general goal)", None)
+            if context is not None and context.projects is not None:
+                for project in context.projects.all_projects():
+                    self.project_combo.addItem(project.name, project.project_id)
+            layout.addRow("Linked Project (optional):", self.project_combo)
+
         self.status_combo: Optional[QComboBox] = None
         if self._editing:
             self.status_combo = QComboBox()
@@ -114,6 +130,7 @@ class AddEditMissionDialog(QDialog):
 
         self._name: str = ""
         self._trip_id = None
+        self._project_id = None
         self._status: str = "active"
         self._icon: str = "\U0001F4CB"
         self._region: str = ""
@@ -156,6 +173,8 @@ class AddEditMissionDialog(QDialog):
         self._reward_credits = self.reward_credits_spin.value()
         if self.trip_combo is not None:
             self._trip_id = self.trip_combo.currentData()
+        if self.project_combo is not None:
+            self._project_id = self.project_combo.currentData()
         if self.status_combo is not None:
             self._status = self.status_combo.currentData()
         self.accept()
@@ -167,6 +186,10 @@ class AddEditMissionDialog(QDialog):
     @property
     def entered_trip_id(self):
         return self._trip_id
+
+    @property
+    def entered_project_id(self):
+        return self._project_id
 
     @property
     def entered_status(self) -> str:

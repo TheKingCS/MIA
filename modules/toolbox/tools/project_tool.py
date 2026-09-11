@@ -37,6 +37,7 @@ from core.task_manager import Task
 from gui.add_edit_project_dialog import AddEditProjectDialog
 from gui.add_edit_task_dialog import AddEditTaskDialog
 from gui.delete_confirm_dialog import DeleteConfirmDialog
+from gui.manage_project_skills_dialog import ManageProjectSkillsDialog
 from modules.toolbox.tool_base import ToolboxTool
 
 
@@ -90,6 +91,10 @@ class ProjectTool(ToolboxTool):
         delete_project_button = QPushButton("Delete Selected")
         delete_project_button.clicked.connect(self._on_delete_project)
         project_buttons.addWidget(delete_project_button)
+
+        manage_skills_button = QPushButton("Manage Skills")
+        manage_skills_button.clicked.connect(self._on_manage_skills)
+        project_buttons.addWidget(manage_skills_button)
         layout.addLayout(project_buttons)
 
         task_title = QLabel("Tasks in selected Project")
@@ -175,7 +180,7 @@ class ProjectTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add_project(self) -> None:
-        dialog = AddEditProjectDialog()
+        dialog = AddEditProjectDialog(self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -184,6 +189,7 @@ class ProjectTool(ToolboxTool):
             status=dialog.entered_status,
             due_date=dialog.entered_due_date,
             description=dialog.entered_description,
+            intent_id=dialog.entered_intent_id,
         )
         self._refresh_project_list()
 
@@ -194,7 +200,7 @@ class ProjectTool(ToolboxTool):
             return
 
         project = self.context.projects.get_project(project_id)
-        dialog = AddEditProjectDialog(project=project)
+        dialog = AddEditProjectDialog(self.context, project=project)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -204,6 +210,7 @@ class ProjectTool(ToolboxTool):
             status=dialog.entered_status,
             due_date=dialog.entered_due_date,
             description=dialog.entered_description,
+            intent_id=dialog.entered_intent_id,
         )
         self._refresh_project_list()
 
@@ -233,6 +240,17 @@ class ProjectTool(ToolboxTool):
             return
 
         self.context.projects.delete_project(project_id)
+        self._refresh_project_list()
+
+    def _on_manage_skills(self) -> None:
+        project_id = self._selected_project_id()
+        if project_id is None:
+            QMessageBox.information(None, "No Project Selected", "Select a project to manage skills for.")
+            return
+
+        project = self.context.projects.get_project(project_id)
+        dialog = ManageProjectSkillsDialog(self.context, project)
+        dialog.exec()
         self._refresh_project_list()
 
     # ------------------------------------------------------------------

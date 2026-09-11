@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
 from modules.module_base import ModuleBase
 from modules.toolbox.tools.alarm_tool import AlarmTool
 from modules.toolbox.tools.calendar_tool import CalendarTool
+from modules.toolbox.tools.intent_tool import IntentTool
 from modules.toolbox.tools.inventory_tool import InventoryTool
 from modules.toolbox.tools.project_tool import ProjectTool
 from modules.toolbox.tools.stopwatch_tool import StopwatchTool
@@ -62,6 +63,7 @@ class ToolboxModule(ModuleBase):
             AlarmTool(self.context),
             StopwatchTool(self.context),
             InventoryTool(self.context),
+            IntentTool(self.context),
             ProjectTool(self.context),
         ]
 

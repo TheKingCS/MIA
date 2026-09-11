@@ -402,6 +402,7 @@ class MissionsModule(ModuleBase):
         mission = self.context.missions.add_mission(
             name=dialog.entered_name,
             trip_id=dialog.entered_trip_id,
+            project_id=dialog.entered_project_id,
             icon=dialog.entered_icon,
             region=dialog.entered_region,
             summary=dialog.entered_summary,

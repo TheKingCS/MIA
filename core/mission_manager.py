@@ -172,6 +172,14 @@ class Mission:
     name: str
     trip_id: Optional[str] = None
     task_id: Optional[str] = None
+    # Connective-infrastructure pass (2026-09-11) — a Mission can
+    # optionally be the gamified "face" of a Project, rather than the
+    # two staying two unrelated containers for structured work. None
+    # by default (zero migration needed for existing data/missions.json)
+    # and, deliberately, not settable through update_mission() once a
+    # Mission exists — same "pick it at creation, don't reassign later"
+    # rule trip_id already follows.
+    project_id: Optional[str] = None
     status: str = "active"  # "active" | "completed" | "abandoned"
     assigned_by: str = "user"  # "user" | "mia" — see module docstring's "2026-07-16 gamification pass"
     objectives: list[Objective] = field(default_factory=list)
@@ -205,6 +213,7 @@ class Mission:
             "name": self.name,
             "trip_id": self.trip_id,
             "task_id": self.task_id,
+            "project_id": self.project_id,
             "status": self.status,
             "assigned_by": self.assigned_by,
             "objectives": [o.to_dict() for o in self.objectives],
@@ -227,6 +236,7 @@ class Mission:
             name=data.get("name", ""),
             trip_id=data.get("trip_id"),
             task_id=data.get("task_id"),
+            project_id=data.get("project_id"),
             status=data.get("status", "active"),
             assigned_by=data.get("assigned_by", "user"),
             objectives=[Objective.from_dict(d) for d in data.get("objectives", [])],
@@ -285,6 +295,7 @@ class MissionManager:
         name: str,
         trip_id: Optional[str] = None,
         task_id: Optional[str] = None,
+        project_id: Optional[str] = None,
         assigned_by: str = "user",
         icon: str = "\U0001F4CB",
         region: str = "",
@@ -301,6 +312,7 @@ class MissionManager:
             name=name,
             trip_id=trip_id,
             task_id=task_id,
+            project_id=project_id,
             assigned_by=assigned_by,
             created_at=now,
             updated_at=now,
@@ -324,7 +336,7 @@ class MissionManager:
             raise ValueError(f"No mission with id '{mission_id}'.")
         was_completed = mission.status == "completed"
         for key, value in fields.items():
-            if key in ("created_at", "trip_id"):
+            if key in ("created_at", "trip_id", "project_id"):
                 raise ValueError(f"'{key}' can't be set through update_mission().")
             if not hasattr(mission, key):
                 raise ValueError(f"Mission has no field '{key}'.")

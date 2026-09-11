@@ -87,6 +87,7 @@ from core.port_scanner import scan_ports
 from core.energy_manager import EnergyManager
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
+from core.intent_manager import IntentManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
 from core.plaid_manager import PlaidManager
 from core.real_estate_manager import Property, RealEstateManager, equity as property_equity
@@ -218,6 +219,7 @@ class MIAApplication:
         self.context.expeditions = ExpeditionManager(self.context)
         self.context.trips = TripManager(self.context)
         self.context.projects = ProjectManager(self.context)
+        self.context.intents = IntentManager(self.context)
         self.context.tasks = TaskManager(self.context)
         # Memories is read-only aggregation over Expeditions/Trips/
         # Waypoints/Journal, so it's constructed after all four are
