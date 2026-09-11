@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from core.data_logger_manager import DataLoggerManager
     from core.device_framework import DeviceFramework
     from core.device_help_manager import DeviceHelpManager
+    from core.discovery_manager import DiscoveryManager
     from core.energy_manager import EnergyManager
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
@@ -144,6 +145,12 @@ class AppContext:
     # them a pre-authored sequence of real Missions that build it. See
     # core/pathway_manager.py's own docstring.
     pathways: Optional["PathwayManager"] = field(default=None, repr=False)
+    # Discovery (2026-09-11) — the AI-generated counterpart to
+    # Pathways: MIA proposes one Mission at a time from real Skill/
+    # Project/Intent state, validated deterministically, accepted or
+    # rejected by the user. See core/discovery_manager.py's own
+    # docstring for the full design and what's deliberately deferred.
+    discovery: Optional["DiscoveryManager"] = field(default=None, repr=False)
     volume: Optional["VolumeManager"] = field(default=None, repr=False)
     conversations: Optional["ConversationManager"] = field(default=None, repr=False)
     # Named user_memories, not memories, to stay distinct from the

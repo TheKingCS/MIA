@@ -7509,3 +7509,97 @@ generated missions (v1 missions are plain, user marks them complete
 manually); AI-generated pathway content; skill-card-level "start this
 pathway" integration in the Skills module; more pathways beyond the 4
 piloted here.
+
+## Discovery: the first AI-generated Mission proposal loop (2026-09-11)
+
+Immediately after Pathways shipped, the user described a much bigger
+destination — Hero's Path as a "Personal Capability & Progression
+Engine": an evolving Capability Graph distinguishing known from
+demonstrated, adaptive branching per domain, MIA reasoning over
+prerequisites, cross-tree synthesis ("Electronics + Gardening +
+Programming → Smart Greenhouse"), compositional mission decomposition,
+and eventually a real fail/struggle signal driving remedial missions.
+Given a direct assessment of what was actually buildable now (no real
+failure signal exists anywhere in Missions yet — only active/completed/
+abandoned; no real Activity/Insight corpus exists to ground cross-tree
+synthesis; full decomposition is agentic-planning-grade risk), the user
+explicitly agreed to build only the smallest real closed loop first,
+as a deliberate stepping stone: current state → one AI-generated
+Mission proposal → deterministic validation → user accept/reject →
+real persisted Mission → completion → real Skill XP → next proposal.
+Planned via a full Plan Mode pass (3 parallel Explore research agents
+covering the real LLM-call pattern, Mission/Pathway/Skill/Project/
+Intent data shapes, and the Insight/Recommendation precedent) before
+any code was written.
+
+**The one hard rule this exists to enforce, in the user's own words**:
+the LLM only ever proposes; deterministic systems stay authoritative
+for prerequisites, XP, completions, and unlock conditions; nothing the
+LLM says becomes state until it's validated AND the user explicitly
+accepts it. New `core/discovery_manager.py` — `MissionProposal`
+(`data/mission_proposals.json`, real per-profile runtime state, no
+`.gitignore` exception unlike `mission_pathways.json`) +
+`DiscoveryManager`. `build_discovery_prompt()` is pure/deterministic —
+gathers real Skill progress (trained + unlocked-but-untrained
+"frontier" skills, capped so 95 real skill definitions don't all get
+dumped into the prompt), the primary Intent, active Projects, and
+recently-completed Mission names, formats them as a labeled reference
+block (same shape as `core.device_help_manager.build_grounded_prompt()`),
+and tells the model exactly which real `skill_id`s it may use.
+`parse_and_validate_proposal()` is equally pure and is the real
+boundary: a proposal naming even one unknown `skill_id` is discarded
+*whole*, no partial acceptance — mirrors
+`core.assistant_chat.parse_extracted_memories()`'s "a formatting slip
+must never smuggle in a wrong fact" discipline. `reward_xp`/
+`reward_credits` are never taken from the LLM's own text at all —
+computed deterministically from the validated skill list and
+difficulty, one less thing the model has to get right and one more
+piece of the reward economy kept fully deterministic.
+
+Only `accept_proposal()` — an explicit user action — turns a validated
+proposal into a real `Mission` (`assigned_by="mia"`, same as Pathways-
+generated missions; no changes needed to `core/mission_manager.py`
+itself). `reject_proposal()` discards it (kept, not deleted, as light
+history) with no retry. Only one `"pending"` proposal per profile at a
+time, same one-active-thing-per-profile discipline
+`PathwayManager.start_pathway()` already established. New
+`modules/toolbox/tools/discovery_tool.py` — a propose button when
+nothing's pending, an accept/reject card when something is; generation
+runs off the GUI thread via the existing
+`core.generate_worker.GenerateWorker` (same pattern
+`core/assistant_chat.py`'s memory extraction already uses), so an
+unreachable LLM degrades to a plain "try again" message rather than
+freezing the UI or erroring.
+
+**Deliberately deferred, stated plainly rather than half-built**:
+`supports_project_id` stays in the `MissionProposal` schema (so
+`accept_proposal()` and any future UI can use it) but generation
+doesn't populate it yet — matching freeform LLM prose to a specific
+real Project reliably needs its own matching logic, and letting the
+model guess a project id is a worse failure mode than leaving it
+unset; Projects/Intent are still fed into the prompt as context. No
+auto-generation of the next proposal on completion (v1 is a manual
+button — an unasked "when should MIA proactively nag me" design
+decision, left alone). Cross-tree synthesis, mission decomposition,
+and adaptive "you struggled, here's a prerequisite" logic are all
+explicitly future work, not started here — the user separately flagged
+wanting Missions to gain a real "failed/struggled, here's why" signal
+next, which is the natural immediate follow-up once this loop is
+proven, not folded into this pass.
+
+**Verified for real**: 26 new tests (`test_discovery_manager.py` — 24,
+`test_discovery_tool.py` — 2) — full suite 2463 passing, zero
+regressions. Manual end-to-end
+verification against a throwaway repo copy with a REAL reachable local
+Ollama (`llama3.2:latest`): generated one real proposal ("Build a
+Compost System") from real seeded Gardening XP + a real active Project
++ a real primary Intent + a real completed Mission — the model's own
+rationale correctly referenced the greenhouse project and the user's
+existing gardening progress, using only real skill ids it was given.
+Accepted it into a real Mission, completed it, and confirmed real
+Skill XP landed on all three cross-trained skills via the existing,
+completely unchanged `MissionManager._credit_mission_rewards()` path.
+Separately verified the LLM-unavailable path (pointed `llm.base_url`
+at an unreachable port): logged a warning, degraded to `None` at every
+layer, no crash. Screenshotted the Discovery tool in both its
+propose-button and pending-proposal-with-accept/reject states.

@@ -71,6 +71,7 @@ from core.logger import get_logger
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
 from core.pathway_manager import PathwayManager
+from core.discovery_manager import DiscoveryManager
 from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
@@ -123,6 +124,11 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     # Mission Pathways — subscribes to Missions' "mission.completed"
     # event at construction, same ordering rule as core/application.py.
     context.pathways = PathwayManager(context)
+    # Discovery — references skills/missions (projects/intents aren't
+    # wired in this headless scope; it degrades gracefully without
+    # them, same as every other optional-service check here), same
+    # ordering rule as core/application.py.
+    context.discovery = DiscoveryManager(context)
     context.user_memories = UserMemoryManager(context)
 
     # Constructed but never `.discover()`-ed — stays empty for the life
