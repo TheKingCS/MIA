@@ -724,18 +724,26 @@ recognizing "I want to accomplish X but lack knowledge Y" and connecting
 Missions/Pathways/Discovery proposals to real lessons, tutorials,
 reference material, and practice exercises.
 
-**Confirmed via direct search, not assumed: no Classroom module exists
+**Confirmed via direct search, not assumed: no Classroom module existed
 anywhere in this repository** — zero matches for "classroom" across
 `core/`, `modules/`, or any doc in this repo. Same "confirm before
 building on top of it" discipline as the MIA Home handoff-doc audit
 above. **Resolved directly with the user (2026-09-11): it was never
 actually built** — genuinely new scope, not a separate project to bring
-in. Track it here as a future new module (K-12 homeschooling + trades
-content, connected into the loop below), not an integration point that
-already exists.
+in.
 
-The envisioned full loop, for when both a real Classroom module and
-real capability-status tracking exist:
+**v1 shipped 2026-09-11, same day** — `core/classroom_manager.py` +
+`modules/classroom/module.py`: Subjects → Courses → Lessons, marking
+lessons complete, derived completion rollups. Scoped directly with the
+user first: for the user's own self-education (not a homeschooling-
+the-kids tracker), and deliberately just the content/lesson structure
+— **no Skills/Missions/Discovery connection yet**. The loop below is
+still the destination, not built.
+
+The envisioned full loop, for when Classroom is actually connected to
+the rest of the system (capability status tiers — Locked/Learning/
+Practiced/Demonstrated — already shipped separately, same day, see
+`docs/ROADMAP.md`'s dated entry):
 
 ```
 Intent (what do I ultimately want?)
@@ -754,10 +762,10 @@ This is a real extension of the loop `docs/ROADMAP.md`'s Discovery entry
 already implements a first slice of (state -> proposal -> validation ->
 accept -> completion -> new state -> next proposal) — Classroom would
 sit between "Path/Skill Tree" and "Mission" as a new knowledge-gap-
-detection step, not a parallel system. Not designed further here; the
-same "prove the smaller loop first" discipline that shaped Discovery's
-v1 scope applies again once a real Classroom module exists to reason
-about.
+detection step, not a parallel system. Not designed further here; same
+"prove the smaller loop first" discipline as every other pass this
+session — Classroom's own content model should get real use before
+wiring it into Missions/Discovery.
 
 ## Why this is a separate document from ROADMAP.md
 
@@ -879,11 +887,12 @@ the other.
   `core/device_help_manager.py`'s own docstring already applies to doc
   retrieval. A fuller graph/tree *visualization* is real, separate UI
   scope, still unbuilt.
-- **The Classroom module the "User OS" vision wants to connect
-  everything to does not exist in this repository, and never was
-  built** — confirmed by direct search, then resolved directly with
-  the user. See the dedicated section above. Treat it as genuinely new
-  scope whenever it's picked up, not an existing integration point.
+- **The Classroom module the "User OS" vision wants to eventually
+  connect everything to shipped a v1 the same day (2026-09-11)** —
+  confirmed first that it never existed (direct search + resolved with
+  the user), then built the content/lesson structure only. Still not
+  connected to Skills/Missions/Discovery — see the dedicated section
+  above for the envisioned full loop, not yet wired.
 - **This update's own scope is, by a wide margin, the largest single
   addition to this document since the 2026-07-14 wearable-companion
   pass** — voice-first primacy, intelligent UI navigation, proactive
@@ -935,7 +944,7 @@ the other.
 | **Educational games** (2026-07-19 addition: games that teach real engineering concepts, homesteading, tool use, electronics, mechanics, and more) | Home (Project 2), new module(s) — desktop-class scope (real game-loop/rendering work), not a Core/field-device feature. Natural links to existing systems rather than a standalone content silo: Workshop & Electronics' component/machine data, the Missions/Gamification engine's objective-tracking primitives, and the Interactive onboarding/tutorial system above ("MIA teaches herself through real conversation and real tasks") are all plausible foundations once this is scoped for real. Not designed yet — flagged here so it isn't lost, same "don't build blind" discipline as everything else in this document. |
 | **MIA as a "User OS" / AR-XR HUD interface** (2026-09-11 addition: a persistent capability layer eventually reachable through an AR/XR contextual HUD, desktop/mobile/voice/wearable all as equal clients of the same core) | See the dedicated section above. Architectural constraint, not new work: the Skills/Missions/Pathways/Projects/Intent/Discovery stack built this session already satisfies it by construction (no `core/` file imports `gui/`; `core/core_runtime.py` already proves the same manager stack runs headless). Extends, doesn't replace, the already-resolved "Multi-platform architecture + browser/XR support" row below. |
 | **"Inspect" capability** (2026-09-11 addition: query MIA about your own capability state, or — later — a real-world object via AR glasses) | Project 1/2, future. Depends on capability-status tracking (Locked/Learning/Practiced/Demonstrated, itself still deferred — see `docs/ROADMAP.md`'s Discovery/Pathways entries) for the self-query form, and on the same camera/on-device-classification hardware question already flagged above for the contextual/object-recognition form. Not designed further. |
-| **Classroom as the knowledge/education layer** (2026-09-11 addition: connect Missions/Pathways/Discovery to real lessons/tutorials/reference material when a capability gap is identified) | Project 1, new module — **confirmed by direct search and then with the user directly: never actually built.** See the dedicated section above. Genuinely new scope (K-12 homeschooling + trades content) whenever it's picked up, not an existing module to integrate with. |
+| **Classroom as the knowledge/education layer** (2026-09-11 addition: connect Missions/Pathways/Discovery to real lessons/tutorials/reference material when a capability gap is identified) | Project 1. **v1 shipped 2026-09-11** — `core/classroom_manager.py` + `modules/classroom/module.py` (Subjects → Courses → Lessons, derived completion). Confirmed first it never existed before building it. Deliberately just the content/lesson structure so far — the Skills/Missions/Discovery connection described in the dedicated section above is still unbuilt. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 
