@@ -50,7 +50,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.maintenance_manager import DEFAULT_METER_UNITS, MaintenanceAsset, MaintenanceTask
+from core.maintenance_manager import DEFAULT_METER_UNITS, PRIORITY_LEVELS, MaintenanceAsset, MaintenanceTask
 
 _DEFAULT_INTERVAL_DAYS = 30
 
@@ -76,7 +76,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Task" if task is not None else "New Task")
-        self.setFixedSize(380, 520)
+        self.setFixedSize(380, 570)
         self._assets = assets or []
 
         layout = QVBoxLayout(self)
@@ -108,6 +108,13 @@ class AddEditMaintenanceTaskDialog(QDialog):
         self.auto_schedule_checkbox = QCheckBox("Auto-schedule a calendar event once due")
         layout.addWidget(self.auto_schedule_checkbox)
 
+        layout.addWidget(QLabel("Priority:"))
+        self.priority_combo = QComboBox()
+        for level in PRIORITY_LEVELS:
+            self.priority_combo.addItem(level.capitalize(), level)
+        self.priority_combo.setCurrentIndex(PRIORITY_LEVELS.index("normal"))
+        layout.addWidget(self.priority_combo)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -133,6 +140,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         self._threshold_value: Optional[float] = None
         self._threshold_direction: str = "below"
         self._auto_schedule: bool = False
+        self._priority: str = "normal"
 
     # ------------------------------------------------------------------
     # Trigger-type pages
@@ -221,6 +229,8 @@ class AddEditMaintenanceTaskDialog(QDialog):
             self.title_edit.setText(task.title)
             self.notes_edit.setPlainText(task.notes)
             self.auto_schedule_checkbox.setChecked(task.auto_schedule)
+            priority_index = self.priority_combo.findData(task.priority)
+            self.priority_combo.setCurrentIndex(priority_index if priority_index != -1 else PRIORITY_LEVELS.index("normal"))
 
             trigger_index = next(
                 (i for i, (_label, value) in enumerate(_TRIGGER_TYPE_LABELS) if value == task.trigger_type), 0
@@ -263,6 +273,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         self._title = title
         self._notes = self.notes_edit.toPlainText().strip()
         self._auto_schedule = self.auto_schedule_checkbox.isChecked()
+        self._priority = self.priority_combo.currentData()
         self._trigger_type = _TRIGGER_TYPE_LABELS[self.trigger_combo.currentIndex()][1]
 
         self._interval_days = None
@@ -322,3 +333,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
     @property
     def entered_auto_schedule(self) -> bool:
         return self._auto_schedule
+
+    @property
+    def entered_priority(self) -> str:
+        return self._priority

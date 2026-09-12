@@ -73,7 +73,24 @@ _DATA_DIR = _PROJECT_ROOT / "data"
 _MAINTENANCE_FILE = _DATA_DIR / "maintenance.json"
 _DOCUMENT_ROOT = _PROJECT_ROOT / "maintenance_documents"
 
-ASSET_CATEGORIES = ["Vehicle", "Power Equipment", "Appliance", "Property", "Tool", "Other"]
+ASSET_CATEGORIES = ["Vehicle", "Power Equipment", "Appliance", "Property", "Garden/Plant", "Tool", "Other"]
+
+#: Suggested vocabulary for MaintenanceTask.priority (2026-09-12 "smart
+#: calendar" pass) — a plain str, not an enum, same "unrecognized/blank
+#: just means unspecified" reasoning as core.mission_manager's
+#: DIFFICULTY_LEVELS. Independent of urgency below: a task can be
+#: high-priority but not due for months (e.g. "inspect the mower's
+#: safety interlocks"), or low-priority and overdue.
+PRIORITY_LEVELS = ("low", "normal", "high")
+
+#: Derived urgency tier (2026-09-12) — never persisted, always computed
+#: from the same due-date primitives this module already has (see
+#: task_urgency() below). Used for coloring, not stored anywhere.
+URGENCY_LEVELS = ("overdue", "due_soon", "on_track", "unknown")
+
+# Same 3-day window core.maintenance_insights.py's own _DUE_SOON_WITHIN_DAYS
+# and core.smart_suggestions.py's _EXPIRING_WITHIN_DAYS already use.
+_DUE_SOON_WITHIN_DAYS = 3
 
 # trigger_type values that use the cumulative-meter mechanism (a reading
 # minus its value at last completion, compared against an interval) —
@@ -160,6 +177,9 @@ class MaintenanceTask:
     # from the dashboard's existing refresh tick. Off by default — see
     # core/maintenance_manager.py module docstring.
     auto_schedule: bool = False
+    # "Smart calendar" pass (2026-09-12) — user-set importance,
+    # independent of due-date urgency (see PRIORITY_LEVELS above).
+    priority: str = "normal"
 
     def to_dict(self) -> dict:
         return {
@@ -178,6 +198,7 @@ class MaintenanceTask:
             "threshold_value": self.threshold_value,
             "threshold_direction": self.threshold_direction,
             "auto_schedule": self.auto_schedule,
+            "priority": self.priority,
         }
 
     @staticmethod
@@ -198,6 +219,7 @@ class MaintenanceTask:
             threshold_value=data.get("threshold_value"),
             threshold_direction=data.get("threshold_direction", "below"),
             auto_schedule=data.get("auto_schedule", False),
+            priority=data.get("priority", "normal"),
         )
 
     @property
@@ -340,6 +362,75 @@ def predicted_due_date(
         when = f"~{max(1, round(days_remaining))} days"
     caveat = f"{when} at current usage (avg {rate_per_week:.1f} {unit}/week over {len(readings)} logged readings)"
     return estimated, caveat
+
+
+def task_urgency(task: MaintenanceTask, readings: list[Reading], today: date) -> str:
+    """
+    One of URGENCY_LEVELS — a normalized tier across all three trigger
+    types, for coloring a task row (never persisted). Reuses this
+    module's own due-date primitives (is_overdue/days_until_due for
+    calendar, is_meter_task_due/predicted_due_date for meter,
+    is_sensor_task_due for sensor) rather than re-deriving anything.
+
+    Deliberately a separate function from core.maintenance_insights.py's
+    own _task_flag(), even though the underlying math overlaps — that
+    function's (kind, detail) output feeds real, already-persisted
+    Insight records keyed on exact kind strings that differ by trigger
+    type for real reasons ("overdue" vs "due"); reshaping it to share
+    code with a plain 4-value UI tier risked a subtle behavior change
+    to a working, tested system for a purely cosmetic consolidation —
+    a small, deliberate, accepted duplication, not an oversight.
+    """
+    if task.trigger_type == "calendar":
+        remaining = days_until_due(task, today)
+        if remaining is None:
+            return "unknown"
+        if remaining < 0:
+            return "overdue"
+        if remaining <= _DUE_SOON_WITHIN_DAYS:
+            return "due_soon"
+        return "on_track"
+
+    if task.is_meter_task:
+        if task.last_completed_meter_value is None or not readings:
+            return "unknown"
+        if is_meter_task_due(task, readings):
+            return "overdue"
+        projection = predicted_due_date(task, readings, today)
+        if projection is not None:
+            estimated_date, _caveat = projection
+            if (estimated_date - today).days <= _DUE_SOON_WITHIN_DAYS:
+                return "due_soon"
+        return "on_track"
+
+    # Sensor (threshold) task — no honest forward date exists (see
+    # next_occurrence_date() below), so this only ever distinguishes
+    # currently-due from currently-fine, never a "due_soon" trend.
+    if not readings:
+        return "unknown"
+    return "overdue" if is_sensor_task_due(task, readings) else "on_track"
+
+
+def next_occurrence_date(task: MaintenanceTask, readings: list[Reading], today: date) -> Optional[date]:
+    """
+    The best real date to place this task on a week/month overview, or
+    None when no honest date exists (never a fabricated guess — same
+    standard predicted_due_date() itself already holds to):
+    calendar -> next_due_date(task); meter -> predicted_due_date()'s
+    estimate if available, else today if already due, else None;
+    sensor -> today if currently due, else None (a threshold crossing
+    has no forward trend to project).
+    """
+    if task.trigger_type == "calendar":
+        return next_due_date(task)
+
+    if task.is_meter_task:
+        if is_meter_task_due(task, readings):
+            return today
+        projection = predicted_due_date(task, readings, today)
+        return projection[0] if projection is not None else None
+
+    return today if is_sensor_task_due(task, readings) else None
 
 
 class MaintenanceManager:
@@ -514,6 +605,7 @@ class MaintenanceManager:
         threshold_value: Optional[float] = None,
         threshold_direction: str = "below",
         auto_schedule: bool = False,
+        priority: str = "normal",
     ) -> MaintenanceTask:
         task = MaintenanceTask(
             task_id=uuid.uuid4().hex[:10],
@@ -529,6 +621,7 @@ class MaintenanceManager:
             threshold_value=threshold_value,
             threshold_direction=threshold_direction,
             auto_schedule=auto_schedule,
+            priority=priority,
         )
         self._tasks.append(task)
         self._save()

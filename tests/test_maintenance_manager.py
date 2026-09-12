@@ -49,7 +49,9 @@ from core.maintenance_manager import (
     is_sensor_task_due,
     meter_used_since_last,
     next_due_date,
+    next_occurrence_date,
     predicted_due_date,
+    task_urgency,
 )
 from core.profile_manager import ProfileManager
 from core.skill_manager import SkillManager
@@ -331,6 +333,151 @@ def test_predicted_due_date_days_phrasing_for_short_estimates():
     estimated, caveat = result
     assert "days" in caveat
     assert "weeks" not in caveat
+
+
+# ------------------------------------------------------------------
+# task_urgency — "smart calendar" pass (2026-09-12)
+# ------------------------------------------------------------------
+
+def test_task_urgency_calendar_overdue():
+    task = _task(interval_days=10, last_completed="2026-01-01")
+    assert task_urgency(task, [], date(2026, 1, 15)) == "overdue"
+
+
+def test_task_urgency_calendar_due_soon():
+    task = _task(interval_days=10, last_completed="2026-01-01")
+    assert task_urgency(task, [], date(2026, 1, 9)) == "due_soon"  # 2 days remaining
+
+
+def test_task_urgency_calendar_on_track():
+    task = _task(interval_days=10, last_completed="2026-01-01")
+    assert task_urgency(task, [], date(2026, 1, 1)) == "on_track"  # 10 days remaining
+
+
+def test_task_urgency_calendar_unknown_when_never_completed():
+    task = _task(interval_days=10, last_completed=None)
+    assert task_urgency(task, [], date(2026, 1, 1)) == "unknown"
+
+
+def test_task_urgency_meter_unknown_without_baseline():
+    task = _task(trigger_type="mileage", last_completed_meter_value=None)
+    assert task_urgency(task, [_reading(100, "2026-01-01T00:00:00")], date(2026, 1, 1)) == "unknown"
+
+
+def test_task_urgency_meter_overdue():
+    task = _task(trigger_type="mileage", meter_interval=3000, last_completed_meter_value=50000)
+    readings = [_reading(53000, "2026-01-01T00:00:00")]
+    assert task_urgency(task, readings, date(2026, 1, 1)) == "overdue"
+
+
+def test_task_urgency_meter_due_soon():
+    task = _task(trigger_type="mileage", meter_unit="miles", meter_interval=100, last_completed_meter_value=0)
+    readings = [_reading(0, "2026-01-01T00:00:00"), _reading(90, "2026-01-02T00:00:00")]
+    assert task_urgency(task, readings, date(2026, 1, 2)) == "due_soon"
+
+
+def test_task_urgency_meter_on_track():
+    task = _task(trigger_type="mileage", meter_unit="miles", meter_interval=100, last_completed_meter_value=0)
+    readings = [_reading(0, "2026-01-01T00:00:00"), _reading(5, "2026-01-02T00:00:00")]
+    assert task_urgency(task, readings, date(2026, 1, 2)) == "on_track"
+
+
+def test_task_urgency_sensor_unknown_without_readings():
+    task = _task(trigger_type="sensor", threshold_value=20, threshold_direction="below")
+    assert task_urgency(task, [], date(2026, 1, 1)) == "unknown"
+
+
+def test_task_urgency_sensor_overdue():
+    task = _task(trigger_type="sensor", threshold_value=20, threshold_direction="below")
+    readings = [_reading(15, "2026-01-01T00:00:00")]
+    assert task_urgency(task, readings, date(2026, 1, 1)) == "overdue"
+
+
+def test_task_urgency_sensor_on_track():
+    task = _task(trigger_type="sensor", threshold_value=20, threshold_direction="below")
+    readings = [_reading(25, "2026-01-01T00:00:00")]
+    assert task_urgency(task, readings, date(2026, 1, 1)) == "on_track"
+
+
+# ------------------------------------------------------------------
+# next_occurrence_date — "smart calendar" pass (2026-09-12)
+# ------------------------------------------------------------------
+
+def test_next_occurrence_date_calendar_matches_next_due_date():
+    task = _task(interval_days=10, last_completed="2026-01-01")
+    assert next_occurrence_date(task, [], date(2026, 1, 5)) == next_due_date(task)
+
+
+def test_next_occurrence_date_calendar_none_when_never_completed():
+    task = _task(interval_days=10, last_completed=None)
+    assert next_occurrence_date(task, [], date(2026, 1, 1)) is None
+
+
+def test_next_occurrence_date_meter_today_when_already_due():
+    task = _task(trigger_type="mileage", meter_interval=3000, last_completed_meter_value=50000)
+    readings = [_reading(53000, "2026-01-01T00:00:00")]
+    today = date(2026, 1, 10)
+    assert next_occurrence_date(task, readings, today) == today
+
+
+def test_next_occurrence_date_meter_uses_predicted_estimate():
+    task = _task(trigger_type="mileage", meter_unit="miles", meter_interval=100, last_completed_meter_value=0)
+    readings = [_reading(0, "2026-01-01T00:00:00"), _reading(90, "2026-01-02T00:00:00")]
+    today = date(2026, 1, 2)
+    expected = predicted_due_date(task, readings, today)[0]
+    assert next_occurrence_date(task, readings, today) == expected
+
+
+def test_next_occurrence_date_meter_none_without_enough_data():
+    task = _task(trigger_type="mileage", meter_interval=3000, last_completed_meter_value=50000)
+    assert next_occurrence_date(task, [], date(2026, 1, 1)) is None
+
+
+def test_next_occurrence_date_sensor_today_when_due():
+    task = _task(trigger_type="sensor", threshold_value=20, threshold_direction="below")
+    readings = [_reading(15, "2026-01-01T00:00:00")]
+    today = date(2026, 1, 10)
+    assert next_occurrence_date(task, readings, today) == today
+
+
+def test_next_occurrence_date_sensor_none_when_not_due():
+    task = _task(trigger_type="sensor", threshold_value=20, threshold_direction="below")
+    readings = [_reading(25, "2026-01-01T00:00:00")]
+    assert next_occurrence_date(task, readings, date(2026, 1, 10)) is None
+
+
+# ------------------------------------------------------------------
+# priority — "smart calendar" pass (2026-09-12)
+# ------------------------------------------------------------------
+
+def test_task_priority_defaults_to_normal():
+    assert _task().priority == "normal"
+
+
+def test_task_priority_round_trips_through_to_dict_from_dict():
+    task = _task(priority="high")
+    assert MaintenanceTask.from_dict(task.to_dict()).priority == "high"
+
+
+def test_task_priority_backward_compatible_with_old_shape():
+    task = MaintenanceTask.from_dict({"task_id": "t1", "asset_id": "a1", "title": "Oil change"})
+    assert task.priority == "normal"
+
+
+def test_add_task_defaults_priority_to_normal(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Oil change")
+    assert task.priority == "normal"
+
+
+def test_add_task_accepts_a_real_priority(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Oil change", priority="high")
+    assert task.priority == "high"
 
 
 # ------------------------------------------------------------------

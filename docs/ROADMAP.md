@@ -7874,3 +7874,66 @@ just asserted in isolation. Confirmed `build_discovery_prompt()`
 correctly omits "Currently studying" once the only lesson is complete,
 and correctly shows it again once a second, still-incomplete lesson
 exists under the same subject.
+
+## Smart Maintenance Calendar: priority coloring, weekly/monthly overview, garden/plant care (2026-09-12)
+
+The user's own next real-life-management ask, alongside a concept
+mockup of the long-term "User OS" vision (`docs/vision_assets/
+user_os_concept.png`, reference material only — see `docs/VISION.md`).
+**Verified before scoping, not assumed**: `core/maintenance_manager.py`
+already had real, tested due-date math for calendar (months-passed) and
+meter (hours/mileage/cycles/condition) triggers — exactly the mower-
+manual-schedule case the user described — so none of that needed
+rebuilding. The real gaps, confirmed by reading the actual code: no
+`priority` field anywhere, `format_task_row()` returned plain
+uncolored text, only a flat Tasks list existed (no weekly/monthly
+grouped view), and no Plant/Garden asset category existed for
+watering/care schedules. Scoped directly with the user: extend the
+existing Maintenance module (not a separate calendar module), and
+model plants as Maintenance assets (a garden bed becomes an asset with
+its own recurring watering tasks, reusing the mower's exact due-date
+engine) rather than building a new Garden module.
+
+`ASSET_CATEGORIES` gains `"Garden/Plant"` — the entire watering/care
+feature is just this plus ordinary calendar-trigger recurring tasks,
+no new manager or data model. New `PRIORITY_LEVELS` (soft vocabulary,
+same spirit as `DIFFICULTY_LEVELS`) + `MaintenanceTask.priority`
+(user-set, independent of due-date urgency). New pure
+`task_urgency(task, readings, today) -> str` — a normalized
+overdue/due_soon/on_track/unknown tier across all three trigger types,
+for coloring. **Deliberately not a refactor of
+`core/maintenance_insights.py`'s own `_task_flag()`**, despite real
+overlapping math — that function's `(kind, detail)` output feeds
+already-persisted Insight records keyed on exact kind strings that
+differ by trigger type for real reasons, and reshaping it to share
+code with a plain 4-value UI tier risked a subtle behavior change to a
+working, tested system for a purely cosmetic consolidation; a small,
+deliberate, stated duplication, not an oversight. New pure
+`next_occurrence_date()` — the best real date to place a task on a
+week/month overview, never a fabricated guess (mirrors
+`predicted_due_date()`'s own standard exactly): `None` when no honest
+date exists, e.g. a sensor task that isn't currently due.
+
+`gui/add_edit_maintenance_task_dialog.py` gained a Priority combo.
+`modules/maintenance/module.py`: the Tasks tab now colors each row via
+`item.setForeground()` keyed off `task_urgency()`, reusing this app's
+own already-established critical/warning colors (`#e06666`/`#e0af68`
+from `gui/styles.py`'s `NotificationCard` convention) rather than
+inventing new ones; a `[HIGH]`/`[low]` badge appears only for non-
+default priority (silent for "normal," same restraint as Mission's
+`abandon_reason` "(none)" convention). New **Overview tab** — This
+Week / This Month, color-coded the same way, tasks placed by
+`next_occurrence_date()`; refreshes on every tab switch, same fix this
+project already applied to Budget's own Summary/Trends staleness bug.
+
+**Verified for real**: 29 new tests (23 in `test_maintenance_manager.py`
+covering `task_urgency()`/`next_occurrence_date()` across all 3 trigger
+types and `priority`, 6 in `test_maintenance_module.py` for the badge/
+overview-row formatters) — full suite 2549 passing, zero regressions.
+Manual headless-Qt walkthrough against a real seeded mower asset (an
+hours-based oil-change task pushed 5 engine-hours overdue), a calendar
+task overdue by 2 days, one due in 2 days, and a real Garden/Plant
+asset with a 3-day watering task: the Tasks tab correctly rendered red/
+amber/default rows with the right priority badges, and the new
+Overview tab correctly grouped and sorted all four real tasks by date
+under both This Week and This Month.

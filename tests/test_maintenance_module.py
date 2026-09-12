@@ -29,7 +29,12 @@ from core.maintenance_manager import (
     next_due_date,
     predicted_due_date,
 )
-from modules.maintenance.module import format_asset_row, format_task_row
+from modules.maintenance.module import (
+    format_asset_row,
+    format_overview_row,
+    format_priority_badge,
+    format_task_row,
+)
 
 
 def _task(interval_days=None, last_completed=None):
@@ -251,3 +256,42 @@ def test_predicted_due_date_projects_forward_from_real_usage_rate():
     assert estimated_date == date(2026, 10, 17)  # today + 40 days (4000 units remaining / 100 per day)
     assert "at current usage" in caveat
     assert "miles/week" in caveat
+
+
+# ------------------------------------------------------------------
+# format_priority_badge / format_overview_row — "smart calendar" pass
+# (2026-09-12)
+# ------------------------------------------------------------------
+
+def test_format_priority_badge_normal_is_silent():
+    assert format_priority_badge("normal") == ""
+
+
+def test_format_priority_badge_high():
+    assert format_priority_badge("high") == "[HIGH] "
+
+
+def test_format_priority_badge_low():
+    assert format_priority_badge("low") == "[low] "
+
+
+def test_format_overview_row_includes_date_title_and_asset():
+    task = MaintenanceTask(task_id="t1", asset_id="a1", title="Oil change")
+    asset = MaintenanceAsset(asset_id="a1", name="Truck")
+    row = format_overview_row(task, asset, date(2026, 9, 4))
+    assert "Oil change" in row
+    assert "(Truck)" in row
+    assert "Sep" in row
+
+
+def test_format_overview_row_includes_priority_badge():
+    task = MaintenanceTask(task_id="t1", asset_id="a1", title="Oil change", priority="high")
+    asset = MaintenanceAsset(asset_id="a1", name="Truck")
+    row = format_overview_row(task, asset, date(2026, 9, 4))
+    assert "[HIGH]" in row
+
+
+def test_format_overview_row_unknown_asset():
+    task = MaintenanceTask(task_id="t1", asset_id="a1", title="Oil change")
+    row = format_overview_row(task, None, date(2026, 9, 4))
+    assert "Unknown asset" in row

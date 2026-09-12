@@ -27,6 +27,7 @@ from datetime import date
 from typing import Optional
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -49,7 +50,9 @@ from core.maintenance_manager import (
     is_overdue,
     is_sensor_task_due,
     meter_used_since_last,
+    next_occurrence_date,
     predicted_due_date,
+    task_urgency,
 )
 from core.search_manager import SearchResult
 from gui.add_edit_asset_dialog import AddEditAssetDialog
@@ -64,6 +67,46 @@ from modules.module_base import ModuleBase
 def format_asset_row(asset: MaintenanceAsset) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_maintenance_module.py)."""
     return f"{asset.name}   [{asset.category}]"
+
+
+# "Smart calendar" pass (2026-09-12) — reuses this app's own already-
+# established critical/warning colors (gui/styles.py's NotificationCard
+# convention) rather than inventing new ones; on_track/unknown keep the
+# list's default color (no entry here — see _color_for_urgency() below).
+_URGENCY_COLORS = {
+    "overdue": "#e06666",
+    "due_soon": "#e0af68",
+}
+
+
+def _color_for_urgency(urgency: str) -> Optional[QColor]:
+    """None means "leave the row at its default color" — never fabricate
+    a color for on_track/unknown, same "don't decorate a non-event"
+    restraint format_task_row() itself already applies."""
+    hex_color = _URGENCY_COLORS.get(urgency)
+    return QColor(hex_color) if hex_color else None
+
+
+def format_priority_badge(priority: str) -> str:
+    """Pure formatting logic — testable without Qt. "" for the default
+    "normal" (no visual noise for the common case, same precedent as
+    Mission's abandon_reason "(none)" convention)."""
+    if priority == "high":
+        return "[HIGH] "
+    if priority == "low":
+        return "[low] "
+    return ""
+
+
+def format_overview_row(task: MaintenanceTask, asset: Optional[MaintenanceAsset], occurrence_date) -> str:
+    """Pure formatting logic — testable without Qt. For the Overview
+    tab's This Week/This Month lists."""
+    asset_name = asset.name if asset is not None else "Unknown asset"
+    # %-d (no leading zero) is POSIX-only and not portable to native
+    # Windows Python — %d plus a manual lstrip keeps this cross-platform.
+    day = occurrence_date.strftime("%d").lstrip("0") or "0"
+    date_text = f"{occurrence_date.strftime('%a %b')} {day}"
+    return f"{date_text} — {format_priority_badge(task.priority)}{task.title} ({asset_name})"
 
 
 def format_task_row(
@@ -96,7 +139,7 @@ def format_task_row(
             status = "[DUE TODAY]"
         else:
             status = f"[DUE IN {remaining}d]"
-        return f"{status}  {task.title}   ({asset_name})"
+        return f"{status}  {format_priority_badge(task.priority)}{task.title}   ({asset_name})"
 
     if task.is_meter_task:
         unit = task.meter_unit or "units"
@@ -118,7 +161,7 @@ def format_task_row(
                     status += f"  ({caveat})"
                 elif len(readings) < 2:
                     status += "  (not enough data logged yet)"
-        return f"{status}  {task.title}   ({asset_name})"
+        return f"{status}  {format_priority_badge(task.priority)}{task.title}   ({asset_name})"
 
     # Sensor (threshold) task.
     if not readings:
@@ -130,7 +173,7 @@ def format_task_row(
             status = f"[DUE — {latest:g}{unit} {task.threshold_direction} {task.threshold_value:g}{unit}]"
         else:
             status = f"[OK — {latest:g}{unit}]"
-    return f"{status}  {task.title}   ({asset_name})"
+    return f"{status}  {format_priority_badge(task.priority)}{task.title}   ({asset_name})"
 
 
 class MaintenanceModule(ModuleBase):
@@ -145,6 +188,8 @@ class MaintenanceModule(ModuleBase):
         self._asset_list: Optional[QListWidget] = None
         self._task_filter_edit: Optional[QLineEdit] = None
         self._task_list: Optional[QListWidget] = None
+        self._week_list: Optional[QListWidget] = None
+        self._month_list: Optional[QListWidget] = None
 
     def on_load(self) -> None:
         super().on_load()
@@ -167,6 +212,13 @@ class MaintenanceModule(ModuleBase):
         tabs = QTabWidget()
         tabs.addTab(self._build_assets_tab(), "Assets")
         tabs.addTab(self._build_tasks_tab(), "Tasks")
+        tabs.addTab(self._build_overview_tab(), "Overview")
+        # Same "every tab refreshes on every tabs.currentChanged" fix
+        # this project already applied to Budget's own Summary/Trends
+        # staleness bug — Overview needs to reflect whatever was just
+        # added/completed on the Tasks tab, not just its state when the
+        # module widget was first built.
+        tabs.currentChanged.connect(lambda _index: self._refresh_overview())
         layout.addWidget(tabs, stretch=1)
 
         return widget
@@ -369,6 +421,9 @@ class MaintenanceModule(ModuleBase):
                 continue
             item = QListWidgetItem(row_text)
             item.setData(Qt.ItemDataRole.UserRole, task.task_id)
+            color = _color_for_urgency(task_urgency(task, readings or [], today))
+            if color is not None:
+                item.setForeground(color)
             self._task_list.addItem(item)
 
     def _selected_task_id(self) -> Optional[str]:
@@ -376,6 +431,73 @@ class MaintenanceModule(ModuleBase):
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
+
+    # ------------------------------------------------------------------
+    # Overview tab — "smart calendar" pass (2026-09-12): a week/month
+    # grouped view over the same tasks the Tasks tab shows, placed by
+    # core.maintenance_manager.next_occurrence_date() (never a guessed
+    # date — a task with no honest date, e.g. a sensor task that isn't
+    # currently due, simply doesn't appear in either list).
+    # ------------------------------------------------------------------
+
+    def _build_overview_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        week_label = QLabel("This Week")
+        week_label.setObjectName("SubtitleLabel")
+        layout.addWidget(week_label)
+        self._week_list = QListWidget()
+        layout.addWidget(self._week_list, stretch=1)
+
+        month_label = QLabel("This Month")
+        month_label.setObjectName("SubtitleLabel")
+        layout.addWidget(month_label)
+        self._month_list = QListWidget()
+        layout.addWidget(self._month_list, stretch=1)
+
+        self._refresh_overview()
+        return tab
+
+    def _refresh_overview(self) -> None:
+        today = date.today()
+        week_cutoff = today.toordinal() + 7
+        month_cutoff = today.toordinal() + 30
+
+        week_rows: list[tuple[date, MaintenanceTask]] = []
+        month_rows: list[tuple[date, MaintenanceTask]] = []
+        for task in self.context.maintenance.all_tasks():
+            readings = (
+                self.context.maintenance.readings_for_task(task.task_id)
+                if task.trigger_type != "calendar"
+                else []
+            )
+            occurrence = next_occurrence_date(task, readings, today)
+            if occurrence is None:
+                continue
+            if occurrence.toordinal() <= week_cutoff:
+                week_rows.append((occurrence, task))
+            if occurrence.toordinal() <= month_cutoff:
+                month_rows.append((occurrence, task))
+
+        self._populate_overview_list(self._week_list, week_rows, today)
+        self._populate_overview_list(self._month_list, month_rows, today)
+
+    def _populate_overview_list(self, list_widget: QListWidget, rows: list, today: date) -> None:
+        list_widget.clear()
+        for occurrence, task in sorted(rows, key=lambda pair: pair[0]):
+            asset = self.context.maintenance.get_asset(task.asset_id)
+            item = QListWidgetItem(format_overview_row(task, asset, occurrence))
+            item.setData(Qt.ItemDataRole.UserRole, task.task_id)
+            readings = (
+                self.context.maintenance.readings_for_task(task.task_id)
+                if task.trigger_type != "calendar"
+                else []
+            )
+            color = _color_for_urgency(task_urgency(task, readings, today))
+            if color is not None:
+                item.setForeground(color)
+            list_widget.addItem(item)
 
     def _on_add_task(self) -> None:
         assets = self.context.maintenance.all_assets()
@@ -398,6 +520,7 @@ class MaintenanceModule(ModuleBase):
             threshold_value=dialog.entered_threshold_value,
             threshold_direction=dialog.entered_threshold_direction,
             auto_schedule=dialog.entered_auto_schedule,
+            priority=dialog.entered_priority,
         )
         self._refresh_task_list()
 
@@ -425,6 +548,7 @@ class MaintenanceModule(ModuleBase):
             threshold_value=dialog.entered_threshold_value,
             threshold_direction=dialog.entered_threshold_direction,
             auto_schedule=dialog.entered_auto_schedule,
+            priority=dialog.entered_priority,
         )
         self._refresh_task_list()
 
