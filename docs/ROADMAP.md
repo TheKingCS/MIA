@@ -7670,3 +7670,29 @@ section so the model can actually consider proposing something in that
 same skill area, not just avoid repeating the exact abandoned mission.
 Not fixed this pass — flagged honestly rather than silently left for
 someone to rediscover.
+
+## Discovery: frontier-skill cap no longer crowds out struggled skills (2026-09-11)
+
+Closed the honest gap flagged at the end of the previous entry. In
+`core/discovery_manager.py`'s `build_discovery_prompt()`, the set of
+skill_ids targeted by a real `"too_hard"`-abandoned mission is now
+computed *before* the frontier-skill list is built (previously computed
+afterward, purely for display), and the frontier list is stable-sorted
+so any struggled-with skill sorts first — the existing
+`_MAX_FRONTIER_SKILLS_IN_PROMPT` cap can no longer silently cut a
+genuinely-unlocked struggled skill just because other categories
+happened to fill the cap first in `all_skills()`'s definition order.
+No other behavior changed — same cap size, same "Found too difficult
+recently" section, same instruction line.
+
+**Verified for real**: 1 new test
+(`test_struggled_skill_is_not_crowded_out_by_the_frontier_cap`)
+reproduces the exact scenario found manually in the previous phase —
+more unlocked skills than the cap allows, with the struggled skill
+deliberately last in definition order — and confirms it now survives
+into both the "available next" list and the allowed-skill-ids line.
+Full suite 2475 passing, zero regressions. No live-Ollama re-
+verification needed for this pass — the fix is entirely inside the
+pure, deterministic `build_discovery_prompt()` function (no parsing/
+LLM-facing behavior changed), already covered end-to-end by the
+previous phase's real manual verification.

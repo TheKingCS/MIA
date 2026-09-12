@@ -169,6 +169,31 @@ def test_prompt_ignores_a_mission_abandoned_for_another_reason(isolated_paths):
     assert "prefer an easier step" not in prompt
 
 
+def test_struggled_skill_is_not_crowded_out_by_the_frontier_cap(isolated_paths):
+    from core.discovery_manager import _MAX_FRONTIER_SKILLS_IN_PROMPT
+
+    # More unlocked, untrained skills than the frontier cap allows,
+    # with the struggled-with skill deliberately LAST in definition
+    # order — without prioritization this would get cut.
+    skills = [
+        {"skill_id": f"filler_{i}", "name": f"Filler {i}", "category": "Misc"}
+        for i in range(_MAX_FRONTIER_SKILLS_IN_PROMPT + 5)
+    ]
+    skills.append({"skill_id": "framing", "name": "Framing", "category": "Construction"})
+    isolated_paths.mkdir(parents=True, exist_ok=True)
+    (isolated_paths / "skill_definitions.json").write_text(json.dumps({"skills": skills}))
+
+    context = _make_context()
+    manager = _make_manager(context)
+    mission = context.missions.add_mission(name="Frame a Wall", skill_rewards=[SkillWeight("framing", 40)])
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="too_hard")
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Framing (framing)" in prompt.split("You may ONLY reference")[0]
+    assert "framing" in prompt.split("You may ONLY reference these exact skill ids in your answer:")[1].split(".")[0]
+
+
 def test_prompt_ignores_a_too_hard_mission_with_no_skill_rewards(isolated_paths):
     _write_skill_definitions(isolated_paths)
     context = _make_context()
