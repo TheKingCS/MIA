@@ -34,12 +34,20 @@ from modules.toolbox.tool_base import ToolboxTool
 
 
 def format_pathway_status(pathway: Pathway, progress: Optional[PathwayProgress]) -> str:
-    """Pure formatting logic — testable without Qt."""
+    """Pure formatting logic — testable without Qt. Shows the repeat
+    count only for a step that actually has one (repeat_count > 1) —
+    "Step 1 of 3 (2/3)" — silent otherwise, matching this codebase's
+    "don't decorate a non-event" restraint elsewhere (e.g. Mission's
+    abandon_reason "(none)" convention)."""
     if progress is None:
         return "Not started"
     if progress.status == "completed":
         return "Completed"
-    return f"Step {progress.current_step_index + 1} of {len(pathway.steps)}"
+    base = f"Step {progress.current_step_index + 1} of {len(pathway.steps)}"
+    current_step = pathway.steps[progress.current_step_index]
+    if current_step.repeat_count > 1:
+        base += f" ({progress.current_step_repeats_done}/{current_step.repeat_count})"
+    return base
 
 
 def format_pathway_row(pathway: Pathway, progress: Optional[PathwayProgress]) -> str:

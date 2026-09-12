@@ -270,6 +270,100 @@ def test_a_completed_pathway_can_be_started_again(isolated_paths):
 
 
 # ------------------------------------------------------------------
+# Repeatable pathway steps (2026-09-12)
+# ------------------------------------------------------------------
+
+_REPEATING_PATHWAY = {
+    "pathway_id": "test_path",
+    "skill_id": "cooking",
+    "name": "Test Pathway",
+    "steps": [
+        {"name": "Cook a New Recipe", "skill_rewards": [{"skill_id": "cooking", "xp": 15}], "repeat_count": 3},
+        {"name": "Step Two", "skill_rewards": [{"skill_id": "cooking", "xp": 20}]},
+    ],
+}
+
+
+def test_repeat_count_defaults_to_one_and_is_a_no_op_change(isolated_paths):
+    """Every existing pathway/step (repeat_count never set) must behave
+    exactly as before this feature — proven by reusing the plain
+    two-step fixture every other test above already relies on."""
+    _write_pathways(isolated_paths, [_TWO_STEP_PATHWAY])
+    context = _make_context()
+    manager = _make_manager(context)
+    first_mission = manager.start_pathway("p1", "test_path")
+
+    context.missions.update_mission(first_mission.mission_id, status="completed")
+
+    progress = manager.status_for("p1", "test_path")
+    assert progress.current_step_index == 1
+    assert progress.current_step_repeats_done == 0
+
+
+def test_completing_a_repeating_step_recreates_the_same_step(isolated_paths):
+    _write_pathways(isolated_paths, [_REPEATING_PATHWAY])
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = _make_manager(context)
+    first_mission = manager.start_pathway("p1", "test_path")
+
+    context.missions.update_mission(first_mission.mission_id, status="completed")
+
+    progress = manager.status_for("p1", "test_path")
+    assert progress.status == "active"
+    assert progress.current_step_index == 0  # still on the same step
+    assert progress.current_step_repeats_done == 1
+    second_mission = context.missions.get_mission(progress.current_mission_id)
+    assert second_mission is not None
+    assert second_mission.mission_id != first_mission.mission_id
+    assert second_mission.name == "Cook a New Recipe"
+
+    repeat_calls = [c for c in context.notifications.calls if c["title"] == "\U0001F501 Do It Again!"]
+    assert len(repeat_calls) == 1
+    assert "1 of 3 done" in repeat_calls[0]["message"]
+    unlock_calls = [c for c in context.notifications.calls if c["source"] == "pathways" and c["title"] != "\U0001F501 Do It Again!"]
+    assert unlock_calls == []  # no premature "New Mission Unlocked!"
+
+
+def test_repeating_step_advances_only_after_repeat_count_satisfied(isolated_paths):
+    _write_pathways(isolated_paths, [_REPEATING_PATHWAY])
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = _make_manager(context)
+    mission = manager.start_pathway("p1", "test_path")
+
+    # Complete the repeating step 3 times total.
+    for _ in range(3):
+        context.missions.update_mission(mission.mission_id, status="completed")
+        progress = manager.status_for("p1", "test_path")
+        if progress.current_step_index == 0:
+            mission = context.missions.get_mission(progress.current_mission_id)
+
+    progress = manager.status_for("p1", "test_path")
+    assert progress.current_step_index == 1
+    assert progress.current_step_repeats_done == 0  # reset after advancing
+    advanced_mission = context.missions.get_mission(progress.current_mission_id)
+    assert advanced_mission.name == "Step Two"
+
+    unlock_calls = [c for c in context.notifications.calls if c["title"] == "\U0001F513 New Mission Unlocked!"]
+    assert len(unlock_calls) == 1
+    repeat_calls = [c for c in context.notifications.calls if c["title"] == "\U0001F501 Do It Again!"]
+    assert len(repeat_calls) == 2  # 2 repeats before the 3rd completion genuinely advances
+
+
+def test_current_step_repeats_done_persists_mid_repeat(isolated_paths):
+    _write_pathways(isolated_paths, [_REPEATING_PATHWAY])
+    context = _make_context()
+    manager = _make_manager(context)
+    first_mission = manager.start_pathway("p1", "test_path")
+    context.missions.update_mission(first_mission.mission_id, status="completed")
+
+    reloaded = PathwayManager(context)
+
+    assert reloaded.status_for("p1", "test_path").current_step_repeats_done == 1
+
+
+# ------------------------------------------------------------------
 # status_for
 # ------------------------------------------------------------------
 

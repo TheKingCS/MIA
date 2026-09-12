@@ -67,6 +67,13 @@ class PathwayStep:
     reward_xp: int = 0
     reward_credits: int = 0
     skill_rewards: list[SkillWeight] = field(default_factory=list)
+    # "Repeatable pathway steps" (2026-09-12) — how many real completions
+    # of this step are needed before the pathway advances past it.
+    # Default 1 preserves the original one-and-done behavior exactly
+    # (see PathwayManager._advance()). >1 is for steps like "Cook a New
+    # Recipe" the user is realistically going to do several times before
+    # moving on.
+    repeat_count: int = 1
 
     @staticmethod
     def from_dict(data: dict) -> "PathwayStep":
@@ -80,6 +87,7 @@ class PathwayStep:
             skill_rewards=[
                 SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_rewards", [])
             ],
+            repeat_count=data.get("repeat_count", 1),
         )
 
 
@@ -111,6 +119,10 @@ class PathwayProgress:
     status: str = "active"
     started_at: str = ""  # ISO datetime
     updated_at: str = ""  # ISO datetime
+    # "Repeatable pathway steps" (2026-09-12) — real completions of the
+    # CURRENT step so far, reset to 0 the moment the pathway actually
+    # advances past it. Only meaningful while status == "active".
+    current_step_repeats_done: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -121,6 +133,7 @@ class PathwayProgress:
             "status": self.status,
             "started_at": self.started_at,
             "updated_at": self.updated_at,
+            "current_step_repeats_done": self.current_step_repeats_done,
         }
 
     @staticmethod
@@ -130,6 +143,7 @@ class PathwayProgress:
             pathway_id=data.get("pathway_id", ""),
             current_step_index=data.get("current_step_index", 0),
             current_mission_id=data.get("current_mission_id", ""),
+            current_step_repeats_done=data.get("current_step_repeats_done", 0),
             status=data.get("status", "active"),
             started_at=data.get("started_at", ""),
             updated_at=data.get("updated_at", ""),
@@ -271,8 +285,31 @@ class PathwayManager:
         pathway = self._pathways.get(progress.pathway_id)
         if pathway is None:
             return
-        next_index = progress.current_step_index + 1
         now = datetime.now().isoformat(timespec="seconds")
+
+        # "Repeatable pathway steps" (2026-09-12) — a real completion of
+        # the CURRENT step always counts toward its own repeat_count
+        # first. With the default repeat_count=1 this immediately falls
+        # through to the unchanged advance-to-next-step logic below,
+        # zero behavior change for every existing pathway/step.
+        current_step = pathway.steps[progress.current_step_index]
+        progress.current_step_repeats_done += 1
+        if progress.current_step_repeats_done < current_step.repeat_count:
+            repeat_mission = self._create_step_mission(current_step)
+            progress.current_mission_id = repeat_mission.mission_id
+            progress.updated_at = now
+            self._save_progress()
+            if self.context.notifications is not None:
+                self.context.notifications.notify(
+                    title="\U0001F501 Do It Again!",
+                    message=f"{repeat_mission.name} — {progress.current_step_repeats_done} of {current_step.repeat_count} done.",
+                    level="info",
+                    source="pathways",
+                )
+            return
+        progress.current_step_repeats_done = 0
+
+        next_index = progress.current_step_index + 1
 
         if next_index >= len(pathway.steps):
             progress.status = "completed"

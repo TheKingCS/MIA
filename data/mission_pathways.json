@@ -1,5 +1,5 @@
 {
-  "_comment": "Mission Pathways (core/pathway_manager.py). Hand-edited directly -- add more pathways or steps without touching any code. Each pathway trains one primary skill_id (must exist in data/skill_definitions.json); each step's skill_rewards can name other skills too, for real cross-training. Steps are plain Missions (no auto-tracked objectives) -- the user marks each complete once they've genuinely done the real-world thing, same as any other Mission.",
+  "_comment": "Mission Pathways (core/pathway_manager.py). Hand-edited directly -- add more pathways or steps without touching any code. Each pathway trains one primary skill_id (must exist in data/skill_definitions.json); each step's skill_rewards can name other skills too, for real cross-training. Steps are plain Missions (no auto-tracked objectives) -- the user marks each complete once they've genuinely done the real-world thing, same as any other Mission. A step's optional 'repeat_count' (default 1) is how many real completions of it are needed before the pathway advances -- for a step realistically worth doing more than once (see Kitchen Explorer's 'Cook a New Recipe' below) rather than a true one-and-done milestone.",
   "pathways": [
     {
       "pathway_id": "carpentry_fundamentals",
@@ -106,10 +106,11 @@
         {
           "name": "Cook a New Recipe",
           "icon": "🍳",
-          "summary": "Something you haven't made before -- real practice, not a repeat.",
+          "summary": "Something you haven't made before -- real practice, not a repeat. Do this three times before moving on -- a different recipe each time.",
           "difficulty": "EASY",
           "reward_xp": 15,
-          "skill_rewards": [{"skill_id": "cooking", "xp": 15}]
+          "skill_rewards": [{"skill_id": "cooking", "xp": 15}],
+          "repeat_count": 3
         },
         {
           "name": "Cook 5 Different Meals This Month",

@@ -7994,3 +7994,49 @@ a live lookup), completed the Mission through the real
 `update_mission()` path, and confirmed the same detail page then
 showed the full recipe — ingredients section, real instructions text,
 and the log-a-meal button all present for the first time.
+
+## Repeatable pathway steps (2026-09-12)
+
+The last item still open from the original Mission Pathways
+conversation: "some early missions like the cooking ones should repeat
+... because I am likely to repeat that many times." Confirmed by
+re-reading `data/mission_pathways.json` before touching it: Kitchen
+Explorer's own "Cook a New Recipe" step summary already said "real
+practice, not a repeat" — this feature is exactly what turns that
+one-shot step into "cook a few different new recipes before moving
+on," without changing what the Mission itself asks the user to do.
+
+`PathwayStep` gains `repeat_count: int = 1` (definitions-file field
+only, same as every other field there); `PathwayProgress` gains
+`current_step_repeats_done: int = 0` (real, persisted per-profile
+state, reset to 0 the moment the pathway genuinely advances past a
+step). `_advance()` now counts a real completion toward the *current*
+step's own `repeat_count` first — under it, the exact same step's
+Mission is re-created again (not the next step) with a distinct
+`"🔁 Do It Again!"` notification naming the real progress
+("2 of 3 done"), clearly different from `"🔓 New Mission Unlocked!"` so
+a repeat is never mistaken for genuinely new content; once satisfied,
+`current_step_repeats_done` resets and the existing advance-to-next-
+step (or complete-the-pathway) logic runs completely unchanged. With
+the default `repeat_count=1` this is a verified no-op — every existing
+Pathway test kept passing unmodified.
+
+`data/mission_pathways.json`'s Kitchen Explorer "Cook a New Recipe"
+step now sets `"repeat_count": 3`, directly the case the user named,
+with one added sentence in its own summary so the repeat isn't a
+silent surprise. `modules/toolbox/tools/pathway_tool.py`'s
+`format_pathway_status()` shows the repeat progress only when a step
+actually has one (`"Step 1 of 3 (2/3)"`), silent otherwise.
+
+**Verified for real**: 6 new tests (4 in `test_pathway_manager.py`, 2
+in `test_pathway_tool.py`) — full suite 2571 passing, zero
+regressions. Manual headless-Qt walkthrough against the REAL seeded
+Kitchen Explorer pathway: started it, completed "Cook a New Recipe"
+three times through the real `MissionManager.update_mission()` path —
+confirmed the same step's Mission regenerated with "Do It Again!" (1
+of 3, 2 of 3) on the first two completions, including a real mid-
+repeat Skill level-up firing alongside it (Cooking reached Level 2),
+and only the third completion genuinely advanced to "Cook 5 Different
+Meals This Month" with "New Mission Unlocked!". Screenshotted the
+Toolbox Pathways tool mid-repeat ("Step 1 of 3 (2/3)") and after the
+real advance ("Step 2 of 3", no stray repeat suffix).
