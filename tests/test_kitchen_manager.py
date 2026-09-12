@@ -458,3 +458,81 @@ def test_recipes_makeable_now_uses_current_recipes_and_pantry(isolated_paths):
     assert len(results) == 1
     assert results[0][0].recipe_id == recipe.recipe_id
     assert results[0][1] == []
+
+
+# ------------------------------------------------------------------
+# locked / unlock_recipe — "Recipe Unlocked" (2026-09-12)
+# ------------------------------------------------------------------
+
+class _FakeNotifications:
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def notify(self, title, message, level="info", source="system"):
+        self.calls.append({"title": title, "message": message, "level": level, "source": source})
+
+
+def test_recipe_locked_defaults_to_false(isolated_paths):
+    manager = _make_manager(_make_context())
+    recipe = manager.add_recipe(name="Homemade Ramen")
+    assert recipe.locked is False
+
+
+def test_recipe_locked_round_trips_through_to_dict_from_dict(isolated_paths):
+    recipe = Recipe(recipe_id="r1", name="Homemade Ramen", locked=True)
+    assert Recipe.from_dict(recipe.to_dict()).locked is True
+
+
+def test_recipe_locked_backward_compatible_with_old_shape(isolated_paths):
+    recipe = Recipe.from_dict({"recipe_id": "r1", "name": "Chili"})
+    assert recipe.locked is False
+
+
+def test_add_recipe_accepts_locked_true(isolated_paths):
+    manager = _make_manager(_make_context())
+    recipe = manager.add_recipe(name="Homemade Ramen", locked=True)
+    assert recipe.locked is True
+
+
+def test_unlock_recipe_transitions_locked_to_unlocked_and_notifies(isolated_paths):
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Homemade Ramen", locked=True)
+
+    unlocked = manager.unlock_recipe(recipe.recipe_id)
+
+    assert unlocked.locked is False
+    assert manager.get_recipe(recipe.recipe_id).locked is False
+    assert len(context.notifications.calls) == 1
+    assert context.notifications.calls[0]["title"] == "\U0001F513 Recipe Unlocked!"
+    assert "Homemade Ramen" in context.notifications.calls[0]["message"]
+
+
+def test_unlock_recipe_already_unlocked_is_a_silent_no_op(isolated_paths):
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Chili")  # locked=False by default
+
+    result = manager.unlock_recipe(recipe.recipe_id)
+
+    assert result.locked is False
+    assert context.notifications.calls == []
+
+
+def test_unlock_recipe_called_twice_only_notifies_once(isolated_paths):
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Homemade Ramen", locked=True)
+
+    manager.unlock_recipe(recipe.recipe_id)
+    manager.unlock_recipe(recipe.recipe_id)
+
+    assert len(context.notifications.calls) == 1
+
+
+def test_unlock_recipe_unknown_id_returns_none(isolated_paths):
+    manager = _make_manager(_make_context())
+    assert manager.unlock_recipe("does-not-exist") is None

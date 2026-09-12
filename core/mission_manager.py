@@ -222,6 +222,12 @@ class Mission:
     # owns its own nested list of sub-items" shape as `objectives`
     # above, not a separate top-level manager.
     skill_rewards: list[SkillWeight] = field(default_factory=list)
+    # "Recipe Unlocked" (2026-09-12) — real core.kitchen_manager.Recipe
+    # ids to unlock (Recipe.locked -> False) on this Mission's real
+    # completion. Empty by default, zero migration needed. Credited
+    # independently of skill_rewards/reward_xp — see
+    # MissionManager._unlock_mission_recipes().
+    recipe_unlocks: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -244,6 +250,7 @@ class Mission:
             "reward_xp": self.reward_xp,
             "reward_credits": self.reward_credits,
             "skill_rewards": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_rewards],
+            "recipe_unlocks": list(self.recipe_unlocks),
         }
 
     @staticmethod
@@ -270,6 +277,7 @@ class Mission:
             skill_rewards=[
                 SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_rewards", [])
             ],
+            recipe_unlocks=list(data.get("recipe_unlocks", [])),
         )
 
 
@@ -323,6 +331,7 @@ class MissionManager:
         reward_xp: int = 0,
         reward_credits: int = 0,
         skill_rewards: Optional[list[SkillWeight]] = None,
+        recipe_unlocks: Optional[list[str]] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -342,6 +351,7 @@ class MissionManager:
             reward_xp=reward_xp,
             reward_credits=reward_credits,
             skill_rewards=list(skill_rewards) if skill_rewards else [],
+            recipe_unlocks=list(recipe_unlocks) if recipe_unlocks else [],
         )
         self._missions.append(mission)
         self._save()
@@ -370,6 +380,14 @@ class MissionManager:
         if not was_completed and mission.status == "completed":
             self._notify_mission_completed(mission)
             self._credit_mission_rewards(mission)
+            # "Recipe Unlocked" (2026-09-12) — deliberately a separate
+            # call, not folded into _credit_mission_rewards(): that
+            # method's own early-return is about profile-XP crediting
+            # specifically (no active profile means no one to credit)
+            # and must not gate recipe unlocking, which has nothing to
+            # do with an active profile existing — Kitchen has no
+            # per-profile concept at all.
+            self._unlock_mission_recipes(mission)
             # Mission Pathways (2026-09-11) — a real, previously-missing
             # gap this closes independent of that feature: nothing in
             # this codebase reacted to a Mission actually finishing
@@ -418,6 +436,22 @@ class MissionManager:
         if mission.skill_rewards and self.context.skills is not None:
             for weight in mission.skill_rewards:
                 self.context.skills.add_skill_xp(active_profile.profile_id, weight.skill_id, weight.xp)
+
+    def _unlock_mission_recipes(self, mission: Mission) -> None:
+        """
+        "Recipe Unlocked" (2026-09-12) — unlocks every real Recipe
+        mission.recipe_unlocks names, via core.kitchen_manager
+        .KitchenManager.unlock_recipe() (context.kitchen), which is
+        itself idempotent — never fires a duplicate notification for a
+        recipe that's already unlocked. Household-wide, not gated on an
+        active profile — see this method's own call site in
+        update_mission() for why it's kept separate from
+        _credit_mission_rewards().
+        """
+        if not mission.recipe_unlocks or self.context.kitchen is None:
+            return
+        for recipe_id in mission.recipe_unlocks:
+            self.context.kitchen.unlock_recipe(recipe_id)
 
     def delete_mission(self, mission_id: str) -> None:
         self._missions = [m for m in self._missions if m.mission_id != mission_id]

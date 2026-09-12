@@ -47,6 +47,16 @@ def test_format_recipe_row_omits_time_when_unset():
     assert "min" not in format_recipe_row(recipe)
 
 
+def test_format_recipe_row_shows_locked_prefix():
+    recipe = _recipe(locked=True)
+    assert format_recipe_row(recipe) == "(Locked) Weeknight Chili   [Dinner]   6 servings"
+
+
+def test_format_recipe_row_omits_prefix_when_unlocked():
+    recipe = _recipe(locked=False)
+    assert not format_recipe_row(recipe).startswith("(Locked)")
+
+
 def test_format_pantry_row_no_tag_when_expiration_not_tracked():
     item = _pantry_item(expiration_date="")
     row = format_pantry_row(item, date(2026, 9, 10))

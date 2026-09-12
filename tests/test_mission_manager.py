@@ -17,6 +17,7 @@ import pytest
 
 import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
+import core.kitchen_manager as kitchen_manager_module
 import core.mission_manager as mission_manager_module
 import core.skill_manager as skill_manager_module
 import core.task_manager as task_manager_module
@@ -27,6 +28,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.gamification import SkillWeight
+from core.kitchen_manager import KitchenManager
 from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
 from core.skill_manager import SkillManager
@@ -52,6 +54,11 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
     monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
+    monkeypatch.setattr(kitchen_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(kitchen_manager_module, "_RECIPES_FILE", data_dir / "kitchen_recipes.json")
+    monkeypatch.setattr(kitchen_manager_module, "_PANTRY_FILE", data_dir / "kitchen_pantry.json")
+    monkeypatch.setattr(kitchen_manager_module, "_GROCERY_LIST_FILE", data_dir / "kitchen_grocery_list.json")
+    monkeypatch.setattr(kitchen_manager_module, "_MEAL_LOG_FILE", data_dir / "kitchen_meal_log.json")
 
 
 def _make_context() -> AppContext:
@@ -593,6 +600,76 @@ def test_mission_with_no_skill_rewards_deserializes_to_empty_list(isolated_paths
     context = _make_context()
     mission = context.missions.get_mission("m1")
     assert mission.skill_rewards == []
+
+
+# ----------------------------------------------------------------------
+# recipe_unlocks — "Recipe Unlocked" (2026-09-12)
+# ----------------------------------------------------------------------
+
+def test_completing_a_mission_unlocks_named_recipes(isolated_paths):
+    context = _make_context()
+    context.kitchen = KitchenManager(context)
+    recipe = context.kitchen.add_recipe(name="Homemade Ramen", locked=True)
+    mission = context.missions.add_mission(name="Ramen Quest", recipe_unlocks=[recipe.recipe_id])
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.kitchen.get_recipe(recipe.recipe_id).locked is False
+
+
+def test_completing_a_mission_with_recipe_unlocks_does_not_require_an_active_profile(isolated_paths):
+    """Deliberately using plain _make_context() — no context.profiles
+    at all — to prove recipe unlocking is independent of profile-XP
+    crediting, unlike skill_rewards."""
+    context = _make_context()
+    context.kitchen = KitchenManager(context)
+    recipe = context.kitchen.add_recipe(name="Homemade Ramen", locked=True)
+    mission = context.missions.add_mission(name="Ramen Quest", recipe_unlocks=[recipe.recipe_id])
+
+    context.missions.update_mission(mission.mission_id, status="completed")  # must not raise
+
+    assert context.kitchen.get_recipe(recipe.recipe_id).locked is False
+
+
+def test_completing_a_mission_with_no_recipe_unlocks_touches_no_recipes(isolated_paths):
+    context = _make_context()
+    context.kitchen = KitchenManager(context)
+    recipe = context.kitchen.add_recipe(name="Homemade Ramen", locked=True)
+    mission = context.missions.add_mission(name="X")
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.kitchen.get_recipe(recipe.recipe_id).locked is True
+
+
+def test_completing_a_mission_with_recipe_unlocks_and_no_kitchen_service_does_not_crash(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Ramen Quest", recipe_unlocks=["some-recipe-id"])
+
+    context.missions.update_mission(mission.mission_id, status="completed")  # must not raise
+
+
+def test_mission_recipe_unlocks_persist_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    context.missions.add_mission(name="Ramen Quest", recipe_unlocks=["r1", "r2"])
+
+    reloaded = MissionManager(context)
+    mission = reloaded.all_missions()[0]
+    assert mission.recipe_unlocks == ["r1", "r2"]
+
+
+def test_mission_with_no_recipe_unlocks_deserializes_to_empty_list(isolated_paths):
+    """Backward compatibility: old missions.json rows with no
+    recipe_unlocks key at all must still deserialize cleanly."""
+    import json
+
+    mission_manager_module._DATA_DIR.mkdir(parents=True, exist_ok=True)
+    mission_manager_module._MISSIONS_FILE.write_text(
+        json.dumps([{"mission_id": "m1", "name": "Old Mission", "reward_xp": 50}])
+    )
+    context = _make_context()
+    mission = context.missions.get_mission("m1")
+    assert mission.recipe_unlocks == []
 
 
 # ----------------------------------------------------------------------

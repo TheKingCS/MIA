@@ -68,9 +68,14 @@ from modules.module_base import ModuleBase
 
 
 def format_recipe_row(recipe: Recipe) -> str:
-    """Pure formatting logic — testable without Qt (see tests/test_kitchen_module.py)."""
+    """Pure formatting logic — testable without Qt (see tests/test_kitchen_module.py).
+    A locked recipe uses a plain-ASCII "(Locked)" prefix, same
+    modules/skills/module.py.format_locked_skill_name() convention —
+    that function's own docstring explains why: a real, reproduced
+    font-fallback bug with the lock emoji, not a style choice."""
+    prefix = "(Locked) " if recipe.locked else ""
     time_part = f"  {recipe.prep_time_minutes + recipe.cook_time_minutes} min" if recipe.prep_time_minutes or recipe.cook_time_minutes else ""
-    return f"{recipe.name}   [{recipe.category}]   {recipe.servings} servings{time_part}"
+    return f"{prefix}{recipe.name}   [{recipe.category}]   {recipe.servings} servings{time_part}"
 
 
 def format_pantry_row(item: PantryItem, today: date) -> str:
@@ -235,6 +240,7 @@ class KitchenModule(ModuleBase):
             fat_g=dialog.entered_fat_g,
             source=dialog.entered_source,
             notes=dialog.entered_notes,
+            locked=dialog.entered_locked,
         )
         self._refresh_recipe_list()
 
@@ -261,6 +267,7 @@ class KitchenModule(ModuleBase):
             fat_g=dialog.entered_fat_g,
             source=dialog.entered_source,
             notes=dialog.entered_notes,
+            locked=dialog.entered_locked,
         )
         self._refresh_recipe_list()
 
@@ -316,6 +323,28 @@ class KitchenModule(ModuleBase):
         header = QLabel(recipe.name)
         header.setObjectName("TitleLabel")
         layout.addWidget(header)
+
+        # "Recipe Unlocked" (2026-09-12) — the actual reward-withholding
+        # this feature exists to provide: a locked recipe shows nothing
+        # but its name and what unlocks it, real ingredients/
+        # instructions/nutrition stay hidden until it's genuinely
+        # unlocked. Derived live via _unlocking_mission_name() — nothing
+        # new persisted for this lookup.
+        if recipe.locked:
+            locked_label = QLabel("\U0001F512 Locked")
+            locked_label.setObjectName("SubtitleLabel")
+            layout.addWidget(locked_label)
+            mission_name = self._unlocking_mission_name(recipe_id)
+            hint_text = (
+                f"Complete the mission \"{mission_name}\" to unlock this recipe."
+                if mission_name is not None
+                else "Complete a mission to unlock this recipe."
+            )
+            hint_label = QLabel(hint_text)
+            hint_label.setWordWrap(True)
+            layout.addWidget(hint_label)
+            layout.addStretch(1)
+            return page
 
         time_total = recipe.prep_time_minutes + recipe.cook_time_minutes
         info_text = f"{recipe.category}   —   {recipe.servings} servings"
@@ -386,6 +415,19 @@ class KitchenModule(ModuleBase):
 
         layout.addStretch(1)
         return page
+
+    def _unlocking_mission_name(self, recipe_id: str) -> Optional[str]:
+        """Live reverse-lookup — the real, currently-active Mission (if
+        any) whose recipe_unlocks names this recipe. Never a stale or
+        fabricated name: None if no such Mission exists right now
+        (already-completed/abandoned missions don't count — there's
+        nothing left for the user to go do)."""
+        if self.context.missions is None:
+            return None
+        for mission in self.context.missions.all_missions():
+            if mission.status == "active" and recipe_id in mission.recipe_unlocks:
+                return mission.name
+        return None
 
     def _selected_ingredient_index(self) -> Optional[int]:
         item = self._detail_ingredients_list.currentItem()

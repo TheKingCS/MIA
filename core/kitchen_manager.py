@@ -81,6 +81,13 @@ class Recipe:
     source: str = ""
     notes: str = ""
     created_at: str = ""
+    # "Recipe Unlocked" (2026-09-12) — a reward Mission.recipe_unlocks
+    # can grant. Defaults False so every existing recipe stays exactly
+    # as visible/usable as it is today; only a recipe the user
+    # deliberately checks "Locked" for starts hidden. See
+    # KitchenManager.unlock_recipe() and core.mission_manager's own
+    # crediting of it on Mission completion.
+    locked: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -91,6 +98,7 @@ class Recipe:
             "calories_per_serving": self.calories_per_serving, "protein_g": self.protein_g,
             "carbs_g": self.carbs_g, "fat_g": self.fat_g,
             "source": self.source, "notes": self.notes, "created_at": self.created_at,
+            "locked": self.locked,
         }
 
     @staticmethod
@@ -111,6 +119,7 @@ class Recipe:
             source=data.get("source", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
+            locked=bool(data.get("locked", False)),
         )
 
 
@@ -326,6 +335,7 @@ class KitchenManager:
         fat_g: Optional[float] = None,
         source: str = "",
         notes: str = "",
+        locked: bool = False,
     ) -> Recipe:
         recipe = Recipe(
             recipe_id=uuid.uuid4().hex[:10],
@@ -342,6 +352,7 @@ class KitchenManager:
             source=source,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
+            locked=locked,
         )
         self._recipes.append(recipe)
         self._save_recipes()
@@ -376,6 +387,34 @@ class KitchenManager:
 
     def all_recipes(self) -> list[Recipe]:
         return sorted(self._recipes, key=lambda r: r.name.lower())
+
+    def unlock_recipe(self, recipe_id: str) -> Optional[Recipe]:
+        """
+        "Recipe Unlocked" (2026-09-12) — called by
+        core.mission_manager.MissionManager on a real Mission
+        completion (mission.recipe_unlocks). No-ops (returns the recipe
+        unchanged) if the recipe is already unlocked or the id is
+        unknown — never fires a duplicate notification for a state that
+        was already true, same idempotency stance
+        core.insight_manager.InsightManager.resolve_insight() already
+        takes. Not profile-scoped — Recipe has no per-profile concept
+        anywhere in this codebase, so unlocking is household-wide, same
+        as every other Kitchen record.
+        """
+        recipe = self.get_recipe(recipe_id)
+        if recipe is None or not recipe.locked:
+            return recipe
+        recipe.locked = False
+        self._save_recipes()
+        log.info("Recipe unlocked: '%s'", recipe.name)
+        if self.context.notifications is not None:
+            self.context.notifications.notify(
+                title="\U0001F513 Recipe Unlocked!",
+                message=f"'{recipe.name}' is now available.",
+                level="info",
+                source="kitchen",
+            )
+        return recipe
 
     # ------------------------------------------------------------------
     # Ingredients — mutate a Recipe's own ingredients list, not a

@@ -22,6 +22,7 @@ from __future__ import annotations
 from typing import Optional
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -40,7 +41,7 @@ class AddEditRecipeDialog(QDialog):
     def __init__(self, parent=None, recipe: Optional[Recipe] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Recipe" if recipe is not None else "New Recipe")
-        self.setFixedSize(380, 760)
+        self.setFixedSize(380, 790)
 
         layout = QVBoxLayout(self)
 
@@ -112,6 +113,12 @@ class AddEditRecipeDialog(QDialog):
         self.notes_edit.setFixedHeight(60)
         layout.addWidget(self.notes_edit)
 
+        # "Recipe Unlocked" (2026-09-12) — unchecked by default so a
+        # new recipe is always immediately usable; only a deliberately-
+        # authored "reward" recipe starts hidden.
+        self.locked_checkbox = QCheckBox("Locked (unlocked by completing a mission)")
+        layout.addWidget(self.locked_checkbox)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -133,6 +140,7 @@ class AddEditRecipeDialog(QDialog):
         self._fat_g: Optional[float] = None
         self._source: str = ""
         self._notes: str = ""
+        self._locked: bool = False
 
     def _prefill(self, recipe: Optional[Recipe]) -> None:
         if recipe is None:
@@ -150,6 +158,7 @@ class AddEditRecipeDialog(QDialog):
         self.fat_spin.setValue(recipe.fat_g or 0.0)
         self.source_edit.setText(recipe.source)
         self.notes_edit.setPlainText(recipe.notes)
+        self.locked_checkbox.setChecked(recipe.locked)
 
     def _on_accept(self) -> None:
         name = self.name_edit.text().strip()
@@ -169,6 +178,7 @@ class AddEditRecipeDialog(QDialog):
         self._fat_g = self.fat_spin.value() or None
         self._source = self.source_edit.text().strip()
         self._notes = self.notes_edit.toPlainText().strip()
+        self._locked = self.locked_checkbox.isChecked()
         self.accept()
 
     @property
@@ -218,3 +228,7 @@ class AddEditRecipeDialog(QDialog):
     @property
     def entered_notes(self) -> str:
         return self._notes
+
+    @property
+    def entered_locked(self) -> bool:
+        return self._locked

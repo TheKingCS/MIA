@@ -7937,3 +7937,60 @@ asset with a 3-day watering task: the Tasks tab correctly rendered red/
 amber/default rows with the right priority badges, and the new
 Overview tab correctly grouped and sorted all four real tasks by date
 under both This Week and This Month.
+
+## Recipe Unlocked: Kitchen recipes gated behind Mission completion (2026-09-12)
+
+The other half of the original Mission Pathways request, deferred at
+the time — confirmed then and reconfirmed now:
+`core.kitchen_manager.Recipe` had no lock/unlock concept at all. This
+pass builds the real mechanism the user's original message described
+("🔓 Recipe Unlocked: Homemade Ramen"): `Recipe` gains `locked: bool =
+False` (defaults to unlocked so every existing real recipe stays
+exactly as usable as it is today), `Mission` gains
+`recipe_unlocks: list[str]` (same shape as `skill_rewards`). New
+`KitchenManager.unlock_recipe()` is idempotent — a no-op, no duplicate
+notification, on an already-unlocked recipe — and fires
+`"🔓 Recipe Unlocked!"` on a real transition, same emoji-led voice
+`core/achievements.py`'s Skill-unlock notification already established.
+
+**Deliberately a separate method from `_credit_mission_rewards()`**,
+not folded in: that method's own early-return is specifically about
+profile-XP crediting (no active profile means no one to credit) and
+must not gate recipe unlocking, which has nothing to do with a profile
+existing — confirmed by reading `Recipe`'s fields that Kitchen has no
+per-profile concept at all, so unlocking is household-wide. New
+`MissionManager._unlock_mission_recipes()` reaches into
+`context.kitchen` the same way `_credit_mission_rewards()` already
+reaches into `context.skills`.
+
+Authoring which recipes a Mission unlocks stays code-level (via
+`add_mission()`'s param) rather than added to
+`gui/add_edit_mission_dialog.py` — a deliberate scope match, not a gap:
+that dialog doesn't expose `skill_rewards` editing either. New "Locked"
+checkbox in the Recipe dialog is enough to author the reward side.
+`modules/kitchen/module.py`'s recipe rows gain the exact `"(Locked) "`
+plain-ASCII prefix `modules/skills/module.py`'s own
+`format_locked_skill_name()` already established (that function's
+docstring explains the real reproduced lock-emoji font-fallback bug
+this avoids — reused verbatim, not reinvented). The real reward-
+withholding: a locked recipe's detail page shows only its name, a
+"🔒 Locked" label, and — via a live reverse-lookup over
+`context.missions.all_missions()`, nothing new persisted — which real
+active Mission unlocks it, if one currently does; ingredients,
+instructions, nutrition, and the "log that I made this" button all
+stay hidden until it's genuinely unlocked.
+
+**Verified for real**: 16 new tests (8 in `test_kitchen_manager.py`
+covering `locked`/`unlock_recipe()`'s idempotency, 6 in
+`test_mission_manager.py` covering `recipe_unlocks` including the "no
+active profile required" case, 2 in `test_kitchen_module.py` for the
+row prefix) — full suite 2565 passing, zero regressions. Manual
+headless-Qt walkthrough against a throwaway repo copy, through the
+real dialog and real manager calls end to end: created a real locked
+"Homemade Ramen" recipe, a real "Ramen Quest" Mission naming it,
+confirmed the Kitchen detail page correctly showed it locked with
+"Ramen Quest" named as the real unlocking source (nothing hard-coded —
+a live lookup), completed the Mission through the real
+`update_mission()` path, and confirmed the same detail page then
+showed the full recipe — ingredients section, real instructions text,
+and the log-a-meal button all present for the first time.
