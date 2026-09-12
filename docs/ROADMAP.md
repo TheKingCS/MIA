@@ -7753,3 +7753,69 @@ separately the whole Construction category's locked rows) shows no
 status label at all, just its existing "(Locked)"/"Requires:" text. No
 live-Ollama call needed — the Discovery-side change is entirely inside
 the pure prompt-building function.
+
+## Classroom module shipped — v1: content/lesson structure only (2026-09-11)
+
+Confirmed the previous session's finding again before starting: no
+Classroom module exists anywhere in this repo — never actually built,
+not a separate unmerged project (resolved directly with the user).
+Scoped directly before planning: this is for the user's OWN self-
+education (K-12-level academic subjects and trades content, meant to
+eventually feed their own Hero's Path), not a homeschooling-the-kids
+curriculum tracker — and **v1 is deliberately just the content/lesson
+structure**, no Skills/Missions/Discovery wiring yet, same "prove the
+smaller thing first" discipline as every other pass this session.
+Starts empty, like every other personal-content module in this
+codebase (Kitchen, Workout, Projects) — no pre-seeded universal
+curriculum ships with it, unlike Mission Pathways/Skill definitions'
+hand-authored content files.
+
+New `core/classroom_manager.py` — one manager, three related record
+types (`Subject`/`Course`/`Lesson`, one file per type — same shape as
+`core.workout_manager.py`'s `Exercise`/`Template`/`Session`).
+**Cascading delete, not unlink**: a Lesson doesn't independently make
+sense without its Course, same reasoning `Mission.objectives` are
+deleted with their parent Mission rather than the Project/Task unlink
+precedent — deleting a Subject removes its Courses and their Lessons;
+deleting a Course removes its Lessons. **Completion is derived, never
+stored twice**: `course_completion()`/`subject_completion()` compute
+`(done, total)` fresh from real Lesson records every time, same
+"derive it, don't persist a second copy that can drift" philosophy as
+every level/unlock computation elsewhere in this codebase.
+`update_lesson()` detects the real `completed` False→True transition
+(same shape as `MissionManager.update_mission()`'s `was_completed`
+pattern) and sets `completed_at` exactly once on that transition — no
+event published yet, since nothing consumes one (adding it now would
+be building for a hypothetical future consumer before it exists,
+unlike `mission.completed`, which Pathways needed immediately).
+
+New `modules/classroom/module.py` — a 3-level drill-down
+`QStackedWidget` (Subjects → that Subject's Courses → that Course's
+Lessons), same "← Back" navigation shape as
+`modules/real_estate/module.py`; three small dialogs
+(`gui/add_edit_classroom_{subject,course,lesson}_dialog.py`), one per
+entity, matching this codebase's existing one-dialog-per-entity
+convention. New `docs/user_help/classroom.md` per
+`docs/ADDING_MODULES.md`'s convention. **Real, previously-documented
+gap caught proactively this time, not rediscovered**: `tests/run_module.py`
+maintains its own manual `context.<manager>` wiring list (the same
+class of gap a 2026-09-09 cleanup pass found and fixed for 8 other
+managers) — added `context.classroom = ClassroomManager(context)`
+there in the same pass that added the module, not as an afterthought.
+
+**Deliberately deferred, stated plainly**: any Skills/Missions/
+Discovery connection (completing a Lesson grants nothing yet); a
+Ctrl+K search provider (optional per `CLAUDE.md`, skipped like Real
+Estate/Music); any pre-seeded curriculum content.
+
+**Verified for real**: 25 new tests (`test_classroom_manager.py` — 18,
+`test_classroom_module.py` — 7) — full suite 2512 passing, zero
+regressions. Manual headless-Qt walkthrough against a throwaway repo
+copy, through the REAL dialogs and REAL manager calls end to end:
+created a real Subject ("Electrical" / "Trade Skills") → Course ("DC
+Circuits") → two Lessons ("Ohm's Law"/"Series Circuits"); marked one
+complete and confirmed both Course-level (1 of 2) and Subject-level
+(1 of 2) completion rolled up correctly; deleted the Course and
+confirmed both its Lessons were gone too (real cascading delete, not
+just unlinked). Screenshotted all three drill-down levels, empty and
+populated.

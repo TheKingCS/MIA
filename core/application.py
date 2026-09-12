@@ -104,6 +104,7 @@ from core.task_manager import TaskManager
 from core.trail_map_library import NotAPdfError, TrailMapLibrary
 from core.music_manager import MusicManager
 from core.kitchen_manager import KitchenManager
+from core.classroom_manager import ClassroomManager
 from core.workout_manager import WorkoutManager
 from core.relationships_manager import RelationshipsManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
@@ -267,6 +268,7 @@ class MIAApplication:
         self.context.kitchen = KitchenManager(self.context)
         self.context.workout = WorkoutManager(self.context)
         self.context.relationships = RelationshipsManager(self.context)
+        self.context.classroom = ClassroomManager(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
         # Registered by default so the registry has something real to
         # demonstrate end-to-end — it's a stub (no real driver), not a

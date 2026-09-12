@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from core.plaid_manager import PlaidManager
     from core.real_estate_manager import RealEstateManager
     from core.calendar_manager import CalendarManager
+    from core.classroom_manager import ClassroomManager
     from core.component_manager import ComponentManager
     from core.maintenance_manager import MaintenanceManager
     from core.material_manager import MaterialManager
@@ -172,6 +173,11 @@ class AppContext:
     kitchen: Optional["KitchenManager"] = field(default=None, repr=False)
     workout: Optional["WorkoutManager"] = field(default=None, repr=False)
     relationships: Optional["RelationshipsManager"] = field(default=None, repr=False)
+    # Classroom (2026-09-11) — the user's own self-education content
+    # model (Subjects -> Courses -> Lessons). v1 is deliberately just
+    # the content structure; see core/classroom_manager.py's own
+    # docstring for what's not built yet.
+    classroom: Optional["ClassroomManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only

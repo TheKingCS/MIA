@@ -1,0 +1,81 @@
+"""
+gui.add_edit_classroom_lesson_dialog
+========================================
+
+Small dialog for creating or editing a Lesson within a Course
+(modules/classroom/module.py) — name and freeform notes (content/
+summary/materials). `completed` is deliberately NOT editable here —
+it's flipped via the Lessons list's own Mark Complete/Incomplete
+button (modules/classroom/module.py), same "a real, deliberate action,
+not an incidental field on an edit form" reasoning
+gui/add_edit_mission_dialog.py's status combo does NOT follow for
+Missions (that one IS editable here) but Pathways/Discovery-generated
+Missions already established for their own completion — mirrored here
+since marking a lesson done is exactly that kind of deliberate action.
+`course_id` is fixed at creation, same reasoning as
+gui/add_edit_classroom_course_dialog.py's subject_id.
+"""
+
+from __future__ import annotations
+
+from typing import Optional
+
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QLineEdit, QTextEdit, QVBoxLayout
+
+from core.classroom_manager import Lesson
+
+
+class AddEditLessonDialog(QDialog):
+    def __init__(self, context, parent=None, lesson: Optional[Lesson] = None) -> None:
+        super().__init__(parent)
+        self.context = context
+        self.setWindowTitle("Edit Lesson" if lesson is not None else "New Lesson")
+        self.setFixedSize(360, 320)
+
+        layout = QVBoxLayout(self)
+
+        layout.addWidget(QLabel("Name:"))
+        self.name_edit = QLineEdit()
+        self.name_edit.setPlaceholderText("e.g. 'Ohm's Law and Series Circuits'")
+        layout.addWidget(self.name_edit)
+
+        layout.addWidget(QLabel("Notes:"))
+        self.notes_edit = QTextEdit()
+        self.notes_edit.setPlaceholderText("Content, summary, or materials (optional)")
+        layout.addWidget(self.notes_edit, stretch=1)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self._on_accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+        self._prefill(lesson)
+
+        self._name: str = ""
+        self._notes: str = ""
+
+    def _prefill(self, lesson: Optional[Lesson]) -> None:
+        if lesson is None:
+            return
+        self.name_edit.setText(lesson.name)
+        self.notes_edit.setPlainText(lesson.notes)
+
+    def _on_accept(self) -> None:
+        name = self.name_edit.text().strip()
+        if not name:
+            self.name_edit.setPlaceholderText("Name can't be empty!")
+            return
+
+        self._name = name
+        self._notes = self.notes_edit.toPlainText()
+        self.accept()
+
+    @property
+    def entered_name(self) -> str:
+        return self._name
+
+    @property
+    def entered_notes(self) -> str:
+        return self._notes
