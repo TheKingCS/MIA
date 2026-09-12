@@ -16,6 +16,44 @@ tests/test_skill_leveling.py), same shape as core/leveling.py itself.
 
 from __future__ import annotations
 
+#: Capability status tiers (2026-09-11) — a derived, readable status
+#: over a skill's existing level/unlock state, not a new persisted
+#: field: every skill's XP already only ever comes from a real
+#: completed Mission/Pathway-step/Project (no passive/incidental XP
+#: source exists anywhere in this codebase), so "has real XP" already
+#: means "did something real" — this just gives that existing evidence
+#: a readable label. See capability_status_for_level()'s own docstring
+#: for the level->tier boundaries and the deliberate simplifications.
+CAPABILITY_STATUSES: tuple[str, ...] = ("locked", "learning", "practiced", "demonstrated")
+
+
+def capability_status_for_level(unlocked: bool, level: int) -> str:
+    """
+    Pure. Maps a skill's real unlock state + derived level onto one of
+    CAPABILITY_STATUSES. `unlocked` always wins first — a skill with
+    unmet prerequisites is "locked" regardless of any level a caller
+    passes in. First-cut boundary, not tuned further — same "revisit
+    once real usage shows whether this feels right" stance
+    xp_required_for_skill_level()'s own docstring already takes for the
+    level curve itself.
+
+    Deliberate simplification: level 1 covers both "just became
+    available, zero XP yet" and "started but hasn't leveled up once" —
+    both genuinely mean "no real demonstrated evidence yet," and a
+    distinct 5th "available but untouched" tier would need a real
+    signal (e.g. a first-activity timestamp) that doesn't exist yet
+    either. Not a sub-capability breakdown (Soil Prep/Garden Beds/etc.
+    under one skill) — that's real, separate, much bigger authored
+    content, not attempted here.
+    """
+    if not unlocked:
+        return "locked"
+    if level == 1:
+        return "learning"
+    if level in (2, 3):
+        return "practiced"
+    return "demonstrated"
+
 
 def xp_required_for_skill_level(level: int) -> int:
     """

@@ -1,4 +1,8 @@
-from core.skill_leveling import compute_skill_level_progress, xp_required_for_skill_level
+from core.skill_leveling import (
+    capability_status_for_level,
+    compute_skill_level_progress,
+    xp_required_for_skill_level,
+)
 
 
 def test_xp_required_for_skill_level_scales_linearly():
@@ -34,3 +38,22 @@ def test_compute_skill_level_progress_partway_through_a_later_level():
 
 def test_compute_skill_level_progress_negative_xp_treated_as_zero():
     assert compute_skill_level_progress(-50) == (1, 0, 20)
+
+
+def test_capability_status_locked_overrides_any_level():
+    assert capability_status_for_level(unlocked=False, level=1) == "locked"
+    assert capability_status_for_level(unlocked=False, level=10) == "locked"
+
+
+def test_capability_status_level_1_is_learning():
+    assert capability_status_for_level(unlocked=True, level=1) == "learning"
+
+
+def test_capability_status_levels_2_and_3_are_practiced():
+    assert capability_status_for_level(unlocked=True, level=2) == "practiced"
+    assert capability_status_for_level(unlocked=True, level=3) == "practiced"
+
+
+def test_capability_status_level_4_and_above_is_demonstrated():
+    assert capability_status_for_level(unlocked=True, level=4) == "demonstrated"
+    assert capability_status_for_level(unlocked=True, level=10) == "demonstrated"

@@ -84,6 +84,12 @@ def format_prerequisites_line(prereq_names: list[str]) -> str:
     return "Requires: " + ", ".join(prereq_names)
 
 
+def format_capability_status_label(status: str) -> str:
+    """Pure formatting logic — testable without Qt. Title-cases one of
+    core.skill_leveling.CAPABILITY_STATUSES ("learning" -> "Learning")."""
+    return status.capitalize()
+
+
 class SkillsModule(ModuleBase):
     module_id = "skills"
     display_name = "Skills"
@@ -265,6 +271,16 @@ class SkillsModule(ModuleBase):
         bar.setTextVisible(False)
         bar.setFixedHeight(6)
         card_layout.addWidget(bar)
+
+        # Capability status tiers (2026-09-11) — only for unlocked
+        # skills; a locked card already says "(Locked) <name>" via
+        # format_locked_skill_name() above, so a second "Locked" label
+        # here would just repeat it.
+        if not locked and profile_id is not None:
+            status = self.context.skills.capability_status(profile_id, definition.skill_id)
+            status_label = QLabel(format_capability_status_label(status))
+            status_label.setObjectName("SkillCardStatus")
+            card_layout.addWidget(status_label)
 
         if definition.prerequisite_skill_ids:
             prereq_names = []

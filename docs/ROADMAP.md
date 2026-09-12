@@ -7696,3 +7696,60 @@ verification needed for this pass — the fix is entirely inside the
 pure, deterministic `build_discovery_prompt()` function (no parsing/
 LLM-facing behavior changed), already covered end-to-end by the
 previous phase's real manual verification.
+
+## Capability status tiers: Locked/Learning/Practiced/Demonstrated (2026-09-11)
+
+Deferred twice — once during the Mission Pathways conversation, again
+in the User OS/AR-XR vision extension (both "Inspect" and the
+Capability Graph sketch explicitly depend on a real status per skill,
+not just a raw level number). Built the smallest honest version: a
+derived 4-tier status, computed entirely from evidence that already
+exists — `SkillManager.is_unlocked()` + the real level from
+`compute_skill_level_progress()` — no new persisted field, no new
+authored content, no sub-capability taxonomy under each skill (the
+user's own nested "Gardening → Soil Prep/Garden Beds/Plant Propagation"
+example is real, separate, much bigger authoring scope, explicitly not
+attempted here). Every skill's XP already only ever comes from a real
+completed Mission/Pathway-step/Project — there is no passive/incidental
+XP source anywhere in this codebase — so "has real XP" already means
+"did something real"; this pass just gives that existing evidence a
+readable label.
+
+New `core.skill_leveling.capability_status_for_level(unlocked, level)`
+— pure, `locked` always wins regardless of level; level 1 → `learning`
+(a deliberate simplification — this covers both "just became
+available, zero XP" and "started but hasn't leveled up once," since
+splitting those needs a real signal, like a first-activity timestamp,
+that doesn't exist yet either); levels 2-3 → `practiced`; level 4+ →
+`demonstrated`. Documented as a first-cut boundary, not tuned further,
+same humility `xp_required_for_skill_level()`'s own docstring already
+states for the level curve itself. New
+`SkillManager.capability_status(profile_id, skill_id)` is the one real
+call site every consumer goes through, rather than three copies of the
+same is_unlocked+level wiring.
+
+Surfaced in two places: `modules/skills/module.py`'s skill cards gain
+the tier label under the existing XP subtitle — only for unlocked
+skills, since a locked card already says "(Locked) &lt;name&gt;," so
+repeating "Locked" again would be redundant. `core/discovery_manager.py`'s
+`build_discovery_prompt()` adds the tier to each *trained* skill's line
+(`"Carpentry (carpentry): 25 XP — Learning"`) — deliberately not the
+frontier/"available next" list, since those are all 0 XP by definition
+and would just reprint what "not yet trained" already says — plus one
+new soft instruction sentence (propose something more ambitious for a
+`Demonstrated` skill, gentler for a `Learning` one), same "real
+grounding + one steering sentence, still fully gated by validation"
+shape the struggle-signal pass already established.
+
+**Verified for real**: 12 new tests across
+`test_skill_leveling.py`/`test_skill_manager.py`/`test_skills_module.py`/
+`test_discovery_manager.py` — full suite 2487 passing, zero
+regressions. Manual headless-Qt screenshot against the real 95-skill
+seeded taxonomy: picked 3 real unlocked skills and drove them to
+level 1/2/4 (`strength`→Learning, `mobility`→Practiced,
+`endurance`→Demonstrated, confirmed both programmatically and in the
+rendered Skills module), and confirmed a real locked skill (`cad`, and
+separately the whole Construction category's locked rows) shows no
+status label at all, just its existing "(Locked)"/"Requires:" text. No
+live-Ollama call needed — the Discovery-side change is entirely inside
+the pure prompt-building function.

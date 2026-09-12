@@ -114,6 +114,29 @@ def test_prompt_shows_trained_and_newly_unlocked_frontier_skill(isolated_paths):
     assert "Framing" in prompt
 
 
+def test_prompt_shows_capability_status_tier_on_trained_skills(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    context.skills.add_skill_xp("p1", "carpentry", 5)  # level 1 -> "learning"
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Carpentry (carpentry): 5 XP — Learning" in prompt
+    assert "propose something more ambitious" in prompt.lower()
+
+
+def test_prompt_frontier_skills_do_not_show_a_capability_status(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Carpentry (carpentry) —" not in prompt
+    assert "propose something more ambitious" not in prompt.lower()
+
+
 def test_prompt_includes_active_project_and_primary_intent(isolated_paths):
     _write_skill_definitions(isolated_paths)
     context = _make_context()

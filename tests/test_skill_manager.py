@@ -416,3 +416,54 @@ def test_add_skill_xp_with_no_notifications_service_does_not_crash(isolated_path
     context = _make_context()
     manager = SkillManager(context)
     manager.add_skill_xp("p1", "strength", 100)  # must not raise, context.notifications is None
+
+
+# ------------------------------------------------------------------
+# capability_status() — capability status tiers (2026-09-11)
+# ------------------------------------------------------------------
+
+def test_capability_status_locked_when_prerequisite_untrained(isolated_paths):
+    _write_definitions(isolated_paths, [
+        {"skill_id": "carpentry", "name": "Carpentry", "category": "Construction"},
+        {"skill_id": "framing", "name": "Framing", "category": "Construction",
+         "prerequisite_skill_ids": ["carpentry"]},
+    ])
+    context = _make_context()
+    manager = SkillManager(context)
+
+    assert manager.capability_status("p1", "framing") == "locked"
+
+
+def test_capability_status_learning_when_unlocked_with_low_xp(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "carpentry", "name": "Carpentry", "category": "Construction"}])
+    context = _make_context()
+    manager = SkillManager(context)
+    manager.add_skill_xp("p1", "carpentry", 5)
+
+    assert manager.capability_status("p1", "carpentry") == "learning"
+
+
+def test_capability_status_learning_when_unlocked_with_zero_xp(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "carpentry", "name": "Carpentry", "category": "Construction"}])
+    context = _make_context()
+    manager = SkillManager(context)
+
+    assert manager.capability_status("p1", "carpentry") == "learning"
+
+
+def test_capability_status_practiced_at_higher_xp(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "carpentry", "name": "Carpentry", "category": "Construction"}])
+    context = _make_context()
+    manager = SkillManager(context)
+    manager.add_skill_xp("p1", "carpentry", 25)  # 20 needed for level 1->2
+
+    assert manager.capability_status("p1", "carpentry") == "practiced"
+
+
+def test_capability_status_demonstrated_at_sustained_xp(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "carpentry", "name": "Carpentry", "category": "Construction"}])
+    context = _make_context()
+    manager = SkillManager(context)
+    manager.add_skill_xp("p1", "carpentry", 130)  # level 4, see test_skill_leveling.py's own boundary test
+
+    assert manager.capability_status("p1", "carpentry") == "demonstrated"

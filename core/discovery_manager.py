@@ -297,6 +297,7 @@ class DiscoveryManager:
             ][:_MAX_STRUGGLED_MISSIONS_IN_PROMPT]
         struggled_skill_ids = {weight.skill_id for m in struggled_missions for weight in m.skill_rewards}
 
+        has_trained_skills = False
         if self.context.skills is not None:
             progress_by_id = {
                 p.skill_id: p.total_xp for p in self.context.skills.progress_for_profile(profile_id)
@@ -319,8 +320,13 @@ class DiscoveryManager:
             allowed_skill_ids = [d.skill_id for d, _ in trained] + [d.skill_id for d in frontier]
 
             if trained:
+                has_trained_skills = True
                 lines.append("Skills the user has already trained (real progress):")
-                lines.extend(f"- {d.name} ({d.skill_id}): {xp} XP" for d, xp in trained)
+                lines.extend(
+                    f"- {d.name} ({d.skill_id}): {xp} XP — "
+                    f"{self.context.skills.capability_status(profile_id, d.skill_id).capitalize()}"
+                    for d, xp in trained
+                )
             if frontier:
                 lines.append("Skills available to start next (unlocked, not yet trained):")
                 lines.extend(f"- {d.name} ({d.skill_id})" for d in frontier)
@@ -369,12 +375,21 @@ class DiscoveryManager:
             if struggled_missions
             else ""
         )
+        # Capability status tiers (2026-09-11) — the same "real
+        # grounding + one soft steering sentence" shape as
+        # struggle_instruction above, not a hard rule.
+        capability_instruction = (
+            " Propose something more ambitious in a skill marked Demonstrated, and something "
+            "gentler in a skill marked Learning."
+            if has_trained_skills
+            else ""
+        )
 
         return (
             "You are MIA, a personal capability-building assistant. Based on the real "
             "information below about what this user has actually done, propose ONE new "
             "mission -- a concrete, real-world action -- that would be a useful next step "
-            f"for them.{struggle_instruction}\n\n"
+            f"for them.{struggle_instruction}{capability_instruction}\n\n"
             f"{reference_block}\n\n"
             f"You may ONLY reference these exact skill ids in your answer: {allowed_ids_text}. "
             "Never invent a new skill id, and never claim the user has already done something "

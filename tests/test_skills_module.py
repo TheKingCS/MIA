@@ -9,6 +9,7 @@ tests/test_missions_module.py (no Qt event loop, no fixtures).
 from __future__ import annotations
 
 from modules.skills.module import (
+    format_capability_status_label,
     format_locked_skill_name,
     format_prerequisites_line,
     format_skill_subtitle,
@@ -26,6 +27,12 @@ def test_format_locked_skill_name():
 
 def test_format_skills_trained_summary():
     assert format_skills_trained_summary(5, 80) == "5 of 80 skills trained"
+
+
+def test_format_capability_status_label():
+    assert format_capability_status_label("learning") == "Learning"
+    assert format_capability_status_label("practiced") == "Practiced"
+    assert format_capability_status_label("demonstrated") == "Demonstrated"
 
 
 def test_format_skills_trained_summary_none_trained():

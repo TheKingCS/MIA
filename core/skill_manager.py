@@ -43,7 +43,7 @@ from typing import Optional
 from core.achievements import crossed_a_level, format_skill_level_up, format_skill_unlocked
 from core.app_context import AppContext
 from core.logger import get_logger
-from core.skill_leveling import compute_skill_level_progress
+from core.skill_leveling import capability_status_for_level, compute_skill_level_progress
 
 log = get_logger(__name__)
 
@@ -243,6 +243,20 @@ class SkillManager:
                 if skill_id in other.prerequisite_skill_ids and self.is_unlocked(profile_id, other.skill_id):
                     title, message = format_skill_unlocked(other.name)
                     self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
+
+    def capability_status(self, profile_id: str, skill_id: str) -> str:
+        """
+        Real-evidence-derived status for this skill (2026-09-11) — one
+        of core.skill_leveling.CAPABILITY_STATUSES. Gathers the real
+        inputs (is_unlocked(), current level from real total_xp) and
+        delegates the tier boundary itself to
+        core.skill_leveling.capability_status_for_level(), the single
+        shared rule every consumer (Skills module, Discovery's prompt)
+        should call through rather than re-deriving.
+        """
+        unlocked = self.is_unlocked(profile_id, skill_id)
+        level, _, _ = compute_skill_level_progress(self.get_progress(profile_id, skill_id).total_xp)
+        return capability_status_for_level(unlocked, level)
 
     def is_unlocked(self, profile_id: str, skill_id: str) -> bool:
         """A skill with no prerequisites is always unlocked. Unknown
