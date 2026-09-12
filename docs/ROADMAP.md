@@ -7819,3 +7819,58 @@ complete and confirmed both Course-level (1 of 2) and Subject-level
 confirmed both its Lessons were gone too (real cascading delete, not
 just unlinked). Screenshotted all three drill-down levels, empty and
 populated.
+
+## Wire Classroom into Hero's Path: skill XP + Discovery awareness (2026-09-12)
+
+Direct follow-up, the user's own pick for "what's next" right after
+Classroom's content model shipped: connect a completed Lesson to real
+Skill XP, and give Discovery real awareness of what the user is
+currently studying. Deliberately not the whole envisioned loop
+(`docs/VISION.md`'s "Classroom sits between Path/Skill Tree and
+Mission") — no knowledge-gap detection, no Discovery-generated lesson
+recommendations, no link from a Mission/Proposal back to a specific
+Course. Just the first real connection.
+
+`Lesson` gains `skill_rewards: list[SkillWeight]` and
+`skill_rewards_credited: bool` — **the exact same two-field shape
+`core.project_manager.Project` already uses, for the identical
+reason**: `completed` is a plain bool a user can toggle back and forth
+via the existing Mark Complete/Incomplete button, and without a
+credited-guard that's a real, already-once-discovered exploit (Project's
+own docstring: "toggling status back and forth would re-grant the same
+skill_weights every time, a real exploit vector, not a theoretical
+one"). `update_lesson()`'s existing transition-detection now credits
+via the shared `core.gamification.grant_xp()` on the real False→True
+transition — same path Kitchen/Workout/Maintenance/Budget already use
+for "a completed real action, not a Mission," **0 flat profile XP**
+(that stays Mission-exclusive, same boundary Project's own crediting
+already draws).
+
+`gui/add_edit_classroom_lesson_dialog.py` gained a "Trains skill
+(optional)" combo + XP spinbox — a single skill per lesson for v1, not
+a full multi-weight list editor, matching a real existing gap (even
+Mission's own dialog doesn't expose multi-skill-weight editing yet
+either, so this doesn't overbuild past what that UI already offers).
+
+`core/discovery_manager.py`'s `build_discovery_prompt()` gained a
+"Currently studying" section — real Subjects with at least one
+incomplete lesson, same capping convention as every other section —
+plus one soft instruction sentence to consider reinforcing current
+study, only when the section is non-empty. Purely informational, same
+"real grounding, still fully gated by validation" shape every prior
+Discovery addition has used.
+
+**Verified for real**: 8 new tests (5 in `test_classroom_manager.py`
+covering crediting/the toggle-exploit guard/graceful degradation with
+no Skills service, 3 in `test_discovery_manager.py` for the studying
+section) — full suite 2520 passing, zero regressions. Manual
+headless-Qt walkthrough against a throwaway repo copy and the REAL
+seeded skill taxonomy: created a real Lesson through the actual dialog
+with a real skill (`electrical_wiring`) attached, marked it complete
+through the real manager call and confirmed real Skill XP landed (0→15),
+then explicitly tried the exploit (Complete→Incomplete→Complete again)
+and confirmed XP stayed at 15, not 30 — the guard actually holds, not
+just asserted in isolation. Confirmed `build_discovery_prompt()`
+correctly omits "Currently studying" once the only lesson is complete,
+and correctly shows it again once a second, still-incomplete lesson
+exists under the same subject.

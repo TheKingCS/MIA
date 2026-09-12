@@ -14,12 +14,14 @@ import json
 
 import pytest
 
+import core.classroom_manager as classroom_manager_module
 import core.discovery_manager as discovery_manager_module
 import core.intent_manager as intent_manager_module
 import core.mission_manager as mission_manager_module
 import core.project_manager as project_manager_module
 import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
+from core.classroom_manager import ClassroomManager
 from core.config_manager import ConfigManager
 from core.discovery_manager import DiscoveryManager
 from core.event_bus import EventBus
@@ -44,6 +46,10 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(project_manager_module, "_PROJECTS_FILE", data_dir / "projects.json")
     monkeypatch.setattr(intent_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(intent_manager_module, "_INTENTS_FILE", data_dir / "intents.json")
+    monkeypatch.setattr(classroom_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(classroom_manager_module, "_SUBJECTS_FILE", data_dir / "classroom_subjects.json")
+    monkeypatch.setattr(classroom_manager_module, "_COURSES_FILE", data_dir / "classroom_courses.json")
+    monkeypatch.setattr(classroom_manager_module, "_LESSONS_FILE", data_dir / "classroom_lessons.json")
     return data_dir
 
 
@@ -227,6 +233,50 @@ def test_prompt_ignores_a_too_hard_mission_with_no_skill_rewards(isolated_paths)
     prompt = manager.build_discovery_prompt("p1")
 
     assert "Found too difficult recently" not in prompt
+
+
+def test_prompt_shows_currently_studying_subject_with_incomplete_lesson(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    context.classroom = ClassroomManager(context)
+    subject = context.classroom.add_subject(name="Electrical")
+    course = context.classroom.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    context.classroom.add_lesson(course_id=course.course_id, name="Ohm's Law")
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Currently studying" in prompt
+    assert "- Electrical" in prompt
+    assert "reinforce something the user is currently studying" in prompt
+
+
+def test_prompt_excludes_a_fully_completed_subject(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    context.classroom = ClassroomManager(context)
+    subject = context.classroom.add_subject(name="Electrical")
+    course = context.classroom.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    lesson = context.classroom.add_lesson(course_id=course.course_id, name="Ohm's Law")
+    context.classroom.update_lesson(lesson.lesson_id, completed=True)
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Currently studying" not in prompt
+    assert "reinforce something the user is currently studying" not in prompt
+
+
+def test_prompt_excludes_a_subject_with_no_courses_or_lessons(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    context.classroom = ClassroomManager(context)
+    context.classroom.add_subject(name="Electrical")
+
+    prompt = manager.build_discovery_prompt("p1")
+
+    assert "Currently studying" not in prompt
 
 
 def test_prompt_degrades_gracefully_with_no_projects_or_intents_wired(isolated_paths):

@@ -32,12 +32,13 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -118,6 +119,15 @@ class Lesson:
     notes: str = ""  # freeform content/summary/materials
     completed: bool = False
     completed_at: str = ""  # set once, on the real False -> True transition
+    # "Wire Classroom into Hero's Path" (2026-09-12) — optional Skill XP
+    # a completed Lesson also grants, credited via the shared
+    # core.gamification.grant_xp() helper (same path Kitchen/Workout/
+    # Maintenance/Budget already use for "a completed real action, not
+    # a Mission"). skill_rewards_credited guards against re-granting on
+    # a later Complete->Incomplete->Complete cycle — same exploit class,
+    # same fix shape, as core.project_manager.Project.skill_weights_credited.
+    skill_rewards: list[SkillWeight] = field(default_factory=list)
+    skill_rewards_credited: bool = False
     created_at: str = ""
     updated_at: str = ""
 
@@ -129,6 +139,8 @@ class Lesson:
             "notes": self.notes,
             "completed": self.completed,
             "completed_at": self.completed_at,
+            "skill_rewards": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_rewards],
+            "skill_rewards_credited": self.skill_rewards_credited,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -142,6 +154,10 @@ class Lesson:
             notes=data.get("notes", ""),
             completed=bool(data.get("completed", False)),
             completed_at=data.get("completed_at", ""),
+            skill_rewards=[
+                SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_rewards", [])
+            ],
+            skill_rewards_credited=bool(data.get("skill_rewards_credited", False)),
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
         )
@@ -287,11 +303,14 @@ class ClassroomManager:
     # Lessons
     # ------------------------------------------------------------------
 
-    def add_lesson(self, course_id: str, name: str, notes: str = "") -> Lesson:
+    def add_lesson(
+        self, course_id: str, name: str, notes: str = "", skill_rewards: Optional[list[SkillWeight]] = None,
+    ) -> Lesson:
         now = datetime.now().isoformat(timespec="seconds")
         lesson = Lesson(
             lesson_id=uuid.uuid4().hex[:10], course_id=course_id, name=name,
-            notes=notes, created_at=now, updated_at=now,
+            notes=notes, skill_rewards=list(skill_rewards) if skill_rewards else [],
+            created_at=now, updated_at=now,
         )
         self._lessons.append(lesson)
         self._save_lessons()
@@ -303,7 +322,7 @@ class ClassroomManager:
             raise ValueError(f"No lesson with id '{lesson_id}'.")
         was_completed = lesson.completed
         for key, value in fields.items():
-            if key in ("created_at", "course_id", "completed_at"):
+            if key in ("created_at", "course_id", "completed_at", "skill_rewards_credited"):
                 raise ValueError(f"'{key}' can't be set through update_lesson().")
             if not hasattr(lesson, key):
                 raise ValueError(f"Lesson has no field '{key}'.")
@@ -311,6 +330,20 @@ class ClassroomManager:
         lesson.updated_at = datetime.now().isoformat(timespec="seconds")
         if not was_completed and lesson.completed:
             lesson.completed_at = lesson.updated_at
+            # "Wire Classroom into Hero's Path" (2026-09-12) — credits
+            # only on this real transition, guarded by
+            # skill_rewards_credited so a later Complete->Incomplete->
+            # Complete cycle can never re-grant the same XP (same
+            # exploit class core.project_manager.Project.skill_weights_credited
+            # was added to close). 0 flat profile XP — that stays
+            # Mission-exclusive, same boundary
+            # Project._credit_project_skill_weights() already draws.
+            if lesson.skill_rewards and not lesson.skill_rewards_credited:
+                grant_xp(
+                    self.context, 0, "\U0001F393 Lesson complete!",
+                    f"'{lesson.name}' is complete!", skill_weights=lesson.skill_rewards,
+                )
+                lesson.skill_rewards_credited = True
         self._save_lessons()
         return lesson
 

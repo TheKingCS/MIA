@@ -9,13 +9,20 @@ tests/test_workout_manager.py.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 import core.classroom_manager as classroom_manager_module
+import core.config_manager as config_manager_module
+import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
 from core.classroom_manager import ClassroomManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+from core.gamification import SkillWeight
+from core.profile_manager import ProfileManager
+from core.skill_manager import SkillManager
 
 
 @pytest.fixture
@@ -25,6 +32,13 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(classroom_manager_module, "_SUBJECTS_FILE", data_dir / "classroom_subjects.json")
     monkeypatch.setattr(classroom_manager_module, "_COURSES_FILE", data_dir / "classroom_courses.json")
     monkeypatch.setattr(classroom_manager_module, "_LESSONS_FILE", data_dir / "classroom_lessons.json")
+    # Needed once a test constructs a real ProfileManager/SkillManager
+    # too (skill-crediting tests below) — without these, that would
+    # write to the actual config/config.json and data/skill_*.json.
+    monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
     return data_dir
 
 
@@ -236,3 +250,98 @@ def test_subject_completion_with_no_courses_is_zero_of_zero(isolated_paths):
     subject = manager.add_subject(name="Geometry")
 
     assert manager.subject_completion(subject.subject_id) == (0, 0)
+
+
+# ------------------------------------------------------------------
+# skill_rewards crediting — "Wire Classroom into Hero's Path" (2026-09-12)
+# ------------------------------------------------------------------
+
+def _write_skill_definitions(data_dir) -> None:
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "skill_definitions.json").write_text(
+        json.dumps({"skills": [{"skill_id": "electrical", "name": "Electrical", "category": "Trade Skills"}]})
+    )
+
+
+def test_completing_a_lesson_with_skill_rewards_grants_skill_xp(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    manager = ClassroomManager(context)
+    subject = manager.add_subject(name="Electrical")
+    course = manager.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    lesson = manager.add_lesson(
+        course_id=course.course_id, name="Ohm's Law", skill_rewards=[SkillWeight(skill_id="electrical", xp=10)],
+    )
+
+    manager.update_lesson(lesson.lesson_id, completed=True)
+
+    assert context.skills.get_progress(profile.profile_id, "electrical").total_xp == 10
+
+
+def test_completing_a_lesson_with_skill_rewards_grants_zero_flat_profile_xp(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    context.profiles.create_profile(name="Alex", make_active=True)
+    manager = ClassroomManager(context)
+    subject = manager.add_subject(name="Electrical")
+    course = manager.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    lesson = manager.add_lesson(
+        course_id=course.course_id, name="Ohm's Law", skill_rewards=[SkillWeight(skill_id="electrical", xp=10)],
+    )
+
+    manager.update_lesson(lesson.lesson_id, completed=True)
+
+    assert context.profiles.get_active_profile().total_xp == 0
+
+
+def test_toggling_a_lesson_complete_incomplete_complete_does_not_recredit(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    manager = ClassroomManager(context)
+    subject = manager.add_subject(name="Electrical")
+    course = manager.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    lesson = manager.add_lesson(
+        course_id=course.course_id, name="Ohm's Law", skill_rewards=[SkillWeight(skill_id="electrical", xp=10)],
+    )
+
+    manager.update_lesson(lesson.lesson_id, completed=True)
+    manager.update_lesson(lesson.lesson_id, completed=False)
+    manager.update_lesson(lesson.lesson_id, completed=True)
+
+    assert context.skills.get_progress(profile.profile_id, "electrical").total_xp == 10
+
+
+def test_completing_a_lesson_with_no_skill_rewards_grants_nothing(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    context.skills = SkillManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    manager = ClassroomManager(context)
+    subject = manager.add_subject(name="Electrical")
+    course = manager.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    lesson = manager.add_lesson(course_id=course.course_id, name="Ohm's Law")
+
+    manager.update_lesson(lesson.lesson_id, completed=True)
+
+    assert context.skills.get_progress(profile.profile_id, "electrical").total_xp == 0
+
+
+def test_completing_a_lesson_with_no_skills_service_does_not_raise(isolated_paths):
+    context = _make_context()
+    manager = ClassroomManager(context)
+    subject = manager.add_subject(name="Electrical")
+    course = manager.add_course(subject_id=subject.subject_id, name="DC Circuits")
+    lesson = manager.add_lesson(
+        course_id=course.course_id, name="Ohm's Law", skill_rewards=[SkillWeight(skill_id="electrical", xp=10)],
+    )
+
+    manager.update_lesson(lesson.lesson_id, completed=True)  # must not raise

@@ -93,6 +93,7 @@ _MAX_TRAINED_SKILLS_IN_PROMPT = 20
 _MAX_FRONTIER_SKILLS_IN_PROMPT = 15
 _MAX_RECENT_MISSIONS_IN_PROMPT = 5
 _MAX_STRUGGLED_MISSIONS_IN_PROMPT = 5
+_MAX_STUDYING_SUBJECTS_IN_PROMPT = 5
 
 _PROPOSAL_TAGS = ("Mission", "Summary", "Difficulty", "Skills", "Rationale")
 
@@ -367,6 +368,23 @@ class DiscoveryManager:
                 for m in struggled_missions
             )
 
+        # "Wire Classroom into Hero's Path" (2026-09-12) — real,
+        # deterministic awareness of what the user is actually studying
+        # right now (a Subject with at least one lesson, not fully
+        # complete). Purely informational grounding, same as every
+        # other section here — no knowledge-gap detection, no
+        # Discovery-generated lesson recommendations.
+        studying_subjects = []
+        if self.context.classroom is not None:
+            for subject in self.context.classroom.all_subjects():
+                done, total = self.context.classroom.subject_completion(subject.subject_id)
+                if total and done < total:
+                    studying_subjects.append(subject)
+            studying_subjects = studying_subjects[:_MAX_STUDYING_SUBJECTS_IN_PROMPT]
+            if studying_subjects:
+                lines.append("Currently studying (real, in-progress coursework):")
+                lines.extend(f"- {s.name}" for s in studying_subjects)
+
         reference_block = "\n".join(lines) if lines else "No real progress recorded yet — this is a fresh start."
         allowed_ids_text = ", ".join(allowed_skill_ids) if allowed_skill_ids else "(none available)"
         struggle_instruction = (
@@ -384,12 +402,17 @@ class DiscoveryManager:
             if has_trained_skills
             else ""
         )
+        studying_instruction = (
+            " Consider whether a mission could reinforce something the user is currently studying."
+            if studying_subjects
+            else ""
+        )
 
         return (
             "You are MIA, a personal capability-building assistant. Based on the real "
             "information below about what this user has actually done, propose ONE new "
             "mission -- a concrete, real-world action -- that would be a useful next step "
-            f"for them.{struggle_instruction}{capability_instruction}\n\n"
+            f"for them.{struggle_instruction}{capability_instruction}{studying_instruction}\n\n"
             f"{reference_block}\n\n"
             f"You may ONLY reference these exact skill ids in your answer: {allowed_ids_text}. "
             "Never invent a new skill id, and never claim the user has already done something "

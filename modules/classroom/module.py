@@ -395,6 +395,7 @@ class ClassroomModule(ModuleBase):
             return
         self.context.classroom.add_lesson(
             course_id=self._current_course_id, name=dialog.entered_name, notes=dialog.entered_notes,
+            skill_rewards=dialog.entered_skill_rewards,
         )
         self._refresh_lesson_list()
 
@@ -407,7 +408,10 @@ class ClassroomModule(ModuleBase):
         dialog = AddEditLessonDialog(self.context, lesson=lesson)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self.context.classroom.update_lesson(lesson_id, name=dialog.entered_name, notes=dialog.entered_notes)
+        self.context.classroom.update_lesson(
+            lesson_id, name=dialog.entered_name, notes=dialog.entered_notes,
+            skill_rewards=dialog.entered_skill_rewards,
+        )
         self._refresh_lesson_list()
 
     def _on_toggle_lesson_complete(self) -> None:
