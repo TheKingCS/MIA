@@ -8120,3 +8120,52 @@ copy, `HomeDashboard.__new__()` bypassing the module's own heavy
 `__init__` to exercise just the two changed builder methods directly):
 both the Clock and Mission cards render with visible corner marks and
 a soft teal glow halo, confirming the new technique works end to end.
+
+## Design restyle, Phase 2: Missions quest detail, screen 1b (2026-09-12)
+
+Continuing the "MIA Smart User OS Design" restyle in the handoff's own
+sequence. **Real finding before touching anything**: `modules/missions
+/module.py`'s existing detail panel (built in the 2026-07-18 CCH.zip
+pass) already has almost the exact structure the new v2 spec wants —
+icon, title, "MIA ASSIGNED" badge, region, summary, an objectives
+checklist, a difficulty tag, a rewards footer. The actual gaps were
+smaller than a rebuild: corner marks + glow (Phase 1's own new
+primitives, reused verbatim — no new widgets or QSS needed this
+phase), and a real, previously-missing data gap —
+`Mission.skill_rewards` has existed since the "My Hero's Path" pass
+but was never shown anywhere in this screen, even though the design
+explicitly calls for "SKILL WEIGHTS" chips in the rewards footer. Added
+them, reusing the existing `MissionDifficultyTag` object name/QSS
+verbatim (same small mono-chip look) rather than a new stylesheet rule
+for an identical chip.
+
+**Real, deliberate exclusion, per the handoff's own stated rule** ("when
+design and code disagree on data, the code wins"): the design's 1b
+spec also shows a right-hand "asset record" panel — a mower's photo/
+serial/purchase-date plus a live `predicted_due_date()` trigger
+readout. Checked `core/mission_manager.py`'s `Mission` model directly
+before assuming this was buildable: it has no field linking a Mission
+to a `MaintenanceAsset`/`MaintenanceTask` at all (`task_id` points at
+`core.task_manager.Task`, a Project to-do item — a different, same-
+named "Task"). The mockup's "mower inspection quest" scenario assumes
+a relationship that doesn't exist in this codebase. Not fabricated —
+no new FK field, no fake asset panel. A real Missions↔Maintenance link
+is its own future feature request if the user wants it, named here so
+it isn't lost.
+
+**Verification**: `pytest -q` — full suite 2571, zero regressions (no
+pytest coverage exists for this GUI construction code, same as Phase
+1 — no new test added, for the same reason). Manual headless-Qt
+screenshot (throwaway repo copy) against two real Missions — one with
+`skill_rewards` set, one without: confirmed corner marks + glow on
+both the detail card and rewards footer, and the skill-weight chips
+rendering correctly (`home_maintenance +10`, `repair +5`) only on the
+mission that actually has them. **Real, small layout issue caught by
+looking at the actual screenshot, not assumed correct**: the rewards
+footer row felt visibly cramped once real chips were added — fixed
+with an explicit `rewards_layout.setSpacing(14)` (the row had been
+relying on Qt's tight default spacing); re-verified at the design's
+own real 1440px artboard width (not just a narrow 900px test window,
+which had genuinely truncated "100 XP"/"OPTIONAL MISSION" purely from
+window-width, not a real bug) to confirm the fix holds at the actual
+intended size.

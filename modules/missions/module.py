@@ -44,6 +44,8 @@ from core.mission_manager import Mission, Objective
 from gui.add_edit_mission_dialog import AddEditMissionDialog
 from gui.add_edit_objective_dialog import AddEditObjectiveDialog
 from gui.delete_confirm_dialog import DeleteConfirmDialog
+from gui.widgets.blueprint_frame import BlueprintFrame
+from gui.widgets.glow import apply_panel_glow
 from gui.widgets.mission_list_row import MissionListRow
 from gui.widgets.objective_checklist_row import ObjectiveChecklistRow
 from modules.module_base import ModuleBase
@@ -150,11 +152,17 @@ class MissionsModule(ModuleBase):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
 
-        self._detail_container = QWidget()
+        # 2026-09-12 design restyle, phase 2 — corner marks + glow, the
+        # v2 HUD layer's own treatment for a screen's main panel (see
+        # gui/widgets/blueprint_frame.py). Plain (non-accent) ink since
+        # this card sits on the neutral #101722 DashboardCard
+        # background, not an accent-tinted one.
+        self._detail_container = BlueprintFrame()
         self._detail_container.setObjectName("DashboardCard")
         self._detail_layout = QVBoxLayout(self._detail_container)
         self._detail_layout.setContentsMargins(22, 20, 22, 20)
         self._detail_layout.setSpacing(10)
+        apply_panel_glow(self._detail_container)
 
         scroll.setWidget(self._detail_container)
         return scroll
@@ -367,17 +375,36 @@ class MissionsModule(ModuleBase):
 
         self._detail_layout.addStretch()
 
-        rewards_footer = QWidget()
+        # 2026-09-12 design restyle, phase 2 — same corner-marks + glow
+        # treatment as the detail container above; plain ink, this
+        # tile's #131b26 background isn't the accent-field color either.
+        rewards_footer = BlueprintFrame()
         rewards_footer.setObjectName("MissionRewardsFooter")
         rewards_layout = QHBoxLayout(rewards_footer)
         rewards_layout.setContentsMargins(16, 12, 16, 12)
+        rewards_layout.setSpacing(14)
         rewards_text = QLabel(format_rewards_line(mission.reward_credits, mission.reward_xp))
         rewards_text.setObjectName("MissionRewardsText")
         rewards_layout.addWidget(rewards_text)
+        # Real, previously-missing gap the design surfaced: mission.skill_rewards
+        # has existed since the "My Hero's Path" pass but was never shown
+        # anywhere in this screen. Reuses MissionDifficultyTag's existing
+        # small mono-chip look verbatim (same visual language the design
+        # calls for "SKILL WEIGHTS" chips) rather than adding a new QSS
+        # rule for an identical chip style. Only shown when there's
+        # something real to show. Real user-visible crowding found via
+        # screenshot against #DashboardCard's own tight default QHBoxLayout
+        # spacing — the explicit setSpacing() above is the actual fix,
+        # not the small per-chip left margin some other chip row might use.
+        for weight in mission.skill_rewards:
+            skill_chip = QLabel(f"{weight.skill_id} +{weight.xp}")
+            skill_chip.setObjectName("MissionDifficultyTag")
+            rewards_layout.addWidget(skill_chip)
         rewards_layout.addStretch()
         mission_type_label = QLabel(mission.mission_type)
         mission_type_label.setObjectName("MissionTypeLabel")
         rewards_layout.addWidget(mission_type_label)
+        apply_panel_glow(rewards_footer)
         self._detail_layout.addWidget(rewards_footer)
 
     def _refresh_level_footer(self) -> None:
