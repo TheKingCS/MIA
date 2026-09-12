@@ -1062,4 +1062,44 @@ QLabel#MonitorTileValue {
     font-weight: 700;
     color: #e7ecf3;
 }
+
+/* "MIA Smart User OS Design" handoff, v2 HUD layer (2026-09-12) — new
+primitives only this pass, applied so far just to gui/home_dashboard.py's
+Clock and Mission widget cards (see gui/widgets/blueprint_frame.py and
+gui/widgets/glow.py for the corner-mark/glow techniques QSS itself
+can't express — box-shadow/text-shadow have no QSS equivalent). Every
+other screen this design covers (Missions detail, Maintenance/
+greenhouse monitor, Skills tier grid, architecture diagram) is real,
+deferred follow-up scope. */
+
+QFrame#HudPlate {
+    background-color: rgba(8, 17, 24, 0.86);
+    border: 1px solid rgba(56, 217, 201, 0.5);
+    border-radius: 10px;
+}
+
+/* The XP-purple progress variant — distinct object name from the
+default teal QProgressBar above so both coexist; square corners per
+the handoff's "square in skill/quest contexts" spacing note. Not yet
+applied to any real widget this pass — the token exists for the
+Skills-module restyle phase that comes later. */
+QProgressBar#XPProgressBar {
+    background-color: #161b22;
+    border: 1px solid #232b34;
+    border-radius: 0px;
+    text-align: center;
+    color: #d8e0e8;
+}
+
+QProgressBar#XPProgressBar::chunk {
+    background-color: #a855f7;
+    border-radius: 0px;
+}
+
+/* HP-green token, for a future real Health & Fitness-backed stat —
+the handoff itself warns against showing a fabricated "HP" number, so
+this variant exists but isn't wired to any value yet. */
+QLabel#DashboardStatValue[state="hp"] {
+    color: #4ade80;
+}
 """

@@ -156,6 +156,8 @@ from core.startup_briefing import build_stat_highlights, build_startup_briefing
 from core.tts_worker import TTSWorker
 from gui.dashboard_customize_dialog import DashboardCustomizeDialog
 from gui.widgets.avatar_camera_widget import AvatarCameraWidget
+from gui.widgets.blueprint_frame import BlueprintFrame
+from gui.widgets.glow import apply_panel_glow
 from gui.widgets.toggle_switch import ToggleSwitch
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
@@ -704,8 +706,14 @@ class HomeDashboard(QFrame):
         """A real card (eyebrow "CLOCK" label + big time, left; date,
         right) — re-comparing against the ForMIA mockup found this had
         shipped as a bare centered label stack with no card/eyebrow at
-        all, unlike every other widget's card treatment."""
-        card = QFrame()
+        all, unlike every other widget's card treatment.
+
+        **2026-09-12 design restyle, phase 1**: one of two proof-of-
+        concept cards for the "MIA Smart User OS Design" handoff's v2
+        HUD layer — BlueprintFrame's corner marks + a colored glow
+        (gui/widgets/glow.py) replace the plain QFrame + generic black
+        drop-shadow this card used before."""
+        card = BlueprintFrame()
         card.setObjectName("DashboardCard")
         layout = QHBoxLayout(card)
         layout.setContentsMargins(20, 18, 20, 18)
@@ -727,12 +735,7 @@ class HomeDashboard(QFrame):
         self._clock_date_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
         layout.addWidget(self._clock_date_label)
 
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(16)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        card.setGraphicsEffect(shadow)
+        apply_panel_glow(card)
 
         return card
 
@@ -842,7 +845,20 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("missions"),
         )
         self._widget_bodies["mission"] = body
-        return card
+
+        # 2026-09-12 design restyle, phase 1 — the second proof-of-concept
+        # card for the v2 HUD layer (see _build_clock()'s own comment).
+        # The clickable card itself stays a QPushButton (this app's own
+        # "never :hover a descendant QLabel" rule — see
+        # gui/widgets/module_button.py's docstring), so it's wrapped in a
+        # transparent BlueprintFrame for the corner marks + glow rather
+        # than trying to make the button itself paint them.
+        wrapper = BlueprintFrame(accent=True)
+        wrapper_layout = QVBoxLayout(wrapper)
+        wrapper_layout.setContentsMargins(6, 6, 6, 6)
+        wrapper_layout.addWidget(card)
+        apply_panel_glow(wrapper)
+        return wrapper
 
     def _build_current_project_widget(self, descriptor: WidgetDescriptor) -> QWidget:
         card, body = self._build_simple_card(

@@ -8040,3 +8040,83 @@ and only the third completion genuinely advanced to "Cook 5 Different
 Meals This Month" with "New Mission Unlocked!". Screenshotted the
 Toolbox Pathways tool mid-repeat ("Step 1 of 3 (2/3)") and after the
 real advance ("Step 2 of 3", no stray repeat suffix).
+
+## Design restyle, Phase 1: v2 HUD token layer + BlueprintFrame + Home console (2026-09-12)
+
+The user dropped a new design handoff bundle ("MIA Smart User OS
+Design.zip") with an unusually thorough spec — real color/type/spacing
+tokens mapped onto this repo's own `gui/styles.py` conventions, and
+per-screen breakdowns referencing real functions already in the
+codebase (`predicted_due_date`, `capability_status_for_level`,
+`crossed_a_level`). Its own instruction: restyle the *existing* app
+centrally through `DARK_FIELD_THEME` + a small set of shared widgets,
+never per-screen `setStyleSheet()`; AR HUD and a fake "mobile preview"
+panel are explicitly "concept only," skip both. Mobile access is a
+separate, later effort the user deliberately sequenced after this
+restyle.
+
+**Real finding before writing any code**: this isn't a from-scratch
+reskin. `gui/styles.py`'s current `dark_field` theme already uses the
+*exact* base palette the new handoff specifies (`#38d9c9` accent,
+`#0f1a1c`/`#1f3538` accent fields, `#e0af68`/`#e06666` warning/critical,
+`#f0b83c` gold — already `MissionCardBadge`) — same design lineage,
+already built up across several earlier "ForMIA"/CCH.zip passes. What's
+new in v2 is an additive HUD glow layer on top (colored panel glows,
+HP green, XP purple, blueprint corner-marks), not a repaint.
+
+**Second real finding, mid-implementation**: the plan's original
+target for the first proof point — wrapping an existing `#ConsoleOrbStage`
+widget — turned out not to exist. `gui/styles.py` has real QSS rules
+for `ConsoleOrbStage`/`ConsoleTitle`/`ConsoleStateLabel`/
+`ConsoleOrbLabel`/`ConsoleLastMessage`/`ConsoleInfoValue` (from the
+2026-07-18 CCH.zip pass), but a full-repo search found **zero** real
+widget anywhere ever setting any of those object names — orphaned CSS
+for a "console" concept that was styled but never actually built or
+wired in. Adapted the plan on the spot: applied the new treatment to
+the Clock and Mission dashboard cards instead (both confirmed real,
+live, already-rendered widgets) — same intent (prove the new language
+on two real Home-dashboard elements), different concrete targets.
+
+New `gui/widgets/blueprint_frame.py` (`BlueprintFrame(QFrame)` — paints
+four `+` registration marks in `paintEvent`, matching the handoff's own
+spec, an `accent` flag for the brighter ink variant on accent-tinted
+panels) and `gui/widgets/glow.py` (`apply_panel_glow()`, a thin shared
+wrapper around `QGraphicsDropShadowEffect` — the same technique
+`gui/home_dashboard.py`'s existing card-lift shadows already used, just
+parameterized for the new colored teal glow instead of a generic black
+drop-shadow). New QSS primitives in `DARK_FIELD_THEME`: `#HudPlate`
+(the floating HUD-readout-card treatment), `#XPProgressBar` (the
+XP-purple progress variant), and an HP-green `[state="hp"]` label
+variant — tokens made available for later phases, not yet wired to any
+real widget beyond the Clock/Mission cards' corner marks and glow.
+
+Barlow Condensed (the one genuinely new font the handoff calls for) is
+**not bundled** — only Inter and JetBrains Mono exist in
+`assets/fonts/` today. Used the handoff's own documented fallback
+(Inter 800 uppercase) rather than sourcing/licensing a third font file
+without the user picking one first — not needed this pass anyway,
+since no new screen-title text was added.
+
+**Deferred, stated plainly**: Missions' quest-detail screen, the
+Maintenance/greenhouse sensor monitor, Skills' tier-grid layout (it
+already has real 2026-09-11 Hero's Path styling; the handoff's node-
+grid/connector-line layout is a bigger, separate change), the
+architecture diagram (lowest priority per the handoff itself), the two
+decorative animation loops (gated behind a setting per the handoff's
+own instruction) — every one of these is real, named follow-up scope,
+not silently dropped.
+
+**Verification, adjusted from the original plan**: confirmed by
+grepping the whole test suite that this codebase has **zero existing
+precedent for a pytest test constructing a real Qt widget** — every
+prior GUI change in this project has been verified by manual headless-
+Qt screenshot, never asserted in pytest. Skipped adding a
+`tests/test_blueprint_frame.py` pytest file (would have introduced a
+new testing pattern inconsistent with the other 2571 tests) in favor of
+matching the established convention. `pytest -q` — full suite 2571,
+zero regressions (no code path this phase touches has automated
+coverage to begin with). Manual headless-Qt screenshot (throwaway repo
+copy, `HomeDashboard.__new__()` bypassing the module's own heavy
+`__init__` to exercise just the two changed builder methods directly):
+both the Clock and Mission cards render with visible corner marks and
+a soft teal glow halo, confirming the new technique works end to end.
