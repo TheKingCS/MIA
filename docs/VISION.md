@@ -667,6 +667,16 @@ AR/XR HUD (loosely inspired by *Free Guy*'s overlay feel and *My
 Vampire System*'s "Inspect" ability, neither literally copied) as one
 future interface among several, never the only one.
 
+**Concept mockup (2026-09-12)**: `docs/vision_assets/user_os_concept.png`
+— a mood-board illustration the user put together of what this could
+eventually look like (AR HUD overlay, a desktop dashboard, mobile app,
+Skills/Progression screen, and a "System Architecture" diagram showing
+Desktop/Mobile/Voice/AR-XR/Displays as equal interfaces over one
+"M.I.A. Core"). Reference material for the destination, same as this
+whole section — not a spec, and none of it is being built from
+directly; concrete work still gets scoped and planned piece by piece
+like everything else in this document.
+
 **The architectural constraint this section exists to state, explicitly
 not a build request**: the intelligence/data layer this session's
 "Hero's Path" work has been building all along — Skills, Missions,
