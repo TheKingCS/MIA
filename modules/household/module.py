@@ -48,6 +48,8 @@ from PySide6.QtWidgets import (
 
 from core.mission_manager import Mission
 from core.recurring_mission_manager import RecurringMissionTemplate
+from gui.widgets.blueprint_frame import BlueprintFrame
+from gui.widgets.glow import apply_panel_glow
 from modules.module_base import ModuleBase
 
 HOUSEHOLD_CATEGORIES = ["Household"]
@@ -112,14 +114,27 @@ class HouseholdModule(ModuleBase):
         subtitle.setObjectName("SubtitleLabel")
         outer.addWidget(subtitle)
 
+        progress_card = BlueprintFrame(accent=True)
+        progress_card.setObjectName("DashboardCard")
+        apply_panel_glow(progress_card)
+        progress_layout = QVBoxLayout(progress_card)
+        progress_layout.setContentsMargins(18, 16, 18, 16)
+        progress_layout.setSpacing(8)
+
+        progress_eyebrow = QLabel("TOTAL PROGRESS")
+        progress_eyebrow.setObjectName("MonitorTileEyebrow")
+        progress_layout.addWidget(progress_eyebrow)
+
         self._progress_label = QLabel("—")
-        self._progress_label.setObjectName("SubtitleLabel")
-        outer.addWidget(self._progress_label)
+        self._progress_label.setObjectName("MonitorTileValue")
+        progress_layout.addWidget(self._progress_label)
 
         self._progress_bar = QProgressBar()
         self._progress_bar.setTextVisible(False)
         self._progress_bar.setFixedHeight(10)
-        outer.addWidget(self._progress_bar)
+        progress_layout.addWidget(self._progress_bar)
+
+        outer.addWidget(progress_card)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -160,9 +175,17 @@ class HouseholdModule(ModuleBase):
             occurrence_missions.append(mission)
             streak = self.context.recurring_missions.current_streak_for_template(template.template_id, today)
 
-            row = QPushButton(format_checklist_line(template, mission, streak))
+            row = QPushButton()
+            row.setObjectName("DashboardCard")
             row.setCursor(Qt.CursorShape.PointingHandCursor)
-            row.setStyleSheet("text-align: left; padding: 6px 0;")
+            row.setToolTip(f"Open {template.name}")
+            row.setMinimumHeight(64)
+            row_layout = QVBoxLayout(row)
+            row_layout.setContentsMargins(18, 12, 18, 12)
+            row_layout.setSpacing(2)
+            line_label = QLabel(format_checklist_line(template, mission, streak))
+            line_label.setObjectName("MonitorTileValue")
+            row_layout.addWidget(line_label)
             if mission is not None:
                 row.clicked.connect(
                     lambda checked=False, mid=mission.mission_id: self.context.events.publish(

@@ -8770,3 +8770,62 @@ the big progress bar + checklist row correctly. Screenshotted.
 **Deferred, not built**: a dedicated "create a new recurring mission
 template" UI dialog — every template (Push-ups, Laundry) is still
 created via direct script, same as before.
+
+## Design/style catch-up: Garage, Property, Greenhouse, Household (2026-09-14)
+
+Asked to bring the recent module work up to the visual standard the
+"MIA Smart User OS Design" restyle already established elsewhere
+(Home dashboard, Maintenance's Sensor Monitor tab, Missions) — Garage,
+Property, Greenhouse, and the new Household module were all still
+plain `QLabel`/`QPushButton` text, built functionally but never pulled
+into the HUD/BlueprintFrame system.
+
+Two mechanical changes, applied identically across all four modules
+(no new shared widget — matches this codebase's own existing
+precedent of `modules/maintenance/module.py`'s Monitor tab inlining
+its own tile-building code rather than factoring out a shared helper):
+
+- **Glance tiles** (Tracked/Needs Attention/Next Up, and Household's
+  "Total Progress"): now a real `BlueprintFrame` + `#MonitorTile`
+  card with `#MonitorTileEyebrow`/`#MonitorTileValue` labels — the
+  exact objectNames Maintenance's own Sensor Monitor tab already uses
+  — instead of a bare `QLabel` pair.
+- **Section rows**: a given asset/template now renders as a real
+  clickable `QPushButton#DashboardCard` (whole card opens its detail
+  page, matching `gui/home_dashboard.py`'s own "click-to-navigate
+  widget card" convention) instead of a plain-text `QPushButton`
+  header with loose `QLabel` lines beneath it. A cross-asset callout
+  like "Needs Attention" (no single asset to click through to) gets
+  the same accent-glow `BlueprintFrame` treatment Maintenance's own
+  "due tasks" quest card uses — the same kind of thing, a boss's
+  outstanding fight list.
+
+**Caught and fixed a real bug in my own verification script, not
+product code**: a throwaway script meant to isolate test data from the
+real `data/maintenance.json` monkeypatched nonexistent attribute names
+(`_ASSETS_FILE`/`_TASKS_FILE` — the real module only has one combined
+`_MAINTENANCE_FILE` constant), so it silently loaded and wrote to the
+REAL data file, adding two fake "Greenhouse Aquaponics" test assets
+and two fake "Prune tomatoes" tasks. Caught immediately by checking
+the glance tile count against what the script itself had added,
+cleaned by removing exactly those newly-added ids (confirmed by
+name+id match) and verifying the asset/task counts returned to the
+known-good 5/35 — worth remembering generally: always confirm which
+exact file-path constant a manager module uses (grep it) before
+trusting a monkeypatch, rather than assuming a name pattern.
+
+**Verification**: `pytest -q` — full suite, 2679 passed, zero
+regressions (existing Garage/Property/Greenhouse/Household pure-
+function tests untouched, since only Qt widget-construction code
+changed). Manual headless-Qt screenshots of Greenhouse (list view),
+Garage (list + detail view, confirming `focus_record()`/the shared
+missions panel still work under the new card layout), and Household
+(the new accent-glow progress card + DashboardCard checklist rows).
+
+Deferred: the Garage/Property/Greenhouse per-asset **detail** pages
+still render as plain text (only the list views were restyled this
+pass) — a smaller, lower-priority follow-up, not part of what was
+asked for. Character page and Skill Tree page work (star ratings,
+generated bio, Borderlands-style intertwining trees, a skill-
+convergence "naming engine") discussed but explicitly deferred as
+their own separate, bigger conversations.

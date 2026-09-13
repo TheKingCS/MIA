@@ -54,6 +54,8 @@ from core.maintenance_manager import (
     meter_used_since_last,
 )
 from gui.widgets.asset_missions_panel import build_asset_missions_panel
+from gui.widgets.blueprint_frame import BlueprintFrame
+from gui.widgets.glow import apply_panel_glow
 from modules.module_base import ModuleBase
 
 PROPERTY_CATEGORIES = ["Appliance", "Property", "Tool"]
@@ -266,16 +268,21 @@ class PropertyModule(ModuleBase):
         self.context.events.publish("assistant.open_module_requested", module_id="maintenance")
 
     def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str) -> QLabel:
-        tile = QVBoxLayout()
+        """Design/style catch-up (2026-09-14) — real #MonitorTile card
+        (BlueprintFrame + the same eyebrow/value objectNames Maintenance's
+        own Sensor Monitor tab uses), not a bare QLabel pair, so this
+        glance row reads as an instrument-panel tile like the rest of
+        the restyled screens rather than plain stacked text."""
+        tile = BlueprintFrame()
+        tile.setObjectName("MonitorTile")
+        tile_layout = QVBoxLayout(tile)
+        eyebrow = QLabel(caption.upper())
+        eyebrow.setObjectName("MonitorTileEyebrow")
+        tile_layout.addWidget(eyebrow)
         value_label = QLabel("—")
-        value_label.setObjectName("TitleLabel")
-        value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        caption_label = QLabel(caption)
-        caption_label.setObjectName("SubtitleLabel")
-        caption_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        tile.addWidget(value_label)
-        tile.addWidget(caption_label)
-        row_layout.addLayout(tile)
+        value_label.setObjectName("MonitorTileValue")
+        tile_layout.addWidget(value_label)
+        row_layout.addWidget(tile)
         return value_label
 
     def _refresh(self) -> None:
@@ -330,25 +337,53 @@ class PropertyModule(ModuleBase):
     def _add_section(
         self, title: str, lines: list[str], empty_text: str = "Nothing here yet.", asset_id: Optional[str] = None,
     ) -> None:
+        """Design/style catch-up (2026-09-14) — every section is now a
+        real #DashboardCard, matching gui/home_dashboard.py's own
+        clickable-widget-card convention, instead of a plain QPushButton
+        text header with bare QLabel lines floating under it. A given
+        asset (asset_id set) gets the clickable QPushButton variant
+        (whole card opens its detail page, not just the title text); a
+        cross-asset callout like "Needs Attention" (asset_id is None)
+        gets the same accent-glow BlueprintFrame treatment Maintenance's
+        own Sensor Monitor tab uses for its "due tasks" quest card —
+        it's the same kind of thing, a boss's outstanding fight list."""
         if asset_id is not None:
-            # Mission-to-asset tagging (2026-09-13) — a real detail page
-            # now exists to click through to (see _build_detail_page()).
-            section_label = QPushButton(f"{title}  ›")
-            section_label.setCursor(Qt.CursorShape.PointingHandCursor)
-            section_label.setStyleSheet("text-align: left; font-weight: 600; padding: 4px 0;")
-            section_label.clicked.connect(lambda checked=False, aid=asset_id: self._show_detail_page(aid))
+            card = QPushButton()
+            card.setObjectName("DashboardCard")
+            card.setCursor(Qt.CursorShape.PointingHandCursor)
+            card.setToolTip(f"Open {title}")
+            card.setMinimumHeight(96)
+            card.clicked.connect(lambda checked=False, aid=asset_id: self._show_detail_page(aid))
+            card_layout = QVBoxLayout(card)
+            card_layout.setContentsMargins(18, 16, 18, 16)
+            card_layout.setSpacing(6)
+
+            header_row = QHBoxLayout()
+            title_label = QLabel(f"{title}  ›")
+            title_label.setObjectName("MonitorTileValue")
+            header_row.addWidget(title_label, stretch=1)
+            card_layout.addLayout(header_row)
         else:
-            section_label = QLabel(title)
-            section_label.setStyleSheet("font-weight: 600;")
-        self._list_layout.addWidget(section_label)
+            card = BlueprintFrame(accent=True)
+            card.setObjectName("DashboardCard")
+            apply_panel_glow(card)
+            card_layout = QVBoxLayout(card)
+            card_layout.setContentsMargins(18, 16, 18, 16)
+            card_layout.setSpacing(6)
+
+            eyebrow = QLabel(title.upper())
+            eyebrow.setObjectName("MonitorTileEyebrow")
+            card_layout.addWidget(eyebrow)
 
         if not lines:
             empty_label = QLabel(empty_text)
             empty_label.setObjectName("SubtitleLabel")
-            self._list_layout.addWidget(empty_label)
-            return
-
+            empty_label.setWordWrap(True)
+            card_layout.addWidget(empty_label)
         for line in lines:
             item_label = QLabel(f"- {line}")
+            item_label.setObjectName("MonitorTileCaption")
             item_label.setWordWrap(True)
-            self._list_layout.addWidget(item_label)
+            card_layout.addWidget(item_label)
+
+        self._list_layout.addWidget(card)
