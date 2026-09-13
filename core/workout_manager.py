@@ -354,6 +354,14 @@ class WorkoutManager:
             f"Nice work — {set_note}",
             skill_weights=[SkillWeight("strength", 10)],
         )
+        # Event-sourced groundwork (2026-09-14) — see
+        # core/rewards_manager.py's own docstring for the full design.
+        self.context.events.publish(
+            "activity.logged", source="workout", category="workout_session",
+            timestamp=datetime.now().isoformat(timespec="seconds"),
+            duration=session.duration_minutes / 60.0, quantity=None,
+            metadata={"session_id": session.session_id},
+        )
         return session
 
     def delete_session(self, session_id: str) -> None:

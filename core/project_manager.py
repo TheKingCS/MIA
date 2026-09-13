@@ -192,6 +192,19 @@ class ProjectManager:
         if not was_complete and project.status == "Complete" and not project.skill_weights_credited:
             self._credit_project_skill_weights(project)
             project.skill_weights_credited = True
+            # Event-sourced groundwork (2026-09-14) — see
+            # core/rewards_manager.py's own docstring for the full
+            # design. Fires on this same real transition, not on every
+            # update_project() call (a Project can go Complete ->
+            # Active -> Complete again; this activity event fires only
+            # for the first sighting of a genuine completion, mirroring
+            # the skill_weights_credited guard right above).
+            self.context.events.publish(
+                "activity.logged", source="project", category="project_completed",
+                timestamp=datetime.now().isoformat(timespec="seconds"),
+                duration=None, quantity=1,
+                metadata={"project_id": project.project_id},
+            )
         self._save()
         return project
 

@@ -83,6 +83,20 @@ def _make_context() -> AppContext:
     return context
 
 
+def _detach_rewards_event_subscriptions(context: AppContext) -> None:
+    """Real app behavior (2026-09-14 event-sourced groundwork) always
+    has RewardsManager auto-scan on "activity.logged"/"mission.completed"
+    — see core/rewards_manager.py's own docstring. Several tests below
+    want to call scan_for_new_unlocks()/scan_for_new_hidden_achievements()
+    explicitly and observe THEIR OWN return value/notification in
+    isolation, which the real-time auto-trigger would otherwise beat
+    them to (making the explicit call a correct-but-uninteresting
+    no-op) — a pure test-isolation tool, not something real code ever
+    does."""
+    context.events.unsubscribe("activity.logged", context.rewards._on_activity_event)
+    context.events.unsubscribe("mission.completed", context.rewards._on_activity_event)
+
+
 # ------------------------------------------------------------------
 # reward_progress_fraction
 # ------------------------------------------------------------------
@@ -214,6 +228,7 @@ def test_all_stat_values_covers_every_definition(isolated_paths):
 
 def test_scan_for_new_unlocks_unlocks_when_threshold_crossed(isolated_paths):
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -233,6 +248,7 @@ def test_scan_for_new_unlocks_credits_every_tier_already_reached(isolated_paths)
     This is exactly what makes "add a profile, credit real past
     accomplishment" work correctly."""
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -265,6 +281,7 @@ def test_scan_for_new_unlocks_fires_one_notification_for_a_single_unlock(isolate
 
 def test_scan_for_new_unlocks_batches_multiple_unlocks_into_one_notification(isolated_paths):
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -283,6 +300,7 @@ def test_scan_for_new_unlocks_batches_multiple_unlocks_into_one_notification(iso
 
 def test_scan_for_new_hidden_achievements_batches_multiple_into_one_notification(isolated_paths):
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -306,6 +324,7 @@ def test_format_multi_unlock_notification_shape():
 
 def test_scan_for_new_unlocks_is_idempotent(isolated_paths):
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -394,6 +413,7 @@ def test_unlocked_hidden_achievements_empty_before_any_unlock(isolated_paths):
 
 def test_scan_for_new_hidden_achievements_unlocks_on_combined_threshold(isolated_paths):
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -419,6 +439,7 @@ def test_scan_for_new_hidden_achievements_below_combined_threshold_unlocks_nothi
 
 def test_scan_for_new_hidden_achievements_is_idempotent(isolated_paths):
     context = _make_context()
+    _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
@@ -452,6 +473,76 @@ def test_hidden_achievement_ids_never_collide_with_chain_tier_ids():
     tier_ids = {tier.reward_id for tier in all_tiers()}
     hidden_ids = {achievement.achievement_id for achievement in HIDDEN_ACHIEVEMENTS}
     assert tier_ids.isdisjoint(hidden_ids)
+
+
+# ------------------------------------------------------------------
+# Event-sourced groundwork (2026-09-14) — real activity auto-unlocks
+# without any explicit scan call, via the "activity.logged"/
+# "mission.completed" subscriptions RewardsManager sets up at
+# construction. Uses the REAL (attached) context, unlike the tests
+# above that call _detach_rewards_event_subscriptions() to isolate the
+# scan methods themselves.
+# ------------------------------------------------------------------
+
+def test_logging_a_maintenance_reading_auto_unlocks_without_an_explicit_scan(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+
+    context.maintenance.log_reading(task.task_id, 10.0)  # no explicit scan call anywhere
+
+    assert context.rewards.is_unlocked(profile.profile_id, "mowing_rookie") is True
+    achievement_notifications = [n for n in context.notifications.list_all() if n.source == "achievements"]
+    assert len(achievement_notifications) == 1
+
+
+def test_logging_a_workout_session_auto_unlocks_without_an_explicit_scan(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+
+    context.workout.add_session(template_id="", date_str="2026-09-01", duration_minutes=5 * 60)
+
+    assert context.rewards.is_unlocked(profile.profile_id, "fitness_getting_started") is True
+
+
+def test_logging_a_meal_auto_unlocks_without_an_explicit_scan(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    recipe = context.kitchen.add_recipe(name="Tacos")
+
+    for i in range(10):
+        context.kitchen.log_meal(recipe.recipe_id, date_str=f"2026-08-{i + 1:02d}")
+
+    assert context.rewards.is_unlocked(profile.profile_id, "home_chef_apprentice") is True
+
+
+def test_completing_a_project_auto_unlocks_without_an_explicit_scan(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    project = context.projects.add_project(name="Deck rebuild")
+
+    context.projects.update_project(project.project_id, status="Complete")
+
+    assert context.rewards.is_unlocked(profile.profile_id, "builder_first_build") is True
+
+
+def test_completing_a_mission_auto_unlocks_without_an_explicit_scan(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    for i in range(5):
+        mission = context.missions.add_mission(name=f"Mission {i}")
+        context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.rewards.is_unlocked(profile.profile_id, "missions_rookie") is True
+
+
+def test_activity_logged_event_with_no_active_profile_does_not_crash(isolated_paths):
+    context = _make_context()
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+
+    context.maintenance.log_reading(task.task_id, 10.0)  # no profile ever created — must not raise
 
 
 # ------------------------------------------------------------------

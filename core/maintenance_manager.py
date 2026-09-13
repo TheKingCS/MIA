@@ -705,9 +705,20 @@ class MaintenanceManager:
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No maintenance task with id '{task_id}'.")
-        return self.context.data_logger.add_reading(
+        reading = self.context.data_logger.add_reading(
             series_id=task.series_id, value=value, unit=unit or task.meter_unit, note=note
         )
+        # Event-sourced groundwork (2026-09-14) — see
+        # core/rewards_manager.py's own docstring for the full design;
+        # this is real activity a hardware sensor would eventually
+        # publish the same way.
+        self.context.events.publish(
+            "activity.logged", source="maintenance", category="meter_reading",
+            timestamp=datetime.now().isoformat(timespec="seconds"),
+            duration=None, quantity=value,
+            metadata={"task_id": task_id, "asset_id": task.asset_id, "task_title": task.title},
+        )
+        return reading
 
     def readings_for_task(self, task_id: str) -> list[Reading]:
         task = self.get_task(task_id)

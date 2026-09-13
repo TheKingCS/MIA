@@ -9667,3 +9667,52 @@ achievements) produced exactly 2 notifications total — "🎉 4 rewards
 unlocked! Lawn Rookie, Yard Worker, Lawn Ranger, Groundskeeper" and
 "🎉 2 hidden achievements unlocked! Built Different, Renaissance" —
 instead of 6 separate toasts.
+
+## Event-sourced groundwork (2026-09-14)
+
+Slice 5 of the Prestige/Rarity/Character vision — section 13's own
+ask: a common `ACTIVITY EVENT` envelope so hardware can plug in later
+"the same way a manual log call already does," software-only for now.
+
+**A real, deliberate scope decision made before writing any code**:
+this is NOT a full event-sourced rewrite of stat computation. Every
+`RewardsManager._compute_*` stat stays a live, pull-based read of its
+own manager's real data, unchanged — turning stats into pure event
+accumulators would trade away the "derive it, don't persist a second
+copy that can drift" guarantee this whole codebase follows for an
+architecture the handoff itself never actually asked for over deriving
+live. What's real: a new `"activity.logged"` event topic (same plain
+string-topic-plus-kwargs convention every other event in this codebase
+already uses, `core/event_bus.py` — no new dataclass payload type),
+published by `core.maintenance_manager.log_reading()`,
+`core.workout_manager.add_session()`, `core.kitchen_manager.log_meal()`,
+and `core.project_manager.update_project()` (only on the real
+Planning/Active/On Hold -> Complete transition, mirroring the existing
+`skill_weights_credited` once-only guard).
+
+**`RewardsManager` subscribes to `"activity.logged"` AND the already-
+existing `"mission.completed"` event at construction** (same ordering
+convention every other reacting manager already follows) and rescans
+the active profile immediately on either — real activity now unlocks
+within the same moment it's logged, not up to a day later. The daily-
+occasion timer and Skills' own page-refresh scan both stay in place,
+unchanged, as existing fallback paths — all three are safely
+idempotent together (confirmed by test and by manual check: opening
+the Skills page right after an event-triggered unlock does not
+re-notify).
+
+**Verification**: `pytest -q` — full suite, 2804 passed (6 new tests
+proving real activity auto-unlocks with zero explicit scan call
+anywhere — logging a maintenance reading, a workout session, a meal, a
+completed project, and a completed mission each unlock their own real
+tier without any test-side scan; plus a no-active-profile safety
+check). The pre-existing scan-method unit tests needed a small,
+explicitly-documented test-isolation tool
+(`_detach_rewards_event_subscriptions()`) since the real auto-trigger
+now beats an explicit call to the unlock in every realistic scenario —
+those tests were unchanged in intent, just no longer fooled by their
+own now-automatic side effect. Manual headless-Qt check: logged a real
+workout session with zero explicit scan calls anywhere in the script —
+confirmed `is_unlocked()` true immediately and a real notification
+fired before the Skills module was even constructed; opening Skills
+afterward correctly did not re-notify.

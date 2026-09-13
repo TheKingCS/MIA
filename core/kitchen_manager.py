@@ -599,6 +599,14 @@ class KitchenManager:
             for mission in self.context.missions.all_missions():
                 if mission.status == "active" and recipe_id in mission.recipe_unlocks:
                     self.context.missions.update_mission(mission.mission_id, status="completed")
+        # Event-sourced groundwork (2026-09-14) — see
+        # core/rewards_manager.py's own docstring for the full design.
+        self.context.events.publish(
+            "activity.logged", source="kitchen", category="meal_cooked",
+            timestamp=datetime.now().isoformat(timespec="seconds"),
+            duration=None, quantity=1,
+            metadata={"entry_id": entry.entry_id, "recipe_id": recipe_id},
+        )
         return entry
 
     def delete_meal_log_entry(self, entry_id: str) -> None:

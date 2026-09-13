@@ -100,6 +100,30 @@ more specific text, but more than one batches into
 `format_multi_unlock_notification()`'s "N rewards/hidden achievements
 unlocked!" + a plain comma-joined name list — restraint is about
 toast COUNT here, not about suppressing any real unlock.
+
+**Event-sourced groundwork (2026-09-14, fifth pass)** — the handoff's
+own section 13: a common `ACTIVITY EVENT` envelope so a future
+hardware sensor can plug in the same way a manual log call already
+does, "software-only now, hardware-pluggable later." This is
+deliberately NOT a full event-sourced rewrite of stat computation —
+every stat's `_compute_*` method here stays a live, pull-based read of
+its manager's own real data (unchanged), the same "derive it, don't
+persist a second copy that can drift" philosophy this whole codebase
+follows; turning stats into pure event accumulators would trade away
+that correctness guarantee for an architecture the vision doc itself
+never actually asked for over deriving live. What's real here: a new
+`"activity.logged"` event topic (same plain string-topic-plus-kwargs
+convention as every other event in this codebase, see
+`core/event_bus.py` — no new dataclass payload type), published by
+`core.maintenance_manager.log_reading()`, `core.workout_manager
+.add_session()`, `core.kitchen_manager.log_meal()`, and
+`core.project_manager.update_project()` (only on the real Planning/
+Active/On Hold -> Complete transition). `RewardsManager` subscribes to
+it (and to the already-existing `"mission.completed"` event) at
+construction and rescans the active profile immediately on either —
+real activity now unlocks within the same moment it's logged, not up
+to a day later (the daily-occasion timer and Skills' own page refresh
+both stay in place too, unchanged, as the existing fallback paths).
 """
 
 from __future__ import annotations
@@ -352,6 +376,30 @@ def format_multi_unlock_notification(names: list[str], noun: str) -> tuple[str, 
 class RewardsManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
+        # Event-sourced groundwork (2026-09-14, fifth pass) — see this
+        # module's own docstring. Subscribing here (not waiting for the
+        # daily timer or a page refresh) means a real threshold crossed
+        # by an actual logged activity unlocks within the same moment,
+        # not up to a day later. Same "subscribes at construction"
+        # ordering convention every other reacting manager in this
+        # codebase already follows (e.g. RecurringMissionManager's own
+        # "mission.completed" subscription).
+        self.context.events.subscribe("activity.logged", self._on_activity_event)
+        self.context.events.subscribe("mission.completed", self._on_activity_event)
+
+    def _on_activity_event(self, **_kwargs) -> None:
+        """Reacts to any real activity — deliberately ignores the
+        event's own payload and just rescans the active profile, same
+        "safe to call as often as convenient" idempotent scans this
+        module already exposes. A future hardware sensor publishing
+        "activity.logged" needs no new code here to plug in."""
+        if self.context.profiles is None:
+            return
+        active = self.context.profiles.get_active_profile()
+        if active is None:
+            return
+        self.scan_for_new_unlocks(active.profile_id)
+        self.scan_for_new_hidden_achievements(active.profile_id)
 
     # ------------------------------------------------------------------
     # Stat values — each one derived live from real data elsewhere.
