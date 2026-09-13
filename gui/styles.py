@@ -260,6 +260,13 @@ QFrame#DashboardCard[locked="true"] {
     border: 1px solid #161c24;
 }
 
+/* Design restyle Phase 4 (2026-09-12) — the skill tree's "current
+focus" node (modules/skills/module.py, whichever skill
+core.skill_leveling.next_honest_step() names). */
+QFrame#DashboardCard[focus="true"] {
+    border: 1px solid #38d9c9;
+}
+
 QLabel#SkillCardTitle {
     color: #e7ecf3;
     font-size: 14px;
@@ -274,6 +281,47 @@ QLabel#SkillCardPrereq {
     color: #5a6472;
     font-size: 11px;
     font-style: italic;
+}
+
+/* Design restyle Phase 4 (2026-09-12) — SkillCardStatus was already
+set via setObjectName() in modules/skills/module.py but had no
+matching rule here at all (confirmed via grep before this pass —
+unstyled, not orphaned the other way around). Colored by the real
+`status` property (core.skill_leveling.CAPABILITY_STATUSES), reusing
+existing theme tokens rather than inventing new colors: learning ->
+accent deep, practiced -> accent alt, demonstrated -> HP green (the
+v2 token table's own "health/complete states" color). */
+QLabel#SkillCardStatus {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+}
+
+QLabel#SkillCardStatus[status="learning"] {
+    color: #0d9488;
+}
+
+QLabel#SkillCardStatus[status="practiced"] {
+    color: #4fd1c5;
+}
+
+QLabel#SkillCardStatus[status="demonstrated"] {
+    color: #4ade80;
+}
+
+QLabel#SkillCardTier {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0d9488;
+}
+
+/* Separates achievements-panel entries (modules/skills/module.py's
+_refresh_achievements()) — the design's own "three entries separated
+by 1px #1f3538 rules" spec. */
+QFrame#HairlineRule {
+    background-color: #1f3538;
+    max-height: 1px;
+    border: none;
 }
 
 QFrame#CharacterPanel {

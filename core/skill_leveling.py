@@ -16,6 +16,11 @@ tests/test_skill_leveling.py), same shape as core/leveling.py itself.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from core.skill_manager import SkillDefinition
+
 #: Capability status tiers (2026-09-11) — a derived, readable status
 #: over a skill's existing level/unlock state, not a new persisted
 #: field: every skill's XP already only ever comes from a real
@@ -84,3 +89,46 @@ def compute_skill_level_progress(total_xp: int) -> tuple[int, int, int]:
             return level, remaining, needed
         remaining -= needed
         level += 1
+
+
+def next_honest_step(
+    definitions: list["SkillDefinition"], total_xp_by_skill_id: dict[str, int]
+) -> Optional[str]:
+    """
+    A plain, explicitly-labeled heuristic (design restyle Phase 4,
+    2026-09-12), not a smart-suggestion system: among unlocked skills,
+    prefers whichever is already started (real total_xp > 0) and
+    closest to its next level; falls back to the lowest-tier unlocked-
+    but-untouched skill if nothing is in progress; `None` if every
+    skill is locked (nothing honest to suggest).
+
+    Pure — no Qt, no AppContext — same "take the real inputs as
+    explicit parameters" convention as this file's other functions
+    and core/maintenance_manager.py's is_sensor_task_due(). Duck-types
+    `definitions` (needs .skill_id/.prerequisite_skill_ids/.tier) to
+    avoid a circular import with core.skill_manager (which itself
+    imports this module) — see the TYPE_CHECKING guard above.
+    """
+    def is_unlocked(definition: "SkillDefinition") -> bool:
+        if not definition.prerequisite_skill_ids:
+            return True
+        return all(total_xp_by_skill_id.get(pid, 0) > 0 for pid in definition.prerequisite_skill_ids)
+
+    unlocked = [d for d in definitions if is_unlocked(d)]
+    if not unlocked:
+        return None
+
+    in_progress = [d for d in unlocked if total_xp_by_skill_id.get(d.skill_id, 0) > 0]
+    if in_progress:
+        def remaining_to_next_level(definition: "SkillDefinition") -> int:
+            _level, xp_into, xp_needed = compute_skill_level_progress(total_xp_by_skill_id.get(definition.skill_id, 0))
+            return xp_needed - xp_into
+
+        best = min(in_progress, key=lambda d: (remaining_to_next_level(d), d.skill_id))
+        return best.skill_id
+
+    untouched = [d for d in unlocked if total_xp_by_skill_id.get(d.skill_id, 0) == 0]
+    if not untouched:
+        return None
+    best = min(untouched, key=lambda d: (d.tier, d.skill_id))
+    return best.skill_id

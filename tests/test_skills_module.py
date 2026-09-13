@@ -9,11 +9,15 @@ tests/test_missions_module.py (no Qt event loop, no fixtures).
 from __future__ import annotations
 
 from modules.skills.module import (
+    format_achievement_title_for_display,
     format_capability_status_label,
+    format_header_stats_line,
     format_locked_skill_name,
+    format_next_honest_step_line,
     format_prerequisites_line,
+    format_skill_status_line,
     format_skill_subtitle,
-    format_skills_trained_summary,
+    format_tier_chip,
 )
 
 
@@ -25,18 +29,38 @@ def test_format_locked_skill_name():
     assert format_locked_skill_name("CAD / 3D Design") == "(Locked) CAD / 3D Design"
 
 
-def test_format_skills_trained_summary():
-    assert format_skills_trained_summary(5, 80) == "5 of 80 skills trained"
-
-
 def test_format_capability_status_label():
     assert format_capability_status_label("learning") == "Learning"
     assert format_capability_status_label("practiced") == "Practiced"
     assert format_capability_status_label("demonstrated") == "Demonstrated"
 
 
-def test_format_skills_trained_summary_none_trained():
-    assert format_skills_trained_summary(0, 80) == "0 of 80 skills trained"
+def test_format_skill_status_line():
+    assert format_skill_status_line(5, "demonstrated") == "LV 5 · DEMONSTRATED"
+
+
+def test_format_tier_chip():
+    assert format_tier_chip(3) == "T3"
+
+
+def test_format_achievement_title_for_display_strips_leading_emoji():
+    assert format_achievement_title_for_display("\U0001F393 Skill level up!") == "Skill level up!"
+
+
+def test_format_achievement_title_for_display_leaves_ascii_titles_alone():
+    assert format_achievement_title_for_display("Plain Title Here") == "Plain Title Here"
+
+
+def test_format_header_stats_line():
+    assert format_header_stats_line(7, 23, 96, 4) == "PROFILE LEVEL 7 · SKILLS TOUCHED 23/96 · DEMONSTRATED 4"
+
+
+def test_format_next_honest_step_line_names_a_skill():
+    assert format_next_honest_step_line("Gardening") == "Put some real time toward Gardening next."
+
+
+def test_format_next_honest_step_line_none():
+    assert format_next_honest_step_line(None) == "Nothing to suggest right now — every skill is locked."
 
 
 def test_format_prerequisites_line_single():

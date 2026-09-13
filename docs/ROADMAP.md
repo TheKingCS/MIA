@@ -8376,3 +8376,69 @@ and fixed a real layout bug in the same pass: the quest card's content
 was spreading out to fill its full column height with large gaps
 between labels — an explicit `addStretch(1)` after its last widget
 fixed it, confirmed by re-screenshotting.
+
+## Design restyle, Phase 4: My Hero's Path skill tree (1d) (2026-09-12)
+
+Continuing the "MIA Smart User OS Design" restyle. Unlike Phase 3, this
+screen's content was already fully real — the handoff's own "real
+chain drawn" (Gardening → Seed Starting/Soil Science → Irrigation →
+Hydroponics → Aquaponics → Greenhouse Automation → Closed-Loop
+Agriculture) is copied directly from the actual
+`data/skill_definitions.json` (95 real skills). `modules/skills/module.py`'s
+own docstring already said the quiet part: "A true graphical tree view
+... is real future scope, not built here." This phase is that future
+scope.
+
+**Real, favorable finding**: the "achievements panel" isn't a new
+derivation at all — `SkillManager._notify_achievements()` already
+raises real `NotificationManager` entries with `source="achievements"`
+on every level-up/unlock. The panel is just the 3 most recent of
+those, already-real data.
+
+New `gui/widgets/skill_tree_canvas.py` (`SkillTreeCanvas`) draws
+prerequisite connector lines behind the card grid — Qt's own paint
+order (a widget's `paintEvent` runs before its children) means this
+needed no manual raise()/overlay trick, just becoming the grid
+container itself. New `core/skill_leveling.py::next_honest_step()` — a
+plainly-labeled heuristic, not a smart-suggestion system — picks
+whichever unlocked skill is closest to leveling up (or the lowest-tier
+untouched one if nothing's in progress); that same skill gets the
+visual "current focus" border, since no field names one otherwise.
+
+**Real bug caught by manual verification, not pytest**: the first
+screenshot showed no connector lines at all. Cause: skills were laid
+into the grid in raw `skill_definitions.json` order, which places
+`gardening` and its own dependent `seed_starting` in the *same grid
+row* — a bottom-of-card-to-top-of-card line between two same-row cards
+draws as an invisible sliver. Fixed by sorting each category's skills
+by `(tier, name)` before laying them into the grid, so a prerequisite
+(always a strictly lower tier) never lands in a *later* row than its
+dependent — confirmed by re-screenshotting, real visible connector
+lines from Gardening down through Seed Starting/Soil Science into
+Irrigation.
+
+**Also caught and fixed in the same pass**: the original card layout
+put a capability-status line ("LV 1 · LOCKED") and an empty 0/20 XP
+bar on *locked* cards too — the design's own spec says locked/untouched
+nodes get no bar at all, just the "(Locked) Name" + "Requires: ..."
+line. A three-way branch (locked / unlocked-but-untouched / has real
+XP) now matches that.
+
+Also puts the previously-unstyled `SkillCardStatus` object name (set
+in Python since the original 2026-09-11 pass, zero matching QSS) to
+real use, colored per capability status using existing theme tokens
+(learning → accent deep, practiced → accent alt, demonstrated → HP
+green) rather than inventing new colors.
+
+**Verification**: `pytest -q` — full suite, 2610 passed, zero
+regressions (removed `format_skills_trained_summary`, superseded by
+the new combined header-stats line, along with its now-dead tests;
+added cases for `next_honest_step()` and the new pure formatting
+helpers). Manual headless-Qt screenshot (throwaway repo copy, a real
+profile with real XP logged on `gardening`/`seed_starting`/
+`home_maintenance` via the actual manager methods): confirmed real
+connector lines, tier chips, status coloring, the achievements panel
+showing real de-emojied entries, and the focus border landing on
+`next_honest_step()`'s own actual return value (cross-checked in the
+same script, not just eyeballed) — both bugs above were caught and
+fixed from this same screenshot pass, not assumed correct on the first try.
