@@ -9551,3 +9551,46 @@ already used there for `core.logger`'s log file); the actual cleanup
 of the 10,032 existing orphans is flagged for the user to run
 themselves (a mass-delete the auto-mode safety classifier correctly
 declined to let an agent run unattended even with prior approval).
+
+## Hidden achievements (2026-09-14)
+
+Slice 2 of the Prestige/Rarity/Character vision (see
+[[project_mia_prestige_rarity_vision]]), picked via AskUserQuestion
+after slice 1 (rarity + chains) shipped — the handoff's own section 9:
+"the user should NOT know every achievement exists."
+
+**New `HiddenAchievement` in `core/rewards_manager.py`**: checked
+against the SUM of one or more real stats (`combined_stat_value()`)
+rather than a single stat, so it can recognize combined effort across
+areas — the handoff's own "Built Different" example, built only from
+the 3 real stats that already exist (not the handoff's broader
+"outdoor hours" example, which nothing here measures yet).
+`HIDDEN_ACHIEVEMENTS` has 3: "Built Different" (50 combined engine +
+workout hours, Epic), "Grinder" (50 missions — deliberately sits
+strictly between the visible `missions_veteran`@25 and
+`missions_legend`@100 chain tiers as a real surprise bonus mid-
+progression, Rare), "Renaissance" (200 combined hours, Legendary).
+Reuses the exact same `Profile.unlocked_reward_ids` field as chain
+tiers (same real, persisted, one-way unlock state) but exposes only
+one read accessor, `unlocked_hidden_achievements()` — deliberately no
+"list every hidden achievement" or "progress toward a locked one"
+method anywhere, since the whole point is nothing to show until
+already earned.
+
+`scan_for_new_hidden_achievements()` is a separate idempotent scan
+(not folded into `scan_for_new_unlocks()`, which stays
+`list[ChallengeTier]`-typed for its existing callers) — called
+alongside it at both real call sites (`core/application.py`'s daily
+timer, `modules/skills/module.py`'s own refresh).
+
+**UI**: a new "Hidden Achievements" section in Skills' REWARDS card,
+listing only what's actually been found (colored by rarity) — the
+section itself is omitted entirely at zero, so its very existence
+isn't spoiled before the first one unlocks.
+
+**Verification**: `pytest -q` — full suite, 2790 passed (10 new
+tests). Manual headless-Qt check: 30 real engine hours + a 20-hour
+workout session (50 combined) fired 4 notifications in one scan (3
+visible chain tiers + "💪 Hidden Achievement Unlocked! \"Built
+Different\""), and the REWARDS card correctly showed a new "Hidden
+Achievements" section with "Earned: Built Different" in purple (Epic).

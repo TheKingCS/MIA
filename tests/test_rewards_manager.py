@@ -25,8 +25,10 @@ from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
 from core.rewards_manager import (
     CHALLENGE_CHAINS,
+    HIDDEN_ACHIEVEMENTS,
     RewardsManager,
     all_tiers,
+    combined_stat_value,
     highest_unlocked_tier,
     next_locked_tier,
     reward_progress_fraction,
@@ -234,6 +236,96 @@ def test_unlocked_reward_ids_reflects_real_unlocks(isolated_paths):
     context.rewards.scan_for_new_unlocks(profile.profile_id)
 
     assert "mowing_rookie" in context.rewards.unlocked_reward_ids(profile.profile_id)
+
+
+# ------------------------------------------------------------------
+# combined_stat_value — pure logic
+# ------------------------------------------------------------------
+
+def test_combined_stat_value_sums_named_stats():
+    values = {"engine_hours_logged": 30.0, "workout_hours_logged": 12.0, "missions_completed": 4.0}
+    assert combined_stat_value(values, ("engine_hours_logged", "workout_hours_logged")) == 42.0
+
+
+def test_combined_stat_value_single_stat():
+    values = {"missions_completed": 7.0}
+    assert combined_stat_value(values, ("missions_completed",)) == 7.0
+
+
+def test_combined_stat_value_missing_stat_reads_as_zero():
+    assert combined_stat_value({}, ("engine_hours_logged",)) == 0.0
+
+
+# ------------------------------------------------------------------
+# Hidden achievements — never exposed until unlocked
+# ------------------------------------------------------------------
+
+def test_unlocked_hidden_achievements_empty_before_any_unlock(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    assert context.rewards.unlocked_hidden_achievements(profile.profile_id) == []
+
+
+def test_scan_for_new_hidden_achievements_unlocks_on_combined_threshold(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 30.0)
+    context.workout.add_session(template_id="", date_str="2026-09-01", duration_minutes=20 * 60)  # 20 hrs
+
+    newly_unlocked = context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
+
+    ids = {a.achievement_id for a in newly_unlocked}
+    assert "built_different" in ids
+    assert context.rewards.is_unlocked(profile.profile_id, "built_different") is True
+
+
+def test_scan_for_new_hidden_achievements_below_combined_threshold_unlocks_nothing(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 5.0)
+
+    assert context.rewards.scan_for_new_hidden_achievements(profile.profile_id) == []
+
+
+def test_scan_for_new_hidden_achievements_is_idempotent(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 60.0)
+
+    first_scan = context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
+    second_scan = context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
+
+    assert len(first_scan) >= 1
+    assert second_scan == []
+
+
+def test_unlocked_hidden_achievements_reflects_real_unlocks(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 60.0)
+    context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
+
+    names = {a.name for a in context.rewards.unlocked_hidden_achievements(profile.profile_id)}
+    assert "Built Different" in names
+
+
+def test_hidden_achievement_ids_are_unique():
+    ids = [achievement.achievement_id for achievement in HIDDEN_ACHIEVEMENTS]
+    assert len(ids) == len(set(ids))
+
+
+def test_hidden_achievement_ids_never_collide_with_chain_tier_ids():
+    tier_ids = {tier.reward_id for tier in all_tiers()}
+    hidden_ids = {achievement.achievement_id for achievement in HIDDEN_ACHIEVEMENTS}
+    assert tier_ids.isdisjoint(hidden_ids)
 
 
 # ------------------------------------------------------------------

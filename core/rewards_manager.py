@@ -63,6 +63,29 @@ real engine hours logged before this system existed unlocks every
 tier up to that value in one scan, not just the newest one — the
 correct behavior for retroactively crediting real past accomplishment
 (see the "add Faith a profile, credit accomplishments" 2026-09-14 ask).
+
+**Hidden achievements (2026-09-14, third pass)** — the handoff's own
+section 9: "the user should NOT know every achievement exists." A
+`HiddenAchievement` is checked against the SUM of one or more real
+stats (see `combined_stat_value()`) rather than a single stat, so it
+can recognize combined effort across areas (the handoff's own "Built
+Different" example) — deliberately built only from the same 3 real
+stats above, not the handoff's own broader "outdoor hours" example
+(nothing here measures that yet). Some sit strictly between two
+visible chain tiers as a genuine surprise bonus (`grinder` at 50
+missions, between the visible `missions_veteran`@25 and
+`missions_legend`@100). Unlocking reuses the exact same
+`Profile.unlocked_reward_ids` field as chain tiers — same real,
+one-way, persisted state — but `unlocked_hidden_achievements()` is the
+ONLY read accessor, and it only ever returns ones already unlocked:
+there is no "list every hidden achievement" or "progress toward a
+locked one" method anywhere in this module, on purpose — the UI has
+nothing to show for a hidden achievement until it's already earned.
+Scanned by a separate `scan_for_new_hidden_achievements()` (not folded
+into `scan_for_new_unlocks()`, which returns `list[ChallengeTier]` —
+keeping the two scans separate avoids a mixed-type return list and
+keeps existing `ChallengeTier`-typed callers unchanged) — call both
+together at every real call site.
 """
 
 from __future__ import annotations
@@ -111,6 +134,23 @@ class ChallengeChain:
     tiers: tuple[ChallengeTier, ...]
 
 
+@dataclass(frozen=True)
+class HiddenAchievement:
+    """A secret milestone — see this module's own docstring for why it
+    is never shown (no progress bar, no visible entry) until actually
+    unlocked. Checked against the SUM of `stat_ids` (all hour-based
+    stats sum meaningfully; a count like missions_completed is used
+    alone, never mixed into a sum with hours)."""
+
+    achievement_id: str
+    name: str
+    description: str
+    icon: str
+    rarity_index: int
+    stat_ids: tuple[str, ...]
+    threshold: float
+
+
 #: Every stat here has a real, already-logged data source — see this
 #: module's own docstring for why "water used watering plants" (the
 #: user's own example) isn't in this list yet.
@@ -156,6 +196,28 @@ CHALLENGE_CHAINS: list[ChallengeChain] = [
             ChallengeTier("fitness_iron_will", "Iron Will", "Log 25 hours of workouts.", "💪", 25.0, 2),
             ChallengeTier("fitness_unbreakable", "Unbreakable", "Log 100 hours of workouts.", "⚡", 100.0, 4),
         ),
+    ),
+]
+
+#: Never enumerated to the user ahead of unlock — see this module's
+#: own docstring and HiddenAchievement's own docstring. `grinder` sits
+#: strictly between the visible mowing/missions chain tiers on
+#: purpose, a real surprise bonus mid-progression.
+HIDDEN_ACHIEVEMENTS: list[HiddenAchievement] = [
+    HiddenAchievement(
+        "built_different", "Built Different",
+        "Complete 50 combined hours of equipment work and workouts.",
+        "\U0001F4AA", 3, ("engine_hours_logged", "workout_hours_logged"), 50.0,
+    ),
+    HiddenAchievement(
+        "grinder", "Grinder",
+        "Complete 50 missions total.",
+        "⚙️", 2, ("missions_completed",), 50.0,
+    ),
+    HiddenAchievement(
+        "renaissance", "Renaissance",
+        "Complete 200 combined hours of equipment work and workouts.",
+        "\U0001F31F", 4, ("engine_hours_logged", "workout_hours_logged"), 200.0,
     ),
 ]
 
@@ -207,6 +269,14 @@ def next_locked_tier(tiers: tuple[ChallengeTier, ...], unlocked_ids: set[str]) -
         if tier.reward_id not in unlocked_ids:
             return tier
     return None
+
+
+def combined_stat_value(stat_values: dict[str, float], stat_ids: tuple[str, ...]) -> float:
+    """Sums the named stats out of a stat_values dict (e.g.
+    RewardsManager.all_stat_values()) — pure logic, testable without a
+    real manager. Used to check a HiddenAchievement's combined-effort
+    threshold."""
+    return sum(stat_values.get(stat_id, 0.0) for stat_id in stat_ids)
 
 
 class RewardsManager:
@@ -299,6 +369,44 @@ class RewardsManager:
                     self.context.notifications.notify(
                         title=f"{tier.icon} Reward unlocked!",
                         message=f"You unlocked \"{tier.name}\" — {tier.description}",
+                        level="info",
+                        source="achievements",
+                    )
+        return newly_unlocked
+
+    # ------------------------------------------------------------------
+    # Hidden achievements — see this module's own docstring and
+    # HiddenAchievement's own docstring for why there is no "list every
+    # hidden achievement" or "progress toward a locked one" accessor.
+    # ------------------------------------------------------------------
+
+    def unlocked_hidden_achievements(self, profile_id: str) -> list[HiddenAchievement]:
+        """Only ever returns achievements already unlocked — never
+        exposes a locked one's existence, name, or threshold."""
+        unlocked_ids = set(self.unlocked_reward_ids(profile_id))
+        return [achievement for achievement in HIDDEN_ACHIEVEMENTS if achievement.achievement_id in unlocked_ids]
+
+    def scan_for_new_hidden_achievements(self, profile_id: str) -> list[HiddenAchievement]:
+        """Idempotent, same shape as scan_for_new_unlocks() — kept as
+        its own method (not folded into scan_for_new_unlocks()) so that
+        method's return type stays list[ChallengeTier] for its existing
+        callers; call both together at every real call site."""
+        if self.context.profiles is None:
+            return []
+
+        newly_unlocked: list[HiddenAchievement] = []
+        stat_values = self.all_stat_values()
+        for achievement in HIDDEN_ACHIEVEMENTS:
+            if self.is_unlocked(profile_id, achievement.achievement_id):
+                continue
+            if combined_stat_value(stat_values, achievement.stat_ids) < achievement.threshold:
+                continue
+            if self.context.profiles.unlock_reward(profile_id, achievement.achievement_id):
+                newly_unlocked.append(achievement)
+                if self.context.notifications is not None:
+                    self.context.notifications.notify(
+                        title=f"{achievement.icon} Hidden Achievement Unlocked!",
+                        message=f"\"{achievement.name}\" — {achievement.description}",
                         level="info",
                         source="achievements",
                     )

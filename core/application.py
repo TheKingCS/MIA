@@ -535,6 +535,10 @@ class MIAApplication:
                 active_profile = self.context.profiles.get_active_profile()
                 if active_profile is not None:
                     self.context.rewards.scan_for_new_unlocks(active_profile.profile_id)
+                    # Hidden achievements (2026-09-14) — kept as its own
+                    # scan (see core/rewards_manager.py's own docstring),
+                    # called alongside scan_for_new_unlocks() everywhere.
+                    self.context.rewards.scan_for_new_hidden_achievements(active_profile.profile_id)
             config.set("system.last_rewards_check_date", today_iso)
             config.save()
 

@@ -492,6 +492,7 @@ class SkillsModule(ModuleBase):
         # docstring); the daily-occasion timer in core/application.py
         # also calls this so it fires even if this page is never opened.
         self.context.rewards.scan_for_new_unlocks(active.profile_id)
+        self.context.rewards.scan_for_new_hidden_achievements(active.profile_id)
         stat_values = self.context.rewards.all_stat_values()
         stat_by_id = {definition.stat_id: definition for definition in STAT_DEFINITIONS}
         unlocked_ids = set(self.context.rewards.unlocked_reward_ids(active.profile_id))
@@ -545,6 +546,27 @@ class SkillsModule(ModuleBase):
             bar.setTextVisible(False)
             bar.setFixedHeight(6)
             self._rewards_layout.addWidget(bar)
+
+        # Hidden achievements (2026-09-14) — only ever shown once
+        # already unlocked (see core/rewards_manager.py's own
+        # docstring); the section itself is omitted entirely when none
+        # have been found yet, same "don't show a zero-value stat"
+        # restraint as everywhere else, and doubles here as not
+        # spoiling that hidden achievements exist at all until one is.
+        hidden_found = self.context.rewards.unlocked_hidden_achievements(active.profile_id)
+        if hidden_found:
+            rule = QFrame()
+            rule.setFrameShape(QFrame.Shape.HLine)
+            rule.setObjectName("HairlineRule")
+            self._rewards_layout.addWidget(rule)
+            hidden_title = QLabel("Hidden Achievements")
+            hidden_title.setObjectName("SkillCardTitle")
+            self._rewards_layout.addWidget(hidden_title)
+            for achievement in hidden_found:
+                hidden_label = QLabel(format_earned_title_line(achievement.icon, achievement.name))
+                hidden_label.setWordWrap(True)
+                hidden_label.setStyleSheet(f"color: {rarity_color_for_index(achievement.rarity_index)};")
+                self._rewards_layout.addWidget(hidden_label)
 
         prestige_rewards = self.context.rewards.prestige_rewards_for_profile(active.profile_id)
         if prestige_rewards:
