@@ -77,3 +77,14 @@ class ModuleBase(ABC):
     def on_unload(self) -> None:
         """Called if the module is being torn down. Optional override."""
         self._loaded = False
+
+    def focus_record(self, record_id: str) -> None:
+        """
+        Cross-module deep-linking (2026-09-13) — called right after
+        get_widget()/on_load() when something asked to open this module
+        already pointed at a specific record (gui/main_window.py's
+        open_module(module_id, record_id=...)). Default no-op, same
+        "modules degrade gracefully, no ABC requirement" stance every
+        other optional hook here takes — most modules have no concept
+        of a single focusable record and simply ignore this.
+        """

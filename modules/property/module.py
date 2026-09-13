@@ -16,10 +16,15 @@ Deliberately its own module rather than a tab bolted onto Garage —
 "cars and motorized things" and "the house and what's in it" are real,
 separate mental categories a user reaches for independently (matches
 the reasoning that kept Garage itself out of Workshop). Everything
-about the layout, the free-function/no-cross-module-import shape, and
-the deliberate "no deep link" limitation is identical to
-modules/garage/module.py — see that file's docstring for the fuller
-rationale, not repeated here.
+about the layout and the free-function/no-cross-module-import shape
+is identical to modules/garage/module.py — see that file's docstring
+for the fuller rationale, not repeated here.
+
+**Mission-to-asset tagging (2026-09-13)**: the "no deep link" limitation
+this docstring used to describe is closed, the same way and for the
+same reason as Garage's own — clicking an asset's section header opens
+a real detail page with its full task status plus
+gui/widgets/asset_missions_panel.py's shared "Related Missions" list.
 """
 
 from __future__ import annotations
@@ -28,7 +33,16 @@ from datetime import date
 from typing import Optional
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from core.data_logger_manager import Reading
 from core.maintenance_manager import (
@@ -39,6 +53,7 @@ from core.maintenance_manager import (
     is_sensor_task_due,
     meter_used_since_last,
 )
+from gui.widgets.asset_missions_panel import build_asset_missions_panel
 from modules.module_base import ModuleBase
 
 PROPERTY_CATEGORIES = ["Appliance", "Property", "Tool"]
@@ -140,8 +155,75 @@ class PropertyModule(ModuleBase):
         self._tracked_value_label: Optional[QLabel] = None
         self._attention_value_label: Optional[QLabel] = None
         self._next_up_value_label: Optional[QLabel] = None
+        self._stack: Optional[QStackedWidget] = None
+        self._list_page: Optional[QWidget] = None
+        self._detail_page: Optional[QWidget] = None
 
     def get_widget(self) -> QWidget:
+        self._stack = QStackedWidget()
+        self._list_page = self._build_list_page()
+        self._stack.addWidget(self._list_page)
+        return self._stack
+
+    def focus_record(self, record_id: str) -> None:
+        """Cross-module deep-linking (2026-09-13) — same mechanism
+        Real Estate/Garage/Greenhouse's own focus_record() use."""
+        self._show_detail_page(record_id)
+
+    def _show_list_page(self) -> None:
+        self._refresh()
+        self._stack.setCurrentWidget(self._list_page)
+
+    def _show_detail_page(self, asset_id: str) -> None:
+        if self._detail_page is not None:
+            self._stack.removeWidget(self._detail_page)
+            self._detail_page = None
+        self._detail_page = self._build_detail_page(asset_id)
+        self._stack.addWidget(self._detail_page)
+        self._stack.setCurrentWidget(self._detail_page)
+
+    def _build_detail_page(self, asset_id: str) -> QWidget:
+        asset = self.context.maintenance.get_asset(asset_id)
+
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(10)
+
+        back_button = QPushButton("← Back to Property")
+        back_button.clicked.connect(self._show_list_page)
+        layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        if asset is None:
+            layout.addWidget(QLabel("This asset no longer exists."))
+            return page
+
+        header = QLabel(f"{asset.name}  [{asset.category}]")
+        header.setObjectName("TitleLabel")
+        layout.addWidget(header)
+
+        today = date.today()
+        status_title = QLabel("Status")
+        status_title.setStyleSheet("font-weight: 600;")
+        layout.addWidget(status_title)
+        tasks = self.context.maintenance.tasks_for_asset(asset.asset_id)
+        if not tasks:
+            empty = QLabel("No maintenance tasks tracked for this asset yet.")
+            empty.setObjectName("SubtitleLabel")
+            layout.addWidget(empty)
+        for task in tasks:
+            readings = (
+                self.context.maintenance.readings_for_task(task.task_id) if task.trigger_type != "calendar" else []
+            )
+            line = QLabel(f"- {format_task_status_line(task, today, readings)}")
+            line.setWordWrap(True)
+            layout.addWidget(line)
+
+        layout.addWidget(build_asset_missions_panel(self.context, asset.asset_id))
+        layout.addStretch(1)
+        return page
+
+    def _build_list_page(self) -> QWidget:
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -239,11 +321,25 @@ class PropertyModule(ModuleBase):
             return
 
         for asset in assets:
-            self._add_section(f"{asset.name}  [{asset.category}]", asset_status_lines[asset.asset_id][:_SECTION_ITEM_LIMIT])
+            self._add_section(
+                f"{asset.name}  [{asset.category}]",
+                asset_status_lines[asset.asset_id][:_SECTION_ITEM_LIMIT],
+                asset_id=asset.asset_id,
+            )
 
-    def _add_section(self, title: str, lines: list[str], empty_text: str = "Nothing here yet.") -> None:
-        section_label = QLabel(title)
-        section_label.setStyleSheet("font-weight: 600;")
+    def _add_section(
+        self, title: str, lines: list[str], empty_text: str = "Nothing here yet.", asset_id: Optional[str] = None,
+    ) -> None:
+        if asset_id is not None:
+            # Mission-to-asset tagging (2026-09-13) — a real detail page
+            # now exists to click through to (see _build_detail_page()).
+            section_label = QPushButton(f"{title}  ›")
+            section_label.setCursor(Qt.CursorShape.PointingHandCursor)
+            section_label.setStyleSheet("text-align: left; font-weight: 600; padding: 4px 0;")
+            section_label.clicked.connect(lambda checked=False, aid=asset_id: self._show_detail_page(aid))
+        else:
+            section_label = QLabel(title)
+            section_label.setStyleSheet("font-weight: 600;")
         self._list_layout.addWidget(section_label)
 
         if not lines:

@@ -162,6 +162,28 @@ def test_add_mission_without_maintenance_task_id_defaults_to_none(isolated_paths
     assert mission.maintenance_task_id is None
 
 
+def test_add_mission_can_link_to_a_maintenance_asset(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Clean Out the Old House", maintenance_asset_id="asset123")
+    assert mission.maintenance_asset_id == "asset123"
+    assert context.missions.missions_for_maintenance_asset("asset123") == [mission]
+    assert context.missions.missions_for_maintenance_asset("nonexistent") == []
+
+
+def test_maintenance_asset_id_persists_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    context.missions.add_mission(name="Clean Out the Old House", maintenance_asset_id="asset123")
+
+    reloaded = MissionManager(context)
+    assert reloaded.all_missions()[0].maintenance_asset_id == "asset123"
+
+
+def test_add_mission_without_maintenance_asset_id_defaults_to_none(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Master Angler")
+    assert mission.maintenance_asset_id is None
+
+
 def test_add_mission_can_set_recurring_fields(isolated_paths):
     context = _make_context()
     mission = context.missions.add_mission(

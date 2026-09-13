@@ -8636,3 +8636,73 @@ pass. Then applied the real template + retroactive link against the
 actual `data/missions.json`/`recurring_mission_templates.json`,
 confirmed no duplicate Mission was created for today and the weekly
 tally landed at exactly 1/7.
+
+## Mission-to-asset tagging + real per-area drill-down: Real Estate, Garage, Property, Greenhouse (2026-09-13)
+
+At the user's own explicit request for real parity across "areas" —
+their framing: the garage, the home, the greenhouse are each like a
+boss with missions fighting to keep it in good standing. Started
+narrower (Real Estate only, Garage/Greenhouse deferred as "no detail
+view exists yet"); the user's immediate correction was "I like your
+plan but let's also work on" both — real parity mattered more than an
+uneven rollout. Saved as a standing preference (see
+`feedback_area_parity_scoping` memory).
+
+**Real, favorable finding**: `core/maintenance_manager.py`'s
+`MaintenanceAsset` is already the one general "thing you own" registry
+— confirmed Garage has no asset model of its own (a filtered read view
+over `MaintenanceAsset`) and Real Estate's own `Property` deliberately
+links out to one rather than duplicating it. **Second real finding,
+mid-implementation**: there's already a *second* Garage-sibling module,
+`modules/property/module.py` (`PROPERTY_CATEGORIES = ["Appliance",
+"Property", "Tool"]`) — the user's own "real estate page" request
+mapped to the financial `real_estate` module, but this near-identical
+twin existed too and would have been an inconsistent, unexplained gap
+left un-upgraded. Upgraded it the same way as Garage, unprompted but
+directly following the same parity principle, and said so plainly
+rather than silently including or silently skipping it.
+
+**New, shared, built once**: `gui/widgets/asset_missions_panel.py` —
+`build_asset_missions_panel(context, asset_id)`, a "Related Missions"
+list reusing `gui/widgets/mission_list_row.py`'s existing
+`MissionListRow` verbatim. Embedded by all four areas below, not
+reimplemented per module.
+
+**New general cross-module mechanism** — confirmed, directly, that
+none existed before this (Garage's own docstring said so plainly):
+`ModuleBase.focus_record(record_id)` (default no-op — "modules degrade
+gracefully"), threaded through `gui/main_window.py`'s
+`open_module(module_id, record_id=None)` and the existing
+`"assistant.open_module_requested"` event. `core/mission_manager.py`
+gains `Mission.maintenance_asset_id` (mirrors the existing
+`maintenance_task_id`'s optional-FK shape) +
+`missions_for_maintenance_asset()`.
+
+**New `modules/greenhouse/module.py`** — Garage/Property's third
+sibling (`GREENHOUSE_CATEGORIES = ["Garden/Plant"]`), the real
+"Greenhouse section" that didn't exist at all before this (Garden/Plant
+assets previously had no dedicated area, only the generic Maintenance
+Assets tab). Garage and Property both gained real list→detail
+navigation (a `QStackedWidget` "← Back" page, mirroring
+`modules/real_estate/module.py`'s own exact pattern) where none existed
+before — each asset's section header is now a clickable row opening a
+detail page with its task status plus the shared missions panel. Real
+Estate got a new "Related Missions" section on its existing detail
+page and a real `focus_record()` (its `_show_detail_page()` already
+existed, just wasn't reachable from outside the module before).
+
+**Verification**: `pytest -q` — full suite, 2661 passed, zero
+regressions (new field-persistence cases in `test_mission_manager.py`,
+a new `test_greenhouse_module.py` mirroring `test_garage_module.py`'s
+own pure-function coverage exactly, existing Garage/Property tests
+confirmed unaffected by the list→detail restructure). Manual
+headless-Qt verification (throwaway repo copy): created a real
+Property + linked `MaintenanceAsset`, a real Vehicle asset, and a real
+Garden/Plant asset, tagged one real Mission to each, then opened all
+three areas' detail pages via `focus_record()` directly — confirmed
+each showed exactly its own tagged Mission (no cross-contamination),
+and clicking a listed Mission published the exact right
+`"assistant.open_module_requested"` event
+(`module_id="missions", record_id=<the real mission_id>`) — the actual
+cross-module navigation payload, not just that a click handler fired.
+Screenshotted all three.

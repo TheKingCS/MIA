@@ -183,8 +183,8 @@ class MainWindow(QMainWindow):
         level, _xp_into_level, _xp_needed = compute_level_progress(total_xp)
         self._level_badge.setText(f"Lv. {level}")
 
-    def _on_assistant_open_module_requested(self, module_id: str) -> None:
-        self.open_module(module_id)
+    def _on_assistant_open_module_requested(self, module_id: str, record_id: Optional[str] = None) -> None:
+        self.open_module(module_id, record_id=record_id)
 
     def _on_profile_switch_requested(self, **kwargs) -> None:
         self.switch_profile_requested.emit()
@@ -661,18 +661,28 @@ class MainWindow(QMainWindow):
     # Navigation
     # ------------------------------------------------------------------
 
-    def open_module(self, module_id: str) -> None:
-        """Switch the central stack to show the given module's widget."""
+    def open_module(self, module_id: str, record_id: Optional[str] = None) -> None:
+        """Switch the central stack to show the given module's widget.
+        `record_id` (2026-09-13, cross-module deep-linking) is passed to
+        the module's own focus_record() — a real, general "open this
+        with X pre-selected" mechanism (real Missions tagged to a real
+        asset, opened from Real Estate/Garage/Greenhouse), not a
+        one-off special case. Most modules just ignore it
+        (ModuleBase.focus_record()'s own default no-op)."""
+        module = self.module_manager.get(module_id)
+        if module is None:
+            log.warning("Attempted to open unknown module_id '%s'", module_id)
+            return
+
         if module_id not in self._module_widgets:
-            module = self.module_manager.get(module_id)
-            if module is None:
-                log.warning("Attempted to open unknown module_id '%s'", module_id)
-                return
             module.on_load()
             widget = module.get_widget()
             self._module_widgets[module_id] = widget
             self._stack.addWidget(widget)
             log.info("Opened module '%s' for the first time.", module_id)
+
+        if record_id is not None:
+            module.focus_record(record_id)
 
         self._navigate_to(self._module_widgets[module_id])
         self.statusBar().showMessage(f"Viewing: {module_id}")

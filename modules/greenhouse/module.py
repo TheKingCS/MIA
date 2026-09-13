@@ -1,57 +1,33 @@
 """
-modules.garage.module
-========================
+modules.greenhouse.module
+============================
 
-Garage — a read-only, at-a-glance place to check on cars and other
-motorized property equipment, without digging through every maintenance
-task in the general Maintenance module. Purely a filtered aggregation
-view over core.maintenance_manager (self.context.maintenance) — same
-"no add/edit/delete of its own" stance as modules/dashboard/module.py;
-managing an asset or task still happens in Maintenance, this just
-answers "how's the truck doing" faster.
+Greenhouse — a read-only, at-a-glance place to check on garden/plant
+assets (a greenhouse, aquaponics system, raised beds — anything logged
+in core.maintenance_manager under category "Garden/Plant"), without
+digging through every maintenance category in the general Maintenance
+module. Garage/Property's third sibling — same "filtered aggregation
+view over core.maintenance_manager, no add/edit/delete of its own"
+shape, just GREENHOUSE_CATEGORIES instead of GARAGE_CATEGORIES/
+PROPERTY_CATEGORIES.
 
-A "Manage in Maintenance" button navigates there via the existing
-"assistant.open_module_requested" event (gui/main_window.py already
-subscribes to it — same mechanism gui/home_dashboard.py's cards and
-modules/field_kit/module.py's docked-Core auto-navigate use).
+Added 2026-09-13, at the user's own explicit request for real parity
+across "areas" (the garage, the home, the greenhouse — each is like a
+boss with missions fighting to keep it in good standing): before this,
+Garden/Plant assets had no dedicated section of their own at all,
+unlike Vehicle/Power Equipment (Garage) or Property/Appliance/Tool
+(Property) — only the generic, all-categories Maintenance Assets tab.
+Clicking an asset's section header opens a real detail page (same
+QStackedWidget "← Back" pattern Garage/Property/Real Estate already
+use) showing its full task status plus
+gui/widgets/asset_missions_panel.py's shared "Related Missions" list.
 
-**Mission-to-asset tagging (2026-09-13)**: this module's own docstring
-used to say no deep link to a specific asset existed anywhere — that's
-now closed. Clicking an asset's own section header opens a real detail
-page (same `QStackedWidget` "← Back" pattern `modules/real_estate/module.py`
-already uses) showing its full task status plus
-`gui/widgets/asset_missions_panel.py`'s shared "Related Missions" list
-— real parity with Real Estate/Property/Greenhouse, at the user's own
-explicit request, not a Garage-only special case.
-
-Filtered to GARAGE_CATEGORIES (Vehicle, Power Equipment) — the "cars and
-motorized things" the user asked this view to cover, not every
-maintenance category (Appliance/Property/Tool stay in the general
-Maintenance module only). This was originally floated as folding into
-"MIA Workshop," but modules/workshop/module.py is a distinct
-electronics/fab business pipeline (Components/Materials/Jobs/Products/
-Ledger) with zero asset/serial/maintenance-schedule concepts — Garage
-reads from Maintenance instead, which already owns this exact data
-model (assets/tasks/documents/meter+sensor readings).
-
-Layout follows the "glance tier -> needs-attention zone -> grouped
-detail" information-architecture pattern from an earlier MIA Homestead
-dashboard redesign: 3 hero glance tiles first (Tracked / Needs
-Attention / Next Up), then everything across every garage asset that
-needs a human pulled into one distinctly-labeled "Needs Attention"
-zone, then full per-asset detail grouped under each asset's own
-sub-header (its status lines, not squeezed into a single flat list).
-
-is_garage_asset()/task_needs_attention()/format_task_status_line()/
-format_attention_line() are free functions (not methods) — testable
-without Qt, see tests/test_garage_module.py. These deliberately don't
-import modules.maintenance.module's format_task_row/format_asset_row —
-modules never import another module directly (CLAUDE.md's
-one-directional layering rule); same stance modules/dashboard/module.py
-already documents for its own summary-line functions. The underlying
-due/overdue math (days_until_due/is_meter_task_due/is_sensor_task_due/
-meter_used_since_last) IS reused directly from core.maintenance_manager
-— only the presentation strings are independently owned.
+is_greenhouse_asset()/task_needs_attention()/format_task_status_line()/
+format_attention_line() are free functions (not methods), independently
+owned rather than imported from modules.garage.module — modules never
+import another module directly (CLAUDE.md's one-directional layering
+rule), same stance Garage/Property already take relative to each
+other.
 """
 
 from __future__ import annotations
@@ -83,20 +59,18 @@ from core.maintenance_manager import (
 from gui.widgets.asset_missions_panel import build_asset_missions_panel
 from modules.module_base import ModuleBase
 
-GARAGE_CATEGORIES = ["Vehicle", "Power Equipment"]
+GREENHOUSE_CATEGORIES = ["Garden/Plant"]
 _SECTION_ITEM_LIMIT = 20
 
 
-def is_garage_asset(asset: MaintenanceAsset) -> bool:
-    """Pure filter — testable without Qt (see tests/test_garage_module.py)."""
-    return asset.category in GARAGE_CATEGORIES
+def is_greenhouse_asset(asset: MaintenanceAsset) -> bool:
+    """Pure filter — testable without Qt (see tests/test_greenhouse_module.py)."""
+    return asset.category in GREENHOUSE_CATEGORIES
 
 
 def task_needs_attention(task: MaintenanceTask, today: date, readings: Optional[list[Reading]] = None) -> bool:
-    """Pure logic — testable without Qt. A calendar task counts as
-    needing attention once its due date has arrived (not just past it —
-    "due today" belongs in the same zone as overdue, not left for the
-    per-asset detail section to surface quietly)."""
+    """Pure logic — testable without Qt. Identical rule to
+    modules.garage.module's/modules.property.module's own versions."""
     readings = readings or []
     if task.trigger_type == "calendar":
         remaining = days_until_due(task, today)
@@ -110,8 +84,8 @@ def task_needs_attention(task: MaintenanceTask, today: date, readings: Optional[
 
 def format_task_status_line(task: MaintenanceTask, today: date, readings: Optional[list[Reading]] = None) -> str:
     """Pure formatting logic — testable without Qt. Same status
-    vocabulary as modules.maintenance.module.format_task_row but
-    independently owned (see module docstring)."""
+    vocabulary as modules.garage.module.format_task_status_line, owned
+    independently here (modules never import another module directly)."""
     readings = readings or []
 
     if task.trigger_type == "calendar":
@@ -155,19 +129,14 @@ def format_task_status_line(task: MaintenanceTask, today: date, readings: Option
 def format_attention_line(
     task: MaintenanceTask, asset: Optional[MaintenanceAsset], today: date, readings: Optional[list[Reading]] = None
 ) -> str:
-    """Pure formatting logic — testable without Qt. Same as
-    format_task_status_line but with the asset name appended, for the
-    flat cross-asset "Needs Attention" zone."""
+    """Pure formatting logic — testable without Qt."""
     asset_name = asset.name if asset is not None else "Unknown asset"
     return f"{format_task_status_line(task, today, readings)}   ({asset_name})"
 
 
 def format_glance_next_up(attention_count: int, first_task: Optional[MaintenanceTask]) -> str:
-    """Pure formatting logic — testable without Qt. Deliberately doesn't
-    try to rank across mechanically-incomparable units (days vs. miles
-    vs. a raw sensor value) — just names the one thing needing
-    attention when there's exactly one, a count otherwise, and an
-    honest "All caught up" when there's nothing."""
+    """Pure formatting logic — testable without Qt. Same "don't rank
+    across incomparable units" stance as modules.garage.module's version."""
     if attention_count == 0:
         return "All caught up"
     if attention_count == 1 and first_task is not None:
@@ -175,11 +144,11 @@ def format_glance_next_up(attention_count: int, first_task: Optional[Maintenance
     return f"{attention_count} items"
 
 
-class GarageModule(ModuleBase):
-    module_id = "garage"
-    display_name = "Garage"
-    description = "At-a-glance status for vehicles and motorized equipment."
-    icon = "\U0001F697"  # car
+class GreenhouseModule(ModuleBase):
+    module_id = "greenhouse"
+    display_name = "Greenhouse"
+    description = "At-a-glance status for garden, greenhouse, and aquaponics assets."
+    icon = "\U0001F331"  # seedling
 
     def __init__(self, context) -> None:
         super().__init__(context)
@@ -199,7 +168,7 @@ class GarageModule(ModuleBase):
 
     def focus_record(self, record_id: str) -> None:
         """Cross-module deep-linking (2026-09-13) — same mechanism
-        Real Estate/Property/Greenhouse's own focus_record() use."""
+        Real Estate/Garage/Property's own focus_record() use."""
         self._show_detail_page(record_id)
 
     def _show_list_page(self) -> None:
@@ -222,7 +191,7 @@ class GarageModule(ModuleBase):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(10)
 
-        back_button = QPushButton("← Back to Garage")
+        back_button = QPushButton("← Back to Greenhouse")
         back_button.clicked.connect(self._show_list_page)
         layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
@@ -318,7 +287,7 @@ class GarageModule(ModuleBase):
                 widget.deleteLater()
 
         today = date.today()
-        assets = [a for a in self.context.maintenance.all_assets() if is_garage_asset(a)]
+        assets = [a for a in self.context.maintenance.all_assets() if is_greenhouse_asset(a)]
 
         attention_entries: list[tuple[MaintenanceTask, MaintenanceAsset, list[Reading]]] = []
         asset_status_lines: dict[str, list[str]] = {}
@@ -346,9 +315,9 @@ class GarageModule(ModuleBase):
 
         if not assets:
             self._add_section(
-                "Vehicles & Equipment",
+                "Garden & Greenhouse",
                 [],
-                empty_text="No vehicles or motorized equipment tracked yet — add one in Maintenance.",
+                empty_text="Nothing tracked yet — add a Garden/Plant asset in Maintenance.",
             )
             return
 
@@ -363,12 +332,8 @@ class GarageModule(ModuleBase):
         self, title: str, lines: list[str], empty_text: str = "Nothing here yet.", asset_id: Optional[str] = None,
     ) -> None:
         if asset_id is not None:
-            # Mission-to-asset tagging (2026-09-13) — a real detail page
-            # now exists to click through to (see _build_detail_page()).
-            # Plain QPushButton, no objectName — avoids combining an
-            # existing QSS class with a direct style override, and this
-            # is a small, self-contained control, not a candidate for a
-            # new shared theme selector.
+            # Same "plain QPushButton, no objectName" reasoning as
+            # Garage/Property's own identical section headers.
             section_label = QPushButton(f"{title}  ›")
             section_label.setCursor(Qt.CursorShape.PointingHandCursor)
             section_label.setStyleSheet("text-align: left; font-weight: 600; padding: 4px 0;")

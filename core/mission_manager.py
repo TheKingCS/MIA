@@ -260,6 +260,15 @@ class Mission:
     recurring_template_id: Optional[str] = None
     recurring_kind: Optional[str] = None  # "daily" | "weekly"
     occurrence_key: Optional[str] = None
+    # Mission-to-asset tagging (2026-09-13) — same optional-FK shape as
+    # maintenance_task_id above, but pointing at the whole
+    # MaintenanceAsset rather than one specific recurring task on it: a
+    # Mission can be generally "about" a house/mower/truck/greenhouse
+    # asset (e.g. "Clean Out the Old House") without being tied to any
+    # one task. Surfaced by gui/widgets/asset_missions_panel.py on
+    # whichever real per-area module (Garage/Real Estate/Greenhouse)
+    # owns that asset's category.
+    maintenance_asset_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -288,6 +297,7 @@ class Mission:
             "recurring_template_id": self.recurring_template_id,
             "recurring_kind": self.recurring_kind,
             "occurrence_key": self.occurrence_key,
+            "maintenance_asset_id": self.maintenance_asset_id,
         }
 
     @staticmethod
@@ -320,6 +330,7 @@ class Mission:
             recurring_template_id=data.get("recurring_template_id"),
             recurring_kind=data.get("recurring_kind"),
             occurrence_key=data.get("occurrence_key"),
+            maintenance_asset_id=data.get("maintenance_asset_id"),
         )
 
 
@@ -378,6 +389,7 @@ class MissionManager:
         recurring_template_id: Optional[str] = None,
         recurring_kind: Optional[str] = None,
         occurrence_key: Optional[str] = None,
+        maintenance_asset_id: Optional[str] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -402,6 +414,7 @@ class MissionManager:
             recurring_template_id=recurring_template_id,
             recurring_kind=recurring_kind,
             occurrence_key=occurrence_key,
+            maintenance_asset_id=maintenance_asset_id,
         )
         self._missions.append(mission)
         self._save()
@@ -568,6 +581,9 @@ class MissionManager:
 
     def missions_for_maintenance_task(self, task_id: str) -> list[Mission]:
         return [m for m in self._missions if m.maintenance_task_id == task_id]
+
+    def missions_for_maintenance_asset(self, asset_id: str) -> list[Mission]:
+        return [m for m in self._missions if m.maintenance_asset_id == asset_id]
 
     # ------------------------------------------------------------------
     # Objectives

@@ -52,6 +52,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.budget_manager import ExpenseEntry, IncomeEntry
+from gui.widgets.asset_missions_panel import build_asset_missions_panel
 from core.maintenance_manager import MaintenanceTask, days_until_due, is_meter_task_due, is_sensor_task_due, meter_used_since_last
 from core.real_estate_manager import (
     Property,
@@ -420,10 +421,36 @@ class RealEstateModule(ModuleBase):
         layout.addWidget(info)
 
         layout.addWidget(self._build_maintenance_section(prop))
+        layout.addWidget(self._build_missions_section(prop))
         layout.addWidget(self._build_income_expense_section(prop), stretch=1)
         layout.addWidget(self._build_summary_section(prop))
 
         return page
+
+    def _build_missions_section(self, prop: Property) -> QWidget:
+        """Mission-to-asset tagging (2026-09-13) — real parity across
+        areas: this is the same shared panel Garage/Property/Greenhouse
+        embed on their own asset detail pages, at the user's own
+        explicit request. An unlinked property (no maintenance_asset_id
+        yet) gets an honest note rather than a panel with nothing to
+        show — same "prefer the model" stance the rest of this app's
+        Maintenance integration already takes."""
+        if not prop.maintenance_asset_id:
+            section = QWidget()
+            layout = QVBoxLayout(section)
+            layout.setContentsMargins(0, 0, 0, 0)
+            note = QLabel("Link a Maintenance asset above to see related Missions.")
+            note.setObjectName("SubtitleLabel")
+            layout.addWidget(note)
+            return section
+        return build_asset_missions_panel(self.context, prop.maintenance_asset_id)
+
+    def focus_record(self, record_id: str) -> None:
+        """Cross-module deep-linking (2026-09-13) — opens straight to
+        this property's own detail page, same mechanism
+        Garage/Property/Greenhouse's own focus_record() implementations
+        use."""
+        self._show_detail_page(record_id)
 
     def _build_maintenance_section(self, prop: Property) -> QWidget:
         section = QWidget()
