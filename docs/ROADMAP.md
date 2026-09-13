@@ -9266,3 +9266,28 @@ This closes the full "Nature" re-skin rollout from the original
 reference picture: Garage/Greenhouse/Workout/Kitchen/Real Estate (full
 conversion), Missions/Skills/Home dashboard (hero-only). Household
 remains on the old teal system (never one of the 8 pictured pages).
+
+## Property module: closing a real parity gap (2026-09-14)
+
+Noticed unprompted, not asked by the user: Property (Garage's other
+sibling, covering Appliance/Property/Tool categories) never got
+touched anywhere in the whole Nature rollout — it wasn't one of the 8
+pictured pages, but it's structurally identical to Garage/Greenhouse
+(both of which DID get the full conversion), so leaving it on the old
+teal system was a real parity gap, not a deliberate scope choice —
+directly the same lesson [[feedback_area_parity_scoping.md]] already
+captured from earlier this session. Ported verbatim from Garage's
+finished pilot — same list page (photo hero, `#NatureGlanceTile` row,
+`#NatureAttentionPanel`, clickable `#NatureAssetCard`s) and detail
+page (quick-stats strip, Overview/Maintenance/Missions/Documents tab
+bar). New pure functions `is_quick_stat_task()`/`format_quick_stat_value()`/
+`next_up_tasks()` mirrored 1:1 from Garage's own.
+
+**Verification**: `pytest -q` — full suite, 2707 passed (8 new tests
+for the 3 new pure functions), zero regressions. Manual headless-Qt
+screenshots (isolated data, real `data/maintenance.json` confirmed
+untouched — still 5/35) of the list and detail pages match Garage's
+own screenshots pixel-for-pixel in structure.
+
+This is now genuinely complete: every asset-style area (Garage/
+Greenhouse/Property) plus Real Estate has full Nature parity.
