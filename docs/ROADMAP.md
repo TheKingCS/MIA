@@ -9213,3 +9213,56 @@ stale) confirmed: property selection switches the right pane, the
 Maintenance/Missions aggregate tabs list every property correctly,
 `focus_record()` selects the right property, and Kitchen's quick-log
 button immediately updates its own card's "Made Nx" count.
+
+## Real data: "Clean Out the Truck" mission (2026-09-14)
+
+Real Mission created and tagged directly to the real 2006 Honda
+Ridgeline (`maintenance_asset_id`), matching the same pattern the
+mower's own real missions already use: +15 XP, `household_management`
++10 / `home_maintenance` +5 (scaled down from "Clean Out the Old
+House"'s +25/15/10 — a smaller real job). Shows up under the truck's
+own Related Missions on its Garage detail page immediately.
+
+Also investigated a real user report ("I have 3 houses and it's only
+showing 2") — checked the real `data/properties.json` directly (all 3
+present, all `entity_id=""`) and re-rendered Real Estate against an
+isolated copy of that exact real data: all 3 properties render
+correctly, "Properties" tile correctly reads 3. Could not reproduce.
+Most likely explanation: the running app was still on a build from
+before today's Real Estate rebuild (or the double-refresh bug fixed
+earlier the same day) — MIA doesn't hot-reload, so a still-running
+instance wouldn't have picked up either fix. Asked the user to fully
+restart and re-check; flagged as open until confirmed either way.
+
+## Home dashboard: hero-only pass (2026-09-14)
+
+Completes the reference-picture rollout — Home dashboard was
+deliberately deferred earlier for its own scoping question, same as
+Missions/Skills. Asked directly: full conversion or hero-only, given
+this is the main app shell (~1835 lines, its own long-standing teal-
+HUD widget grid/clock/briefing-banner/chat-bar design) — user picked
+hero-only.
+
+The old plain "SYSTEM OVERVIEW" / "● ALL SYSTEMS NOMINAL" row is
+replaced by a `PhotoBackgroundFrame` hero with a real, personalized
+greeting — `core.startup_briefing.greeting_for_hour()` (already
+existed, already used by the briefing banner below it) + the real
+active profile's name, e.g. "Good afternoon, Zac" — not a fabricated
+copy of the reference mockup's own static "Good morning, Zac." The
+status chip relocates into the hero rather than being dropped, same
+pattern as every other hero-only pass. Everything below (clock,
+widgets grid, briefing banner, chat bar) is completely untouched.
+
+**Verification**: `pytest -q` — full suite, 2699 passed (all 60
+existing `test_home_dashboard.py` tests untouched — only
+`_build_overview_row()`'s widget construction changed, no pure-
+function signatures). Manual headless-Qt screenshot (isolated
+profile/config data, real `config/config.json` confirmed untouched)
+confirmed the hero renders with the correct time-of-day greeting and
+relocated status chip, with the clock/briefing/widgets/chat bar all
+rendering exactly as before.
+
+This closes the full "Nature" re-skin rollout from the original
+reference picture: Garage/Greenhouse/Workout/Kitchen/Real Estate (full
+conversion), Missions/Skills/Home dashboard (hero-only). Household
+remains on the old teal system (never one of the 8 pictured pages).

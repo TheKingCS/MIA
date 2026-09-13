@@ -152,12 +152,13 @@ from core.kitchen_manager import days_until_expiration
 from core.power_manager import PowerStatus
 from core.project_manager import Project
 from core.push_to_talk_trigger import PushToTalkTrigger
-from core.startup_briefing import build_stat_highlights, build_startup_briefing
+from core.startup_briefing import build_stat_highlights, build_startup_briefing, greeting_for_hour
 from core.tts_worker import TTSWorker
 from gui.dashboard_customize_dialog import DashboardCustomizeDialog
 from gui.widgets.avatar_camera_widget import AvatarCameraWidget
 from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from gui.widgets.toggle_switch import ToggleSwitch
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
@@ -588,7 +589,7 @@ class HomeDashboard(QFrame):
         outer.setSpacing(24)
         outer.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        outer.addLayout(self._build_overview_row())
+        outer.addWidget(self._build_overview_row())
         outer.addWidget(self._build_clock())
 
         # Built (and refreshed with real data) before the briefing
@@ -685,22 +686,51 @@ class HomeDashboard(QFrame):
     # Construction
     # ------------------------------------------------------------------
 
-    def _build_overview_row(self) -> QHBoxLayout:
-        """The "SYSTEM OVERVIEW" / "● ALL SYSTEMS NOMINAL" header row —
-        a real gap found re-comparing against the ForMIA mockup
-        (`Dashboard.dc.html`), missing entirely before this pass. The
-        status chip is static ambient copy, same precedent as
-        gui/main_window.py's own status-bar default message ("M.I.A.
-        core online.") — not a live health check standing behind it."""
-        row = QHBoxLayout()
-        overview_label = QLabel("SYSTEM OVERVIEW")
-        overview_label.setObjectName("DashboardOverlineLabel")
-        row.addWidget(overview_label)
-        row.addStretch()
+    def _build_overview_row(self) -> QWidget:
+        """Nature re-skin, hero-only pass (2026-09-14) — same scope
+        Missions/Skills got: a photo hero replaces the old plain
+        "SYSTEM OVERVIEW" / "● ALL SYSTEMS NOMINAL" row, with that
+        status chip relocated into it rather than dropped. A real,
+        personalized greeting — `core.startup_briefing.greeting_for_hour()`
+        (already built, already used by the briefing banner below) +
+        the real active profile's name, not a fabricated "Good
+        morning, Zac" the way the reference mockup's own copy is.
+        Everything below this (clock, widgets grid, briefing banner,
+        chat bar) is untouched — this screen already went through its
+        own earlier, separate design pass rather than starting plain."""
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(120)
+        layout = QHBoxLayout(hero)
+        layout.setContentsMargins(28, 16, 28, 16)
+        layout.setSpacing(12)
+
+        icon_badge = QLabel("\U0001F3E0")  # house
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(icon_badge)
+
+        profile_name = "there"
+        if self.context.profiles is not None:
+            active_profile = self.context.profiles.get_active_profile()
+            if active_profile is not None:
+                profile_name = active_profile.name
+
+        title_column = QVBoxLayout()
+        title_column.setSpacing(2)
+        title = QLabel(f"{greeting_for_hour(datetime.now().hour)}, {profile_name}")
+        title.setObjectName("NatureHeaderTitle")
+        title_column.addWidget(title)
+        tagline = QLabel("Another day to build the life you want.")
+        tagline.setObjectName("NatureHeaderTagline")
+        title_column.addWidget(tagline)
+        layout.addLayout(title_column, stretch=1)
+
         status_chip = QLabel("● ALL SYSTEMS NOMINAL")
         status_chip.setObjectName("DashboardStatusChip")
-        row.addWidget(status_chip)
-        return row
+        layout.addWidget(status_chip, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        return hero
 
     def _build_clock(self) -> QWidget:
         """A real card (eyebrow "CLOCK" label + big time, left; date,
