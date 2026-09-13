@@ -324,6 +324,29 @@ QFrame#HairlineRule {
     border: none;
 }
 
+/* Design restyle Phase 5 (2026-09-12) — the Module Browser's new
+Architecture tab. A dashed variant of the existing MissionDifficultyTag
+chip look (accent-field bg/border already established there) for
+"concept only"/"not yet built" markers — no dashed-border precedent
+existed anywhere in this theme before this pass. */
+QLabel#ArchitectureDashedChip {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    color: #5a6472;
+    background-color: #0c1119;
+    border: 1px dashed #232b34;
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+
+QLabel#ArchitectureRowLabel {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #5b6a80;
+}
+
 QFrame#CharacterPanel {
     background-color: #0c1017;
     border: 1px solid #1b222e;

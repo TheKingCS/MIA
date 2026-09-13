@@ -8442,3 +8442,52 @@ showing real de-emojied entries, and the focus border landing on
 `next_honest_step()`'s own actual return value (cross-checked in the
 same script, not just eyeballed) — both bugs above were caught and
 fixed from this same screenshot pass, not assumed correct on the first try.
+
+## Design restyle, Phase 5: System architecture diagram (1e) (2026-09-12)
+
+Last of the five "MIA Smart User OS Design" screens. Its own spec is
+unusual among the five: **"Behavior: static. If you want it in-app, it
+belongs in the Diagnostics or Modules screen, rendered from
+ModuleManager's live discovery list so it can't drift."** — the design
+itself frames this as optional and names where it belongs, rather than
+mandating a new module. Asked the user directly rather than assuming;
+picked "add it to Module Browser" over Diagnostics or skipping it
+entirely.
+
+Added as a second "Architecture" tab in `modules/module_browser/module.py`
+(existing content moved into a new `_build_modules_tab()`, unchanged).
+Only the MODULES row is live — reuses `self.known_modules`, the same
+real discovery list the Modules tab already shows, capped at 6 example
+chips + a real "+N more" count (this app has 29 real modules; a literal
+one-chip-per-module row doesn't fit any reasonable width). Everything
+else is real, fixed information about this codebase's own layering —
+the M.I.A. CORE block's 8 service-name chips are `core/app_context.py`'s
+actual fields, the PERSISTENCE row's 6 filenames are real
+`data/*.json` files, the footer's "core/ never imports gui/ or
+modules/" is `CLAUDE.md`'s own rule verbatim.
+
+**Real correction to the mockup's own content, not silently copied**:
+the INTERFACES row lists "Mobile — not yet," true when this design was
+authored but no longer true — this same session's own Mobile access
+Phases 1-2 shipped a real, opt-in mobile interface (PWA + Web Push)
+since then. Shown active ("Mobile (opt-in)"), not dimmed, rather than
+repeating a now-stale claim. AR/XR stays "concept only" — genuinely
+still true.
+
+**Real layout bug caught by manual verification**: the first pass
+capped the MODULES row at 10 example chips, which overflowed past the
+design's own 1440px reference width (the outer scroll area's own
+horizontal scrollbar kicked in, clipping the trailing "drop a folder"
+chip and the footer's rule text). Reduced to 6, confirmed by
+re-screenshotting that every row now fits cleanly with no horizontal
+overflow.
+
+**Verification**: `pytest -q` — full suite, 2610 passed, zero
+regressions (no new pure-function surface worth unit testing here —
+this screen is inherently a GUI-construction/layout concern, same
+"manual screenshot only" convention every prior restyle phase's
+GUI-only work has used). Manual headless-Qt screenshot (throwaway repo
+copy, a real `ModuleManager.discover()` call against the actual 29
+modules in this repo — not a fixture): confirmed both the unaffected
+Modules tab and the new Architecture tab, all four corner marks on the
+M.I.A. CORE block, and the overflow fix.

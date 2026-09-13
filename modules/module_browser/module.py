@@ -16,6 +16,18 @@ real ModuleManager (self.module_manager, set externally by
 gui/main_window.py's _wire_module_browser()) rather than just a static
 snapshot of module metadata. That's a deliberate, narrow exception —
 this module's entire purpose is managing modules.
+
+**Design restyle Phase 5 (2026-09-12)**: adds a second "Architecture"
+tab — the handoff's own 1e screen, which its own spec calls "static"
+and explicitly says belongs "in the Diagnostics or Modules screen,"
+not as its own module. Only the MODULES row is live (rendered from
+this module's own self.known_modules, the same real discovery list
+the Modules tab already shows) — everything else is fixed structural
+information about the codebase's own layering, which doesn't change
+at runtime. See _build_architecture_tab()'s own docstring for the one
+real correction made to the mockup's own content: it lists "Mobile —
+not yet," which was true when the design was authored but is no
+longer true after this same session's own Mobile access Phases 1-2.
 """
 
 from __future__ import annotations
@@ -29,15 +41,19 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from gui.widgets.blueprint_frame import BlueprintFrame
+from gui.widgets.glow import apply_panel_glow
 from modules.module_base import ModuleBase
 
 
@@ -59,6 +75,19 @@ class ModuleBrowserModule(ModuleBase):
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
+        outer.setSpacing(12)
+
+        tabs = QTabWidget()
+        tabs.addTab(self._build_modules_tab(), "Modules")
+        tabs.addTab(self._build_architecture_tab(), "Architecture")
+        outer.addWidget(tabs)
+
+        return widget
+
+    def _build_modules_tab(self) -> QWidget:
+        widget = QWidget()
+        outer = QVBoxLayout(widget)
+        outer.setContentsMargins(0, 12, 0, 0)
         outer.setSpacing(12)
 
         header = QLabel("Loaded Modules")
@@ -103,6 +132,194 @@ class ModuleBrowserModule(ModuleBase):
 
         self._populate_rows()
         return widget
+
+    # ------------------------------------------------------------------
+    # Architecture tab — design restyle Phase 5 (2026-09-12)
+    # ------------------------------------------------------------------
+
+    def _build_architecture_tab(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 12, 12, 12)
+        layout.setSpacing(20)
+
+        layout.addLayout(self._build_architecture_row("INTERFACES", self._build_interfaces_chips()))
+        layout.addLayout(self._build_architecture_row("GUI LAYER", self._build_gui_layer_chips()))
+        layout.addLayout(self._build_architecture_row("MODULES", self._build_modules_chips()))
+        layout.addWidget(self._build_core_block())
+        layout.addLayout(self._build_architecture_row("PERSISTENCE", self._build_persistence_chips()))
+        layout.addWidget(self._build_architecture_footer())
+        layout.addStretch(1)
+
+        scroll.setWidget(container)
+        return scroll
+
+    @staticmethod
+    def _build_architecture_row(label_text: str, content: QHBoxLayout) -> QHBoxLayout:
+        row = QHBoxLayout()
+        label = QLabel(label_text)
+        label.setObjectName("ArchitectureRowLabel")
+        label.setFixedWidth(150)
+        label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        row.addWidget(label)
+        row.addLayout(content, stretch=1)
+        return row
+
+    @staticmethod
+    def _chip(text: str) -> QLabel:
+        chip = QLabel(text)
+        chip.setObjectName("MissionDifficultyTag")
+        return chip
+
+    @staticmethod
+    def _dashed_chip(text: str) -> QLabel:
+        chip = QLabel(text)
+        chip.setObjectName("ArchitectureDashedChip")
+        return chip
+
+    def _build_interfaces_chips(self) -> QHBoxLayout:
+        """Real correction to the design handoff's own mockup content:
+        it lists "Mobile — not yet," true when the design was
+        authored but no longer true — this same session's own Mobile
+        access Phases 1-2 (server/app.py, a PWA, Web Push) shipped a
+        real, opt-in mobile interface tier since then. Shown active,
+        not dimmed, with an honest "opt-in" caveat rather than quietly
+        repeating a now-stale claim. AR/XR stays "concept only" —
+        genuinely still true, nothing built."""
+        row = QHBoxLayout()
+        row.addWidget(self._chip("Pi 5 Kiosk"))
+        row.addWidget(self._chip("Desktop"))
+        row.addWidget(self._chip("Voice"))
+        row.addWidget(self._chip("Mobile (opt-in)"))
+        row.addWidget(self._dashed_chip("AR / XR — concept only"))
+        row.addStretch(1)
+        return row
+
+    def _build_gui_layer_chips(self) -> QHBoxLayout:
+        row = QHBoxLayout()
+        row.addWidget(self._chip("gui/"))
+        arrow = QLabel("→ core/ only")
+        arrow.setObjectName("SubtitleLabel")
+        row.addWidget(arrow)
+        row.addWidget(self._chip("theme_manager.py"))
+        row.addWidget(self._chip("main_window.py"))
+        row.addWidget(self._chip("home_dashboard.py"))
+        row.addStretch(1)
+        return row
+
+    def _build_modules_chips(self) -> QHBoxLayout:
+        """The one live row on this otherwise-static screen — the
+        design handoff's own behavior note ("rendered from
+        ModuleManager's live discovery list so it can't drift") — reuses
+        self.known_modules, the same real list the Modules tab already
+        shows. Capped at 10 example chips (this app has dozens of real
+        modules; a literal one-chip-per-module row would overflow any
+        reasonable window width) — a real, stated simplification, not
+        a hidden truncation, via the "+N more" label."""
+        row = QHBoxLayout()
+        modules = self.known_modules or [self]
+        # Capped low enough that the row (plus the "+N more" label and
+        # the dashed "drop a folder" chip) actually fits within the
+        # design's own 1440px reference width without overflowing —
+        # confirmed by re-screenshotting after an earlier attempt at 10
+        # chips genuinely didn't fit.
+        shown = modules[:6]
+        for module in shown:
+            row.addWidget(self._chip(module.display_name))
+        if len(modules) > len(shown):
+            more_label = QLabel(f"+{len(modules) - len(shown)} more")
+            more_label.setObjectName("SubtitleLabel")
+            row.addWidget(more_label)
+        row.addWidget(self._dashed_chip("drop a folder → it appears"))
+        row.addStretch(1)
+        return row
+
+    def _build_core_block(self) -> QFrame:
+        card = BlueprintFrame(accent=True)
+        card.setObjectName("DashboardCard")
+        apply_panel_glow(card)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(10)
+
+        title = QLabel("\U0001F9CA  AppContext — the one shared object")
+        title.setObjectName("SkillCardTitle")
+        layout.addWidget(title)
+
+        # The real core/app_context.py fields every module/GUI screen
+        # is actually handed — not an illustrative subset invented for
+        # this screen.
+        services = ["config", "events", "profiles", "notifications", "search", "skills", "data_logger", "calendar"]
+        grid = QGridLayout()
+        grid.setSpacing(8)
+        for index, name in enumerate(services):
+            grid.addWidget(self._chip(name), index // 4, index % 4)
+        layout.addLayout(grid)
+
+        cells_row = QHBoxLayout()
+        for label_text, filename in [
+            ("Gamification", "core/gamification.py"),
+            ("Leveling", "core/leveling.py"),
+            ("Achievements", "core/achievements.py"),
+        ]:
+            cell = QFrame()
+            cell.setObjectName("DashboardCard")
+            cell_layout = QVBoxLayout(cell)
+            cell_title = QLabel(label_text)
+            cell_title.setObjectName("SkillCardTitle")
+            cell_layout.addWidget(cell_title)
+            cell_file = QLabel(filename)
+            cell_file.setObjectName("SkillCardPrereq")
+            cell_layout.addWidget(cell_file)
+            cells_row.addWidget(cell)
+        layout.addLayout(cells_row)
+
+        return card
+
+    def _build_persistence_chips(self) -> QHBoxLayout:
+        row = QHBoxLayout()
+        # Six representative data/*.json files (real filenames from
+        # their owning managers — core/config_manager.py,
+        # core/mission_manager.py, core/skill_manager.py x2,
+        # core/notification_manager.py, core/data_logger_manager.py),
+        # not literally every persisted file this app has (there are
+        # many more) — matches the design's own "six mono filename
+        # chips," picked to represent the M.I.A. CORE services above.
+        files = [
+            "config.json", "missions.json", "skill_definitions.json",
+            "skill_progress.json", "notifications.json", "data_logger_readings.json",
+        ]
+        for name in files:
+            row.addWidget(self._chip(name))
+        row.addStretch(1)
+        return row
+
+    def _build_architecture_footer(self) -> QWidget:
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        rule = QFrame()
+        rule.setObjectName("HairlineRule")
+        layout.addWidget(rule)
+
+        row = QHBoxLayout()
+        row.addWidget(self._chip("ORGANIZATION"))
+        row.addWidget(self._chip("AUTOMATION"))
+        row.addWidget(self._chip("GAMIFICATION"))
+        row.addWidget(self._dashed_chip("XR / AR — LATER"))
+        row.addStretch(1)
+        rule_text = QLabel("core/ never imports gui/ or modules/")
+        rule_text.setObjectName("SkillCardPrereq")
+        row.addWidget(rule_text)
+        layout.addLayout(row)
+
+        return container
 
     # ------------------------------------------------------------------
     # Row list
