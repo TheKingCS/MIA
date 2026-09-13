@@ -69,6 +69,7 @@ if TYPE_CHECKING:
     from core.power_manager import PowerManager
     from core.profile_manager import ProfileManager
     from core.product_manager import ProductManager
+    from core.push_subscription_manager import PushSubscriptionManager
     from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
     from core.relationships_manager import RelationshipsManager
@@ -178,6 +179,13 @@ class AppContext:
     # the content structure; see core/classroom_manager.py's own
     # docstring for what's not built yet.
     classroom: Optional["ClassroomManager"] = field(default=None, repr=False)
+    # Mobile access, Phase 1 (2026-09-12) — Web Push subscription
+    # storage for the opt-in local API server (server/app.py). See
+    # core/push_subscription_manager.py's own docstring; only
+    # constructed when server.enabled is true (core/application.py),
+    # so stays None everywhere else, same "optional service, degrades
+    # gracefully" pattern as e.g. context.energy.
+    push_subscriptions: Optional["PushSubscriptionManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only

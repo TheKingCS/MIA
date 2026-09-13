@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MIA Mobile</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        body {
+            background: #0f1a1c;
+            color: #d8e0e8;
+            font-family: system-ui, sans-serif;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+        h1 { color: #38d9c9; font-size: 20px; }
+        label { display: block; margin-top: 12px; font-size: 13px; color: #9fb0b6; }
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            margin-top: 4px;
+            background: #161b22;
+            border: 1px solid #232b34;
+            color: #d8e0e8;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 16px;
+            width: 100%;
+            padding: 10px;
+            background: #38d9c9;
+            color: #0f1a1c;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        #status { margin-top: 16px; font-size: 13px; color: #9fb0b6; }
+        #push-section { margin-top: 24px; border-top: 1px solid #232b34; padding-top: 16px; }
+    </style>
+</head>
+<body>
+    <h1>MIA Mobile — Phase 1</h1>
+
+    <label for="profile_id">Profile ID</label>
+    <input id="profile_id" type="text" autocomplete="username">
+
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+
+    <button id="login-button">Log in</button>
+
+    <div id="push-section" hidden>
+        <button id="enable-button">Enable notifications</button>
+        <button id="test-button">Send test notification</button>
+    </div>
+
+    <div id="status"></div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

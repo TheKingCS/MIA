@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import threading
 import urllib.error
 from datetime import date, datetime
 from pathlib import Path
@@ -90,6 +91,7 @@ from core.port_scanner import scan_ports
 from core.energy_manager import EnergyManager
 from core.power_manager import PowerManager
 from core.profile_manager import ProfileManager
+from core.push_subscription_manager import PushSubscriptionManager
 from core.insight_manager import InsightManager
 from core.intent_manager import IntentManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
@@ -193,6 +195,11 @@ class MIAApplication:
         # core/profile_manager.py.
         self.context.profiles = ProfileManager(self.context)
         self.context.notifications = NotificationManager(self.context)
+        # Mobile access, Phase 1 (2026-09-12) — cheap to construct
+        # unconditionally like every other manager here; only the
+        # opt-in server thread itself (_start_mobile_server(), called
+        # from run()) is gated behind server.enabled.
+        self.context.push_subscriptions = PushSubscriptionManager(self.context)
         self.context.calendar = CalendarManager(self.context)
         self.context.alarms = AlarmManager(self.context)
         self.context.journal = JournalManager(self.context)
@@ -4303,6 +4310,7 @@ class MIAApplication:
         self.splash = SplashScreen()
         self._display(self.splash)
         self._play_boot_sound()
+        self._start_mobile_server()
 
         # The splash screen steps through a sequence of boot checks
         # before handing off to the wizard or main window. Using a
@@ -4342,6 +4350,46 @@ class MIAApplication:
         write_boot_sound_wav(output_path)
         self._boot_sound_worker = BootSoundWorker(self.context.voice, output_path)
         self._boot_sound_worker.start()
+
+    def _start_mobile_server(self) -> None:
+        """
+        Mobile access, Phase 1 (2026-09-12) — opt-in local API server
+        for the PWA + Web Push pipeline (server/app.py), off by default
+        (server.enabled). Started here, in the same process and on the
+        same self.context every GUI screen already shares, rather than
+        as a separate process — that's what lets a future
+        "notification.created" -> push relay (not built yet) see events
+        raised anywhere in the running app; a standalone server process
+        would have its own disconnected event bus. See the Mobile
+        Phase 1 plan's own architecture note for the full reasoning.
+
+        Runs on a daemon thread via uvicorn — a real, accepted
+        simplification for v1: the server thread reads/writes the same
+        manager instances the GUI thread does, with no new locking
+        (same category of simplification CLAUDE.md's "Known intentional
+        simplifications" already accepts for no threading/async in
+        core — added here, scoped to this one opt-in feature, not
+        speculatively). Never blocks or fails boot: a missing
+        fastapi/uvicorn install (only needed if this feature is turned
+        on) or a bind failure is logged and swallowed, not raised.
+        """
+        if not self.config.get("server.enabled", False):
+            return
+        try:
+            import uvicorn
+
+            from server.app import create_app
+        except ImportError:
+            log.warning("server.enabled is true but fastapi/uvicorn/pywebpush aren't installed — mobile server not started.")
+            return
+
+        port = self.config.get("server.port", 8765)
+        app = create_app(self.context)
+        server_config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning")
+        server = uvicorn.Server(server_config)
+        thread = threading.Thread(target=server.run, daemon=True, name="mia-mobile-server")
+        thread.start()
+        log.info("Mobile API server started on port %d.", port)
 
     def _boot_step_core_systems(self) -> str:
         return "CORE SYSTEMS... ONLINE"

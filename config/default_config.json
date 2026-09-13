@@ -53,5 +53,9 @@
         "window_width": 1100,
         "window_height": 700,
         "show_character_panel": true
+    },
+    "server": {
+        "enabled": false,
+        "port": 8765
     }
 }

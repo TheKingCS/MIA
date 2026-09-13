@@ -12,7 +12,25 @@ PySide6>=6.6,<7.0
 # covers with no extra dependency, actual data confidentiality has no
 # safe stdlib equivalent to reach for — this is the one real exception
 # to "keep this list minimal." Has prebuilt wheels for aarch64 (Pi 5).
-cryptography>=42,<43
+# Floor raised from <43 to >=46 on 2026-09-12 — pywebpush/py-vapid
+# (below) require it; confirmed cryptography 47.x still ships a real
+# aarch64 wheel (manylinux2014_aarch64) before widening this, so the
+# original Pi 5 justification still holds at the new floor.
+cryptography>=46,<48
+
+# Mobile access, Phase 1 (2026-09-12) — the opt-in local API server
+# (server/app.py) the desktop app can start alongside itself for real
+# phone access + Web Push. FastAPI/uvicorn are a real, new web-framework
+# dependency (no stdlib equivalent); pywebpush (and its own py-vapid/
+# cryptography dependency) is the standard library for signing and
+# sending Web Push messages — same "no safe stdlib equivalent" bar as
+# every other addition here. Opt-in (server.enabled defaults to false),
+# but unconditionally listed here rather than lazily imported, matching
+# this project's existing convention for big optional features
+# (plaid-python, vosk).
+fastapi>=0.141,<1.0
+uvicorn>=0.52,<1.0
+pywebpush>=2.5,<3.0
 
 # Reference Library engine (core/reference_library_manager.py, v0.4
 # milestone 4.1) — Kiwix's own Python bindings for reading .zim files.
@@ -75,3 +93,7 @@ plaid-python>=44,<45
 
 # Testing
 pytest>=7.4
+# Required by starlette's TestClient (FastAPI's own test harness, used
+# by tests/test_server_app.py) as of the fastapi/uvicorn pin above —
+# not something the running app itself imports.
+httpx2>=2.12,<3.0

@@ -8169,3 +8169,76 @@ own real 1440px artboard width (not just a narrow 900px test window,
 which had genuinely truncated "100 XP"/"OPTIONAL MISSION" purely from
 window-width, not a real bug) to confirm the fix holds at the actual
 intended size.
+
+## Mobile access, Phase 1: opt-in local API server + Web Push pipeline (2026-09-12)
+
+First real step on real mobile access + push notifications (PWA + Web
+Push, private-mesh-VPN network model — both user decisions from this
+same session). This phase builds and proves the *software mechanism*
+only: a new `server/` package — a fourth interface tier, sibling to
+`core/`/`gui/`/`modules/`, consuming `core/` the same way `gui/` does —
+with a minimal FastAPI app (`server/app.py`: login via the existing
+`ProfileManager.verify_password()`, a VAPID public-key endpoint, a
+push-subscribe endpoint, and a manual "send yourself a test push"
+endpoint) plus a bare static PWA page (`server/static/`). New
+`core/push_subscription_manager.py` (standard dataclass+manager+JSON
+shape, `data/push_subscriptions.json`) and `core/web_push.py` (VAPID
+keypair generation/persistence to `data/vapid_keys.json`, and
+`send_web_push()` wrapping `pywebpush`).
+
+**Real architectural decision**: the server runs *embedded* in
+`core/application.py`'s `MIAApplication`, on a daemon thread started
+from `run()` (`_start_mobile_server()`), sharing the exact same
+`AppContext`/`EventBus` every GUI screen already uses — not a separate
+process. A standalone process would have its own disconnected event
+bus and could never see a `"notification.created"` event raised from
+GUI-triggered code (e.g. an overdue Maintenance task), which is a hard
+requirement for a *future* auto-push integration (explicitly deferred
+this phase, named so it isn't lost). Opt-in via new `server.enabled`
+(default `false`)/`server.port` (default `8765`) config keys — off for
+every existing user until turned on.
+
+**New dependencies, and a real pin-compatibility finding**: `fastapi`,
+`uvicorn`, `pywebpush` (+ its own `py-vapid`/`cryptography` deps).
+Installing `pywebpush` pulled in `cryptography>=46/47`, conflicting
+with the existing `cryptography>=42,<43` pin (chosen for aarch64/Pi 5
+wheel availability). Verified before widening it — `pip download
+--platform manylinux2014_aarch64` confirmed cryptography 47.x still
+ships a real aarch64 wheel — so the pin is now `>=46,<48`, not silently
+loosened on a guess. `httpx2` added too (test-only — required by
+FastAPI/Starlette's own `TestClient`).
+
+**Two real bugs caught in this phase's own manual verification, not
+just pytest** (pytest alone mocks `pywebpush.webpush()` throughout, so
+neither would have surfaced there):
+1. `get_or_create_vapid_keys()` originally stored the private key as
+   PEM text; `pywebpush`'s own `Vapid.from_string()` (what `webpush()`
+   calls on a `str` key) instead b64url-decodes the whole string
+   straight into `load_der_private_key()` — a PEM header breaks that.
+   Fixed to store/pass base64url-encoded DER instead, confirmed via a
+   direct `Vapid.from_string()` round-trip test, and added as a
+   permanent regression test (`test_get_or_create_vapid_keys_private_key_is_usable_by_pywebpush`).
+2. `send_web_push()` only caught `WebPushException` (a *reached* push
+   service's non-success response) — a malformed subscription's
+   `p256dh`/`auth` keys raise a bare `ValueError`/`binascii.Error`
+   during local encryption, before any network call. Caught while
+   running the real pipeline end-to-end on a live port with synthetic
+   subscription data; added a matching `except ValueError` (logged,
+   subscription kept — not a "confirmed gone" signal) plus a
+   regression test.
+
+**Verification**: `pytest -q` — full suite, 2592 passed, zero
+regressions (added 24 new tests across
+`tests/test_push_subscription_manager.py`, `tests/test_web_push.py`,
+`tests/test_server_app.py` — the last via FastAPI's `TestClient` against
+a real `build_core_context()`-built context, same isolation pattern as
+`tests/test_core_runtime.py`). Manual verification, honestly bounded:
+ran the real FastAPI app on a live local port (not just `TestClient`)
+end-to-end — static page served, login, VAPID key, subscribe (with a
+realistic random P-256-shaped key), and push/test — confirming the
+whole pipeline runs and degrades gracefully on a real (fake-endpoint)
+network attempt, which is exactly what surfaced bug #2 above. **What
+this phase cannot verify from this sandbox, stated plainly**: a real
+browser's `PushManager.subscribe()`, a real phone receiving a real
+push, or Tailscale reachability — those are the user's own real-device/
+network steps, next.
