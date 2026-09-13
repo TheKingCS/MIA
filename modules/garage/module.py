@@ -203,6 +203,18 @@ def format_quick_stat_value(readings: list[Reading], unit: str) -> str:
     return f"{readings[-1].value:g} {unit}".strip()
 
 
+def next_up_tasks(
+    actionable_tasks: list[MaintenanceTask], attention_tasks: list[MaintenanceTask], limit: int = 3
+) -> list[MaintenanceTask]:
+    """Pure logic — testable without Qt. Actionable tasks not already
+    in the attention list, in their existing order — deliberately no
+    cross-type ranking across days/hours/percent (same "don't rank
+    across incomparable units" stance as format_glance_next_up()
+    below), capped at `limit` for the Overview tab's "Next Up" card."""
+    attention_ids = {t.task_id for t in attention_tasks}
+    return [t for t in actionable_tasks if t.task_id not in attention_ids][:limit]
+
+
 def format_glance_next_up(attention_count: int, first_task: Optional[MaintenanceTask]) -> str:
     """Pure formatting logic — testable without Qt. Deliberately doesn't
     try to rank across mechanically-incomparable units (days vs. miles
@@ -256,18 +268,18 @@ class GarageModule(ModuleBase):
         self._stack.setCurrentWidget(self._detail_page)
 
     def _build_detail_page(self, asset_id: str) -> QWidget:
-        """Nature re-skin pilot, detail page (2026-09-14) — rebuilt
-        against the user's own second reference mockup (a full
-        per-asset page: hero photo, quick-stats strip, Needs Attention/
-        Next Up cards, task list, Related Missions, Asset Details,
-        Documents). Kept as one scrollable page rather than the
-        mockup's own sidebar/tab system (Overview/Maintenance/
-        Missions/Documents/Parts/History/Settings) — that's a much
-        bigger per-asset navigation feature, and "Parts"/"History" have
-        no real data model behind them yet. Every card here shows only
-        real data (readings, real task fields, real asset fields,
-        real documents) — nothing fabricated just to fill the
-        reference's shape."""
+        """Nature re-skin pilot, detail page — information-architecture
+        pass (2026-09-14). The first pass flattened everything into one
+        scroll; re-examined the reference mockup and it actually
+        organizes into a real tab bar (Overview/Maintenance/Missions/
+        Documents/Parts/History) with a distinct "Next Up" card the
+        first pass had dropped entirely. Rebuilt around a real tab row
+        (a plain button row + QStackedWidget, not QPushButton
+        QTabWidget's own unstyled default chrome) — Overview is a
+        condensed summary (Needs Attention + Next Up + Asset Details),
+        Maintenance/Missions/Documents each get the FULL list, not a
+        truncated preview. Still no Parts/History tab — no real data
+        model behind either. Every card shows only real data."""
         asset = self.context.maintenance.get_asset(asset_id)
 
         page = QWidget()
@@ -315,13 +327,10 @@ class GarageModule(ModuleBase):
 
         outer.addWidget(hero)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        content = QWidget()
-        body_layout = QVBoxLayout(content)
-        body_layout.setContentsMargins(24, 20, 24, 24)
-        body_layout.setSpacing(16)
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(24, 20, 24, 0)
+        body_layout.setSpacing(12)
 
         today = date.today()
         tasks = self.context.maintenance.tasks_for_asset(asset.asset_id)
@@ -334,6 +343,7 @@ class GarageModule(ModuleBase):
         quick_stat_tasks = [t for t in tasks if is_quick_stat_task(t)]
         actionable_tasks = [t for t in tasks if not is_quick_stat_task(t)]
         attention_tasks = [t for t in actionable_tasks if task_needs_attention(t, today, readings_by_task[t.task_id])]
+        upcoming_tasks = next_up_tasks(actionable_tasks, attention_tasks)
 
         if quick_stat_tasks:
             stats_row = QHBoxLayout()
@@ -341,6 +351,61 @@ class GarageModule(ModuleBase):
             for task in quick_stat_tasks:
                 self._build_quick_stat_tile(stats_row, task, readings_by_task[task.task_id])
             body_layout.addLayout(stats_row)
+
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(24)
+        stack = QStackedWidget()
+        tab_pages = {
+            "Overview": self._build_overview_tab(asset, attention_tasks, upcoming_tasks, today, readings_by_task),
+            "Maintenance": self._build_maintenance_tab(actionable_tasks, attention_tasks, today, readings_by_task),
+            "Missions": self._build_missions_tab(asset),
+            "Documents": self._build_documents_tab(asset),
+        }
+        tab_buttons: dict[str, QPushButton] = {}
+
+        def _select_tab(name: str) -> None:
+            for key, button in tab_buttons.items():
+                button.setProperty("active", key == name)
+                button.style().unpolish(button)
+                button.style().polish(button)
+            stack.setCurrentWidget(tab_pages[name])
+
+        for name, widget in tab_pages.items():
+            button = QPushButton(name)
+            button.setObjectName("NatureTabButton")
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda checked=False, n=name: _select_tab(n))
+            tab_buttons[name] = button
+            tab_row.addWidget(button)
+            stack.addWidget(widget)
+        tab_row.addStretch(1)
+        body_layout.addLayout(tab_row)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(stack)
+        body_layout.addWidget(scroll, stretch=1)
+
+        outer.addWidget(body, stretch=1)
+        _select_tab("Overview")
+        return page
+
+    def _build_overview_tab(
+        self,
+        asset: MaintenanceAsset,
+        attention_tasks: list[MaintenanceTask],
+        upcoming_tasks: list[MaintenanceTask],
+        today: date,
+        readings_by_task: dict[str, list[Reading]],
+    ) -> QWidget:
+        """Overview — a condensed summary, not the full task/mission/
+        document lists (those live in their own tabs): Needs Attention,
+        Next Up, and static Asset Details."""
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 12, 0, 12)
+        layout.setSpacing(16)
 
         if attention_tasks:
             attention_card = QFrame()
@@ -356,35 +421,26 @@ class GarageModule(ModuleBase):
                 line.setObjectName("NatureAttentionLine")
                 line.setWordWrap(True)
                 attention_layout.addWidget(line)
-            body_layout.addWidget(attention_card)
+            layout.addWidget(attention_card)
 
-        tasks_card = QFrame()
-        tasks_card.setObjectName("NatureAssetCard")
-        tasks_layout = QVBoxLayout(tasks_card)
-        tasks_layout.setContentsMargins(18, 16, 18, 16)
-        tasks_layout.setSpacing(6)
-        tasks_title = QLabel("Current Tasks")
-        tasks_title.setObjectName("NatureSectionTitle")
-        tasks_layout.addWidget(tasks_title)
-        if not actionable_tasks:
-            empty = QLabel("No maintenance tasks tracked for this asset yet.")
+        next_up_card = QFrame()
+        next_up_card.setObjectName("NatureAssetCard")
+        next_up_layout = QVBoxLayout(next_up_card)
+        next_up_layout.setContentsMargins(18, 16, 18, 16)
+        next_up_layout.setSpacing(6)
+        next_up_title = QLabel("Next Up")
+        next_up_title.setObjectName("NatureSectionTitle")
+        next_up_layout.addWidget(next_up_title)
+        if not upcoming_tasks:
+            empty = QLabel("Nothing else upcoming.")
             empty.setObjectName("NatureTileCaption")
-            tasks_layout.addWidget(empty)
-        for task in actionable_tasks:
+            next_up_layout.addWidget(empty)
+        for task in upcoming_tasks:
             line = QLabel(f"•  {format_task_status_line(task, today, readings_by_task[task.task_id])}")
             line.setObjectName("NatureAssetLine")
-            if task in attention_tasks:
-                line.setProperty("tone", "danger")
             line.setWordWrap(True)
-            tasks_layout.addWidget(line)
-        body_layout.addWidget(tasks_card)
-
-        missions_card = QFrame()
-        missions_card.setObjectName("NatureAssetCard")
-        missions_layout = QVBoxLayout(missions_card)
-        missions_layout.setContentsMargins(18, 16, 18, 16)
-        missions_layout.addWidget(build_asset_missions_panel(self.context, asset.asset_id))
-        body_layout.addWidget(missions_card)
+            next_up_layout.addWidget(line)
+        layout.addWidget(next_up_card)
 
         details = [
             ("Make", asset.manufacturer),
@@ -406,7 +462,69 @@ class GarageModule(ModuleBase):
                 row = QLabel(f"{label}: {value}")
                 row.setObjectName("NatureAssetLine")
                 details_layout.addWidget(row)
-            body_layout.addWidget(details_card)
+            layout.addWidget(details_card)
+
+        layout.addStretch(1)
+        return page
+
+    def _build_maintenance_tab(
+        self,
+        actionable_tasks: list[MaintenanceTask],
+        attention_tasks: list[MaintenanceTask],
+        today: date,
+        readings_by_task: dict[str, list[Reading]],
+    ) -> QWidget:
+        """Maintenance — every real task, not the Overview tab's
+        Needs-Attention-only subset."""
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 12, 0, 12)
+        layout.setSpacing(16)
+
+        tasks_card = QFrame()
+        tasks_card.setObjectName("NatureAssetCard")
+        tasks_layout = QVBoxLayout(tasks_card)
+        tasks_layout.setContentsMargins(18, 16, 18, 16)
+        tasks_layout.setSpacing(6)
+        tasks_title = QLabel("Current Tasks")
+        tasks_title.setObjectName("NatureSectionTitle")
+        tasks_layout.addWidget(tasks_title)
+        if not actionable_tasks:
+            empty = QLabel("No maintenance tasks tracked for this asset yet.")
+            empty.setObjectName("NatureTileCaption")
+            tasks_layout.addWidget(empty)
+        attention_ids = {t.task_id for t in attention_tasks}
+        for task in actionable_tasks:
+            line = QLabel(f"•  {format_task_status_line(task, today, readings_by_task[task.task_id])}")
+            line.setObjectName("NatureAssetLine")
+            if task.task_id in attention_ids:
+                line.setProperty("tone", "danger")
+            line.setWordWrap(True)
+            tasks_layout.addWidget(line)
+        layout.addWidget(tasks_card)
+        layout.addStretch(1)
+        return page
+
+    def _build_missions_tab(self, asset: MaintenanceAsset) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 12, 0, 12)
+        layout.setSpacing(16)
+
+        missions_card = QFrame()
+        missions_card.setObjectName("NatureAssetCard")
+        missions_layout = QVBoxLayout(missions_card)
+        missions_layout.setContentsMargins(18, 16, 18, 16)
+        missions_layout.addWidget(build_asset_missions_panel(self.context, asset.asset_id))
+        layout.addWidget(missions_card)
+        layout.addStretch(1)
+        return page
+
+    def _build_documents_tab(self, asset: MaintenanceAsset) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 12, 0, 12)
+        layout.setSpacing(16)
 
         documents_card = QFrame()
         documents_card.setObjectName("NatureAssetCard")
@@ -425,11 +543,8 @@ class GarageModule(ModuleBase):
                 row = QLabel(f"📄  {filename}")
                 row.setObjectName("NatureAssetLine")
                 documents_layout.addWidget(row)
-        body_layout.addWidget(documents_card)
-
-        body_layout.addStretch(1)
-        scroll.setWidget(content)
-        outer.addWidget(scroll, stretch=1)
+        layout.addWidget(documents_card)
+        layout.addStretch(1)
         return page
 
     def _build_quick_stat_tile(self, row_layout: QHBoxLayout, task: MaintenanceTask, readings: list[Reading]) -> None:

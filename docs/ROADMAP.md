@@ -8927,3 +8927,34 @@ screenshot against an isolated copy of the real data (never written
 to directly by the verification script) confirmed quick-stat tile,
 Current Tasks, newly-linked Related Missions, and the new Asset
 Details fields all render correctly.
+
+## "Nature" re-skin pilot, part 3: real tabs on Garage's detail page (2026-09-14)
+
+User pushed back on part 2: "let's work on more than just the style
+... more on the information and how it's organized" — a fair
+critique. Re-examined the reference mockup and it actually organizes
+around a real tab bar (Overview/Maintenance/Missions/Documents/Parts/
+History), and has a distinct **"Next Up"** card the previous pass had
+dropped entirely (only "Needs Attention" existed). Part 2 had
+flattened everything into one long scroll instead of matching that
+structure.
+
+Rebuilt the detail page around a real tab row — a plain button row +
+`QStackedWidget`, not `QPushButton` `QTabWidget`'s own unstyled default
+chrome (would clash with the Nature cards) — new `#NatureTabButton`
+QSS with an active-state green underline. Still no Parts/History tab
+(no real data model behind either, unchanged reasoning from part 2).
+
+**Real reorganization, not just new widgets**: Overview is now a
+condensed summary (Needs Attention + new Next Up + Asset Details) —
+Maintenance/Missions/Documents each show their FULL real list, not a
+truncated preview. New pure function `next_up_tasks()` — actionable
+tasks not already in the attention list, capped at 3, no cross-type
+ranking (same "don't rank across incomparable units" stance
+`format_glance_next_up()` already documented).
+
+**Verification**: `pytest -q` — full suite, 2689 passed (3 new tests
+for `next_up_tasks()`), zero regressions. Manual headless-Qt
+screenshots against an isolated copy of the real (enriched) mower
+data confirmed all 4 tabs render and switch correctly, with the
+active tab's underline updating each click.

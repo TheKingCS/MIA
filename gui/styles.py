@@ -1307,4 +1307,24 @@ QLabel#NatureHeaderTagline {
     color: #cdd9d4;
     font-size: 13px;
 }
+
+/* Detail-page tab bar (2026-09-14, information-architecture pass) —
+a plain button row + QStackedWidget rather than QPushButton
+QTabWidget's own default chrome, which has no Nature styling and
+would look out of place next to these cards. */
+QPushButton#NatureTabButton {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0px;
+    color: #9fb8ac;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 4px;
+}
+
+QPushButton#NatureTabButton[active="true"] {
+    color: #51bc76;
+    border-bottom: 2px solid #51bc76;
+}
 """

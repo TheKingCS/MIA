@@ -23,6 +23,7 @@ from modules.garage.module import (
     format_task_status_line,
     is_garage_asset,
     is_quick_stat_task,
+    next_up_tasks,
     task_needs_attention,
 )
 
@@ -195,6 +196,28 @@ def test_format_quick_stat_value_uses_latest_reading():
 
 def test_format_quick_stat_value_no_readings():
     assert format_quick_stat_value([], "engine hours") == "no reading logged"
+
+
+# ------------------------------------------------------------------
+# next_up_tasks (information-architecture pass, 2026-09-14)
+# ------------------------------------------------------------------
+
+def test_next_up_tasks_excludes_attention_tasks():
+    t1 = MaintenanceTask(task_id="a", asset_id="a1", title="Overdue one", trigger_type="calendar")
+    t2 = MaintenanceTask(task_id="b", asset_id="a1", title="Upcoming one", trigger_type="calendar")
+    assert next_up_tasks([t1, t2], [t1]) == [t2]
+
+
+def test_next_up_tasks_respects_limit():
+    tasks = [
+        MaintenanceTask(task_id=str(i), asset_id="a1", title=f"Task {i}", trigger_type="calendar") for i in range(5)
+    ]
+    assert len(next_up_tasks(tasks, [], limit=3)) == 3
+
+
+def test_next_up_tasks_empty_when_all_are_attention():
+    t1 = MaintenanceTask(task_id="a", asset_id="a1", title="Overdue one", trigger_type="calendar")
+    assert next_up_tasks([t1], [t1]) == []
 
 
 # ------------------------------------------------------------------
