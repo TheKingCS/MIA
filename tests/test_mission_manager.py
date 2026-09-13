@@ -582,6 +582,83 @@ def test_completing_a_mission_credits_skill_rewards(isolated_paths):
     assert context.skills.get_progress(active.profile_id, "fabrication").total_xp == 40
 
 
+def test_reactivating_and_recompleting_a_mission_does_not_double_credit(isolated_paths):
+    """Regression test for a real, reachable bug found while building
+    the "Manage Skills" UI: gui/add_edit_mission_dialog.py's own status
+    combo lets a completed Mission go back to "active" — without
+    Mission.rewards_credited, re-completing it would re-grant
+    reward_xp/reward_credits/skill_rewards every time."""
+    context = _make_context_with_profiles_and_skills(["aquaponics"])
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(
+        name="Aquaponics Pilot", reward_xp=50, reward_credits=10,
+        skill_rewards=[SkillWeight("aquaponics", 120)],
+    )
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+    context.missions.update_mission(mission.mission_id, status="active")
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    active = context.profiles.get_active_profile()
+    assert active.total_xp == 50  # not 100
+    assert active.total_credits == 10  # not 20
+    assert context.skills.get_progress(active.profile_id, "aquaponics").total_xp == 120  # not 240
+
+
+def test_rewards_credited_cannot_be_set_through_update_mission(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    with pytest.raises(ValueError):
+        context.missions.update_mission(mission.mission_id, rewards_credited=True)
+
+
+def test_rewards_credited_persists_across_a_fresh_load(isolated_paths):
+    context = _make_context_with_profiles()
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="X", reward_xp=10)
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    reloaded = MissionManager(context)
+    assert reloaded.all_missions()[0].rewards_credited is True
+
+
+def test_new_mission_defaults_to_rewards_not_credited(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="X")
+    assert mission.rewards_credited is False
+
+
+def test_add_skill_reward_appends_and_does_not_credit_before_completion(isolated_paths):
+    context = _make_context_with_profiles_and_skills(["aquaponics"])
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="X")
+
+    updated = context.missions.add_skill_reward(mission.mission_id, "aquaponics", 30)
+
+    assert updated.skill_rewards == [SkillWeight("aquaponics", 30)]
+    active = context.profiles.get_active_profile()
+    assert context.skills.get_progress(active.profile_id, "aquaponics").total_xp == 0
+
+
+def test_add_skill_reward_credits_immediately_after_completion(isolated_paths):
+    context = _make_context_with_profiles_and_skills(["aquaponics", "fabrication"])
+    context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="X", skill_rewards=[SkillWeight("aquaponics", 120)])
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    context.missions.add_skill_reward(mission.mission_id, "fabrication", 40)
+
+    active = context.profiles.get_active_profile()
+    assert context.skills.get_progress(active.profile_id, "aquaponics").total_xp == 120  # unchanged, no double-credit
+    assert context.skills.get_progress(active.profile_id, "fabrication").total_xp == 40  # the new one, credited now
+
+
+def test_add_skill_reward_unknown_mission_raises(isolated_paths):
+    context = _make_context()
+    with pytest.raises(ValueError):
+        context.missions.add_skill_reward("nonexistent", "aquaponics", 10)
+
+
 def test_completing_a_mission_with_no_skill_rewards_credits_no_skills(isolated_paths):
     context = _make_context_with_profiles_and_skills(["aquaponics"])
     context.profiles.create_profile(name="Alex", make_active=True)

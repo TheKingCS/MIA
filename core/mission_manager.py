@@ -88,7 +88,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
-from core.gamification import SkillWeight
+from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -235,6 +235,19 @@ class Mission:
     # establishes above (picked at creation, not reassignable via
     # update_mission()). None by default — zero migration needed.
     maintenance_task_id: Optional[str] = None
+    # "Manage Skills" UI (2026-09-12) — True once this Mission's
+    # reward_xp/reward_credits/skill_rewards have been bulk-credited at
+    # least once. Real, not speculative: Mission's own status combo
+    # (gui/add_edit_mission_dialog.py) lets a user set a completed
+    # Mission back to "active" and complete it again — without this
+    # flag, that real, reachable cycle would re-grant every reward each
+    # time (the same exploit core.project_manager.Project's own
+    # skill_weights_credited already guards against — its comment used
+    # to claim Mission's status has "no going back," which is wrong).
+    # Never reset once True. Doesn't gate add_skill_reward()'s own
+    # single-new-weight crediting path — that one's safe by
+    # construction (it only ever credits the ONE weight just appended).
+    rewards_credited: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -259,6 +272,7 @@ class Mission:
             "skill_rewards": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_rewards],
             "recipe_unlocks": list(self.recipe_unlocks),
             "maintenance_task_id": self.maintenance_task_id,
+            "rewards_credited": self.rewards_credited,
         }
 
     @staticmethod
@@ -287,6 +301,7 @@ class Mission:
             ],
             recipe_unlocks=list(data.get("recipe_unlocks", [])),
             maintenance_task_id=data.get("maintenance_task_id"),
+            rewards_credited=bool(data.get("rewards_credited", False)),
         )
 
 
@@ -376,7 +391,7 @@ class MissionManager:
         was_completed = mission.status == "completed"
         was_abandoned = mission.status == "abandoned"
         for key, value in fields.items():
-            if key in ("created_at", "trip_id", "project_id"):
+            if key in ("created_at", "trip_id", "project_id", "rewards_credited"):
                 raise ValueError(f"'{key}' can't be set through update_mission().")
             if not hasattr(mission, key):
                 raise ValueError(f"Mission has no field '{key}'.")
@@ -390,7 +405,26 @@ class MissionManager:
         # its own copy of "did this just newly become complete."
         if not was_completed and mission.status == "completed":
             self._notify_mission_completed(mission)
-            self._credit_mission_rewards(mission)
+            # "Manage Skills" UI (2026-09-12) — reward-crediting
+            # specifically (not the notify/recipe-unlock/event-publish
+            # below) is additionally gated on rewards_credited: a
+            # completed Mission's status can genuinely go back to
+            # "active" via gui/add_edit_mission_dialog.py's own status
+            # combo, and without this guard re-completing would
+            # re-grant every reward every time (a real exploit vector,
+            # not theoretical — see Mission.rewards_credited's own
+            # docstring). The other three effects below are left firing
+            # on every genuine completion transition, unchanged —
+            # narrower fix, not a broader behavior change to Pathways/
+            # Recipe-unlock semantics that weren't part of this bug.
+            if not mission.rewards_credited:
+                self._credit_mission_rewards(mission)
+                mission.rewards_credited = True
+                # A second save — the one above already ran before this
+                # block, so without this the flag would only ever live
+                # in memory and never actually persist (caught by this
+                # feature's own regression test, not assumed correct).
+                self._save()
             # "Recipe Unlocked" (2026-09-12) — deliberately a separate
             # call, not folded into _credit_mission_rewards(): that
             # method's own early-return is about profile-XP crediting
@@ -463,6 +497,34 @@ class MissionManager:
             return
         for recipe_id in mission.recipe_unlocks:
             self.context.kitchen.unlock_recipe(recipe_id)
+
+    def add_skill_reward(self, mission_id: str, skill_id: str, xp: int) -> Mission:
+        """Declares (or retroactively adds) a skill this Mission
+        rewards — "Manage Skills" UI (2026-09-12), a near-verbatim port
+        of core.project_manager.ProjectManager.add_skill_weight(). If
+        the Mission is still active, this weight is simply appended and
+        gets credited normally when it later completes (see
+        update_mission()). If the Mission is ALREADY completed, this
+        credits just this one new weight immediately — never the whole
+        list, so an earlier completion's already-granted rewards are
+        never double-credited. Doesn't touch rewards_credited — safe by
+        construction."""
+        mission = self.get_mission(mission_id)
+        if mission is None:
+            raise ValueError(f"No mission with id '{mission_id}'.")
+        weight = SkillWeight(skill_id=skill_id, xp=xp)
+        mission.skill_rewards.append(weight)
+        self._bump_updated_at(mission)
+        self._save()
+        if mission.status == "completed":
+            grant_xp(
+                self.context,
+                0,
+                "\U0001F4DD Skill credited!",
+                f"'{mission.name}' also taught you something — crediting it now.",
+                skill_weights=[weight],
+            )
+        return mission
 
     def delete_mission(self, mission_id: str) -> None:
         self._missions = [m for m in self._missions if m.mission_id != mission_id]

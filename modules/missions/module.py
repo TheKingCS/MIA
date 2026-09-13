@@ -44,6 +44,7 @@ from core.mission_manager import Mission, Objective
 from gui.add_edit_mission_dialog import AddEditMissionDialog
 from gui.add_edit_objective_dialog import AddEditObjectiveDialog
 from gui.delete_confirm_dialog import DeleteConfirmDialog
+from gui.manage_mission_skills_dialog import ManageMissionSkillsDialog
 from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
 from gui.widgets.mission_list_row import MissionListRow
@@ -406,6 +407,23 @@ class MissionsModule(ModuleBase):
         rewards_layout.addWidget(mission_type_label)
         apply_panel_glow(rewards_footer)
         self._detail_layout.addWidget(rewards_footer)
+
+        # "Manage Skills" UI (2026-09-12) — the upfront/retroactive
+        # skill_rewards editor docs/ROADMAP.md flagged as deferred
+        # across three separate 2026-09-11 passes, mirroring
+        # modules/toolbox/tools/project_tool.py's own ManageProjectSkillsDialog
+        # wiring exactly.
+        manage_skills_button = QPushButton("Manage Skills…")
+        manage_skills_button.clicked.connect(lambda: self._on_manage_skills(mission.mission_id))
+        self._detail_layout.addWidget(manage_skills_button)
+
+    def _on_manage_skills(self, mission_id: str) -> None:
+        mission = self.context.missions.get_mission(mission_id)
+        if mission is None:
+            return
+        dialog = ManageMissionSkillsDialog(self.context, mission)
+        dialog.exec()
+        self._refresh_detail()
 
     def _refresh_level_footer(self) -> None:
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None

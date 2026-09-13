@@ -57,8 +57,7 @@ class Project:
     # add_skill_weight().
     skill_weights: list[SkillWeight] = field(default_factory=list)
     # True once skill_weights has been bulk-credited at least once.
-    # Real, deliberately added after a test caught the gap: unlike
-    # Mission's status (active/completed/abandoned, no going back),
+    # Real, deliberately added after a test caught the gap:
     # PROJECT_STATUSES allows Complete -> Active -> Complete again —
     # without this flag, toggling status back and forth would re-grant
     # the same skill_weights every time, a real exploit vector, not a
@@ -66,6 +65,14 @@ class Project:
     # add_skill_weight()'s own single-new-weight crediting path — that
     # one's safe by construction (it only ever credits the ONE weight
     # just appended, never the whole list).
+    #
+    # 2026-09-12 correction: this comment used to claim Mission's
+    # status was different ("active/completed/abandoned, no going
+    # back"). That was wrong — gui/add_edit_mission_dialog.py's own
+    # status combo lets a completed Mission go back to "active" too,
+    # and Mission had the exact same re-grant exploit until
+    # Mission.rewards_credited (added the same day, same reasoning)
+    # closed it.
     skill_weights_credited: bool = False
 
     def to_dict(self) -> dict:

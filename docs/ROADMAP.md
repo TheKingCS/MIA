@@ -8491,3 +8491,65 @@ copy, a real `ModuleManager.discover()` call against the actual 29
 modules in this repo — not a fixture): confirmed both the unaffected
 Modules tab and the new Architecture tab, all four corner marks on the
 M.I.A. CORE block, and the overflow fix.
+
+## "Manage Skills" UI for Missions (2026-09-12)
+
+Closes a real gap flagged three separate times across the 2026-09-11
+connective-infrastructure passes: `Mission.skill_rewards` has existed
+since the original "My Hero's Path" pass but never had any UI, upfront
+or retroactive. `core.project_manager.ProjectManager` already got
+exactly this (`add_skill_weight()` +
+`gui/manage_project_skills_dialog.py`); Missions never did. Mirrored
+the same, already-proven pattern: new
+`MissionManager.add_skill_reward(mission_id, skill_id, xp)` (a
+near-verbatim port of `add_skill_weight()`) and new
+`gui/manage_mission_skills_dialog.py` (`ManageMissionSkillsDialog`,
+same live-action shape — each "Add" credits immediately, no OK/Cancel
+step), wired into the Missions module's quest detail panel as a new
+"Manage Skills…" button beside the rewards footer.
+
+**Real, reachable bug found while researching this, not theoretical —
+fixed in the same pass**: `core/project_manager.py`'s own
+`skill_weights_credited` comment claimed Project needed its
+double-credit guard because, unlike Project, "Mission's status
+(active/completed/abandoned)" has "no going back." That claim was
+wrong — confirmed directly in `gui/add_edit_mission_dialog.py`: editing
+an existing Mission shows a real status combo with all three values,
+`active` included, so a completed Mission can genuinely be set back to
+`active` and completed again. `MissionManager._credit_mission_rewards()`
+had no equivalent guard, so that real path was silently double-crediting
+`reward_xp`/`reward_credits`/`skill_rewards` every time — confirmed by
+writing the regression test *before* the fix and watching it fail
+first. Added `Mission.rewards_credited: bool` (mirroring
+`Project.skill_weights_credited` exactly), gating only the
+reward-crediting call specifically — the mission-completed
+notification, Recipe Unlocked, and the `"mission.completed"` event
+(Pathways) all still fire on every genuine completion transition,
+unchanged; narrower fix, not a broader behavior change to systems that
+weren't part of this bug. Corrected the now-wrong claim in
+`core/project_manager.py`'s own comment rather than leaving stale
+documentation behind.
+
+**Second real bug, caught by the regression test itself**: the first
+implementation set `mission.rewards_credited = True` *after*
+`update_mission()`'s own `self._save()` call had already run earlier in
+the same method — the flag updated the in-memory object but was never
+actually persisted to `missions.json`. A `test_rewards_credited_persists_across_a_fresh_load`
+test failed immediately, caught before it shipped; fixed with a second
+`self._save()` right after setting the flag.
+
+**Verification**: `pytest -q` — full suite, 2620 passed, zero
+regressions (10 new/extended `test_mission_manager.py` cases including
+the completed→active→completed double-credit regression test — run
+against the pre-fix code first and confirmed it actually failed there
+— plus 3 new `test_manage_mission_skills_dialog.py` pure-formatting
+tests). Manual verification (throwaway repo copy, through the real
+dialog's own `_on_add()` handler, not the manager method directly):
+added a skill reward before completion (confirmed 0 XP credited yet),
+completed the mission (confirmed exact reward_xp/reward_credits/
+skill_rewards XP landed), retroactively added a second skill reward
+(confirmed immediate credit with no double-credit of the first), then
+reactivated and re-completed the mission (confirmed — the real bug fix
+— nothing credited a second time) — every number printed matched
+exactly. Screenshotted the dialog and the detail panel's new button
+and skill chips, both rendering correctly.
