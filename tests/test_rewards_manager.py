@@ -13,16 +13,20 @@ import pytest
 
 import core.config_manager as config_manager_module
 import core.data_logger_manager as data_logger_manager_module
+import core.kitchen_manager as kitchen_manager_module
 import core.maintenance_manager as maintenance_manager_module
 import core.mission_manager as mission_manager_module
+import core.project_manager as project_manager_module
 import core.workout_manager as workout_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.data_logger_manager import DataLoggerManager
 from core.event_bus import EventBus
+from core.kitchen_manager import KitchenManager
 from core.maintenance_manager import MaintenanceManager
 from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
+from core.project_manager import ProjectManager
 from core.rewards_manager import (
     CHALLENGE_CHAINS,
     HIDDEN_ACHIEVEMENTS,
@@ -51,6 +55,13 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(workout_manager_module, "_SESSIONS_FILE", data_dir / "workout_sessions.json")
     monkeypatch.setattr(data_logger_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(data_logger_manager_module, "_READINGS_FILE", data_dir / "data_logger_readings.json")
+    monkeypatch.setattr(kitchen_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(kitchen_manager_module, "_RECIPES_FILE", data_dir / "kitchen_recipes.json")
+    monkeypatch.setattr(kitchen_manager_module, "_PANTRY_FILE", data_dir / "kitchen_pantry.json")
+    monkeypatch.setattr(kitchen_manager_module, "_GROCERY_LIST_FILE", data_dir / "kitchen_grocery_list.json")
+    monkeypatch.setattr(kitchen_manager_module, "_MEAL_LOG_FILE", data_dir / "kitchen_meal_log.json")
+    monkeypatch.setattr(project_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(project_manager_module, "_PROJECTS_FILE", data_dir / "projects.json")
 
 
 def _make_context() -> AppContext:
@@ -60,6 +71,8 @@ def _make_context() -> AppContext:
     context.missions = MissionManager(context)
     context.workout = WorkoutManager(context)
     context.data_logger = DataLoggerManager(context)
+    context.kitchen = KitchenManager(context)
+    context.projects = ProjectManager(context)
     context.rewards = RewardsManager(context)
     return context
 
@@ -136,10 +149,57 @@ def test_missions_completed_counts_only_completed_status(isolated_paths):
     assert context.rewards.stat_value("missions_completed") == 1.0
 
 
+def test_vehicle_miles_logged_sums_odometer_readings_across_assets(isolated_paths):
+    context = _make_context()
+    truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(odometer.task_id, 40000.0)
+    context.maintenance.log_reading(odometer.task_id, 40250.0)  # latest reading wins
+
+    other = context.maintenance.add_asset(name="Second Car", category="Vehicle")
+    other_odometer = context.maintenance.add_task(asset_id=other.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(other_odometer.task_id, 1000.0)
+
+    assert context.rewards.stat_value("vehicle_miles_logged") == 41250.0
+
+
+def test_vehicle_miles_logged_ignores_other_mileage_tasks(isolated_paths):
+    """Oil changes/tire rotations also log in miles, but they track
+    miles-since-last-service, not the vehicle's real lifetime total —
+    only the Odometer task itself represents that."""
+    context = _make_context()
+    truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
+    oil_change = context.maintenance.add_task(asset_id=truck.asset_id, title="Oil & filter change", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(oil_change.task_id, 3000.0)
+
+    assert context.rewards.stat_value("vehicle_miles_logged") == 0.0
+
+
+def test_meals_cooked_counts_real_meal_log_entries(isolated_paths):
+    context = _make_context()
+    recipe = context.kitchen.add_recipe(name="Tacos")
+    context.kitchen.log_meal(recipe.recipe_id, date_str="2026-09-01")
+    context.kitchen.log_meal(recipe.recipe_id, date_str="2026-09-02")
+
+    assert context.rewards.stat_value("meals_cooked") == 2.0
+
+
+def test_projects_completed_counts_only_complete_status(isolated_paths):
+    context = _make_context()
+    done = context.projects.add_project(name="Deck rebuild")
+    context.projects.update_project(done.project_id, status="Complete")
+    context.projects.add_project(name="Still planning")
+
+    assert context.rewards.stat_value("projects_completed") == 1.0
+
+
 def test_all_stat_values_covers_every_definition(isolated_paths):
     context = _make_context()
     values = context.rewards.all_stat_values()
-    assert set(values.keys()) == {"engine_hours_logged", "workout_hours_logged", "missions_completed"}
+    assert set(values.keys()) == {
+        "engine_hours_logged", "workout_hours_logged", "missions_completed",
+        "vehicle_miles_logged", "meals_cooked", "projects_completed",
+    }
 
 
 # ------------------------------------------------------------------

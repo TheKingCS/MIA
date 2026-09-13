@@ -153,11 +153,19 @@ class HiddenAchievement:
 
 #: Every stat here has a real, already-logged data source — see this
 #: module's own docstring for why "water used watering plants" (the
-#: user's own example) isn't in this list yet.
+#: user's own example) isn't in this list yet. 2026-09-14 (expanded
+#: lifetime stats pass): checked every other manager for a real,
+#: already-logged source before adding one — Maintenance's own
+#: Property-category tasks are all calendar-scheduled (done/not-done),
+#: not meter-tracked, so there's no real "property hours" number to
+#: read yet; deliberately left out rather than fabricated.
 STAT_DEFINITIONS: list[StatDefinition] = [
     StatDefinition("engine_hours_logged", "Engine Hours Logged", "hrs", "🚜"),
     StatDefinition("workout_hours_logged", "Workout Hours Logged", "hrs", "💪"),
     StatDefinition("missions_completed", "Missions Completed", "", "🏆"),
+    StatDefinition("vehicle_miles_logged", "Vehicle Miles Logged", "mi", "🚗"),
+    StatDefinition("meals_cooked", "Meals Cooked", "", "🍳"),
+    StatDefinition("projects_completed", "Projects Completed", "", "🛠️"),
 ]
 
 #: v2 reward set — real escalating chains against the real stats above,
@@ -195,6 +203,42 @@ CHALLENGE_CHAINS: list[ChallengeChain] = [
             ChallengeTier("fitness_getting_started", "Getting Started", "Log 5 hours of workouts.", "🔥", 5.0, 0),
             ChallengeTier("fitness_iron_will", "Iron Will", "Log 25 hours of workouts.", "💪", 25.0, 2),
             ChallengeTier("fitness_unbreakable", "Unbreakable", "Log 100 hours of workouts.", "⚡", 100.0, 4),
+        ),
+    ),
+    # 2026-09-14 (expanded lifetime stats pass) — 3 new chains against
+    # 3 new real stats (see STAT_DEFINITIONS above for why "property
+    # hours" isn't among them).
+    ChallengeChain(
+        chain_id="road_warrior",
+        stat_id="vehicle_miles_logged",
+        tiers=(
+            ChallengeTier("road_warrior_first_mile", "First Mile", "Log 1,000 miles on a real vehicle.", "🚗", 1000.0, 0),
+            ChallengeTier("road_warrior_road_tripper", "Road Tripper", "Log 5,000 miles on a real vehicle.", "🗺️", 5000.0, 1),
+            ChallengeTier("road_warrior_long_hauler", "Long Hauler", "Log 15,000 miles on a real vehicle.", "🛣️", 15000.0, 2),
+            ChallengeTier("road_warrior_road_warrior", "Road Warrior", "Log 50,000 miles on a real vehicle.", "🏁", 50000.0, 3),
+            ChallengeTier("road_warrior_odometer_legend", "Odometer Legend", "Log 100,000 miles on a real vehicle.", "🏆", 100000.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="home_chef",
+        stat_id="meals_cooked",
+        tiers=(
+            ChallengeTier("home_chef_apprentice", "Kitchen Apprentice", "Cook 10 real meals.", "🍳", 10.0, 0),
+            ChallengeTier("home_chef_line_cook", "Line Cook", "Cook 25 real meals.", "🥘", 25.0, 1),
+            ChallengeTier("home_chef_sous_chef", "Sous Chef", "Cook 100 real meals.", "👨‍🍳", 100.0, 2),
+            ChallengeTier("home_chef_head_chef", "Head Chef", "Cook 250 real meals.", "🍽️", 250.0, 3),
+            ChallengeTier("home_chef_iron_chef", "Iron Chef", "Cook 500 real meals.", "🏆", 500.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="builder",
+        stat_id="projects_completed",
+        tiers=(
+            ChallengeTier("builder_first_build", "First Build", "Complete 1 real project.", "🔨", 1.0, 0),
+            ChallengeTier("builder_handy", "Handy", "Complete 5 real projects.", "🧰", 5.0, 1),
+            ChallengeTier("builder_craftsman", "Craftsman", "Complete 15 real projects.", "🛠️", 15.0, 2),
+            ChallengeTier("builder_master_builder", "Master Builder", "Complete 30 real projects.", "🏗️", 30.0, 3),
+            ChallengeTier("builder_legendary_maker", "Legendary Maker", "Complete 50 real projects.", "🏆", 50.0, 4),
         ),
     ),
 ]
@@ -294,6 +338,12 @@ class RewardsManager:
             return self._compute_workout_hours_logged()
         if stat_id == "missions_completed":
             return self._compute_missions_completed()
+        if stat_id == "vehicle_miles_logged":
+            return self._compute_vehicle_miles_logged()
+        if stat_id == "meals_cooked":
+            return self._compute_meals_cooked()
+        if stat_id == "projects_completed":
+            return self._compute_projects_completed()
         return 0.0
 
     def all_stat_values(self) -> dict[str, float]:
@@ -325,6 +375,37 @@ class RewardsManager:
         if self.context.missions is None:
             return 0.0
         return float(sum(1 for mission in self.context.missions.all_missions() if mission.status == "completed"))
+
+    def _compute_vehicle_miles_logged(self) -> float:
+        """Sums the latest "Odometer" reading across every real
+        Maintenance asset that tracks one — same "match by task title,
+        not by asset category" pattern as _compute_engine_hours_logged(),
+        so a future second vehicle's own Odometer task counts too.
+        Deliberately NOT summing every mileage-unit task (Oil & filter
+        change, Brake inspection, ... also log in miles) — those track
+        miles-since-last-service, not the vehicle's real lifetime
+        total, which only the Odometer task itself represents."""
+        if self.context.maintenance is None:
+            return 0.0
+        total = 0.0
+        for asset in self.context.maintenance.all_assets():
+            for task in self.context.maintenance.tasks_for_asset(asset.asset_id):
+                if task.title != "Odometer":
+                    continue
+                readings = self.context.maintenance.readings_for_task(task.task_id)
+                if readings:
+                    total += readings[-1].value
+        return total
+
+    def _compute_meals_cooked(self) -> float:
+        if self.context.kitchen is None:
+            return 0.0
+        return float(len(self.context.kitchen.all_meal_log_entries()))
+
+    def _compute_projects_completed(self) -> float:
+        if self.context.projects is None:
+            return 0.0
+        return float(sum(1 for project in self.context.projects.all_projects() if project.status == "Complete"))
 
     # ------------------------------------------------------------------
     # Unlocking

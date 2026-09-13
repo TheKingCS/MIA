@@ -9594,3 +9594,45 @@ workout session (50 combined) fired 4 notifications in one scan (3
 visible chain tiers + "💪 Hidden Achievement Unlocked! \"Built
 Different\""), and the REWARDS card correctly showed a new "Hidden
 Achievements" section with "Earned: Built Different" in purple (Epic).
+
+## Expanded lifetime stats (2026-09-14)
+
+Slice 3 of the Prestige/Rarity/Character vision (see
+[[project_mia_prestige_rarity_vision]]), picked via AskUserQuestion.
+The handoff's section 5 lists dozens of stats across Homestead/
+Fitness/Provisioning/Wealth/Exploration/Projects — checked every real
+manager for one with an actual already-logged data source before
+adding anything (same "don't fake a number" discipline as the
+original 3 stats): Maintenance's own Property-category tasks are all
+calendar-scheduled (done/not-done), not meter-tracked, so there's
+genuinely no "property hours" number to read yet — left out rather
+than fabricated.
+
+**3 new real stats, 3 new chains** in `core/rewards_manager.py`:
+`vehicle_miles_logged` (the real Vehicle asset's "Odometer" task
+readings — matched by task title, same pattern as Engine Hours, and
+deliberately NOT summing every mileage-unit task, since Oil & filter
+change/Brake inspection/etc. track miles-since-last-service, not the
+vehicle's real lifetime total) → **Road Warrior** chain (First Mile
+1,000mi → Road Tripper 5,000mi → Long Hauler 15,000mi → Road Warrior
+50,000mi → Odometer Legend 100,000mi). `meals_cooked` (real count from
+`core.kitchen_manager`'s own `all_meal_log_entries()`) → **Home Chef**
+chain (Kitchen Apprentice 10 → Line Cook 25 → Sous Chef 100 → Head
+Chef 250 → Iron Chef 500). `projects_completed` (real count of
+`core.project_manager`'s own `Project.status == "Complete"`) →
+**Builder** chain (First Build 1 → Handy 5 → Craftsman 15 → Master
+Builder 30 → Legendary Maker 50).
+
+No UI code changed — `modules/skills/module.py`'s REWARDS card already
+iterates `CHALLENGE_CHAINS`/`STAT_DEFINITIONS` generically, so the 3
+new chains render for free.
+
+**Verification**: `pytest -q` — full suite, 2794 passed (4 new stat-
+computation tests; the existing generic chain-sanity tests — ascending
+thresholds, unique ids, valid rarity indices — automatically covered
+the 3 new chains with no test changes needed). Manual headless-Qt
+check: logged 6,200 real vehicle miles, 12 real meals, and 1 real
+completed project — confirmed 4 correct notifications (Road Warrior's
+first two tiers, Home Chef's first tier, Builder's first tier) and
+screenshotted all 6 chains rendering correctly side by side in the
+REWARDS card.
