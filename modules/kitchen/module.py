@@ -288,7 +288,30 @@ class KitchenModule(ModuleBase):
             self._recipe_list_layout.addWidget(empty)
             return
         for recipe in recipes:
-            self._recipe_list_layout.addWidget(self._build_recipe_card(recipe))
+            self._recipe_list_layout.addWidget(self._build_recipe_row(recipe))
+
+    def _build_recipe_row(self, recipe: Recipe) -> QWidget:
+        """A recipe's clickable card plus a separate quick-log button
+        (2026-09-14) — "a way to easily log meals like logging
+        workouts": one click from the list, no need to open the
+        detail page first. Kept as a sibling widget rather than nested
+        inside the card's own QPushButton (a real click-handling risk
+        — a button inside a button), matching how every other Nature
+        list keeps its card a single, whole clickable region."""
+        row = QWidget()
+        row_layout = QHBoxLayout(row)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(10)
+
+        row_layout.addWidget(self._build_recipe_card(recipe), stretch=1)
+
+        if not recipe.locked:
+            log_button = QPushButton("\U0001F373 Log")
+            log_button.setToolTip(f"Log that you made {recipe.name} today")
+            log_button.clicked.connect(lambda checked=False, rid=recipe.recipe_id: self._on_quick_log_meal(rid))
+            row_layout.addWidget(log_button)
+
+        return row
 
     def _build_recipe_card(self, recipe: Recipe) -> QPushButton:
         card = QPushButton()
@@ -309,12 +332,33 @@ class KitchenModule(ModuleBase):
         thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         outer.addWidget(thumb)
 
+        text_col = QVBoxLayout()
+        text_col.setSpacing(2)
         title_label = QLabel(f"{format_recipe_row(recipe)}  ›")
         title_label.setObjectName("NatureAssetTitle")
         title_label.setWordWrap(True)
-        outer.addWidget(title_label, stretch=1)
+        text_col.addWidget(title_label)
+
+        if not recipe.locked:
+            # "Stat tracking how many times I've made each meal"
+            # (2026-09-14) — real data, core.kitchen_manager.times_made()
+            # already existed but was never surfaced anywhere in the UI.
+            times_made = self.context.kitchen.times_made(recipe.recipe_id)
+            made_text = "Never made yet" if times_made == 0 else f"Made {times_made}x"
+            made_label = QLabel(made_text)
+            made_label.setObjectName("NatureTileCaption")
+            text_col.addWidget(made_label)
+
+        outer.addLayout(text_col, stretch=1)
 
         return card
+
+    def _on_quick_log_meal(self, recipe_id: str) -> None:
+        """Low-friction by design — no confirmation dialog; the
+        card's own "Made Nx" count updating immediately is the
+        feedback, same spirit as Workout's live counters."""
+        self.context.kitchen.log_meal(recipe_id, date.today().isoformat())
+        self._refresh_recipe_list()
 
     def _on_add_recipe(self) -> None:
         dialog = AddEditRecipeDialog()
@@ -542,6 +586,11 @@ class KitchenModule(ModuleBase):
         last_made_layout = QVBoxLayout(last_made_card)
         last_made_layout.setContentsMargins(18, 16, 18, 16)
         last_made_layout.setSpacing(8)
+        times_made = self.context.kitchen.times_made(recipe_id)
+        made_count_text = "Never made yet" if times_made == 0 else f"Made {times_made}x"
+        made_count_label = QLabel(made_count_text)
+        made_count_label.setObjectName("NatureAssetLine")
+        last_made_layout.addWidget(made_count_label)
         last_made = self.context.kitchen.last_made_date(recipe_id)
         last_made_text = f"Last made: {last_made}" if last_made else "Never logged as made"
         last_made_label = QLabel(last_made_text)

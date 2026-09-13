@@ -9158,3 +9158,58 @@ master-detail rebuild.
 **Verification**: `pytest -q` — full suite, 2699 passed, zero
 regressions. Manual headless-Qt screenshot confirmed the new Latest
 Entry card renders correctly above Daily Mission.
+
+## Real Estate master-detail rebuild + Kitchen meal stats (2026-09-14)
+
+Two more real asks: "build out real estate the way the picture shows,"
+plus a real per-recipe "times made" stat and an easy one-click way to
+log a meal, mirroring how easy logging a workout already is.
+
+**Real Estate**: rebuilt around a real top tab row (Properties/
+Maintenance/Missions — plain buttons + `QStackedWidget`, same
+convention every per-asset detail page already uses) replacing the
+old navigate-to-a-separate-page `QStackedWidget`. **Properties** tab
+is a genuine master-detail split: a left column of clickable property
+cards (clicking one *selects* it in place — a new `[selected="true"]`
+QSS state, green border, persists until another card is clicked —
+rather than navigating to a separate page) and a right column showing
+the selected property's full detail (info, income/expense, summary,
+maintenance, related missions — the same section builders as before,
+now called once for whichever property is selected). **Maintenance**
+and **Missions** tabs are real cross-property aggregates — every
+property's own Maintenance/Missions section, stacked with a property-
+name label above each, reusing `_build_maintenance_section()`/
+`_build_missions_section()` unchanged (called once per property
+instead of once for a single selected one). `focus_record()` now
+switches to the Properties tab and selects the given property, rather
+than navigating to a now-removed detail page.
+
+**Real bug caught and fixed before it shipped**: an initial pass
+called `_refresh_property_list()` both inside `_build_properties_tab()`
+and again from `get_widget()`'s own `_select_top_tab("Properties")`
+right after — two back-to-back refreshes with no event-loop
+iteration between them left one stale, not-yet-destroyed card's child
+label visible underneath the real ones. Caught via a real screenshot
+(not assumed), fixed by removing the redundant first call — the tab
+switch already performs the one real initial population.
+
+**Kitchen**: `core.kitchen_manager.KitchenManager.times_made()` was
+already a real, tested function that had never been surfaced in the
+UI at all — now shown both on each recipe's list card ("Made 3x" /
+"Never made yet") and on its detail page. Recipe cards also gained a
+sibling quick-log button ("🍳 Log," not nested inside the card's own
+clickable region — a real button-in-a-button risk) — one click logs
+today's meal for that recipe without opening its detail page first,
+with the card's own updated count as the only feedback (no
+confirmation dialog, deliberately low-friction).
+
+**Verification**: `pytest -q` — full suite, 2699 passed, zero
+regressions. Manual headless-Qt screenshots (with explicit
+`QApplication.processEvents()` calls — grabbing a headless offscreen
+widget right after a state change needs the event loop pumped a few
+times to actually repaint, confirmed by adding debug prints showing
+the underlying state was already correct when a screenshot looked
+stale) confirmed: property selection switches the right pane, the
+Maintenance/Missions aggregate tabs list every property correctly,
+`focus_record()` selects the right property, and Kitchen's quick-log
+button immediately updates its own card's "Made Nx" count.

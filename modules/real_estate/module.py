@@ -3,12 +3,31 @@ modules.real_estate.module
 =============================
 
 Real Estate: a property portfolio — values, equity, rental income, and
-linked Maintenance history per property. List page (all properties,
-glance tiles) + a detail page per property (info, linked maintenance
-task list, income/expense history, a NOI/cap-rate/equity summary) —
-same `QStackedWidget` "← Back" pattern as modules/knowledge/module.py,
-not a second top-level module, since reopening a property shouldn't
-feel like leaving and re-entering the app.
+linked Maintenance history per property.
+
+**Master-detail rebuild (2026-09-14)**: the reference "MIA Smart User
+OS" mockup shows Real Estate as a real master-detail split — the
+property list AND a selected property's full detail (entity, rental
+income, expenses, summary, maintenance, related missions) visible
+*simultaneously* on one screen, under Properties/Maintenance/Missions
+top-level tabs — not the navigate-to-a-separate-page pattern every
+other Nature module uses. Rebuilt to match: a top tab row (plain
+buttons + `QStackedWidget`, same convention every per-asset detail
+page's own tab bar already uses) switches between three views:
+  - **Properties** — the master-detail split itself: a left column of
+    clickable property cards (clicking one *selects* it, updating the
+    right column in place — no page navigation) and a right column
+    showing the selected property's full detail.
+  - **Maintenance** — every property's own Maintenance section, one
+    per property, stacked — the cross-property aggregate the mockup's
+    top-level "Maintenance" tab implies.
+  - **Missions** — same idea, for Related Missions.
+
+`_build_maintenance_section()`/`_build_missions_section()`/
+`_build_income_expense_section()`/`_build_summary_section()` are
+shared between the Properties tab's detail pane and the Maintenance/
+Missions aggregate tabs — called once per property in the aggregate
+case, once for the selected property in the master-detail case.
 
 All persistence/reporting logic lives in core/real_estate_manager.py
 (self.context.real_estate) — this module is the Qt-facing wrapper
@@ -23,20 +42,10 @@ modules.budget.module/modules.property.module, matching the same
 "no cross-module import" stance already established for
 Garage/Property's near-identical formatters.
 
-The detail page is rebuilt fresh every time it's opened (not cached)
-— unlike Knowledge's reader pages (static PDF content, worth caching
-scroll position), a property's linked financial/maintenance data
-changes often enough that showing stale data would be a real, confusing
-bug, not just a missed optimization.
-
-**"Nature" re-skin rollout (2026-09-14)**: photo hero header + the
-same clickable `#NatureAssetCard` list Garage/Greenhouse use (each
-property is its own card, replacing the old `QListWidget` + "View
-Details" button flow). Edit/Delete moved from the list page onto the
-detail page itself (a property's own page is now where you manage
-it, matching the "click in to act on it" pattern the rest of the
-Nature pages already use) — the list page keeps only Add + a
-clickable card per property.
+The detail pane is rebuilt fresh on every selection/edit/delete (not
+cached) — a property's linked financial/maintenance data changes often
+enough that showing stale data would be a real, confusing bug, not
+just a missed optimization.
 """
 
 from __future__ import annotations
@@ -147,18 +156,22 @@ class RealEstateModule(ModuleBase):
 
     def __init__(self, context) -> None:
         super().__init__(context)
-        self._stack: Optional[QStackedWidget] = None
-        self._list_page: Optional[QWidget] = None
-        self._detail_page: Optional[QWidget] = None
-        self._detail_property_id: Optional[str] = None
+        self._top_tab_stack: Optional[QStackedWidget] = None
+        self._top_tab_pages: dict[str, QWidget] = {}
+        self._top_tab_buttons: dict[str, QPushButton] = {}
 
-        self._list_layout: Optional[QVBoxLayout] = None
+        self._property_list_layout: Optional[QVBoxLayout] = None
+        self._property_detail_layout: Optional[QVBoxLayout] = None
+        self._selected_property_id: Optional[str] = None
         self._entity_filter_combo: Optional[QComboBox] = None
         self._tracked_label: Optional[QLabel] = None
         self._equity_label: Optional[QLabel] = None
         self._rental_label: Optional[QLabel] = None
 
-        # Detail-page widget refs, rebuilt each time _build_detail_page runs.
+        self._re_maintenance_layout: Optional[QVBoxLayout] = None
+        self._re_missions_layout: Optional[QVBoxLayout] = None
+
+        # Detail-pane widget refs, rebuilt each time a section builder runs.
         self._detail_income_list: Optional[QListWidget] = None
         self._detail_expense_list: Optional[QListWidget] = None
         self._detail_maintenance_list: Optional[QListWidget] = None
@@ -170,21 +183,17 @@ class RealEstateModule(ModuleBase):
         self._detail_loan_balance_label: Optional[QLabel] = None
         self._detail_payoff_date_label: Optional[QLabel] = None
         self._detail_range_label: Optional[QLabel] = None
-        self._detail_start_date: Optional[str] = None
-        self._detail_end_date: Optional[str] = None
 
     def get_widget(self) -> QWidget:
-        self._stack = QStackedWidget()
-        self._list_page = self._build_list_page()
-        self._stack.addWidget(self._list_page)
-        self._stack.setCurrentWidget(self._list_page)
-        return self._stack
-
-    # ------------------------------------------------------------------
-    # List page
-    # ------------------------------------------------------------------
-
-    def _build_list_page(self) -> QWidget:
+        """Nature re-skin, real reorganization (2026-09-14) — the
+        reference mockup shows a real master-detail split (the
+        property list AND a selected property's full detail visible
+        together, under Properties/Maintenance/Missions top-level
+        tabs), not the navigate-to-a-separate-page pattern every other
+        Nature module uses. Rebuilt to match: a top tab row (plain
+        buttons + QStackedWidget, same convention as every per-asset
+        detail page's own tab bar) switches between the Properties
+        master-detail view and two cross-property aggregate views."""
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")
         outer = QVBoxLayout(page)
@@ -226,36 +235,108 @@ class RealEstateModule(ModuleBase):
         body_layout.setContentsMargins(24, 20, 24, 24)
         body_layout.setSpacing(16)
 
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(24)
+        self._top_tab_stack = QStackedWidget()
+        self._top_tab_pages = {
+            "Properties": self._build_properties_tab(),
+            "Maintenance": self._build_real_estate_maintenance_tab(),
+            "Missions": self._build_real_estate_missions_tab(),
+        }
+        self._top_tab_buttons = {}
+        for name, tab_widget in self._top_tab_pages.items():
+            button = QPushButton(name)
+            button.setObjectName("NatureTabButton")
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda checked=False, n=name: self._select_top_tab(n))
+            self._top_tab_buttons[name] = button
+            tab_row.addWidget(button)
+            self._top_tab_stack.addWidget(tab_widget)
+        tab_row.addStretch(1)
+        body_layout.addLayout(tab_row)
+        body_layout.addWidget(self._top_tab_stack, stretch=1)
+
+        outer.addWidget(body, stretch=1)
+        self._select_top_tab("Properties")
+        return page
+
+    def _select_top_tab(self, name: str) -> None:
+        for key, button in self._top_tab_buttons.items():
+            button.setProperty("active", key == name)
+            button.style().unpolish(button)
+            button.style().polish(button)
+        self._top_tab_stack.setCurrentWidget(self._top_tab_pages[name])
+        # Same "refresh whichever tab you land on" convention
+        # modules/kitchen/module.py's _on_tab_changed() already uses —
+        # cheap in-memory recomputation, no staleness tracking needed.
+        if name == "Properties":
+            self._refresh_property_list()
+        elif name == "Maintenance":
+            self._refresh_real_estate_maintenance_tab()
+        elif name == "Missions":
+            self._refresh_real_estate_missions_tab()
+
+    # ------------------------------------------------------------------
+    # Properties tab — master-detail split
+    # ------------------------------------------------------------------
+
+    def _build_properties_tab(self) -> QWidget:
+        page = QWidget()
+        layout = QHBoxLayout(page)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(16)
+
+        left = QWidget()
+        left_layout = QVBoxLayout(left)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(12)
+
         entity_row = QHBoxLayout()
         entity_label = QLabel("Entity:")
         entity_label.setObjectName("NatureTileCaption")
         entity_row.addWidget(entity_label)
         self._entity_filter_combo = QComboBox()
         self._refresh_entity_filter_combo()
-        self._entity_filter_combo.currentIndexChanged.connect(lambda _idx: self._refresh_list())
+        self._entity_filter_combo.currentIndexChanged.connect(lambda _idx: self._refresh_property_list())
         entity_row.addWidget(self._entity_filter_combo, stretch=1)
-        body_layout.addLayout(entity_row)
+        left_layout.addLayout(entity_row)
 
         glance_row = QHBoxLayout()
         glance_row.setSpacing(16)
         self._tracked_label = self._build_glance_tile(glance_row, "Properties", "\U0001F3D8")
         self._equity_label = self._build_glance_tile(glance_row, "Total Equity", "\U0001F4B0")
         self._rental_label = self._build_glance_tile(glance_row, "Rental Income This Month", "\U0001F4C5")
-        body_layout.addLayout(glance_row)
+        left_layout.addLayout(glance_row)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        content = QWidget()
-        self._list_layout = QVBoxLayout(content)
-        self._list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self._list_layout.setSpacing(16)
-        scroll.setWidget(content)
-        body_layout.addWidget(scroll, stretch=1)
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        left_content = QWidget()
+        self._property_list_layout = QVBoxLayout(left_content)
+        self._property_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._property_list_layout.setSpacing(12)
+        left_scroll.setWidget(left_content)
+        left_layout.addWidget(left_scroll, stretch=1)
 
-        outer.addWidget(body, stretch=1)
+        layout.addWidget(left, stretch=1)
 
-        self._refresh_list()
+        right_scroll = QScrollArea()
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        right_content = QWidget()
+        self._property_detail_layout = QVBoxLayout(right_content)
+        self._property_detail_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._property_detail_layout.setSpacing(16)
+        right_scroll.setWidget(right_content)
+        layout.addWidget(right_scroll, stretch=1)
+
+        # Deliberately no initial _refresh_property_list() call here —
+        # get_widget()'s own _select_top_tab("Properties") right after
+        # all three tabs are built is the single source of the first
+        # real population. A second call here, right on top of that
+        # one with no event loop iteration in between, left a stale
+        # not-yet-destroyed card's child label visible underneath the
+        # real ones — caught via a real screenshot, not assumed.
         return page
 
     def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str, icon: str) -> QLabel:
@@ -300,9 +381,14 @@ class RealEstateModule(ModuleBase):
         self._entity_filter_combo.setCurrentIndex(idx if idx >= 0 else 0)
         self._entity_filter_combo.blockSignals(False)
 
-    def _refresh_list(self) -> None:
-        while self._list_layout.count():
-            item = self._list_layout.takeAt(0)
+    def _refresh_property_list(self) -> None:
+        """Rebuilds the left column's cards AND the right column's
+        detail pane together — a selection change, an edit, a delete,
+        and an entity-filter change all funnel through here, same
+        "always refresh, don't track staleness" convention as
+        modules/kitchen/module.py's own _on_tab_changed()."""
+        while self._property_list_layout.count():
+            item = self._property_list_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
@@ -332,24 +418,32 @@ class RealEstateModule(ModuleBase):
             )
             empty_label = QLabel(empty_text)
             empty_label.setObjectName("NatureTileCaption")
-            self._list_layout.addWidget(empty_label)
+            self._property_list_layout.addWidget(empty_label)
+            self._selected_property_id = None
+            self._refresh_property_detail()
             return
 
+        if self._selected_property_id is None or not any(p.property_id == self._selected_property_id for p in properties):
+            self._selected_property_id = properties[0].property_id
+
         for prop in properties:
-            self._list_layout.addWidget(self._build_property_card(prop))
+            self._property_list_layout.addWidget(self._build_property_card(prop))
+
+        self._refresh_property_detail()
 
     def _build_property_card(self, prop: Property) -> QPushButton:
         card = QPushButton()
         card.setObjectName("NatureAssetCard")
+        card.setProperty("selected", prop.property_id == self._selected_property_id)
         card.setCursor(Qt.CursorShape.PointingHandCursor)
-        card.setToolTip(f"Open {prop.name}")
+        card.setToolTip(f"View {prop.name}")
         card.setMinimumHeight(90)
-        card.clicked.connect(lambda checked=False, pid=prop.property_id: self._show_detail_page(pid))
+        card.clicked.connect(lambda checked=False, pid=prop.property_id: self._on_select_property(pid))
         layout = QVBoxLayout(card)
         layout.setContentsMargins(16, 14, 16, 14)
         layout.setSpacing(4)
 
-        title_label = QLabel(f"{prop.name}  ›")
+        title_label = QLabel(prop.name)
         title_label.setObjectName("NatureAssetTitle")
         layout.addWidget(title_label)
 
@@ -359,6 +453,154 @@ class RealEstateModule(ModuleBase):
         layout.addWidget(line)
 
         return card
+
+    def _on_select_property(self, property_id: str) -> None:
+        self._selected_property_id = property_id
+        self._refresh_property_list()
+
+    def _refresh_property_detail(self) -> None:
+        while self._property_detail_layout.count():
+            item = self._property_detail_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        if self._selected_property_id is None:
+            empty = QLabel("Select a property to see its details.")
+            empty.setObjectName("NatureTileCaption")
+            self._property_detail_layout.addWidget(empty)
+            return
+
+        prop = self.context.real_estate.get_property(self._selected_property_id)
+        if prop is None:
+            empty = QLabel("This property no longer exists.")
+            empty.setObjectName("NatureTileCaption")
+            self._property_detail_layout.addWidget(empty)
+            return
+
+        header_widget = QWidget()
+        header_row = QHBoxLayout(header_widget)
+        header_row.setContentsMargins(0, 0, 0, 0)
+        title = QLabel(prop.name)
+        title.setObjectName("NatureHeaderTitle")
+        header_row.addWidget(title, stretch=1)
+        edit_button = QPushButton("Edit")
+        edit_button.clicked.connect(lambda: self._on_edit_property(prop.property_id))
+        header_row.addWidget(edit_button)
+        delete_button = QPushButton("Delete")
+        delete_button.clicked.connect(lambda: self._on_delete_property(prop.property_id))
+        header_row.addWidget(delete_button)
+        self._property_detail_layout.addWidget(header_widget)
+
+        category_label = QLabel(prop.property_type)
+        category_label.setObjectName("NatureTileCaption")
+        self._property_detail_layout.addWidget(category_label)
+
+        entity = self.context.budget.get_business_entity(prop.entity_id) if prop.entity_id else None
+        entity_name = entity.name if entity is not None else "(Unassigned)"
+        info_card = QFrame()
+        info_card.setObjectName("NatureAssetCard")
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(18, 16, 18, 16)
+        info = QLabel(
+            f"Purchased {prop.purchase_date or 'unknown'} for ${prop.purchase_price:,.2f}\n"
+            f"Current value: ${prop.current_value:,.2f}   Mortgage balance: ${prop.mortgage_balance:,.2f}   "
+            f"Equity: ${equity(prop):,.2f}\n"
+            f"Entity: {entity_name}"
+        )
+        info.setObjectName("NatureAssetLine")
+        info.setWordWrap(True)
+        info_layout.addWidget(info)
+        self._property_detail_layout.addWidget(info_card)
+
+        self._property_detail_layout.addWidget(self._build_income_expense_section(prop))
+        self._property_detail_layout.addWidget(self._build_summary_section(prop))
+        self._property_detail_layout.addWidget(self._build_maintenance_section(prop))
+        self._property_detail_layout.addWidget(self._build_missions_section(prop))
+
+    # ------------------------------------------------------------------
+    # Maintenance tab — aggregated across every property
+    # ------------------------------------------------------------------
+
+    def _build_real_estate_maintenance_tab(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 12, 0, 12)
+        layout.setSpacing(16)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self._re_maintenance_layout = QVBoxLayout(content)
+        self._re_maintenance_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._re_maintenance_layout.setSpacing(16)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, stretch=1)
+
+        return page
+
+    def _refresh_real_estate_maintenance_tab(self) -> None:
+        while self._re_maintenance_layout.count():
+            item = self._re_maintenance_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        properties = self.context.real_estate.all_properties()
+        if not properties:
+            empty = QLabel("No properties tracked yet.")
+            empty.setObjectName("NatureTileCaption")
+            self._re_maintenance_layout.addWidget(empty)
+            return
+
+        for prop in properties:
+            label = QLabel(prop.name)
+            label.setObjectName("NatureAssetCategory")
+            self._re_maintenance_layout.addWidget(label)
+            self._re_maintenance_layout.addWidget(self._build_maintenance_section(prop))
+
+    # ------------------------------------------------------------------
+    # Missions tab — aggregated across every property
+    # ------------------------------------------------------------------
+
+    def _build_real_estate_missions_tab(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 12, 0, 12)
+        layout.setSpacing(16)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self._re_missions_layout = QVBoxLayout(content)
+        self._re_missions_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._re_missions_layout.setSpacing(16)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, stretch=1)
+
+        return page
+
+    def _refresh_real_estate_missions_tab(self) -> None:
+        while self._re_missions_layout.count():
+            item = self._re_missions_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        properties = self.context.real_estate.all_properties()
+        if not properties:
+            empty = QLabel("No properties tracked yet.")
+            empty.setObjectName("NatureTileCaption")
+            self._re_missions_layout.addWidget(empty)
+            return
+
+        for prop in properties:
+            label = QLabel(prop.name)
+            label.setObjectName("NatureAssetCategory")
+            self._re_missions_layout.addWidget(label)
+            self._re_missions_layout.addWidget(self._build_missions_section(prop))
 
     def _on_add_property(self) -> None:
         dialog = AddEditPropertyDialog(entities=self.context.budget.all_business_entities())
@@ -381,7 +623,7 @@ class RealEstateModule(ModuleBase):
             loan_start_date=dialog.entered_loan_start_date,
             notes=dialog.entered_notes,
         )
-        self._refresh_list()
+        self._refresh_property_list()
 
     def _on_edit_property(self, property_id: str) -> None:
         prop = self.context.real_estate.get_property(property_id)
@@ -406,7 +648,7 @@ class RealEstateModule(ModuleBase):
             loan_start_date=dialog.entered_loan_start_date,
             notes=dialog.entered_notes,
         )
-        self._show_detail_page(property_id)
+        self._refresh_property_list()
 
     def _on_delete_property(self, property_id: str) -> None:
         prop = self.context.real_estate.get_property(property_id)
@@ -421,107 +663,14 @@ class RealEstateModule(ModuleBase):
             return
 
         self.context.real_estate.delete_property(property_id)
-        self._show_list_page()
+        self._selected_property_id = None
+        self._refresh_property_list()
 
     # ------------------------------------------------------------------
-    # Detail page
+    # Shared section builders (Maintenance/Missions/Income-Expense/
+    # Summary) — used both by the Properties tab's detail pane and the
+    # cross-property Maintenance/Missions aggregate tabs.
     # ------------------------------------------------------------------
-
-    def _show_list_page(self) -> None:
-        self._stack.setCurrentWidget(self._list_page)
-        if self._detail_page is not None:
-            self._stack.removeWidget(self._detail_page)
-            self._detail_page = None
-            self._detail_property_id = None
-        self._refresh_list()
-
-    def _show_detail_page(self, property_id: str) -> None:
-        if self._detail_page is not None:
-            self._stack.removeWidget(self._detail_page)
-            self._detail_page = None
-
-        self._detail_property_id = property_id
-        self._detail_start_date = None
-        self._detail_end_date = None
-        self._detail_page = self._build_detail_page(property_id)
-        self._stack.addWidget(self._detail_page)
-        self._stack.setCurrentWidget(self._detail_page)
-
-    def _build_detail_page(self, property_id: str) -> QWidget:
-        """Nature re-skin (2026-09-14) — photo hero + Edit/Delete moved
-        here from the list page (a property's own page is now where
-        you manage it), each section wrapped in a #NatureAssetCard."""
-        prop = self.context.real_estate.get_property(property_id)
-
-        page = QWidget()
-        page.setStyleSheet("background-color: #070f0d;")
-        outer = QVBoxLayout(page)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.setSpacing(0)
-
-        hero = PhotoBackgroundFrame()
-        hero.setFixedHeight(150)
-        hero_layout = QVBoxLayout(hero)
-        hero_layout.setContentsMargins(28, 16, 28, 16)
-        hero_layout.setSpacing(6)
-
-        top_row = QHBoxLayout()
-        back_button = QPushButton("← Back to Properties")
-        back_button.clicked.connect(self._show_list_page)
-        top_row.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        top_row.addStretch(1)
-        edit_button = QPushButton("Edit")
-        edit_button.clicked.connect(lambda: self._on_edit_property(property_id))
-        top_row.addWidget(edit_button)
-        delete_button = QPushButton("Delete")
-        delete_button.clicked.connect(lambda: self._on_delete_property(property_id))
-        top_row.addWidget(delete_button)
-        hero_layout.addLayout(top_row)
-
-        title = QLabel(prop.name)
-        title.setObjectName("NatureHeaderTitle")
-        hero_layout.addWidget(title)
-
-        category_label = QLabel(prop.property_type)
-        category_label.setObjectName("NatureHeaderTagline")
-        hero_layout.addWidget(category_label)
-        hero_layout.addStretch(1)
-
-        outer.addWidget(hero)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        content = QWidget()
-        layout = QVBoxLayout(content)
-        layout.setContentsMargins(24, 20, 24, 24)
-        layout.setSpacing(16)
-
-        entity = self.context.budget.get_business_entity(prop.entity_id) if prop.entity_id else None
-        entity_name = entity.name if entity is not None else "(Unassigned)"
-        info_card = QFrame()
-        info_card.setObjectName("NatureAssetCard")
-        info_layout = QVBoxLayout(info_card)
-        info_layout.setContentsMargins(18, 16, 18, 16)
-        info = QLabel(
-            f"Purchased {prop.purchase_date or 'unknown'} for ${prop.purchase_price:,.2f}\n"
-            f"Current value: ${prop.current_value:,.2f}   Mortgage balance: ${prop.mortgage_balance:,.2f}   "
-            f"Equity: ${equity(prop):,.2f}\n"
-            f"Entity: {entity_name}"
-        )
-        info.setObjectName("NatureAssetLine")
-        info.setWordWrap(True)
-        info_layout.addWidget(info)
-        layout.addWidget(info_card)
-
-        layout.addWidget(self._build_maintenance_section(prop))
-        layout.addWidget(self._build_missions_section(prop))
-        layout.addWidget(self._build_income_expense_section(prop), stretch=1)
-        layout.addWidget(self._build_summary_section(prop))
-
-        scroll.setWidget(content)
-        outer.addWidget(scroll, stretch=1)
-        return page
 
     def _build_missions_section(self, prop: Property) -> QWidget:
         """Mission-to-asset tagging (2026-09-13) — real parity across
@@ -548,11 +697,12 @@ class RealEstateModule(ModuleBase):
         return card
 
     def focus_record(self, record_id: str) -> None:
-        """Cross-module deep-linking (2026-09-13) — opens straight to
-        this property's own detail page, same mechanism
-        Garage/Property/Greenhouse's own focus_record() implementations
-        use."""
-        self._show_detail_page(record_id)
+        """Cross-module deep-linking (2026-09-13) — switches to the
+        Properties tab and selects this property in the master-detail
+        view (2026-09-14: no longer a separate full-page navigation,
+        since the master-detail rebuild removed that page)."""
+        self._select_top_tab("Properties")
+        self._on_select_property(record_id)
 
     def _build_maintenance_section(self, prop: Property) -> QWidget:
         section = QFrame()
@@ -604,11 +754,11 @@ class RealEstateModule(ModuleBase):
 
         chosen = candidates[labels.index(label)]
         self.context.real_estate.update_property(property_id, maintenance_asset_id=chosen.asset_id)
-        self._show_detail_page(property_id)
+        self._refresh_property_detail()
 
     def _on_unlink_maintenance(self, property_id: str) -> None:
         self.context.real_estate.update_property(property_id, maintenance_asset_id="")
-        self._show_detail_page(property_id)
+        self._refresh_property_detail()
 
     def _build_income_expense_section(self, prop: Property) -> QWidget:
         section = QFrame()
@@ -657,7 +807,7 @@ class RealEstateModule(ModuleBase):
             property_id, amount=dialog.entered_amount, date_str=dialog.entered_date,
             description=dialog.entered_description, notes=dialog.entered_notes,
         )
-        self._show_detail_page(property_id)
+        self._refresh_property_detail()
 
     def _on_record_expense(self, property_id: str) -> None:
         dialog = AddEditExpenseDialog()
@@ -667,7 +817,7 @@ class RealEstateModule(ModuleBase):
             property_id, amount=dialog.entered_amount, category=dialog.entered_category,
             date_str=dialog.entered_date, description=dialog.entered_description, notes=dialog.entered_notes,
         )
-        self._show_detail_page(property_id)
+        self._refresh_property_detail()
 
     def _build_summary_section(self, prop: Property) -> QWidget:
         section = QFrame()

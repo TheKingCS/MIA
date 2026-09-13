@@ -1277,6 +1277,15 @@ QPushButton#NatureAssetCard:pressed {
     background-color: rgba(2, 18, 20, 0.95);
 }
 
+/* Master-detail selection state (Real Estate, 2026-09-14) — a
+selected-but-not-hovered card needs its own persistent highlight,
+distinct from :hover's transient one, since master-detail selection
+stays visible while the mouse moves elsewhere. */
+QPushButton#NatureAssetCard[selected="true"] {
+    background-color: rgba(2, 24, 27, 0.95);
+    border: 1px solid #51bc76;
+}
+
 QLabel#NatureAssetTitle {
     color: #e7ecf3;
     font-size: 15px;
