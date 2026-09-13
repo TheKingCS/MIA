@@ -140,6 +140,28 @@ def test_add_mission_can_link_to_a_trip(isolated_paths):
     assert context.missions.missions_for_trip(trip.trip_id) == [mission]
 
 
+def test_add_mission_can_link_to_a_maintenance_task(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Inspect: Pump Filter", maintenance_task_id="task123")
+    assert mission.maintenance_task_id == "task123"
+    assert context.missions.missions_for_maintenance_task("task123") == [mission]
+    assert context.missions.missions_for_maintenance_task("nonexistent") == []
+
+
+def test_maintenance_task_id_persists_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    context.missions.add_mission(name="Inspect: Pump Filter", maintenance_task_id="task123")
+
+    reloaded = MissionManager(context)
+    assert reloaded.all_missions()[0].maintenance_task_id == "task123"
+
+
+def test_add_mission_without_maintenance_task_id_defaults_to_none(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Master Angler")
+    assert mission.maintenance_task_id is None
+
+
 def test_update_mission_changes_fields_and_bumps_updated_at(isolated_paths):
     context = _make_context()
     mission = context.missions.add_mission(name="Original")

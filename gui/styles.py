@@ -1063,6 +1063,24 @@ QLabel#MonitorTileValue {
     color: #e7ecf3;
 }
 
+/* Sensor Monitor screen (design restyle Phase 3, 2026-09-12) — the
+mono eyebrow/caption labels the design's #MonitorTile spec calls for
+alongside the value above (uppercasing happens in Python; QSS has no
+text-transform). */
+QLabel#MonitorTileEyebrow {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #5b6a80;
+}
+
+QLabel#MonitorTileCaption {
+    font-family: "JetBrains Mono", "Consolas", "DejaVu Sans Mono", monospace;
+    font-size: 11px;
+    color: #7c8798;
+}
+
 /* "MIA Smart User OS Design" handoff, v2 HUD layer (2026-09-12) — new
 primitives only this pass, applied so far just to gui/home_dashboard.py's
 Clock and Mission widget cards (see gui/widgets/blueprint_frame.py and

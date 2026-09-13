@@ -8293,3 +8293,86 @@ called `notify()` for real, and confirmed (a) it returns in under a
 millisecond — not blocked on the network call — and (b) the real
 background thread it spawned actually invoked `webpush()` with the
 right subscription and payload shortly after.
+
+## Design restyle, Phase 3: Sensor monitor screen (1c) (2026-09-12)
+
+Continuing the "MIA Smart User OS Design" restyle. The handoff's 1c
+screen is titled "Greenhouse & aquaponics monitor" and mocks up a
+specific homestead scenario — fixed AIR TEMP/HUMIDITY/LIGHT/CO2 tiles,
+a chart for a series named `aquaponics_flow_gpm`, and cards for "GROW
+TOWER 1 18%," "FISH 8," "PLANTS 14," pump/pH/ammonia/water-level
+readouts. **Real finding, per the handoff's own stated rule** ("prefer
+the model... render the honest 'unknown' state rather than inventing
+the number"): none of that homestead-specific content has a backing
+field anywhere in `core/` — `MaintenanceAsset`/`MaintenanceTask` are
+fully generic, with no "grow tower"/"fish count"/"pump"/"pH" concept at
+all. Built the real, generic version instead: a **Sensor Monitor** tab
+in `modules/maintenance/module.py`, driven entirely by whichever
+asset's real `trigger_type="sensor"` tasks exist — same visual
+language (tile row, themed chart, reading-entry, a threshold-crossed
+quest card), zero fabricated fields. Explicitly not built, named so
+it isn't lost: the grow-tower/fish/plant cards and the pump/pH/ammonia
+key-value card (no backing data model for either); the mockup's
+"last five points restated in a different color" chart flourish
+(simplified to one highlighted dot on the latest reading — QtCharts
+has no cheap way to recolor individual points within one series); and
+deep-linking "START QUEST" straight to the created mission's own detail
+row (no existing mechanism opens a specific mission — this switches to
+the Missions module and leaves finding it, the newest entry, to the
+user).
+
+**Real charting-precedent finding**: `modules/lab/module.py` and
+`modules/budget/module.py` already chart `DataLoggerManager` data via
+`PySide6.QtCharts` — reused that rather than hand-rolling a `QPainter`
+plot (`gui/widgets/sensor_chart.py`). Neither existing chart is
+dark-themed, though (both render QtCharts' plain light-mode look) — a
+real, pre-existing gap; added `gui/widgets/theme_chart.py`'s
+`apply_dark_chart_theme()` so this new chart doesn't repeat it (a
+natural, separate follow-up would apply it to Lab's/Budget's own
+charts too). **Same "verify before building on a selector" lesson as
+Phase 1's `ConsoleOrbStage` finding**: `gui/styles.py` already had
+`QFrame#MonitorTile`/`QLabel#MonitorTileValue` — styled since an
+earlier pass but never once set via `setObjectName()` anywhere in the
+repo. This phase is what actually uses it (plus two small new sibling
+rules, `MonitorTileEyebrow`/`MonitorTileCaption`, for the mono
+labels the tile spec also calls for).
+
+**Real, small schema addition** — directly what the handoff's own
+behavior spec asks for ("'START QUEST' creates/opens the mission for
+that task"), not speculative: `core.mission_manager.Mission` gains
+`maintenance_task_id: Optional[str] = None`, mirroring the existing
+`trip_id` optional-FK pattern exactly, plus
+`missions_for_maintenance_task()` mirroring `missions_for_trip()`.
+"START QUEST" finds-or-creates exactly one Mission per sensor task
+(`assigned_by="mia"`, real `skill_rewards=[SkillWeight("home_maintenance", 10)]`
+matching `MaintenanceManager.mark_complete()`'s own existing grant, not
+a fabricated reward number) and opens Missions via the same
+`"assistant.open_module_requested"` event `gui/home_dashboard.py`'s
+`_open_module()` already uses.
+
+**Real bug caught by manual verification, not pytest**: the threshold
+dashed line silently rendered off-chart whenever the threshold hadn't
+been crossed yet (the common case) — `QValueAxis` only auto-ranges from
+series already attached at the moment it computes its range, so a
+threshold value outside the readings' own value span fell outside the
+visible axis. Fixed with an explicit `y_axis.setRange()` spanning both
+the data and the threshold, rather than relying on QtCharts' own
+auto-fit.
+
+**Verification**: `pytest -q` — full suite, 2600 passed, zero
+regressions (3 new `mission_manager` cases for `maintenance_task_id`).
+Manual headless-Qt screenshot (throwaway repo copy, real
+`MaintenanceManager`/`DataLoggerManager` data — a "Greenhouse
+Aquaponics" asset with 3 real sensor tasks, one crossed): tiles/chart/
+reading-entry render correctly with the real dark theme applied (a
+screenshot taken without `app.setStyleSheet(get_theme_stylesheet(...))`
+first rendered in light mode — a verification-script gap, not a
+product bug, caught and corrected before trusting the result); the
+quest card appeared only for the crossed threshold; clicking "START
+QUEST" twice created exactly one Mission (confirmed via
+`context.missions.all_missions()` count, not just visually) with the
+right `maintenance_task_id`/`assigned_by`/`skill_rewards`. Also caught
+and fixed a real layout bug in the same pass: the quest card's content
+was spreading out to fill its full column height with large gaps
+between labels — an explicit `addStretch(1)` after its last widget
+fixed it, confirmed by re-screenshotting.

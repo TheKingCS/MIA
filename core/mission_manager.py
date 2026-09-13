@@ -228,6 +228,13 @@ class Mission:
     # independently of skill_rewards/reward_xp — see
     # MissionManager._unlock_mission_recipes().
     recipe_unlocks: list[str] = field(default_factory=list)
+    # Design restyle, Phase 3 (2026-09-12) — the Sensor Monitor screen's
+    # "START QUEST" button on a crossed-threshold MaintenanceTask
+    # (core.maintenance_manager) needs to find-or-create exactly one
+    # Mission per task, same optional-FK shape trip_id already
+    # establishes above (picked at creation, not reassignable via
+    # update_mission()). None by default — zero migration needed.
+    maintenance_task_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -251,6 +258,7 @@ class Mission:
             "reward_credits": self.reward_credits,
             "skill_rewards": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_rewards],
             "recipe_unlocks": list(self.recipe_unlocks),
+            "maintenance_task_id": self.maintenance_task_id,
         }
 
     @staticmethod
@@ -278,6 +286,7 @@ class Mission:
                 SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_rewards", [])
             ],
             recipe_unlocks=list(data.get("recipe_unlocks", [])),
+            maintenance_task_id=data.get("maintenance_task_id"),
         )
 
 
@@ -332,6 +341,7 @@ class MissionManager:
         reward_credits: int = 0,
         skill_rewards: Optional[list[SkillWeight]] = None,
         recipe_unlocks: Optional[list[str]] = None,
+        maintenance_task_id: Optional[str] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -352,6 +362,7 @@ class MissionManager:
             reward_credits=reward_credits,
             skill_rewards=list(skill_rewards) if skill_rewards else [],
             recipe_unlocks=list(recipe_unlocks) if recipe_unlocks else [],
+            maintenance_task_id=maintenance_task_id,
         )
         self._missions.append(mission)
         self._save()
@@ -468,6 +479,9 @@ class MissionManager:
 
     def missions_for_trip(self, trip_id: str) -> list[Mission]:
         return [m for m in self._missions if m.trip_id == trip_id]
+
+    def missions_for_maintenance_task(self, task_id: str) -> list[Mission]:
+        return [m for m in self._missions if m.maintenance_task_id == task_id]
 
     # ------------------------------------------------------------------
     # Objectives

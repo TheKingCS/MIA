@@ -29,6 +29,7 @@ from typing import Optional
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -43,6 +44,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.data_logger_manager import Reading
+from core.gamification import SkillWeight
 from core.maintenance_manager import (
     MaintenanceAsset,
     MaintenanceTask,
@@ -61,6 +63,9 @@ from gui.log_asset_reading_dialog import LogAssetReadingDialog
 from gui.log_reading_dialog import LogReadingDialog
 from gui.mark_complete_dialog import MarkCompleteDialog
 from gui.schedule_task_dialog import ScheduleTaskDialog
+from gui.widgets.blueprint_frame import BlueprintFrame
+from gui.widgets.glow import apply_panel_glow
+from gui.widgets.sensor_chart import build_sensor_chart_view
 from modules.module_base import ModuleBase
 
 
@@ -190,6 +195,14 @@ class MaintenanceModule(ModuleBase):
         self._task_list: Optional[QListWidget] = None
         self._week_list: Optional[QListWidget] = None
         self._month_list: Optional[QListWidget] = None
+        # Design restyle Phase 3 (2026-09-12) — Sensor Monitor tab state.
+        self._monitor_asset_combo: Optional[QComboBox] = None
+        self._monitor_series_combo: Optional[QComboBox] = None
+        self._monitor_tile_row: Optional[QHBoxLayout] = None
+        self._monitor_chart_container: Optional[QVBoxLayout] = None
+        self._monitor_reading_task_combo: Optional[QComboBox] = None
+        self._monitor_reading_value_edit: Optional[QLineEdit] = None
+        self._monitor_quest_container: Optional[QVBoxLayout] = None
 
     def on_load(self) -> None:
         super().on_load()
@@ -213,12 +226,16 @@ class MaintenanceModule(ModuleBase):
         tabs.addTab(self._build_assets_tab(), "Assets")
         tabs.addTab(self._build_tasks_tab(), "Tasks")
         tabs.addTab(self._build_overview_tab(), "Overview")
+        tabs.addTab(self._build_monitor_tab(), "Monitor")
         # Same "every tab refreshes on every tabs.currentChanged" fix
         # this project already applied to Budget's own Summary/Trends
         # staleness bug — Overview needs to reflect whatever was just
         # added/completed on the Tasks tab, not just its state when the
-        # module widget was first built.
+        # module widget was first built. Monitor needs the same: a
+        # reading logged on the Tasks tab (via LogReadingDialog) should
+        # show up here without rebuilding the whole module widget.
         tabs.currentChanged.connect(lambda _index: self._refresh_overview())
+        tabs.currentChanged.connect(lambda _index: self._refresh_monitor())
         layout.addWidget(tabs, stretch=1)
 
         return widget
@@ -498,6 +515,257 @@ class MaintenanceModule(ModuleBase):
             if color is not None:
                 item.setForeground(color)
             list_widget.addItem(item)
+
+    # ------------------------------------------------------------------
+    # Monitor tab — design restyle Phase 3 (2026-09-12): the handoff's
+    # "1c Greenhouse & aquaponics monitor" screen, built as a generic
+    # sensor monitor for whichever asset actually has trigger_type
+    # "sensor" tasks — see this module's own git history / docs/ROADMAP.md
+    # for why the mockup's literal grow-tower/fish/pump/pH content isn't
+    # here: none of it has a backing field in MaintenanceAsset/
+    # MaintenanceTask, and the design handoff's own rule is to prefer
+    # the real model over inventing a number.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _clear_layout(layout) -> None:
+        """Same takeAt(0)/hide/setParent(None)/deleteLater idiom
+        modules/missions/module.py's own _refresh_list() already uses."""
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+
+    def _assets_with_sensor_tasks(self) -> list[MaintenanceAsset]:
+        return [
+            asset for asset in self.context.maintenance.all_assets()
+            if any(t.is_sensor_task for t in self.context.maintenance.tasks_for_asset(asset.asset_id))
+        ]
+
+    def _build_monitor_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        self._monitor_asset_combo = QComboBox()
+        self._monitor_asset_combo.currentIndexChanged.connect(lambda _index: self._refresh_monitor())
+        layout.addWidget(self._monitor_asset_combo)
+
+        tile_row_widget = QWidget()
+        self._monitor_tile_row = QHBoxLayout(tile_row_widget)
+        layout.addWidget(tile_row_widget)
+
+        split_row = QHBoxLayout()
+
+        chart_card = BlueprintFrame()
+        chart_card.setObjectName("DashboardCard")
+        apply_panel_glow(chart_card)
+        chart_card_layout = QVBoxLayout(chart_card)
+
+        series_row = QHBoxLayout()
+        series_label = QLabel("SENSOR TASK")
+        series_label.setObjectName("MonitorTileEyebrow")
+        series_row.addWidget(series_label)
+        self._monitor_series_combo = QComboBox()
+        self._monitor_series_combo.currentIndexChanged.connect(lambda _index: self._refresh_monitor_chart())
+        series_row.addWidget(self._monitor_series_combo, stretch=1)
+        chart_card_layout.addLayout(series_row)
+
+        chart_container_widget = QWidget()
+        self._monitor_chart_container = QVBoxLayout(chart_container_widget)
+        chart_card_layout.addWidget(chart_container_widget, stretch=1)
+
+        reading_row = QHBoxLayout()
+        self._monitor_reading_task_combo = QComboBox()
+        reading_row.addWidget(self._monitor_reading_task_combo, stretch=1)
+        self._monitor_reading_value_edit = QLineEdit()
+        self._monitor_reading_value_edit.setPlaceholderText("Value")
+        reading_row.addWidget(self._monitor_reading_value_edit)
+        log_button = QPushButton("Log")
+        log_button.clicked.connect(self._on_monitor_log_reading)
+        reading_row.addWidget(log_button)
+        chart_card_layout.addLayout(reading_row)
+
+        caption = QLabel("Manual entry until real hardware calls the same method.")
+        caption.setObjectName("MonitorTileCaption")
+        chart_card_layout.addWidget(caption)
+
+        split_row.addWidget(chart_card, stretch=1)
+
+        quest_card = BlueprintFrame(accent=True)
+        quest_card.setObjectName("DashboardCard")
+        apply_panel_glow(quest_card)
+        quest_card.setFixedWidth(400)
+        self._monitor_quest_container = QVBoxLayout(quest_card)
+        split_row.addWidget(quest_card)
+
+        layout.addLayout(split_row, stretch=1)
+
+        self._refresh_monitor()
+        return tab
+
+    def _refresh_monitor(self) -> None:
+        if self._monitor_asset_combo is None:
+            return
+
+        assets = self._assets_with_sensor_tasks()
+        previous_asset_id = self._monitor_asset_combo.currentData()
+        self._monitor_asset_combo.blockSignals(True)
+        self._monitor_asset_combo.clear()
+        for asset in assets:
+            self._monitor_asset_combo.addItem(f"{asset.name}   [{asset.category}]", asset.asset_id)
+        if previous_asset_id is not None:
+            index = self._monitor_asset_combo.findData(previous_asset_id)
+            if index >= 0:
+                self._monitor_asset_combo.setCurrentIndex(index)
+        self._monitor_asset_combo.blockSignals(False)
+
+        self._clear_layout(self._monitor_tile_row)
+        self._clear_layout(self._monitor_quest_container)
+        self._monitor_reading_task_combo.clear()
+        self._monitor_series_combo.blockSignals(True)
+        self._monitor_series_combo.clear()
+
+        if not assets:
+            empty_label = QLabel("No assets have sensor tasks yet — add one in the Tasks tab.")
+            empty_label.setObjectName("SubtitleLabel")
+            self._monitor_tile_row.addWidget(empty_label)
+            self._monitor_series_combo.blockSignals(False)
+            self._refresh_monitor_chart()
+            return
+
+        asset_id = self._monitor_asset_combo.currentData()
+        sensor_tasks = [
+            t for t in self.context.maintenance.tasks_for_asset(asset_id) if t.is_sensor_task
+        ] if asset_id else []
+
+        today = date.today()
+        due_tasks = []
+        for task in sensor_tasks:
+            readings = self.context.maintenance.readings_for_task(task.task_id)
+            latest = readings[-1] if readings else None
+
+            tile = BlueprintFrame()
+            tile.setObjectName("MonitorTile")
+            tile_layout = QVBoxLayout(tile)
+            eyebrow = QLabel(task.title.upper())
+            eyebrow.setObjectName("MonitorTileEyebrow")
+            tile_layout.addWidget(eyebrow)
+            value_text = f"{latest.value:g} {latest.unit}".strip() if latest is not None else "—"
+            value_label = QLabel(value_text)
+            value_label.setObjectName("MonitorTileValue")
+            tile_layout.addWidget(value_label)
+            if task.threshold_value is not None:
+                target_caption = QLabel(f"target: {task.threshold_direction} {task.threshold_value:g}")
+                target_caption.setObjectName("MonitorTileCaption")
+                tile_layout.addWidget(target_caption)
+            self._monitor_tile_row.addWidget(tile)
+
+            self._monitor_series_combo.addItem(task.title, task.task_id)
+            self._monitor_reading_task_combo.addItem(task.title, task.task_id)
+
+            if readings and is_sensor_task_due(task, readings):
+                due_tasks.append(task)
+
+        self._monitor_series_combo.blockSignals(False)
+        self._refresh_monitor_chart()
+        self._refresh_monitor_quest_card(due_tasks)
+
+    def _refresh_monitor_chart(self) -> None:
+        if self._monitor_chart_container is None:
+            return
+        self._clear_layout(self._monitor_chart_container)
+
+        task_id = self._monitor_series_combo.currentData() if self._monitor_series_combo.count() else None
+        if task_id is None:
+            empty_label = QLabel("No sensor tasks on this asset yet.")
+            empty_label.setObjectName("SubtitleLabel")
+            self._monitor_chart_container.addWidget(empty_label)
+            return
+
+        task = self.context.maintenance.get_task(task_id)
+        readings = self.context.maintenance.readings_for_task(task_id)
+        chart_view = build_sensor_chart_view(readings, task.threshold_value, task.threshold_direction) if task else None
+        if chart_view is None:
+            empty_label = QLabel("No readings yet.")
+            empty_label.setObjectName("SubtitleLabel")
+            self._monitor_chart_container.addWidget(empty_label)
+        else:
+            self._monitor_chart_container.addWidget(chart_view)
+
+    def _refresh_monitor_quest_card(self, due_tasks: list[MaintenanceTask]) -> None:
+        if not due_tasks:
+            hint = QLabel("No sensor thresholds currently crossed.")
+            hint.setObjectName("SubtitleLabel")
+            self._monitor_quest_container.addWidget(hint)
+            self._monitor_quest_container.addStretch(1)
+            return
+
+        # Only the first currently-due sensor task gets a card this
+        # pass — showing one at a time matches the design's own single-
+        # card layout; a real multi-alert stack is separate future scope.
+        task = due_tasks[0]
+        eyebrow = QLabel("SENSOR TASK · THRESHOLD CROSSED")
+        eyebrow.setObjectName("MonitorTileEyebrow")
+        self._monitor_quest_container.addWidget(eyebrow)
+
+        title = QLabel(task.title)
+        title.setObjectName("MissionDetailTitle")
+        title.setWordWrap(True)
+        self._monitor_quest_container.addWidget(title)
+
+        body = QLabel("MIA noticed this reading cross its threshold — worth a look.")
+        body.setWordWrap(True)
+        self._monitor_quest_container.addWidget(body)
+
+        reward = QLabel("+10 XP · home_maintenance")
+        reward.setObjectName("MonitorTileCaption")
+        self._monitor_quest_container.addWidget(reward)
+
+        quest_button = QPushButton("START QUEST")
+        quest_button.clicked.connect(lambda: self._on_start_quest(task.task_id))
+        self._monitor_quest_container.addWidget(quest_button)
+        self._monitor_quest_container.addStretch(1)
+
+    def _on_monitor_log_reading(self) -> None:
+        task_id = self._monitor_reading_task_combo.currentData()
+        if task_id is None:
+            QMessageBox.information(None, "No Sensor Task", "This asset has no sensor tasks to log a reading against.")
+            return
+        value_text = self._monitor_reading_value_edit.text().strip()
+        try:
+            value = float(value_text)
+        except ValueError:
+            QMessageBox.information(None, "Invalid Value", "Enter a numeric value.")
+            return
+        self.context.maintenance.log_reading(task_id, value)
+        self._monitor_reading_value_edit.clear()
+        self._refresh_monitor()
+
+    def _on_start_quest(self, task_id: str) -> None:
+        """Finds or creates exactly one Mission for this sensor task
+        (core.mission_manager.Mission.maintenance_task_id), then opens
+        the Missions module — same "assistant.open_module_requested"
+        mechanism gui/home_dashboard.py's own _open_module() already
+        uses. No deep-link to the mission's own detail row exists yet
+        (see this phase's own plan/ROADMAP entry) — the user finds it
+        in the list, which will be the newest entry."""
+        existing = self.context.missions.missions_for_maintenance_task(task_id)
+        if not existing:
+            task = self.context.maintenance.get_task(task_id)
+            if task is not None:
+                mission = self.context.missions.add_mission(
+                    name=f"Inspect: {task.title}",
+                    maintenance_task_id=task_id,
+                    assigned_by="mia",
+                    icon="\U0001F527",
+                    summary=f"A sensor reading on '{task.title}' crossed its threshold — take a look.",
+                    skill_rewards=[SkillWeight("home_maintenance", 10)],
+                )
+                self.context.missions.add_objective(mission.mission_id, "Resolve it", "tally", 1)
+        self.context.events.publish("assistant.open_module_requested", module_id="missions")
 
     def _on_add_task(self) -> None:
         assets = self.context.maintenance.all_assets()
