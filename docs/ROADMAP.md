@@ -9321,3 +9321,70 @@ With this, every module that was ever "plain teal" now either has full
 Nature parity (Garage/Greenhouse/Property/Real Estate/Kitchen/Workout/
 Household) or a deliberate hero-only treatment the user chose
 (Missions/Skills/Home dashboard). Nothing active is left inconsistent.
+
+## Prestige system, built (2026-09-14)
+
+Fully designed several sessions ago (same XP curve every prestige
+tier, a Borderlands-style white/green/blue/purple/orange color scale
+capping at orange — both confirmed via AskUserQuestion at design time)
+but never implemented until now — picked up as the one remaining item
+with zero open design questions left, unlike the deeper Character/
+Skill-Tree ideas still bookmarked as their own future conversations.
+
+**`core/leveling.py`**: `Profile.total_xp` stays lifetime-cumulative
+and uncapped (an existing invariant achievements/crossed-level-
+detection already relies on) — the only new persisted field is
+`Profile.prestige_tier` (how many times the user has actually clicked
+"Prestige," a real choice, not derivable from XP alone, since a
+profile sitting at the level-100 ceiling hasn't necessarily prestiged
+yet). Everything else is pure derivation: `XP_PER_PRESTIGE_CYCLE`
+(505,000 — the XP to fully complete levels 1-100), `cycle_xp_for_profile()`,
+`is_eligible_to_prestige()`, `prestige_color_for_tier()` (capped at
+`PRESTIGE_COLORS`' last entry, "orange," for tier 4 and beyond — the
+user's own explicit call), and `compute_prestige_level_progress()`.
+
+**Real bug caught while writing the first integration test, not
+assumed**: plain `compute_level_progress()` has no ceiling concept, so
+a profile that exactly completes a cycle reports "level 101" — a
+level the prestige design never defines (there's no "next level"
+until you actually prestige). Fixed by having
+`compute_prestige_level_progress()` explicitly cap at a maxed-out
+level 100 (a full bar) once eligible, and by switching
+`ProfileManager.add_xp()`'s own level-up-notification check to use
+this prestige-aware function instead of the raw uncapped one — a
+grant crossing the ceiling now correctly fires "Level 100!", never a
+"Level 101!" nothing else in the app would ever show.
+
+**`core.profile_manager.ProfileManager.prestige()`**: a real,
+deliberate action (not automatic once XP crosses the threshold — the
+user's own framing was "hit level 100 and CAN prestige," a celebratory
+choice, not a silent rollover). Re-checks eligibility itself server-
+side rather than trusting the UI already gated it, increments
+`prestige_tier`, publishes `"profile.prestiged"` +
+`"profile.xp_changed"`, and fires a real notification via a new
+`core.achievements.format_prestige_achieved()`.
+
+**UI**: wired into `modules/skills/module.py` — the Skills module's
+own header stats line now reads "PROFILE LEVEL 1 · PRESTIGE 1 · ..."
+(the "· PRESTIGE N" segment omitted entirely at tier 0, same "don't
+show a zero-value stat" restraint every other glance stat in this app
+follows) and renders in the real tier color once prestiged. A new
+"PRESTIGE" card in the right column (same `BlueprintFrame(accent=True)`
+treatment as "Next Honest Step") shows quiet progress copy below level
+100, or a real "Prestige Now" button once eligible.
+
+**Verification**: `pytest -q` — full suite, 2735 passed (36 new tests
+across `test_leveling.py`/`test_profile_manager.py`/`test_skills_module.py`).
+Manual headless-Qt screenshots confirmed all three real states: not-
+yet-eligible (quiet progress text, no button), eligible (capped
+"PROFILE LEVEL 100," a real "Level up!" achievement, the Prestige Now
+button), and after a real click (level genuinely reset to 1, "PRESTIGE
+1" showing in green text, the card back to quiet progress copy for
+the new cycle).
+
+**Deliberately not done this pass**: no other screen's own "Level X"
+display (Missions footer, `gui/main_window.py`'s header badge) was
+updated to the prestige-aware function or colored text — Skills is
+the one real "character progression" home this pass targeted, not a
+sweep of every level readout in the app. A natural, scoped follow-up
+if wanted.

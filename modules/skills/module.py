@@ -44,7 +44,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.leveling import compute_level_progress
+from core.leveling import (
+    compute_prestige_level_progress,
+    is_eligible_to_prestige,
+    prestige_color_for_tier,
+)
 from core.skill_leveling import (
     CAPABILITY_STATUSES,
     capability_status_for_level,
@@ -127,10 +131,28 @@ def format_achievement_title_for_display(title: str) -> str:
     return title
 
 
-def format_header_stats_line(profile_level: int, trained: int, total: int, demonstrated: int) -> str:
+def format_header_stats_line(
+    profile_level: int, trained: int, total: int, demonstrated: int, prestige_tier: int = 0
+) -> str:
     """Pure formatting logic — testable without Qt. "PROFILE LEVEL 7 ·
-    SKILLS TOUCHED 23/96 · DEMONSTRATED 4"."""
-    return f"PROFILE LEVEL {profile_level} · SKILLS TOUCHED {trained}/{total} · DEMONSTRATED {demonstrated}"
+    SKILLS TOUCHED 23/96 · DEMONSTRATED 4", with "· PRESTIGE 2" inserted
+    once the user has actually prestiged at least once — omitted
+    entirely at tier 0 (never prestiged), same "don't show a zero-value
+    stat" restraint every other glance stat in this app follows.
+    `prestige_tier` defaults to 0 so every existing call site keeps
+    working unchanged."""
+    prestige_part = f" · PRESTIGE {prestige_tier}" if prestige_tier > 0 else ""
+    return f"PROFILE LEVEL {profile_level}{prestige_part} · SKILLS TOUCHED {trained}/{total} · DEMONSTRATED {demonstrated}"
+
+
+def format_prestige_status(level: int, eligible: bool, prestige_tier: int) -> str:
+    """Pure formatting logic — testable without Qt. Quiet progress
+    copy while not yet eligible; a real celebratory line once level
+    100 is maxed out and Prestige is available."""
+    if eligible:
+        next_color = prestige_color_for_tier(prestige_tier + 1)
+        return f"Level 100 maxed out! Prestige now — next badge color: {next_color}."
+    return f"Level {level}/100 — prestige unlocks once you max out level 100."
 
 
 def format_next_honest_step_line(skill_name: Optional[str]) -> str:
@@ -288,6 +310,25 @@ class SkillsModule(ModuleBase):
         self._next_step_layout.addWidget(self._next_step_body)
         column_layout.addWidget(next_step_card)
 
+        # Prestige (2026-09-14) — the user's own fully-designed system
+        # (same XP curve every tier, Borderlands white/green/blue/
+        # purple/orange scale capping at orange), finally built.
+        prestige_card = BlueprintFrame(accent=True)
+        prestige_card.setObjectName("DashboardCard")
+        apply_panel_glow(prestige_card)
+        self._prestige_layout = QVBoxLayout(prestige_card)
+        prestige_title = QLabel("PRESTIGE")
+        prestige_title.setObjectName("MonitorTileEyebrow")
+        self._prestige_layout.addWidget(prestige_title)
+        self._prestige_body = QLabel()
+        self._prestige_body.setWordWrap(True)
+        self._prestige_layout.addWidget(self._prestige_body)
+        self._prestige_button = QPushButton("Prestige Now")
+        self._prestige_button.clicked.connect(self._on_prestige_clicked)
+        self._prestige_button.hide()
+        self._prestige_layout.addWidget(self._prestige_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        column_layout.addWidget(prestige_card)
+
         column_layout.addStretch(1)
         return column
 
@@ -318,6 +359,7 @@ class SkillsModule(ModuleBase):
         self._refresh_next_step()
         self._refresh_grid()
         self._refresh_achievements()
+        self._refresh_prestige_card()
 
     def _active_profile_id(self) -> Optional[str]:
         if self.context.profiles is None:
@@ -338,12 +380,43 @@ class SkillsModule(ModuleBase):
             self._stats_label.setText("")
             return
         active = self.context.profiles.get_active_profile()
-        profile_level = compute_level_progress(active.total_xp)[0] if active else 0
+        profile_level = 0
+        prestige_tier = 0
+        if active is not None:
+            profile_level = compute_prestige_level_progress(active.total_xp, active.prestige_tier)[0]
+            prestige_tier = active.prestige_tier
         profile_id = self._active_profile_id()
         total = len(self.context.skills.all_skills())
         trained = len(self.context.skills.progress_for_profile(profile_id)) if profile_id else 0
         demonstrated = self._demonstrated_count(profile_id)
-        self._stats_label.setText(format_header_stats_line(profile_level, trained, total, demonstrated))
+        self._stats_label.setText(format_header_stats_line(profile_level, trained, total, demonstrated, prestige_tier))
+        color = prestige_color_for_tier(prestige_tier) if prestige_tier > 0 else None
+        self._stats_label.setStyleSheet(f"color: {color};" if color else "")
+
+    def _refresh_prestige_card(self) -> None:
+        active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        if active is None:
+            self._prestige_body.setText("No active profile.")
+            self._prestige_button.hide()
+            return
+
+        level, _xp_into, _xp_needed = compute_prestige_level_progress(active.total_xp, active.prestige_tier)
+        eligible = is_eligible_to_prestige(active.total_xp, active.prestige_tier)
+        self._prestige_body.setText(format_prestige_status(level, eligible, active.prestige_tier))
+        self._prestige_button.setVisible(eligible)
+
+    def _on_prestige_clicked(self) -> None:
+        if self.context.profiles is None:
+            return
+        active = self.context.profiles.get_active_profile()
+        if active is None:
+            return
+        # ProfileManager.prestige() re-checks eligibility itself
+        # (never trusts the UI already gated this) and returns None if
+        # it's rejected — refreshing either way keeps the card honest.
+        self.context.profiles.prestige(active.profile_id)
+        self._refresh_stats_label()
+        self._refresh_prestige_card()
 
     def _refresh_achievements(self) -> None:
         while self._achievements_layout.count() > 1:  # keep the eyebrow title (index 0)

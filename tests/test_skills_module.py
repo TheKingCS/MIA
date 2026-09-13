@@ -15,6 +15,7 @@ from modules.skills.module import (
     format_locked_skill_name,
     format_next_honest_step_line,
     format_prerequisites_line,
+    format_prestige_status,
     format_skill_status_line,
     format_skill_subtitle,
     format_tier_chip,
@@ -53,6 +54,30 @@ def test_format_achievement_title_for_display_leaves_ascii_titles_alone():
 
 def test_format_header_stats_line():
     assert format_header_stats_line(7, 23, 96, 4) == "PROFILE LEVEL 7 · SKILLS TOUCHED 23/96 · DEMONSTRATED 4"
+
+
+def test_format_header_stats_line_omits_prestige_at_tier_zero():
+    assert format_header_stats_line(7, 23, 96, 4, prestige_tier=0) == "PROFILE LEVEL 7 · SKILLS TOUCHED 23/96 · DEMONSTRATED 4"
+
+
+def test_format_header_stats_line_includes_prestige_once_earned():
+    assert format_header_stats_line(1, 23, 96, 4, prestige_tier=2) == "PROFILE LEVEL 1 · PRESTIGE 2 · SKILLS TOUCHED 23/96 · DEMONSTRATED 4"
+
+
+# ------------------------------------------------------------------
+# Prestige (2026-09-14)
+# ------------------------------------------------------------------
+
+def test_format_prestige_status_not_yet_eligible():
+    assert format_prestige_status(42, eligible=False, prestige_tier=0) == "Level 42/100 — prestige unlocks once you max out level 100."
+
+
+def test_format_prestige_status_eligible_names_the_next_color():
+    assert format_prestige_status(100, eligible=True, prestige_tier=0) == "Level 100 maxed out! Prestige now — next badge color: green."
+
+
+def test_format_prestige_status_eligible_at_a_later_tier():
+    assert format_prestige_status(100, eligible=True, prestige_tier=3) == "Level 100 maxed out! Prestige now — next badge color: orange."
 
 
 def test_format_next_honest_step_line_names_a_skill():

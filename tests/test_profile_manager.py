@@ -18,6 +18,7 @@ import core.config_manager as config_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
+from core.leveling import XP_PER_PRESTIGE_CYCLE
 from core.profile_manager import ProfileManager
 
 
@@ -258,3 +259,114 @@ def test_add_xp_with_no_notifications_service_does_not_crash(isolated_paths):
     manager = _make_manager()
     profile = manager.create_profile(name="Alex")
     manager.add_xp(profile.profile_id, 500)  # must not raise, context.notifications is None
+
+
+# ------------------------------------------------------------------
+# Prestige (2026-09-14)
+# ------------------------------------------------------------------
+
+def test_new_profile_has_prestige_tier_zero_by_default(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert profile.prestige_tier == 0
+
+
+def test_prestige_succeeds_when_eligible(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+
+    assert manager.prestige(profile.profile_id) == 1
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.prestige_tier == 1
+
+
+def test_prestige_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+    manager.prestige(profile.profile_id)
+
+    reloaded_manager = _make_manager()
+    assert reloaded_manager.list_profiles()[0].prestige_tier == 1
+
+
+def test_prestige_rejected_when_not_yet_eligible(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE - 1)
+
+    assert manager.prestige(profile.profile_id) is None
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.prestige_tier == 0
+
+
+def test_prestige_unknown_profile_returns_none(isolated_paths):
+    manager = _make_manager()
+    assert manager.prestige("does-not-exist") is None
+
+
+def test_prestige_publishes_profile_prestiged(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+    received = []
+    manager.context.events.subscribe("profile.prestiged", lambda **kwargs: received.append(kwargs))
+
+    manager.prestige(profile.profile_id)
+
+    assert received == [{"profile_id": profile.profile_id, "new_tier": 1}]
+
+
+def test_add_xp_crossing_the_prestige_ceiling_reports_level_100_not_101(isolated_paths):
+    """Real gap caught while testing prestige() itself: add_xp()'s own
+    level-up check used to run on the raw, uncapped compute_level_progress()
+    — a grant landing exactly on the prestige-cycle ceiling would report
+    "Level 101!", a level that doesn't exist anywhere in the capped
+    display model (compute_prestige_level_progress() itself caps at a
+    maxed-out level 100 until a real Prestige action). Fixed by having
+    add_xp()'s own crossed_a_level() check use the prestige-aware
+    function instead."""
+    manager = _make_manager()
+    manager.context.notifications = _FakeNotifications()
+    profile = manager.create_profile(name="Alex")
+
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+
+    level_up_calls = [c for c in manager.context.notifications.calls if "Level" in c.get("message", "")]
+    assert len(level_up_calls) == 1
+    assert level_up_calls[0]["message"] == "You reached Level 100!"
+
+
+def test_prestige_notifies_with_the_right_color(isolated_paths):
+    """Earning exactly the prestige-cycle ceiling legitimately fires
+    its own "Level 100!" notification from add_xp() too (a real level
+    crossing) — prestige()'s own notification is a second, separate
+    one, not a replacement for it."""
+    manager = _make_manager()
+    manager.context.notifications = _FakeNotifications()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+
+    manager.prestige(profile.profile_id)
+
+    prestige_calls = [c for c in manager.context.notifications.calls if "green" in c["message"]]
+    assert len(prestige_calls) == 1
+    assert prestige_calls[0]["source"] == "achievements"
+
+
+def test_prestige_with_no_notifications_service_does_not_crash(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+    manager.prestige(profile.profile_id)  # must not raise, context.notifications is None
+
+
+def test_prestige_twice_reaches_tier_two(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+    manager.prestige(profile.profile_id)
+    manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
+
+    assert manager.prestige(profile.profile_id) == 2

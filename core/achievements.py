@@ -56,3 +56,14 @@ def format_skill_unlocked(skill_name: str) -> tuple[str, str]:
 def format_profile_level_up(new_level: int) -> tuple[str, str]:
     """Pure formatting logic — testable without Qt (see tests/test_achievements.py)."""
     return ("\U00002B50 Level up!", f"You reached Level {new_level}!")
+
+
+def format_prestige_achieved(new_tier: int, color: str) -> tuple[str, str]:
+    """Pure formatting logic — testable without Qt. `color` is
+    core.leveling.prestige_color_for_tier(new_tier) — passed in rather
+    than recomputed here so this stays a plain formatter, not a second
+    place that knows the color scale."""
+    return (
+        "\U0001F3C6 Prestige!",
+        f"You've prestiged to tier {new_tier} — your level badge is now {color}!",
+    )

@@ -40,9 +40,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from core.achievements import crossed_a_level, format_profile_level_up
+from core.achievements import crossed_a_level, format_prestige_achieved, format_profile_level_up
 from core.app_context import AppContext
-from core.leveling import compute_level_progress
+from core.leveling import compute_prestige_level_progress, is_eligible_to_prestige, prestige_color_for_tier
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -85,6 +85,13 @@ class Profile:
     # philosophy MissionManager already uses for objective progress.
     total_xp: int = 0
     total_credits: int = 0
+    # Prestige (2026-09-14) — how many times this profile has actually
+    # clicked "Prestige" (core.leveling's own module docstring has the
+    # full design). A real choice, not derivable from total_xp alone —
+    # a profile sitting at the level-100 ceiling hasn't necessarily
+    # prestiged yet, and total_xp itself stays lifetime-cumulative and
+    # uncapped regardless (existing invariant this doesn't touch).
+    prestige_tier: int = 0
 
     @property
     def has_password(self) -> bool:
@@ -183,6 +190,7 @@ class ProfileManager:
                 birthday=data.get("birthday"),
                 total_xp=data.get("total_xp", 0),
                 total_credits=data.get("total_credits", 0),
+                prestige_tier=data.get("prestige_tier", 0),
             )
             for pid, data in raw.items()
         ]
@@ -205,6 +213,7 @@ class ProfileManager:
             birthday=raw.get("birthday"),
             total_xp=raw.get("total_xp", 0),
             total_credits=raw.get("total_credits", 0),
+            prestige_tier=raw.get("prestige_tier", 0),
         )
 
     def set_active_profile(self, profile_id: str) -> None:
@@ -283,8 +292,17 @@ class ProfileManager:
         self.context.events.publish("profile.xp_changed", profile_id=profile_id)
         # Achievements/Milestones (2026-09-11) — see core/achievements.py's
         # own docstring; graceful no-op with no notifications service.
+        # Prestige (2026-09-14) — uses compute_prestige_level_progress()
+        # (capped at a maxed-out level 100), not the raw uncapped
+        # compute_level_progress(), so a grant that crosses the
+        # prestige ceiling reports "Level 100!" — the real level the
+        # rest of the UI would show — never a "Level 101" that only
+        # exists in the uncapped math and nowhere in this design.
         if self.context.notifications is not None:
-            leveled_up, new_level = crossed_a_level(old_total, new_total, compute_level_progress)
+            prestige_tier = record.get("prestige_tier", 0)
+            leveled_up, new_level = crossed_a_level(
+                old_total, new_total, lambda xp: compute_prestige_level_progress(xp, prestige_tier)
+            )
             if leveled_up:
                 title, message = format_profile_level_up(new_level)
                 self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
@@ -310,6 +328,46 @@ class ProfileManager:
         log.info("Profile '%s' earned %d credits (total now %d)", profile_id, amount, new_total)
         self.context.events.publish("profile.xp_changed", profile_id=profile_id)
         return new_total
+
+    def prestige(self, profile_id: str) -> Optional[int]:
+        """A real, deliberate action — not automatic once a profile
+        crosses the XP threshold (core.leveling's own module docstring
+        explains why: reaching the ceiling should feel like earning a
+        celebratory choice, not a silent rollover). Returns the new
+        prestige_tier, or None if the profile doesn't exist or isn't
+        actually eligible yet (checked here, not just trusted from the
+        caller — same "don't trust the UI already gated this" stance
+        every other real state-changing method in this codebase takes)."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to prestige unknown profile_id '%s'", profile_id)
+            return None
+
+        total_xp = raw.get("total_xp", 0)
+        old_tier = raw.get("prestige_tier", 0)
+        if not is_eligible_to_prestige(total_xp, old_tier):
+            log.warning("Profile '%s' attempted to prestige without being eligible yet.", profile_id)
+            return None
+
+        new_tier = old_tier + 1
+        record = dict(raw)
+        record["prestige_tier"] = new_tier
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Profile '%s' prestiged to tier %d (%s)", profile_id, new_tier, prestige_color_for_tier(new_tier))
+        self.context.events.publish("profile.prestiged", profile_id=profile_id, new_tier=new_tier)
+        # Same "profile stats changed, re-check whatever you're
+        # showing" signal add_xp()/add_credits() already publish — a
+        # prestige changes the displayed level/color just as much as
+        # an XP change does.
+        self.context.events.publish("profile.xp_changed", profile_id=profile_id)
+
+        if self.context.notifications is not None:
+            title, message = format_prestige_achieved(new_tier, prestige_color_for_tier(new_tier))
+            self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
+
+        return new_tier
 
     def has_any_profiles(self) -> bool:
         return bool(self.context.config.get("profiles", {}))
