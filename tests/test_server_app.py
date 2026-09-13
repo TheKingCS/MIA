@@ -104,6 +104,12 @@ def test_login_succeeds_with_correct_password(client, context):
     assert body["token"]
 
 
+def test_login_succeeds_with_profile_name_case_insensitive(client, context):
+    res = client.post("/api/login", json={"profile_id": "aLiCe", "password": "hunter2"})
+    assert res.status_code == 200
+    assert res.json()["name"] == "Alice"
+
+
 def test_login_fails_with_wrong_password(client, context):
     res = client.post("/api/login", json={"profile_id": _profile_id(context), "password": "wrong"})
     assert res.status_code == 401

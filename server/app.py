@@ -77,8 +77,16 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.post("/api/login")
     def login(body: LoginRequest) -> dict:
-        profile = next((p for p in context.profiles.list_profiles() if p.profile_id == body.profile_id), None)
-        if profile is None or not context.profiles.verify_password(body.profile_id, body.password):
+        # Accepts either the real profile_id or the profile's display
+        # name (case-insensitive) — a person testing this from a phone
+        # has no way to know their own internal profile_id, only their
+        # name, matching what the login form itself now asks for.
+        identifier = body.profile_id.strip().lower()
+        profile = next(
+            (p for p in context.profiles.list_profiles() if p.profile_id == body.profile_id or p.name.strip().lower() == identifier),
+            None,
+        )
+        if profile is None or not context.profiles.verify_password(profile.profile_id, body.password):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
         token = secrets.token_urlsafe(32)
         app.state.sessions[token] = profile.profile_id
