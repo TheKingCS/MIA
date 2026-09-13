@@ -136,7 +136,7 @@ class KitchenModule(ModuleBase):
         self._recipes_stack: Optional[QStackedWidget] = None
         self._recipe_list_page: Optional[QWidget] = None
         self._recipe_detail_page: Optional[QWidget] = None
-        self._recipe_list: Optional[QListWidget] = None
+        self._recipe_list_layout: Optional[QVBoxLayout] = None
         self._detail_recipe_id: Optional[str] = None
         self._detail_ingredients_list: Optional[QListWidget] = None
 
@@ -243,47 +243,78 @@ class KitchenModule(ModuleBase):
         return self._recipes_stack
 
     def _build_recipe_list_page(self) -> QWidget:
+        """Nature re-skin, real reorganization (2026-09-14) — recipe
+        cards (icon/lock-state thumbnail + name/category/servings/time,
+        reusing format_recipe_row() verbatim) replacing the old
+        QListWidget rows, matching the reference mockup's own recipe-
+        card layout and Garage/Real Estate's established clickable-card
+        pattern. Edit/Delete moved onto the recipe's own detail page —
+        same reasoning as Real Estate's property cards."""
         page = QWidget()
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
 
-        self._recipe_list = QListWidget()
-        layout.addWidget(self._recipe_list, stretch=1)
-
-        button_row = QHBoxLayout()
         add_button = QPushButton("Add Recipe")
         add_button.clicked.connect(self._on_add_recipe)
-        button_row.addWidget(add_button)
+        layout.addWidget(add_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        edit_button = QPushButton("Edit Selected")
-        edit_button.clicked.connect(self._on_edit_recipe)
-        button_row.addWidget(edit_button)
-
-        details_button = QPushButton("View Details")
-        details_button.clicked.connect(self._on_view_recipe_details)
-        button_row.addWidget(details_button)
-
-        delete_button = QPushButton("Delete Selected")
-        delete_button.clicked.connect(self._on_delete_recipe)
-        button_row.addWidget(delete_button)
-        layout.addLayout(button_row)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self._recipe_list_layout = QVBoxLayout(content)
+        self._recipe_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._recipe_list_layout.setSpacing(12)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, stretch=1)
 
         self._refresh_recipe_list()
         return page
 
     def _refresh_recipe_list(self) -> None:
-        if self._recipe_list is None:
+        if self._recipe_list_layout is None:
             return
-        self._recipe_list.clear()
-        recipes = self.context.kitchen.all_recipes()
-        for recipe in recipes:
-            item = QListWidgetItem(format_recipe_row(recipe))
-            item.setData(Qt.ItemDataRole.UserRole, recipe.recipe_id)
-            self._recipe_list.addItem(item)
-        if self._recipe_list.count() == 0:
-            add_empty_state_item(self._recipe_list, "No recipes yet — click Add Recipe to get started.")
+        while self._recipe_list_layout.count():
+            item = self._recipe_list_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
 
-    def _selected_recipe_id(self) -> Optional[str]:
-        return selected_item_data(self._recipe_list)
+        recipes = self.context.kitchen.all_recipes()
+        if not recipes:
+            empty = QLabel("No recipes yet — click Add Recipe to get started.")
+            empty.setObjectName("NatureTileCaption")
+            self._recipe_list_layout.addWidget(empty)
+            return
+        for recipe in recipes:
+            self._recipe_list_layout.addWidget(self._build_recipe_card(recipe))
+
+    def _build_recipe_card(self, recipe: Recipe) -> QPushButton:
+        card = QPushButton()
+        card.setObjectName("NatureAssetCard")
+        card.setCursor(Qt.CursorShape.PointingHandCursor)
+        card.setToolTip(f"Open {recipe.name}")
+        card.setMinimumHeight(80)
+        card.clicked.connect(lambda checked=False, rid=recipe.recipe_id: self._show_recipe_detail_page(rid))
+        outer = QHBoxLayout(card)
+        outer.setContentsMargins(16, 14, 16, 14)
+        outer.setSpacing(14)
+
+        thumb = QLabel("\U0001F512" if recipe.locked else "\U0001F37D")
+        thumb.setObjectName("NatureIconBadge")
+        if recipe.locked:
+            thumb.setProperty("tone", "danger")
+        thumb.setFixedSize(48, 48)
+        thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        outer.addWidget(thumb)
+
+        title_label = QLabel(f"{format_recipe_row(recipe)}  ›")
+        title_label.setObjectName("NatureAssetTitle")
+        title_label.setWordWrap(True)
+        outer.addWidget(title_label, stretch=1)
+
+        return card
 
     def _on_add_recipe(self) -> None:
         dialog = AddEditRecipeDialog()
@@ -306,11 +337,7 @@ class KitchenModule(ModuleBase):
         )
         self._refresh_recipe_list()
 
-    def _on_edit_recipe(self) -> None:
-        recipe_id = self._selected_recipe_id()
-        if recipe_id is None:
-            QMessageBox.information(None, "No Recipe Selected", "Select a recipe to edit.")
-            return
+    def _on_edit_recipe(self, recipe_id: str) -> None:
         recipe = self.context.kitchen.get_recipe(recipe_id)
         dialog = AddEditRecipeDialog(recipe=recipe)
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -331,22 +358,11 @@ class KitchenModule(ModuleBase):
             notes=dialog.entered_notes,
             locked=dialog.entered_locked,
         )
-        self._refresh_recipe_list()
-
-    def _on_delete_recipe(self) -> None:
-        recipe_id = self._selected_recipe_id()
-        if recipe_id is None:
-            QMessageBox.information(None, "No Recipe Selected", "Select a recipe to delete.")
-            return
-        self.context.kitchen.delete_recipe(recipe_id)
-        self._refresh_recipe_list()
-
-    def _on_view_recipe_details(self) -> None:
-        recipe_id = self._selected_recipe_id()
-        if recipe_id is None:
-            QMessageBox.information(None, "No Recipe Selected", "Select a recipe to view.")
-            return
         self._show_recipe_detail_page(recipe_id)
+
+    def _on_delete_recipe(self, recipe_id: str) -> None:
+        self.context.kitchen.delete_recipe(recipe_id)
+        self._show_recipe_list_page()
 
     # ------------------------------------------------------------------
     # Recipes tab — detail page
@@ -371,20 +387,59 @@ class KitchenModule(ModuleBase):
         self._recipes_stack.setCurrentWidget(self._recipe_detail_page)
 
     def _build_recipe_detail_page(self, recipe_id: str) -> QWidget:
+        """Nature re-skin, real reorganization (2026-09-14) — photo hero
+        (Edit/Delete moved here, same reasoning as Real Estate's
+        property detail page) + each section as its own #NatureAssetCard."""
         recipe = self.context.kitchen.get_recipe(recipe_id)
 
         page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        page.setStyleSheet("background-color: #070f0d;")
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
 
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 16, 28, 16)
+        hero_layout.setSpacing(6)
+
+        top_row = QHBoxLayout()
         back_button = QPushButton("← Back to Recipes")
         back_button.clicked.connect(self._show_recipe_list_page)
-        layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        top_row.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        top_row.addStretch(1)
+        edit_button = QPushButton("Edit")
+        edit_button.clicked.connect(lambda: self._on_edit_recipe(recipe_id))
+        top_row.addWidget(edit_button)
+        delete_button = QPushButton("Delete")
+        delete_button.clicked.connect(lambda: self._on_delete_recipe(recipe_id))
+        top_row.addWidget(delete_button)
+        hero_layout.addLayout(top_row)
 
-        header = QLabel(recipe.name)
-        header.setObjectName("TitleLabel")
-        layout.addWidget(header)
+        title = QLabel(recipe.name)
+        title.setObjectName("NatureHeaderTitle")
+        hero_layout.addWidget(title)
+
+        if not recipe.locked:
+            time_total = recipe.prep_time_minutes + recipe.cook_time_minutes
+            tagline_text = f"{recipe.category}   —   {recipe.servings} servings"
+            if time_total:
+                tagline_text += f"   —   {recipe.prep_time_minutes} min prep + {recipe.cook_time_minutes} min cook"
+            tagline = QLabel(tagline_text)
+            tagline.setObjectName("NatureHeaderTagline")
+            hero_layout.addWidget(tagline)
+        hero_layout.addStretch(1)
+
+        outer.addWidget(hero)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(24, 20, 24, 24)
+        layout.setSpacing(16)
 
         # "Recipe Unlocked" (2026-09-12) — the actual reward-withholding
         # this feature exists to provide: a locked recipe shows nothing
@@ -393,9 +448,13 @@ class KitchenModule(ModuleBase):
         # unlocked. Derived live via _unlocking_mission_name() — nothing
         # new persisted for this lookup.
         if recipe.locked:
-            locked_label = QLabel("\U0001F512 Locked")
-            locked_label.setObjectName("SubtitleLabel")
-            layout.addWidget(locked_label)
+            locked_card = QFrame()
+            locked_card.setObjectName("NatureAttentionPanel")
+            locked_layout = QVBoxLayout(locked_card)
+            locked_layout.setContentsMargins(18, 16, 18, 16)
+            locked_title = QLabel("\U0001F512 Locked")
+            locked_title.setObjectName("NatureAttentionTitle")
+            locked_layout.addWidget(locked_title)
             mission_name = self._unlocking_mission_name(recipe_id)
             hint_text = (
                 f"Complete the mission \"{mission_name}\" to unlock this recipe."
@@ -403,18 +462,14 @@ class KitchenModule(ModuleBase):
                 else "Complete a mission to unlock this recipe."
             )
             hint_label = QLabel(hint_text)
+            hint_label.setObjectName("NatureAttentionLine")
             hint_label.setWordWrap(True)
-            layout.addWidget(hint_label)
+            locked_layout.addWidget(hint_label)
+            layout.addWidget(locked_card)
             layout.addStretch(1)
+            scroll.setWidget(content)
+            outer.addWidget(scroll, stretch=1)
             return page
-
-        time_total = recipe.prep_time_minutes + recipe.cook_time_minutes
-        info_text = f"{recipe.category}   —   {recipe.servings} servings"
-        if time_total:
-            info_text += f"   —   {recipe.prep_time_minutes} min prep + {recipe.cook_time_minutes} min cook"
-        info = QLabel(info_text)
-        info.setWordWrap(True)
-        layout.addWidget(info)
 
         if any(v is not None for v in (recipe.calories_per_serving, recipe.protein_g, recipe.carbs_g, recipe.fat_g)):
             parts = []
@@ -426,13 +481,23 @@ class KitchenModule(ModuleBase):
                 parts.append(f"{recipe.carbs_g:g}g carbs")
             if recipe.fat_g is not None:
                 parts.append(f"{recipe.fat_g:g}g fat")
+            nutrition_card = QFrame()
+            nutrition_card.setObjectName("NatureAssetCard")
+            nutrition_layout = QVBoxLayout(nutrition_card)
+            nutrition_layout.setContentsMargins(18, 16, 18, 16)
             nutrition = QLabel("Per serving: " + ", ".join(parts))
-            nutrition.setObjectName("SubtitleLabel")
-            layout.addWidget(nutrition)
+            nutrition.setObjectName("NatureAssetLine")
+            nutrition_layout.addWidget(nutrition)
+            layout.addWidget(nutrition_card)
 
+        ingredients_card = QFrame()
+        ingredients_card.setObjectName("NatureAssetCard")
+        ingredients_layout = QVBoxLayout(ingredients_card)
+        ingredients_layout.setContentsMargins(18, 16, 18, 16)
+        ingredients_layout.setSpacing(6)
         ingredients_title = QLabel("Ingredients")
-        ingredients_title.setStyleSheet("font-weight: 600;")
-        layout.addWidget(ingredients_title)
+        ingredients_title.setObjectName("NatureSectionTitle")
+        ingredients_layout.addWidget(ingredients_title)
 
         self._detail_ingredients_list = QListWidget()
         self._detail_ingredients_list.setMaximumHeight(160)
@@ -444,7 +509,7 @@ class KitchenModule(ModuleBase):
             self._detail_ingredients_list.addItem(f"{ingredient.get('name', '')}   {quantity_part}{notes_part}")
         if self._detail_ingredients_list.count() == 0:
             add_empty_state_item(self._detail_ingredients_list, "No ingredients added yet.")
-        layout.addWidget(self._detail_ingredients_list)
+        ingredients_layout.addWidget(self._detail_ingredients_list)
 
         ingredient_button_row = QHBoxLayout()
         add_ingredient_button = QPushButton("Add Ingredient…")
@@ -453,29 +518,44 @@ class KitchenModule(ModuleBase):
         remove_ingredient_button = QPushButton("Remove Selected")
         remove_ingredient_button.clicked.connect(lambda: self._on_remove_ingredient(recipe_id))
         ingredient_button_row.addWidget(remove_ingredient_button)
-        layout.addLayout(ingredient_button_row)
+        ingredients_layout.addLayout(ingredient_button_row)
+        layout.addWidget(ingredients_card)
 
         if recipe.instructions:
+            instructions_card = QFrame()
+            instructions_card.setObjectName("NatureAssetCard")
+            instructions_layout = QVBoxLayout(instructions_card)
+            instructions_layout.setContentsMargins(18, 16, 18, 16)
+            instructions_layout.setSpacing(6)
             instructions_title = QLabel("Instructions")
-            instructions_title.setStyleSheet("font-weight: 600;")
-            layout.addWidget(instructions_title)
+            instructions_title.setObjectName("NatureSectionTitle")
+            instructions_layout.addWidget(instructions_title)
             instructions_view = QTextEdit()
             instructions_view.setPlainText(recipe.instructions)
             instructions_view.setReadOnly(True)
             instructions_view.setMaximumHeight(140)
-            layout.addWidget(instructions_view)
+            instructions_layout.addWidget(instructions_view)
+            layout.addWidget(instructions_card)
 
+        last_made_card = QFrame()
+        last_made_card.setObjectName("NatureAssetCard")
+        last_made_layout = QVBoxLayout(last_made_card)
+        last_made_layout.setContentsMargins(18, 16, 18, 16)
+        last_made_layout.setSpacing(8)
         last_made = self.context.kitchen.last_made_date(recipe_id)
         last_made_text = f"Last made: {last_made}" if last_made else "Never logged as made"
         last_made_label = QLabel(last_made_text)
-        last_made_label.setObjectName("SubtitleLabel")
-        layout.addWidget(last_made_label)
+        last_made_label.setObjectName("NatureTileCaption")
+        last_made_layout.addWidget(last_made_label)
 
         log_meal_button = QPushButton("Log that I made this today")
         log_meal_button.clicked.connect(lambda: self._on_log_meal_today(recipe_id))
-        layout.addWidget(log_meal_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        last_made_layout.addWidget(log_meal_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(last_made_card)
 
         layout.addStretch(1)
+        scroll.setWidget(content)
+        outer.addWidget(scroll, stretch=1)
         return page
 
     def _unlocking_mission_name(self, recipe_id: str) -> Optional[str]:
@@ -524,8 +604,24 @@ class KitchenModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_pantry_tab(self) -> QWidget:
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        """Nature re-skin (2026-09-14) — a bordered #NatureAssetCard
+        titled "Pantry" around the existing QListWidget, matching how
+        the reference mockup shows Pantry as its own boxed section.
+        The list/selection/Edit/Delete interaction is unchanged — a
+        pantry item has no detail page to click into, unlike Recipes."""
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 12, 0, 12)
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(8)
+
+        title = QLabel("Pantry")
+        title.setObjectName("NatureSectionTitle")
+        layout.addWidget(title)
 
         self._pantry_list = QListWidget()
         layout.addWidget(self._pantry_list, stretch=1)
@@ -544,8 +640,9 @@ class KitchenModule(ModuleBase):
         button_row.addWidget(delete_button)
         layout.addLayout(button_row)
 
+        page_layout.addWidget(card, stretch=1)
         self._refresh_pantry_list()
-        return tab
+        return page
 
     def _refresh_pantry_list(self) -> None:
         if self._pantry_list is None:
@@ -603,8 +700,22 @@ class KitchenModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_grocery_tab(self) -> QWidget:
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        """Nature re-skin (2026-09-14) — boxed #NatureAssetCard titled
+        "Grocery List", matching the reference mockup; the checkable-
+        item interaction underneath is unchanged."""
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 12, 0, 12)
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(8)
+
+        title = QLabel("Grocery List")
+        title.setObjectName("NatureSectionTitle")
+        layout.addWidget(title)
 
         self._grocery_list_widget = QListWidget()
         self._grocery_list_widget.itemChanged.connect(self._on_grocery_item_changed)
@@ -624,8 +735,9 @@ class KitchenModule(ModuleBase):
         button_row.addWidget(clear_button)
         layout.addLayout(button_row)
 
+        page_layout.addWidget(card, stretch=1)
         self._refresh_grocery_list()
-        return tab
+        return page
 
     def _refresh_grocery_list(self) -> None:
         if self._grocery_list_widget is None:
@@ -678,8 +790,21 @@ class KitchenModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_meal_log_tab(self) -> QWidget:
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        """Nature re-skin (2026-09-14) — boxed #NatureAssetCard titled
+        "Meal Log", same treatment as Pantry/Grocery."""
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 12, 0, 12)
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(8)
+
+        title = QLabel("Meal Log")
+        title.setObjectName("NatureSectionTitle")
+        layout.addWidget(title)
 
         self._meal_log_list = QListWidget()
         layout.addWidget(self._meal_log_list, stretch=1)
@@ -694,8 +819,9 @@ class KitchenModule(ModuleBase):
         button_row.addWidget(delete_button)
         layout.addLayout(button_row)
 
+        page_layout.addWidget(card, stretch=1)
         self._refresh_meal_log_list()
-        return tab
+        return page
 
     def _refresh_meal_log_list(self) -> None:
         if self._meal_log_list is None:
@@ -738,11 +864,24 @@ class KitchenModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_suggestions_tab(self) -> QWidget:
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        """Nature re-skin (2026-09-14) — boxed #NatureAssetCard titled
+        "Suggestions", same treatment as Pantry/Grocery/Meal Log."""
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 12, 0, 12)
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(8)
+
+        title = QLabel("Suggestions")
+        title.setObjectName("NatureSectionTitle")
+        layout.addWidget(title)
 
         intro = QLabel("Recipes you can make right now, based on your pantry — fully makeable ones come first.")
-        intro.setObjectName("SubtitleLabel")
+        intro.setObjectName("NatureTileCaption")
         intro.setWordWrap(True)
         layout.addWidget(intro)
 
@@ -753,8 +892,9 @@ class KitchenModule(ModuleBase):
         add_missing_button.clicked.connect(self._on_add_missing_to_grocery_list)
         layout.addWidget(add_missing_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
+        page_layout.addWidget(card, stretch=1)
         self._refresh_suggestions_list()
-        return tab
+        return page
 
     def _refresh_suggestions_list(self) -> None:
         if self._suggestions_list is None:

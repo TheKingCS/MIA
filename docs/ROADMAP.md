@@ -9067,3 +9067,45 @@ Estate got the full Nature conversion; Missions and Skills got the
 hero-only treatment; Home dashboard is deliberately not touched,
 reserved for its own future session. Household was never one of the
 pictured 8 pages and remains on the old teal system.
+
+## Kitchen: real reorganization, not just the earlier shell swap (2026-09-14)
+
+User caught a real gap: the Kitchen pass earlier the same day only did
+the mechanical outer-shell swap (photo hero + tab-bar chrome, same as
+Workout) — every tab's actual content was untouched, still plain
+`QListWidget` rows, not the recipe photo-cards or boxed Pantry/Grocery
+sections the reference mockup actually shows. Same class of gap as
+the earlier Garage detail-page correction (style pass done, content-
+structure pass skipped) — see
+`feedback_style_vs_information_architecture.md`.
+
+**Recipes tab**: real restructure, same pattern as Real Estate's
+properties. `QListWidget` rows replaced with clickable
+`#NatureAssetCard`s — a thumbnail badge (🔒 for locked, 🍽 otherwise)
++ `format_recipe_row()`'s existing text reused verbatim (no formatter
+changes, no test breakage). Add/Edit/View/Delete's old selected-row
+button flow is gone; Edit/Delete moved onto the recipe's own detail
+page (matches Real Estate/every other Nature page's "click in to
+manage it" pattern), "Add Recipe" stays on the list page.
+
+**Recipe detail page**: same hero + per-section `#NatureAssetCard`
+treatment as every other detail page this rollout touched (Nutrition/
+Ingredients/Instructions/Last-Made cards); the locked-recipe branch
+still shows nothing but name + unlock hint, now in a coral
+`#NatureAttentionPanel` instead of plain text.
+
+**Pantry/Grocery List/Meal Log/Suggestions**: lighter treatment —
+each tab's content is now one boxed `#NatureAssetCard` with a real
+section title, matching how the mockup shows Pantry/Grocery as their
+own bordered sections. The underlying `QListWidget` + selected-row
+Edit/Delete/checkbox interaction is deliberately unchanged — unlike a
+recipe or a property, a pantry item or grocery entry has no detail
+page to click into, so a full card conversion would only be
+decorative, not functional, here.
+
+**Verification**: `pytest -q` — full suite, 2696 passed (all 17
+existing Kitchen tests, including every `format_recipe_row()` case,
+passed unmodified). Manual headless-Qt screenshots confirmed: 3 real
+recipe cards (locked and unlocked), a locked recipe's coral attention
+panel, an unlocked recipe's Ingredients/Instructions cards, and the
+boxed Pantry card — all rendering and clicking through correctly.
