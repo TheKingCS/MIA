@@ -178,6 +178,31 @@ def format_attention_line(
     return f"{format_task_status_line(task, today, readings)}   ({asset_name})"
 
 
+def is_quick_stat_task(task: MaintenanceTask) -> bool:
+    """Pure filter — testable without Qt. A meter/sensor task with no
+    due-date configuration at all (no meter_interval / no
+    threshold_value) is a pure live-reading tracker — e.g. "Engine
+    Hours"/"Fuel Level" — not something that itself goes overdue, so
+    it belongs in the detail page's quick-stats strip, not the Current
+    Tasks list. (Other meter/sensor tasks, like the mower's hour-based
+    Oil & filter change, DO have a meter_interval and stay in Current
+    Tasks as usual.)"""
+    if task.is_meter_task:
+        return task.meter_interval is None
+    if task.is_sensor_task:
+        return task.threshold_value is None
+    return False
+
+
+def format_quick_stat_value(readings: list[Reading], unit: str) -> str:
+    """Pure formatting logic — testable without Qt. The latest logged
+    reading for a quick-stat task, or an honest "no reading logged"
+    rather than fabricating one."""
+    if not readings:
+        return "no reading logged"
+    return f"{readings[-1].value:g} {unit}".strip()
+
+
 def format_glance_next_up(attention_count: int, first_task: Optional[MaintenanceTask]) -> str:
     """Pure formatting logic — testable without Qt. Deliberately doesn't
     try to rank across mechanically-incomparable units (days vs. miles
@@ -231,45 +256,195 @@ class GarageModule(ModuleBase):
         self._stack.setCurrentWidget(self._detail_page)
 
     def _build_detail_page(self, asset_id: str) -> QWidget:
+        """Nature re-skin pilot, detail page (2026-09-14) — rebuilt
+        against the user's own second reference mockup (a full
+        per-asset page: hero photo, quick-stats strip, Needs Attention/
+        Next Up cards, task list, Related Missions, Asset Details,
+        Documents). Kept as one scrollable page rather than the
+        mockup's own sidebar/tab system (Overview/Maintenance/
+        Missions/Documents/Parts/History/Settings) — that's a much
+        bigger per-asset navigation feature, and "Parts"/"History" have
+        no real data model behind them yet. Every card here shows only
+        real data (readings, real task fields, real asset fields,
+        real documents) — nothing fabricated just to fill the
+        reference's shape."""
         asset = self.context.maintenance.get_asset(asset_id)
 
         page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(10)
+        page.setStyleSheet("background-color: #070f0d;")
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 16, 28, 16)
+        hero_layout.setSpacing(6)
 
         back_button = QPushButton("← Back to Garage")
         back_button.clicked.connect(self._show_list_page)
-        layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        hero_layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
         if asset is None:
-            layout.addWidget(QLabel("This asset no longer exists."))
+            hero_layout.addStretch(1)
+            missing = QLabel("This asset no longer exists.")
+            missing.setObjectName("NatureHeaderTagline")
+            hero_layout.addWidget(missing)
+            outer.addWidget(hero)
+            outer.addStretch(1)
             return page
 
-        header = QLabel(f"{asset.name}  [{asset.category}]")
-        header.setObjectName("TitleLabel")
-        layout.addWidget(header)
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+        title = QLabel(asset.name)
+        title.setObjectName("NatureHeaderTitle")
+        header_row.addWidget(title)
+        category_badge = QLabel(asset.category)
+        category_badge.setObjectName("NatureTileCaption")
+        header_row.addWidget(category_badge)
+        header_row.addStretch(1)
+        hero_layout.addLayout(header_row)
+
+        make_model = " ".join(part for part in [asset.manufacturer, asset.model] if part)
+        if make_model:
+            subtitle = QLabel(make_model)
+            subtitle.setObjectName("NatureHeaderTagline")
+            hero_layout.addWidget(subtitle)
+        hero_layout.addStretch(1)
+
+        outer.addWidget(hero)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        body_layout = QVBoxLayout(content)
+        body_layout.setContentsMargins(24, 20, 24, 24)
+        body_layout.setSpacing(16)
 
         today = date.today()
-        status_title = QLabel("Status")
-        status_title.setStyleSheet("font-weight: 600;")
-        layout.addWidget(status_title)
         tasks = self.context.maintenance.tasks_for_asset(asset.asset_id)
-        if not tasks:
-            empty = QLabel("No maintenance tasks tracked for this asset yet.")
-            empty.setObjectName("SubtitleLabel")
-            layout.addWidget(empty)
-        for task in tasks:
-            readings = (
+        readings_by_task = {
+            task.task_id: (
                 self.context.maintenance.readings_for_task(task.task_id) if task.trigger_type != "calendar" else []
             )
-            line = QLabel(f"- {format_task_status_line(task, today, readings)}")
-            line.setWordWrap(True)
-            layout.addWidget(line)
+            for task in tasks
+        }
+        quick_stat_tasks = [t for t in tasks if is_quick_stat_task(t)]
+        actionable_tasks = [t for t in tasks if not is_quick_stat_task(t)]
+        attention_tasks = [t for t in actionable_tasks if task_needs_attention(t, today, readings_by_task[t.task_id])]
 
-        layout.addWidget(build_asset_missions_panel(self.context, asset.asset_id))
-        layout.addStretch(1)
+        if quick_stat_tasks:
+            stats_row = QHBoxLayout()
+            stats_row.setSpacing(16)
+            for task in quick_stat_tasks:
+                self._build_quick_stat_tile(stats_row, task, readings_by_task[task.task_id])
+            body_layout.addLayout(stats_row)
+
+        if attention_tasks:
+            attention_card = QFrame()
+            attention_card.setObjectName("NatureAttentionPanel")
+            attention_layout = QVBoxLayout(attention_card)
+            attention_layout.setContentsMargins(18, 16, 18, 16)
+            attention_layout.setSpacing(6)
+            attention_title = QLabel("⚠  Needs Attention")
+            attention_title.setObjectName("NatureAttentionTitle")
+            attention_layout.addWidget(attention_title)
+            for task in attention_tasks:
+                line = QLabel(f"•  {format_task_status_line(task, today, readings_by_task[task.task_id])}")
+                line.setObjectName("NatureAttentionLine")
+                line.setWordWrap(True)
+                attention_layout.addWidget(line)
+            body_layout.addWidget(attention_card)
+
+        tasks_card = QFrame()
+        tasks_card.setObjectName("NatureAssetCard")
+        tasks_layout = QVBoxLayout(tasks_card)
+        tasks_layout.setContentsMargins(18, 16, 18, 16)
+        tasks_layout.setSpacing(6)
+        tasks_title = QLabel("Current Tasks")
+        tasks_title.setObjectName("NatureSectionTitle")
+        tasks_layout.addWidget(tasks_title)
+        if not actionable_tasks:
+            empty = QLabel("No maintenance tasks tracked for this asset yet.")
+            empty.setObjectName("NatureTileCaption")
+            tasks_layout.addWidget(empty)
+        for task in actionable_tasks:
+            line = QLabel(f"•  {format_task_status_line(task, today, readings_by_task[task.task_id])}")
+            line.setObjectName("NatureAssetLine")
+            if task in attention_tasks:
+                line.setProperty("tone", "danger")
+            line.setWordWrap(True)
+            tasks_layout.addWidget(line)
+        body_layout.addWidget(tasks_card)
+
+        missions_card = QFrame()
+        missions_card.setObjectName("NatureAssetCard")
+        missions_layout = QVBoxLayout(missions_card)
+        missions_layout.setContentsMargins(18, 16, 18, 16)
+        missions_layout.addWidget(build_asset_missions_panel(self.context, asset.asset_id))
+        body_layout.addWidget(missions_card)
+
+        details = [
+            ("Make", asset.manufacturer),
+            ("Model", asset.model),
+            ("Serial #", asset.serial_number),
+            ("Purchase Date", asset.purchase_date),
+        ]
+        details = [(label, value) for label, value in details if value]
+        if details:
+            details_card = QFrame()
+            details_card.setObjectName("NatureAssetCard")
+            details_layout = QVBoxLayout(details_card)
+            details_layout.setContentsMargins(18, 16, 18, 16)
+            details_layout.setSpacing(6)
+            details_title = QLabel("Asset Details")
+            details_title.setObjectName("NatureSectionTitle")
+            details_layout.addWidget(details_title)
+            for label, value in details:
+                row = QLabel(f"{label}: {value}")
+                row.setObjectName("NatureAssetLine")
+                details_layout.addWidget(row)
+            body_layout.addWidget(details_card)
+
+        documents_card = QFrame()
+        documents_card.setObjectName("NatureAssetCard")
+        documents_layout = QVBoxLayout(documents_card)
+        documents_layout.setContentsMargins(18, 16, 18, 16)
+        documents_layout.setSpacing(6)
+        documents_title = QLabel("Documents")
+        documents_title.setObjectName("NatureSectionTitle")
+        documents_layout.addWidget(documents_title)
+        if not asset.documents:
+            empty = QLabel("No documents attached yet.")
+            empty.setObjectName("NatureTileCaption")
+            documents_layout.addWidget(empty)
+        else:
+            for filename in asset.documents:
+                row = QLabel(f"📄  {filename}")
+                row.setObjectName("NatureAssetLine")
+                documents_layout.addWidget(row)
+        body_layout.addWidget(documents_card)
+
+        body_layout.addStretch(1)
+        scroll.setWidget(content)
+        outer.addWidget(scroll, stretch=1)
         return page
+
+    def _build_quick_stat_tile(self, row_layout: QHBoxLayout, task: MaintenanceTask, readings: list[Reading]) -> None:
+        tile = QFrame()
+        tile.setObjectName("NatureGlanceTile")
+        tile_layout = QVBoxLayout(tile)
+        tile_layout.setContentsMargins(14, 12, 14, 12)
+        tile_layout.setSpacing(2)
+        value_label = QLabel(format_quick_stat_value(readings, task.meter_unit))
+        value_label.setObjectName("NatureTileValue")
+        tile_layout.addWidget(value_label)
+        caption_label = QLabel(task.title)
+        caption_label.setObjectName("NatureTileCaption")
+        tile_layout.addWidget(caption_label)
+        row_layout.addWidget(tile, stretch=1)
 
     def _build_list_page(self) -> QWidget:
         """Nature re-skin pilot (2026-09-14) — a fixed-height photo

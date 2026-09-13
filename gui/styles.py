@@ -1254,11 +1254,18 @@ QLabel#NatureAttentionLine {
     font-size: 13px;
 }
 
+QFrame#NatureAssetCard,
 QPushButton#NatureAssetCard {
     background-color: rgba(2, 24, 27, 0.82);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     text-align: left;
+}
+
+QLabel#NatureSectionTitle {
+    color: #e7ecf3;
+    font-size: 15px;
+    font-weight: 700;
 }
 
 QPushButton#NatureAssetCard:hover {

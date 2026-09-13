@@ -8882,3 +8882,48 @@ still work unchanged under the new hero/body structure.
 this same treatment to Greenhouse, Kitchen, Workout, Real Estate,
 Missions, Skills, and Household — explicitly sequenced as "pilot one
 page first," not started yet.
+
+## "Nature" re-skin pilot, part 2: Garage's asset detail page (2026-09-14)
+
+User shared a second reference mockup — a full per-asset detail page
+(hero photo, sidebar nav, quick-stats strip, floating Quick Stats/
+Needs Attention/Next Up cards, tabbed Overview with Current Tasks/
+Related Missions/Asset Details/Documents cards, brand footer) for a
+"John Deere Z315E" mower. Confirmed scope: rebuild Garage's own
+`_build_detail_page()` against it (the exact real mower this app
+already tracks).
+
+Kept as one scrollable page rather than the mockup's own sidebar/tab
+navigation (Overview/Maintenance/Missions/Documents/**Parts**/
+**History**/Settings) — that's a much bigger per-asset navigation
+feature, and Parts/History have no real data model behind them.
+**New pure functions** `is_quick_stat_task()`/`format_quick_stat_value()`
+distinguish a pure live-reading tracker (a meter/sensor task with no
+`meter_interval`/`threshold_value` configured — e.g. "Engine Hours")
+from an actionable due-date task (e.g. "Fuel Level," which — checked
+the real data, not assumed — DOES have a real threshold_value=20 low-
+fuel warning configured, so correctly stays in Current Tasks rather
+than becoming a quick-stat tile). New cards: quick-stats strip, Needs
+Attention (reused from the list page's styling), Current Tasks, Asset
+Details (Make/Model/Serial/Purchase Date — real `MaintenanceAsset`
+fields that already existed but were empty), Documents (real
+`asset.documents`, empty state honest about there being none yet).
+Related Missions reuses the existing shared panel unchanged.
+
+**Real bug found while verifying, not fabricated**: the real "Mow the
+Lawn"/"Check the Mower's Oil"/"Fill the Mower with Gas" missions
+(created earlier this session) had never actually been linked via
+`maintenance_asset_id` to the real mower — the Related Missions
+feature built two sessions ago had zero real links to show for the
+mower specifically. Fixed as real data, alongside filling in the
+mower's real `manufacturer`/`model` ("John Deere"/"Z315E," known from
+this session's own earlier Z315E research) — both via `update_asset()`/
+`update_mission()`, verified by re-rendering the real mower's detail
+page and confirming all three missions now appear.
+
+**Verification**: `pytest -q` — full suite, 2686 passed (7 new tests
+for the two pure functions), zero regressions. Manual headless-Qt
+screenshot against an isolated copy of the real data (never written
+to directly by the verification script) confirmed quick-stat tile,
+Current Tasks, newly-linked Related Missions, and the new Asset
+Details fields all render correctly.

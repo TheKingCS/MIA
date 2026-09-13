@@ -19,8 +19,10 @@ from modules.garage.module import (
     GarageModule,
     format_attention_line,
     format_glance_next_up,
+    format_quick_stat_value,
     format_task_status_line,
     is_garage_asset,
+    is_quick_stat_task,
     task_needs_attention,
 )
 
@@ -156,6 +158,43 @@ def test_format_glance_next_up_single_item_names_it():
 
 def test_format_glance_next_up_multiple_items_shows_count():
     assert format_glance_next_up(3, _calendar_task()) == "3 items"
+
+
+# ------------------------------------------------------------------
+# is_quick_stat_task / format_quick_stat_value (Nature re-skin's
+# detail page, 2026-09-14)
+# ------------------------------------------------------------------
+
+def test_is_quick_stat_task_true_for_meter_task_with_no_interval():
+    task = MaintenanceTask(
+        task_id="t4", asset_id="a1", title="Engine Hours", trigger_type="runtime", meter_unit="engine hours",
+    )
+    assert is_quick_stat_task(task) is True
+
+
+def test_is_quick_stat_task_false_for_meter_task_with_an_interval():
+    assert is_quick_stat_task(_meter_task()) is False
+
+
+def test_is_quick_stat_task_true_for_sensor_task_with_no_threshold():
+    task = MaintenanceTask(task_id="t5", asset_id="a1", title="Fuel Level", trigger_type="sensor", meter_unit="%")
+    assert is_quick_stat_task(task) is True
+
+
+def test_is_quick_stat_task_false_for_sensor_task_with_a_threshold():
+    assert is_quick_stat_task(_sensor_task()) is False
+
+
+def test_is_quick_stat_task_false_for_calendar_task():
+    assert is_quick_stat_task(_calendar_task()) is False
+
+
+def test_format_quick_stat_value_uses_latest_reading():
+    assert format_quick_stat_value([_reading(1.0), _reading(1.5)], "engine hours") == "1.5 engine hours"
+
+
+def test_format_quick_stat_value_no_readings():
+    assert format_quick_stat_value([], "engine hours") == "no reading logged"
 
 
 # ------------------------------------------------------------------
