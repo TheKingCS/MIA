@@ -8242,3 +8242,54 @@ this phase cannot verify from this sandbox, stated plainly**: a real
 browser's `PushManager.subscribe()`, a real phone receiving a real
 push, or Tailscale reachability — those are the user's own real-device/
 network steps, next.
+
+## Mobile access, Phase 2: real notifications auto-push to subscribed phones (2026-09-12)
+
+Closes the gap Phase 1 named and deferred: every real `NotificationManager.notify()`
+call (mission complete, low battery, a Maintenance reminder — anything,
+from anywhere in the running app) now also goes out as a Web Push, not
+just the on-demand test button. `core/web_push.py` gained
+`register_notification_relay(context)`, which subscribes to the
+existing `"notification.created"` event and fans it out to every
+registered subscription — reacting to `NotificationManager` from the
+outside (same pattern `core/pathway_manager.py` already uses on
+`"mission.completed"`), zero changes to `NotificationManager` itself.
+Registered in `core/application.py`'s `_start_mobile_server()`, so it's
+under the same `server.enabled` flag as the rest of this feature.
+
+**Real, deliberate simplification, stated plainly**: not profile-
+scoped. `core/notification_manager.py`'s `Notification` carries no
+`profile_id` at all — notifications are device-wide, not per-user —
+so every subscribed device gets every notification regardless of which
+profile is active. Correct for a personal single-user device; a named,
+real gap if this device ever has multiple profiles genuinely in
+separate everyday use.
+
+**Real threading concern caught before it shipped, not after**:
+`core/event_bus.py`'s `publish()` is synchronous, and `notify()` can be
+called from the GUI thread (e.g. completing a Mission via a button
+click). Sending a push is a blocking network call — doing it inline on
+the calling thread would freeze the UI, the exact anti-pattern this
+project's existing QThread-based workers (generate/chat/boot-sound)
+exist to avoid. The relay's event callback hands off to a plain
+`threading.Thread` (daemon, fire-and-forget) instead — deliberately
+plain `threading`, not `QThread`, so `core/web_push.py` still needs no
+PySide6 import.
+
+Also fixed, while working on this: `/api/login` required the internal
+`profile_id` hex string, which a person testing from a phone has no
+way to know — it now accepts the profile's display name too
+(case-insensitive), and the login form label changed from "Profile ID"
+to "Name" to match. Caught immediately when actually reasoning through
+what a human tester would type, before anyone hit it.
+
+**Verification**: `pytest -q` — full suite, 2597 passed, zero
+regressions (4 new relay tests, mocking `pywebpush.webpush` and — for
+the one true end-to-end test through a real `notify()` call — swapping
+in a synchronous stand-in for `threading.Thread` so the test isn't
+racy). Manual verification: built a real context with a real
+`NotificationManager`/`PushSubscriptionManager`, registered the relay,
+called `notify()` for real, and confirmed (a) it returns in under a
+millisecond — not blocked on the network call — and (b) the real
+background thread it spawned actually invoked `webpush()` with the
+right subscription and payload shortly after.

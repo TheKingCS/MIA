@@ -4357,11 +4357,12 @@ class MIAApplication:
         for the PWA + Web Push pipeline (server/app.py), off by default
         (server.enabled). Started here, in the same process and on the
         same self.context every GUI screen already shares, rather than
-        as a separate process — that's what lets a future
-        "notification.created" -> push relay (not built yet) see events
-        raised anywhere in the running app; a standalone server process
-        would have its own disconnected event bus. See the Mobile
-        Phase 1 plan's own architecture note for the full reasoning.
+        as a separate process — that's what lets Phase 2's
+        "notification.created" -> push relay (registered right below)
+        see events raised anywhere in the running app; a standalone
+        server process would have its own disconnected event bus. See
+        the Mobile Phase 1 plan's own architecture note for the full
+        reasoning.
 
         Runs on a daemon thread via uvicorn — a real, accepted
         simplification for v1: the server thread reads/writes the same
@@ -4378,6 +4379,7 @@ class MIAApplication:
         try:
             import uvicorn
 
+            from core.web_push import register_notification_relay
             from server.app import create_app
         except ImportError:
             log.warning("server.enabled is true but fastapi/uvicorn/pywebpush aren't installed — mobile server not started.")
@@ -4390,6 +4392,14 @@ class MIAApplication:
         thread = threading.Thread(target=server.run, daemon=True, name="mia-mobile-server")
         thread.start()
         log.info("Mobile API server started on port %d.", port)
+
+        # Mobile access, Phase 2 (2026-09-12) — real notifications now
+        # actually reach subscribed phones, not just the on-demand test
+        # push. Registered only when the server itself is enabled: with
+        # it off, no subscription could ever exist anyway, and this
+        # keeps the whole feature under the one server.enabled flag a
+        # user actually sees/controls.
+        register_notification_relay(self.context)
 
     def _boot_step_core_systems(self) -> str:
         return "CORE SYSTEMS... ONLINE"

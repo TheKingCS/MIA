@@ -22,12 +22,37 @@ core/llm_manager.py's own stance on an unreachable external service. A
 permanently dead subscription (the push service's 404/410 "gone"
 response) is removed via PushSubscriptionManager so it doesn't keep
 being retried forever.
+
+register_notification_relay() (Mobile access, Phase 2, 2026-09-12)
+subscribes to NotificationManager's existing "notification.created"
+event and fans it out to every registered push subscription — reacting
+to the publisher rather than modifying it, same pattern
+core/pathway_manager.py already uses on "mission.completed". **Not
+profile-scoped**: core/notification_manager.py's Notification carries
+no profile_id at all (notifications are device-wide, not per-user), so
+every subscribed device gets every notification, regardless of which
+profile is logged in on it or which profile is "active" on the desktop.
+Correct and simple for a personal single-user device; a real, named
+simplification if this device ever has multiple profiles genuinely
+in separate use.
+
+Real threading note: core/event_bus.py's publish() is synchronous, and
+notify() can be called from the GUI thread (e.g. completing a Mission
+via a button click). Actually sending a push is a blocking network
+call — doing that on the calling thread would freeze the UI, the exact
+anti-pattern MIA's existing QThread-based workers (generate/chat/boot-
+sound) exist to avoid. The relay's event-bus callback therefore hands
+off to a plain threading.Thread (daemon, fire-and-forget) rather than
+sending inline — plain threading, not QThread, so this module still
+needs no PySide6 import and stays usable from a headless context too.
 """
 
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import requests
 from cryptography.hazmat.primitives import serialization
@@ -36,6 +61,10 @@ from pywebpush import WebPushException, webpush
 
 from core.logger import get_logger
 from core.push_subscription_manager import PushSubscription, PushSubscriptionManager
+
+if TYPE_CHECKING:
+    from core.app_context import AppContext
+    from core.notification_manager import Notification
 
 log = get_logger(__name__)
 
@@ -142,3 +171,32 @@ def send_web_push(
         # logged but not removed (unlike the 404/410 case above).
         log.warning("Malformed push subscription for profile '%s' — cannot send.", subscription.profile_id, exc_info=True)
         return False
+
+
+def _relay_notification_to_all_subscriptions(context: "AppContext", notification: "Notification") -> None:
+    """The actual fan-out for one notification — separated from
+    register_notification_relay()'s event-bus callback so it can be
+    called (and tested) directly and synchronously, independent of the
+    background-thread hand-off described in this module's docstring."""
+    if context.push_subscriptions is None:
+        return
+    for subscription in context.push_subscriptions.all_subscriptions():
+        send_web_push(subscription, notification.title, notification.message, context.push_subscriptions)
+
+
+def register_notification_relay(context: "AppContext") -> None:
+    """Subscribes to "notification.created" so every raised
+    Notification also goes out as a Web Push to every registered
+    subscription. See this module's docstring for why this isn't
+    profile-scoped and why the actual send happens on a background
+    thread rather than inline on the publishing thread."""
+
+    def _on_notification_created(notification: "Notification", **kwargs) -> None:
+        threading.Thread(
+            target=_relay_notification_to_all_subscriptions,
+            args=(context, notification),
+            daemon=True,
+            name="mia-push-relay",
+        ).start()
+
+    context.events.subscribe("notification.created", _on_notification_created)

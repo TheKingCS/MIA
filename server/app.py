@@ -10,11 +10,12 @@ dashboard endpoints yet; that's separate, later scope.
 
 create_app(context) takes the *same*, already-constructed AppContext
 core/application.py's MIAApplication is running (not a fresh
-build_core_context() call) — this is what lets a future auto-push
-integration (subscribing to "notification.created" on context.events)
-see events from anywhere in the running app, GUI-triggered included.
-See core/application.py's own comment at the call site for the
-threading model this implies.
+build_core_context() call) — this is what lets Phase 2's auto-push
+relay (core.web_push.register_notification_relay(), registered
+alongside this server in core/application.py) see
+"notification.created" events raised from anywhere in the running app,
+GUI-triggered included. See core/application.py's own comment at the
+call site for the threading model this implies.
 
 Auth is deliberately simple, matching this project's existing "stdlib
 covers it" stance on profile passwords (core/profile_manager.py):
