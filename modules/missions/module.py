@@ -28,6 +28,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
@@ -50,6 +51,7 @@ from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
 from gui.widgets.mission_list_row import MissionListRow
 from gui.widgets.objective_checklist_row import ObjectiveChecklistRow
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from modules.module_base import ModuleBase
 
 
@@ -126,36 +128,69 @@ class MissionsModule(ModuleBase):
         self._selected_mission_id: Optional[str] = None
 
     def get_widget(self) -> QWidget:
-        widget = QWidget()
-        outer = QVBoxLayout(widget)
-        outer.setContentsMargins(24, 20, 24, 20)
+        """Nature re-skin (2026-09-14) — hero-only pass: a photo hero
+        replaces the old plain-text title row (the active-count pill
+        moves into it, same info, just relocated), everything below
+        (detail/list panels, their teal-HUD styling, MissionListRow,
+        etc.) is untouched — a deliberate, smaller scope than the full
+        conversion Garage/Kitchen/Real Estate got, since this screen
+        already went through its own earlier, separate design pass
+        (2026-07-18's teal HUD restyle) rather than starting plain."""
+        page = QWidget()
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(14)
 
-        title_row = QHBoxLayout()
-        title_label = QLabel(f"{self.icon}  Mission Log")
-        title_label.setObjectName("TitleLabel")
-        title_row.addWidget(title_label)
-        title_row.addStretch()
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(120)
+        hero_layout = QHBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 16, 28, 16)
+        hero_layout.setSpacing(12)
+
+        icon_badge = QLabel(self.icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hero_layout.addWidget(icon_badge)
+
+        title_col = QVBoxLayout()
+        title_col.setSpacing(2)
+        title_label = QLabel("Mission Log")
+        title_label.setObjectName("NatureHeaderTitle")
+        title_col.addWidget(title_label)
+        tagline = QLabel(self.description)
+        tagline.setObjectName("NatureHeaderTagline")
+        title_col.addWidget(tagline)
+        hero_layout.addLayout(title_col, stretch=1)
+
         self._active_count_label = QLabel("")
         self._active_count_label.setObjectName("MissionActiveCountPill")
-        title_row.addWidget(self._active_count_label)
-        outer.addLayout(title_row)
+        hero_layout.addWidget(self._active_count_label, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        outer.addWidget(hero)
+
+        body_container = QWidget()
+        body_outer = QVBoxLayout(body_container)
+        body_outer.setContentsMargins(24, 0, 24, 20)
+        body_outer.setSpacing(14)
 
         add_row = QHBoxLayout()
         add_mission_button = QPushButton("+ Add Mission")
         add_mission_button.clicked.connect(self._on_add_mission)
         add_row.addWidget(add_mission_button)
         add_row.addStretch()
-        outer.addLayout(add_row)
+        body_outer.addLayout(add_row)
 
         body = QHBoxLayout()
         body.setSpacing(18)
         body.addWidget(self._build_detail_panel(), stretch=10)
         body.addWidget(self._build_list_panel(), stretch=7)
-        outer.addLayout(body, stretch=1)
+        body_outer.addLayout(body, stretch=1)
+
+        outer.addWidget(body_container, stretch=1)
 
         self._refresh()
-        return widget
+        return page
 
     # ------------------------------------------------------------------
     # Panel construction

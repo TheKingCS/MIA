@@ -9030,3 +9030,40 @@ regressions. Manual headless-Qt screenshots (isolated real-shaped
 data, real `data/properties.json` confirmed untouched — still 3)
 of Kitchen's tab bar and Real Estate's list+detail pages, including
 clicking through Edit/Delete's new detail-page location.
+
+## "Nature" re-skin rollout: hero-only pass on Missions + Skills (2026-09-14)
+
+Missions and Skills are qualitatively different from the other five
+modules touched this rollout — they aren't plain, unstyled screens
+getting a first design pass; they already went through their OWN
+earlier, separate teal-HUD design work (Missions: 2026-07-18's
+two-panel Mission Log rebuild; Skills: 2026-09-12's Phase 4 skill
+tree restyle), with a lot of specific custom QSS (`MissionCardBadge`,
+`MissionDetailRegion`, `SkillCardStatus`, a level footer, etc.). Asked
+the user directly via AskUserQuestion whether to fully convert both to
+Nature or add just the photo hero and leave the rest — they picked
+hero-only, and separately confirmed Home dashboard (the main app
+shell, highest-traffic/highest-risk screen) should wait for its own
+dedicated session rather than be folded into this rollout.
+
+Both modules: the old plain-text title row is replaced by a
+`PhotoBackgroundFrame` hero (icon badge + title + tagline), with
+whatever info lived in that row (Missions' active-mission-count pill;
+Skills' level/XP stats label) relocated into the hero itself, not
+dropped. Every other element — category tabs, the skill tree canvas,
+capability/achievements/next-honest-step cards, the Mission Log's
+detail/list split panels and all their teal-HUD object names — is
+completely untouched.
+
+**Verification**: `pytest -q` — full suite, 2696 passed, zero
+regressions (only each module's outermost `get_widget()` layout
+changed). Manual headless-Qt screenshots (isolated profile/skill/
+mission data, real `config/config.json` confirmed untouched) of both
+screens confirm the hero renders correctly with the relocated info
+intact, and the rest of each screen is pixel-identical to before.
+
+**Rollout status**: Garage, Greenhouse, Workout, Kitchen, and Real
+Estate got the full Nature conversion; Missions and Skills got the
+hero-only treatment; Home dashboard is deliberately not touched,
+reserved for its own future session. Household was never one of the
+pictured 8 pages and remains on the old teal system.

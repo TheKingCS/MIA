@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -53,6 +54,7 @@ from core.skill_leveling import (
 from core.skill_manager import SkillDefinition
 from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from gui.widgets.skill_tree_canvas import SkillTreeCanvas
 from modules.missions.module import format_level_footer_line
 from modules.module_base import ModuleBase
@@ -165,29 +167,56 @@ class SkillsModule(ModuleBase):
         self.context.events.subscribe("profile.xp_changed", self._on_profile_xp_changed)
 
     def get_widget(self) -> QWidget:
+        """Nature re-skin (2026-09-14) — hero-only pass: a photo hero
+        replaces the old plain-text title row, the level/XP stats
+        label moves into it (same info, relocated). Everything below
+        (category tabs, skill tree canvas, capability/achievements/
+        next-step cards, their teal-HUD styling) is untouched — this
+        screen already went through its own earlier, separate design
+        pass (2026-09-12's Phase 4 skill tree restyle) rather than
+        starting plain, so it gets the smaller hero-only scope, same
+        as modules/missions/module.py."""
         root = QWidget()
         layout = QVBoxLayout(root)
-        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(120)
+        hero_layout = QHBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 16, 28, 16)
+        hero_layout.setSpacing(12)
+
+        icon_badge = QLabel(self.icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hero_layout.addWidget(icon_badge)
+
         title_column = QVBoxLayout()
+        title_column.setSpacing(2)
         title = QLabel("Skills")
-        title.setObjectName("TitleLabel")
+        title.setObjectName("NatureHeaderTitle")
         title_column.addWidget(title)
         tagline = QLabel("Do the thing. Earn the level. Unlock the next thing.")
-        tagline.setObjectName("SubtitleLabel")
+        tagline.setObjectName("NatureHeaderTagline")
         title_column.addWidget(tagline)
-        header.addLayout(title_column)
-        header.addStretch()
+        hero_layout.addLayout(title_column, stretch=1)
+
         self._stats_label = QLabel()
-        self._stats_label.setObjectName("SubtitleLabel")
-        header.addWidget(self._stats_label)
-        layout.addLayout(header)
+        self._stats_label.setObjectName("NatureHeaderTagline")
+        hero_layout.addWidget(self._stats_label, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        layout.addWidget(hero)
+
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(24, 0, 24, 24)
+        body_layout.setSpacing(12)
 
         self._tabs_row = QHBoxLayout()
         self._tabs_row.setSpacing(6)
-        layout.addLayout(self._tabs_row)
+        body_layout.addLayout(self._tabs_row)
 
         split_row = QHBoxLayout()
         split_row.setSpacing(20)
@@ -203,7 +232,9 @@ class SkillsModule(ModuleBase):
         split_row.addLayout(left_column, stretch=1)
 
         split_row.addWidget(self._build_right_column())
-        layout.addLayout(split_row, stretch=1)
+        body_layout.addLayout(split_row, stretch=1)
+
+        layout.addWidget(body, stretch=1)
 
         self._widget_built = True
         categories = self.context.skills.categories() if self.context.skills else []
