@@ -10,15 +10,21 @@ core/kitchen_manager.py (self.context.kitchen) — this module is the
 Qt-facing wrapper around it, same split as every other data-backed
 module here.
 
-Five tabs (Recipes, Pantry, Grocery List, Meal Log, Suggestions),
-QTabWidget, same shape as modules/budget/module.py. The Recipes tab is
-itself a `QStackedWidget` list↔detail page (mirrors
-modules/real_estate/module.py's exact pattern) — reopening a recipe
-shouldn't feel like leaving and re-entering the module. Ingredient
-editing on the detail page opens gui/add_edit_ingredient_dialog.py one
-ingredient at a time (the real gui/pick_item_quantity_dialog.py
-precedent — see that dialog's own docstring — not an embedded
-multi-row table editor).
+Five tabs (Recipes, Pantry, Grocery List, Meal Log, Suggestions) — a
+plain button row + QStackedWidget (the "Nature" re-skin's own tab
+convention, ported from modules/garage/module.py; not QTabWidget's own
+unstyled default chrome). The Recipes tab is itself a second, nested
+`QStackedWidget` list↔detail page (mirrors modules/real_estate/module.py's
+exact pattern) — reopening a recipe shouldn't feel like leaving and
+re-entering the module. Ingredient editing on the detail page opens
+gui/add_edit_ingredient_dialog.py one ingredient at a time (the real
+gui/pick_item_quantity_dialog.py precedent — see that dialog's own
+docstring — not an embedded multi-row table editor).
+
+**"Nature" re-skin rollout (2026-09-14)**: photo hero header + the
+Garage/Greenhouse/Workout tab-bar convention. Every tab's own internal
+content (recipe cards, pantry/grocery/meal-log lists) is unchanged
+this pass — only the outer shell.
 
 Since Pantry/Grocery List/Meal Log changes affect what the Suggestions
 tab (and the Recipes detail page's own "missing ingredients" list)
@@ -38,14 +44,15 @@ from typing import Optional
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
-    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -64,6 +71,7 @@ from gui.add_edit_pantry_item_dialog import AddEditPantryItemDialog
 from gui.add_edit_recipe_dialog import AddEditRecipeDialog
 from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from gui.log_meal_dialog import LogMealDialog
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from modules.module_base import ModuleBase
 
 
@@ -138,29 +146,83 @@ class KitchenModule(ModuleBase):
         self._suggestions_list: Optional[QListWidget] = None
 
     def get_widget(self) -> QWidget:
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(12)
+        page = QWidget()
+        page.setStyleSheet("background-color: #070f0d;")
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
 
-        header = QLabel(f"{self.icon}  {self.display_name}")
-        header.setObjectName("TitleLabel")
-        layout.addWidget(header)
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 20, 28, 16)
+        hero_layout.setSpacing(4)
 
-        subtitle = QLabel(self.description)
-        subtitle.setObjectName("SubtitleLabel")
-        layout.addWidget(subtitle)
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+        icon_badge = QLabel(self.icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header_row.addWidget(icon_badge)
+        title = QLabel(self.display_name)
+        title.setObjectName("NatureHeaderTitle")
+        header_row.addWidget(title)
+        header_row.addStretch(1)
+        hero_layout.addLayout(header_row)
 
-        tabs = QTabWidget()
-        tabs.addTab(self._build_recipes_tab(), "Recipes")
-        tabs.addTab(self._build_pantry_tab(), "Pantry")
-        tabs.addTab(self._build_grocery_tab(), "Grocery List")
-        tabs.addTab(self._build_meal_log_tab(), "Meal Log")
-        tabs.addTab(self._build_suggestions_tab(), "Suggestions")
-        tabs.currentChanged.connect(self._on_tab_changed)
-        layout.addWidget(tabs, stretch=1)
+        tagline = QLabel(self.description)
+        tagline.setObjectName("NatureHeaderTagline")
+        hero_layout.addWidget(tagline)
+        hero_layout.addStretch(1)
 
-        return widget
+        outer.addWidget(hero)
+
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(24, 20, 24, 0)
+        body_layout.setSpacing(12)
+
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(24)
+        stack = QStackedWidget()
+        tab_pages = {
+            "Recipes": self._build_recipes_tab(),
+            "Pantry": self._build_pantry_tab(),
+            "Grocery List": self._build_grocery_tab(),
+            "Meal Log": self._build_meal_log_tab(),
+            "Suggestions": self._build_suggestions_tab(),
+        }
+        tab_buttons: dict[str, QPushButton] = {}
+
+        def _select_tab(name: str) -> None:
+            for key, button in tab_buttons.items():
+                button.setProperty("active", key == name)
+                button.style().unpolish(button)
+                button.style().polish(button)
+            stack.setCurrentWidget(tab_pages[name])
+            self._on_tab_changed(0)
+
+        for name, tab_widget in tab_pages.items():
+            button = QPushButton(name)
+            button.setObjectName("NatureTabButton")
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda checked=False, n=name: _select_tab(n))
+            tab_buttons[name] = button
+            tab_row.addWidget(button)
+            stack.addWidget(tab_widget)
+        tab_row.addStretch(1)
+        body_layout.addLayout(tab_row)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(stack)
+        body_layout.addWidget(scroll, stretch=1)
+
+        outer.addWidget(body, stretch=1)
+        _select_tab("Recipes")
+        return page
 
     def _on_tab_changed(self, index: int) -> None:
         self._refresh_recipe_list()

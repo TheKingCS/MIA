@@ -8998,3 +8998,35 @@ populated Daily Mission card side by side.
 
 **Still to do** from the same rollout instruction: Kitchen, Real
 Estate, Missions, Skills, and Home dashboard — not started yet.
+
+## "Nature" re-skin rollout: Kitchen + Real Estate (2026-09-14)
+
+**Kitchen**: same mechanical `QTabWidget` → photo-hero + Nature
+button-row/`QStackedWidget` swap as Workout — all 5 tab-content
+methods (`_build_recipes_tab()` etc., including the Recipes tab's own
+nested list↔detail `QStackedWidget`) reused completely unchanged.
+
+**Real Estate**: a bigger, genuine restructure, not just a wrapper —
+the old list page used a bare `QListWidget` + separate Add/Edit/View
+Details/Delete buttons keyed off "selected row." Replaced with
+clickable `#NatureAssetCard`s (one per property, matching Garage/
+Greenhouse/Kitchen's own established list pattern) — since there's no
+more "selected row" to hang Edit/Delete off, those two moved onto the
+property's own detail page instead (its header now has real Edit/
+Delete buttons alongside "← Back"), which also reads more naturally
+as "manage a property from inside its own page," matching every other
+Nature page's own click-in-to-act-on-it pattern. All 4 detail-page
+sections (Maintenance/Missions/Income-Expense/Summary) now render as
+real `#NatureAssetCard`s instead of plain `QWidget`s with inline-
+styled titles. No pure-function signatures changed;
+`format_property_glance_line()` is reused as-is for each card's body
+line. Checked first: `tests/test_real_estate_module.py` only exercises
+pure functions, never the `QListWidget`/button-click Qt flow being
+removed, confirming this restructure carried zero test-breakage risk
+before starting.
+
+**Verification**: `pytest -q` — full suite, 2696 passed, zero
+regressions. Manual headless-Qt screenshots (isolated real-shaped
+data, real `data/properties.json` confirmed untouched — still 3)
+of Kitchen's tab bar and Real Estate's list+detail pages, including
+clicking through Edit/Delete's new detail-page location.

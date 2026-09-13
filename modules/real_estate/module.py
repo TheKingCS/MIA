@@ -28,6 +28,15 @@ The detail page is rebuilt fresh every time it's opened (not cached)
 scroll position), a property's linked financial/maintenance data
 changes often enough that showing stale data would be a real, confusing
 bug, not just a missed optimization.
+
+**"Nature" re-skin rollout (2026-09-14)**: photo hero header + the
+same clickable `#NatureAssetCard` list Garage/Greenhouse use (each
+property is its own card, replacing the old `QListWidget` + "View
+Details" button flow). Edit/Delete moved from the list page onto the
+detail page itself (a property's own page is now where you manage
+it, matching the "click in to act on it" pattern the rest of the
+Nature pages already use) — the list page keeps only Add + a
+clickable card per property.
 """
 
 from __future__ import annotations
@@ -39,13 +48,14 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
+    QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
     QListWidget,
-    QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -67,7 +77,8 @@ from core.real_estate_manager import (
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_property_dialog import AddEditPropertyDialog
-from gui.list_widget_helpers import add_empty_state_item, selected_item_data
+from gui.list_widget_helpers import add_empty_state_item
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from modules.module_base import ModuleBase
 
 
@@ -141,7 +152,7 @@ class RealEstateModule(ModuleBase):
         self._detail_page: Optional[QWidget] = None
         self._detail_property_id: Optional[str] = None
 
-        self._property_list: Optional[QListWidget] = None
+        self._list_layout: Optional[QVBoxLayout] = None
         self._entity_filter_combo: Optional[QComboBox] = None
         self._tracked_label: Optional[QLabel] = None
         self._equity_label: Optional[QLabel] = None
@@ -175,69 +186,102 @@ class RealEstateModule(ModuleBase):
 
     def _build_list_page(self) -> QWidget:
         page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(12)
+        page.setStyleSheet("background-color: #070f0d;")
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
 
-        header = QLabel(f"{self.icon}  {self.display_name}")
-        header.setObjectName("TitleLabel")
-        layout.addWidget(header)
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 20, 28, 16)
+        hero_layout.setSpacing(4)
 
-        subtitle = QLabel(self.description)
-        subtitle.setObjectName("SubtitleLabel")
-        layout.addWidget(subtitle)
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+        icon_badge = QLabel(self.icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header_row.addWidget(icon_badge)
+        title = QLabel(self.display_name)
+        title.setObjectName("NatureHeaderTitle")
+        header_row.addWidget(title)
+        header_row.addStretch(1)
+        hero_layout.addLayout(header_row)
+
+        tagline = QLabel(self.description)
+        tagline.setObjectName("NatureHeaderTagline")
+        hero_layout.addWidget(tagline)
+        hero_layout.addStretch(1)
+
+        add_button = QPushButton("Add Property")
+        add_button.clicked.connect(self._on_add_property)
+        hero_layout.addWidget(add_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        outer.addWidget(hero)
+
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(24, 20, 24, 24)
+        body_layout.setSpacing(16)
 
         entity_row = QHBoxLayout()
-        entity_row.addWidget(QLabel("Entity:"))
+        entity_label = QLabel("Entity:")
+        entity_label.setObjectName("NatureTileCaption")
+        entity_row.addWidget(entity_label)
         self._entity_filter_combo = QComboBox()
         self._refresh_entity_filter_combo()
         self._entity_filter_combo.currentIndexChanged.connect(lambda _idx: self._refresh_list())
         entity_row.addWidget(self._entity_filter_combo, stretch=1)
-        layout.addLayout(entity_row)
+        body_layout.addLayout(entity_row)
 
         glance_row = QHBoxLayout()
-        glance_row.setSpacing(24)
-        self._tracked_label = self._build_glance_tile(glance_row, "Properties")
-        self._equity_label = self._build_glance_tile(glance_row, "Total Equity")
-        self._rental_label = self._build_glance_tile(glance_row, "Rental Income This Month")
-        layout.addLayout(glance_row)
+        glance_row.setSpacing(16)
+        self._tracked_label = self._build_glance_tile(glance_row, "Properties", "\U0001F3D8")
+        self._equity_label = self._build_glance_tile(glance_row, "Total Equity", "\U0001F4B0")
+        self._rental_label = self._build_glance_tile(glance_row, "Rental Income This Month", "\U0001F4C5")
+        body_layout.addLayout(glance_row)
 
-        self._property_list = QListWidget()
-        layout.addWidget(self._property_list, stretch=1)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self._list_layout = QVBoxLayout(content)
+        self._list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._list_layout.setSpacing(16)
+        scroll.setWidget(content)
+        body_layout.addWidget(scroll, stretch=1)
 
-        button_row = QHBoxLayout()
-        add_button = QPushButton("Add Property")
-        add_button.clicked.connect(self._on_add_property)
-        button_row.addWidget(add_button)
-
-        edit_button = QPushButton("Edit Selected")
-        edit_button.clicked.connect(self._on_edit_property)
-        button_row.addWidget(edit_button)
-
-        details_button = QPushButton("View Details")
-        details_button.clicked.connect(self._on_view_details)
-        button_row.addWidget(details_button)
-
-        delete_button = QPushButton("Delete Selected")
-        delete_button.clicked.connect(self._on_delete_property)
-        button_row.addWidget(delete_button)
-
-        layout.addLayout(button_row)
+        outer.addWidget(body, stretch=1)
 
         self._refresh_list()
         return page
 
-    def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str) -> QLabel:
-        tile = QVBoxLayout()
+    def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str, icon: str) -> QLabel:
+        tile = QFrame()
+        tile.setObjectName("NatureGlanceTile")
+        tile_layout = QHBoxLayout(tile)
+        tile_layout.setContentsMargins(14, 12, 14, 12)
+        tile_layout.setSpacing(10)
+
+        icon_badge = QLabel(icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(36, 36)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tile_layout.addWidget(icon_badge)
+
+        text_col = QVBoxLayout()
+        text_col.setSpacing(2)
         value_label = QLabel("—")
-        value_label.setObjectName("TitleLabel")
-        value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        value_label.setObjectName("NatureTileValue")
+        text_col.addWidget(value_label)
         caption_label = QLabel(caption)
-        caption_label.setObjectName("SubtitleLabel")
-        caption_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        tile.addWidget(value_label)
-        tile.addWidget(caption_label)
-        row_layout.addLayout(tile)
+        caption_label.setObjectName("NatureTileCaption")
+        text_col.addWidget(caption_label)
+        tile_layout.addLayout(text_col)
+
+        row_layout.addWidget(tile, stretch=1)
         return value_label
 
     def _refresh_entity_filter_combo(self) -> None:
@@ -257,6 +301,12 @@ class RealEstateModule(ModuleBase):
         self._entity_filter_combo.blockSignals(False)
 
     def _refresh_list(self) -> None:
+        while self._list_layout.count():
+            item = self._list_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
         selected_entity = self._entity_filter_combo.currentData()
         properties = [
             p for p in self.context.real_estate.all_properties()
@@ -275,19 +325,40 @@ class RealEstateModule(ModuleBase):
         )
         self._rental_label.setText(f"${total_rental:,.2f}")
 
-        self._property_list.clear()
-        for prop in properties:
-            item = QListWidgetItem(format_property_glance_line(prop, equity(prop)))
-            item.setData(Qt.ItemDataRole.UserRole, prop.property_id)
-            self._property_list.addItem(item)
-        if self._property_list.count() == 0:
-            if selected_entity is not None:
-                add_empty_state_item(self._property_list, "No properties for this entity.")
-            else:
-                add_empty_state_item(self._property_list, "No properties tracked yet — click Add Property to get started.")
+        if not properties:
+            empty_text = (
+                "No properties for this entity." if selected_entity is not None
+                else "No properties tracked yet — click Add Property to get started."
+            )
+            empty_label = QLabel(empty_text)
+            empty_label.setObjectName("NatureTileCaption")
+            self._list_layout.addWidget(empty_label)
+            return
 
-    def _selected_property_id(self) -> Optional[str]:
-        return selected_item_data(self._property_list)
+        for prop in properties:
+            self._list_layout.addWidget(self._build_property_card(prop))
+
+    def _build_property_card(self, prop: Property) -> QPushButton:
+        card = QPushButton()
+        card.setObjectName("NatureAssetCard")
+        card.setCursor(Qt.CursorShape.PointingHandCursor)
+        card.setToolTip(f"Open {prop.name}")
+        card.setMinimumHeight(90)
+        card.clicked.connect(lambda checked=False, pid=prop.property_id: self._show_detail_page(pid))
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(4)
+
+        title_label = QLabel(f"{prop.name}  ›")
+        title_label.setObjectName("NatureAssetTitle")
+        layout.addWidget(title_label)
+
+        line = QLabel(format_property_glance_line(prop, equity(prop)))
+        line.setObjectName("NatureAssetLine")
+        line.setWordWrap(True)
+        layout.addWidget(line)
+
+        return card
 
     def _on_add_property(self) -> None:
         dialog = AddEditPropertyDialog(entities=self.context.budget.all_business_entities())
@@ -312,12 +383,7 @@ class RealEstateModule(ModuleBase):
         )
         self._refresh_list()
 
-    def _on_edit_property(self) -> None:
-        property_id = self._selected_property_id()
-        if property_id is None:
-            QMessageBox.information(None, "No Property Selected", "Select a property to edit.")
-            return
-
+    def _on_edit_property(self, property_id: str) -> None:
         prop = self.context.real_estate.get_property(property_id)
         dialog = AddEditPropertyDialog(property_=prop, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -340,21 +406,9 @@ class RealEstateModule(ModuleBase):
             loan_start_date=dialog.entered_loan_start_date,
             notes=dialog.entered_notes,
         )
-        self._refresh_list()
-
-    def _on_view_details(self) -> None:
-        property_id = self._selected_property_id()
-        if property_id is None:
-            QMessageBox.information(None, "No Property Selected", "Select a property to view.")
-            return
         self._show_detail_page(property_id)
 
-    def _on_delete_property(self) -> None:
-        property_id = self._selected_property_id()
-        if property_id is None:
-            QMessageBox.information(None, "No Property Selected", "Select a property to delete.")
-            return
-
+    def _on_delete_property(self, property_id: str) -> None:
         prop = self.context.real_estate.get_property(property_id)
         confirm = QMessageBox.question(
             None,
@@ -367,7 +421,7 @@ class RealEstateModule(ModuleBase):
             return
 
         self.context.real_estate.delete_property(property_id)
-        self._refresh_list()
+        self._show_list_page()
 
     # ------------------------------------------------------------------
     # Detail page
@@ -394,37 +448,79 @@ class RealEstateModule(ModuleBase):
         self._stack.setCurrentWidget(self._detail_page)
 
     def _build_detail_page(self, property_id: str) -> QWidget:
+        """Nature re-skin (2026-09-14) — photo hero + Edit/Delete moved
+        here from the list page (a property's own page is now where
+        you manage it), each section wrapped in a #NatureAssetCard."""
         prop = self.context.real_estate.get_property(property_id)
 
         page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(10)
+        page.setStyleSheet("background-color: #070f0d;")
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
 
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 16, 28, 16)
+        hero_layout.setSpacing(6)
+
+        top_row = QHBoxLayout()
         back_button = QPushButton("← Back to Properties")
         back_button.clicked.connect(self._show_list_page)
-        layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        top_row.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        top_row.addStretch(1)
+        edit_button = QPushButton("Edit")
+        edit_button.clicked.connect(lambda: self._on_edit_property(property_id))
+        top_row.addWidget(edit_button)
+        delete_button = QPushButton("Delete")
+        delete_button.clicked.connect(lambda: self._on_delete_property(property_id))
+        top_row.addWidget(delete_button)
+        hero_layout.addLayout(top_row)
 
-        header = QLabel(prop.name)
-        header.setObjectName("TitleLabel")
-        layout.addWidget(header)
+        title = QLabel(prop.name)
+        title.setObjectName("NatureHeaderTitle")
+        hero_layout.addWidget(title)
+
+        category_label = QLabel(prop.property_type)
+        category_label.setObjectName("NatureHeaderTagline")
+        hero_layout.addWidget(category_label)
+        hero_layout.addStretch(1)
+
+        outer.addWidget(hero)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(24, 20, 24, 24)
+        layout.setSpacing(16)
 
         entity = self.context.budget.get_business_entity(prop.entity_id) if prop.entity_id else None
         entity_name = entity.name if entity is not None else "(Unassigned)"
+        info_card = QFrame()
+        info_card.setObjectName("NatureAssetCard")
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(18, 16, 18, 16)
         info = QLabel(
-            f"{prop.property_type}   —   Purchased {prop.purchase_date or 'unknown'} for ${prop.purchase_price:,.2f}\n"
+            f"Purchased {prop.purchase_date or 'unknown'} for ${prop.purchase_price:,.2f}\n"
             f"Current value: ${prop.current_value:,.2f}   Mortgage balance: ${prop.mortgage_balance:,.2f}   "
             f"Equity: ${equity(prop):,.2f}\n"
             f"Entity: {entity_name}"
         )
+        info.setObjectName("NatureAssetLine")
         info.setWordWrap(True)
-        layout.addWidget(info)
+        info_layout.addWidget(info)
+        layout.addWidget(info_card)
 
         layout.addWidget(self._build_maintenance_section(prop))
         layout.addWidget(self._build_missions_section(prop))
         layout.addWidget(self._build_income_expense_section(prop), stretch=1)
         layout.addWidget(self._build_summary_section(prop))
 
+        scroll.setWidget(content)
+        outer.addWidget(scroll, stretch=1)
         return page
 
     def _build_missions_section(self, prop: Property) -> QWidget:
@@ -436,14 +532,20 @@ class RealEstateModule(ModuleBase):
         show — same "prefer the model" stance the rest of this app's
         Maintenance integration already takes."""
         if not prop.maintenance_asset_id:
-            section = QWidget()
+            section = QFrame()
+            section.setObjectName("NatureAssetCard")
             layout = QVBoxLayout(section)
-            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setContentsMargins(18, 16, 18, 16)
             note = QLabel("Link a Maintenance asset above to see related Missions.")
-            note.setObjectName("SubtitleLabel")
+            note.setObjectName("NatureTileCaption")
             layout.addWidget(note)
             return section
-        return build_asset_missions_panel(self.context, prop.maintenance_asset_id)
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(18, 16, 18, 16)
+        card_layout.addWidget(build_asset_missions_panel(self.context, prop.maintenance_asset_id))
+        return card
 
     def focus_record(self, record_id: str) -> None:
         """Cross-module deep-linking (2026-09-13) — opens straight to
@@ -453,12 +555,13 @@ class RealEstateModule(ModuleBase):
         self._show_detail_page(record_id)
 
     def _build_maintenance_section(self, prop: Property) -> QWidget:
-        section = QWidget()
+        section = QFrame()
+        section.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(18, 16, 18, 16)
 
         title = QLabel("Maintenance")
-        title.setStyleSheet("font-weight: 600;")
+        title.setObjectName("NatureSectionTitle")
         layout.addWidget(title)
 
         self._detail_maintenance_list = QListWidget()
@@ -508,13 +611,14 @@ class RealEstateModule(ModuleBase):
         self._show_detail_page(property_id)
 
     def _build_income_expense_section(self, prop: Property) -> QWidget:
-        section = QWidget()
+        section = QFrame()
+        section.setObjectName("NatureAssetCard")
         layout = QHBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(18, 16, 18, 16)
 
         income_column = QVBoxLayout()
         income_title = QLabel("Rental Income")
-        income_title.setStyleSheet("font-weight: 600;")
+        income_title.setObjectName("NatureSectionTitle")
         income_column.addWidget(income_title)
         self._detail_income_list = QListWidget()
         income_column.addWidget(self._detail_income_list, stretch=1)
@@ -525,7 +629,7 @@ class RealEstateModule(ModuleBase):
 
         expense_column = QVBoxLayout()
         expense_title = QLabel("Expenses")
-        expense_title.setStyleSheet("font-weight: 600;")
+        expense_title.setObjectName("NatureSectionTitle")
         expense_column.addWidget(expense_title)
         self._detail_expense_list = QListWidget()
         expense_column.addWidget(self._detail_expense_list, stretch=1)
@@ -566,16 +670,17 @@ class RealEstateModule(ModuleBase):
         self._show_detail_page(property_id)
 
     def _build_summary_section(self, prop: Property) -> QWidget:
-        section = QWidget()
+        section = QFrame()
+        section.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(18, 16, 18, 16)
 
         title = QLabel("Summary")
-        title.setStyleSheet("font-weight: 600;")
+        title.setObjectName("NatureSectionTitle")
         layout.addWidget(title)
 
         self._detail_range_label = QLabel("")
-        self._detail_range_label.setObjectName("SubtitleLabel")
+        self._detail_range_label.setObjectName("NatureTileCaption")
         layout.addWidget(self._detail_range_label)
 
         range_row = QHBoxLayout()
