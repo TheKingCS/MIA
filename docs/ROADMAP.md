@@ -9291,3 +9291,33 @@ own screenshots pixel-for-pixel in structure.
 
 This is now genuinely complete: every asset-style area (Garage/
 Greenhouse/Property) plus Real Estate has full Nature parity.
+
+## Household module: Nature re-skin, the last real parity gap (2026-09-14)
+
+Confirmed with the user: the "3 houses only showing 2" report was a
+stale running instance (MIA doesn't hot-reload) — a restart fixed it,
+no code change needed.
+
+Closed the last remaining active-module parity gap, unprompted, same
+reasoning as Property: Household was the only functional module left
+entirely on the old teal system (`BlueprintFrame`/`DashboardCard`/
+`MonitorTile*`), a visible inconsistency once every asset-style area
+had moved to Nature. Ported: photo hero (icon/title/tagline), the
+"Total Progress" card now a plain `#NatureAssetCard` (not the coral
+attention-panel styling — a celebratory highlight, not a warning) with
+`#NatureSectionTitle`/`#NatureTileValue`, and each checklist row now a
+clickable `#NatureAssetCard` (`#NatureAssetTitle` text) matching every
+other module's asset-card convention. No pure-function changes — only
+`get_widget()`'s widget construction and `_refresh()`'s row-building
+touched.
+
+**Verification**: `pytest -q` — full suite, 2707 passed (all 9
+existing `test_household_module.py` tests untouched, since none of the
+three pure functions changed). Manual headless-Qt screenshot confirmed
+the hero, Total Progress card, and checklist row all render correctly
+and match the rest of the app's visual language.
+
+With this, every module that was ever "plain teal" now either has full
+Nature parity (Garage/Greenhouse/Property/Real Estate/Kitchen/Workout/
+Household) or a deliberate hero-only treatment the user chose
+(Missions/Skills/Home dashboard). Nothing active is left inconsistent.
