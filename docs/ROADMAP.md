@@ -9109,3 +9109,52 @@ passed unmodified). Manual headless-Qt screenshots confirmed: 3 real
 recipe cards (locked and unlocked), a locked recipe's coral attention
 panel, an unlocked recipe's Ingredients/Instructions cards, and the
 boxed Pantry card — all rendering and clicking through correctly.
+
+## "Cook it to unlock it" + Workout's missing "Latest Entry" card (2026-09-14)
+
+Two real, concrete asks: (1) "the mission for unlocking the recipe
+should be cooking that recipe" — the existing "Recipe Unlocked"
+mechanic (`Mission.recipe_unlocks`) only ever completed via a manual
+mark-complete in the Missions UI; there was no path from actually
+cooking the recipe to its own unlock. (2) a request to re-audit every
+touched page's information architecture against the reference picture
+again, since Kitchen had just been caught missing real content.
+
+**`core.kitchen_manager.KitchenManager.log_meal()`** now completes any
+active Mission whose `recipe_unlocks` names the just-cooked recipe,
+via `MissionManager.update_mission(status="completed")` — reusing that
+method's existing reward-crediting/recipe-unlocking pipeline verbatim,
+not a second unlock mechanism. 3 new tests (`test_kitchen_manager.py`):
+completes the right mission, leaves unrelated active missions alone,
+no-ops safely with no missions manager at all.
+
+**Workout's Log Session tab** was missing a real "Latest Entry" card
+the reference mockup shows above "Daily Mission" (the earlier Workout
+pass only built the second one). New `_build_daily_mission_card()`
+sibling `_build_latest_entry_card()` — the most recent set, live from
+the in-progress session if one's active, else the last historical
+session's last set. Deliberately doesn't fabricate the mockup's own
+per-set clock time ("5:42 PM") — `WorkoutSession` only stores a
+session-level date, so the card shows that instead of inventing a
+timestamp the data model doesn't have.
+
+**Re-audited every touched page against the reference picture**:
+Garage and Greenhouse's list/detail structure matches closely (minor
+exception: Greenhouse's single-asset demo shows Related Missions
+inline beside the asset on the list page itself — not chased, since
+Garage/Property-style N-asset cases have no obvious inline equivalent
+and the missions are still one tab-click away). **Real Estate is a
+real, bigger discrepancy**: the reference shows a simultaneous
+master-detail split (property list AND a selected property's full
+detail visible in the same view, under Properties/Maintenance/
+Missions top-level tabs) — what got built instead is the same
+navigate-to-a-separate-page pattern every other Nature module uses.
+This was a deliberate, flagged tradeoff at the time (avoiding a third
+distinct interaction pattern), but it is a genuine mismatch against
+the picture, not a smaller miss like Kitchen's — flagged to the user
+directly rather than silently reworked, given the size of a real
+master-detail rebuild.
+
+**Verification**: `pytest -q` — full suite, 2699 passed, zero
+regressions. Manual headless-Qt screenshot confirmed the new Latest
+Entry card renders correctly above Daily Mission.

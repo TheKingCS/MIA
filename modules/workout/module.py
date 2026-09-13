@@ -541,13 +541,63 @@ class WorkoutModule(ModuleBase):
 
         outer.addWidget(session_card, stretch=2)
 
+        side_column = QVBoxLayout()
+        side_column.setSpacing(16)
+        latest_entry_card = self._build_latest_entry_card()
+        if latest_entry_card is not None:
+            side_column.addWidget(latest_entry_card)
         daily_mission_card = self._build_daily_mission_card()
         if daily_mission_card is not None:
-            outer.addWidget(daily_mission_card, stretch=1)
+            side_column.addWidget(daily_mission_card)
+        side_column.addStretch(1)
+        outer.addLayout(side_column, stretch=1)
 
         self._refresh_session_template_combo()
         self._refresh_session_exercise_combo()
         return tab
+
+    def _build_latest_entry_card(self) -> Optional[QFrame]:
+        """"Latest Entry" card (Nature re-skin, 2026-09-14) — the most
+        recently logged set: live from the in-progress session if one
+        is active, else the last set from workout history, matching
+        the reference mockup's own Log Session layout (a "Latest
+        Entry" card above "Daily Mission" — the first pass only built
+        the second one). Real data only — no fabricated clock time;
+        WorkoutSession only stores a session-level date, not a per-set
+        timestamp like the mockup's own "5:42 PM"."""
+        if self._session_active and self._session_sets_logged:
+            latest = self._session_sets_logged[-1]
+            when = "Today"
+        else:
+            sessions = self.context.workout.all_sessions()
+            if not sessions or not sessions[0].sets_logged:
+                return None
+            latest = sessions[0].sets_logged[-1]
+            when = sessions[0].date
+
+        exercise = self.context.workout.get_exercise(latest["exercise_id"])
+        exercise_name = exercise.name if exercise is not None else "(deleted exercise)"
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(6)
+
+        title = QLabel("Latest Entry")
+        title.setObjectName("NatureSectionTitle")
+        layout.addWidget(title)
+
+        line = QLabel(f"{exercise_name} — Set {latest['set_number']}: {latest['reps']:g} reps @ {latest['weight']:g}")
+        line.setObjectName("NatureAssetLine")
+        line.setWordWrap(True)
+        layout.addWidget(line)
+
+        when_label = QLabel(when)
+        when_label.setObjectName("NatureTileCaption")
+        layout.addWidget(when_label)
+
+        return card
 
     def _build_daily_mission_card(self) -> Optional[QFrame]:
         """"Daily Mission" card (Nature re-skin, 2026-09-14) — surfaces

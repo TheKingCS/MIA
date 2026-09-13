@@ -86,7 +86,10 @@ class Recipe:
     # as visible/usable as it is today; only a recipe the user
     # deliberately checks "Locked" for starts hidden. See
     # KitchenManager.unlock_recipe() and core.mission_manager's own
-    # crediting of it on Mission completion.
+    # crediting of it on Mission completion. "Cook it to unlock it"
+    # (2026-09-14) — log_meal()'s own real completion trigger: the
+    # Mission naming this recipe completes the moment the user logs
+    # having actually made it, not just via a manual mark-complete.
     locked: bool = False
 
     def to_dict(self) -> dict:
@@ -584,6 +587,18 @@ class KitchenManager:
             recipe_note,
             skill_weights=[SkillWeight("nutrition", 5)],
         )
+        # "Cook it to unlock it" (2026-09-14) — the real, direct
+        # completion trigger the user asked for: any active Mission
+        # whose recipe_unlocks names this recipe completes the moment
+        # you actually log having made it, rather than needing a
+        # separate manual "mark complete" click or an unrelated tally.
+        # Reuses update_mission()'s own existing reward-crediting/
+        # recipe-unlocking pipeline verbatim — this is the only new
+        # code, not a second unlock mechanism.
+        if self.context.missions is not None:
+            for mission in self.context.missions.all_missions():
+                if mission.status == "active" and recipe_id in mission.recipe_unlocks:
+                    self.context.missions.update_mission(mission.mission_id, status="completed")
         return entry
 
     def delete_meal_log_entry(self, entry_id: str) -> None:

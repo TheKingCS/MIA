@@ -16,6 +16,7 @@ import pytest
 
 import core.config_manager as config_manager_module
 import core.kitchen_manager as kitchen_manager_module
+import core.mission_manager as mission_manager_module
 import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
@@ -29,6 +30,7 @@ from core.kitchen_manager import (
     recipe_missing_ingredients,
     recipes_makeable_from_pantry,
 )
+from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
 from core.skill_manager import SkillManager
 
@@ -41,6 +43,10 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(kitchen_manager_module, "_PANTRY_FILE", data_dir / "kitchen_pantry.json")
     monkeypatch.setattr(kitchen_manager_module, "_GROCERY_LIST_FILE", data_dir / "kitchen_grocery_list.json")
     monkeypatch.setattr(kitchen_manager_module, "_MEAL_LOG_FILE", data_dir / "kitchen_meal_log.json")
+    # "Cook it to unlock it" (2026-09-14) — needed once a test
+    # constructs a real MissionManager too.
+    monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
     # Real once a test constructs a real ProfileManager too (2026-09-11
     # gamification hook tests below) — see test_workout_manager.py's
     # own isolated_paths for the identical reasoning.
@@ -385,6 +391,42 @@ def test_log_meal_grants_xp_with_no_active_profile_does_not_raise(isolated_paths
     context.profiles = ProfileManager(context)
     recipe = manager.add_recipe(name="X")
     manager.log_meal(recipe.recipe_id)  # must not raise
+
+
+def test_log_meal_completes_the_mission_that_unlocks_it(isolated_paths):
+    """"Cook it to unlock it" (2026-09-14) — logging a meal for a
+    recipe is the real completion trigger for whatever active Mission
+    names that recipe in recipe_unlocks, not a separate manual step."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.missions = MissionManager(context)
+    recipe = manager.add_recipe(name="Homemade Ramen", locked=True)
+    mission = context.missions.add_mission(name="Cook Homemade Ramen", recipe_unlocks=[recipe.recipe_id])
+
+    manager.log_meal(recipe.recipe_id)
+
+    assert context.missions.get_mission(mission.mission_id).status == "completed"
+    assert manager.get_recipe(recipe.recipe_id).locked is False
+
+
+def test_log_meal_does_not_touch_unrelated_active_missions(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.missions = MissionManager(context)
+    recipe = manager.add_recipe(name="X")
+    other_recipe = manager.add_recipe(name="Y", locked=True)
+    unrelated_mission = context.missions.add_mission(name="Cook Y", recipe_unlocks=[other_recipe.recipe_id])
+
+    manager.log_meal(recipe.recipe_id)
+
+    assert context.missions.get_mission(unrelated_mission.mission_id).status == "active"
+
+
+def test_log_meal_with_no_missions_manager_does_not_raise(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="X")
+    manager.log_meal(recipe.recipe_id)  # context.missions is None — must not raise
 
 
 def test_log_meal_grants_nutrition_skill_xp(isolated_paths):
