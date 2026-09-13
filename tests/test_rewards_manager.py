@@ -16,6 +16,7 @@ import core.data_logger_manager as data_logger_manager_module
 import core.kitchen_manager as kitchen_manager_module
 import core.maintenance_manager as maintenance_manager_module
 import core.mission_manager as mission_manager_module
+import core.notification_manager as notification_manager_module
 import core.project_manager as project_manager_module
 import core.workout_manager as workout_manager_module
 from core.app_context import AppContext
@@ -25,6 +26,7 @@ from core.event_bus import EventBus
 from core.kitchen_manager import KitchenManager
 from core.maintenance_manager import MaintenanceManager
 from core.mission_manager import MissionManager
+from core.notification_manager import NotificationManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
 from core.rewards_manager import (
@@ -33,6 +35,7 @@ from core.rewards_manager import (
     RewardsManager,
     all_tiers,
     combined_stat_value,
+    format_multi_unlock_notification,
     highest_unlocked_tier,
     next_locked_tier,
     reward_progress_fraction,
@@ -62,6 +65,8 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(kitchen_manager_module, "_MEAL_LOG_FILE", data_dir / "kitchen_meal_log.json")
     monkeypatch.setattr(project_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(project_manager_module, "_PROJECTS_FILE", data_dir / "projects.json")
+    monkeypatch.setattr(notification_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(notification_manager_module, "_NOTIFICATIONS_FILE", data_dir / "notifications.json")
 
 
 def _make_context() -> AppContext:
@@ -73,6 +78,7 @@ def _make_context() -> AppContext:
     context.data_logger = DataLoggerManager(context)
     context.kitchen = KitchenManager(context)
     context.projects = ProjectManager(context)
+    context.notifications = NotificationManager(context)
     context.rewards = RewardsManager(context)
     return context
 
@@ -236,6 +242,66 @@ def test_scan_for_new_unlocks_credits_every_tier_already_reached(isolated_paths)
 
     reward_ids = {r.reward_id for r in newly_unlocked}
     assert reward_ids == {"mowing_rookie", "mowing_yard_worker", "mowing_ranger"}
+
+
+# ------------------------------------------------------------------
+# Notification restraint (2026-09-14) — one notification per scan,
+# not one toast per unlock
+# ------------------------------------------------------------------
+
+def test_scan_for_new_unlocks_fires_one_notification_for_a_single_unlock(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 10.0)
+
+    context.rewards.scan_for_new_unlocks(profile.profile_id)
+
+    achievement_notifications = [n for n in context.notifications.list_all() if n.source == "achievements"]
+    assert len(achievement_notifications) == 1
+    assert "Lawn Rookie" in achievement_notifications[0].message
+
+
+def test_scan_for_new_unlocks_batches_multiple_unlocks_into_one_notification(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 60.0)  # past 3 tiers at once
+
+    context.rewards.scan_for_new_unlocks(profile.profile_id)
+
+    achievement_notifications = [n for n in context.notifications.list_all() if n.source == "achievements"]
+    assert len(achievement_notifications) == 1
+    notification = achievement_notifications[0]
+    assert "3" in notification.title
+    assert "Lawn Rookie" in notification.message
+    assert "Yard Worker" in notification.message
+    assert "Lawn Ranger" in notification.message
+
+
+def test_scan_for_new_hidden_achievements_batches_multiple_into_one_notification(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 250.0)  # crosses built_different(50) and renaissance(200)
+
+    context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
+
+    achievement_notifications = [n for n in context.notifications.list_all() if n.source == "achievements"]
+    assert len(achievement_notifications) == 1
+    notification = achievement_notifications[0]
+    assert "2" in notification.title
+    assert "Built Different" in notification.message
+    assert "Renaissance" in notification.message
+
+
+def test_format_multi_unlock_notification_shape():
+    title, message = format_multi_unlock_notification(["Lawn Rookie", "Yard Worker"], "rewards")
+    assert title == "\U0001F389 2 rewards unlocked!"
+    assert message == "Lawn Rookie, Yard Worker"
 
 
 def test_scan_for_new_unlocks_is_idempotent(isolated_paths):

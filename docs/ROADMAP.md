@@ -9636,3 +9636,34 @@ completed project — confirmed 4 correct notifications (Road Warrior's
 first two tiers, Home Chef's first tier, Builder's first tier) and
 screenshotted all 6 chains rendering correctly side by side in the
 REWARDS card.
+
+## Notification restraint (2026-09-14)
+
+Slice 4 of the Prestige/Rarity/Character vision — the handoff's own
+section 12/14: "avoid making every tiny event generate an annoying
+notification... M.I.A. should intelligently determine what deserves
+presentation." A real, reproduced case from slice 1's own testing: a
+profile with real prior history crossing several thresholds at once
+(e.g. adding Faith and crediting her real past accomplishments) fired
+one separate toast per unlock — 6 in one scan in an earlier test.
+
+Both `scan_for_new_unlocks()` and `scan_for_new_hidden_achievements()`
+now collect every new unlock first, then fire exactly ONE notification
+per scan: a single unlock keeps its existing, more specific text
+("🧢 Reward unlocked! ... Lawn Rookie ..."); more than one batches via
+new `format_multi_unlock_notification()` into "🎉 N rewards unlocked!"
+(or "N hidden achievements unlocked!") plus a plain comma-joined name
+list. Restraint is about toast *count* here, not about suppressing any
+real unlock — every qualifying tier/achievement still unlocks and
+still gets named, just in one message instead of several.
+
+**Verification**: `pytest -q` — full suite, 2798 passed (4 new tests,
+including a real `NotificationManager` now wired into this test file's
+`_make_context()` for the first time so notification behavior is
+actually assertable, not just reward-unlock state). Manual headless
+check: logging 300 real engine hours (crossing 4 mowing tiers) plus
+250 combined engine+workout-equivalent hours (crossing both hidden
+achievements) produced exactly 2 notifications total — "🎉 4 rewards
+unlocked! Lawn Rookie, Yard Worker, Lawn Ranger, Groundskeeper" and
+"🎉 2 hidden achievements unlocked! Built Different, Renaissance" —
+instead of 6 separate toasts.

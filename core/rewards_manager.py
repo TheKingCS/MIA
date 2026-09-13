@@ -86,6 +86,20 @@ into `scan_for_new_unlocks()`, which returns `list[ChallengeTier]` —
 keeping the two scans separate avoids a mixed-type return list and
 keeps existing `ChallengeTier`-typed callers unchanged) — call both
 together at every real call site.
+
+**Notification restraint (2026-09-14, fourth pass)** — the handoff's
+own section 12/14: "avoid making every tiny event generate an
+annoying notification... M.I.A. should intelligently determine what
+deserves presentation." Before this pass, retroactively crediting a
+profile with real prior history (e.g. "add Faith, credit her past
+accomplishments") could fire many separate toasts back to back — a
+real, reproduced case (6 notifications in one scan while building
+slice 1). Both scans now collect every new unlock first and fire
+exactly ONE notification per scan: a single unlock keeps its existing,
+more specific text, but more than one batches into
+`format_multi_unlock_notification()`'s "N rewards/hidden achievements
+unlocked!" + a plain comma-joined name list — restraint is about
+toast COUNT here, not about suppressing any real unlock.
 """
 
 from __future__ import annotations
@@ -323,6 +337,18 @@ def combined_stat_value(stat_values: dict[str, float], stat_ids: tuple[str, ...]
     return sum(stat_values.get(stat_id, 0.0) for stat_id in stat_ids)
 
 
+def format_multi_unlock_notification(names: list[str], noun: str) -> tuple[str, str]:
+    """Pure logic — testable without a real manager. One notification
+    covering every unlock from a single scan, instead of one toast per
+    unlock — the handoff's own section 12/14 restraint ("avoid making
+    every tiny event generate an annoying notification"; "M.I.A. should
+    intelligently determine what deserves presentation"). Only used
+    when a scan finds MORE than one new unlock at once (a single unlock
+    keeps its own existing, more specific notification text — see
+    RewardsManager._notify_unlocked_tiers()/_notify_unlocked_hidden_achievements())."""
+    return (f"\U0001F389 {len(names)} {noun} unlocked!", ", ".join(names))
+
+
 class RewardsManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
@@ -432,7 +458,10 @@ class RewardsManager:
         so a stat that's already well past several thresholds unlocks
         all of them at once — the correct behavior for retroactively
         crediting real past accomplishment, not just newly-logged
-        activity."""
+        activity. Notification restraint (2026-09-14): fires ONE
+        notification per scan regardless of how many tiers just
+        unlocked, not one toast per tier — see
+        format_multi_unlock_notification()'s own docstring."""
         if self.context.profiles is None:
             return []
 
@@ -446,14 +475,23 @@ class RewardsManager:
                 continue
             if self.context.profiles.unlock_reward(profile_id, tier.reward_id):
                 newly_unlocked.append(tier)
-                if self.context.notifications is not None:
-                    self.context.notifications.notify(
-                        title=f"{tier.icon} Reward unlocked!",
-                        message=f"You unlocked \"{tier.name}\" — {tier.description}",
-                        level="info",
-                        source="achievements",
-                    )
+
+        if newly_unlocked and self.context.notifications is not None:
+            self._notify_unlocked_tiers(newly_unlocked)
         return newly_unlocked
+
+    def _notify_unlocked_tiers(self, tiers: list[ChallengeTier]) -> None:
+        if len(tiers) == 1:
+            tier = tiers[0]
+            self.context.notifications.notify(
+                title=f"{tier.icon} Reward unlocked!",
+                message=f"You unlocked \"{tier.name}\" — {tier.description}",
+                level="info",
+                source="achievements",
+            )
+            return
+        title, message = format_multi_unlock_notification([tier.name for tier in tiers], "rewards")
+        self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
 
     # ------------------------------------------------------------------
     # Hidden achievements — see this module's own docstring and
@@ -471,7 +509,8 @@ class RewardsManager:
         """Idempotent, same shape as scan_for_new_unlocks() — kept as
         its own method (not folded into scan_for_new_unlocks()) so that
         method's return type stays list[ChallengeTier] for its existing
-        callers; call both together at every real call site."""
+        callers; call both together at every real call site. Same
+        notification-restraint batching as scan_for_new_unlocks()."""
         if self.context.profiles is None:
             return []
 
@@ -484,14 +523,25 @@ class RewardsManager:
                 continue
             if self.context.profiles.unlock_reward(profile_id, achievement.achievement_id):
                 newly_unlocked.append(achievement)
-                if self.context.notifications is not None:
-                    self.context.notifications.notify(
-                        title=f"{achievement.icon} Hidden Achievement Unlocked!",
-                        message=f"\"{achievement.name}\" — {achievement.description}",
-                        level="info",
-                        source="achievements",
-                    )
+
+        if newly_unlocked and self.context.notifications is not None:
+            self._notify_unlocked_hidden_achievements(newly_unlocked)
         return newly_unlocked
+
+    def _notify_unlocked_hidden_achievements(self, achievements: list[HiddenAchievement]) -> None:
+        if len(achievements) == 1:
+            achievement = achievements[0]
+            self.context.notifications.notify(
+                title=f"{achievement.icon} Hidden Achievement Unlocked!",
+                message=f"\"{achievement.name}\" — {achievement.description}",
+                level="info",
+                source="achievements",
+            )
+            return
+        title, message = format_multi_unlock_notification(
+            [achievement.name for achievement in achievements], "hidden achievements",
+        )
+        self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
 
     # ------------------------------------------------------------------
     # Prestige emblems — derived live from Profile.prestige_tier, not
