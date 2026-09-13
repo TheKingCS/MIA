@@ -73,6 +73,7 @@ if TYPE_CHECKING:
     from core.recurring_mission_manager import RecurringMissionManager
     from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
+    from core.rewards_manager import RewardsManager
     from core.relationships_manager import RelationshipsManager
     from core.script_library_manager import ScriptLibraryManager
     from core.search_manager import SearchManager
@@ -192,6 +193,10 @@ class AppContext:
     # Pathways above — must be constructed after context.missions
     # already exists).
     recurring_missions: Optional["RecurringMissionManager"] = field(default=None, repr=False)
+    # Rewards (2026-09-14) — real lifetime stats (mower hours, workout
+    # hours, missions completed, ...) unlocking real cosmetic/emblem
+    # rewards at thresholds, CoD-style. See core/rewards_manager.py.
+    rewards: Optional["RewardsManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only

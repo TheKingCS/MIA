@@ -99,6 +99,7 @@ from core.project_manager import PROJECT_STATUSES, ProjectManager
 from core.plaid_manager import PlaidManager
 from core.real_estate_manager import Property, RealEstateManager, equity as property_equity
 from core.reference_library_manager import ReferenceLibraryManager
+from core.rewards_manager import RewardsManager
 from core.script_library_manager import ScriptLibraryManager
 from core.subnet_calculator import calculate_subnet
 from core.search_manager import SearchManager, SearchResult
@@ -278,6 +279,10 @@ class MIAApplication:
         self.context.music = MusicManager(self.context)
         self.context.kitchen = KitchenManager(self.context)
         self.context.workout = WorkoutManager(self.context)
+        # Rewards — reads real stat data from maintenance/missions/workout
+        # and unlocks against context.profiles, so it's constructed last
+        # among those four (see core/rewards_manager.py's own docstring).
+        self.context.rewards = RewardsManager(self.context)
         self.context.relationships = RelationshipsManager(self.context)
         self.context.classroom = ClassroomManager(self.context)
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
@@ -516,6 +521,21 @@ class MIAApplication:
                     if template.active:
                         self.context.recurring_missions.ensure_current_missions(template, now.date())
             config.set("system.last_recurring_mission_check_date", today_iso)
+            config.save()
+
+        # Rewards (2026-09-14) — same should_run_once_daily() gate;
+        # scan_for_new_unlocks() is itself idempotent (checks
+        # is_unlocked() first), so this is a cheap once-a-day nudge, not
+        # the only thing preventing duplicate notifications. Also called
+        # from modules/skills/module.py's own refresh, so a threshold
+        # crossed while the app is open unlocks right away rather than
+        # waiting up to a day.
+        if should_run_once_daily(config.get("system.last_rewards_check_date"), today_iso):
+            if self.context.rewards is not None and self.context.profiles is not None:
+                active_profile = self.context.profiles.get_active_profile()
+                if active_profile is not None:
+                    self.context.rewards.scan_for_new_unlocks(active_profile.profile_id)
+            config.set("system.last_rewards_check_date", today_iso)
             config.save()
 
     def _display(self, widget) -> None:

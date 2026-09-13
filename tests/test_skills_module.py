@@ -16,6 +16,7 @@ from modules.skills.module import (
     format_next_honest_step_line,
     format_prerequisites_line,
     format_prestige_status,
+    format_reward_status_line,
     format_skill_status_line,
     format_skill_subtitle,
     format_tier_chip,
@@ -94,3 +95,18 @@ def test_format_prerequisites_line_single():
 
 def test_format_prerequisites_line_multiple():
     assert format_prerequisites_line(["Automation", "Fabrication"]) == "Requires: Automation, Fabrication"
+
+
+def test_format_reward_status_line_locked_shows_progress_and_unit():
+    assert format_reward_status_line("Log 10 hours on your mower.", "hrs", 4.0, 10.0, False) == \
+        "4/10 hrs — Log 10 hours on your mower."
+
+
+def test_format_reward_status_line_locked_omits_unit_when_blank():
+    assert format_reward_status_line("Complete 5 missions.", "", 2.0, 5.0, False) == \
+        "2/5 — Complete 5 missions."
+
+
+def test_format_reward_status_line_unlocked_drops_the_numbers():
+    assert format_reward_status_line("Log 10 hours on your mower.", "hrs", 12.0, 10.0, True) == \
+        "Unlocked — Log 10 hours on your mower."

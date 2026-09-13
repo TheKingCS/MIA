@@ -55,6 +55,7 @@ from core.skill_leveling import (
     compute_skill_level_progress,
     next_honest_step,
 )
+from core.rewards_manager import REWARD_DEFINITIONS, STAT_DEFINITIONS, reward_progress_fraction
 from core.skill_manager import SkillDefinition
 from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
@@ -96,6 +97,16 @@ def format_locked_skill_name(name: str) -> str:
 def format_prerequisites_line(prereq_names: list[str]) -> str:
     """Pure formatting logic — testable without Qt."""
     return "Requires: " + ", ".join(prereq_names)
+
+
+def format_reward_status_line(description: str, unit: str, value: float, threshold: float, unlocked: bool) -> str:
+    """Pure formatting logic — testable without Qt. Locked rows show
+    real progress against the threshold; unlocked rows drop the numbers
+    entirely (the description alone reads better once it's done)."""
+    if unlocked:
+        return f"Unlocked — {description}"
+    unit_suffix = f" {unit}" if unit else ""
+    return f"{value:g}/{threshold:g}{unit_suffix} — {description}"
 
 
 def format_capability_status_label(status: str) -> str:
@@ -329,6 +340,25 @@ class SkillsModule(ModuleBase):
         self._prestige_layout.addWidget(self._prestige_button, alignment=Qt.AlignmentFlag.AlignLeft)
         column_layout.addWidget(prestige_card)
 
+        # Rewards (2026-09-14) — the user's own "Call of Duty
+        # headshots/kills/bloodthirstys" motivational-stats ask: real
+        # lifetime stats (engine hours, workout hours, missions
+        # completed) unlocking real cosmetic rewards at thresholds.
+        # Character-art illustration is deliberately deferred (see
+        # core/rewards_manager.py's own docstring); plain emoji icons
+        # for now, same convention as every other not-yet-illustrated
+        # part of this app. Also lists Prestige N emblems already
+        # reached, derived live — the same "collection" the user asked
+        # for, in one place.
+        rewards_card = BlueprintFrame(accent=True)
+        rewards_card.setObjectName("DashboardCard")
+        apply_panel_glow(rewards_card)
+        self._rewards_layout = QVBoxLayout(rewards_card)
+        rewards_title = QLabel("REWARDS")
+        rewards_title.setObjectName("MonitorTileEyebrow")
+        self._rewards_layout.addWidget(rewards_title)
+        column_layout.addWidget(rewards_card)
+
         column_layout.addStretch(1)
         return column
 
@@ -360,6 +390,7 @@ class SkillsModule(ModuleBase):
         self._refresh_grid()
         self._refresh_achievements()
         self._refresh_prestige_card()
+        self._refresh_rewards_card()
 
     def _active_profile_id(self) -> Optional[str]:
         if self.context.profiles is None:
@@ -417,6 +448,72 @@ class SkillsModule(ModuleBase):
         self.context.profiles.prestige(active.profile_id)
         self._refresh_stats_label()
         self._refresh_prestige_card()
+        self._refresh_rewards_card()
+
+    def _refresh_rewards_card(self) -> None:
+        while self._rewards_layout.count() > 1:  # keep the eyebrow title (index 0)
+            item = self._rewards_layout.takeAt(1)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+
+        if self.context.rewards is None or self.context.profiles is None:
+            return
+        active = self.context.profiles.get_active_profile()
+        if active is None:
+            empty = QLabel("No active profile.")
+            empty.setObjectName("SubtitleLabel")
+            self._rewards_layout.addWidget(empty)
+            return
+
+        # Snappy "check on view" unlock feedback — safe to call every
+        # refresh, scan_for_new_unlocks() is idempotent (see its own
+        # docstring); the daily-occasion timer in core/application.py
+        # also calls this so it fires even if this page is never opened.
+        self.context.rewards.scan_for_new_unlocks(active.profile_id)
+        stat_values = self.context.rewards.all_stat_values()
+        stat_unit_by_id = {definition.stat_id: definition.unit for definition in STAT_DEFINITIONS}
+
+        for index, reward in enumerate(REWARD_DEFINITIONS):
+            if index > 0:
+                rule = QFrame()
+                rule.setFrameShape(QFrame.Shape.HLine)
+                rule.setObjectName("HairlineRule")
+                self._rewards_layout.addWidget(rule)
+            unlocked = self.context.rewards.is_unlocked(active.profile_id, reward.reward_id)
+            value = stat_values.get(reward.stat_id, 0.0)
+            title = QLabel(f"{reward.icon} {reward.name}")
+            title.setObjectName("SkillCardTitle")
+            self._rewards_layout.addWidget(title)
+            status = QLabel(format_reward_status_line(
+                reward.description, stat_unit_by_id.get(reward.stat_id, ""), value, reward.threshold, unlocked,
+            ))
+            status.setWordWrap(True)
+            status.setObjectName("SkillCardPrereq")
+            self._rewards_layout.addWidget(status)
+            if not unlocked:
+                bar = QProgressBar()
+                bar.setRange(0, 100)
+                bar.setValue(int(reward_progress_fraction(value, reward.threshold) * 100))
+                bar.setTextVisible(False)
+                bar.setFixedHeight(6)
+                self._rewards_layout.addWidget(bar)
+
+        prestige_rewards = self.context.rewards.prestige_rewards_for_profile(active.profile_id)
+        if prestige_rewards:
+            rule = QFrame()
+            rule.setFrameShape(QFrame.Shape.HLine)
+            rule.setObjectName("HairlineRule")
+            self._rewards_layout.addWidget(rule)
+            emblem_title = QLabel("Prestige Emblems")
+            emblem_title.setObjectName("SkillCardTitle")
+            self._rewards_layout.addWidget(emblem_title)
+            for entry in prestige_rewards:
+                emblem_label = QLabel(f"\U0001F3C6 {entry['name']}")
+                emblem_label.setStyleSheet(f"color: {entry['color']};")
+                self._rewards_layout.addWidget(emblem_label)
 
     def _refresh_achievements(self) -> None:
         while self._achievements_layout.count() > 1:  # keep the eyebrow title (index 0)

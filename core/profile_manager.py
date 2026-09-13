@@ -92,6 +92,14 @@ class Profile:
     # prestiged yet, and total_xp itself stays lifetime-cumulative and
     # uncapped regardless (existing invariant this doesn't touch).
     prestige_tier: int = 0
+    # Rewards (2026-09-14) — real reward_ids this profile has actually
+    # unlocked (core.rewards_manager.REWARD_DEFINITIONS). A real,
+    # one-way state, not derivable from live stat values alone: once
+    # unlocked, a reward stays unlocked even if the underlying stat
+    # somehow later reads lower (a corrected reading, a data fix) —
+    # same "a real choice/event, not a live computation" reasoning as
+    # prestige_tier above.
+    unlocked_reward_ids: list[str] = field(default_factory=list)
 
     @property
     def has_password(self) -> bool:
@@ -191,6 +199,7 @@ class ProfileManager:
                 total_xp=data.get("total_xp", 0),
                 total_credits=data.get("total_credits", 0),
                 prestige_tier=data.get("prestige_tier", 0),
+                unlocked_reward_ids=list(data.get("unlocked_reward_ids", [])),
             )
             for pid, data in raw.items()
         ]
@@ -214,7 +223,15 @@ class ProfileManager:
             total_xp=raw.get("total_xp", 0),
             total_credits=raw.get("total_credits", 0),
             prestige_tier=raw.get("prestige_tier", 0),
+            unlocked_reward_ids=list(raw.get("unlocked_reward_ids", [])),
         )
+
+    def get_profile(self, profile_id: str) -> Optional[Profile]:
+        """Look up any profile by id, active or not — a real, missing
+        lookup this class never had before Rewards needed it (every
+        other read path was either "the active one" or "all of
+        them")."""
+        return next((p for p in self.list_profiles() if p.profile_id == profile_id), None)
 
     def set_active_profile(self, profile_id: str) -> None:
         """Switch the active profile and persist the choice."""
@@ -368,6 +385,36 @@ class ProfileManager:
             self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
 
         return new_tier
+
+    def unlock_reward(self, profile_id: str, reward_id: str) -> bool:
+        """Records `reward_id` as unlocked for this profile. Returns
+        True if this actually changed anything (a real, new unlock),
+        False if the profile doesn't exist or already had it — same
+        idempotent-and-tells-you-so shape as
+        core.insight_manager.InsightManager.create_insight_if_new(),
+        so a caller (core.rewards_manager.RewardsManager) knows whether
+        to actually fire a celebration notification or stay quiet.
+        Deliberately no notification/formatting here — this class
+        doesn't know a reward's name/icon/description, only that one
+        got unlocked; RewardsManager owns that content."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to unlock a reward for unknown profile_id '%s'", profile_id)
+            return False
+
+        unlocked = list(raw.get("unlocked_reward_ids", []))
+        if reward_id in unlocked:
+            return False
+
+        unlocked.append(reward_id)
+        record = dict(raw)
+        record["unlocked_reward_ids"] = unlocked
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Profile '%s' unlocked reward '%s'", profile_id, reward_id)
+        self.context.events.publish("profile.reward_unlocked", profile_id=profile_id, reward_id=reward_id)
+        return True
 
     def has_any_profiles(self) -> bool:
         return bool(self.context.config.get("profiles", {}))

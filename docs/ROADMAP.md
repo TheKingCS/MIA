@@ -9373,6 +9373,64 @@ follows) and renders in the real tier color once prestiged. A new
 treatment as "Next Honest Step") shows quiet progress copy below level
 100, or a real "Prestige Now" button once eligible.
 
+## Rewards: real lifetime stats unlocking real cosmetics, CoD-style (2026-09-14)
+
+The user's own ask: a Character page where a little character unlocks
+customizations from real milestones ("after 10 hours are put on the
+mower he could unlock a little John Deere hat"), plus Call-of-Duty-
+style lifetime motivational stats (hours mowed, workout hours,
+missions completed, ...) that can themselves trigger rewards, and a
+Prestige-tier emblem collection alongside them — all with a real
+unlock notification. Real character art is explicitly deferred ("we
+will work on the artwork later, for now let's build the system") —
+this pass is the backend + a plain-emoji-icon UI, same placeholder
+convention as everything else in this app not yet illustrated.
+
+**New `core/rewards_manager.py`**: `STAT_DEFINITIONS` — 3 stats with a
+real, already-logged data source (`engine_hours_logged` from
+Maintenance's real "Engine Hours" task readings, latest reading per
+task summed across every asset that has one; `workout_hours_logged`
+from Workout's real session minutes; `missions_completed` from real
+Mission status). The user's own fourth example — "water used watering
+plants" — is deliberately NOT included; nothing in the app currently
+measures that, and this system's whole design stance (like every
+derived value elsewhere) is to never fake a number. `REWARD_DEFINITIONS`
+— 4 real threshold-gated rewards, including the exact "John Deere Hat"
+/ 10 engine-hours example the user gave. Stats are always derived live
+(never double-tracked); unlocking IS real persisted state
+(`Profile.unlocked_reward_ids`, new field), since a one-way unlock
+event is a real choice/fact, not a live computation — same reasoning
+`Profile.prestige_tier` already established.
+
+`RewardsManager.scan_for_new_unlocks()` is idempotent (checks
+`is_unlocked()` first) and fires a real notification
+(`context.notifications.notify(...)`) on every genuinely new unlock —
+safe to call from more than one place. It's called from two real
+sites: `core/application.py`'s daily-occasion timer (new
+`should_run_once_daily()`-gated block, same shape as every other
+once-a-day check there) and `modules/skills/module.py`'s own
+`_refresh()`, so opening the Character/Skills page after crossing a
+threshold unlocks it immediately rather than up to a day later.
+
+Prestige emblems are NOT a second unlock-tracking system —
+`prestige_rewards_for_profile()` derives one "Prestige N" entry per
+tier already reached straight from the existing `profile.prestige_tier`
+(same "derive it, don't persist a duplicate" stance this whole codebase
+follows), colored via the Prestige system's own
+`prestige_color_for_tier()`.
+
+**UI**: a new "REWARDS" card in `modules/skills/module.py`'s right
+column (same `BlueprintFrame(accent=True)` treatment as Prestige/Next
+Honest Step), listing every reward with its icon, unlocked/locked
+state, a real progress bar against its threshold when locked, and the
+Prestige-emblem collection beneath — one visible "collection" home for
+both, per the user's own ask.
+
+`core/profile_manager.py` gained `Profile.unlocked_reward_ids`, a new
+`get_profile(profile_id)` lookup, and a new `unlock_reward()` method
+(idempotent, publishes `"profile.reward_unlocked"`, fires no
+notification of its own — `RewardsManager` owns reward content/copy).
+
 **Verification**: `pytest -q` — full suite, 2735 passed (36 new tests
 across `test_leveling.py`/`test_profile_manager.py`/`test_skills_module.py`).
 Manual headless-Qt screenshots confirmed all three real states: not-
