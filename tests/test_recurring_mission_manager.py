@@ -28,6 +28,7 @@ from core.recurring_mission_manager import (
     RecurringMissionManager,
     current_streak_for,
     current_target_for,
+    current_weekly_streak_for,
     week_index_for,
     week_key_for,
 )
@@ -105,6 +106,22 @@ def test_current_streak_for_zero_when_nothing_recent():
 
 def test_current_streak_for_empty_list():
     assert current_streak_for([], date(2026, 9, 13)) == 0
+
+
+def test_current_weekly_streak_for_counts_consecutive_weeks_ending_current():
+    assert current_weekly_streak_for([0, 1, 2], 2) == 3
+
+
+def test_current_weekly_streak_for_counts_from_previous_week_if_current_not_done_yet():
+    assert current_weekly_streak_for([0, 1], 2) == 2
+
+
+def test_current_weekly_streak_for_resets_across_a_skipped_week():
+    assert current_weekly_streak_for([0, 2], 2) == 1
+
+
+def test_current_weekly_streak_for_empty_list():
+    assert current_weekly_streak_for([], 0) == 0
 
 
 class RecurringMissionManagerTestTemplate:
@@ -215,6 +232,95 @@ def test_current_streak_for_template_reflects_real_completions(isolated_paths):
     context.missions.update_mission(daily.mission_id, status="completed")
 
     assert context.recurring_missions.current_streak_for_template(template.template_id, date(2026, 9, 13)) == 1
+
+
+# ----------------------------------------------------------------------
+# "weekly" recurrence (laundry's own shape — one Mission per week, no
+# daily sub-occurrence)
+# ----------------------------------------------------------------------
+
+def test_ensure_current_missions_weekly_creates_one_mission_no_daily_bonus(isolated_paths):
+    context = _make_context()
+    template = context.recurring_missions.add_template(
+        name="Laundry", objective_description_template="Do {target:g} loads of laundry",
+        base_target=3, target_increment_per_week=0, daily_reward_xp=10, weekly_bonus_reward_xp=0,
+        start_date="2026-09-13", recurrence="weekly", category="Household",
+    )
+
+    mission, weekly = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 13))
+
+    assert weekly is None
+    assert mission.recurring_kind == "weekly_standalone"
+    assert mission.occurrence_key == "2026-09-13-W0"
+    assert mission.objectives[0].target == 3
+    assert mission.objectives[0].description == "Do 3 loads of laundry"
+    assert len(context.missions.all_missions()) == 1  # not 2 — no daily bonus Mission
+    assert len(context.calendar.all_events()) == 1
+
+
+def test_ensure_current_missions_weekly_is_idempotent_within_the_week(isolated_paths):
+    context = _make_context()
+    template = context.recurring_missions.add_template(
+        name="Laundry", objective_description_template="Do {target:g} loads of laundry",
+        base_target=3, target_increment_per_week=0, daily_reward_xp=10, weekly_bonus_reward_xp=0,
+        start_date="2026-09-13", recurrence="weekly", category="Household",
+    )
+
+    mission1, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 13))
+    mission2, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 16))
+
+    assert mission1.mission_id == mission2.mission_id
+    assert len(context.missions.all_missions()) == 1
+    assert len(context.calendar.all_events()) == 1
+
+
+def test_ensure_current_missions_weekly_creates_a_new_mission_next_week(isolated_paths):
+    context = _make_context()
+    template = context.recurring_missions.add_template(
+        name="Laundry", objective_description_template="Do {target:g} loads of laundry",
+        base_target=3, target_increment_per_week=0, daily_reward_xp=10, weekly_bonus_reward_xp=0,
+        start_date="2026-09-13", recurrence="weekly", category="Household",
+    )
+
+    week0, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 13))
+    week1, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 20))
+
+    assert week0.mission_id != week1.mission_id
+    assert week1.occurrence_key == "2026-09-13-W1"
+    assert len(context.missions.all_missions()) == 2
+
+
+def test_current_streak_for_template_weekly_counts_consecutive_completed_weeks(isolated_paths):
+    context = _make_context()
+    template = context.recurring_missions.add_template(
+        name="Laundry", objective_description_template="Do {target:g} loads of laundry",
+        base_target=3, target_increment_per_week=0, daily_reward_xp=10, weekly_bonus_reward_xp=0,
+        start_date="2026-09-13", recurrence="weekly", category="Household",
+    )
+
+    week0, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 13))
+    context.missions.update_mission(week0.mission_id, status="completed")
+    week1, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 20))
+    context.missions.update_mission(week1.mission_id, status="completed")
+
+    assert context.recurring_missions.current_streak_for_template(template.template_id, date(2026, 9, 20)) == 2
+
+
+def test_current_streak_for_template_weekly_resets_across_a_skipped_week(isolated_paths):
+    context = _make_context()
+    template = context.recurring_missions.add_template(
+        name="Laundry", objective_description_template="Do {target:g} loads of laundry",
+        base_target=3, target_increment_per_week=0, daily_reward_xp=10, weekly_bonus_reward_xp=0,
+        start_date="2026-09-13", recurrence="weekly", category="Household",
+    )
+
+    week0, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 13))
+    context.missions.update_mission(week0.mission_id, status="completed")
+    # Week 1 (2026-09-20) skipped entirely — jump straight to week 2.
+    week2, _ = context.recurring_missions.ensure_current_missions(template, date(2026, 9, 27))
+    context.missions.update_mission(week2.mission_id, status="completed")
+
+    assert context.recurring_missions.current_streak_for_template(template.template_id, date(2026, 9, 27)) == 1
 
 
 def test_ensure_current_missions_without_calendar_does_not_crash(isolated_paths):

@@ -8706,3 +8706,67 @@ and clicking a listed Mission published the exact right
 (`module_id="missions", record_id=<the real mission_id>`) — the actual
 cross-module navigation payload, not just that a click handler fired.
 Screenshotted all three.
+
+## New "Household" area + weekly-cadence Recurring Missions: laundry (2026-09-14)
+
+Asked "I just did like 3 loads of laundry — where would that even be
+tracked? it wouldn't really have a page like real estate or garage."
+`core/recurring_mission_manager.py` (built for the daily push-up goal)
+only supported one cadence: a daily Mission plus a weekly "did every
+day" bonus Mission. Laundry isn't daily-with-a-rollup, it's just
+*weekly* — a real, new recurrence shape, not something to force into
+the existing one.
+
+**`core/recurring_mission_manager.py`**: `RecurringMissionTemplate`
+gains `recurrence: str = "daily"` (new: `"weekly"`) and `category: str
+= "Household"` (mirrors `MaintenanceAsset.category` — what the new
+module filters by). `ensure_current_missions()` now dispatches on
+`template.recurrence`: `"daily"` is the exact original behavior,
+unchanged; `"weekly"` (new) creates **one** Mission per week
+(`recurring_kind="weekly_standalone"`, a distinct kind from the daily
+rollup's own `"weekly"`, so `_on_mission_completed()`'s existing daily-
+only guard already leaves it alone with zero changes there) — own
+tally objective via the existing `current_target_for()` math, own
+reward reusing the existing `daily_reward_xp`/`daily_skill_rewards`
+fields (`weekly_bonus_*` simply goes unused for these templates), one
+Calendar event per week not per day. New pure function
+`current_weekly_streak_for()` — same shape as `current_streak_for()`
+but counts consecutive *week indices* instead of calendar dates;
+`current_streak_for_template()` now looks up the template and branches
+on its `recurrence` to call the right one.
+
+**New `modules/household/module.py`** — Garage/Property/Greenhouse's
+fourth sibling, but over `RecurringMissionTemplate` (filtered to
+`category == "Household"`) instead of `MaintenanceAsset`. The user's
+own display spec: a little checklist (one row per template — name,
+progress, streak, a ✓/• marker) plus one big total progress bar for
+"X/Y complete" across every template's current real occurrence. No
+detail-page/stack needed here — a template's real history is just its
+own past Missions, already viewable in the Mission Log. Each row opens
+its current occurrence Mission via the same
+`"assistant.open_module_requested"` + `record_id` mechanism every other
+area uses.
+
+**Real data**: the existing real "Push-ups" template's `category`
+corrected to `"Fitness"` (it predates the field, defaulted to
+"Household"). New real "Laundry" template: `recurrence="weekly"`,
+`category="Household"`, `base_target=3`, no escalation, reward `+10
+XP` / `household_management +10`. This week's real occurrence created
+and completed with today's real 3/3 progress.
+
+**Verification**: `pytest -q` — full suite, 2679 passed, zero
+regressions (new `current_weekly_streak_for()` cases, new `"weekly"`-
+recurrence cases for `ensure_current_missions()`/
+`current_streak_for_template()` covering idempotency-within-a-week, a
+new Mission created the following week, and a streak reset across a
+skipped week; new `tests/test_household_module.py` for the module's
+pure formatting/aggregation functions). Manual headless-Qt
+verification: simulated 3 real weeks against a throwaway Laundry
+template (completing weeks 0 and 2, skipping week 1) — confirmed
+exactly one Mission per week (3 total, not 7), the streak correctly
+reset to 1 across the skipped week, and the Household module rendered
+the big progress bar + checklist row correctly. Screenshotted.
+
+**Deferred, not built**: a dedicated "create a new recurring mission
+template" UI dialog — every template (Push-ups, Laundry) is still
+created via direct script, same as before.

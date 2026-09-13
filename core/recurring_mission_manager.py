@@ -72,6 +72,15 @@ class RecurringMissionTemplate:
     weekly_bonus_skill_rewards: list[SkillWeight] = field(default_factory=list)
     icon: str = "\U0001F3AF"  # dart
     active: bool = True
+    # Household area (2026-09-14) — "daily" (existing shape: a daily
+    # Mission + a weekly "did every day" bonus Mission) or "weekly" (one
+    # Mission per week, no daily sub-occurrence — laundry's own shape,
+    # not a daily habit with a weekly rollup). See
+    # ensure_current_missions()'s own docstring for the branch.
+    recurrence: str = "daily"
+    # Mirrors MaintenanceAsset.category — what modules/household/module.py
+    # (Garage/Property/Greenhouse's fourth sibling) filters templates by.
+    category: str = "Household"
 
     def to_dict(self) -> dict:
         return {
@@ -88,6 +97,8 @@ class RecurringMissionTemplate:
             "weekly_bonus_skill_rewards": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.weekly_bonus_skill_rewards],
             "icon": self.icon,
             "active": self.active,
+            "recurrence": self.recurrence,
+            "category": self.category,
         }
 
     @staticmethod
@@ -110,6 +121,8 @@ class RecurringMissionTemplate:
             ],
             icon=data.get("icon", "\U0001F3AF"),
             active=data.get("active", True),
+            recurrence=data.get("recurrence", "daily"),
+            category=data.get("category", "Household"),
         )
 
 
@@ -159,6 +172,21 @@ def current_streak_for(daily_occurrence_dates: list[str], today: date) -> int:
     return streak
 
 
+def current_weekly_streak_for(completed_week_indices: list[int], current_week_index: int) -> int:
+    """Same shape as current_streak_for() but counts consecutive WEEKS
+    (by index, not calendar date) — for recurrence == "weekly"
+    templates (laundry's own shape), where the occurrence itself IS the
+    week, not a daily sub-occurrence rolled up into one."""
+    completed = set(completed_week_indices)
+    cursor = current_week_index if current_week_index in completed else current_week_index - 1
+
+    streak = 0
+    while cursor in completed and cursor >= 0:
+        streak += 1
+        cursor -= 1
+    return streak
+
+
 class RecurringMissionManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
@@ -204,6 +232,8 @@ class RecurringMissionManager:
         daily_skill_rewards: Optional[list[SkillWeight]] = None,
         weekly_bonus_skill_rewards: Optional[list[SkillWeight]] = None,
         icon: str = "\U0001F3AF",
+        recurrence: str = "daily",
+        category: str = "Household",
     ) -> RecurringMissionTemplate:
         template = RecurringMissionTemplate(
             template_id=uuid.uuid4().hex[:10],
@@ -218,6 +248,8 @@ class RecurringMissionManager:
             daily_skill_rewards=list(daily_skill_rewards) if daily_skill_rewards else [],
             weekly_bonus_skill_rewards=list(weekly_bonus_skill_rewards) if weekly_bonus_skill_rewards else [],
             icon=icon,
+            recurrence=recurrence,
+            category=category,
         )
         self._templates.append(template)
         self._save()
@@ -247,11 +279,62 @@ class RecurringMissionManager:
                 return mission
         return None
 
-    def ensure_current_missions(self, template: RecurringMissionTemplate, today: date) -> tuple[Mission, Mission]:
+    def ensure_current_missions(
+        self, template: RecurringMissionTemplate, today: date
+    ) -> tuple[Mission, Optional[Mission]]:
         """Idempotent — safe to call every 5 minutes from the daily-
-        occasion timer (core/application.py) or by hand. Returns
-        (today's daily Mission, this week's weekly Mission), creating
-        whichever doesn't exist yet."""
+        occasion timer (core/application.py) or by hand. Dispatches on
+        template.recurrence: "daily" (the original push-up shape)
+        returns (today's daily Mission, this week's bonus Mission);
+        "weekly" (laundry's own shape — see this module's docstring for
+        why it's a distinct code path, not forced into the daily one)
+        returns (this week's one Mission, None) — the None keeps a
+        consistent 2-tuple unpack shape for callers regardless of
+        recurrence."""
+        if template.recurrence == "weekly":
+            return self._ensure_current_mission_weekly(template, today), None
+        return self._ensure_current_missions_daily(template, today)
+
+    def _ensure_current_mission_weekly(self, template: RecurringMissionTemplate, today: date) -> Mission:
+        start = date.fromisoformat(template.start_date)
+        week_index = week_index_for(start, today)
+        week_key = week_key_for(start, week_index)
+
+        mission = self._find_occurrence(template.template_id, "weekly_standalone", week_key)
+        if mission is not None:
+            return mission
+
+        target = current_target_for(template, today)
+        mission = self.context.missions.add_mission(
+            name=f"{template.name} — Week {week_index + 1}",
+            icon=template.icon,
+            summary=f"This week's real goal, week {week_index + 1}.",
+            reward_xp=template.daily_reward_xp,
+            skill_rewards=template.daily_skill_rewards,
+            recurring_template_id=template.template_id,
+            recurring_kind="weekly_standalone",
+            occurrence_key=week_key,
+        )
+        self.context.missions.add_objective(
+            mission.mission_id,
+            template.objective_description_template.format(target=target),
+            "tally",
+            target,
+        )
+        if self.context.calendar is not None:
+            self.context.calendar.add_event(
+                title=f"{template.name}: {target:g} this week",
+                date=today.isoformat(),
+            )
+        log.info("Created this week's recurring Mission: '%s' (target %.3g)", template.name, target)
+        return mission
+
+    def _ensure_current_missions_daily(
+        self, template: RecurringMissionTemplate, today: date
+    ) -> tuple[Mission, Mission]:
+        """The original push-up shape: a daily Mission every day, plus
+        one weekly bonus Mission per week that completes once all 7
+        days are done (see _on_mission_completed() below)."""
         today_key = today.isoformat()
         start = date.fromisoformat(template.start_date)
         week_index = week_index_for(start, today)
@@ -312,6 +395,20 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def current_streak_for_template(self, template_id: str, today: date) -> int:
+        template = self.get_template(template_id)
+        if template is not None and template.recurrence == "weekly":
+            start = date.fromisoformat(template.start_date)
+            current_week_index = week_index_for(start, today)
+            completed_week_indices = [
+                int(mission.occurrence_key.rsplit("-W", 1)[1])
+                for mission in self.context.missions.all_missions()
+                if mission.recurring_template_id == template_id
+                and mission.recurring_kind == "weekly_standalone"
+                and mission.status == "completed"
+                and mission.occurrence_key is not None
+            ]
+            return current_weekly_streak_for(completed_week_indices, current_week_index)
+
         completed_dates = [
             mission.occurrence_key
             for mission in self.context.missions.all_missions()
