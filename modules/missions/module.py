@@ -25,6 +25,7 @@ them.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Optional
 
 from PySide6.QtWidgets import (
@@ -50,6 +51,19 @@ from gui.widgets.glow import apply_panel_glow
 from gui.widgets.mission_list_row import MissionListRow
 from gui.widgets.objective_checklist_row import ObjectiveChecklistRow
 from modules.module_base import ModuleBase
+
+
+def format_recurring_status_line(kind: str, streak: int, weekly_progress: Optional[float] = None) -> str:
+    """Pure formatting logic — testable without Qt (see
+    tests/test_missions_module.py). `kind` is Mission.recurring_kind
+    ("daily" or "weekly")."""
+    if kind == "daily":
+        if streak <= 0:
+            return "\U0001F525 New streak starting today"
+        return f"\U0001F525 {streak}-day streak"
+    if kind == "weekly" and weekly_progress is not None:
+        return f"\U0001F3C6 {weekly_progress:g}/7 days this week"
+    return ""
 
 
 def format_mission_row(mission: Mission, trip_name: str = "") -> str:
@@ -375,6 +389,25 @@ class MissionsModule(ModuleBase):
         self._detail_layout.addWidget(tag_widget)
 
         self._detail_layout.addStretch()
+
+        # Recurring Missions (2026-09-13) — real derived streak/weekly-
+        # progress info, only for a Mission core.recurring_mission_manager
+        # created. Streak is never persisted (see that module's own
+        # docstring) — recomputed fresh from real completed occurrences
+        # every time this panel renders.
+        if mission.recurring_kind is not None:
+            recurring_text = ""
+            if mission.recurring_kind == "daily" and self.context.recurring_missions is not None and mission.recurring_template_id is not None:
+                streak = self.context.recurring_missions.current_streak_for_template(
+                    mission.recurring_template_id, date.today()
+                )
+                recurring_text = format_recurring_status_line("daily", streak)
+            elif mission.recurring_kind == "weekly" and mission.objectives:
+                recurring_text = format_recurring_status_line("weekly", 0, mission.objectives[0].progress)
+            if recurring_text:
+                recurring_label = QLabel(recurring_text)
+                recurring_label.setObjectName("SubtitleLabel")
+                self._detail_layout.addWidget(recurring_label)
 
         # 2026-09-12 design restyle, phase 2 — same corner-marks + glow
         # treatment as the detail container above; plain ink, this

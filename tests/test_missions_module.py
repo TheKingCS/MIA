@@ -15,6 +15,7 @@ from modules.missions.module import (
     format_mission_row,
     format_objective_row,
     format_objectives_heading,
+    format_recurring_status_line,
     format_rewards_line,
 )
 
@@ -27,6 +28,22 @@ def test_format_mission_row_with_trip():
 def test_format_mission_row_no_trip():
     mission = Mission(mission_id="m1", name="General Goal", status="completed")
     assert format_mission_row(mission) == "General Goal  (completed)"
+
+
+def test_format_recurring_status_line_daily_with_streak():
+    assert format_recurring_status_line("daily", 4) == "\U0001F525 4-day streak"
+
+
+def test_format_recurring_status_line_daily_zero_streak():
+    assert format_recurring_status_line("daily", 0) == "\U0001F525 New streak starting today"
+
+
+def test_format_recurring_status_line_weekly():
+    assert format_recurring_status_line("weekly", 0, weekly_progress=3) == "\U0001F3C6 3/7 days this week"
+
+
+def test_format_recurring_status_line_unknown_kind():
+    assert format_recurring_status_line("nonsense", 0) == ""
 
 
 def test_format_objective_row_incomplete_tally():

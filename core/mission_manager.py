@@ -248,6 +248,18 @@ class Mission:
     # single-new-weight crediting path — that one's safe by
     # construction (it only ever credits the ONE weight just appended).
     rewards_credited: bool = False
+    # Recurring Missions (2026-09-13) — same optional-FK shape as
+    # maintenance_task_id above. A Mission created by
+    # core.recurring_mission_manager.RecurringMissionManager carries all
+    # three: which template it came from, whether it's the "daily"
+    # occurrence or the week's "weekly" summary/bonus, and a stable key
+    # identifying *which* occurrence (the daily one's real ISO date, or
+    # the weekly one's "{start_date}-Wn") so ensure_current_missions()
+    # can look up "does this occurrence already exist" without any date
+    # parsing of created_at. None for every ordinary Mission.
+    recurring_template_id: Optional[str] = None
+    recurring_kind: Optional[str] = None  # "daily" | "weekly"
+    occurrence_key: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -273,6 +285,9 @@ class Mission:
             "recipe_unlocks": list(self.recipe_unlocks),
             "maintenance_task_id": self.maintenance_task_id,
             "rewards_credited": self.rewards_credited,
+            "recurring_template_id": self.recurring_template_id,
+            "recurring_kind": self.recurring_kind,
+            "occurrence_key": self.occurrence_key,
         }
 
     @staticmethod
@@ -302,6 +317,9 @@ class Mission:
             recipe_unlocks=list(data.get("recipe_unlocks", [])),
             maintenance_task_id=data.get("maintenance_task_id"),
             rewards_credited=bool(data.get("rewards_credited", False)),
+            recurring_template_id=data.get("recurring_template_id"),
+            recurring_kind=data.get("recurring_kind"),
+            occurrence_key=data.get("occurrence_key"),
         )
 
 
@@ -357,6 +375,9 @@ class MissionManager:
         skill_rewards: Optional[list[SkillWeight]] = None,
         recipe_unlocks: Optional[list[str]] = None,
         maintenance_task_id: Optional[str] = None,
+        recurring_template_id: Optional[str] = None,
+        recurring_kind: Optional[str] = None,
+        occurrence_key: Optional[str] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -378,6 +399,9 @@ class MissionManager:
             skill_rewards=list(skill_rewards) if skill_rewards else [],
             recipe_unlocks=list(recipe_unlocks) if recipe_unlocks else [],
             maintenance_task_id=maintenance_task_id,
+            recurring_template_id=recurring_template_id,
+            recurring_kind=recurring_kind,
+            occurrence_key=occurrence_key,
         )
         self._missions.append(mission)
         self._save()

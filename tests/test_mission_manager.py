@@ -162,6 +162,51 @@ def test_add_mission_without_maintenance_task_id_defaults_to_none(isolated_paths
     assert mission.maintenance_task_id is None
 
 
+def test_add_mission_can_set_recurring_fields(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(
+        name="Push-ups", recurring_template_id="tmpl1", recurring_kind="daily", occurrence_key="2026-09-13",
+    )
+    assert mission.recurring_template_id == "tmpl1"
+    assert mission.recurring_kind == "daily"
+    assert mission.occurrence_key == "2026-09-13"
+
+
+def test_recurring_fields_persist_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    context.missions.add_mission(
+        name="Push-ups", recurring_template_id="tmpl1", recurring_kind="daily", occurrence_key="2026-09-13",
+    )
+
+    reloaded = MissionManager(context)
+    mission = reloaded.all_missions()[0]
+    assert mission.recurring_template_id == "tmpl1"
+    assert mission.recurring_kind == "daily"
+    assert mission.occurrence_key == "2026-09-13"
+
+
+def test_add_mission_without_recurring_fields_defaults_to_none(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Master Angler")
+    assert mission.recurring_template_id is None
+    assert mission.recurring_kind is None
+    assert mission.occurrence_key is None
+
+
+def test_recurring_fields_settable_via_update_mission(isolated_paths):
+    """Needed for retroactively linking an already-existing Mission to
+    a template created afterward (see core/recurring_mission_manager.py)."""
+    context = _make_context()
+    mission = context.missions.add_mission(name="Push-ups")
+    context.missions.update_mission(
+        mission.mission_id, recurring_template_id="tmpl1", recurring_kind="daily", occurrence_key="2026-09-13",
+    )
+    updated = context.missions.get_mission(mission.mission_id)
+    assert updated.recurring_template_id == "tmpl1"
+    assert updated.recurring_kind == "daily"
+    assert updated.occurrence_key == "2026-09-13"
+
+
 def test_update_mission_changes_fields_and_bumps_updated_at(isolated_paths):
     context = _make_context()
     mission = context.missions.add_mission(name="Original")

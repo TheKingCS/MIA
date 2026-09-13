@@ -82,6 +82,7 @@ from core.map_tile_cache import MapTileCache
 from core.memory_manager import MemoryManager
 from core.mission_manager import METRIC_TYPES as MISSION_METRIC_TYPES, MissionManager
 from core.pathway_manager import PathwayManager
+from core.recurring_mission_manager import RecurringMissionManager
 from core.discovery_manager import DiscoveryManager
 from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
@@ -252,6 +253,9 @@ class MIAApplication:
         # this ordering matches every other "reacts to X" manager's
         # own construction-order convention).
         self.context.pathways = PathwayManager(self.context)
+        # Recurring Missions — same "subscribes to mission.completed at
+        # construction" ordering rule as Pathways just above.
+        self.context.recurring_missions = RecurringMissionManager(self.context)
         # Discovery references skills/projects/intents/missions (all
         # read-only, to build its generation prompt), so it's
         # constructed after all four already are — same reasoning as
@@ -499,6 +503,19 @@ class MIAApplication:
                     source="insights",
                 )
             config.set("system.last_maintenance_insight_date", today_iso)
+            config.save()
+
+        # Recurring Missions (2026-09-13) — same should_run_once_daily()
+        # gate as every other check here; ensure_current_missions()
+        # itself is idempotent too (checks occurrence_key first), so
+        # this gate is a cheap once-a-day skip, not the only thing
+        # preventing duplicates.
+        if should_run_once_daily(config.get("system.last_recurring_mission_check_date"), today_iso):
+            if self.context.recurring_missions is not None:
+                for template in self.context.recurring_missions.all_templates():
+                    if template.active:
+                        self.context.recurring_missions.ensure_current_missions(template, now.date())
+            config.set("system.last_recurring_mission_check_date", today_iso)
             config.save()
 
     def _display(self, widget) -> None:

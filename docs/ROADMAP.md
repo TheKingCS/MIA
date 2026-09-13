@@ -8553,3 +8553,86 @@ reactivated and re-completed the mission (confirmed — the real bug fix
 — nothing credited a second time) — every number printed matched
 exactly. Screenshotted the dialog and the detail panel's new button
 and skill chips, both rendering correctly.
+
+## Recurring Missions with streak awareness + a weekly bonus (2026-09-13)
+
+At the user's explicit request, at the "go full steam, make it usable"
+priority shift: a real daily push-up goal that keeps generating itself,
+tracks a real streak, shows on the Calendar, and rewards a bigger
+weekly bonus Mission when every day that week gets done — with the
+daily target climbing by 5 each week.
+
+**Real, favorable finding, twice over**: this codebase already had
+both patterns this needed. `core/pathway_manager.py`'s "Repeatable
+pathway steps" (2026-09-12) already established "create a fresh
+Mission for the next occurrence, don't mutate one Mission into a
+repeating record" — reused directly rather than adding a recurrence
+concept to `Mission` itself. `core/application.py`'s
+`_daily_occasion_timer` (checks every 5 minutes, six existing
+`should_run_once_daily()`-gated checks) is a real, already-running
+"once a day" mechanism — the new check is a seventh block in the same
+function, not a new timer.
+
+New `core/recurring_mission_manager.py` — `RecurringMissionTemplate`
+(persisted to `data/recurring_mission_templates.json`) +
+`RecurringMissionManager`. `Mission` gains three optional fields
+(`recurring_template_id`/`recurring_kind`/`occurrence_key`, same
+optional-FK shape as `maintenance_task_id`). `ensure_current_missions()`
+is idempotent (checks `occurrence_key` first) and creates both a
+"daily" Mission (real tally objective at the correctly escalated
+target) and, once per week, a "weekly" bonus Mission (tally target 7 —
+"how many of this week's daily Missions got completed," which doubles
+as the whole streak/bonus mechanism, no separate counter). Subscribes
+to the existing `"mission.completed"` event (same construction-time
+pattern `PathwayManager` already uses) to bump the weekly tally and
+auto-complete+credit the bonus at 7/7 — through the exact same real
+`update_mission()` reward-crediting path everything else here uses,
+no parallel reward logic invented.
+
+**Streak is deliberately not new persisted state** — every daily
+occurrence is already a real Mission with a real date and status, so
+"days in a row" is fully derived (`current_streak_for()`, a pure
+function operating on plain date strings) from
+`context.missions.all_missions()`, same "derive it, don't persist a
+second copy that can drift" philosophy as every level/capability-status
+calculation elsewhere in this codebase.
+
+**Deliberate scope decision — Calendar**: `RECURRENCE_TYPES` (yearly/
+monthly/weekly/biweekly) has no "daily" value, and wasn't given one —
+a recurring entry couldn't show an escalating target through one
+static description anyway. Each real day instead gets a fresh one-shot
+`CalendarEvent` naming that day's real target, mirroring
+`MaintenanceManager.schedule_task()`'s own one-shot-per-occurrence
+pattern exactly.
+
+**Real UX bug caught by manual screenshot, not assumed correct**: the
+first pass named every daily Mission just `template.name` ("Push-ups")
+— a completed week's Missions list showed seven identically-named,
+indistinguishable rows. Fixed by dating the name (`"Push-ups — Sep
+19"`); confirmed by re-screenshotting that the list is now scannable.
+
+**Real data, created directly** (matching how the very first push-up
+Mission itself was created earlier the same day — no new "create a
+recurring mission" dialog this pass, named as deferred, separate
+scope): a real "Push-ups" template, `start_date` = today, `base_target=20`,
+`+5`/week, `daily_reward_xp=10` + `calisthenics +15`/`strength +5`
+(matching what was already granted), `weekly_bonus_reward_xp=15` +
+`calisthenics +10`. Today's already-completed "20 Push-ups" Mission
+was retroactively linked (not duplicated) as today's daily occurrence,
+and this week's bonus Mission was created with its tally already at
+1/7 to reflect that.
+
+**Verification**: `pytest -q` — full suite, 2644 passed, zero
+regressions (16 new `test_recurring_mission_manager.py` cases —
+pure-helper math, idempotency, the full 7-day completion → auto-bonus
+chain — plus new `Mission` field-persistence cases and 4 new
+`modules/missions/module.py` formatting-function cases). Manual
+verification: simulated a full real week end-to-end in a throwaway
+copy first (streak counting 1 through 7, target correctly escalating
+to 25 in week 2, the bonus Mission auto-completing with the right
+reward at day 7, a real Calendar event created each day) before
+touching real data — the naming bug above was caught in this same
+pass. Then applied the real template + retroactive link against the
+actual `data/missions.json`/`recurring_mission_templates.json`,
+confirmed no duplicate Mission was created for today and the weekly
+tally landed at exactly 1/7.

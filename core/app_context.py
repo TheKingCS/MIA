@@ -70,6 +70,7 @@ if TYPE_CHECKING:
     from core.profile_manager import ProfileManager
     from core.product_manager import ProductManager
     from core.push_subscription_manager import PushSubscriptionManager
+    from core.recurring_mission_manager import RecurringMissionManager
     from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
     from core.relationships_manager import RelationshipsManager
@@ -186,6 +187,11 @@ class AppContext:
     # so stays None everywhere else, same "optional service, degrades
     # gracefully" pattern as e.g. context.energy.
     push_subscriptions: Optional["PushSubscriptionManager"] = field(default=None, repr=False)
+    # Recurring Missions (2026-09-13) — subscribes to Missions' own
+    # "mission.completed" event at construction (same ordering rule as
+    # Pathways above — must be constructed after context.missions
+    # already exists).
+    recurring_missions: Optional["RecurringMissionManager"] = field(default=None, repr=False)
     # Set by MIAApplication (Home) or core/core_runtime.py (headless
     # Core) right after construction, same "assigned after the fact"
     # reason as profiles/etc. above. _action_open_module is the only
