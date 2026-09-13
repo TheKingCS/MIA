@@ -10,11 +10,22 @@ core/workout_manager.py (self.context.workout) — this module is the
 Qt-facing wrapper around it, same split as every other data-backed
 module here.
 
-Five tabs (Exercises/Templates/Log Session/History/Progress),
-QTabWidget, same shape as modules/kitchen/module.py — including that
-same module's "every tab refreshes on every tabs.currentChanged" fix,
-applied proactively here from the start (History/Progress both depend
-on whatever Log Session just saved).
+Five tabs (Exercises/Templates/Log Session/History/Progress) — a
+plain button row + QStackedWidget (the "Nature" re-skin's own tab
+convention, ported from modules/garage/module.py; not QPushButton
+QTabWidget's own unstyled default chrome), same "every tab refreshes
+on every tab switch" fix modules/kitchen/module.py's own QTabWidget
+still uses, applied proactively here from the start (History/Progress
+both depend on whatever Log Session just saved).
+
+**"Nature" re-skin rollout (2026-09-14)**: photo hero header + the
+same tab-bar convention as Garage/Greenhouse's detail pages. Log
+Session specifically also gained a real "Daily Mission" card — any
+active Fitness-category core.recurring_mission_manager template
+(e.g. the real Push-ups goal) shown alongside the session form,
+matching the user's own reference mockup. Every other tab's own
+internal content (lists/forms/combos) is unchanged this pass — only
+the outer shell and Log Session were touched.
 
 The Log Session tab is the one genuinely new interaction in this app:
 a live, in-memory state machine (nothing written to core/workout_manager.py
@@ -48,13 +59,15 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDoubleSpinBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
-    QTabWidget,
+    QScrollArea,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -65,6 +78,7 @@ from gui.add_edit_workout_template_dialog import AddEditWorkoutTemplateDialog
 from gui.add_template_exercise_dialog import AddTemplateExerciseDialog
 from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from gui.log_set_dialog import LogSetDialog
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from modules.module_base import ModuleBase
 
 _DISPLAY_INTERVAL_MS = 100
@@ -153,29 +167,83 @@ class WorkoutModule(ModuleBase):
         self._session_calories_spin: Optional[QDoubleSpinBox] = None
 
     def get_widget(self) -> QWidget:
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(12)
+        page = QWidget()
+        page.setStyleSheet("background-color: #070f0d;")
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
 
-        header = QLabel(f"{self.icon}  {self.display_name}")
-        header.setObjectName("TitleLabel")
-        layout.addWidget(header)
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 20, 28, 16)
+        hero_layout.setSpacing(4)
 
-        subtitle = QLabel(self.description)
-        subtitle.setObjectName("SubtitleLabel")
-        layout.addWidget(subtitle)
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+        icon_badge = QLabel(self.icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header_row.addWidget(icon_badge)
+        title = QLabel(self.display_name)
+        title.setObjectName("NatureHeaderTitle")
+        header_row.addWidget(title)
+        header_row.addStretch(1)
+        hero_layout.addLayout(header_row)
 
-        tabs = QTabWidget()
-        tabs.addTab(self._build_exercises_tab(), "Exercises")
-        tabs.addTab(self._build_templates_tab(), "Templates")
-        tabs.addTab(self._build_log_session_tab(), "Log Session")
-        tabs.addTab(self._build_history_tab(), "History")
-        tabs.addTab(self._build_progress_tab(), "Progress")
-        tabs.currentChanged.connect(self._on_tab_changed)
-        layout.addWidget(tabs, stretch=1)
+        tagline = QLabel(self.description)
+        tagline.setObjectName("NatureHeaderTagline")
+        hero_layout.addWidget(tagline)
+        hero_layout.addStretch(1)
 
-        return widget
+        outer.addWidget(hero)
+
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(24, 20, 24, 0)
+        body_layout.setSpacing(12)
+
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(24)
+        stack = QStackedWidget()
+        tab_pages = {
+            "Exercises": self._build_exercises_tab(),
+            "Templates": self._build_templates_tab(),
+            "Log Session": self._build_log_session_tab(),
+            "History": self._build_history_tab(),
+            "Progress": self._build_progress_tab(),
+        }
+        tab_buttons: dict[str, QPushButton] = {}
+
+        def _select_tab(name: str) -> None:
+            for key, button in tab_buttons.items():
+                button.setProperty("active", key == name)
+                button.style().unpolish(button)
+                button.style().polish(button)
+            stack.setCurrentWidget(tab_pages[name])
+            self._on_tab_changed(0)
+
+        for name, tab_widget in tab_pages.items():
+            button = QPushButton(name)
+            button.setObjectName("NatureTabButton")
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda checked=False, n=name: _select_tab(n))
+            tab_buttons[name] = button
+            tab_row.addWidget(button)
+            stack.addWidget(tab_widget)
+        tab_row.addStretch(1)
+        body_layout.addLayout(tab_row)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(stack)
+        body_layout.addWidget(scroll, stretch=1)
+
+        outer.addWidget(body, stretch=1)
+        _select_tab("Exercises")
+        return page
 
     def _on_tab_changed(self, index: int) -> None:
         self._refresh_exercise_list()
@@ -406,8 +474,23 @@ class WorkoutModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_log_session_tab(self) -> QWidget:
+        """Nature re-skin (2026-09-14) — a session card (the existing
+        form/state machine, unchanged internally, just now contained in
+        a rounded card) alongside a real "Daily Mission" card, matching
+        the reference mockup's own two-panel Log Session layout."""
         tab = QWidget()
-        layout = QVBoxLayout(tab)
+        outer = QHBoxLayout(tab)
+        outer.setSpacing(16)
+
+        session_card = QFrame()
+        session_card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(session_card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(10)
+
+        session_title = QLabel("Log Session")
+        session_title.setObjectName("NatureSectionTitle")
+        layout.addWidget(session_title)
 
         start_row = QHBoxLayout()
         start_row.addWidget(QLabel("Template:"))
@@ -456,9 +539,65 @@ class WorkoutModule(ModuleBase):
         finish_row.addWidget(self._finish_session_button)
         layout.addLayout(finish_row)
 
+        outer.addWidget(session_card, stretch=2)
+
+        daily_mission_card = self._build_daily_mission_card()
+        if daily_mission_card is not None:
+            outer.addWidget(daily_mission_card, stretch=1)
+
         self._refresh_session_template_combo()
         self._refresh_session_exercise_combo()
         return tab
+
+    def _build_daily_mission_card(self) -> Optional[QFrame]:
+        """"Daily Mission" card (Nature re-skin, 2026-09-14) — surfaces
+        whatever active Fitness-category core.recurring_mission_manager
+        template exists (e.g. the real Push-ups goal), matching the
+        reference mockup's own Log Session "Daily Mission" card. No
+        cross-module import (modules never import each other, CLAUDE.md's
+        layering rule) — reads core.recurring_mission_manager directly,
+        same as every other module that surfaces a recurring Mission's
+        status. None if there's no active Fitness template yet."""
+        if self.context.recurring_missions is None:
+            return None
+        templates = [
+            t for t in self.context.recurring_missions.all_templates() if t.active and t.category == "Fitness"
+        ]
+        if not templates:
+            return None
+        template = templates[0]
+        today = date.today()
+        mission, _ = self.context.recurring_missions.ensure_current_missions(template, today)
+        streak = self.context.recurring_missions.current_streak_for_template(template.template_id, today)
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(6)
+
+        title = QLabel("Daily Mission")
+        title.setObjectName("NatureSectionTitle")
+        layout.addWidget(title)
+
+        name_label = QLabel(template.name)
+        name_label.setObjectName("NatureAssetLine")
+        layout.addWidget(name_label)
+
+        if mission is not None and mission.objectives:
+            objective = mission.objectives[0]
+            progress_label = QLabel(f"{objective.progress:g}/{objective.target:g}")
+            progress_label.setObjectName("NatureTileValue")
+            layout.addWidget(progress_label)
+
+        streak_unit = "week" if template.recurrence == "weekly" else "day"
+        streak_text = f"\U0001F525 {streak}-{streak_unit} streak" if streak > 0 else "New streak starting today"
+        streak_label = QLabel(streak_text)
+        streak_label.setObjectName("NatureTileCaption")
+        layout.addWidget(streak_label)
+
+        layout.addStretch(1)
+        return card
 
     def _refresh_session_template_combo(self) -> None:
         if self._session_template_combo is None or self._session_active:

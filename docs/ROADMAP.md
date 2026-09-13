@@ -8958,3 +8958,43 @@ for `next_up_tasks()`), zero regressions. Manual headless-Qt
 screenshots against an isolated copy of the real (enriched) mower
 data confirmed all 4 tabs render and switch correctly, with the
 active tab's underline updating each click.
+
+## "Nature" re-skin rollout: Greenhouse + Workout (2026-09-14)
+
+User confirmed the Garage pilot and asked to continue "on all things
+in that picture" (the 8-panel reference mockup: Home/Greenhouse/
+Garage/Kitchen/Household/Workout/Real Estate/Missions/Skills) —
+Household was excluded from this instruction since it wasn't actually
+one of the pictured panels, left on the older teal system for now.
+
+**Greenhouse**: ported Garage's finished pilot verbatim — same photo
+hero + `#NatureGlanceTile` row + `#NatureAttentionPanel` + clickable
+`#NatureAssetCard` list, same Overview/Maintenance/Missions/Documents
+tab bar on the detail page. Only `GREENHOUSE_CATEGORIES`/icon/copy
+differ; every pure function and Qt structure is identical in shape.
+
+**Workout**: the user specifically called out "log a session on the
+workout tab" as an example. `get_widget()`'s outer QTabWidget was
+swapped for the Nature photo-hero + button-row + `QStackedWidget`
+pattern — all 5 tab-content methods (`_build_exercises_tab()` etc.)
+were reused completely unchanged, since they already each return a
+self-contained `QWidget`. `_build_log_session_tab()` itself got a real
+reorganization, not just a wrapper: its existing form/session-state-
+machine (untouched internally) now sits in a `#NatureAssetCard`
+alongside a new **"Daily Mission" card** — surfaces whatever active
+`category == "Fitness"` `core.recurring_mission_manager` template
+exists (the real Push-ups goal) with its live progress/streak,
+matching the reference mockup's own Log Session layout exactly. No
+cross-module import — reads `core.recurring_mission_manager` directly,
+same as every other module that surfaces a recurring Mission.
+
+**Verification**: `pytest -q` — full suite, 2696 passed, zero
+regressions (Workout's existing session-state-machine tests all still
+pass since nothing about `_on_start_session()`/`_on_log_set()`/etc.
+changed — only their container did). Manual headless-Qt screenshots
+confirmed Greenhouse's list+detail pages match Garage's exactly, and
+Workout's Log Session tab renders the session form plus a real,
+populated Daily Mission card side by side.
+
+**Still to do** from the same rollout instruction: Kitchen, Real
+Estate, Missions, Skills, and Home dashboard — not started yet.
