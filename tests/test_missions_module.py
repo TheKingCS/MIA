@@ -77,6 +77,14 @@ def test_format_level_footer_line():
     assert format_level_footer_line(6, 9143, 13886) == "Level 6    9,143 / 13,886"
 
 
+def test_format_level_footer_line_omits_prestige_at_tier_zero():
+    assert format_level_footer_line(6, 9143, 13886, 0) == "Level 6    9,143 / 13,886"
+
+
+def test_format_level_footer_line_includes_prestige_once_earned():
+    assert format_level_footer_line(1, 0, 100, 2) == "Level 1    0 / 100    PRESTIGE 2"
+
+
 def test_format_objectives_heading_no_objectives():
     assert format_objectives_heading(0, 0) == "OBJECTIVES"
 

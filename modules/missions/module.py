@@ -11,10 +11,13 @@ on the right — replacing the previous single-column "Missions list
 above Objectives list" layout entirely, not just restyling it.
 
 The list's sticky footer reads the active profile's real level/XP
-(`core.leveling.compute_level_progress()`, driven by
+(`core.leveling.compute_prestige_level_progress()`, driven by
 `core.mission_manager.MissionManager`'s reward-crediting on mission
 completion — see that module's docstring) — this is real gamification
-state now, not the design mockup's static placeholder numbers.
+state now, not the design mockup's static placeholder numbers. Also
+shows the real Prestige tier (2026-09-14 follow-up to the Prestige
+system's Skills-only launch), same "omit at tier 0" restraint used
+everywhere else.
 
 format_mission_row()/format_objective_row() are kept, still tested
 (tests/test_missions_module.py) — they were never actually rendered as
@@ -41,7 +44,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.leveling import compute_level_progress
+from core.leveling import compute_prestige_level_progress, prestige_color_for_tier
 from core.mission_manager import Mission, Objective
 from gui.add_edit_mission_dialog import AddEditMissionDialog
 from gui.add_edit_objective_dialog import AddEditObjectiveDialog
@@ -85,9 +88,14 @@ def format_rewards_line(reward_credits: int, reward_xp: int) -> str:
     return f"${reward_credits:,}    {reward_xp:,} XP"
 
 
-def format_level_footer_line(level: int, xp_into_level: int, xp_needed: int) -> str:
-    """Pure formatting logic — testable without Qt (see tests/test_missions_module.py)."""
-    return f"Level {level}    {xp_into_level:,} / {xp_needed:,}"
+def format_level_footer_line(level: int, xp_into_level: int, xp_needed: int, prestige_tier: int = 0) -> str:
+    """Pure formatting logic — testable without Qt (see tests/test_missions_module.py).
+    `prestige_tier` defaults to 0 so every existing call keeps working
+    unchanged; the "· PRESTIGE N" segment is omitted entirely at tier 0
+    (never prestiged), same restraint modules/skills/module.py's own
+    format_header_stats_line() already established."""
+    prestige_part = f"    PRESTIGE {prestige_tier}" if prestige_tier > 0 else ""
+    return f"Level {level}    {xp_into_level:,} / {xp_needed:,}{prestige_part}"
 
 
 def format_objectives_heading(completed: int, total: int) -> str:
@@ -496,8 +504,11 @@ class MissionsModule(ModuleBase):
     def _refresh_level_footer(self) -> None:
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         total_xp = active_profile.total_xp if active_profile is not None else 0
-        level, xp_into_level, xp_needed = compute_level_progress(total_xp)
-        self._level_footer_label.setText(format_level_footer_line(level, xp_into_level, xp_needed))
+        prestige_tier = active_profile.prestige_tier if active_profile is not None else 0
+        level, xp_into_level, xp_needed = compute_prestige_level_progress(total_xp, prestige_tier)
+        self._level_footer_label.setText(format_level_footer_line(level, xp_into_level, xp_needed, prestige_tier))
+        color = prestige_color_for_tier(prestige_tier) if prestige_tier > 0 else None
+        self._level_footer_label.setStyleSheet(f"color: {color};" if color else "")
 
     def _on_mission_selected(self, mission_id: str) -> None:
         self._selected_mission_id = mission_id

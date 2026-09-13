@@ -9373,6 +9373,23 @@ follows) and renders in the real tier color once prestiged. A new
 treatment as "Next Honest Step") shows quiet progress copy below level
 100, or a real "Prestige Now" button once eligible.
 
+**Verification**: `pytest -q` — full suite, 2735 passed (36 new tests
+across `test_leveling.py`/`test_profile_manager.py`/`test_skills_module.py`).
+Manual headless-Qt screenshots confirmed all three real states: not-
+yet-eligible (quiet progress text, no button), eligible (capped
+"PROFILE LEVEL 100," a real "Level up!" achievement, the Prestige Now
+button), and after a real click (level genuinely reset to 1, "PRESTIGE
+1" showing in green text, the card back to quiet progress copy for
+the new cycle).
+
+**Deliberately not done this pass**: no other screen's own "Level X"
+display (Missions footer, `gui/main_window.py`'s header badge) was
+updated to the prestige-aware function or colored text — Skills is
+the one real "character progression" home this pass targeted, not a
+sweep of every level readout in the app. A natural, scoped follow-up
+if wanted. (Closed 2026-09-14, same day — see the "Prestige-aware
+level displays" entry below.)
+
 ## Rewards: real lifetime stats unlocking real cosmetics, CoD-style (2026-09-14)
 
 The user's own ask: a Character page where a little character unlocks
@@ -9431,18 +9448,34 @@ both, per the user's own ask.
 (idempotent, publishes `"profile.reward_unlocked"`, fires no
 notification of its own — `RewardsManager` owns reward content/copy).
 
-**Verification**: `pytest -q` — full suite, 2735 passed (36 new tests
-across `test_leveling.py`/`test_profile_manager.py`/`test_skills_module.py`).
-Manual headless-Qt screenshots confirmed all three real states: not-
-yet-eligible (quiet progress text, no button), eligible (capped
-"PROFILE LEVEL 100," a real "Level up!" achievement, the Prestige Now
-button), and after a real click (level genuinely reset to 1, "PRESTIGE
-1" showing in green text, the card back to quiet progress copy for
-the new cycle).
+**Verification**: `pytest -q` — full suite, 2758 passed (23 new tests
+across `test_rewards_manager.py`/`test_skills_module.py`). Manually
+verified headless: crossed the real 10-engine-hour threshold, confirmed
+the notification fired and the REWARDS card rendered both locked (with
+progress bars) and unlocked states correctly.
 
-**Deliberately not done this pass**: no other screen's own "Level X"
-display (Missions footer, `gui/main_window.py`'s header badge) was
-updated to the prestige-aware function or colored text — Skills is
-the one real "character progression" home this pass targeted, not a
-sweep of every level readout in the app. A natural, scoped follow-up
-if wanted.
+## Prestige-aware level displays: Missions footer + header badge (2026-09-14)
+
+The Prestige system's own launch entry above deliberately scoped
+itself to Skills only and flagged the other two "Level X" readouts as
+a natural follow-up — picked up the same day since it's a small, real
+consistency gap (the exact [[feedback_area_parity_scoping]] shape,
+applied to a display detail rather than a whole module).
+
+`modules/missions/module.py`'s sticky list footer and
+`gui/main_window.py`'s header badge both switch from the raw uncapped
+`compute_level_progress()` to `compute_prestige_level_progress()`, and
+both grow a `prestige_tier` parameter with the same "omit the segment
+entirely at tier 0" restraint `modules/skills/module.py`'s own
+`format_header_stats_line()` already established —
+`format_level_footer_line()` appends "    PRESTIGE N", the new
+`gui.main_window.format_level_badge_text()` appends " · PN" — plus the
+same real tier color via `prestige_color_for_tier()`. Both are pure,
+tested functions now (`format_level_badge_text()` is main_window.py's
+first-ever module-level pure function, in a new `tests/test_main_window.py`).
+
+**Verification**: `pytest -q` — full suite, 2763 passed (5 new tests).
+Manual headless-Qt check with a real prestiged profile (tier 1, mid
+cycle 2): Missions footer read "Level 2    0 / 200    PRESTIGE 1" in
+green, `format_level_badge_text(2, 1)` returned "Lv. 2 · P1" — both
+screenshotted and confirmed correct.

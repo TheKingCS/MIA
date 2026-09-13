@@ -42,7 +42,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.app_context import AppContext
-from core.leveling import compute_level_progress
+from core.leveling import compute_prestige_level_progress, prestige_color_for_tier
 from core.logger import get_logger
 from core.module_manager import ModuleManager
 from core.onboarding import build_first_run_welcome_message
@@ -57,6 +57,17 @@ from gui.widgets.module_button import ModuleButton
 from gui.widgets.volume_quick_control import VolumeQuickControl
 
 log = get_logger(__name__)
+
+
+def format_level_badge_text(level: int, prestige_tier: int = 0) -> str:
+    """Pure formatting logic — testable without Qt (see tests/test_main_window.py).
+    "Lv. 100 · P2", with the "· P{tier}" segment omitted entirely at
+    tier 0 (never prestiged) — same restraint every other glance stat
+    in this app follows (modules/skills/module.py's own
+    format_header_stats_line(), modules/missions/module.py's own
+    format_level_footer_line())."""
+    prestige_part = f" · P{prestige_tier}" if prestige_tier > 0 else ""
+    return f"Lv. {level}{prestige_part}"
 
 
 class MainWindow(QMainWindow):
@@ -177,11 +188,13 @@ class MainWindow(QMainWindow):
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         if active_profile is None or active_profile.profile_id != profile_id:
             return
-        self._refresh_level_badge(active_profile.total_xp)
+        self._refresh_level_badge(active_profile.total_xp, active_profile.prestige_tier)
 
-    def _refresh_level_badge(self, total_xp: int) -> None:
-        level, _xp_into_level, _xp_needed = compute_level_progress(total_xp)
-        self._level_badge.setText(f"Lv. {level}")
+    def _refresh_level_badge(self, total_xp: int, prestige_tier: int = 0) -> None:
+        level, _xp_into_level, _xp_needed = compute_prestige_level_progress(total_xp, prestige_tier)
+        self._level_badge.setText(format_level_badge_text(level, prestige_tier))
+        color = prestige_color_for_tier(prestige_tier) if prestige_tier > 0 else None
+        self._level_badge.setStyleSheet(f"color: {color};" if color else "")
 
     def _on_assistant_open_module_requested(self, module_id: str, record_id: Optional[str] = None) -> None:
         self.open_module(module_id, record_id=record_id)
@@ -605,7 +618,7 @@ class MainWindow(QMainWindow):
         self._level_badge = QLabel()
         self._level_badge.setObjectName("HeaderLevelBadge")
         if active_profile is not None:
-            self._refresh_level_badge(active_profile.total_xp)
+            self._refresh_level_badge(active_profile.total_xp, active_profile.prestige_tier)
         else:
             self._level_badge.hide()
 
