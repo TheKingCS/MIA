@@ -1191,4 +1191,113 @@ this variant exists but isn't wired to any value yet. */
 QLabel#DashboardStatValue[state="hp"] {
     color: #4ade80;
 }
+
+/* "Nature" re-skin pilot (2026-09-14) — Garage first, per the user's
+own reference mockup (warm photographic backgrounds, forest-green/
+coral palette, rounded translucent cards), a deliberately different
+visual direction from the teal HUD system above. Colors sampled
+directly from the reference image, not eyeballed. Scoped to new
+object names only (Nature*) so every other still-teal-HUD module is
+completely unaffected — this is a pilot for one page, not a theme
+switch. See gui/widgets/photo_background_frame.py for the background
+photo + scrim technique (QSS has no background-image "cover" crop). */
+QFrame#NatureGlanceTile {
+    background-color: rgba(8, 25, 23, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+}
+
+QFrame#NatureGlanceTile[tone="danger"] {
+    background-color: rgba(58, 21, 18, 0.82);
+    border: 1px solid rgba(217, 83, 79, 0.4);
+}
+
+QLabel#NatureTileValue {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e7ecf3;
+}
+
+QLabel#NatureTileValue[tone="danger"] {
+    color: #e2574a;
+}
+
+QLabel#NatureTileCaption {
+    font-size: 12px;
+    color: #9fb8ac;
+}
+
+QLabel#NatureIconBadge {
+    background-color: rgba(81, 188, 118, 0.18);
+    border-radius: 18px;
+    font-size: 16px;
+}
+
+QLabel#NatureIconBadge[tone="danger"] {
+    background-color: rgba(217, 83, 79, 0.18);
+}
+
+QFrame#NatureAttentionPanel {
+    background-color: rgba(58, 21, 18, 0.78);
+    border: 1px solid #d9534f;
+    border-radius: 16px;
+}
+
+QLabel#NatureAttentionTitle {
+    color: #e2574a;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QLabel#NatureAttentionLine {
+    color: #ecd9d7;
+    font-size: 13px;
+}
+
+QPushButton#NatureAssetCard {
+    background-color: rgba(2, 24, 27, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    text-align: left;
+}
+
+QPushButton#NatureAssetCard:hover {
+    background-color: rgba(2, 24, 27, 0.95);
+    border: 1px solid #51bc76;
+}
+
+QPushButton#NatureAssetCard:pressed {
+    background-color: rgba(2, 18, 20, 0.95);
+}
+
+QLabel#NatureAssetTitle {
+    color: #e7ecf3;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+QLabel#NatureAssetCategory {
+    color: #9fb8ac;
+    font-size: 12px;
+}
+
+QLabel#NatureAssetLine {
+    color: #c3ccd9;
+    font-size: 12px;
+}
+
+QLabel#NatureAssetLine[tone="danger"] {
+    color: #e2574a;
+}
+
+QLabel#NatureHeaderTitle {
+    color: #f2f6f4;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+QLabel#NatureHeaderTagline {
+    color: #cdd9d4;
+    font-size: 13px;
+}
 """

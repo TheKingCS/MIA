@@ -52,6 +52,21 @@ already documents for its own summary-line functions. The underlying
 due/overdue math (days_until_due/is_meter_task_due/is_sensor_task_due/
 meter_used_since_last) IS reused directly from core.maintenance_manager
 — only the presentation strings are independently owned.
+
+**"Nature" re-skin pilot (2026-09-14)**: Garage is the first module
+rebuilt against the user's own reference mockup — a warm photographic
+hero header + forest-green/coral rounded cards, a deliberately
+different visual direction from the teal HUD system (BlueprintFrame/
+#DashboardCard/#MonitorTile) every other module still uses. This is an
+explicit pilot: get sign-off on the look here before touching
+Greenhouse/Kitchen/Workout/Real Estate/Missions/Skills/Household, per
+the user's own chosen sequencing. The reference mockup's own asset
+photography (mower/truck/Camaro thumbnails) was too low-resolution
+(~150px) to extract and ship — `gui/widgets/photo_background_frame.py`
+paints a gradient placeholder until real photography exists; swapping
+in a real photo later needs no other code changes. The per-asset
+detail page (`_build_detail_page()`) is untouched this pass — still
+the plain teal-HUD-adjacent look, deliberately deferred smaller scope.
 """
 
 from __future__ import annotations
@@ -81,8 +96,7 @@ from core.maintenance_manager import (
     meter_used_since_last,
 )
 from gui.widgets.asset_missions_panel import build_asset_missions_panel
-from gui.widgets.blueprint_frame import BlueprintFrame
-from gui.widgets.glow import apply_panel_glow
+from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from modules.module_base import ModuleBase
 
 GARAGE_CATEGORIES = ["Vehicle", "Power Equipment"]
@@ -258,29 +272,61 @@ class GarageModule(ModuleBase):
         return page
 
     def _build_list_page(self) -> QWidget:
+        """Nature re-skin pilot (2026-09-14) — a fixed-height photo
+        hero (icon badge + title + tagline over the background photo/
+        placeholder gradient) followed by a solid dark body, rather
+        than wrapping the whole scrollable page in the photo frame:
+        the reference mockup itself only really shows photo behind the
+        header — by the time you reach the card stack it's already
+        effectively solid dark, so this is a closer match, not just a
+        simpler implementation."""
         page = QWidget()
+        page.setStyleSheet("background-color: #070f0d;")
         outer = QVBoxLayout(page)
-        outer.setContentsMargins(24, 24, 24, 24)
-        outer.setSpacing(12)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
 
-        header = QLabel(f"{self.icon}  {self.display_name}")
-        header.setObjectName("TitleLabel")
-        outer.addWidget(header)
+        hero = PhotoBackgroundFrame()
+        hero.setFixedHeight(150)
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 20, 28, 16)
+        hero_layout.setSpacing(4)
 
-        subtitle = QLabel(self.description)
-        subtitle.setObjectName("SubtitleLabel")
-        outer.addWidget(subtitle)
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+        icon_badge = QLabel(self.icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        icon_badge.setFixedSize(40, 40)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header_row.addWidget(icon_badge)
+        title = QLabel(self.display_name)
+        title.setObjectName("NatureHeaderTitle")
+        header_row.addWidget(title)
+        header_row.addStretch(1)
+        hero_layout.addLayout(header_row)
+
+        tagline = QLabel(self.description)
+        tagline.setObjectName("NatureHeaderTagline")
+        hero_layout.addWidget(tagline)
+        hero_layout.addStretch(1)
 
         manage_button = QPushButton("Manage in Maintenance →")
         manage_button.clicked.connect(self._on_manage_in_maintenance)
-        outer.addWidget(manage_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        hero_layout.addWidget(manage_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        outer.addWidget(hero)
+
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(24, 20, 24, 24)
+        body_layout.setSpacing(16)
 
         glance_row = QHBoxLayout()
-        glance_row.setSpacing(24)
-        self._tracked_value_label = self._build_glance_tile(glance_row, "Tracked")
-        self._attention_value_label = self._build_glance_tile(glance_row, "Needs Attention")
-        self._next_up_value_label = self._build_glance_tile(glance_row, "Next Up")
-        outer.addLayout(glance_row)
+        glance_row.setSpacing(16)
+        self._tracked_value_label = self._build_glance_tile(glance_row, "Tracked", "\U0001F331")
+        self._attention_value_label = self._build_glance_tile(glance_row, "Needs Attention", "⚠", danger=True)
+        self._next_up_value_label = self._build_glance_tile(glance_row, "Next Up", "\U0001F4C5")
+        body_layout.addLayout(glance_row)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -291,7 +337,9 @@ class GarageModule(ModuleBase):
         self._list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self._list_layout.setSpacing(16)
         scroll.setWidget(content)
-        outer.addWidget(scroll, stretch=1)
+        body_layout.addWidget(scroll, stretch=1)
+
+        outer.addWidget(body, stretch=1)
 
         self._refresh()
         return page
@@ -299,22 +347,41 @@ class GarageModule(ModuleBase):
     def _on_manage_in_maintenance(self) -> None:
         self.context.events.publish("assistant.open_module_requested", module_id="maintenance")
 
-    def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str) -> QLabel:
-        """Design/style catch-up (2026-09-14) — real #MonitorTile card
-        (BlueprintFrame + the same eyebrow/value objectNames Maintenance's
-        own Sensor Monitor tab uses), not a bare QLabel pair, so this
-        glance row reads as an instrument-panel tile like the rest of
-        the restyled screens rather than plain stacked text."""
-        tile = BlueprintFrame()
-        tile.setObjectName("MonitorTile")
-        tile_layout = QVBoxLayout(tile)
-        eyebrow = QLabel(caption.upper())
-        eyebrow.setObjectName("MonitorTileEyebrow")
-        tile_layout.addWidget(eyebrow)
+    def _build_glance_tile(
+        self, row_layout: QHBoxLayout, caption: str, icon: str, danger: bool = False
+    ) -> QLabel:
+        """Nature re-skin pilot (2026-09-14) — a rounded translucent
+        #NatureGlanceTile with an icon badge, replacing the teal HUD's
+        #MonitorTile for this one pilot page."""
+        tile = QFrame()
+        tile.setObjectName("NatureGlanceTile")
+        if danger:
+            tile.setProperty("tone", "danger")
+        tile_layout = QHBoxLayout(tile)
+        tile_layout.setContentsMargins(14, 12, 14, 12)
+        tile_layout.setSpacing(10)
+
+        icon_badge = QLabel(icon)
+        icon_badge.setObjectName("NatureIconBadge")
+        if danger:
+            icon_badge.setProperty("tone", "danger")
+        icon_badge.setFixedSize(36, 36)
+        icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tile_layout.addWidget(icon_badge)
+
+        text_col = QVBoxLayout()
+        text_col.setSpacing(2)
         value_label = QLabel("—")
-        value_label.setObjectName("MonitorTileValue")
-        tile_layout.addWidget(value_label)
-        row_layout.addWidget(tile)
+        value_label.setObjectName("NatureTileValue")
+        if danger:
+            value_label.setProperty("tone", "danger")
+        text_col.addWidget(value_label)
+        caption_label = QLabel(caption)
+        caption_label.setObjectName("NatureTileCaption")
+        text_col.addWidget(caption_label)
+        tile_layout.addLayout(text_col)
+
+        row_layout.addWidget(tile, stretch=1)
         return value_label
 
     def _refresh(self) -> None:
@@ -369,52 +436,53 @@ class GarageModule(ModuleBase):
     def _add_section(
         self, title: str, lines: list[str], empty_text: str = "Nothing here yet.", asset_id: Optional[str] = None,
     ) -> None:
-        """Design/style catch-up (2026-09-14) — every section is now a
-        real #DashboardCard, matching gui/home_dashboard.py's own
-        clickable-widget-card convention, instead of a plain QPushButton
-        text header with bare QLabel lines floating under it. A given
-        asset (asset_id set) gets the clickable QPushButton variant
-        (whole card opens its detail page, not just the title text); a
-        cross-asset callout like "Needs Attention" (asset_id is None)
-        gets the same accent-glow BlueprintFrame treatment Maintenance's
-        own Sensor Monitor tab uses for its "due tasks" quest card —
-        it's the same kind of thing, a boss's outstanding fight list."""
+        """Nature re-skin pilot (2026-09-14) — a given asset (asset_id
+        set) is a rounded #NatureAssetCard (whole card opens its detail
+        page); a cross-asset callout like "Needs Attention" (asset_id
+        is None) is a #NatureAttentionPanel — coral-bordered, matching
+        the reference mockup's own "Needs Attention" box exactly.
+        Individual overdue lines get the danger text tone; other lines
+        stay neutral, same as the mockup's own mixed-color line list."""
         if asset_id is not None:
             card = QPushButton()
-            card.setObjectName("DashboardCard")
+            card.setObjectName("NatureAssetCard")
             card.setCursor(Qt.CursorShape.PointingHandCursor)
             card.setToolTip(f"Open {title}")
-            card.setMinimumHeight(96)
+            card.setMinimumHeight(90)
             card.clicked.connect(lambda checked=False, aid=asset_id: self._show_detail_page(aid))
             card_layout = QVBoxLayout(card)
-            card_layout.setContentsMargins(18, 16, 18, 16)
-            card_layout.setSpacing(6)
+            card_layout.setContentsMargins(16, 14, 16, 14)
+            card_layout.setSpacing(4)
 
-            header_row = QHBoxLayout()
-            title_label = QLabel(f"{title}  ›")
-            title_label.setObjectName("MonitorTileValue")
-            header_row.addWidget(title_label, stretch=1)
-            card_layout.addLayout(header_row)
+            name, _, category = title.partition("  [")
+            title_label = QLabel(f"{name}  ›")
+            title_label.setObjectName("NatureAssetTitle")
+            card_layout.addWidget(title_label)
+            if category:
+                category_label = QLabel(category.rstrip("]"))
+                category_label.setObjectName("NatureAssetCategory")
+                card_layout.addWidget(category_label)
         else:
-            card = BlueprintFrame(accent=True)
-            card.setObjectName("DashboardCard")
-            apply_panel_glow(card)
+            card = QFrame()
+            card.setObjectName("NatureAttentionPanel")
             card_layout = QVBoxLayout(card)
             card_layout.setContentsMargins(18, 16, 18, 16)
             card_layout.setSpacing(6)
 
-            eyebrow = QLabel(title.upper())
-            eyebrow.setObjectName("MonitorTileEyebrow")
+            eyebrow = QLabel(f"⚠  {title}")
+            eyebrow.setObjectName("NatureAttentionTitle")
             card_layout.addWidget(eyebrow)
 
         if not lines:
             empty_label = QLabel(empty_text)
-            empty_label.setObjectName("SubtitleLabel")
+            empty_label.setObjectName("NatureTileCaption")
             empty_label.setWordWrap(True)
             card_layout.addWidget(empty_label)
         for line in lines:
-            item_label = QLabel(f"- {line}")
-            item_label.setObjectName("MonitorTileCaption")
+            item_label = QLabel(f"•  {line}")
+            item_label.setObjectName("NatureAttentionLine" if asset_id is None else "NatureAssetLine")
+            if asset_id is not None and "overdue" in line:
+                item_label.setProperty("tone", "danger")
             item_label.setWordWrap(True)
             card_layout.addWidget(item_label)
 

@@ -8829,3 +8829,56 @@ asked for. Character page and Skill Tree page work (star ratings,
 generated bio, Borderlands-style intertwining trees, a skill-
 convergence "naming engine") discussed but explicitly deferred as
 their own separate, bigger conversations.
+
+## "Nature" re-skin pilot: Garage (2026-09-14)
+
+User shared a reference mockup (photographic hero backgrounds, forest-
+green/coral palette, rounded translucent cards, spanning Home/
+Greenhouse/Garage/Kitchen/Workout/Real Estate/Missions/Skills) as
+their real intended visual direction — a full re-skin, not an
+incremental tweak. Confirmed scope via AskUserQuestion: build from
+the image directly (no fuller Claude Design handoff needed first),
+and pilot ONE page (Garage, furthest along already) before touching
+the other seven.
+
+**Real constraint found before building anything**: the reference
+image is ~1312×1199px total, so each page panel is only ~440×425px —
+individual asset photos (mower/truck/Camaro) are ~150px, far too
+low-resolution to extract and ship as real assets. Colors were
+sampled directly from the image (via PIL, not eyeballed) for an
+accurate palette; the photography itself will come later from the
+ChatGPT image-generation brief already handed to the user.
+
+**New `gui/widgets/photo_background_frame.py`**: `PhotoBackgroundFrame`
+— paints a background photo scaled+cropped to cover (Qt has no CSS
+`background-size: cover` equivalent) with a dark gradient scrim on
+top for legibility; paints a dark-green-to-black gradient placeholder
+when no photo path is given (true everywhere, for now). Swapping in a
+real photo later is a one-line change, no other code changes needed.
+
+**New QSS tokens in `gui/styles.py`** under `Nature*` object names
+only (`NatureGlanceTile`, `NatureAttentionPanel`, `NatureAssetCard`,
+etc.) — scoped so every other still-teal-HUD module (Household,
+Greenhouse, Property, Real Estate, Missions, Skills, and Garage's own
+detail page) is completely unaffected. This is a pilot for one page's
+list view, not a global theme switch.
+
+**`modules/garage/module.py`** list page rebuilt: a fixed-height
+`PhotoBackgroundFrame` hero (icon badge + title + tagline) over a
+solid dark body containing the same glance-tile/Needs-Attention/
+per-asset-card structure as before, restyled with the new tokens —
+danger-toned text on overdue lines, coral-bordered attention panel,
+rounded asset cards. `_refresh()`'s data logic and the per-asset
+**detail** page are untouched this pass — deliberately deferred,
+smaller follow-up scope.
+
+**Verification**: `pytest -q` — full suite, 2679 passed, zero
+regressions (only widget-construction code changed). Manual
+headless-Qt screenshots of the new Garage list page and confirmed the
+detail page (`focus_record()`, the shared missions panel, "← Back")
+still work unchanged under the new hero/body structure.
+
+**Deferred, waiting on user sign-off before proceeding**: propagating
+this same treatment to Greenhouse, Kitchen, Workout, Real Estate,
+Missions, Skills, and Household — explicitly sequenced as "pilot one
+page first," not started yet.
