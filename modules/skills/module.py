@@ -55,7 +55,14 @@ from core.skill_leveling import (
     compute_skill_level_progress,
     next_honest_step,
 )
-from core.rewards_manager import REWARD_DEFINITIONS, STAT_DEFINITIONS, reward_progress_fraction
+from core.rarity import rarity_color_for_index, rarity_name_for_index
+from core.rewards_manager import (
+    CHALLENGE_CHAINS,
+    STAT_DEFINITIONS,
+    highest_unlocked_tier,
+    next_locked_tier,
+    reward_progress_fraction,
+)
 from core.skill_manager import SkillDefinition
 from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
@@ -107,6 +114,18 @@ def format_reward_status_line(description: str, unit: str, value: float, thresho
         return f"Unlocked — {description}"
     unit_suffix = f" {unit}" if unit else ""
     return f"{value:g}/{threshold:g}{unit_suffix} — {description}"
+
+
+def format_earned_title_line(icon: str, name: str) -> str:
+    """Pure formatting logic — testable without Qt. The highest tier
+    already earned in a challenge chain."""
+    return f"Earned: {icon} {name}"
+
+
+def format_chain_maxed_line(icon: str, name: str) -> str:
+    """Pure formatting logic — testable without Qt. Shown once every
+    tier in a challenge chain has been unlocked."""
+    return f"\U0001F3C6 Maxed out — {icon} {name}"
 
 
 def format_capability_status_label(status: str) -> str:
@@ -474,32 +493,58 @@ class SkillsModule(ModuleBase):
         # also calls this so it fires even if this page is never opened.
         self.context.rewards.scan_for_new_unlocks(active.profile_id)
         stat_values = self.context.rewards.all_stat_values()
-        stat_unit_by_id = {definition.stat_id: definition.unit for definition in STAT_DEFINITIONS}
+        stat_by_id = {definition.stat_id: definition for definition in STAT_DEFINITIONS}
+        unlocked_ids = set(self.context.rewards.unlocked_reward_ids(active.profile_id))
 
-        for index, reward in enumerate(REWARD_DEFINITIONS):
+        # Challenge chains (2026-09-14 rarity/tiered-chain pass) — one
+        # chain per real stat, escalating tiers with Borderlands-style
+        # rarity (core.rarity) instead of the old flat one-shot
+        # rewards. Each chain shows its earned title (if any, colored
+        # by rarity) plus real progress toward the next locked tier, or
+        # a "maxed out" line once every tier is earned.
+        for index, chain in enumerate(CHALLENGE_CHAINS):
             if index > 0:
                 rule = QFrame()
                 rule.setFrameShape(QFrame.Shape.HLine)
                 rule.setObjectName("HairlineRule")
                 self._rewards_layout.addWidget(rule)
-            unlocked = self.context.rewards.is_unlocked(active.profile_id, reward.reward_id)
-            value = stat_values.get(reward.stat_id, 0.0)
-            title = QLabel(f"{reward.icon} {reward.name}")
-            title.setObjectName("SkillCardTitle")
-            self._rewards_layout.addWidget(title)
+
+            stat = stat_by_id.get(chain.stat_id)
+            header = QLabel(f"{stat.icon if stat else ''} {stat.name if stat else chain.chain_id}".strip())
+            header.setObjectName("SkillCardTitle")
+            self._rewards_layout.addWidget(header)
+
+            upcoming = next_locked_tier(chain.tiers, unlocked_ids)
+            if upcoming is None:
+                # Every tier unlocked — show one "maxed out" line for
+                # the last tier rather than both an "Earned" line and
+                # a redundant "Maxed out" line for the same tier.
+                last_tier = chain.tiers[-1]
+                maxed_label = QLabel(format_chain_maxed_line(last_tier.icon, last_tier.name))
+                maxed_label.setStyleSheet(f"color: {rarity_color_for_index(last_tier.rarity_index)};")
+                self._rewards_layout.addWidget(maxed_label)
+                continue
+
+            earned = highest_unlocked_tier(chain.tiers, unlocked_ids)
+            if earned is not None:
+                earned_label = QLabel(format_earned_title_line(earned.icon, earned.name))
+                earned_label.setWordWrap(True)
+                earned_label.setStyleSheet(f"color: {rarity_color_for_index(earned.rarity_index)};")
+                self._rewards_layout.addWidget(earned_label)
+
+            value = stat_values.get(chain.stat_id, 0.0)
             status = QLabel(format_reward_status_line(
-                reward.description, stat_unit_by_id.get(reward.stat_id, ""), value, reward.threshold, unlocked,
+                upcoming.description, stat.unit if stat else "", value, upcoming.threshold, False,
             ))
             status.setWordWrap(True)
             status.setObjectName("SkillCardPrereq")
             self._rewards_layout.addWidget(status)
-            if not unlocked:
-                bar = QProgressBar()
-                bar.setRange(0, 100)
-                bar.setValue(int(reward_progress_fraction(value, reward.threshold) * 100))
-                bar.setTextVisible(False)
-                bar.setFixedHeight(6)
-                self._rewards_layout.addWidget(bar)
+            bar = QProgressBar()
+            bar.setRange(0, 100)
+            bar.setValue(int(reward_progress_fraction(value, upcoming.threshold) * 100))
+            bar.setTextVisible(False)
+            bar.setFixedHeight(6)
+            self._rewards_layout.addWidget(bar)
 
         prestige_rewards = self.context.rewards.prestige_rewards_for_profile(active.profile_id)
         if prestige_rewards:

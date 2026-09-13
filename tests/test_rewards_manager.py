@@ -24,9 +24,13 @@ from core.maintenance_manager import MaintenanceManager
 from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
 from core.rewards_manager import (
-    REWARD_DEFINITIONS,
+    CHALLENGE_CHAINS,
     RewardsManager,
+    all_tiers,
+    highest_unlocked_tier,
+    next_locked_tier,
     reward_progress_fraction,
+    stat_id_for_tier,
 )
 from core.workout_manager import WorkoutManager
 
@@ -150,8 +154,26 @@ def test_scan_for_new_unlocks_unlocks_when_threshold_crossed(isolated_paths):
     newly_unlocked = context.rewards.scan_for_new_unlocks(profile.profile_id)
 
     reward_ids = {r.reward_id for r in newly_unlocked}
-    assert "john_deere_hat" in reward_ids
-    assert context.rewards.is_unlocked(profile.profile_id, "john_deere_hat") is True
+    assert "mowing_rookie" in reward_ids
+    assert context.rewards.is_unlocked(profile.profile_id, "mowing_rookie") is True
+
+
+def test_scan_for_new_unlocks_credits_every_tier_already_reached(isolated_paths):
+    """Retroactive credit — a stat that's already well past several
+    thresholds (e.g. an established profile's real history) unlocks
+    every tier up to that value in one scan, not just the newest one.
+    This is exactly what makes "add a profile, credit real past
+    accomplishment" work correctly."""
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 60.0)  # past rookie(10)/yard_worker(25)/ranger(50)
+
+    newly_unlocked = context.rewards.scan_for_new_unlocks(profile.profile_id)
+
+    reward_ids = {r.reward_id for r in newly_unlocked}
+    assert reward_ids == {"mowing_rookie", "mowing_yard_worker", "mowing_ranger"}
 
 
 def test_scan_for_new_unlocks_is_idempotent(isolated_paths):
@@ -176,7 +198,7 @@ def test_scan_for_new_unlocks_below_threshold_unlocks_nothing(isolated_paths):
     context.maintenance.log_reading(task.task_id, 1.5)
 
     assert context.rewards.scan_for_new_unlocks(profile.profile_id) == []
-    assert context.rewards.is_unlocked(profile.profile_id, "john_deere_hat") is False
+    assert context.rewards.is_unlocked(profile.profile_id, "mowing_rookie") is False
 
 
 def test_scan_for_new_unlocks_persists_across_a_fresh_load(isolated_paths):
@@ -189,7 +211,7 @@ def test_scan_for_new_unlocks_persists_across_a_fresh_load(isolated_paths):
 
     reloaded_profiles = ProfileManager(context)
     reloaded = reloaded_profiles.get_profile(profile.profile_id)
-    assert "john_deere_hat" in reloaded.unlocked_reward_ids
+    assert "mowing_rookie" in reloaded.unlocked_reward_ids
 
 
 def test_scan_for_new_unlocks_with_no_profiles_manager_returns_empty(isolated_paths):
@@ -200,7 +222,7 @@ def test_scan_for_new_unlocks_with_no_profiles_manager_returns_empty(isolated_pa
 
 def test_is_unlocked_false_for_unknown_profile(isolated_paths):
     context = _make_context()
-    assert context.rewards.is_unlocked("does-not-exist", "john_deere_hat") is False
+    assert context.rewards.is_unlocked("does-not-exist", "mowing_rookie") is False
 
 
 def test_unlocked_reward_ids_reflects_real_unlocks(isolated_paths):
@@ -211,7 +233,7 @@ def test_unlocked_reward_ids_reflects_real_unlocks(isolated_paths):
     context.maintenance.log_reading(task.task_id, 10.0)
     context.rewards.scan_for_new_unlocks(profile.profile_id)
 
-    assert "john_deere_hat" in context.rewards.unlocked_reward_ids(profile.profile_id)
+    assert "mowing_rookie" in context.rewards.unlocked_reward_ids(profile.profile_id)
 
 
 # ------------------------------------------------------------------
@@ -240,5 +262,57 @@ def test_prestige_rewards_for_profile_one_entry_per_tier_newest_first(isolated_p
 
 
 def test_reward_definitions_have_unique_ids():
-    ids = [r.reward_id for r in REWARD_DEFINITIONS]
+    ids = [tier.reward_id for tier in all_tiers()]
     assert len(ids) == len(set(ids))
+
+
+def test_chain_ids_are_unique():
+    chain_ids = [chain.chain_id for chain in CHALLENGE_CHAINS]
+    assert len(chain_ids) == len(set(chain_ids))
+
+
+def test_every_chains_tiers_are_in_ascending_threshold_order():
+    for chain in CHALLENGE_CHAINS:
+        thresholds = [tier.threshold for tier in chain.tiers]
+        assert thresholds == sorted(thresholds)
+
+
+def test_every_tiers_rarity_index_is_valid():
+    for tier in all_tiers():
+        assert 0 <= tier.rarity_index <= 4
+
+
+def test_stat_id_for_tier_finds_the_right_chain():
+    assert stat_id_for_tier("mowing_ranger") == "engine_hours_logged"
+    assert stat_id_for_tier("fitness_iron_will") == "workout_hours_logged"
+
+
+def test_stat_id_for_tier_unknown_reward_id_returns_none():
+    assert stat_id_for_tier("does-not-exist") is None
+
+
+# ------------------------------------------------------------------
+# Chain progression helpers — pure logic, no manager needed
+# ------------------------------------------------------------------
+
+def _mowing_tiers():
+    return next(chain.tiers for chain in CHALLENGE_CHAINS if chain.chain_id == "mowing")
+
+
+def test_highest_unlocked_tier_none_when_chain_not_started():
+    assert highest_unlocked_tier(_mowing_tiers(), unlocked_ids=set()) is None
+
+
+def test_highest_unlocked_tier_returns_the_furthest_reached():
+    unlocked = {"mowing_rookie", "mowing_yard_worker"}
+    assert highest_unlocked_tier(_mowing_tiers(), unlocked).reward_id == "mowing_yard_worker"
+
+
+def test_next_locked_tier_returns_the_first_not_yet_unlocked():
+    unlocked = {"mowing_rookie"}
+    assert next_locked_tier(_mowing_tiers(), unlocked).reward_id == "mowing_yard_worker"
+
+
+def test_next_locked_tier_none_once_chain_is_maxed_out():
+    unlocked = {tier.reward_id for tier in _mowing_tiers()}
+    assert next_locked_tier(_mowing_tiers(), unlocked) is None

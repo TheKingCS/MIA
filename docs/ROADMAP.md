@@ -9479,3 +9479,75 @@ Manual headless-Qt check with a real prestiged profile (tier 1, mid
 cycle 2): Missions footer read "Level 2    0 / 200    PRESTIGE 1" in
 green, `format_level_badge_text(2, 1)` returned "Lv. 2 · P1" — both
 screenshotted and confirmed correct.
+
+## Rarity + escalating challenge chains (2026-09-14)
+
+The user handed off a much larger "Prestige, Rarity & Character
+Progression System" design doc (15 sections — full lifetime stats
+across Homestead/Fitness/Provisioning/Wealth/Exploration/Projects,
+tiered challenges, hidden achievements, a real Character page, an
+event-sourced hardware-ready pipeline; saved in full to the
+[[project_mia_prestige_rarity_vision]] memory). Rather than build all
+15 sections at once, the user picked one scoped slice via
+AskUserQuestion: rarity tags + escalating challenge chains, reusing
+today's Rewards system rather than the bigger stats/character-page/
+event-pipeline work.
+
+**New `core/rarity.py`**: `RARITY_NAMES` (Common..Legendary) +
+`RARITY_COLORS` (white/green/blue/purple/orange) — the exact same
+palette `core.leveling.PRESTIGE_COLORS` already uses for Prestige,
+kept as its own tiny dependency-free module since the handoff's own
+framing is that rarity should eventually tag achievements, cosmetics,
+titles, and quests broadly, not just Prestige tiers.
+
+**`core/rewards_manager.py` redesigned around chains, not flat
+rewards**: the old flat `RewardDefinition`/`REWARD_DEFINITIONS` become
+`ChallengeTier` (adds `rarity_index`, 0-4) grouped into
+`ChallengeChain` (one per stat, ascending threshold order) —
+`CHALLENGE_CHAINS` now has 3 chains: Mowing (Lawn Rookie -> Yard
+Worker -> Lawn Ranger -> Groundskeeper -> Master of the Grounds,
+exactly the user's own mowing example), Missions (Rookie -> Veteran ->
+Legend), Fitness (Getting Started -> Iron Will -> Unbreakable).
+Nothing had been unlocked yet under the old flat ids (confirmed
+against the real profile before renaming), so this was a clean
+redesign, not a migration.
+
+`scan_for_new_unlocks()` checks every tier independently against the
+same live stat value rather than just the next tier in each chain, so
+a stat that's already well past several thresholds (a profile just
+created for someone with real prior history — see the "add Faith a
+profile" 2026-09-14 ask right before this) unlocks every tier it
+qualifies for in one scan, each with its own real notification — the
+correct behavior for retroactively crediting real past accomplishment,
+not just newly-logged activity.
+
+**UI**: `modules/skills/module.py`'s REWARDS card now renders one
+section per chain — the stat's own name/icon as a header, the highest
+tier already earned (if any) colored by its rarity via
+`rarity_color_for_index()`, then either real progress toward the next
+locked tier (description, `value/threshold unit`, a progress bar) or a
+"Maxed out" line once every tier in that chain is unlocked.
+
+**Verification**: `pytest -q` — full suite, 2780 passed (17 new
+tests across `test_rarity.py`/`test_rewards_manager.py`/
+`test_skills_module.py`). Manual headless-Qt check: logged 60 real
+engine hours in one shot (past 3 of 5 mowing thresholds) and completed
+105 missions (past all 3 mission thresholds) — confirmed 6 separate
+unlock notifications fired in one scan, the Mowing chain showed
+"Earned: Lawn Ranger" in blue with a real 60/250 progress bar toward
+Groundskeeper, and the Missions chain showed "Maxed out — Mission
+Legend" in orange.
+
+**Also found and fixed while building this**: a real, longstanding
+test-isolation gap in `core/profile_manager.py` — `create_profile()`'s
+real `mkdir()` for a profile's data directory used a hardcoded module
+constant (`_DATA_PROFILES_DIR`) that no test file, including
+`tests/test_profile_manager.py` itself, had ever isolated. Every test
+run across this project's history leaked one empty orphan directory
+into the real `data/profiles/` — found at 10,033 accumulated
+directories against a single real profile. Fixed in `tests/conftest.py`
+(same "redirect a hardcoded module constant session-wide" pattern
+already used there for `core.logger`'s log file); the actual cleanup
+of the 10,032 existing orphans is flagged for the user to run
+themselves (a mass-delete the auto-mode safety classifier correctly
+declined to let an agent run unattended even with prior approval).

@@ -11,6 +11,8 @@ from __future__ import annotations
 from modules.skills.module import (
     format_achievement_title_for_display,
     format_capability_status_label,
+    format_chain_maxed_line,
+    format_earned_title_line,
     format_header_stats_line,
     format_locked_skill_name,
     format_next_honest_step_line,
@@ -110,3 +112,11 @@ def test_format_reward_status_line_locked_omits_unit_when_blank():
 def test_format_reward_status_line_unlocked_drops_the_numbers():
     assert format_reward_status_line("Log 10 hours on your mower.", "hrs", 12.0, 10.0, True) == \
         "Unlocked — Log 10 hours on your mower."
+
+
+def test_format_earned_title_line():
+    assert format_earned_title_line("🧢", "Lawn Rookie") == "Earned: 🧢 Lawn Rookie"
+
+
+def test_format_chain_maxed_line():
+    assert format_chain_maxed_line("🏆", "Master of the Grounds") == "\U0001F3C6 Maxed out — 🏆 Master of the Grounds"

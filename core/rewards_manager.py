@@ -12,6 +12,19 @@ will work on the artwork later, for now let's build the system"); this
 module is the system, using plain emoji icons as placeholders exactly
 like every other not-yet-illustrated part of this app.
 
+**Challenge chains + rarity (2026-09-14, second pass)** — the user's
+own follow-up design handoff (see the
+[[project_mia_prestige_rarity_vision]] memory) asked for escalating
+tiers per stat (Rookie -> Ranger -> Groundskeeper -> Master, the exact
+mowing example) with Borderlands-style rarity, not flat one-shot
+rewards. A `ChallengeChain` is one stat's ladder of `ChallengeTier`s in
+ascending threshold order; each tier carries a `rarity_index` (0-4,
+Common..Legendary — see `core.rarity`) instead of a separate color
+field, so rarity name/color both derive from the one index. Nothing
+real had been unlocked yet under the old flat `RewardDefinition` ids
+(confirmed against the real profile before renaming), so this is a
+clean redesign, not a migration.
+
 **Stats are derived, not tracked twice.** Each stat's value is computed
 live from data that already exists elsewhere (mower hours from the
 real Engine Hours readings core.maintenance_manager already logs,
@@ -25,10 +38,10 @@ add it for real once something actually logs it.
 
 **Unlocking IS real, persisted state** (`Profile.unlocked_reward_ids`,
 see core/profile_manager.py) — unlike the stat values themselves, once
-a reward is unlocked it stays unlocked even if the underlying stat
-later reads lower (a data correction, a deleted log entry), the same
-"a real choice/event, not a live computation" reasoning
-`Profile.prestige_tier` already established.
+a tier is unlocked it stays unlocked even if the underlying stat later
+reads lower (a data correction, a deleted log entry), the same "a real
+choice/event, not a live computation" reasoning `Profile.prestige_tier`
+already established.
 
 **Prestige tiers are their own reward category** — the user's own
 explicit ask ("I also want the prestige system to come with a similar
@@ -44,7 +57,12 @@ and safe to call as often as convenient — both from the daily-occasion
 timer (core/application.py, matching core/maintenance_insights.py's
 own established cadence) and from the Skills module's own refresh (so
 opening the page after crossing a threshold unlocks it right away,
-not up to a day later).
+not up to a day later). Because chain tiers are checked independently
+against the same live stat value, a profile that already had, say, 60
+real engine hours logged before this system existed unlocks every
+tier up to that value in one scan, not just the newest one — the
+correct behavior for retroactively crediting real past accomplishment
+(see the "add Faith a profile, credit accomplishments" 2026-09-14 ask).
 """
 
 from __future__ import annotations
@@ -68,13 +86,29 @@ class StatDefinition:
 
 
 @dataclass(frozen=True)
-class RewardDefinition:
+class ChallengeTier:
+    """One rung of a challenge chain — a stable reward_id (persisted in
+    Profile.unlocked_reward_ids, must never change once shipped), the
+    threshold against its chain's stat, and a rarity_index (0=Common
+    .. 4=Legendary, see core.rarity) rather than a separate color."""
+
     reward_id: str
     name: str
     description: str
     icon: str
-    stat_id: str
     threshold: float
+    rarity_index: int
+
+
+@dataclass(frozen=True)
+class ChallengeChain:
+    """One stat's escalating ladder of rewards, ascending threshold
+    order — e.g. Mowing: Lawn Rookie (10 hrs) -> ... -> Master of the
+    Grounds (1,000 hrs)."""
+
+    chain_id: str
+    stat_id: str
+    tiers: tuple[ChallengeTier, ...]
 
 
 #: Every stat here has a real, already-logged data source — see this
@@ -86,46 +120,63 @@ STAT_DEFINITIONS: list[StatDefinition] = [
     StatDefinition("missions_completed", "Missions Completed", "", "🏆"),
 ]
 
-#: v1 reward set — real thresholds against the real stats above.
-#: Icons are plain emoji placeholders (real character/cosmetic art is
-#: deliberately deferred, per this module's own docstring); reward_id
-#: is the stable identifier persisted in Profile.unlocked_reward_ids,
-#: so renaming `name`/`description`/`icon` later is safe, but
+#: v2 reward set — real escalating chains against the real stats above,
+#: per the user's own tiered-challenge handoff. Icons are plain emoji
+#: placeholders (real character/cosmetic art is deliberately deferred,
+#: per this module's own docstring); each tier's reward_id is the
+#: stable identifier persisted in Profile.unlocked_reward_ids, so
+#: renaming name/description/icon/rarity_index later is safe, but
 #: reward_id itself must never change once shipped.
-REWARD_DEFINITIONS: list[RewardDefinition] = [
-    RewardDefinition(
-        reward_id="john_deere_hat",
-        name="John Deere Hat",
-        description="Log 10 hours on your mower/equipment.",
-        icon="🧢",
+CHALLENGE_CHAINS: list[ChallengeChain] = [
+    ChallengeChain(
+        chain_id="mowing",
         stat_id="engine_hours_logged",
-        threshold=10.0,
+        tiers=(
+            ChallengeTier("mowing_rookie", "Lawn Rookie", "Log 10 hours on your mower/equipment.", "🧢", 10.0, 0),
+            ChallengeTier("mowing_yard_worker", "Yard Worker", "Log 25 hours on your mower/equipment.", "🎽", 25.0, 1),
+            ChallengeTier("mowing_ranger", "Lawn Ranger", "Log 50 hours on your mower/equipment.", "🧥", 50.0, 2),
+            ChallengeTier("mowing_groundskeeper", "Groundskeeper", "Log 250 hours on your mower/equipment.", "👔", 250.0, 3),
+            ChallengeTier("mowing_master", "Master of the Grounds", "Log 1,000 hours on your mower/equipment.", "🏆", 1000.0, 4),
+        ),
     ),
-    RewardDefinition(
-        reward_id="mission_rookie",
-        name="Mission Rookie",
-        description="Complete 5 missions.",
-        icon="🎖️",
+    ChallengeChain(
+        chain_id="missions",
         stat_id="missions_completed",
-        threshold=5.0,
+        tiers=(
+            ChallengeTier("missions_rookie", "Mission Rookie", "Complete 5 missions.", "🎖️", 5.0, 0),
+            ChallengeTier("missions_veteran", "Mission Veteran", "Complete 25 missions.", "🏅", 25.0, 2),
+            ChallengeTier("missions_legend", "Mission Legend", "Complete 100 missions.", "🌟", 100.0, 4),
+        ),
     ),
-    RewardDefinition(
-        reward_id="mission_veteran",
-        name="Mission Veteran",
-        description="Complete 25 missions.",
-        icon="🏅",
-        stat_id="missions_completed",
-        threshold=25.0,
-    ),
-    RewardDefinition(
-        reward_id="iron_will",
-        name="Iron Will",
-        description="Log 5 hours of workouts.",
-        icon="🔥",
+    ChallengeChain(
+        chain_id="fitness",
         stat_id="workout_hours_logged",
-        threshold=5.0,
+        tiers=(
+            ChallengeTier("fitness_getting_started", "Getting Started", "Log 5 hours of workouts.", "🔥", 5.0, 0),
+            ChallengeTier("fitness_iron_will", "Iron Will", "Log 25 hours of workouts.", "💪", 25.0, 2),
+            ChallengeTier("fitness_unbreakable", "Unbreakable", "Log 100 hours of workouts.", "⚡", 100.0, 4),
+        ),
     ),
 ]
+
+
+def all_tiers() -> list[ChallengeTier]:
+    """Every tier across every chain, flattened — testable without a
+    real manager. Used for both scanning and simple iteration where a
+    caller doesn't need chain grouping."""
+    return [tier for chain in CHALLENGE_CHAINS for tier in chain.tiers]
+
+
+def stat_id_for_tier(reward_id: str) -> Optional[str]:
+    """Which chain (by stat_id) a given tier's reward_id belongs to —
+    pure logic, testable without a real manager. Looked up by
+    reward_id rather than dataclass equality so two coincidentally
+    identical tiers in different chains can never cross-match."""
+    for chain in CHALLENGE_CHAINS:
+        for tier in chain.tiers:
+            if tier.reward_id == reward_id:
+                return chain.stat_id
+    return None
 
 
 def reward_progress_fraction(value: float, threshold: float) -> float:
@@ -135,6 +186,27 @@ def reward_progress_fraction(value: float, threshold: float) -> float:
     if threshold <= 0:
         return 1.0
     return min(max(value / threshold, 0.0), 1.0)
+
+
+def highest_unlocked_tier(tiers: tuple[ChallengeTier, ...], unlocked_ids: set[str]) -> Optional[ChallengeTier]:
+    """The furthest tier already unlocked in a chain (tiers is ascending
+    threshold order), or None if the chain hasn't been started. Pure
+    logic — testable without a real manager."""
+    result: Optional[ChallengeTier] = None
+    for tier in tiers:
+        if tier.reward_id in unlocked_ids:
+            result = tier
+    return result
+
+
+def next_locked_tier(tiers: tuple[ChallengeTier, ...], unlocked_ids: set[str]) -> Optional[ChallengeTier]:
+    """The next tier still locked in a chain, or None once every tier
+    is unlocked (the chain is maxed out). Pure logic — testable without
+    a real manager."""
+    for tier in tiers:
+        if tier.reward_id not in unlocked_ids:
+            return tier
+    return None
 
 
 class RewardsManager:
@@ -200,27 +272,33 @@ class RewardsManager:
         profile = self.context.profiles.get_profile(profile_id)
         return list(profile.unlocked_reward_ids) if profile is not None else []
 
-    def scan_for_new_unlocks(self, profile_id: str) -> list[RewardDefinition]:
-        """Idempotent — checks every reward definition's real stat
-        value against its threshold, unlocking (and notifying) any
-        that just crossed it. Safe to call as often as convenient; see
-        this module's own docstring for the two real call sites."""
+    def scan_for_new_unlocks(self, profile_id: str) -> list[ChallengeTier]:
+        """Idempotent — checks every chain tier's real stat value
+        against its threshold, unlocking (and notifying) any that just
+        crossed it. Safe to call as often as convenient; see this
+        module's own docstring for the two real call sites. Checks
+        every tier independently (not just the next one in each chain),
+        so a stat that's already well past several thresholds unlocks
+        all of them at once — the correct behavior for retroactively
+        crediting real past accomplishment, not just newly-logged
+        activity."""
         if self.context.profiles is None:
             return []
 
-        newly_unlocked: list[RewardDefinition] = []
+        newly_unlocked: list[ChallengeTier] = []
         stat_values = self.all_stat_values()
-        for reward in REWARD_DEFINITIONS:
-            if self.is_unlocked(profile_id, reward.reward_id):
+        for tier in all_tiers():
+            if self.is_unlocked(profile_id, tier.reward_id):
                 continue
-            if stat_values.get(reward.stat_id, 0.0) < reward.threshold:
+            stat_id = stat_id_for_tier(tier.reward_id)
+            if stat_values.get(stat_id, 0.0) < tier.threshold:
                 continue
-            if self.context.profiles.unlock_reward(profile_id, reward.reward_id):
-                newly_unlocked.append(reward)
+            if self.context.profiles.unlock_reward(profile_id, tier.reward_id):
+                newly_unlocked.append(tier)
                 if self.context.notifications is not None:
                     self.context.notifications.notify(
-                        title=f"{reward.icon} Reward unlocked!",
-                        message=f"You unlocked \"{reward.name}\" — {reward.description}",
+                        title=f"{tier.icon} Reward unlocked!",
+                        message=f"You unlocked \"{tier.name}\" — {tier.description}",
                         level="info",
                         source="achievements",
                     )
@@ -233,7 +311,7 @@ class RewardsManager:
 
     def prestige_rewards_for_profile(self, profile_id: str) -> list[dict]:
         """One entry per prestige tier already reached — [{"name",
-        "color"}], newest first. Not a RewardDefinition (there's no
+        "color"}], newest first. Not a ChallengeTier (there's no
         stat/threshold to check; prestige_tier IS the real record)."""
         if self.context.profiles is None:
             return []
