@@ -732,8 +732,10 @@ class MaintenanceManager:
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No maintenance task with id '{task_id}'.")
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         reading = self.context.data_logger.add_reading(
-            series_id=task.series_id, value=value, unit=unit or task.meter_unit, note=note
+            series_id=task.series_id, value=value, unit=unit or task.meter_unit, note=note,
+            profile_id=active_profile.profile_id if active_profile is not None else None,
         )
         # Event-sourced groundwork (2026-09-14) — see
         # core/rewards_manager.py's own docstring for the full design;
@@ -770,8 +772,10 @@ class MaintenanceManager:
     def log_asset_reading(self, asset_id: str, meter_name: str, value: float, unit: str = "", note: str = "") -> Reading:
         if self.get_asset(asset_id) is None:
             raise ValueError(f"No maintenance asset with id '{asset_id}'.")
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         return self.context.data_logger.add_reading(
-            series_id=self._asset_series_id(asset_id, meter_name), value=value, unit=unit, note=note
+            series_id=self._asset_series_id(asset_id, meter_name), value=value, unit=unit, note=note,
+            profile_id=active_profile.profile_id if active_profile is not None else None,
         )
 
     def asset_meter_names(self, asset_id: str) -> list[str]:

@@ -56,6 +56,24 @@ def test_add_reading_persists_across_a_fresh_load(isolated_paths):
     assert readings[0].note == "bench PSU"
 
 
+def test_add_reading_profile_id_defaults_to_none(isolated_paths):
+    manager = _make_manager()
+    reading = manager.add_reading("soil_moisture", 42.0)
+    assert reading.profile_id is None
+
+
+def test_add_reading_profile_id_persists_across_a_fresh_load(isolated_paths):
+    """Multi-user pass (2026-09-14) — DataLoggerManager itself has no
+    concept of an active profile (it's a generic cross-cutting store);
+    callers like core.maintenance_manager pass a real profile_id
+    through explicitly."""
+    manager = _make_manager()
+    manager.add_reading("multimeter_voltage", 3.3, profile_id="zac-id")
+
+    reloaded = _make_manager()
+    assert reloaded.readings_for("multimeter_voltage")[0].profile_id == "zac-id"
+
+
 def test_readings_for_returns_only_that_series_oldest_first(isolated_paths):
     manager = _make_manager()
     manager.add_reading("a", 1.0, timestamp="2026-01-01T10:00:00")

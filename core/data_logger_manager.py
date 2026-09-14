@@ -48,6 +48,17 @@ class Reading:
     unit: str = ""
     note: str = ""
     timestamp: str = ""  # ISO datetime
+    # Multi-user pass (2026-09-14) — who logged this specific reading,
+    # for shared cumulative-meter assets (a mower/truck both profiles
+    # use) where usage needs to split by real contributor, not just by
+    # whole-asset ownership (core.maintenance_manager.MaintenanceAsset
+    # .owner_profile_id). None (the default, every reading logged
+    # before this field existed, or environmental/sensor readings with
+    # no real "user" — see core/energy_manager.py, modules/lab/module.py)
+    # stays shared, same "derive it, counts for everyone" convention
+    # every other per-profile field in this codebase already uses —
+    # see core.rewards_manager.usage_deltas_by_reader().
+    profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -57,6 +68,7 @@ class Reading:
             "unit": self.unit,
             "note": self.note,
             "timestamp": self.timestamp,
+            "profile_id": self.profile_id,
         }
 
     @staticmethod
@@ -68,6 +80,7 @@ class Reading:
             unit=data.get("unit", ""),
             note=data.get("note", ""),
             timestamp=data.get("timestamp", ""),
+            profile_id=data.get("profile_id"),
         )
 
 
@@ -110,6 +123,7 @@ class DataLoggerManager:
         unit: str = "",
         note: str = "",
         timestamp: Optional[str] = None,
+        profile_id: Optional[str] = None,
     ) -> Reading:
         reading = Reading(
             reading_id=uuid.uuid4().hex[:10],
@@ -118,6 +132,7 @@ class DataLoggerManager:
             unit=unit,
             note=note,
             timestamp=timestamp or datetime.now().isoformat(timespec="seconds"),
+            profile_id=profile_id,
         )
         self._readings.append(reading)
         self._save()

@@ -152,12 +152,31 @@ that whole history count as "achievement" the moment tracking begins
 — "the zero from the truck would be like 207,000." Each meter task now
 carries its own `reward_baseline_value` (`core.maintenance_manager.
 MaintenanceTask`), subtracted from every reading via
-`reading_since_baseline()` before it ever reaches a stat or a
-threshold check. `None` (the default) behaves exactly like no baseline
-existed before this pass — a brand-new task still starts truly at
-zero. Ownership and baseline are two independent, separately-settable
-concerns (who it belongs to; where reward tracking starts counting
+`usage_deltas_by_reader()` before it ever reaches a stat or a
+threshold check (see that function's own docstring — it also splits
+usage by whoever logged each reading, added in the very next pass
+below, once real per-reading attribution existed to split by). `None`
+(the default) behaves exactly like no baseline existed before this
+pass — a brand-new task still starts truly at zero. Ownership and
+baseline are two independent, separately-settable concerns (who it
+belongs to; where reward tracking starts counting
 from), not one combined mechanism.
+
+**Per-reading usage split for shared assets (2026-09-14, seventh
+pass)** — the multi-user vision doc's own mower/truck example: "The
+mower has 14 total operating hours, with Zac responsible for 13.2
+hours and Faith responsible for 0.8 hours." Whole-asset ownership
+(above) answers "does this asset even count for me" but can't split a
+genuinely SHARED asset's usage by who actually used it. Every real
+Maintenance reading now carries its own `profile_id`
+(`core.data_logger_manager.Reading`, auto-stamped by
+`core.maintenance_manager.log_reading()`/`log_asset_reading()` with
+whoever's active) and `usage_deltas_by_reader()` (see its own
+docstring) attributes each cumulative meter's real usage delta to
+whoever logged it. `None` (readings logged before this field existed,
+or with no active profile) stays shared, same convention as
+everywhere else — this reduces to the exact old single-value
+computation for any task only one person has ever logged against.
 """
 
 from __future__ import annotations
@@ -166,6 +185,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from core.app_context import AppContext
+from core.data_logger_manager import Reading
 from core.leveling import prestige_color_for_tier
 from core.logger import get_logger
 
@@ -399,15 +419,33 @@ def is_attributed_to(owner_id: Optional[str], profile_id: str) -> bool:
     return owner_id is None or owner_id == profile_id
 
 
-def reading_since_baseline(value: float, baseline: Optional[float]) -> float:
-    """The real amount accrued since reward tracking began on a meter
-    task — `value` minus `baseline` (None baseline — the default —
-    means 0, so a task with no baseline set still reads its raw value,
-    unchanged from before this concept existed). Never negative, so a
-    baseline set exactly at (or above, from later data correction) the
-    latest reading reads 0 rather than a nonsensical negative "reward."
-    Pure logic, testable without a real manager."""
-    return max(value - (baseline or 0.0), 0.0)
+def usage_deltas_by_reader(readings: list[Reading], baseline: Optional[float] = None) -> dict[Optional[str], float]:
+    """Splits a shared cumulative-meter task's real usage by whoever
+    actually logged each reading — the vision doc's own mower example:
+    "14 hrs total, Zac 13.2 / Faith 0.8." Each reading is a cumulative
+    value (an hour-meter/odometer total, not an incremental amount), so
+    the amount any one person actually contributed is the DELTA versus
+    the immediately-prior reading, sorted by timestamp — attributed to
+    whoever logged the LATER (higher) reading, since they're the one
+    who just took the meter from the old value to the new one. A
+    negative delta (a data correction/reset) contributes 0, never a
+    negative "usage." `baseline` (a task's real reward_baseline_value)
+    acts as an implicit reading logged by no one at the very start —
+    defaulting to 0.0 (not skipped) when unset, so a brand-new task's
+    very first-ever reading still counts as real accumulated usage
+    from true zero, exactly like every meter task in this app before
+    per-reader attribution existed. The single-reader case (everything
+    attributed to one profile, or all unattributed) reduces to exactly
+    the old flat "value minus baseline" computation this function
+    replaces. Pure logic, testable without a real manager."""
+    ordered = sorted(readings, key=lambda r: r.timestamp)
+    deltas: dict[Optional[str], float] = {}
+    previous_value = baseline if baseline is not None else 0.0
+    for reading in ordered:
+        delta = max(reading.value - previous_value, 0.0)
+        deltas[reading.profile_id] = deltas.get(reading.profile_id, 0.0) + delta
+        previous_value = reading.value
+    return deltas
 
 
 def combined_stat_value(stat_values: dict[str, float], stat_ids: tuple[str, ...]) -> float:
@@ -497,13 +535,17 @@ class RewardsManager:
         return {definition.stat_id: self.stat_value(definition.stat_id, profile_id) for definition in STAT_DEFINITIONS}
 
     def _compute_engine_hours_logged(self, profile_id: str) -> float:
-        """Sums the latest "Engine Hours" reading across every real
-        Maintenance asset OWNED BY this profile (or shared/unowned —
-        see is_attributed_to()) that tracks one — not hardcoded to a
-        single mower, so a future second piece of equipment with its
-        own Engine Hours task counts too. Each reading is counted since
-        its task's own reward_baseline_value (0 if unset) — see
-        reading_since_baseline()."""
+        """Every real Maintenance asset OWNED BY this profile (or
+        shared/unowned — see is_attributed_to()) that tracks an
+        "Engine Hours" task — not hardcoded to a single mower, so a
+        future second piece of equipment counts too. Real usage is
+        split by whoever actually logged each reading
+        (usage_deltas_by_reader()), not just the raw latest value — a
+        shared mower correctly attributes "13.2 hrs to Zac, 0.8 to
+        Faith" rather than crediting whoever's asked regardless of who
+        actually used it. Unattributed deltas (readings logged before
+        per-reading attribution existed, or with no active profile)
+        count toward everyone, same convention as everywhere else."""
         if self.context.maintenance is None:
             return 0.0
         total = 0.0
@@ -514,8 +556,8 @@ class RewardsManager:
                 if task.title != "Engine Hours":
                     continue
                 readings = self.context.maintenance.readings_for_task(task.task_id)
-                if readings:
-                    total += reading_since_baseline(readings[-1].value, task.reward_baseline_value)
+                deltas = usage_deltas_by_reader(readings, task.reward_baseline_value)
+                total += deltas.get(profile_id, 0.0) + deltas.get(None, 0.0)
         return total
 
     def _compute_workout_hours_logged(self, profile_id: str) -> float:
@@ -535,21 +577,22 @@ class RewardsManager:
         ))
 
     def _compute_vehicle_miles_logged(self, profile_id: str) -> float:
-        """Sums the latest "Odometer" reading across every real
-        Maintenance asset OWNED BY this profile (or shared/unowned —
-        see is_attributed_to()) that tracks one — same "match by task
-        title, not by asset category" pattern as
-        _compute_engine_hours_logged(), so a future second vehicle's
-        own Odometer task counts too. Deliberately NOT summing every
-        mileage-unit task (Oil & filter change, Brake inspection, ...
-        also log in miles) — those track miles-since-last-service, not
-        the vehicle's real lifetime total, which only the Odometer task
-        itself represents. Each reading is counted since its task's own
-        reward_baseline_value (0 if unset) — see
-        reading_since_baseline(); a vehicle with real prior mileage
-        (e.g. 207,000 real miles already on the odometer) starts its
-        reward tracking from that baseline, not from its full lifetime
-        total."""
+        """Every real Maintenance asset OWNED BY this profile (or
+        shared/unowned — see is_attributed_to()) that tracks an
+        "Odometer" task — same "match by task title, not by asset
+        category" pattern as _compute_engine_hours_logged(), so a
+        future second vehicle's own Odometer task counts too.
+        Deliberately NOT summing every mileage-unit task (Oil & filter
+        change, Brake inspection, ... also log in miles) — those track
+        miles-since-last-service, not the vehicle's real lifetime
+        total, which only the Odometer task itself represents. Real
+        usage is split by whoever actually logged each reading
+        (usage_deltas_by_reader()) against the task's own
+        reward_baseline_value — a shared vehicle both profiles drive
+        correctly attributes each person's own real miles, and a
+        vehicle with real prior history (e.g. 207,000 real miles
+        already on the odometer) still starts reward tracking from
+        that baseline, not its full lifetime total."""
         if self.context.maintenance is None:
             return 0.0
         total = 0.0
@@ -560,8 +603,8 @@ class RewardsManager:
                 if task.title != "Odometer":
                     continue
                 readings = self.context.maintenance.readings_for_task(task.task_id)
-                if readings:
-                    total += reading_since_baseline(readings[-1].value, task.reward_baseline_value)
+                deltas = usage_deltas_by_reader(readings, task.reward_baseline_value)
+                total += deltas.get(profile_id, 0.0) + deltas.get(None, 0.0)
         return total
 
     def _compute_meals_cooked(self) -> float:

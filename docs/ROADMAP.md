@@ -9929,3 +9929,62 @@ in a grid, and that Skills' own category tabs correctly reordered
 ("★ Homestead", "★ Maker" first) after saving those interests. Also
 caught and fixed a real bug during this check: two of the form's own
 labels weren't word-wrapped and clipped at the dialog's edge.
+
+## Multi-user, slice 2: per-reading usage split for shared assets (2026-09-14)
+
+Completes the multi-user vision's own mower/truck example: "The mower
+has 14 total operating hours, with Zac responsible for 13.2 hours and
+Faith responsible for 0.8 hours." The earlier "per-profile + per-
+vehicle" pass only handled whole-asset ownership (an asset belongs to
+one profile, or is shared) — it couldn't yet split a genuinely SHARED
+asset's usage by who actually used it.
+
+**`core/data_logger_manager.py`**: `Reading` gains `profile_id`
+(`add_reading()` grows a matching optional param) — `None` (every
+reading logged before this existed, plus environmental/sensor readings
+from `core/energy_manager.py`/`modules/lab/module.py` that have no
+real "user") stays shared, unchanged. `core/maintenance_manager.py`'s
+`log_reading()`/`log_asset_reading()` auto-stamp it with whoever's
+active, same precedent `WorkoutSession.profile_id` already established.
+
+**`core/rewards_manager.py`**: new `usage_deltas_by_reader()` — since
+a meter reading is a cumulative total (an hour-meter/odometer value),
+not an incremental amount, the real amount any one person contributed
+is the DELTA versus the immediately-prior reading (sorted by
+timestamp), attributed to whoever logged the later, higher reading. A
+task's `reward_baseline_value` acts as an implicit first "reading" at
+the very start, so real prior-baseline behavior is preserved exactly
+(the single-reader case reduces to the old flat "value minus
+baseline" computation, which this function replaces). `_compute_
+engine_hours_logged()`/`_compute_vehicle_miles_logged()` now use it
+instead of just the raw latest value. Asset-level ownership
+(`is_attributed_to()`) still gates first — an individually-owned asset
+stays invisible to other profiles entirely — but a SHARED asset now
+correctly splits by real reader rather than counting fully for
+whoever asks.
+
+**Real distinction surfaced by this fix, worth remembering**: "shared
+object does not mean shared progression" applies even within one
+unowned asset — logging a reading while active as Zac attributes that
+usage to Zac specifically, not automatically to Faith too, even though
+the asset itself has no exclusive owner. Only a genuinely unattributed
+reading (no active profile at logging time, or predating this field)
+stays shared. Caught this exact distinction via a real failing test
+from the previous pass that had assumed "shared asset = shared usage,"
+which this pass proved wrong — fixed the test, not papered over it.
+
+No new UI needed — `modules/character/module.py`'s existing LIFETIME
+STATS section already reads `stat_value(profile_id)` per active
+profile (built in an earlier slice), so it now simply shows the
+correct, real per-driver numbers for any shared asset automatically.
+
+**Verification**: `pytest -q` — full suite, 2886 passed (13 new
+tests: `usage_deltas_by_reader()` pure logic including the exact "14
+hrs total, Zac 13.2/Faith 0.8" worked example, plus `Reading.
+profile_id`/`log_reading()`/`log_asset_reading()` attribution round
+trips). Manually verified: a real shared mower with Zac mowing first
+(0→13.2) then Faith mowing next (13.2→14.0) correctly split as
+Zac=13.2/Faith≈0.8; confirmed the real Ridgeline data (Zac's 5 real
+Road Warrior tiers, Faith's correct 0 mileage) unaffected by this
+change — read-only check against real data, verified `git status`
+showed no data files touched.

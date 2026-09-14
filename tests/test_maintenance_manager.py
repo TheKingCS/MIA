@@ -906,6 +906,33 @@ def test_readings_for_task_returns_empty_for_unknown_task(isolated_paths):
     assert manager.readings_for_task("no-such-id") == []
 
 
+def test_log_reading_stamps_the_active_profile_id(isolated_paths):
+    """Multi-user pass (2026-09-14) — same auto-attribution precedent
+    core.workout_manager.WorkoutSession.profile_id already established."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+
+    reading = manager.log_reading(task.task_id, 50100.0)
+
+    assert reading.profile_id == profile.profile_id
+
+
+def test_log_reading_with_no_active_profile_leaves_profile_id_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+
+    reading = manager.log_reading(task.task_id, 50100.0)
+
+    assert reading.profile_id is None
+
+
 # ------------------------------------------------------------------
 # Asset-level usage stats — independent of any task
 # ------------------------------------------------------------------
@@ -915,6 +942,18 @@ def test_log_asset_reading_raises_for_unknown_asset(isolated_paths):
     manager = _make_manager(context)
     with pytest.raises(ValueError):
         manager.log_asset_reading("no-such-id", "Fuel", 12.0)
+
+
+def test_log_asset_reading_stamps_the_active_profile_id(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    asset = manager.add_asset(name="Truck")
+
+    reading = manager.log_asset_reading(asset.asset_id, "Fuel", 12.0)
+
+    assert reading.profile_id == profile.profile_id
 
 
 def test_asset_meter_names_derived_from_series_prefix_only(isolated_paths):

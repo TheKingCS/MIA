@@ -21,7 +21,7 @@ import core.project_manager as project_manager_module
 import core.workout_manager as workout_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
-from core.data_logger_manager import DataLoggerManager
+from core.data_logger_manager import DataLoggerManager, Reading
 from core.event_bus import EventBus
 from core.kitchen_manager import KitchenManager
 from core.maintenance_manager import MaintenanceManager
@@ -40,9 +40,9 @@ from core.rewards_manager import (
     is_attributed_to,
     next_locked_tier,
     rarity_tally_for_unlocked,
-    reading_since_baseline,
     reward_progress_fraction,
     stat_id_for_tier,
+    usage_deltas_by_reader,
 )
 from core.workout_manager import WorkoutManager
 
@@ -121,7 +121,7 @@ def test_reward_progress_fraction_zero_threshold_reads_complete():
 
 
 # ------------------------------------------------------------------
-# is_attributed_to / reading_since_baseline — pure logic
+# is_attributed_to / usage_deltas_by_reader — pure logic
 # ------------------------------------------------------------------
 
 def test_is_attributed_to_none_owner_counts_for_any_profile():
@@ -137,16 +137,56 @@ def test_is_attributed_to_non_matching_owner():
     assert is_attributed_to("alex", "sam") is False
 
 
-def test_reading_since_baseline_no_baseline_reads_raw_value():
-    assert reading_since_baseline(207000.0, None) == 207000.0
+def _reading(value, profile_id=None, timestamp="2026-01-01T00:00:00") -> Reading:
+    return Reading(reading_id="r", series_id="s", value=value, timestamp=timestamp, profile_id=profile_id)
 
 
-def test_reading_since_baseline_subtracts_real_baseline():
-    assert reading_since_baseline(207500.0, 207000.0) == 500.0
+def test_usage_deltas_by_reader_no_baseline_first_reading_counts_from_true_zero():
+    """A brand-new task's very first-ever reading still counts as real
+    accumulated usage — the same "starts truly at zero" behavior every
+    meter task in this app had before per-reader attribution existed."""
+    readings = [_reading(10.0, "zac", "2026-01-01T00:00:00")]
+    assert usage_deltas_by_reader(readings) == {"zac": 10.0}
 
 
-def test_reading_since_baseline_never_negative():
-    assert reading_since_baseline(100.0, 500.0) == 0.0
+def test_usage_deltas_by_reader_single_reader_reduces_to_flat_baseline_subtraction():
+    readings = [_reading(207500.0, "zac", "2026-01-02T00:00:00")]
+    assert usage_deltas_by_reader(readings, baseline=207000.0) == {"zac": 500.0}
+
+
+def test_usage_deltas_by_reader_splits_a_shared_asset_by_real_contributor():
+    """The vision doc's own worked example: "14 hrs total, Zac 13.2,
+    Faith 0.8." """
+    readings = [
+        _reading(13.2, "zac", "2026-01-01T00:00:00"),
+        _reading(14.0, "faith", "2026-01-02T00:00:00"),
+    ]
+    assert usage_deltas_by_reader(readings, baseline=0.0) == pytest.approx({"zac": 13.2, "faith": 0.8})
+
+
+def test_usage_deltas_by_reader_sorts_by_timestamp_not_list_order():
+    readings = [
+        _reading(14.0, "faith", "2026-01-02T00:00:00"),
+        _reading(13.2, "zac", "2026-01-01T00:00:00"),
+    ]
+    assert usage_deltas_by_reader(readings, baseline=0.0) == pytest.approx({"zac": 13.2, "faith": 0.8})
+
+
+def test_usage_deltas_by_reader_unattributed_readings_bucket_under_none():
+    readings = [_reading(5.0, None, "2026-01-01T00:00:00")]
+    assert usage_deltas_by_reader(readings, baseline=0.0) == {None: 5.0}
+
+
+def test_usage_deltas_by_reader_negative_delta_contributes_zero_not_negative():
+    readings = [
+        _reading(10.0, "zac", "2026-01-01T00:00:00"),
+        _reading(4.0, "faith", "2026-01-02T00:00:00"),  # a data reset/correction
+    ]
+    assert usage_deltas_by_reader(readings, baseline=0.0) == {"zac": 10.0, "faith": 0.0}
+
+
+def test_usage_deltas_by_reader_no_readings_no_baseline_is_empty():
+    assert usage_deltas_by_reader([]) == {}
 
 
 # ------------------------------------------------------------------
@@ -249,15 +289,35 @@ def test_vehicle_miles_logged_counts_only_for_its_real_owner(isolated_paths):
     assert context.rewards.stat_value("vehicle_miles_logged", faith.profile_id) == 0.0
 
 
-def test_vehicle_miles_logged_shared_unowned_asset_counts_for_everyone(isolated_paths):
-    """An asset with no owner (the default — every pre-existing asset
-    included) stays shared, unchanged from before ownership existed."""
+def test_vehicle_miles_logged_shared_asset_still_splits_by_real_reader(isolated_paths):
+    """An UNOWNED asset (the default) can still be driven by anyone,
+    but usage attributes to whoever actually logged each reading, not
+    automatically to everyone just because the asset itself has no
+    single owner — "shared object does not mean shared progression"
+    (the multi-user vision's own framing). See the next test for the
+    real "shared, counts for everyone" case: a reading with no
+    attribution at all."""
     context = _make_context()
     zac = context.profiles.create_profile(name="Zac")
     faith = context.profiles.create_profile(name="Faith", make_active=False)
     truck = context.maintenance.add_asset(name="Family Van", category="Vehicle")  # no owner
     odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
-    context.maintenance.log_reading(odometer.task_id, 3000.0)
+    context.maintenance.log_reading(odometer.task_id, 3000.0)  # logged as Zac (active)
+
+    assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 3000.0
+    assert context.rewards.stat_value("vehicle_miles_logged", faith.profile_id) == 0.0
+
+
+def test_vehicle_miles_logged_unattributed_reading_counts_for_everyone(isolated_paths):
+    """A reading logged with no active profile at all (or from before
+    per-reading attribution existed) stays genuinely shared — the same
+    convention every other per-profile field in this codebase uses."""
+    context = _make_context()
+    zac = context.profiles.create_profile(name="Zac", make_active=False)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    truck = context.maintenance.add_asset(name="Family Van", category="Vehicle")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(odometer.task_id, 3000.0)  # no active profile
 
     assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 3000.0
     assert context.rewards.stat_value("vehicle_miles_logged", faith.profile_id) == 3000.0
