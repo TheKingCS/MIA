@@ -857,6 +857,69 @@ framing is "eventually," secondary to the solo/home-life focus. Same
 treatment as this file's existing "Realistic phased horizon" table
 below — don't let it pull near-term scope toward it.
 
+## MIA Spatial Interface & Meta Wearables Vision (2026-09-14)
+
+A full handoff naming the concrete destination for the "MIA as a
+Personal 'User OS'" section above — that section named AR/XR as a
+future interface target in the abstract; this one describes the actual
+architecture and a real prototyping path (VR first, as a sandbox for
+AR), plus names Meta's developer ecosystem specifically
+(`https://developers.meta.com/wearables/` — the Wearables Device
+Access Toolkit, the Orion prototype, Neural Band gesture input) as a
+concrete future platform to investigate, not a hardware dependency.
+**Explicitly NOT started** — no VR/AR/3D-rendering code exists
+anywhere in this repository (checked: no Unity/Unreal/WebXR/OpenXR
+references, no 3D asset pipeline, nothing beyond PySide6 2D widgets),
+same "confirmed before assuming" discipline every other handoff in
+this document gets.
+
+**The core architectural ask, already true by construction, same as
+the AR/XR section above**: core data (Missions, Skills, Maintenance
+assets, etc.) must stay independent of presentation. A "MIA Spatial
+Asset System" is the concrete proposal — digital assets (a mower, a
+vehicle, a greenhouse tank) eventually carry real 3D/AR metadata
+(interaction zones like ENGINE/BLADES/TIRES, a 3D model reference, a
+2D fallback) alongside what `core.maintenance_manager.MaintenanceAsset`
+already tracks (specs, maintenance schedule, usage stats, documents),
+so the same real object can render as a dashboard tile, a 2D asset, a
+VR object, or eventually an AR-anchored overlay without duplicating
+logic. VR is explicitly framed as a development sandbox for AR
+concepts, not a destination itself — walking up to a virtual mower in
+a "MIA HQ" VR environment and inspecting its engine should use the
+same underlying data/interaction model that later anchors to the real
+mower through AR glasses.
+
+**Not designed further here** — this needs its own real scoping pass
+(what 3D/asset pipeline, what engine or framework, how "interaction
+zones" map onto real `MaintenanceTask`/`Mission` data) before any code
+gets written, same "don't build blind" discipline as the "Inspect"
+capability and Classroom sections above. Unlike those two, this one
+has no existing partial prerequisite already shipped (no capability-
+status tracking equivalent) — it starts from zero.
+
+**A second, separate, and more immediately actionable point the user
+raised alongside this**: MIA's architecture should work for *any* user
+with *any* hobby/interest/business, not just this user's own real life
+(mowing, vehicles, homesteading, fishing). A real, honest audit against
+this (not assumed either way): the ENGINE layer (Missions/XP/
+Skills/Achievements/Notifications/Insights, the multi-user "shared
+object + per-profile relationship" pattern) is already generic by
+construction — nothing in `core/` hardcodes a specific hobby, and
+`MaintenanceAsset`'s own categories (Vehicle/Power Equipment/Appliance/
+Property/Garden-Plant/Tool/Other) are broad, structural buckets, not
+this user's specific vehicles. The skill tree's 95 skills across 9
+categories (Body/Construction/Creative/Homestead/Maker/Mind/Outdoor/
+Social/Technology) are reasonably broad too, though they were
+hand-authored once for breadth, not generated per-user — a genuinely
+unrepresented hobby fits loosely into an existing category rather than
+getting its own tailored content. The real, concrete, currently-unused
+lever for this already exists: the profile-creation interview
+(`Profile.interview_notes`, free-text) is captured but nothing parses
+it yet (see `ROADMAP.md`'s "Profile-creation interview" entry) — this
+is the natural mechanism for eventually seeding genuinely per-user
+content, not yet wired up. Not scoped further here; a real candidate
+for the next concrete slice once picked up.
+
 ## Why this is a separate document from ROADMAP.md
 
 This vision includes ideas (a multi-agent "Expert Council," genetic
