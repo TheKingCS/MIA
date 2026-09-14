@@ -27,7 +27,7 @@ import core.recurring_mission_manager as recurring_mission_manager_module
 import core.skill_manager as skill_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
-from core.context_assembler import assemble_life_state, format_life_state_summary
+from core.context_assembler import assemble_life_state, format_life_state_glance_line, format_life_state_summary
 from core.event_bus import EventBus
 from core.insight_manager import InsightManager
 from core.maintenance_manager import MaintenanceManager
@@ -298,3 +298,39 @@ def test_format_life_state_summary_includes_every_populated_section():
     assert "2 maintenance item" in summary
     assert "1 active project" in summary
     assert "A real observation." in summary
+
+
+# ------------------------------------------------------------------
+# format_life_state_glance_line
+# ------------------------------------------------------------------
+
+def test_format_life_state_glance_line_all_quiet():
+    from core.context_assembler import LifeStateSnapshot
+    assert format_life_state_glance_line(LifeStateSnapshot(profile_id="p1")) == "All quiet"
+
+
+def test_format_life_state_glance_line_singular_mission():
+    from core.context_assembler import LifeStateSnapshot
+    snapshot = LifeStateSnapshot(profile_id="p1", active_mission_count=1)
+    assert format_life_state_glance_line(snapshot) == "1 active mission"
+
+
+def test_format_life_state_glance_line_combines_every_populated_count():
+    from core.context_assembler import LifeStateSnapshot
+    snapshot = LifeStateSnapshot(
+        profile_id="p1",
+        active_mission_count=3,
+        skills_growing=["Cooking"],
+        skills_declining=["Fitness", "Maker"],
+        overdue_maintenance_count=1,
+    )
+    assert format_life_state_glance_line(snapshot) == "3 active missions · 1 growing · 2 declining · 1 overdue item"
+
+
+def test_format_life_state_glance_line_ignores_dormant_and_streaks():
+    """Dormant interests and streaks are real signals in the full
+    summary but deliberately left out of the compact glance line —
+    there's only room for the handful that matter most at a glance."""
+    from core.context_assembler import LifeStateSnapshot
+    snapshot = LifeStateSnapshot(profile_id="p1", skills_dormant=["Maker"], recurring_streaks=[("Laundry", 4)])
+    assert format_life_state_glance_line(snapshot) == "All quiet"

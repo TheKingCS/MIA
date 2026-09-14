@@ -172,3 +172,26 @@ def format_life_state_summary(snapshot: LifeStateSnapshot) -> str:
         return "Nothing notable right now — no active missions, no maintenance overdue, and no skill trends to report."
 
     return " ".join(lines)
+
+
+def format_life_state_glance_line(snapshot: LifeStateSnapshot) -> str:
+    """Pure formatting logic — testable without Qt. The dashboard-card
+    "glance" form of format_life_state_summary() above — a short
+    counts-only line, same "surface the summary before the detail"
+    stance as gui/home_dashboard.py's other format_*_line() functions,
+    just living here instead since it formats a core dataclass rather
+    than reading a GUI-local structure."""
+    parts = []
+    if snapshot.active_mission_count:
+        noun = "mission" if snapshot.active_mission_count == 1 else "missions"
+        parts.append(f"{snapshot.active_mission_count} active {noun}")
+    if snapshot.skills_growing:
+        parts.append(f"{len(snapshot.skills_growing)} growing")
+    if snapshot.skills_declining:
+        parts.append(f"{len(snapshot.skills_declining)} declining")
+    if snapshot.overdue_maintenance_count:
+        noun = "item" if snapshot.overdue_maintenance_count == 1 else "items"
+        parts.append(f"{snapshot.overdue_maintenance_count} overdue {noun}")
+    if not parts:
+        return "All quiet"
+    return " · ".join(parts)

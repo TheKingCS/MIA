@@ -10958,3 +10958,37 @@ Deliberately scoped as a read-only query layer only — Discovery
 reasoning over this same state, a Dashboard "System HUD" section, and
 cross-domain Pattern Insight correlation are all real future consumers
 of this exact function, not built yet.
+
+## Life State reaches the Dashboard (2026-09-14)
+
+The second of the three consumers named as "not built yet" above — a
+real "System HUD" glance card on the Home dashboard, reading the same
+`assemble_life_state()` the Assistant action already uses. New
+`format_life_state_glance_line()` in `core/context_assembler.py`: a
+compact counts-only line (`"3 active missions · 1 growing · 1 overdue
+item"`, or `"All quiet"`) — deliberately narrower than the full
+`format_life_state_summary()` paragraph, and deliberately leaves out
+dormant interests/streaks (there's only room for the handful that
+matter most at a glance, same restraint every other dashboard glance
+line in this codebase already follows).
+
+New `_build_life_state_widget()`/`_refresh_life_state()` in
+`gui/home_dashboard.py`, registered the same way every other widget is
+— with one deliberate omission: **no spoken-briefing highlight
+provider**. Life State synthesizes signals (open Insights, overdue
+Maintenance, active Missions) that Observations/Maintenance/Mission's
+own highlight providers already speak in the "welcome back" briefing;
+giving it a second highlight would just repeat them. Also no
+`on_click` — unlike every other widget here, there's no single module
+screen this summarizes down from, same "no related page" reasoning
+Activity Log/Real Estate/Kraken Agent already established.
+
+**Verification**: `pytest -q` — full suite, 3104 passed (4 new tests
+for the glance-line formatter). Manually verified with a real,
+fully-constructed `HomeDashboard` (headless Qt) against a realistic
+scenario — screenshot confirmed the card renders correctly ("2 active
+missions · 1 growing · 1 overdue item") with real data. Confirmed real
+`config/config.json` untouched.
+
+Cross-domain Pattern Insight correlation and Discovery reasoning over
+this same Life State remain the two real, not-yet-built consumers.

@@ -129,6 +129,7 @@ from core.assistant_chat import (
     split_safe_tool_calls,
 )
 from core.chat_worker import ChatWorker
+from core.context_assembler import assemble_life_state, format_life_state_glance_line
 from core.conversation_manager import DEFAULT_TITLE
 from core.budget_manager import Bill, days_until_bill_due
 from core.real_estate_manager import Property, equity as property_equity
@@ -599,6 +600,7 @@ class HomeDashboard(QFrame):
             "relationships": self._build_relationships_widget,
             "observations": self._build_observations_widget,
             "lite_captures": self._build_lite_captures_widget,
+            "life_state": self._build_life_state_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -632,6 +634,12 @@ class HomeDashboard(QFrame):
             # isn't a persisted fact known at construction time; the
             # briefing is computed once per launch, before the user has
             # started anything.
+            # life_state deliberately has no highlight provider — it
+            # synthesizes signals (open Insights, overdue Maintenance,
+            # active Missions) that observations/maintenance/mission's
+            # OWN highlight providers already speak in the briefing;
+            # adding a second highlight for the same underlying signals
+            # would just repeat them, not add anything.
         }
 
         outer = QVBoxLayout(self)
@@ -1091,6 +1099,17 @@ class HomeDashboard(QFrame):
             on_click=lambda: self._open_module("observations"),
         )
         self._widget_bodies["observations"] = body
+        return card
+
+    def _build_life_state_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        # core.context_assembler's own first GUI consumer beyond the
+        # Assistant action (2026-09-14) — a synthesized "what's going on
+        # right now" glance. No on_click: unlike every other widget
+        # here, there's no dedicated module screen this summarizes down
+        # from (it spans several), same "no related page" reasoning
+        # Activity Log/Real Estate/Kraken Agent already establish.
+        card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
+        self._widget_bodies["life_state"] = body
         return card
 
     def _build_lite_captures_widget(self, descriptor: WidgetDescriptor) -> QWidget:
@@ -1624,11 +1643,13 @@ class HomeDashboard(QFrame):
     def _build_briefing_text(self) -> str:
         """Computed once at construction (not on the 5s data-refresh
         timer below) — this is a "welcome back" greeting, not a live
-        ticker. 11 of the 19 registered dashboard widgets have a real
+        ticker. 11 of the 20 registered dashboard widgets have a real
         highlight provider as of 2026-09-14 (power/mission/current_project/
         homestead from 2026-07-15, budget/maintenance/kitchen/workout/
         relationships/observations/lite_captures added once those
-        modules existed) — the rest are deliberate exclusions, see the comments in
+        modules existed; life_state deliberately has none, see that
+        comment in self._widget_highlight_providers) — the rest are
+        deliberate exclusions, see the comments in
         self._widget_highlight_providers itself, right where each one is
         registered (or pointedly isn't), for the reasoning per widget.
         Extend this as a new subsystem lands: add a _<widget_id>_highlight()
@@ -2005,6 +2026,17 @@ class HomeDashboard(QFrame):
             self._refresh_observations()
         if "lite_captures" in self._widget_bodies:
             self._refresh_lite_captures()
+        if "life_state" in self._widget_bodies:
+            self._refresh_life_state()
+
+    def _refresh_life_state(self) -> None:
+        line = "No active profile"
+        if self.context.profiles is not None:
+            active_profile = self.context.profiles.get_active_profile()
+            if active_profile is not None:
+                snapshot = assemble_life_state(self.context, active_profile.profile_id, date.today())
+                line = format_life_state_glance_line(snapshot)
+        self._set_widget_body_text("life_state", line)
 
     def _refresh_observations(self) -> None:
         open_insights = self.context.insights.open_insights() if self.context.insights else []
