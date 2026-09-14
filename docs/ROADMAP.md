@@ -10319,3 +10319,38 @@ and the populated view — the Jamie/Denver cluster correctly rooted at
 its hub memory with both direct facts as children, the Rex cluster
 separately rooted, and the isolated fishing memory correctly absent
 from the view entirely.
+
+## Observations: a real browsing UI for Insights (2026-09-14)
+
+`core/insight_manager.py`'s own docstring named this as deferred —
+"no dedicated browsing UI this phase... available for a later phase
+(a 'System Observation' view...) to query." That later phase arrived
+naturally once a second real scan domain existed
+(`core/mission_insights.py`, alongside `core/maintenance_insights.py`)
+— before that, an Insight only ever reached the user as a one-shot
+Notification toast; dismiss it and there was no way back to "what's
+still open."
+
+**New `modules/observations/module.py`** — a real, read-only module
+(mirrors `modules/memories/module.py`'s plain header+subtitle+scroll
+shape, not the fuller Nature-reskin hero treatment other actively-
+worked modules got — this is an ambient/read-only screen, same
+category as Memories) listing every OPEN Insight, grouped by
+`source_type` (MAINTENANCE/MISSIONS), oldest-first within each group
+so the longest-neglected observation surfaces first. Each card shows
+the Insight's title/message plus its linked Recommendation. No manual
+"mark resolved" here — same as both scan modules' own docstrings,
+resolution still happens automatically through the real domain action
+(completing a Maintenance task, touching a stale Mission) that already
+drives `resolve_insight()`.
+
+**Verification**: `pytest -q` — full suite, 2954 passed (10 new
+tests: section-label formatting, recommendation-line formatting,
+grouping/sorting/empty-state logic). Confirmed real module auto-
+discovery picks it up with zero registry changes (`ModuleManager
+.discover()` finds it by folder structure alone, per this project's
+existing convention). Manual headless-Qt screenshots confirmed both
+the true empty state ("Nothing open right now...") and a populated
+view with one real Maintenance insight and one real Missions insight,
+correctly grouped under their own section headers with the right
+title/message/recommendation text.

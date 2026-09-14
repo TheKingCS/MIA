@@ -33,10 +33,15 @@ automatically, the moment a real completion happens through whatever
 UI already handles that domain — no new "mark resolved" interaction
 needed for this pass.
 
-Deliberately no dedicated browsing UI this phase — Insights surface
-through the existing NotificationToast/NotificationCenter (same as
-Smart Suggestions), and are simply available for a later phase (a
-"System Observation" view, `context_assembler.py`, etc.) to query.
+Insights still always surface first through the existing
+NotificationToast/NotificationCenter (same as Smart Suggestions) —
+that's unchanged. The dedicated browsing UI this docstring once called
+a deferred "later phase" now exists too, once a second real domain
+(core/mission_insights.py) gave it real cross-domain content to show:
+`modules/observations/module.py`, a real, read-only "what's still
+open" view over every Insight this manager holds, regardless of which
+Notification toast surfaced it or whether that toast was already
+dismissed.
 """
 
 from __future__ import annotations
