@@ -31,6 +31,13 @@ against the FULL memory list regardless of the active category filter,
 since a real relation can span categories. Silent otherwise, same "no
 add/edit UI, no manual curation" stance as the rest of this dialog —
 the relation is discovered automatically, never hand-authored.
+
+**2026-09-14, "graph/tree visualization"**: a "View Connections"
+button opens gui/memory_connections_dialog.py — the fuller
+visualization docs/VISION.md flagged as real, separate UI scope not
+attempted in the pass above. That dialog reuses this same
+related_memories() relation, just grouped into real connected trees
+instead of a per-row one-line hint.
 """
 
 from __future__ import annotations
@@ -51,6 +58,7 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 from core.user_memory_manager import MEMORY_CATEGORIES, related_memories
+from gui.memory_connections_dialog import MemoryConnectionsDialog
 
 
 class UserMemoryDialog(QDialog):
@@ -93,6 +101,9 @@ class UserMemoryDialog(QDialog):
         clear_all_button = QPushButton("Clear All")
         clear_all_button.clicked.connect(self._on_clear_all)
         button_row.addWidget(clear_all_button)
+        connections_button = QPushButton("View Connections")
+        connections_button.clicked.connect(self._on_view_connections)
+        button_row.addWidget(connections_button)
         button_row.addStretch()
         close_button = QPushButton("Close")
         close_button.clicked.connect(self.accept)
@@ -170,6 +181,10 @@ class UserMemoryDialog(QDialog):
             column.addWidget(related_label)
 
         return card
+
+    def _on_view_connections(self) -> None:
+        dialog = MemoryConnectionsDialog(self.context, parent=self)
+        dialog.exec()
 
     def _on_delete(self, memory) -> None:
         self.context.user_memories.delete_memory(memory.memory_id)

@@ -175,6 +175,102 @@ def related_memories(target: "UserMemory", all_memories: list["UserMemory"], lim
     return [other for _, other in scored[:limit]]
 
 
+# ------------------------------------------------------------------
+# Memory Palace: graph/tree visualization (2026-09-14)
+# ------------------------------------------------------------------
+#
+# docs/VISION.md flagged this as the one piece of "interconnected
+# memory" deliberately NOT attempted in the 2026-09-10 pass —
+# related_memories() proved the underlying relation was worth having
+# (a "Related:" line in gui/user_memory_dialog.py), but never grouped
+# memories into a real visual structure. This reuses related_memories()
+# unchanged (unlimited, not its own display-oriented default limit=3)
+# rather than inventing a second relation computation.
+#
+# No QTreeWidget anywhere in this codebase (checked before adding
+# one) — every existing hierarchical screen (e.g.
+# modules/classroom/module.py's Subjects->Courses->Lessons) is a
+# QStackedWidget drill-down or a flat QListWidget, so the render side
+# (gui/memory_connections_dialog.py) draws this tree as nested,
+# indented cards instead of reaching for an unprecedented widget type.
+# The DATA shape here is still a real tree (MemoryTreeNode.children),
+# not a flat list dressed up with indentation — the UI just renders it
+# recursively rather than via a dedicated tree control.
+
+
+@dataclass
+class MemoryTreeNode:
+    memory: "UserMemory"
+    children: list["MemoryTreeNode"]
+
+
+def _tree_size(node: "MemoryTreeNode") -> int:
+    return 1 + sum(_tree_size(child) for child in node.children)
+
+
+def _build_tree_node(
+    root_id: str, adjacency: dict[str, set[str]], id_to_memory: dict[str, "UserMemory"]
+) -> "MemoryTreeNode":
+    """Breadth-first walk of `adjacency` from `root_id`, turning a
+    symmetric/undirected relation graph into a real rooted tree — each
+    memory appears exactly once, as a child of whichever
+    already-placed node reaches it first in BFS order."""
+    placed = {root_id}
+    root = MemoryTreeNode(memory=id_to_memory[root_id], children=[])
+    queue = [root]
+    while queue:
+        node = queue.pop(0)
+        for neighbor_id in adjacency[node.memory.memory_id]:
+            if neighbor_id in placed:
+                continue
+            placed.add(neighbor_id)
+            child = MemoryTreeNode(memory=id_to_memory[neighbor_id], children=[])
+            node.children.append(child)
+            queue.append(child)
+    return root
+
+
+def memory_relationship_trees(all_memories: list["UserMemory"]) -> list["MemoryTreeNode"]:
+    """Pure logic — testable without touching the filesystem or Qt.
+    Builds the full relation graph via related_memories() (symmetric —
+    see _related_memory_score()'s own set-intersection math), splits
+    it into connected clusters, and roots each cluster as a real tree
+    (BFS from the cluster's own highest-degree memory, ties broken by
+    original list order — deterministic, not re-sorted by score).
+    Isolated memories (no real relation to anything) are excluded —
+    there's nothing to visualize a connection for; they still show in
+    the existing flat list. Returned largest-tree-first."""
+    adjacency: dict[str, set[str]] = {m.memory_id: set() for m in all_memories}
+    id_to_memory: dict[str, "UserMemory"] = {m.memory_id: m for m in all_memories}
+    for memory in all_memories:
+        for other in related_memories(memory, all_memories, limit=len(all_memories)):
+            adjacency[memory.memory_id].add(other.memory_id)
+            adjacency[other.memory_id].add(memory.memory_id)
+
+    order = {m.memory_id: i for i, m in enumerate(all_memories)}
+    visited: set[str] = set()
+    trees: list[MemoryTreeNode] = []
+    for memory in all_memories:
+        if memory.memory_id in visited or not adjacency[memory.memory_id]:
+            continue
+
+        component_ids: set[str] = set()
+        queue = [memory.memory_id]
+        while queue:
+            current = queue.pop(0)
+            if current in component_ids:
+                continue
+            component_ids.add(current)
+            queue.extend(adjacency[current] - component_ids)
+        visited |= component_ids
+
+        root_id = max(component_ids, key=lambda mid: (len(adjacency[mid]), -order[mid]))
+        trees.append(_build_tree_node(root_id, adjacency, id_to_memory))
+
+    trees.sort(key=_tree_size, reverse=True)
+    return trees
+
+
 class UserMemoryManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context

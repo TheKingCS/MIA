@@ -21,6 +21,7 @@ from core.user_memory_manager import (
     UserMemory,
     UserMemoryManager,
     is_duplicate_memory,
+    memory_relationship_trees,
     related_memories,
 )
 
@@ -122,6 +123,80 @@ def test_related_memories_empty_when_nothing_qualifies():
     target = _memory("m1", "The user enjoys fly fishing on weekends.", category="Fishing")
     other = _memory("m2", "The user works as a backend engineer.", category="Work")
     assert related_memories(target, [target, other]) == []
+
+
+# ----------------------------------------------------------------------
+# memory_relationship_trees (pure, 2026-09-14 "graph/tree visualization")
+# ----------------------------------------------------------------------
+
+def test_memory_relationship_trees_empty_with_no_memories():
+    assert memory_relationship_trees([]) == []
+
+
+def test_memory_relationship_trees_excludes_fully_isolated_memories():
+    a = _memory("m1", "The user enjoys fly fishing on weekends.", category="Fishing")
+    b = _memory("m2", "The user works as a backend engineer.", category="Work")
+    assert memory_relationship_trees([a, b]) == []
+
+
+def test_memory_relationship_trees_pairs_a_related_pair_as_root_and_child():
+    sister = _memory("m1", "The user's sister is named Jamie.", category="Family")
+    party = _memory("m2", "The user is planning a birthday party for Jamie next month.", category="Family")
+
+    trees = memory_relationship_trees([sister, party])
+
+    assert len(trees) == 1
+    root = trees[0]
+    assert len(root.children) == 1
+    assert {root.memory.memory_id, root.children[0].memory.memory_id} == {"m1", "m2"}
+
+
+def test_memory_relationship_trees_chain_forms_one_cluster_rooted_at_the_hub():
+    """A relates to B (shared name "Jamie"), B relates to C (shared
+    name "Denver"), but A and C share neither name with each other —
+    still one connected tree (transitively linked via B), rooted at B
+    since it's the only one with degree 2."""
+    a = _memory("m1", "The user's sister is named Jamie.", category="Family")
+    b = _memory("m2", "The user is calling Jamie about the upcoming Denver trip.", category="Family")
+    c = _memory("m3", "The user is planning a trip to Denver.", category="Travel")
+
+    assert related_memories(a, [a, b, c]) == [b]  # sanity check: a and c really don't relate directly
+    assert related_memories(c, [a, b, c]) == [b]
+
+    trees = memory_relationship_trees([a, b, c])
+
+    assert len(trees) == 1
+    root = trees[0]
+    assert root.memory.memory_id == "m2"
+    child_ids = {child.memory.memory_id for child in root.children}
+    assert child_ids == {"m1", "m3"}
+
+
+def test_memory_relationship_trees_two_separate_clusters_largest_first():
+    jamie_a = _memory("m1", "The user's sister is named Jamie.", category="Family")
+    jamie_b = _memory("m2", "The user is planning a birthday party for Jamie.", category="Family")
+    jamie_c = _memory("m3", "The user is buying a gift for Jamie.", category="Family")
+    rex_a = _memory("m4", "The user has a dog named Rex.", category="Pets")
+    rex_b = _memory("m5", "The user is taking Rex to the vet.", category="Pets")
+
+    trees = memory_relationship_trees([jamie_a, jamie_b, jamie_c, rex_a, rex_b])
+
+    assert len(trees) == 2
+    assert len(trees[0].children) + 1 == 3  # the 3-member Jamie cluster is listed first
+    assert len(trees[1].children) + 1 == 2  # the 2-member Rex cluster is listed second
+
+
+def test_memory_relationship_trees_root_tie_broken_by_original_order():
+    """Two memories with equal degree (1 each) — the earlier one in
+    the original list wins the root spot, deterministically."""
+    a = _memory("m1", "The user's sister is named Jamie.", category="Family")
+    b = _memory("m2", "The user is planning a birthday party for Jamie.", category="Family")
+
+    trees = memory_relationship_trees([a, b])
+    assert trees[0].memory.memory_id == "m1"
+
+    trees_reversed = memory_relationship_trees([b, a])
+    assert trees_reversed[0].memory.memory_id == "m2"
 
 
 # ----------------------------------------------------------------------

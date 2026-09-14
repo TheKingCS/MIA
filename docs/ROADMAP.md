@@ -10274,3 +10274,48 @@ active mission produced exactly one real `Insight` + `Recommendation`
 + `Notification` with the correct text; a second same-day scan did not
 duplicate it; and adding a real objective to the stale mission
 correctly resolved its insight.
+
+## Memory Connections: the graph/tree visualization (2026-09-14)
+
+The other real gap docs/VISION.md flagged and left explicitly unbuilt
+in the 2026-09-10 "Memory Palace" pass: `related_memories()` proved
+the underlying relation was worth having (a one-line "Related: ..."
+hint per row), but nothing ever grouped memories into a real visual
+structure.
+
+**New `core.user_memory_manager.memory_relationship_trees()`** —
+reuses `related_memories()` unchanged (called unlimited, not its own
+display-oriented default `limit=3`) to build the full relation graph,
+splits it into connected clusters via BFS, and roots each cluster as a
+real tree (`MemoryTreeNode.children`) at its own highest-degree member
+— a deterministic, tie-broken-by-original-order choice, not
+re-sorted by score. Isolated memories (no real relation to anything)
+are excluded; they still show in the existing flat list. Checked
+first that no `QTreeWidget` exists anywhere in this codebase — every
+existing hierarchical screen (Classroom's Subjects→Courses→Lessons) is
+a `QStackedWidget` drill-down or flat `QListWidget` — so the new
+`gui/memory_connections_dialog.py` renders the real tree data
+recursively as nested, indented cards instead of reaching for an
+unprecedented widget type. Opened via a new "View Connections" button
+in `gui/user_memory_dialog.py`.
+
+**Real data note**: `data/user_memories.json` currently has zero
+entries — the user hasn't had a conversation with the Assistant that
+extracted any yet. Verified with realistic representative examples
+instead (a Jamie/Denver family cluster, a Rex pet-care cluster, one
+deliberately isolated fly-fishing memory) — the feature will render
+real content correctly the moment real memories exist; nothing here
+was built around a guessed data shape the way the gym-equipment pivot
+earlier this session was avoided for exactly that reason.
+
+**Verification**: `pytest -q` — full suite, 2944 passed (6 new tests:
+empty/isolated-excluded cases, a simple related pair, a 3-memory chain
+proving transitive-but-not-direct connections still cluster together
+and root at the actual hub, two-clusters-largest-first, and root
+tie-breaking by original order). Manual headless-Qt verification
+(screenshots) confirmed both the true empty state ("No connections yet
+— MIA will find these automatically as it learns more about you.")
+and the populated view — the Jamie/Denver cluster correctly rooted at
+its hub memory with both direct facts as children, the Rex cluster
+separately rooted, and the isolated fishing memory correctly absent
+from the view entirely.
