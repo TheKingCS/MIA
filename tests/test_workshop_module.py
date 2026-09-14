@@ -24,6 +24,7 @@ from modules.workshop.module import (
     format_job_row,
     format_material_detail_line,
     format_material_row,
+    format_product_detail_line,
     format_product_row,
     format_revenue_row,
 )
@@ -84,6 +85,23 @@ def test_material_detail_line_with_attribution_and_never_used():
 def test_material_detail_line_with_usage_and_who_last_used_it():
     result = format_material_detail_line("Alex", 3, "Faith", "2026-09-14")
     assert result == "Added by Alex  ·  Used 3x (last: Faith on 2026-09-14)"
+
+
+# ------------------------------------------------------------------
+# format_product_detail_line (multi-user pass, 2026-09-14)
+# ------------------------------------------------------------------
+
+def test_product_detail_line_unknown_attribution_and_never_sold():
+    assert format_product_detail_line(None, 0, None, None) == "Added by: unknown  ·  Never sold yet"
+
+
+def test_product_detail_line_with_attribution_and_never_sold():
+    assert format_product_detail_line("Alex", 0, None, None) == "Added by Alex  ·  Never sold yet"
+
+
+def test_product_detail_line_with_sales_and_who_sold_it():
+    result = format_product_detail_line("Alex", 3, "Faith", "2026-09-14")
+    assert result == "Added by Alex  ·  Sold 3x (last: Faith on 2026-09-14)"
 
 
 def test_omits_location_when_absent():

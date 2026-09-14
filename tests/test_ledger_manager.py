@@ -16,11 +16,13 @@ import pytest
 
 import core.ledger_manager as ledger_manager_module
 import core.product_manager as product_manager_module
+import core.profile_manager as profile_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.ledger_manager import LedgerManager, _in_range
 from core.product_manager import ProductManager
+from core.profile_manager import ProfileManager
 
 
 @pytest.fixture
@@ -31,6 +33,8 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(ledger_manager_module, "_EXPENSES_FILE", data_dir / "expenses.json")
     monkeypatch.setattr(product_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(product_manager_module, "_PRODUCTS_FILE", data_dir / "products.json")
+    monkeypatch.setattr(product_manager_module, "_USAGE_LOG_FILE", data_dir / "product_usage_log.json")
+    monkeypatch.setattr(profile_manager_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     return data_dir
 
 
@@ -290,6 +294,24 @@ def test_record_sale_records_revenue_and_deducts_stock(isolated_paths):
     assert entry.product_id == product.product_id
     assert entry.quantity_sold == 3
     assert context.products.get_product(product.product_id).quantity_in_stock == 17
+
+
+def test_record_sale_logs_real_attributed_usage(isolated_paths):
+    """Multi-user pass (2026-09-14) — record_sale() also needed no
+    rewiring: it already called ProductManager.adjust_stock(), which
+    now logs attributed usage internally. Confirmed, not assumed."""
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    active_profile = context.profiles.create_profile(name="Alex")
+    product = context.products.add_product(name="Coasters", quantity_in_stock=20)
+
+    context.ledger.record_sale(product.product_id, quantity_sold=3, amount=45.0, description="Etsy order")
+
+    usage = context.products.usage_log_for_product(product.product_id)
+    assert len(usage) == 1
+    assert usage[0].delta == -3
+    assert usage[0].profile_id == active_profile.profile_id
+    assert context.products.times_sold(product.product_id) == 1
 
 
 def test_record_sale_clamps_stock_at_zero_rather_than_going_negative(isolated_paths):

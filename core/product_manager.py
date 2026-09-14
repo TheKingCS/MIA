@@ -48,6 +48,18 @@ log = get_logger(__name__)
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _PRODUCTS_FILE = _DATA_DIR / "products.json"
+# Multi-user pass (2026-09-14) — the "shared object + user relationship"
+# pattern's fifth real application (see core.material_manager.
+# MaterialUsageEntry's own docstring for the fourth). Product itself
+# stays shared/household; this file holds one real per-adjustment
+# event. Genuinely the easiest of the five to wire up: adjust_stock()
+# already existed and both real event sources
+# (core.job_manager.JobManager.produce_product() and
+# core.ledger_manager.LedgerManager.record_sale()) already call it, so
+# logging inside adjust_stock() itself covers both with zero further
+# rewiring — unlike Materials, which needed consume_material() rewired
+# by hand.
+_USAGE_LOG_FILE = _DATA_DIR / "product_usage_log.json"
 
 LISTING_STATUSES = ("Active", "Inactive", "Sold Out")
 
@@ -92,6 +104,10 @@ class Product:
     notes: str = ""
     created_at: str = ""
     updated_at: str = ""
+    # Multi-user pass (2026-09-14) — who first added this product, same
+    # role core.material_manager.Material.added_by_profile_id/
+    # core.component_manager.Component.added_by_profile_id play.
+    added_by_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -105,6 +121,7 @@ class Product:
             "notes": self.notes,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "added_by_profile_id": self.added_by_profile_id,
         }
 
     @staticmethod
@@ -120,6 +137,47 @@ class Product:
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
+            added_by_profile_id=data.get("added_by_profile_id"),
+        )
+
+
+@dataclass
+class ProductUsageEntry:
+    """One real stock adjustment, attributed to whoever was active when
+    it happened — same shape as core.material_manager.MaterialUsageEntry
+    (a real `float` delta). Populated inside adjust_stock() itself, so
+    both real sources of a product's stock changing
+    (JobManager.produce_product() crediting a finished job, and
+    LedgerManager.record_sale() debiting a real sale) become attributed
+    usage automatically, no rewiring needed at either call site.
+    times_sold()/last_sold() (not times_used()/last_used(), unlike the
+    other three applications of this pattern) since "used" doesn't fit
+    a product the way it does a consumable — the real business question
+    here is who sold it."""
+
+    entry_id: str
+    product_id: str
+    delta: float
+    profile_id: Optional[str] = None
+    timestamp: str = ""  # ISO datetime
+
+    def to_dict(self) -> dict:
+        return {
+            "entry_id": self.entry_id,
+            "product_id": self.product_id,
+            "delta": self.delta,
+            "profile_id": self.profile_id,
+            "timestamp": self.timestamp,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "ProductUsageEntry":
+        return ProductUsageEntry(
+            entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
+            product_id=data.get("product_id", ""),
+            delta=data.get("delta", 0.0),
+            profile_id=data.get("profile_id"),
+            timestamp=data.get("timestamp", ""),
         )
 
 
@@ -127,7 +185,9 @@ class ProductManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._products: list[Product] = []
+        self._usage_log: list[ProductUsageEntry] = []
         self._load()
+        self._load_usage_log()
 
     # ------------------------------------------------------------------
     # Persistence
@@ -145,12 +205,36 @@ class ProductManager:
             notify_data_corruption(self.context, "products.json")
             self._products = []
 
+    def _load_usage_log(self) -> None:
+        if not _USAGE_LOG_FILE.exists():
+            self._usage_log = []
+            return
+        try:
+            raw = json.loads(_USAGE_LOG_FILE.read_text(encoding="utf-8"))
+            self._usage_log = [ProductUsageEntry.from_dict(d) for d in raw]
+        except (json.JSONDecodeError, OSError):
+            log.exception("Failed to load product_usage_log.json — starting with an empty list.")
+            notify_data_corruption(self.context, "product_usage_log.json")
+            self._usage_log = []
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_PRODUCTS_FILE,
             json.dumps([p.to_dict() for p in self._products], indent=2),
             encoding="utf-8",
         )
+
+    def _save_usage_log(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(
+            _USAGE_LOG_FILE,
+            json.dumps([e.to_dict() for e in self._usage_log], indent=2),
+            encoding="utf-8",
+        )
+
+    def _active_profile_id(self) -> Optional[str]:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        return active_profile.profile_id if active_profile is not None else None
 
     # ------------------------------------------------------------------
     # Writing — products
@@ -176,6 +260,7 @@ class ProductManager:
             notes=notes,
             created_at=now,
             updated_at=now,
+            added_by_profile_id=self._active_profile_id(),
         )
         self._products.append(product)
         self._save()
@@ -209,12 +294,30 @@ class ProductManager:
         clamped at zero — the manual counterpart to
         core/job_manager.py's produce_product(), for stock changes not
         tied to a specific job (e.g. a manual recount, a sale recorded
-        by hand before the Revenue slice exists)."""
+        by hand before the Revenue slice exists).
+
+        Multi-user pass (2026-09-14) — a real, non-zero delta also
+        appends a ProductUsageEntry attributed to whoever's active.
+        Both `core.job_manager.JobManager.produce_product()` (a
+        positive delta) and `core.ledger_manager.LedgerManager.
+        record_sale()` (a negative delta) already call this method
+        rather than mutating quantity_in_stock directly, so both real
+        event sources become attributed usage with no further
+        rewiring — see ProductUsageEntry's own docstring."""
         product = self.get_product(product_id)
         if product is None:
             raise ValueError(f"No product with id '{product_id}'.")
         product.quantity_in_stock = max(0.0, product.quantity_in_stock + delta)
         product.updated_at = datetime.now().isoformat(timespec="seconds")
+        if delta != 0:
+            self._usage_log.append(ProductUsageEntry(
+                entry_id=uuid.uuid4().hex[:10],
+                product_id=product_id,
+                delta=delta,
+                profile_id=self._active_profile_id(),
+                timestamp=product.updated_at,
+            ))
+            self._save_usage_log()
         self._save()
         return product
 
@@ -274,3 +377,42 @@ class ProductManager:
             if query_lower in haystack:
                 matches.append(product)
         return sorted(matches, key=lambda p: p.name.lower())
+
+    # ------------------------------------------------------------------
+    # Usage (multi-user pass, 2026-09-14) — see ProductUsageEntry's own
+    # docstring; direct analog of
+    # core.material_manager.MaterialManager's usage_log_for_material()/
+    # times_used()/last_used(), renamed times_sold()/last_sold() here
+    # since "used" doesn't fit a finished-goods product.
+    # ------------------------------------------------------------------
+
+    def usage_log_for_product(self, product_id: str) -> list[ProductUsageEntry]:
+        """Every real stock adjustment (both production and sales/reductions) for this product, oldest first."""
+        return [e for e in self._usage_log if e.product_id == product_id]
+
+    def times_sold(self, product_id: str, profile_id: Optional[str] = None) -> int:
+        """Real stock REDUCTIONS only (delta < 0) — a production credit
+        isn't a sale. `profile_id=None` (the default) is the real
+        household total; a real profile_id counts only entries
+        attributed to that profile OR unattributed — same semantics
+        every other application of this pattern already established."""
+        return sum(
+            1 for e in self._usage_log
+            if e.product_id == product_id and e.delta < 0
+            and (profile_id is None or e.profile_id is None or e.profile_id == profile_id)
+        )
+
+    def last_sold(self, product_id: str, profile_id: Optional[str] = None) -> Optional[ProductUsageEntry]:
+        """Same `profile_id` semantics as times_sold() above. Picks the
+        last MATCHING entry by real append order, not by comparing
+        `timestamp` strings — see
+        core.inventory_manager.InventoryManager.last_used()'s own
+        docstring for why."""
+        matches = [
+            e for e in self._usage_log
+            if e.product_id == product_id and e.delta < 0
+            and (profile_id is None or e.profile_id is None or e.profile_id == profile_id)
+        ]
+        if not matches:
+            return None
+        return matches[-1]

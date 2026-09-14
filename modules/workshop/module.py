@@ -147,6 +147,28 @@ def format_product_row(product: Product) -> str:
     return f"{product.name}  —  {product.quantity_in_stock:g} in stock  —  ${product.base_price:.2f} base{listing_note}"
 
 
+def format_product_detail_line(
+    added_by_name: Optional[str], times_sold: int, last_sold_by_name: Optional[str], last_sold_date: Optional[str]
+) -> str:
+    """Pure formatting logic — testable without Qt. Same shape as
+    format_material_detail_line() above — Products is the fifth real
+    application of this "shared object + user relationship" surfacing.
+    "Sold" not "used": a product's real usage event is production
+    (Jobs) crediting stock and a sale (Ledger) debiting it, not a
+    manual per-item tally, same reasoning Materials' own detail line
+    already established for its two real event sources."""
+    added_part = f"Added by {added_by_name}" if added_by_name else "Added by: unknown"
+    if times_sold:
+        sold_part = f"Sold {times_sold}x"
+        if last_sold_by_name and last_sold_date:
+            sold_part += f" (last: {last_sold_by_name} on {last_sold_date})"
+        elif last_sold_date:
+            sold_part += f" (last: {last_sold_date})"
+    else:
+        sold_part = "Never sold yet"
+    return f"{added_part}  ·  {sold_part}"
+
+
 def format_revenue_row(entry: RevenueEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description = f"  —  {entry.description}" if entry.description else ""
@@ -177,6 +199,7 @@ class WorkshopModule(ModuleBase):
         self._job_filter_edit: Optional[QLineEdit] = None
         self._product_list: Optional[QListWidget] = None
         self._product_filter_edit: Optional[QLineEdit] = None
+        self._product_detail_label: Optional[QLabel] = None
         self._revenue_list: Optional[QListWidget] = None
         self._expense_list: Optional[QListWidget] = None
         self._net_profit_label: Optional[QLabel] = None
@@ -638,7 +661,17 @@ class WorkshopModule(ModuleBase):
         layout.addWidget(self._product_filter_edit)
 
         self._product_list = QListWidget()
+        self._product_list.currentItemChanged.connect(lambda *_: self._update_product_detail_label())
         layout.addWidget(self._product_list, stretch=1)
+
+        # Multi-user pass (2026-09-14) — same "shared object + user
+        # relationship" surfacing as the Components/Materials tabs' own
+        # detail labels; no quick-adjust buttons here either, see
+        # format_product_detail_line()'s own docstring for why.
+        self._product_detail_label = QLabel("")
+        self._product_detail_label.setObjectName("SubtitleLabel")
+        self._product_detail_label.setWordWrap(True)
+        layout.addWidget(self._product_detail_label)
 
         button_row = QHBoxLayout()
         add_button = QPushButton("Add Product")
@@ -669,7 +702,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_products_list()
         return tab
 
-    def _refresh_products_list(self) -> None:
+    def _refresh_products_list(self, select_product_id: Optional[str] = None) -> None:
         query = self._product_filter_edit.text().strip()
         products = self.context.products.search(query) if query else self.context.products.all_products()
 
@@ -678,21 +711,45 @@ class WorkshopModule(ModuleBase):
             item = QListWidgetItem(format_product_row(product))
             item.setData(Qt.ItemDataRole.UserRole, product.product_id)
             self._product_list.addItem(item)
+            if product.product_id == select_product_id:
+                self._product_list.setCurrentItem(item)
+        self._update_product_detail_label()
 
     def _selected_product_id(self) -> Optional[str]:
         item = self._product_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
+    def _update_product_detail_label(self) -> None:
+        product_id = self._selected_product_id()
+        if product_id is None:
+            self._product_detail_label.setText("")
+            return
+
+        product = self.context.products.get_product(product_id)
+        if product is None:
+            self._product_detail_label.setText("")
+            return
+
+        added_by_name = self._profile_name(product.added_by_profile_id)
+        times_sold = self.context.products.times_sold(product_id)
+        last_sold_entry = self.context.products.last_sold(product_id)
+        last_sold_by_name = self._profile_name(last_sold_entry.profile_id) if last_sold_entry else None
+        last_sold_date = last_sold_entry.timestamp[:10] if last_sold_entry else None
+
+        self._product_detail_label.setText(
+            format_product_detail_line(added_by_name, times_sold, last_sold_by_name, last_sold_date)
+        )
+
     def _on_add_product(self) -> None:
         dialog = AddEditProductDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self.context.products.add_product(
+        added = self.context.products.add_product(
             name=dialog.entered_name, description=dialog.entered_description,
             quantity_in_stock=dialog.entered_quantity_in_stock, base_price=dialog.entered_base_price,
             notes=dialog.entered_notes,
         )
-        self._refresh_products_list()
+        self._refresh_products_list(select_product_id=added.product_id)
 
     def _on_edit_product(self) -> None:
         product_id = self._selected_product_id()
@@ -708,7 +765,7 @@ class WorkshopModule(ModuleBase):
             quantity_in_stock=dialog.entered_quantity_in_stock, base_price=dialog.entered_base_price,
             notes=dialog.entered_notes,
         )
-        self._refresh_products_list()
+        self._refresh_products_list(select_product_id=product_id)
 
     def _on_delete_product(self) -> None:
         product_id = self._selected_product_id()

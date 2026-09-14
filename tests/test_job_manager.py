@@ -38,6 +38,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(material_manager_module, "_USAGE_LOG_FILE", data_dir / "material_usage_log.json")
     monkeypatch.setattr(product_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(product_manager_module, "_PRODUCTS_FILE", data_dir / "products.json")
+    monkeypatch.setattr(product_manager_module, "_USAGE_LOG_FILE", data_dir / "product_usage_log.json")
     monkeypatch.setattr(profile_manager_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
 
 
@@ -312,6 +313,25 @@ def test_produce_product_records_entry_and_credits_stock(isolated_paths):
     assert job.products_produced[0].product_id == product.product_id
     assert job.products_produced[0].quantity_produced == 20
     assert context.products.get_product(product.product_id).quantity_in_stock == 25
+
+
+def test_produce_product_logs_real_attributed_usage(isolated_paths):
+    """Multi-user pass (2026-09-14) — unlike consume_material(),
+    produce_product() needed NO rewiring at all: it already called
+    ProductManager.adjust_stock(), which now logs attributed usage
+    internally. This proves that's genuinely true, not assumed."""
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    active_profile = context.profiles.create_profile(name="Alex")
+    product = context.products.add_product(name="Coasters", quantity_in_stock=5)
+    job = context.jobs.add_job(name="Batch run")
+
+    context.jobs.produce_product(job.job_id, product.product_id, 20)
+
+    usage = context.products.usage_log_for_product(product.product_id)
+    assert len(usage) == 1
+    assert usage[0].delta == 20
+    assert usage[0].profile_id == active_profile.profile_id
 
 
 def test_produce_product_unknown_job_raises(isolated_paths):

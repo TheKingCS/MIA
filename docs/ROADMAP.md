@@ -11486,3 +11486,52 @@ Four domains now prove the "shared object + user relationship" pattern
 (Recipes → Inventory → Component DB → Materials), across both discrete
 and continuous quantities and both manual and cross-manager-triggered
 usage events.
+
+## Multi-user shared-object pattern, fifth application: Products (2026-09-14)
+
+User said to continue rather than stop at four. Genuinely the easiest
+of the five: `core.product_manager.ProductManager.adjust_stock()`
+already existed, and both real event sources —
+`core.job_manager.JobManager.produce_product()` (a production credit)
+and `core.ledger_manager.LedgerManager.record_sale()` (a sale debit) —
+already called it rather than mutating `quantity_in_stock` directly.
+Adding the usage-log layer *inside* `adjust_stock()` itself covered
+both automatically, with zero rewiring needed at either call site —
+unlike Materials, which needed `consume_material()` rewired by hand.
+
+`Product` gains `added_by_profile_id`; new `ProductUsageEntry` (same
+shape as `MaterialUsageEntry`, a real `float` delta). One real, deliberate
+naming departure from the other four applications: query methods are
+`times_sold()`/`last_sold()`, not `times_used()`/`last_used()` — "used"
+doesn't fit a finished-goods product the way it does a consumable, and
+the real business question here is who sold it, not who used it.
+Negative delta = a real stock reduction (a sale, or a manual
+correction); positive = production, correctly excluded from "sold."
+
+**Verified the "zero rewiring" claim rather than assuming it worked**:
+added one new proof test at each of the two existing real call sites
+(`test_job_manager.py`'s `produce_product()`, `test_ledger_manager.py`'s
+`record_sale()`) confirming each already produces a correctly-
+attributed `ProductUsageEntry` with no changes to either method's own
+code. Same deliberate UI scope call as Materials: no +1/−1 buttons on
+the Products tab — production and sales are the real events, already
+wired through Jobs/Ledger — just the same "Added by X · Sold Nx (last:
+Y on DATE)" detail line.
+
+**Verification**: `pytest -q` — full suite, 3227 passed (21 new tests:
+20 in `test_product_manager.py` mirroring the established coverage
+shape, plus the two zero-rewiring proof tests in
+`test_job_manager.py`/`test_ledger_manager.py`; 3 new formatter tests
+in `test_workshop_module.py`). Manually verified end-to-end with a
+real two-source, two-profile scenario against the actual Workshop
+module widget (Zac produces 20 more via a real Job, Faith sells 3 via
+a real Ledger entry) — screenshot confirmed the correct final quantity
+(22) and the correct "Sold 1x (last: Faith...)" attribution, correctly
+excluding the production credit, on the first run. Confirmed real
+`config/config.json` untouched.
+
+Five domains now prove the "shared object + user relationship" pattern
+(Recipes → Inventory → Component DB → Materials → Products) — spanning
+discrete and continuous quantities, manual and cross-manager-triggered
+usage, and (for Products) two independent real event sources sharing
+one attribution point with no duplication.
