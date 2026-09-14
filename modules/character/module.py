@@ -199,7 +199,7 @@ class CharacterModule(ModuleBase):
         self.context.rewards.scan_for_new_hidden_achievements(active.profile_id)
 
         self._build_portrait_section()
-        self._build_stats_section()
+        self._build_stats_section(active.profile_id)
         self._build_collection_section(active.profile_id)
         self._build_rarity_tally_section(active.profile_id)
         self._build_prestige_section(active.profile_id)
@@ -215,7 +215,7 @@ class CharacterModule(ModuleBase):
         portrait_layout.addWidget(caption)
         self._body_layout.addWidget(portrait)
 
-    def _build_stats_section(self) -> None:
+    def _build_stats_section(self, profile_id: str) -> None:
         card = QFrame()
         card.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(card)
@@ -225,7 +225,7 @@ class CharacterModule(ModuleBase):
         title.setObjectName("NatureSectionTitle")
         layout.addWidget(title)
 
-        stat_values = self.context.rewards.all_stat_values()
+        stat_values = self.context.rewards.all_stat_values(profile_id)
         for definition in STAT_DEFINITIONS:
             line = QLabel(format_stat_line(
                 definition.icon, definition.name, stat_values.get(definition.stat_id, 0.0), definition.unit,

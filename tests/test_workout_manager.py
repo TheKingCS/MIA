@@ -222,6 +222,39 @@ def test_add_session_grants_xp_with_no_active_profile_does_not_raise(isolated_pa
     manager.add_session()  # must not raise
 
 
+def test_add_session_stamps_the_active_profile_id(isolated_paths):
+    """Per-profile rewards (2026-09-14) — a session is attributed to
+    whoever's actually active when it's logged, same "credit whoever's
+    actually active" precedent grant_xp() already follows for XP."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+
+    session = manager.add_session()
+
+    assert session.profile_id == profile.profile_id
+
+
+def test_add_session_with_no_active_profile_leaves_profile_id_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)  # constructed, but no profile created/active
+
+    session = manager.add_session()
+
+    assert session.profile_id is None
+
+
+def test_add_session_with_no_profiles_manager_leaves_profile_id_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)  # context.profiles never set at all
+
+    session = manager.add_session()
+
+    assert session.profile_id is None
+
+
 def test_add_session_grants_strength_skill_xp(isolated_paths):
     """"My Hero's Path" (2026-09-11) — the first real proof one
     activity can train a Skill alongside the flat profile XP above."""

@@ -9768,3 +9768,61 @@ What's left, per [[project_mia_prestige_rarity_vision]]'s own updated
 backlog: real character art (explicitly deferred by the user) and any
 further expansion of the lifetime-stats surface as new real data
 sources actually appear — both intentionally open-ended, not gaps.
+
+## Per-profile + per-vehicle rewards, with a baseline (2026-09-14)
+
+A real bug the user caught the moment a second profile (Faith) got
+real activity logged: she instantly unlocked the entire "Road Warrior"
+mileage chain too, because the real family truck's 207,000-mile
+odometer reading was being summed for every profile — Maintenance,
+Missions, and Workout had no attribution concept at all. The fix:
+"make it per profile and per vehicle... start it from the baseline
+instead."
+
+**Three new fields, all additive and backward-compatible** (`None`
+behaves exactly like the concept never existed): `MaintenanceAsset.
+owner_profile_id` (per-vehicle — an asset belongs to one profile, or
+stays shared), `MaintenanceTask.reward_baseline_value` (the real
+starting point for reward purposes — a vehicle with real prior history
+starts counting from there, not its full lifetime total), and
+`Mission.profile_id` / `WorkoutSession.profile_id` (per-profile —
+`WorkoutSession` auto-stamped with whoever's active at `add_session()`
+time; `Mission` auto-stamped the first time it genuinely completes, if
+not already set, so "she will obviously have profile specific
+missions... maybe not have some of the same ones I have" needs zero
+new assignment UI — completing something as her makes it hers).
+
+**`core/rewards_manager.py`**: every `_compute_*` stat now takes a
+required `profile_id` and filters via new `is_attributed_to()` (None
+owner = shared, counts for everyone; explicit owner = only that
+profile) and `reading_since_baseline()` (subtracts a task's baseline
+before it ever reaches a stat or threshold check). `meals_cooked`/
+`projects_completed` stay deliberately unfiltered/shared —
+`MealLogEntry`/`Project` have no owner concept, and weren't part of
+this ask. `stat_value()`/`all_stat_values()`'s signature change
+propagated to both real call sites (Skills' REWARDS card, Character's
+LIFETIME STATS) and every test.
+
+**Real data correction, not just new code**: assigned the real
+Ridgeline to Zac, set its real Odometer task's baseline to 207,000,
+backfilled `profile_id` onto the 3 real Missions Faith completed
+earlier today, and removed the 5 `road_warrior_*` tiers she'd been
+incorrectly credited for before this fix existed — a real misattribution
+bug being corrected, not a legitimate achievement being revoked (Zac
+keeps his own 5 real Road Warrior tiers; he genuinely drove those
+miles before baseline tracking began).
+
+**Verification**: `pytest -q` — full suite, 2841 passed (24 new tests
+across `test_rewards_manager.py` (`is_attributed_to`/
+`reading_since_baseline` pure logic, per-owner/per-baseline/per-profile
+manager-level coverage for all 4 newly-filtered stats),
+`test_mission_manager.py` (auto-attribution, explicit pre-assignment,
+no-reassignment-on-recompletion), `test_workout_manager.py`
+(auto-stamp + no-profile safety), `test_maintenance_manager.py`
+(owner/baseline round-trips)). Manual headless-Qt check against the
+REAL app data: Faith's Character page now reads "Vehicle Miles Logged
+— 0 mi" with no Road Warrior entries in her COLLECTION; Zac's still
+shows all 5 real Road Warrior tiers (historical achievement preserved)
+while his own going-forward Vehicle Miles Logged also correctly reads
+0 (baseline consumed the full 207,000) — screenshotted both,
+confirmed correct.

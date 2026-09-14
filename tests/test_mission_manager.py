@@ -489,6 +489,54 @@ def test_completing_a_mission_with_no_active_profile_does_not_crash(isolated_pat
     context.missions.update_mission(mission.mission_id, status="completed")  # should not raise
 
 
+def test_completing_a_mission_auto_attributes_profile_id(isolated_paths):
+    """Per-profile rewards (2026-09-14) — a Mission with no explicit
+    owner becomes whoever's real accomplishment completed it."""
+    context = _make_context_with_profiles()
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="Master Angler")
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.missions.get_mission(mission.mission_id).profile_id == profile.profile_id
+
+
+def test_completing_a_mission_with_no_active_profile_leaves_profile_id_none(isolated_paths):
+    context = _make_context_with_profiles()
+    mission = context.missions.add_mission(name="Master Angler")
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.missions.get_mission(mission.mission_id).profile_id is None
+
+
+def test_mission_created_with_explicit_profile_id_keeps_it_through_completion(isolated_paths):
+    """Forward-planning ("assign this Mission to Faith") — explicit
+    assignment at creation is never overwritten by auto-attribution."""
+    context = _make_context_with_profiles()
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    mission = context.missions.add_mission(name="Faith's mission", profile_id=faith.profile_id)
+
+    context.missions.update_mission(mission.mission_id, status="completed")  # completed while Zac is active
+
+    assert context.missions.get_mission(mission.mission_id).profile_id == faith.profile_id
+
+
+def test_recompleting_a_mission_does_not_reassign_profile_id(isolated_paths):
+    context = _make_context_with_profiles()
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    mission = context.missions.add_mission(name="Master Angler")
+    context.missions.update_mission(mission.mission_id, status="completed")  # attributed to Zac
+
+    context.profiles.set_active_profile(faith.profile_id)
+    context.missions.update_mission(mission.mission_id, status="active")
+    context.missions.update_mission(mission.mission_id, status="completed")  # re-completed as Faith
+
+    assert context.missions.get_mission(mission.mission_id).profile_id == zac.profile_id
+
+
 def test_recompleting_a_mission_does_not_double_credit(isolated_paths):
     context = _make_context_with_profiles()
     context.profiles.create_profile(name="Alex", make_active=True)

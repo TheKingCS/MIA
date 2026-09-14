@@ -124,6 +124,40 @@ construction and rescans the active profile immediately on either —
 real activity now unlocks within the same moment it's logged, not up
 to a day later (the daily-occasion timer and Skills' own page refresh
 both stay in place too, unchanged, as the existing fallback paths).
+
+**Per-profile + per-vehicle attribution, with a baseline (2026-09-14,
+sixth pass)** — a real bug the user caught in practice: adding a
+second real profile (Faith) and logging her own real accomplishments
+showed her instantly unlocking the entire "Road Warrior" mileage chain
+too, because the real family truck's 207,000-mile odometer reading was
+being summed for EVERY profile, not just whoever actually drives it.
+Every `_compute_*` stat here now takes a required `profile_id` and
+filters by real ownership via `is_attributed_to()`: `MaintenanceAsset.
+owner_profile_id`, `WorkoutSession.profile_id` (auto-stamped with
+whoever's active at `add_session()` time), and `Mission.profile_id`
+(auto-stamped the first time a Mission genuinely completes, if not
+already set — see `core.mission_manager.Mission.profile_id`'s own
+docstring) all default to `None`, meaning "shared/unattributed,"
+which — unchanged from before this pass — counts toward EVERY
+profile's stats; an explicit owner counts ONLY for that profile. This
+is purely additive: nothing that existed before this pass regresses,
+since `None` behaves exactly like "no attribution concept" did.
+`core.kitchen_manager.MealLogEntry` and `core.project_manager.Project`
+stay deliberately unfiltered/shared — the user didn't ask for those,
+and neither has any owner concept to filter by yet.
+
+A second, independent concern the user also raised: a vehicle (or any
+meter-tracked asset) with real PRE-EXISTING history shouldn't have
+that whole history count as "achievement" the moment tracking begins
+— "the zero from the truck would be like 207,000." Each meter task now
+carries its own `reward_baseline_value` (`core.maintenance_manager.
+MaintenanceTask`), subtracted from every reading via
+`reading_since_baseline()` before it ever reaches a stat or a
+threshold check. `None` (the default) behaves exactly like no baseline
+existed before this pass — a brand-new task still starts truly at
+zero. Ownership and baseline are two independent, separately-settable
+concerns (who it belongs to; where reward tracking starts counting
+from), not one combined mechanism.
 """
 
 from __future__ import annotations
@@ -353,6 +387,29 @@ def next_locked_tier(tiers: tuple[ChallengeTier, ...], unlocked_ids: set[str]) -
     return None
 
 
+def is_attributed_to(owner_id: Optional[str], profile_id: str) -> bool:
+    """True if something owned by `owner_id` counts toward `profile_id`'s
+    own stats. None (shared/unattributed — the default for every asset,
+    Mission, or WorkoutSession that existed before per-profile
+    attribution, 2026-09-14) counts toward EVERY profile, unchanged
+    behavior from before this concept existed; an explicit owner counts
+    ONLY for that exact profile — the real fix for "she got credit for
+    my truck's mileage" (see the [[project_mia_overview]] memory).
+    Pure logic, testable without a real manager."""
+    return owner_id is None or owner_id == profile_id
+
+
+def reading_since_baseline(value: float, baseline: Optional[float]) -> float:
+    """The real amount accrued since reward tracking began on a meter
+    task — `value` minus `baseline` (None baseline — the default —
+    means 0, so a task with no baseline set still reads its raw value,
+    unchanged from before this concept existed). Never negative, so a
+    baseline set exactly at (or above, from later data correction) the
+    latest reading reads 0 rather than a nonsensical negative "reward."
+    Pure logic, testable without a real manager."""
+    return max(value - (baseline or 0.0), 0.0)
+
+
 def combined_stat_value(stat_values: dict[str, float], stat_ids: tuple[str, ...]) -> float:
     """Sums the named stats out of a stat_values dict (e.g.
     RewardsManager.all_stat_values()) — pure logic, testable without a
@@ -421,78 +478,105 @@ class RewardsManager:
     # Stat values — each one derived live from real data elsewhere.
     # ------------------------------------------------------------------
 
-    def stat_value(self, stat_id: str) -> float:
+    def stat_value(self, stat_id: str, profile_id: str) -> float:
         if stat_id == "engine_hours_logged":
-            return self._compute_engine_hours_logged()
+            return self._compute_engine_hours_logged(profile_id)
         if stat_id == "workout_hours_logged":
-            return self._compute_workout_hours_logged()
+            return self._compute_workout_hours_logged(profile_id)
         if stat_id == "missions_completed":
-            return self._compute_missions_completed()
+            return self._compute_missions_completed(profile_id)
         if stat_id == "vehicle_miles_logged":
-            return self._compute_vehicle_miles_logged()
+            return self._compute_vehicle_miles_logged(profile_id)
         if stat_id == "meals_cooked":
             return self._compute_meals_cooked()
         if stat_id == "projects_completed":
             return self._compute_projects_completed()
         return 0.0
 
-    def all_stat_values(self) -> dict[str, float]:
-        return {definition.stat_id: self.stat_value(definition.stat_id) for definition in STAT_DEFINITIONS}
+    def all_stat_values(self, profile_id: str) -> dict[str, float]:
+        return {definition.stat_id: self.stat_value(definition.stat_id, profile_id) for definition in STAT_DEFINITIONS}
 
-    def _compute_engine_hours_logged(self) -> float:
+    def _compute_engine_hours_logged(self, profile_id: str) -> float:
         """Sums the latest "Engine Hours" reading across every real
-        Maintenance asset that tracks one — not hardcoded to a single
-        mower, so a future second piece of equipment with its own
-        Engine Hours task counts too."""
+        Maintenance asset OWNED BY this profile (or shared/unowned —
+        see is_attributed_to()) that tracks one — not hardcoded to a
+        single mower, so a future second piece of equipment with its
+        own Engine Hours task counts too. Each reading is counted since
+        its task's own reward_baseline_value (0 if unset) — see
+        reading_since_baseline()."""
         if self.context.maintenance is None:
             return 0.0
         total = 0.0
         for asset in self.context.maintenance.all_assets():
+            if not is_attributed_to(asset.owner_profile_id, profile_id):
+                continue
             for task in self.context.maintenance.tasks_for_asset(asset.asset_id):
                 if task.title != "Engine Hours":
                     continue
                 readings = self.context.maintenance.readings_for_task(task.task_id)
                 if readings:
-                    total += readings[-1].value
+                    total += reading_since_baseline(readings[-1].value, task.reward_baseline_value)
         return total
 
-    def _compute_workout_hours_logged(self) -> float:
+    def _compute_workout_hours_logged(self, profile_id: str) -> float:
         if self.context.workout is None:
             return 0.0
-        return sum(session.duration_minutes for session in self.context.workout.all_sessions()) / 60.0
+        return sum(
+            session.duration_minutes for session in self.context.workout.all_sessions()
+            if is_attributed_to(session.profile_id, profile_id)
+        ) / 60.0
 
-    def _compute_missions_completed(self) -> float:
+    def _compute_missions_completed(self, profile_id: str) -> float:
         if self.context.missions is None:
             return 0.0
-        return float(sum(1 for mission in self.context.missions.all_missions() if mission.status == "completed"))
+        return float(sum(
+            1 for mission in self.context.missions.all_missions()
+            if mission.status == "completed" and is_attributed_to(mission.profile_id, profile_id)
+        ))
 
-    def _compute_vehicle_miles_logged(self) -> float:
+    def _compute_vehicle_miles_logged(self, profile_id: str) -> float:
         """Sums the latest "Odometer" reading across every real
-        Maintenance asset that tracks one — same "match by task title,
-        not by asset category" pattern as _compute_engine_hours_logged(),
-        so a future second vehicle's own Odometer task counts too.
-        Deliberately NOT summing every mileage-unit task (Oil & filter
-        change, Brake inspection, ... also log in miles) — those track
-        miles-since-last-service, not the vehicle's real lifetime
-        total, which only the Odometer task itself represents."""
+        Maintenance asset OWNED BY this profile (or shared/unowned —
+        see is_attributed_to()) that tracks one — same "match by task
+        title, not by asset category" pattern as
+        _compute_engine_hours_logged(), so a future second vehicle's
+        own Odometer task counts too. Deliberately NOT summing every
+        mileage-unit task (Oil & filter change, Brake inspection, ...
+        also log in miles) — those track miles-since-last-service, not
+        the vehicle's real lifetime total, which only the Odometer task
+        itself represents. Each reading is counted since its task's own
+        reward_baseline_value (0 if unset) — see
+        reading_since_baseline(); a vehicle with real prior mileage
+        (e.g. 207,000 real miles already on the odometer) starts its
+        reward tracking from that baseline, not from its full lifetime
+        total."""
         if self.context.maintenance is None:
             return 0.0
         total = 0.0
         for asset in self.context.maintenance.all_assets():
+            if not is_attributed_to(asset.owner_profile_id, profile_id):
+                continue
             for task in self.context.maintenance.tasks_for_asset(asset.asset_id):
                 if task.title != "Odometer":
                     continue
                 readings = self.context.maintenance.readings_for_task(task.task_id)
                 if readings:
-                    total += readings[-1].value
+                    total += reading_since_baseline(readings[-1].value, task.reward_baseline_value)
         return total
 
     def _compute_meals_cooked(self) -> float:
+        """Deliberately still shared/global, not profile-filtered —
+        core.kitchen_manager.MealLogEntry has no owner concept at all
+        (2026-09-14 per-profile pass only touched Missions/WorkoutSession/
+        MaintenanceAsset, the ones the user actually asked for)."""
         if self.context.kitchen is None:
             return 0.0
         return float(len(self.context.kitchen.all_meal_log_entries()))
 
     def _compute_projects_completed(self) -> float:
+        """Deliberately still shared/global — see
+        _compute_meals_cooked()'s own docstring; core.project_manager.
+        Project has no owner concept either."""
         if self.context.projects is None:
             return 0.0
         return float(sum(1 for project in self.context.projects.all_projects() if project.status == "Complete"))
@@ -541,7 +625,7 @@ class RewardsManager:
             return []
 
         newly_unlocked: list[ChallengeTier] = []
-        stat_values = self.all_stat_values()
+        stat_values = self.all_stat_values(profile_id)
         for tier in all_tiers():
             if self.is_unlocked(profile_id, tier.reward_id):
                 continue
@@ -590,7 +674,7 @@ class RewardsManager:
             return []
 
         newly_unlocked: list[HiddenAchievement] = []
-        stat_values = self.all_stat_values()
+        stat_values = self.all_stat_values(profile_id)
         for achievement in HIDDEN_ACHIEVEMENTS:
             if self.is_unlocked(profile_id, achievement.achievement_id):
                 continue

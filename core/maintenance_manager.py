@@ -122,6 +122,14 @@ class MaintenanceAsset:
     manufacturer: str = ""
     model: str = ""
     documents: list[str] = field(default_factory=list)  # bare filenames under maintenance_documents/<asset_id>/
+    # Per-profile/per-vehicle rewards (2026-09-14) — None (the default,
+    # every pre-existing asset included) means "shared/household," and
+    # core.rewards_manager's stat computation counts it toward EVERY
+    # profile, same as before this field existed. Set it to make an
+    # asset belong to one specific profile (a vehicle, most concretely
+    # — "she may not have the same [vehicle miles] I have"), and its
+    # readings count ONLY toward that profile's own stats from then on.
+    owner_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -135,6 +143,7 @@ class MaintenanceAsset:
             "manufacturer": self.manufacturer,
             "model": self.model,
             "documents": list(self.documents),
+            "owner_profile_id": self.owner_profile_id,
         }
 
     @staticmethod
@@ -150,6 +159,7 @@ class MaintenanceAsset:
             manufacturer=data.get("manufacturer", ""),
             model=data.get("model", ""),
             documents=list(data.get("documents", [])),
+            owner_profile_id=data.get("owner_profile_id"),
         )
 
 
@@ -180,6 +190,17 @@ class MaintenanceTask:
     # "Smart calendar" pass (2026-09-12) — user-set importance,
     # independent of due-date urgency (see PRIORITY_LEVELS above).
     priority: str = "normal"
+    # Per-profile/per-vehicle rewards (2026-09-14) — the real starting
+    # point for reward-stat purposes, distinct from meter tracking's
+    # own last_completed_meter_value (which is about scheduling, not
+    # rewards). None (the default) means "count the raw reading," the
+    # same behavior as before this field existed — a brand-new task
+    # genuinely starts at zero. Set it once, to the reading at the
+    # moment reward tracking begins on an asset with real prior history
+    # (e.g. a truck already showing 207,000 real miles), and
+    # core.rewards_manager subtracts it from every future reading, so
+    # existing mileage/hours never counts as new "achievement."
+    reward_baseline_value: Optional[float] = None
 
     def to_dict(self) -> dict:
         return {
@@ -199,6 +220,7 @@ class MaintenanceTask:
             "threshold_direction": self.threshold_direction,
             "auto_schedule": self.auto_schedule,
             "priority": self.priority,
+            "reward_baseline_value": self.reward_baseline_value,
         }
 
     @staticmethod
@@ -220,6 +242,7 @@ class MaintenanceTask:
             threshold_direction=data.get("threshold_direction", "below"),
             auto_schedule=data.get("auto_schedule", False),
             priority=data.get("priority", "normal"),
+            reward_baseline_value=data.get("reward_baseline_value"),
         )
 
     @property
@@ -493,6 +516,7 @@ class MaintenanceManager:
         serial_number: str = "",
         manufacturer: str = "",
         model: str = "",
+        owner_profile_id: Optional[str] = None,
     ) -> MaintenanceAsset:
         asset = MaintenanceAsset(
             asset_id=uuid.uuid4().hex[:10],
@@ -504,6 +528,7 @@ class MaintenanceManager:
             serial_number=serial_number,
             manufacturer=manufacturer,
             model=model,
+            owner_profile_id=owner_profile_id,
         )
         self._assets.append(asset)
         self._save()
@@ -606,6 +631,7 @@ class MaintenanceManager:
         threshold_direction: str = "below",
         auto_schedule: bool = False,
         priority: str = "normal",
+        reward_baseline_value: Optional[float] = None,
     ) -> MaintenanceTask:
         task = MaintenanceTask(
             task_id=uuid.uuid4().hex[:10],
@@ -622,6 +648,7 @@ class MaintenanceManager:
             threshold_direction=threshold_direction,
             auto_schedule=auto_schedule,
             priority=priority,
+            reward_baseline_value=reward_baseline_value,
         )
         self._tasks.append(task)
         self._save()

@@ -509,6 +509,32 @@ def test_add_asset_defaults_and_persists(isolated_paths):
     assert found.category == "Power Equipment"
 
 
+def test_add_asset_owner_profile_id_defaults_to_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Lawn Mower")
+    assert asset.owner_profile_id is None
+
+
+def test_add_asset_owner_profile_id_persists_across_a_fresh_load(isolated_paths):
+    """Per-profile/per-vehicle rewards (2026-09-14)."""
+    context = _make_context()
+    manager = _make_manager(context)
+    manager.add_asset(name="Ridgeline", category="Vehicle", owner_profile_id="zac-id")
+
+    reloaded = MaintenanceManager(context)
+    found = reloaded.all_assets()[0]
+    assert found.owner_profile_id == "zac-id"
+
+
+def test_update_asset_can_reassign_owner_profile_id(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Ridgeline")
+    manager.update_asset(asset.asset_id, owner_profile_id="zac-id")
+    assert manager.get_asset(asset.asset_id).owner_profile_id == "zac-id"
+
+
 def test_update_asset_changes_fields(isolated_paths):
     context = _make_context()
     manager = _make_manager(context)
@@ -636,6 +662,39 @@ def test_add_task_defaults_and_persists(isolated_paths):
     assert task.title == "Oil change"
     assert task.interval_days == 90
     assert task.trigger_type == "calendar"
+
+
+def test_add_task_reward_baseline_value_defaults_to_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    assert task.reward_baseline_value is None
+
+
+def test_add_task_reward_baseline_value_persists_across_a_fresh_load(isolated_paths):
+    """Per-profile/per-vehicle rewards (2026-09-14) — a vehicle with
+    real prior history starts reward tracking from this baseline."""
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    manager.add_task(
+        asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles",
+        reward_baseline_value=207000.0,
+    )
+
+    reloaded = MaintenanceManager(context)
+    task = reloaded.all_tasks()[0]
+    assert task.reward_baseline_value == 207000.0
+
+
+def test_update_task_can_set_reward_baseline_value(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    manager.update_task(task.task_id, reward_baseline_value=207000.0)
+    assert manager.get_task(task.task_id).reward_baseline_value == 207000.0
 
 
 def test_update_task_changes_fields(isolated_paths):

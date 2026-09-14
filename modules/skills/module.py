@@ -493,7 +493,7 @@ class SkillsModule(ModuleBase):
         # also calls this so it fires even if this page is never opened.
         self.context.rewards.scan_for_new_unlocks(active.profile_id)
         self.context.rewards.scan_for_new_hidden_achievements(active.profile_id)
-        stat_values = self.context.rewards.all_stat_values()
+        stat_values = self.context.rewards.all_stat_values(active.profile_id)
         stat_by_id = {definition.stat_id: definition for definition in STAT_DEFINITIONS}
         unlocked_ids = set(self.context.rewards.unlocked_reward_ids(active.profile_id))
 

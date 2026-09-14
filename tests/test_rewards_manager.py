@@ -37,8 +37,10 @@ from core.rewards_manager import (
     combined_stat_value,
     format_multi_unlock_notification,
     highest_unlocked_tier,
+    is_attributed_to,
     next_locked_tier,
     rarity_tally_for_unlocked,
+    reading_since_baseline,
     reward_progress_fraction,
     stat_id_for_tier,
 )
@@ -119,11 +121,41 @@ def test_reward_progress_fraction_zero_threshold_reads_complete():
 
 
 # ------------------------------------------------------------------
+# is_attributed_to / reading_since_baseline — pure logic
+# ------------------------------------------------------------------
+
+def test_is_attributed_to_none_owner_counts_for_any_profile():
+    assert is_attributed_to(None, "alex") is True
+    assert is_attributed_to(None, "sam") is True
+
+
+def test_is_attributed_to_matching_owner():
+    assert is_attributed_to("alex", "alex") is True
+
+
+def test_is_attributed_to_non_matching_owner():
+    assert is_attributed_to("alex", "sam") is False
+
+
+def test_reading_since_baseline_no_baseline_reads_raw_value():
+    assert reading_since_baseline(207000.0, None) == 207000.0
+
+
+def test_reading_since_baseline_subtracts_real_baseline():
+    assert reading_since_baseline(207500.0, 207000.0) == 500.0
+
+
+def test_reading_since_baseline_never_negative():
+    assert reading_since_baseline(100.0, 500.0) == 0.0
+
+
+# ------------------------------------------------------------------
 # Stat values — derived from real data
 # ------------------------------------------------------------------
 
 def test_engine_hours_logged_sums_across_assets(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     mower = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=mower.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
     context.maintenance.log_reading(task.task_id, 4.5)
@@ -133,45 +165,50 @@ def test_engine_hours_logged_sums_across_assets(isolated_paths):
     other_task = context.maintenance.add_task(asset_id=other.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
     context.maintenance.log_reading(other_task.task_id, 2.0)
 
-    assert context.rewards.stat_value("engine_hours_logged") == 9.0
+    assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 9.0
 
 
 def test_engine_hours_logged_ignores_unrelated_tasks(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     task = context.maintenance.add_task(asset_id=asset.asset_id, title="Oil Change", trigger_type="calendar", interval_days=30)
     context.maintenance.log_reading(task.task_id, 999.0)
 
-    assert context.rewards.stat_value("engine_hours_logged") == 0.0
+    assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 0.0
 
 
 def test_engine_hours_logged_zero_with_no_readings(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
     context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
 
-    assert context.rewards.stat_value("engine_hours_logged") == 0.0
+    assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 0.0
 
 
 def test_workout_hours_logged_sums_session_minutes(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     context.workout.add_session(template_id="", date_str="2026-09-01", duration_minutes=90)
     context.workout.add_session(template_id="", date_str="2026-09-02", duration_minutes=30)
 
-    assert context.rewards.stat_value("workout_hours_logged") == 2.0
+    assert context.rewards.stat_value("workout_hours_logged", profile.profile_id) == 2.0
 
 
 def test_missions_completed_counts_only_completed_status(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     m1 = context.missions.add_mission(name="Done one")
     context.missions.update_mission(m1.mission_id, status="completed")
     context.missions.add_mission(name="Still active")
 
-    assert context.rewards.stat_value("missions_completed") == 1.0
+    assert context.rewards.stat_value("missions_completed", profile.profile_id) == 1.0
 
 
 def test_vehicle_miles_logged_sums_odometer_readings_across_assets(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
     odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
     context.maintenance.log_reading(odometer.task_id, 40000.0)
@@ -181,7 +218,7 @@ def test_vehicle_miles_logged_sums_odometer_readings_across_assets(isolated_path
     other_odometer = context.maintenance.add_task(asset_id=other.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
     context.maintenance.log_reading(other_odometer.task_id, 1000.0)
 
-    assert context.rewards.stat_value("vehicle_miles_logged") == 41250.0
+    assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 41250.0
 
 
 def test_vehicle_miles_logged_ignores_other_mileage_tasks(isolated_paths):
@@ -189,34 +226,114 @@ def test_vehicle_miles_logged_ignores_other_mileage_tasks(isolated_paths):
     miles-since-last-service, not the vehicle's real lifetime total —
     only the Odometer task itself represents that."""
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
     oil_change = context.maintenance.add_task(asset_id=truck.asset_id, title="Oil & filter change", trigger_type="mileage", meter_unit="miles")
     context.maintenance.log_reading(oil_change.task_id, 3000.0)
 
-    assert context.rewards.stat_value("vehicle_miles_logged") == 0.0
+    assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 0.0
+
+
+def test_vehicle_miles_logged_counts_only_for_its_real_owner(isolated_paths):
+    """A vehicle owned by one profile doesn't count toward a different
+    profile's own stat — the real bug the user caught (Faith getting
+    credit for Zac's truck mileage)."""
+    context = _make_context()
+    zac = context.profiles.create_profile(name="Zac")
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle", owner_profile_id=zac.profile_id)
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(odometer.task_id, 5000.0)
+
+    assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 5000.0
+    assert context.rewards.stat_value("vehicle_miles_logged", faith.profile_id) == 0.0
+
+
+def test_vehicle_miles_logged_shared_unowned_asset_counts_for_everyone(isolated_paths):
+    """An asset with no owner (the default — every pre-existing asset
+    included) stays shared, unchanged from before ownership existed."""
+    context = _make_context()
+    zac = context.profiles.create_profile(name="Zac")
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    truck = context.maintenance.add_asset(name="Family Van", category="Vehicle")  # no owner
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(odometer.task_id, 3000.0)
+
+    assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 3000.0
+    assert context.rewards.stat_value("vehicle_miles_logged", faith.profile_id) == 3000.0
+
+
+def test_vehicle_miles_logged_subtracts_real_baseline(isolated_paths):
+    """A vehicle with real prior history (a real 207,000-mile odometer
+    reading) starts reward tracking from that baseline, not its full
+    lifetime total — the user's own "the zero from the truck would be
+    like 207,000" ask."""
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Zac")
+    truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
+    odometer = context.maintenance.add_task(
+        asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles",
+        reward_baseline_value=207000.0,
+    )
+    context.maintenance.log_reading(odometer.task_id, 207000.0)
+    assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 0.0
+
+    context.maintenance.log_reading(odometer.task_id, 207500.0)
+    assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 500.0
+
+
+def test_workout_hours_logged_counts_only_for_the_active_profile_at_logging_time(isolated_paths):
+    context = _make_context()
+    zac = context.profiles.create_profile(name="Zac")
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    context.workout.add_session(template_id="", date_str="2026-09-01", duration_minutes=60)  # logged as Zac (active)
+
+    context.profiles.set_active_profile(faith.profile_id)
+    context.workout.add_session(template_id="", date_str="2026-09-02", duration_minutes=30)  # logged as Faith
+
+    assert context.rewards.stat_value("workout_hours_logged", zac.profile_id) == 1.0
+    assert context.rewards.stat_value("workout_hours_logged", faith.profile_id) == 0.5
+
+
+def test_missions_completed_counts_only_for_whoever_completed_it(isolated_paths):
+    context = _make_context()
+    zac = context.profiles.create_profile(name="Zac")
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    m1 = context.missions.add_mission(name="Zac's mission")
+    context.missions.update_mission(m1.mission_id, status="completed")  # completed as Zac (active)
+
+    context.profiles.set_active_profile(faith.profile_id)
+    m2 = context.missions.add_mission(name="Faith's mission")
+    context.missions.update_mission(m2.mission_id, status="completed")  # completed as Faith
+
+    assert context.rewards.stat_value("missions_completed", zac.profile_id) == 1.0
+    assert context.rewards.stat_value("missions_completed", faith.profile_id) == 1.0
 
 
 def test_meals_cooked_counts_real_meal_log_entries(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     recipe = context.kitchen.add_recipe(name="Tacos")
     context.kitchen.log_meal(recipe.recipe_id, date_str="2026-09-01")
     context.kitchen.log_meal(recipe.recipe_id, date_str="2026-09-02")
 
-    assert context.rewards.stat_value("meals_cooked") == 2.0
+    assert context.rewards.stat_value("meals_cooked", profile.profile_id) == 2.0
 
 
 def test_projects_completed_counts_only_complete_status(isolated_paths):
     context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
     done = context.projects.add_project(name="Deck rebuild")
     context.projects.update_project(done.project_id, status="Complete")
     context.projects.add_project(name="Still planning")
 
-    assert context.rewards.stat_value("projects_completed") == 1.0
+    assert context.rewards.stat_value("projects_completed", profile.profile_id) == 1.0
 
 
 def test_all_stat_values_covers_every_definition(isolated_paths):
     context = _make_context()
-    values = context.rewards.all_stat_values()
+    profile = context.profiles.create_profile(name="Alex")
+    values = context.rewards.all_stat_values(profile.profile_id)
     assert set(values.keys()) == {
         "engine_hours_logged", "workout_hours_logged", "missions_completed",
         "vehicle_miles_logged", "meals_cooked", "projects_completed",

@@ -269,6 +269,19 @@ class Mission:
     # whichever real per-area module (Garage/Real Estate/Greenhouse)
     # owns that asset's category.
     maintenance_asset_id: Optional[str] = None
+    # Per-profile rewards (2026-09-14) — the user's own ask ("she will
+    # obviously have profile specific missions and maybe not have some
+    # of the same ones I have too"). None (the default, every existing
+    # Mission included) means "shared/unattributed" — counts toward
+    # EVERY profile's missions_completed, same as before this field
+    # existed. Settable at creation for real forward-planning
+    # ("assign this Mission to Faith"); otherwise auto-stamped with
+    # whoever's active the moment it's genuinely completed (see
+    # update_mission() below) — same "credit whoever's actually active"
+    # precedent core.gamification.grant_xp() already follows for XP,
+    # so a Mission naturally becomes whoever's real accomplishment
+    # completed it, with zero new assignment UI required.
+    profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -298,6 +311,7 @@ class Mission:
             "recurring_kind": self.recurring_kind,
             "occurrence_key": self.occurrence_key,
             "maintenance_asset_id": self.maintenance_asset_id,
+            "profile_id": self.profile_id,
         }
 
     @staticmethod
@@ -331,6 +345,7 @@ class Mission:
             recurring_kind=data.get("recurring_kind"),
             occurrence_key=data.get("occurrence_key"),
             maintenance_asset_id=data.get("maintenance_asset_id"),
+            profile_id=data.get("profile_id"),
         )
 
 
@@ -390,6 +405,7 @@ class MissionManager:
         recurring_kind: Optional[str] = None,
         occurrence_key: Optional[str] = None,
         maintenance_asset_id: Optional[str] = None,
+        profile_id: Optional[str] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -415,6 +431,7 @@ class MissionManager:
             recurring_kind=recurring_kind,
             occurrence_key=occurrence_key,
             maintenance_asset_id=maintenance_asset_id,
+            profile_id=profile_id,
         )
         self._missions.append(mission)
         self._save()
@@ -441,6 +458,16 @@ class MissionManager:
         # logic lives here, in the manager, so neither call site needs
         # its own copy of "did this just newly become complete."
         if not was_completed and mission.status == "completed":
+            # Per-profile rewards (2026-09-14) — a Mission created with
+            # no explicit owner becomes whoever's real accomplishment
+            # completed it, the first time it's genuinely completed
+            # (never reassigned on a later re-completion — same "pick
+            # it once" rule trip_id/project_id already follow). See
+            # Mission.profile_id's own docstring.
+            if mission.profile_id is None and self.context.profiles is not None:
+                active_profile = self.context.profiles.get_active_profile()
+                if active_profile is not None:
+                    mission.profile_id = active_profile.profile_id
             self._notify_mission_completed(mission)
             # "Manage Skills" UI (2026-09-12) — reward-crediting
             # specifically (not the notify/recipe-unlock/event-publish

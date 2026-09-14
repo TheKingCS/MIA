@@ -110,12 +110,21 @@ class WorkoutSession:
     calories_estimate: Optional[float] = None  # None = not entered, never a fabricated zero
     notes: str = ""
     sets_logged: list = field(default_factory=list)  # [{"exercise_id","set_number","reps","weight"}]
+    # Per-profile rewards (2026-09-14) — stamped automatically with
+    # whoever was the active profile at add_session() time (see that
+    # method below), same "credit whoever's actually active" precedent
+    # core.gamification.grant_xp() already follows for XP. None only
+    # for a session logged with no active profile at all (or from
+    # before this field existed) — core.rewards_manager treats that as
+    # shared, counting toward every profile, same as before this field
+    # existed.
+    profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
             "session_id": self.session_id, "template_id": self.template_id, "date": self.date,
             "duration_minutes": self.duration_minutes, "calories_estimate": self.calories_estimate,
-            "notes": self.notes, "sets_logged": self.sets_logged,
+            "notes": self.notes, "sets_logged": self.sets_logged, "profile_id": self.profile_id,
         }
 
     @staticmethod
@@ -128,6 +137,7 @@ class WorkoutSession:
             calories_estimate=data.get("calories_estimate"),
             notes=data.get("notes", ""),
             sets_logged=data.get("sets_logged", []),
+            profile_id=data.get("profile_id"),
         )
 
 
@@ -324,6 +334,7 @@ class WorkoutManager:
         self, template_id: str = "", date_str: Optional[str] = None, duration_minutes: float = 0.0,
         calories_estimate: Optional[float] = None, notes: str = "", sets_logged: Optional[list] = None,
     ) -> WorkoutSession:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         session = WorkoutSession(
             session_id=uuid.uuid4().hex[:10],
             template_id=template_id,
@@ -332,6 +343,7 @@ class WorkoutManager:
             calories_estimate=calories_estimate,
             notes=notes,
             sets_logged=sets_logged or [],
+            profile_id=active_profile.profile_id if active_profile is not None else None,
         )
         self._sessions.append(session)
         self._save_sessions()
