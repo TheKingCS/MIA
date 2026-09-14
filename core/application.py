@@ -1176,6 +1176,21 @@ class MIAApplication:
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
+            name="list_field_captures",
+            domain="system",
+            description=(
+                "List pending field captures — voice notes recorded on a MIA Lite field device, waiting "
+                "for review before they become real Journal entries. Use this for questions like 'do I "
+                "have any field captures' or 'what did I record in the field' or 'any voice notes waiting'."
+            ),
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_field_captures,
+            trigger_phrases=(
+                "field captures", "voice notes waiting", "what did i record",
+                "captures to review", "field notes waiting",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
             name="add_waypoint",
             domain="waypoints",
             description="Save a new named waypoint (location) in MIA's Navigation module.",
@@ -3274,6 +3289,24 @@ class MIAApplication:
             if pending:
                 line += f" Recommendation: {pending.message}"
             lines.append(line)
+        return "\n".join(lines)
+
+    @staticmethod
+    def _action_list_field_captures(context: AppContext, arguments: dict) -> str:
+        """
+        Fetches every pending field-capture transcript as plain text —
+        same "let the LLM phrase its own answer from raw records" shape
+        as _action_list_observations above. GUI-only, same reason as
+        that action: headless Core never constructs
+        context.lite_captures either.
+        """
+        if context.lite_captures is None:
+            return "Field Captures aren't available."
+        pending = context.lite_captures.pending_proposals()
+        if not pending:
+            return "Nothing waiting for review."
+
+        lines = [f"{proposal.journal_title}: {proposal.transcript}" for proposal in pending]
         return "\n".join(lines)
 
     @staticmethod

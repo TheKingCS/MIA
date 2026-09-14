@@ -10793,3 +10793,21 @@ then a real capture manifest scanned in produced the exact right
 widget text ("1 capture to review") and highlight ("1 field capture to
 review") — a real screenshot confirmed the card rendering correctly on
 the actual dashboard layout.
+
+## Field Captures reaches the Assistant (2026-09-14)
+
+The last surface Field Captures wasn't wired into yet, closing out the
+same 3-surface treatment (tool/module, dashboard, chat) Observations
+already got. New `list_field_captures` AssistantAction — GUI-only,
+same reason `list_observations` is: headless Core never constructs
+`context.lite_captures` either. `_action_list_field_captures()`
+mirrors `_action_list_observations()`'s exact shape: fetch raw pending
+transcripts as plain text, let the LLM phrase its own answer.
+
+**Verification**: `pytest -q` — full suite, 3057 passed (4 new tests:
+nothing-pending/returns-transcripts/excludes-accepted/no-service-
+degrades-gracefully). Confirmed `core/application.py` still imports
+cleanly, and that the new test fixture's real `LiteCaptureManager`
+construction stayed isolated to `tmp_path` — real `config/config.json`
+and the real `lite_captures/` folder both confirmed untouched
+afterward.

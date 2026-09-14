@@ -24,6 +24,7 @@ import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.insight_manager as insight_manager_module
+import core.lite_capture_manager as lite_capture_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
 import core.ledger_manager as ledger_manager_module
@@ -45,6 +46,7 @@ from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.insight_manager import InsightManager
+from core.lite_capture_manager import LiteCaptureManager
 from core.inventory_manager import InventoryManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
@@ -109,6 +111,8 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(insight_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(insight_manager_module, "_INSIGHTS_FILE", data_dir / "insights.json")
     monkeypatch.setattr(insight_manager_module, "_RECOMMENDATIONS_FILE", data_dir / "recommendations.json")
+    monkeypatch.setattr(lite_capture_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(lite_capture_manager_module, "_PROPOSALS_FILE", data_dir / "capture_proposals.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -133,6 +137,8 @@ def context(tmp_path, monkeypatch):
     ctx.ledger = LedgerManager(ctx)
     ctx.trail_maps = TrailMapLibrary(ctx)
     ctx.insights = InsightManager(ctx)
+    ctx.config.set("lite_capture.import_folder", str(tmp_path / "lite_captures"))
+    ctx.lite_captures = LiteCaptureManager(ctx)
     return ctx
 
 
@@ -1691,4 +1697,43 @@ def test_list_observations_excludes_resolved(context):
 def test_list_observations_no_service_reports_unavailable(context):
     context.insights = None
     result = MIAApplication._action_list_observations(context, {})
+    assert "not available" in result.lower() or "aren't available" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Field Captures
+# ----------------------------------------------------------------------
+
+def test_list_field_captures_nothing_pending(context):
+    result = MIAApplication._action_list_field_captures(context, {})
+    assert "nothing waiting" in result.lower()
+
+
+def test_list_field_captures_returns_pending_transcripts(context):
+    from core.lite_capture_manager import CaptureProposal
+
+    context.lite_captures._proposals.append(CaptureProposal(
+        proposal_id="cap1", journal_title="Field Note — Sep 14, 2026 2:32 PM",
+        transcript="Check the mower's oil level.",
+    ))
+
+    result = MIAApplication._action_list_field_captures(context, {})
+    assert "Field Note — Sep 14, 2026 2:32 PM" in result
+    assert "Check the mower's oil level." in result
+
+
+def test_list_field_captures_excludes_accepted(context):
+    from core.lite_capture_manager import CaptureProposal
+
+    context.lite_captures._proposals.append(CaptureProposal(
+        proposal_id="cap1", status="accepted", journal_title="Field Note", transcript="Already handled.",
+    ))
+
+    result = MIAApplication._action_list_field_captures(context, {})
+    assert "nothing waiting" in result.lower()
+
+
+def test_list_field_captures_no_service_reports_unavailable(context):
+    context.lite_captures = None
+    result = MIAApplication._action_list_field_captures(context, {})
     assert "not available" in result.lower() or "aren't available" in result.lower()
