@@ -36,6 +36,7 @@ from gui.home_dashboard import (
     format_current_project_line,
     format_homestead_line,
     format_kraken_line,
+    format_lite_captures_line,
     format_maintenance_line,
     format_music_line,
     format_net_worth_line,
@@ -361,6 +362,18 @@ def test_format_observations_line_plural():
         Insight(insight_id="i2", source_type="missions", source_id="m1", kind="stale", title="T2", message="M2"),
     ]
     assert format_observations_line(insights) == "2 things noticed"
+
+
+def test_format_lite_captures_line_none_pending():
+    assert format_lite_captures_line(0) == "Nothing waiting"
+
+
+def test_format_lite_captures_line_singular():
+    assert format_lite_captures_line(1) == "1 capture to review"
+
+
+def test_format_lite_captures_line_plural():
+    assert format_lite_captures_line(3) == "3 captures to review"
 
 
 def _bill(due_date="2026-09-07", recurrence=None, last_paid_date=None):

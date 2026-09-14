@@ -10765,3 +10765,31 @@ Journal entry and correctly firing the cross-module event that started
 Home's real extraction worker even though Home wasn't the visible
 screen at the time. A second screenshot after accepting, which is what
 caught the ghosting bug above, confirmed clean after the fix.
+
+## Field Captures reaches the Home dashboard (2026-09-14)
+
+Followed straight on from shipping the tool itself — same treatment
+Observations got: a widget card and a startup-briefing highlight,
+following `_build_observations_widget()`/`_observations_highlight()`'s
+exact pattern, no new mechanism. Clicking the card opens Toolbox
+itself (not a direct deep-link into the Field Captures tool — there's
+no cross-MODULE-into-a-specific-tool navigation mechanism the way
+`ModuleBase.focus_record()` gives modules; a real, honest limitation,
+not worth inventing a new mechanism just for this one card).
+
+New `format_lite_captures_line()` (pure, same "distinct empty-vs-
+pending states" shape as `format_observations_line()`), a
+`_build_lite_captures_widget()`/`_refresh_lite_captures()` pair wired
+into the existing 5s `_refresh_data()` dispatch, and
+`_lite_captures_highlight()` registered alongside the other 11
+highlight providers. New `WidgetDescriptor("lite_captures", ...)`
+registered in `core/application.py`.
+
+**Verification**: `pytest -q` — full suite, 3053 passed (3 new pure-
+function tests). Manual headless-Qt verification against a real,
+fully-constructed `HomeDashboard` (not a stub): confirmed the empty
+state ("Nothing waiting", no highlight) before any capture existed,
+then a real capture manifest scanned in produced the exact right
+widget text ("1 capture to review") and highlight ("1 field capture to
+review") — a real screenshot confirmed the card rendering correctly on
+the actual dashboard layout.

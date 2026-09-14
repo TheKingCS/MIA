@@ -435,6 +435,18 @@ def format_observations_line(open_insights: list["Insight"]) -> str:
     return f"{len(open_insights)} {noun} noticed"
 
 
+def format_lite_captures_line(pending_count: int) -> str:
+    """Pure formatting logic — testable without Qt. Same "surface the
+    summary, distinct empty-vs-caught-up states" stance as
+    format_observations_line above — modules/toolbox/tools/
+    lite_captures_tool.py has the real per-item review; this is just
+    the dashboard glance."""
+    if not pending_count:
+        return "Nothing waiting"
+    noun = "capture" if pending_count == 1 else "captures"
+    return f"{pending_count} {noun} to review"
+
+
 def format_budget_line(bills: list[Bill], today: date) -> str:
     """Pure formatting logic — testable without Qt. Same "surface the
     summary before the detail, distinct empty-vs-caught-up states" stance
@@ -586,6 +598,7 @@ class HomeDashboard(QFrame):
             "workout": self._build_workout_widget,
             "relationships": self._build_relationships_widget,
             "observations": self._build_observations_widget,
+            "lite_captures": self._build_lite_captures_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -598,6 +611,7 @@ class HomeDashboard(QFrame):
             "workout": self._workout_highlight,
             "relationships": self._relationships_highlight,
             "observations": self._observations_highlight,
+            "lite_captures": self._lite_captures_highlight,
             # real_estate/kraken_agent/net_worth deliberately have no
             # highlight provider yet — same reasoning as
             # activity_log/quick_bus below: this is genuinely new,
@@ -1079,6 +1093,21 @@ class HomeDashboard(QFrame):
         self._widget_bodies["observations"] = body
         return card
 
+    def _build_lite_captures_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        # Field Captures is a Toolbox tool, not a top-level module —
+        # there's no deep-link mechanism into a specific tool (unlike
+        # ModuleBase.focus_record()'s cross-MODULE navigation), so this
+        # opens Toolbox itself; the user picks Field Captures from
+        # there. A real, honest limitation, not worth a new navigation
+        # mechanism just for this one card.
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("toolbox"),
+        )
+        self._widget_bodies["lite_captures"] = body
+        return card
+
     def _build_budget_widget(self, descriptor: WidgetDescriptor) -> QWidget:
         card, body = self._build_simple_card(
             descriptor.icon,
@@ -1501,6 +1530,18 @@ class HomeDashboard(QFrame):
         noun = "thing" if count == 1 else "things"
         return f"{count} {noun} MIA has noticed"
 
+    def _lite_captures_highlight(self) -> Optional[str]:
+        """Same "silent unless something needs real attention"
+        restraint as every other highlight provider here — a pending
+        field capture is exactly that by construction."""
+        if self.context.lite_captures is None:
+            return None
+        count = len(self.context.lite_captures.pending_proposals())
+        if not count:
+            return None
+        noun = "field capture" if count == 1 else "field captures"
+        return f"{count} {noun} to review"
+
     def _kitchen_highlight(self) -> Optional[str]:
         """Same expiring-within-3-days computation _refresh_kitchen()
         already does for the widget tile (format_kitchen_line()'s own
@@ -1583,11 +1624,11 @@ class HomeDashboard(QFrame):
     def _build_briefing_text(self) -> str:
         """Computed once at construction (not on the 5s data-refresh
         timer below) — this is a "welcome back" greeting, not a live
-        ticker. 10 of the 18 registered dashboard widgets have a real
+        ticker. 11 of the 19 registered dashboard widgets have a real
         highlight provider as of 2026-09-14 (power/mission/current_project/
         homestead from 2026-07-15, budget/maintenance/kitchen/workout/
-        relationships/observations added once those modules existed)
-        — the rest are deliberate exclusions, see the comments in
+        relationships/observations/lite_captures added once those
+        modules existed) — the rest are deliberate exclusions, see the comments in
         self._widget_highlight_providers itself, right where each one is
         registered (or pointedly isn't), for the reasoning per widget.
         Extend this as a new subsystem lands: add a _<widget_id>_highlight()
@@ -1962,10 +2003,16 @@ class HomeDashboard(QFrame):
             self._refresh_relationships()
         if "observations" in self._widget_bodies:
             self._refresh_observations()
+        if "lite_captures" in self._widget_bodies:
+            self._refresh_lite_captures()
 
     def _refresh_observations(self) -> None:
         open_insights = self.context.insights.open_insights() if self.context.insights else []
         self._set_widget_body_text("observations", format_observations_line(open_insights))
+
+    def _refresh_lite_captures(self) -> None:
+        pending_count = len(self.context.lite_captures.pending_proposals()) if self.context.lite_captures else 0
+        self._set_widget_body_text("lite_captures", format_lite_captures_line(pending_count))
 
     def _refresh_budget(self) -> None:
         bills = self.context.budget.all_bills() if self.context.budget else []

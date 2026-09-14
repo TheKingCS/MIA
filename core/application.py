@@ -825,6 +825,7 @@ class MIAApplication:
         self.context.dashboard_widgets.register(WidgetDescriptor("workout", "Workout", "\U0001F3CB"))
         self.context.dashboard_widgets.register(WidgetDescriptor("relationships", "People & Pets", "\U0001F465"))
         self.context.dashboard_widgets.register(WidgetDescriptor("observations", "Observations", "\U0001F50D"))
+        self.context.dashboard_widgets.register(WidgetDescriptor("lite_captures", "Field Captures", "\U0001F399"))
 
     def _register_assistant_actions(self) -> None:
         """
