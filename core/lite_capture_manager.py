@@ -65,6 +65,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -168,6 +169,7 @@ class LiteCaptureManager:
             self._proposals = [CaptureProposal.from_dict(d) for d in raw.get("proposals", [])]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load capture_proposals.json — starting with no proposals.")
+            notify_data_corruption(self.context, "capture_proposals.json")
             self._proposals = []
 
     def _save(self) -> None:

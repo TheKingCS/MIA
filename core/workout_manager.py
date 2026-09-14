@@ -43,6 +43,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -202,8 +203,7 @@ class WorkoutManager:
         self._templates = self._load_file(_TEMPLATES_FILE, WorkoutTemplate)
         self._sessions = self._load_file(_SESSIONS_FILE, WorkoutSession)
 
-    @staticmethod
-    def _load_file(path: Path, cls) -> list:
+    def _load_file(self, path: Path, cls) -> list:
         if not path.exists():
             return []
         try:
@@ -211,6 +211,7 @@ class WorkoutManager:
             return [cls.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load %s — starting with an empty list.", path.name)
+            notify_data_corruption(self.context, path.name)
             return []
 
     @staticmethod

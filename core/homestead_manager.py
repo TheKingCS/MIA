@@ -50,8 +50,9 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
-from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
+from core.logger import get_logger
 
 log = get_logger(__name__)
 
@@ -153,6 +154,7 @@ class HomesteadManager:
             raw = json.loads(_SNAPSHOTS_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             log.warning("Could not read %s — starting with no stored snapshots.", _SNAPSHOTS_FILE)
+            notify_data_corruption(self.context, _SNAPSHOTS_FILE.name)
             return
         for source, snapshot_raw in raw.items():
             try:

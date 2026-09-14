@@ -96,6 +96,18 @@ class NotificationManager:
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load notifications.json — starting with an empty list.")
             self._notifications = []
+            # Self-reference, not core.data_recovery.notify_data_corruption()
+            # (2026-09-14 stabilization pass) — self.context.notifications
+            # isn't assigned until AFTER this constructor returns (see
+            # core/application.py), but self.notify() is a normal, fully
+            # usable instance method the moment self._notifications above
+            # is set, one line up.
+            self.notify(
+                title="⚠️ Data file recovered",
+                message="'notifications.json' couldn't be read and has been reset to empty. See logs/mia.log for detail.",
+                level="warning",
+                source="system",
+            )
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)

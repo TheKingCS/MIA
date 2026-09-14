@@ -592,3 +592,34 @@ def test_xp_log_trims_events_older_than_the_retention_window(isolated_paths):
 
     reloaded = SkillManager(_make_context())
     assert reloaded.xp_earned_between("p1", "strength", date(2010, 1, 1), date(2030, 1, 1)) == 5
+
+
+# ------------------------------------------------------------------
+# Corrupted data files (core.data_recovery, 2026-09-14)
+# ------------------------------------------------------------------
+
+def test_corrupt_skill_progress_raises_a_real_notification(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    (isolated_paths / "skill_progress.json").write_text("{not valid json", encoding="utf-8")
+
+    class _FakeNotifications:
+        def __init__(self):
+            self.calls = []
+
+        def notify(self, title, message, level="info", source="system"):
+            self.calls.append(message)
+
+    context = _make_context()
+    context.notifications = _FakeNotifications()
+
+    manager = SkillManager(context)  # must not raise
+
+    assert manager.get_progress("p1", "strength").total_xp == 0  # graceful fallback, unchanged
+    assert any("skill_progress.json" in message for message in context.notifications.calls)
+
+
+def test_corrupt_skill_progress_with_no_notifications_service_does_not_raise(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    (isolated_paths / "skill_progress.json").write_text("{not valid json", encoding="utf-8")
+
+    SkillManager(_make_context())  # context.notifications is None by default — must not raise

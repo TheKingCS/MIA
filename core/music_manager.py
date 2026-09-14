@@ -67,6 +67,7 @@ import json
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 if TYPE_CHECKING:
     from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
@@ -269,8 +270,7 @@ class MusicManager:
         self._tracks = self._load_file(_TRACKS_FILE, Track.from_dict)
         self._playlists = self._load_file(_PLAYLISTS_FILE, Playlist.from_dict)
 
-    @staticmethod
-    def _load_file(path: Path, from_dict) -> list:
+    def _load_file(self, path: Path, from_dict) -> list:
         if not path.exists():
             return []
         try:
@@ -278,6 +278,7 @@ class MusicManager:
             return [from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load %s — starting with an empty list.", path.name)
+            notify_data_corruption(self.context, path.name)
             return []
 
     def _save_tracks(self) -> None:

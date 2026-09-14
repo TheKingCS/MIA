@@ -45,6 +45,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -96,6 +97,7 @@ class UsageTracker:
             raw = json.loads(_USAGE_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load module_usage.json — starting with no usage recorded.")
+            notify_data_corruption(self.context, "module_usage.json")
             return
         for entry in raw.get("usage", []):
             usage = ModuleUsage.from_dict(entry)

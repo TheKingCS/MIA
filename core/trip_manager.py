@@ -42,6 +42,7 @@ from core.app_context import AppContext
 from core.logger import get_logger
 from core.waypoint_manager import haversine_distance_km
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -203,6 +204,7 @@ class TripManager:
             self._trips = [Trip.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load trips.json — starting with an empty list.")
+            notify_data_corruption(self.context, "trips.json")
             self._trips = []
 
     def reload(self) -> None:

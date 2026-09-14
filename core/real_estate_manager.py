@@ -45,6 +45,7 @@ from typing import TYPE_CHECKING, Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 if TYPE_CHECKING:
     from core.budget_manager import ExpenseEntry, IncomeEntry
@@ -329,6 +330,7 @@ class RealEstateManager:
             self._properties = [Property.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load properties.json — starting with an empty list.")
+            notify_data_corruption(self.context, "properties.json")
             self._properties = []
 
     def _save(self) -> None:

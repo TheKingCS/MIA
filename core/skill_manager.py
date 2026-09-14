@@ -46,6 +46,7 @@ from core.app_context import AppContext
 from core.logger import get_logger
 from core.skill_leveling import capability_status_for_level, compute_skill_level_progress
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -201,6 +202,7 @@ class SkillManager:
             raw = json.loads(_SKILL_DEFINITIONS_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load skill_definitions.json — no skills registered.")
+            notify_data_corruption(self.context, "skill_definitions.json")
             return
         for entry in raw.get("skills", []):
             definition = SkillDefinition.from_dict(entry)
@@ -232,6 +234,7 @@ class SkillManager:
             raw = json.loads(_SKILL_PROGRESS_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load skill_progress.json — starting with no progress.")
+            notify_data_corruption(self.context, "skill_progress.json")
             return
         for entry in raw.get("progress", []):
             progress = SkillProgress.from_dict(entry)
@@ -249,6 +252,7 @@ class SkillManager:
             raw = json.loads(_SKILL_XP_LOG_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load skill_xp_log.json — starting with no XP history.")
+            notify_data_corruption(self.context, "skill_xp_log.json")
             return
         self._xp_log = [SkillXpEvent.from_dict(e) for e in raw.get("events", [])]
 

@@ -64,6 +64,7 @@ from core.calendar_manager import RECURRENCE_TYPES, date_recurs_on
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -422,8 +423,7 @@ class BudgetManager:
         self._budget_targets = self._load_file(_BUDGET_TARGETS_FILE, BudgetTarget.from_dict)
         self._business_entities = self._load_file(_BUSINESS_ENTITIES_FILE, BusinessEntity.from_dict)
 
-    @staticmethod
-    def _load_file(path: Path, from_dict) -> list:
+    def _load_file(self, path: Path, from_dict) -> list:
         if not path.exists():
             return []
         try:
@@ -431,6 +431,7 @@ class BudgetManager:
             return [from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load %s — starting with an empty list.", path.name)
+            notify_data_corruption(self.context, path.name)
             return []
 
     def _save_bills(self) -> None:

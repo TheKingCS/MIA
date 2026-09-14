@@ -217,6 +217,28 @@ def test_load_handles_corrupt_json_gracefully(isolated_paths, tmp_path):
     assert context.ledger.all_expenses() == []
 
 
+def test_load_corrupt_json_raises_a_real_notification(isolated_paths, tmp_path):
+    """core.data_recovery stabilization pass (2026-09-14) — real
+    regression coverage: _load_file() used to be a @staticmethod with
+    no `self` in scope at all, so this crashed outright until fixed."""
+    (tmp_path / "data").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "data" / "revenue.json").write_text("{not valid json", encoding="utf-8")
+
+    class _FakeNotifications:
+        def __init__(self):
+            self.calls = []
+
+        def notify(self, title, message, level="info", source="system"):
+            self.calls.append(message)
+
+    context = AppContext(config=ConfigManager(), events=EventBus())
+    context.notifications = _FakeNotifications()
+    context.products = ProductManager(context)
+    context.ledger = LedgerManager(context)
+
+    assert any("revenue.json" in message for message in context.notifications.calls)
+
+
 # ----------------------------------------------------------------------
 # Reporting
 # ----------------------------------------------------------------------

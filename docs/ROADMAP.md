@@ -11211,3 +11211,58 @@ subsequent real `save()` even though the live file legitimately moves
 on, and a valid config is never quarantined). Confirmed no stray
 quarantine files were left in the real `config/` directory by any test
 run.
+
+## Stabilization: the corruption-quarantine pattern extended broadly (2026-09-14)
+
+User picked extending the config.json fix's other half — a visible
+notification, not a quarantine copy — to every other manager, since
+(unlike `ConfigManager`) they all already have `context.notifications`
+available by the time they load. New `core/data_recovery.py`:
+`notify_data_corruption(context, filename)`, a small best-effort
+helper (never raises, even if the notification pipeline itself fails)
+that graceful-no-ops with no notifications service, same stance every
+other optional-service check in this codebase already takes.
+
+Applied to every manager's own `except (json.JSONDecodeError,
+OSError):` load-corruption handler across the codebase — 39 files via
+a mechanical sweep (extracted the filename from each handler's own
+existing `log.exception("Failed to load X.json — ...")` message rather
+than re-parsing the read call above it, since that message text turned
+out to be completely consistent across the whole codebase), 2 more by
+hand (`finance_manager.py`/`homestead_manager.py`, which use
+`log.warning()` with a full `Path` object instead), and
+`notification_manager.py` specially (calls `self.notify()` directly —
+`self.context.notifications` isn't assigned until *after* its own
+`__init__` returns, so the shared helper doesn't apply to its own
+corruption). `llm_manager.py`/`device_framework.py`/`update_manager.py`
+were checked and confirmed out of scope entirely (network/subprocess/
+zip-validation parsing, not persisted-state corruption).
+`expedition_sync.py`'s own merge-on-import corruption handling has no
+`context` in scope at all (a module-level function) — a real, known,
+not-silently-skipped follow-up if it's ever worth threading through.
+
+**A real regression caught by the sweep's own safety net, not
+assumed clean**: the full test suite immediately caught that 7 files
+(`budget_manager.py`, `classroom_manager.py`, `kitchen_manager.py`,
+`music_manager.py`, `relationships_manager.py`, `workout_manager.py`,
+`ledger_manager.py`) share a generic `_load_file(path, from_dict)`
+helper that was a `@staticmethod` — no `self` in scope at all, so the
+mechanical insertion produced a real `NameError` the instant any of
+those managers hit a corrupted file. Fixed by converting each to a
+regular instance method (every call site already used
+`self._load_file(...)`, so this was a zero-impact signature change) —
+then wrote a script to scan every file for any *other* `self.context`
+reference sitting inside a `@staticmethod`, confirming none remained,
+rather than trusting the one class of bug found was the only one.
+
+**Verification**: `pytest -q` — full suite, 3137 passed (6 new tests:
+`core/data_recovery.py`'s own helper — fires a real notification,
+no-ops with no service, never raises even if the notification
+pipeline itself fails — plus real regression coverage in
+`test_ledger_manager.py`, the exact file the staticmethod bug was
+caught in, and `test_skill_manager.py` for the literal-filename shape).
+Manually verified end-to-end with two real corrupted files (one per
+shape — `skill_progress.json` literal, `bills.json` via the now-fixed
+instance method) against a real notifications stand-in: both produced
+the correct, real notification message. Confirmed real
+`config/config.json` untouched.

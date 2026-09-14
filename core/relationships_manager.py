@@ -38,6 +38,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -147,8 +148,7 @@ class RelationshipsManager:
         self._people = self._load_file(_PEOPLE_FILE, Person)
         self._pets = self._load_file(_PETS_FILE, Pet)
 
-    @staticmethod
-    def _load_file(path: Path, cls) -> list:
+    def _load_file(self, path: Path, cls) -> list:
         if not path.exists():
             return []
         try:
@@ -156,6 +156,7 @@ class RelationshipsManager:
             return [cls.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load %s — starting with an empty list.", path.name)
+            notify_data_corruption(self.context, path.name)
             return []
 
     @staticmethod

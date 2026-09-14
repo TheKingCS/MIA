@@ -49,6 +49,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -172,6 +173,7 @@ class PathwayManager:
             raw = json.loads(_PATHWAYS_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load mission_pathways.json — no pathways registered.")
+            notify_data_corruption(self.context, "mission_pathways.json")
             return
         for entry in raw.get("pathways", []):
             pathway = Pathway.from_dict(entry)
@@ -198,6 +200,7 @@ class PathwayManager:
             self._progress = [PathwayProgress.from_dict(d) for d in raw.get("progress", [])]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load pathway_progress.json — starting with no progress.")
+            notify_data_corruption(self.context, "pathway_progress.json")
             self._progress = []
 
     def _save_progress(self) -> None:

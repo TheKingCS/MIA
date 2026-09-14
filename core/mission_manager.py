@@ -110,6 +110,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -413,6 +414,7 @@ class MissionManager:
             self._missions = [Mission.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load missions.json — starting with an empty list.")
+            notify_data_corruption(self.context, "missions.json")
             self._missions = []
 
     def _save(self) -> None:

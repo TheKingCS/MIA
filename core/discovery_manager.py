@@ -76,6 +76,7 @@ from core.logger import get_logger
 from core.mission_manager import DIFFICULTY_LEVELS
 from core.skill_patterns import declining_categories, momentum_categories
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -240,6 +241,7 @@ class DiscoveryManager:
             self._proposals = [MissionProposal.from_dict(d) for d in raw.get("proposals", [])]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load mission_proposals.json — starting with no proposals.")
+            notify_data_corruption(self.context, "mission_proposals.json")
             self._proposals = []
 
     def _save(self) -> None:

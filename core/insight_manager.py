@@ -56,6 +56,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -156,6 +157,7 @@ class InsightManager:
                 self._insights = [Insight.from_dict(d) for d in raw]
             except (json.JSONDecodeError, OSError):
                 log.exception("Failed to load insights.json — starting with an empty list.")
+                notify_data_corruption(self.context, "insights.json")
                 self._insights = []
         if _RECOMMENDATIONS_FILE.exists():
             try:
@@ -163,6 +165,7 @@ class InsightManager:
                 self._recommendations = [Recommendation.from_dict(d) for d in raw]
             except (json.JSONDecodeError, OSError):
                 log.exception("Failed to load recommendations.json — starting with an empty list.")
+                notify_data_corruption(self.context, "recommendations.json")
                 self._recommendations = []
 
     def _save_insights(self) -> None:

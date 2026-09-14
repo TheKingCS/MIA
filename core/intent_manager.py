@@ -38,6 +38,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
+from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
@@ -100,6 +101,7 @@ class IntentManager:
             self._intents = [Intent.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load intents.json — starting with an empty list.")
+            notify_data_corruption(self.context, "intents.json")
             self._intents = []
 
     def _save(self) -> None:
