@@ -10354,3 +10354,38 @@ the true empty state ("Nothing open right now...") and a populated
 view with one real Maintenance insight and one real Missions insight,
 correctly grouped under their own section headers with the right
 title/message/recommendation text.
+
+## Observations reaches the Home dashboard (2026-09-14)
+
+The new module's content was still one navigation away from where the
+user actually starts each session — the Home dashboard. Gave it the
+exact same treatment every other real domain module already gets
+there: a widget card and a startup-briefing highlight, following
+`_build_maintenance_widget()`/`_maintenance_highlight()`'s own
+established pattern in `gui/home_dashboard.py` exactly (no new
+mechanism invented).
+
+New `format_observations_line()` (pure, same "distinct empty-vs-
+caught-up states" stance as `format_maintenance_line()`), a
+`_build_observations_widget()` using the existing `_build_simple_card()`
+helper (click opens the Observations module directly, same as every
+other simple card), a `_refresh_observations()` wired into the
+existing 5s `_refresh_data()` dispatch, and `_observations_highlight()`
+registered alongside the other 9 highlight providers — silent unless
+something's actually open, same restraint every other provider here
+already takes. New `WidgetDescriptor("observations", ...)` registered
+in `core/application.py`'s `_register_dashboard_widgets()` — enabled
+by default automatically (`DashboardWidgetRegistry.is_enabled()`
+defaults true for anything not explicitly disabled), no further
+registration needed anywhere else.
+
+**Verification**: `pytest -q` — full suite, 2957 passed (3 new pure-
+function tests). Manual headless-Qt verification against a real,
+fully-constructed `HomeDashboard` instance (not a stub — every
+required context service wired, including `ConversationManager` which
+the widget/highlight machinery doesn't touch but construction itself
+needs): confirmed the widget body correctly read "1 thing noticed"
+and the highlight correctly read "1 thing MIA has noticed" after
+creating one real open Insight, and a real screenshot showed the
+"OBSERVATIONS" card rendering on the actual dashboard layout among the
+other real widgets.

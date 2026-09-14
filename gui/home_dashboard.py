@@ -137,6 +137,7 @@ from core.dashboard_widgets import WidgetDescriptor
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
 from core.data_logger_manager import Reading
+from core.insight_manager import Insight
 from core.leveling import compute_prestige_level_progress
 from core.rewards_manager import is_attributed_to
 from core.maintenance_manager import (
@@ -423,6 +424,17 @@ def format_maintenance_line(
     return "All caught up"
 
 
+def format_observations_line(open_insights: list["Insight"]) -> str:
+    """Pure formatting logic — testable without Qt. Same "surface the
+    summary, distinct empty-vs-caught-up states" stance as
+    format_maintenance_line above — modules/observations/module.py has
+    the real per-item detail; this is just the dashboard glance."""
+    if not open_insights:
+        return "All caught up"
+    noun = "thing" if len(open_insights) == 1 else "things"
+    return f"{len(open_insights)} {noun} noticed"
+
+
 def format_budget_line(bills: list[Bill], today: date) -> str:
     """Pure formatting logic — testable without Qt. Same "surface the
     summary before the detail, distinct empty-vs-caught-up states" stance
@@ -571,6 +583,7 @@ class HomeDashboard(QFrame):
             "kitchen": self._build_kitchen_widget,
             "workout": self._build_workout_widget,
             "relationships": self._build_relationships_widget,
+            "observations": self._build_observations_widget,
         }
         self._widget_highlight_providers: dict[str, Callable[[], Optional[str]]] = {
             "power": self._power_highlight,
@@ -582,6 +595,7 @@ class HomeDashboard(QFrame):
             "kitchen": self._kitchen_highlight,
             "workout": self._workout_highlight,
             "relationships": self._relationships_highlight,
+            "observations": self._observations_highlight,
             # real_estate/kraken_agent/net_worth deliberately have no
             # highlight provider yet — same reasoning as
             # activity_log/quick_bus below: this is genuinely new,
@@ -1046,6 +1060,15 @@ class HomeDashboard(QFrame):
         self._widget_bodies["maintenance"] = body
         return card
 
+    def _build_observations_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        card, body = self._build_simple_card(
+            descriptor.icon,
+            descriptor.display_name,
+            on_click=lambda: self._open_module("observations"),
+        )
+        self._widget_bodies["observations"] = body
+        return card
+
     def _build_budget_widget(self, descriptor: WidgetDescriptor) -> QWidget:
         card, body = self._build_simple_card(
             descriptor.icon,
@@ -1455,6 +1478,19 @@ class HomeDashboard(QFrame):
         noun = "task" if overdue == 1 else "tasks"
         return f"{overdue} maintenance {noun} needing attention"
 
+    def _observations_highlight(self) -> Optional[str]:
+        """Same "silent unless something needs real attention"
+        restraint as every other highlight provider here — an open
+        Insight is exactly that by construction (see
+        core/insight_manager.py), so any nonzero count qualifies."""
+        if self.context.insights is None:
+            return None
+        count = len(self.context.insights.open_insights())
+        if not count:
+            return None
+        noun = "thing" if count == 1 else "things"
+        return f"{count} {noun} MIA has noticed"
+
     def _kitchen_highlight(self) -> Optional[str]:
         """Same expiring-within-3-days computation _refresh_kitchen()
         already does for the widget tile (format_kitchen_line()'s own
@@ -1537,11 +1573,11 @@ class HomeDashboard(QFrame):
     def _build_briefing_text(self) -> str:
         """Computed once at construction (not on the 5s data-refresh
         timer below) — this is a "welcome back" greeting, not a live
-        ticker. 9 of the 16 registered dashboard widgets have a real
-        highlight provider as of 2026-09-10 (power/mission/current_project/
+        ticker. 10 of the 18 registered dashboard widgets have a real
+        highlight provider as of 2026-09-14 (power/mission/current_project/
         homestead from 2026-07-15, budget/maintenance/kitchen/workout/
-        relationships added once those modules existed) — the rest are
-        deliberate exclusions, see the comments in
+        relationships/observations added once those modules existed)
+        — the rest are deliberate exclusions, see the comments in
         self._widget_highlight_providers itself, right where each one is
         registered (or pointedly isn't), for the reasoning per widget.
         Extend this as a new subsystem lands: add a _<widget_id>_highlight()
@@ -1844,6 +1880,12 @@ class HomeDashboard(QFrame):
             self._refresh_workout()
         if "relationships" in self._widget_bodies:
             self._refresh_relationships()
+        if "observations" in self._widget_bodies:
+            self._refresh_observations()
+
+    def _refresh_observations(self) -> None:
+        open_insights = self.context.insights.open_insights() if self.context.insights else []
+        self._set_widget_body_text("observations", format_observations_line(open_insights))
 
     def _refresh_budget(self) -> None:
         bills = self.context.budget.all_bills() if self.context.budget else []

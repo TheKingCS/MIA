@@ -19,6 +19,7 @@ from core.real_estate_manager import Property
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
 from core.data_logger_manager import Reading
+from core.insight_manager import Insight
 from core.maintenance_manager import MaintenanceTask
 from core.mission_manager import Mission, Objective
 from core.music_manager import NowPlaying
@@ -38,6 +39,7 @@ from gui.home_dashboard import (
     format_maintenance_line,
     format_music_line,
     format_net_worth_line,
+    format_observations_line,
     format_party_activity_line,
     format_power_line,
     format_real_estate_line,
@@ -342,6 +344,23 @@ def test_format_maintenance_line_meter_task_with_no_readings_is_all_caught_up():
     # Honest — no logged reading means no evidence it's due, not a fabricated overdue count.
     tasks = [_meter_task()]
     assert format_maintenance_line(tasks, date(2026, 9, 7), {}) == "All caught up"
+
+
+def test_format_observations_line_none_open():
+    assert format_observations_line([]) == "All caught up"
+
+
+def test_format_observations_line_singular():
+    insight = Insight(insight_id="i1", source_type="maintenance", source_id="t1", kind="overdue", title="T", message="M")
+    assert format_observations_line([insight]) == "1 thing noticed"
+
+
+def test_format_observations_line_plural():
+    insights = [
+        Insight(insight_id="i1", source_type="maintenance", source_id="t1", kind="overdue", title="T", message="M"),
+        Insight(insight_id="i2", source_type="missions", source_id="m1", kind="stale", title="T2", message="M2"),
+    ]
+    assert format_observations_line(insights) == "2 things noticed"
 
 
 def _bill(due_date="2026-09-07", recurrence=None, last_paid_date=None):
