@@ -9988,3 +9988,44 @@ Zac=13.2/Faith≈0.8; confirmed the real Ridgeline data (Zac's 5 real
 Road Warrior tiers, Faith's correct 0 mileage) unaffected by this
 change — read-only check against real data, verified `git status`
 showed no data files touched.
+
+## Multi-user slice 3: the personalized dashboard (2026-09-14)
+
+The vision doc's own "Welcome back, Faith / Welcome back, Zac" mockup
+— logging in as a different profile should show a genuinely different
+dashboard, not the same shared view with a name swapped in.
+
+**Hero tagline is now real per-profile data** (`gui/home_dashboard.py`'s
+`_build_overview_row()`/new `_hero_tagline_text()`) — real level (via
+`core.leveling.compute_prestige_level_progress()`), real missions
+currently available to this profile, real active household projects —
+replacing the old generic "Another day to build the life you want."
+New pure `format_dashboard_hero_tagline()`. Deliberately does NOT
+include a "recipes mastered" or streak-style number this pass — no
+"mastered" threshold is defined anywhere in this codebase yet, and
+inventing one here would be a fabricated stat, not a real one.
+
+**New "PARTY ACTIVITY" card** — the vision doc's own "Zac completed
+'Mow the Homestead'" example. Derived entirely from real completed
+Missions' own `profile_id` (no new storage), filtered to profiles
+OTHER than whoever's active, newest first, capped at 3. Omitted
+entirely (not just empty) on a single-profile device — "party
+activity" implies someone else exists to report on. New pure
+`format_party_activity_line()`.
+
+**Verification**: `pytest -q` — full suite, 2889 passed (3 new tests).
+Manually verified with two real profiles and real missions/projects: a
+lightweight harness (no full HomeDashboard construction needed, given
+its many optional service dependencies — called the two new methods
+directly against a real AppContext) confirmed Zac's tagline read
+"Level 5 · 2 missions available · 2 active projects" and his Party
+Activity card correctly showed only "Faith completed 'Organize
+Kitchen'" (not his own missions); Faith's own Party Activity view
+correctly showed the real empty state, since Zac hadn't completed
+anything in the test scenario.
+
+This completes all 3 concrete multi-user slices picked so far
+(Recipes, per-reading asset usage, personalized dashboard). What
+remains from [[project_mia_multiuser_vision]]: shared missions/group
+quests (a real new data structure) and multi-group hierarchy
+(explicitly long-term, not scoped).

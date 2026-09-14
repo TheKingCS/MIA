@@ -30,6 +30,7 @@ from gui.home_dashboard import (
     format_clock_date,
     format_clock_time,
     format_budget_line,
+    format_dashboard_hero_tagline,
     format_property_portfolio_line,
     format_current_project_line,
     format_homestead_line,
@@ -37,6 +38,7 @@ from gui.home_dashboard import (
     format_maintenance_line,
     format_music_line,
     format_net_worth_line,
+    format_party_activity_line,
     format_power_line,
     format_real_estate_line,
 )
@@ -62,6 +64,18 @@ def test_format_power_line_plugged_in():
 def test_format_power_line_on_battery():
     status = PowerStatus(percent=42.0, plugged_in=False, seconds_left=600)
     assert format_power_line(status) == "42%  —  On battery"
+
+
+def test_format_dashboard_hero_tagline():
+    assert format_dashboard_hero_tagline(14, 3, 2) == "Level 14 · 3 missions available · 2 active projects"
+
+
+def test_format_dashboard_hero_tagline_zeros():
+    assert format_dashboard_hero_tagline(1, 0, 0) == "Level 1 · 0 missions available · 0 active projects"
+
+
+def test_format_party_activity_line():
+    assert format_party_activity_line("Zac", "Mow the Homestead") == 'Zac completed "Mow the Homestead"'
 
 
 def test_format_active_mission_line_none():

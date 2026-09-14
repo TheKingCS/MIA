@@ -137,6 +137,8 @@ from core.dashboard_widgets import WidgetDescriptor
 from core.finance_manager import FinancialSnapshot
 from core.homestead_manager import HomesteadSnapshot
 from core.data_logger_manager import Reading
+from core.leveling import compute_prestige_level_progress
+from core.rewards_manager import is_attributed_to
 from core.maintenance_manager import (
     MaintenanceTask,
     days_until_due,
@@ -516,6 +518,24 @@ def format_relationships_line(nearest_birthday: Optional[tuple]) -> str:
     return f"{person.name}'s birthday in {days} {noun}"
 
 
+def format_dashboard_hero_tagline(level: int, missions_available: int, active_projects: int) -> str:
+    """Pure formatting logic — testable without Qt. Multi-user pass
+    (2026-09-14, personalized dashboard slice) — replaces the generic
+    "Another day to build the life you want." with the active
+    profile's own real numbers, the vision doc's own "Level 14 · 3
+    missions available · 2 active projects" example. Deliberately
+    omits "recipes mastered"/streak-style metrics this pass — there's
+    no defined "mastered" threshold anywhere in this codebase yet, and
+    inventing one here would be a fabricated number, not a real one."""
+    return f"Level {level} · {missions_available} missions available · {active_projects} active projects"
+
+
+def format_party_activity_line(profile_name: str, mission_name: str) -> str:
+    """Pure formatting logic — testable without Qt. The vision doc's
+    own "Zac completed 'Mow the Homestead'" example."""
+    return f"{profile_name} completed \"{mission_name}\""
+
+
 class HomeDashboard(QFrame):
     """The post-login home screen — see module docstring."""
 
@@ -590,6 +610,9 @@ class HomeDashboard(QFrame):
         outer.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         outer.addWidget(self._build_overview_row())
+        party_activity_card = self._build_party_activity_card()
+        if party_activity_card is not None:
+            outer.addWidget(party_activity_card)
         outer.addWidget(self._build_clock())
 
         # Built (and refreshed with real data) before the briefing
@@ -697,7 +720,15 @@ class HomeDashboard(QFrame):
         morning, Zac" the way the reference mockup's own copy is.
         Everything below this (clock, widgets grid, briefing banner,
         chat bar) is untouched — this screen already went through its
-        own earlier, separate design pass rather than starting plain."""
+        own earlier, separate design pass rather than starting plain.
+
+        **Personalized dashboard, multi-user slice (2026-09-14)**: the
+        tagline itself is now real per-profile data (level, real
+        missions available, real active projects —
+        `format_dashboard_hero_tagline()`) instead of a generic line,
+        the vision doc's own "Level 14 · 3 missions available · 2
+        active projects" example. Falls back to the old generic line
+        with no active profile (nothing real to report)."""
         hero = PhotoBackgroundFrame()
         hero.setFixedHeight(120)
         layout = QHBoxLayout(hero)
@@ -711,6 +742,7 @@ class HomeDashboard(QFrame):
         layout.addWidget(icon_badge)
 
         profile_name = "there"
+        active_profile = None
         if self.context.profiles is not None:
             active_profile = self.context.profiles.get_active_profile()
             if active_profile is not None:
@@ -721,7 +753,7 @@ class HomeDashboard(QFrame):
         title = QLabel(f"{greeting_for_hour(datetime.now().hour)}, {profile_name}")
         title.setObjectName("NatureHeaderTitle")
         title_column.addWidget(title)
-        tagline = QLabel("Another day to build the life you want.")
+        tagline = QLabel(self._hero_tagline_text(active_profile))
         tagline.setObjectName("NatureHeaderTagline")
         title_column.addWidget(tagline)
         layout.addLayout(title_column, stretch=1)
@@ -731,6 +763,80 @@ class HomeDashboard(QFrame):
         layout.addWidget(status_chip, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         return hero
+
+    def _hero_tagline_text(self, active_profile) -> str:
+        """Real per-profile numbers for the hero tagline — level (via
+        core.leveling, prestige-aware), real missions currently
+        available to this profile (is_attributed_to() — today mostly
+        the same shared count for everyone, since an active Mission
+        only carries a real profile_id when explicitly pre-assigned;
+        still a real, honest number, not fabricated personalization),
+        and real active household projects (Project has no per-profile
+        concept yet, so this is the real household total). Falls back
+        to the old generic line with no active profile at all."""
+        if active_profile is None:
+            return "Another day to build the life you want."
+        level, _xp_into, _xp_needed = compute_prestige_level_progress(active_profile.total_xp, active_profile.prestige_tier)
+        missions_available = 0
+        if self.context.missions is not None:
+            missions_available = sum(
+                1 for mission in self.context.missions.all_missions()
+                if mission.status == "active" and is_attributed_to(mission.profile_id, active_profile.profile_id)
+            )
+        active_projects = 0
+        if self.context.projects is not None:
+            active_projects = sum(
+                1 for project in self.context.projects.all_projects() if project.status in ("Planning", "Active", "On Hold")
+            )
+        return format_dashboard_hero_tagline(level, missions_available, active_projects)
+
+    def _build_party_activity_card(self) -> Optional[QWidget]:
+        """Multi-user pass (2026-09-14) — the vision doc's own "Party
+        Activity: Zac completed 'Mow the Homestead'" example. Derived
+        entirely from real completed Missions' own profile_id (no new
+        storage — same "derive it" stance everything else in this
+        codebase follows), filtered to profiles OTHER than whoever's
+        active. None (card omitted entirely) with fewer than 2 real
+        profiles on this device — "party activity" implies there's
+        someone else to report on; showing an empty card to a
+        single-profile household would just be confusing chrome."""
+        if self.context.profiles is None or self.context.missions is None:
+            return None
+        profiles = self.context.profiles.list_profiles()
+        if len(profiles) < 2:
+            return None
+        active_profile = self.context.profiles.get_active_profile()
+        active_id = active_profile.profile_id if active_profile is not None else None
+        names_by_id = {p.profile_id: p.name for p in profiles}
+
+        other_completions = sorted(
+            (
+                mission for mission in self.context.missions.all_missions()
+                if mission.status == "completed" and mission.profile_id is not None and mission.profile_id != active_id
+            ),
+            key=lambda m: m.updated_at,
+            reverse=True,
+        )[:3]
+
+        card = BlueprintFrame()
+        card.setObjectName("DashboardCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 18, 20, 18)
+        eyebrow = QLabel("PARTY ACTIVITY")
+        eyebrow.setObjectName("DashboardSectionTitle")
+        layout.addWidget(eyebrow)
+
+        if not other_completions:
+            empty = QLabel("No recent activity from the rest of your household yet.")
+            layout.addWidget(empty)
+        else:
+            for mission in other_completions:
+                name = names_by_id.get(mission.profile_id, "Someone")
+                line = QLabel(format_party_activity_line(name, mission.name))
+                layout.addWidget(line)
+
+        apply_panel_glow(card)
+        return card
 
     def _build_clock(self) -> QWidget:
         """A real card (eyebrow "CLOCK" label + big time, left; date,
