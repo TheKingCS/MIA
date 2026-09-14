@@ -11170,3 +11170,44 @@ existing assistant-action-handler tests). The key regression test:
 monkeypatches the calendar-digest check (second in the list) to raise,
 and confirms every check after it — including the very last one —
 still ran. Confirmed real `config/config.json` untouched.
+
+## Stabilization: a corrupted config.json is quarantined, not destroyed (2026-09-14)
+
+Kept auditing. `ConfigManager._read_json()`'s non-required branch
+(the real `config.json` load path) catches `JSONDecodeError` and
+falls back to empty defaults so the app still boots — correct
+behavior, the app must never fail to start over a bad config file.
+But it then silently discarded the corrupted file with only a log
+line: the next real `save()` call (which happens constantly — any
+setting change) permanently overwrites it with fresh defaults, and
+whatever real settings the corrupted file held are gone forever with
+no trace anywhere.
+
+`ConfigManager` is the very first core service constructed (before
+`NotificationManager` exists), so there's no user-visible channel
+available this early in boot to say "your settings got reset" — the
+only way to leave a real trail is preserving the file itself. New
+`_quarantine_corrupted_file()`: on a malformed `config.json`, copies
+it aside to `config.json.corrupted-<timestamp>` before falling back to
+defaults — best-effort (if even the copy fails, boot still proceeds
+with defaults rather than failing over a quarantine attempt).
+
+**Deliberately scoped to config.json only, not a repeat of the
+atomic-write sweep**: the identical "log and silently discard on
+corruption" pattern exists in every other manager's own `_load()`
+across the codebase too, but config.json is uniquely the one file
+where losing it silently is most likely to visibly confuse a real
+user (theme, notification prefs, device profile, every configured
+external content path) — the other ~45 files mostly re-derive or lose
+lower-stakes state (a fresh Pattern Insight scan next cycle, a
+skill's XP-trend log) where the same fix would have much lower value
+per file. Noted as a real, known follow-up if worth doing broadly
+later, not silently skipped.
+
+**Verification**: `pytest -q` — full suite, 3131 passed (4 new tests:
+boots clean on malformed JSON, the corrupted content is preserved
+byte-for-byte in the quarantine copy, the quarantine copy survives a
+subsequent real `save()` even though the live file legitimately moves
+on, and a valid config is never quarantined). Confirmed no stray
+quarantine files were left in the real `config/` directory by any test
+run.

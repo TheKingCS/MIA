@@ -21,6 +21,8 @@ defaulting, validation, and save behavior stay in one place.
 from __future__ import annotations
 
 import json
+import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -90,7 +92,30 @@ class ConfigManager:
             log.error("Malformed JSON in %s: %s", path, exc)
             if required:
                 raise
+            # Real config.json corruption (2026-09-14 stabilization pass)
+            # — falling back to defaults here is the right recovery (the
+            # app must still boot), but silently discarding the
+            # corrupted file would permanently destroy whatever real
+            # settings it held the moment anything calls save() again.
+            # No notifications service exists yet this early in boot
+            # (ConfigManager is the very first core service constructed
+            # — see core/application.py), so the only way to leave a
+            # real trail is preserving the file itself, not just a log
+            # line nobody's watching on a kiosk device.
+            ConfigManager._quarantine_corrupted_file(path)
             return {}
+
+    @staticmethod
+    def _quarantine_corrupted_file(path: Path) -> None:
+        """Best-effort — if even this fails, the load() fallback to
+        defaults still proceeds; losing the quarantine copy is far
+        better than failing to boot over it."""
+        quarantine_path = path.with_name(f"{path.name}.corrupted-{datetime.now().strftime('%Y%m%dT%H%M%S')}")
+        try:
+            shutil.copy2(path, quarantine_path)
+            log.error("Preserved the corrupted file for inspection at %s", quarantine_path)
+        except OSError:
+            log.exception("Could not preserve corrupted %s before falling back to defaults", path)
 
     @staticmethod
     def _merge_defaults(defaults: dict, user: dict) -> dict:
