@@ -299,10 +299,18 @@ class KitchenModule(ModuleBase):
     def _refresh_recipe_list(self) -> None:
         if self._recipe_list_layout is None:
             return
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._recipe_list_layout.count():
             item = self._recipe_list_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         recipes = self.context.kitchen.all_recipes()

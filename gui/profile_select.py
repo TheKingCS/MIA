@@ -68,11 +68,20 @@ class ProfileSelectScreen(QWidget):
         layout.addStretch()
 
     def _populate_profiles(self) -> None:
-        # Clear any existing rows before repopulating (used after add/delete).
+        # Clear any existing rows before repopulating (used after
+        # add/delete). hide()+setParent(None) before deleteLater() —
+        # deleteLater() alone doesn't remove a widget from the screen
+        # immediately, a real ghosting bug found via an actual
+        # screenshot while building modules/toolbox/tools/
+        # lite_captures_tool.py and fixed across this codebase's other
+        # actively-re-triggered refresh methods the same day.
         while self._list_container.count():
             item = self._list_container.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
             elif item.layout():
                 self._clear_layout(item.layout())
 
@@ -104,8 +113,11 @@ class ProfileSelectScreen(QWidget):
     def _clear_layout(layout) -> None:
         while layout.count():
             item = layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
 
     def _on_profile_chosen(self, profile) -> None:
         if profile.has_password:

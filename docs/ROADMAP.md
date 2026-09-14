@@ -10811,3 +10811,52 @@ cleanly, and that the new test fixture's real `LiteCaptureManager`
 construction stayed isolated to `tmp_path` — real `config/config.json`
 and the real `lite_captures/` folder both confirmed untouched
 afterward.
+
+## Widget-ghosting bug: a systematic sweep (2026-09-14)
+
+Manually verifying Field Captures' tool UI (`modules/toolbox/tools/
+lite_captures_tool.py`'s `_clear()`) turned up a real bug via an actual
+screenshot, not a hypothetical: `deleteLater()` alone doesn't remove a
+widget from the screen immediately when clearing/repopulating a
+`QLayout` in a loop, so a second refresh cycle showed old and new card
+text superimposed. The correct fix (already present in
+`gui/user_memory_dialog.py`'s `_refresh()`) is `hide()` +
+`setParent(None)` before `deleteLater()`, called on a widget reference
+cached *before* any of the three calls run.
+
+Grepped the same `while layout.count(): item = layout.takeAt(0); ...`
+shape across the whole codebase and found it in 15 more spots — most
+with their refresh method genuinely re-triggered at runtime (not just
+latent). Fixed all of them: `modules/toolbox/tools/discovery_tool.py`,
+`modules/observations/module.py`, `gui/profile_select.py` (two spots —
+`_populate_profiles()` and `_clear_layout()`), `gui/notification_center.py`,
+`gui/search_dialog.py`, `modules/module_browser/module.py`,
+`modules/knowledge/module.py`, `modules/field_kit/module.py`,
+`modules/memories/module.py`, `modules/greenhouse/module.py`,
+`modules/garage/module.py`, `modules/household/module.py`,
+`modules/property/module.py`, `modules/character/module.py`,
+`modules/dashboard/module.py`, `modules/kitchen/module.py`, and all 4
+clear-loops in `modules/real_estate/module.py`.
+
+**A real self-caught regression along the way**: several of these files
+used a more compact original shape — `if item.widget():
+item.widget().hide(); item.widget().setParent(None);
+item.widget().deleteLater()` — calling `item.widget()` fresh each time
+instead of once. My first pass at fixing those literally kept that
+same repeated-call shape, which is *also* broken: after
+`setParent(None)` runs, a later fresh `item.widget()` call in the same
+statement sequence can return `None`. Caught this via a real crash
+(`AttributeError: 'NoneType' object has no attribute 'deleteLater'`)
+running a manual two-query verification script against
+`gui/search_dialog.py` — the second query's clear-loop crashed on
+`item.widget().deleteLater()`. Fixed by caching `widget = item.widget()`
+into a local variable once, then acting on that same variable for all
+three calls, matching the pattern already correct elsewhere. Re-ran the
+same script afterward — no crash, and the screenshot shows only the
+second query's results, no leftover text from the first.
+
+**Verification**: `pytest -q` — full suite, 3057 passed, unchanged (this
+bug class isn't unit-tested directly, only via manual headless-Qt
+verification, since it's about widget lifecycle rather than business
+logic). Confirmed real `config/config.json` and `lite_captures/`
+untouched.

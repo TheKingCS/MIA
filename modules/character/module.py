@@ -161,10 +161,18 @@ class CharacterModule(ModuleBase):
         return self.context.profiles.get_active_profile()
 
     def _refresh(self) -> None:
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._body_layout.count():
             item = self._body_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         active = self._active_profile()

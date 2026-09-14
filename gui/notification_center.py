@@ -71,10 +71,19 @@ class NotificationCenterDialog(QDialog):
         layout.addWidget(clear_all_button)
 
     def _populate(self) -> None:
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
 
         notifications = self.context.notifications.list_all()
         if not notifications:

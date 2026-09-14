@@ -205,10 +205,18 @@ class FieldKitModule(ModuleBase):
 
         # Clear existing rows — everything except the trailing stretch
         # added in _build_devices_tab(), which always stays last.
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._device_list_layout.count() > 1:
             item = self._device_list_layout.takeAt(0)
             row_widget = item.widget()
             if row_widget is not None:
+                row_widget.hide()
+                row_widget.setParent(None)
                 row_widget.deleteLater()
 
         if not storage and not serial_devices:

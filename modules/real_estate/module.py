@@ -387,10 +387,18 @@ class RealEstateModule(ModuleBase):
         and an entity-filter change all funnel through here, same
         "always refresh, don't track staleness" convention as
         modules/kitchen/module.py's own _on_tab_changed()."""
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._property_list_layout.count():
             item = self._property_list_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         selected_entity = self._entity_filter_combo.currentData()
@@ -459,10 +467,18 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_list()
 
     def _refresh_property_detail(self) -> None:
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._property_detail_layout.count():
             item = self._property_detail_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         if self._selected_property_id is None:
@@ -541,10 +557,18 @@ class RealEstateModule(ModuleBase):
         return page
 
     def _refresh_real_estate_maintenance_tab(self) -> None:
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._re_maintenance_layout.count():
             item = self._re_maintenance_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         properties = self.context.real_estate.all_properties()
@@ -583,10 +607,18 @@ class RealEstateModule(ModuleBase):
         return page
 
     def _refresh_real_estate_missions_tab(self) -> None:
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day.
         while self._re_missions_layout.count():
             item = self._re_missions_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         properties = self.context.real_estate.all_properties()

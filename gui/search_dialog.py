@@ -108,10 +108,19 @@ class SearchDialog(QDialog):
         self.query_edit.setFocus()
 
     def _on_query_changed(self, text: str) -> None:
+        # hide()+setParent(None) before deleteLater() — deleteLater()
+        # alone doesn't remove a widget from the screen immediately, a
+        # real ghosting bug found via an actual screenshot (see
+        # modules/toolbox/tools/lite_captures_tool.py) and fixed across
+        # this codebase's other actively-re-triggered refresh methods
+        # the same day — this one re-triggers on every keystroke.
         while self._results_layout.count():
             item = self._results_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
 
         text = text.strip()
         if not text:
