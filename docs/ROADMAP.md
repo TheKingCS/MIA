@@ -9877,3 +9877,55 @@ note; Faith: 3 meals + a 5.0 rating + favorited) — screenshotted
 Faith's view: "HOUSEHOLD — Made 7x" alongside "YOUR STATS — Made 3x,
 Your rating: 5/5, ✓ Favorite," with Zac's personal note correctly
 absent from her view.
+
+## Profile-creation interview (2026-09-14)
+
+The one concrete, immediately-buildable idea from the user's Master
+Vision handoff (see [[project_mia_master_vision]] memory / `docs/
+VISION.md`'s matching 2026-09-14 section): "a kind of user interview
+upon profile creation to get a feel of the user's life, hobbies,
+goals, and interests." v1 scope, deliberately real and small — no
+mission/module generation from the answers yet (that's the vision
+doc's own larger, separate "MIA can generate personalized missions"
+scope); this just collects and persists real answers, then uses them
+for one concrete, visible thing.
+
+**New `gui/widgets/interview_form.py`**: one reusable `InterviewForm`
+widget (real category checkboxes read live from
+`core.skill_manager.SkillManager.categories()` — never a hardcoded,
+drift-prone duplicate list — plus a free-text goals/responsibilities
+field), embedded in BOTH `gui/setup_wizard.py`'s first-run flow (a new
+third `_InterviewPage`, right after Welcome/Date-Time — the wizard's
+own docstring literally anticipated "future versions will likely add
+more first-run pages") and a new standalone
+`gui/profile_interview_dialog.py`, shown right after `gui/profile_
+select.py`'s existing "Add Profile" flow creates a later profile
+(`AddProfileDialog` itself stays untouched and small, per its own
+docstring — this is a deliberate second dialog, not folded in).
+Skipping is a real, valid answer in both places — nothing forces it.
+
+**`core/profile_manager.py`**: `Profile` gains `interests: list[str]`
+(real category names) and `interview_notes: str`, both empty by
+default (every existing profile, and any interview genuinely skipped).
+New `set_interview_answers(profile_id, interests, interview_notes)` —
+same idempotent "read the whole raw record, modify, write back"
+pattern `unlock_reward()` already established.
+
+**One real, visible use of the answers**: `modules/skills/module.py`'s
+category tabs now sort the user's own picked interests first (new pure
+`order_categories_by_interest()`), marked with a "★" prefix (new pure
+`format_category_tab_label()`) — falls back to plain alphabetical
+(unchanged) with no active profile or no interests picked. Reapplying
+this same pattern to a dashboard "suggested modules" surface, or to
+real mission generation, is real future scope, not attempted here.
+
+**Verification**: `pytest -q` — full suite, 2876 passed (15 new
+tests). Manual headless-Qt check: walked the real 3-page SetupWizard
+end to end (name → date/time → interview, checking "Homestead",
+typing free-text notes) and confirmed the real created profile
+persisted both fields correctly; separately verified the standalone
+ProfileInterviewDialog renders all 9 real skill categories correctly
+in a grid, and that Skills' own category tabs correctly reordered
+("★ Homestead", "★ Maker" first) after saving those interests. Also
+caught and fixed a real bug during this check: two of the form's own
+labels weren't word-wrapped and clipped at the dialog's edge.

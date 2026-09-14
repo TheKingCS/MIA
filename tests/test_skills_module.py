@@ -11,6 +11,7 @@ from __future__ import annotations
 from modules.skills.module import (
     format_achievement_title_for_display,
     format_capability_status_label,
+    format_category_tab_label,
     format_chain_maxed_line,
     format_earned_title_line,
     format_header_stats_line,
@@ -22,6 +23,7 @@ from modules.skills.module import (
     format_skill_status_line,
     format_skill_subtitle,
     format_tier_chip,
+    order_categories_by_interest,
 )
 
 
@@ -120,3 +122,28 @@ def test_format_earned_title_line():
 
 def test_format_chain_maxed_line():
     assert format_chain_maxed_line("🏆", "Master of the Grounds") == "\U0001F3C6 Maxed out — 🏆 Master of the Grounds"
+
+
+def test_order_categories_by_interest_puts_interests_first():
+    categories = ["Body", "Construction", "Homestead", "Maker", "Mind"]
+    assert order_categories_by_interest(categories, ["Homestead", "Maker"]) == \
+        ["Homestead", "Maker", "Body", "Construction", "Mind"]
+
+
+def test_order_categories_by_interest_no_interests_is_unchanged():
+    categories = ["Body", "Mind"]
+    assert order_categories_by_interest(categories, []) == ["Body", "Mind"]
+
+
+def test_order_categories_by_interest_never_drops_a_category():
+    categories = ["Body", "Mind", "Outdoor"]
+    result = order_categories_by_interest(categories, ["Outdoor", "Nonexistent"])
+    assert set(result) == set(categories)
+
+
+def test_format_category_tab_label_interest():
+    assert format_category_tab_label("Homestead", True) == "★ Homestead"
+
+
+def test_format_category_tab_label_not_interest():
+    assert format_category_tab_label("Homestead", False) == "Homestead"

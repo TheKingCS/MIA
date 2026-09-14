@@ -370,3 +370,59 @@ def test_prestige_twice_reaches_tier_two(isolated_paths):
     manager.add_xp(profile.profile_id, XP_PER_PRESTIGE_CYCLE)
 
     assert manager.prestige(profile.profile_id) == 2
+
+
+# ------------------------------------------------------------------
+# Profile-creation interview (2026-09-14)
+# ------------------------------------------------------------------
+
+def test_new_profile_has_no_interview_answers_by_default(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert profile.interests == []
+    assert profile.interview_notes == ""
+
+
+def test_set_interview_answers_succeeds_for_a_real_profile(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+
+    result = manager.set_interview_answers(profile.profile_id, ["Homestead", "Maker"], "Building a greenhouse.")
+
+    assert result is True
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.interests == ["Homestead", "Maker"]
+    assert reloaded.interview_notes == "Building a greenhouse."
+
+
+def test_set_interview_answers_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.set_interview_answers(profile.profile_id, ["Outdoor"], "I like to hike.")
+
+    reloaded_manager = _make_manager()
+    reloaded = reloaded_manager.list_profiles()[0]
+    assert reloaded.interests == ["Outdoor"]
+    assert reloaded.interview_notes == "I like to hike."
+
+
+def test_set_interview_answers_reflected_in_get_active_profile(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex", make_active=True)
+    manager.set_interview_answers(profile.profile_id, ["Body"], "")
+
+    assert manager.get_active_profile().interests == ["Body"]
+
+
+def test_set_interview_answers_unknown_profile_returns_false(isolated_paths):
+    manager = _make_manager()
+    assert manager.set_interview_answers("does-not-exist", ["Body"], "notes") is False
+
+
+def test_set_interview_answers_empty_is_a_real_valid_skip(isolated_paths):
+    """Skipping the interview is a real answer, not an error — an
+    empty interests list and blank notes are valid, saved state."""
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    result = manager.set_interview_answers(profile.profile_id, [], "")
+    assert result is True

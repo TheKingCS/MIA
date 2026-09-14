@@ -29,6 +29,7 @@ from core.app_context import AppContext
 from core.logger import get_logger
 from gui.add_profile_dialog import AddProfileDialog
 from gui.password_dialog import prompt_for_password
+from gui.profile_interview_dialog import ProfileInterviewDialog
 
 log = get_logger(__name__)
 
@@ -154,5 +155,16 @@ class ProfileSelectScreen(QWidget):
         dialog = AddProfileDialog(self)
         if dialog.exec() == AddProfileDialog.DialogCode.Accepted and dialog.entered_name:
             password = dialog.entered_password or None
-            self.context.profiles.create_profile(dialog.entered_name, password=password, make_active=False)
+            profile = self.context.profiles.create_profile(dialog.entered_name, password=password, make_active=False)
+            # Profile-creation interview (2026-09-14) — a real, separate
+            # second dialog right after creation, not folded into
+            # AddProfileDialog itself (see that class's own docstring
+            # for why it stays small). Skipping is a real, valid answer
+            # (ProfileInterviewDialog.reject()) — nothing is saved, the
+            # profile still exists either way.
+            interview = ProfileInterviewDialog(self.context, dialog.entered_name, self)
+            if interview.exec() == ProfileInterviewDialog.DialogCode.Accepted:
+                self.context.profiles.set_interview_answers(
+                    profile.profile_id, interview.form.selected_interests(), interview.form.entered_notes(),
+                )
             self._populate_profiles()

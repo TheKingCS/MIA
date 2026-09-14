@@ -100,6 +100,20 @@ class Profile:
     # same "a real choice/event, not a live computation" reasoning as
     # prestige_tier above.
     unlocked_reward_ids: list[str] = field(default_factory=list)
+    # Profile-creation interview (2026-09-14, per the user's own Master
+    # Vision handoff: "a kind of user interview upon profile creation
+    # to get a feel of the user's life, hobbies, goals, and interests").
+    # `interests` holds real core.skill_manager category names the user
+    # picked (e.g. "Homestead", "Maker") — not free text, so downstream
+    # code (Skills' own tab ordering) can match it directly without any
+    # NLP. `interview_notes` is the free-text answer to "anything else
+    # MIA should know about your goals or responsibilities" — read-only
+    # color today; nothing parses it (see gui/profile_interview_dialog.py's
+    # own docstring for what's deliberately not built yet). Both empty
+    # for every profile created before this existed, or if the
+    # interview was skipped — never required.
+    interests: list[str] = field(default_factory=list)
+    interview_notes: str = ""
 
     @property
     def has_password(self) -> bool:
@@ -200,6 +214,8 @@ class ProfileManager:
                 total_credits=data.get("total_credits", 0),
                 prestige_tier=data.get("prestige_tier", 0),
                 unlocked_reward_ids=list(data.get("unlocked_reward_ids", [])),
+                interests=list(data.get("interests", [])),
+                interview_notes=data.get("interview_notes", ""),
             )
             for pid, data in raw.items()
         ]
@@ -224,6 +240,8 @@ class ProfileManager:
             total_credits=raw.get("total_credits", 0),
             prestige_tier=raw.get("prestige_tier", 0),
             unlocked_reward_ids=list(raw.get("unlocked_reward_ids", [])),
+            interests=list(raw.get("interests", [])),
+            interview_notes=raw.get("interview_notes", ""),
         )
 
     def get_profile(self, profile_id: str) -> Optional[Profile]:
@@ -242,6 +260,28 @@ class ProfileManager:
         config.set("system.active_profile_id", profile_id)
         config.save()
         self.context.events.publish("profile.switched", profile_id=profile_id)
+
+    def set_interview_answers(self, profile_id: str, interests: list[str], interview_notes: str) -> bool:
+        """Records the profile-creation interview's real answers (see
+        gui/profile_interview_dialog.py). Returns True if the profile
+        existed and this actually saved, False otherwise — same
+        idempotent-and-tells-you-so shape unlock_reward() already uses.
+        A real, deliberate write, not something inferred: interests
+        must be real core.skill_manager category names (not validated
+        here — the dialog itself only ever offers real categories, so
+        there's nothing to police)."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to save interview answers for unknown profile_id '%s'", profile_id)
+            return False
+        record = dict(raw)
+        record["interests"] = list(interests)
+        record["interview_notes"] = interview_notes
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Saved interview answers for profile '%s': interests=%s", profile_id, interests)
+        return True
         log.info("Switched active profile to '%s'", profile_id)
 
     def rename_profile(self, profile_id: str, new_name: str) -> bool:

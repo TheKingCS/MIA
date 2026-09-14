@@ -148,6 +148,22 @@ def format_tier_chip(tier: int) -> str:
     return f"T{tier}"
 
 
+def order_categories_by_interest(categories: list[str], interests: list[str]) -> list[str]:
+    """Pure logic — testable without Qt. Profile-creation interview
+    (2026-09-14): interest categories sort first (preserving their
+    relative order in `categories`, i.e. alphabetical since
+    core.skill_manager.SkillManager.categories() is already sorted),
+    then everything else, same order as before. Never drops or adds a
+    category — just reorders."""
+    interest_set = set(interests)
+    return [c for c in categories if c in interest_set] + [c for c in categories if c not in interest_set]
+
+
+def format_category_tab_label(category: str, is_interest: bool) -> str:
+    """Pure formatting logic — testable without Qt."""
+    return f"★ {category}" if is_interest else category
+
+
 def format_achievement_title_for_display(title: str) -> str:
     """Pure formatting logic — testable without Qt. Strips a leading
     emoji + space for display, per the design handoff's own copy note
@@ -203,6 +219,11 @@ class SkillsModule(ModuleBase):
         self._current_category: Optional[str] = None
         self._category_buttons: dict[str, QPushButton] = {}
         self._widget_built = False
+        # Profile-creation interview (2026-09-14) — the active
+        # profile's own picked interests, read once in get_widget() and
+        # used by _build_category_tabs() to star the ones they said
+        # they care about. Empty set with no active profile/no picks.
+        self._interest_categories: set[str] = set()
         # Design restyle Phase 4 (2026-09-12) — whichever skill_id
         # core.skill_leveling.next_honest_step() names, set by
         # _refresh_next_step() and read by _build_skill_card() to draw
@@ -290,6 +311,17 @@ class SkillsModule(ModuleBase):
 
         self._widget_built = True
         categories = self.context.skills.categories() if self.context.skills else []
+        # Profile-creation interview (2026-09-14) — a profile's own
+        # picked interests (core/profile_manager.py's Profile.interests,
+        # real category names) sort first, so the categories the user
+        # actually said they care about are the ones they land on.
+        # Falls back to plain alphabetical (categories() is already
+        # sorted) with no active profile or no interests picked —
+        # unchanged from before this existed.
+        active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        if active is not None and active.interests:
+            categories = order_categories_by_interest(categories, active.interests)
+            self._interest_categories = set(active.interests)
         self._current_category = categories[0] if categories else None
         self._build_category_tabs(categories)
         self._refresh()
@@ -383,7 +415,8 @@ class SkillsModule(ModuleBase):
 
     def _build_category_tabs(self, categories: list[str]) -> None:
         for category in categories:
-            button = QPushButton(category)
+            label = format_category_tab_label(category, category in self._interest_categories)
+            button = QPushButton(label)
             button.setObjectName("SkillCategoryTab")
             button.setProperty("active", category == self._current_category)
             button.clicked.connect(lambda checked=False, c=category: self._select_category(c))

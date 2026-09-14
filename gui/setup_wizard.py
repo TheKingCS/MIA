@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from gui.widgets.interview_form import InterviewForm
 
 log = get_logger(__name__)
 
@@ -73,6 +74,30 @@ class _DateTimePage(QWizardPage):
         layout.addWidget(self.time_edit)
 
 
+class _InterviewPage(QWizardPage):
+    """Profile-creation interview (2026-09-14) — see
+    gui/widgets/interview_form.py's own docstring for the full design.
+    Wired here, not just in the later "Add Profile" flow, since a
+    first-run profile is created right when this wizard finishes —
+    same moment, no separate second dialog needed for the very first
+    profile."""
+
+    def __init__(self, context: AppContext) -> None:
+        super().__init__()
+        self.setTitle("Tell MIA About You")
+        self.setSubTitle("Optional — helps MIA suggest things that actually fit your life.")
+        layout = QVBoxLayout(self)
+        self.form = InterviewForm(context)
+        layout.addWidget(self.form)
+
+    def initializePage(self) -> None:  # noqa: N802 (Qt override signature)
+        # Re-reads the name field once this page is actually shown, so
+        # the greeting uses the real name typed on the earlier Welcome
+        # page rather than "" at construction time (this page is built
+        # before the user has typed anything).
+        self.form.set_profile_name(self.field("user_name") or "")
+
+
 class SetupWizard(QWizard):
     """
     First-run wizard. On completion, writes user.name, user.setup_date,
@@ -83,13 +108,15 @@ class SetupWizard(QWizard):
         super().__init__()
         self.context = context
         self.setWindowTitle("MIA — First-Time Setup")
-        self.setFixedSize(480, 320)
+        self.setFixedSize(520, 460)
 
         self._welcome_page = _WelcomePage()
         self._datetime_page = _DateTimePage()
+        self._interview_page = _InterviewPage(context)
 
         self.addPage(self._welcome_page)
         self.addPage(self._datetime_page)
+        self.addPage(self._interview_page)
 
         self.accepted.connect(self._save_setup)
 
@@ -105,7 +132,14 @@ class SetupWizard(QWizard):
         # Creating the first profile also activates it and saves config,
         # so no separate config.save() call is needed here — see
         # core/profile_manager.py's create_profile().
-        self.context.profiles.create_profile(name, make_active=True)
+        profile = self.context.profiles.create_profile(name, make_active=True)
+        # Profile-creation interview (2026-09-14) — optional, so an
+        # empty interests list / blank notes is a real, valid answer
+        # ("skipped"), not an error; still saved so downstream code
+        # never has to guess "never asked" vs. "asked, said nothing."
+        self.context.profiles.set_interview_answers(
+            profile.profile_id, self._interview_page.form.selected_interests(), self._interview_page.form.entered_notes(),
+        )
         config.mark_setup_complete()  # also saves
 
         log.info("First-time setup complete for '%s' at %s %s", name, date_str, time_str)
