@@ -66,7 +66,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
@@ -74,6 +74,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight
 from core.logger import get_logger
 from core.mission_manager import DIFFICULTY_LEVELS
+from core.skill_patterns import declining_categories, momentum_categories
 
 log = get_logger(__name__)
 
@@ -270,7 +271,7 @@ class DiscoveryManager:
     # Generation — pure prompt-building + pure parsing, no I/O in either
     # ------------------------------------------------------------------
 
-    def build_discovery_prompt(self, profile_id: str) -> str:
+    def build_discovery_prompt(self, profile_id: str, today: Optional[date] = None) -> str:
         """
         Pure, deterministic — gathers real Skill/Project/Intent/Mission
         state and formats it as a labeled reference block, same
@@ -279,7 +280,25 @@ class DiscoveryManager:
         the RETURNED STRING through context.llm.generate() themselves
         (via core.generate_worker.GenerateWorker off the GUI thread) —
         this method makes no LLM call and does no I/O.
+
+        `today` defaults to date.today() — an explicit override exists
+        purely for deterministic tests, same "today: Optional[date]"
+        shape core.skill_patterns' own scan functions use.
+
+        Discovery reasoning over Life State (2026-09-14) — the first of
+        core.context_assembler's two remaining named future consumers.
+        Reuses core.skill_patterns' own momentum_categories()/
+        declining_categories() directly (the exact same functions
+        core.context_assembler.assemble_life_state() calls) rather than
+        importing the whole LifeStateSnapshot: Discovery's prompt is
+        shaped per-skill-category the same way its existing trained/
+        frontier lists already are, and Life State's Mission/Maintenance/
+        Project signals are genuinely out of scope for a "capability-
+        building assistant" — the shared value is the reused pure
+        functions, not a shared object shape.
         """
+        if today is None:
+            today = date.today()
         lines: list[str] = []
         allowed_skill_ids: list[str] = []
 
@@ -331,6 +350,24 @@ class DiscoveryManager:
             if frontier:
                 lines.append("Skills available to start next (unlocked, not yet trained):")
                 lines.extend(f"- {d.name} ({d.skill_id})" for d in frontier)
+
+        # Skill momentum/decline (2026-09-14) — real, recent trend
+        # signal, distinct from the static trained/frontier lists
+        # above (those never change day to day; these do). See this
+        # method's own docstring for why these two functions are
+        # reused directly rather than a shared LifeStateSnapshot.
+        momentum_category_names: list[str] = []
+        decline_category_names: list[str] = []
+        if self.context.skills is not None:
+            momentum_category_names = momentum_categories(self.context.skills, profile_id, today)
+            decline_category_names = declining_categories(self.context.skills, profile_id, today)
+            if momentum_category_names:
+                lines.append(f"Currently on a roll in (real recent XP burst): {', '.join(momentum_category_names)}")
+            if decline_category_names:
+                lines.append(
+                    f"Went quiet recently (real prior engagement, no XP in 60+ days): "
+                    f"{', '.join(decline_category_names)}"
+                )
 
         if self.context.intents is not None:
             primary = self.context.intents.primary_intent()
@@ -407,12 +444,25 @@ class DiscoveryManager:
             if studying_subjects
             else ""
         )
+        momentum_instruction = (
+            " If a category is listed as currently 'on a roll,' consider a mission that builds "
+            "on that momentum rather than starting something unrelated."
+            if momentum_category_names
+            else ""
+        )
+        decline_instruction = (
+            " If a category 'went quiet recently,' consider a low-friction mission to gently "
+            "re-engage it -- but don't force it if a better opportunity exists elsewhere."
+            if decline_category_names
+            else ""
+        )
 
         return (
             "You are MIA, a personal capability-building assistant. Based on the real "
             "information below about what this user has actually done, propose ONE new "
             "mission -- a concrete, real-world action -- that would be a useful next step "
-            f"for them.{struggle_instruction}{capability_instruction}{studying_instruction}\n\n"
+            f"for them.{struggle_instruction}{capability_instruction}{studying_instruction}"
+            f"{momentum_instruction}{decline_instruction}\n\n"
             f"{reference_block}\n\n"
             f"You may ONLY reference these exact skill ids in your answer: {allowed_ids_text}. "
             "Never invent a new skill id, and never claim the user has already done something "

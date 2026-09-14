@@ -10992,3 +10992,42 @@ missions · 1 growing · 1 overdue item") with real data. Confirmed real
 
 Cross-domain Pattern Insight correlation and Discovery reasoning over
 this same Life State remain the two real, not-yet-built consumers.
+
+## Discovery reasons over skill momentum/decline (2026-09-14)
+
+The last of Life State's three named future consumers — Discovery's
+`build_discovery_prompt()` now includes real, recent skill-trend
+signal, not just the static trained/frontier lists it already had.
+
+**A deliberate scoping call, not a full Life State import**:
+`build_discovery_prompt()` reuses `core.skill_patterns.momentum_categories()`/
+`declining_categories()` directly — the exact same pure functions
+`core.context_assembler.assemble_life_state()` itself calls — rather
+than importing the whole `LifeStateSnapshot`. Discovery's prompt is
+shaped per-skill-category the same way its existing trained/frontier
+sections already are, and Life State's Mission/Maintenance/Project
+signals are genuinely out of scope for a "capability-building
+assistant." The shared value is the reused pure functions producing
+one consistent trend signal everywhere it's read, not a shared object
+shape forced onto every consumer.
+
+Two new reference-block lines ("Currently on a roll in... " /
+"Went quiet recently...") plus two new soft-steering sentences in the
+instruction paragraph, same shape as the existing struggle/capability/
+studying instructions — "consider building on momentum" / "consider a
+low-friction re-engagement, but don't force it." `build_discovery_prompt()`
+gained an optional `today: Optional[date] = None` parameter (defaults
+to `date.today()`) for deterministic tests, same shape
+`core.skill_patterns`' own scan functions already use — the one call
+site (`modules/toolbox/tools/discovery_tool.py`) needed no changes.
+
+**Verification**: `pytest -q` — full suite, 3107 passed (3 new tests:
+momentum shown, decline shown, neither shown when nothing applies).
+Manually verified with a real simulated Aquaculture burst + a real
+stale Electrical category — the generated prompt correctly named
+"Homestead" as on a roll and "Maker" as gone quiet, with both
+steering sentences reading naturally in the opening paragraph.
+Confirmed real `config/config.json` untouched.
+
+This closes out all three of Life State's originally-named future
+consumers (Assistant action, Dashboard glance, Discovery reasoning).

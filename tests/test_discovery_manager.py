@@ -11,6 +11,7 @@ area, same monkeypatch pattern as tests/test_pathway_manager.py.
 from __future__ import annotations
 
 import json
+from datetime import date, timedelta
 
 import pytest
 
@@ -40,6 +41,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
     monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_XP_LOG_FILE", data_dir / "skill_xp_log.json")
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
     monkeypatch.setattr(project_manager_module, "_DATA_DIR", data_dir)
@@ -233,6 +235,56 @@ def test_prompt_ignores_a_too_hard_mission_with_no_skill_rewards(isolated_paths)
     prompt = manager.build_discovery_prompt("p1")
 
     assert "Found too difficult recently" not in prompt
+
+
+# ------------------------------------------------------------------
+# Skill momentum / decline (core.skill_patterns, reused directly)
+# ------------------------------------------------------------------
+
+_TODAY = date(2026, 9, 14)
+
+
+def test_prompt_shows_momentum_category_with_a_real_recent_burst(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    context.skills.add_skill_xp("p1", "carpentry", 40)
+    context.skills._xp_log[-1].timestamp = (_TODAY - timedelta(days=2)).isoformat()
+    context.skills._save_xp_log()
+
+    prompt = manager.build_discovery_prompt("p1", today=_TODAY)
+
+    assert "Currently on a roll in" in prompt
+    assert "Construction" in prompt
+    assert "builds on that momentum" in prompt.lower()
+
+
+def test_prompt_shows_decline_category_with_real_stale_history(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+    context.skills.add_skill_xp("p1", "carpentry", 20)
+    context.skills._progress[("p1", "carpentry")].last_touched = (_TODAY - timedelta(days=61)).isoformat()
+    context.skills._save_progress()
+
+    prompt = manager.build_discovery_prompt("p1", today=_TODAY)
+
+    assert "Went quiet recently" in prompt
+    assert "Construction" in prompt
+    assert "gently" in prompt.lower()
+
+
+def test_prompt_has_no_momentum_or_decline_section_when_neither_applies(isolated_paths):
+    _write_skill_definitions(isolated_paths)
+    context = _make_context()
+    manager = _make_manager(context)
+
+    prompt = manager.build_discovery_prompt("p1", today=_TODAY)
+
+    assert "Currently on a roll in" not in prompt
+    assert "Went quiet recently" not in prompt
+    assert "builds on that momentum" not in prompt.lower()
+    assert "gently" not in prompt.lower()
 
 
 def test_prompt_shows_currently_studying_subject_with_incomplete_lesson(isolated_paths):
