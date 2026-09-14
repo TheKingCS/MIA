@@ -43,6 +43,28 @@ def format_item_row(item: InventoryItem) -> str:
     return "  ".join(parts)
 
 
+def format_item_detail_line(
+    added_by_name: Optional[str], times_used: int, last_used_by_name: Optional[str], last_used_date: Optional[str]
+) -> str:
+    """Pure formatting logic — testable without Qt. Multi-user pass
+    (2026-09-14) — the same "shared object + user relationship" pattern
+    core.kitchen_manager's own Recipe detail view already surfaces,
+    scaled down to this tool's single-line-per-item list shape rather
+    than a full HOUSEHOLD/YOUR STATS card pair (Inventory items don't
+    have subjective opinions like a recipe rating/favorite to show a
+    second card for)."""
+    added_part = f"Added by {added_by_name}" if added_by_name else "Added by: unknown"
+    if times_used:
+        used_part = f"Used {times_used}x"
+        if last_used_by_name and last_used_date:
+            used_part += f" (last: {last_used_by_name} on {last_used_date})"
+        elif last_used_date:
+            used_part += f" (last: {last_used_date})"
+    else:
+        used_part = "Never used yet"
+    return f"{added_part}  ·  {used_part}"
+
+
 class InventoryTool(ToolboxTool):
     tool_id = "inventory"
     display_name = "Inventory"
@@ -53,6 +75,7 @@ class InventoryTool(ToolboxTool):
         super().__init__(context)
         self._list: Optional[QListWidget] = None
         self._filter_edit: Optional[QLineEdit] = None
+        self._detail_label: Optional[QLabel] = None
 
     def build_widget(self) -> QWidget:
         widget = QWidget()
@@ -66,7 +89,18 @@ class InventoryTool(ToolboxTool):
         layout.addWidget(self._filter_edit)
 
         self._list = QListWidget()
+        self._list.currentItemChanged.connect(lambda *_: self._update_detail_label())
         layout.addWidget(self._list, stretch=1)
+
+        # Multi-user pass (2026-09-14) — who added this item + real
+        # usage history for the selected item, the same "shared object
+        # + user relationship" pattern core.kitchen_manager's own Recipe
+        # detail view surfaces, scaled to this tool's simpler list
+        # shape (see format_item_detail_line()'s own docstring).
+        self._detail_label = QLabel("")
+        self._detail_label.setObjectName("SubtitleLabel")
+        self._detail_label.setWordWrap(True)
+        layout.addWidget(self._detail_label)
 
         adjust_row = QHBoxLayout()
         adjust_row.addWidget(QLabel("Quantity:"))
@@ -115,12 +149,40 @@ class InventoryTool(ToolboxTool):
             self._list.addItem(list_item)
             if item.item_id == select_item_id:
                 self._list.setCurrentItem(list_item)
+        self._update_detail_label()
 
     def _selected_item_id(self) -> Optional[str]:
         item = self._list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
+
+    def _profile_name(self, profile_id: Optional[str]) -> Optional[str]:
+        if profile_id is None or self.context.profiles is None:
+            return None
+        match = next((p for p in self.context.profiles.list_profiles() if p.profile_id == profile_id), None)
+        return match.name if match is not None else None
+
+    def _update_detail_label(self) -> None:
+        item_id = self._selected_item_id()
+        if item_id is None:
+            self._detail_label.setText("")
+            return
+
+        item = self.context.inventory.get_item(item_id)
+        if item is None:
+            self._detail_label.setText("")
+            return
+
+        added_by_name = self._profile_name(item.added_by_profile_id)
+        times_used = self.context.inventory.times_used(item_id)
+        last_used_entry = self.context.inventory.last_used(item_id)
+        last_used_by_name = self._profile_name(last_used_entry.profile_id) if last_used_entry else None
+        last_used_date = last_used_entry.timestamp[:10] if last_used_entry else None
+
+        self._detail_label.setText(
+            format_item_detail_line(added_by_name, times_used, last_used_by_name, last_used_date)
+        )
 
     # ------------------------------------------------------------------
     # Actions

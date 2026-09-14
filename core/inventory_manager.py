@@ -38,6 +38,13 @@ log = get_logger(__name__)
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _ITEMS_FILE = _DATA_DIR / "inventory_items.json"
+# Multi-user pass (2026-09-14) — the "shared object + user relationship"
+# pattern's second real application (see [[project_mia_multiuser_vision]]
+# and core.kitchen_manager.RecipeUserStats' own docstring for the first,
+# Recipes). InventoryItem itself stays shared/household, same as Recipe;
+# this file holds one real per-adjustment event, the direct analog of
+# kitchen_manager.MealLogEntry.
+_USAGE_LOG_FILE = _DATA_DIR / "inventory_usage_log.json"
 
 
 @dataclass
@@ -49,6 +56,13 @@ class InventoryItem:
     location: str = ""
     notes: str = ""
     updated_at: str = ""  # ISO datetime
+    # Multi-user pass (2026-09-14) — who first added this item, same
+    # "attribute the shared object's own creation" role
+    # core.kitchen_manager.Recipe.unlocked_by_profile_id plays for
+    # Recipes. None (every item added before this field existed, or
+    # added with no active profile) means "unattributed" — a real,
+    # valid state, not an error.
+    added_by_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -59,6 +73,7 @@ class InventoryItem:
             "location": self.location,
             "notes": self.notes,
             "updated_at": self.updated_at,
+            "added_by_profile_id": self.added_by_profile_id,
         }
 
     @staticmethod
@@ -71,6 +86,43 @@ class InventoryItem:
             location=data.get("location", ""),
             notes=data.get("notes", ""),
             updated_at=data.get("updated_at", ""),
+            added_by_profile_id=data.get("added_by_profile_id"),
+        )
+
+
+@dataclass
+class InventoryUsageEntry:
+    """One real quantity adjustment, attributed to whoever was active
+    when it happened — the direct analog of
+    core.kitchen_manager.MealLogEntry. `delta` is negative for real
+    consumption ("used the last roll of paper towels") and positive
+    for a restock; `times_used()`/`last_used()` below only count the
+    negative ones, matching the household's actual question ("who's
+    used it, how often") rather than every adjustment indiscriminately."""
+
+    entry_id: str
+    item_id: str
+    delta: int
+    profile_id: Optional[str] = None
+    timestamp: str = ""  # ISO datetime
+
+    def to_dict(self) -> dict:
+        return {
+            "entry_id": self.entry_id,
+            "item_id": self.item_id,
+            "delta": self.delta,
+            "profile_id": self.profile_id,
+            "timestamp": self.timestamp,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "InventoryUsageEntry":
+        return InventoryUsageEntry(
+            entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
+            item_id=data.get("item_id", ""),
+            delta=data.get("delta", 0),
+            profile_id=data.get("profile_id"),
+            timestamp=data.get("timestamp", ""),
         )
 
 
@@ -78,7 +130,9 @@ class InventoryManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._items: list[InventoryItem] = []
+        self._usage_log: list[InventoryUsageEntry] = []
         self._load()
+        self._load_usage_log()
 
     # ------------------------------------------------------------------
     # Persistence
@@ -96,9 +150,22 @@ class InventoryManager:
             notify_data_corruption(self.context, "inventory_items.json")
             self._items = []
 
+    def _load_usage_log(self) -> None:
+        if not _USAGE_LOG_FILE.exists():
+            self._usage_log = []
+            return
+        try:
+            raw = json.loads(_USAGE_LOG_FILE.read_text(encoding="utf-8"))
+            self._usage_log = [InventoryUsageEntry.from_dict(d) for d in raw]
+        except (json.JSONDecodeError, OSError):
+            log.exception("Failed to load inventory_usage_log.json — starting with an empty list.")
+            notify_data_corruption(self.context, "inventory_usage_log.json")
+            self._usage_log = []
+
     def reload(self) -> None:
         """Re-reads inventory_items.json from disk — see ExpeditionManager.reload()'s docstring for why."""
         self._load()
+        self._load_usage_log()
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -106,6 +173,18 @@ class InventoryManager:
             json.dumps([i.to_dict() for i in self._items], indent=2),
             encoding="utf-8",
         )
+
+    def _save_usage_log(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(
+            _USAGE_LOG_FILE,
+            json.dumps([e.to_dict() for e in self._usage_log], indent=2),
+            encoding="utf-8",
+        )
+
+    def _active_profile_id(self) -> Optional[str]:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        return active_profile.profile_id if active_profile is not None else None
 
     # ------------------------------------------------------------------
     # Writing
@@ -127,6 +206,7 @@ class InventoryManager:
             location=location,
             notes=notes,
             updated_at=datetime.now().isoformat(timespec="seconds"),
+            added_by_profile_id=self._active_profile_id(),
         )
         self._items.append(item)
         self._save()
@@ -150,12 +230,28 @@ class InventoryManager:
         return item
 
     def adjust_quantity(self, item_id: str, delta: int) -> InventoryItem:
-        """Convenience for a quick +1/-1 button — clamps at 0 rather than going negative."""
+        """Convenience for a quick +1/-1 button — clamps at 0 rather than
+        going negative. Multi-user pass (2026-09-14) — a real, non-zero
+        delta also appends an InventoryUsageEntry attributed to whoever's
+        active, the direct analog of kitchen_manager.log_meal(). A
+        clamped-to-0 delta (e.g. -1 on an item already at 0) still logs
+        the attempt as a real -1 — that's still a real "someone tried to
+        use this" event, not a no-op, even though the stored quantity
+        itself doesn't go negative."""
         item = self.get_item(item_id)
         if item is None:
             raise ValueError(f"No inventory item with id '{item_id}'.")
         item.quantity = max(0, item.quantity + delta)
         item.updated_at = datetime.now().isoformat(timespec="seconds")
+        if delta != 0:
+            self._usage_log.append(InventoryUsageEntry(
+                entry_id=uuid.uuid4().hex[:10],
+                item_id=item_id,
+                delta=delta,
+                profile_id=self._active_profile_id(),
+                timestamp=item.updated_at,
+            ))
+            self._save_usage_log()
         self._save()
         return item
 
@@ -188,3 +284,52 @@ class InventoryManager:
             if query_lower in haystack:
                 matches.append(item)
         return sorted(matches, key=lambda i: i.name.lower())
+
+    # ------------------------------------------------------------------
+    # Usage (multi-user pass, 2026-09-14) — see InventoryUsageEntry's
+    # own docstring; direct analog of kitchen_manager's
+    # times_made()/last_made_date().
+    # ------------------------------------------------------------------
+
+    def usage_log_for_item(self, item_id: str) -> list[InventoryUsageEntry]:
+        """Every real adjustment (both restocks and consumption) for
+        this item, oldest first."""
+        return [e for e in self._usage_log if e.item_id == item_id]
+
+    def times_used(self, item_id: str, profile_id: Optional[str] = None) -> int:
+        """Real consumption events only (delta < 0) — a restock isn't
+        "using" the item. `profile_id=None` (the default) is the real
+        household total (every profile's own usage, attributed or not).
+        A real profile_id counts only entries attributed to that
+        profile OR unattributed — same semantics
+        core.kitchen_manager.KitchenManager.times_made() already
+        established for the identical "shared object, per-user OR
+        household view" question."""
+        return sum(
+            1 for e in self._usage_log
+            if e.item_id == item_id and e.delta < 0
+            and (profile_id is None or e.profile_id is None or e.profile_id == profile_id)
+        )
+
+    def last_used(self, item_id: str, profile_id: Optional[str] = None) -> Optional[InventoryUsageEntry]:
+        """Same `profile_id` semantics as times_used() above. None if
+        this item (or this profile's own slice of it) has never really
+        been used.
+
+        Picks the last MATCHING entry by real append order (self._usage_log
+        is always appended to, never reordered), not by comparing
+        `timestamp` strings — a real bug caught via an actual manual
+        verification screenshot (2026-09-14): several quick adjustments
+        can land in the same one-second-resolution timestamp, and
+        `max(..., key=lambda e: e.timestamp)` breaks that tie by
+        returning the FIRST one found (Python's max() is stable), the
+        wrong direction for "most recent." List position is finer-
+        grained than the timestamp string and always correct."""
+        matches = [
+            e for e in self._usage_log
+            if e.item_id == item_id and e.delta < 0
+            and (profile_id is None or e.profile_id is None or e.profile_id == profile_id)
+        ]
+        if not matches:
+            return None
+        return matches[-1]

@@ -11312,3 +11312,66 @@ This closes out every concrete finding from this stabilization thread
 — five real fixes (backup/restore external content coverage, atomic
 writes, daily-check isolation, config quarantine, corruption
 notifications) plus this one, the most serious of the six.
+
+## Multi-user shared-object pattern, second application: Inventory (2026-09-14)
+
+User picked extending the "shared object + user relationship" pattern
+(built for Recipes on 2026-09-13 — see `core.kitchen_manager.Recipe`/
+`MealLogEntry`/`RecipeUserStats`) to a second real domain: Inventory,
+the general Toolbox item tracker. Studied the Recipes implementation
+first rather than guessing the shape — `InventoryItem` stays shared/
+household, same as `Recipe`; a real per-adjustment log is the new
+piece, the direct analog of `MealLogEntry`.
+
+`core/inventory_manager.py`: `InventoryItem` gains
+`added_by_profile_id` (who first added it, auto-stamped from the
+active profile at `add_item()` time — mirrors `Recipe.unlocked_by_
+profile_id`'s role exactly). New `InventoryUsageEntry` (entry_id,
+item_id, delta, profile_id, timestamp), appended on every real
+`adjust_quantity()` call with a non-zero delta — including a delta
+that clamps to 0 (e.g. -1 on an already-empty item), since that's
+still a real "someone tried to use this" event, not a no-op. New
+`times_used()`/`last_used()` — consumption only (delta < 0; a restock
+isn't "using" the item), same `profile_id=None` = household-total,
+real-profile-id = that profile OR unattributed semantics
+`KitchenManager.times_made()` already established for the identical
+question.
+
+**Deliberately did NOT add a `RecipeUserStats`-style opinions table**
+for Inventory — Recipes needed one for real per-user subjective
+data (rating/favorite/personal notes) that nothing else could derive;
+a plain inventory item has no natural analog to those, and adding one
+anyway would be exactly the unneeded abstraction this codebase's own
+conventions warn against. The shared value from Recipes reused here is
+the *pattern* (attribute creation + a real per-event log), not every
+piece of its shape.
+
+`modules/toolbox/tools/inventory_tool.py`: new `format_item_detail_line()`
++ a detail label below the list, showing the selected item's real
+"Added by X · Used Nx (last: Y on DATE)" — scaled to this tool's
+single-line-list shape rather than Recipes' full HOUSEHOLD/YOUR STATS
+card pair, since there's no per-user opinion data to show a second
+card for here.
+
+**A real bug caught by an actual manual verification screenshot, not
+assumed correct**: `last_used()`'s first implementation used
+`max(matches, key=lambda e: e.timestamp)` — but several quick
+adjustments can land in the same one-second-resolution timestamp
+string, and Python's `max()` breaks ties by returning the FIRST
+element, the wrong direction for "most recent." A real screenshot
+showed "last: Zac" immediately after Faith's own real, later
+adjustment. Fixed by using real list-append order (`matches[-1]`,
+finer-grained than the timestamp string and always correct) instead of
+comparing timestamps at all.
+
+**Verification**: `pytest -q` — full suite, 3161 passed (25 new tests:
+17 in `test_inventory_manager.py` covering attribution, the usage log,
+`times_used()`/`last_used()`'s household/per-profile/unattributed
+semantics, and the real `last_used()` tie-breaking regression; 4 new
+formatter tests in `test_inventory_tool.py`; plus persistence/
+corruption-handling coverage for the new usage-log file). Manually
+verified end-to-end with a real two-profile scenario (Zac adds an
+item and uses it twice, Faith uses it once) against the real Qt tool
+widget — screenshot confirmed the detail line renders correctly
+("Added by Zac · Used 3x (last: Faith on 2026-09-14)") only after the
+`last_used()` fix. Confirmed real `config/config.json` untouched.
