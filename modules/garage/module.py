@@ -65,8 +65,10 @@ photography (mower/truck/Camaro thumbnails) was too low-resolution
 (~150px) to extract and ship — `gui/widgets/photo_background_frame.py`
 paints a gradient placeholder until real photography exists; swapping
 in a real photo later needs no other code changes. The per-asset
-detail page (`_build_detail_page()`) is untouched this pass — still
-the plain teal-HUD-adjacent look, deliberately deferred smaller scope.
+detail page (`_build_detail_page()`) got the same treatment later the
+same day — see its own docstring below for that pass's details
+(NatureAssetCard/NatureGlanceTile throughout); nothing here is still
+on the old teal-HUD look.
 """
 
 from __future__ import annotations
