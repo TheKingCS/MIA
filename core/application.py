@@ -57,6 +57,7 @@ from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
+from core.context_assembler import assemble_life_state, format_life_state_summary
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
 from core.maintenance_insights import format_maintenance_insights_message, scan_maintenance_insights
 from core.mission_insights import format_mission_insights_message, scan_mission_insights
@@ -1208,6 +1209,24 @@ class MIAApplication:
             trigger_phrases=(
                 "field captures", "voice notes waiting", "what did i record",
                 "captures to review", "field notes waiting",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
+            name="get_life_state",
+            domain="system",
+            description=(
+                "Give a synthesized status report of what's currently going on in the active profile's "
+                "life — active missions, live streaks, skill trends (growing/declining/dormant), open "
+                "system observations, overdue maintenance, and active projects, all in one answer. Use "
+                "this for broad questions like 'what's going on with me', 'how am I doing', 'give me a "
+                "status report', or 'what's my life state' — not for a single-domain question that "
+                "another action already answers more precisely."
+            ),
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_get_life_state,
+            trigger_phrases=(
+                "what's going on with me", "how am i doing", "status report",
+                "my life state", "give me an overview", "catch me up",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -3328,6 +3347,26 @@ class MIAApplication:
 
         lines = [f"{proposal.journal_title}: {proposal.transcript}" for proposal in pending]
         return "\n".join(lines)
+
+    @staticmethod
+    def _action_get_life_state(context: AppContext, arguments: dict) -> str:
+        """
+        The first real consumer of core.context_assembler (2026-09-14) —
+        a synthesized "what's going on with me" answer, built live from
+        Missions/Skills/Insights/Maintenance/Projects rather than the
+        LLM having to stitch together several separate action calls
+        itself. GUI-only, same reason list_observations/
+        list_field_captures are: context.insights/maintenance/projects/
+        recurring_missions are only ever constructed in
+        core/application.py, not the headless boot path.
+        """
+        if context.profiles is None:
+            return "Life state isn't available without an active profile."
+        active_profile = context.profiles.get_active_profile()
+        if active_profile is None:
+            return "No active profile — nothing to report."
+        snapshot = assemble_life_state(context, active_profile.profile_id, date.today())
+        return format_life_state_summary(snapshot)
 
     @staticmethod
     def _action_add_waypoint(context: AppContext, arguments: dict) -> str:

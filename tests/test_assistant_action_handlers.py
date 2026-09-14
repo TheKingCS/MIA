@@ -28,11 +28,14 @@ import core.lite_capture_manager as lite_capture_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
 import core.ledger_manager as ledger_manager_module
+import core.maintenance_manager as maintenance_manager_module
 import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
 import core.product_manager as product_manager_module
 import core.project_manager as project_manager_module
+import core.recurring_mission_manager as recurring_mission_manager_module
 import core.script_library_manager as script_library_manager_module
+import core.skill_manager as skill_manager_module
 import core.task_manager as task_manager_module
 import core.trail_map_library as trail_map_library_module
 import core.trip_manager as trip_manager_module
@@ -51,13 +54,16 @@ from core.inventory_manager import InventoryManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
 from core.ledger_manager import LedgerManager
+from core.maintenance_manager import MaintenanceManager
 from core.material_manager import MaterialManager
 from core.memory_manager import MemoryManager
 from core.mission_manager import MissionManager
 from core.product_manager import ProductManager
 from core.profile_manager import ProfileManager
 from core.project_manager import ProjectManager
+from core.recurring_mission_manager import RecurringMissionManager
 from core.script_library_manager import ScriptLibraryManager
+from core.skill_manager import SkillManager
 from core.task_manager import TaskManager
 from core.trail_map_library import NotAPdfError, TrailMapLibrary
 from core.trip_manager import TripManager
@@ -113,6 +119,14 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(insight_manager_module, "_RECOMMENDATIONS_FILE", data_dir / "recommendations.json")
     monkeypatch.setattr(lite_capture_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(lite_capture_manager_module, "_PROPOSALS_FILE", data_dir / "capture_proposals.json")
+    monkeypatch.setattr(maintenance_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(maintenance_manager_module, "_MAINTENANCE_FILE", data_dir / "maintenance.json")
+    monkeypatch.setattr(recurring_mission_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(recurring_mission_manager_module, "_TEMPLATES_FILE", data_dir / "recurring_mission_templates.json")
+    monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_XP_LOG_FILE", data_dir / "skill_xp_log.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -139,6 +153,9 @@ def context(tmp_path, monkeypatch):
     ctx.insights = InsightManager(ctx)
     ctx.config.set("lite_capture.import_folder", str(tmp_path / "lite_captures"))
     ctx.lite_captures = LiteCaptureManager(ctx)
+    ctx.maintenance = MaintenanceManager(ctx)
+    ctx.recurring_missions = RecurringMissionManager(ctx)
+    ctx.skills = SkillManager(ctx)
     return ctx
 
 
@@ -1737,3 +1754,31 @@ def test_list_field_captures_no_service_reports_unavailable(context):
     context.lite_captures = None
     result = MIAApplication._action_list_field_captures(context, {})
     assert "not available" in result.lower() or "aren't available" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Life State (core.context_assembler)
+# ----------------------------------------------------------------------
+
+def test_get_life_state_no_active_profile_reports_nothing_to_report(context):
+    result = MIAApplication._action_get_life_state(context, {})
+    assert "no active profile" in result.lower()
+
+
+def test_get_life_state_no_profiles_service_reports_unavailable(context):
+    context.profiles = None
+    result = MIAApplication._action_get_life_state(context, {})
+    assert "isn't available" in result.lower()
+
+
+def test_get_life_state_quiet_profile_still_returns_real_text(context):
+    context.profiles.create_profile(name="Alex")
+    result = MIAApplication._action_get_life_state(context, {})
+    assert "Nothing notable" in result
+
+
+def test_get_life_state_reflects_a_real_active_mission(context):
+    context.profiles.create_profile(name="Alex")
+    context.missions.add_mission("Real mission")
+    result = MIAApplication._action_get_life_state(context, {})
+    assert "1 active mission" in result

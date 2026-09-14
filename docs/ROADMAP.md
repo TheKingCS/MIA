@@ -10906,3 +10906,55 @@ simulated two-session Cooking burst produced the Insight
 recommendation, and — scanning again 10 days later with no new
 activity — the Insight resolved on its own as expected. Confirmed real
 `config/config.json` untouched throughout.
+
+## Life State: a real context_assembler.py, finally built (2026-09-14)
+
+A real service answering "what's going on in this person's life right
+now" — the exact `context_assembler.py` design discussed and agreed on
+2026-09-11 (mia_system_vision's own words at the time: a "live view,
+not a stored object") and then never actually built, until an external
+architecture review (requested by the user, reviewing a generated
+program-overview handoff document) independently named this the single
+most valuable missing piece. The review also validated several things
+already shipped without knowing it — multi-skill XP per activity
+(`skill_weights`), the Individual/Shared Household/Group multi-user
+hierarchy — while correctly flagging Life State and cross-domain
+Pattern Insight correlation as the two genuinely open gaps.
+
+New `core/context_assembler.py`: `LifeStateSnapshot` (a plain dataclass,
+never persisted) + `assemble_life_state(context, profile_id, today)`,
+synthesizing live from Missions (active count, correctly scoped to
+unattributed + this profile's own + group-quest participation, the
+same attribution rules `_credit_mission_rewards()` already
+established), recurring-mission streaks, Skill momentum/decline/dormant
+categories (reusing `core.skill_patterns`' own functions rather than
+reimplementing them), open Insights (this profile's own Pattern
+Insights plus every other household-wide signal), overdue Maintenance,
+and active Projects. Nothing new is persisted — every field is
+recomputed fresh on each call, exactly the "live view" design already
+agreed on three days ago.
+
+First real consumer: a new `get_life_state` Assistant action ("what's
+going on with me", "how am I doing", "status report") — GUI-only, same
+reason `list_observations`/`list_field_captures` are (several of the
+managers it reads are only constructed in `core/application.py`, not
+the headless boot path). `format_life_state_summary()` turns the
+snapshot into one plain-English paragraph, always returning real text
+even when everything is quiet (a pull-query response, unlike a
+notification, must never come back empty).
+
+**Verification**: `pytest -q` — full suite, 3100 passed (19 new tests:
+15 in `test_context_assembler.py` covering every section of the
+snapshot plus the formatter, 4 in `test_assistant_action_handlers.py`
+for the new action). Manually verified end-to-end with isolated tmp
+data dirs across all seven source managers at once — a realistic
+scenario (2 active missions, a completed weekly laundry streak, a real
+Aquaculture XP burst, a dormant stated interest, an open maintenance
+Insight, an overdue task, and an active project) produced a correct,
+naturally-readable snapshot and summary. Confirmed real
+`config/config.json` untouched throughout.
+
+Deliberately scoped as a read-only query layer only — Discovery
+reasoning over this same state, a Dashboard "System HUD" section, and
+cross-domain Pattern Insight correlation are all real future consumers
+of this exact function, not built yet.
