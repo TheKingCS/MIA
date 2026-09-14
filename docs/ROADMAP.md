@@ -10647,3 +10647,47 @@ profile interested in both Homestead and Maker, with real XP only in
 Maker, correctly flagged only Homestead — the exact message, a real
 Notification, and resolution once real Homestead XP landed all
 confirmed. Real `config/config.json` confirmed untouched throughout.
+
+## Pattern Insights, slice 3: skill decline (2026-09-14)
+
+Scoped directly with the user, same discipline as slices 1 and 2. The
+mirror image of interest gaps: a category with real historical
+engagement that's gone quiet, not one that was never started.
+
+**Real correction made before writing any code**: originally described
+as derivable from completed-Mission history alone with no new schema
+— checked further and that was wrong. Skill XP is granted from many
+places (Missions, Workout, Kitchen, Budget, Maintenance, Project,
+Classroom), all through the one shared `core.gamification.grant_xp()`
+-> `SkillManager.add_skill_xp()` choke point. Deriving "last touched"
+from Mission history alone would falsely flag anyone staying engaged
+through a different activity type. **New `SkillProgress.last_touched`**
+(core/skill_manager.py) — one real timestamp field, set at the actual
+choke point, the one place persisting it is correct rather than a
+"derive it, don't duplicate" violation, since no single other source
+has this information to derive it from. Blank for every skill touched
+before this field existed — treated as "no evidence," never flagged
+either way.
+
+**New `declining_categories()`/`scan_skill_decline_insights()`**
+(`core/skill_patterns.py`, same file as interest gaps — both read the
+same Skill/Profile domain, unlike `mission_patterns.py`) — a category
+with real historical XP (> 0) but no skill in it touched within 60
+days surfaces as a real Insight + Recommendation, resolving the moment
+real XP lands there again. Third distinct `kind` ("skill_decline")
+under the shared `source_type="patterns"`, fully independent of the
+other two per profile — a new regression test proves this explicitly
+(same cross-kind resolution bug class slice 2 found in slice 1).
+`docs/user_help/observations.md`/`skills.md` updated in the same pass.
+
+**Verification**: `pytest -q` — full suite, 3028 passed (18 new tests:
+3 for the new `SkillProgress.last_touched` field in
+`test_skill_manager.py`, 15 in `test_skill_patterns.py` covering
+category-decline detection, the "no real evidence" non-claim case,
+scan idempotency, resolution, and the cross-kind regression test).
+Manual end-to-end verification against a fully isolated context
+(config path explicitly asserted before touching anything): a profile
+with real historical XP in both Homestead (backdated 90 days stale)
+and Maker (fresh) correctly flagged only Homestead — exact message,
+real Notification, and resolution once fresh Homestead XP landed all
+confirmed. Real `config/config.json` confirmed untouched.

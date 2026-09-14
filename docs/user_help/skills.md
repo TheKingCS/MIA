@@ -11,8 +11,9 @@ XP progress bar. Category tabs group related skills; if you answered the intervi
 questions when your profile was created, those categories are starred
 and sorted first. MIA also keeps an eye on this: if you said you're
 interested in a category but still have zero real XP there a few
-weeks later, it shows up as a real Observation, not just silently
-ignored.
+weeks later, or a category you genuinely used to work in has gone
+quiet for 60+ days, either one shows up as a real Observation, not
+just silently ignored.
 
 ## Capability status: Locked, Learning, Practiced, Demonstrated
 

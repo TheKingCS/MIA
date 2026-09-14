@@ -140,6 +140,34 @@ def test_add_skill_xp_persists_across_a_fresh_load(isolated_paths):
     assert reloaded.get_progress("p1", "strength").total_xp == 10
 
 
+def test_add_skill_xp_sets_last_touched(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    manager = SkillManager(context)
+
+    manager.add_skill_xp("p1", "strength", 10)
+
+    assert manager.get_progress("p1", "strength").last_touched != ""
+
+
+def test_untouched_skill_has_no_last_touched(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    manager = SkillManager(context)
+    assert manager.get_progress("p1", "strength").last_touched == ""
+
+
+def test_add_skill_xp_last_touched_persists_across_a_fresh_load(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    context = _make_context()
+    manager = SkillManager(context)
+    manager.add_skill_xp("p1", "strength", 10)
+    first_touched = manager.get_progress("p1", "strength").last_touched
+
+    reloaded = SkillManager(context)
+    assert reloaded.get_progress("p1", "strength").last_touched == first_touched
+
+
 def test_add_skill_xp_unknown_skill_returns_none_and_does_not_persist(isolated_paths):
     context = _make_context()
     manager = SkillManager(context)

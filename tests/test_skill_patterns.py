@@ -25,9 +25,14 @@ from core.insight_manager import InsightManager
 from core.profile_manager import Profile, ProfileManager
 from core.skill_manager import SkillManager
 from core.skill_patterns import (
+    build_decline_recommendation,
     build_interest_gap_recommendation,
+    declining_categories,
+    format_decline_message,
     format_interest_gap_message,
+    format_skill_decline_insights_message,
     format_skill_pattern_insights_message,
+    scan_skill_decline_insights,
     scan_skill_pattern_insights,
     total_xp_in_category,
     untouched_interests,
@@ -251,3 +256,165 @@ def test_scan_with_no_insights_service_returns_empty(isolated_paths):
 
 def test_format_skill_pattern_insights_message_none_when_empty():
     assert format_skill_pattern_insights_message([]) is None
+
+
+def _backdate_skill(context, profile_id, skill_id, when_iso):
+    """Test-only reach-into-internals helper — add_skill_xp() always
+    stamps "now", so backdating last_touched needs direct access, same
+    as this whole session's established "mutate the object, then call
+    the manager's own _save()" convention for other managers."""
+    progress = context.skills.get_progress(profile_id, skill_id)
+    progress.last_touched = when_iso
+    context.skills._progress[(profile_id, skill_id)] = progress
+    context.skills._save_progress()
+
+
+# ------------------------------------------------------------------
+# declining_categories (pure-ish)
+# ------------------------------------------------------------------
+
+def test_declining_categories_flags_stale_real_history(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 20)
+    _backdate_skill(context, "p1", "gardening", (TODAY - timedelta(days=61)).isoformat())
+
+    assert declining_categories(context.skills, "p1", TODAY) == ["Homestead"]
+
+
+def test_declining_categories_not_flagged_within_the_window(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 20)
+    _backdate_skill(context, "p1", "gardening", (TODAY - timedelta(days=59)).isoformat())
+
+    assert declining_categories(context.skills, "p1", TODAY) == []
+
+
+def test_declining_categories_ignores_categories_with_no_real_history(isolated_paths):
+    context = _homestead_maker_context()
+    assert declining_categories(context.skills, "p1", TODAY) == []  # that's interest_gap's job, not this one's
+
+
+def test_declining_categories_uses_most_recent_touch_in_the_category(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 20)
+    _backdate_skill(context, "p1", "gardening", (TODAY - timedelta(days=90)).isoformat())
+    context.skills.add_skill_xp("p1", "canning", 5)  # recent — real activity in the SAME category
+    _backdate_skill(context, "p1", "canning", (TODAY - timedelta(days=1)).isoformat())
+
+    assert declining_categories(context.skills, "p1", TODAY) == []
+
+
+def test_declining_categories_no_real_last_touched_evidence_is_not_flagged(isolated_paths):
+    """Real XP exists (earned before last_touched existed) but no real
+    evidence of when — can't judge, must not guess "definitely stale.\""""
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 20)
+    _backdate_skill(context, "p1", "gardening", "")
+
+    assert declining_categories(context.skills, "p1", TODAY) == []
+
+
+# ------------------------------------------------------------------
+# format_decline_message / build_decline_recommendation
+# ------------------------------------------------------------------
+
+def test_format_decline_message_single():
+    assert format_decline_message(["Homestead"]) == (
+        "You used to be active in Homestead, but haven't earned any real XP there in 60+ days."
+    )
+
+
+def test_format_decline_message_multiple():
+    assert format_decline_message(["Homestead", "Maker"]) == (
+        "You used to be active in Homestead and Maker, but haven't earned any real XP there in 60+ days."
+    )
+
+
+def test_build_decline_recommendation_single():
+    assert build_decline_recommendation(["Homestead"]) == "Pick up a Mission in Homestead again, or let it go for now."
+
+
+def test_build_decline_recommendation_multiple():
+    assert "one of these" in build_decline_recommendation(["Homestead", "Maker"])
+
+
+# ------------------------------------------------------------------
+# scan_skill_decline_insights
+# ------------------------------------------------------------------
+
+def test_scan_decline_flags_a_real_stale_category(isolated_paths):
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 20)
+    _backdate_skill(context, profile.profile_id, "gardening", (TODAY - timedelta(days=61)).isoformat())
+
+    new_insights = scan_skill_decline_insights(context, TODAY)
+
+    assert len(new_insights) == 1
+    assert new_insights[0].kind == "skill_decline"
+    assert new_insights[0].source_id == profile.profile_id
+    assert "Homestead" in new_insights[0].message
+    assert len(context.insights.recommendations_for_insight(new_insights[0].insight_id)) == 1
+
+
+def test_scan_decline_does_not_duplicate_on_a_second_scan(isolated_paths):
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 20)
+    _backdate_skill(context, profile.profile_id, "gardening", (TODAY - timedelta(days=61)).isoformat())
+
+    first_run = scan_skill_decline_insights(context, TODAY)
+    second_run = scan_skill_decline_insights(context, TODAY)
+
+    assert len(first_run) == 1
+    assert second_run == []
+    assert len(context.insights.all_insights()) == 1
+
+
+def test_scan_decline_resolves_once_real_xp_lands_again(isolated_paths):
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 20)
+    _backdate_skill(context, profile.profile_id, "gardening", (TODAY - timedelta(days=61)).isoformat())
+
+    new_insights = scan_skill_decline_insights(context, TODAY)
+    insight_id = new_insights[0].insight_id
+
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 5)  # real activity today
+    scan_skill_decline_insights(context, TODAY)
+
+    assert context.insights.get_insight(insight_id).status == "resolved"
+
+
+def test_scan_decline_does_not_cross_resolve_a_different_pattern_kind(isolated_paths):
+    """Same real bug class as mission_patterns.py's own regression test
+    — resolution here must be scoped to kind="skill_decline" only."""
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    unrelated = context.insights.create_insight_if_new(
+        source_type="patterns", source_id=profile.profile_id, kind="interest_gap",
+        title="Unrelated", message="A different real pattern.",
+    )
+
+    scan_skill_decline_insights(context, TODAY)  # nothing declining -> nothing of its own to resolve
+
+    assert context.insights.get_insight(unrelated.insight_id).status == "open"
+
+
+def test_scan_decline_with_no_profiles_service_returns_empty(isolated_paths):
+    context = AppContext(config=ConfigManager(), events=EventBus())
+    context.skills = SkillManager(context)
+    context.insights = InsightManager(context)
+    assert scan_skill_decline_insights(context, TODAY) == []
+
+
+# ------------------------------------------------------------------
+# format_skill_decline_insights_message
+# ------------------------------------------------------------------
+
+def test_format_skill_decline_insights_message_none_when_empty():
+    assert format_skill_decline_insights_message([]) is None

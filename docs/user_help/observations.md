@@ -8,13 +8,14 @@ need attention, grouped under its own section:
 - **Maintenance** — overdue or due-soon tasks.
 - **Missions** — a Mission that's gone quiet for two weeks or more.
 - **Patterns** — a real trend noticed across your history, not just
-  current state. Two real patterns today: repeated Mission
+  current state. Three real patterns today: repeated Mission
   abandonment (3 or more within the last 30 days names the most
   common reason — too hard, not interesting, no time — with a
-  matching suggestion), and a stated interest with no real engagement
-  (if you picked a category during your profile interview but still
-  have zero real skill XP there a few weeks later, MIA says so and
-  points you at a Mission or Pathway to get started).
+  matching suggestion); a stated interest with no real engagement
+  (picked a category during your profile interview but still have
+  zero real skill XP there a few weeks later); and skill decline — the
+  mirror image, a category you genuinely used to work in but haven't
+  earned any real XP in for 60+ days.
 
 Each entry shows what was noticed plus a suggested next step.
 
@@ -25,9 +26,9 @@ observation clears itself automatically the moment the real condition
 behind it stops being true — completing the overdue Maintenance task,
 making real progress on (or abandoning) the stale Mission, not
 abandoning any more Missions until the older ones age out of the
-30-day window, or earning real XP in a stated interest that had none.
-Observations is just a window into that same real state, not a second
-copy of it.
+30-day window, or earning real XP in a category that had none (or had
+gone quiet). Observations is just a window into that same real state,
+not a second copy of it.
 
 ## Also on the Home dashboard and in chat
 

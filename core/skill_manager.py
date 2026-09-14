@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -97,9 +98,26 @@ class SkillProgress:
     profile_id: str
     skill_id: str
     total_xp: int = 0
+    # Pattern Insights slice 3 (2026-09-14) — "when was this skill last
+    # trained," a real gap: XP is granted from many places (Missions,
+    # Workout, Kitchen, Budget, Maintenance, Project, Classroom, all
+    # through the one shared core.gamification.grant_xp() -> this
+    # class's own add_skill_xp() choke point), so deriving "last
+    # touched" from any ONE of those sources (e.g. completed Missions
+    # alone) would be wrong — it'd read as "decline" for someone
+    # actively engaged through a different activity type entirely.
+    # This is the one place persisting a real timestamp is correct
+    # rather than a "derive it" violation: there's no other single
+    # authoritative source to derive it from. Blank for every skill
+    # touched before this field existed — see core/skill_patterns.py's
+    # own handling of that case.
+    last_touched: str = ""
 
     def to_dict(self) -> dict:
-        return {"profile_id": self.profile_id, "skill_id": self.skill_id, "total_xp": self.total_xp}
+        return {
+            "profile_id": self.profile_id, "skill_id": self.skill_id,
+            "total_xp": self.total_xp, "last_touched": self.last_touched,
+        }
 
     @staticmethod
     def from_dict(data: dict) -> "SkillProgress":
@@ -107,6 +125,7 @@ class SkillProgress:
             profile_id=data["profile_id"],
             skill_id=data["skill_id"],
             total_xp=data.get("total_xp", 0),
+            last_touched=data.get("last_touched", ""),
         )
 
 
@@ -209,7 +228,10 @@ class SkillManager:
         existing = self._progress.get(key)
         old_total = existing.total_xp if existing else 0
         new_total = old_total + amount
-        self._progress[key] = SkillProgress(profile_id=profile_id, skill_id=skill_id, total_xp=new_total)
+        self._progress[key] = SkillProgress(
+            profile_id=profile_id, skill_id=skill_id, total_xp=new_total,
+            last_touched=datetime.now().isoformat(timespec="seconds"),
+        )
         self._save_progress()
         log.info("Profile '%s' earned %d XP in skill '%s' (total now %d)", profile_id, amount, skill_id, new_total)
         self.context.events.publish("profile.skill_xp_changed", profile_id=profile_id, skill_id=skill_id)
