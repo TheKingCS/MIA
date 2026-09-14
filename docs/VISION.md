@@ -370,6 +370,45 @@ recording LED/vibration motor outside of any GUI framework. Flagged
 here as real, unstarted work — same "don't build blind, scope it
 properly first" discipline as everything else in this document.
 
+### "MIA Lite" — a fourth tier, lighter than Core (2026-09-14)
+
+Core (above) still runs a real local model via the Hailo NPU — genuine
+tool-calling and conversation, fully offline. **MIA Lite is a
+different, lighter idea**: a field/wearable mode (possibly on Core's
+own hardware running a reduced mode, possibly a smaller/cheaper
+secondary device — not yet decided which) that does **no local
+inference at all**. It just captures — a push-to-talk voice note, a
+quick journal entry, sensor/location logs — timestamps and buffers
+that raw capture locally, and does nothing else until it reconnects to
+a real MIA instance (Core or Home), at which point everything queued
+gets handed off for real processing (transcription, memory extraction,
+mission/journal entries, whatever the content actually needs).
+
+**Why this is a real, separate tier, not just "Core with a weaker
+model"**: the hybrid decision above already established Core must stay
+offline-capable *because* a thin client that needs Home is a
+contradiction for a survival companion — but Core's own offline
+capability still assumes real compute (the Hailo NPU) is present and
+powered. Lite is for the case where even that's too heavy — a lower
+power/weight budget, a cheaper secondary wearable, or a deliberate
+battery-saving field mode on the same Receiver hardware. The design
+constraint is the mirror image of Core's: Lite must be *useful*
+(capture never fails, never waits on a connection, never loses data)
+while being *minimal* (no model, no inference, the least power/compute
+this project can get away with).
+
+**Not designed further here** — real open questions: is this a mode
+on existing Receiver hardware or genuinely separate/cheaper hardware;
+what the local buffer format is (and how it survives a crash/power
+loss before sync); what "reconnect" means concretely (USB dock like
+Core→Home already implies, or opportunistic network sync); and how
+queued raw captures map onto real processing once they land (a voice
+note becoming a Journal entry vs. a Mission update vs. a UserMemory
+fact is a real classification problem, not automatic). Flagged here so
+it has an obvious home once scoped, same "don't build blind" stance as
+everything else in this document — this needs its own real design
+pass before any code, same as the Core→Home hand-off itself above.
+
 ## Home's visual identity — a sci-fi companion interface (2026-07-15)
 
 Now that Home is confirmed as the only place MIA's visual interface
