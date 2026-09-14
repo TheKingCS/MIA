@@ -23,6 +23,7 @@ import threading
 import urllib.error
 from datetime import date, datetime
 from pathlib import Path
+from typing import Callable
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFontDatabase
@@ -447,11 +448,55 @@ class MIAApplication:
             )
 
     def _check_daily_occasions(self) -> None:
-        """See core/daily_occasions.py's docstring for the full reasoning behind each check."""
+        """See core/daily_occasions.py's docstring for the full reasoning behind each check.
+
+        Stabilization (2026-09-14) — this used to be one long function
+        with 14 sequential `if should_run_once_daily(...):` blocks and
+        no exception isolation between them: a real bug in any one
+        block (e.g. Calendar digest) would raise, and every later
+        block in the list (Budget nudge, all four Pattern Insight
+        slices, Rewards, Walkthrough suggestions, ...) would silently
+        never run that tick — not because THEY had a problem, but
+        because an unrelated earlier one crashed first. Confirmed via
+        a real check (not assumed) that PySide6 here calls
+        sys.excepthook and keeps the app running rather than aborting
+        (see main.py's own handler), so this wasn't an app-crashing
+        bug — but it was a silent, indefinite one: if the same block
+        kept failing every tick, every check after it would starve
+        forever, logged but invisible on a kiosk device nobody's
+        watching a terminal on. Refactored into one small method per
+        check (same behavior/content as before, just relocated) and a
+        loop with the exact same per-callback exception isolation
+        core.event_bus.EventBus.publish() already established for the
+        same reason — one broken check should never be able to starve
+        the rest."""
         now = datetime.now()
         today_iso = now.date().isoformat()
-        config = self.context.config
 
+        checks: list[tuple[str, Callable[[datetime, str], None]]] = [
+            ("birthday", self._check_birthday),
+            ("calendar_digest", self._check_calendar_digest),
+            ("checkin", self._check_checkin),
+            ("budget_nudge", self._check_budget_nudge),
+            ("smart_suggestion", self._check_smart_suggestion),
+            ("maintenance_insight", self._check_maintenance_insight),
+            ("mission_insight", self._check_mission_insight),
+            ("pattern_insight", self._check_pattern_insight),
+            ("skill_pattern_insight", self._check_skill_pattern_insight),
+            ("skill_decline_insight", self._check_skill_decline_insight),
+            ("skill_momentum_insight", self._check_skill_momentum_insight),
+            ("recurring_mission", self._check_recurring_missions),
+            ("rewards", self._check_rewards),
+            ("walkthrough_suggestion", self._check_walkthrough_suggestion),
+        ]
+        for name, check in checks:
+            try:
+                check(now, today_iso)
+            except Exception:
+                log.exception("Daily occasion check '%s' failed — other checks still ran.", name)
+
+    def _check_birthday(self, now: datetime, today_iso: str) -> None:
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_birthday_celebrated_date"), today_iso):
             active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
             if active_profile is not None and is_birthday_today(active_profile.birthday, now.date()):
@@ -464,6 +509,8 @@ class MIAApplication:
                 config.set("system.last_birthday_celebrated_date", today_iso)
                 config.save()
 
+    def _check_calendar_digest(self, now: datetime, today_iso: str) -> None:
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_calendar_digest_date"), today_iso):
             events_today = (
                 calendar_events_today(self.context.calendar.all_events(), today_iso)
@@ -481,6 +528,8 @@ class MIAApplication:
             config.set("system.last_calendar_digest_date", today_iso)
             config.save()
 
+    def _check_checkin(self, now: datetime, today_iso: str) -> None:
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_checkin_date"), today_iso):
             has_activity_today = self.context.conversations is not None and any(
                 conversation.updated_at[:10] == today_iso
@@ -496,6 +545,8 @@ class MIAApplication:
                 config.set("system.last_checkin_date", today_iso)
                 config.save()
 
+    def _check_budget_nudge(self, now: datetime, today_iso: str) -> None:
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_budget_nudge_date"), today_iso) and self.context.budget is not None:
             bills = self.context.budget.all_bills()
             income_sources = self.context.budget.all_income_sources()
@@ -513,6 +564,8 @@ class MIAApplication:
             config.set("system.last_budget_nudge_date", today_iso)
             config.save()
 
+    def _check_smart_suggestion(self, now: datetime, today_iso: str) -> None:
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_smart_suggestion_date"), today_iso):
             last_session_date = self.context.workout.last_session_date() if self.context.workout is not None else None
             pantry_items = self.context.kitchen.all_pantry_items() if self.context.kitchen is not None else []
@@ -528,10 +581,12 @@ class MIAApplication:
             config.set("system.last_smart_suggestion_date", today_iso)
             config.save()
 
+    def _check_maintenance_insight(self, now: datetime, today_iso: str) -> None:
         # "Connective infrastructure" phase 3 (2026-09-11) — the first
         # real observe->insight->recommend scan, piloted in Maintenance.
         # Same should_run_once_daily()-gated, batched-into-one-message
-        # shape as the Smart Suggestions block right above.
+        # shape as the Smart Suggestions check above.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_maintenance_insight_date"), today_iso):
             new_insights = scan_maintenance_insights(self.context, now.date())
             message = format_maintenance_insights_message(new_insights)
@@ -545,10 +600,12 @@ class MIAApplication:
             config.set("system.last_maintenance_insight_date", today_iso)
             config.save()
 
+    def _check_mission_insight(self, now: datetime, today_iso: str) -> None:
         # Missions-stale insights (2026-09-14) — the second domain the
         # observe->insight->recommend loop covers, same gated/batched
-        # shape as the Maintenance block right above (see
+        # shape as the Maintenance check above (see
         # core/mission_insights.py's own docstring).
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_mission_insight_date"), today_iso):
             new_mission_insights = scan_mission_insights(self.context, now.date())
             message = format_mission_insights_message(new_mission_insights)
@@ -562,12 +619,14 @@ class MIAApplication:
             config.set("system.last_mission_insight_date", today_iso)
             config.save()
 
+    def _check_pattern_insight(self, now: datetime, today_iso: str) -> None:
         # Pattern insights (2026-09-14) — the third domain the
         # observe->insight->recommend loop covers, and the first real
         # "learns from history" signal (core/pathway_manager.py's own
         # docstring named this "Phase 6"). Same gated/batched shape as
-        # the two blocks above — see core/mission_patterns.py's own
+        # the two checks above — see core/mission_patterns.py's own
         # docstring.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_pattern_insight_date"), today_iso):
             new_pattern_insights = scan_pattern_insights(self.context, now.date())
             message = format_pattern_insights_message(new_pattern_insights)
@@ -581,12 +640,14 @@ class MIAApplication:
             config.set("system.last_pattern_insight_date", today_iso)
             config.save()
 
+    def _check_skill_pattern_insight(self, now: datetime, today_iso: str) -> None:
         # Skill pattern insights (2026-09-14) — the second Pattern
         # Insight slice, scoped directly with the user (not assumed —
         # see core/skill_patterns.py's own docstring). Same gated/
-        # batched shape as the block above; a different `kind` under
+        # batched shape as the check above; a different `kind` under
         # the same "patterns" source_type, tracked fully independently
         # per profile.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_skill_pattern_insight_date"), today_iso):
             new_skill_pattern_insights = scan_skill_pattern_insights(self.context, now.date())
             message = format_skill_pattern_insights_message(new_skill_pattern_insights)
@@ -600,11 +661,13 @@ class MIAApplication:
             config.set("system.last_skill_pattern_insight_date", today_iso)
             config.save()
 
+    def _check_skill_decline_insight(self, now: datetime, today_iso: str) -> None:
         # Skill decline insights (2026-09-14) — the third Pattern
         # Insight slice, scoped directly with the user. Same gated/
-        # batched shape as the block above; a different `kind` under
+        # batched shape as the check above; a different `kind` under
         # the same "patterns" source_type, tracked fully independently
         # per profile — see core/skill_patterns.py's own docstring.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_skill_decline_insight_date"), today_iso):
             new_skill_decline_insights = scan_skill_decline_insights(self.context, now.date())
             message = format_skill_decline_insights_message(new_skill_decline_insights)
@@ -618,11 +681,13 @@ class MIAApplication:
             config.set("system.last_skill_decline_insight_date", today_iso)
             config.save()
 
+    def _check_skill_momentum_insight(self, now: datetime, today_iso: str) -> None:
         # Skill momentum insights (2026-09-14) — the fourth Pattern
         # Insight slice, scoped directly with the user. Same gated/
-        # batched shape as the block above; a different `kind` under
+        # batched shape as the check above; a different `kind` under
         # the same "patterns" source_type, tracked fully independently
         # per profile — see core/skill_patterns.py's own docstring.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_skill_momentum_insight_date"), today_iso):
             new_skill_momentum_insights = scan_skill_momentum_insights(self.context, now.date())
             message = format_skill_momentum_insights_message(new_skill_momentum_insights)
@@ -636,11 +701,13 @@ class MIAApplication:
             config.set("system.last_skill_momentum_insight_date", today_iso)
             config.save()
 
+    def _check_recurring_missions(self, now: datetime, today_iso: str) -> None:
         # Recurring Missions (2026-09-13) — same should_run_once_daily()
         # gate as every other check here; ensure_current_missions()
         # itself is idempotent too (checks occurrence_key first), so
         # this gate is a cheap once-a-day skip, not the only thing
         # preventing duplicates.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_recurring_mission_check_date"), today_iso):
             if self.context.recurring_missions is not None:
                 for template in self.context.recurring_missions.all_templates():
@@ -649,6 +716,7 @@ class MIAApplication:
             config.set("system.last_recurring_mission_check_date", today_iso)
             config.save()
 
+    def _check_rewards(self, now: datetime, today_iso: str) -> None:
         # Rewards (2026-09-14) — same should_run_once_daily() gate;
         # scan_for_new_unlocks() is itself idempotent (checks
         # is_unlocked() first), so this is a cheap once-a-day nudge, not
@@ -656,6 +724,7 @@ class MIAApplication:
         # from modules/skills/module.py's own refresh, so a threshold
         # crossed while the app is open unlocks right away rather than
         # waiting up to a day.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_rewards_check_date"), today_iso):
             if self.context.rewards is not None and self.context.profiles is not None:
                 active_profile = self.context.profiles.get_active_profile()
@@ -668,17 +737,19 @@ class MIAApplication:
             config.set("system.last_rewards_check_date", today_iso)
             config.save()
 
+    def _check_walkthrough_suggestion(self, now: datetime, today_iso: str) -> None:
         # Modular tutorial system: "never-used feature" walkthrough
-        # suggestions (2026-09-14) — its own gate/block, not folded into
+        # suggestions (2026-09-14) — its own gate/check, not folded into
         # the combined Smart Suggestion message above, same reasoning
         # as Maintenance Insights/Recurring Missions/Rewards each
-        # getting their own block: it has a real reason to fire (or
+        # getting their own check: it has a real reason to fire (or
         # not) independent of workout/pantry/birthday state. At most
         # ONE candidate per day (module_browser excluded — it's always
         # visible chrome, not a discoverable feature), and
         # usage_tracker.mark_suggested() means the same module is never
         # nudged twice — see core/usage_tracker.py's own docstring for
         # why this can't become a recurring nag.
+        config = self.context.config
         if should_run_once_daily(config.get("system.last_walkthrough_suggestion_date"), today_iso):
             if self.context.usage_tracker is not None and self.module_manager is not None:
                 candidate_modules = [

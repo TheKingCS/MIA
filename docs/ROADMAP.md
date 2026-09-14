@@ -11129,3 +11129,44 @@ raise, confirming the original file survives untouched — plus 3 new
 backup-manager tests for the three additional directories). Confirmed
 real `config/config.json` and all six real external content
 directories at the repo root untouched by any test run.
+
+## Stabilization: one broken daily check could silently starve the rest (2026-09-14)
+
+Kept auditing after the user chose to continue rather than switch
+threads. `core/application.py`'s `_check_daily_occasions()` — the
+5-minute-timer method every "once a day" feature this session added
+(all four Pattern Insight slices, Rewards, Walkthrough suggestions,
+Budget nudges, ...) hangs off of — was one long function with 14
+sequential `if should_run_once_daily(...):` blocks and, unlike
+`core.event_bus.EventBus.publish()`'s own established pattern, **no
+exception isolation between them.** A real bug in any one block would
+raise and skip every block after it in the list for that tick — not
+because they had a problem, but because an unrelated earlier one
+crashed first.
+
+**Checked, not assumed, before deciding this was worth fixing**: wrote
+a real reproduction (`QPushButton.clicked` connected to a slot that
+raises, run headless) confirming this exact PySide6 version (6.11.1)
+calls `main.py`'s own `sys.excepthook` and keeps the app running
+rather than aborting — so this was never an app-crashing bug. But it
+was a silent, *indefinite* one: if the same block kept failing every
+single tick (a real, plausible scenario — e.g. a service that's
+`None` in some edge case a guard didn't anticipate), every check after
+it in the list would starve forever, logged once and then invisible
+on a kiosk device nobody's watching a terminal on.
+
+Refactored into one small `_check_<name>()` method per check (same
+content as before, just relocated — no logic changes) plus a loop in
+`_check_daily_occasions()` with the exact same per-callback try/except
+isolation `EventBus.publish()` already established for the identical
+reason: one broken subscriber/check should never be able to take down
+the rest.
+
+**Verification**: `pytest -q` — full suite, 3127 passed, unchanged
+except 3 new tests in `tests/test_application_daily_occasions.py`
+(constructs a bare `MIAApplication` via `__new__`, bypassing the full
+Qt boot — same "test the method, not the whole app" approach as the
+existing assistant-action-handler tests). The key regression test:
+monkeypatches the calendar-digest check (second in the list) to raise,
+and confirms every check after it — including the very last one —
+still ran. Confirmed real `config/config.json` untouched.
