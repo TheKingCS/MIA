@@ -63,8 +63,10 @@ from core.mission_insights import format_mission_insights_message, scan_mission_
 from core.mission_patterns import format_pattern_insights_message, scan_pattern_insights
 from core.skill_patterns import (
     format_skill_decline_insights_message,
+    format_skill_momentum_insights_message,
     format_skill_pattern_insights_message,
     scan_skill_decline_insights,
+    scan_skill_momentum_insights,
     scan_skill_pattern_insights,
 )
 from core.smart_suggestions import build_smart_suggestions_message, build_walkthrough_suggestion
@@ -613,6 +615,24 @@ class MIAApplication:
                     source="insights",
                 )
             config.set("system.last_skill_decline_insight_date", today_iso)
+            config.save()
+
+        # Skill momentum insights (2026-09-14) — the fourth Pattern
+        # Insight slice, scoped directly with the user. Same gated/
+        # batched shape as the block above; a different `kind` under
+        # the same "patterns" source_type, tracked fully independently
+        # per profile — see core/skill_patterns.py's own docstring.
+        if should_run_once_daily(config.get("system.last_skill_momentum_insight_date"), today_iso):
+            new_skill_momentum_insights = scan_skill_momentum_insights(self.context, now.date())
+            message = format_skill_momentum_insights_message(new_skill_momentum_insights)
+            if message:
+                self.context.notifications.notify(
+                    title="\U0001F4C8 Noticed a pattern",
+                    message=message,
+                    level="info",
+                    source="insights",
+                )
+            config.set("system.last_skill_momentum_insight_date", today_iso)
             config.save()
 
         # Recurring Missions (2026-09-13) — same should_run_once_daily()

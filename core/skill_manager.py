@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -51,6 +51,27 @@ log = get_logger(__name__)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _SKILL_DEFINITIONS_FILE = _DATA_DIR / "skill_definitions.json"
 _SKILL_PROGRESS_FILE = _DATA_DIR / "skill_progress.json"
+_SKILL_XP_LOG_FILE = _DATA_DIR / "skill_xp_log.json"
+# Pattern Insights slice 4 (2026-09-14) — "skill momentum" needs a real
+# recent-vs-prior XP comparison, which total_xp/last_touched can't
+# answer (a cumulative total and a single latest timestamp can't tell
+# you HOW MUCH was earned in the last 7 days vs the 7 before that).
+# Retention is generous relative to that window on purpose — capped so
+# a long-running kiosk device's log file doesn't grow unbounded (same
+# concern core/activity_log_manager.py's own docstring states), not
+# tuned tightly to today's one consumer.
+_XP_LOG_MAX_AGE_DAYS = 90
+
+
+def _event_date(timestamp: str) -> Optional[date]:
+    """Pure logic — testable without Qt. None for blank/unparseable —
+    same "no evidence" stance as core.skill_patterns._last_touched_date."""
+    if not timestamp:
+        return None
+    try:
+        return datetime.fromisoformat(timestamp).date()
+    except ValueError:
+        return None
 
 
 @dataclass
@@ -129,13 +150,43 @@ class SkillProgress:
         )
 
 
+@dataclass
+class SkillXpEvent:
+    """One real XP grant, kept as its own timestamped event rather than
+    folded into SkillProgress — Pattern Insights slice 4 (skill
+    momentum) needs to compare how much was earned in a recent window
+    vs the window before it, which a cumulative total_xp and a single
+    last_touched can't answer. See _XP_LOG_MAX_AGE_DAYS above for why
+    this doesn't grow unbounded."""
+
+    profile_id: str
+    skill_id: str
+    amount: int
+    timestamp: str  # ISO datetime
+
+    def to_dict(self) -> dict:
+        return {
+            "profile_id": self.profile_id, "skill_id": self.skill_id,
+            "amount": self.amount, "timestamp": self.timestamp,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "SkillXpEvent":
+        return SkillXpEvent(
+            profile_id=data["profile_id"], skill_id=data["skill_id"],
+            amount=data.get("amount", 0), timestamp=data.get("timestamp", ""),
+        )
+
+
 class SkillManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._definitions: dict[str, SkillDefinition] = {}
         self._progress: dict[tuple[str, str], SkillProgress] = {}
+        self._xp_log: list[SkillXpEvent] = []
         self._load_definitions()
         self._load_progress()
+        self._load_xp_log()
 
     # ------------------------------------------------------------------
     # Definitions — read-only from this class's own perspective
@@ -190,6 +241,46 @@ class SkillManager:
         payload = {"progress": [p.to_dict() for p in self._progress.values()]}
         _SKILL_PROGRESS_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
+    def _load_xp_log(self) -> None:
+        if not _SKILL_XP_LOG_FILE.exists():
+            return
+        try:
+            raw = json.loads(_SKILL_XP_LOG_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            log.exception("Failed to load skill_xp_log.json — starting with no XP history.")
+            return
+        self._xp_log = [SkillXpEvent.from_dict(e) for e in raw.get("events", [])]
+
+    def _save_xp_log(self) -> None:
+        # Drop events older than the retention window before writing —
+        # an unparseable/blank timestamp is kept rather than dropped
+        # (same "no evidence, don't guess" stance as _event_date's own
+        # callers elsewhere), since there's no safe way to judge its age.
+        cutoff = datetime.now().date() - timedelta(days=_XP_LOG_MAX_AGE_DAYS)
+        self._xp_log = [
+            e for e in self._xp_log
+            if _event_date(e.timestamp) is None or _event_date(e.timestamp) >= cutoff
+        ]
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        payload = {"events": [e.to_dict() for e in self._xp_log]}
+        _SKILL_XP_LOG_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def xp_earned_between(self, profile_id: str, skill_id: str, start: date, end: date) -> int:
+        """Sum of real XP-grant events for this skill with
+        start <= event date < end (half-open, so adjacent windows —
+        e.g. Pattern Insights' recent/prior split — never double-count
+        a day). Reads the real per-grant event log, unlike total_xp
+        (a lifetime cumulative) or last_touched (a single latest
+        timestamp) — this is the one query that needs actual history."""
+        total = 0
+        for event in self._xp_log:
+            if event.profile_id != profile_id or event.skill_id != skill_id:
+                continue
+            event_date = _event_date(event.timestamp)
+            if event_date is not None and start <= event_date < end:
+                total += event.amount
+        return total
+
     def get_progress(self, profile_id: str, skill_id: str) -> SkillProgress:
         """Never returns None — an untrained skill is just 0 XP, not a
         missing record, so callers never need a null-check before
@@ -228,11 +319,14 @@ class SkillManager:
         existing = self._progress.get(key)
         old_total = existing.total_xp if existing else 0
         new_total = old_total + amount
+        now_iso = datetime.now().isoformat(timespec="seconds")
         self._progress[key] = SkillProgress(
             profile_id=profile_id, skill_id=skill_id, total_xp=new_total,
-            last_touched=datetime.now().isoformat(timespec="seconds"),
+            last_touched=now_iso,
         )
         self._save_progress()
+        self._xp_log.append(SkillXpEvent(profile_id=profile_id, skill_id=skill_id, amount=amount, timestamp=now_iso))
+        self._save_xp_log()
         log.info("Profile '%s' earned %d XP in skill '%s' (total now %d)", profile_id, amount, skill_id, new_total)
         self.context.events.publish("profile.skill_xp_changed", profile_id=profile_id, skill_id=skill_id)
         self._notify_achievements(profile_id, skill_id, old_total, new_total)

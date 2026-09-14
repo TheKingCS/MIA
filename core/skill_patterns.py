@@ -2,15 +2,15 @@
 core.skill_patterns
 ======================
 
-Pattern Insight slices 2 and 3 — scoped directly with the user, not
+Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not
 assumed (see core/mission_patterns.py's own docstring for slice 1,
 repeated Mission abandonment, and mia_system_vision's "Phase 6"
 framing this whole thread continues). Same observe -> insight ->
-recommend loop; both slices here read the Skill/Profile domain, unlike
-mission_patterns.py's Mission-history domain — the reason they share
-this file rather than each getting a separate one the way
+recommend loop; all three slices here read the Skill/Profile domain,
+unlike mission_patterns.py's Mission-history domain — the reason they
+share this file rather than each getting a separate one the way
 mission_insights.py/mission_patterns.py do (those two barely share any
-code; these two share imports, a join-with-"and" formatter, and the
+code; these three share imports, a join-with-"and" formatter, and the
 per-profile loop shape).
 
 **Slice 2 — interest gaps**: a profile picked a real interest category
@@ -35,19 +35,34 @@ source has this information to derive it from. A skill with real XP
 but no real `last_touched` (earned before that field existed) can't be
 judged either way and is treated as "no evidence," not flagged.
 
-Both slices share `source_type="patterns"` with
+**Slice 4 — skill momentum**: the positive mirror of slice 3 — a
+category where real XP earned in the last `_MOMENTUM_RECENT_DAYS` days
+clears a meaningful floor AND is a real step up from the
+`_MOMENTUM_RECENT_DAYS` days before that. Neither `total_xp` (a
+lifetime cumulative) nor `last_touched` (a single latest timestamp)
+can answer "how much, how recently, compared to before" — this needed
+a real per-grant event log, `core.skill_manager.SkillManager`'s new
+`SkillXpEvent`/`xp_earned_between()` (see that module's own docstring
+for why this is a genuinely new data need, not a "derive it" gap). An
+ephemeral, self-resolving signal by construction: once the burst ages
+out of the recent window with nothing to replace it, the next scan
+naturally stops flagging it and resolves the Insight — no separate
+"momentum ended" bookkeeping needed.
+
+All four slices share `source_type="patterns"` with
 core/mission_patterns.py's own signal (the same Observations module
-section groups all three together) but each has its own distinct
-`kind` ("interest_gap" / "skill_decline" / "repeated_abandonment"), so
-`core.insight_manager.Insight`'s (source_type, source_id, kind) dedup
-key keeps all three fully independent per profile — see
-core/mission_patterns.py's own `scan_pattern_insights()` docstring for
-the real cross-kind resolution bug slice 2 found and fixed in slice 1.
+section groups all four together) but each has its own distinct
+`kind` ("interest_gap" / "skill_decline" / "skill_momentum" /
+"repeated_abandonment"), so `core.insight_manager.Insight`'s
+(source_type, source_id, kind) dedup key keeps all four fully
+independent per profile — see core/mission_patterns.py's own
+`scan_pattern_insights()` docstring for the real cross-kind resolution
+bug slice 2 found and fixed in slice 1.
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 from core.insight_manager import Insight
@@ -253,6 +268,107 @@ def format_skill_decline_insights_message(insights: list[Insight]) -> Optional[s
     """Pure formatting logic — testable without Qt. Same "join newly-
     created Insights into one message, None when there's nothing to
     say" shape as format_skill_pattern_insights_message() above."""
+    if not insights:
+        return None
+    return " ".join(insight.message for insight in insights)
+
+
+# ------------------------------------------------------------------
+# Slice 4 — skill momentum
+# ------------------------------------------------------------------
+
+_MOMENTUM_RECENT_DAYS = 7
+# Floor on the recent window alone — avoids flagging a single small
+# grant (e.g. one 10 XP routine action) as a "trend."
+_MOMENTUM_MIN_RECENT_XP = 30
+# How much bigger the recent window must be than the one before it,
+# when the prior window wasn't flat zero.
+_MOMENTUM_MULTIPLIER = 2.0
+
+
+def xp_earned_in_category_between(skill_manager, profile_id: str, category: str, start: date, end: date) -> int:
+    """Pure-ish logic (reads skill_manager's already-loaded XP-event
+    log). Same aggregation shape as total_xp_in_category() above, but
+    windowed by real grant-event dates instead of a lifetime total."""
+    return sum(
+        skill_manager.xp_earned_between(profile_id, skill.skill_id, start, end)
+        for skill in skill_manager.skills_in_category(category)
+    )
+
+
+def momentum_categories(skill_manager, profile_id: str, today: date) -> list[str]:
+    """Pure-ish logic. Categories where the last _MOMENTUM_RECENT_DAYS
+    days' real XP clears _MOMENTUM_MIN_RECENT_XP AND is a real step up
+    from the _MOMENTUM_RECENT_DAYS days before that (at least
+    _MOMENTUM_MULTIPLIER x, or the prior window was flat zero) — the
+    positive mirror of declining_categories(): a real recent burst,
+    not just "still active.\""""
+    recent_start = today - timedelta(days=_MOMENTUM_RECENT_DAYS)
+    prior_start = today - timedelta(days=2 * _MOMENTUM_RECENT_DAYS)
+
+    momentum = []
+    for category in skill_manager.categories():
+        recent = xp_earned_in_category_between(skill_manager, profile_id, category, recent_start, today)
+        if recent < _MOMENTUM_MIN_RECENT_XP:
+            continue
+        prior = xp_earned_in_category_between(skill_manager, profile_id, category, prior_start, recent_start)
+        if prior == 0 or recent >= _MOMENTUM_MULTIPLIER * prior:
+            momentum.append(category)
+    return momentum
+
+
+def format_momentum_message(momentum: list[str]) -> str:
+    """Pure formatting logic — testable without Qt."""
+    categories = _join_with_and(momentum)
+    return f"You've been on a roll with {categories} lately!"
+
+
+def build_momentum_recommendation(momentum: list[str]) -> str:
+    """Pure logic — testable without Qt."""
+    if len(momentum) == 1:
+        return f"Keep it going — tackle another Mission in {momentum[0]}."
+    return "Keep the momentum going in one of these."
+
+
+def scan_skill_momentum_insights(context, today: date) -> list[Insight]:
+    """Real, deterministic daily scan over every real profile's own
+    skill categories — creates a new "skill_momentum" Insight (+
+    Recommendation) the moment a category shows a real recent XP
+    burst, resolves it the moment that burst ages out of the recent
+    window with nothing to replace it (naturally self-resolving —
+    momentum is a transient signal by nature, not a standing state).
+    Returns only the Insights newly created THIS run — same shape as
+    scan_skill_decline_insights() above."""
+    if context.profiles is None or context.skills is None or context.insights is None:
+        return []
+
+    new_insights: list[Insight] = []
+    for profile in context.profiles.list_profiles():
+        existing_open = context.insights.open_insight_for("patterns", profile.profile_id, "skill_momentum")
+        momentum = momentum_categories(context.skills, profile.profile_id, today)
+
+        if not momentum:
+            if existing_open is not None:
+                context.insights.resolve_insight(existing_open.insight_id)
+            continue
+
+        title = f"\U0001F4C8 {profile.name}"
+        message = format_momentum_message(momentum)
+        insight = context.insights.create_insight_if_new(
+            source_type="patterns", source_id=profile.profile_id, kind="skill_momentum",
+            title=title, message=message,
+        )
+        if insight is not None:
+            context.insights.add_recommendation(insight.insight_id, build_momentum_recommendation(momentum))
+            new_insights.append(insight)
+
+    return new_insights
+
+
+def format_skill_momentum_insights_message(insights: list[Insight]) -> Optional[str]:
+    """Pure formatting logic — testable without Qt. Same "join newly-
+    created Insights into one message, None when there's nothing to
+    say" shape as format_skill_decline_insights_message() above."""
     if not insights:
         return None
     return " ".join(insight.message for insight in insights)

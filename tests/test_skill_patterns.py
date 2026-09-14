@@ -27,15 +27,21 @@ from core.skill_manager import SkillManager
 from core.skill_patterns import (
     build_decline_recommendation,
     build_interest_gap_recommendation,
+    build_momentum_recommendation,
     declining_categories,
     format_decline_message,
     format_interest_gap_message,
+    format_momentum_message,
     format_skill_decline_insights_message,
+    format_skill_momentum_insights_message,
     format_skill_pattern_insights_message,
+    momentum_categories,
     scan_skill_decline_insights,
+    scan_skill_momentum_insights,
     scan_skill_pattern_insights,
     total_xp_in_category,
     untouched_interests,
+    xp_earned_in_category_between,
 )
 
 TODAY = date(2026, 9, 14)
@@ -49,6 +55,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
     monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_XP_LOG_FILE", data_dir / "skill_xp_log.json")
     monkeypatch.setattr(insight_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(insight_manager_module, "_INSIGHTS_FILE", data_dir / "insights.json")
     monkeypatch.setattr(insight_manager_module, "_RECOMMENDATIONS_FILE", data_dir / "recommendations.json")
@@ -418,3 +425,173 @@ def test_scan_decline_with_no_profiles_service_returns_empty(isolated_paths):
 
 def test_format_skill_decline_insights_message_none_when_empty():
     assert format_skill_decline_insights_message([]) is None
+
+
+# ------------------------------------------------------------------
+# xp_earned_in_category_between / momentum_categories (pure-ish)
+# ------------------------------------------------------------------
+
+def _backdate_last_xp_event(context, when_iso):
+    """Test-only reach-into-internals helper — add_skill_xp() always
+    stamps "now" on the event it logs; backdating needs direct access,
+    same convention _backdate_skill() above uses for last_touched."""
+    context.skills._xp_log[-1].timestamp = when_iso
+    context.skills._save_xp_log()
+
+
+def test_xp_earned_in_category_between_sums_across_skills(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 15)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+    context.skills.add_skill_xp("p1", "canning", 10)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=3)).isoformat())
+    context.skills.add_skill_xp("p1", "woodworking", 999)  # different category, must not count
+
+    window_start = TODAY - timedelta(days=7)
+    assert xp_earned_in_category_between(context.skills, "p1", "Homestead", window_start, TODAY) == 25
+
+
+def test_momentum_categories_flags_a_real_burst_over_flat_prior(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 40)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+
+    assert momentum_categories(context.skills, "p1", TODAY) == ["Homestead"]
+
+
+def test_momentum_categories_not_flagged_below_the_minimum_floor(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 10)  # below _MOMENTUM_MIN_RECENT_XP
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+
+    assert momentum_categories(context.skills, "p1", TODAY) == []
+
+
+def test_momentum_categories_not_flagged_when_prior_window_was_just_as_active(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 40)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+    context.skills.add_skill_xp("p1", "gardening", 40)  # same pace the week before — not a "burst"
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=10)).isoformat())
+
+    assert momentum_categories(context.skills, "p1", TODAY) == []
+
+
+def test_momentum_categories_flagged_when_recent_clears_the_multiplier(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 10)  # prior window, modest
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=10)).isoformat())
+    context.skills.add_skill_xp("p1", "gardening", 40)  # recent window, well over 2x
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+
+    assert momentum_categories(context.skills, "p1", TODAY) == ["Homestead"]
+
+
+def test_momentum_categories_ignores_events_outside_either_window(isolated_paths):
+    context = _homestead_maker_context()
+    context.skills.add_skill_xp("p1", "gardening", 999)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=30)).isoformat())  # long before either window
+
+    assert momentum_categories(context.skills, "p1", TODAY) == []
+
+
+# ------------------------------------------------------------------
+# format_momentum_message / build_momentum_recommendation
+# ------------------------------------------------------------------
+
+def test_format_momentum_message_single():
+    assert format_momentum_message(["Homestead"]) == "You've been on a roll with Homestead lately!"
+
+
+def test_format_momentum_message_multiple():
+    assert format_momentum_message(["Homestead", "Maker"]) == "You've been on a roll with Homestead and Maker lately!"
+
+
+def test_build_momentum_recommendation_single():
+    assert build_momentum_recommendation(["Homestead"]) == "Keep it going — tackle another Mission in Homestead."
+
+
+def test_build_momentum_recommendation_multiple():
+    assert "one of these" in build_momentum_recommendation(["Homestead", "Maker"])
+
+
+# ------------------------------------------------------------------
+# scan_skill_momentum_insights
+# ------------------------------------------------------------------
+
+def test_scan_momentum_flags_a_real_burst(isolated_paths):
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 40)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+
+    new_insights = scan_skill_momentum_insights(context, TODAY)
+
+    assert len(new_insights) == 1
+    assert new_insights[0].kind == "skill_momentum"
+    assert new_insights[0].source_id == profile.profile_id
+    assert "Homestead" in new_insights[0].message
+    assert len(context.insights.recommendations_for_insight(new_insights[0].insight_id)) == 1
+
+
+def test_scan_momentum_does_not_duplicate_on_a_second_scan(isolated_paths):
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 40)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+
+    first_run = scan_skill_momentum_insights(context, TODAY)
+    second_run = scan_skill_momentum_insights(context, TODAY)
+
+    assert len(first_run) == 1
+    assert second_run == []
+    assert len(context.insights.all_insights()) == 1
+
+
+def test_scan_momentum_resolves_once_the_burst_ages_out(isolated_paths):
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    context.skills.add_skill_xp(profile.profile_id, "gardening", 40)
+    _backdate_last_xp_event(context, (TODAY - timedelta(days=2)).isoformat())
+
+    new_insights = scan_skill_momentum_insights(context, TODAY)
+    insight_id = new_insights[0].insight_id
+
+    later = TODAY + timedelta(days=10)  # the burst is now outside the recent window, nothing replaced it
+    scan_skill_momentum_insights(context, later)
+
+    assert context.insights.get_insight(insight_id).status == "resolved"
+
+
+def test_scan_momentum_does_not_cross_resolve_a_different_pattern_kind(isolated_paths):
+    """Same real bug class as mission_patterns.py's own regression test
+    — resolution here must be scoped to kind="skill_momentum" only."""
+    context = _homestead_maker_context()
+    context.profiles.create_profile(name="Alex")
+    profile = context.profiles.list_profiles()[0]
+    unrelated = context.insights.create_insight_if_new(
+        source_type="patterns", source_id=profile.profile_id, kind="skill_decline",
+        title="Unrelated", message="A different real pattern.",
+    )
+
+    scan_skill_momentum_insights(context, TODAY)  # no burst -> nothing of its own to resolve
+
+    assert context.insights.get_insight(unrelated.insight_id).status == "open"
+
+
+def test_scan_momentum_with_no_profiles_service_returns_empty(isolated_paths):
+    context = AppContext(config=ConfigManager(), events=EventBus())
+    context.skills = SkillManager(context)
+    context.insights = InsightManager(context)
+    assert scan_skill_momentum_insights(context, TODAY) == []
+
+
+# ------------------------------------------------------------------
+# format_skill_momentum_insights_message
+# ------------------------------------------------------------------
+
+def test_format_skill_momentum_insights_message_none_when_empty():
+    assert format_skill_momentum_insights_message([]) is None

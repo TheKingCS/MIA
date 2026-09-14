@@ -10860,3 +10860,49 @@ bug class isn't unit-tested directly, only via manual headless-Qt
 verification, since it's about widget lifecycle rather than business
 logic). Confirmed real `config/config.json` and `lite_captures/`
 untouched.
+
+## Pattern Insights, slice 4: skill momentum (2026-09-14)
+
+The fourth and (per `core/skill_patterns.py`'s own docstring) last
+explicitly-named Pattern Insight slice — the positive mirror of slice
+3's decline signal: a category where real XP earned in the last 7 days
+clears a meaningful floor (30 XP) AND is a real step up (2x, or the
+prior 7 days were flat zero) from the 7 days before that.
+
+**Real gap found before writing any code**: neither `total_xp` (a
+lifetime cumulative) nor `last_touched` (a single latest timestamp) —
+the two fields slices 2/3 already had — can answer "how much, how
+recently, compared to before." This genuinely needed a real per-grant
+event log, not something derivable from existing fields. New
+`core.skill_manager.SkillXpEvent` (profile_id, skill_id, amount,
+timestamp), appended once per `add_skill_xp()` call at the same choke
+point `last_touched` already uses, persisted to a new
+`data/skill_xp_log.json`, retained for 90 days (generous headroom over
+the 14-day window slice 4 actually needs, capped so a long-running
+kiosk device's log doesn't grow unbounded — same concern
+`core/activity_log_manager.py`'s own docstring states). New
+`SkillManager.xp_earned_between(profile_id, skill_id, start, end)`
+query method (half-open window, so adjacent windows never double-count
+a day) is the one place that reads the raw event log; `core/skill_patterns.py`'s
+new `xp_earned_in_category_between()` aggregates it per category the
+same way `total_xp_in_category()` already does for the lifetime total.
+
+Same `source_type="patterns"`, new `kind="skill_momentum"` — fully
+independent from the other three pattern kinds via the existing
+(source_type, source_id, kind) dedup key. Deliberately ephemeral by
+construction: once a burst ages out of the recent window with nothing
+to replace it, the next scan naturally stops flagging it and resolves
+the Insight on its own — no separate "momentum ended" bookkeeping
+needed, unlike slices 2/3 which resolve only on an explicit opposite
+signal (new XP landing).
+
+**Verification**: `pytest -q` — full suite, 3081 passed (24 new tests:
+9 for the new XP-event log/query in `test_skill_manager.py`, 15 for
+`momentum_categories()`/`scan_skill_momentum_insights()` and its
+formatting/recommendation helpers in `test_skill_patterns.py`).
+Manually verified end-to-end with isolated tmp data dirs: a real
+simulated two-session Cooking burst produced the Insight
+("You've been on a roll with Cooking lately!"), a sensible
+recommendation, and — scanning again 10 days later with no new
+activity — the Insight resolved on its own as expected. Confirmed real
+`config/config.json` untouched throughout.

@@ -13,6 +13,7 @@ that file's real content.
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import pytest
 
@@ -29,6 +30,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
     monkeypatch.setattr(skill_manager_module, "_SKILL_PROGRESS_FILE", data_dir / "skill_progress.json")
+    monkeypatch.setattr(skill_manager_module, "_SKILL_XP_LOG_FILE", data_dir / "skill_xp_log.json")
     return data_dir
 
 
@@ -495,3 +497,98 @@ def test_capability_status_demonstrated_at_sustained_xp(isolated_paths):
     manager.add_skill_xp("p1", "carpentry", 130)  # level 4, see test_skill_leveling.py's own boundary test
 
     assert manager.capability_status("p1", "carpentry") == "demonstrated"
+
+
+# ------------------------------------------------------------------
+# xp_earned_between / the XP-grant event log (Pattern Insights slice 4)
+# ------------------------------------------------------------------
+
+def _backdate_last_event(manager, when_iso):
+    """Test-only reach-into-internals helper — add_skill_xp() always
+    stamps "now" on the event it logs, same as SkillProgress.last_touched;
+    backdating needs direct access, same convention
+    tests/test_skill_patterns.py's own _backdate_skill() uses."""
+    manager._xp_log[-1].timestamp = when_iso
+    manager._save_xp_log()
+
+
+def test_xp_earned_between_zero_when_no_events(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 0
+
+
+def test_xp_earned_between_sums_events_inside_the_window(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p1", "strength", 10)
+    _backdate_last_event(manager, "2026-09-05T10:00:00")
+    manager.add_skill_xp("p1", "strength", 20)
+    _backdate_last_event(manager, "2026-09-06T10:00:00")
+
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 30
+
+
+def test_xp_earned_between_excludes_events_outside_the_window(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p1", "strength", 10)
+    _backdate_last_event(manager, "2026-08-01T10:00:00")  # before the window
+
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 0
+
+
+def test_xp_earned_between_window_is_half_open_at_the_end(isolated_paths):
+    """start <= event date < end — an event exactly ON `end` must not
+    double-count into an adjacent window, the whole reason this is
+    half-open rather than inclusive on both sides."""
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p1", "strength", 10)
+    _backdate_last_event(manager, "2026-09-08T10:00:00")
+
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 0
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 8), date(2026, 9, 15)) == 10
+
+
+def test_xp_earned_between_ignores_a_different_skill(isolated_paths):
+    _write_definitions(
+        isolated_paths,
+        [
+            {"skill_id": "strength", "name": "Strength", "category": "Body"},
+            {"skill_id": "cooking", "name": "Cooking", "category": "Home"},
+        ],
+    )
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p1", "cooking", 999)
+
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 0
+
+
+def test_xp_earned_between_ignores_a_different_profile(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p2", "strength", 999)
+
+    assert manager.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 0
+
+
+def test_xp_log_persists_across_a_fresh_load(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p1", "strength", 10)
+    _backdate_last_event(manager, "2026-09-05T10:00:00")
+
+    reloaded = SkillManager(_make_context())
+    assert reloaded.xp_earned_between("p1", "strength", date(2026, 9, 1), date(2026, 9, 8)) == 10
+
+
+def test_xp_log_trims_events_older_than_the_retention_window(isolated_paths):
+    _write_definitions(isolated_paths, [{"skill_id": "strength", "name": "Strength", "category": "Body"}])
+    manager = SkillManager(_make_context())
+    manager.add_skill_xp("p1", "strength", 10)
+    _backdate_last_event(manager, "2020-01-01T10:00:00")  # far older than _XP_LOG_MAX_AGE_DAYS
+    manager.add_skill_xp("p1", "strength", 5)  # a second, real (unbackdated) event to trigger a save
+
+    reloaded = SkillManager(_make_context())
+    assert reloaded.xp_earned_between("p1", "strength", date(2010, 1, 1), date(2030, 1, 1)) == 5
