@@ -141,6 +141,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         self._threshold_direction: str = "below"
         self._auto_schedule: bool = False
         self._priority: str = "normal"
+        self._tracks_lifetime_usage: bool = False
 
     # ------------------------------------------------------------------
     # Trigger-type pages
@@ -179,6 +180,17 @@ class AddEditMaintenanceTaskDialog(QDialog):
         self.meter_interval_spin.setDecimals(1)
         self.meter_interval_spin.setValue(50.0)
         layout.addWidget(self.meter_interval_spin)
+
+        # Generalized shared-asset usage stats (2026-09-14) — check this
+        # for the ONE task that represents this asset's real lifetime
+        # total (an odometer, an hour meter), not a same-unit task that
+        # merely reuses the meter for service-interval tracking (e.g.
+        # "Oil & filter change" also logs in miles, but isn't the
+        # vehicle's real total). Feeds core.rewards_manager's Runtime/
+        # Mileage lifetime stats automatically — see
+        # MaintenanceTask.tracks_lifetime_usage's own docstring.
+        self.tracks_lifetime_usage_checkbox = QCheckBox("This is the asset's real lifetime total (not a service reminder)")
+        layout.addWidget(self.tracks_lifetime_usage_checkbox)
 
         return page
 
@@ -245,6 +257,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
 
             self.meter_unit_edit.setText(task.meter_unit)
             self.sensor_unit_edit.setText(task.meter_unit)
+            self.tracks_lifetime_usage_checkbox.setChecked(task.tracks_lifetime_usage)
             if task.meter_interval is not None:
                 self.meter_interval_spin.setValue(task.meter_interval)
             if task.threshold_value is not None:
@@ -281,6 +294,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         self._meter_interval = None
         self._threshold_value = None
         self._threshold_direction = "below"
+        self._tracks_lifetime_usage = False
 
         if self._trigger_type == "calendar":
             self._interval_days = self.interval_spin.value() if self.recurring_checkbox.isChecked() else None
@@ -291,6 +305,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         else:
             self._meter_unit = self.meter_unit_edit.text().strip()
             self._meter_interval = self.meter_interval_spin.value()
+            self._tracks_lifetime_usage = self.tracks_lifetime_usage_checkbox.isChecked()
 
         self.accept()
 
@@ -337,3 +352,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
     @property
     def entered_priority(self) -> str:
         return self._priority
+
+    @property
+    def entered_tracks_lifetime_usage(self) -> bool:
+        return self._tracks_lifetime_usage

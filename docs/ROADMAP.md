@@ -10097,3 +10097,75 @@ This closes out every concrete slice of [[project_mia_multiuser_vision]].
 What remains is explicitly long-term/unscoped per the user's own
 framing: multi-group hierarchy (a user belonging to more than one
 household/group) and real-world multi-player events across households.
+
+## Generalized shared-asset lifetime-usage stats (2026-09-14)
+
+Before this, `RewardsManager._compute_engine_hours_logged()`/
+`_compute_vehicle_miles_logged()` found "the" real usage meter for an
+asset by matching a task's literal title string ("Engine Hours",
+"Odometer") — brittle (a rename silently zeroes the stat) and closed:
+a real future piece of powered equipment (a greenhouse pump, a
+generator) would need a brand-new hardcoded stat function to be
+tracked at all, even though the underlying per-reader usage-split
+mechanism (`usage_deltas_by_reader()`) was already fully generic.
+
+**New `MaintenanceTask.tracks_lifetime_usage: bool = False`**
+(`core/maintenance_manager.py`) — marks the ONE task that represents
+an asset's real cumulative lifetime total, as opposed to a same-unit
+task that merely reuses the meter for service-interval tracking (Oil &
+filter change also logs in miles, but isn't the vehicle's real total).
+`RewardsManager` now matches by `trigger_type + tracks_lifetime_usage`
+instead of by title — "runtime" feeds `engine_hours_logged`, "mileage"
+feeds `vehicle_miles_logged` — so any future asset's own primary meter
+task counts automatically the moment it's marked this way, titled
+however the user likes, with zero new Python code. Trigger_type alone
+isn't sufficient (a service-interval task can share both the same
+trigger_type AND meter_unit as the real lifetime meter), which is why
+this needed a real new field rather than just relaxing the existing
+title check.
+
+New UI: `gui/add_edit_maintenance_task_dialog.py`'s meter page gained
+a "This is the asset's real lifetime total (not a service reminder)"
+checkbox, wired into both add and edit task flows in
+`modules/maintenance/module.py`.
+
+**Real data migration, not just code**: the real "Engine Hours" task
+on the Lawn Mower and "Odometer" task on the Ridgeline both got
+`tracks_lifetime_usage=True` set directly against `data/maintenance.json`
+— without this, the generalization would have silently zeroed both
+real profiles' real stats (confirmed by checking BEFORE making the
+code change, not after). Verified post-fix against real data: Zac and
+Faith's `engine_hours_logged` still read `1.5` (shared mower, unowned)
+and `vehicle_miles_logged` still read `0.0` (Ridgeline's real
+207,000-mile baseline preserved) — identical to before this change.
+
+**Why this instead of building out gym-equipment/garden-contribution
+tracking directly** (the originally-offered next multi-user slice):
+checking first found `workout_hours_logged` already covers gym
+equipment correctly (workouts aren't logged against a shared physical
+asset), and no real gym-equipment or garden/aquaponics asset exists
+yet in this app's actual data — building category-specific stat
+functions for hypothetical equipment would have been architecture for
+data that doesn't exist. Generalizing the existing mechanism instead
+means the real remaining case (a real future garden/greenhouse asset,
+e.g. an irrigation pump) needs no further code at all, not more of it.
+
+**Verification**: `pytest -q` — full suite, 2912 passed (6 new tests:
+3 in `test_maintenance_manager.py` for the new field's persistence/
+`update_task()` support, 3 in `test_rewards_manager.py` proving a
+differently-titled runtime task now counts, a same-titled-but-
+unmarked task does NOT count, and the existing "ignores same-unit
+service task" test still holds). Manual headless-Qt check confirmed
+the new checkbox renders on the meter page and round-trips through
+`entered_tracks_lifetime_usage`. Real production `data/maintenance.json`
+checked directly (both before and after the migration script) and via
+a full live `RewardsManager` computation against real profiles —
+stats unchanged, migration confirmed necessary and correct.
+
+Also corrected two stale claims found while scoping this: the Master
+Vision memory said asset documents/manuals/warranty/purchase-info
+fields "don't exist yet" and that the profile-creation interview was
+"not built" — both were already fully shipped (2026-09-07 and
+2026-09-14 respectively, well before those claims were written).
+Fixed in `docs/VISION.md` and the `project_mia_master_vision` memory —
+see [[feedback_vision_md_staleness]].

@@ -825,21 +825,25 @@ style choice.
 **Physical objects as first-class entities** (mower, truck, 3D
 printer, etc. — spec sheet, maintenance schedule, usage stats,
 documents/manuals/photos, costs, associated missions/achievements).
-Partially real already: `core.maintenance_manager.MaintenanceAsset`
-now carries real per-owner attribution and per-task reward baselines
-(2026-09-14, see `ROADMAP.md`'s "per-profile + per-vehicle rewards"
-entry) — documents/manuals/warranty/purchase-info fields don't exist
-yet. The AR "look at the mower, see its stats" interface is the
-existing "Inspect" section above's contextual form, unchanged, still
-gated on camera/on-device-classification hardware.
+**Built.** `core.maintenance_manager.MaintenanceAsset` carries
+manufacturer/model/serial/purchase-date fields and a full
+documents (receipts/warranties/manuals) list, with a real UI in
+`gui/add_edit_asset_dialog.py` (Add/Open/Remove, launches the OS's own
+viewer) — shipped 2026-09-07, ahead of and independent from the later
+2026-09-14 per-owner-attribution/reward-baseline work. The only piece
+of this item still unbuilt is the AR "look at the mower, see its
+stats" interface — the existing "Inspect" section above's contextual
+form, unchanged, still gated on camera/on-device-classification
+hardware.
 
-**New concrete idea, not built**: a real onboarding interview at
-profile creation — MIA asks about the new user's real life, hobbies,
-goals, responsibilities, and interests, and uses those answers to seed
-which modules/missions/skills feel relevant to *them* specifically
-(directly serves "Faith may not have the same missions I have" from
-the multi-user handoff). Not scoped or built — flagged here so it has
-an obvious home once picked up.
+**Built**: a real onboarding interview at profile creation — MIA asks
+about the new user's real life, hobbies, goals, responsibilities, and
+interests, and uses those answers to seed which modules/missions/
+skills feel relevant to *them* specifically (directly serves "Faith
+may not have the same missions I have" from the multi-user handoff).
+Shipped 2026-09-14 — `gui/widgets/interview_form.py`, wired into both
+first-run setup and "Add Profile"; see `ROADMAP.md`'s
+"Profile-creation interview" entry.
 
 **Explicitly long-term, not scoped**: real-world multi-player events
 across households (section 25's closing line) — the user's own

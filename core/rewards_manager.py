@@ -536,10 +536,16 @@ class RewardsManager:
 
     def _compute_engine_hours_logged(self, profile_id: str) -> float:
         """Every real Maintenance asset OWNED BY this profile (or
-        shared/unowned — see is_attributed_to()) that tracks an
-        "Engine Hours" task — not hardcoded to a single mower, so a
-        future second piece of equipment counts too. Real usage is
-        split by whoever actually logged each reading
+        shared/unowned — see is_attributed_to()) that has a "runtime"
+        meter task marked tracks_lifetime_usage=True — not hardcoded to
+        a single mower or to the literal title "Engine Hours" (2026-09-14
+        generalization): any future powered equipment (a generator, a
+        greenhouse pump) automatically counts the moment its own primary
+        meter task is marked this way, no new code needed. Matched by
+        trigger_type + tracks_lifetime_usage rather than trigger_type
+        alone, same reasoning as _compute_vehicle_miles_logged() below —
+        a same-unit service-interval task must not double-count. Real
+        usage is split by whoever actually logged each reading
         (usage_deltas_by_reader()), not just the raw latest value — a
         shared mower correctly attributes "13.2 hrs to Zac, 0.8 to
         Faith" rather than crediting whoever's asked regardless of who
@@ -553,7 +559,7 @@ class RewardsManager:
             if not is_attributed_to(asset.owner_profile_id, profile_id):
                 continue
             for task in self.context.maintenance.tasks_for_asset(asset.asset_id):
-                if task.title != "Engine Hours":
+                if task.trigger_type != "runtime" or not task.tracks_lifetime_usage:
                     continue
                 readings = self.context.maintenance.readings_for_task(task.task_id)
                 deltas = usage_deltas_by_reader(readings, task.reward_baseline_value)
@@ -588,21 +594,25 @@ class RewardsManager:
 
     def _compute_vehicle_miles_logged(self, profile_id: str) -> float:
         """Every real Maintenance asset OWNED BY this profile (or
-        shared/unowned — see is_attributed_to()) that tracks an
-        "Odometer" task — same "match by task title, not by asset
-        category" pattern as _compute_engine_hours_logged(), so a
-        future second vehicle's own Odometer task counts too.
-        Deliberately NOT summing every mileage-unit task (Oil & filter
-        change, Brake inspection, ... also log in miles) — those track
-        miles-since-last-service, not the vehicle's real lifetime
-        total, which only the Odometer task itself represents. Real
-        usage is split by whoever actually logged each reading
-        (usage_deltas_by_reader()) against the task's own
-        reward_baseline_value — a shared vehicle both profiles drive
-        correctly attributes each person's own real miles, and a
-        vehicle with real prior history (e.g. 207,000 real miles
-        already on the odometer) still starts reward tracking from
-        that baseline, not its full lifetime total."""
+        shared/unowned — see is_attributed_to()) that has a "mileage"
+        meter task marked tracks_lifetime_usage=True — generalized
+        (2026-09-14) from matching the literal title "Odometer" to
+        matching trigger_type + tracks_lifetime_usage, so a future
+        second vehicle's own odometer-equivalent task counts too
+        without any new code, whatever it's titled. Still deliberately
+        NOT summing every mileage-unit task (Oil & filter change, Brake
+        inspection, ... also log in miles) — those track miles-since-
+        last-service, not the vehicle's real lifetime total, which only
+        the one task marked tracks_lifetime_usage=True represents;
+        trigger_type alone can't make this distinction, since a
+        service-interval task shares both the same trigger_type AND the
+        same meter_unit as the real odometer. Real usage is split by
+        whoever actually logged each reading (usage_deltas_by_reader())
+        against the task's own reward_baseline_value — a shared vehicle
+        both profiles drive correctly attributes each person's own real
+        miles, and a vehicle with real prior history (e.g. 207,000 real
+        miles already on the odometer) still starts reward tracking
+        from that baseline, not its full lifetime total."""
         if self.context.maintenance is None:
             return 0.0
         total = 0.0
@@ -610,7 +620,7 @@ class RewardsManager:
             if not is_attributed_to(asset.owner_profile_id, profile_id):
                 continue
             for task in self.context.maintenance.tasks_for_asset(asset.asset_id):
-                if task.title != "Odometer":
+                if task.trigger_type != "mileage" or not task.tracks_lifetime_usage:
                     continue
                 readings = self.context.maintenance.readings_for_task(task.task_id)
                 deltas = usage_deltas_by_reader(readings, task.reward_baseline_value)

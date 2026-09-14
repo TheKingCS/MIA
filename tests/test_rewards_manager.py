@@ -197,12 +197,12 @@ def test_engine_hours_logged_sums_across_assets(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     mower = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=mower.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=mower.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 4.5)
     context.maintenance.log_reading(task.task_id, 7.0)  # latest reading wins, not a sum of readings
 
     other = context.maintenance.add_asset(name="Generator", category="Power Equipment")
-    other_task = context.maintenance.add_task(asset_id=other.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    other_task = context.maintenance.add_task(asset_id=other.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(other_task.task_id, 2.0)
 
     assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 9.0
@@ -222,7 +222,40 @@ def test_engine_hours_logged_zero_with_no_readings(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
+
+    assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 0.0
+
+
+def test_engine_hours_logged_counts_a_differently_titled_runtime_task(isolated_paths):
+    """Generalization (2026-09-14): matched by trigger_type +
+    tracks_lifetime_usage, not the literal title "Engine Hours" — a
+    brand-new piece of equipment (a greenhouse pump, say) with its own
+    runtime meter task automatically counts, no new code needed."""
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    pump = context.maintenance.add_asset(name="Greenhouse Pump", category="Garden/Plant")
+    task = context.maintenance.add_task(
+        asset_id=pump.asset_id, title="Pump Runtime", trigger_type="runtime", meter_unit="hours",
+        tracks_lifetime_usage=True,
+    )
+    context.maintenance.log_reading(task.task_id, 12.0)
+
+    assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 12.0
+
+
+def test_engine_hours_logged_ignores_runtime_task_not_marked_lifetime_usage(isolated_paths):
+    """Same trigger_type and even the same conventional title, but not
+    marked as the asset's real lifetime meter — must not count, same
+    "service-interval task can share a trigger_type" reasoning as
+    test_vehicle_miles_logged_ignores_other_mileage_tasks below."""
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(
+        asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours",
+    )
+    context.maintenance.log_reading(task.task_id, 50.0)
 
     assert context.rewards.stat_value("engine_hours_logged", profile.profile_id) == 0.0
 
@@ -250,12 +283,12 @@ def test_vehicle_miles_logged_sums_odometer_readings_across_assets(isolated_path
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
-    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles", tracks_lifetime_usage=True)
     context.maintenance.log_reading(odometer.task_id, 40000.0)
     context.maintenance.log_reading(odometer.task_id, 40250.0)  # latest reading wins
 
     other = context.maintenance.add_asset(name="Second Car", category="Vehicle")
-    other_odometer = context.maintenance.add_task(asset_id=other.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    other_odometer = context.maintenance.add_task(asset_id=other.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles", tracks_lifetime_usage=True)
     context.maintenance.log_reading(other_odometer.task_id, 1000.0)
 
     assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 41250.0
@@ -274,6 +307,19 @@ def test_vehicle_miles_logged_ignores_other_mileage_tasks(isolated_paths):
     assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 0.0
 
 
+def test_vehicle_miles_logged_ignores_mileage_task_not_marked_lifetime_usage(isolated_paths):
+    """Even a task literally titled "Odometer" doesn't count unless
+    it's marked as the asset's real lifetime total — trigger_type alone
+    can't disambiguate it from a same-unit service-interval task."""
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    context.maintenance.log_reading(odometer.task_id, 40000.0)
+
+    assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 0.0
+
+
 def test_vehicle_miles_logged_counts_only_for_its_real_owner(isolated_paths):
     """A vehicle owned by one profile doesn't count toward a different
     profile's own stat — the real bug the user caught (Faith getting
@@ -282,7 +328,7 @@ def test_vehicle_miles_logged_counts_only_for_its_real_owner(isolated_paths):
     zac = context.profiles.create_profile(name="Zac")
     faith = context.profiles.create_profile(name="Faith", make_active=False)
     truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle", owner_profile_id=zac.profile_id)
-    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles", tracks_lifetime_usage=True)
     context.maintenance.log_reading(odometer.task_id, 5000.0)
 
     assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 5000.0
@@ -301,7 +347,7 @@ def test_vehicle_miles_logged_shared_asset_still_splits_by_real_reader(isolated_
     zac = context.profiles.create_profile(name="Zac")
     faith = context.profiles.create_profile(name="Faith", make_active=False)
     truck = context.maintenance.add_asset(name="Family Van", category="Vehicle")  # no owner
-    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles", tracks_lifetime_usage=True)
     context.maintenance.log_reading(odometer.task_id, 3000.0)  # logged as Zac (active)
 
     assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 3000.0
@@ -316,7 +362,7 @@ def test_vehicle_miles_logged_unattributed_reading_counts_for_everyone(isolated_
     zac = context.profiles.create_profile(name="Zac", make_active=False)
     faith = context.profiles.create_profile(name="Faith", make_active=False)
     truck = context.maintenance.add_asset(name="Family Van", category="Vehicle")
-    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    odometer = context.maintenance.add_task(asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles", tracks_lifetime_usage=True)
     context.maintenance.log_reading(odometer.task_id, 3000.0)  # no active profile
 
     assert context.rewards.stat_value("vehicle_miles_logged", zac.profile_id) == 3000.0
@@ -333,7 +379,7 @@ def test_vehicle_miles_logged_subtracts_real_baseline(isolated_paths):
     truck = context.maintenance.add_asset(name="Ridgeline", category="Vehicle")
     odometer = context.maintenance.add_task(
         asset_id=truck.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles",
-        reward_baseline_value=207000.0,
+        reward_baseline_value=207000.0, tracks_lifetime_usage=True,
     )
     context.maintenance.log_reading(odometer.task_id, 207000.0)
     assert context.rewards.stat_value("vehicle_miles_logged", profile.profile_id) == 0.0
@@ -424,7 +470,7 @@ def test_scan_for_new_unlocks_unlocks_when_threshold_crossed(isolated_paths):
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 10.0)
 
     newly_unlocked = context.rewards.scan_for_new_unlocks(profile.profile_id)
@@ -444,7 +490,7 @@ def test_scan_for_new_unlocks_credits_every_tier_already_reached(isolated_paths)
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 60.0)  # past rookie(10)/yard_worker(25)/ranger(50)
 
     newly_unlocked = context.rewards.scan_for_new_unlocks(profile.profile_id)
@@ -462,7 +508,7 @@ def test_scan_for_new_unlocks_fires_one_notification_for_a_single_unlock(isolate
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 10.0)
 
     context.rewards.scan_for_new_unlocks(profile.profile_id)
@@ -477,7 +523,7 @@ def test_scan_for_new_unlocks_batches_multiple_unlocks_into_one_notification(iso
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 60.0)  # past 3 tiers at once
 
     context.rewards.scan_for_new_unlocks(profile.profile_id)
@@ -496,7 +542,7 @@ def test_scan_for_new_hidden_achievements_batches_multiple_into_one_notification
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 250.0)  # crosses built_different(50) and renaissance(200)
 
     context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
@@ -520,7 +566,7 @@ def test_scan_for_new_unlocks_is_idempotent(isolated_paths):
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 10.0)
 
     first_scan = context.rewards.scan_for_new_unlocks(profile.profile_id)
@@ -534,7 +580,7 @@ def test_scan_for_new_unlocks_below_threshold_unlocks_nothing(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 1.5)
 
     assert context.rewards.scan_for_new_unlocks(profile.profile_id) == []
@@ -545,7 +591,7 @@ def test_scan_for_new_unlocks_persists_across_a_fresh_load(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 10.0)
     context.rewards.scan_for_new_unlocks(profile.profile_id)
 
@@ -569,7 +615,7 @@ def test_unlocked_reward_ids_reflects_real_unlocks(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 10.0)
     context.rewards.scan_for_new_unlocks(profile.profile_id)
 
@@ -590,7 +636,7 @@ def test_all_unlocked_tiers_flattens_across_chains(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 10.0)  # mowing_rookie
     for i in range(5):
         m = context.missions.add_mission(name=f"M{i}")
@@ -611,7 +657,7 @@ def test_rarity_tally_counts_tiers_and_hidden_achievements(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 60.0)  # mowing_rookie(0)/yard_worker(1)/ranger(2) + built_different hidden(3)
 
     tally = context.rewards.rarity_tally(profile.profile_id)
@@ -659,7 +705,7 @@ def test_scan_for_new_hidden_achievements_unlocks_on_combined_threshold(isolated
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 30.0)
     context.workout.add_session(template_id="", date_str="2026-09-01", duration_minutes=20 * 60)  # 20 hrs
 
@@ -674,7 +720,7 @@ def test_scan_for_new_hidden_achievements_below_combined_threshold_unlocks_nothi
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 5.0)
 
     assert context.rewards.scan_for_new_hidden_achievements(profile.profile_id) == []
@@ -685,7 +731,7 @@ def test_scan_for_new_hidden_achievements_is_idempotent(isolated_paths):
     _detach_rewards_event_subscriptions(context)
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 60.0)
 
     first_scan = context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
@@ -699,7 +745,7 @@ def test_unlocked_hidden_achievements_reflects_real_unlocks(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
     context.maintenance.log_reading(task.task_id, 60.0)
     context.rewards.scan_for_new_hidden_achievements(profile.profile_id)
 
@@ -731,7 +777,7 @@ def test_logging_a_maintenance_reading_auto_unlocks_without_an_explicit_scan(iso
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
 
     context.maintenance.log_reading(task.task_id, 10.0)  # no explicit scan call anywhere
 
@@ -783,7 +829,7 @@ def test_completing_a_mission_auto_unlocks_without_an_explicit_scan(isolated_pat
 def test_activity_logged_event_with_no_active_profile_does_not_crash(isolated_paths):
     context = _make_context()
     asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
-    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours", tracks_lifetime_usage=True)
 
     context.maintenance.log_reading(task.task_id, 10.0)  # no profile ever created — must not raise
 

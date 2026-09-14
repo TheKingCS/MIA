@@ -201,6 +201,23 @@ class MaintenanceTask:
     # core.rewards_manager subtracts it from every future reading, so
     # existing mileage/hours never counts as new "achievement."
     reward_baseline_value: Optional[float] = None
+    # Generalized shared-asset usage stats (2026-09-14) — marks this
+    # meter task as the asset's ONE canonical lifetime-usage total (an
+    # odometer, an hour meter), as opposed to a same-unit task that
+    # merely reuses that meter for service-interval tracking (e.g. "Oil
+    # & filter change" also logs in miles, but represents miles-since-
+    # last-service, not the vehicle's real lifetime total). False by
+    # default — every existing task is unaffected. core.rewards_manager
+    # sums usage ONLY across tasks with this set, matched by
+    # trigger_type ("runtime"->engine_hours_logged, "mileage"->
+    # vehicle_miles_logged) rather than by title string — so a new
+    # piece of powered equipment (a greenhouse pump, a generator) or a
+    # second vehicle automatically contributes to the right stat the
+    # moment its own primary meter task is marked this way, with zero
+    # new Python code. Title-matching alone can't make this
+    # distinction: a service-interval task can share both the same
+    # trigger_type AND the same meter_unit as the real lifetime meter.
+    tracks_lifetime_usage: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -221,6 +238,7 @@ class MaintenanceTask:
             "auto_schedule": self.auto_schedule,
             "priority": self.priority,
             "reward_baseline_value": self.reward_baseline_value,
+            "tracks_lifetime_usage": self.tracks_lifetime_usage,
         }
 
     @staticmethod
@@ -243,6 +261,7 @@ class MaintenanceTask:
             auto_schedule=data.get("auto_schedule", False),
             priority=data.get("priority", "normal"),
             reward_baseline_value=data.get("reward_baseline_value"),
+            tracks_lifetime_usage=data.get("tracks_lifetime_usage", False),
         )
 
     @property
@@ -632,6 +651,7 @@ class MaintenanceManager:
         auto_schedule: bool = False,
         priority: str = "normal",
         reward_baseline_value: Optional[float] = None,
+        tracks_lifetime_usage: bool = False,
     ) -> MaintenanceTask:
         task = MaintenanceTask(
             task_id=uuid.uuid4().hex[:10],
@@ -649,6 +669,7 @@ class MaintenanceManager:
             auto_schedule=auto_schedule,
             priority=priority,
             reward_baseline_value=reward_baseline_value,
+            tracks_lifetime_usage=tracks_lifetime_usage,
         )
         self._tasks.append(task)
         self._save()

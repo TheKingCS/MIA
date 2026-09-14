@@ -697,6 +697,41 @@ def test_update_task_can_set_reward_baseline_value(isolated_paths):
     assert manager.get_task(task.task_id).reward_baseline_value == 207000.0
 
 
+def test_add_task_tracks_lifetime_usage_defaults_to_false(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    assert task.tracks_lifetime_usage is False
+
+
+def test_add_task_tracks_lifetime_usage_persists_across_a_fresh_load(isolated_paths):
+    """Generalized shared-asset usage stats (2026-09-14) — marks the
+    ONE task representing an asset's real lifetime total, so
+    core.rewards_manager can find it by trigger_type instead of a
+    brittle exact title match."""
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    manager.add_task(
+        asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles",
+        tracks_lifetime_usage=True,
+    )
+
+    reloaded = MaintenanceManager(context)
+    task = reloaded.all_tasks()[0]
+    assert task.tracks_lifetime_usage is True
+
+
+def test_update_task_can_set_tracks_lifetime_usage(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset(name="Truck")
+    task = manager.add_task(asset_id=asset.asset_id, title="Odometer", trigger_type="mileage", meter_unit="miles")
+    manager.update_task(task.task_id, tracks_lifetime_usage=True)
+    assert manager.get_task(task.task_id).tracks_lifetime_usage is True
+
+
 def test_update_task_changes_fields(isolated_paths):
     context = _make_context()
     manager = _make_manager(context)

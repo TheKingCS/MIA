@@ -789,6 +789,7 @@ class MaintenanceModule(ModuleBase):
             threshold_direction=dialog.entered_threshold_direction,
             auto_schedule=dialog.entered_auto_schedule,
             priority=dialog.entered_priority,
+            tracks_lifetime_usage=dialog.entered_tracks_lifetime_usage,
         )
         self._refresh_task_list()
 
@@ -817,6 +818,7 @@ class MaintenanceModule(ModuleBase):
             threshold_direction=dialog.entered_threshold_direction,
             auto_schedule=dialog.entered_auto_schedule,
             priority=dialog.entered_priority,
+            tracks_lifetime_usage=dialog.entered_tracks_lifetime_usage,
         )
         self._refresh_task_list()
 
