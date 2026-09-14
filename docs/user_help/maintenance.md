@@ -18,13 +18,14 @@ task; Log Usage… on the Assets tab logs general usage against the
 asset itself. Mark Complete resets a due task; Schedule… puts a
 calendar-triggered task on your actual Calendar.
 
-## Garage and Property are quick status views into this same data
+## Garage, Property, and Greenhouse are quick status views into this same data
 
-The Garage and Property modules aren't separate systems — they're
+Garage, Property, and Greenhouse aren't separate systems — they're
 read-only, at-a-glance filtered views over this same Maintenance data.
 Garage shows just Vehicle and Power Equipment assets ("how's the
 truck doing" without digging through everything else); Property shows
-just Appliance/Property/Tool assets. Both have a "Manage in
-Maintenance" button, because adding, editing, or completing a task
-always happens here in Maintenance itself — Garage and Property never
-add or edit anything on their own.
+just Appliance/Property/Tool assets; Greenhouse shows just Garden/Plant
+assets (a greenhouse, an aquaponics system, raised beds). All three
+have a "Manage in Maintenance" button, because adding, editing, or
+completing a task always happens here in Maintenance itself — they
+never add or edit anything on their own.

@@ -10438,3 +10438,39 @@ today and is a real backlog, not something introduced here. Flagged,
 not silently left implicit, matching this row's own "revisit any time
 a module ships without one" standard — a natural, separately-scoped
 follow-on whenever picked up.
+
+## Closing the real self-knowledge gaps in that backlog (2026-09-14)
+
+Checked the flagged 14-module backlog properly before touching it —
+most were already covered, just not by an exact-filename-match doc:
+`power` (in `home_and_power.md`), `dashboard`/`diagnostics`/
+`files_mod`/`module_browser`/`lab` (all in `system_and_files.md`), and
+`notes`/`toolbox` (in `organizing.md`). `garage`/`property` also
+already had real coverage via `maintenance.md`'s own "quick status
+views" section. Grepped every real candidate term across the whole
+`docs/user_help/` corpus before writing anything, not just checking
+filenames — this is what found the true remaining gaps were only 4:
+**Skills, Character, Greenhouse, Household** — plus, found along the
+way, Recurring Missions (streaks/weekly bonus/escalating target) had
+zero coverage despite being a real, fully-shipped feature.
+
+**New `docs/user_help/skills.md`** — capability status (Locked is
+display-only, XP still lands), category tabs sorted by profile
+interests, the skill tree's real prerequisite lines, and "Manage
+Skills…" for attaching skill rewards to a Mission (up front or
+retroactively). **New `docs/user_help/character.md`** — the real
+derived numbers (lifetime stats, Collection, rarity tally, Prestige
+emblems), explicit about there being no character art yet ("what you
+see is deliberately just the real system underneath"). **Extended
+`maintenance.md`** to name Greenhouse as the third Garage/Property
+sibling. **Extended `missions.md`** with Recurring Missions (daily vs.
+weekly recurrence) and Household (the recurring-routines checklist,
+distinct from Maintenance-asset-based Garage/Property/Greenhouse).
+
+**Verification**: `pytest -q` — full suite, 2961 passed (pure content,
+no new logic). Verified functionally, not just written: queried
+`DeviceHelpManager.retrieve()` with 5 real questions ("what does
+locked mean for a skill," "how does prestige work," "how does the
+household module work," "what is greenhouse for," "how do recurring
+missions work") — every one correctly surfaced the new content at or
+near the top of results.

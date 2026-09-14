@@ -56,6 +56,28 @@ Contribution" count for just your own assigned Objectives. Finishing a
 party Mission credits its full reward (XP and credits) to every real
 participant, not just whoever completed the last Objective.
 
+## Recurring Missions: a daily goal that keeps generating itself
+
+Some Missions repeat on their own — a real daily goal like push-ups
+gets a fresh Mission every day automatically, with its own real streak
+(how many days in a row you've completed it) and its target escalating
+week over week as you build the habit. Completing every daily Mission
+in a week also completes a bonus weekly Mission for extra reward. A
+recurring goal can also be weekly instead of daily — one Mission per
+week rather than one per day — for something like laundry that isn't
+a daily task. Each day/week's occurrence shows up on your Calendar too.
+
+## Household: a checklist for recurring domestic routines
+
+The Household module is a dedicated home for recurring routines that
+aren't tied to a specific piece of equipment — laundry, dishes,
+hygiene — the same idea as a daily push-up goal, just for chores
+instead of fitness. It shows a simple daily/weekly checklist plus one
+overall progress bar; checking a row off opens that routine's real
+current Mission. Garage, Property, and Greenhouse are the same kind of
+focused view, just over Maintenance assets instead of recurring
+routines.
+
 ## The Mission Log shows overall progress
 
 Selecting a Mission in the list shows its full detail — objectives as
