@@ -109,6 +109,29 @@ def format_material_row(material: Material) -> str:
     return line
 
 
+def format_material_detail_line(
+    added_by_name: Optional[str], times_used: int, last_used_by_name: Optional[str], last_used_date: Optional[str]
+) -> str:
+    """Pure formatting logic — testable without Qt. Same shape as
+    format_component_detail_line() above — Materials is the fourth real
+    application of this "shared object + user relationship" surfacing
+    (Recipes, Inventory, Component DB, now Materials). No quick-adjust
+    buttons here unlike Components/Inventory: a material's real usage
+    event is "Consume Material" on a Job (see JobManager.
+    consume_material()), not a manual per-item tally — this label
+    reflects both that and any direct manual adjustment."""
+    added_part = f"Added by {added_by_name}" if added_by_name else "Added by: unknown"
+    if times_used:
+        used_part = f"Used {times_used}x"
+        if last_used_by_name and last_used_date:
+            used_part += f" (last: {last_used_by_name} on {last_used_date})"
+        elif last_used_date:
+            used_part += f" (last: {last_used_date})"
+    else:
+        used_part = "Never used yet"
+    return f"{added_part}  ·  {used_part}"
+
+
 def format_job_row(job: Job) -> str:
     """Pure formatting logic — testable without Qt. Cost isn't included
     here — it needs live Material prices/the labor rate (see
@@ -149,6 +172,7 @@ class WorkshopModule(ModuleBase):
         self._component_detail_label: Optional[QLabel] = None
         self._material_list: Optional[QListWidget] = None
         self._material_filter_edit: Optional[QLineEdit] = None
+        self._material_detail_label: Optional[QLabel] = None
         self._job_list: Optional[QListWidget] = None
         self._job_filter_edit: Optional[QLineEdit] = None
         self._product_list: Optional[QListWidget] = None
@@ -349,7 +373,17 @@ class WorkshopModule(ModuleBase):
         layout.addWidget(self._material_filter_edit)
 
         self._material_list = QListWidget()
+        self._material_list.currentItemChanged.connect(lambda *_: self._update_material_detail_label())
         layout.addWidget(self._material_list, stretch=1)
+
+        # Multi-user pass (2026-09-14) — same "shared object + user
+        # relationship" surfacing as the Components tab's own detail
+        # label above; no quick-adjust buttons here, see
+        # format_material_detail_line()'s own docstring for why.
+        self._material_detail_label = QLabel("")
+        self._material_detail_label.setObjectName("SubtitleLabel")
+        self._material_detail_label.setWordWrap(True)
+        layout.addWidget(self._material_detail_label)
 
         button_row = QHBoxLayout()
         add_button = QPushButton("Add Material")
@@ -369,7 +403,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_materials_list()
         return tab
 
-    def _refresh_materials_list(self) -> None:
+    def _refresh_materials_list(self, select_material_id: Optional[str] = None) -> None:
         query = self._material_filter_edit.text().strip()
         materials = self.context.materials.search(query) if query else self.context.materials.all_materials()
 
@@ -378,21 +412,45 @@ class WorkshopModule(ModuleBase):
             item = QListWidgetItem(format_material_row(material))
             item.setData(Qt.ItemDataRole.UserRole, material.material_id)
             self._material_list.addItem(item)
+            if material.material_id == select_material_id:
+                self._material_list.setCurrentItem(item)
+        self._update_material_detail_label()
 
     def _selected_material_id(self) -> Optional[str]:
         item = self._material_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
+    def _update_material_detail_label(self) -> None:
+        material_id = self._selected_material_id()
+        if material_id is None:
+            self._material_detail_label.setText("")
+            return
+
+        material = self.context.materials.get_material(material_id)
+        if material is None:
+            self._material_detail_label.setText("")
+            return
+
+        added_by_name = self._profile_name(material.added_by_profile_id)
+        times_used = self.context.materials.times_used(material_id)
+        last_used_entry = self.context.materials.last_used(material_id)
+        last_used_by_name = self._profile_name(last_used_entry.profile_id) if last_used_entry else None
+        last_used_date = last_used_entry.timestamp[:10] if last_used_entry else None
+
+        self._material_detail_label.setText(
+            format_material_detail_line(added_by_name, times_used, last_used_by_name, last_used_date)
+        )
+
     def _on_add_material(self) -> None:
         dialog = AddEditMaterialDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self.context.materials.add_material(
+        added = self.context.materials.add_material(
             name=dialog.entered_name, unit=dialog.entered_unit, unit_cost=dialog.entered_unit_cost,
             quantity_on_hand=dialog.entered_quantity_on_hand, reorder_threshold=dialog.entered_reorder_threshold,
             supplier=dialog.entered_supplier, location=dialog.entered_location, notes=dialog.entered_notes,
         )
-        self._refresh_materials_list()
+        self._refresh_materials_list(select_material_id=added.material_id)
 
     def _on_edit_material(self) -> None:
         material_id = self._selected_material_id()
@@ -408,7 +466,7 @@ class WorkshopModule(ModuleBase):
             quantity_on_hand=dialog.entered_quantity_on_hand, reorder_threshold=dialog.entered_reorder_threshold,
             supplier=dialog.entered_supplier, location=dialog.entered_location, notes=dialog.entered_notes,
         )
-        self._refresh_materials_list()
+        self._refresh_materials_list(select_material_id=material_id)
 
     def _on_delete_material(self) -> None:
         material_id = self._selected_material_id()

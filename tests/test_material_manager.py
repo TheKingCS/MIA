@@ -15,10 +15,12 @@ from __future__ import annotations
 import pytest
 
 import core.material_manager as material_manager_module
+import core.profile_manager as profile_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.material_manager import Material, MaterialManager, materials_needing_restock
+from core.profile_manager import ProfileManager
 
 
 @pytest.fixture
@@ -27,12 +29,22 @@ def isolated_paths(tmp_path, monkeypatch):
     materials_file = data_dir / "materials.json"
     monkeypatch.setattr(material_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(material_manager_module, "_MATERIALS_FILE", materials_file)
+    monkeypatch.setattr(material_manager_module, "_USAGE_LOG_FILE", data_dir / "material_usage_log.json")
+    monkeypatch.setattr(profile_manager_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     return data_dir, materials_file
 
 
 def _make_manager() -> MaterialManager:
     context = AppContext(config=ConfigManager(), events=EventBus())
     return MaterialManager(context)
+
+
+def _make_manager_with_profile(name: str) -> tuple[MaterialManager, AppContext]:
+    context = AppContext(config=ConfigManager(), events=EventBus())
+    context.profiles = ProfileManager(context)
+    context.profiles.create_profile(name=name)
+    manager = MaterialManager(context)
+    return manager, context
 
 
 # ----------------------------------------------------------------------
@@ -194,3 +206,184 @@ def test_manager_materials_needing_restock_reflects_live_data(isolated_paths):
     flagged = manager.materials_needing_restock()
 
     assert [m.name for m in flagged] == ["Low Stock Item"]
+
+
+# ------------------------------------------------------------------
+# Multi-user pass (2026-09-14) — added_by_profile_id + the usage log.
+# Fourth real application of the "shared object + user relationship"
+# pattern (Recipes, Inventory, Component DB, now Materials). `delta`
+# is a real float here, matching this domain's own continuous units.
+# ------------------------------------------------------------------
+
+def test_add_material_with_no_active_profile_leaves_added_by_unset(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood")
+    assert material.added_by_profile_id is None
+
+
+def test_add_material_attributes_to_the_real_active_profile(isolated_paths):
+    manager, context = _make_manager_with_profile("Alex")
+    active_profile = context.profiles.get_active_profile()
+
+    material = manager.add_material(name="Plywood")
+
+    assert material.added_by_profile_id == active_profile.profile_id
+
+
+def test_added_by_persists_across_a_fresh_load(isolated_paths):
+    manager, context = _make_manager_with_profile("Alex")
+    active_profile = context.profiles.get_active_profile()
+    material = manager.add_material(name="Plywood")
+
+    reloaded_context = AppContext(config=ConfigManager(), events=EventBus())
+    reloaded_context.profiles = context.profiles
+    reloaded = MaterialManager(reloaded_context)
+
+    assert reloaded.get_material(material.material_id).added_by_profile_id == active_profile.profile_id
+
+
+def test_adjust_quantity_increments_and_decrements_with_float_deltas(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+
+    manager.adjust_quantity(material.material_id, -2.5)
+    assert material.quantity_on_hand == 7.5
+    manager.adjust_quantity(material.material_id, 1.25)
+    assert material.quantity_on_hand == 8.75
+
+
+def test_adjust_quantity_clamps_at_zero(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=1.0)
+    manager.adjust_quantity(material.material_id, -5.0)
+    assert material.quantity_on_hand == 0.0
+
+
+def test_adjust_quantity_unknown_id_raises(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.adjust_quantity("does-not-exist", 1.0)
+
+
+def test_adjust_quantity_with_negative_delta_logs_a_real_usage_entry(isolated_paths):
+    manager, context = _make_manager_with_profile("Alex")
+    active_profile = context.profiles.get_active_profile()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+
+    manager.adjust_quantity(material.material_id, -2.5)
+
+    log = manager.usage_log_for_material(material.material_id)
+    assert len(log) == 1
+    assert log[0].delta == -2.5
+    assert log[0].profile_id == active_profile.profile_id
+
+
+def test_adjust_quantity_with_zero_delta_logs_nothing(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood")
+    manager.adjust_quantity(material.material_id, 0)
+    assert manager.usage_log_for_material(material.material_id) == []
+
+
+def test_times_used_counts_only_negative_deltas(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+    manager.adjust_quantity(material.material_id, -1.0)
+    manager.adjust_quantity(material.material_id, -1.0)
+    manager.adjust_quantity(material.material_id, 5.0)  # a restock, not a "use"
+    assert manager.times_used(material.material_id) == 2
+
+
+def test_times_used_household_total_includes_every_profile(isolated_paths):
+    manager, context = _make_manager_with_profile("Alex")
+    second_profile = context.profiles.create_profile(name="Faith", make_active=False)
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+
+    manager.adjust_quantity(material.material_id, -1.0)  # Alex (active)
+    context.profiles.set_active_profile(second_profile.profile_id)
+    manager.adjust_quantity(material.material_id, -1.0)  # Faith
+
+    assert manager.times_used(material.material_id) == 2
+
+
+def test_times_used_scoped_to_one_profile_excludes_the_others(isolated_paths):
+    manager, context = _make_manager_with_profile("Alex")
+    alex = context.profiles.get_active_profile()
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+
+    manager.adjust_quantity(material.material_id, -1.0)  # Alex
+    context.profiles.set_active_profile(faith.profile_id)
+    manager.adjust_quantity(material.material_id, -1.0)  # Faith
+
+    assert manager.times_used(material.material_id, profile_id=alex.profile_id) == 1
+    assert manager.times_used(material.material_id, profile_id=faith.profile_id) == 1
+
+
+def test_last_used_returns_the_most_recent_real_consumption_event(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+    manager.adjust_quantity(material.material_id, -1.0)
+    latest = manager.adjust_quantity(material.material_id, -1.0)
+
+    result = manager.last_used(material.material_id)
+    assert result is not None
+    assert result.timestamp == latest.updated_at
+
+
+def test_last_used_ignores_restocks(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+    manager.adjust_quantity(material.material_id, 10.0)  # a restock, not a use
+    assert manager.last_used(material.material_id) is None
+
+
+def test_last_used_none_when_never_used(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood")
+    assert manager.last_used(material.material_id) is None
+
+
+def test_last_used_picks_the_truly_last_entry_even_with_identical_timestamps(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+    from core.material_manager import MaterialUsageEntry
+
+    same_moment = "2026-09-14T12:00:00"
+    manager._usage_log.append(MaterialUsageEntry(entry_id="e1", material_id=material.material_id, delta=-1.0, profile_id="alex", timestamp=same_moment))
+    manager._usage_log.append(MaterialUsageEntry(entry_id="e2", material_id=material.material_id, delta=-1.0, profile_id="faith", timestamp=same_moment))
+
+    result = manager.last_used(material.material_id)
+    assert result is not None
+    assert result.profile_id == "faith"
+
+
+def test_usage_log_isolated_per_material(isolated_paths):
+    manager = _make_manager()
+    material_a = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+    material_b = manager.add_material(name="Filament", quantity_on_hand=5.0)
+
+    manager.adjust_quantity(material_a.material_id, -1.0)
+    manager.adjust_quantity(material_b.material_id, -1.0)
+    manager.adjust_quantity(material_b.material_id, -1.0)
+
+    assert len(manager.usage_log_for_material(material_a.material_id)) == 1
+    assert len(manager.usage_log_for_material(material_b.material_id)) == 2
+
+
+def test_usage_log_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    material = manager.add_material(name="Plywood", quantity_on_hand=10.0)
+    manager.adjust_quantity(material.material_id, -1.0)
+
+    reloaded = _make_manager()
+    assert len(reloaded.usage_log_for_material(material.material_id)) == 1
+
+
+def test_load_usage_log_handles_corrupt_json_gracefully(isolated_paths):
+    data_dir, _ = isolated_paths
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "material_usage_log.json").write_text("{not valid json", encoding="utf-8")
+
+    manager = _make_manager()  # must not raise
+    assert manager.usage_log_for_material("anything") == []

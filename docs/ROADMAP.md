@@ -11425,3 +11425,64 @@ untouched.
 This is now the third real application of the "shared object + user
 relationship" pattern (Recipes → Inventory → Component DB), and the
 same shape is now proven across three structurally different domains.
+
+## Multi-user shared-object pattern, fourth application: Materials (2026-09-14)
+
+Checked in after three applications rather than mechanically finding a
+fourth; user picked Materials (Workshop's fabrication-materials stock)
+as the recommended option, since real consumption events already exist
+via `core.job_manager.JobManager.consume_material()`.
+
+**That assumption was half right, checked before building**: real
+consumption events do exist (`MaterialConsumptionEntry`, recorded on
+the `Job`), but neither `Job` nor that entry carries any profile
+attribution, and `consume_material()` deducted stock via
+`update_material()` — a generic field-setter, not a delta-tracked,
+loggable method. So Materials needed the same new plumbing Components
+did (a real `adjust_quantity()`), plus one more step: **rewiring**
+`consume_material()` to route through it, so the real, already-existing
+Job-driven consumption automatically becomes attributed usage instead
+of needing a second, parallel tracking mechanism.
+
+`core/material_manager.py`: `Material` gains `added_by_profile_id`; new
+`MaterialUsageEntry` — same shape as `ComponentUsageEntry`/
+`InventoryUsageEntry`, except `delta` is a real `float` (materials use
+continuous units — kg, sheets, ft — unlike Inventory/Components'
+discrete counts). New `adjust_quantity(material_id, delta: float)`.
+`core/job_manager.py`'s `consume_material()` now calls
+`self.context.materials.adjust_quantity(material_id, -quantity_used)`
+instead of `update_material()` directly — mathematically identical
+final quantity, confirmed by the full existing `consume_material()`
+test suite passing unchanged, but now every real Job consumption is
+also a real, attributed `MaterialUsageEntry`.
+
+**A deliberate UI scope difference, not an oversight**: unlike
+Inventory/Components, the Materials tab did NOT get +1/−1 quick-adjust
+buttons — a material's real usage event is "Consume Material" on a Job
+(already a real, wired action), not a manual per-item tally that would
+make sense for a continuous quantity. It DID get the same "Added by X
+· Used Nx (last: Y on DATE)" detail line, since that's a real question
+regardless of which of the two adjustment paths produced the usage.
+
+`last_used()` was written with the cached-list-position fix
+(`matches[-1]`) from the start again — the third time in a row now,
+having learned it from Inventory and re-applied it in Components too.
+
+**Verification**: `pytest -q` — full suite, 3206 passed (22 new tests:
+20 in `test_material_manager.py` mirroring the established coverage
+shape with `float` deltas, plus a new `test_job_manager.py` test
+proving a real `consume_material()` call now produces a correctly-
+attributed usage entry — the actual point of the rewire — while every
+pre-existing `consume_material()` test still passed unchanged,
+confirming the swap was behavior-preserving; 3 new formatter tests in
+`test_workshop_module.py`). Manually verified end-to-end with a real
+two-Job, two-profile scenario against the actual Workshop module
+widget (Zac consumes 2.5 sheets via one Job, Faith consumes 1.0 via a
+second) — screenshot confirmed both the correct final quantity (16.5)
+and the correct attributed detail line on the first run. Confirmed
+real `config/config.json` untouched.
+
+Four domains now prove the "shared object + user relationship" pattern
+(Recipes → Inventory → Component DB → Materials), across both discrete
+and continuous quantities and both manual and cross-manager-triggered
+usage events.

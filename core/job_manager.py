@@ -279,12 +279,15 @@ class JobManager:
         job.updated_at = datetime.now().isoformat(timespec="seconds")
         self._save()
 
+        # Routed through adjust_quantity() rather than update_material()
+        # directly (multi-user pass, 2026-09-14) — a real Job consuming
+        # stock is real, attributed usage, the same as a manual
+        # quantity tweak; see MaterialManager.adjust_quantity()'s own
+        # docstring for why both paths need to share one method.
         if self.context.materials is not None:
             material = self.context.materials.get_material(material_id)
             if material is not None:
-                self.context.materials.update_material(
-                    material_id, quantity_on_hand=material.quantity_on_hand - quantity_used
-                )
+                self.context.materials.adjust_quantity(material_id, -quantity_used)
         return job
 
     def produce_product(self, job_id: str, product_id: str, quantity_produced: float) -> Job:

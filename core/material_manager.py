@@ -56,6 +56,15 @@ log = get_logger(__name__)
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _MATERIALS_FILE = _DATA_DIR / "materials.json"
+# Multi-user pass (2026-09-14) — the "shared object + user relationship"
+# pattern's fourth real application (see core.component_manager.
+# ComponentUsageEntry's own docstring for the third, Component DB, and
+# core.inventory_manager's for the second, Inventory). Material itself
+# stays shared/household; this file holds one real per-adjustment
+# event, same shape as ComponentUsageEntry/InventoryUsageEntry — with
+# a `float` delta rather than `int`, matching this domain's own
+# continuous units (kg, sheets, ft) that the other two don't have.
+_USAGE_LOG_FILE = _DATA_DIR / "material_usage_log.json"
 
 
 @dataclass
@@ -70,6 +79,10 @@ class Material:
     location: str = ""
     notes: str = ""
     updated_at: str = ""  # ISO datetime
+    # Multi-user pass (2026-09-14) — who first added this material,
+    # same role core.component_manager.Component.added_by_profile_id/
+    # core.inventory_manager.InventoryItem.added_by_profile_id play.
+    added_by_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -83,6 +96,7 @@ class Material:
             "location": self.location,
             "notes": self.notes,
             "updated_at": self.updated_at,
+            "added_by_profile_id": self.added_by_profile_id,
         }
 
     @staticmethod
@@ -98,6 +112,45 @@ class Material:
             location=data.get("location", ""),
             notes=data.get("notes", ""),
             updated_at=data.get("updated_at", ""),
+            added_by_profile_id=data.get("added_by_profile_id"),
+        )
+
+
+@dataclass
+class MaterialUsageEntry:
+    """One real quantity adjustment, attributed to whoever was active
+    when it happened — same shape and role as
+    core.component_manager.ComponentUsageEntry, except `delta` is a
+    `float` (materials use continuous units like kg/sheets/ft, unlike
+    Inventory/Components' discrete counts). Populated by both real
+    sources of a material's quantity changing: a direct manual
+    adjustment, and core.job_manager.JobManager.consume_material() (a
+    real Job consuming stock) — see MaterialManager.adjust_quantity()'s
+    own docstring for why both flow through the same method."""
+
+    entry_id: str
+    material_id: str
+    delta: float
+    profile_id: Optional[str] = None
+    timestamp: str = ""  # ISO datetime
+
+    def to_dict(self) -> dict:
+        return {
+            "entry_id": self.entry_id,
+            "material_id": self.material_id,
+            "delta": self.delta,
+            "profile_id": self.profile_id,
+            "timestamp": self.timestamp,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "MaterialUsageEntry":
+        return MaterialUsageEntry(
+            entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
+            material_id=data.get("material_id", ""),
+            delta=data.get("delta", 0.0),
+            profile_id=data.get("profile_id"),
+            timestamp=data.get("timestamp", ""),
         )
 
 
@@ -111,7 +164,9 @@ class MaterialManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._materials: list[Material] = []
+        self._usage_log: list[MaterialUsageEntry] = []
         self._load()
+        self._load_usage_log()
 
     # ------------------------------------------------------------------
     # Persistence
@@ -129,12 +184,36 @@ class MaterialManager:
             notify_data_corruption(self.context, "materials.json")
             self._materials = []
 
+    def _load_usage_log(self) -> None:
+        if not _USAGE_LOG_FILE.exists():
+            self._usage_log = []
+            return
+        try:
+            raw = json.loads(_USAGE_LOG_FILE.read_text(encoding="utf-8"))
+            self._usage_log = [MaterialUsageEntry.from_dict(d) for d in raw]
+        except (json.JSONDecodeError, OSError):
+            log.exception("Failed to load material_usage_log.json — starting with an empty list.")
+            notify_data_corruption(self.context, "material_usage_log.json")
+            self._usage_log = []
+
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_MATERIALS_FILE,
             json.dumps([m.to_dict() for m in self._materials], indent=2),
             encoding="utf-8",
         )
+
+    def _save_usage_log(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(
+            _USAGE_LOG_FILE,
+            json.dumps([e.to_dict() for e in self._usage_log], indent=2),
+            encoding="utf-8",
+        )
+
+    def _active_profile_id(self) -> Optional[str]:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        return active_profile.profile_id if active_profile is not None else None
 
     # ------------------------------------------------------------------
     # Writing
@@ -162,10 +241,38 @@ class MaterialManager:
             location=location,
             notes=notes,
             updated_at=datetime.now().isoformat(timespec="seconds"),
+            added_by_profile_id=self._active_profile_id(),
         )
         self._materials.append(material)
         self._save()
         log.info("Material added: '%s' (qty %s %s)", name, material.quantity_on_hand, material.unit)
+        return material
+
+    def adjust_quantity(self, material_id: str, delta: float) -> Material:
+        """Quick adjust — clamps at 0 rather than going negative. Multi-
+        user pass (2026-09-14) — a real, non-zero delta also appends a
+        MaterialUsageEntry attributed to whoever's active, same shape as
+        core.component_manager.ComponentManager.adjust_quantity() and
+        core.inventory_manager.InventoryManager.adjust_quantity().
+        core.job_manager.JobManager.consume_material() calls this too
+        (with a negative delta) rather than update_material() directly,
+        so a real Job consuming stock is also real, attributed usage —
+        not just a manual quantity tweak counts."""
+        material = self.get_material(material_id)
+        if material is None:
+            raise ValueError(f"No material with id '{material_id}'.")
+        material.quantity_on_hand = max(0.0, material.quantity_on_hand + delta)
+        material.updated_at = datetime.now().isoformat(timespec="seconds")
+        if delta != 0:
+            self._usage_log.append(MaterialUsageEntry(
+                entry_id=uuid.uuid4().hex[:10],
+                material_id=material_id,
+                delta=delta,
+                profile_id=self._active_profile_id(),
+                timestamp=material.updated_at,
+            ))
+            self._save_usage_log()
+        self._save()
         return material
 
     def update_material(self, material_id: str, **fields) -> Material:
@@ -220,3 +327,42 @@ class MaterialManager:
 
     def materials_needing_restock(self) -> list[Material]:
         return materials_needing_restock(self._materials)
+
+    # ------------------------------------------------------------------
+    # Usage (multi-user pass, 2026-09-14) — see MaterialUsageEntry's own
+    # docstring; direct analog of core.component_manager.ComponentManager's
+    # usage_log_for_component()/times_used()/last_used().
+    # ------------------------------------------------------------------
+
+    def usage_log_for_material(self, material_id: str) -> list[MaterialUsageEntry]:
+        """Every real adjustment (both restocks and consumption) for this material, oldest first."""
+        return [e for e in self._usage_log if e.material_id == material_id]
+
+    def times_used(self, material_id: str, profile_id: Optional[str] = None) -> int:
+        """Real consumption events only (delta < 0) — includes both
+        manual adjustments and real Job consumption (see
+        adjust_quantity()'s own docstring). `profile_id=None` (the
+        default) is the real household total; a real profile_id counts
+        only entries attributed to that profile OR unattributed — same
+        semantics core.component_manager/core.inventory_manager already
+        established for the identical question."""
+        return sum(
+            1 for e in self._usage_log
+            if e.material_id == material_id and e.delta < 0
+            and (profile_id is None or e.profile_id is None or e.profile_id == profile_id)
+        )
+
+    def last_used(self, material_id: str, profile_id: Optional[str] = None) -> Optional[MaterialUsageEntry]:
+        """Same `profile_id` semantics as times_used() above. Picks the
+        last MATCHING entry by real append order, not by comparing
+        `timestamp` strings — see
+        core.inventory_manager.InventoryManager.last_used()'s own
+        docstring for why."""
+        matches = [
+            e for e in self._usage_log
+            if e.material_id == material_id and e.delta < 0
+            and (profile_id is None or e.profile_id is None or e.profile_id == profile_id)
+        ]
+        if not matches:
+            return None
+        return matches[-1]

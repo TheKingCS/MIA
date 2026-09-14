@@ -18,12 +18,14 @@ import pytest
 import core.job_manager as job_manager_module
 import core.material_manager as material_manager_module
 import core.product_manager as product_manager_module
+import core.profile_manager as profile_manager_module
 from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.job_manager import Job, JobManager, MaterialConsumptionEntry, job_labor_cost, job_material_cost, job_total_cost
 from core.material_manager import Material, MaterialManager
 from core.product_manager import ProductManager
+from core.profile_manager import ProfileManager
 
 
 @pytest.fixture
@@ -33,8 +35,10 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(job_manager_module, "_JOBS_FILE", data_dir / "jobs.json")
     monkeypatch.setattr(material_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(material_manager_module, "_MATERIALS_FILE", data_dir / "materials.json")
+    monkeypatch.setattr(material_manager_module, "_USAGE_LOG_FILE", data_dir / "material_usage_log.json")
     monkeypatch.setattr(product_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(product_manager_module, "_PRODUCTS_FILE", data_dir / "products.json")
+    monkeypatch.setattr(profile_manager_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
 
 
 def _make_context() -> AppContext:
@@ -219,6 +223,26 @@ def test_consume_material_records_entry_and_deducts_stock(isolated_paths):
     assert job.material_consumption[0].material_id == material.material_id
     assert job.material_consumption[0].quantity_used == 5
     assert context.materials.get_material(material.material_id).quantity_on_hand == 15
+
+
+def test_consume_material_logs_real_attributed_usage(isolated_paths):
+    """Multi-user pass (2026-09-14) — consume_material() now routes
+    through MaterialManager.adjust_quantity() rather than
+    update_material() directly, so a real Job consuming stock is also
+    real, attributed usage, not just a manual quantity tweak."""
+    context = _make_context()
+    context.profiles = ProfileManager(context)
+    active_profile = context.profiles.create_profile(name="Alex")
+    material = context.materials.add_material(name="Plywood", unit_cost=10.0, quantity_on_hand=20)
+    job = context.jobs.add_job(name="Coasters")
+
+    context.jobs.consume_material(job.job_id, material.material_id, 5)
+
+    usage = context.materials.usage_log_for_material(material.material_id)
+    assert len(usage) == 1
+    assert usage[0].delta == -5
+    assert usage[0].profile_id == active_profile.profile_id
+    assert context.materials.times_used(material.material_id) == 1
 
 
 def test_consume_material_clamps_stock_at_zero_rather_than_going_negative(isolated_paths):
