@@ -78,6 +78,17 @@ current Mission. Garage, Property, and Greenhouse are the same kind of
 focused view, just over Maintenance assets instead of recurring
 routines.
 
+## Abandoning a Mission
+
+Not every Mission works out, and that's fine — set its status to
+Abandoned instead of leaving it active forever. When you do, you can
+optionally record why: too hard, not interesting, no time, or other.
+This isn't just bookkeeping — MIA actually pays attention to it. If
+you abandon 3 or more Missions within 30 days, it shows up as a real
+Observation naming the most common reason, with a suggestion tailored
+to it (an easier difficulty if things felt too hard, something smaller
+if there wasn't time). See the Observations module's own help topic.
+
 ## The Mission Log shows overall progress
 
 Selecting a Mission in the list shows its full detail — objectives as
