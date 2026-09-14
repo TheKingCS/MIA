@@ -23,6 +23,7 @@ import core.component_manager as component_manager_module
 import core.config_manager as config_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
+import core.insight_manager as insight_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
 import core.ledger_manager as ledger_manager_module
@@ -43,6 +44,7 @@ from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
+from core.insight_manager import InsightManager
 from core.inventory_manager import InventoryManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
@@ -104,6 +106,9 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(ledger_manager_module, "_EXPENSES_FILE", data_dir / "expenses.json")
     monkeypatch.setattr(trail_map_library_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(trail_map_library_module, "_TRAIL_MAPS_FILE", data_dir / "trail_maps.json")
+    monkeypatch.setattr(insight_manager_module, "_DATA_DIR", data_dir)
+    monkeypatch.setattr(insight_manager_module, "_INSIGHTS_FILE", data_dir / "insights.json")
+    monkeypatch.setattr(insight_manager_module, "_RECOMMENDATIONS_FILE", data_dir / "recommendations.json")
 
     ctx = AppContext(config=ConfigManager(), events=EventBus())
     ctx.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -127,6 +132,7 @@ def context(tmp_path, monkeypatch):
     ctx.products = ProductManager(ctx)
     ctx.ledger = LedgerManager(ctx)
     ctx.trail_maps = TrailMapLibrary(ctx)
+    ctx.insights = InsightManager(ctx)
     return ctx
 
 
@@ -1647,3 +1653,42 @@ def test_calculate_ohms_law_solves_for_current(context):
 def test_calculate_ohms_law_missing_values_reports_need_more(context):
     result = MIAApplication._action_calculate_ohms_law(context, {"solve_for": "voltage", "current": 2})
     assert "need" in result.lower()
+
+
+# ----------------------------------------------------------------------
+# Observations
+# ----------------------------------------------------------------------
+
+def test_list_observations_nothing_open(context):
+    result = MIAApplication._action_list_observations(context, {})
+    assert "nothing open" in result.lower()
+
+
+def test_list_observations_returns_open_insights_with_recommendations(context):
+    insight = context.insights.create_insight_if_new(
+        source_type="maintenance", source_id="t1", kind="overdue",
+        title="Oil change", message="'Oil change' is overdue by 10 days.",
+    )
+    context.insights.add_recommendation(insight.insight_id, "Mark it complete, or reschedule it.")
+
+    result = MIAApplication._action_list_observations(context, {})
+    assert "[maintenance]" in result
+    assert "overdue by 10 days" in result
+    assert "Recommendation: Mark it complete" in result
+
+
+def test_list_observations_excludes_resolved(context):
+    insight = context.insights.create_insight_if_new(
+        source_type="maintenance", source_id="t1", kind="overdue",
+        title="Oil change", message="'Oil change' is overdue by 10 days.",
+    )
+    context.insights.resolve_insight(insight.insight_id)
+
+    result = MIAApplication._action_list_observations(context, {})
+    assert "nothing open" in result.lower()
+
+
+def test_list_observations_no_service_reports_unavailable(context):
+    context.insights = None
+    result = MIAApplication._action_list_observations(context, {})
+    assert "not available" in result.lower() or "aren't available" in result.lower()

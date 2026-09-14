@@ -1075,6 +1075,21 @@ class MIAApplication:
             trigger_phrases=("recent activity", "activity log", "what have i done", "what have i been doing", "what did i do"),
         ))
         self.context.assistant_actions.register(AssistantAction(
+            name="list_observations",
+            domain="system",
+            description=(
+                "List everything MIA has currently noticed and hasn't resolved yet — overdue/due-soon "
+                "Maintenance tasks and Missions that have gone stale. Use this for questions like 'what "
+                "have you noticed' or 'anything I should know about' or 'any observations'."
+            ),
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=self._action_list_observations,
+            trigger_phrases=(
+                "what have you noticed", "any observations", "anything i should know",
+                "what's open", "what needs attention", "system observations",
+            ),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
             name="add_waypoint",
             domain="waypoints",
             description="Save a new named waypoint (location) in MIA's Navigation module.",
@@ -3145,6 +3160,34 @@ class MIAApplication:
             return "No matching recent activity found." if keyword else "No recent activity recorded yet."
 
         lines = [f"{e.timestamp.replace('T', ' ')} — {e.summary}" for e in entries]
+        return "\n".join(lines)
+
+    @staticmethod
+    def _action_list_observations(context: AppContext, arguments: dict) -> str:
+        """
+        Fetches every currently open Insight as plain text — same
+        "let the LLM phrase its own answer from raw records" shape as
+        _action_recall_recent_activity above. Distinct from that
+        action: this is MIA's own durable observations (Maintenance/
+        Missions scans, modules/observations/module.py), not a log of
+        what the USER did.
+        """
+        if context.insights is None:
+            return "Observations aren't available."
+        open_insights = context.insights.open_insights()
+        if not open_insights:
+            return "Nothing open right now — no observations need attention."
+
+        lines = []
+        for insight in open_insights:
+            pending = next(
+                (r for r in context.insights.recommendations_for_insight(insight.insight_id) if r.status == "pending"),
+                None,
+            )
+            line = f"[{insight.source_type}] {insight.message}"
+            if pending:
+                line += f" Recommendation: {pending.message}"
+            lines.append(line)
         return "\n".join(lines)
 
     @staticmethod

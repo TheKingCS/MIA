@@ -10389,3 +10389,22 @@ and the highlight correctly read "1 thing MIA has noticed" after
 creating one real open Insight, and a real screenshot showed the
 "OBSERVATIONS" card rendering on the actual dashboard layout among the
 other real widgets.
+
+## Observations reaches the Assistant: "what have you noticed?" (2026-09-14)
+
+The last real surface Observations wasn't wired into yet — you can now
+just ask MIA, same as `recall_recent_activity` already lets you ask
+"what have I been doing." New `list_observations` AssistantAction
+(`core/application.py`, GUI app only — headless Core never constructs
+`context.insights` at all, same reason it has no Maintenance actions
+either, so this correctly isn't registered there) with trigger phrases
+like "what have you noticed"/"any observations"/"what needs
+attention." `_action_list_observations()` mirrors
+`_action_recall_recent_activity()`'s exact shape: fetch raw open
+Insights (+ each one's pending Recommendation) as plain text, let the
+LLM phrase its own answer rather than templating one here.
+
+**Verification**: `pytest -q` — full suite, 2961 passed (4 new
+tests: nothing-open/populated-with-recommendation/excludes-resolved/
+no-service-degrades-gracefully). Confirmed `core/application.py`
+still imports cleanly with the new registration in place.
