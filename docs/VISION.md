@@ -777,6 +777,76 @@ detection step, not a parallel system. Not designed further here; same
 session — Classroom's own content model should get real use before
 wiring it into Missions/Discovery.
 
+## Master vision & product philosophy re-statement (2026-09-14)
+
+The user handed off a full 25-section "Master Vision & Product
+Philosophy" document. Most of it restates or sharpens ground this file
+already covers in detail (AR/XR HUD and "Inspect" → the "User OS"
+section above; workshop/maker/greenhouse/aquaponics → the "Jarvis
+workshop/office vision" section above; the four-project structure,
+offline-first, companion philosophy → the Mission/Companion sections
+above). Recorded in full in the `project_mia_master_vision` memory.
+What's genuinely new or newly crystallized enough to record here:
+
+**The unifying mission statement, stated more sharply than before**:
+*"MIA should help turn real life into an interactive, measurable,
+intelligent world."* Not artificial tasks invented to gamify
+productivity — MIA recognizes what the user is *already* doing (mowing,
+cooking, building, hiking, saving money, growing food) and turns it
+into tracked, meaningful progression. This is the same principle that
+already governed every real system built this session (Rewards derives
+stats live from real Maintenance/Workout/Kitchen/Project data rather
+than a separate fabricated point system) — worth stating as the
+explicit test for every future feature, not just an emergent pattern.
+
+**Multi-user "living world" as an explicit top-level pillar, not an
+afterthought.** *"Each person is a player. The household is a shared
+world."* This is a real, separate design document now
+(`project_mia_multiuser_vision`) with its own first real slice already
+shipped (Recipes as shared object + personal stats, 2026-09-14, see
+`ROADMAP.md`) — this master document confirms it as core identity, not
+a one-off feature.
+
+**"Universal engine vs. individual module experiences" — a real
+architectural principle worth naming, even though it's mostly already
+true by construction.** The user's framing: a core engine provides
+Users/Identity/Memory/Events/Objects/Missions/XP/Skills/Achievements/
+Statistics/Notifications/Shared-data, and a new module (e.g. a future
+Gardening module) should automatically get all of that for free rather
+than reinventing it. This already holds for every module built this
+session — Kitchen/Workout/Maintenance/Missions/Projects all plug into
+the one shared `RewardsManager`/skill-XP/notification pipeline rather
+than each inventing its own — but hadn't been named as a deliberate
+rule until now. Treat it as a real constraint on future module design:
+a new domain module reaching for its own bespoke XP/achievement/
+notification mechanism instead of the shared ones is a smell, not a
+style choice.
+
+**Physical objects as first-class entities** (mower, truck, 3D
+printer, etc. — spec sheet, maintenance schedule, usage stats,
+documents/manuals/photos, costs, associated missions/achievements).
+Partially real already: `core.maintenance_manager.MaintenanceAsset`
+now carries real per-owner attribution and per-task reward baselines
+(2026-09-14, see `ROADMAP.md`'s "per-profile + per-vehicle rewards"
+entry) — documents/manuals/warranty/purchase-info fields don't exist
+yet. The AR "look at the mower, see its stats" interface is the
+existing "Inspect" section above's contextual form, unchanged, still
+gated on camera/on-device-classification hardware.
+
+**New concrete idea, not built**: a real onboarding interview at
+profile creation — MIA asks about the new user's real life, hobbies,
+goals, responsibilities, and interests, and uses those answers to seed
+which modules/missions/skills feel relevant to *them* specifically
+(directly serves "Faith may not have the same missions I have" from
+the multi-user handoff). Not scoped or built — flagged here so it has
+an obvious home once picked up.
+
+**Explicitly long-term, not scoped**: real-world multi-player events
+across households (section 25's closing line) — the user's own
+framing is "eventually," secondary to the solo/home-life focus. Same
+treatment as this file's existing "Realistic phased horizon" table
+below — don't let it pull near-term scope toward it.
+
 ## Why this is a separate document from ROADMAP.md
 
 This vision includes ideas (a multi-agent "Expert Council," genetic
@@ -955,6 +1025,9 @@ the other.
 | **MIA as a "User OS" / AR-XR HUD interface** (2026-09-11 addition: a persistent capability layer eventually reachable through an AR/XR contextual HUD, desktop/mobile/voice/wearable all as equal clients of the same core) | See the dedicated section above. Architectural constraint, not new work: the Skills/Missions/Pathways/Projects/Intent/Discovery stack built this session already satisfies it by construction (no `core/` file imports `gui/`; `core/core_runtime.py` already proves the same manager stack runs headless). Extends, doesn't replace, the already-resolved "Multi-platform architecture + browser/XR support" row below. |
 | **"Inspect" capability** (2026-09-11 addition: query MIA about your own capability state, or — later — a real-world object via AR glasses) | Project 1/2, future. Depends on capability-status tracking (Locked/Learning/Practiced/Demonstrated, itself still deferred — see `docs/ROADMAP.md`'s Discovery/Pathways entries) for the self-query form, and on the same camera/on-device-classification hardware question already flagged above for the contextual/object-recognition form. Not designed further. |
 | **Classroom as the knowledge/education layer** (2026-09-11 addition: connect Missions/Pathways/Discovery to real lessons/tutorials/reference material when a capability gap is identified) | Project 1. **v1 shipped 2026-09-11** — `core/classroom_manager.py` + `modules/classroom/module.py` (Subjects → Courses → Lessons, derived completion). Confirmed first it never existed before building it. Deliberately just the content/lesson structure so far — the Skills/Missions/Discovery connection described in the dedicated section above is still unbuilt. |
+| **Multi-user "living world"** (2026-09-14 addition: every profile is their own player — own level/XP/skills/missions/stats/history — inside one shared household world; shared object ≠ shared progression) | Project 1. Real, separate vision doc (`project_mia_multiuser_vision` memory). **Slice 1 shipped 2026-09-14** — Recipes as shared object + personal per-profile stats (`core/kitchen_manager.py`'s `RecipeUserStats`, see `ROADMAP.md`). Prerequisite groundwork (per-profile Mission/Workout attribution, per-vehicle Maintenance ownership) shipped the same day, ahead of the vision doc itself arriving. Remaining slices: reapply the pattern to other shared objects, shared missions/group quests, the personalized "Welcome back, Faith" dashboard — all still open. |
+| **Universal engine vs. individual module experiences** (2026-09-14 addition: a shared core — Users/Memory/Events/Objects/Missions/XP/Skills/Achievements/Notifications — that every new module gets for free rather than reinventing) | Project 1. Mostly already true by construction (every module this session built plugs into the one shared `RewardsManager`/skill-XP/notification pipeline) — newly named as a deliberate constraint on future module design, not new work itself. |
+| **Profile-creation interview** (2026-09-14 addition: a real onboarding conversation at profile creation — hobbies, goals, responsibilities, interests — used to seed which modules/missions/skills feel relevant to that specific person) | Project 1, new scope, not started. Directly serves the multi-user vision's "Faith may not have the same missions I have" — the natural mechanism for that would be built through here. |
 
 ## Realistic phased horizon (coarse-grained, not a commitment)
 
