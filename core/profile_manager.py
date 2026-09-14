@@ -114,6 +114,21 @@ class Profile:
     # interview was skipped — never required.
     interests: list[str] = field(default_factory=list)
     interview_notes: str = ""
+    # Spatial/"any user" vision (2026-09-14) — interview_notes went
+    # from "read-only color, nothing parses it" to a real input: the
+    # first time this profile reaches Home with unprocessed notes,
+    # gui/home_dashboard.py runs them through the exact same memory-
+    # extraction pipeline a real chat message already goes through
+    # (core.assistant_chat.build_memory_extraction_prompt()/
+    # parse_extracted_memories()) — same "gather real facts, let the
+    # LLM phrase them, never treat its output as authoritative without
+    # parsing" discipline as everywhere else that pipeline is used.
+    # This flag is the one-shot gate so a repeat Home construction
+    # doesn't re-extract (and re-store near-duplicate) the same notes
+    # every session — set True once extraction actually runs, even if
+    # zero real facts came back, since "nothing to extract" is still a
+    # real, final answer for these particular notes.
+    interview_notes_extracted: bool = False
 
     @property
     def has_password(self) -> bool:
@@ -216,6 +231,7 @@ class ProfileManager:
                 unlocked_reward_ids=list(data.get("unlocked_reward_ids", [])),
                 interests=list(data.get("interests", [])),
                 interview_notes=data.get("interview_notes", ""),
+                interview_notes_extracted=data.get("interview_notes_extracted", False),
             )
             for pid, data in raw.items()
         ]
@@ -242,6 +258,7 @@ class ProfileManager:
             unlocked_reward_ids=list(raw.get("unlocked_reward_ids", [])),
             interests=list(raw.get("interests", [])),
             interview_notes=raw.get("interview_notes", ""),
+            interview_notes_extracted=raw.get("interview_notes_extracted", False),
         )
 
     def get_profile(self, profile_id: str) -> Optional[Profile]:
@@ -282,7 +299,24 @@ class ProfileManager:
         config.save()
         log.info("Saved interview answers for profile '%s': interests=%s", profile_id, interests)
         return True
-        log.info("Switched active profile to '%s'", profile_id)
+
+    def mark_interview_notes_extracted(self, profile_id: str) -> bool:
+        """The one-shot gate gui/home_dashboard.py sets once it's run
+        this profile's interview_notes through memory extraction —
+        same shape as set_interview_answers() above. Set regardless of
+        whether any real fact actually came back; "nothing to extract"
+        is still a final answer for these particular notes, not a
+        reason to keep retrying every session."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            log.warning("Attempted to mark interview notes extracted for unknown profile_id '%s'", profile_id)
+            return False
+        record = dict(raw)
+        record["interview_notes_extracted"] = True
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        return True
 
     def rename_profile(self, profile_id: str, new_name: str) -> bool:
         """Rename an existing profile. Returns False if the profile

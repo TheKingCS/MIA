@@ -10534,3 +10534,57 @@ produced the exact right Insight/Recommendation/Notification text, an
 unrelated completion didn't create a duplicate, and the abandoned
 Mission's `profile_id` was confirmed correctly stamped. Confirmed real
 `config/config.json` and `data/profiles/` were untouched by this run.
+
+## interview_notes finally does something real (2026-09-14)
+
+From the "MIA Spatial Interface & Meta Wearables Vision" handoff's
+second, separate, more actionable point: MIA's architecture should
+work for any user's hobby, not just this user's own life. Audited the
+current system honestly first (see `VISION.md`'s matching section) —
+the engine layer is already generic by construction; the real,
+concrete, currently-inert lever was `Profile.interview_notes`
+(free-text interview answers, captured since 2026-09-14 earlier the
+same day, never parsed). User picked wiring this up as the concrete
+next step, over scoping the (genuinely separate, hardware-independent-
+but-still-unscoped) spatial/AR architecture itself.
+
+**New `Profile.interview_notes_extracted: bool`** — the one-shot gate.
+**`gui/home_dashboard.py`'s `_extract_interview_notes_if_needed()`**
+runs a profile's unprocessed `interview_notes` through the exact same
+extraction pipeline a real chat message already goes through
+(`core.assistant_chat.build_memory_extraction_prompt()`/
+`parse_extracted_memories()`, the identical `GenerateWorker` pattern
+`_extract_memories()` already uses) — called once, right after Home
+finishes constructing. **Real reliability reasoning behind WHERE this
+runs**: the transient setup wizard / profile-interview dialog closes
+almost immediately after Save, which would orphan an in-flight
+`GenerateWorker` before a real LLM reply comes back; Home is the first
+stable, long-lived widget every profile reaches afterward, so the
+worker's lifetime is tied to something that actually survives long
+enough. New `ProfileManager.mark_interview_notes_extracted()` mirrors
+`set_interview_answers()`'s exact shape; also removed a real, harmless
+but stray dead-code line (`log.info(...)` after a `return`,
+mislabeled — clearly copy-pasted from `set_active_profile()`) found
+while editing that same method.
+
+**Honest, explicitly-stated limitation, not silently glossed over**:
+this inherits `core.user_memory_manager`'s pre-existing lack of a
+`profile_id` field — extracted facts land in one shared memory pool,
+not scoped to just the profile whose interview produced them. Not a
+new gap this introduces (every existing chat-based extraction call
+site already has it); flagged as real future scope, not fixed here.
+
+**Verification**: `pytest -q` — full suite, 2991 passed (5 new tests
+for the new field/method in `test_profile_manager.py`). Manual
+headless-Qt verification (no real LLM invoked — the async worker's
+result handler called directly with a fabricated reply, same
+convention as everywhere else `GenerateWorker` wiring is checked in
+this codebase, since no test anywhere unit-tests the Qt-thread
+plumbing itself): confirmed no worker starts for a blank-notes
+profile, a worker DOES start for a real-notes/not-yet-extracted
+profile, the resulting facts land as real `UserMemory` entries with
+the right text, the one-shot flag persists, and a later Home
+construction for the same profile correctly does NOT re-trigger
+extraction. Confirmed real `config/config.json` untouched throughout
+(the isolation lesson from earlier this same session applied here
+deliberately).

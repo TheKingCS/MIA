@@ -561,6 +561,7 @@ class HomeDashboard(QFrame):
         self._worker: Optional[ChatWorker] = None
         self._title_worker: Optional[GenerateWorker] = None
         self._memory_worker: Optional[GenerateWorker] = None
+        self._interview_memory_worker: Optional[GenerateWorker] = None
         self._conversation = None
         self._recording = False
         self._widget_bodies: dict[str, QLabel] = {}
@@ -669,6 +670,7 @@ class HomeDashboard(QFrame):
 
         self.context.conversations.start_new_active_conversation()
         self._speak(self._briefing_label.text())
+        self._extract_interview_notes_if_needed()
 
         self._clock_timer = QTimer(self)
         self._clock_timer.timeout.connect(self._tick_clock)
@@ -1740,6 +1742,48 @@ class HomeDashboard(QFrame):
     def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
         for category, fact in parse_extracted_memories(raw_text):
             self.context.user_memories.add_memory(fact, category=category, source_conversation_id=conversation_id)
+
+    def _extract_interview_notes_if_needed(self) -> None:
+        """"Any user, any hobby" vision (2026-09-14) — the profile-
+        creation interview's free-text notes were captured but never
+        acted on until now. Runs them through the exact same
+        extraction pipeline a real chat message already goes through
+        (build_memory_extraction_prompt()/parse_extracted_memories()),
+        once per profile ever (Profile.interview_notes_extracted gates
+        it) — Home is the first stable, long-lived widget a profile
+        reaches after either first-run setup or "Add Profile," so
+        starting the worker here (rather than from the transient setup
+        wizard/interview dialog itself) means it isn't orphaned by that
+        dialog closing before a real LLM reply comes back.
+
+        Inherits the same pre-existing limitation every other
+        extraction call site in this app already has: UserMemory has
+        no profile_id field, so extracted facts land in one shared
+        pool, not scoped to just this profile — not a new gap this
+        introduces, see core/user_memory_manager.py."""
+        if self.context.user_memories is None or self.context.llm is None or self.context.profiles is None:
+            return
+        profile = self.context.profiles.get_active_profile()
+        if profile is None or profile.interview_notes_extracted or not profile.interview_notes.strip():
+            return
+        prompt = build_memory_extraction_prompt(profile.interview_notes)
+        self._interview_memory_worker = GenerateWorker(self.context.llm, prompt)
+        profile_id = profile.profile_id
+        self._interview_memory_worker.result_ready.connect(
+            lambda raw: self._on_interview_notes_extracted(profile_id, raw)
+        )
+        self._interview_memory_worker.finished.connect(self._on_interview_memory_worker_finished)
+        self._interview_memory_worker.start()
+
+    def _on_interview_notes_extracted(self, profile_id: str, raw_text: Optional[str]) -> None:
+        for category, fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, category=category)
+        self.context.profiles.mark_interview_notes_extracted(profile_id)
+
+    def _on_interview_memory_worker_finished(self) -> None:
+        if self._interview_memory_worker is not None:
+            self._interview_memory_worker.deleteLater()
+            self._interview_memory_worker = None
 
     def _on_memory_worker_finished(self) -> None:
         if self._memory_worker is not None:

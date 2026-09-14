@@ -920,6 +920,17 @@ is the natural mechanism for eventually seeding genuinely per-user
 content, not yet wired up. Not scoped further here; a real candidate
 for the next concrete slice once picked up.
 
+**Built 2026-09-14, same day** — `interview_notes` now actually does
+something: `gui/home_dashboard.py` runs it through the exact same
+memory-extraction pipeline a real chat message already goes through,
+the first time a profile reaches Home with unprocessed notes
+(`Profile.interview_notes_extracted` gates it to once ever). See
+`ROADMAP.md`'s matching entry. Still a first, narrow slice — the
+resulting facts land in the existing shared `UserMemory` pool (no
+`profile_id` field exists on it yet), and nothing yet turns an
+extracted fact into a real Mission/module suggestion; both are real,
+separate future scope.
+
 ## Why this is a separate document from ROADMAP.md
 
 This vision includes ideas (a multi-agent "Expert Council," genetic

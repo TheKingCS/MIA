@@ -426,3 +426,42 @@ def test_set_interview_answers_empty_is_a_real_valid_skip(isolated_paths):
     profile = manager.create_profile(name="Alex")
     result = manager.set_interview_answers(profile.profile_id, [], "")
     assert result is True
+
+
+def test_new_profile_has_interview_notes_not_extracted_by_default(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    assert profile.interview_notes_extracted is False
+
+
+def test_mark_interview_notes_extracted_succeeds_for_a_real_profile(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+
+    result = manager.mark_interview_notes_extracted(profile.profile_id)
+
+    assert result is True
+    reloaded = manager.list_profiles()[0]
+    assert reloaded.interview_notes_extracted is True
+
+
+def test_mark_interview_notes_extracted_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex")
+    manager.mark_interview_notes_extracted(profile.profile_id)
+
+    reloaded_manager = _make_manager()
+    assert reloaded_manager.list_profiles()[0].interview_notes_extracted is True
+
+
+def test_mark_interview_notes_extracted_reflected_in_get_active_profile(isolated_paths):
+    manager = _make_manager()
+    profile = manager.create_profile(name="Alex", make_active=True)
+    manager.mark_interview_notes_extracted(profile.profile_id)
+
+    assert manager.get_active_profile().interview_notes_extracted is True
+
+
+def test_mark_interview_notes_extracted_unknown_profile_returns_false(isolated_paths):
+    manager = _make_manager()
+    assert manager.mark_interview_notes_extracted("does-not-exist") is False
