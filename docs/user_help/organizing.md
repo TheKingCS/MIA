@@ -22,6 +22,12 @@ Toolbox is a collection of everyday tools, each its own tab:
 - **Stopwatch** — a simple timer for quick use.
 - **Calculators** — unit conversion (length, area, volume, weight,
   temperature) and other quick calculators.
+- **Field Captures** — review voice notes captured by a MIA Lite field
+  device (a lightweight, no-inference capture mode, not built into any
+  device yet) before they become real entries. Each one shows its
+  transcript; Accept turns it into a real Journal entry (and lets MIA
+  notice any real facts in it, the same way a chat message already
+  does); Reject discards it. No editing — accept or reject as-is.
 
 ## Workshop & Electronics
 

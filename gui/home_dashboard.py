@@ -562,6 +562,7 @@ class HomeDashboard(QFrame):
         self._title_worker: Optional[GenerateWorker] = None
         self._memory_worker: Optional[GenerateWorker] = None
         self._interview_memory_worker: Optional[GenerateWorker] = None
+        self._capture_memory_worker: Optional[GenerateWorker] = None
         self._conversation = None
         self._recording = False
         self._widget_bodies: dict[str, QLabel] = {}
@@ -681,6 +682,13 @@ class HomeDashboard(QFrame):
         self._data_timer.start(_DATA_REFRESH_MS)
 
         self.context.events.subscribe("dashboard.widgets_changed", self._on_widgets_changed)
+        # MIA Lite (2026-09-14) — a capture can be accepted from
+        # modules/toolbox/tools/lite_captures_tool.py while Home isn't
+        # even the visible screen; Home stays alive across module
+        # navigation (a QStackedWidget hides it, doesn't destroy it),
+        # so subscribing here reacts correctly regardless of which
+        # screen the user was actually on when they clicked Accept.
+        self.context.events.subscribe("capture.accepted", self._on_capture_accepted)
 
         self._tick_clock()
         self._refresh_data()
@@ -1784,6 +1792,34 @@ class HomeDashboard(QFrame):
         if self._interview_memory_worker is not None:
             self._interview_memory_worker.deleteLater()
             self._interview_memory_worker = None
+
+    def _on_capture_accepted(self, proposal_id: str) -> None:
+        """MIA Lite (2026-09-14) — the "MIA notices things silently in
+        the background" step core.lite_capture_manager.py's own
+        docstring describes: real personal facts extracted from an
+        accepted field capture's transcript, same pipeline/worker
+        shape as _extract_interview_notes_if_needed() above, just
+        triggered by the "capture.accepted" event instead of at
+        construction time."""
+        if self.context.user_memories is None or self.context.llm is None or self.context.lite_captures is None:
+            return
+        proposal = self.context.lite_captures.get_proposal(proposal_id)
+        if proposal is None or not proposal.transcript.strip():
+            return
+        prompt = build_memory_extraction_prompt(proposal.transcript)
+        self._capture_memory_worker = GenerateWorker(self.context.llm, prompt)
+        self._capture_memory_worker.result_ready.connect(self._on_capture_memories_extracted)
+        self._capture_memory_worker.finished.connect(self._on_capture_memory_worker_finished)
+        self._capture_memory_worker.start()
+
+    def _on_capture_memories_extracted(self, raw_text: Optional[str]) -> None:
+        for category, fact in parse_extracted_memories(raw_text):
+            self.context.user_memories.add_memory(fact, category=category)
+
+    def _on_capture_memory_worker_finished(self) -> None:
+        if self._capture_memory_worker is not None:
+            self._capture_memory_worker.deleteLater()
+            self._capture_memory_worker = None
 
     def _on_memory_worker_finished(self) -> None:
         if self._memory_worker is not None:

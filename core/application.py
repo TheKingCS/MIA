@@ -42,6 +42,7 @@ from core.budget_manager import (
 )
 from core.finance_manager import FinanceManager
 from core.homestead_manager import HomesteadManager
+from core.lite_capture_manager import LiteCaptureManager
 from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
@@ -277,6 +278,7 @@ class MIAApplication:
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
+        self.context.lite_captures = LiteCaptureManager(self.context)
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.insights = InsightManager(self.context)
         self.context.budget = BudgetManager(self.context)
@@ -379,6 +381,18 @@ class MIAApplication:
         self._homestead_snapshot_timer.timeout.connect(self._check_homestead_snapshots)
         self._homestead_snapshot_timer.start(60_000)
 
+        # Same "always alive for the whole app session" reasoning as
+        # the two timers above — MIA Lite's watched-folder field
+        # capture ingestion (core/lite_capture_manager.py) must pick up
+        # a landed capture regardless of which screen is open. Same
+        # 60s cadence/reasoning: prompt enough without polling
+        # needlessly often for what's currently a manual drop (no
+        # device-side wireless sync exists yet — see that module's own
+        # docstring).
+        self._lite_capture_timer = QTimer()
+        self._lite_capture_timer.timeout.connect(self._check_lite_captures)
+        self._lite_capture_timer.start(60_000)
+
         # Same "always alive for the whole app session" reasoning as the
         # timers above — "MIA should assign me missions sometimes"
         # (docs/VISION.md's gamification goal) needs to fire regardless
@@ -419,6 +433,14 @@ class MIAApplication:
             self.context.notifications.notify(
                 "New homestead snapshot imported",
                 f"Imported an updated snapshot from '{snapshot.source}'.",
+            )
+
+    def _check_lite_captures(self) -> None:
+        new_proposals = self.context.lite_captures.scan_for_new_captures()
+        for proposal in new_proposals:
+            self.context.notifications.notify(
+                "New field capture ready to review",
+                f"'{proposal.journal_title}' is ready to review in Field Captures.",
             )
 
     def _check_daily_occasions(self) -> None:

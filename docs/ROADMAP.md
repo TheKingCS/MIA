@@ -10691,3 +10691,77 @@ with real historical XP in both Homestead (backdated 90 days stale)
 and Maker (fresh) correctly flagged only Homestead — exact message,
 real Notification, and resolution once fresh Homestead XP landed all
 confirmed. Real `config/config.json` confirmed untouched.
+
+## MIA Lite, receiving side (2026-09-14)
+
+Scoped directly with the user across 4 real questions before any
+code (hardware: a mode on the existing Receiver; capture scope v1:
+voice notes only; sync: opportunistic wireless, eventually;
+processing: MIA proposes, the user confirms — same discipline
+`core/discovery_manager.py` already established). Then a real
+constraint surfaced translating that into an actual plan: the
+device-side capture and wireless sync transport can't be built or
+tested here at all — no real Receiver hardware exists in this dev
+sandbox, the identical situation Core's own voice-loop entry point is
+already honest about. Confirmed and explained before writing any
+code; the user approved building the receiving/processing side only.
+
+**New `core/lite_capture_manager.py`** — watches `lite_captures/`
+(same "manual drop for now, automated later" pattern
+`core/finance_manager.py`/`core/homestead_manager.py` already proved
+out) for a `<id>.json` manifest + `.wav` pair — a real file contract
+this project defines now, the same position `docs/MIA_HOME_SYNC_PLAN.md`
+was in before the Homestead side existed. Transcribes via the existing
+offline `VoiceManager` (no new speech tech). Every transcript becomes
+a real, persisted `CaptureProposal` — deliberately not a destination-
+classification decision for an LLM to get wrong; it always proposes a
+Journal entry (the one destination that's always a correct fit),
+reviewed via Accept/Reject only, no editing. Real personal facts are
+additionally extracted from the same transcript on accept, via the
+exact same pipeline a real chat message already goes through
+(`build_memory_extraction_prompt()`/`parse_extracted_memories()`) —
+silently, in the background, same precedent that pipeline already has
+everywhere else. "Mission update" as a destination is deliberately not
+attempted — a real, separate, harder classification problem.
+
+**New "Field Captures" Toolbox tool**
+(`modules/toolbox/tools/lite_captures_tool.py`) — a list of pending
+proposals (not Discovery's single-proposal model; multiple captures
+can genuinely queue up between review sessions), each with Accept/
+Reject. Accepting fires `"capture.accepted"` (only on a genuine
+pending->accepted transition, not a redundant click) so
+`gui/home_dashboard.py` — which stays alive across module navigation,
+unlike the tool itself — can react and run memory extraction, even
+when Home isn't the visible screen at the moment of accepting.
+
+**A real, active bug this pass caught and fixed beyond its own code**:
+`discovery_tool.py`'s own `_clear_content()` (actively triggered, not
+latent) and `modules/observations/module.py`'s `_refresh()` (latent
+today) both called `deleteLater()` alone on old widgets — doesn't
+remove them from the screen immediately, a real ghosting bug this
+codebase already had the correct fix for elsewhere
+(`gui/user_memory_dialog.py`'s own `_refresh()`) that these two just
+hadn't received yet. Caught by an actual screenshot showing old and
+new card text superimposed, not assumed safe; all three (the new tool
+plus these two pre-existing ones) now use the same correct
+hide()+setParent(None)+deleteLater() sequence.
+
+New `.gitignore` entry for `lite_captures/*` added up front, in the
+same commit as the manager — not found as a gap after the fact the
+way `homestead_snapshots/*`'s own entry was.
+
+**Verification**: `pytest -q` — full suite, 3050 passed (22 new tests:
+21 in `test_lite_capture_manager.py` covering the manifest scan,
+transcription stub, move-to-processed/failed, accept/reject,
+persistence, and graceful degradation without Journal/voice services;
+1 in `test_lite_captures_tool.py` for the pure card-formatting
+function). Manual end-to-end verification against a fully isolated
+context (config path explicitly isolated and asserted; no real Vosk/
+LLM invoked, both stubbed consistent with this session's established
+convention): a real capture manifest+wav dropped in, scanned,
+transcribed, shown in the real Field Captures UI (screenshot
+confirmed), accepted through the real tool method — producing a real
+Journal entry and correctly firing the cross-module event that started
+Home's real extraction worker even though Home wasn't the visible
+screen at the time. A second screenshot after accepting, which is what
+caught the ghosting bug above, confirmed clean after the fix.

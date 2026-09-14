@@ -42,6 +42,7 @@ from modules.module_base import ModuleBase
 from modules.toolbox.tools.alarm_tool import AlarmTool
 from modules.toolbox.tools.calendar_tool import CalendarTool
 from modules.toolbox.tools.discovery_tool import DiscoveryTool
+from modules.toolbox.tools.lite_captures_tool import LiteCapturesTool
 from modules.toolbox.tools.intent_tool import IntentTool
 from modules.toolbox.tools.inventory_tool import InventoryTool
 from modules.toolbox.tools.pathway_tool import PathwayTool
@@ -69,6 +70,7 @@ class ToolboxModule(ModuleBase):
             ProjectTool(self.context),
             PathwayTool(self.context),
             DiscoveryTool(self.context),
+            LiteCapturesTool(self.context),
         ]
 
     def get_widget(self) -> QWidget:

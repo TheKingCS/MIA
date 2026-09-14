@@ -115,10 +115,22 @@ class ObservationsModule(ModuleBase):
         return page
 
     def _refresh(self) -> None:
+        # hide()+setParent(None) before deleteLater() — currently
+        # harmless here (_refresh() only ever runs once per widget
+        # instance today), but deleteLater() alone doesn't remove a
+        # widget from the screen immediately, a real ghosting bug this
+        # codebase has hit more than once (see
+        # gui/user_memory_dialog.py's own _refresh(), and
+        # modules/toolbox/tools/lite_captures_tool.py's _clear(),
+        # caught there by an actual screenshot showing overlapping
+        # text) — fixed proactively so a future second refresh here
+        # doesn't silently reintroduce it.
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         all_insights = self.context.insights.all_insights() if self.context.insights is not None else []

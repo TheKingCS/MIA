@@ -89,10 +89,19 @@ class DiscoveryTool(ToolboxTool):
         return active.profile_id if active else None
 
     def _clear_content(self) -> None:
+        # hide()+setParent(None) before deleteLater() — a real, active
+        # ghosting bug: _refresh() genuinely runs more than once here
+        # (after generation/accept/reject), and deleteLater() alone
+        # doesn't remove a widget from the screen immediately. Found
+        # while building modules/toolbox/tools/lite_captures_tool.py
+        # (same pattern, caught there by an actual screenshot showing
+        # overlapping text) and fixed here too, not just there.
         while self._content_layout.count():
             item = self._content_layout.takeAt(0)
             child = item.widget()
             if child is not None:
+                child.hide()
+                child.setParent(None)
                 child.deleteLater()
 
     def _refresh(self) -> None:

@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
     from core.homestead_manager import HomesteadManager
+    from core.lite_capture_manager import LiteCaptureManager
     from core.intent_manager import IntentManager
     from core.insight_manager import InsightManager
     from core.inventory_manager import InventoryManager
@@ -166,6 +167,12 @@ class AppContext:
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)
     homestead: Optional["HomesteadManager"] = field(default=None, repr=False)
+    # MIA Lite (2026-09-14) — the receiving/processing side of the
+    # field-capture tier docs/VISION.md's Core/Home split section
+    # names. See core/lite_capture_manager.py's own docstring for what
+    # this is (and deliberately isn't yet — no device-side capture or
+    # wireless sync exists).
+    lite_captures: Optional["LiteCaptureManager"] = field(default=None, repr=False)
     maintenance: Optional["MaintenanceManager"] = field(default=None, repr=False)
     budget: Optional["BudgetManager"] = field(default=None, repr=False)
     real_estate: Optional["RealEstateManager"] = field(default=None, repr=False)

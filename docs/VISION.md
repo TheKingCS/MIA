@@ -397,17 +397,51 @@ constraint is the mirror image of Core's: Lite must be *useful*
 while being *minimal* (no model, no inference, the least power/compute
 this project can get away with).
 
-**Not designed further here** — real open questions: is this a mode
-on existing Receiver hardware or genuinely separate/cheaper hardware;
-what the local buffer format is (and how it survives a crash/power
-loss before sync); what "reconnect" means concretely (USB dock like
-Core→Home already implies, or opportunistic network sync); and how
-queued raw captures map onto real processing once they land (a voice
-note becoming a Journal entry vs. a Mission update vs. a UserMemory
-fact is a real classification problem, not automatic). Flagged here so
-it has an obvious home once scoped, same "don't build blind" stance as
-everything else in this document — this needs its own real design
-pass before any code, same as the Core→Home hand-off itself above.
+**Scoped directly with the user, 2026-09-14, same day — 4 real
+questions answered before any code**: hardware is a mode on the
+existing Receiver, not new hardware; v1 capture scope is voice notes
+only (not journal text entry or sensor/location logs — real, separate
+future scope); the sync mechanism is opportunistic wireless,
+eventually; and processing is "MIA proposes, the user confirms," the
+exact same discipline `core/discovery_manager.py` already established
+for Mission proposals, not silent auto-filing.
+
+**Built the same day: the receiving/processing side only.** The
+device-side capture (recording on the Receiver) and the actual
+wireless sync transport are explicitly NOT built and can't be — no
+real Receiver hardware exists in this dev sandbox, the identical
+constraint Core's own voice-loop entry point above is already honest
+about. What IS real: `core/lite_capture_manager.py` watches a folder
+(`lite_captures/`, same "manual drop for now, automated later" pattern
+`core/finance_manager.py`/`core/homestead_manager.py` already proved
+out) for a capture manifest + `.wav` pair — a real file contract this
+project gets to define now, the same position `docs/MIA_HOME_SYNC_PLAN.md`
+was in before the Homestead side existed. Transcribes via the existing
+offline `core.voice_manager.VoiceManager` (no new speech tech). Every
+transcript becomes a real, persisted `CaptureProposal` — deliberately
+NOT a destination-classification decision for an LLM to risk getting
+wrong (journal vs. mission vs. memory); it always proposes a Journal
+entry (the one destination that's always a correct fit for "something
+said out loud in the field"), reviewed in a new "Field Captures"
+Toolbox tool (Accept/Reject, no editing, same shape as Discovery's own
+proposal review). Real personal facts are additionally extracted from
+the same transcript on accept, via the exact same pipeline a real chat
+message already goes through — silently, in the background, the same
+precedent that pipeline already has everywhere else it's used, not a
+second thing to separately confirm. "Mission update" as a destination
+is deliberately not attempted — mapping free voice text onto a
+specific Mission/Objective is a real, separate, harder problem.
+
+A real bug this pass caught and fixed, not just here: two existing
+list-refresh methods (`modules/toolbox/tools/discovery_tool.py`'s own
+`_clear_content()`, actively triggered — and
+`modules/observations/module.py`'s `_refresh()`, latent) called
+`deleteLater()` alone, which doesn't remove a widget from the screen
+immediately — a real ghosting bug this codebase already has a known,
+correct fix for elsewhere (`gui/user_memory_dialog.py`'s own
+`_refresh()`) that these two just hadn't gotten yet. Caught by an
+actual screenshot showing overlapping text, not assumed safe; both
+fixed the same way.
 
 ## Home's visual identity — a sci-fi companion interface (2026-07-15)
 

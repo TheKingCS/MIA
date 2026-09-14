@@ -67,6 +67,14 @@ financial_snapshots/*
 homestead_snapshots/*
 !homestead_snapshots/.gitkeep
 
+# MIA Lite field capture ingestion (core/lite_capture_manager.py) —
+# same watched-drop-folder pattern as financial_snapshots/ above, for
+# voice-note manifests+audio landing from a real field device (not
+# built — see that module's own docstring). Added up front this time,
+# not found as a gap after the fact like homestead_snapshots/ was.
+lite_captures/*
+!lite_captures/.gitkeep
+
 # Trail map PDFs (core/trail_map_library.py, Maps module) — user-added
 # official state park/trail map PDFs, downloaded or copied in by the
 # user. Same "large-ish user-supplied binary, not under data/" reasoning
