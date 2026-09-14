@@ -211,3 +211,75 @@ def test_find_export_bundles_sorted_newest_first(tmp_path):
 
 def test_find_export_bundles_nonexistent_mountpoint_returns_empty(tmp_path):
     assert find_export_bundles(tmp_path / "does-not-exist") == []
+
+
+# ------------------------------------------------------------------
+# Corrupted destination file during import (2026-09-14 stabilization
+# pass) — a real, more serious variant of the "corrupted data file"
+# problem than a fresh-state manager's own _load() has: this module
+# merges into an EXISTING file, so silently treating a corrupted live
+# file as empty would PERMANENTLY OVERWRITE the destination's own real
+# data with just the imported bundle, the exact loss "merge, don't
+# overwrite" exists to prevent.
+# ------------------------------------------------------------------
+
+def test_import_never_overwrites_a_corrupted_live_file(isolated_paths, tmp_path):
+    data_dir, _ = isolated_paths
+    # The "Home" machine's own real, pre-existing expeditions.json is
+    # corrupted (e.g. from a crash on some earlier, pre-atomic-write
+    # version) — real content that must survive this import untouched.
+    corrupted_content = "{not valid json, but real bytes that must not be lost"
+    _write_json_raw(data_dir / "expeditions.json", corrupted_content)
+
+    pi_data_dir = tmp_path / "pi_data"
+    _write_json(pi_data_dir / "expeditions.json", [{"expedition_id": "pi-exp", "name": "Field Trip"}])
+    import core.expedition_sync as sync_module
+    original_data_dir = sync_module._DATA_DIR
+    sync_module._DATA_DIR = pi_data_dir
+    try:
+        bundle_path = tmp_path / "export.zip"
+        export_expedition_data(bundle_path)
+    finally:
+        sync_module._DATA_DIR = original_data_dir
+
+    result = import_expedition_data(bundle_path)
+
+    assert result.passed is True  # a partial success, not a hard failure
+    assert result.counts["expeditions.json"] == 0  # nothing merged into the corrupted file
+    assert any("expeditions.json" in error for error in result.errors)
+    # The real, original corrupted bytes are still there, byte for
+    # byte — not silently replaced with just the imported bundle.
+    assert (data_dir / "expeditions.json").read_text(encoding="utf-8") == corrupted_content
+
+
+def test_import_still_merges_other_files_when_one_is_corrupted(isolated_paths, tmp_path):
+    """One corrupted file must not block the rest of the same import."""
+    data_dir, _ = isolated_paths
+    _write_json_raw(data_dir / "expeditions.json", "{not valid json")
+    _write_json(data_dir / "trips.json", [{"trip_id": "home-trip", "expedition_id": "e1", "name": "Home Trip"}])
+
+    pi_data_dir = tmp_path / "pi_data"
+    _write_json(pi_data_dir / "expeditions.json", [{"expedition_id": "pi-exp", "name": "Field Trip"}])
+    _write_json(pi_data_dir / "trips.json", [{"trip_id": "pi-trip", "expedition_id": "pi-exp", "name": "Pi Trip"}])
+    import core.expedition_sync as sync_module
+    original_data_dir = sync_module._DATA_DIR
+    sync_module._DATA_DIR = pi_data_dir
+    try:
+        bundle_path = tmp_path / "export.zip"
+        export_expedition_data(bundle_path)
+    finally:
+        sync_module._DATA_DIR = original_data_dir
+
+    result = import_expedition_data(bundle_path)
+
+    assert result.counts["expeditions.json"] == 0  # skipped — corrupted
+    assert result.counts["trips.json"] == 1  # merged fine — unaffected by the other file's corruption
+
+    merged_trips = json.loads((data_dir / "trips.json").read_text(encoding="utf-8"))
+    trip_ids = {record["trip_id"] for record in merged_trips}
+    assert trip_ids == {"home-trip", "pi-trip"}
+
+
+def _write_json_raw(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")

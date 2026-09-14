@@ -11266,3 +11266,49 @@ shape — `skill_progress.json` literal, `bills.json` via the now-fixed
 instance method) against a real notifications stand-in: both produced
 the correct, real notification message. Confirmed real
 `config/config.json` untouched.
+
+## Stabilization: expedition-sync import no longer destroys corrupted destination data (2026-09-14)
+
+Closed the one gap flagged (not silently skipped) in the previous
+pass: `core/expedition_sync.py`'s own merge-on-import had no `context`
+in scope to reuse `core.data_recovery`, and needed a genuinely
+different fix anyway — this was the **most serious** corrupted-file
+finding of the whole stabilization thread, not just another instance
+of the same pattern.
+
+Every other manager's `_load()` owns a fresh file — falling back to
+empty on corruption just means "start over," annoying but bounded.
+`_merge_json_records()` is different: it merges an *imported* bundle
+into an *existing* destination file (the real use case is a Pi docked
+to a Home desktop, syncing real trips/expeditions/waypoints/journal
+entries). The old code treated a corrupted destination file as an
+empty list and merged the import into that — which meant the next
+`atomic_write_text()` call **permanently overwrote** whatever real
+data the destination machine already had with just the imported
+bundle's own records. Exactly the data loss this module's own
+docstring says "merge, don't overwrite" exists to prevent, silently
+defeated by one corrupted file.
+
+Fixed by changing `_merge_json_records()`'s return shape from a bare
+count to `(count, error_or_None)`: a corrupted destination file now
+aborts the merge for *that file only* — left completely untouched,
+reported back via a new `ImportResult.errors` entry — while every
+other file in the same import still merges normally.
+`ImportResult.passed` stays `True` for this case (real work still
+happened; this is a partial success, not a hard failure), so both
+`modules/field_kit/module.py` callers (the manual Import button and
+the docked-Core auto-import path) were updated to surface `errors`
+even when `passed` is `True` — previously only checked on failure,
+which would have silently hidden exactly this warning from the user.
+
+**Verification**: `pytest -q` — full suite, 3139 passed (2 new
+regression tests: a corrupted destination `expeditions.json` survives
+an import byte-for-byte instead of being overwritten, and a *second*
+test confirming one corrupted file doesn't block a sibling file in the
+same bundle from merging normally). Confirmed real `config/config.json`
+untouched.
+
+This closes out every concrete finding from this stabilization thread
+— five real fixes (backup/restore external content coverage, atomic
+writes, daily-check isolation, config quarantine, corruption
+notifications) plus this one, the most serious of the six.

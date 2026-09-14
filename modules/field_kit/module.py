@@ -320,6 +320,13 @@ class FieldKitModule(ModuleBase):
             summary = "\n".join(f"{name}: +{count}" for name, count in result.counts.items() if count)
             if not summary:
                 summary = "No new records or photos — everything in this export was already present."
+            # A per-file merge error (2026-09-14 stabilization pass) —
+            # e.g. a corrupted live trips.json — doesn't fail the whole
+            # import, but must still reach the user: silently showing
+            # "Import Complete" while one file was actually skipped
+            # would hide a real problem.
+            if result.errors:
+                summary += "\n\nWarnings:\n" + "\n".join(f"• {e}" for e in result.errors)
             QMessageBox.information(None, "Import Complete", summary)
         else:
             QMessageBox.warning(None, "Import Failed", "\n".join(result.errors))
@@ -374,6 +381,17 @@ class FieldKitModule(ModuleBase):
                 any_failed = True
                 log.warning("Auto-import failed for '%s': %s", bundle_path, "; ".join(result.errors))
                 continue
+            if result.errors:
+                # A partial success (2026-09-14 stabilization pass) —
+                # e.g. a corrupted live trips.json skipped this one
+                # file's merge — still counts as "failed" for this
+                # unattended flow's own summary note, even though
+                # result.passed is True: there's no dialog here to show
+                # the detail in, so the log is the only place it's
+                # visible, and the summary note is what tells the user
+                # to go look.
+                any_failed = True
+                log.warning("Auto-import partially failed for '%s': %s", bundle_path, "; ".join(result.errors))
             for key, count in result.counts.items():
                 total_counts[key] = total_counts.get(key, 0) + count
 

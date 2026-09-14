@@ -25,6 +25,16 @@ directly"). Reuses `core/backup_manager.py`'s proven zip-bundle pattern
    any `trip_photos/<trip_id>/<filename>` not already present is copied
    in.
 
+   **2026-09-14 stabilization pass**: if the DESTINATION's own file
+   (e.g. this machine's real `trips.json`) is corrupted, the merge for
+   that one file is aborted and reported back via `ImportResult.errors`
+   — never silently treated as empty and overwritten. Every other file
+   in the same import still merges normally; `ImportResult.passed`
+   stays `True` for a partial success like this (real work still
+   happened), with the skipped file named explicitly so the caller can
+   tell the user rather than silently reporting a clean import when
+   real destination data was actually left at risk.
+
 Like `core/backup_manager.py`, this module only touches files on disk —
 it has no `AppContext`/manager coupling, so an already-running
 `TripManager`/`ExpeditionManager`/etc. won't see newly-imported records
@@ -188,10 +198,14 @@ def import_expedition_data(source_path: Path) -> ImportResult:
         except BackupError as exc:
             return ImportResult(passed=False, errors=[str(exc)])
 
+        merge_errors: list[str] = []
         for filename, id_field in _DATA_FILES:
             staged_file = staging_dir / "data" / filename
             live_file = _DATA_DIR / filename
-            counts[filename] = _merge_json_records(staged_file, live_file, id_field)
+            added, error = _merge_json_records(staged_file, live_file, id_field)
+            counts[filename] = added
+            if error:
+                merge_errors.append(error)
 
         staged_photos = staging_dir / "trip_photos"
         counts["trip_photos"] = _merge_photo_files(staged_photos, _TRIP_PHOTOS_DIR)
@@ -201,21 +215,49 @@ def import_expedition_data(source_path: Path) -> ImportResult:
         shutil.rmtree(staging_dir, ignore_errors=True)
 
     log.info("Imported expedition data from '%s': %s", source_path, counts)
-    return ImportResult(passed=True, counts=counts)
+    # `merge_errors` (2026-09-14 stabilization pass) doesn't fail the
+    # whole import — the files that DID merge cleanly are real,
+    # genuine progress — but is still surfaced via `errors` so the
+    # caller can tell the user "trips.json couldn't be merged" rather
+    # than silently reporting a clean import when one file was
+    # actually skipped. See _merge_json_records()'s own docstring for
+    # why this is a real, more serious variant of the "corrupted data
+    # file" problem than a fresh-state manager's own _load() has.
+    return ImportResult(passed=True, counts=counts, errors=merge_errors)
 
 
-def _merge_json_records(staged_file: Path, live_file: Path, id_field: str) -> int:
-    """Appends records from staged_file whose id_field isn't already present in live_file. Returns count added."""
+def _merge_json_records(staged_file: Path, live_file: Path, id_field: str) -> tuple[int, Optional[str]]:
+    """Appends records from staged_file whose id_field isn't already
+    present in live_file. Returns (count added, error message or None).
+
+    2026-09-14 stabilization pass — a real, more serious variant of the
+    "corrupted data file" problem every other manager's own _load()
+    has: this function merges into an EXISTING file rather than owning
+    a fresh one, so silently treating a corrupted live_file as empty
+    (the old behavior) didn't just lose a rebuildable cache the way it
+    does elsewhere — it PERMANENTLY OVERWROTE whatever real trips/
+    expeditions/waypoints/journal entries the destination machine
+    already had with just the imported bundle's own records, the exact
+    data loss "merge, don't overwrite" exists in this module specifically
+    to prevent (see the module's own docstring). If live_file can't be
+    read, this now aborts the merge for THIS FILE ONLY (a real error,
+    reported back to the caller) and leaves it completely untouched,
+    rather than guessing it was empty — every other file in the same
+    import still merges normally.
+    """
     if not staged_file.exists():
-        return 0
+        return 0, None
 
     staged_records = json.loads(staged_file.read_text(encoding="utf-8"))
 
     if live_file.exists():
         try:
             live_records = json.loads(live_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            live_records = []
+        except (json.JSONDecodeError, OSError) as exc:
+            return 0, (
+                f"'{live_file.name}' is corrupted and could not be read — skipped merging into it "
+                f"to avoid losing its existing data ({exc}). Nothing from this export was merged into it."
+            )
     else:
         live_records = []
 
@@ -231,7 +273,7 @@ def _merge_json_records(staged_file: Path, live_file: Path, id_field: str) -> in
     if added:
         live_file.parent.mkdir(parents=True, exist_ok=True)
         atomic_write_text(live_file, json.dumps(live_records, indent=2), encoding="utf-8")
-    return added
+    return added, None
 
 
 def _merge_photo_files(staged_dir: Path, live_dir: Path) -> int:
