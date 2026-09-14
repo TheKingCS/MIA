@@ -44,6 +44,18 @@ Manager sits untouched for several days, MIA can also turn that
 specific stale Task into its own one-objective Mission, so it doesn't
 just get quietly forgotten.
 
+## Party missions: sharing a Mission with another profile
+
+A Mission can also be a party quest for two or more profiles at once
+— pick who's involved when you create it. Each Objective on a party
+Mission can either be assigned to one specific person or left shared
+(anyone's progress counts). The detail panel shows a "Party" line
+naming everyone involved, a "Household Progress" count across every
+Objective, and — if you're one of the people on it — a "Your
+Contribution" count for just your own assigned Objectives. Finishing a
+party Mission credits its full reward (XP and credits) to every real
+participant, not just whoever completed the last Objective.
+
 ## The Mission Log shows overall progress
 
 Selecting a Mission in the list shows its full detail — objectives as

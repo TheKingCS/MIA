@@ -10408,3 +10408,33 @@ LLM phrase its own answer rather than templating one here.
 tests: nothing-open/populated-with-recommendation/excludes-resolved/
 no-service-degrades-gracefully). Confirmed `core/application.py`
 still imports cleanly with the new registration in place.
+
+## Self-knowledge companion docs: Observations + Group Quests (2026-09-14)
+
+`docs/VISION.md`'s self-knowledge row is explicit: "every new module
+this project ships from here on needs its own `docs/user_help/
+<module_id>.md` companion, or MIA can only give a one-sentence gloss
+for it." Shipping Observations without one would have been exactly
+that silent gap the row warns about.
+
+**New `docs/user_help/observations.md`** — what shows up there, why
+there's nothing to add/edit directly (resolution happens back in the
+source module), and its dashboard/Assistant surfaces. **`missions.md`
+also gained a real missing section** — Group Quests (participants,
+per-objective assignment, Party/Household Progress/Your Contribution)
+had zero grounded content anywhere despite being a real, fully-shipped
+feature; found while touching this same doc category for Observations.
+
+Verified functionally, not just written: queried
+`DeviceHelpManager.retrieve()` directly with `"what is a party
+mission"` and `"how do observations work"` — both correctly surface
+the new content as real chunks, not just a one-sentence module gloss.
+
+**Known, pre-existing, NOT fixed this pass**: 14 other real modules
+still have no exact-named `docs/user_help/*.md` file (notes, skills,
+garage, property, greenhouse, household, power, toolbox, character,
+dashboard, diagnostics, module_browser, files_mod, lab) — this predates
+today and is a real backlog, not something introduced here. Flagged,
+not silently left implicit, matching this row's own "revisit any time
+a module ships without one" standard — a natural, separately-scoped
+follow-on whenever picked up.
