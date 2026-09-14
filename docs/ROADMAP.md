@@ -9826,3 +9826,54 @@ shows all 5 real Road Warrior tiers (historical achievement preserved)
 while his own going-forward Vehicle Miles Logged also correctly reads
 0 (baseline consumed the full 207,000) — screenshotted both,
 confirmed correct.
+
+## Multi-user, slice 1: shared object + personal recipe stats (2026-09-14)
+
+The user handed off "MIA Multi-User System: Individual Lives + Shared
+Household" — a full vision for MIA as a multi-user ecosystem where
+every profile is their own player, with shared household objects
+carrying independent per-user statistics (see the
+[[project_mia_multiuser_vision]] memory). Picked via AskUserQuestion:
+the vision doc's own flagship worked example, Recipes — "Japanese
+Curry: Zac made it 8 times, Faith made it 12" — establishing the
+reusable "shared object + user relationship" pattern before applying
+it anywhere else.
+
+**`core/kitchen_manager.py`**: `Recipe` gains `unlocked_by_profile_id`/
+`unlocked_at` (real attribution metadata on the ONE shared recipe,
+stamped by `unlock_recipe()` — never a duplicated per-user Recipe).
+`MealLogEntry` gains `profile_id`, auto-stamped in `log_meal()` with
+whoever's active (same precedent `WorkoutSession.profile_id` already
+established). New `RecipeUserStats` — one row per real (profile_id,
+recipe_id) pair holding only what nothing else could derive live
+(rating, favorite, personal_notes); `times_made`/`last_made` stay
+deliberately NOT fields on it — both derive from `MealLogEntry`
+via `times_made(recipe_id, profile_id=None, ...)` /
+`last_made_date(recipe_id, profile_id=None)`, both backward-compatible
+(`profile_id=None` is the unchanged household total; a real profile_id
+filters to that profile's own entries, with unattributed/legacy
+entries still counting toward everyone). New CRUD:
+`get_recipe_user_stats()` (never None — a fresh default), 
+`set_recipe_rating()`/`set_recipe_favorite()`/`set_recipe_personal_notes()`,
+`favorite_recipe_ids()`.
+
+**UI**: `modules/kitchen/module.py`'s recipe detail page now has two
+cards — "HOUSEHOLD" (the unfiltered total, what was already there,
+relabeled for clarity) and a new "YOUR STATS" card showing the active
+profile's own times-made/last-made, plus editable rating (dropdown),
+favorite (checkbox), and personal notes (text field) with a Save
+button. Extracted `format_made_count_line()`/`format_last_made_line()`
+(previously duplicated inline in two places) into real, tested pure
+functions — the new personal-stats call site was the natural moment
+to consolidate.
+
+**Real data**: backfilled `profile_id` onto the 2 real meals Faith
+logged earlier today (predates this field).
+
+**Verification**: `pytest -q` — full suite, 2861 passed (20 new
+tests). Manual headless-Qt check with two real profiles logging
+against one shared recipe (Zac: 4 meals + a 4.5 rating + a personal
+note; Faith: 3 meals + a 5.0 rating + favorited) — screenshotted
+Faith's view: "HOUSEHOLD — Made 7x" alongside "YOUR STATS — Made 3x,
+Your rating: 5/5, ✓ Favorite," with Zac's personal note correctly
+absent from her view.

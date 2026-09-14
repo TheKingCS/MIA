@@ -56,6 +56,12 @@ _RECIPES_FILE = _DATA_DIR / "kitchen_recipes.json"
 _PANTRY_FILE = _DATA_DIR / "kitchen_pantry.json"
 _GROCERY_LIST_FILE = _DATA_DIR / "kitchen_grocery_list.json"
 _MEAL_LOG_FILE = _DATA_DIR / "kitchen_meal_log.json"
+# Multi-user pass (2026-09-14) — the "shared object + user relationship"
+# pattern's first real application (see the
+# [[project_mia_multiuser_vision]] memory). Recipe/MealLogEntry stay
+# shared/household; this file holds one RecipeUserStats row per real
+# (profile_id, recipe_id) pair that's ever been rated/favorited/noted.
+_RECIPE_USER_STATS_FILE = _DATA_DIR / "kitchen_recipe_user_stats.json"
 
 RECIPE_CATEGORIES = ["Breakfast", "Lunch", "Dinner", "Dessert", "Snack", "Side", "Drink", "Other"]
 PANTRY_CATEGORIES = [
@@ -91,6 +97,16 @@ class Recipe:
     # Mission naming this recipe completes the moment the user logs
     # having actually made it, not just via a manual mark-complete.
     locked: bool = False
+    # Multi-user pass (2026-09-14) — who unlocked this shared recipe
+    # and when, per the [[project_mia_multiuser_vision]] handoff's own
+    # "Unlocked by: Faith" example. Recipe itself stays one shared
+    # object (never duplicated per user) — this is just real metadata
+    # about a real one-time event, same "record what happened, not a
+    # duplicate" stance as everything else here. None/None for every
+    # recipe that started unlocked (locked was never True) or was
+    # unlocked before this field existed.
+    unlocked_by_profile_id: Optional[str] = None
+    unlocked_at: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -102,6 +118,8 @@ class Recipe:
             "carbs_g": self.carbs_g, "fat_g": self.fat_g,
             "source": self.source, "notes": self.notes, "created_at": self.created_at,
             "locked": self.locked,
+            "unlocked_by_profile_id": self.unlocked_by_profile_id,
+            "unlocked_at": self.unlocked_at,
         }
 
     @staticmethod
@@ -123,6 +141,8 @@ class Recipe:
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
             locked=bool(data.get("locked", False)),
+            unlocked_by_profile_id=data.get("unlocked_by_profile_id"),
+            unlocked_at=data.get("unlocked_at"),
         )
 
 
@@ -193,9 +213,21 @@ class MealLogEntry:
     recipe_id: str
     date: str
     notes: str = ""
+    # Multi-user pass (2026-09-14) — stamped with whoever's active at
+    # log_meal() time, same auto-attribution precedent
+    # core.workout_manager.WorkoutSession.profile_id already
+    # established. None (shared/unattributed — every entry logged
+    # before this field existed, or with no active profile) counts
+    # toward every profile's own times_made()/last_made_date(), same
+    # "derive it, don't persist a duplicate" default every other
+    # per-profile field in this codebase already uses.
+    profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {"entry_id": self.entry_id, "recipe_id": self.recipe_id, "date": self.date, "notes": self.notes}
+        return {
+            "entry_id": self.entry_id, "recipe_id": self.recipe_id, "date": self.date,
+            "notes": self.notes, "profile_id": self.profile_id,
+        }
 
     @staticmethod
     def from_dict(data: dict) -> "MealLogEntry":
@@ -204,6 +236,44 @@ class MealLogEntry:
             recipe_id=data.get("recipe_id", ""),
             date=data.get("date", ""),
             notes=data.get("notes", ""),
+            profile_id=data.get("profile_id"),
+        )
+
+
+@dataclass
+class RecipeUserStats:
+    """One real (profile_id, recipe_id) pair's own relationship to a
+    shared Recipe — the [[project_mia_multiuser_vision]] handoff's own
+    flagship "shared object + user relationship" pattern. Recipe
+    itself never gets duplicated per user; this is the per-user side
+    of it. `times_made`/`last_made` are deliberately NOT fields here —
+    both derive live from MealLogEntry.profile_id (see
+    KitchenManager.times_made()/last_made_date()), same "derive it,
+    don't persist a second copy that can drift" stance as everything
+    else in this codebase. Only real per-user OPINIONS/notes that
+    nothing else could derive live here: rating, favorite, personal
+    notes."""
+
+    profile_id: str
+    recipe_id: str
+    rating: Optional[float] = None  # None = not rated, never a fabricated 0
+    favorite: bool = False
+    personal_notes: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "profile_id": self.profile_id, "recipe_id": self.recipe_id,
+            "rating": self.rating, "favorite": self.favorite, "personal_notes": self.personal_notes,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "RecipeUserStats":
+        return RecipeUserStats(
+            profile_id=data.get("profile_id", ""),
+            recipe_id=data.get("recipe_id", ""),
+            rating=data.get("rating"),
+            favorite=bool(data.get("favorite", False)),
+            personal_notes=data.get("personal_notes", ""),
         )
 
 
@@ -280,6 +350,7 @@ class KitchenManager:
         self._pantry: list[PantryItem] = []
         self._grocery_list: list[GroceryListItem] = []
         self._meal_log: list[MealLogEntry] = []
+        self._recipe_user_stats: list[RecipeUserStats] = []
         self._load()
 
     # ------------------------------------------------------------------
@@ -291,6 +362,7 @@ class KitchenManager:
         self._pantry = self._load_file(_PANTRY_FILE, PantryItem)
         self._grocery_list = self._load_file(_GROCERY_LIST_FILE, GroceryListItem)
         self._meal_log = self._load_file(_MEAL_LOG_FILE, MealLogEntry)
+        self._recipe_user_stats = self._load_file(_RECIPE_USER_STATS_FILE, RecipeUserStats)
 
     @staticmethod
     def _load_file(path: Path, cls) -> list:
@@ -319,6 +391,9 @@ class KitchenManager:
 
     def _save_meal_log(self) -> None:
         self._save_file(_MEAL_LOG_FILE, self._meal_log)
+
+    def _save_recipe_user_stats(self) -> None:
+        self._save_file(_RECIPE_USER_STATS_FILE, self._recipe_user_stats)
 
     # ------------------------------------------------------------------
     # Recipe CRUD
@@ -400,14 +475,20 @@ class KitchenManager:
         unknown — never fires a duplicate notification for a state that
         was already true, same idempotency stance
         core.insight_manager.InsightManager.resolve_insight() already
-        takes. Not profile-scoped — Recipe has no per-profile concept
-        anywhere in this codebase, so unlocking is household-wide, same
-        as every other Kitchen record.
+        takes. The unlock itself stays household-wide (the Recipe
+        object is shared, not duplicated per profile — see
+        [[project_mia_multiuser_vision]]), but records WHO unlocked it
+        (whoever's active, if any) and when — real attribution
+        metadata on the one shared object, same pattern
+        core.mission_manager.Mission.profile_id already established.
         """
         recipe = self.get_recipe(recipe_id)
         if recipe is None or not recipe.locked:
             return recipe
         recipe.locked = False
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        recipe.unlocked_by_profile_id = active_profile.profile_id if active_profile is not None else None
+        recipe.unlocked_at = datetime.now().isoformat(timespec="seconds")
         self._save_recipes()
         log.info("Recipe unlocked: '%s'", recipe.name)
         if self.context.notifications is not None:
@@ -565,11 +646,13 @@ class KitchenManager:
     # ------------------------------------------------------------------
 
     def log_meal(self, recipe_id: str, date_str: Optional[str] = None, notes: str = "") -> MealLogEntry:
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         entry = MealLogEntry(
             entry_id=uuid.uuid4().hex[:10],
             recipe_id=recipe_id,
             date=date_str or date.today().isoformat(),
             notes=notes,
+            profile_id=active_profile.profile_id if active_profile is not None else None,
         )
         self._meal_log.append(entry)
         self._save_meal_log()
@@ -616,14 +699,74 @@ class KitchenManager:
     def all_meal_log_entries(self) -> list[MealLogEntry]:
         return sorted(self._meal_log, key=lambda m: m.date, reverse=True)
 
-    def times_made(self, recipe_id: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> int:
+    def times_made(
+        self, recipe_id: str, profile_id: Optional[str] = None,
+        start_date: Optional[str] = None, end_date: Optional[str] = None,
+    ) -> int:
+        """`profile_id=None` (the default) is the real household total —
+        unchanged from before per-profile attribution existed. Given a
+        real profile_id, counts only entries attributed to that
+        profile OR unattributed (`MealLogEntry.profile_id is None` —
+        shared/legacy, counts toward everyone, same convention
+        core.rewards_manager.is_attributed_to() already established)."""
         return sum(
-            1 for m in self._meal_log if m.recipe_id == recipe_id and _in_range(m.date, start_date, end_date)
+            1 for m in self._meal_log
+            if m.recipe_id == recipe_id and _in_range(m.date, start_date, end_date)
+            and (profile_id is None or m.profile_id is None or m.profile_id == profile_id)
         )
 
-    def last_made_date(self, recipe_id: str) -> Optional[str]:
-        dates = [m.date for m in self._meal_log if m.recipe_id == recipe_id]
+    def last_made_date(self, recipe_id: str, profile_id: Optional[str] = None) -> Optional[str]:
+        """Same `profile_id` semantics as times_made() above."""
+        dates = [
+            m.date for m in self._meal_log
+            if m.recipe_id == recipe_id and (profile_id is None or m.profile_id is None or m.profile_id == profile_id)
+        ]
         return max(dates) if dates else None
+
+    # ------------------------------------------------------------------
+    # Recipe <-> profile relationship (2026-09-14) — the "shared object
+    # + user relationship" pattern's first real application, see
+    # RecipeUserStats' own docstring and [[project_mia_multiuser_vision]].
+    # ------------------------------------------------------------------
+
+    def get_recipe_user_stats(self, profile_id: str, recipe_id: str) -> RecipeUserStats:
+        """Never returns None — a profile/recipe pair with no real
+        rating/favorite/notes yet just gets a fresh, unsaved default
+        (nothing is persisted until one of the setters below is
+        actually called), so callers never need a null-check."""
+        for stats in self._recipe_user_stats:
+            if stats.profile_id == profile_id and stats.recipe_id == recipe_id:
+                return stats
+        return RecipeUserStats(profile_id=profile_id, recipe_id=recipe_id)
+
+    def _get_or_create_recipe_user_stats(self, profile_id: str, recipe_id: str) -> RecipeUserStats:
+        for stats in self._recipe_user_stats:
+            if stats.profile_id == profile_id and stats.recipe_id == recipe_id:
+                return stats
+        stats = RecipeUserStats(profile_id=profile_id, recipe_id=recipe_id)
+        self._recipe_user_stats.append(stats)
+        return stats
+
+    def set_recipe_rating(self, profile_id: str, recipe_id: str, rating: Optional[float]) -> RecipeUserStats:
+        stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
+        stats.rating = rating
+        self._save_recipe_user_stats()
+        return stats
+
+    def set_recipe_favorite(self, profile_id: str, recipe_id: str, favorite: bool) -> RecipeUserStats:
+        stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
+        stats.favorite = favorite
+        self._save_recipe_user_stats()
+        return stats
+
+    def set_recipe_personal_notes(self, profile_id: str, recipe_id: str, personal_notes: str) -> RecipeUserStats:
+        stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
+        stats.personal_notes = personal_notes
+        self._save_recipe_user_stats()
+        return stats
+
+    def favorite_recipe_ids(self, profile_id: str) -> list[str]:
+        return [s.recipe_id for s in self._recipe_user_stats if s.profile_id == profile_id and s.favorite]
 
     # ------------------------------------------------------------------
     # Suggestions

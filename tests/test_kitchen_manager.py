@@ -43,6 +43,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(kitchen_manager_module, "_PANTRY_FILE", data_dir / "kitchen_pantry.json")
     monkeypatch.setattr(kitchen_manager_module, "_GROCERY_LIST_FILE", data_dir / "kitchen_grocery_list.json")
     monkeypatch.setattr(kitchen_manager_module, "_MEAL_LOG_FILE", data_dir / "kitchen_meal_log.json")
+    monkeypatch.setattr(kitchen_manager_module, "_RECIPE_USER_STATS_FILE", data_dir / "kitchen_recipe_user_stats.json")
     # "Cook it to unlock it" (2026-09-14) — needed once a test
     # constructs a real MissionManager too.
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
@@ -393,6 +394,31 @@ def test_log_meal_grants_xp_with_no_active_profile_does_not_raise(isolated_paths
     manager.log_meal(recipe.recipe_id)  # must not raise
 
 
+def test_log_meal_stamps_the_active_profile_id(isolated_paths):
+    """Multi-user pass (2026-09-14) — same auto-attribution precedent
+    core.workout_manager.WorkoutSession.profile_id already established."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    recipe = manager.add_recipe(name="X")
+
+    entry = manager.log_meal(recipe.recipe_id)
+
+    assert entry.profile_id == profile.profile_id
+
+
+def test_log_meal_with_no_active_profile_leaves_profile_id_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    recipe = manager.add_recipe(name="X")
+
+    entry = manager.log_meal(recipe.recipe_id)
+
+    assert entry.profile_id is None
+
+
 def test_log_meal_completes_the_mission_that_unlocks_it(isolated_paths):
     """"Cook it to unlock it" (2026-09-14) — logging a meal for a
     recipe is the real completion trigger for whatever active Mission
@@ -474,6 +500,164 @@ def test_last_made_date_none_when_never_made(isolated_paths):
     manager = _make_manager(context)
     recipe = manager.add_recipe(name="X")
     assert manager.last_made_date(recipe.recipe_id) is None
+
+
+# ------------------------------------------------------------------
+# Multi-user pass (2026-09-14) — per-profile times_made/last_made_date
+# ------------------------------------------------------------------
+
+def test_times_made_filters_to_one_profile_when_given(isolated_paths):
+    """The vision doc's own worked example: one shared recipe, each
+    profile's own times_made stays independent."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    recipe = manager.add_recipe(name="Japanese Curry")
+    manager.log_meal(recipe.recipe_id, "2026-01-01")  # as Zac (active)
+    manager.log_meal(recipe.recipe_id, "2026-01-02")  # as Zac (active)
+
+    context.profiles.set_active_profile(faith.profile_id)
+    manager.log_meal(recipe.recipe_id, "2026-01-03")  # as Faith
+
+    assert manager.times_made(recipe.recipe_id) == 3  # household total, unchanged
+    assert manager.times_made(recipe.recipe_id, profile_id=zac.profile_id) == 2
+    assert manager.times_made(recipe.recipe_id, profile_id=faith.profile_id) == 1
+
+
+def test_times_made_counts_unattributed_entries_toward_every_profile(isolated_paths):
+    """Entries logged before this field existed (or with no active
+    profile) stay shared — same convention core.rewards_manager.
+    is_attributed_to() already established."""
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Alex")
+    recipe = manager.add_recipe(name="X")
+    manager.log_meal(recipe.recipe_id, "2026-01-01")  # no active profile -> profile_id=None
+
+    assert manager.times_made(recipe.recipe_id, profile_id=profile.profile_id) == 1
+
+
+def test_last_made_date_filters_to_one_profile_when_given(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    recipe = manager.add_recipe(name="X")
+    manager.log_meal(recipe.recipe_id, "2026-01-01")  # as Zac
+
+    context.profiles.set_active_profile(faith.profile_id)
+    manager.log_meal(recipe.recipe_id, "2026-09-01")  # as Faith
+
+    assert manager.last_made_date(recipe.recipe_id, profile_id=zac.profile_id) == "2026-01-01"
+    assert manager.last_made_date(recipe.recipe_id, profile_id=faith.profile_id) == "2026-09-01"
+    assert manager.last_made_date(recipe.recipe_id) == "2026-09-01"  # household
+
+
+# ------------------------------------------------------------------
+# RecipeUserStats — "shared object + user relationship" pattern
+# ------------------------------------------------------------------
+
+def test_get_recipe_user_stats_returns_a_fresh_default_when_none_exists(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    stats = manager.get_recipe_user_stats("zac-id", "recipe-id")
+    assert stats.rating is None
+    assert stats.favorite is False
+    assert stats.personal_notes == ""
+
+
+def test_set_recipe_rating_persists_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Japanese Curry")
+    manager.set_recipe_rating("zac-id", recipe.recipe_id, 4.5)
+
+    reloaded = KitchenManager(context)
+    assert reloaded.get_recipe_user_stats("zac-id", recipe.recipe_id).rating == 4.5
+
+
+def test_set_recipe_favorite_persists(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Japanese Curry")
+    manager.set_recipe_favorite("zac-id", recipe.recipe_id, True)
+    assert manager.get_recipe_user_stats("zac-id", recipe.recipe_id).favorite is True
+
+
+def test_set_recipe_personal_notes_persists(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Japanese Curry")
+    manager.set_recipe_personal_notes("zac-id", recipe.recipe_id, "Add more carrots")
+    assert manager.get_recipe_user_stats("zac-id", recipe.recipe_id).personal_notes == "Add more carrots"
+
+
+def test_recipe_user_stats_stay_independent_per_profile(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="Japanese Curry")
+    manager.set_recipe_rating("zac-id", recipe.recipe_id, 4.5)
+    manager.set_recipe_rating("faith-id", recipe.recipe_id, 5.0)
+
+    assert manager.get_recipe_user_stats("zac-id", recipe.recipe_id).rating == 4.5
+    assert manager.get_recipe_user_stats("faith-id", recipe.recipe_id).rating == 5.0
+
+
+def test_setting_one_field_does_not_reset_another_already_set(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    recipe = manager.add_recipe(name="X")
+    manager.set_recipe_rating("zac-id", recipe.recipe_id, 4.5)
+    manager.set_recipe_favorite("zac-id", recipe.recipe_id, True)
+
+    stats = manager.get_recipe_user_stats("zac-id", recipe.recipe_id)
+    assert stats.rating == 4.5
+    assert stats.favorite is True
+
+
+def test_favorite_recipe_ids_returns_only_this_profiles_favorites(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    r1 = manager.add_recipe(name="X")
+    r2 = manager.add_recipe(name="Y")
+    manager.set_recipe_favorite("zac-id", r1.recipe_id, True)
+    manager.set_recipe_favorite("faith-id", r2.recipe_id, True)
+
+    assert manager.favorite_recipe_ids("zac-id") == [r1.recipe_id]
+    assert manager.favorite_recipe_ids("faith-id") == [r2.recipe_id]
+
+
+# ------------------------------------------------------------------
+# Recipe.unlocked_by_profile_id / unlocked_at
+# ------------------------------------------------------------------
+
+def test_unlock_recipe_stamps_who_and_when(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    profile = context.profiles.create_profile(name="Faith", make_active=True)
+    recipe = manager.add_recipe(name="X", locked=True)
+
+    unlocked = manager.unlock_recipe(recipe.recipe_id)
+
+    assert unlocked.unlocked_by_profile_id == profile.profile_id
+    assert unlocked.unlocked_at is not None
+
+
+def test_unlock_recipe_with_no_active_profile_leaves_unlocked_by_none(isolated_paths):
+    context = _make_context()
+    manager = _make_manager(context)
+    context.profiles = ProfileManager(context)
+    recipe = manager.add_recipe(name="X", locked=True)
+
+    unlocked = manager.unlock_recipe(recipe.recipe_id)
+
+    assert unlocked.unlocked_by_profile_id is None
+    assert unlocked.unlocked_at is not None
 
 
 def test_delete_meal_log_entry_removes_it(isolated_paths):

@@ -43,10 +43,13 @@ from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
     QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
@@ -84,6 +87,27 @@ def format_recipe_row(recipe: Recipe) -> str:
     prefix = "(Locked) " if recipe.locked else ""
     time_part = f"  {recipe.prep_time_minutes + recipe.cook_time_minutes} min" if recipe.prep_time_minutes or recipe.cook_time_minutes else ""
     return f"{prefix}{recipe.name}   [{recipe.category}]   {recipe.servings} servings{time_part}"
+
+
+def format_made_count_line(times_made: int) -> str:
+    """Pure formatting logic — testable without Qt. Consolidates what
+    used to be duplicated inline in two places (the recipe card and
+    the detail page) — now a third real call site (multi-user pass,
+    2026-09-14) for the per-profile "YOUR STATS" card justified
+    actually extracting it."""
+    return "Never made yet" if times_made == 0 else f"Made {times_made}x"
+
+
+def format_last_made_line(last_made: Optional[str]) -> str:
+    """Pure formatting logic — testable without Qt."""
+    return f"Last made: {last_made}" if last_made else "Never logged as made"
+
+
+def format_rating_line(rating: Optional[float]) -> str:
+    """Pure formatting logic — testable without Qt. Multi-user pass
+    (2026-09-14) — a real per-profile opinion, never a fabricated
+    default rating."""
+    return f"Your rating: {rating:g}/5" if rating is not None else "Not rated yet"
 
 
 def format_pantry_row(item: PantryItem, today: date) -> str:
@@ -344,8 +368,7 @@ class KitchenModule(ModuleBase):
             # (2026-09-14) — real data, core.kitchen_manager.times_made()
             # already existed but was never surfaced anywhere in the UI.
             times_made = self.context.kitchen.times_made(recipe.recipe_id)
-            made_text = "Never made yet" if times_made == 0 else f"Made {times_made}x"
-            made_label = QLabel(made_text)
+            made_label = QLabel(format_made_count_line(times_made))
             made_label.setObjectName("NatureTileCaption")
             text_col.addWidget(made_label)
 
@@ -586,14 +609,20 @@ class KitchenModule(ModuleBase):
         last_made_layout = QVBoxLayout(last_made_card)
         last_made_layout.setContentsMargins(18, 16, 18, 16)
         last_made_layout.setSpacing(8)
+        # Multi-user pass (2026-09-14) — this card is the HOUSEHOLD
+        # total (every profile's meals, unfiltered); see the new "YOUR
+        # STATS" card below for the active profile's own relationship
+        # to this recipe (the [[project_mia_multiuser_vision]] handoff's
+        # own "shared object + user relationship" pattern).
+        household_title = QLabel("HOUSEHOLD")
+        household_title.setObjectName("NatureSectionTitle")
+        last_made_layout.addWidget(household_title)
         times_made = self.context.kitchen.times_made(recipe_id)
-        made_count_text = "Never made yet" if times_made == 0 else f"Made {times_made}x"
-        made_count_label = QLabel(made_count_text)
+        made_count_label = QLabel(format_made_count_line(times_made))
         made_count_label.setObjectName("NatureAssetLine")
         last_made_layout.addWidget(made_count_label)
         last_made = self.context.kitchen.last_made_date(recipe_id)
-        last_made_text = f"Last made: {last_made}" if last_made else "Never logged as made"
-        last_made_label = QLabel(last_made_text)
+        last_made_label = QLabel(format_last_made_line(last_made))
         last_made_label.setObjectName("NatureTileCaption")
         last_made_layout.addWidget(last_made_label)
 
@@ -602,10 +631,85 @@ class KitchenModule(ModuleBase):
         last_made_layout.addWidget(log_meal_button, alignment=Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(last_made_card)
 
+        your_stats_card = self._build_your_recipe_stats_card(recipe_id)
+        if your_stats_card is not None:
+            layout.addWidget(your_stats_card)
+
         layout.addStretch(1)
         scroll.setWidget(content)
         outer.addWidget(scroll, stretch=1)
         return page
+
+    def _build_your_recipe_stats_card(self, recipe_id: str) -> Optional[QFrame]:
+        """The active profile's own relationship to this shared recipe
+        (2026-09-14 multi-user pass) — times made, last made, rating,
+        favorite, personal notes, all editable and scoped to whoever's
+        actually logged in. None with no active profile (same "degrade
+        gracefully" stance every other profile-aware card in this app
+        takes) — there's no "you" to show stats for."""
+        active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        if active_profile is None:
+            return None
+
+        card = QFrame()
+        card.setObjectName("NatureAssetCard")
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(18, 16, 18, 16)
+        card_layout.setSpacing(8)
+        title = QLabel("YOUR STATS")
+        title.setObjectName("NatureSectionTitle")
+        card_layout.addWidget(title)
+
+        your_times_made = self.context.kitchen.times_made(recipe_id, profile_id=active_profile.profile_id)
+        made_label = QLabel(format_made_count_line(your_times_made))
+        made_label.setObjectName("NatureAssetLine")
+        card_layout.addWidget(made_label)
+
+        your_last_made = self.context.kitchen.last_made_date(recipe_id, profile_id=active_profile.profile_id)
+        last_made_label = QLabel(format_last_made_line(your_last_made))
+        last_made_label.setObjectName("NatureTileCaption")
+        card_layout.addWidget(last_made_label)
+
+        user_stats = self.context.kitchen.get_recipe_user_stats(active_profile.profile_id, recipe_id)
+
+        rating_row = QHBoxLayout()
+        rating_label = QLabel("Your rating:")
+        rating_row.addWidget(rating_label)
+        rating_combo = QComboBox()
+        rating_combo.addItem("Not rated", None)
+        for value in (1.0, 2.0, 3.0, 4.0, 5.0):
+            rating_combo.addItem(f"{value:g}/5", value)
+        if user_stats.rating is not None:
+            index = rating_combo.findData(user_stats.rating)
+            if index >= 0:
+                rating_combo.setCurrentIndex(index)
+        rating_row.addWidget(rating_combo)
+        rating_row.addStretch(1)
+        card_layout.addLayout(rating_row)
+
+        favorite_checkbox = QCheckBox("Favorite")
+        favorite_checkbox.setChecked(user_stats.favorite)
+        card_layout.addWidget(favorite_checkbox)
+
+        notes_field = QLineEdit(user_stats.personal_notes)
+        notes_field.setPlaceholderText("Your personal notes (e.g. \"add more carrots\")")
+        card_layout.addWidget(notes_field)
+
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(lambda: self._on_save_recipe_user_stats(
+            recipe_id, active_profile.profile_id, rating_combo, favorite_checkbox, notes_field,
+        ))
+        card_layout.addWidget(save_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        return card
+
+    def _on_save_recipe_user_stats(
+        self, recipe_id: str, profile_id: str, rating_combo: QComboBox, favorite_checkbox: QCheckBox, notes_field: QLineEdit,
+    ) -> None:
+        self.context.kitchen.set_recipe_rating(profile_id, recipe_id, rating_combo.currentData())
+        self.context.kitchen.set_recipe_favorite(profile_id, recipe_id, favorite_checkbox.isChecked())
+        self.context.kitchen.set_recipe_personal_notes(profile_id, recipe_id, notes_field.text())
+        self._show_recipe_detail_page(recipe_id)
 
     def _unlocking_mission_name(self, recipe_id: str) -> Optional[str]:
         """Live reverse-lookup — the real, currently-active Mission (if

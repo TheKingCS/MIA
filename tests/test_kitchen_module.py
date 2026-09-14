@@ -13,8 +13,11 @@ from datetime import date
 from core.kitchen_manager import GroceryListItem, MealLogEntry, PantryItem, Recipe
 from modules.kitchen.module import (
     format_grocery_row,
+    format_last_made_line,
+    format_made_count_line,
     format_meal_log_row,
     format_pantry_row,
+    format_rating_line,
     format_recipe_row,
     format_suggestion_row,
 )
@@ -40,6 +43,30 @@ def test_format_recipe_row_includes_name_category_servings():
 def test_format_recipe_row_includes_total_time_when_set():
     recipe = _recipe(prep_time_minutes=15, cook_time_minutes=45)
     assert format_recipe_row(recipe) == "Weeknight Chili   [Dinner]   6 servings  60 min"
+
+
+def test_format_made_count_line_zero():
+    assert format_made_count_line(0) == "Never made yet"
+
+
+def test_format_made_count_line_nonzero():
+    assert format_made_count_line(8) == "Made 8x"
+
+
+def test_format_last_made_line_none():
+    assert format_last_made_line(None) == "Never logged as made"
+
+
+def test_format_last_made_line_with_a_date():
+    assert format_last_made_line("2026-09-12") == "Last made: 2026-09-12"
+
+
+def test_format_rating_line_not_rated():
+    assert format_rating_line(None) == "Not rated yet"
+
+
+def test_format_rating_line_with_a_rating():
+    assert format_rating_line(4.5) == "Your rating: 4.5/5"
 
 
 def test_format_recipe_row_omits_time_when_unset():
