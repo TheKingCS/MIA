@@ -38,6 +38,7 @@ from core.rewards_manager import (
     format_multi_unlock_notification,
     highest_unlocked_tier,
     next_locked_tier,
+    rarity_tally_for_unlocked,
     reward_progress_fraction,
     stat_id_for_tier,
 )
@@ -381,6 +382,56 @@ def test_unlocked_reward_ids_reflects_real_unlocks(isolated_paths):
     context.rewards.scan_for_new_unlocks(profile.profile_id)
 
     assert "mowing_rookie" in context.rewards.unlocked_reward_ids(profile.profile_id)
+
+
+# ------------------------------------------------------------------
+# Character page support (2026-09-14) — collection + rarity tally
+# ------------------------------------------------------------------
+
+def test_all_unlocked_tiers_empty_before_any_unlock(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    assert context.rewards.all_unlocked_tiers(profile.profile_id) == []
+
+
+def test_all_unlocked_tiers_flattens_across_chains(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 10.0)  # mowing_rookie
+    for i in range(5):
+        m = context.missions.add_mission(name=f"M{i}")
+        context.missions.update_mission(m.mission_id, status="completed")  # missions_rookie at 5
+
+    ids = {tier.reward_id for tier in context.rewards.all_unlocked_tiers(profile.profile_id)}
+    assert "mowing_rookie" in ids
+    assert "missions_rookie" in ids
+
+
+def test_rarity_tally_all_zero_before_any_unlock(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    assert context.rewards.rarity_tally(profile.profile_id) == [0, 0, 0, 0, 0]
+
+
+def test_rarity_tally_counts_tiers_and_hidden_achievements(isolated_paths):
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    asset = context.maintenance.add_asset(name="Mower", category="Power Equipment")
+    task = context.maintenance.add_task(asset_id=asset.asset_id, title="Engine Hours", trigger_type="runtime", meter_unit="engine hours")
+    context.maintenance.log_reading(task.task_id, 60.0)  # mowing_rookie(0)/yard_worker(1)/ranger(2) + built_different hidden(3)
+
+    tally = context.rewards.rarity_tally(profile.profile_id)
+    assert tally[0] == 1  # mowing_rookie, Common
+    assert tally[1] == 1  # mowing_yard_worker, Uncommon
+    assert tally[2] == 1  # mowing_ranger, Rare
+    assert tally[3] == 1  # built_different, Epic
+
+
+def test_rarity_tally_for_unlocked_pure():
+    tally = rarity_tally_for_unlocked({"mowing_rookie", "mission_that_does_not_exist"})
+    assert tally == [1, 0, 0, 0, 0]
 
 
 # ------------------------------------------------------------------

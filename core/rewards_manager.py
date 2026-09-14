@@ -361,6 +361,22 @@ def combined_stat_value(stat_values: dict[str, float], stat_ids: tuple[str, ...]
     return sum(stat_values.get(stat_id, 0.0) for stat_id in stat_ids)
 
 
+def rarity_tally_for_unlocked(unlocked_ids: set[str]) -> list[int]:
+    """[common_count, uncommon_count, rare_count, epic_count,
+    legendary_count] — pure logic, testable without a real manager.
+    Counts every unlocked ChallengeTier and HiddenAchievement by its
+    rarity_index (see core.rarity for the name/color each index maps
+    to). Built for the Character page's rarity tally (2026-09-14)."""
+    counts = [0, 0, 0, 0, 0]
+    for tier in all_tiers():
+        if tier.reward_id in unlocked_ids:
+            counts[tier.rarity_index] += 1
+    for achievement in HIDDEN_ACHIEVEMENTS:
+        if achievement.achievement_id in unlocked_ids:
+            counts[achievement.rarity_index] += 1
+    return counts
+
+
 def format_multi_unlock_notification(names: list[str], noun: str) -> tuple[str, str]:
     """Pure logic — testable without a real manager. One notification
     covering every unlock from a single scan, instead of one toast per
@@ -496,6 +512,17 @@ class RewardsManager:
             return []
         profile = self.context.profiles.get_profile(profile_id)
         return list(profile.unlocked_reward_ids) if profile is not None else []
+
+    def all_unlocked_tiers(self, profile_id: str) -> list[ChallengeTier]:
+        """Every unlocked ChallengeTier across every chain, flattened —
+        for the Character page's "collection" view, which (unlike
+        Skills' REWARDS card) isn't grouped per-chain. Built 2026-09-14."""
+        unlocked_ids = set(self.unlocked_reward_ids(profile_id))
+        return [tier for tier in all_tiers() if tier.reward_id in unlocked_ids]
+
+    def rarity_tally(self, profile_id: str) -> list[int]:
+        """See rarity_tally_for_unlocked()'s own docstring."""
+        return rarity_tally_for_unlocked(set(self.unlocked_reward_ids(profile_id)))
 
     def scan_for_new_unlocks(self, profile_id: str) -> list[ChallengeTier]:
         """Idempotent — checks every chain tier's real stat value

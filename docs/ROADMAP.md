@@ -9716,3 +9716,55 @@ workout session with zero explicit scan calls anywhere in the script —
 confirmed `is_unlocked()` true immediately and a real notification
 fired before the Skills module was even constructed; opening Skills
 afterward correctly did not re-notify.
+
+## Character page shell — the last vision-doc slice (2026-09-14)
+
+Slice 6, the final item from the Prestige/Rarity/Character handoff
+(see [[project_mia_prestige_rarity_vision]]): "the Character page
+should become one of the primary M.I.A. interfaces... a visual archive
+of the user's actual life." Real character art stays explicitly
+deferred per the user's own words — this is the shell: real data,
+placeholder visuals, same convention as every other not-yet-
+illustrated part of this app.
+
+**New top-level `modules/character/module.py`** (not folded into
+Skills — the handoff frames Character as a primary interface in its
+own right; Skills' own REWARDS card keeps its per-chain "progress
+toward the next tier" job, this page's COLLECTION section is the
+finished-collection view across every chain and hidden achievement at
+once). Same Nature hero + `#NatureAssetCard` visual system every other
+active module already uses.
+
+Real data shown: the active profile's real name/level/XP/prestige in
+the hero (reusing `core.leveling.compute_prestige_level_progress()`);
+a `PhotoBackgroundFrame` placeholder standing in for "the character"
+with a plain "Character art coming soon" caption; **LIFETIME STATS**
+(every `STAT_DEFINITIONS` entry, real values via
+`RewardsManager.all_stat_values()`); **COLLECTION** — new
+`RewardsManager.all_unlocked_tiers()` + the existing
+`unlocked_hidden_achievements()`, combined and sorted by a new pure
+`sorted_collection()` (highest rarity first, then name) via
+`modules/character/module.py`'s own `sorted_collection()`; **RARITY**
+— new `RewardsManager.rarity_tally()` / pure
+`rarity_tally_for_unlocked()` in `core/rewards_manager.py`, a real
+Common/Uncommon/Rare/Epic/Legendary count across every real unlock;
+**PRESTIGE EMBLEMS** — the existing `prestige_rewards_for_profile()`,
+same as Skills. Every number here is derived live from the same
+managers Skills/Missions already read — nothing new persisted.
+
+**Verification**: `pytest -q` — full suite, 2817 passed (13 new tests:
+5 for the two new `RewardsManager` methods + pure
+`rarity_tally_for_unlocked()`, 8 for the Character module's own pure
+formatting/sorting functions). Manual headless-Qt check with a real
+prestiged, multi-reward profile (Prestige 1, 7 real unlocked items
+across 3 rarities plus a Legendary hidden achievement) — screenshotted
+confirming the hero, stats, sorted/colored collection, rarity tally
+(Common×2/Uncommon×1/Rare×1/Epic×2/Legendary×1, hand-verified correct
+against the real unlocked set), and Prestige Emblems section all
+render correctly.
+
+This closes all 6 slices of the Prestige/Rarity/Character vision doc.
+What's left, per [[project_mia_prestige_rarity_vision]]'s own updated
+backlog: real character art (explicitly deferred by the user) and any
+further expansion of the lifetime-stats surface as new real data
+sources actually appear — both intentionally open-ended, not gaps.
