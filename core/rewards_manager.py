@@ -569,11 +569,21 @@ class RewardsManager:
         ) / 60.0
 
     def _compute_missions_completed(self, profile_id: str) -> float:
+        """Group quests (2026-09-14): a Mission with real
+        `participant_profile_ids` counts toward EVERY participant's
+        own missions_completed, not just whoever's stamped as the one
+        who completed it — "group rewards," the user's own words.
+        Falls back to plain `is_attributed_to()` for every ordinary
+        solo/unattributed Mission, unchanged."""
         if self.context.missions is None:
             return 0.0
         return float(sum(
             1 for mission in self.context.missions.all_missions()
-            if mission.status == "completed" and is_attributed_to(mission.profile_id, profile_id)
+            if mission.status == "completed" and (
+                profile_id in mission.participant_profile_ids
+                if mission.participant_profile_ids
+                else is_attributed_to(mission.profile_id, profile_id)
+            )
         ))
 
     def _compute_vehicle_miles_logged(self, profile_id: str) -> float:

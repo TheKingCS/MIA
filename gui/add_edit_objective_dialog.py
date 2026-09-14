@@ -9,9 +9,20 @@ as gui/add_edit_trip_dialog.py's activity_type field), and target.
 Add-only — this app has no "edit an objective" flow; delete and
 re-add covers the rare correction case, same reasoning as gear items
 in gui/trip_detail_dialog.py.
+
+Group quests (2026-09-14) — when the mission being added to is a real
+party quest (see gui.add_edit_mission_dialog.AddEditMissionDialog's
+Party picker), gained an optional "Assign to" combo so an objective
+can be personal to one participant
+(core.mission_manager.Objective.assigned_profile_id) instead of always
+shared. `participant_names_by_id` defaults to empty so a normal solo
+mission's Add Objective flow is unchanged — no combo shown, assignee
+always None.
 """
 
 from __future__ import annotations
+
+from typing import Optional
 
 from PySide6.QtWidgets import (
     QComboBox,
@@ -30,12 +41,14 @@ _METRIC_TYPE_LABELS = {
     "trip_duration_hours": "Time spent on linked trip (hours)",
 }
 
+_SHARED_ASSIGNEE_LABEL = "(Shared — anyone)"
+
 
 class AddEditObjectiveDialog(QDialog):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, participant_names_by_id: Optional[dict[str, str]] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("New Objective")
-        self.setFixedSize(360, 260)
+        self.setFixedSize(360, 260 if not participant_names_by_id else 300)
 
         layout = QVBoxLayout(self)
 
@@ -56,6 +69,15 @@ class AddEditObjectiveDialog(QDialog):
         self.target_spin.setValue(1.0)
         layout.addWidget(self.target_spin)
 
+        self.assignee_combo: Optional[QComboBox] = None
+        if participant_names_by_id:
+            layout.addWidget(QLabel("Assign to:"))
+            self.assignee_combo = QComboBox()
+            self.assignee_combo.addItem(_SHARED_ASSIGNEE_LABEL, None)
+            for profile_id, name in participant_names_by_id.items():
+                self.assignee_combo.addItem(name, profile_id)
+            layout.addWidget(self.assignee_combo)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -66,6 +88,7 @@ class AddEditObjectiveDialog(QDialog):
         self._description: str = ""
         self._metric_type: str = "tally"
         self._target: float = 1.0
+        self._assignee_profile_id: Optional[str] = None
 
     def _on_accept(self) -> None:
         description = self.description_edit.text().strip()
@@ -76,6 +99,8 @@ class AddEditObjectiveDialog(QDialog):
         self._description = description
         self._metric_type = self.metric_combo.currentData()
         self._target = self.target_spin.value()
+        if self.assignee_combo is not None:
+            self._assignee_profile_id = self.assignee_combo.currentData()
         self.accept()
 
     @property
@@ -89,3 +114,7 @@ class AddEditObjectiveDialog(QDialog):
     @property
     def entered_target(self) -> float:
         return self._target
+
+    @property
+    def entered_assignee_profile_id(self) -> Optional[str]:
+        return self._assignee_profile_id

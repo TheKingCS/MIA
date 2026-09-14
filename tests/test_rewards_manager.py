@@ -370,6 +370,21 @@ def test_missions_completed_counts_only_for_whoever_completed_it(isolated_paths)
     assert context.rewards.stat_value("missions_completed", faith.profile_id) == 1.0
 
 
+def test_missions_completed_group_quest_counts_for_every_participant(isolated_paths):
+    """Group quests (2026-09-14) — a real party Mission counts toward
+    EVERY participant, not just whoever completed it."""
+    context = _make_context()
+    zac = context.profiles.create_profile(name="Zac")
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    mission = context.missions.add_mission(
+        name="Prepare the House for Fall", participant_profile_ids=[zac.profile_id, faith.profile_id],
+    )
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.rewards.stat_value("missions_completed", zac.profile_id) == 1.0
+    assert context.rewards.stat_value("missions_completed", faith.profile_id) == 1.0
+
+
 def test_meals_cooked_counts_real_meal_log_entries(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")

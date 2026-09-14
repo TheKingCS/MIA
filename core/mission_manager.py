@@ -76,6 +76,25 @@ than a new "last checked" timestamp — same "derive it, don't add a new
 field to track it" preference as `core/daily_occasions.py`'s own
 once-daily gates use the target date field itself, not a separate
 counter.
+
+**Group quests (2026-09-14)** — the multi-user vision handoff's own
+"D&D-style party system" (see the `project_mia_multiuser_vision`
+memory), section 5: "Prepare the House for Fall," with Zac's own
+objectives, Faith's own, and shared ones, tracked under one Mission.
+`Mission.participant_profile_ids` (empty by default — every existing
+Mission, and any ordinary solo Mission still) names the real party;
+`Objective.assigned_profile_id` (also `None`-default) marks a specific
+objective as personal to one participant rather than shared/anyone's.
+`individual_objective_progress()`/`group_objective_progress()` derive
+the vision doc's own "Your Contribution: 4/7" and "Household Progress:
+68%" numbers live from real objective completion state — nothing new
+persisted. `_credit_mission_rewards()` grants the Mission's flat
+reward to EVERY participant on completion when the list is real, not
+just whoever happened to click complete — "group rewards." Deliberately
+NOT built this pass: automatic per-objective reward splitting (there's
+no per-objective reward_xp field, only the Mission's own flat one) —
+a real, separate future refinement if the flat "everyone gets the same
+reward" model ever feels wrong in practice.
 """
 
 from __future__ import annotations
@@ -141,6 +160,16 @@ class Objective:
     metric_type: str  # one of METRIC_TYPES
     target: float
     progress: float = 0.0  # only meaningful for "tally" — "trip_duration_hours" is always computed live, never stored here
+    # Group quests (2026-09-14, per the user's own multi-user vision
+    # handoff, section 5 — "Prepare the House for Fall": Zac's own
+    # objectives, Faith's own, plus shared ones). None (the default,
+    # every existing objective included) means "shared" — anyone on
+    # the quest can work it, and it counts toward group progress only.
+    # A real profile_id makes it personal to that one participant —
+    # counted in BOTH their own individual progress
+    # (MissionManager.individual_objective_progress()) and the whole
+    # mission's group progress (MissionManager.group_objective_progress()).
+    assigned_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -148,6 +177,7 @@ class Objective:
             "metric_type": self.metric_type,
             "target": self.target,
             "progress": self.progress,
+            "assigned_profile_id": self.assigned_profile_id,
         }
 
     @staticmethod
@@ -157,6 +187,7 @@ class Objective:
             metric_type=data.get("metric_type", "tally"),
             target=float(data.get("target", 0.0)),
             progress=float(data.get("progress", 0.0)),
+            assigned_profile_id=data.get("assigned_profile_id"),
         )
 
 
@@ -282,6 +313,17 @@ class Mission:
     # so a Mission naturally becomes whoever's real accomplishment
     # completed it, with zero new assignment UI required.
     profile_id: Optional[str] = None
+    # Group quests (2026-09-14) — the real party members on this
+    # Mission, e.g. "Prepare the House for Fall" with both Zac and
+    # Faith. Empty (the default, every existing Mission included) means
+    # a normal solo/unattributed Mission — completely unchanged
+    # behavior. When non-empty: _credit_mission_rewards() grants the
+    # flat reward_xp/reward_credits/skill_rewards to EVERY participant
+    # on completion (not just whoever was active), and
+    # core.rewards_manager's missions_completed stat counts it for
+    # every participant too — "the mission can have... group rewards,"
+    # the user's own words.
+    participant_profile_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -312,6 +354,7 @@ class Mission:
             "occurrence_key": self.occurrence_key,
             "maintenance_asset_id": self.maintenance_asset_id,
             "profile_id": self.profile_id,
+            "participant_profile_ids": list(self.participant_profile_ids),
         }
 
     @staticmethod
@@ -346,6 +389,7 @@ class Mission:
             occurrence_key=data.get("occurrence_key"),
             maintenance_asset_id=data.get("maintenance_asset_id"),
             profile_id=data.get("profile_id"),
+            participant_profile_ids=list(data.get("participant_profile_ids", [])),
         )
 
 
@@ -406,6 +450,7 @@ class MissionManager:
         occurrence_key: Optional[str] = None,
         maintenance_asset_id: Optional[str] = None,
         profile_id: Optional[str] = None,
+        participant_profile_ids: Optional[list[str]] = None,
     ) -> Mission:
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
@@ -432,6 +477,7 @@ class MissionManager:
             occurrence_key=occurrence_key,
             maintenance_asset_id=maintenance_asset_id,
             profile_id=profile_id,
+            participant_profile_ids=list(participant_profile_ids) if participant_profile_ids else [],
         )
         self._missions.append(mission)
         self._save()
@@ -530,21 +576,35 @@ class MissionManager:
         core.gamification.grant_xp() (which would also fire a second,
         redundant notification on top of _notify_mission_completed()'s
         own).
+
+        Group quests (2026-09-14): when `mission.participant_profile_ids`
+        is real (non-empty), the SAME flat reward goes to EVERY
+        participant, not just whoever happened to be active when the
+        mission's last condition completed — "group rewards," the
+        user's own words. Falls back to "just the active profile" for
+        every mission with no real participants (every Mission before
+        this pass, and any ordinary solo Mission still), unchanged.
         """
         if self.context.profiles is None or (
             mission.reward_xp == 0 and mission.reward_credits == 0 and not mission.skill_rewards
         ):
             return
-        active_profile = self.context.profiles.get_active_profile()
-        if active_profile is None:
-            return
-        if mission.reward_xp:
-            self.context.profiles.add_xp(active_profile.profile_id, mission.reward_xp)
-        if mission.reward_credits:
-            self.context.profiles.add_credits(active_profile.profile_id, mission.reward_credits)
-        if mission.skill_rewards and self.context.skills is not None:
-            for weight in mission.skill_rewards:
-                self.context.skills.add_skill_xp(active_profile.profile_id, weight.skill_id, weight.xp)
+        if mission.participant_profile_ids:
+            profile_ids = list(mission.participant_profile_ids)
+        else:
+            active_profile = self.context.profiles.get_active_profile()
+            if active_profile is None:
+                return
+            profile_ids = [active_profile.profile_id]
+
+        for profile_id in profile_ids:
+            if mission.reward_xp:
+                self.context.profiles.add_xp(profile_id, mission.reward_xp)
+            if mission.reward_credits:
+                self.context.profiles.add_credits(profile_id, mission.reward_credits)
+            if mission.skill_rewards and self.context.skills is not None:
+                for weight in mission.skill_rewards:
+                    self.context.skills.add_skill_xp(profile_id, weight.skill_id, weight.xp)
 
     def _unlock_mission_recipes(self, mission: Mission) -> None:
         """
@@ -616,13 +676,19 @@ class MissionManager:
     # Objectives
     # ------------------------------------------------------------------
 
-    def add_objective(self, mission_id: str, description: str, metric_type: str, target: float) -> Mission:
+    def add_objective(
+        self, mission_id: str, description: str, metric_type: str, target: float,
+        assigned_profile_id: Optional[str] = None,
+    ) -> Mission:
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
         if metric_type not in METRIC_TYPES:
             raise ValueError(f"Unknown metric_type '{metric_type}'.")
-        mission.objectives.append(Objective(description=description, metric_type=metric_type, target=target))
+        mission.objectives.append(Objective(
+            description=description, metric_type=metric_type, target=target,
+            assigned_profile_id=assigned_profile_id,
+        ))
         self._bump_updated_at(mission)
         self._save()
         return mission
@@ -725,6 +791,35 @@ class MissionManager:
             return False
         progress = self.objective_progress(mission_id, index)
         return progress is not None and progress >= mission.objectives[index].target
+
+    # ------------------------------------------------------------------
+    # Group quests (2026-09-14) — individual vs. group progress over a
+    # Mission with real participant_profile_ids. See Objective.
+    # assigned_profile_id's own docstring for the shared-vs-personal
+    # split these both read.
+    # ------------------------------------------------------------------
+
+    def individual_objective_progress(self, mission_id: str, profile_id: str) -> tuple[int, int]:
+        """(completed, total) among objectives assigned SPECIFICALLY to
+        `profile_id` — the vision doc's own "Your Contribution: 4/7"
+        example. Shared objectives (assigned_profile_id is None) don't
+        count here — see group_objective_progress() for those."""
+        mission = self.get_mission(mission_id)
+        if mission is None:
+            return (0, 0)
+        indices = [i for i, o in enumerate(mission.objectives) if o.assigned_profile_id == profile_id]
+        completed = sum(1 for i in indices if self.is_objective_complete(mission_id, i))
+        return (completed, len(indices))
+
+    def group_objective_progress(self, mission_id: str) -> tuple[int, int]:
+        """(completed, total) across EVERY objective on this Mission —
+        personal and shared alike — the vision doc's own "Household
+        Progress: 68%" example."""
+        mission = self.get_mission(mission_id)
+        if mission is None:
+            return (0, 0)
+        completed = sum(1 for i in range(len(mission.objectives)) if self.is_objective_complete(mission_id, i))
+        return (completed, len(mission.objectives))
 
     def _trip_elapsed_hours(self, trip_id: str) -> Optional[float]:
         trip = self.context.trips.get_trip(trip_id)

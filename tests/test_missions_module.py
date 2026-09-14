@@ -11,10 +11,14 @@ from __future__ import annotations
 from core.mission_manager import Mission, Objective
 from modules.missions.module import (
     format_checklist_label,
+    format_group_progress_line,
+    format_individual_contribution_line,
     format_level_footer_line,
     format_mission_row,
+    format_objective_assignee_suffix,
     format_objective_row,
     format_objectives_heading,
+    format_participants_line,
     format_recurring_status_line,
     format_rewards_line,
 )
@@ -107,3 +111,27 @@ def test_format_checklist_label_multi_step_incomplete_shows_fraction():
 
 def test_format_checklist_label_complete_omits_fraction_even_with_multi_step_target():
     assert format_checklist_label("Catch 3 fish", 3.0, 3.0, True) == "Catch 3 fish"
+
+
+# ------------------------------------------------------------------
+# Group quests (2026-09-14)
+# ------------------------------------------------------------------
+
+def test_format_objective_assignee_suffix_with_an_assignee():
+    assert format_objective_assignee_suffix("Zac") == " — Zac"
+
+
+def test_format_objective_assignee_suffix_shared_is_empty():
+    assert format_objective_assignee_suffix(None) == ""
+
+
+def test_format_participants_line():
+    assert format_participants_line(["Zac", "Faith"]) == "Party: Zac, Faith"
+
+
+def test_format_individual_contribution_line():
+    assert format_individual_contribution_line(4, 7) == "Your Contribution: 4/7 objectives"
+
+
+def test_format_group_progress_line():
+    assert format_group_progress_line(5, 7) == "Household Progress: 5/7 objectives"

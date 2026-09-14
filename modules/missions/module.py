@@ -118,6 +118,36 @@ def format_checklist_label(description: str, progress: float, target: float, is_
     return f"{description} ({progress:g} of {target:g})"
 
 
+def format_objective_assignee_suffix(assignee_name: Optional[str]) -> str:
+    """Pure formatting logic — testable without Qt. Group quests
+    (2026-09-14) — appended to a checklist row's own label so a
+    personal objective on a party Mission reads "Clean mower — Zac".
+    Empty for a shared objective (assignee_name is None)."""
+    return f" — {assignee_name}" if assignee_name else ""
+
+
+def format_participants_line(participant_names: list[str]) -> str:
+    """Pure formatting logic — testable without Qt. Group quests
+    (2026-09-14) — the real party on this Mission."""
+    return f"Party: {', '.join(participant_names)}"
+
+
+def format_individual_contribution_line(completed: int, total: int) -> str:
+    """Pure formatting logic — testable without Qt. Group quests
+    (2026-09-14) — the vision doc's own "Your Contribution: 4/7
+    objectives" example."""
+    return f"Your Contribution: {completed}/{total} objectives"
+
+
+def format_group_progress_line(completed: int, total: int) -> str:
+    """Pure formatting logic — testable without Qt. Group quests
+    (2026-09-14) — the vision doc's own "Household Progress" example,
+    shown as a real fraction here (not the dashboard's own percentage
+    framing) to stay consistent with format_individual_contribution_line()
+    on the same detail page."""
+    return f"Household Progress: {completed}/{total} objectives"
+
+
 class MissionsModule(ModuleBase):
     module_id = "missions"
     display_name = "Missions"
@@ -399,6 +429,30 @@ class MissionsModule(ModuleBase):
             summary_label.setWordWrap(True)
             self._detail_layout.addWidget(summary_label)
 
+        # Group quests (2026-09-14) — real party info, only for a
+        # Mission with real participant_profile_ids (every ordinary
+        # solo Mission has none, so this section simply doesn't render
+        # for them, unchanged). `names_by_id` is also reused below for
+        # each objective's own assignee suffix.
+        names_by_id = {p.profile_id: p.name for p in self.context.profiles.list_profiles()} if self.context.profiles is not None else {}
+        if mission.participant_profile_ids and self.context.profiles is not None:
+            names = [names_by_id[pid] for pid in mission.participant_profile_ids if pid in names_by_id]
+            party_label = QLabel(format_participants_line(names))
+            party_label.setObjectName("SubtitleLabel")
+            self._detail_layout.addWidget(party_label)
+
+            group_completed, group_total = self.context.missions.group_objective_progress(mission.mission_id)
+            group_label = QLabel(format_group_progress_line(group_completed, group_total))
+            self._detail_layout.addWidget(group_label)
+
+            active_profile = self.context.profiles.get_active_profile()
+            if active_profile is not None and active_profile.profile_id in mission.participant_profile_ids:
+                your_completed, your_total = self.context.missions.individual_objective_progress(
+                    mission.mission_id, active_profile.profile_id,
+                )
+                your_label = QLabel(format_individual_contribution_line(your_completed, your_total))
+                self._detail_layout.addWidget(your_label)
+
         completed_objectives = sum(
             1 for index in range(len(mission.objectives)) if self.context.missions.is_objective_complete(mission.mission_id, index)
         )
@@ -410,6 +464,7 @@ class MissionsModule(ModuleBase):
             progress = self.context.missions.objective_progress(mission.mission_id, index) or 0.0
             is_complete = self.context.missions.is_objective_complete(mission.mission_id, index)
             label_text = format_checklist_label(objective.description, progress, objective.target, is_complete)
+            label_text += format_objective_assignee_suffix(names_by_id.get(objective.assigned_profile_id))
             row = ObjectiveChecklistRow(
                 index, label_text, is_complete, objective.metric_type == "tally", is_multi_step=objective.target > 1
             )
@@ -534,6 +589,7 @@ class MissionsModule(ModuleBase):
             mission_type=dialog.entered_mission_type,
             reward_xp=dialog.entered_reward_xp,
             reward_credits=dialog.entered_reward_credits,
+            participant_profile_ids=dialog.entered_participant_profile_ids,
         )
         self._selected_mission_id = mission.mission_id
         self._refresh()
@@ -583,12 +639,24 @@ class MissionsModule(ModuleBase):
             QMessageBox.information(None, "No Mission Selected", "Select a mission to add an objective to.")
             return
 
-        dialog = AddEditObjectiveDialog()
+        mission = self.context.missions.get_mission(self._selected_mission_id)
+        participant_names_by_id: dict[str, str] = {}
+        if mission is not None and mission.participant_profile_ids:
+            for profile_id in mission.participant_profile_ids:
+                profile = self.context.profiles.get_profile(profile_id)
+                if profile is not None:
+                    participant_names_by_id[profile_id] = profile.name
+
+        dialog = AddEditObjectiveDialog(participant_names_by_id=participant_names_by_id)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         self.context.missions.add_objective(
-            self._selected_mission_id, dialog.entered_description, dialog.entered_metric_type, dialog.entered_target
+            self._selected_mission_id,
+            dialog.entered_description,
+            dialog.entered_metric_type,
+            dialog.entered_target,
+            assigned_profile_id=dialog.entered_assignee_profile_id,
         )
         self._refresh()
 

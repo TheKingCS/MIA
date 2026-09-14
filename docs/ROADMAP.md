@@ -10029,3 +10029,71 @@ This completes all 3 concrete multi-user slices picked so far
 remains from [[project_mia_multiuser_vision]]: shared missions/group
 quests (a real new data structure) and multi-group hierarchy
 (explicitly long-term, not scoped).
+
+## Multi-user slice 4: shared missions / group quests (2026-09-14)
+
+The vision doc's own "D&D-style party" example — "Prepare the House
+for Fall" with Zac's objectives, Faith's objectives, shared objectives,
+and both individual and household-level progress/rewards. The last
+concrete slice from [[project_mia_multiuser_vision]].
+
+**Extended the existing `Mission`/`Objective` dataclasses rather than
+inventing a parallel `GroupMission` entity** (`core/mission_manager.py`)
+— `Objective.assigned_profile_id: Optional[str] = None` (None = shared,
+counts for everyone; a real id = personal to that one participant) and
+`Mission.participant_profile_ids: list[str] = field(default_factory=list)`
+(empty = an ordinary solo/legacy mission, completely unchanged
+behavior). This reuses all existing completion/notification/UI
+machinery instead of duplicating it.
+
+New `individual_objective_progress(mission_id, profile_id)` and
+`group_objective_progress(mission_id)` — both derived live from
+`Objective.assigned_profile_id` + the existing `is_objective_complete()`
+(itself already correctly handling all `METRIC_TYPES`), nothing new
+persisted. `_credit_mission_rewards()` now grants a group mission's
+flat `reward_xp`/`reward_credits`/`skill_rewards` to *every* real
+participant, not just whoever triggered completion — deliberately NOT
+building per-objective reward splitting; flagged in the module
+docstring as a real, separate future refinement if ever needed.
+`core/rewards_manager.py`'s `_compute_missions_completed()` credits
+every real participant of a group mission the same way it already
+credits solo missions via `is_attributed_to()`.
+
+**UI**: `gui/add_edit_mission_dialog.py` gained a creation-only "Party
+(optional)" checkbox section (one checkbox per real profile) — same
+"picked once, not reassignable via edit" rule the existing trip/project
+links already follow. `gui/add_edit_objective_dialog.py` gained an
+optional "Assign to" combo (a `participant_names_by_id` param, empty by
+default so a normal solo mission's Add Objective flow is unchanged) —
+"(Shared — anyone)" plus one entry per real party member.
+`modules/missions/module.py`'s detail view gained a "Party" section
+(only rendered when a mission has real participants): `Party: Zac,
+Faith`, `Household Progress: X/Y objectives`, `Your Contribution: X/Y
+objectives` (only shown when the active profile is a participant), and
+each objective row gets an " — Zac"/" — Faith" assignee suffix when
+set. 4 new pure functions: `format_participants_line()`,
+`format_group_progress_line()`, `format_individual_contribution_line()`,
+`format_objective_assignee_suffix()`.
+
+**Verification**: `pytest -q` — full suite, 2906 passed (17 new
+tests across `test_mission_manager.py`, `test_rewards_manager.py`,
+`test_missions_module.py`). Manual headless-Qt verification against a
+throwaway isolated data dir (real `AddEditMissionDialog`/
+`AddEditObjectiveDialog`/`MissionsModule` widgets, no mocks): created a
+real "Prepare the House for Fall" mission with Zac and Faith as
+participants, an objective assigned to each plus one shared objective;
+confirmed `group_objective_progress()`/`individual_objective_progress()`
+tracked correctly as objectives completed, the mission dialog's
+participant checkboxes round-tripped correctly, the objective dialog's
+assignee combo defaulted to "shared" and correctly produced `None` when
+no participants were passed in (solo-mission case, no combo shown at
+all), and a real screenshot of the rendered detail panel showed
+"Party: Zac, Faith" / "Household Progress: 2/3 objectives" / "Your
+Contribution: 1/1 objectives" / "Clean the gutters — Zac" / "Put away
+the garden beds — Faith" / "Buy firewood" (shared, no suffix) exactly
+as designed.
+
+This closes out every concrete slice of [[project_mia_multiuser_vision]].
+What remains is explicitly long-term/unscoped per the user's own
+framing: multi-group hierarchy (a user belonging to more than one
+household/group) and real-world multi-player events across households.

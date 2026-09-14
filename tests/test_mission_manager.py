@@ -1210,3 +1210,116 @@ def test_stale_task_rule_not_reached_when_idle_rule_already_fired(isolated_paths
 
     mission = context.missions.check_for_auto_assignment()
     assert mission.task_id is None  # the idle-rule template mission, not the stale-task one
+
+
+# ------------------------------------------------------------------
+# Group quests (2026-09-14)
+# ------------------------------------------------------------------
+
+def test_new_mission_has_no_participants_by_default(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Solo Quest")
+    assert mission.participant_profile_ids == []
+
+
+def test_add_mission_with_real_participants(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Prepare the House for Fall", participant_profile_ids=["zac", "faith"])
+    assert mission.participant_profile_ids == ["zac", "faith"]
+
+
+def test_new_objective_has_no_assignee_by_default(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Prepare the House for Fall")
+    context.missions.add_objective(mission.mission_id, "Clean garage", "tally", 1.0)
+    assert context.missions.get_mission(mission.mission_id).objectives[0].assigned_profile_id is None
+
+
+def test_add_objective_with_a_real_assignee(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Prepare the House for Fall")
+    context.missions.add_objective(mission.mission_id, "Clean mower", "tally", 1.0, assigned_profile_id="zac")
+    assert context.missions.get_mission(mission.mission_id).objectives[0].assigned_profile_id == "zac"
+
+
+def test_participant_and_assignee_persist_across_a_fresh_load(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Prepare the House for Fall", participant_profile_ids=["zac", "faith"])
+    context.missions.add_objective(mission.mission_id, "Clean mower", "tally", 1.0, assigned_profile_id="zac")
+
+    reloaded = MissionManager(context)
+    reloaded_mission = reloaded.get_mission(mission.mission_id)
+    assert reloaded_mission.participant_profile_ids == ["zac", "faith"]
+    assert reloaded_mission.objectives[0].assigned_profile_id == "zac"
+
+
+def test_individual_objective_progress_counts_only_that_profiles_objectives(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Prepare the House for Fall", participant_profile_ids=["zac", "faith"])
+    context.missions.add_objective(mission.mission_id, "Clean mower", "tally", 1.0, assigned_profile_id="zac")
+    context.missions.add_objective(mission.mission_id, "Inspect equipment", "tally", 1.0, assigned_profile_id="zac")
+    context.missions.add_objective(mission.mission_id, "Organize storage", "tally", 1.0, assigned_profile_id="faith")
+    context.missions.add_objective(mission.mission_id, "Clean garage", "tally", 1.0)  # shared
+
+    context.missions.increment_tally(mission.mission_id, 0)  # Zac's "Clean mower" done
+
+    assert context.missions.individual_objective_progress(mission.mission_id, "zac") == (1, 2)
+    assert context.missions.individual_objective_progress(mission.mission_id, "faith") == (0, 1)
+
+
+def test_group_objective_progress_counts_every_objective(isolated_paths):
+    context = _make_context()
+    mission = context.missions.add_mission(name="Prepare the House for Fall", participant_profile_ids=["zac", "faith"])
+    context.missions.add_objective(mission.mission_id, "Clean mower", "tally", 1.0, assigned_profile_id="zac")
+    context.missions.add_objective(mission.mission_id, "Organize storage", "tally", 1.0, assigned_profile_id="faith")
+    context.missions.add_objective(mission.mission_id, "Clean garage", "tally", 1.0)  # shared
+
+    context.missions.increment_tally(mission.mission_id, 0)
+    context.missions.increment_tally(mission.mission_id, 2)
+
+    assert context.missions.group_objective_progress(mission.mission_id) == (2, 3)
+
+
+def test_individual_objective_progress_unknown_mission_returns_zero(isolated_paths):
+    context = _make_context()
+    assert context.missions.individual_objective_progress("no-such-id", "zac") == (0, 0)
+
+
+def test_group_objective_progress_unknown_mission_returns_zero(isolated_paths):
+    context = _make_context()
+    assert context.missions.group_objective_progress("no-such-id") == (0, 0)
+
+
+def test_completing_a_group_mission_credits_every_real_participant(isolated_paths):
+    """Group quests (2026-09-14) — "group rewards": every participant
+    gets the same flat reward, not just whoever completed it."""
+    context = _make_context_with_profiles()
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    mission = context.missions.add_mission(
+        name="Prepare the House for Fall", reward_xp=100, reward_credits=20,
+        participant_profile_ids=[zac.profile_id, faith.profile_id],
+    )
+
+    context.missions.update_mission(mission.mission_id, status="completed")  # completed while Zac active
+
+    reloaded_zac = context.profiles.get_profile(zac.profile_id)
+    reloaded_faith = context.profiles.get_profile(faith.profile_id)
+    assert reloaded_zac.total_xp == 100
+    assert reloaded_zac.total_credits == 20
+    assert reloaded_faith.total_xp == 100
+    assert reloaded_faith.total_credits == 20
+
+
+def test_completing_a_solo_mission_still_only_credits_the_active_profile(isolated_paths):
+    """No real participants (every ordinary Mission) keeps the old
+    "just whoever's active" behavior, unchanged."""
+    context = _make_context_with_profiles()
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    mission = context.missions.add_mission(name="Solo Quest", reward_xp=100)
+
+    context.missions.update_mission(mission.mission_id, status="completed")
+
+    assert context.profiles.get_profile(zac.profile_id).total_xp == 100
+    assert context.profiles.get_profile(faith.profile_id).total_xp == 0

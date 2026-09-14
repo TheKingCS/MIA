@@ -31,6 +31,7 @@ from __future__ import annotations
 from typing import Optional
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -38,6 +39,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPlainTextEdit,
     QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 
 from core.mission_manager import ABANDON_REASONS, DIFFICULTY_LEVELS, Mission
@@ -113,6 +116,23 @@ class AddEditMissionDialog(QDialog):
                     self.project_combo.addItem(project.name, project.project_id)
             layout.addRow("Linked Project (optional):", self.project_combo)
 
+        # Group quests (2026-09-14) — real party members, creation-only
+        # (same "picked once, not reassignable via edit" rule the
+        # trip/project links above already follow). Empty by default —
+        # a Mission with no boxes checked is a normal solo/unattributed
+        # Mission, unchanged.
+        self.participant_checkboxes: dict[str, QCheckBox] = {}
+        if not self._editing:
+            party_widget = QWidget()
+            party_layout = QVBoxLayout(party_widget)
+            party_layout.setContentsMargins(0, 0, 0, 0)
+            if context is not None and context.profiles is not None:
+                for profile in context.profiles.list_profiles():
+                    checkbox = QCheckBox(profile.name)
+                    self.participant_checkboxes[profile.profile_id] = checkbox
+                    party_layout.addWidget(checkbox)
+            layout.addRow("Party (optional):", party_widget)
+
         self.status_combo: Optional[QComboBox] = None
         self.abandon_reason_combo: Optional[QComboBox] = None
         if self._editing:
@@ -153,6 +173,7 @@ class AddEditMissionDialog(QDialog):
         self._reward_xp: int = 0
         self._reward_credits: int = 0
         self._abandon_reason: str = ""
+        self._participant_profile_ids: list[str] = []
 
     def _prefill(self, mission: Optional[Mission]) -> None:
         if mission is None:
@@ -192,6 +213,9 @@ class AddEditMissionDialog(QDialog):
             self._trip_id = self.trip_combo.currentData()
         if self.project_combo is not None:
             self._project_id = self.project_combo.currentData()
+        self._participant_profile_ids = [
+            profile_id for profile_id, checkbox in self.participant_checkboxes.items() if checkbox.isChecked()
+        ]
         if self.status_combo is not None:
             self._status = self.status_combo.currentData()
         self._abandon_reason = (
@@ -248,3 +272,7 @@ class AddEditMissionDialog(QDialog):
     @property
     def entered_abandon_reason(self) -> str:
         return self._abandon_reason
+
+    @property
+    def entered_participant_profile_ids(self) -> list[str]:
+        return self._participant_profile_ids
