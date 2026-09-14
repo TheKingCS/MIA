@@ -225,6 +225,28 @@ def test_scan_resolves_insight_once_back_under_threshold(isolated_paths):
     assert context.insights.get_insight(insight_id).status == "resolved"
 
 
+def test_scan_does_not_resolve_a_different_kind_of_insight_for_the_same_profile(isolated_paths):
+    """Regression test: a real bug found while adding a second pattern
+    kind (core/skill_patterns.py) — resolution here must be scoped to
+    kind="repeated_abandonment" specifically, not every open insight
+    under source_type="patterns" for this profile."""
+    context = _make_context()
+    profile = context.profiles.create_profile(name="Alex")
+    unrelated_insight = context.insights.create_insight_if_new(
+        source_type="patterns", source_id=profile.profile_id, kind="interest_gap",
+        title="Unrelated", message="A different real pattern, nothing to do with abandonment.",
+    )
+
+    # Fewer than the abandonment threshold — scan should have nothing
+    # of its own to resolve, and must leave the unrelated insight alone.
+    mission = context.missions.add_mission(name="Quest")
+    context.missions.update_mission(mission.mission_id, status="abandoned")
+
+    scan_pattern_insights(context, TODAY)
+
+    assert context.insights.get_insight(unrelated_insight.insight_id).status == "open"
+
+
 def test_scan_with_separate_profiles_tracked_independently(isolated_paths):
     context = _make_context()
     zac = context.profiles.create_profile(name="Zac", make_active=True)

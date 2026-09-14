@@ -10603,3 +10603,47 @@ yet; `ProfileManager` creates it on demand). Confirmed `pytest -q`
 still 2991 passing afterward (test isolation is fully independent of
 real `data/`, so this was never expected to affect it) and real
 `config/config.json` untouched.
+
+## Pattern Insights, slice 2: interest gaps (2026-09-14)
+
+Scoped directly with the user before building (per this thread's own
+established discipline — options first, user picks). A second real
+signal alongside repeated Mission abandonment: a stated interest
+(picked at the profile-creation interview) with zero real skill XP
+earned after a real grace period.
+
+**New `core/skill_patterns.py`** — no new data model at all, reuses
+`Profile.interests`/`created_at` and `SkillManager.
+skills_in_category()`/`get_progress()` exactly as they already exist.
+30-day grace period (matching the abandonment pattern's own window)
+before a brand-new profile's untouched interests get flagged — nothing
+to notice yet isn't the same as a real gap. Shares `source_type=
+"patterns"` with `core/mission_patterns.py` (same Observations section)
+but a different `kind` ("interest_gap"), so the two track fully
+independently per profile.
+
+**Real bug found and fixed while adding this second kind**:
+`core/mission_patterns.py`'s own resolve step was calling
+`open_insights_for_source()` (every open insight for that profile,
+any kind) instead of `open_insight_for()` (this exact kind only) — so
+a profile dropping back under the abandonment threshold would have
+wrongly resolved an unrelated interest-gap insight for the same
+profile too. Fixed, with a regression test proving the two kinds now
+stay fully independent.
+
+Wired into `core/application.py`'s daily check as its own gated block,
+alongside (not folded into) the abandonment-pattern block.
+`docs/user_help/observations.md`/`skills.md` updated in the same pass,
+not left for later.
+
+**Verification**: `pytest -q` — full suite, 3010 passed (19 new tests:
+1 regression test in `test_mission_patterns.py` for the cross-kind
+resolution bug, 18 in `test_skill_patterns.py` covering category-XP
+aggregation, grace-period gating, scan idempotency, and resolution
+once real XP lands). Manual end-to-end verification against a fully
+isolated context (config path explicitly isolated and asserted,
+learning applied from the earlier incident this same session): a
+profile interested in both Homestead and Maker, with real XP only in
+Maker, correctly flagged only Homestead — the exact message, a real
+Notification, and resolution once real Homestead XP landed all
+confirmed. Real `config/config.json` confirmed untouched throughout.

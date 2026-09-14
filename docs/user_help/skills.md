@@ -9,7 +9,10 @@ grants XP toward specific skills, so your progress actually reflects
 what you've been doing. Each card shows its icon, name, level, and an
 XP progress bar. Category tabs group related skills; if you answered the interview
 questions when your profile was created, those categories are starred
-and sorted first.
+and sorted first. MIA also keeps an eye on this: if you said you're
+interested in a category but still have zero real XP there a few
+weeks later, it shows up as a real Observation, not just silently
+ignored.
 
 ## Capability status: Locked, Learning, Practiced, Demonstrated
 

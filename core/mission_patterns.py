@@ -123,11 +123,18 @@ def scan_pattern_insights(context, today: date) -> list[Insight]:
     new_insights: list[Insight] = []
     for profile in context.profiles.list_profiles():
         recent = recent_abandoned_missions(all_missions, profile.profile_id, today)
-        existing_open = context.insights.open_insights_for_source("patterns", profile.profile_id)
+        # Scoped to this exact kind, not open_insights_for_source()'s
+        # every-kind list — a profile can carry more than one real
+        # "patterns" insight at once (see core/skill_patterns.py), and
+        # resolving ALL of them here would wrongly clear an unrelated
+        # one (e.g. an interest-gap insight) just because THIS profile
+        # happens to be back under the abandonment threshold. Real bug,
+        # found and fixed while adding that second pattern kind.
+        existing_open = context.insights.open_insight_for("patterns", profile.profile_id, "repeated_abandonment")
 
         if len(recent) < _ABANDONMENT_THRESHOLD:
-            for insight in existing_open:
-                context.insights.resolve_insight(insight.insight_id)
+            if existing_open is not None:
+                context.insights.resolve_insight(existing_open.insight_id)
             continue
 
         reason = most_common_abandon_reason(recent)
