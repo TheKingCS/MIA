@@ -557,6 +557,25 @@ class MissionManager:
         # core/discovery_manager.py react to *why* without this module
         # needing to know Discovery exists.
         if not was_abandoned and mission.status == "abandoned":
+            # Pattern insights (2026-09-14) — same "whose real
+            # accomplishment/experience was this, stamped once on the
+            # first genuine transition, never reassigned later" rule as
+            # the completion-stamping block above. Without this, an
+            # abandoned solo Mission's profile_id stays None forever
+            # (nothing else ever sets it), making it impossible to
+            # attribute a real "you've abandoned N Missions lately"
+            # pattern to the right profile in a multi-user household —
+            # see core/mission_patterns.py.
+            if mission.profile_id is None and self.context.profiles is not None:
+                active_profile = self.context.profiles.get_active_profile()
+                if active_profile is not None:
+                    mission.profile_id = active_profile.profile_id
+                    # The save above this whole if/elif block already
+                    # ran before this stamp happened — without a second
+                    # save here, same "caught by this feature's own
+                    # regression test" reasoning as rewards_credited
+                    # above, the stamp would only ever live in memory.
+                    self._save()
             self.context.events.publish(
                 "mission.abandoned", mission_id=mission.mission_id, reason=mission.abandon_reason
             )

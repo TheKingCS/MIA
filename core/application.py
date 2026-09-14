@@ -59,6 +59,7 @@ from core.budget_nudges import build_nudge_message
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
 from core.maintenance_insights import format_maintenance_insights_message, scan_maintenance_insights
 from core.mission_insights import format_mission_insights_message, scan_mission_insights
+from core.mission_patterns import format_pattern_insights_message, scan_pattern_insights
 from core.smart_suggestions import build_smart_suggestions_message, build_walkthrough_suggestion
 from core.dashboard_widgets import DashboardWidgetRegistry, WidgetDescriptor
 from core.data_logger_manager import DataLoggerManager
@@ -528,6 +529,25 @@ class MIAApplication:
                     source="insights",
                 )
             config.set("system.last_mission_insight_date", today_iso)
+            config.save()
+
+        # Pattern insights (2026-09-14) — the third domain the
+        # observe->insight->recommend loop covers, and the first real
+        # "learns from history" signal (core/pathway_manager.py's own
+        # docstring named this "Phase 6"). Same gated/batched shape as
+        # the two blocks above — see core/mission_patterns.py's own
+        # docstring.
+        if should_run_once_daily(config.get("system.last_pattern_insight_date"), today_iso):
+            new_pattern_insights = scan_pattern_insights(self.context, now.date())
+            message = format_pattern_insights_message(new_pattern_insights)
+            if message:
+                self.context.notifications.notify(
+                    title="\U0001F914 Noticed a pattern",
+                    message=message,
+                    level="info",
+                    source="insights",
+                )
+            config.set("system.last_pattern_insight_date", today_iso)
             config.save()
 
         # Recurring Missions (2026-09-13) — same should_run_once_daily()

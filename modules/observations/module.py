@@ -6,18 +6,19 @@ modules.observations.module
 flagged as deferred: "Deliberately no dedicated browsing UI this
 phase — Insights surface through the existing NotificationToast/
 NotificationCenter... available for a later phase (a 'System
-Observation' view...) to query." That later phase is now: two real
-scan domains (core.maintenance_insights, core.mission_insights) both
-feed the same Insight/Recommendation store, so there's real content to
-browse instead of an empty shell.
+Observation' view...) to query." That later phase is now: three real
+scan domains (core.maintenance_insights, core.mission_insights,
+core.mission_patterns) all feed the same Insight/Recommendation store,
+so there's real content to browse instead of an empty shell.
 
 Read-only, same stance as modules/memories/module.py (Expedition
 recaps) — an Insight is discovered automatically by a domain scan,
 never hand-authored, and resolving one happens through the existing
-domain UI (marking a Maintenance task complete, touching a stale
-Mission) exactly as it already does for the Notification toast this
-adds a persistent view alongside. No new "mark resolved" interaction
-here, matching both scan modules' own docstrings.
+domain UI (marking a Maintenance task complete, touching a stale or
+repeatedly-abandoned Mission) exactly as it already does for the
+Notification toast this adds a persistent view alongside. No new "mark
+resolved" interaction here, matching all three scan modules' own
+docstrings.
 
 format_source_section_label()/group_open_insights_by_source() are free
 functions (not methods) — testable without Qt, see
@@ -43,6 +44,7 @@ from modules.module_base import ModuleBase
 _SOURCE_LABELS = {
     "maintenance": "MAINTENANCE",
     "missions": "MISSIONS",
+    "patterns": "PATTERNS",
 }
 
 

@@ -549,6 +549,54 @@ def test_recompleting_a_mission_does_not_double_credit(isolated_paths):
     assert reloaded.total_credits == 25
 
 
+def test_abandoning_a_mission_auto_attributes_profile_id(isolated_paths):
+    """Pattern insights (2026-09-14) — same "whose real experience was
+    this" stamping rule as completion, for abandonment."""
+    context = _make_context_with_profiles()
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="Master Angler")
+
+    context.missions.update_mission(mission.mission_id, status="abandoned")
+
+    assert context.missions.get_mission(mission.mission_id).profile_id == profile.profile_id
+
+
+def test_abandoning_a_mission_with_no_active_profile_leaves_profile_id_none(isolated_paths):
+    context = _make_context_with_profiles()
+    mission = context.missions.add_mission(name="Master Angler")
+
+    context.missions.update_mission(mission.mission_id, status="abandoned")
+
+    assert context.missions.get_mission(mission.mission_id).profile_id is None
+
+
+def test_abandoning_a_mission_profile_id_persists_across_a_fresh_load(isolated_paths):
+    """Regression coverage for the real bug this could have been: the
+    stamp happening after this method's own initial _save() call, so
+    without a second save it would only ever live in memory."""
+    context = _make_context_with_profiles()
+    profile = context.profiles.create_profile(name="Alex", make_active=True)
+    mission = context.missions.add_mission(name="Master Angler")
+    context.missions.update_mission(mission.mission_id, status="abandoned")
+
+    reloaded = MissionManager(context)
+    assert reloaded.get_mission(mission.mission_id).profile_id == profile.profile_id
+
+
+def test_reabandoning_a_mission_does_not_reassign_profile_id(isolated_paths):
+    context = _make_context_with_profiles()
+    zac = context.profiles.create_profile(name="Zac", make_active=True)
+    faith = context.profiles.create_profile(name="Faith", make_active=False)
+    mission = context.missions.add_mission(name="Master Angler")
+    context.missions.update_mission(mission.mission_id, status="abandoned")  # attributed to Zac
+
+    context.profiles.set_active_profile(faith.profile_id)
+    context.missions.update_mission(mission.mission_id, status="active")
+    context.missions.update_mission(mission.mission_id, status="abandoned")  # re-abandoned as Faith
+
+    assert context.missions.get_mission(mission.mission_id).profile_id == zac.profile_id
+
+
 # ----------------------------------------------------------------------
 # "mission.completed" event — Mission Pathways (2026-09-11)
 # ----------------------------------------------------------------------

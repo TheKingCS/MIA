@@ -10474,3 +10474,63 @@ locked mean for a skill," "how does prestige work," "how does the
 household module work," "what is greenhouse for," "how do recurring
 missions work") — every one correctly surfaced the new content at or
 near the top of results.
+
+## Pattern insights: the first "learns from history" signal (2026-09-14)
+
+`core/pathway_manager.py`'s own docstring names this "Phase 6: MIA
+inferring a pattern from history" — the one piece of the original
+"learns about itself" vision still open after Discovery
+(`core/discovery_manager.py`) proved out generating from a snapshot of
+CURRENT state only. User picked this to scope deliberately (not a
+blind build) from 3 concrete candidate slices offered; the smallest
+closed loop chosen: repeated Mission abandonment.
+
+**New `core/mission_patterns.py`** — third real domain over the
+observe->insight->recommend loop, mirroring `core/mission_insights.py`'s
+shape exactly. If a profile abandons 3+ Missions within a rolling
+30-day window, a real Insight (+ tailored Recommendation, reason-aware:
+"too hard" suggests an easier difficulty, "no time" suggests something
+smaller) surfaces — resolves automatically once the pattern's no longer
+true. Reuses `core.mission_insights.days_since_last_touch()` rather
+than re-deriving "how long ago" math a second time.
+
+**Real prerequisite fix, found while designing this**:
+`Mission.profile_id` was only ever auto-stamped on completion, never
+on abandonment — meaning every abandoned solo Mission stayed
+permanently unattributed, making per-profile pattern tracking
+impossible in a multi-user household. `MissionManager.update_mission()`
+now stamps it on the first genuine abandon transition too, mirroring
+the completion stamp's exact "pick it once, never reassign" rule.
+Caught a real persistence bug in my own first draft of this fix (the
+stamp happened after the method's own save already ran, so it would
+only ever have lived in memory) — a regression test
+(`test_abandoning_a_mission_profile_id_persists_across_a_fresh_load`)
+now guards it.
+
+**A real incident during this work, not glossed over**: the first test
+file for this feature (`tests/test_mission_patterns.py`) constructed a
+real `ProfileManager` without isolating `ConfigManager`'s file path —
+`create_profile()` calls `context.config.save()`, so that write landed
+on the REAL `config/config.json`, adding 6 stray test profiles and
+overwriting `system.active_profile_id` to point at a fake one. Caught
+immediately by checking real file state after the test run (not
+assumed clean), explained plainly to the user, and fixed with their
+explicit approval — removed exactly the 6 stray entries (all
+timestamped to the test run) and restored `active_profile_id` to the
+real Zac profile; both real profiles' own data were untouched
+throughout. Root cause fixed in the test fixture itself
+(`config_manager_module._CONFIG_FILE` now isolated, matching every
+other test file in this suite that constructs a `ProfileManager` —
+confirmed by grep that no other current test file has this gap).
+
+**Verification**: `pytest -q` — full suite, 2986 passed (25 new tests:
+4 for the new abandonment-stamping behavior in `test_mission_manager.py`,
+21 in `test_mission_patterns.py` covering the pure functions, scan
+idempotency, cross-profile independence, and resolution-once-under-
+threshold). Manual end-to-end verification against a fully isolated
+context (config path explicitly asserted to be under the tmp dir
+before running anything, this time) — 3 real abandoned Missions
+produced the exact right Insight/Recommendation/Notification text, an
+unrelated completion didn't create a duplicate, and the abandoned
+Mission's `profile_id` was confirmed correctly stamped. Confirmed real
+`config/config.json` and `data/profiles/` were untouched by this run.
