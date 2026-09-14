@@ -10588,3 +10588,18 @@ construction for the same profile correctly does NOT re-trigger
 extraction. Confirmed real `config/config.json` untouched throughout
 (the isolation lesson from earlier this same session applied here
 deliberately).
+
+## Orphaned data/profiles/ directories — real cleanup, done (2026-09-14)
+
+The standing 10,033-directory leak (root cause fixed in
+`tests/conftest.py` earlier this session) finally cleaned up. Real,
+targeted script — not a blind `rm -rf`: only directories that were (a)
+genuinely empty AND (b) not a real profile id from `config.json`'s own
+`profiles` key got deleted, computed and printed before anything was
+removed. Result: 10,033 deleted, exactly 1 directory preserved
+(`7c7038ab`, Faith's real, non-empty profile directory) — Zac's own
+directory (`0585dbef`) never existed at all (nothing has needed it
+yet; `ProfileManager` creates it on demand). Confirmed `pytest -q`
+still 2991 passing afterward (test isolation is fully independent of
+real `data/`, so this was never expected to affect it) and real
+`config/config.json` untouched.
