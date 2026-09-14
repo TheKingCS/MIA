@@ -25,6 +25,18 @@ every test-created profile across the whole history of this suite
 leaks one empty orphan directory into the real data/profiles/ — found
 at 10,033 accumulated directories against a single real profile.
 
+Same reasoning again for core.usage_tracker's `_DATA_DIR`/`_USAGE_FILE`
+(2026-09-14, found the same day the module shipped) — any test that
+builds a full context via core.core_runtime.build_core_context() or
+core.application.MIAApplication (e.g. tests/test_core_runtime.py's own
+`context` fixture) constructs a real UsageTracker, which writes a real
+data/module_usage.json the moment any "module.opened" event fires,
+unless that specific test file happens to isolate this one manager's
+paths itself — which none did, since the manager didn't exist when
+they were written. Isolating it here, globally, is the fix this
+project already learned to reach for instead of patching every
+individual fixture one at a time.
+
 This module-level code (not a fixture) runs when pytest loads this
 conftest.py, which always happens before any test module is imported —
 early enough to win the race against core.module_manager and friends
@@ -38,6 +50,7 @@ from pathlib import Path
 
 import core.logger as logger_module
 import core.profile_manager as profile_manager_module
+import core.usage_tracker as usage_tracker_module
 
 _TEST_LOG_DIR = Path(tempfile.mkdtemp(prefix="mia_test_logs_"))
 logger_module._LOG_DIR = _TEST_LOG_DIR
@@ -45,3 +58,7 @@ logger_module._LOG_FILE = _TEST_LOG_DIR / "mia.log"
 
 _TEST_PROFILES_DIR = Path(tempfile.mkdtemp(prefix="mia_test_profiles_"))
 profile_manager_module._DATA_PROFILES_DIR = _TEST_PROFILES_DIR
+
+_TEST_USAGE_DIR = Path(tempfile.mkdtemp(prefix="mia_test_usage_"))
+usage_tracker_module._DATA_DIR = _TEST_USAGE_DIR
+usage_tracker_module._USAGE_FILE = _TEST_USAGE_DIR / "module_usage.json"

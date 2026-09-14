@@ -17,6 +17,7 @@ from core.smart_suggestions import (
     build_pantry_suggestion,
     build_recovery_suggestion,
     build_smart_suggestions_message,
+    build_walkthrough_suggestion,
 )
 
 
@@ -195,3 +196,18 @@ def test_build_gift_reminder_suggestion_names_multiple_people():
     assert "Jamie" in message
     assert "Alex" in message
     assert "Sam" not in message
+
+
+# ------------------------------------------------------------------
+# build_walkthrough_suggestion
+# ------------------------------------------------------------------
+
+def test_build_walkthrough_suggestion_none_when_nothing_chosen():
+    assert build_walkthrough_suggestion(None) is None
+
+
+def test_build_walkthrough_suggestion_names_the_module_and_the_teach_me_phrase():
+    message = build_walkthrough_suggestion("Kitchen")
+    assert message is not None
+    assert "Kitchen" in message
+    assert 'teach me how kitchen works' in message

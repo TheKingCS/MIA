@@ -10169,3 +10169,66 @@ fields "don't exist yet" and that the profile-creation interview was
 2026-09-14 respectively, well before those claims were written).
 Fixed in `docs/VISION.md` and the `project_mia_master_vision` memory —
 see [[feedback_vision_md_staleness]].
+
+## Modular tutorial system: "never-used feature" walkthrough suggestions (2026-09-14)
+
+The real remaining gap in the modular tutorial system docs/VISION.md
+flags: the teaching-mode conversation path ("teach me how X works")
+shipped 2026-09-10, but nothing ever proactively suggested it —
+VISION's own words, "proactively suggest a walkthrough for never-used
+features... needs a real per-feature usage-tracking subsystem that
+doesn't exist yet."
+
+**New `core/usage_tracker.py`** — `UsageTracker` subscribes to the
+same `"module.opened"` event `core.activity_log_manager.
+ActivityLogManager` already does, but keeps a small, never-pruned
+per-module record (`ModuleUsage`: first_opened/last_opened/open_count)
+instead of a capped chronological narrative log — "has this module
+EVER been opened" needs to stay correct indefinitely, independent of
+how much unrelated activity has scrolled past the activity log's own
+5000-entry cap since. Deliberately NOT backfilled from existing
+domain data (a module's data files being full proves work happened in
+that domain, not that a real person clicked into the module through
+the running app — most of this session's data was created directly
+via manager calls while building features). Every module honestly
+starts "never opened" as of this ship date.
+
+**New `build_walkthrough_suggestion()`** (`core/smart_suggestions.py`)
+— the 4th proactive daily check, added alongside recovery/pantry/gift-
+reminder but kept as its own gated block in `core/application.py`
+(same reasoning Maintenance Insights/Recurring Missions/Rewards each
+got their own block) rather than folded into the combined message.
+Picks at most ONE never-opened, never-yet-suggested module per day
+(`module_browser` excluded — it's always-visible chrome, not a
+discoverable feature) and marks it suggested immediately, so the same
+module is never nudged twice — the real mechanism keeping this from
+ever becoming a recurring nag, especially important given day-one
+usage data is empty for every module including ones the user already
+knows well.
+
+**Verification**: `pytest -q` — full suite, 2922 passed (10 new
+tests: 8 in `test_usage_tracker.py` covering recording/persistence/
+never-opened filtering/suggested-state, 2 in `test_smart_suggestions.py`
+for the new pure function). Manual headless verification against real
+module discovery (`ModuleManager.discover()`, 32 real enabled
+modules): simulated 3 real `module.opened` events, confirmed those 3
+plus `module_browser` were correctly excluded from candidates,
+confirmed the chosen candidate's message correctly named the module
+and the exact "teach me how X works" phrase the teaching-mode path
+matches on, confirmed `mark_suggested()` prevented the same module
+being offered again on a second pass, and confirmed both usage and
+suggested-state survive a fresh `UsageTracker` reload.
+
+**Real regression caught by `git status`, not by the test suite
+itself**: the first full `pytest -q` run after this shipped left a
+real `data/module_usage.json` behind — `tests/test_core_runtime.py`'s
+`context` fixture builds a full context via `build_core_context()`,
+which now constructs a real `UsageTracker`, and that fixture (written
+before this manager existed) never isolated its paths. Exactly the
+same class of leak `tests/conftest.py` already documents fixing once
+for `core.profile_manager._DATA_PROFILES_DIR` (10,033 orphaned
+directories, found 2026-09-14 earlier the same day). Fixed the same
+way: `core.usage_tracker._DATA_DIR`/`_USAGE_FILE` now isolated
+globally in `tests/conftest.py`, not patched per test file — re-ran
+the full suite afterward and confirmed no `data/module_usage.json`
+was created.

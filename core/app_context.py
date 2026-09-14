@@ -81,6 +81,7 @@ if TYPE_CHECKING:
     from core.task_manager import TaskManager
     from core.trail_map_library import TrailMapLibrary
     from core.trip_manager import TripManager
+    from core.usage_tracker import UsageTracker
     from core.user_memory_manager import UserMemoryManager
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
@@ -206,6 +207,11 @@ class AppContext:
     # to "there's no module called X" rather than crashing — there's no
     # screen to open one on anyway.
     module_manager: Optional["ModuleManager"] = field(default=None, repr=False)
+    # Modular tutorial system, "never-used feature" walkthrough
+    # suggestions (2026-09-14) — see core/usage_tracker.py's own
+    # docstring for why this is a separate, never-pruned record from
+    # context.activity_log's capped narrative log.
+    usage_tracker: Optional["UsageTracker"] = field(default=None, repr=False)
     # CalculatorEngine/AssistantActionRegistry take no AppContext
     # dependency, so — unlike the services above — they can just be
     # constructed directly here.

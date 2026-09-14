@@ -15,6 +15,17 @@ knows, with their own birthdays), which didn't exist yet; now that
 core.relationships_manager.RelationshipsManager does, it has real data
 behind it too.
 
+**Fourth check added 2026-09-14**: `build_walkthrough_suggestion()`,
+the modular-tutorial-system half docs/VISION.md flagged as still
+needing "a real per-feature usage-tracking subsystem that doesn't
+exist yet" — now core.usage_tracker.UsageTracker. Deliberately takes
+just ONE display_name (or None), not a list — core.application's daily
+check already narrows a whole list of never-opened modules down to a
+single candidate before calling this (see UsageTracker's own docstring
+for why: never repeat the same nudge, never fire more than once a
+day), so this function's only job is turning "the chosen module" into
+the actual notification sentence.
+
 Same split as core.daily_occasions/core.budget_nudges (both established
 this exact "pure functions, no Qt, no manager instances, wired into
 core.application's existing daily-check timer" shape first): the
@@ -92,6 +103,20 @@ def build_gift_reminder_suggestion(people: list[Person], today: date) -> Optiona
     if not parts:
         return None
     return " ".join(parts)
+
+
+def build_walkthrough_suggestion(never_used_display_name: Optional[str]) -> Optional[str]:
+    """Pure logic — testable without Qt. `never_used_display_name` is
+    the ONE module the caller has already chosen to suggest this time
+    (or None if there's nothing left to suggest) — see this module's
+    docstring for why the narrowing happens before this function, not
+    inside it."""
+    if not never_used_display_name:
+        return None
+    return (
+        f"You haven't tried the {never_used_display_name} module yet — "
+        f'say "teach me how {never_used_display_name.lower()} works" any time you want a walkthrough.'
+    )
 
 
 def build_smart_suggestions_message(

@@ -155,7 +155,10 @@ today's flat `UserMemory` list, not just extending it — categorization
 half built 2026-09-10 as a real `category` field + LLM-based
 extraction-time tagging on the existing `core/user_memory_manager.py`,
 deliberately not a rename, see the critical-evaluation note below;
-cross-linking memories to each other is still unbuilt), **Relationship
+cross-linking also built 2026-09-10 — `related_memories()`, a pure
+keyword-overlap computation, surfaced as a "Related:" line per memory;
+deliberately unpersisted, see the table row below for why. A fuller
+graph/tree visualization is still unbuilt), **Relationship
 Profiles** (people MIA knows — birthdays, favorite things, gift
 ideas, shared memories, optionally tied to visual recognition when
 hardware supports it — text-only profiles built 2026-09-10,
@@ -189,10 +192,12 @@ Relationships widgets), an **interactive first-time onboarding**
 (MIA teaches herself through real conversation and real tasks, not
 docs/slides — a one-time welcome message built 2026-09-10) and an
 always-available **modular tutorial system** ("Teach me how quests
-work" — the teaching-mode conversation path built 2026-09-10; category/
-skill-level organization and proactively suggesting a walkthrough for
-never-used features are still unbuilt, the latter needing a real
-per-feature usage-tracking subsystem that doesn't exist yet), and
+work" — the teaching-mode conversation path built 2026-09-10;
+proactively suggesting a walkthrough for never-used features built
+2026-09-14, `core/usage_tracker.py` + `core/smart_suggestions.py`'s
+`build_walkthrough_suggestion()`, see `ROADMAP.md`'s matching entry;
+category/skill-level organization of the tutorial content itself is
+still unbuilt), and
 **self-knowledge** (MIA should be able to explain any of her own
 modules/features/workflows conversationally — the user should never need
 to read documentation). Motivation & celebration already exists in

@@ -56,6 +56,7 @@ wiring point) — see that file if these two ever need to be reconciled.
 from __future__ import annotations
 
 from core.activity_log_manager import ActivityLogManager
+from core.usage_tracker import UsageTracker
 from core.alarm_manager import AlarmManager
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
@@ -138,6 +139,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.module_manager = ModuleManager(context)
     context.device_help = DeviceHelpManager(context)
     context.activity_log = ActivityLogManager(context)
+    context.usage_tracker = UsageTracker(context)
     context.device_help.register_module_lister(context.module_manager.all)
     context.activity_log.register_module_lister(context.module_manager.all)
     context.device_help.register_reference_library(context.reference_library)

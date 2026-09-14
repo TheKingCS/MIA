@@ -29,6 +29,7 @@ from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 
 from core.activity_log_manager import ActivityLogManager
+from core.usage_tracker import UsageTracker
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
 from core.budget_manager import (
@@ -57,7 +58,7 @@ from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
 from core.maintenance_insights import format_maintenance_insights_message, scan_maintenance_insights
-from core.smart_suggestions import build_smart_suggestions_message
+from core.smart_suggestions import build_smart_suggestions_message, build_walkthrough_suggestion
 from core.dashboard_widgets import DashboardWidgetRegistry, WidgetDescriptor
 from core.data_logger_manager import DataLoggerManager
 from core.device_framework import DeviceFramework
@@ -295,6 +296,7 @@ class MIAApplication:
         self.context.search = SearchManager(self.context)
         self.context.device_help = DeviceHelpManager(self.context)
         self.context.activity_log = ActivityLogManager(self.context)
+        self.context.usage_tracker = UsageTracker(self.context)
         # module_manager.all is stored as a callable, not called now — it's
         # still empty until self.module_manager.discover() runs later in
         # the boot sequence (run()'s boot_steps), and device_help/
@@ -540,6 +542,40 @@ class MIAApplication:
                     # called alongside scan_for_new_unlocks() everywhere.
                     self.context.rewards.scan_for_new_hidden_achievements(active_profile.profile_id)
             config.set("system.last_rewards_check_date", today_iso)
+            config.save()
+
+        # Modular tutorial system: "never-used feature" walkthrough
+        # suggestions (2026-09-14) — its own gate/block, not folded into
+        # the combined Smart Suggestion message above, same reasoning
+        # as Maintenance Insights/Recurring Missions/Rewards each
+        # getting their own block: it has a real reason to fire (or
+        # not) independent of workout/pantry/birthday state. At most
+        # ONE candidate per day (module_browser excluded — it's always
+        # visible chrome, not a discoverable feature), and
+        # usage_tracker.mark_suggested() means the same module is never
+        # nudged twice — see core/usage_tracker.py's own docstring for
+        # why this can't become a recurring nag.
+        if should_run_once_daily(config.get("system.last_walkthrough_suggestion_date"), today_iso):
+            if self.context.usage_tracker is not None and self.module_manager is not None:
+                candidate_modules = [
+                    module for module in self.module_manager.enabled_modules()
+                    if module.module_id != "module_browser"
+                ]
+                candidate_ids = [module.module_id for module in candidate_modules]
+                never_opened = self.context.usage_tracker.unsuggested_never_opened_module_ids(candidate_ids)
+                if never_opened:
+                    chosen_id = never_opened[0]
+                    chosen_module = next(m for m in candidate_modules if m.module_id == chosen_id)
+                    message = build_walkthrough_suggestion(chosen_module.display_name)
+                    if message:
+                        self.context.notifications.notify(
+                            title="\U0001F393 Something to try",
+                            message=message,
+                            level="info",
+                            source="system",
+                        )
+                        self.context.usage_tracker.mark_suggested(chosen_id)
+            config.set("system.last_walkthrough_suggestion_date", today_iso)
             config.save()
 
     def _display(self, widget) -> None:
