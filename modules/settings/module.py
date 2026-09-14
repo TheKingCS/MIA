@@ -413,7 +413,7 @@ class SettingsModule(ModuleBase):
         if not destination:
             return
 
-        result = create_backup(Path(destination), passphrase=passphrase or None)
+        result = create_backup(Path(destination), passphrase=passphrase or None, config=self.context.config)
         if result.passed:
             QMessageBox.information(None, "Backup Created", f"Backup saved to:\n{result.destination}")
             self._set_status(f"Backup created: {result.destination}")
@@ -444,15 +444,16 @@ class SettingsModule(ModuleBase):
             None,
             "Confirm Restore",
             "Restoring will overwrite your current configuration and data "
-            "(profiles, notifications, etc.) with the contents of this "
-            "backup. This cannot be undone.\n\nContinue?",
+            "(profiles, notifications, trip photos, trail maps, field "
+            "captures, etc.) with the contents of this backup. This "
+            "cannot be undone.\n\nContinue?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
         if confirm != QMessageBox.StandardButton.Yes:
             return
 
-        result = restore_backup(source_path, passphrase=passphrase)
+        result = restore_backup(source_path, passphrase=passphrase, config=self.context.config)
         if result.passed:
             QMessageBox.information(
                 None, "Restore Complete",

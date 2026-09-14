@@ -11031,3 +11031,50 @@ Confirmed real `config/config.json` untouched.
 
 This closes out all three of Life State's originally-named future
 consumers (Assistant action, Dashboard glance, Discovery reasoning).
+
+## Stabilization: Backup/Restore now covers external content (2026-09-14)
+
+Cross-domain Pattern Insight correlation (the last item from the
+outside architecture review) turned out to need new tracking that
+doesn't honestly exist yet (no work/personal tag on Calendar events to
+correlate against) — offered a narrower, real "shifted focus" version
+instead, but the user chose to hold off on that whole thread and pick
+up the review's other real flag instead: a stabilization pass.
+
+**Real gap found by checking, not assumed**: `core/backup_manager.py`'s
+`_build_zip_bytes()` walks `data/` exhaustively via `rglob("*")` — genuinely
+complete for every JSON record, including brand-new files like
+`skill_xp_log.json` that never needed a manual update here. But three
+real, often-irreplaceable content directories live OUTSIDE `data/`
+entirely and were never covered at all: trip photos
+(`core.trip_manager`), downloaded trail maps (`core.trail_map_library`),
+and MIA Lite's pending field-capture voice notes
+(`core.lite_capture_manager`). A backup taken before this pass
+faithfully preserved every *record about* a trip's photos while
+silently excluding the actual photo files.
+
+`create_backup()`/`restore_backup()` gained an optional `config`
+parameter (`None` by default — every pre-existing call site, and all
+9 pre-existing tests, unaffected) used only to resolve these three
+directories the same way their owning managers already do. When given,
+each directory's files are included under `content/<name>/...` in the
+archive; restore replaces each live directory to match, same
+destructive-replace semantics `data/` already has. `modules/settings/
+module.py`'s real Backup/Restore buttons now pass `self.context.config`
+for full coverage, and the restore confirmation dialog now names trip
+photos/trail maps/field captures explicitly, since restoring now
+genuinely touches more than it used to.
+
+**A real subtlety documented, not glossed over**: a zip archive never
+records an empty directory, so "this directory was empty when the
+backup was taken" and "this backup predates the feature entirely" are
+indistinguishable on restore. Resolved in favor of the safer choice for
+a destructive operation — restore never wipes a directory that has no
+matching archive entry, rather than guessing.
+
+**Verification**: `pytest -q` — full suite, 3113 passed (6 new tests
+covering with/without config, a custom configured path overriding the
+default, a full replace round-trip, and both "no config" and "backup
+predates the feature" leave-untouched cases). Confirmed the real
+`trip_photos/`, `trail_maps/`, and `lite_captures/` directories at the
+repo root were untouched by any test run.

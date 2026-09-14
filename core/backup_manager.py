@@ -25,14 +25,35 @@ The zip itself contains:
     - manifest.json    — {"app": "M.I.A.", "manifest_version": 1, "created_at": ...}
     - config.json      — a copy of config/config.json
     - data/...          — a full copy of the data/ directory tree
+    - content/<name>/... — real user-generated content that lives
+      OUTSIDE data/ (see "External content directories" below)
 
 Restoring is a destructive operation — it overwrites the live
-config/config.json and replaces the entire data/ directory with the
-backup's contents. This module performs that unconditionally when
-asked; confirming with the user is the GUI layer's job (see
-modules/settings/module.py), the same division of responsibility as
-core/module_manager.py's install vs. the Modules screen's confirmation
-dialogs.
+config/config.json and replaces the entire data/ directory (and every
+external content directory it covers) with the backup's contents.
+This module performs that unconditionally when asked; confirming with
+the user is the GUI layer's job (see modules/settings/module.py), the
+same division of responsibility as core/module_manager.py's install
+vs. the Modules screen's confirmation dialogs.
+
+**External content directories (2026-09-14, a real stabilization
+gap found and fixed)**: trip photos (`core.trip_manager`), trail maps
+(`core.trail_map_library`), and MIA Lite field captures
+(`core.lite_capture_manager`) all resolve to a real, configurable
+directory OUTSIDE `data/` — `data/`'s own `rglob("*")` walk above
+never touched them, so a backup taken before this pass silently
+excluded real, often-irreplaceable content (trip photos, pending field
+voice notes) while faithfully covering every JSON record about them.
+Found by checking each manager's actual `_resolve_*_path()`/default
+constant against what `_build_zip_bytes()` actually walks, not
+assumed safe. `create_backup()`/`restore_backup()` now take an
+optional `config` parameter (a `core.config_manager.ConfigManager`, or
+anything duck-typing `.get(key, default)`) used ONLY to resolve these
+three directories the same way their owning managers do — `None`
+(the default, every pre-existing call site unaffected) means "skip
+external content," not "error," so this stays fully backward
+compatible. `modules/settings/module.py`'s real Backup/Restore buttons
+now pass `self.context.config` for full coverage.
 """
 
 from __future__ import annotations
@@ -58,6 +79,37 @@ _DATA_DIR = _PROJECT_ROOT / "data"
 
 _MAGIC = b"MIAB1"
 _MANIFEST_VERSION = 1
+
+# External content directories — each (config key, default path, archive
+# name under "content/") mirrors the exact resolution logic its owning
+# manager uses (core.trip_manager._resolve_photo_root_path(),
+# core.trail_map_library's own resolver, core.lite_capture_manager's
+# capture_folder_path property) — kept as literals here rather than
+# importing those modules, since backup_manager.py stays a dependency-
+# light filesystem/zip utility otherwise. If any of those managers' own
+# default folder name or config key ever changes, this list needs the
+# matching update — there's no other coupling enforcing that today.
+_DEFAULT_TRIP_PHOTOS_DIR = _PROJECT_ROOT / "trip_photos"
+_DEFAULT_TRAIL_MAPS_DIR = _PROJECT_ROOT / "trail_maps"
+_DEFAULT_LITE_CAPTURES_DIR = _PROJECT_ROOT / "lite_captures"
+_EXTERNAL_CONTENT_DIRS = (
+    ("trips.photo_root_path", _DEFAULT_TRIP_PHOTOS_DIR, "trip_photos"),
+    ("maps.trail_map_root_path", _DEFAULT_TRAIL_MAPS_DIR, "trail_maps"),
+    ("lite_capture.import_folder", _DEFAULT_LITE_CAPTURES_DIR, "lite_captures"),
+)
+
+
+def _resolve_external_content_dirs(config) -> list[tuple[str, Path]]:
+    """(archive_name, real resolved directory) for every external
+    content directory config knows how to place — empty if `config`
+    is None (the "skip external content" case, see module docstring)."""
+    if config is None:
+        return []
+    resolved = []
+    for key, default_dir, archive_name in _EXTERNAL_CONTENT_DIRS:
+        configured = config.get(key, "")
+        resolved.append((archive_name, Path(configured) if configured else default_dir))
+    return resolved
 
 
 class BackupError(Exception):
@@ -93,12 +145,15 @@ def is_backup_encrypted(path: Path) -> bool:
     return header == _MAGIC
 
 
-def create_backup(destination_path: Path, passphrase: Optional[str] = None) -> BackupResult:
-    """Build a backup archive at destination_path, encrypted if `passphrase` is given."""
+def create_backup(destination_path: Path, passphrase: Optional[str] = None, config=None) -> BackupResult:
+    """Build a backup archive at destination_path, encrypted if `passphrase` is given.
+    `config` resolves external content directories (trip photos, trail
+    maps, lite captures) to include — omit to back up config+data only,
+    same as before this parameter existed."""
     destination_path = Path(destination_path)
 
     try:
-        zip_bytes = _build_zip_bytes()
+        zip_bytes = _build_zip_bytes(config)
     except OSError as exc:
         return BackupResult(passed=False, errors=[f"Could not read config/data to back up: {exc}"])
 
@@ -116,7 +171,7 @@ def create_backup(destination_path: Path, passphrase: Optional[str] = None) -> B
     return BackupResult(passed=True, destination=destination_path)
 
 
-def _build_zip_bytes() -> bytes:
+def _build_zip_bytes(config=None) -> bytes:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         manifest = {
@@ -135,17 +190,32 @@ def _build_zip_bytes() -> bytes:
                     arcname = "data/" + str(file_path.relative_to(_DATA_DIR))
                     zf.write(file_path, arcname=arcname)
 
+        for archive_name, content_dir in _resolve_external_content_dirs(config):
+            if content_dir.exists():
+                for file_path in content_dir.rglob("*"):
+                    if file_path.is_file():
+                        arcname = f"content/{archive_name}/" + str(file_path.relative_to(content_dir))
+                        zf.write(file_path, arcname=arcname)
+
     return buffer.getvalue()
 
 
-def restore_backup(source_path: Path, passphrase: Optional[str] = None) -> RestoreResult:
+def restore_backup(source_path: Path, passphrase: Optional[str] = None, config=None) -> RestoreResult:
     """
-    Restore config/config.json and the data/ directory from a backup
-    file created by create_backup(). Destructive: replaces the live
-    config file and the entire data/ directory. Extracts into a staging
+    Restore config/config.json, the data/ directory, and (when `config`
+    is given) every external content directory from a backup file
+    created by create_backup(). Destructive: replaces each live
+    location with the backup's contents. Extracts into a staging
     temp directory first and validates it before touching anything
     live, so a bad/corrupt/wrong-passphrase backup can't leave a
-    half-restored mess.
+    half-restored mess. A backup taken before external content
+    directories existed simply has no "content/" members — restoring
+    one just leaves those directories untouched, not an error. The
+    same applies if a directory was genuinely empty at backup time
+    (zip archives don't record empty directories, so this case is
+    indistinguishable from "predates the feature") — restore favors
+    never wiping real content over faithfully reproducing "this was
+    empty," the safer default for a destructive operation.
     """
     source_path = Path(source_path)
 
@@ -203,6 +273,14 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None) -> Resto
             shutil.copytree(staged_data, _DATA_DIR)
         else:
             _DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        for archive_name, content_dir in _resolve_external_content_dirs(config):
+            staged_content = staging_dir / "content" / archive_name
+            if not staged_content.exists():
+                continue  # backup predates this content dir, or it was genuinely empty
+            if content_dir.exists():
+                shutil.rmtree(content_dir)
+            shutil.copytree(staged_content, content_dir)
 
     except OSError as exc:
         return RestoreResult(passed=False, errors=[f"Restore failed while writing to disk: {exc}"])

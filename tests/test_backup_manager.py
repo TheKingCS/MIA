@@ -155,3 +155,135 @@ def test_safe_extract_rejects_path_traversal(tmp_path):
     with zipfile.ZipFile(malicious_zip_path) as zf:
         with pytest.raises(backup_manager_module.BackupError):
             backup_manager_module.safe_extract_zip(zf, target_dir)
+
+
+# ------------------------------------------------------------------
+# External content directories (2026-09-14) — trip photos, trail
+# maps, and lite captures all live outside data/, so they need their
+# own explicit coverage, opt-in via the `config` parameter.
+# ------------------------------------------------------------------
+
+class _FakeConfig:
+    """Fakes just what backup_manager.py actually uses — ConfigManager.get()."""
+
+    def __init__(self, values: dict) -> None:
+        self._values = values
+
+    def get(self, key: str, default=None):
+        return self._values.get(key, default)
+
+
+@pytest.fixture
+def external_content_paths(tmp_path, monkeypatch):
+    trip_photos = tmp_path / "trip_photos"
+    trail_maps = tmp_path / "trail_maps"
+    lite_captures = tmp_path / "lite_captures"
+    for d in (trip_photos, trail_maps, lite_captures):
+        d.mkdir()
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_TRIP_PHOTOS_DIR", trip_photos)
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_TRAIL_MAPS_DIR", trail_maps)
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_LITE_CAPTURES_DIR", lite_captures)
+    monkeypatch.setattr(
+        backup_manager_module,
+        "_EXTERNAL_CONTENT_DIRS",
+        (
+            ("trips.photo_root_path", trip_photos, "trip_photos"),
+            ("maps.trail_map_root_path", trail_maps, "trail_maps"),
+            ("lite_capture.import_folder", lite_captures, "lite_captures"),
+        ),
+    )
+    return trip_photos, trail_maps, lite_captures
+
+
+def test_create_backup_without_config_excludes_external_content(isolated_paths, external_content_paths, tmp_path):
+    trip_photos, _, _ = external_content_paths
+    (trip_photos / "hike.jpg").write_bytes(b"fake photo bytes")
+    backup_path = tmp_path / "backup.zip"
+
+    create_backup(backup_path)  # no config passed
+
+    with zipfile.ZipFile(backup_path) as zf:
+        assert not any(name.startswith("content/") for name in zf.namelist())
+
+
+def test_create_backup_with_config_includes_external_content(isolated_paths, external_content_paths, tmp_path):
+    trip_photos, trail_maps, lite_captures = external_content_paths
+    (trip_photos / "hike.jpg").write_bytes(b"fake photo bytes")
+    (lite_captures / "note.txt").write_text("a pending voice note transcript")
+    backup_path = tmp_path / "backup.zip"
+    config = _FakeConfig({})  # empty -> every key falls back to its default dir
+
+    create_backup(backup_path, config=config)
+
+    with zipfile.ZipFile(backup_path) as zf:
+        names = zf.namelist()
+        assert "content/trip_photos/hike.jpg" in names
+        assert "content/lite_captures/note.txt" in names
+        assert not any(name.startswith("content/trail_maps/") for name in names)  # trail_maps was empty
+
+
+def test_create_backup_uses_configured_path_over_default(isolated_paths, external_content_paths, tmp_path):
+    custom_photos_dir = tmp_path / "custom_photos"
+    custom_photos_dir.mkdir()
+    (custom_photos_dir / "sunset.jpg").write_bytes(b"fake photo bytes")
+    backup_path = tmp_path / "backup.zip"
+    config = _FakeConfig({"trips.photo_root_path": str(custom_photos_dir)})
+
+    create_backup(backup_path, config=config)
+
+    with zipfile.ZipFile(backup_path) as zf:
+        assert "content/trip_photos/sunset.jpg" in zf.namelist()
+
+
+def test_restore_with_config_restores_external_content(isolated_paths, external_content_paths, tmp_path):
+    trip_photos, _, lite_captures = external_content_paths
+    (trip_photos / "hike.jpg").write_bytes(b"original photo")
+    (lite_captures / "old_note.txt").write_text("present at backup time")
+    backup_path = tmp_path / "backup.zip"
+    config = _FakeConfig({})
+
+    create_backup(backup_path, config=config)
+
+    # Simulate real changes after the backup: photo replaced, the old
+    # note deleted, and a new pending capture arrives that was never
+    # backed up.
+    (trip_photos / "hike.jpg").write_bytes(b"OVERWRITTEN")
+    (lite_captures / "old_note.txt").unlink()
+    (lite_captures / "new_note.txt").write_text("arrived after the backup")
+
+    result = restore_backup(backup_path, config=config)
+
+    assert result.passed is True
+    assert (trip_photos / "hike.jpg").read_bytes() == b"original photo"
+    assert (lite_captures / "old_note.txt").read_text() == "present at backup time"
+    assert not (lite_captures / "new_note.txt").exists()  # real destructive replace, not a merge
+
+
+def test_restore_without_config_leaves_external_content_untouched(isolated_paths, external_content_paths, tmp_path):
+    trip_photos, _, _ = external_content_paths
+    (trip_photos / "hike.jpg").write_bytes(b"original photo")
+    backup_path = tmp_path / "backup.zip"
+
+    create_backup(backup_path, config=_FakeConfig({}))
+    (trip_photos / "hike.jpg").write_bytes(b"changed after backup")
+
+    result = restore_backup(backup_path)  # no config -> external content opted out
+
+    assert result.passed is True
+    assert (trip_photos / "hike.jpg").read_bytes() == b"changed after backup"  # untouched by this restore
+
+
+def test_restore_backup_predating_external_content_leaves_dirs_untouched(isolated_paths, external_content_paths, tmp_path):
+    """A backup made before this feature existed has no "content/"
+    members at all — restoring it with a real config must not error
+    and must not wipe whatever's currently in those directories."""
+    trip_photos, _, _ = external_content_paths
+    backup_path = tmp_path / "backup.zip"
+    create_backup(backup_path)  # old-style backup, no config -> no content/ members
+
+    (trip_photos / "still_here.jpg").write_bytes(b"never touched")
+
+    result = restore_backup(backup_path, config=_FakeConfig({}))
+
+    assert result.passed is True
+    assert (trip_photos / "still_here.jpg").read_bytes() == b"never touched"
