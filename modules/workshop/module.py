@@ -79,6 +79,27 @@ def format_component_row(component: Component) -> str:
     return f"{component.name}{detail}  qty {component.quantity}{location}"
 
 
+def format_component_detail_line(
+    added_by_name: Optional[str], times_used: int, last_used_by_name: Optional[str], last_used_date: Optional[str]
+) -> str:
+    """Pure formatting logic — testable without Qt. Multi-user pass
+    (2026-09-14) — same shape as
+    modules.toolbox.tools.inventory_tool.format_item_detail_line(),
+    the second real application of this exact "shared object + user
+    relationship" surfacing (Components is the third domain, after
+    Recipes and Inventory)."""
+    added_part = f"Added by {added_by_name}" if added_by_name else "Added by: unknown"
+    if times_used:
+        used_part = f"Used {times_used}x"
+        if last_used_by_name and last_used_date:
+            used_part += f" (last: {last_used_by_name} on {last_used_date})"
+        elif last_used_date:
+            used_part += f" (last: {last_used_date})"
+    else:
+        used_part = "Never used yet"
+    return f"{added_part}  ·  {used_part}"
+
+
 def format_material_row(material: Material) -> str:
     """Pure formatting logic — testable without Qt."""
     unit = f" {material.unit}" if material.unit else ""
@@ -125,6 +146,7 @@ class WorkshopModule(ModuleBase):
         super().__init__(context)
         self._component_list: Optional[QListWidget] = None
         self._component_filter_edit: Optional[QLineEdit] = None
+        self._component_detail_label: Optional[QLabel] = None
         self._material_list: Optional[QListWidget] = None
         self._material_filter_edit: Optional[QLineEdit] = None
         self._job_list: Optional[QListWidget] = None
@@ -173,7 +195,31 @@ class WorkshopModule(ModuleBase):
         layout.addWidget(self._component_filter_edit)
 
         self._component_list = QListWidget()
+        self._component_list.currentItemChanged.connect(lambda *_: self._update_component_detail_label())
         layout.addWidget(self._component_list, stretch=1)
+
+        # Multi-user pass (2026-09-14) — who added this component + real
+        # usage history for the selected one, same "shared object + user
+        # relationship" surfacing as
+        # modules/toolbox/tools/inventory_tool.py's own detail label.
+        self._component_detail_label = QLabel("")
+        self._component_detail_label.setObjectName("SubtitleLabel")
+        self._component_detail_label.setWordWrap(True)
+        layout.addWidget(self._component_detail_label)
+
+        adjust_row = QHBoxLayout()
+        adjust_row.addWidget(QLabel("Quantity:"))
+
+        minus_button = QPushButton("−1")
+        minus_button.clicked.connect(lambda: self._on_adjust_component(-1))
+        adjust_row.addWidget(minus_button)
+
+        plus_button = QPushButton("+1")
+        plus_button.clicked.connect(lambda: self._on_adjust_component(1))
+        adjust_row.addWidget(plus_button)
+
+        adjust_row.addStretch()
+        layout.addLayout(adjust_row)
 
         button_row = QHBoxLayout()
         add_button = QPushButton("Add Component")
@@ -193,7 +239,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_components_list()
         return tab
 
-    def _refresh_components_list(self) -> None:
+    def _refresh_components_list(self, select_component_id: Optional[str] = None) -> None:
         query = self._component_filter_edit.text().strip()
         components = (
             self.context.components.search(query) if query else self.context.components.all_components()
@@ -204,21 +250,59 @@ class WorkshopModule(ModuleBase):
             item = QListWidgetItem(format_component_row(component))
             item.setData(Qt.ItemDataRole.UserRole, component.component_id)
             self._component_list.addItem(item)
+            if component.component_id == select_component_id:
+                self._component_list.setCurrentItem(item)
+        self._update_component_detail_label()
 
     def _selected_component_id(self) -> Optional[str]:
         item = self._component_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
+    def _profile_name(self, profile_id: Optional[str]) -> Optional[str]:
+        if profile_id is None or self.context.profiles is None:
+            return None
+        match = next((p for p in self.context.profiles.list_profiles() if p.profile_id == profile_id), None)
+        return match.name if match is not None else None
+
+    def _update_component_detail_label(self) -> None:
+        component_id = self._selected_component_id()
+        if component_id is None:
+            self._component_detail_label.setText("")
+            return
+
+        component = self.context.components.get_component(component_id)
+        if component is None:
+            self._component_detail_label.setText("")
+            return
+
+        added_by_name = self._profile_name(component.added_by_profile_id)
+        times_used = self.context.components.times_used(component_id)
+        last_used_entry = self.context.components.last_used(component_id)
+        last_used_by_name = self._profile_name(last_used_entry.profile_id) if last_used_entry else None
+        last_used_date = last_used_entry.timestamp[:10] if last_used_entry else None
+
+        self._component_detail_label.setText(
+            format_component_detail_line(added_by_name, times_used, last_used_by_name, last_used_date)
+        )
+
+    def _on_adjust_component(self, delta: int) -> None:
+        component_id = self._selected_component_id()
+        if component_id is None:
+            QMessageBox.information(None, "No Component Selected", "Select a component to adjust.")
+            return
+        self.context.components.adjust_quantity(component_id, delta)
+        self._refresh_components_list(select_component_id=component_id)
+
     def _on_add_component(self) -> None:
         dialog = AddEditComponentDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self.context.components.add_component(
+        added = self.context.components.add_component(
             name=dialog.entered_name, category=dialog.entered_category, value=dialog.entered_value,
             package=dialog.entered_package, quantity=dialog.entered_quantity,
             location=dialog.entered_location, notes=dialog.entered_notes,
         )
-        self._refresh_components_list()
+        self._refresh_components_list(select_component_id=added.component_id)
 
     def _on_edit_component(self) -> None:
         component_id = self._selected_component_id()
@@ -234,7 +318,7 @@ class WorkshopModule(ModuleBase):
             value=dialog.entered_value, package=dialog.entered_package, quantity=dialog.entered_quantity,
             location=dialog.entered_location, notes=dialog.entered_notes,
         )
-        self._refresh_components_list()
+        self._refresh_components_list(select_component_id=component_id)
 
     def _on_delete_component(self) -> None:
         component_id = self._selected_component_id()

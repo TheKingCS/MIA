@@ -11375,3 +11375,53 @@ item and uses it twice, Faith uses it once) against the real Qt tool
 widget — screenshot confirmed the detail line renders correctly
 ("Added by Zac · Used 3x (last: Faith on 2026-09-14)") only after the
 `last_used()` fix. Confirmed real `config/config.json` untouched.
+
+## Multi-user shared-object pattern, third application: Component DB (2026-09-14)
+
+User asked to skip real character art (still deliberately deferred)
+and continue. Extended the same pattern one domain further — Workshop's
+Component DB (`core/component_manager.py`), the electronics-parts
+inventory. Its own docstring already says "Same persisted-JSON pattern
+as core/inventory_manager.py," and that similarity held for the
+multi-user pattern too.
+
+**One real gap found before assuming this would be a straight repeat
+of Inventory**: unlike Inventory, `ComponentManager` had no quick-
+adjust method at all — `core/job_manager.py`'s `consume_material()`
+only consumes **Materials**, never Components, so Components had zero
+existing usage-event source (Add/Edit/Delete plus a generic field-
+setter only). New `ComponentManager.adjust_quantity()` added first
+(mirroring `InventoryManager.adjust_quantity()` exactly, including the
+"a clamped-to-0 delta still logs the attempt as a real event" behavior),
+*then* the same `added_by_profile_id`/`ComponentUsageEntry`/
+`times_used()`/`last_used()` shape applied on top of it. (A different,
+hardware-driver-shaped `WorkshopMachine`/`WorkshopMachineRegistry`
+abstraction was checked first and correctly ruled out — it answers
+"what physical fabrication device can I send a job to," a completely
+different question from "who's used this shared parts-bin item.")
+
+`last_used()` was written with the cached-list-position fix from the
+start this time (`matches[-1]`, not `max(..., key=timestamp)`) —
+applying the exact lesson from Inventory's own real bug immediately,
+rather than re-discovering it.
+
+`modules/workshop/module.py`'s Components tab gained the same
+quantity +1/−1 buttons and detail line
+(`format_component_detail_line()`) Inventory's own tool already has,
+plus Add/Edit now preserve the selected row so the detail line stays
+populated after either action — a real, small UX gap the new label
+exposed, fixed while already in this code.
+
+**Verification**: `pytest -q` — full suite, 3184 passed (23 new tests:
+19 in `test_component_manager.py` mirroring Inventory's own coverage
+exactly, including the `last_used()` tie-breaking regression case
+written proactively rather than waiting to hit it; 4 new formatter
+tests in `test_workshop_module.py`). Manually verified end-to-end with
+a real two-profile scenario against the actual Workshop module
+widget — screenshot confirmed the detail line rendered correctly on
+the first run this time. Confirmed real `config/config.json`
+untouched.
+
+This is now the third real application of the "shared object + user
+relationship" pattern (Recipes → Inventory → Component DB), and the
+same shape is now proven across three structurally different domains.

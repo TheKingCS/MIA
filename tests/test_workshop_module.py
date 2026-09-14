@@ -18,6 +18,7 @@ from core.ledger_manager import ExpenseEntry, RevenueEntry
 from core.material_manager import Material
 from core.product_manager import Product, ProductListing
 from modules.workshop.module import (
+    format_component_detail_line,
     format_component_row,
     format_expense_row,
     format_job_row,
@@ -43,6 +44,28 @@ def test_formats_full_details():
 def test_omits_missing_detail_fields():
     component = Component(component_id="abc123", name="Mystery Part", quantity=3)
     assert format_component_row(component) == "Mystery Part  qty 3"
+
+
+# ------------------------------------------------------------------
+# format_component_detail_line (multi-user pass, 2026-09-14)
+# ------------------------------------------------------------------
+
+def test_detail_line_unknown_attribution_and_never_used():
+    assert format_component_detail_line(None, 0, None, None) == "Added by: unknown  ·  Never used yet"
+
+
+def test_detail_line_with_attribution_and_never_used():
+    assert format_component_detail_line("Alex", 0, None, None) == "Added by Alex  ·  Never used yet"
+
+
+def test_detail_line_with_usage_and_who_last_used_it():
+    result = format_component_detail_line("Alex", 3, "Faith", "2026-09-14")
+    assert result == "Added by Alex  ·  Used 3x (last: Faith on 2026-09-14)"
+
+
+def test_detail_line_with_usage_but_unknown_last_user():
+    result = format_component_detail_line("Alex", 1, None, "2026-09-14")
+    assert result == "Added by Alex  ·  Used 1x (last: 2026-09-14)"
 
 
 def test_omits_location_when_absent():
