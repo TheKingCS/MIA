@@ -45,6 +45,7 @@ from core.achievements import crossed_a_level, format_skill_level_up, format_ski
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.skill_leveling import capability_status_for_level, compute_skill_level_progress
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -239,7 +240,7 @@ class SkillManager:
     def _save_progress(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         payload = {"progress": [p.to_dict() for p in self._progress.values()]}
-        _SKILL_PROGRESS_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        atomic_write_text(_SKILL_PROGRESS_FILE, json.dumps(payload, indent=2), encoding="utf-8")
 
     def _load_xp_log(self) -> None:
         if not _SKILL_XP_LOG_FILE.exists():
@@ -263,7 +264,7 @@ class SkillManager:
         ]
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         payload = {"events": [e.to_dict() for e in self._xp_log]}
-        _SKILL_XP_LOG_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        atomic_write_text(_SKILL_XP_LOG_FILE, json.dumps(payload, indent=2), encoding="utf-8")
 
     def xp_earned_between(self, profile_id: str, skill_id: str, start: date, end: date) -> int:
         """Sum of real XP-grant events for this skill with

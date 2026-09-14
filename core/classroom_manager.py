@@ -40,6 +40,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -193,15 +194,15 @@ class ClassroomManager:
 
     def _save_subjects(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _SUBJECTS_FILE.write_text(json.dumps([s.to_dict() for s in self._subjects], indent=2), encoding="utf-8")
+        atomic_write_text(_SUBJECTS_FILE, json.dumps([s.to_dict() for s in self._subjects], indent=2), encoding="utf-8")
 
     def _save_courses(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _COURSES_FILE.write_text(json.dumps([c.to_dict() for c in self._courses], indent=2), encoding="utf-8")
+        atomic_write_text(_COURSES_FILE, json.dumps([c.to_dict() for c in self._courses], indent=2), encoding="utf-8")
 
     def _save_lessons(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _LESSONS_FILE.write_text(json.dumps([l.to_dict() for l in self._lessons], indent=2), encoding="utf-8")
+        atomic_write_text(_LESSONS_FILE, json.dumps([l.to_dict() for l in self._lessons], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Subjects

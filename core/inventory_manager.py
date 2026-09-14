@@ -31,6 +31,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -99,7 +100,7 @@ class InventoryManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _ITEMS_FILE.write_text(
+        atomic_write_text(_ITEMS_FILE,
             json.dumps([i.to_dict() for i in self._items], indent=2),
             encoding="utf-8",
         )

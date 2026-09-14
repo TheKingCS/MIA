@@ -48,6 +48,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -158,7 +159,7 @@ class FinanceManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _SNAPSHOTS_FILE.write_text(
+        atomic_write_text(_SNAPSHOTS_FILE,
             json.dumps({source: snap.to_dict() for source, snap in self._snapshots.items()}, indent=2),
             encoding="utf-8",
         )

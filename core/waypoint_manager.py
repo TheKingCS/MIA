@@ -28,6 +28,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -134,7 +135,7 @@ class WaypointManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _WAYPOINTS_FILE.write_text(
+        atomic_write_text(_WAYPOINTS_FILE,
             json.dumps([w.to_dict() for w in self._waypoints], indent=2),
             encoding="utf-8",
         )

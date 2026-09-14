@@ -50,6 +50,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -180,11 +181,11 @@ class LedgerManager:
 
     def _save_revenue(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _REVENUE_FILE.write_text(json.dumps([r.to_dict() for r in self._revenue], indent=2), encoding="utf-8")
+        atomic_write_text(_REVENUE_FILE, json.dumps([r.to_dict() for r in self._revenue], indent=2), encoding="utf-8")
 
     def _save_expenses(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _EXPENSES_FILE.write_text(json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
+        atomic_write_text(_EXPENSES_FILE, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Revenue

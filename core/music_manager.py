@@ -66,6 +66,7 @@ import json
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 if TYPE_CHECKING:
     from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
@@ -281,11 +282,11 @@ class MusicManager:
 
     def _save_tracks(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _TRACKS_FILE.write_text(json.dumps([t.to_dict() for t in self._tracks], indent=2), encoding="utf-8")
+        atomic_write_text(_TRACKS_FILE, json.dumps([t.to_dict() for t in self._tracks], indent=2), encoding="utf-8")
 
     def _save_playlists(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _PLAYLISTS_FILE.write_text(json.dumps([p.to_dict() for p in self._playlists], indent=2), encoding="utf-8")
+        atomic_write_text(_PLAYLISTS_FILE, json.dumps([p.to_dict() for p in self._playlists], indent=2), encoding="utf-8")
 
     def _resolve_root_path(self) -> Path:
         configured = self.context.config.get("music.library_root_path", "")

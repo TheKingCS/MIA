@@ -41,6 +41,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.waypoint_manager import haversine_distance_km
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -210,7 +211,7 @@ class TripManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _TRIPS_FILE.write_text(
+        atomic_write_text(_TRIPS_FILE,
             json.dumps([t.to_dict() for t in self._trips], indent=2),
             encoding="utf-8",
         )

@@ -65,6 +65,7 @@ from core.app_context import AppContext
 from core.data_logger_manager import Reading
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -511,7 +512,7 @@ class MaintenanceManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _MAINTENANCE_FILE.write_text(
+        atomic_write_text(_MAINTENANCE_FILE,
             json.dumps(
                 {
                     "assets": [a.to_dict() for a in self._assets],

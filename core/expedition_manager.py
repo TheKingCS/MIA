@@ -28,6 +28,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -105,7 +106,7 @@ class ExpeditionManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _EXPEDITIONS_FILE.write_text(
+        atomic_write_text(_EXPEDITIONS_FILE,
             json.dumps([e.to_dict() for e in self._expeditions], indent=2),
             encoding="utf-8",
         )

@@ -62,6 +62,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -294,7 +295,7 @@ class UserMemoryManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _USER_MEMORIES_FILE.write_text(
+        atomic_write_text(_USER_MEMORIES_FILE,
             json.dumps([m.to_dict() for m in self._memories], indent=2),
             encoding="utf-8",
         )

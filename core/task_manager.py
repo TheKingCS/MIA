@@ -19,6 +19,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -86,7 +87,7 @@ class TaskManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _TASKS_FILE.write_text(
+        atomic_write_text(_TASKS_FILE,
             json.dumps([t.to_dict() for t in self._tasks], indent=2),
             encoding="utf-8",
         )

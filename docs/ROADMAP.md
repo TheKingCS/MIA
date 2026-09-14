@@ -11078,3 +11078,54 @@ default, a full replace round-trip, and both "no config" and "backup
 predates the feature" leave-untouched cases). Confirmed the real
 `trip_photos/`, `trail_maps/`, and `lite_captures/` directories at the
 repo root were untouched by any test run.
+
+## Stabilization: atomic writes everywhere, and three more backup gaps (2026-09-14)
+
+Continued the stabilization pass. Two real, systemic findings this
+round, both from checking actual repo state rather than assuming.
+
+**1. No manager anywhere used a crash-safe write.** Audited every
+`core/*_manager.py`'s own `_save()` method: all ~46 files persisted
+their JSON state via a direct `path.write_text(...)` (or, for
+`config_manager.py`, `json.dump(f, ...)` against an open file handle)
+— neither is atomic. A crash, power loss, or disk-full condition mid-
+write leaves that file truncated or corrupted, permanently losing
+everything in it — a real risk for this project's actual deployment
+target (a kiosk device that can lose power ungracefully in the field),
+not a theoretical one. New `core/atomic_write.py`: one shared
+`atomic_write_text(path, text, encoding="utf-8")` — write to a temp
+file in the same directory, fsync it, then `os.replace()` onto the
+real path (atomic on both POSIX and Windows; the live file is always
+either the complete old content or the complete new content, never a
+partial write). Same call shape as `Path.write_text()` on purpose, so
+it's a drop-in replacement.
+
+Applied via a mechanical sweep across all ~46 files (2 by hand —
+`config_manager.py`, the single highest-stakes file, and
+`plaid_manager.py`'s one parenthesized-receiver call site; the other
+44 via a small transform script that only rewrites the receiver +
+method-call syntax, never touching the argument list itself, so every
+`json.dumps(...)` call stayed byte-for-byte identical). Verified
+mechanically too: every file still compiles, and the full suite passes
+unchanged — these were pure crash-safety swaps, not behavior changes.
+
+**2. The backup/restore fix from earlier today only caught 3 of 6
+real external content directories.** Re-checked the full list of
+top-level project folders (not just re-trusting the first pass) and
+found `homestead_snapshots/` (`core.homestead_manager`),
+`financial_snapshots/` (`core.finance_manager`), and
+`maintenance_documents/` (`core.maintenance_manager` — the one entry
+with no configurable override at all, always one fixed path) are the
+exact same real gap as trip photos/trail maps/lite captures: real,
+often-irreplaceable imported/uploaded content living outside `data/`,
+silently excluded from every backup. Extended `_EXTERNAL_CONTENT_DIRS`
+to all six; `_resolve_external_content_dirs()` now accepts a `None`
+config key for the one directory with no override to resolve.
+
+**Verification**: `pytest -q` — full suite, 3124 passed (8 new tests
+for `core/atomic_write.py`'s crash-safety guarantee itself — including
+a real simulated failure mid-write via `monkeypatch`ing `os.fsync` to
+raise, confirming the original file survives untouched — plus 3 new
+backup-manager tests for the three additional directories). Confirmed
+real `config/config.json` and all six real external content
+directories at the repo root untouched by any test run.

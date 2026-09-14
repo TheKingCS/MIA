@@ -40,6 +40,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -111,7 +112,7 @@ class JournalManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _ENTRIES_FILE.write_text(
+        atomic_write_text(_ENTRIES_FILE,
             json.dumps([e.to_dict() for e in self._entries], indent=2),
             encoding="utf-8",
         )

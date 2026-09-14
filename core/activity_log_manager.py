@@ -42,6 +42,7 @@ from typing import Callable, Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -122,7 +123,7 @@ class ActivityLogManager:
         # in tests/test_activity_log_manager.py's capping test before it
         # was rescoped to a small cap).
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _ACTIVITY_LOG_FILE.write_text(
+        atomic_write_text(_ACTIVITY_LOG_FILE,
             json.dumps([e.to_dict() for e in self._entries], indent=2),
             encoding="utf-8",
         )

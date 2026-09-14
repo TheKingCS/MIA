@@ -58,6 +58,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.material_manager import Material
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -201,7 +202,7 @@ class JobManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _JOBS_FILE.write_text(
+        atomic_write_text(_JOBS_FILE,
             json.dumps([j.to_dict() for j in self._jobs], indent=2),
             encoding="utf-8",
         )

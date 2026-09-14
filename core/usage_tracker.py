@@ -44,6 +44,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -108,7 +109,7 @@ class UsageTracker:
             "usage": [usage.to_dict() for usage in self._usage.values()],
             "suggested_module_ids": sorted(self._suggested_module_ids),
         }
-        _USAGE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        atomic_write_text(_USAGE_FILE, json.dumps(data, indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Recording

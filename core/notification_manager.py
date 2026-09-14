@@ -32,6 +32,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -98,7 +99,7 @@ class NotificationManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _NOTIFICATIONS_FILE.write_text(
+        atomic_write_text(_NOTIFICATIONS_FILE,
             json.dumps([n.to_dict() for n in self._notifications], indent=2),
             encoding="utf-8",
         )

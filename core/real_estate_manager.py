@@ -44,6 +44,7 @@ from typing import TYPE_CHECKING, Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 if TYPE_CHECKING:
     from core.budget_manager import ExpenseEntry, IncomeEntry
@@ -332,7 +333,7 @@ class RealEstateManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _PROPERTIES_FILE.write_text(
+        atomic_write_text(_PROPERTIES_FILE,
             json.dumps([p.to_dict() for p in self._properties], indent=2), encoding="utf-8",
         )
 

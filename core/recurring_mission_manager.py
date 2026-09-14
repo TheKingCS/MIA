@@ -48,6 +48,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight
 from core.logger import get_logger
 from core.mission_manager import Mission
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -211,7 +212,7 @@ class RecurringMissionManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _TEMPLATES_FILE.write_text(
+        atomic_write_text(_TEMPLATES_FILE,
             json.dumps([t.to_dict() for t in self._templates], indent=2),
             encoding="utf-8",
         )

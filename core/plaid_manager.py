@@ -96,6 +96,7 @@ from plaid.model.transactions_sync_request import TransactionsSyncRequest
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
 
 from core.app_context import AppContext
+from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 from core.secrets_manager import SecretsError, decrypt_bytes, encrypt_bytes
 
@@ -749,4 +750,4 @@ class PlaidManager:
         import_folder = self.context.finance.import_folder_path
         import_folder.mkdir(parents=True, exist_ok=True)
         filename = f"{snapshot_data['source']}_{uuid.uuid4().hex[:8]}.json"
-        (import_folder / filename).write_text(json.dumps(snapshot_data, indent=2), encoding="utf-8")
+        atomic_write_text(import_folder / filename, json.dumps(snapshot_data, indent=2))

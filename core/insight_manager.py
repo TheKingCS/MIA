@@ -55,6 +55,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -166,13 +167,13 @@ class InsightManager:
 
     def _save_insights(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _INSIGHTS_FILE.write_text(
+        atomic_write_text(_INSIGHTS_FILE,
             json.dumps([i.to_dict() for i in self._insights], indent=2), encoding="utf-8"
         )
 
     def _save_recommendations(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _RECOMMENDATIONS_FILE.write_text(
+        atomic_write_text(_RECOMMENDATIONS_FILE,
             json.dumps([r.to_dict() for r in self._recommendations], indent=2), encoding="utf-8"
         )
 

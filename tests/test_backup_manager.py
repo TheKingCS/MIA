@@ -175,24 +175,50 @@ class _FakeConfig:
 
 @pytest.fixture
 def external_content_paths(tmp_path, monkeypatch):
-    trip_photos = tmp_path / "trip_photos"
-    trail_maps = tmp_path / "trail_maps"
-    lite_captures = tmp_path / "lite_captures"
-    for d in (trip_photos, trail_maps, lite_captures):
+    dirs = {
+        "trip_photos": tmp_path / "trip_photos",
+        "trail_maps": tmp_path / "trail_maps",
+        "lite_captures": tmp_path / "lite_captures",
+        "homestead_snapshots": tmp_path / "homestead_snapshots",
+        "financial_snapshots": tmp_path / "financial_snapshots",
+        "maintenance_documents": tmp_path / "maintenance_documents",
+    }
+    for d in dirs.values():
         d.mkdir()
-    monkeypatch.setattr(backup_manager_module, "_DEFAULT_TRIP_PHOTOS_DIR", trip_photos)
-    monkeypatch.setattr(backup_manager_module, "_DEFAULT_TRAIL_MAPS_DIR", trail_maps)
-    monkeypatch.setattr(backup_manager_module, "_DEFAULT_LITE_CAPTURES_DIR", lite_captures)
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_TRIP_PHOTOS_DIR", dirs["trip_photos"])
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_TRAIL_MAPS_DIR", dirs["trail_maps"])
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_LITE_CAPTURES_DIR", dirs["lite_captures"])
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_HOMESTEAD_SNAPSHOTS_DIR", dirs["homestead_snapshots"])
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_FINANCIAL_SNAPSHOTS_DIR", dirs["financial_snapshots"])
+    monkeypatch.setattr(backup_manager_module, "_DEFAULT_MAINTENANCE_DOCUMENTS_DIR", dirs["maintenance_documents"])
     monkeypatch.setattr(
         backup_manager_module,
         "_EXTERNAL_CONTENT_DIRS",
         (
-            ("trips.photo_root_path", trip_photos, "trip_photos"),
-            ("maps.trail_map_root_path", trail_maps, "trail_maps"),
-            ("lite_capture.import_folder", lite_captures, "lite_captures"),
+            ("trips.photo_root_path", dirs["trip_photos"], "trip_photos"),
+            ("maps.trail_map_root_path", dirs["trail_maps"], "trail_maps"),
+            ("lite_capture.import_folder", dirs["lite_captures"], "lite_captures"),
+            ("homestead.snapshot_import_folder", dirs["homestead_snapshots"], "homestead_snapshots"),
+            ("finance.snapshot_import_folder", dirs["financial_snapshots"], "financial_snapshots"),
+            (None, dirs["maintenance_documents"], "maintenance_documents"),
         ),
     )
-    return trip_photos, trail_maps, lite_captures
+    return dirs["trip_photos"], dirs["trail_maps"], dirs["lite_captures"]
+
+
+@pytest.fixture
+def all_external_content_dirs(external_content_paths, tmp_path):
+    """Same isolated setup as external_content_paths, but returns every
+    directory (including the three added in the second stabilization
+    pass) rather than just the original three."""
+    return {
+        "trip_photos": tmp_path / "trip_photos",
+        "trail_maps": tmp_path / "trail_maps",
+        "lite_captures": tmp_path / "lite_captures",
+        "homestead_snapshots": tmp_path / "homestead_snapshots",
+        "financial_snapshots": tmp_path / "financial_snapshots",
+        "maintenance_documents": tmp_path / "maintenance_documents",
+    }
 
 
 def test_create_backup_without_config_excludes_external_content(isolated_paths, external_content_paths, tmp_path):
@@ -287,3 +313,67 @@ def test_restore_backup_predating_external_content_leaves_dirs_untouched(isolate
 
     assert result.passed is True
     assert (trip_photos / "still_here.jpg").read_bytes() == b"never touched"
+
+
+# ------------------------------------------------------------------
+# The three external content directories added in the second
+# stabilization pass (2026-09-14) — homestead/financial snapshot
+# imports and maintenance asset documents. Same coverage shape as the
+# original three above; maintenance_documents is the one entry with no
+# configurable override (config key is None), so it gets its own
+# explicit test for that branch.
+# ------------------------------------------------------------------
+
+def test_create_backup_includes_homestead_and_financial_snapshots(
+    isolated_paths, all_external_content_dirs, tmp_path
+):
+    dirs = all_external_content_dirs
+    (dirs["homestead_snapshots"] / "reading.json").write_text("{}")
+    (dirs["financial_snapshots"] / "statement.json").write_text("{}")
+    backup_path = tmp_path / "backup.zip"
+
+    create_backup(backup_path, config=_FakeConfig({}))
+
+    with zipfile.ZipFile(backup_path) as zf:
+        names = zf.namelist()
+        assert "content/homestead_snapshots/reading.json" in names
+        assert "content/financial_snapshots/statement.json" in names
+
+
+def test_create_backup_includes_maintenance_documents_with_no_config_override(
+    isolated_paths, all_external_content_dirs, tmp_path
+):
+    """maintenance_documents has no configurable path at all (config
+    key is None in _EXTERNAL_CONTENT_DIRS) — must still resolve to its
+    default and be included, not silently skipped."""
+    dirs = all_external_content_dirs
+    (dirs["maintenance_documents"] / "receipt.pdf").write_bytes(b"fake pdf bytes")
+    backup_path = tmp_path / "backup.zip"
+
+    # An empty config with no relevant keys at all — proves the None
+    # key branch doesn't depend on config.get() being called for it.
+    create_backup(backup_path, config=_FakeConfig({}))
+
+    with zipfile.ZipFile(backup_path) as zf:
+        assert "content/maintenance_documents/receipt.pdf" in zf.namelist()
+
+
+def test_restore_restores_all_six_external_content_directories(
+    isolated_paths, all_external_content_dirs, tmp_path
+):
+    dirs = all_external_content_dirs
+    for name, directory in dirs.items():
+        (directory / "original.txt").write_text(f"original {name}")
+    backup_path = tmp_path / "backup.zip"
+    config = _FakeConfig({})
+
+    create_backup(backup_path, config=config)
+
+    for directory in dirs.values():
+        (directory / "original.txt").write_text("OVERWRITTEN")
+
+    result = restore_backup(backup_path, config=config)
+
+    assert result.passed is True
+    for name, directory in dirs.items():
+        assert (directory / "original.txt").read_text() == f"original {name}"

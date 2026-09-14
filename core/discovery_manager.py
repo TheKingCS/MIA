@@ -75,6 +75,7 @@ from core.gamification import SkillWeight
 from core.logger import get_logger
 from core.mission_manager import DIFFICULTY_LEVELS
 from core.skill_patterns import declining_categories, momentum_categories
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -243,7 +244,7 @@ class DiscoveryManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _PROPOSALS_FILE.write_text(
+        atomic_write_text(_PROPOSALS_FILE,
             json.dumps({"proposals": [p.to_dict() for p in self._proposals]}, indent=2),
             encoding="utf-8",
         )

@@ -46,6 +46,7 @@ from typing import Optional
 
 from core.backup_manager import BackupError, safe_extract_zip
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -229,7 +230,7 @@ def _merge_json_records(staged_file: Path, live_file: Path, id_field: str) -> in
 
     if added:
         live_file.parent.mkdir(parents=True, exist_ok=True)
-        live_file.write_text(json.dumps(live_records, indent=2), encoding="utf-8")
+        atomic_write_text(live_file, json.dumps(live_records, indent=2), encoding="utf-8")
     return added
 
 

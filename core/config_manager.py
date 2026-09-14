@@ -24,6 +24,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -66,10 +67,13 @@ class ConfigManager:
         self._data = self._merge_defaults(defaults, user_config)
 
     def save(self) -> None:
-        """Persist the current in-memory config to config/config.json."""
+        """Persist the current in-memory config to config/config.json.
+        Crash-safe (core.atomic_write) — the single highest-stakes file
+        in the app (every other manager's path resolution can depend
+        on it), found with every other manager's own _save() during
+        the 2026-09-14 atomic-write audit."""
         _CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        with _CONFIG_FILE.open("w", encoding="utf-8") as f:
-            json.dump(self._data, f, indent=4, sort_keys=True)
+        atomic_write_text(_CONFIG_FILE, json.dumps(self._data, indent=4, sort_keys=True))
         log.info("Configuration saved to %s", _CONFIG_FILE)
 
     @staticmethod

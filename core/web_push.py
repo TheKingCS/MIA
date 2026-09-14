@@ -61,6 +61,7 @@ from pywebpush import WebPushException, webpush
 
 from core.logger import get_logger
 from core.push_subscription_manager import PushSubscription, PushSubscriptionManager
+from core.atomic_write import atomic_write_text
 
 if TYPE_CHECKING:
     from core.app_context import AppContext
@@ -120,7 +121,7 @@ def get_or_create_vapid_keys() -> tuple[str, str]:
     public_key_b64 = b64urlencode(public_key_raw)
 
     _DATA_DIR.mkdir(parents=True, exist_ok=True)
-    _VAPID_KEYS_FILE.write_text(
+    atomic_write_text(_VAPID_KEYS_FILE,
         json.dumps({"private_key_der_b64": private_key_der_b64, "public_key_b64": public_key_b64}, indent=2),
         encoding="utf-8",
     )

@@ -30,6 +30,7 @@ from pathlib import Path
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -95,7 +96,7 @@ class PushSubscriptionManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _SUBSCRIPTIONS_FILE.write_text(
+        atomic_write_text(_SUBSCRIPTIONS_FILE,
             json.dumps([s.to_dict() for s in self._subscriptions], indent=2),
             encoding="utf-8",
         )

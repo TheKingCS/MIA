@@ -48,6 +48,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -378,7 +379,7 @@ class KitchenManager:
     @staticmethod
     def _save_file(path: Path, records: list) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
+        atomic_write_text(path, json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
 
     def _save_recipes(self) -> None:
         self._save_file(_RECIPES_FILE, self._recipes)

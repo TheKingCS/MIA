@@ -43,6 +43,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -121,7 +122,7 @@ class ConversationManager:
 
     def _save(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _CONVERSATIONS_FILE.write_text(
+        atomic_write_text(_CONVERSATIONS_FILE,
             json.dumps([c.to_dict() for c in self._conversations], indent=2),
             encoding="utf-8",
         )

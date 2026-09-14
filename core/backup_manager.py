@@ -38,21 +38,29 @@ vs. the Modules screen's confirmation dialogs.
 
 **External content directories (2026-09-14, a real stabilization
 gap found and fixed)**: trip photos (`core.trip_manager`), trail maps
-(`core.trail_map_library`), and MIA Lite field captures
-(`core.lite_capture_manager`) all resolve to a real, configurable
+(`core.trail_map_library`), MIA Lite field captures
+(`core.lite_capture_manager`), homestead snapshot imports
+(`core.homestead_manager`), financial snapshot imports
+(`core.finance_manager`), and maintenance asset documents
+(`core.maintenance_manager`, the one entry with no configurable
+override at all — always the one fixed path) all resolve to a real
 directory OUTSIDE `data/` — `data/`'s own `rglob("*")` walk above
-never touched them, so a backup taken before this pass silently
+never touched any of them, so a backup taken before this pass silently
 excluded real, often-irreplaceable content (trip photos, pending field
-voice notes) while faithfully covering every JSON record about them.
-Found by checking each manager's actual `_resolve_*_path()`/default
-constant against what `_build_zip_bytes()` actually walks, not
-assumed safe. `create_backup()`/`restore_backup()` now take an
-optional `config` parameter (a `core.config_manager.ConfigManager`, or
-anything duck-typing `.get(key, default)`) used ONLY to resolve these
-three directories the same way their owning managers do — `None`
-(the default, every pre-existing call site unaffected) means "skip
-external content," not "error," so this stays fully backward
-compatible. `modules/settings/module.py`'s real Backup/Restore buttons
+voice notes, imported snapshot files, maintenance receipts/manuals)
+while faithfully covering every JSON record about them. Found by
+checking each manager's actual `_resolve_*_path()`/default constant
+against what `_build_zip_bytes()` actually walks, not assumed safe —
+the first pass at this fix only caught three of the six real
+directories, found by re-checking the full list of top-level project
+folders rather than trusting the first sweep was exhaustive.
+`create_backup()`/`restore_backup()` now take an optional `config`
+parameter (a `core.config_manager.ConfigManager`, or anything duck-
+typing `.get(key, default)`) used ONLY to resolve these directories
+the same way their owning managers do — `None` (the default, every
+pre-existing call site unaffected) means "skip external content," not
+"error," so this stays fully backward compatible. `modules/settings/
+module.py`'s real Backup/Restore buttons
 now pass `self.context.config` for full coverage.
 """
 
@@ -92,10 +100,19 @@ _MANIFEST_VERSION = 1
 _DEFAULT_TRIP_PHOTOS_DIR = _PROJECT_ROOT / "trip_photos"
 _DEFAULT_TRAIL_MAPS_DIR = _PROJECT_ROOT / "trail_maps"
 _DEFAULT_LITE_CAPTURES_DIR = _PROJECT_ROOT / "lite_captures"
+_DEFAULT_HOMESTEAD_SNAPSHOTS_DIR = _PROJECT_ROOT / "homestead_snapshots"
+_DEFAULT_FINANCIAL_SNAPSHOTS_DIR = _PROJECT_ROOT / "financial_snapshots"
+_DEFAULT_MAINTENANCE_DOCUMENTS_DIR = _PROJECT_ROOT / "maintenance_documents"
+# `config key` is None for a directory with no configurable override
+# at all (core.maintenance_manager._DOCUMENT_ROOT is always this exact
+# path) — always resolves to its default, see _resolve_external_content_dirs.
 _EXTERNAL_CONTENT_DIRS = (
     ("trips.photo_root_path", _DEFAULT_TRIP_PHOTOS_DIR, "trip_photos"),
     ("maps.trail_map_root_path", _DEFAULT_TRAIL_MAPS_DIR, "trail_maps"),
     ("lite_capture.import_folder", _DEFAULT_LITE_CAPTURES_DIR, "lite_captures"),
+    ("homestead.snapshot_import_folder", _DEFAULT_HOMESTEAD_SNAPSHOTS_DIR, "homestead_snapshots"),
+    ("finance.snapshot_import_folder", _DEFAULT_FINANCIAL_SNAPSHOTS_DIR, "financial_snapshots"),
+    (None, _DEFAULT_MAINTENANCE_DOCUMENTS_DIR, "maintenance_documents"),
 )
 
 
@@ -107,7 +124,7 @@ def _resolve_external_content_dirs(config) -> list[tuple[str, Path]]:
         return []
     resolved = []
     for key, default_dir, archive_name in _EXTERNAL_CONTENT_DIRS:
-        configured = config.get(key, "")
+        configured = config.get(key, "") if key is not None else ""
         resolved.append((archive_name, Path(configured) if configured else default_dir))
     return resolved
 

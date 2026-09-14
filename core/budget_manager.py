@@ -63,6 +63,7 @@ from core.app_context import AppContext
 from core.calendar_manager import RECURRENCE_TYPES, date_recurs_on
 from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
+from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
 
@@ -434,27 +435,27 @@ class BudgetManager:
 
     def _save_bills(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _BILLS_FILE.write_text(json.dumps([b.to_dict() for b in self._bills], indent=2), encoding="utf-8")
+        atomic_write_text(_BILLS_FILE, json.dumps([b.to_dict() for b in self._bills], indent=2), encoding="utf-8")
 
     def _save_income(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _INCOME_FILE.write_text(json.dumps([i.to_dict() for i in self._income], indent=2), encoding="utf-8")
+        atomic_write_text(_INCOME_FILE, json.dumps([i.to_dict() for i in self._income], indent=2), encoding="utf-8")
 
     def _save_expenses(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _EXPENSES_FILE.write_text(json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
+        atomic_write_text(_EXPENSES_FILE, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
 
     def _save_income_sources(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _INCOME_SOURCES_FILE.write_text(json.dumps([s.to_dict() for s in self._income_sources], indent=2), encoding="utf-8")
+        atomic_write_text(_INCOME_SOURCES_FILE, json.dumps([s.to_dict() for s in self._income_sources], indent=2), encoding="utf-8")
 
     def _save_budget_targets(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _BUDGET_TARGETS_FILE.write_text(json.dumps([t.to_dict() for t in self._budget_targets], indent=2), encoding="utf-8")
+        atomic_write_text(_BUDGET_TARGETS_FILE, json.dumps([t.to_dict() for t in self._budget_targets], indent=2), encoding="utf-8")
 
     def _save_business_entities(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _BUSINESS_ENTITIES_FILE.write_text(json.dumps([e.to_dict() for e in self._business_entities], indent=2), encoding="utf-8")
+        atomic_write_text(_BUSINESS_ENTITIES_FILE, json.dumps([e.to_dict() for e in self._business_entities], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Bills
