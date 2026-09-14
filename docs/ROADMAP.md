@@ -10232,3 +10232,45 @@ way: `core.usage_tracker._DATA_DIR`/`_USAGE_FILE` now isolated
 globally in `tests/conftest.py`, not patched per test file — re-ran
 the full suite afterward and confirmed no `data/module_usage.json`
 was created.
+
+## Missions-stale insights (2026-09-14)
+
+The second domain the observe->insight->recommend loop
+(`core/insight_manager.py`, piloted in Maintenance 2026-09-11) covers
+— docs/VISION.md's Smart Suggestions row had named "Missions-stale" as
+a natural future extension; this builds it against the real
+Insight/Recommendation machinery rather than a new one-off mechanism.
+
+**New `core/mission_insights.py`** — mirrors `core/maintenance_insights.py`'s
+shape exactly (same module, same wiring pattern, deliberately not
+reinvented). Invents no new "how long has this been idle" math:
+`Mission.updated_at` is already bumped by every real touch
+(`add_objective()`/`increment_tally()`/`update_mission()`), so
+`days_since_last_touch()` just reads it (falling back to `created_at`
+for a mission never edited since creation). `is_stale()` — an
+"active" mission untouched for 14+ days — 2 weeks chosen the same way
+Maintenance's own `_DUE_SOON_WITHIN_DAYS` picked its window: long
+enough that normal day-to-day gaps in attention don't trip it, short
+enough to mean something. `scan_mission_insights()` creates one
+"stale" Insight (+ Recommendation) per newly-flagged mission,
+auto-resolves it the moment the mission is touched again or leaves
+"active" status — no new "mark resolved" UI needed, same as
+Maintenance's insights.
+
+Wired into `core/application.py`'s daily-check timer as its own
+gated block (`system.last_mission_insight_date`), right alongside the
+Maintenance Insights block it mirrors. Not wired into headless
+`core/core_runtime.py` — no daily-check timer exists there at all
+(neither does Maintenance Insights).
+
+**Verification**: `pytest -q` — full suite, 2938 passed (16 new
+tests: pure `days_since_last_touch()`/`is_stale()` logic, scan
+idempotency/resolution-on-touch/resolution-on-completion, empty-service
+guards, message formatting). Manual verification against a fully
+isolated real `AppContext` (Missions/Insights/Notifications wired
+together, not mocked): a freshly-created mission and an old-but-
+completed mission both correctly did NOT flag; a genuinely stale
+active mission produced exactly one real `Insight` + `Recommendation`
++ `Notification` with the correct text; a second same-day scan did not
+duplicate it; and adding a real objective to the stale mission
+correctly resolved its insight.
