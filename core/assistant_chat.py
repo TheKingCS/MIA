@@ -47,6 +47,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING, Iterable, Optional
 
+from core.connectivity import connectivity_prompt_block
 from core.device_help_manager import GROUNDING_INSTRUCTION
 from core.llm_manager import ToolCall
 from core.user_memory_manager import MEMORY_CATEGORIES
@@ -396,7 +397,15 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         return _IDENTITY_LINE
 
     closing_instruction = _TEACHING_INSTRUCTION if is_teaching_request else GROUNDING_INSTRUCTION
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context), closing_instruction]
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context)]
+    # 2026-09-27: online/offline awareness. Info questions only — every
+    # Assistant action runs offline, so the action path stays lean.
+    connectivity = getattr(context, "connectivity", None)
+    if connectivity is not None:
+        block = connectivity_prompt_block(connectivity.status)
+        if block:
+            parts.append(block)
+    parts.append(closing_instruction)
     return "\n\n".join(parts)
 
 

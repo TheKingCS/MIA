@@ -5,19 +5,45 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-09-27*
+*Last updated: 2026-09-27 (evening)*
 
 ---
 
 ## 1. Your hands-on steps (need your computer, not Claude)
 
-- [ ] **Plaid sandbox test.** Follow `docs/PLAID_SETUP.md` Parts 1–5
-      and report back. Then Part 6: Reset → Production → connect real
-      accounts.
-- [ ] **Phone voice first run.** Follow `docs/PHONE_VOICE_SETUP.md`
-      (Tailscale, `server.enabled`, add to Home Screen) and try it on
-      the drive home. Report: did it hear you over road noise, how long
-      answers took, anything confusing.
+- [ ] **Plaid sandbox test** (full checklist: `docs/PLAID_SETUP.md`).
+      1. On your main computer: `git pull`, activate `.venv`,
+         `pip install -r requirements.txt`, `python main.py`.
+      2. Plaid dashboard → Developers → Keys: copy your client_id and
+         **Sandbox** secret. Never paste them into a chat.
+      3. MIA → Budget → Bank Sync → Set Up Plaid: paste the keys, pick
+         `sandbox`, and choose a vault passphrase (store it in a
+         password manager; it can't be recovered).
+      4. Connect a Bank → any bank → log in with `user_good` /
+         `pass_good` (code `1234` if asked) → Sync Now.
+      5. Check the Income, Expenses and Debts tabs, sync again, and
+         confirm nothing is duplicated.
+      6. Report back to Claude (the error text plus the last lines of
+         `logs/`, never keys).
+      7. Then Part 6: **Reset Plaid Setup** (clears the test data) → Set
+         Up Plaid with your **Production** secret → connect your real
+         banks (10 free connections; one bank login = one connection).
+- [ ] **Phone voice first run** (full guide: `docs/PHONE_VOICE_SETUP.md`).
+      1. Install Tailscale on the computer (`sudo tailscale up`) and on
+         your Android phone, both on the same account.
+      2. login.tailscale.com → DNS: turn on MagicDNS and **Enable
+         HTTPS**.
+      3. Give your MIA profile a password (Settings).
+      4. In `config/config.json` set `"server": {"enabled": true,
+         "host": "127.0.0.1", "port": 8765}`, then restart MIA.
+      5. `sudo tailscale serve --bg http://127.0.0.1:8765`, then
+         `tailscale serve status` to get your `https://…ts.net`
+         address.
+      6. On the phone: open that address in Chrome → log in → ⋮ → Add to
+         Home screen → allow the microphone.
+      7. Try it on the drive home (screen stays on, phone mounted).
+         Report whether it heard you over road noise, how long answers
+         took, and anything confusing.
 - [ ] **Claude Design pass.** Upload `docs/design_handoff/` (or the zip
       Claude sent) plus your inspiration pictures to Claude Design and
       paste the prompt at the top of its README. Bring the 3 directions
@@ -27,17 +53,19 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were
    built without being able to reach Plaid or a real phone.
-2. **Phone voice, phase 2: a real phone app** so MIA keeps listening
-   with the **screen locked** and in the background (web apps can't).
-   Needs one decision first: **iPhone or Android?** iPhone apps need
-   a Mac + Xcode, or a paid Apple developer account for anything beyond
-   short test installs; Android can be built and installed directly.
-   Also in this phase:
-   - headphone-button push-to-talk
-   - phone conversations saved to the desktop's History
-   - desktop screens refreshing after phone-made changes
-   - faster replies (stream the answer instead of waiting for the
-     whole thing)
+2. **Phone voice, phase 2: a native Android app** (you have Android)
+   so MIA keeps listening with the **screen locked** and in the
+   background, which web apps can't do. Plan: a small Kotlin app with an
+   Android foreground service (the kind that's allowed to keep the mic
+   on, with a persistent notification), talking to the same
+   `/api/voice/*` endpoints the web app already uses.
+   - Build the installable APK with GitHub Actions, so you download it
+     straight to your phone with no Android Studio needed; you'll allow
+     "install unknown apps" once.
+   - Headphone and Bluetooth button to start/stop talking.
+   - Phone conversations saved to the desktop's History.
+   - Desktop screens refresh after phone-made changes.
+   - Faster replies (stream the answer instead of waiting for all of it).
 3. **Claude Design direction → new theme** (after you bring designs back).
 4. **Finance, #2: homestead build and tool costs.** Wire your real
    tools and builds into the existing Workshop Materials/Jobs/Ledger
@@ -50,6 +78,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
    connection).
 
 ## 3. Ideas parked for later (need their own planning pass)
+
+- **Offline awareness follow-ups** (the base is built, 2026-09-27):
+  a notification when MIA goes offline or comes back, and actually
+  queuing "remind me when I'm back online" requests.
 
 - **MIA email inbox**: forward receipts, manuals and business
   documents; MIA classifies them and files them to the right place

@@ -11803,3 +11803,72 @@ returned to listening hands-free, then handled a typed turn and End.
 Not verifiable here: a real phone, real Tailscale, real Vosk/Piper/
 Ollama quality over the network. The owner's first drive is the test
 (`docs/PHONE_VOICE_SETUP.md`).
+
+## Online/offline self-knowledge (2026-09-27)
+
+The owner's ask: MIA should know what she can do offline versus online,
+so if the connection drops she keeps acting sensibly and helpfully.
+Nothing tracked connectivity before this.
+
+**First, an audit of what actually touches the network** (grep for
+every request-making code path, not a guess). Only five things:
+- Plaid bank sync/connect (`core/plaid_manager.py`)
+- phone Web Push (`core/web_push.py`)
+- downloading map tiles not already cached (`core/map_tile_cache.py`)
+- adding a trail map from a URL (`core/trail_map_library.py`)
+- reaching MIA from the phone away from home (Tailscale)
+
+The LLM is local Ollama (`localhost:11434`), and voice is Vosk/Piper.
+Everything else is local.
+
+**`core/connectivity.py`**:
+- `ONLINE_ONLY_CAPABILITIES` records each online-only feature with its
+  offline fallback, plus a matching `OFFLINE_CAPABILITIES` list.
+- `ConnectivityMonitor` probes with a bare TCP connect to
+  `network.probe_hosts` (default `1.1.1.1:443`, `8.8.8.8:53`; no data
+  sent; set `network.connectivity_check: false` to disable) on a
+  background daemon thread.
+- Reading `.status` never blocks. It returns the cached result and
+  kicks off a re-check when older than 60 s, so the GUI, headless
+  voice loop and phone server all stay current without their own
+  timers. Results older than 10 min read as "unknown".
+- It's constructed in both `core/application.py` and
+  `core/core_runtime.py` with an immediate first check.
+
+**How MIA uses it**:
+- `build_system_message()` adds a connectivity block on conversational
+  turns only. Every Assistant action runs offline, so the action path
+  stays lean (this project has real evidence that small local models
+  degrade as system prompts grow).
+- Offline: what still works, what must wait, and to say so plainly,
+  offer the offline alternative, and offer to remind them later.
+  Online: one line. Unknown: nothing, since silence beats guessing.
+- New `get_connectivity_status` action ("are you online?", "what can
+  you do without internet?"), with deliberately specific trigger
+  phrases, since a bare "offline" would hijack "how do offline maps
+  work?" away from the help docs. It's registered in both the desktop
+  and headless registries from one shared definition.
+- New end-user help page `docs/user_help/offline_and_online.md`,
+  confirmed to be what retrieval returns for "what works without
+  internet?".
+- `docs/ASSISTANT_CAPABILITIES.md` now says to add to the list
+  whenever a feature starts making network requests.
+
+**Test hygiene**: the monitor's default connect is a module-level
+`_default_connect`, and `tests/conftest.py` swaps it for one that
+fails instantly. Building a full context in any test never makes a
+real network connection.
+
+**Verified**: `pytest -q`, 3352 passed (same one pre-existing timezone
+failure). 28 new tests in `tests/test_connectivity.py`:
+- probe order, fallback and closing the socket
+- custom hosts, and disabled-means-never-probes
+- non-blocking status with due re-checks, staleness, single-flight
+  background refresh
+- prompt text per state, and the action path staying lean
+- the action (cached, check-now-when-unknown, no monitor)
+- trigger phrases firing, and not firing on unrelated "offline" words
+
+The real `AssistantActionRegistry.matching_actions()` and
+`DeviceHelpManager.build_grounded_prompt()` were also checked directly
+against real questions.

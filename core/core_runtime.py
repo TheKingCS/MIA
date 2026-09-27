@@ -62,6 +62,7 @@ from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import CalendarManager
 from core.config_manager import ConfigManager
+from core.connectivity import ConnectivityMonitor, connectivity_action
 from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
@@ -106,6 +107,8 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.inventory = InventoryManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
+    context.connectivity = ConnectivityMonitor(context)
+    context.connectivity.refresh_async()
     context.voice = VoiceManager(context)
     context.waypoints = WaypointManager(context)
     context.power = PowerManager(context)
@@ -151,6 +154,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 def _register_core_assistant_actions(context: AppContext) -> None:
     """Registers Core's curated Assistant action subset — see this module's docstring."""
     registry = context.assistant_actions
+    registry.register(connectivity_action())
 
     registry.register(AssistantAction(
         name="add_alarm",

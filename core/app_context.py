@@ -71,6 +71,7 @@ if TYPE_CHECKING:
     from core.profile_manager import ProfileManager
     from core.product_manager import ProductManager
     from core.push_subscription_manager import PushSubscriptionManager
+    from core.connectivity import ConnectivityMonitor
     from core.recurring_mission_manager import RecurringMissionManager
     from core.project_manager import ProjectManager
     from core.reference_library_manager import ReferenceLibraryManager
@@ -196,6 +197,9 @@ class AppContext:
     # so stays None everywhere else, same "optional service, degrades
     # gracefully" pattern as e.g. context.energy.
     push_subscriptions: Optional["PushSubscriptionManager"] = field(default=None, repr=False)
+    # Online/offline awareness (2026-09-27) — whether the internet is
+    # reachable, and which features need it. See core/connectivity.py.
+    connectivity: Optional["ConnectivityMonitor"] = field(default=None, repr=False)
     # Recurring Missions (2026-09-13) — subscribes to Missions' own
     # "mission.completed" event at construction (same ordering rule as
     # Pathways above — must be constructed after context.missions

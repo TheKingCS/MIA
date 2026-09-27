@@ -48,6 +48,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
+import core.connectivity as connectivity_module
 import core.logger as logger_module
 import core.profile_manager as profile_manager_module
 import core.usage_tracker as usage_tracker_module
@@ -62,3 +63,12 @@ profile_manager_module._DATA_PROFILES_DIR = _TEST_PROFILES_DIR
 _TEST_USAGE_DIR = Path(tempfile.mkdtemp(prefix="mia_test_usage_"))
 usage_tracker_module._DATA_DIR = _TEST_USAGE_DIR
 usage_tracker_module._USAGE_FILE = _TEST_USAGE_DIR / "module_usage.json"
+
+# core.connectivity's background probe (2026-09-27) would otherwise make a
+# real network connection whenever a test builds a full context. Tests
+# that exercise the monitor inject their own connect function.
+def _no_network(*_args, **_kwargs):
+    raise OSError("network disabled in tests")
+
+
+connectivity_module._default_connect = _no_network

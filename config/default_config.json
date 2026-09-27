@@ -54,6 +54,10 @@
         "window_height": 700,
         "show_character_panel": true
     },
+    "network": {
+        "connectivity_check": true,
+        "probe_hosts": ["1.1.1.1:443", "8.8.8.8:53"]
+    },
     "server": {
         "enabled": false,
         "host": "127.0.0.1",

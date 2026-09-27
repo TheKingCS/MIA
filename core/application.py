@@ -56,6 +56,7 @@ from core.material_manager import MaterialManager
 from core.ledger_manager import LedgerManager
 from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
+from core.connectivity import ConnectivityMonitor, connectivity_action
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
 from core.context_assembler import assemble_life_state, format_life_state_summary
@@ -236,6 +237,10 @@ class MIAApplication:
         self.context.ledger = LedgerManager(self.context)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
+        # Online/offline awareness — first check starts now in the
+        # background; see core/connectivity.py.
+        self.context.connectivity = ConnectivityMonitor(self.context)
+        self.context.connectivity.refresh_async()
         self.context.voice = VoiceManager(self.context)
         self.context.waypoints = WaypointManager(self.context)
         self.context.power = PowerManager(self.context)
@@ -936,6 +941,7 @@ class MIAApplication:
         own smaller Assistant action set (see that module) without
         having to duplicate this class or its Qt/gui-heavy imports.
         """
+        self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",

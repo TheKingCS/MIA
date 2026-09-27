@@ -64,6 +64,18 @@ existed; every prior answer to that question required reading
   purpose — mixing them has caused real, measured regressions (see
   `docs/ROADMAP.md`'s gotcha #7).
 
+- **Online/offline awareness** (2026-09-27, `core/connectivity.py`).
+  A background check (never blocking a turn) tracks whether the
+  internet is reachable. Conversational replies get a short system-prompt
+  line with the current state; when offline it lists what still works
+  and what must wait. The `get_connectivity_status` action answers "are
+  you online?" / "what can you do without internet?". The online-only
+  list (`ONLINE_ONLY_CAPABILITIES`) is: bank sync, phone notifications,
+  new map downloads, adding trail maps from a web link, and phone access
+  away from home. **Add to that list whenever a feature starts making
+  network requests**, or MIA will promise it while offline. End-user
+  help: `docs/user_help/offline_and_online.md`.
+
 ## The self-knowledge problem (read before adding a new capability)
 
 **A capability with no tool call attached to it is invisible to the
