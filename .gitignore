@@ -92,3 +92,8 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# --- Android app (android/) build output ---
+android/.gradle/
+android/local.properties
+*.apk

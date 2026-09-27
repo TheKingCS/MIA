@@ -61,6 +61,12 @@ and C are in the build queue below; D waits for the Android app.
       journaling"; check the entry in the Private Journal tab. Also try
       "just listen", "no bullshit", "hype me up", "off the record".
       Optional: Settings → Support & Safety → a trusted person.
+- [ ] **Install the Android app.** On your phone: GitHub → the MIA
+      repo → Releases → "MIA Companion (Android)" → tap
+      MIA-Companion.apk (full steps: `android/README.md`). Needs the
+      phone voice setup at home done first. Tell Claude what works and
+      what doesn't: locked-screen listening, the headset button, the
+      Bluetooth mic option, signing back in after MIA restarts.
 - [ ] **Claude Design pass.** Upload `docs/design_handoff/` (or the zip
       Claude sent) plus your inspiration pictures to Claude Design and
       paste the prompt at the top of its README. Bring the 3 directions
@@ -70,19 +76,11 @@ and C are in the build queue below; D waits for the Android app.
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were
    built without being able to reach Plaid or a real phone.
-2. **Phone voice, phase 2: a native Android app** (you have Android)
-   so MIA keeps listening with the **screen locked** and in the
-   background, which web apps can't do. Plan: a small Kotlin app with an
-   Android foreground service (the kind that's allowed to keep the mic
-   on, with a persistent notification), talking to the same
-   `/api/voice/*` endpoints the web app already uses.
-   - Build the installable APK with GitHub Actions, so you download it
-     straight to your phone with no Android Studio needed; you'll allow
-     "install unknown apps" once.
-   - Headphone and Bluetooth button to start/stop talking.
-   - Phone conversations saved to the desktop's History.
-   - Desktop screens refresh after phone-made changes.
-   - Faster replies (stream the answer instead of waiting for all of it).
+2. **Phone voice, phase 2, the rest** (the Android app itself is built,
+   see `android/README.md`): phone conversations saved to the
+   desktop's History, desktop screens refreshing after phone-made
+   changes, and streaming replies so MIA starts talking sooner. Plus
+   whatever your first real use of the app turns up.
 3. **Cognitive Extension, slice B: "Remember Why".** Intents gain
    `serves_intent_id` + `reason` (your chain of reasons, set up by
    talking and read back to you before saving); `core/why_graph.py`

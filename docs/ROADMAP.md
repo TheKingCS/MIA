@@ -12035,3 +12035,39 @@ with a fake model, the Private Journal tab and the Assistant module's
 safety path offscreen). The live checklist gains 7 personal-mode cases
 (206 total) that check properties, not wording; dry run routes all
 correctly. Not verifiable here: the real model's replies in each mode.
+
+## Phone voice, phase 2: the native Android app (2026-09-27)
+
+`android/`: MIA Companion, a small Kotlin app (no third-party
+libraries, UI built in code) that keeps hands-free MIA listening with
+the phone locked, which the phone web app can't do.
+
+- **Foreground service of type microphone** (`VoiceService.kt`), with a
+  persistent notification (Pause / Stop) and a partial wake lock. A
+  half-duplex loop so MIA never hears herself: listen → beep → send the
+  WAV home → play the reply → listen.
+- **Same wire format and detector as the web app**: `VoiceCore.kt` is a
+  straight port of `server/static/voice.js` (end-of-speech detection,
+  16 kHz mono WAV) and "goodbye" pauses the same way, so the server
+  needed no changes.
+- **Headset/Bluetooth button** pauses and resumes via a MediaSession;
+  optional Bluetooth headset mic (SCO).
+- **Survives MIA restarting**: the server's sessions are in memory, so
+  on HTTP 401 the app signs in again with the saved password, which is
+  encrypted with an Android Keystore AES-GCM key.
+- **Build and delivery**: `.github/workflows/android.yml` runs the unit
+  tests, builds the APK, and publishes it as the `android-latest`
+  release to download on the phone. A committed signing key keeps
+  updates installable over the old version.
+
+**Found in review before pushing:** a sticky service would have been
+restarted by Android in the background and tried to open the
+microphone, which Android 14 forbids (a crash loop). It's non-sticky
+now. Also, typed messages used startForegroundService() on an
+already-running service; they now use startService() then.
+
+**Verified here:** the Kotlin compiles against Robolectric's Android
+14 framework jar (Google's SDK host is blocked in this workspace) and
+the 8 JVM unit tests pass (detector, WAV round-trip and chunk walking,
+goodbye phrases). **Not verifiable here:** the real APK build (GitHub
+Actions), and behavior on a real phone.

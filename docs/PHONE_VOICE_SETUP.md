@@ -25,7 +25,11 @@ encrypted connection.
 - Say **"goodbye"**, **"stop listening"** or **"that's all"** to end it.
 - You can also type to MIA from the same screen.
 
-**Not yet (fixed by the native app, the next phase):**
+**Android: the native app is here.** It keeps listening with the
+phone locked and works with your headset button. Install steps:
+`android/README.md`. The web app below still works on any phone.
+
+**Not yet in the web app (fixed by the Android app):**
 - **The screen must stay on with MIA open.** If you lock the phone or
   switch apps, the phone cuts off the microphone. That's a rule phones
   apply to web apps. Mount the phone and leave MIA on screen.

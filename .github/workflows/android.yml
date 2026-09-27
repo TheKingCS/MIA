@@ -1,0 +1,59 @@
+# Builds the MIA Companion Android app (android/) and publishes the APK as
+# the "android-latest" release, so it can be downloaded straight to the
+# phone (see android/README.md). Runs when android/ changes, or by hand
+# from the Actions tab ("Run workflow").
+name: Android app
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write # to publish the release
+
+concurrency:
+  group: android-app
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Unit tests and APK
+        working-directory: android
+        run: gradle --no-daemon testDebugUnitTest assembleDebug
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk MIA-Companion.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MIA-Companion
+          path: MIA-Companion.apk
+
+      - name: Publish as the android-latest release
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest MIA-Companion.apk \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "MIA Companion (Android) build ${GITHUB_RUN_NUMBER}" \
+            --notes "Built from ${GITHUB_SHA::7}. Open this page on your phone and tap MIA-Companion.apk to install or update. See android/README.md."
