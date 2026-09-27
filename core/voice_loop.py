@@ -37,7 +37,7 @@ useful whether or not there's a screen.
 from __future__ import annotations
 
 from core.app_context import AppContext
-from core.assistant_turn import extract_memories, run_assistant_turn
+from core.assistant_turn import run_assistant_turn, run_followup
 from core.conversation_manager import Conversation
 from core.logger import get_logger
 from core.push_to_talk_source import PushToTalkSource
@@ -101,13 +101,12 @@ class VoiceLoopController:
 
     def _handle_turn(self, prompt: str) -> None:
         turn = run_assistant_turn(self.context, self._conversation, prompt)
+        for text in turn.replies:
+            self._speak(text)
         if not turn.llm_available:
             log.warning(_LLM_UNAVAILABLE)
             return
-        for text in turn.replies:
-            self._speak(text)
-        if turn.remember_from is not None:
-            extract_memories(self.context, self._conversation.conversation_id, turn.remember_from)
+        run_followup(self.context, self._conversation, turn.followup)
 
     def _speak(self, text: str) -> None:
         self._indicators.on_speaking()

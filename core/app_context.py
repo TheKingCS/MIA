@@ -85,6 +85,7 @@ if TYPE_CHECKING:
     from core.trip_manager import TripManager
     from core.usage_tracker import UsageTracker
     from core.user_memory_manager import UserMemoryManager
+    from core.private_journal import PrivateJournalManager
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -164,6 +165,9 @@ class AppContext:
     # pre-existing `memories` field above (core/memory_manager.py's
     # Expedition recaps) — same word, unrelated concept.
     user_memories: Optional["UserMemoryManager"] = field(default=None, repr=False)
+    # The encrypted private journal (core/private_journal.py, Cognitive
+    # Extension slice A). Writable while locked, readable only unlocked.
+    private_journal: Optional["PrivateJournalManager"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

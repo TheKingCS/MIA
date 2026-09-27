@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -47,6 +48,7 @@ from PySide6.QtWidgets import (
 from core.journal_manager import JournalEntry
 from core.search_manager import SearchResult
 from gui.add_edit_journal_entry_dialog import AddEditJournalEntryDialog
+from gui.private_journal_panel import PrivateJournalPanel
 from modules.module_base import ModuleBase
 
 
@@ -85,6 +87,16 @@ class NotesModule(ModuleBase):
         subtitle = QLabel(self.description)
         subtitle.setObjectName("SubtitleLabel")
         layout.addWidget(subtitle)
+
+        # Two tabs (2026-09-27): the plain Notes list, and the encrypted
+        # Private Journal MIA fills from journaling conversations.
+        tabs = QTabWidget()
+        layout.addWidget(tabs, stretch=1)
+        notes_tab = QWidget()
+        tabs.addTab(notes_tab, "Notes")
+        tabs.addTab(PrivateJournalPanel(self.context), "🔒 Private Journal")
+        layout = QVBoxLayout(notes_tab)  # the Notes list below goes in its tab
+        layout.setContentsMargins(0, 8, 0, 0)
 
         self._filter_edit = QLineEdit()
         self._filter_edit.setPlaceholderText("Filter entries by title, tag, or text…")

@@ -131,6 +131,8 @@ from core.assistant_chat import (
     split_safe_tool_calls,
     suggested_prompts_for_module,
 )
+from core.talk_it_out import after_fixed_reply, apply_followup, plan_followup, pre_turn
+from core.safety_floor import detect_danger
 from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
 from core.generate_worker import GenerateWorker
@@ -514,12 +516,26 @@ class CharacterPanel(QFrame):
 
     def _on_send(self) -> None:
         prompt = self._input.text().strip()
-        if not prompt or self._worker is not None or self.context.llm is None:
+        if not prompt or self._worker is not None:
+            return
+        if self.context.llm is None and not detect_danger(prompt):
             return
 
         self._input.clear()
-        self._set_busy(True)
+        prepared = pre_turn(self.context, self._conversation, prompt)
         self.context.conversations.add_message(self._conversation.conversation_id, "user", prompt)
+        if prepared.fixed_reply is not None:
+            # Safety floor (core/safety_floor.py): a fixed reply, never the model.
+            self.context.conversations.add_message(self._conversation.conversation_id, "assistant", prepared.fixed_reply)
+            self._speak(prepared.fixed_reply)
+            after_fixed_reply(self.context, self._conversation)
+            return
+        if prepared.notice:
+            self.context.conversations.add_message(self._conversation.conversation_id, "assistant", prepared.notice)
+            self._speak(prepared.notice)
+        if self.context.llm is None:
+            return
+        self._set_busy(True)
 
         messages, tools = build_chat_request(self.context, self._conversation, prompt)
 
@@ -558,7 +574,8 @@ class CharacterPanel(QFrame):
         self.context.conversations.add_message(self._conversation.conversation_id, "assistant", reply.content)
         self._status_label.setText("")
         self._speak(reply.content)
-        self._maybe_generate_title(user_message, reply.content)
+        if not self._conversation.current_privacy():
+            self._maybe_generate_title(user_message, reply.content)
         self._extract_memories(user_message)
 
     def _on_worker_finished(self) -> None:
@@ -593,18 +610,18 @@ class CharacterPanel(QFrame):
             self._title_worker = None
 
     def _extract_memories(self, user_message: str) -> None:
-        if self._memory_worker is not None or self.context.user_memories is None:
+        # Memory extraction, or organizing a journal session, or nothing
+        # off the record — core/talk_it_out.py decides.
+        if self._memory_worker is not None:
             return
-        prompt = build_memory_extraction_prompt(user_message)
-        self._memory_worker = GenerateWorker(self.context.llm, prompt)
-        conversation_id = self._conversation.conversation_id
-        self._memory_worker.result_ready.connect(lambda raw: self._on_memories_extracted(conversation_id, raw))
+        conversation = self._conversation
+        followup = plan_followup(self.context, conversation, user_message)
+        if followup is None:
+            return
+        self._memory_worker = GenerateWorker(self.context.llm, followup.prompt)
+        self._memory_worker.result_ready.connect(lambda raw: apply_followup(self.context, conversation, followup, raw))
         self._memory_worker.finished.connect(self._on_memory_worker_finished)
         self._memory_worker.start()
-
-    def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
-        for category, fact in parse_extracted_memories(raw_text):
-            self.context.user_memories.add_memory(fact, category=category, source_conversation_id=conversation_id)
 
     def _on_memory_worker_finished(self) -> None:
         if self._memory_worker is not None:

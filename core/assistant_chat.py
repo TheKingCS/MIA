@@ -50,6 +50,14 @@ from datetime import date
 from typing import TYPE_CHECKING, Iterable, Optional
 
 from core.connectivity import connectivity_prompt_block
+from core.conversation_modes import (
+    AGENCY_LINE,
+    COMPANION,
+    LISTEN,
+    MODE_INSTRUCTIONS,
+    PERSONAL_MODES,
+    looks_like_direct_command,
+)
 from core.device_help_manager import GROUNDING_INSTRUCTION
 from core.llm_manager import ToolCall
 from core.user_memory_manager import MEMORY_CATEGORIES
@@ -342,7 +350,8 @@ _MEMORY_EXTRACTION_PROMPT_TEMPLATE = (
     "The user just sent this message to their personal assistant:\n\n"
     "\"{user_message}\"\n\n"
     "List every fact it EXPLICITLY states about the user themselves (name, birthday, a relationship, a "
-    "stated preference, or a stated ongoing interest/hobby). One fact per line, in the exact form "
+    "stated preference, a stated ongoing interest/hobby, something they value, a goal and why they want it, "
+    "something they keep struggling with, or something they accomplished). One fact per line, in the exact form "
     "\"Category: Fact\", using the words \"the user\" instead of he/she/his/her, e.g. "
     "\"Pets: The user has a dog named Rex.\" Category must be exactly one of: "
     f"{_MEMORY_CATEGORY_LIST}, Other — pick Other if nothing else fits. Never add "
@@ -466,6 +475,10 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     `_TEACHING_INSTRUCTION` framing instead of `GROUNDING_INSTRUCTION`,
     and — like any other info question — never get tools attached.
     """
+    mode = getattr(conversation, "mode", COMPANION) if conversation is not None else COMPANION
+    if mode in PERSONAL_MODES or getattr(conversation, "journal", False):
+        return _build_personal_request(context, conversation, prompt, mode)
+
     is_teaching_request = looks_like_teaching_request(prompt)
     matched_actions = (
         context.assistant_actions.matching_actions(prompt, context)
@@ -492,6 +505,44 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         # whichever domain(s) this prompt's own triggers matched).
         tools = context.assistant_actions.to_ollama_tools(matched_actions)
 
+    return messages, tools
+
+
+def build_personal_system_message(context, mode: str) -> str:
+    """The personal path's system message (Cognitive Extension slice A):
+    who MIA is, the human-agency line, what she knows about the user,
+    recent private-journal sessions when unlocked, and the one tone line
+    for the current mode. No help-doc grounding: "only answer from the
+    reference material" is the wrong instruction for someone venting."""
+    from core.talk_it_out import journal_context_block  # local: talk_it_out imports this module
+
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + " " + AGENCY_LINE, build_user_context_block(context)]
+    journal_block = journal_context_block(context)
+    if journal_block:
+        parts.append(journal_block)
+    instruction = MODE_INSTRUCTIONS.get(mode, MODE_INSTRUCTIONS[LISTEN])
+    parts.append(instruction + " Answer in plain conversational text.")
+    return "\n\n".join(parts)
+
+
+def _build_personal_request(context, conversation, prompt: str, mode: str) -> tuple[list[dict], list[dict]]:
+    """A personal-mode turn (listen / direct / momentum / plan, or any
+    journaling). Tools only for a message that starts like a command
+    ("add milk to the list" still works mid-journal); a vent that
+    mentions the truck must not become a maintenance log."""
+    matched_actions = []
+    if context.assistant_actions is not None and looks_like_direct_command(prompt):
+        matched_actions = context.assistant_actions.matching_actions(prompt, context)
+
+    history = trim_history(conversation.messages) if conversation is not None else []
+    if matched_actions:
+        system = _IDENTITY_LINE
+    else:
+        system = build_personal_system_message(context, mode if mode in PERSONAL_MODES else LISTEN)
+    messages = [{"role": "system", "content": system}]
+    messages.extend({"role": m.role, "content": m.content} for m in history)
+    messages.append({"role": "user", "content": prompt})
+    tools = context.assistant_actions.to_ollama_tools(matched_actions) if matched_actions else []
     return messages, tools
 
 

@@ -46,6 +46,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QPushButton,
     QSlider,
@@ -210,6 +211,26 @@ class SettingsModule(ModuleBase):
             volume_row.addWidget(self._volume_value_label)
             outer.addLayout(volume_row)
 
+        # Cognitive Extension slice A: the safety floor (core/safety_floor.py)
+        # always gives 988 and 911; this adds a person of the owner's choosing.
+        support_section = QLabel("Support & Safety")
+        support_section.setObjectName("SettingsSectionHeader")
+        outer.addWidget(support_section)
+        support_desc = QLabel(
+            "If you ever tell MIA you're thinking of hurting yourself or you're in danger, she gives you "
+            "988 (call or text) and 911. Add someone you trust and she'll name them too."
+        )
+        support_desc.setObjectName("SubtitleLabel")
+        support_desc.setWordWrap(True)
+        outer.addWidget(support_desc)
+        contact_row = QHBoxLayout()
+        contact_row.addWidget(QLabel("Trusted person:"))
+        self._trusted_contact_edit = QLineEdit(self.context.config.get("assistant.safety.trusted_contact", "") or "")
+        self._trusted_contact_edit.setPlaceholderText("e.g. my brother Josh, 555-0142")
+        self._trusted_contact_edit.editingFinished.connect(self._on_trusted_contact_changed)
+        contact_row.addWidget(self._trusted_contact_edit, stretch=1)
+        outer.addLayout(contact_row)
+
         backup_section = QLabel("Backup & Restore")
         backup_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(backup_section)
@@ -352,6 +373,10 @@ class SettingsModule(ModuleBase):
         self.context.config.set("system.device_profile", profile_id)
         self.context.config.save()
         self._set_status(f"Device profile changed to {_PROFILE_DISPLAY_NAMES[profile_id]}.")
+
+    def _on_trusted_contact_changed(self) -> None:
+        self.context.config.set("assistant.safety.trusted_contact", self._trusted_contact_edit.text().strip())
+        self.context.config.save()
 
     def _on_voice_changed(self) -> None:
         voice_id = self._voice_combo.currentData()

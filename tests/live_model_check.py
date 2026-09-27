@@ -31,6 +31,7 @@ destructive action can't do anything, on top of the isolated data.
 
 from __future__ import annotations
 
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -155,6 +156,7 @@ from core.app_context import AppContext
 from core.application import MIAApplication
 from core.assistant_actions import AssistantActionRegistry
 from core.assistant_chat import build_chat_request
+from core.talk_it_out import pre_turn
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
@@ -608,6 +610,39 @@ GOLDEN_CASES = [
 ]
 
 
+# Cognitive Extension slice A: personal modes. Each case switches the
+# mode with a first message (applied by core.talk_it_out.pre_turn(), no
+# model call), then checks PROPERTIES of the reply to the second, never
+# its wording (docs/COGNITIVE_EXTENSION_PROPOSAL.md, question 12):
+# (description, mode-switch message, prompt, expected tool or None, max words, lists allowed)
+PERSONAL_CASES = [
+    ("listen: plain vent", "MIA, just listen", "Work dragged so bad today. Same thing every single day.", None, 80, False),
+    ("listen: vent naming a record", "I need to vent", "The truck broke down again and I'm so done with it.", None, 80, False),
+    ("listen: command still works", "Just listen for a bit", "Add milk to the grocery list", "add_grocery_item", None, True),
+    ("direct: short and plain", "MIA, no bullshit", "Am I wasting my life at this factory job?", None, 90, True),
+    ("momentum: brief", "Hype me up", "I've got four hours left on this shift.", None, 70, True),
+    ("plan: one next step", "Help me figure out what to do", "I have the greenhouse, the truck, and bills all at once.", None, 150, True),
+    ("journal: listening", "I want to journal", "Today I realized I'm proud of how far I've come with the land.", None, 80, False),
+]
+
+_LIST_LINE = re.compile(r"^\s*(?:\d+[.)]|[-*•])\s", re.MULTILINE)
+
+
+def _check_personal_reply(reply, expected, max_words, lists_ok) -> tuple[bool, str]:
+    called = [tc.name for tc in reply.tool_calls] if reply and reply.tool_calls else []
+    if expected is not None:
+        return called == [expected], f"expected [{expected}], got {called}"
+    if called:
+        return False, f"expected no tool call, got {called}"
+    text = (reply.content or "") if reply else ""
+    words = len(text.split())
+    if max_words is not None and words > max_words:
+        return False, f"{words} words, over the {max_words}-word limit: {text[:120]!r}"
+    if not lists_ok and _LIST_LINE.search(text):
+        return False, f"listed/advised instead of listening: {text[:120]!r}"
+    return True, f"{words} words"
+
+
 def _build_context() -> AppContext:
     config = ConfigManager()
     events = EventBus()
@@ -808,8 +843,21 @@ def main() -> int:
         if not ok:
             failures.append(description)
 
+    for description, switch, prompt, expected, max_words, lists_ok in PERSONAL_CASES:
+        conversation = context.conversations.start_new_active_conversation()
+        pre_turn(context, conversation, switch)
+        pre_turn(context, conversation, prompt)
+        messages, tools = build_chat_request(context, conversation, prompt)
+        reply = context.llm.chat_with_tools(messages, tools=tools)
+        ok, detail = _check_personal_reply(reply, expected, max_words, lists_ok)
+        status = "PASS" if ok else "FAIL"
+        print(f"[{status}] {description}: {prompt!r} — {detail}")
+        if not ok:
+            failures.append(description)
+
+    total = len(GOLDEN_CASES) + len(PERSONAL_CASES)
     print()
-    print(f"{len(GOLDEN_CASES) - len(failures)}/{len(GOLDEN_CASES)} passed.")
+    print(f"{total - len(failures)}/{total} passed.")
     return 1 if failures else 0
 
 

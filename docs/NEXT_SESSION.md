@@ -5,17 +5,13 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-09-27 (late evening)*
+*Last updated: 2026-09-27 (night)*
 
-**Waiting on your answer first:** the Cognitive Extension proposal
-(`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, from your "Cognitive
-Extension & Contextual Presence" document plus "talk to MIA like a
-therapist / living journal"). Its last section has 4 questions: build
-order (recommended: A "Talk it out" → B "Remember Why" → C "Know when
-to speak" → D Contextual Presence after the Android app → E Life
-Runway), journal encryption, a trusted contact for the safety floor,
-and quiet hours / daily message limit. Once answered, the chosen slice
-goes to the top of the build queue below.
+**Cognitive Extension:** you approved slices A → B → C → D → E
+(`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
+("Talk it out") is built:** conversation modes, journaling into an
+encrypted Private Journal, off the record, and the safety floor. B
+and C are in the build queue below; D waits for the Android app.
 
 ---
 
@@ -58,6 +54,13 @@ goes to the top of the build queue below.
       `docs/ASSISTANT_AUDIT.md`). With Ollama running:
       `python tests/live_model_check.py`. It uses fake data and never
       runs the tools it's testing. Send Claude the FAIL lines.
+- [ ] **Try "Talk it out".** In MIA: Notes → 🔒 Private Journal →
+      Set Up… and pick a passphrase (you can reuse your Plaid vault
+      passphrase; if you forget it, the journal can't be read). Then
+      in chat or on the phone: "I want to journal", talk, "I'm done
+      journaling"; check the entry in the Private Journal tab. Also try
+      "just listen", "no bullshit", "hype me up", "off the record".
+      Optional: Settings → Support & Safety → a trusted person.
 - [ ] **Claude Design pass.** Upload `docs/design_handoff/` (or the zip
       Claude sent) plus your inspiration pictures to Claude Design and
       paste the prompt at the top of its README. Bring the 3 directions
@@ -80,19 +83,38 @@ goes to the top of the build queue below.
    - Phone conversations saved to the desktop's History.
    - Desktop screens refresh after phone-made changes.
    - Faster replies (stream the answer instead of waiting for all of it).
-3. **Fix what the live conversation check turns up** (now 199 cases,
-   including Workout, People & Pets, Household and Classroom). Then
+3. **Cognitive Extension, slice B: "Remember Why".** Intents gain
+   `serves_intent_id` + `reason` (your chain of reasons, set up by
+   talking and read back to you before saving); `core/why_graph.py`
+   attaches live evidence (debts, rentals, builds, wins); a sixth
+   mode, Perspective ("remind me why I'm doing this"), speaks only
+   from that fact sheet. Monthly evidence checkpoints for "look what
+   changed since spring".
+4. **Cognitive Extension, slice C: "Know when to speak".** One gate
+   every proactive message passes through (proposal question 5):
+   **daily budget 5**, **no quiet hours** (you use Do Not Disturb),
+   minimum spacing, no repeats without new facts, ambient dropped not
+   queued, a log of what MIA chose not to say. Move today's daily
+   checks (birthday, calendar digest, check-in, budget nudge, smart
+   suggestions) behind it. Then the opt-in weekly journal reflection.
+5. **Fix what the live conversation check turns up** (now 206 cases,
+   including Workout, People & Pets, Household, Classroom, and 7
+   personal-mode cases). Then
    "propose, you confirm" record updates from things mentioned in
    passing (e.g. "the mower got a new battery" → offer to note it on
    the mower).
-4. **Claude Design direction → new theme** (after you bring designs back).
-5. **Finance, #2: homestead build and tool costs.** Wire your real
+6. **Cognitive Extension, slice D: Contextual Presence** (after the
+   Android app): Places, geofenced transitions sent from the phone,
+   Welcome Home, "you're at Lowe's, want the materials list?". Then
+   slice E, Life Runway.
+7. **Claude Design direction → new theme** (after you bring designs back).
+8. **Finance, #2: homestead build and tool costs.** Wire your real
    tools and builds into the existing Workshop Materials/Jobs/Ledger
    pipeline.
-6. **Finance, #3: mower business-use write-off.** A business-use-
+9. **Finance, #3: mower business-use write-off.** A business-use-
    percentage engine for personal equipment used partly for contract
    lawn care.
-7. **Finance, #4: money on your phone.** A read view of Budget, Debts
+10. **Finance, #4: money on your phone.** A read view of Budget, Debts
    and Net Worth in the phone app (it already has login and a secure
    connection).
 

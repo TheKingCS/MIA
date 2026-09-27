@@ -128,6 +128,8 @@ from core.assistant_chat import (
     parse_extracted_memories,
     split_safe_tool_calls,
 )
+from core.talk_it_out import after_fixed_reply, apply_followup, plan_followup, pre_turn
+from core.safety_floor import detect_danger
 from core.chat_worker import ChatWorker
 from core.context_assembler import assemble_life_state, format_life_state_glance_line
 from core.conversation_manager import DEFAULT_TITLE
@@ -1726,14 +1728,28 @@ class HomeDashboard(QFrame):
 
     def _on_send(self) -> None:
         prompt = self._input.text().strip()
-        if not prompt or self._worker is not None or self.context.llm is None:
+        if not prompt or self._worker is not None:
+            return
+        if self.context.llm is None and not detect_danger(prompt):
             return
 
         self._input.clear()
-        self._set_busy(True)
         conversation = self.context.conversations.get_or_create_active_conversation()
         self._conversation = conversation
+        prepared = pre_turn(self.context, conversation, prompt)
         self.context.conversations.add_message(conversation.conversation_id, "user", prompt)
+        if prepared.fixed_reply is not None:
+            # Safety floor (core/safety_floor.py): a fixed reply, never the model.
+            self.context.conversations.add_message(conversation.conversation_id, "assistant", prepared.fixed_reply)
+            self._speak(prepared.fixed_reply)
+            after_fixed_reply(self.context, conversation)
+            return
+        if prepared.notice:
+            self.context.conversations.add_message(conversation.conversation_id, "assistant", prepared.notice)
+            self._speak(prepared.notice)
+        if self.context.llm is None:
+            return
+        self._set_busy(True)
 
         messages, tools = build_chat_request(self.context, conversation, prompt)
         self._worker = ChatWorker(self.context.llm, messages, tools)
@@ -1765,7 +1781,8 @@ class HomeDashboard(QFrame):
         user_message = conversation.messages[-1].content if conversation.messages else ""
         self.context.conversations.add_message(conversation.conversation_id, "assistant", reply.content)
         self._speak(reply.content)
-        self._maybe_generate_title(conversation, user_message, reply.content)
+        if not conversation.current_privacy():
+            self._maybe_generate_title(conversation, user_message, reply.content)
         self._extract_memories(conversation, user_message)
 
     def _on_worker_finished(self) -> None:
@@ -1800,18 +1817,17 @@ class HomeDashboard(QFrame):
             self._title_worker = None
 
     def _extract_memories(self, conversation, user_message: str) -> None:
-        if self._memory_worker is not None or self.context.user_memories is None:
+        # Memory extraction, or organizing a journal session, or nothing
+        # off the record — core/talk_it_out.py decides.
+        if self._memory_worker is not None:
             return
-        prompt = build_memory_extraction_prompt(user_message)
-        self._memory_worker = GenerateWorker(self.context.llm, prompt)
-        conversation_id = conversation.conversation_id
-        self._memory_worker.result_ready.connect(lambda raw: self._on_memories_extracted(conversation_id, raw))
+        followup = plan_followup(self.context, conversation, user_message)
+        if followup is None:
+            return
+        self._memory_worker = GenerateWorker(self.context.llm, followup.prompt)
+        self._memory_worker.result_ready.connect(lambda raw: apply_followup(self.context, conversation, followup, raw))
         self._memory_worker.finished.connect(self._on_memory_worker_finished)
         self._memory_worker.start()
-
-    def _on_memories_extracted(self, conversation_id: str, raw_text: Optional[str]) -> None:
-        for category, fact in parse_extracted_memories(raw_text):
-            self.context.user_memories.add_memory(fact, category=category, source_conversation_id=conversation_id)
 
     def _extract_interview_notes_if_needed(self) -> None:
         """"Any user, any hobby" vision (2026-09-14) — the profile-

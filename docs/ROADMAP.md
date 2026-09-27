@@ -11982,3 +11982,56 @@ calls:
 - Location via native-Android geofencing sending only transitions, so
   it waits for the Android app.
 - Slices A–E with a recommended order; four open questions for the owner.
+
+## Cognitive Extension, slice A: "Talk it out" (2026-09-27)
+
+The owner approved the proposal's order (A → B → C → D → E), chose an
+encrypted journal, a daily budget of 5 unprompted messages (slice C),
+and no quiet hours (phone Do Not Disturb covers that). Slice A built:
+
+- **Conversation modes** (`core/conversation_modes.py`): Normal,
+  Listen, Direct, Momentum/hype, Plan, switched only by explicit
+  phrases and kept for the conversation until "back to normal". A
+  personal mode gets its own system message (identity, warmth, the
+  human-agency line, what MIA knows, one tone line) with **no help-doc
+  grounding**: the existing info path told the model to answer "ONLY
+  from the reference material", which is wrong for someone venting.
+  Tools are offered in a personal mode only when the message starts
+  like a command, so "the truck broke down again" stays a vent.
+- **Safety floor** (`core/safety_floor.py`): deterministic, runs before
+  every mode on every surface, answers with fixed text (988, 911, an
+  optional trusted person from Settings) and works with Ollama down.
+  Nothing like it existed anywhere in the app before.
+- **Encrypted Private Journal** (`core/private_journal.py`): per-entry
+  Fernet keys wrapped with an RSA-3072 public key, the private key
+  encrypted with the owner's passphrase via core.secrets_manager. MIA
+  can write while locked and nobody can read without the passphrase.
+  One passphrase also unlocks the Plaid vault when it matches.
+- **Journaling by talking and off the record** (`core/talk_it_out.py`):
+  one before/after-turn path used by Home, the side panel, the
+  Assistant module, the phone server and the headless voice loop.
+  Journaled and off-the-record messages stay in memory for the
+  conversation but are never written to conversations.json (a new
+  per-message `privacy` field; `Conversation.to_dict()` skips them).
+  Private conversations get a neutral title instead of an
+  auto-generated one. Journal sessions are organized by the model
+  (title, mood, themes, summary) as the after-reply job that memory
+  extraction used to be; journaled text never becomes a plain memory.
+- **Journal tools** `read_private_journal` and `get_journal_themes`;
+  recent sessions feed the personal-mode prompt only while unlocked.
+- **Memory categories** Values, Goals & Reasons, Struggles & Patterns,
+  Wins.
+- **UI**: a 🔒 Private Journal tab in Notes, and Settings, Support &
+  Safety.
+
+**Bug caught by its own corpus:** "add a journal entry to my notes"
+started private journaling; the journal phrases were narrowed.
+
+**Verified:** `pytest -q`, 3678 passed (the same one pre-existing
+timezone failure), real `data/` untouched. New tests: 104 (safety
+corpus, mode corpus, encryption including "nothing readable on disk"
+and write-while-locked, end-to-end turns through the real registry
+with a fake model, the Private Journal tab and the Assistant module's
+safety path offscreen). The live checklist gains 7 personal-mode cases
+(206 total) that check properties, not wording; dry run routes all
+correctly. Not verifiable here: the real model's replies in each mode.

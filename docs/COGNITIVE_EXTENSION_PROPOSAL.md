@@ -5,8 +5,9 @@ Answers section 20 of `docs/COGNITIVE_EXTENSION.md` (the owner's
 owner's addendum: *talk to MIA like a therapist or a living journal,
 and have her keep the journal organized and use it to support me.*
 
-Nothing here is built yet. This is the plan, split into slices the
-owner picks from.
+**Status (2026-09-27):** the owner approved the order A → B → C → D
+→ E. **Slice A is built** (see "Slice A as built" at the end). The
+owner's answers are recorded under "Decisions".
 
 ## The short version
 
@@ -335,11 +336,43 @@ talk to like a therapist is at least as sensitive. Options:
 Recommendation: **2**, built as part of slice A, since moving existing
 entries later is harder than starting encrypted.
 
-## Open questions for the owner
+## Decisions (owner, 2026-09-27)
 
-1. Build order: A → B → C → D → E, or something else?
-2. Journal encryption: option 1 or 2 above?
-3. Safety floor: is there a trusted person you want listed alongside
-   988 and 911?
-4. Quiet hours and the default daily budget of 3 unprompted messages:
-   right, too many, too few?
+1. **Build order:** A → B → C → D → E, as recommended.
+2. **Journal encryption:** yes (option 2).
+3. **Trusted person:** none named yet. It's an optional field under
+   Settings, Support & Safety.
+4. **Unprompted messages:** a daily budget of **5**, not 3 ("we
+   actually want MIA to be pretty persistent in our life"). **No quiet
+   hours**: the owner uses the phone's Do Not Disturb instead. Slice C
+   uses these values; the spacing and no-repeat rules stay.
+
+## Slice A as built (2026-09-27)
+
+- `core/conversation_modes.py`: five modes (Normal, Listen, Direct,
+  Momentum/hype, Plan) plus the journal and off-the-record flags,
+  switched only by explicit phrases. Perspective, the sixth, arrives
+  with slice B's Why Graph.
+- `core/safety_floor.py`: deterministic detection and a fixed reply
+  (988, 911, optional trusted person), runs before everything, works
+  with the model down.
+- `core/private_journal.py`: the encrypted journal. Each entry has its
+  own key, wrapped with an RSA public key; the private key is
+  encrypted with the passphrase. So MIA can **write** while locked (a
+  24/7 home machine after a reboot, the phone) and nobody can **read**
+  without the passphrase. This refines option 2: one passphrase unlocks
+  the journal and, if it matches, the Plaid vault too.
+- `core/talk_it_out.py`: the before/after-turn glue every chat surface
+  (Home, side panel, Assistant module, phone, headless voice) now
+  calls. Journaled and off-the-record messages stay in memory for the
+  conversation but are **never written to conversations.json**, and
+  journaled text never becomes a plain-JSON memory. Journal tools:
+  `read_private_journal`, `get_journal_themes`.
+- Personal modes skip help-doc grounding (the old path told the model
+  "answer ONLY from the reference material", wrong for a vent) and
+  offer tools only for a message that starts like a command.
+- Four new memory categories: Values, Goals & Reasons, Struggles &
+  Patterns, Wins.
+- UI: a 🔒 Private Journal tab in Notes; Settings, Support & Safety.
+- Deferred from A: the opt-in weekly reflection (it needs slice C's
+  gate to deliver it without nagging).

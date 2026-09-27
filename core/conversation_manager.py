@@ -54,11 +54,24 @@ _CONVERSATIONS_FILE = _DATA_DIR / "conversations.json"
 DEFAULT_TITLE = "New Conversation"
 
 
+# Message privacy (2026-09-27, Cognitive Extension slice A — see
+# core/conversation_modes.py). A private message stays in memory for
+# the rest of this run (so the model keeps its context mid-conversation)
+# but is never written to conversations.json: journaled text belongs in
+# the encrypted core/private_journal.py, and off-the-record text
+# belongs nowhere.
+PRIVACY_NONE = ""
+PRIVACY_JOURNAL = "journal"  # saved to the encrypted private journal only
+PRIVACY_OFF_RECORD = "off_record"  # saved nowhere
+PRIVACY_PRIVATE = "private"  # e.g. a turn that read the private journal back
+
+
 @dataclass
 class ConversationMessage:
     role: str  # "user" | "assistant"
     content: str
     timestamp: str = ""  # ISO datetime
+    privacy: str = PRIVACY_NONE  # never persisted: private messages aren't written at all
 
     def to_dict(self) -> dict:
         return {"role": self.role, "content": self.content, "timestamp": self.timestamp}
@@ -79,14 +92,45 @@ class Conversation:
     messages: list[ConversationMessage] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+    # Conversation mode state (core/conversation_modes.py). Persisted so
+    # a restart mid-journal stays in journal mode; none of it is content.
+    mode: str = "companion"
+    journal: bool = False
+    off_record: bool = False
+    # Transient, this run only: the current turn reads private data
+    # (the private journal), so its messages must not be persisted.
+    private_turn: bool = field(default=False, repr=False, compare=False)
+    # Transient: the latest organization (title/mood/themes/summary) for
+    # the open journal session, so re-saving it doesn't need to read the
+    # encrypted entry back (which would need the passphrase).
+    journal_organization: Optional[dict] = field(default=None, repr=False, compare=False)
+    # Transient: the open journal session's entry id and where it starts
+    # in `messages`. Not persisted on purpose: after a restart the
+    # earlier session's messages are gone from memory (they were never
+    # written here), so continuing must start a new entry rather than
+    # overwrite the saved one with only the newer half.
+    journal_session_id: Optional[str] = field(default=None, repr=False, compare=False)
+    journal_start_index: int = field(default=0, repr=False, compare=False)
+
+    def current_privacy(self) -> str:
+        if self.off_record:
+            return PRIVACY_OFF_RECORD
+        if self.journal:
+            return PRIVACY_JOURNAL
+        if self.private_turn:
+            return PRIVACY_PRIVATE
+        return PRIVACY_NONE
 
     def to_dict(self) -> dict:
         return {
             "conversation_id": self.conversation_id,
             "title": self.title,
-            "messages": [m.to_dict() for m in self.messages],
+            "messages": [m.to_dict() for m in self.messages if not m.privacy],
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "mode": self.mode,
+            "journal": self.journal,
+            "off_record": self.off_record,
         }
 
     @staticmethod
@@ -97,6 +141,9 @@ class Conversation:
             messages=[ConversationMessage.from_dict(d) for d in data.get("messages", [])],
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
+            mode=data.get("mode", "companion"),
+            journal=bool(data.get("journal", False)),
+            off_record=bool(data.get("off_record", False)),
         )
 
 
@@ -128,6 +175,10 @@ class ConversationManager:
             json.dumps([c.to_dict() for c in self._conversations], indent=2),
             encoding="utf-8",
         )
+
+    def save(self) -> None:
+        """Persist after a caller changed a conversation's mode flags directly."""
+        self._save()
 
     def _bump_updated_at(self, conversation: Conversation) -> None:
         conversation.updated_at = datetime.now().isoformat(timespec="seconds")
@@ -179,7 +230,12 @@ class ConversationManager:
         if conversation is None:
             return None
         conversation.messages.append(
-            ConversationMessage(role=role, content=content, timestamp=datetime.now().isoformat(timespec="seconds"))
+            ConversationMessage(
+                role=role,
+                content=content,
+                timestamp=datetime.now().isoformat(timespec="seconds"),
+                privacy=conversation.current_privacy(),
+            )
         )
         self._bump_updated_at(conversation)
         self._save()

@@ -169,7 +169,7 @@ Add a line there whenever MIA misses something. The live model's half
 is `tests/live_model_check.py` (run on the owner's machine). Full
 findings: `docs/ASSISTANT_AUDIT.md`.
 
-## Tool registry (153 actions, 31 domains, as of 2026-09-27)
+## Tool registry (155 actions, 32 domains, as of 2026-09-27)
 
 **Added 2026-09-27** (`core/assistant_domain_actions.py`):
 - maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
@@ -184,6 +184,14 @@ findings: `docs/ASSISTANT_AUDIT.md`.
   `add_pantry_item`, `update_pantry_item`, `list_pantry`
 - components/materials/products: `adjust_component_quantity`,
   `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+**Also added 2026-09-27** (`core/talk_it_out.py`, Cognitive Extension
+slice A): `read_private_journal`, `get_journal_themes` (domain
+`private_journal`; they answer "locked" until the journal is unlocked,
+and their turns are never written to conversations.json). Conversation
+modes are a fourth path beside action/info/teaching: see
+`core/conversation_modes.py` and `docs/COGNITIVE_EXTENSION_PROPOSAL.md`.
+The safety floor (`core/safety_floor.py`) runs before all of them.
 
 **Also added 2026-09-27** (`core/assistant_life_actions.py`):
 - workout: `log_workout` (parses "3x10 squats at 185"),

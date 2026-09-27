@@ -60,7 +60,8 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from core.app_context import AppContext
-from core.assistant_turn import AssistantTurn, extract_memories, run_assistant_turn
+from core.assistant_turn import AssistantTurn, run_assistant_turn
+from core.talk_it_out import apply_followup
 from core.conversation_manager import Conversation
 from core.logger import get_logger
 from core.web_push import get_or_create_vapid_keys, send_web_push
@@ -199,17 +200,25 @@ def create_app(context: AppContext) -> FastAPI:
                 return None
             return base64.b64encode(Path(synthesized).read_bytes()).decode("ascii")
 
+    def followup_locked(conversation: Conversation, followup) -> None:
+        # The model call runs outside the lock (it's slow); saving the
+        # journal/memories runs inside it, so it can't interleave with
+        # the next turn changing the same conversation.
+        raw = context.llm.generate(followup.prompt) if context.llm is not None else None
+        with app.state.turn_lock:
+            apply_followup(context, conversation, followup, raw)
+
     def respond(profile_id: str, transcript: str, background: BackgroundTasks) -> dict:
         conversation = conversation_for(profile_id)
         with app.state.turn_lock:
             turn: AssistantTurn = run_assistant_turn(context, conversation, transcript)
         if not turn.llm_available:
-            replies = [LLM_UNAVAILABLE_REPLY]
+            replies = turn.replies + [LLM_UNAVAILABLE_REPLY]
         else:
             replies = turn.replies or ["Done."]
         reply_text = " ".join(replies)
-        if turn.remember_from is not None:
-            background.add_task(extract_memories, context, conversation.conversation_id, turn.remember_from)
+        if turn.followup is not None:
+            background.add_task(followup_locked, conversation, turn.followup)
         return {
             "transcript": transcript,
             "replies": replies,

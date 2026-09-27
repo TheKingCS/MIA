@@ -59,6 +59,7 @@ from core.config_manager import ConfigManager
 from core.connectivity import ConnectivityMonitor, connectivity_action
 from core.assistant_domain_actions import register_domain_actions
 from core.assistant_life_actions import register_life_actions
+from core.talk_it_out import register_journal_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
@@ -131,6 +132,7 @@ from core.workout_manager import WorkoutManager
 from core.relationships_manager import RelationshipsManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
+from core.private_journal import PrivateJournalManager
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -286,6 +288,7 @@ class MIAApplication:
         self.context.discovery = DiscoveryManager(self.context)
         self.context.conversations = ConversationManager(self.context)
         self.context.user_memories = UserMemoryManager(self.context)
+        self.context.private_journal = PrivateJournalManager(self.context)
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
@@ -947,6 +950,7 @@ class MIAApplication:
         self.context.assistant_actions.register(connectivity_action())
         register_domain_actions(self.context.assistant_actions)
         register_life_actions(self.context.assistant_actions)
+        register_journal_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",

@@ -72,7 +72,13 @@ _USER_MEMORIES_FILE = _DATA_DIR / "user_memories.json"
 
 MEMORY_CATEGORIES = [
     "Family", "Programming", "Fitness", "Fishing", "Projects", "Travel",
-    "Cooking", "Finance", "Pets", "Education", "Work", "Other",
+    "Cooking", "Finance", "Pets", "Education", "Work",
+    # 2026-09-27, Cognitive Extension slice A: what the user values, why
+    # they're doing what they do, what they keep running into, and what
+    # they've pulled off. The raw material "Remember Why" (slice B) and
+    # everyday support draw on.
+    "Values", "Goals & Reasons", "Struggles & Patterns", "Wins",
+    "Other",
 ]
 
 

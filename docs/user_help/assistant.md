@@ -167,6 +167,54 @@ network between your own devices, and needs MIA running on your
 computer at home. For now the phone's screen must stay on with MIA
 open.
 
+## Talking it out: modes, journaling, and support
+
+You can tell MIA what kind of support you want, and she stays that way
+for the rest of the conversation until you say "back to normal":
+
+- **"Just listen"** or "I need to vent": she reflects back what you
+  said and doesn't try to fix it.
+- **"No bullshit"** or "give me the hard truth": plain and short, no
+  cushioning.
+- **"Hype me up"** or "I need a pep talk": energy to get through the
+  next stretch.
+- **"Help me figure out what to do"** or "I'm overwhelmed": she helps
+  make it smaller and suggests one next step. The decision stays yours.
+
+In these modes MIA won't change your records because you mentioned
+them ("the truck broke down again" is a vent, not a maintenance log).
+A clear command still works: "add milk to the grocery list".
+
+**Journaling.** Say "I want to journal" (or "let's journal") and just
+talk. MIA listens and saves the conversation to your **Private
+Journal** (Notes, 🔒 Private Journal tab), with a title, your mood, the
+themes, and a short summary. Say "I'm done journaling" to finish. Ask
+later "what have I been writing about?" or "what did I say in my
+journal about work?".
+
+The Private Journal is **encrypted**. You set a passphrase once (in
+the Private Journal tab). MIA can always *save* to it, even from your
+phone after a restart, but nobody can *read* it, MIA included, until
+you unlock it with that passphrase. If you forget the passphrase, the
+journal can't be recovered. Unlocking the journal also unlocks your
+bank-sync vault if you used the same passphrase. While it's unlocked,
+MIA can use your recent journal sessions to understand how you're
+doing.
+
+**Off the record.** Say "off the record" (or "don't remember this")
+and nothing from that point is saved: not to the journal, not to
+memories, not to your chat history. Say "back on the record" to end
+it.
+
+**MIA is supportive, not a therapist.** She can listen, remember and
+help you think, but she isn't a licensed counselor. If you tell her
+you're thinking about hurting yourself, or you're in danger, she
+always answers the same careful way, even if her AI model is off: she
+stays with you and gives you real people to reach, **988** (call or
+text, the Suicide and Crisis Lifeline) and **911** for immediate
+danger. You can add someone you trust under Settings, Support &
+Safety, and she'll name them too.
+
 ## When MIA isn't sure
 
 If what you said could mean more than one thing ("the oil" when both

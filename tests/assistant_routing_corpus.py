@@ -123,6 +123,10 @@ CORPUS: list[tuple[str, str]] = [
     ("Add to my notes for GFCI outlets: test them monthly", "add_lesson_notes"),
     ("What am I learning right now?", "get_learning_progress"),
     ("What's my next lesson?", "get_learning_progress"),
+    # ---- Private journal (read back; needs the journal unlocked) -----------------
+    ("What did I write in my journal about work?", "read_private_journal"),
+    ("What's been on my mind lately?", "get_journal_themes"),
+    ("What have I been writing about?", "get_journal_themes"),
     # ---- Self-knowledge / how-to (answer from help docs, no tools) ------------
     ("How do I add a bill?", INFO),
     ("How do I track my mower?", INFO),
@@ -167,4 +171,6 @@ NO_TOOLS: list[str] = [
     "Of course, that makes sense",
     "My neighbor's cat got out again",
     "I sat on a bench at the park",
+    "I hate this. I want to go home.",
+    "I'm tired of doing the same thing every day",
 ]

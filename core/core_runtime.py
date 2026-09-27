@@ -83,6 +83,8 @@ from core.reference_library_manager import ReferenceLibraryManager
 from core.system_health import format_system_health, read_system_health
 from core.trip_manager import TripManager
 from core.user_memory_manager import UserMemoryManager
+from core.private_journal import PrivateJournalManager
+from core.talk_it_out import register_journal_actions
 from core.voice_manager import VoiceManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 
@@ -134,6 +136,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     # ordering rule as core/application.py.
     context.discovery = DiscoveryManager(context)
     context.user_memories = UserMemoryManager(context)
+    context.private_journal = PrivateJournalManager(context)
 
     # Constructed but never `.discover()`-ed — stays empty for the life
     # of a headless Core process, so `open_module` (not registered
@@ -155,6 +158,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     """Registers Core's curated Assistant action subset — see this module's docstring."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
+    register_journal_actions(registry)
 
     registry.register(AssistantAction(
         name="add_alarm",
