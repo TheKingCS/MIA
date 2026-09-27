@@ -10,9 +10,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **Cognitive Extension:** you approved slices A → B → C → D → E
 (`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
 ("Talk it out") is built:** conversation modes, journaling into an
-encrypted Private Journal, off the record, and the safety floor. **Slice B ("Remember Why") is built
-too.** C is next in the build queue; D waits for the Android app
-(built, awaiting your first real use).
+encrypted Private Journal, off the record, and the safety floor. **Slices B ("Remember Why") and C
+("Know when to speak") are built too.** D waits on your first real use
+of the Android app.
 
 ---
 
@@ -89,14 +89,12 @@ every step below in order, from a blank machine, with Windows notes.
    (2026-09-27). Try it: Part 6 of `docs/SETUP_GUIDE.md`. Follow-ups:
    MIA asking which kind of support you want when it's unclear, and
    Perspective on the headless Core voice loop.
-4. **Cognitive Extension, slice C: "Know when to speak".** One gate
-   every proactive message passes through (proposal question 5):
-   **daily budget 5**, **no quiet hours** (you use Do Not Disturb),
-   minimum spacing, no repeats without new facts, ambient dropped not
-   queued, a log of what MIA chose not to say. Move today's daily
-   checks (birthday, calendar digest, check-in, budget nudge, smart
-   suggestions) behind it. Then the opt-in weekly journal reflection.
-5. **Fix what the live conversation check turns up** (now 206 cases,
+4. ~~Cognitive Extension, slice C: "Know when to speak"~~ **built**
+   (2026-09-27): one gate for every unprompted message, 5/day, no quiet
+   hours. Follow-ups: the opt-in weekly journal reflection (delivered
+   through the gate), and "learning from being ignored" (needs the
+   notification bell to record dismissals).
+5. **Fix what the live conversation check turns up** (now 210 cases,
    including Workout, People & Pets, Household, Classroom, and 7
    personal-mode cases). Then
    "propose, you confirm" record updates from things mentioned in

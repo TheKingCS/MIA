@@ -6,7 +6,7 @@ owner's addendum: *talk to MIA like a therapist or a living journal,
 and have her keep the journal organized and use it to support me.*
 
 **Status (2026-09-27):** the owner approved the order A → B → C → D
-→ E. **Slices A and B are built** (see "Slice A as built" and "Slice B as built" at the end). The
+→ E. **Slices A, B and C are built** (see the "as built" sections at the end). The
 owner's answers are recorded under "Decisions".
 
 ## The short version
@@ -414,3 +414,34 @@ entries later is harder than starting encrypted.
   message is ambiguous, and remembering your usual choice; and
   Perspective on the headless Core voice loop, which doesn't load goals
   yet.
+
+## Slice C as built (2026-09-27)
+
+- **`core/communication_gate.py`** on `AppContext.communication`. The
+  pure `decide_batch()` applies question 5's rules with the owner's
+  settings (`communication.daily_budget` 5, `min_spacing_minutes` 90,
+  `repeat_days` 7; no quiet hours): urgent always passes; repeats
+  (same topic and facts within 7 days) are dropped; mid-conversation
+  in a personal mode, timely waits 30 minutes and ambient is dropped;
+  over the limit or too soon, timely waits for the next opening and
+  ambient is dropped; what passes together goes out as **one**
+  message counting once.
+- **Deferred items expire.** A daily message ("you have 2 events
+  today") carries an end-of-day expiry, so it's dropped rather than
+  delivered stale tomorrow.
+- **Routed through it:** all 12 daily checks that speak (birthday,
+  calendar, check-in, budget nudge, smart suggestions, five insight
+  scans, feature tips), now collected per tick and offered as one
+  batch; and missions MIA assigns herself. **Not routed**, by design:
+  replies to the user's own actions (objectives, achievements, imports),
+  alarms, low battery.
+- **Every decision is logged** (`data/communication_log.json`, 30
+  days) and the tools `get_held_back_messages` ("what didn't you tell
+  me today?") and `set_message_limit` ("only message me 3 times a
+  day") read and change it. Settings has "When MIA Speaks Up".
+- **Scripted-day test:** six things MIA wanted to say across a day with
+  a journaling session in the middle became two messages, with the
+  mission and maintenance items waiting through the journal session.
+- **Deferred:** learning from being ignored (needs dismissal tracking
+  in the notification bell), and the weekly journal reflection.
+

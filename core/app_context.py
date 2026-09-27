@@ -86,6 +86,7 @@ if TYPE_CHECKING:
     from core.usage_tracker import UsageTracker
     from core.user_memory_manager import UserMemoryManager
     from core.private_journal import PrivateJournalManager
+    from core.communication_gate import CommunicationGate
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -168,6 +169,9 @@ class AppContext:
     # The encrypted private journal (core/private_journal.py, Cognitive
     # Extension slice A). Writable while locked, readable only unlocked.
     private_journal: Optional["PrivateJournalManager"] = field(default=None, repr=False)
+    # "Know when to speak" (core/communication_gate.py, Cognitive
+    # Extension slice C): every unprompted message goes through here.
+    communication: Optional["CommunicationGate"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

@@ -232,6 +232,29 @@ text, the Suicide and Crisis Lifeline) and **911** for immediate
 danger. You can add someone you trust under Settings, Support &
 Safety, and she'll name them too.
 
+## When MIA speaks up on her own
+
+MIA messages you without being asked for things like today's calendar,
+bills coming up, overdue maintenance, check-ins, suggestions, and
+missions she assigns. To keep that useful rather than naggy:
+
+- Things that come up together arrive as **one message**.
+- At most **5 a day** by default, with some time between them. Change
+  it in Settings, "When MIA Speaks Up", or just say "only message me 3
+  times a day" or "message me less".
+- She doesn't repeat herself unless something changed.
+- She won't interrupt while you're venting, journaling or asking her
+  why. Timely things wait a bit; nice-to-know things are let go.
+- Things that matter (bills, your calendar, maintenance) wait for the
+  next opening if she can't say them now. Nice-to-know things are
+  dropped instead of piling up.
+- Urgent things, alarms you set, and answers to what you just did
+  always come through.
+
+There are no quiet hours; use your phone's Do Not Disturb for nights.
+Ask **"what didn't you tell me today?"** and she'll tell you what she
+held back and why.
+
 ## When MIA isn't sure
 
 If what you said could mean more than one thing ("the oil" when both

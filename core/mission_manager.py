@@ -915,11 +915,21 @@ class MissionManager:
         return mission
 
     def _notify_mission_auto_assigned(self, mission: Mission) -> None:
+        title = "\U0001F4DC MIA has a new mission for you"
+        message = f"\"{mission.name}\" — accept the challenge, or abandon it if it's not for you right now."
+        # MIA deciding to speak up on her own, so it goes through the
+        # communication gate (core/communication_gate.py, slice C) when
+        # there is one. The mission exists either way; this is only
+        # whether and when she mentions it.
+        gate = getattr(self.context, "communication", None)
+        if gate is not None:
+            from core.communication_gate import TIMELY, Candidate
+
+            gate.offer(Candidate(
+                topic="mission_auto_assigned", title=title, message=message, urgency=TIMELY,
+                source="missions", fingerprint=mission.mission_id,
+            ))
+            return
         if self.context.notifications is None:
             return
-        self.context.notifications.notify(
-            title="\U0001F4DC MIA has a new mission for you",
-            message=f"\"{mission.name}\" — accept the challenge, or abandon it if it's not for you right now.",
-            level="info",
-            source="missions",
-        )
+        self.context.notifications.notify(title=title, message=message, level="info", source="missions")

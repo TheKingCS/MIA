@@ -615,6 +615,9 @@ GOLDEN_CASES = [
     ("finish a lesson", "I finished the lesson on circuit breakers", "complete_lesson", {"lesson": "circuit breaker"}),
     ("learning progress", "What am I learning right now?", "get_learning_progress"),
     ("small talk: 'of course'", "Of course, that makes sense", None),
+    # Slice C: when MIA speaks up.
+    ("speaking up: what was held back", "What didn't you tell me today?", "get_held_back_messages"),
+    ("speaking up: set the limit", "Only message me 3 times a day", "set_message_limit", {"count": 3}),
     ("small talk: a dog", "What's a good name for a dog?", None),
 ]
 

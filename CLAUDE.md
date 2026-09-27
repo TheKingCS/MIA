@@ -140,6 +140,12 @@ deleting `config/config.json`.
   whether boot shows the setup wizard, profile selector, or lock screen.
 - **Notifications** (`core/notification_manager.py`) — any module can
   raise a toast/persisted notification.
+- **Communication gate** (`core/communication_gate.py`) — every
+  *unprompted* message (daily checks, insights, suggestions, missions MIA
+  assigns) goes through `context.communication.offer(Candidate(...))`,
+  never straight to `notifications.notify()`: it merges, rate-limits
+  (owner's limit: 5/day), drops repeats and logs every decision. Replies
+  to something the user just did, alarms and low battery stay direct.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

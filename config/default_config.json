@@ -56,11 +56,19 @@
     },
     "network": {
         "connectivity_check": true,
-        "probe_hosts": ["1.1.1.1:443", "8.8.8.8:53"]
+        "probe_hosts": [
+            "1.1.1.1:443",
+            "8.8.8.8:53"
+        ]
     },
     "server": {
         "enabled": false,
         "host": "127.0.0.1",
         "port": 8765
+    },
+    "communication": {
+        "daily_budget": 5,
+        "min_spacing_minutes": 90,
+        "repeat_days": 7
     }
 }

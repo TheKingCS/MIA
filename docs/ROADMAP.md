@@ -12110,3 +12110,34 @@ failure), real `data/` untouched. 23 new tests in
 `tests/test_why_graph.py` plus routing corpus (177) and mode cases.
 Live checklist: 208 cases, dry run routes all correctly; the two
 Perspective cases fail on any number not in the fact sheet.
+
+## Cognitive Extension, slice C: "Know when to speak" (2026-09-27)
+
+One gate (`core/communication_gate.py`, `AppContext.communication`) for
+every unprompted message, with the owner's settings: 5 a day, 90
+minutes apart, no repeats within 7 days unless the facts changed, no
+quiet hours (phone Do Not Disturb covers nights).
+
+- `_check_daily_occasions()` now collects each check's message
+  (`_offer()`) and hands the whole tick to the gate as one batch, so
+  what arrives together is one notification counting once. Deferred
+  timely items are retried on later ticks; daily ones expire at
+  midnight rather than arriving stale.
+- Missions MIA assigns herself go through the gate too. Replies to the
+  user's own actions, alarms and low battery stay direct (documented in
+  CLAUDE.md and ARCHITECTURE.md as the rule for new code).
+- Not while venting: a personal-mode conversation active in the last
+  30 minutes holds timely items and drops ambient ones.
+- Logged decisions and two tools: `get_held_back_messages`,
+  `set_message_limit` (161 actions). Settings: "When MIA Speaks Up".
+
+**Caught while building:** waiting messages had no expiry (a
+"today" message could have gone out the next day); the fallback path
+crashed with no notification service (an existing test caught it);
+"what didn't *you* tell me" missed the trigger phrase.
+
+**Verified:** `pytest -q`, 3734 passed (same one pre-existing timezone
+failure), real `data/` untouched. 20 new tests including every rule on
+a fake clock and a scripted day; routing corpus 181; the live
+checklist gains 2 cases (210) and the dry run still routes all 199
+older ones correctly.

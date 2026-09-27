@@ -133,6 +133,11 @@ CORPUS: list[tuple[str, str]] = [
     ("Show my why", "show_my_why"),
     ("What am I working toward?", "show_my_why"),
     ("I achieved my goal of paying off my debt", "mark_goal_achieved"),
+    # ---- When MIA speaks up (core/assistant_comm_actions.py) ------------------------
+    ("What didn't you tell me today?", "get_held_back_messages"),
+    ("Is there anything you held back?", "get_held_back_messages"),
+    ("Only message me 3 times a day", "set_message_limit"),
+    ("You can message me more", "set_message_limit"),
     # ---- Self-knowledge / how-to (answer from help docs, no tools) ------------
     ("How do I add a bill?", INFO),
     ("How do I track my mower?", INFO),

@@ -50,6 +50,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSlider,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -231,6 +232,29 @@ class SettingsModule(ModuleBase):
         contact_row.addWidget(self._trusted_contact_edit, stretch=1)
         outer.addLayout(contact_row)
 
+        # Cognitive Extension slice C: how often MIA speaks up on her own
+        # (core/communication_gate.py).
+        speak_section = QLabel("When MIA Speaks Up")
+        speak_section.setObjectName("SettingsSectionHeader")
+        outer.addWidget(speak_section)
+        speak_desc = QLabel(
+            "Her own messages (calendar, budget, check-ins, suggestions) are combined and limited per day. "
+            "Urgent things, alarms you set and answers to you don't count. Ask her \"what didn't you tell me "
+            "today?\" to see what she held back."
+        )
+        speak_desc.setObjectName("SubtitleLabel")
+        speak_desc.setWordWrap(True)
+        outer.addWidget(speak_desc)
+        speak_row = QHBoxLayout()
+        speak_row.addWidget(QLabel("Messages per day, at most:"))
+        self._daily_budget_spin = QSpinBox()
+        self._daily_budget_spin.setRange(1, 20)
+        self._daily_budget_spin.setValue(int(self.context.config.get("communication.daily_budget", 5)))
+        self._daily_budget_spin.valueChanged.connect(self._on_daily_budget_changed)
+        speak_row.addWidget(self._daily_budget_spin)
+        speak_row.addStretch(1)
+        outer.addLayout(speak_row)
+
         backup_section = QLabel("Backup & Restore")
         backup_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(backup_section)
@@ -373,6 +397,10 @@ class SettingsModule(ModuleBase):
         self.context.config.set("system.device_profile", profile_id)
         self.context.config.save()
         self._set_status(f"Device profile changed to {_PROFILE_DISPLAY_NAMES[profile_id]}.")
+
+    def _on_daily_budget_changed(self, value: int) -> None:
+        self.context.config.set("communication.daily_budget", int(value))
+        self.context.config.save()
 
     def _on_trusted_contact_changed(self) -> None:
         self.context.config.set("assistant.safety.trusted_contact", self._trusted_contact_edit.text().strip())

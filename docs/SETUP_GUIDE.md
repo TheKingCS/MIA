@@ -248,6 +248,11 @@ but reading needs **Unlock…** in the Private Journal tab.
 - [ ] Journal set up and a test entry saved
 - [ ] Your why told to MIA, and "remind me why" tried
 
+**How often MIA messages you on her own:** at most 5 a day, merged
+into one message when several come up together, and never while you're
+venting or journaling. Change the number in **Settings → When MIA Speaks
+Up**, and ask her *"what didn't you tell me today?"* any time.
+
 ---
 
 ## Part 7: Connect your banks (Plaid)

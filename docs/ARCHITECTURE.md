@@ -127,3 +127,18 @@ config, seeded from and merged with the defaults on load (see
   while the config surface is small; if it grows unwieldy, consider a
   `modules.<module_id>.*` namespace convention before reaching for a
   validation library.
+
+## One path for unprompted messages (2026-09-27)
+
+Anything MIA says without being asked goes through
+`core/communication_gate.py` (`AppContext.communication`), the same way
+every top-level screen change goes through `MIAApplication._display()`.
+The gate merges what arrives together into one message, holds MIA to a
+daily limit and a minimum spacing, drops repeats, doesn't interrupt a
+personal-mode conversation, and logs every decision with its reason.
+Urgent candidates always pass. Messages that answer something the user
+just did (an objective completed, an achievement, an imported file),
+alarms the user set, and low-battery warnings are not "speaking up" and
+keep calling `notifications.notify()` directly. The rules and their
+reasoning: `docs/COGNITIVE_EXTENSION_PROPOSAL.md`, question 5.
+

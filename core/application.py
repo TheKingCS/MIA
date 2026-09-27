@@ -61,6 +61,7 @@ from core.assistant_domain_actions import register_domain_actions
 from core.assistant_life_actions import register_life_actions
 from core.talk_it_out import register_journal_actions
 from core.assistant_why_actions import register_why_actions
+from core.assistant_comm_actions import register_communication_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
@@ -134,6 +135,7 @@ from core.relationships_manager import RelationshipsManager
 from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.private_journal import PrivateJournalManager
+from core.communication_gate import AMBIENT, TIMELY, Candidate, CommunicationGate
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -290,6 +292,7 @@ class MIAApplication:
         self.context.conversations = ConversationManager(self.context)
         self.context.user_memories = UserMemoryManager(self.context)
         self.context.private_journal = PrivateJournalManager(self.context)
+        self.context.communication = CommunicationGate(self.context)
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
@@ -501,22 +504,53 @@ class MIAApplication:
             ("rewards", self._check_rewards),
             ("walkthrough_suggestion", self._check_walkthrough_suggestion),
         ]
+        # 2026-09-27, Cognitive Extension slice C: checks no longer notify
+        # directly. Each one offers what it would say (_offer()), and the
+        # whole tick's offers go through core/communication_gate.py
+        # together: one merged message, the daily limit, no repeats,
+        # never while the user is mid-vent. Deferred items from earlier
+        # ticks are retried there too.
+        self._offers = []
+        self._offer_day = today_iso
         for name, check in checks:
             try:
                 check(now, today_iso)
             except Exception:
                 log.exception("Daily occasion check '%s' failed — other checks still ran.", name)
+        offers, self._offers = self._offers, []
+        if self.context.communication is not None:
+            self.context.communication.offer_batch(offers, now)
+        elif self.context.notifications is not None:
+            for c in offers:
+                self.context.notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
+
+    def _offer(self, topic: str, title: str, message: str, urgency: str, source: str = "system",
+               daily: bool = False) -> None:
+        """Queue something a daily check would like to say this tick.
+
+        `daily=True` is for messages that are meant to repeat daily and
+        are only true today (birthday, calendar, check-in, budget
+        nudge): today's date is part of what counts as "the same thing
+        again", and a deferred one expires at midnight."""
+        today_iso = getattr(self, "_offer_day", None) or datetime.now().date().isoformat()
+        self._offers.append(Candidate(
+            topic=topic, title=title, message=message, urgency=urgency, source=source,
+            fingerprint=f"{today_iso}|{message}" if daily else "",
+            expires=f"{today_iso}T23:59:59" if daily else "",
+        ))
 
     def _check_birthday(self, now: datetime, today_iso: str) -> None:
         config = self.context.config
         if should_run_once_daily(config.get("system.last_birthday_celebrated_date"), today_iso):
             active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
             if active_profile is not None and is_birthday_today(active_profile.birthday, now.date()):
-                self.context.notifications.notify(
+                self._offer(
+                    topic="birthday",
                     title="\U0001F389 Happy Birthday!",
                     message=f"Happy birthday, {active_profile.name}! Wishing you an amazing day.",
-                    level="info",
+                    urgency=TIMELY,
                     source="system",
+                    daily=True,
                 )
                 config.set("system.last_birthday_celebrated_date", today_iso)
                 config.save()
@@ -531,11 +565,13 @@ class MIAApplication:
             )
             if events_today:
                 titles = ", ".join(event.title for event in events_today)
-                self.context.notifications.notify(
+                self._offer(
+                    topic="calendar_digest",
                     title="Today's calendar",
                     message=f"You have {len(events_today)} event(s) today: {titles}",
-                    level="info",
+                    urgency=TIMELY,
                     source="system",
+                    daily=True,
                 )
             config.set("system.last_calendar_digest_date", today_iso)
             config.save()
@@ -548,11 +584,13 @@ class MIAApplication:
                 for conversation in self.context.conversations.all_conversations()
             )
             if should_send_checkin(now, has_activity_today):
-                self.context.notifications.notify(
+                self._offer(
+                    topic="checkin",
                     title="Just checking in",
                     message="Haven't heard from you today — how's everything going?",
-                    level="info",
+                    urgency=AMBIENT,
                     source="system",
+                    daily=True,
                 )
                 config.set("system.last_checkin_date", today_iso)
                 config.save()
@@ -567,11 +605,13 @@ class MIAApplication:
             actual_by_category = self.context.budget.total_expenses_by_category(month_start, None)
             message = build_nudge_message(bills, income_sources, targets, actual_by_category, now.date())
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="budget_nudge",
                     title="Budget check-in",
                     message=message,
-                    level="info",
+                    urgency=TIMELY,
                     source="system",
+                    daily=True,
                 )
             config.set("system.last_budget_nudge_date", today_iso)
             config.save()
@@ -584,10 +624,11 @@ class MIAApplication:
             people = self.context.relationships.all_people() if self.context.relationships is not None else []
             message = build_smart_suggestions_message(last_session_date, pantry_items, people, now.date())
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="smart_suggestion",
                     title="Smart Suggestion",
                     message=message,
-                    level="info",
+                    urgency=AMBIENT,
                     source="system",
                 )
             config.set("system.last_smart_suggestion_date", today_iso)
@@ -603,10 +644,11 @@ class MIAApplication:
             new_insights = scan_maintenance_insights(self.context, now.date())
             message = format_maintenance_insights_message(new_insights)
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="maintenance_insight",
                     title="\U0001F527 Maintenance check",
                     message=message,
-                    level="info",
+                    urgency=TIMELY,
                     source="insights",
                 )
             config.set("system.last_maintenance_insight_date", today_iso)
@@ -622,10 +664,11 @@ class MIAApplication:
             new_mission_insights = scan_mission_insights(self.context, now.date())
             message = format_mission_insights_message(new_mission_insights)
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="mission_insight",
                     title="\U0001F4A4 Mission check-in",
                     message=message,
-                    level="info",
+                    urgency=AMBIENT,
                     source="insights",
                 )
             config.set("system.last_mission_insight_date", today_iso)
@@ -643,10 +686,11 @@ class MIAApplication:
             new_pattern_insights = scan_pattern_insights(self.context, now.date())
             message = format_pattern_insights_message(new_pattern_insights)
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="pattern_insight",
                     title="\U0001F914 Noticed a pattern",
                     message=message,
-                    level="info",
+                    urgency=AMBIENT,
                     source="insights",
                 )
             config.set("system.last_pattern_insight_date", today_iso)
@@ -664,10 +708,11 @@ class MIAApplication:
             new_skill_pattern_insights = scan_skill_pattern_insights(self.context, now.date())
             message = format_skill_pattern_insights_message(new_skill_pattern_insights)
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="skill_pattern_insight",
                     title="\U0001F3AF Noticed a pattern",
                     message=message,
-                    level="info",
+                    urgency=AMBIENT,
                     source="insights",
                 )
             config.set("system.last_skill_pattern_insight_date", today_iso)
@@ -684,10 +729,11 @@ class MIAApplication:
             new_skill_decline_insights = scan_skill_decline_insights(self.context, now.date())
             message = format_skill_decline_insights_message(new_skill_decline_insights)
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="skill_decline_insight",
                     title="\U0001F4C9 Noticed a pattern",
                     message=message,
-                    level="info",
+                    urgency=AMBIENT,
                     source="insights",
                 )
             config.set("system.last_skill_decline_insight_date", today_iso)
@@ -704,10 +750,11 @@ class MIAApplication:
             new_skill_momentum_insights = scan_skill_momentum_insights(self.context, now.date())
             message = format_skill_momentum_insights_message(new_skill_momentum_insights)
             if message:
-                self.context.notifications.notify(
+                self._offer(
+                    topic="skill_momentum_insight",
                     title="\U0001F4C8 Noticed a pattern",
                     message=message,
-                    level="info",
+                    urgency=AMBIENT,
                     source="insights",
                 )
             config.set("system.last_skill_momentum_insight_date", today_iso)
@@ -775,10 +822,11 @@ class MIAApplication:
                     chosen_module = next(m for m in candidate_modules if m.module_id == chosen_id)
                     message = build_walkthrough_suggestion(chosen_module.display_name)
                     if message:
-                        self.context.notifications.notify(
+                        self._offer(
+                            topic="walkthrough_suggestion",
                             title="\U0001F393 Something to try",
                             message=message,
-                            level="info",
+                            urgency=AMBIENT,
                             source="system",
                         )
                         self.context.usage_tracker.mark_suggested(chosen_id)
@@ -953,6 +1001,7 @@ class MIAApplication:
         register_life_actions(self.context.assistant_actions)
         register_journal_actions(self.context.assistant_actions)
         register_why_actions(self.context.assistant_actions)
+        register_communication_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",
