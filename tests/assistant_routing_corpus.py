@@ -127,6 +127,12 @@ CORPUS: list[tuple[str, str]] = [
     ("What did I write in my journal about work?", "read_private_journal"),
     ("What's been on my mind lately?", "get_journal_themes"),
     ("What have I been writing about?", "get_journal_themes"),
+    # ---- Your reasons ("Remember Why", core/assistant_why_actions.py) ------------
+    ("The reason I work at the factory is to pay off my debt", "link_my_reason"),
+    ("Paying off debt is so I can control my own time", "link_my_reason"),
+    ("Show my why", "show_my_why"),
+    ("What am I working toward?", "show_my_why"),
+    ("I achieved my goal of paying off my debt", "mark_goal_achieved"),
     # ---- Self-knowledge / how-to (answer from help docs, no tools) ------------
     ("How do I add a bill?", INFO),
     ("How do I track my mower?", INFO),
@@ -173,4 +179,6 @@ NO_TOOLS: list[str] = [
     "I sat on a bench at the park",
     "I hate this. I want to go home.",
     "I'm tired of doing the same thing every day",
+    "Work was awful today",
+    "I'm saving up so I can buy a boat someday",
 ]

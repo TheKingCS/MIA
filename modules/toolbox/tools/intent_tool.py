@@ -117,7 +117,7 @@ class IntentTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add_intent(self) -> None:
-        dialog = AddEditIntentDialog()
+        dialog = AddEditIntentDialog(intents=self.context.intents.all_intents())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -128,6 +128,7 @@ class IntentTool(ToolboxTool):
         )
         if dialog.entered_primary:
             self.context.intents.set_primary(added.intent_id)
+        self._save_reason_link(added.intent_id, dialog)
         self._refresh_intent_list()
 
     def _on_edit_intent(self) -> None:
@@ -137,7 +138,7 @@ class IntentTool(ToolboxTool):
             return
 
         intent = self.context.intents.get_intent(intent_id)
-        dialog = AddEditIntentDialog(intent=intent)
+        dialog = AddEditIntentDialog(intent=intent, intents=self.context.intents.all_intents())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -149,7 +150,16 @@ class IntentTool(ToolboxTool):
         )
         if dialog.entered_primary:
             self.context.intents.set_primary(intent_id)
+        self._save_reason_link(intent_id, dialog)
         self._refresh_intent_list()
+
+    def _save_reason_link(self, intent_id: str, dialog: AddEditIntentDialog) -> None:
+        """The "serves" link and reason (Cognitive Extension slice B).
+        A loop (A serves B serves A) is refused with a message."""
+        try:
+            self.context.intents.set_serves(intent_id, dialog.entered_serves_intent_id, dialog.entered_reason)
+        except ValueError as exc:
+            QMessageBox.warning(None, "Can't link that goal", str(exc))
 
     def _on_make_primary(self) -> None:
         intent_id = self._selected_intent_id()

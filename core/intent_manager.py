@@ -57,6 +57,13 @@ class Intent:
     primary: bool = False
     created_at: str = ""  # ISO datetime
     updated_at: str = ""  # ISO datetime
+    # 2026-09-27, Cognitive Extension slice B ("Remember Why", see
+    # core/why_graph.py): an Intent can serve a bigger one, so the
+    # owner's reasons form a chain ("Factory work" -> "Pay off debt" ->
+    # "Control over my time"), and `reason` keeps why in their own words.
+    # Both optional; existing intents.json rows load unchanged.
+    serves_intent_id: Optional[str] = None
+    reason: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -65,6 +72,8 @@ class Intent:
             "description": self.description,
             "status": self.status,
             "primary": self.primary,
+            "serves_intent_id": self.serves_intent_id,
+            "reason": self.reason,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -77,6 +86,8 @@ class Intent:
             description=data.get("description", ""),
             status=data.get("status", "Active"),
             primary=bool(data.get("primary", False)),
+            serves_intent_id=data.get("serves_intent_id"),
+            reason=data.get("reason", ""),
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
         )
@@ -170,7 +181,36 @@ class IntentManager:
 
     def delete_intent(self, intent_id: str) -> None:
         self._intents = [i for i in self._intents if i.intent_id != intent_id]
+        # Anything that served the deleted goal now serves nothing,
+        # rather than pointing at an id that no longer exists.
+        for intent in self._intents:
+            if intent.serves_intent_id == intent_id:
+                intent.serves_intent_id = None
         self._save()
+
+    def would_create_cycle(self, intent_id: str, serves_intent_id: Optional[str]) -> bool:
+        """True if making `intent_id` serve `serves_intent_id` would loop
+        back to itself (A serves B serves A)."""
+        seen = set()
+        current = serves_intent_id
+        while current is not None and current not in seen:
+            if current == intent_id:
+                return True
+            seen.add(current)
+            parent = self.get_intent(current)
+            current = parent.serves_intent_id if parent is not None else None
+        return False
+
+    def set_serves(self, intent_id: str, serves_intent_id: Optional[str], reason: Optional[str] = None) -> Intent:
+        """Link (or with None, unlink) `intent_id` to the bigger goal it serves."""
+        if serves_intent_id is not None and self.get_intent(serves_intent_id) is None:
+            raise ValueError(f"No intent with id '{serves_intent_id}'.")
+        if self.would_create_cycle(intent_id, serves_intent_id):
+            raise ValueError("That would make a goal serve itself.")
+        fields = {"serves_intent_id": serves_intent_id}
+        if reason is not None:
+            fields["reason"] = reason
+        return self.update_intent(intent_id, **fields)
 
     # ------------------------------------------------------------------
     # Querying

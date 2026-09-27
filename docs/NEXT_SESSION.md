@@ -10,8 +10,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **Cognitive Extension:** you approved slices A → B → C → D → E
 (`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
 ("Talk it out") is built:** conversation modes, journaling into an
-encrypted Private Journal, off the record, and the safety floor. B
-and C are in the build queue below; D waits for the Android app.
+encrypted Private Journal, off the record, and the safety floor. **Slice B ("Remember Why") is built
+too.** C is next in the build queue; D waits for the Android app
+(built, awaiting your first real use).
 
 ---
 
@@ -84,13 +85,10 @@ every step below in order, from a blank machine, with Windows notes.
    desktop's History, desktop screens refreshing after phone-made
    changes, and streaming replies so MIA starts talking sooner. Plus
    whatever your first real use of the app turns up.
-3. **Cognitive Extension, slice B: "Remember Why".** Intents gain
-   `serves_intent_id` + `reason` (your chain of reasons, set up by
-   talking and read back to you before saving); `core/why_graph.py`
-   attaches live evidence (debts, rentals, builds, wins); a sixth
-   mode, Perspective ("remind me why I'm doing this"), speaks only
-   from that fact sheet. Monthly evidence checkpoints for "look what
-   changed since spring".
+3. ~~Cognitive Extension, slice B: "Remember Why"~~ **built**
+   (2026-09-27). Try it: Part 6 of `docs/SETUP_GUIDE.md`. Follow-ups:
+   MIA asking which kind of support you want when it's unclear, and
+   Perspective on the headless Core voice loop.
 4. **Cognitive Extension, slice C: "Know when to speak".** One gate
    every proactive message passes through (proposal question 5):
    **daily budget 5**, **no quiet hours** (you use Do Not Disturb),

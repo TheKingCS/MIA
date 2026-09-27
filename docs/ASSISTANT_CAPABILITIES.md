@@ -169,7 +169,7 @@ Add a line there whenever MIA misses something. The live model's half
 is `tests/live_model_check.py` (run on the owner's machine). Full
 findings: `docs/ASSISTANT_AUDIT.md`.
 
-## Tool registry (155 actions, 32 domains, as of 2026-09-27)
+## Tool registry (159 actions, 33 domains, as of 2026-09-27)
 
 **Added 2026-09-27** (`core/assistant_domain_actions.py`):
 - maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
@@ -184,6 +184,13 @@ findings: `docs/ASSISTANT_AUDIT.md`.
   `add_pantry_item`, `update_pantry_item`, `list_pantry`
 - components/materials/products: `adjust_component_quantity`,
   `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+**Also added 2026-09-27** (`core/assistant_why_actions.py`, Cognitive
+Extension slice B): `link_my_reason`, `show_my_why`,
+`unlink_my_reason`, `mark_goal_achieved` (domain `why`, trigger phrases
+only: goal names are everyday words, so they're never matched by name).
+The Perspective mode ("remind me why") answers from
+`core/why_graph.py`'s fact sheet with no tools offered.
 
 **Also added 2026-09-27** (`core/talk_it_out.py`, Cognitive Extension
 slice A): `read_private_journal`, `get_journal_themes` (domain

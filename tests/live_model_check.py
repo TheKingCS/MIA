@@ -63,6 +63,8 @@ import core.material_manager as material_manager_module
 import core.mission_manager as mission_manager_module
 import core.product_manager as product_manager_module
 import core.project_manager as project_manager_module
+import core.intent_manager as intent_manager_module
+import core.why_graph as why_graph_module
 import core.script_library_manager as script_library_manager_module
 import core.task_manager as task_manager_module
 import core.trail_map_library as trail_map_library_module
@@ -148,6 +150,11 @@ conversation_manager_module._CONVERSATIONS_FILE = _TEMP_DATA_DIR / "conversation
 user_memory_manager_module._DATA_DIR = _TEMP_DATA_DIR
 user_memory_manager_module._USER_MEMORIES_FILE = _TEMP_DATA_DIR / "user_memories.json"
 trail_map_library_module._DATA_DIR = _TEMP_DATA_DIR
+# Slice B: goals and the monthly why checkpoints.
+intent_manager_module._DATA_DIR = _TEMP_DATA_DIR
+intent_manager_module._INTENTS_FILE = _TEMP_DATA_DIR / "intents.json"
+why_graph_module._DATA_DIR = _TEMP_DATA_DIR
+why_graph_module._CHECKPOINTS_FILE = _TEMP_DATA_DIR / "why_checkpoints.json"
 trail_map_library_module._TRAIL_MAPS_FILE = _TEMP_DATA_DIR / "trail_maps.json"
 
 from core.activity_log_manager import ActivityLogManager
@@ -157,6 +164,8 @@ from core.application import MIAApplication
 from core.assistant_actions import AssistantActionRegistry
 from core.assistant_chat import build_chat_request
 from core.talk_it_out import pre_turn
+from core.conversation_modes import PERSPECTIVE
+from core.why_graph import build_why_sheet
 from core.calendar_manager import CalendarManager
 from core.component_manager import ComponentManager
 from core.config_manager import ConfigManager
@@ -623,7 +632,19 @@ PERSONAL_CASES = [
     ("momentum: brief", "Hype me up", "I've got four hours left on this shift.", None, 70, True),
     ("plan: one next step", "Help me figure out what to do", "I have the greenhouse, the truck, and bills all at once.", None, 150, True),
     ("journal: listening", "I want to journal", "Today I realized I'm proud of how far I've come with the land.", None, 80, False),
+    # Slice B: every number in the reply must come from the fact sheet (checked in main()).
+    ("perspective: remind me why", "Hey MIA", "I'm dragged down at work. Remind me why I'm doing all this.", None, 120, True),
+    ("perspective: no bullshit", "Hey MIA", "No bullshit, what's the point of all this?", None, 120, True),
 ]
+
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+
+def _invented_numbers(reply_text: str, sheet_text: str) -> list[str]:
+    """Numbers (2+ digits) in the reply that aren't anywhere in the fact sheet."""
+    known = {n.replace(",", "") for n in _NUMBER.findall(sheet_text)}
+    said = [n for n in _NUMBER.findall(reply_text) if len(n.replace(",", "")) >= 2]
+    return [n for n in said if n.replace(",", "") not in known]
 
 _LIST_LINE = re.compile(r"^\s*(?:\d+[.)]|[-*•])\s", re.MULTILINE)
 
@@ -676,6 +697,7 @@ def _build_context() -> AppContext:
     context.scripts = ScriptLibraryManager(context)
     context.profiles = ProfileManager(context)
     context.projects = ProjectManager(context)
+    context.intents = intent_manager_module.IntentManager(context)
     context.tasks = TaskManager(context)
     # Read-only aggregation, no persisted file of its own — see
     # core/memory_manager.py's docstring — so no _DATA_DIR isolation
@@ -756,6 +778,12 @@ def _seed_fixtures(context: AppContext) -> None:
     context.maintenance.add_task(bed.asset_id, "Water", interval_days=2)
     context.maintenance.add_asset(name="Pepper Plants", category="Garden/Plant")
     context.budget.add_debt(name="Chase Freedom", balance=4200.0, interest_rate=24.99, minimum_payment=90.0)
+    # Slice B: the owner's chain of reasons, for the Perspective cases.
+    factory = context.intents.add_intent("Factory work")
+    debt_goal = context.intents.add_intent("Pay off debt")
+    time_goal = context.intents.add_intent("Control over my time")
+    context.intents.set_serves(factory.intent_id, debt_goal.intent_id, "the factory pays the bills")
+    context.intents.set_serves(debt_goal.intent_id, time_goal.intent_id)
     context.budget.add_debt(name="Truck Loan", balance=18250.0, interest_rate=6.9, minimum_payment=455.0, debt_type="Auto Loan")
     chili = context.kitchen.add_recipe(name="Venison Chili", category="Dinner")
     context.kitchen.add_ingredient(chili.recipe_id, "ground venison", quantity=2, unit="lb")
@@ -850,6 +878,10 @@ def main() -> int:
         messages, tools = build_chat_request(context, conversation, prompt)
         reply = context.llm.chat_with_tools(messages, tools=tools)
         ok, detail = _check_personal_reply(reply, expected, max_words, lists_ok)
+        if ok and conversation.mode == PERSPECTIVE:
+            invented = _invented_numbers(reply.content or "", build_why_sheet(context).to_text())
+            if invented:
+                ok, detail = False, f"numbers not in the fact sheet: {invented}: {(reply.content or '')[:120]!r}"
         status = "PASS" if ok else "FAIL"
         print(f"[{status}] {description}: {prompt!r} — {detail}")
         if not ok:

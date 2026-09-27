@@ -6,7 +6,7 @@ owner's addendum: *talk to MIA like a therapist or a living journal,
 and have her keep the journal organized and use it to support me.*
 
 **Status (2026-09-27):** the owner approved the order A → B → C → D
-→ E. **Slice A is built** (see "Slice A as built" at the end). The
+→ E. **Slices A and B are built** (see "Slice A as built" and "Slice B as built" at the end). The
 owner's answers are recorded under "Decisions".
 
 ## The short version
@@ -376,3 +376,41 @@ entries later is harder than starting encrypted.
 - UI: a 🔒 Private Journal tab in Notes; Settings, Support & Safety.
 - Deferred from A: the opt-in weekly reflection (it needs slice C's
   gate to deliver it without nagging).
+
+## Slice B as built (2026-09-27)
+
+- **The chain is the owner's:** `Intent.serves_intent_id` and
+  `Intent.reason` (`core/intent_manager.py`), with loop protection
+  (`would_create_cycle()`), and deleting a goal unlinks whatever served
+  it. Set by talking (`link_my_reason`, which finds or creates each
+  goal and reads the whole chain back) or in Toolbox → Intents (new
+  "This serves" and "Why, in your own words" fields). Reading back
+  after saving, with correction by saying it again or "unlink", stands
+  in for the proposal's confirm-before-saving: it keeps each turn
+  independent, which the small model handles far more reliably than a
+  pending two-turn confirmation.
+- **The evidence is computed** (`core/why_graph.py`): debt totals,
+  rentals and 30-day rent, land, 30-day income, and Projects linked to
+  the goal, attached by deterministic keyword matching on each goal's
+  name and reason; recent wins from completed missions and projects
+  and "Wins" memories. A goal with nothing measurable gets no facts
+  rather than invented ones.
+- **Monthly checkpoints** (`data/why_checkpoints.json`, the only stored
+  piece) power "what changed since June". A debt goal becomes **done**
+  when the debt that existed at the first checkpoint is paid off, or
+  when a goal is marked Achieved; the fact sheet says it "used to be a
+  reason", so MIA doesn't repeat an outdated why.
+- **Perspective mode** ("remind me why", "what's the point?", "I'm
+  dragged down at work") is the sixth mode. It takes priority over tone
+  words ("no bullshit, remind me why"), gets the fact sheet, and has no
+  tools. With no reasons yet, MIA says so and invites them instead of
+  giving generic motivation.
+- **Bug caught by its own test:** "remind me why…" read as a command
+  (like "remind me to…"), which would have offered reminder tools
+  instead of the facts. Fixed in `looks_like_direct_command()`.
+- **Live check:** two Perspective cases (208 total) that fail on any
+  number in the reply that isn't in the fact sheet.
+- **Deferred from B:** MIA asking which kind of support you want when a
+  message is ambiguous, and remembering your usual choice; and
+  Perspective on the headless Core voice loop, which doesn't load goals
+  yet.

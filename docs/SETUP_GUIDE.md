@@ -233,7 +233,12 @@ cases have met the real model.
    - *"Off the record"*, say something, then *"Back on the record"*. Nothing
      from that stretch should appear in the chat history after a restart.
    - Later: *"What have I been writing about?"*
-3. Optional: **Settings → Support & Safety → Trusted person**. If you ever
+3. **Tell MIA your why**, one link at a time: *"The reason I work at the
+   factory is to pay off my debt"*, then *"Paying off debt is so I can
+   control my own time"*, and so on up to what you're really building.
+   She reads the chain back each time. Then try *"Remind me why I'm
+   doing all this."* Her answer should use only your real numbers.
+4. Optional: **Settings → Support & Safety → Trusted person**. If you ever
    tell MIA you're in danger, she gives 988 and 911, and names this person
    too.
 
@@ -241,6 +246,7 @@ Each time MIA starts, the journal is locked: she can still **save** to it,
 but reading needs **Unlock…** in the Private Journal tab.
 
 - [ ] Journal set up and a test entry saved
+- [ ] Your why told to MIA, and "remind me why" tried
 
 ---
 

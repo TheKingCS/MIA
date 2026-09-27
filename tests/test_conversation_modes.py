@@ -71,6 +71,8 @@ def test_done_journaling_ends_the_journal():
 @pytest.mark.parametrize("text, expected", [
     ("Add milk to the grocery list", True),
     ("MIA, remind me to call Sarah", True),
+    ("Remind me why I'm doing all this", False),  # a perspective request, not a reminder
+    ("Remind me what I'm working toward", False),
     ("Hey MIA, log 120 hours on the mower", True),
     ("How much have I spent this month?", True),
     ("The truck broke down again and I'm done", False),

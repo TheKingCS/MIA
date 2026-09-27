@@ -56,7 +56,18 @@ from core.conversation_modes import (
     LISTEN,
     MODE_INSTRUCTIONS,
     PERSONAL_MODES,
+    PERSPECTIVE,
     looks_like_direct_command,
+)
+from core.why_graph import build_why_sheet
+
+# Perspective asked for before the owner has told MIA any reasons:
+# say so plainly and invite them, instead of generic motivation.
+NO_WHY_YET_INSTRUCTION = (
+    "The user asked to be reminded why they're doing what they're doing, but they haven't told you their "
+    "reasons yet, so you don't know them. Say so kindly, don't guess or give generic motivation, and invite "
+    "them to tell you, for example: 'the reason I'm working this job is so I can pay off my debt, and paying "
+    "off debt is so I can control my own time.'"
 )
 from core.device_help_manager import GROUNDING_INSTRUCTION
 from core.llm_manager import ToolCall
@@ -520,6 +531,13 @@ def build_personal_system_message(context, mode: str) -> str:
     journal_block = journal_context_block(context)
     if journal_block:
         parts.append(journal_block)
+    if mode == PERSPECTIVE:
+        # Slice B: the facts come from code (core/why_graph.py); the model only phrases them.
+        sheet = build_why_sheet(context)
+        if sheet.is_empty:
+            parts.append(NO_WHY_YET_INSTRUCTION + " Answer in plain conversational text.")
+            return "\n\n".join(parts)
+        parts.append("The user's reasons and the facts behind them:\n" + sheet.to_text())
     instruction = MODE_INSTRUCTIONS.get(mode, MODE_INSTRUCTIONS[LISTEN])
     parts.append(instruction + " Answer in plain conversational text.")
     return "\n\n".join(parts)

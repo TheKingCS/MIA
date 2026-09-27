@@ -41,12 +41,14 @@ LISTEN = "listen"
 DIRECT = "direct"
 MOMENTUM = "momentum"
 PLAN = "plan"
+# Slice B, "Remember Why": answers only from core/why_graph.py's fact sheet.
+PERSPECTIVE = "perspective"
 
-MODES = (COMPANION, LISTEN, DIRECT, MOMENTUM, PLAN)
+MODES = (COMPANION, LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE)
 # Modes where MIA is there for the person, not the records: the reply
 # skips help-doc grounding, and tools are offered only for a message
 # that reads as a direct command (see looks_like_direct_command()).
-PERSONAL_MODES = (LISTEN, DIRECT, MOMENTUM, PLAN)
+PERSONAL_MODES = (LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE)
 
 MODE_LABELS = {
     COMPANION: "Normal",
@@ -54,11 +56,19 @@ MODE_LABELS = {
     DIRECT: "Straight talk",
     MOMENTUM: "Hype",
     PLAN: "Figure it out",
+    PERSPECTIVE: "Remember why",
 }
 
 # One sentence or two each, deliberately: every extra clause is prompt
 # length a 3B model has to hold.
 MODE_INSTRUCTIONS = {
+    PERSPECTIVE: (
+        "The user needs perspective on why they're doing what they're doing. Using ONLY the facts below, "
+        "connect what they're doing today to what it's building toward, following their own reasons in order. "
+        "Name one or two real numbers or wins from the facts. Never invent a number, a goal or a reason. If a "
+        "reason is marked DONE, tell them honestly that it used to be a reason and it's complete now. It's fine "
+        "that today is hard; don't tell them how to feel. Five sentences at most."
+    ),
     LISTEN: (
         "Right now the user wants to be heard, not fixed. Reflect back what they said and how it seems to "
         "feel, in two or three sentences, and ask at most one gentle question. No advice, no lists, no to-dos "
@@ -127,6 +137,16 @@ _PLAN = _phrases(
     r"make (?:this|it) smaller",
     r"where do i (?:even )?start",
 )
+_PERSPECTIVE = _phrases(
+    r"remind me why",
+    r"why am i (?:even )?doing (?:this|all this|any of this)",
+    r"why do i (?:even )?bother",
+    r"what'?s the point(?:\s+of (?:this|it|all this|any of this))?(?=\s*(?:[?.!,]|$))",
+    r"what am i (?:even )?(?:working|doing (?:all )?this) (?:toward|towards|for)",
+    r"i'?m (?:feeling |so )?(?:dragged|dragging) down",
+    r"zoom (?:me )?out",
+    r"what is all this for",
+)
 _JOURNAL = _phrases(
     r"i (?:want|need|'?d like) to journal",
     r"let'?s journal",
@@ -176,7 +196,8 @@ def detect_mode_change(prompt: str) -> ModeChange:
     if _BACK_TO_NORMAL.search(text):
         return ModeChange(mode=COMPANION, journal=False, off_record=False)
 
-    for pattern, mode in ((_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
+    # Perspective first: "no bullshit, remind me why" needs the facts more than a tone.
+    for pattern, mode in ((_PERSPECTIVE, PERSPECTIVE), (_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
         if pattern.search(text):
             change.mode = mode
             break
@@ -196,7 +217,7 @@ def detect_mode_change(prompt: str) -> ModeChange:
 # tools are only offered when the message starts like a command.
 _COMMAND_START = re.compile(
     r"^(?:(?:hey |ok |okay )?mia[,:]?\s+)?(?:please\s+)?"
-    r"(?:add|log|remind|set|mark|put|record|delete|remove|open|play|pause|stop|resume|check off|"
+    r"(?:add|log|remind(?! me (?:why|what i))|set|mark|put|record|delete|remove|open|play|pause|stop|resume|check off|"
     r"start tracking|track|create|schedule|update|what'?s on|what is on|how much|list)\b"
 )
 

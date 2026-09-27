@@ -185,6 +185,23 @@ In these modes MIA won't change your records because you mentioned
 them ("the truck broke down again" is a vent, not a maintenance log).
 A clear command still works: "add milk to the grocery list".
 
+**Remember why.** Tell MIA your reasons, one link at a time: "the
+reason I work at the factory is to pay off my debt", then "paying off
+debt is so I can control my own time". She saves each link and reads
+the whole chain back ("Factory work → Pay off debt → Control over my
+time"); if she got it wrong, just say it again, or "unlink factory
+work". Say "show my why" to hear it with the facts behind it.
+
+Then on a hard day, say **"remind me why I'm doing all this"** (or
+"what's the point?", "I'm dragged down at work"). MIA answers only from
+your own reasons and your real records: your debt now, your rentals
+and rent, your land and projects, what's changed since earlier months,
+and recent wins. She never makes up a number. When a reason is done
+("I paid off all my debt!", or she sees the debt reach $0), she tells
+you it used to be a reason and it's complete, instead of repeating an
+old speech. You can also edit goals and their links in Toolbox →
+Intents.
+
 **Journaling.** Say "I want to journal" (or "let's journal") and just
 talk. MIA listens and saves the conversation to your **Private
 Journal** (Notes, 🔒 Private Journal tab), with a title, your mood, the

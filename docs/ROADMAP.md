@@ -12073,3 +12073,40 @@ goodbye phrases). **GitHub Actions run #1 passed** on the first try
 (unit tests + APK build), and published `MIA-Companion.apk` (830 KB)
 as the `android-latest` release. **Not verifiable here:** behavior on
 a real phone.
+
+## New-computer setup guide (2026-09-27)
+
+`docs/SETUP_GUIDE.md`: one ordered checklist from a blank machine to
+everything built so far (install, Ollama, voice models, the live
+check, Private Journal and modes, your why, Plaid sandbox then
+production, Tailscale and the phone web app, the Android app, the
+Claude Design pass, what to report), with Windows notes where a step
+differs. README and NEXT_SESSION point to it.
+
+## Cognitive Extension, slice B: "Remember Why" (2026-09-27)
+
+- **Reasons chain** on Intents (`serves_intent_id`, `reason`), loop-
+  protected, set by talking (`link_my_reason` finds or creates each
+  goal and reads the chain back) or in Toolbox → Intents.
+- **`core/why_graph.py`** builds the fact sheet in code: per-link
+  evidence (debt, rentals and rent, land, income, linked Projects),
+  recent wins, and "what changed" from monthly checkpoints
+  (`data/why_checkpoints.json`). A paid-off debt goal or an Achieved
+  one is marked done, "used to be a reason".
+- **Perspective mode** ("remind me why", "what's the point?") answers
+  only from that sheet, no tools; with no reasons yet, MIA asks for
+  them instead of generic motivation.
+- Tools: `link_my_reason`, `show_my_why`, `unlink_my_reason`,
+  `mark_goal_achieved` (159 actions). Trigger phrases only, never goal
+  names, which are everyday words ("Factory work" would catch "work
+  was awful").
+
+**Bugs caught:** "remind me why" read as a reminder command (fixed);
+"no bullshit, remind me why" picked the tone over the facts
+(Perspective now has priority).
+
+**Verified:** `pytest -q`, 3710 passed (same one pre-existing timezone
+failure), real `data/` untouched. 23 new tests in
+`tests/test_why_graph.py` plus routing corpus (177) and mode cases.
+Live checklist: 208 cases, dry run routes all correctly; the two
+Perspective cases fail on any number not in the fact sheet.
