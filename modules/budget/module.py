@@ -184,7 +184,8 @@ def format_debt_row(debt: Debt, today: date, priority: Optional[DebtPriority] = 
     straight into the row rather than requiring a second lookup."""
     rate = effective_apr(debt, today)
     rank_part = f"#{priority.rank}  " if priority is not None else ""
-    row = f"{rank_part}{debt.name}   ${debt.balance:,.2f} @ {rate:.2f}% APR  [{debt.debt_type}]"
+    synced_part = "  (bank-synced)" if debt.plaid_account_id else ""
+    row = f"{rank_part}{debt.name}   ${debt.balance:,.2f} @ {rate:.2f}% APR  [{debt.debt_type}]{synced_part}"
     if priority is not None:
         row += f"  — {priority.reason}"
     return row
@@ -267,6 +268,7 @@ class BudgetModule(ModuleBase):
         self._plaid_connect_button: Optional[QPushButton] = None
         self._plaid_add_transactions_button: Optional[QPushButton] = None
         self._plaid_add_investments_button: Optional[QPushButton] = None
+        self._plaid_add_liabilities_button: Optional[QPushButton] = None
         self._plaid_sync_button: Optional[QPushButton] = None
         self._plaid_holdings_list: Optional[QListWidget] = None
 
@@ -1520,6 +1522,10 @@ class BudgetModule(ModuleBase):
         self._plaid_add_investments_button.clicked.connect(self._on_plaid_add_investments)
         button_row.addWidget(self._plaid_add_investments_button)
 
+        self._plaid_add_liabilities_button = QPushButton("Add Card/Loan Access…")
+        self._plaid_add_liabilities_button.clicked.connect(self._on_plaid_add_liabilities)
+        button_row.addWidget(self._plaid_add_liabilities_button)
+
         self._plaid_sync_button = QPushButton("Sync Now")
         self._plaid_sync_button.clicked.connect(self._on_plaid_sync)
         button_row.addWidget(self._plaid_sync_button)
@@ -1548,6 +1554,7 @@ class BudgetModule(ModuleBase):
         self._plaid_sync_button.setEnabled(unlocked)
         self._plaid_add_transactions_button.setEnabled(unlocked and self._selected_plaid_item_needs_upgrade())
         self._plaid_add_investments_button.setEnabled(unlocked and self._selected_plaid_item_needs_investments_upgrade())
+        self._plaid_add_liabilities_button.setEnabled(unlocked and self._selected_plaid_item_needs_liabilities_upgrade())
 
         if not configured:
             self._plaid_status_label.setText("Not set up yet.")
@@ -1574,6 +1581,8 @@ class BudgetModule(ModuleBase):
                     suffix_parts.append("transactions enabled")
                 if item.investments_enabled:
                     suffix_parts.append("investments enabled")
+                if item.liabilities_enabled:
+                    suffix_parts.append("cards/loans enabled")
                 suffix = f"  ·  {', '.join(suffix_parts)}" if suffix_parts else ""
                 list_item = QListWidgetItem(f"{item.institution_name}  —  connected {item.connected_at}{suffix}")
                 list_item.setData(Qt.ItemDataRole.UserRole, item.item_id)
@@ -1613,6 +1622,12 @@ class BudgetModule(ModuleBase):
         if item_id is None or not self.context.plaid.is_unlocked():
             return False
         return any(i.item_id == item_id and not i.investments_enabled for i in self.context.plaid.connected_items())
+
+    def _selected_plaid_item_needs_liabilities_upgrade(self) -> bool:
+        item_id = self._selected_plaid_item_id()
+        if item_id is None or not self.context.plaid.is_unlocked():
+            return False
+        return any(i.item_id == item_id and not i.liabilities_enabled for i in self.context.plaid.connected_items())
 
     def _on_plaid_setup(self) -> None:
         dialog = PlaidSetupDialog()
@@ -1739,6 +1754,41 @@ class BudgetModule(ModuleBase):
                 QMessageBox.warning(None, "Couldn't Save", f"Investments access granted for this session, but saving failed: {exc}")
         self._refresh_plaid_tab()
 
+    def _on_plaid_add_liabilities(self) -> None:
+        """Update-mode counterpart to _on_plaid_connect() for
+        Liabilities (credit cards/student loans -> the Debts tab) —
+        same shape as _on_plaid_add_investments() above."""
+        item_id = self._selected_plaid_item_id()
+        if item_id is None:
+            QMessageBox.information(None, "No Account Selected", "Select a connected account to add card/loan access to.")
+            return
+
+        try:
+            link_token, hosted_link_url = self.context.plaid.create_liabilities_upgrade_session(item_id)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Start", str(exc))
+            return
+
+        webbrowser.open(hosted_link_url)
+
+        progress = PlaidConnectProgressDialog(self.context.plaid, link_token)
+        if progress.exec() != QDialog.DialogCode.Accepted or not progress.entered_public_token:
+            return
+
+        try:
+            self.context.plaid.finish_liabilities_upgrade(item_id, progress.entered_public_token)
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Finish", str(exc))
+            return
+
+        save_dialog = PasswordPromptDialog("your Plaid vault", prompt="Re-enter the passphrase for")
+        if save_dialog.exec() == QDialog.DialogCode.Accepted:
+            try:
+                self.context.plaid.save_current_vault(save_dialog.entered_password)
+            except SecretsError as exc:
+                QMessageBox.warning(None, "Couldn't Save", f"Card/loan access granted for this session, but saving failed: {exc}")
+        self._refresh_plaid_tab()
+
     def _on_plaid_sync(self) -> None:
         passphrase = None
         if any(i.transactions_enabled for i in self.context.plaid.connected_items()):
@@ -1765,8 +1815,13 @@ class BudgetModule(ModuleBase):
             message += "."
         if result.investment_accounts_synced:
             message += f" Synced holdings for {result.investment_accounts_synced} investment account(s)."
+        if result.debts_added or result.debts_updated:
+            message += f" Debts: {result.debts_added} new, {result.debts_updated} updated (see the Debts tab)."
         QMessageBox.information(None, "Synced", message)
         self._refresh_plaid_tab()
+        self._refresh_debt_list()
+        self._refresh_expense_list()
+        self._refresh_income_list()
 
     # ------------------------------------------------------------------
     # Search

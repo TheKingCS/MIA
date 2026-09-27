@@ -35,7 +35,10 @@ from core.plaid_manager import (
     PlaidVault,
     compute_net_balance_total,
     extract_completed_public_token,
+    granted_products,
+    liability_debt_fields,
     map_plaid_category,
+    standard_card_apr,
 )
 from core.secrets_manager import SecretsError
 
@@ -63,6 +66,8 @@ def isolated_paths_with_budget(tmp_path, monkeypatch):
     monkeypatch.setattr(budget_manager_module, "_EXPENSES_FILE", data_dir / "budget_expenses.json")
     monkeypatch.setattr(budget_manager_module, "_INCOME_SOURCES_FILE", data_dir / "income_sources.json")
     monkeypatch.setattr(budget_manager_module, "_BUDGET_TARGETS_FILE", data_dir / "budget_targets.json")
+    monkeypatch.setattr(budget_manager_module, "_BUSINESS_ENTITIES_FILE", data_dir / "business_entities.json")
+    monkeypatch.setattr(budget_manager_module, "_DEBTS_FILE", data_dir / "debts.json")
     return data_dir
 
 
@@ -151,7 +156,7 @@ def test_finish_connection_appends_item_and_save_persists_it(isolated_paths, mon
     manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
 
     fake_exchange_response = SimpleNamespace(access_token="access-sandbox-abc", item_id="item-123")
-    fake_item = SimpleNamespace(institution_name="Chase")
+    fake_item = SimpleNamespace(institution_name="Chase", products=["transactions", "investments", "liabilities"])
     fake_accounts_response = SimpleNamespace(item=fake_item, accounts=[])
     fake_client = SimpleNamespace(
         item_public_token_exchange=lambda req: fake_exchange_response,
@@ -164,6 +169,7 @@ def test_finish_connection_appends_item_and_save_persists_it(isolated_paths, mon
     assert item.institution_name == "Chase"
     assert item.transactions_enabled is True
     assert item.investments_enabled is True
+    assert item.liabilities_enabled is True
     assert len(manager.connected_items()) == 1
 
     manager.save_current_vault("hunter2")
@@ -175,6 +181,7 @@ def test_finish_connection_appends_item_and_save_persists_it(isolated_paths, mon
     assert reloaded.connected_items()[0].access_token == "access-sandbox-abc"
     assert reloaded.connected_items()[0].transactions_enabled is True
     assert reloaded.connected_items()[0].investments_enabled is True
+    assert reloaded.connected_items()[0].liabilities_enabled is True
 
 
 # ------------------------------------------------------------------
@@ -290,7 +297,7 @@ def test_map_plaid_category_travel_is_travel():
 # shape, no real network call
 # ------------------------------------------------------------------
 
-def test_create_hosted_link_session_requests_both_products(isolated_paths):
+def test_create_hosted_link_session_requires_only_transactions(isolated_paths):
     manager = _make_manager()
     manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
 
@@ -306,7 +313,11 @@ def test_create_hosted_link_session_requests_both_products(isolated_paths):
     link_token, hosted_link_url = manager.create_hosted_link_session()
     assert link_token == "link-token-1"
     assert hosted_link_url == "https://hosted.plaid.com/abc"
-    assert [str(p) for p in captured["request"].products] == ["balance", "transactions", "investments"]
+    # "balance" is rejected by /link/token/create, and requiring
+    # investments/liabilities would hide institutions lacking them
+    # (most card issuers) — both are required-if-supported instead.
+    assert [str(p) for p in captured["request"].products] == ["transactions"]
+    assert [str(p) for p in captured["request"].required_if_supported_products] == ["investments", "liabilities"]
 
 
 def test_create_update_mode_session_passes_access_token_and_additional_products(isolated_paths):
@@ -902,3 +913,277 @@ def _counting_clock():
         return state["t"]
 
     return _now
+
+
+# ------------------------------------------------------------------
+# Liabilities (2026-09-27) — credit cards/student loans -> Debt records
+# ------------------------------------------------------------------
+
+def _apr(apr_type, pct):
+    return SimpleNamespace(apr_type=apr_type, apr_percentage=pct)
+
+
+def _card(account_id="card-1", aprs=None, minimum_payment_amount=35.0, last_statement_balance=None):
+    return SimpleNamespace(
+        account_id=account_id,
+        aprs=aprs if aprs is not None else [_apr("purchase_apr", 24.99)],
+        minimum_payment_amount=minimum_payment_amount,
+        last_statement_balance=last_statement_balance,
+    )
+
+
+def _student(account_id="loan-1", loan_name="Sallie Mae Loan", rate=5.5, minimum_payment_amount=180.0):
+    return SimpleNamespace(
+        account_id=account_id, loan_name=loan_name, interest_rate_percentage=rate,
+        minimum_payment_amount=minimum_payment_amount, last_statement_balance=None,
+    )
+
+
+def _liability_account(account_id="card-1", name="Freedom", mask="1234", current=1500.0):
+    return SimpleNamespace(account_id=account_id, name=name, mask=mask, balances=SimpleNamespace(current=current))
+
+
+def test_granted_products_reads_item_products_as_strings():
+    assert granted_products(SimpleNamespace(products=["transactions", "liabilities"])) == {"transactions", "liabilities"}
+
+
+def test_granted_products_missing_means_nothing_granted():
+    assert granted_products(SimpleNamespace()) == set()
+    assert granted_products(None) == set()
+
+
+def test_standard_card_apr_prefers_purchase_apr():
+    aprs = [_apr("cash_apr", 29.99), _apr("purchase_apr", 21.99)]
+    assert standard_card_apr(aprs) == 21.99
+
+
+def test_standard_card_apr_never_uses_special_promo_rate():
+    aprs = [_apr("special", 0.0), _apr("balance_transfer_apr", 19.99)]
+    assert standard_card_apr(aprs) == 19.99
+
+
+def test_standard_card_apr_none_when_nothing_usable():
+    assert standard_card_apr([_apr("special", 0.0)]) is None
+    assert standard_card_apr([]) is None
+    assert standard_card_apr(None) is None
+
+
+def test_liability_debt_fields_credit_card():
+    fields = liability_debt_fields("credit", _card(), _liability_account(), "Chase")
+    assert fields == {
+        "name": "Chase Freedom \u2022\u20221234",
+        "debt_type": "Credit Card",
+        "balance": 1500.0,
+        "interest_rate": 24.99,
+        "minimum_payment": 35.0,
+    }
+
+
+def test_liability_debt_fields_student_loan_uses_loan_name():
+    fields = liability_debt_fields("student", _student(), _liability_account(account_id="loan-1", mask=None, current=15000.0), "Nelnet")
+    assert fields["name"] == "Sallie Mae Loan"
+    assert fields["debt_type"] == "Student Loan"
+    assert fields["interest_rate"] == 5.5
+
+
+def test_liability_debt_fields_falls_back_to_statement_balance():
+    account = _liability_account(current=None)
+    fields = liability_debt_fields("credit", _card(last_statement_balance=820.0), account, "Chase")
+    assert fields["balance"] == 820.0
+
+
+def test_liability_debt_fields_none_without_any_balance():
+    assert liability_debt_fields("credit", _card(), _liability_account(current=None), "Chase") is None
+
+
+def test_liability_debt_fields_unknown_kind_is_none():
+    assert liability_debt_fields("mortgage", _card(), _liability_account(), "Chase") is None
+
+
+def test_plaid_item_from_dict_backward_compatible_defaults_liabilities_false():
+    item = PlaidItem.from_dict({"item_id": "i", "access_token": "a", "institution_name": "X", "connected_at": ""})
+    assert item.liabilities_enabled is False
+
+
+def test_finish_connection_only_enables_products_the_institution_granted(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    fake_accounts_response = SimpleNamespace(
+        item=SimpleNamespace(institution_name="Discover", products=["transactions", "liabilities"]), accounts=[],
+    )
+    manager._client = SimpleNamespace(
+        item_public_token_exchange=lambda req: SimpleNamespace(access_token="access-1", item_id="item-1"),
+        accounts_get=lambda req: fake_accounts_response,
+    )
+    item = manager.finish_connection("public-token")
+    assert item.transactions_enabled is True
+    assert item.investments_enabled is False
+    assert item.liabilities_enabled is True
+
+
+def test_create_liabilities_upgrade_session_passes_access_token_and_additional_products(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+    ))
+    captured = {}
+
+    def _fake_link_token_create(req):
+        captured["request"] = req
+        return SimpleNamespace(link_token="lt", hosted_link_url="https://hosted.plaid.com/x")
+
+    manager._client = SimpleNamespace(link_token_create=_fake_link_token_create)
+    manager.create_liabilities_upgrade_session("item-1")
+    assert captured["request"].access_token == "access-abc"
+    assert [str(p) for p in captured["request"].additional_consented_products] == ["liabilities"]
+
+
+def test_create_liabilities_upgrade_session_raises_for_unknown_item(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    with pytest.raises(ValueError):
+        manager.create_liabilities_upgrade_session("nope")
+
+
+def test_finish_liabilities_upgrade_flips_flag(isolated_paths):
+    manager = _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+    ))
+    manager._client = SimpleNamespace(item_public_token_exchange=lambda req: SimpleNamespace())
+    manager.finish_liabilities_upgrade("item-1", "public-token")
+    assert manager.connected_items()[0].liabilities_enabled is True
+
+
+def _liabilities_response(credit=None, student=None, accounts=None):
+    return SimpleNamespace(
+        accounts=accounts if accounts is not None else [_liability_account()],
+        liabilities=SimpleNamespace(credit=credit or [], student=student or [], mortgage=[{"ignored": True}]),
+    )
+
+
+def test_sync_liabilities_creates_then_updates_debt_without_duplicating(isolated_paths_with_budget):
+    manager = _make_manager_with_budget()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Chase",
+                      connected_at="2026-09-01T00:00:00", liabilities_enabled=True)
+    responses = [
+        _liabilities_response(credit=[_card()]),
+        _liabilities_response(
+            credit=[_card(aprs=[_apr("purchase_apr", 26.99)], minimum_payment_amount=40.0)],
+            accounts=[_liability_account(current=1200.0)],
+        ),
+    ]
+    manager._client = SimpleNamespace(liabilities_get=lambda req: responses.pop(0))
+
+    assert manager._sync_liabilities_for_item(item) == (1, 0)
+    budget = manager.context.budget
+    debt = budget.all_debts()[0]
+    assert debt.plaid_account_id == "card-1"
+    assert debt.balance == 1500.0
+
+    # User-owned edits must survive the next sync.
+    budget.update_debt(debt.debt_id, name="My Chase Card", promo_apr=0.0, promo_expires_date="2026-12-01", notes="keep")
+
+    assert manager._sync_liabilities_for_item(item) == (0, 1)
+    assert len(budget.all_debts()) == 1
+    synced = budget.get_debt(debt.debt_id)
+    assert synced.balance == 1200.0
+    assert synced.interest_rate == 26.99
+    assert synced.minimum_payment == 40.0
+    assert synced.name == "My Chase Card"
+    assert synced.promo_apr == 0.0
+    assert synced.promo_expires_date == "2026-12-01"
+    assert synced.notes == "keep"
+
+
+def test_sync_liabilities_does_not_overwrite_rate_plaid_did_not_report(isolated_paths_with_budget):
+    manager = _make_manager_with_budget()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Chase",
+                      connected_at="2026-09-01T00:00:00", liabilities_enabled=True)
+    responses = [
+        _liabilities_response(credit=[_card()]),
+        _liabilities_response(credit=[_card(aprs=[], minimum_payment_amount=None)]),
+    ]
+    manager._client = SimpleNamespace(liabilities_get=lambda req: responses.pop(0))
+    manager._sync_liabilities_for_item(item)
+    manager._sync_liabilities_for_item(item)
+    debt = manager.context.budget.all_debts()[0]
+    assert debt.interest_rate == 24.99
+    assert debt.minimum_payment == 35.0
+
+
+def test_sync_liabilities_skips_accounts_missing_from_response(isolated_paths_with_budget):
+    manager = _make_manager_with_budget()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Chase",
+                      connected_at="2026-09-01T00:00:00", liabilities_enabled=True)
+    manager._client = SimpleNamespace(
+        liabilities_get=lambda req: _liabilities_response(credit=[_card(account_id="ghost")]),
+    )
+    assert manager._sync_liabilities_for_item(item) == (0, 0)
+
+
+def test_sync_imports_student_loans_too(isolated_paths_with_budget):
+    manager = _make_manager_with_budget()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Nelnet",
+                      connected_at="2026-09-01T00:00:00", liabilities_enabled=True)
+    manager._client = SimpleNamespace(liabilities_get=lambda req: _liabilities_response(
+        student=[_student()], accounts=[_liability_account(account_id="loan-1", current=15000.0)],
+    ))
+    manager._sync_liabilities_for_item(item)
+    debt = manager.context.budget.all_debts()[0]
+    assert debt.debt_type == "Student Loan"
+    assert debt.balance == 15000.0
+
+
+def _sync_ready_manager(isolated_dir, liabilities_enabled, liabilities_get):
+    manager = _make_manager_with_budget()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    manager._vault.items.append(PlaidItem(
+        item_id="item-1", access_token="access-abc", institution_name="Chase", connected_at="2026-09-01T00:00:00",
+        liabilities_enabled=liabilities_enabled,
+    ))
+    manager._client = SimpleNamespace(
+        accounts_get=lambda req: SimpleNamespace(item=SimpleNamespace(institution_name="Chase"), accounts=[]),
+        liabilities_get=liabilities_get,
+    )
+    manager.context.finance = SimpleNamespace(
+        import_folder_path=isolated_dir / "finance_import", scan_for_new_snapshots=lambda: None,
+    )
+    return manager
+
+
+def test_sync_reports_debt_counts(isolated_paths_with_budget):
+    manager = _sync_ready_manager(
+        isolated_paths_with_budget, True, lambda req: _liabilities_response(credit=[_card()]),
+    )
+    result = manager.sync()
+    assert result.debts_added == 1
+    assert result.debts_updated == 0
+
+
+def test_sync_skips_liabilities_when_not_enabled(isolated_paths_with_budget):
+    def _must_not_be_called(req):
+        raise AssertionError("liabilities_get called for a non-liabilities item")
+
+    manager = _sync_ready_manager(isolated_paths_with_budget, False, _must_not_be_called)
+    result = manager.sync()
+    assert result.debts_added == 0
+    assert manager.context.budget.all_debts() == []
+
+
+def test_sync_continues_when_liabilities_call_fails(isolated_paths_with_budget):
+    import plaid
+
+    def _fail(req):
+        raise plaid.ApiException(status=400, reason="NO_LIABILITY_ACCOUNTS")
+
+    manager = _sync_ready_manager(isolated_paths_with_budget, True, _fail)
+    result = manager.sync()
+    assert len(result.snapshots) == 1
+    assert result.debts_added == 0

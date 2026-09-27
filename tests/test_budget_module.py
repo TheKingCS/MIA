@@ -63,6 +63,14 @@ def test_format_debt_row_uses_effective_promo_apr():
     assert format_debt_row(debt, date(2026, 9, 27)) == "Chase Freedom   $5,000.00 @ 0.00% APR  [Credit Card]"
 
 
+def test_format_debt_row_marks_bank_synced_debts():
+    debt = _debt()
+    debt.plaid_account_id = "acct-1"
+    assert format_debt_row(debt, date(2026, 9, 27)) == (
+        "Chase Freedom   $5,000.00 @ 24.99% APR  [Credit Card]  (bank-synced)"
+    )
+
+
 def test_format_bill_row_overdue():
     bill = _bill(due_date="2026-08-01")
     assert format_bill_row(bill, date(2026, 9, 7)) == "[OVERDUE 37d]  Electric   $120.00  [Utilities]"

@@ -418,6 +418,10 @@ class Debt:
     promo_expires_date: Optional[str] = None  # ISO date
     entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     last_payment_date: Optional[str] = None
+    # Set when core.plaid_manager created/syncs this debt from a real
+    # linked account — the dedup key on repeat sync, same role as
+    # IncomeEntry/ExpenseEntry's plaid_transaction_id.
+    plaid_account_id: str = ""
     notes: str = ""
     created_at: str = ""
 
@@ -427,7 +431,8 @@ class Debt:
             "interest_rate": self.interest_rate, "minimum_payment": self.minimum_payment,
             "debt_type": self.debt_type, "promo_apr": self.promo_apr,
             "promo_expires_date": self.promo_expires_date, "entity_id": self.entity_id,
-            "last_payment_date": self.last_payment_date, "notes": self.notes, "created_at": self.created_at,
+            "last_payment_date": self.last_payment_date, "plaid_account_id": self.plaid_account_id,
+            "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -443,6 +448,7 @@ class Debt:
             promo_expires_date=data.get("promo_expires_date"),
             entity_id=data.get("entity_id", ""),
             last_payment_date=data.get("last_payment_date"),
+            plaid_account_id=data.get("plaid_account_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -1208,6 +1214,7 @@ class BudgetManager:
         promo_expires_date: Optional[str] = None,
         entity_id: str = "",
         notes: str = "",
+        plaid_account_id: str = "",
     ) -> Debt:
         if balance < 0:
             raise ValueError(f"balance must not be negative, got {balance}")
@@ -1227,6 +1234,7 @@ class BudgetManager:
             # anything real — see effective_apr()'s own reasoning.
             promo_expires_date=promo_expires_date if promo_apr is not None else None,
             entity_id=entity_id,
+            plaid_account_id=plaid_account_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -1263,6 +1271,16 @@ class BudgetManager:
     def get_debt(self, debt_id: str) -> Optional[Debt]:
         for debt in self._debts:
             if debt.debt_id == debt_id:
+                return debt
+        return None
+
+    def get_debt_by_plaid_account_id(self, account_id: str) -> Optional[Debt]:
+        """The dedup lookup a repeat core.plaid_manager liabilities sync
+        uses before deciding whether to add a new debt or update one."""
+        if not account_id:
+            return None
+        for debt in self._debts:
+            if debt.plaid_account_id == account_id:
                 return debt
         return None
 

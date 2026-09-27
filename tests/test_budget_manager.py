@@ -1050,3 +1050,17 @@ def test_weighted_average_debt_apr_weights_by_balance(isolated_paths):
 def test_weighted_average_debt_apr_zero_when_no_open_debt(isolated_paths):
     manager = _make_manager()
     assert manager.weighted_average_debt_apr() == 0.0
+
+
+def test_get_debt_by_plaid_account_id_finds_linked_debt(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="Manual", balance=100.0, interest_rate=10.0)
+    linked = manager.add_debt(name="Synced", balance=200.0, interest_rate=20.0, plaid_account_id="acct-9")
+    assert manager.get_debt_by_plaid_account_id("acct-9").debt_id == linked.debt_id
+    assert manager.get_debt_by_plaid_account_id("") is None
+    assert manager.get_debt_by_plaid_account_id("missing") is None
+
+
+def test_debt_from_dict_backward_compatible_defaults_plaid_account_id_empty():
+    debt = Debt.from_dict({"debt_id": "d1", "name": "Old", "balance": 1.0, "interest_rate": 1.0})
+    assert debt.plaid_account_id == ""

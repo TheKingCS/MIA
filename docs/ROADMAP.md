@@ -11626,3 +11626,55 @@ a personal asset used partly for contracted work (the mower/lawn-care
 case), then real phone dashboard access (extending the existing
 opt-in local server past login+push into a real Budget/Debt/Net Worth
 read view).
+
+## Plaid Liabilities -> Debts tab, plus a real connect-request fix (2026-09-27)
+
+Cards and student loans from a real linked account now flow into the
+Debts tab automatically. `core/plaid_manager.py` gained a
+`liabilities_enabled` item flag, `create_liabilities_upgrade_session()`/
+`finish_liabilities_upgrade()` (same update-mode shape as Investments),
+and `_sync_liabilities_for_item()`, which upserts
+`core.budget_manager.Debt` records keyed by a new
+`Debt.plaid_account_id`. Pure, unit-tested mapping:
+`standard_card_apr()` (purchase APR, else the highest non-promo APR;
+Plaid's `"special"` promo bucket is never used as the standard rate)
+and `liability_debt_fields()`. **Ownership split**: Plaid owns balance,
+standard APR and minimum payment (re-synced every time, since the bank
+is the source of truth), and never overwrites a rate/minimum it didn't
+report. The user owns name after creation, type, entity, notes and the
+promo APR + expiration. Plaid's special APR has no expiration date, so
+it couldn't drive `effective_apr()` anyway. Mortgages stay skipped (owned by
+`Property`); Plaid's newer generic `loan`/`line_of_credit` types aren't
+mapped yet. One institution's liabilities error (e.g.
+`NO_LIABILITY_ACCOUNTS`) is logged and skipped rather than aborting
+every other item's sync.
+
+**A real bug in the never-yet-exercised connect flow, found while
+checking Plaid's own docs, not assumed**: `create_hosted_link_session()`
+listed `balance` in `products`, which /link/token/create rejects
+(Balance initializes automatically with any other product). It also
+required `investments`, which hides every institution that doesn't
+offer it, including most card issuers. Now only `transactions` is
+required; `investments` and `liabilities` are
+`required_if_supported_products`, and `finish_connection()` reads
+which ones the institution actually granted from the Item's own
+`products` list instead of assuming both.
+
+GUI: an "Add Card/Loan Access…" button on Bank Sync (for items linked
+before this existed), a "cards/loans enabled" tag per item, debt counts
+in the sync summary, a "(bank-synced)" marker on synced Debts rows,
+and Sync Now now refreshes the Debts/Income/Expenses lists too.
+
+**Verified for real**: `pytest -q`, 3282 passed (the same one
+pre-existing timezone-dependent navigation failure, unrelated). New tests
+cover the APR/field mapping edge cases, granted-product detection
+including an institution with no investments, the upgrade session
+request shape, create-then-update dedup that preserves user-owned
+edits, no overwrite of unreported rates, student loans, skipping
+non-liabilities items, and sync continuing past a liabilities
+`ApiException`. The budget test fixture in `test_plaid_manager.py` now
+also isolates `debts.json`/`business_entities.json`, confirmed no real
+`data/` file written. Headless-Qt run with a simulated sync confirmed
+the synced card lands ranked in the Debts tab and the new button/tags
+render. **Still unverified against Plaid's real API**; the first
+Sandbox run on the user's own machine is the real test.

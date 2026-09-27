@@ -69,6 +69,29 @@ non-qualifying item, it just returns `is_investments_fallback_item=True`
 with no holdings. `_holdings_snapshot_for_item()` below treats that
 response (and a genuinely empty `holdings` list) as "nothing to show
 yet" and writes no snapshot at all, rather than surfacing it as a bug.
+
+**Liabilities (added 2026-09-27)**: credit cards and student loans
+from /liabilities/get become real `core.budget_manager.Debt` records,
+deduped by `Debt.plaid_account_id`, so they show up in the Debts tab's
+payoff ranking like a manually-entered debt. Plaid owns balance, the
+standard APR, and the minimum payment (re-synced every time — the
+bank is the source of truth for those); the user owns everything else
+(name after creation, debt type, entity, notes, and the promo APR +
+expiration — Plaid's "special" APR type carries no expiration date, so
+it can't populate a promo that `effective_apr()` would honor anyway).
+Mortgages are deliberately skipped (see Debt's own docstring — they
+belong to core.real_estate_manager.Property); Plaid's newer generic
+`loan`/`line_of_credit` liability types are not mapped yet.
+
+**Connect request fix (2026-09-27)**: `create_hosted_link_session()`
+originally listed `balance` in `products`, which Plaid's
+/link/token/create rejects outright (Balance is initialized
+automatically by any other product), and listed `investments` there
+too, which hides every institution that doesn't support investments —
+most card issuers. Now only `transactions` is required; `investments`
+and `liabilities` go in `required_if_supported_products`, and
+`finish_connection()` reads which ones the institution actually
+granted from the Item's own `products` list rather than assuming.
 """
 
 from __future__ import annotations
@@ -87,6 +110,7 @@ from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.country_code import CountryCode
 from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.liabilities_get_request import LiabilitiesGetRequest
 from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
@@ -120,6 +144,7 @@ class PlaidItem:
     transactions_enabled: bool = False  # Transactions product consent granted
     transactions_cursor: str = ""  # last next_cursor from /transactions/sync — "" means never synced yet
     investments_enabled: bool = False  # Investments product consent granted
+    liabilities_enabled: bool = False  # Liabilities product consent granted
 
     def to_dict(self) -> dict:
         return {
@@ -127,6 +152,7 @@ class PlaidItem:
             "institution_name": self.institution_name, "connected_at": self.connected_at,
             "transactions_enabled": self.transactions_enabled, "transactions_cursor": self.transactions_cursor,
             "investments_enabled": self.investments_enabled,
+            "liabilities_enabled": self.liabilities_enabled,
         }
 
     @staticmethod
@@ -139,6 +165,7 @@ class PlaidItem:
             transactions_enabled=data.get("transactions_enabled", False),
             transactions_cursor=data.get("transactions_cursor", ""),
             investments_enabled=data.get("investments_enabled", False),
+            liabilities_enabled=data.get("liabilities_enabled", False),
         )
 
 
@@ -186,6 +213,8 @@ class PlaidSyncResult:
     transactions_added: int = 0
     transactions_updated: int = 0
     investment_accounts_synced: int = 0
+    debts_added: int = 0
+    debts_updated: int = 0
 
 
 _LIABILITY_ACCOUNT_TYPES = {"credit", "loan"}
@@ -286,6 +315,65 @@ def map_plaid_category(primary: str, detailed: str, is_income: bool) -> Optional
     return "Other"  # OTHER, and any future Plaid category this function doesn't yet recognize
 
 
+def granted_products(plaid_item) -> set[str]:
+    """Pure logic — testable without a real Plaid client. The product
+    names an Item actually has initialized (Plaid's Item.products),
+    as plain strings. Missing/None means nothing is known to be
+    granted — callers treat that as "not enabled," never assume."""
+    return {str(p) for p in (getattr(plaid_item, "products", None) or [])}
+
+
+def standard_card_apr(aprs) -> Optional[float]:
+    """Pure logic — testable without a real Plaid client. The card's
+    standard (non-promotional) rate: its purchase APR when reported,
+    otherwise the highest non-"special" APR (cash/balance-transfer/
+    penalty), since that's the conservative choice for payoff ranking.
+    "special" is Plaid's promotional-rate bucket and is never used as
+    the standard rate. None when no usable APR is reported at all."""
+    usable = [a for a in (aprs or []) if a.apr_percentage is not None and str(a.apr_type) != "special"]
+    for apr in usable:
+        if str(apr.apr_type) == "purchase_apr":
+            return apr.apr_percentage
+    return max((a.apr_percentage for a in usable), default=None)
+
+
+def liability_debt_fields(kind: str, liability, account, institution_name: str) -> Optional[dict]:
+    """Pure logic — testable without a real Plaid client. One Plaid
+    credit-card or student-loan liability (plus its matching account,
+    for the balance and display name) -> the Debt fields Plaid owns.
+    interest_rate/minimum_payment are None when Plaid didn't report
+    them, so a sync never overwrites a real value with a guess.
+    Returns None when there's no usable current balance to track."""
+    balances = getattr(account, "balances", None)
+    balance = getattr(balances, "current", None) if balances is not None else None
+    if balance is None:
+        balance = getattr(liability, "last_statement_balance", None)
+    if balance is None:
+        return None
+
+    account_name = getattr(account, "name", None) or "Account"
+    mask = getattr(account, "mask", None)
+    mask_part = f" \u2022\u2022{mask}" if mask else ""
+
+    if kind == "credit":
+        return {
+            "name": f"{institution_name} {account_name}{mask_part}",
+            "debt_type": "Credit Card",
+            "balance": max(0.0, balance),
+            "interest_rate": standard_card_apr(liability.aprs),
+            "minimum_payment": liability.minimum_payment_amount,
+        }
+    if kind == "student":
+        return {
+            "name": f"{liability.loan_name or account_name}{mask_part}",
+            "debt_type": "Student Loan",
+            "balance": max(0.0, balance),
+            "interest_rate": liability.interest_rate_percentage,
+            "minimum_payment": liability.minimum_payment_amount,
+        }
+    return None
+
+
 class PlaidManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
@@ -358,7 +446,8 @@ class PlaidManager:
             language="en",
             country_codes=[CountryCode("US")],
             user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
-            products=[Products("balance"), Products("transactions"), Products("investments")],
+            products=[Products("transactions")],
+            required_if_supported_products=[Products("investments"), Products("liabilities")],
             hosted_link=LinkTokenCreateHostedLink(),
         )
         response = self._client.link_token_create(request)
@@ -406,6 +495,26 @@ class PlaidManager:
             user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
             access_token=item.access_token,
             additional_consented_products=[Products("investments")],
+            hosted_link=LinkTokenCreateHostedLink(),
+        )
+        response = self._client.link_token_create(request)
+        return response.link_token, response.hosted_link_url
+
+    def create_liabilities_upgrade_session(self, item_id: str) -> tuple[str, str]:
+        """Same shape as create_investments_upgrade_session(), for
+        Liabilities — for an item connected before Liabilities was
+        requested at connect time."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        request = LinkTokenCreateRequest(
+            client_name="MIA Home",
+            language="en",
+            country_codes=[CountryCode("US")],
+            user=LinkTokenCreateRequestUser(client_user_id=uuid.uuid4().hex),
+            access_token=item.access_token,
+            additional_consented_products=[Products("liabilities")],
             hosted_link=LinkTokenCreateHostedLink(),
         )
         response = self._client.link_token_create(request)
@@ -470,13 +579,17 @@ class PlaidManager:
         accounts_response = self._client.accounts_get(AccountsGetRequest(access_token=access_token))
         if accounts_response.item is not None and accounts_response.item.institution_name:
             institution_name = accounts_response.item.institution_name
+        # investments/liabilities are required-if-supported (see
+        # create_hosted_link_session), so whether this institution
+        # actually granted them is read from the Item, never assumed.
+        granted = granted_products(accounts_response.item)
 
         new_item = PlaidItem(
             item_id=item_id, access_token=access_token, institution_name=institution_name,
             connected_at=datetime.now().isoformat(timespec="seconds"),
-            # new connections always request all three products now (see create_hosted_link_session)
-            transactions_enabled=True,
-            investments_enabled=True,
+            transactions_enabled=True,  # the one required product — Link can't complete without it
+            investments_enabled="investments" in granted,
+            liabilities_enabled="liabilities" in granted,
         )
         self._vault.items.append(new_item)
         log.info("Connected Plaid item: '%s' (%s)", new_item.institution_name, new_item.item_id)
@@ -509,6 +622,17 @@ class PlaidManager:
         self._client.item_public_token_exchange(ItemPublicTokenExchangeRequest(public_token=public_token))
         item.investments_enabled = True
         log.info("Investments access added for Plaid item '%s'.", item.institution_name)
+
+    def finish_liabilities_upgrade(self, item_id: str, public_token: str) -> None:
+        """The update-mode counterpart to finish_connection() for
+        Liabilities — same shape as finish_investments_upgrade()."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        self._client.item_public_token_exchange(ItemPublicTokenExchangeRequest(public_token=public_token))
+        item.liabilities_enabled = True
+        log.info("Liabilities access added for Plaid item '%s'.", item.institution_name)
 
     def save_current_vault(self, passphrase: str) -> None:
         """Re-encrypts and persists the in-memory vault (e.g. after
@@ -558,6 +682,8 @@ class PlaidManager:
         total_added = 0
         total_updated = 0
         investment_accounts_synced = 0
+        debts_added = 0
+        debts_updated = 0
         cursor_changed = False
 
         for item in self._vault.items:
@@ -592,6 +718,18 @@ class PlaidManager:
                     total_updated += updated
                     cursor_changed = True
 
+            if item.liabilities_enabled and self.context.budget is not None:
+                try:
+                    added, updated = self._sync_liabilities_for_item(item)
+                except plaid.ApiException as exc:
+                    # e.g. NO_LIABILITY_ACCOUNTS — one institution's
+                    # liabilities error shouldn't abort every other
+                    # item's sync.
+                    log.warning("Liabilities sync failed for '%s': %s", item.institution_name, exc)
+                else:
+                    debts_added += added
+                    debts_updated += updated
+
         if written and self.context.finance is not None:
             self.context.finance.scan_for_new_snapshots()
 
@@ -608,6 +746,7 @@ class PlaidManager:
         return PlaidSyncResult(
             snapshots=written, transactions_added=total_added, transactions_updated=total_updated,
             investment_accounts_synced=investment_accounts_synced,
+            debts_added=debts_added, debts_updated=debts_updated,
         )
 
     def _holdings_snapshot_for_item(self, item: PlaidItem) -> Optional[dict]:
@@ -655,6 +794,48 @@ class PlaidManager:
             "holdings": holdings,
             "holdings_total_value": total,
         }
+
+    def _sync_liabilities_for_item(self, item: PlaidItem) -> tuple[int, int]:
+        """/liabilities/get -> upserted core.budget_manager.Debt records,
+        keyed by plaid_account_id. Only Plaid-owned fields (balance,
+        and interest_rate/minimum_payment when reported) are written on
+        update — see the module docstring for the full ownership split.
+        Returns (added, updated)."""
+        response = self._client.liabilities_get(LiabilitiesGetRequest(access_token=item.access_token))
+        accounts_by_id = {a.account_id: a for a in response.accounts}
+        liabilities = response.liabilities
+        budget = self.context.budget
+        added = 0
+        updated = 0
+
+        for kind in ("credit", "student"):
+            for liability in getattr(liabilities, kind, None) or []:
+                account = accounts_by_id.get(liability.account_id)
+                if account is None:
+                    continue
+                fields = liability_debt_fields(kind, liability, account, item.institution_name)
+                if fields is None:
+                    continue
+                existing = budget.get_debt_by_plaid_account_id(liability.account_id)
+                if existing is not None:
+                    changes = {"balance": fields["balance"]}
+                    if fields["interest_rate"] is not None:
+                        changes["interest_rate"] = fields["interest_rate"]
+                    if fields["minimum_payment"] is not None:
+                        changes["minimum_payment"] = fields["minimum_payment"]
+                    budget.update_debt(existing.debt_id, **changes)
+                    updated += 1
+                else:
+                    budget.add_debt(
+                        name=fields["name"],
+                        balance=fields["balance"],
+                        interest_rate=fields["interest_rate"] or 0.0,
+                        minimum_payment=fields["minimum_payment"] or 0.0,
+                        debt_type=fields["debt_type"],
+                        plaid_account_id=liability.account_id,
+                    )
+                    added += 1
+        return added, updated
 
     def _sync_transactions_for_item(self, item: PlaidItem) -> tuple[int, int]:
         """Loops /transactions/sync until has_more is False (Plaid's own
