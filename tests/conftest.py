@@ -48,7 +48,12 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
+import core.component_manager as component_manager_module
 import core.connectivity as connectivity_module
+import core.inventory_manager as inventory_manager_module
+import core.material_manager as material_manager_module
+import core.product_manager as product_manager_module
+import core.skill_manager as skill_manager_module
 import core.logger as logger_module
 import core.profile_manager as profile_manager_module
 import core.usage_tracker as usage_tracker_module
@@ -72,3 +77,49 @@ def _no_network(*_args, **_kwargs):
 
 
 connectivity_module._default_connect = _no_network
+
+
+# 2026-09-27: the real data/ folder was found holding test-written usage
+# logs and a skill XP log (entries from ordinary `pytest` runs). Not every
+# test that triggers them isolates these runtime files, so they default to
+# a temp dir for the whole session; tests that set their own paths still
+# override this. Tracked seed files (skill_definitions.json,
+# mission_pathways.json) are deliberately left pointing at the real ones.
+_TEST_RUNTIME_DIR = Path(tempfile.mkdtemp(prefix="mia_test_runtime_"))
+for _module in (inventory_manager_module, component_manager_module, material_manager_module, product_manager_module):
+    _module._USAGE_LOG_FILE = _TEST_RUNTIME_DIR / _module._USAGE_LOG_FILE.name
+skill_manager_module._SKILL_XP_LOG_FILE = _TEST_RUNTIME_DIR / "skill_xp_log.json"
+skill_manager_module._SKILL_PROGRESS_FILE = _TEST_RUNTIME_DIR / "skill_progress.json"
+
+
+# Guard: the test suite must never touch the real data/ folder. Snapshot
+# it at session start and fail the run, naming the files, if anything was
+# added or changed by the end.
+_REAL_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+
+def _data_snapshot() -> dict[str, float]:
+    if not _REAL_DATA_DIR.exists():
+        return {}
+    return {
+        str(p.relative_to(_REAL_DATA_DIR)): p.stat().st_mtime
+        for p in _REAL_DATA_DIR.rglob("*")
+    }
+
+
+def pytest_sessionstart(session):
+    session.config._mia_data_snapshot = _data_snapshot()
+
+
+def pytest_sessionfinish(session, exitstatus):
+    before = getattr(session.config, "_mia_data_snapshot", None)
+    if before is None:
+        return
+    after = _data_snapshot()
+    touched = sorted(name for name, mtime in after.items() if before.get(name) != mtime)
+    if touched:
+        reporter = session.config.pluginmanager.get_plugin("terminalreporter")
+        message = "Tests wrote into the real data/ folder: " + ", ".join(touched)
+        if reporter is not None:
+            reporter.write_line(message, red=True)
+        session.exitstatus = 1

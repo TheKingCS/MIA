@@ -113,6 +113,36 @@ mower", "the tomatoes". You don't need their exact names in MIA.
 - "I made 5 more cutting boards"
 - "I sold 2 cutting boards for $40 each"
 
+## Workouts
+
+- "Log my workout: 3x10 squats at 185 and 3x8 bench at 155"
+- "I did 20 push-ups" (new exercises are added automatically)
+- "How many workouts have I done this week?"
+- "What's my personal record on the squat?"
+
+## People and pets
+
+- "Add my sister Megan, her birthday is June 12"
+- "Sarah would love a new cast iron skillet" (saved as a gift idea)
+- "Gift ideas for Sarah?" / "Tell me about Sarah"
+- "Any birthdays coming up?"
+- "We adopted a beagle named Rosie"
+- "Biscuit went to the vet for his rabies shot today" (dated medical
+  history)
+
+## Household routines
+
+- "Add a routine: laundry twice a week"
+- "I did a load of laundry" / "Did the dishes"
+- "What chores are left today?" (progress and streaks)
+
+## Classroom
+
+- "Add a course on residential wiring under Electrical"
+- "I finished the lesson on circuit breakers"
+- "Add to my notes for GFCI outlets: test them monthly"
+- "What's my next lesson?"
+
 ## Projects and tasks
 
 - "Start a project called Garage Rewire"

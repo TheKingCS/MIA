@@ -11923,3 +11923,37 @@ model run itself.
 failure). New tests: 171 across `test_assistant_routing.py` and
 `test_assistant_domain_actions.py`, the latter running every new or
 reworked tool against real managers on temp data.
+
+## Conversational coverage: Workout, People & Pets, Household, Classroom (2026-09-27)
+
+Closed the audit's "not covered yet" list. 18 tools in
+`core/assistant_life_actions.py`, registered after the domain tools:
+
+- **Workout:** `log_workout` parses spoken sets ("3x10 squats at 185",
+  "3 sets of 8 bench press with 155 pounds"), reuses existing exercises
+  by name ("squat" finds Back Squat), keeps cardio as session notes;
+  weekly summary and personal records.
+- **People & pets:** add/update/get a person (birthday, favorite
+  things, gift ideas, dated notes), upcoming birthdays, pets with dated
+  medical history. A year-less birthday is stored with a 2000
+  placeholder year that is never spoken.
+- **Household:** routines are recurring mission templates in the
+  Household category; logging one advances this period's count
+  ("Laundry: 2 of 2. That's done for the week!").
+- **Classroom:** courses, lessons, completion, lesson notes, progress
+  with the next lesson.
+
+Vocabulary was kept narrow on purpose: no "course" ("of course"), no
+"dog/cat/pet", no "sets"/"bench", and the "my pr" trigger is anchored
+so it doesn't catch "my progress". New small-talk guards cover each.
+
+**Test-suite data leak found and fixed.** Some tests had been writing
+usage logs and skill XP into the real `data/` folder for several
+sessions, and the live model check left profile folders there.
+`tests/conftest.py` now redirects those files for the whole session and
+fails the run, naming the files, if anything under real `data/`
+changes. `tests/live_model_check.py` isolates the profiles folder too.
+
+**Verified:** `pytest -q`, 3574 passed (same one pre-existing timezone
+failure), real `data/` untouched. 27 new behavior tests, 165 routing
+tests, live checklist dry run 199 of 199 routed correctly.

@@ -169,7 +169,7 @@ Add a line there whenever MIA misses something. The live model's half
 is `tests/live_model_check.py` (run on the owner's machine). Full
 findings: `docs/ASSISTANT_AUDIT.md`.
 
-## Tool registry (135 actions, 27 domains, as of 2026-09-27)
+## Tool registry (153 actions, 31 domains, as of 2026-09-27)
 
 **Added 2026-09-27** (`core/assistant_domain_actions.py`):
 - maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
@@ -184,6 +184,19 @@ findings: `docs/ASSISTANT_AUDIT.md`.
   `add_pantry_item`, `update_pantry_item`, `list_pantry`
 - components/materials/products: `adjust_component_quantity`,
   `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+**Also added 2026-09-27** (`core/assistant_life_actions.py`):
+- workout: `log_workout` (parses "3x10 squats at 185"),
+  `get_workout_summary`, `get_personal_record`
+- relationships: `add_person`, `update_person` (birthday, favorite
+  things, gift ideas, dated notes), `get_person`,
+  `list_upcoming_birthdays`, `add_pet`, `update_pet` (dated medical
+  history), `get_pet`
+- household: `list_household_routines`, `log_household_routine`,
+  `add_household_routine` (recurring mission templates, category
+  "Household")
+- classroom: `add_course`, `add_lesson`, `complete_lesson`,
+  `add_lesson_notes`, `get_learning_progress`
 
 The per-domain list below predates these additions (last full pass
 2026-07-18).

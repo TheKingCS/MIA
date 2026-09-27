@@ -134,8 +134,9 @@ sections for the matching questions.
 
 ## Not covered yet
 
-- **Workout, People & Pets, Household routines, Classroom** have no
-  conversational tools yet. They're next if you want full coverage.
+- ~~Workout, People & Pets, Household routines, Classroom~~ **covered
+  (same day):** 18 tools in `core/assistant_life_actions.py`, 22 more
+  corpus requests, 12 more live checklist cases (199 total).
 - **Turning casual mentions into record updates**, with MIA proposing
   and you confirming (the same "propose, you confirm" pattern Discovery
   uses).

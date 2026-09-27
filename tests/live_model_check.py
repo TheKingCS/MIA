@@ -47,6 +47,10 @@ import core.conversation_manager as conversation_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
 import core.kitchen_manager as kitchen_manager_module
+import core.classroom_manager as classroom_manager_module
+import core.recurring_mission_manager as recurring_mission_manager_module
+import core.relationships_manager as relationships_manager_module
+import core.workout_manager as workout_manager_module
 import core.data_logger_manager as data_logger_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
@@ -72,6 +76,10 @@ import core.waypoint_manager as waypoint_manager_module
 # docs/ROADMAP.md milestone 5.14); isolated here before ANY ConfigManager
 # is ever constructed, same as every manager's own _DATA_DIR below.
 config_manager_module._CONFIG_FILE = _TEMP_DATA_DIR / "config.json"
+# 2026-09-27: creating the seed profile made a real data/profiles/<id>/
+# folder on every run; keep it in the temp dir with everything else.
+import core.profile_manager as profile_manager_module  # noqa: E402
+profile_manager_module._DATA_PROFILES_DIR = _TEMP_DATA_DIR / "profiles"
 
 alarm_manager_module._DATA_DIR = _TEMP_DATA_DIR
 alarm_manager_module._ALARMS_FILE = _TEMP_DATA_DIR / "alarms.json"
@@ -106,6 +114,11 @@ for _attr in ("_RECIPES_FILE", "_PANTRY_FILE", "_GROCERY_LIST_FILE", "_MEAL_LOG_
 component_manager_module._USAGE_LOG_FILE = _TEMP_DATA_DIR / "component_usage_log.json"
 material_manager_module._USAGE_LOG_FILE = _TEMP_DATA_DIR / "material_usage_log.json"
 product_manager_module._USAGE_LOG_FILE = _TEMP_DATA_DIR / "product_usage_log.json"
+for _module in (classroom_manager_module, recurring_mission_manager_module, relationships_manager_module, workout_manager_module):
+    for _attr, _value in list(vars(_module).items()):
+        if isinstance(_value, Path) and _value.parent == _module._DATA_DIR:
+            setattr(_module, _attr, _TEMP_DATA_DIR / _value.name)
+    _module._DATA_DIR = _TEMP_DATA_DIR
 real_estate_manager_module._DATA_DIR = _TEMP_DATA_DIR
 real_estate_manager_module._PROPERTIES_FILE = _TEMP_DATA_DIR / "properties.json"
 data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -151,6 +164,10 @@ from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
 from core.kitchen_manager import KitchenManager
+from core.classroom_manager import ClassroomManager
+from core.recurring_mission_manager import RecurringMissionManager
+from core.relationships_manager import RelationshipsManager
+from core.workout_manager import WorkoutManager
 from core.data_logger_manager import DataLoggerManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
@@ -575,6 +592,19 @@ GOLDEN_CASES = [
     # trade-off); the model must still not write anything.
     ("passing mention of an asset: no write", "I was driving the truck home and it felt great", "safe"),
     ("passing mention of an asset: no write", "Tell me a story about a mower", "safe"),
+    # Workout, people & pets, household, classroom.
+    ("log a workout", "Log my workout: 3x10 squats at 185", "log_workout", {"exercises": "squat"}),
+    ("personal record", "What's my personal record on the squat?", "get_personal_record", {"exercise": "squat"}),
+    ("remember a gift idea", "Sarah would love a new cast iron skillet", "update_person", {"name": "sarah", "gift_idea": "skillet"}),
+    ("someone's birthday", "My friend Jake's birthday is May 9", "safe"),
+    ("upcoming birthdays", "Any birthdays coming up?", "list_upcoming_birthdays"),
+    ("pet vet visit", "Biscuit went to the vet for his rabies shot today", "update_pet", {"name": "biscuit", "medical_note": "rabies"}),
+    ("household routine", "I did a load of laundry", "log_household_routine", {"routine": "laundry"}),
+    ("chores status", "What chores are left today?", "list_household_routines"),
+    ("finish a lesson", "I finished the lesson on circuit breakers", "complete_lesson", {"lesson": "circuit breaker"}),
+    ("learning progress", "What am I learning right now?", "get_learning_progress"),
+    ("small talk: 'of course'", "Of course, that makes sense", None),
+    ("small talk: a dog", "What's a good name for a dog?", None),
 ]
 
 
@@ -619,6 +649,10 @@ def _build_context() -> AppContext:
     context.missions = MissionManager(context)
     context.materials = MaterialManager(context)
     context.kitchen = KitchenManager(context)
+    context.recurring_missions = RecurringMissionManager(context)
+    context.workout = WorkoutManager(context)
+    context.relationships = RelationshipsManager(context)
+    context.classroom = ClassroomManager(context)
     context.jobs = JobManager(context)
     context.products = ProductManager(context)
     context.ledger = LedgerManager(context)
@@ -695,6 +729,17 @@ def _seed_fixtures(context: AppContext) -> None:
     context.kitchen.add_grocery_item("Eggs")
     context.components.add_component(name="Resistor", value="10k", quantity=30, category="Resistor")
     context.products.add_product(name="Cutting Board", quantity_in_stock=3, base_price=40.0)
+    context.workout.add_exercise("Back Squat", category="Legs")
+    context.relationships.add_person("Sarah", relationship="Sister", birthday="2000-03-03")
+    context.relationships.add_pet("Biscuit", species="Dog")
+    context.recurring_missions.add_template(
+        name="Laundry", objective_description_template="Laundry ({target:g}x)", base_target=2,
+        target_increment_per_week=0, daily_reward_xp=10, weekly_bonus_reward_xp=25,
+        start_date="2026-09-01", recurrence="weekly", category="Household",
+    )
+    electrical = context.classroom.add_subject("Electrical")
+    wiring = context.classroom.add_course(electrical.subject_id, "Residential Wiring")
+    context.classroom.add_lesson(wiring.course_id, "Circuit Breakers")
 
 
 def _arguments_match(arguments: dict, expected: dict) -> tuple[bool, str]:

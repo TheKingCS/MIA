@@ -52,6 +52,16 @@ def demo_context() -> SimpleNamespace:
         ]),
         materials=SimpleNamespace(all_materials=lambda: _named("Plywood", "Pine 2x4")),
         products=SimpleNamespace(all_products=lambda: _named("Cutting Board", "Birdhouse")),
+        workout=SimpleNamespace(all_exercises=lambda: _named("Back Squat", "Bench Press", "Deadlift")),
+        relationships=SimpleNamespace(all_people=lambda: _named("Sarah", "Uncle Ray"), all_pets=lambda: _named("Biscuit")),
+        recurring_missions=SimpleNamespace(all_templates=lambda: [
+            SimpleNamespace(name=n, category="Household", active=True) for n in ("Laundry", "Dishes")
+        ]),
+        classroom=SimpleNamespace(
+            all_subjects=lambda: [SimpleNamespace(name="Electrical", subject_id="s1")],
+            courses_for_subject=lambda sid: [SimpleNamespace(name="Residential Wiring", course_id="c1")],
+            lessons_for_course=lambda cid: _named("Circuit Breakers", "GFCI Outlets"),
+        ),
     )
 
 

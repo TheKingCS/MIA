@@ -70,9 +70,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
    - Phone conversations saved to the desktop's History.
    - Desktop screens refresh after phone-made changes.
    - Faster replies (stream the answer instead of waiting for all of it).
-3. **Fix what the live conversation check turns up**, then finish
-   conversational coverage: Workout, People & Pets, Household
-   routines and Classroom have no voice/chat tools yet. Then
+3. **Fix what the live conversation check turns up** (now 199 cases,
+   including Workout, People & Pets, Household and Classroom). Then
    "propose, you confirm" record updates from things mentioned in
    passing (e.g. "the mower got a new battery" → offer to note it on
    the mower).

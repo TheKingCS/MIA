@@ -98,6 +98,31 @@ CORPUS: list[tuple[str, str]] = [
     # ---- General inventory -----------------------------------------------------
     ("How many AA batteries do I have in inventory?", "list_inventory"),
     ("Add a tarp to inventory", "add_inventory_item"),
+    # ---- Workout ---------------------------------------------------------------
+    ("Log my workout: 3x10 squats at 185 and 3x8 bench at 155", "log_workout"),
+    ("I did 3 sets of 10 deadlifts at 225", "log_workout"),
+    ("How many workouts have I done this week?", "get_workout_summary"),
+    ("What's my personal record on the squat?", "get_personal_record"),
+    # ---- People & pets -----------------------------------------------------------
+    ("Add my sister Megan, her birthday is June 12", "add_person"),
+    ("Sarah's birthday is March 3", "update_person"),
+    ("Sarah would love a new cast iron skillet", "update_person"),
+    ("Gift ideas for Sarah?", "get_person"),
+    ("Any birthdays coming up?", "list_upcoming_birthdays"),
+    ("We adopted a beagle named Rosie", "add_pet"),
+    ("Biscuit went to the vet for his shots today", "update_pet"),
+    ("When was Biscuit's last vet visit?", "get_pet"),
+    # ---- Household routines ------------------------------------------------------
+    ("I did a load of laundry", "log_household_routine"),
+    ("Did the dishes", "log_household_routine"),
+    ("What chores are left today?", "list_household_routines"),
+    ("Add a routine: vacuum twice a week", "add_household_routine"),
+    # ---- Classroom -----------------------------------------------------------------
+    ("Add a course on residential wiring under Electrical", "add_course"),
+    ("I finished the lesson on circuit breakers", "complete_lesson"),
+    ("Add to my notes for GFCI outlets: test them monthly", "add_lesson_notes"),
+    ("What am I learning right now?", "get_learning_progress"),
+    ("What's my next lesson?", "get_learning_progress"),
     # ---- Self-knowledge / how-to (answer from help docs, no tools) ------------
     ("How do I add a bill?", INFO),
     ("How do I track my mower?", INFO),
@@ -139,4 +164,7 @@ NO_TOOLS: list[str] = [
     "What's a good way to budget my paycheck?",
     "That's a really useful property of this material",
     "I love my new job at the bakery",
+    "Of course, that makes sense",
+    "My neighbor's cat got out again",
+    "I sat on a bench at the park",
 ]

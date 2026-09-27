@@ -58,6 +58,7 @@ from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.connectivity import ConnectivityMonitor, connectivity_action
 from core.assistant_domain_actions import register_domain_actions
+from core.assistant_life_actions import register_life_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
@@ -945,6 +946,7 @@ class MIAApplication:
         """
         self.context.assistant_actions.register(connectivity_action())
         register_domain_actions(self.context.assistant_actions)
+        register_life_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",
