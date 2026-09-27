@@ -229,6 +229,19 @@ class FinanceManager:
         except OSError as exc:
             log.warning("Could not move %s into %s/: %s", file_path, subdir, exc)
 
+    def remove_snapshots(self, sources) -> int:
+        """Forgets the stored latest snapshot for each given source (e.g.
+        a disconnected Plaid bank's "plaid_<item_id>"), so it stops
+        counting toward dashboard/net-worth totals. Unknown sources are
+        ignored. Returns how many were removed."""
+        removed = 0
+        for source in sources:
+            if self._snapshots.pop(source, None) is not None:
+                removed += 1
+        if removed:
+            self._save()
+        return removed
+
     def latest_snapshot(self, source: str) -> Optional[FinancialSnapshot]:
         return self._snapshots.get(source)
 

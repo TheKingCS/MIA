@@ -1064,3 +1064,29 @@ def test_get_debt_by_plaid_account_id_finds_linked_debt(isolated_paths):
 def test_debt_from_dict_backward_compatible_defaults_plaid_account_id_empty():
     debt = Debt.from_dict({"debt_id": "d1", "name": "Old", "balance": 1.0, "interest_rate": 1.0})
     assert debt.plaid_account_id == ""
+
+
+def test_unlink_plaid_debts_for_item_only_touches_that_item(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="A", balance=1.0, interest_rate=1.0, plaid_account_id="acct-a", plaid_item_id="item-a")
+    manager.add_debt(name="B", balance=1.0, interest_rate=1.0, plaid_account_id="acct-b", plaid_item_id="item-b")
+    assert manager.unlink_plaid_debts_for_item("item-a") == 1
+    reloaded = _make_manager()
+    by_name = {d.name: d for d in reloaded.all_debts()}
+    assert by_name["A"].plaid_account_id == "" and by_name["A"].plaid_item_id == ""
+    assert by_name["B"].plaid_account_id == "acct-b"
+    assert manager.unlink_plaid_debts_for_item("") == 0
+
+
+def test_remove_plaid_imported_data_leaves_manual_entries(isolated_paths):
+    manager = _make_manager()
+    manager.add_income(amount=1.0, plaid_transaction_id="t1")
+    manager.add_income(amount=2.0)
+    manager.add_expense(amount=3.0, plaid_transaction_id="t2")
+    manager.add_debt(name="Synced", balance=1.0, interest_rate=1.0, plaid_account_id="acct")
+    manager.add_debt(name="Manual", balance=1.0, interest_rate=1.0)
+    assert manager.remove_plaid_imported_data() == (1, 1, 1)
+    reloaded = _make_manager()
+    assert [i.amount for i in reloaded.all_income()] == [2.0]
+    assert reloaded.all_expenses() == []
+    assert [d.name for d in reloaded.all_debts()] == ["Manual"]

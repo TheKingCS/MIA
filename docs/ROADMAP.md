@@ -11678,3 +11678,56 @@ also isolates `debts.json`/`business_entities.json`, confirmed no real
 the synced card lands ranked in the Debts tab and the new button/tags
 render. **Still unverified against Plaid's real API**; the first
 Sandbox run on the user's own machine is the real test.
+
+## Plaid Disconnect + Reset: never strand a connection slot (2026-09-27)
+
+Needed before connecting real accounts: the Trial plan caps
+Production at 10 Items, and MIA previously had no way to remove one
+(nor to switch Sandbox -> Production short of deleting
+`data/plaid_vault.enc` by hand, which would leave the Items live on
+Plaid's side, still counting against the cap).
+
+`PlaidManager.disconnect_item(item_id, passphrase)` calls Plaid's
+/item/remove, then forgets the item locally. It drops that item's
+balance/holdings snapshots from net worth
+(new `FinanceManager.remove_snapshots()`), and unlinks its synced debts
+into manual ones (new `Debt.plaid_item_id` +
+`BudgetManager.unlink_plaid_debts_for_item()`). Imported transactions
+are kept, since they're real history. `reset(passphrase, purge_imported_data)`
+removes every item and deletes the vault only if **all** removals
+succeeded; otherwise it saves the vault with just the still-connected
+items and reports which failed, so the user can retry. The purge
+option (`BudgetManager.remove_plaid_imported_data()`) deletes every
+Plaid-imported income/expense/debt while leaving manual entries alone.
+It defaults ON in Sandbox, to clear fake test data out of a real
+budget, and OFF in Production. Safety ordering: the passphrase is
+verified *before* any remote removal, so a typo can't leave an item
+removed on Plaid but still saved locally. An item Plaid reports as
+already gone (`ITEM_NOT_FOUND`/`INVALID_ACCESS_TOKEN`, via new pure
+`plaid_error_code()`) is forgotten locally without error.
+
+**A real ordering bug caught in review before any test ran**: the
+first draft forgot each item (which unlinks its debts, clearing
+`plaid_account_id`) before running the purge, which selects debts
+*by* `plaid_account_id`, so synced debts would have silently survived
+a purge. Reordered, with a regression test covering exactly that case.
+
+GUI: Bank Sync shows the current environment in its status line
+("Unlocked — SANDBOX — …"). New "Disconnect Selected…" (confirm +
+passphrase) and "Reset Plaid Setup…" buttons. The latter opens the new
+`gui/reset_plaid_dialog.py` (typed "reset" + passphrase before the
+button enables, plus the purge checkbox). A clipped checkbox label was
+caught on the rendered dialog and fixed. `docs/PLAID_SETUP.md` Part 6
+is rewritten from "wait" into the real sandbox -> production switch
+steps.
+
+**Verified for real**: `pytest -q`, 3299 passed (same one pre-existing
+timezone failure). New tests cover disconnect's remote-then-local-then-
+persist order, a wrong passphrase touching nothing remotely, already-
+gone items, a real Plaid failure keeping the item for retry, a full
+reset deleting the vault and locking, purge vs. no purge (including
+synced debts), a partial-failure reset that keeps the vault with only
+the failed item and skips the purge, and snapshot removal persisting.
+Headless-Qt screenshots confirmed the new controls, environment label,
+and the Reset button staying disabled until both fields are filled.
+Still unverified against Plaid's live API.

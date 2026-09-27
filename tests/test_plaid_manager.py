@@ -38,6 +38,7 @@ from core.plaid_manager import (
     granted_products,
     liability_debt_fields,
     map_plaid_category,
+    plaid_error_code,
     standard_card_apr,
 )
 from core.secrets_manager import SecretsError
@@ -1187,3 +1188,219 @@ def test_sync_continues_when_liabilities_call_fails(isolated_paths_with_budget):
     result = manager.sync()
     assert len(result.snapshots) == 1
     assert result.debts_added == 0
+
+
+# ------------------------------------------------------------------
+# Disconnect / reset (2026-09-27) — must free Plaid Item slots, never
+# leave a removed-remotely item saved locally, and never delete the
+# vault while any real connection is still live.
+# ------------------------------------------------------------------
+
+import json as _json
+
+import plaid as _plaid
+
+
+def _api_error(error_code):
+    exc = _plaid.ApiException(status=400, reason="Bad Request")
+    exc.body = _json.dumps({"error_code": error_code, "error_type": "ITEM_ERROR"})
+    return exc
+
+
+class _FakeFinance:
+    def __init__(self, sources):
+        self.sources = set(sources)
+
+    def remove_snapshots(self, sources):
+        removed = [s for s in sources if s in self.sources]
+        self.sources -= set(removed)
+        return len(removed)
+
+    def all_latest_snapshots(self):
+        return [SimpleNamespace(source=s) for s in sorted(self.sources)]
+
+
+def _manager_with_items(item_ids, with_budget=False):
+    manager = _make_manager_with_budget() if with_budget else _make_manager()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    for item_id in item_ids:
+        manager._vault.items.append(PlaidItem(
+            item_id=item_id, access_token=f"access-{item_id}", institution_name=f"Bank {item_id}",
+            connected_at="2026-09-27T00:00:00",
+        ))
+    manager.save_current_vault("hunter2")
+    return manager
+
+
+def test_plaid_error_code_reads_json_body():
+    assert plaid_error_code(_api_error("ITEM_NOT_FOUND")) == "ITEM_NOT_FOUND"
+
+
+def test_plaid_error_code_none_for_missing_or_non_json_body():
+    assert plaid_error_code(_plaid.ApiException(status=500, reason="x")) is None
+    exc = _plaid.ApiException(status=500, reason="x")
+    exc.body = "<html>oops</html>"
+    assert plaid_error_code(exc) is None
+
+
+def test_verify_passphrase(isolated_paths):
+    manager = _manager_with_items([])
+    assert manager.verify_passphrase("hunter2") is True
+    assert manager.verify_passphrase("wrong") is False
+
+
+def test_environment_reported_only_while_unlocked(isolated_paths):
+    manager = _manager_with_items([])
+    assert manager.environment == "sandbox"
+    assert _make_manager().environment is None
+
+
+def test_disconnect_item_removes_remotely_then_locally_and_persists(isolated_paths_with_budget):
+    manager = _manager_with_items(["a", "b"], with_budget=True)
+    removed_tokens = []
+    manager._client = SimpleNamespace(item_remove=lambda req: removed_tokens.append(req.access_token))
+    manager.context.finance = _FakeFinance(["plaid_a", "plaid_investments_a", "plaid_b"])
+    budget = manager.context.budget
+    budget.add_debt(name="Card A", balance=100.0, interest_rate=20.0, plaid_account_id="acct-a", plaid_item_id="a")
+    budget.add_debt(name="Card B", balance=100.0, interest_rate=20.0, plaid_account_id="acct-b", plaid_item_id="b")
+
+    manager.disconnect_item("a", "hunter2")
+
+    assert removed_tokens == ["access-a"]
+    assert [i.item_id for i in manager.connected_items()] == ["b"]
+    assert manager.context.finance.sources == {"plaid_b"}
+    card_a = next(d for d in budget.all_debts() if d.name == "Card A")
+    card_b = next(d for d in budget.all_debts() if d.name == "Card B")
+    assert card_a.plaid_account_id == "" and card_a.plaid_item_id == ""
+    assert card_b.plaid_account_id == "acct-b"
+
+    reloaded = _make_manager()
+    reloaded.unlock("hunter2")
+    assert [i.item_id for i in reloaded.connected_items()] == ["b"]
+
+
+def test_disconnect_item_wrong_passphrase_touches_nothing(isolated_paths):
+    manager = _manager_with_items(["a"])
+
+    def _must_not_remove(req):
+        raise AssertionError("item_remove called before passphrase was verified")
+
+    manager._client = SimpleNamespace(item_remove=_must_not_remove)
+    with pytest.raises(SecretsError):
+        manager.disconnect_item("a", "wrong")
+    assert len(manager.connected_items()) == 1
+
+
+def test_disconnect_item_already_gone_on_plaid_still_forgets_locally(isolated_paths):
+    manager = _manager_with_items(["a"])
+
+    def _gone(req):
+        raise _api_error("ITEM_NOT_FOUND")
+
+    manager._client = SimpleNamespace(item_remove=_gone)
+    manager.disconnect_item("a", "hunter2")
+    assert manager.connected_items() == []
+
+
+def test_disconnect_item_real_plaid_failure_keeps_item_for_retry(isolated_paths):
+    manager = _manager_with_items(["a"])
+
+    def _fail(req):
+        raise _api_error("INTERNAL_SERVER_ERROR")
+
+    manager._client = SimpleNamespace(item_remove=_fail)
+    with pytest.raises(_plaid.ApiException):
+        manager.disconnect_item("a", "hunter2")
+    assert len(manager.connected_items()) == 1
+    reloaded = _make_manager()
+    reloaded.unlock("hunter2")
+    assert len(reloaded.connected_items()) == 1
+
+
+def test_reset_removes_every_item_deletes_vault_and_locks(isolated_paths_with_budget):
+    manager = _manager_with_items(["a", "b"], with_budget=True)
+    removed_tokens = []
+    manager._client = SimpleNamespace(item_remove=lambda req: removed_tokens.append(req.access_token))
+    manager.context.finance = _FakeFinance(["plaid_a", "plaid_b", "plaid_investments_old", "real_estate_portfolio"])
+
+    result = manager.reset("hunter2", purge_imported_data=False)
+
+    assert result.completed
+    assert sorted(removed_tokens) == ["access-a", "access-b"]
+    assert not manager.is_configured()
+    assert not manager.is_unlocked()
+    assert manager.context.finance.sources == {"real_estate_portfolio"}
+
+
+def test_reset_purges_imported_data_including_synced_debts(isolated_paths_with_budget):
+    manager = _manager_with_items(["a"], with_budget=True)
+    manager._client = SimpleNamespace(item_remove=lambda req: None)
+    manager.context.finance = _FakeFinance([])
+    budget = manager.context.budget
+    budget.add_expense(amount=10.0, plaid_transaction_id="t1")
+    budget.add_expense(amount=20.0)  # manual — must survive
+    budget.add_income(amount=5.0, plaid_transaction_id="t2")
+    budget.add_debt(name="Synced", balance=1.0, interest_rate=1.0, plaid_account_id="acct-a", plaid_item_id="a")
+    budget.add_debt(name="Manual", balance=1.0, interest_rate=1.0)
+
+    result = manager.reset("hunter2", purge_imported_data=True)
+
+    assert (result.income_purged, result.expenses_purged, result.debts_purged) == (1, 1, 1)
+    assert [e.amount for e in budget.all_expenses()] == [20.0]
+    assert budget.all_income() == []
+    assert [d.name for d in budget.all_debts()] == ["Manual"]
+
+
+def test_reset_without_purge_keeps_imported_data(isolated_paths_with_budget):
+    manager = _manager_with_items(["a"], with_budget=True)
+    manager._client = SimpleNamespace(item_remove=lambda req: None)
+    manager.context.finance = _FakeFinance([])
+    manager.context.budget.add_expense(amount=10.0, plaid_transaction_id="t1")
+    manager.reset("hunter2", purge_imported_data=False)
+    assert len(manager.context.budget.all_expenses()) == 1
+
+
+def test_reset_stops_and_keeps_vault_if_any_removal_fails(isolated_paths_with_budget):
+    manager = _manager_with_items(["a", "b"], with_budget=True)
+
+    def _remove(req):
+        if req.access_token == "access-b":
+            raise _api_error("INTERNAL_SERVER_ERROR")
+
+    manager._client = SimpleNamespace(item_remove=_remove)
+    manager.context.finance = _FakeFinance([])
+    manager.context.budget.add_expense(amount=10.0, plaid_transaction_id="t1")
+
+    result = manager.reset("hunter2", purge_imported_data=True)
+
+    assert not result.completed
+    assert result.removed == ["Bank a"]
+    assert result.failed == ["Bank b: INTERNAL_SERVER_ERROR"]
+    assert manager.is_configured() and manager.is_unlocked()
+    assert [i.item_id for i in manager.connected_items()] == ["b"]
+    assert len(manager.context.budget.all_expenses()) == 1  # no purge on a stopped reset
+    reloaded = _make_manager()
+    reloaded.unlock("hunter2")
+    assert [i.item_id for i in reloaded.connected_items()] == ["b"]
+
+
+def test_reset_wrong_passphrase_touches_nothing(isolated_paths):
+    manager = _manager_with_items(["a"])
+
+    def _must_not_remove(req):
+        raise AssertionError("item_remove called before passphrase was verified")
+
+    manager._client = SimpleNamespace(item_remove=_must_not_remove)
+    with pytest.raises(SecretsError):
+        manager.reset("wrong", purge_imported_data=True)
+    assert manager.is_configured()
+
+
+def test_sync_liabilities_records_item_id_on_new_debt(isolated_paths_with_budget):
+    manager = _make_manager_with_budget()
+    manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Chase",
+                      connected_at="2026-09-01T00:00:00", liabilities_enabled=True)
+    manager._client = SimpleNamespace(liabilities_get=lambda req: _liabilities_response(credit=[_card()]))
+    manager._sync_liabilities_for_item(item)
+    assert manager.context.budget.all_debts()[0].plaid_item_id == "item-1"

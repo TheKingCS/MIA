@@ -129,6 +129,7 @@ from gui.manage_business_entities_dialog import ManageBusinessEntitiesDialog
 from gui.mark_bill_paid_dialog import MarkBillPaidDialog
 from gui.mark_income_received_dialog import MarkIncomeReceivedDialog
 from gui.record_debt_payment_dialog import RecordDebtPaymentDialog
+from gui.reset_plaid_dialog import ResetPlaidDialog
 from gui.password_dialog import PasswordPromptDialog
 from gui.plaid_connect_progress_dialog import PlaidConnectProgressDialog
 from gui.plaid_setup_dialog import PlaidSetupDialog
@@ -269,6 +270,8 @@ class BudgetModule(ModuleBase):
         self._plaid_add_transactions_button: Optional[QPushButton] = None
         self._plaid_add_investments_button: Optional[QPushButton] = None
         self._plaid_add_liabilities_button: Optional[QPushButton] = None
+        self._plaid_disconnect_button: Optional[QPushButton] = None
+        self._plaid_reset_button: Optional[QPushButton] = None
         self._plaid_sync_button: Optional[QPushButton] = None
         self._plaid_holdings_list: Optional[QListWidget] = None
 
@@ -1532,6 +1535,17 @@ class BudgetModule(ModuleBase):
 
         layout.addLayout(button_row)
 
+        manage_row = QHBoxLayout()
+        self._plaid_disconnect_button = QPushButton("Disconnect Selected…")
+        self._plaid_disconnect_button.clicked.connect(self._on_plaid_disconnect)
+        manage_row.addWidget(self._plaid_disconnect_button)
+
+        self._plaid_reset_button = QPushButton("Reset Plaid Setup…")
+        self._plaid_reset_button.clicked.connect(self._on_plaid_reset)
+        manage_row.addWidget(self._plaid_reset_button)
+        manage_row.addStretch(1)
+        layout.addLayout(manage_row)
+
         holdings_label = QLabel("Holdings:")
         holdings_label.setObjectName("SubtitleLabel")
         layout.addWidget(holdings_label)
@@ -1555,6 +1569,8 @@ class BudgetModule(ModuleBase):
         self._plaid_add_transactions_button.setEnabled(unlocked and self._selected_plaid_item_needs_upgrade())
         self._plaid_add_investments_button.setEnabled(unlocked and self._selected_plaid_item_needs_investments_upgrade())
         self._plaid_add_liabilities_button.setEnabled(unlocked and self._selected_plaid_item_needs_liabilities_upgrade())
+        self._plaid_disconnect_button.setEnabled(unlocked and self._selected_plaid_item_id() is not None)
+        self._plaid_reset_button.setEnabled(unlocked)
 
         if not configured:
             self._plaid_status_label.setText("Not set up yet.")
@@ -1563,7 +1579,8 @@ class BudgetModule(ModuleBase):
         else:
             count = len(plaid.connected_items())
             noun = "account" if count == 1 else "accounts"
-            self._plaid_status_label.setText(f"Unlocked — {count} connected {noun}.")
+            environment = (plaid.environment or "").upper()
+            self._plaid_status_label.setText(f"Unlocked — {environment} — {count} connected {noun}.")
 
         # Rebuilding the list below (clear() + re-add) would otherwise wipe
         # the current selection right back out on every call — including
@@ -1788,6 +1805,75 @@ class BudgetModule(ModuleBase):
             except SecretsError as exc:
                 QMessageBox.warning(None, "Couldn't Save", f"Card/loan access granted for this session, but saving failed: {exc}")
         self._refresh_plaid_tab()
+
+    def _on_plaid_disconnect(self) -> None:
+        item_id = self._selected_plaid_item_id()
+        if item_id is None:
+            QMessageBox.information(None, "No Account Selected", "Select a connected account to disconnect.")
+            return
+        item = next((i for i in self.context.plaid.connected_items() if i.item_id == item_id), None)
+        if item is None:
+            return
+        confirm = QMessageBox.question(
+            None,
+            "Disconnect Bank",
+            f"Disconnect '{item.institution_name}'?\n\n"
+            "Plaid removes the connection (freeing its slot). Its balances leave your net worth, "
+            "and its synced debts become manual debts. Imported transactions are kept.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        pw_dialog = PasswordPromptDialog("your Plaid vault", prompt="Enter the passphrase for")
+        if pw_dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            self.context.plaid.disconnect_item(item_id, pw_dialog.entered_password)
+        except SecretsError as exc:
+            QMessageBox.warning(None, "Couldn't Disconnect", str(exc))
+            return
+        except Exception as exc:  # noqa: BLE001 — surface a real Plaid API error; the item is kept for retry
+            QMessageBox.warning(None, "Couldn't Disconnect", f"Plaid didn't remove the connection, so it was kept: {exc}")
+            return
+        QMessageBox.information(None, "Disconnected", f"'{item.institution_name}' was disconnected.")
+        self._refresh_plaid_tab()
+        self._refresh_debt_list()
+
+    def _on_plaid_reset(self) -> None:
+        plaid = self.context.plaid
+        dialog = ResetPlaidDialog(plaid.environment or "", len(plaid.connected_items()))
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            result = plaid.reset(dialog.entered_passphrase, purge_imported_data=dialog.purge_imported_data)
+        except SecretsError as exc:
+            QMessageBox.warning(None, "Couldn't Reset", str(exc))
+            return
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(None, "Couldn't Reset", str(exc))
+            return
+
+        if not result.completed:
+            QMessageBox.warning(
+                None, "Reset Stopped",
+                "These connections couldn't be removed, so your Plaid setup was kept:\n\n"
+                + "\n".join(result.failed)
+                + "\n\nAny others were disconnected. Try Reset again later.",
+            )
+        else:
+            message = f"Disconnected {len(result.removed)} bank(s) and removed your saved Plaid keys."
+            if dialog.purge_imported_data:
+                message += (
+                    f" Deleted {result.income_purged + result.expenses_purged} imported transaction(s)"
+                    f" and {result.debts_purged} synced debt(s)."
+                )
+            message += " You can now run Set Up Plaid again."
+            QMessageBox.information(None, "Plaid Reset", message)
+        self._refresh_plaid_tab()
+        self._refresh_debt_list()
+        self._refresh_income_list()
+        self._refresh_expense_list()
 
     def _on_plaid_sync(self) -> None:
         passphrase = None

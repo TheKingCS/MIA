@@ -204,3 +204,17 @@ def test_all_latest_snapshots_returns_one_per_source(isolated_paths):
 def test_latest_snapshot_returns_none_for_unknown_source(isolated_paths):
     manager = _make_manager(isolated_paths)
     assert manager.latest_snapshot("nonexistent") is None
+
+
+def test_remove_snapshots_forgets_only_named_sources_and_persists(isolated_paths):
+    isolated_paths.mkdir(parents=True, exist_ok=True)
+    for source in ("plaid_a", "plaid_b"):
+        snapshot = dict(_VALID_SNAPSHOT, source=source)
+        (isolated_paths / f"{source}.json").write_text(json.dumps(snapshot))
+    manager = _make_manager(isolated_paths)
+    manager.scan_for_new_snapshots()
+
+    assert manager.remove_snapshots(["plaid_a", "not_there"]) == 1
+    assert manager.latest_snapshot("plaid_a") is None
+    assert manager.latest_snapshot("plaid_b") is not None
+    assert _make_manager(isolated_paths).latest_snapshot("plaid_a") is None

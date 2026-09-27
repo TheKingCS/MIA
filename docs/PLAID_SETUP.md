@@ -13,7 +13,7 @@ connections).
 - [ ] Part 3: Set up Plaid inside MIA (sandbox)
 - [ ] Part 4: Connect a fake sandbox bank and sync
 - [ ] Part 5: Report back to Claude
-- [ ] Part 6: Real accounts (**wait**, see the note there)
+- [ ] Part 6: Switch to production and connect your real accounts
 
 ---
 
@@ -182,34 +182,56 @@ access tokens (long strings starting with `access-`).
 
 ---
 
-## Part 6: Real accounts (**wait**)
+## Part 6: Real accounts
 
-**Don't connect your real accounts yet.** Two things are missing and
-should be built first:
+Do this only after Part 4 worked and you've reported back (Part 5).
 
-1. **Switching from sandbox to production.** MIA has no button for
-   this yet. Today it would mean deleting `data/plaid_vault.enc` by
-   hand.
-2. **Disconnecting a bank.** Deleting the vault file doesn't tell Plaid
-   the connection is gone. On the Trial plan you get **10 real
-   connections**, so a connection MIA forgot about but Plaid didn't
-   could keep using up one of your 10 slots.
+**Why sandbox testing can't waste your 10 connections:** Plaid keeps
+Sandbox and Production completely separate, with different secrets
+and different fake/real banks. The Trial plan's limit counts only
+**Production** connections. Nothing you do in Part 4 touches it.
 
-Ask Claude to build **"Disconnect" and "Reset Plaid setup"** (it's
-already been offered). Once that's in, the production steps will be:
+**Switching MIA from sandbox to production:**
 
-1. `git pull` to get the new code.
-2. Bank Sync → **Reset Plaid setup** (removes the sandbox test banks).
-3. **Set Up Plaid…** again with your client_id, your **Production**
-   secret, and environment **production**.
-4. **Connect a Bank…** and log in with your *real* bank username and
-   password (this happens on Plaid's page, not in MIA).
-5. Repeat for each bank or card company. Each login is one of your 10
-   connections, and one login that covers several accounts (checking +
-   savings + a card at the same bank) counts as just one.
-6. **Sync Now**, then review Debts and add promo APR end dates by hand
-   (**Edit Selected** on the Debts tab). Banks don't report promo
-   expiration dates.
+1. `git pull` to get the latest code (see Part 1).
+2. Open Budget → **Bank Sync**, and **Unlock…** if it's locked. The
+   status line shows which environment you're in, e.g.
+   *"Unlocked — SANDBOX — 1 connected account."*
+3. Click **Reset Plaid Setup…**
+   - Leave **"Also delete data imported from Plaid"** checked. It's on
+     by default in sandbox, and it clears the fake test transactions and
+     debts out of your real budget. Your manual entries are never
+     touched.
+   - Enter your vault passphrase, type `reset`, and click **Reset**.
+   - MIA tells Plaid to remove each test connection, then deletes its
+     saved keys. If any connection can't be removed, it stops and
+     tells you which, and nothing else is deleted. Just try again later.
+4. Click **Set Up Plaid…** again. This time use your client_id, your
+   **Production** secret, and environment **production**. You can
+   reuse the same passphrase or pick a new one.
+5. The status line should now say **PRODUCTION**.
+
+**Connecting your real accounts:**
+
+1. **Connect a Bank…** and log in with your *real* bank username and
+   password. That happens on Plaid's page in your browser; MIA never
+   sees your bank password.
+2. Repeat for each bank or card company. Each login uses one of your
+   **10 connections**. One login that covers several accounts
+   (checking + savings + a card at the same bank) counts as just one.
+3. **Sync Now**, then review the Debts tab. Add promo APR end dates by
+   hand (**Edit Selected**), since banks don't report promo expiration
+   dates.
+
+**Removing a real connection later:** select it and click
+**Disconnect Selected…**. MIA tells Plaid to remove it, which should
+give you that slot back. Its balances leave your net worth, and its
+cards/loans stay on the Debts tab as manual debts. Imported
+transactions are kept.
+
+**Never free up a slot by deleting `data/plaid_vault.enc` by hand.**
+That only makes MIA forget the connection; Plaid would still count it.
+Always use Disconnect or Reset.
 
 **One habit to keep with real accounts:** for a bank-synced card, don't
 use the Debts tab's **Record Payment** button. The bank sync already

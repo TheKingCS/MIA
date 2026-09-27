@@ -422,6 +422,9 @@ class Debt:
     # linked account — the dedup key on repeat sync, same role as
     # IncomeEntry/ExpenseEntry's plaid_transaction_id.
     plaid_account_id: str = ""
+    # Which connected Plaid item (bank login) this debt came from — lets
+    # disconnecting one bank unlink only its own debts.
+    plaid_item_id: str = ""
     notes: str = ""
     created_at: str = ""
 
@@ -432,7 +435,7 @@ class Debt:
             "debt_type": self.debt_type, "promo_apr": self.promo_apr,
             "promo_expires_date": self.promo_expires_date, "entity_id": self.entity_id,
             "last_payment_date": self.last_payment_date, "plaid_account_id": self.plaid_account_id,
-            "notes": self.notes, "created_at": self.created_at,
+            "plaid_item_id": self.plaid_item_id, "notes": self.notes, "created_at": self.created_at,
         }
 
     @staticmethod
@@ -449,6 +452,7 @@ class Debt:
             entity_id=data.get("entity_id", ""),
             last_payment_date=data.get("last_payment_date"),
             plaid_account_id=data.get("plaid_account_id", ""),
+            plaid_item_id=data.get("plaid_item_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
         )
@@ -1215,6 +1219,7 @@ class BudgetManager:
         entity_id: str = "",
         notes: str = "",
         plaid_account_id: str = "",
+        plaid_item_id: str = "",
     ) -> Debt:
         if balance < 0:
             raise ValueError(f"balance must not be negative, got {balance}")
@@ -1235,6 +1240,7 @@ class BudgetManager:
             promo_expires_date=promo_expires_date if promo_apr is not None else None,
             entity_id=entity_id,
             plaid_account_id=plaid_account_id,
+            plaid_item_id=plaid_item_id,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
@@ -1283,6 +1289,47 @@ class BudgetManager:
             if debt.plaid_account_id == account_id:
                 return debt
         return None
+
+    def unlink_plaid_debts_for_item(self, item_id: str) -> int:
+        """Called when one Plaid bank connection is disconnected: its
+        debts stay (they're still real money owed, possibly with the
+        user's own promo/notes edits) but become manual debts that no
+        future sync will touch. Returns how many were unlinked."""
+        if not item_id:
+            return 0
+        unlinked = 0
+        for debt in self._debts:
+            if debt.plaid_item_id == item_id:
+                debt.plaid_item_id = ""
+                debt.plaid_account_id = ""
+                unlinked += 1
+        if unlinked:
+            self._save_debts()
+        return unlinked
+
+    def remove_plaid_imported_data(self) -> tuple[int, int, int]:
+        """Deletes every income/expense entry and debt that came from a
+        Plaid sync (non-empty plaid_transaction_id/plaid_account_id),
+        leaving manual entries untouched. Used by a Plaid reset — e.g.
+        to clear fake Sandbox data before connecting real accounts.
+        Everything removed is re-importable by syncing again. Returns
+        (income_removed, expenses_removed, debts_removed)."""
+        income_before, expenses_before, debts_before = len(self._income), len(self._expenses), len(self._debts)
+        self._income = [i for i in self._income if not i.plaid_transaction_id]
+        self._expenses = [e for e in self._expenses if not e.plaid_transaction_id]
+        self._debts = [d for d in self._debts if not d.plaid_account_id]
+        removed = (
+            income_before - len(self._income),
+            expenses_before - len(self._expenses),
+            debts_before - len(self._debts),
+        )
+        if removed[0]:
+            self._save_income()
+        if removed[1]:
+            self._save_expenses()
+        if removed[2]:
+            self._save_debts()
+        return removed
 
     def all_debts(self, entity_id: Optional[str] = None) -> list[Debt]:
         """entity_id=None (default) returns every stored debt, unfiltered

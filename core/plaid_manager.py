@@ -92,6 +92,16 @@ most card issuers. Now only `transactions` is required; `investments`
 and `liabilities` go in `required_if_supported_products`, and
 `finish_connection()` reads which ones the institution actually
 granted from the Item's own `products` list rather than assuming.
+
+**Disconnect/reset (2026-09-27)**: `disconnect_item()` calls Plaid's
+/item/remove before forgetting an item locally. Just deleting the
+local record would leave the Item live on Plaid's side, where it keeps
+counting against the Trial plan's 10-Item Production cap.
+`reset()` does the same for every item and only deletes the vault
+once none of them failed to remove. An item Plaid reports as already
+gone is dropped locally without error. The passphrase is verified
+*before* anything is removed remotely, so a typo can't leave a
+removed-remotely-but-still-saved-locally item behind.
 """
 
 from __future__ import annotations
@@ -110,6 +120,7 @@ from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.country_code import CountryCode
 from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.item_remove_request import ItemRemoveRequest
 from plaid.model.liabilities_get_request import LiabilitiesGetRequest
 from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
@@ -315,6 +326,34 @@ def map_plaid_category(primary: str, detailed: str, is_income: bool) -> Optional
     return "Other"  # OTHER, and any future Plaid category this function doesn't yet recognize
 
 
+# Plaid error codes meaning the Item is already gone on Plaid's side —
+# safe to forget locally without a successful /item/remove.
+_ALREADY_GONE_ERROR_CODES = {"ITEM_NOT_FOUND", "INVALID_ACCESS_TOKEN"}
+
+
+def plaid_error_code(exc) -> Optional[str]:
+    """Pure logic — testable without a real Plaid client. Pulls
+    Plaid's error_code out of a plaid.ApiException's JSON body; None
+    when the body is missing or isn't Plaid's error JSON."""
+    try:
+        return json.loads(getattr(exc, "body", None) or "").get("error_code")
+    except (ValueError, AttributeError):
+        return None
+
+
+@dataclass
+class PlaidResetResult:
+    removed: list[str] = field(default_factory=list)  # institution names
+    failed: list[str] = field(default_factory=list)  # "Name: reason" — reset aborted if non-empty
+    income_purged: int = 0
+    expenses_purged: int = 0
+    debts_purged: int = 0
+
+    @property
+    def completed(self) -> bool:
+        return not self.failed
+
+
 def granted_products(plaid_item) -> set[str]:
     """Pure logic — testable without a real Plaid client. The product
     names an Item actually has initialized (Plaid's Item.products),
@@ -389,6 +428,21 @@ class PlaidManager:
 
     def is_unlocked(self) -> bool:
         return self._vault is not None
+
+    @property
+    def environment(self) -> Optional[str]:
+        """"sandbox"/"production" while unlocked, else None."""
+        return self._vault.environment if self._vault is not None else None
+
+    def verify_passphrase(self, passphrase: str) -> bool:
+        """True if passphrase decrypts the saved vault file."""
+        if not _VAULT_FILE.exists():
+            return False
+        try:
+            decrypt_bytes(_VAULT_FILE.read_bytes(), passphrase)
+        except SecretsError:
+            return False
+        return True
 
     def setup(self, client_id: str, secret: str, environment: str, passphrase: str) -> None:
         """First-time setup — creates a new vault with the app's own
@@ -644,6 +698,93 @@ class PlaidManager:
         self._require_unlocked()
         self._save_vault(self._vault, passphrase)
 
+    def _remove_remote_item(self, item: PlaidItem) -> None:
+        """/item/remove — raises plaid.ApiException on a real failure;
+        returns quietly when Plaid says the item is already gone."""
+        try:
+            self._client.item_remove(ItemRemoveRequest(access_token=item.access_token))
+        except plaid.ApiException as exc:
+            if plaid_error_code(exc) not in _ALREADY_GONE_ERROR_CODES:
+                raise
+            log.info("Plaid item '%s' was already removed on Plaid's side.", item.institution_name)
+
+    def _forget_item_locally(self, item: PlaidItem) -> None:
+        self._vault.items = [i for i in self._vault.items if i.item_id != item.item_id]
+        if self.context.finance is not None:
+            self.context.finance.remove_snapshots([f"plaid_{item.item_id}", f"plaid_investments_{item.item_id}"])
+        if self.context.budget is not None:
+            self.context.budget.unlink_plaid_debts_for_item(item.item_id)
+
+    def disconnect_item(self, item_id: str, passphrase: str) -> None:
+        """Removes one bank connection on Plaid's side (freeing its
+        Item slot), then forgets it locally and saves the vault. Its
+        balance snapshots are dropped from net worth; its synced debts
+        become manual debts; imported transactions stay (they're real
+        history). Raises SecretsError for a wrong passphrase before
+        touching anything, or plaid.ApiException if Plaid refuses the
+        removal (the item is then kept, so it can be retried)."""
+        self._require_unlocked()
+        item = self._get_item(item_id)
+        if item is None:
+            raise ValueError(f"No connected Plaid item with id '{item_id}'.")
+        if not self.verify_passphrase(passphrase):
+            raise SecretsError("Wrong passphrase for the Plaid vault.")
+        self._remove_remote_item(item)
+        self._forget_item_locally(item)
+        self._save_vault(self._vault, passphrase)
+        log.info("Disconnected Plaid item '%s' (%s).", item.institution_name, item.item_id)
+
+    def reset(self, passphrase: str, purge_imported_data: bool) -> PlaidResetResult:
+        """Disconnects every item (as disconnect_item()), and — only if
+        all of them were removed — deletes the vault and locks, so
+        Set Up Plaid can be run again (e.g. with Production keys).
+        If any removal fails, nothing more is deleted: the vault is
+        saved with just the items still connected, and the result lists
+        the failures so the user can retry. purge_imported_data also
+        deletes every Plaid-imported transaction and synced debt (see
+        BudgetManager.remove_plaid_imported_data()) — meant for clearing
+        fake Sandbox data."""
+        self._require_unlocked()
+        if not self.verify_passphrase(passphrase):
+            raise SecretsError("Wrong passphrase for the Plaid vault.")
+
+        result = PlaidResetResult()
+        removed_items = []
+        for item in list(self._vault.items):
+            try:
+                self._remove_remote_item(item)
+            except plaid.ApiException as exc:
+                result.failed.append(f"{item.institution_name}: {plaid_error_code(exc) or exc.reason}")
+                continue
+            removed_items.append(item)
+            result.removed.append(item.institution_name)
+
+        if not result.completed:
+            for item in removed_items:
+                self._forget_item_locally(item)
+            self._save_vault(self._vault, passphrase)
+            log.warning("Plaid reset stopped — %d item(s) could not be removed.", len(result.failed))
+            return result
+
+        # Purge before forgetting items — forgetting unlinks synced
+        # debts (clears plaid_account_id), which would hide them from
+        # the purge.
+        if purge_imported_data and self.context.budget is not None:
+            result.income_purged, result.expenses_purged, result.debts_purged = (
+                self.context.budget.remove_plaid_imported_data()
+            )
+        for item in removed_items:
+            self._forget_item_locally(item)
+        if self.context.finance is not None:
+            leftover = [s.source for s in self.context.finance.all_latest_snapshots() if s.source.startswith("plaid_")]
+            self.context.finance.remove_snapshots(leftover)
+
+        _VAULT_FILE.unlink(missing_ok=True)
+        self._vault = None
+        self._client = None
+        log.info("Plaid reset complete — vault deleted, %d item(s) removed.", len(result.removed))
+        return result
+
     def connected_items(self) -> list[PlaidItem]:
         self._require_unlocked()
         return list(self._vault.items)
@@ -818,7 +959,7 @@ class PlaidManager:
                     continue
                 existing = budget.get_debt_by_plaid_account_id(liability.account_id)
                 if existing is not None:
-                    changes = {"balance": fields["balance"]}
+                    changes = {"balance": fields["balance"], "plaid_item_id": item.item_id}
                     if fields["interest_rate"] is not None:
                         changes["interest_rate"] = fields["interest_rate"]
                     if fields["minimum_payment"] is not None:
@@ -833,6 +974,7 @@ class PlaidManager:
                         minimum_payment=fields["minimum_payment"] or 0.0,
                         debt_type=fields["debt_type"],
                         plaid_account_id=liability.account_id,
+                        plaid_item_id=item.item_id,
                     )
                     added += 1
         return added, updated
