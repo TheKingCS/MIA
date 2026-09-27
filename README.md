@@ -51,7 +51,14 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the reasoning
 behind these decisions, and [`docs/ADDING_MODULES.md`](docs/ADDING_MODULES.md)
 for how to add a new module.
 
-## Getting started (Ubuntu / WSL)
+## Getting started
+
+**Setting MIA up on a new computer?** Follow
+[`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md): install, the local AI and
+voice, the Private Journal, bank sync, and phone access, step by step.
+The short version for developers:
+
+### Quick start (Ubuntu / WSL)
 
 ```bash
 git clone <your-fork-url> mia

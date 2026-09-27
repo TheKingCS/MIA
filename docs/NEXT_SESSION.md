@@ -17,6 +17,9 @@ and C are in the build queue below; D waits for the Android app.
 
 ## 1. Your hands-on steps (need your computer, not Claude)
 
+**New computer? Start with `docs/SETUP_GUIDE.md`.** It walks through
+every step below in order, from a blank machine, with Windows notes.
+
 - [ ] **Plaid sandbox test** (full checklist: `docs/PLAID_SETUP.md`).
       1. On your main computer: `git pull`, activate `.venv`,
          `pip install -r requirements.txt`, `python main.py`.
