@@ -4776,11 +4776,16 @@ class MIAApplication:
 
         port = self.config.get("server.port", 8765)
         app = create_app(self.context)
-        server_config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning")
+        # Loopback by default: the phone reaches MIA through `tailscale
+        # serve`, which terminates HTTPS (required for the phone's
+        # microphone) and forwards to localhost. Listening on 0.0.0.0
+        # would expose login + voice over plain HTTP to the whole LAN.
+        host = self.config.get("server.host", "127.0.0.1")
+        server_config = uvicorn.Config(app, host=host, port=port, log_level="warning")
         server = uvicorn.Server(server_config)
         thread = threading.Thread(target=server.run, daemon=True, name="mia-mobile-server")
         thread.start()
-        log.info("Mobile API server started on port %d.", port)
+        log.info("Mobile API server started on %s:%d.", host, port)
 
         # Mobile access, Phase 2 (2026-09-12) — real notifications now
         # actually reach subscribed phones, not just the on-demand test

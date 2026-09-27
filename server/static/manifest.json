@@ -1,9 +1,9 @@
 {
-    "name": "MIA Mobile",
+    "name": "MIA",
     "short_name": "MIA",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0f1a1c",
-    "theme_color": "#0f1a1c",
+    "background_color": "#0d1116",
+    "theme_color": "#0d1116",
     "icons": []
 }

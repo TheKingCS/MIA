@@ -12,6 +12,13 @@ See `docs/VISION.md` for the long-term four-project mission and
 `docs/ROADMAP.md` for the actual near-term phase plan — read `ROADMAP.md`
 before assuming a feature is in scope for "now."
 
+## Start of every session
+
+Read `docs/NEXT_SESSION.md` first. It's the running to-do list between
+sessions (the owner's pending hands-on steps, the build queue, parked
+ideas, loose ends); cloud sessions keep no memory of earlier chats.
+Update it before ending a session.
+
 ## Commands
 
 ```bash

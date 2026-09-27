@@ -18,7 +18,8 @@ GUI version's real, already-tested pipeline stage for stage
 `context.llm.chat_with_tools()` -> `split_safe_tool_calls()` ->
 `context.assistant_actions.execute()` -> `context.voice.synthesize()` +
 `.play()`), reusing every one of those exact functions rather than
-reimplementing the decision logic.
+reimplementing the decision logic. The turn itself (2026-09-27) lives in
+`core/assistant_turn.py`, shared with the phone voice endpoint.
 
 Conversation history is in-memory only, for the life of one process —
 deliberately not `core/conversation_manager.py`'s disk-persisted,
@@ -35,16 +36,9 @@ useful whether or not there's a screen.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from core.app_context import AppContext
-from core.assistant_chat import (
-    build_chat_request,
-    build_memory_extraction_prompt,
-    parse_extracted_memories,
-    split_safe_tool_calls,
-)
-from core.conversation_manager import Conversation, ConversationMessage
+from core.assistant_turn import extract_memories, run_assistant_turn
+from core.conversation_manager import Conversation
 from core.logger import get_logger
 from core.push_to_talk_source import PushToTalkSource
 from core.receiver_indicators import ReceiverIndicators
@@ -106,32 +100,14 @@ class VoiceLoopController:
         self._handle_turn(transcript)
 
     def _handle_turn(self, prompt: str) -> None:
-        self._add_message("user", prompt)
-
-        if self.context.llm is None:
+        turn = run_assistant_turn(self.context, self._conversation, prompt)
+        if not turn.llm_available:
             log.warning(_LLM_UNAVAILABLE)
             return
-
-        messages, tools = build_chat_request(self.context, self._conversation, prompt)
-        reply = self.context.llm.chat_with_tools(messages, tools)
-        if reply is None:
-            log.warning(_LLM_UNAVAILABLE)
-            return
-
-        if reply.tool_calls:
-            calls_to_execute, skipped_calls = split_safe_tool_calls(reply.tool_calls, self.context.assistant_actions)
-            if skipped_calls:
-                skipped_names = ", ".join(tc.name for tc in skipped_calls)
-                log.warning("Skipped destructive tool call(s) bundled with other calls in one reply: %s", skipped_names)
-            for tool_call in calls_to_execute:
-                confirmation = self.context.assistant_actions.execute(self.context, tool_call.name, tool_call.arguments)
-                self._add_message("assistant", confirmation)
-                self._speak(confirmation)
-            return
-
-        self._add_message("assistant", reply.content)
-        self._speak(reply.content)
-        self._extract_memories(prompt)
+        for text in turn.replies:
+            self._speak(text)
+        if turn.remember_from is not None:
+            extract_memories(self.context, self._conversation.conversation_id, turn.remember_from)
 
     def _speak(self, text: str) -> None:
         self._indicators.on_speaking()
@@ -145,18 +121,3 @@ class VoiceLoopController:
         synthesized = self.context.voice.synthesize(text, output_path)
         if synthesized is not None:
             self.context.voice.play(synthesized)
-
-    def _extract_memories(self, user_message: str) -> None:
-        if self.context.user_memories is None or self.context.llm is None:
-            return
-        prompt = build_memory_extraction_prompt(user_message)
-        raw = self.context.llm.generate(prompt)
-        for category, fact in parse_extracted_memories(raw):
-            self.context.user_memories.add_memory(
-                fact, category=category, source_conversation_id=self._conversation.conversation_id,
-            )
-
-    def _add_message(self, role: str, content: str) -> None:
-        self._conversation.messages.append(
-            ConversationMessage(role=role, content=content, timestamp=datetime.now(timezone.utc).isoformat())
-        )

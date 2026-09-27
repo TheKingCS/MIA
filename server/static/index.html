@@ -2,62 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MIA Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1116">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>MIA</title>
     <link rel="manifest" href="/manifest.json">
     <style>
-        body {
-            background: #0f1a1c;
-            color: #d8e0e8;
-            font-family: system-ui, sans-serif;
-            max-width: 420px;
-            margin: 0 auto;
-            padding: 24px 16px;
+        :root {
+            --bg: #0d1116; --panel: #161b22; --border: #232b34;
+            --accent: #38d9c9; --accent-deep: #0d9488;
+            --text: #e7ecf3; --text-dim: #7c8798; --warn: #e0af68; --crit: #e06666;
         }
-        h1 { color: #38d9c9; font-size: 20px; }
-        label { display: block; margin-top: 12px; font-size: 13px; color: #9fb0b6; }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 480px; margin: 0 auto;
+            padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+            min-height: 100vh;
+        }
+        h1 { color: var(--accent); font-size: 20px; letter-spacing: 0.08em; margin: 4px 0 16px; }
+        label { display: block; margin-top: 12px; font-size: 13px; color: var(--text-dim); }
         input {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 8px;
-            margin-top: 4px;
-            background: #161b22;
-            border: 1px solid #232b34;
-            color: #d8e0e8;
-            border-radius: 4px;
+            width: 100%; padding: 12px; margin-top: 4px; font-size: 16px;
+            background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 8px;
         }
         button {
-            margin-top: 16px;
-            width: 100%;
-            padding: 10px;
-            background: #38d9c9;
-            color: #0f1a1c;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
+            margin-top: 12px; width: 100%; padding: 12px; font-size: 16px;
+            background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font-weight: 600;
         }
-        #status { margin-top: 16px; font-size: 13px; color: #9fb0b6; }
-        #push-section { margin-top: 24px; border-top: 1px solid #232b34; padding-top: 16px; }
+        button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        [hidden] { display: none !important; }
+
+        #orb {
+            width: 200px; height: 200px; margin: 24px auto 12px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 600; color: var(--bg); text-align: center;
+            background: radial-gradient(circle at 50% 40%, var(--accent), var(--accent-deep) 70%);
+            box-shadow: 0 0 0 0 rgba(56, 217, 201, 0.5);
+            user-select: none; -webkit-user-select: none; cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        #orb.idle { filter: saturate(0.4) brightness(0.8); }
+        #orb.listening { animation: breathe 2.4s ease-in-out infinite; }
+        #orb.recording { animation: pulse 0.9s ease-out infinite; transform: scale(1.05); }
+        #orb.thinking { animation: spin-glow 1.2s linear infinite; }
+        #orb.speaking { animation: pulse 1.6s ease-out infinite; }
+        @keyframes breathe { 50% { transform: scale(1.04); } }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(56, 217, 201, 0.55); }
+            100% { box-shadow: 0 0 0 28px rgba(56, 217, 201, 0); }
+        }
+        @keyframes spin-glow { 50% { filter: brightness(1.25) hue-rotate(20deg); } }
+
+        #state-line { text-align: center; color: var(--text-dim); min-height: 20px; font-size: 14px; }
+        #controls { display: flex; gap: 8px; }
+        #controls button { flex: 1; }
+        #log { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .bubble { padding: 10px 12px; border-radius: 12px; font-size: 15px; line-height: 1.35; max-width: 88%; }
+        .bubble.you { align-self: flex-end; background: var(--panel); border: 1px solid var(--border); }
+        .bubble.mia { align-self: flex-start; background: rgba(56, 217, 201, 0.12); border: 1px solid rgba(56, 217, 201, 0.35); }
+        #text-row { display: flex; gap: 8px; margin-top: 12px; }
+        #text-row input { flex: 1; margin-top: 0; }
+        #text-row button { width: auto; margin-top: 0; padding: 12px 16px; }
+        #status { margin-top: 12px; font-size: 13px; color: var(--text-dim); min-height: 18px; }
+        #status.error { color: var(--crit); }
+        details { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 12px; color: var(--text-dim); }
+        summary { cursor: pointer; }
     </style>
 </head>
 <body>
-    <h1>MIA Mobile — Phase 1</h1>
+    <h1>M.I.A.</h1>
 
-    <label for="profile_id">Name</label>
-    <input id="profile_id" type="text" autocomplete="username">
+    <section id="login-section">
+        <label for="profile_id">Name</label>
+        <input id="profile_id" type="text" autocomplete="username" autocapitalize="off">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password">
+        <button id="login-button">Log in</button>
+    </section>
 
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password">
+    <section id="talk-section" hidden>
+        <div id="orb" class="idle" role="button" aria-label="Talk to MIA">Tap to talk</div>
+        <div id="state-line">Ready</div>
+        <div id="controls">
+            <button id="end-button" class="secondary" hidden>End conversation</button>
+            <button id="new-button" class="secondary">New topic</button>
+        </div>
+        <div id="text-row">
+            <input id="text-input" type="text" placeholder="Or type to MIA…" enterkeyhint="send">
+            <button id="text-send">Send</button>
+        </div>
+        <div id="log"></div>
 
-    <button id="login-button">Log in</button>
-
-    <div id="push-section" hidden>
-        <button id="enable-button">Enable notifications</button>
-        <button id="test-button">Send test notification</button>
-    </div>
+        <details>
+            <summary>Notifications & settings</summary>
+            <label><input id="handsfree" type="checkbox" checked style="width:auto"> Hands-free (keep listening after MIA answers)</label>
+            <button id="enable-button" class="secondary">Enable notifications</button>
+            <button id="test-button" class="secondary">Send test notification</button>
+            <button id="logout-button" class="secondary">Log out</button>
+        </details>
+    </section>
 
     <div id="status"></div>
 
+    <script src="/voice.js"></script>
     <script src="/app.js"></script>
 </body>
 </html>

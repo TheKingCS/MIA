@@ -11731,3 +11731,75 @@ the failed item and skips the purge, and snapshot removal persisting.
 Headless-Qt screenshots confirmed the new controls, environment label,
 and the Reset button staying disabled until both fields are filled.
 Still unverified against Plaid's live API.
+
+## Phone voice, phase 1: hands-free conversation with home MIA from a phone (2026-09-27)
+
+The owner's ASAP ask: put in headphones after work and talk to the
+full desktop MIA from their phone on the drive home, over Wi-Fi or
+cellular: "my secretary with access to every detail of my life on
+speed dial." Built on the already-scoped mobile stack (embedded
+FastAPI server + PWA, private-mesh network, `docs/ROADMAP.md`'s Mobile
+access phases 1–2) rather than a new one.
+
+**Shared turn logic, not a copy**: `core/assistant_turn.py` pulls the
+exact turn pipeline (`build_chat_request()` → `chat_with_tools()` →
+`split_safe_tool_calls()` → action execution) out of
+`core/voice_loop.py`, which now calls it. The headless Core loop and
+the phone endpoint can't drift apart. Memory extraction moved to an
+explicit follow-up (`AssistantTurn.remember_from`) so callers
+speak/send first; the phone runs it as a FastAPI background task after
+the response.
+
+**Server** (`server/app.py`): `/api/voice/turn` (WAV in → transcript,
+reply text, Piper speech as base64 WAV out), `/api/voice/text`,
+`/api/voice/reset`, `/api/voice/status`. One in-memory conversation per
+profile, with turns serialized behind a lock since managers aren't
+thread-safe. `validate_voice_wav()` accepts only mono 16-bit PCM. A
+real bug caught by its own test: a 7-byte garbage upload raised a bare
+`EOFError` (would have been a 500) rather than `wave.Error`, now a
+clean 400. Uploads are capped at 5 MB.
+
+**Two security changes, made because this API can now read and change
+everything MIA knows**:
+- The server binds to a new `server.host` setting, defaulting to
+  `127.0.0.1` (was hard-coded `0.0.0.0`, i.e. plain-HTTP login exposed
+  to the whole LAN). The phone reaches it via `tailscale serve`, which
+  also supplies the HTTPS phones require before allowing microphone
+  access.
+- Remote login now refuses profiles with no password (403), even
+  though `verify_password()` treats "no password" as open for the
+  desktop lock screen.
+
+**Phone page** (`server/static/`): the new `voice.js` does mic capture,
+an adaptive-noise-floor end-of-speech detector (pre-roll so first
+syllables aren't clipped, cough/door-slam rejection, 30 s cap) and
+16 kHz mono WAV encoding on the phone, so the computer needs no
+ffmpeg. `app.js` drives it as a hands-free loop: tap once → listen →
+send → speak reply → listen again. It also has a persisted login, a
+screen wake lock, "goodbye" to end, a typed fallback, best-effort
+headset-button toggling via Media Session, and the existing push
+notifications. Replies play through one `<audio>` element unlocked on
+the first tap, so phones allow later autoplay.
+
+**Honest limit, documented for the owner**: web apps lose the mic
+when the phone locks or switches apps. The screen must stay on with
+MIA open. A native app is phase 2 (`docs/NEXT_SESSION.md`), pending
+the iPhone-or-Android decision.
+
+**Verified for real**: 104 tests across `test_server_app.py` (new:
+login refused without a password, WAV validation, auth on every voice
+route, transcribe → answer → speech, per-profile history + reset,
+background memory extraction on plain replies only, tool-call
+confirmations, model-down/nothing-heard/STT-down/oversized paths),
+`test_phone_voice_js.py` (new: runs `voice.js` under Node and checks
+its WAV output with the server's own validator, plus 4 end-of-speech
+scenarios including steady road-noise-level background), and
+`test_core_runtime.py` (voice loop refactor unchanged). **End-to-end in
+a real browser**: Playwright + Chromium with a simulated microphone
+fed a recorded "utterance", against the real uvicorn server (fake
+STT/TTS/LLM only). The page detected end of speech, uploaded a
+16 kHz/mono 2.8 s WAV, showed transcript + reply, played the reply,
+returned to listening hands-free, then handled a typed turn and End.
+Not verifiable here: a real phone, real Tailscale, real Vosk/Piper/
+Ollama quality over the network. The owner's first drive is the test
+(`docs/PHONE_VOICE_SETUP.md`).
