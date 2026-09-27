@@ -21,6 +21,19 @@ Add Income and Add Expense on their own tabs log a one-off entry
 directly, without needing a recurring Bill/Income Source behind it —
 useful for anything that isn't on a predictable schedule.
 
+## Debts and payoff priority
+
+The Debts tab tracks credit cards and loans (mortgages stay with Real
+Estate): balance, interest rate, minimum payment, and any promotional
+rate with its end date. Debts are ranked by what to pay off first. The
+default "Hybrid" strategy pays the highest interest rate first, but
+moves a debt to the front when its promo rate ends within 45 days.
+Avalanche (highest rate first) and Snowball (smallest balance first)
+are also available. Record Payment logs the payment as an expense and
+lowers the balance. Cards and student loans from connected banks
+appear automatically, marked "(bank-synced)". The bank keeps their
+balance and rate current, but promo end dates are yours to enter.
+
 ## Summary, Trends, and entities
 
 The Summary tab totals everything for This Month/This Year/All Time,
@@ -34,6 +47,10 @@ be filtered to just one.
 
 Bank Sync connects a real bank account (via Plaid) so its transactions
 flow in automatically instead of manual entry — Connect a Bank… starts
-that, Sync Now pulls the latest. Export Business Report (PDF)… and
+that, Sync Now pulls the latest. Add Card/Loan Access… lets an already
+connected bank feed its cards and loans into Debts. Disconnect
+Selected… removes a connection on Plaid's side too (freeing one of your
+connection slots), and Reset Plaid Setup… disconnects everything, for
+example to switch from sandbox testing to your real accounts. Export Business Report (PDF)… and
 Export Consolidated Report (All Entities)… on the Summary tab generate
 a real PDF report for accountant/business use.

@@ -44,6 +44,8 @@ here, not just a subjective read of the prompt.
 
 from __future__ import annotations
 
+import re
+
 from datetime import date
 from typing import TYPE_CHECKING, Iterable, Optional
 
@@ -266,6 +268,32 @@ def looks_like_teaching_request(prompt: str) -> bool:
     return any(phrase in prompt_lower for phrase in _TEACHING_TRIGGER_PHRASES)
 
 
+# 2026-09-27: "how do I add a bill?" contains the add_bill trigger
+# "add a bill", so it used to be routed as a command: tools attached,
+# no help-doc grounding, and a real risk of the model adding a bill
+# instead of explaining. Questions about *how to use* MIA skip tool
+# matching and get the normal grounded answer. Kept to phrasings that
+# ask about using the app, not "how much…"/"how far…" data questions,
+# which are real tool requests.
+_HOW_TO_PREFIXES = (
+    "how do i", "how do you", "how can i", "how would i", "how should i",
+    "where do i", "where can i", "is there a way to", "can you explain how",
+)
+# "how does my budget look" / "what does the mower need" are data
+# questions, so these two shapes only count when they're about how
+# something works or what a part of the app does.
+_HOW_TO_PATTERNS = (
+    re.compile(r"^how does .+ work"),
+    re.compile(r"^what does (the |my )?[\w' ]+ (module|tab|screen|page|button|feature|app) do"),
+)
+
+
+def looks_like_how_to_question(prompt: str) -> bool:
+    """Pure logic. True for questions about how to use MIA itself."""
+    lowered = prompt.lower().strip()
+    return lowered.startswith(_HOW_TO_PREFIXES) or any(p.search(lowered) for p in _HOW_TO_PATTERNS)
+
+
 # Swapped in for GROUNDING_INSTRUCTION (never both at once — one
 # system message, one job) when looks_like_teaching_request() fires.
 # Same "keep it short, don't over-qualify" discipline GROUNDING_
@@ -440,8 +468,8 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     """
     is_teaching_request = looks_like_teaching_request(prompt)
     matched_actions = (
-        context.assistant_actions.matching_actions(prompt)
-        if context.assistant_actions is not None and not is_teaching_request
+        context.assistant_actions.matching_actions(prompt, context)
+        if context.assistant_actions is not None and not is_teaching_request and not looks_like_how_to_question(prompt)
         else []
     )
     is_action_request = bool(matched_actions)

@@ -11872,3 +11872,54 @@ failure). 28 new tests in `tests/test_connectivity.py`:
 The real `AssistantActionRegistry.matching_actions()` and
 `DeviceHelpManager.build_grounded_prompt()` were also checked directly
 against real questions.
+
+## Conversational audit: from 30% to 100% of realistic requests reaching the right tool (2026-09-27)
+
+The owner asked for a deep audit of how MIA handles what she learns in
+conversation: updating assets, finances, greenhouse plants, recipes,
+parts, groceries and materials, using every tool, and knowing herself.
+Full findings: **`docs/ASSISTANT_AUDIT.md`**.
+
+The live model can't run in the cloud workspace (Ollama and its model
+registry are blocked by the network), so the audit measured everything
+deterministic around the model and extended the live checklist for the
+owner's machine.
+
+- **Baseline, measured against the real desktop registry:** 23 of 77
+  realistic requests reached the right tool. 31 needed tools that didn't
+  exist (Kitchen, Debts, budget targets, asset details/notes, part/
+  material/product quantities), 21 missed existing tools through natural
+  phrasing, and 2 how-to questions were routed as commands.
+- **After:** 77 of 77, small talk stays tool-free (24 sentences, including
+  every long-standing golden-set false-positive check), and all 187
+  live-checklist cases route correctly in a dry run.
+- **24 new tools** in `core/assistant_domain_actions.py`, with tolerant-
+  but-unambiguous record lookup (`core/assistant_lookup.py`). Deletes stay
+  exact-match.
+- **Registry matching** gains whole-word domain vocabulary plus the
+  user's own record names, matched by head noun, with an all-words mode
+  for debts.
+- **`looks_like_how_to_question()`** routes app how-to questions to help
+  docs while keeping data questions on tools.
+- **Maintenance handlers** accept the user's words, and a reading with
+  no task named goes to the asset's meter task or its own meter.
+- **Help docs and the capability record** updated.
+
+**Real finds along the way:** "-ies" stemming ("groceries" ≠ "grocery");
+my own first-draft vocabulary was too broad and was caught by a
+chit-chat check and by three long-standing golden-set false-positive
+cases, then trimmed; one documented known gap ("Log 46000 miles for the
+Oil Change on my Truck") is now closed.
+
+**Documented trade-offs:** a passing mention of a record name offers
+tools (with live checklist cases requiring no write for such
+sentences), and the average tools offered is about 18.
+
+**Not yet:** Workout, People & Pets, Household and Classroom tools;
+propose-and-confirm record updates from passing mentions; and the live
+model run itself.
+
+**Verified:** `pytest -q`, 3523 passed (same one pre-existing timezone
+failure). New tests: 171 across `test_assistant_routing.py` and
+`test_assistant_domain_actions.py`, the latter running every new or
+reworked tool against real managers on temp data.

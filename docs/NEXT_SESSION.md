@@ -44,6 +44,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
       7. Try it on the drive home (screen stays on, phone mounted).
          Report whether it heard you over road noise, how long answers
          took, and anything confusing.
+- [ ] **Live check of MIA's conversation skills** (see
+      `docs/ASSISTANT_AUDIT.md`). With Ollama running:
+      `python tests/live_model_check.py`. It uses fake data and never
+      runs the tools it's testing. Send Claude the FAIL lines.
 - [ ] **Claude Design pass.** Upload `docs/design_handoff/` (or the zip
       Claude sent) plus your inspiration pictures to Claude Design and
       paste the prompt at the top of its README. Bring the 3 directions
@@ -66,14 +70,20 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
    - Phone conversations saved to the desktop's History.
    - Desktop screens refresh after phone-made changes.
    - Faster replies (stream the answer instead of waiting for all of it).
-3. **Claude Design direction → new theme** (after you bring designs back).
-4. **Finance, #2: homestead build and tool costs.** Wire your real
+3. **Fix what the live conversation check turns up**, then finish
+   conversational coverage: Workout, People & Pets, Household
+   routines and Classroom have no voice/chat tools yet. Then
+   "propose, you confirm" record updates from things mentioned in
+   passing (e.g. "the mower got a new battery" → offer to note it on
+   the mower).
+4. **Claude Design direction → new theme** (after you bring designs back).
+5. **Finance, #2: homestead build and tool costs.** Wire your real
    tools and builds into the existing Workshop Materials/Jobs/Ledger
    pipeline.
-5. **Finance, #3: mower business-use write-off.** A business-use-
+6. **Finance, #3: mower business-use write-off.** A business-use-
    percentage engine for personal equipment used partly for contract
    lawn care.
-6. **Finance, #4: money on your phone.** A read view of Budget, Debts
+7. **Finance, #4: money on your phone.** A read view of Budget, Debts
    and Net Worth in the phone app (it already has login and a secure
    connection).
 

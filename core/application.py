@@ -57,6 +57,8 @@ from core.ledger_manager import LedgerManager
 from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.connectivity import ConnectivityMonitor, connectivity_action
+from core.assistant_domain_actions import register_domain_actions
+from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
 from core.context_assembler import assemble_life_state, format_life_state_summary
@@ -942,6 +944,7 @@ class MIAApplication:
         having to duplicate this class or its Qt/gui-heavy imports.
         """
         self.context.assistant_actions.register(connectivity_action())
+        register_domain_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",
@@ -2442,8 +2445,9 @@ class MIAApplication:
             name="add_maintenance_asset",
             domain="maintenance",
             description=(
-                "Add a new vehicle, power equipment, appliance, property item, or tool to MIA's "
-                "Maintenance tracker (not Inventory, and not Workshop's electronics parts)."
+                "Add a new vehicle, power equipment, appliance, property item, tool, or garden/greenhouse "
+                "plant or bed (category Garden/Plant) to MIA's Maintenance tracker (not Inventory, and not "
+                "Workshop's electronics parts)."
             ),
             parameters={
                 "type": "object",
@@ -2459,17 +2463,19 @@ class MIAApplication:
             handler=self._action_add_maintenance_asset,
             trigger_phrases=(
                 "track my", "start tracking", "add a vehicle", "add an asset to maintenance", "add to maintenance",
+                "to the greenhouse", "to the garden",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_maintenance_assets",
             domain="maintenance",
-            description="List every vehicle, power equipment, appliance, property item, and tool tracked in MIA's Maintenance tracker.",
+            description="List every vehicle, power equipment, appliance, property item, tool and garden/greenhouse plant tracked in MIA's Maintenance tracker.",
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_maintenance_assets,
             trigger_phrases=(
                 "what vehicles", "list my vehicles", "list my equipment", "what am i tracking",
                 "list maintenance assets", "show my assets", "what's in my garage",
+                "what plants", "list my plants", "my plants",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -2493,7 +2499,7 @@ class MIAApplication:
             description=(
                 "Add a recurring or one-time CALENDAR-based maintenance task tied to an existing vehicle/"
                 "equipment/appliance/property/tool asset in MIA (e.g. 'change the truck's oil every 90 "
-                "days', 'renew tags every year'). NOT a clock-time alarm — use this whenever the task "
+                "days', 'renew tags every year', 'water the tomatoes every 2 days'). NOT a clock-time alarm — use this whenever the task "
                 "repeats on a day interval for a specific owned asset, even if phrased as 'remind me to'. "
                 "Only for day-interval recurrence — mileage/engine-hour/start-count/sensor-triggered tasks "
                 "need the Maintenance module's own screen, not this tool. Only for SETTING UP a new task — "
@@ -2503,8 +2509,8 @@ class MIAApplication:
             parameters={
                 "type": "object",
                 "properties": {
-                    "asset_name": {"type": "string", "description": "The exact name of the existing asset this task is for."},
-                    "title": {"type": "string", "description": "A short task title, e.g. 'Oil change', 'Renew tags'."},
+                    "asset_name": {"type": "string", "description": "The existing asset this task is for, as the user referred to it (e.g. 'truck', 'tomatoes')."},
+                    "title": {"type": "string", "description": "A short task title, e.g. 'Oil change', 'Renew tags', 'Water'."},
                     "interval_days": {
                         "type": "integer",
                         "description": "Repeat every N days. Omit for a one-time task.",
@@ -2532,7 +2538,8 @@ class MIAApplication:
             domain="maintenance",
             description=(
                 "List MIA's maintenance tasks and their real due/overdue status, optionally filtered by a "
-                "keyword matching the task title or asset name. Leave query empty to list everything."
+                "keyword matching the task title or asset name ('greenhouse' or 'garden' lists plant care). "
+                "Leave query empty to list everything."
             ),
             parameters={
                 "type": "object",
@@ -2552,22 +2559,22 @@ class MIAApplication:
             name="complete_maintenance_task",
             domain="maintenance",
             description=(
-                "Mark an EXISTING maintenance task complete/done in MIA by title, because the user is "
-                "reporting they already did it (past tense — 'I renewed the tags', 'I changed the oil'). "
-                "Optionally name the asset to disambiguate. Do NOT use this to set up a new task — use "
-                "add_maintenance_task for that instead."
+                "Mark an EXISTING maintenance task complete/done because the user is reporting they already "
+                "did it (past tense — 'I changed the oil in the truck', 'sharpened the mower blades', 'I "
+                "watered the tomatoes'). Use the user's own words for title and asset; MIA matches them to "
+                "the real task. Do NOT use this to set up a new task — use add_maintenance_task instead."
             ),
             parameters={
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string", "description": "The task's title, e.g. 'Oil change'."},
-                    "asset_name": {"type": "string", "description": "Optional — the asset's name, needed only if more than one asset has a same-titled task."},
+                    "title": {"type": "string", "description": "What was done, in the user's words, e.g. 'oil change', 'blades', 'water'."},
+                    "asset_name": {"type": "string", "description": "The vehicle/tool/plant, in the user's words, e.g. 'truck', 'mower', 'tomatoes'."},
                     "meter_value": {
                         "type": "number",
                         "description": "For a mileage/runtime/cycles/condition task, the meter reading at completion. Omit to use the latest logged reading.",
                     },
                 },
-                "required": ["title"],
+                "required": [],
             },
             handler=self._action_complete_maintenance_task,
             # No fixed phrase list can enumerate every task-specific way
@@ -2589,17 +2596,18 @@ class MIAApplication:
             domain="maintenance",
             description=(
                 "Log a meter/sensor reading (mileage, engine hours, start count, a sensor value like battery "
-                "voltage) for an existing mileage/runtime/cycles/condition/sensor-triggered maintenance task."
+                "voltage) for a tracked vehicle or tool, e.g. '120 hours on the mower', '46,000 miles on the "
+                "truck'. Naming just the asset is enough; add a task title only if the user named one."
             ),
             parameters={
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string", "description": "The task's title, e.g. 'Oil change'."},
-                    "asset_name": {"type": "string", "description": "Optional — the asset's name, needed only if more than one asset has a same-titled task."},
+                    "title": {"type": "string", "description": "Optional task title, if the user named one."},
+                    "asset_name": {"type": "string", "description": "The vehicle/tool, in the user's words, e.g. 'mower'."},
                     "value": {"type": "number", "description": "The current reading value, e.g. 46000 for miles."},
                     "unit": {"type": "string", "description": "Optional unit, e.g. 'miles', 'hours', 'V'."},
                 },
-                "required": ["title", "value"],
+                "required": ["value"],
             },
             handler=self._action_log_maintenance_reading,
             # Tried a bare "log " (trailing space) here to catch "Log
@@ -4151,6 +4159,26 @@ class MIAApplication:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _resolve_maintenance_task_tolerant(context: AppContext, title: str, asset_name: str) -> tuple[Optional[MaintenanceTask], Optional[str]]:
+        """2026-09-27 conversational audit: people say "I changed the oil
+        in the truck", not "Oil change" / "Pickup Truck". Non-destructive
+        actions (complete, log a reading) resolve both names tolerantly
+        via core.assistant_lookup, acting only on one unambiguous match
+        and otherwise asking. Destructive ones keep the exact-match
+        resolver below."""
+        tasks = context.maintenance.all_tasks()
+        if asset_name:
+            asset, error = resolve_by_name(context.maintenance.all_assets(), asset_name, lambda a: a.name, "tracked item")
+            if error:
+                return None, error
+            tasks = [t for t in tasks if t.asset_id == asset.asset_id]
+            if not tasks:
+                return None, f"{asset.name} doesn't have any maintenance tasks yet."
+            if not title and len(tasks) == 1:
+                return tasks[0], None
+        return resolve_by_name(tasks, title, lambda t: t.title, "maintenance task")
+
+    @staticmethod
     def _resolve_maintenance_task(context: AppContext, title: str, asset_name: str) -> tuple[Optional[MaintenanceTask], Optional[str]]:
         """Exact case-insensitive title match, optionally narrowed by
         asset name — never fuzzy, same fail-closed name-resolution
@@ -4181,6 +4209,9 @@ class MIAApplication:
         if not name:
             return "I need a name to add a maintenance asset."
         category = str(arguments.get("category", "") or "Other").strip()
+        category = next((c for c in MAINTENANCE_ASSET_CATEGORIES if c.lower() == category.lower()), category)
+        if category.lower() in ("garden", "greenhouse", "plant", "plants"):
+            category = "Garden/Plant"
         if category not in MAINTENANCE_ASSET_CATEGORIES:
             category = "Other"
         asset = context.maintenance.add_asset(name=name, category=category)
@@ -4206,9 +4237,9 @@ class MIAApplication:
     @staticmethod
     def _action_add_maintenance_task(context: AppContext, arguments: dict) -> str:
         asset_name = str(arguments.get("asset_name", "")).strip()
-        asset = next((a for a in context.maintenance.all_assets() if a.name.lower() == asset_name.lower()), None)
-        if asset is None:
-            return f"I don't have a maintenance asset called '{asset_name}'."
+        asset, error = resolve_by_name(context.maintenance.all_assets(), asset_name, lambda a: a.name, "tracked item")
+        if error:
+            return error
         title = str(arguments.get("title", "")).strip()
         if not title:
             return "I need a task title."
@@ -4222,12 +4253,16 @@ class MIAApplication:
     @staticmethod
     def _action_list_maintenance_tasks(context: AppContext, arguments: dict) -> str:
         query = str(arguments.get("query", "") or "").strip().lower()
+        garden_query = query in ("greenhouse", "garden", "plants", "plant", "garden/plant")
         today = date.today()
         lines = []
         for task in context.maintenance.all_tasks():
             asset = context.maintenance.get_asset(task.asset_id)
             asset_name = asset.name if asset is not None else "Unknown asset"
-            if query and query not in task.title.lower() and query not in asset_name.lower():
+            if garden_query:
+                if asset is None or asset.category != "Garden/Plant":
+                    continue
+            elif query and query not in task.title.lower() and query not in asset_name.lower():
                 continue
 
             if task.trigger_type == "calendar":
@@ -4275,33 +4310,54 @@ class MIAApplication:
 
     @staticmethod
     def _action_complete_maintenance_task(context: AppContext, arguments: dict) -> str:
-        title = str(arguments.get("title", "")).strip()
-        if not title:
-            return "I need a task title to mark complete."
-        task, error = MIAApplication._resolve_maintenance_task(context, title, str(arguments.get("asset_name", "") or "").strip())
+        title = str(arguments.get("title", "") or "").strip()
+        asset_name = str(arguments.get("asset_name", "") or "").strip()
+        if not title and not asset_name:
+            return "Which maintenance task did you finish?"
+        task, error = MIAApplication._resolve_maintenance_task_tolerant(context, title, asset_name)
         if error:
             return error
         meter_value = arguments.get("meter_value")
         meter_value = float(meter_value) if meter_value not in (None, "") else None
         context.maintenance.mark_complete(task.task_id, meter_value=meter_value)
-        return f"Marked '{task.title}' complete."
+        asset = context.maintenance.get_asset(task.asset_id)
+        return f"Marked '{task.title}' complete" + (f" for {asset.name}." if asset is not None else ".")
 
     @staticmethod
     def _action_log_maintenance_reading(context: AppContext, arguments: dict) -> str:
-        title = str(arguments.get("title", "")).strip()
-        if not title:
-            return "I need a task title to log a reading for."
+        title = str(arguments.get("title", "") or "").strip()
+        asset_name = str(arguments.get("asset_name", "") or "").strip()
         value = arguments.get("value")
         if value is None:
             return "I need a value to log."
         try:
-            value = float(value)
+            value = float(str(value).replace(",", ""))
         except (TypeError, ValueError):
             return "That value doesn't look like a number."
-        task, error = MIAApplication._resolve_maintenance_task(context, title, str(arguments.get("asset_name", "") or "").strip())
-        if error:
-            return error
-        unit = str(arguments.get("unit", "") or "")
+        unit = str(arguments.get("unit", "") or "").strip()
+        if not title and not asset_name:
+            return "Which vehicle or item is that reading for?"
+
+        if not title:
+            # "120 hours on the mower": the asset's one meter task in that
+            # unit, else the asset's own meter (e.g. "Engine Hours").
+            asset, error = resolve_by_name(context.maintenance.all_assets(), asset_name, lambda a: a.name, "tracked item")
+            if error:
+                return error
+            meter_tasks = [
+                t for t in context.maintenance.tasks_for_asset(asset.asset_id)
+                if t.is_meter_task and (not unit or not t.meter_unit or t.meter_unit.lower().rstrip("s") == unit.lower().rstrip("s"))
+            ]
+            if len(meter_tasks) == 1:
+                task = meter_tasks[0]
+            else:
+                meter_name = {"hour": "Engine Hours", "mile": "Odometer", "km": "Odometer"}.get(unit.lower().rstrip("s"), unit.title() or "Reading")
+                context.maintenance.log_asset_reading(asset.asset_id, meter_name, value, unit=unit)
+                return f"Logged {value:g}{(' ' + unit) if unit else ''} on {asset.name}'s {meter_name.lower()}."
+        else:
+            task, error = MIAApplication._resolve_maintenance_task_tolerant(context, title, asset_name)
+            if error:
+                return error
         reading = context.maintenance.log_reading(task.task_id, value, unit=unit)
         unit_part = f" {reading.unit}" if reading.unit else ""
         return f"Logged {reading.value:g}{unit_part} for '{task.title}'."

@@ -46,6 +46,7 @@ import core.config_manager as config_manager_module
 import core.conversation_manager as conversation_manager_module
 import core.expedition_manager as expedition_manager_module
 import core.inventory_manager as inventory_manager_module
+import core.kitchen_manager as kitchen_manager_module
 import core.data_logger_manager as data_logger_manager_module
 import core.job_manager as job_manager_module
 import core.journal_manager as journal_manager_module
@@ -95,6 +96,16 @@ budget_manager_module._INCOME_FILE = _TEMP_DATA_DIR / "income.json"
 budget_manager_module._EXPENSES_FILE = _TEMP_DATA_DIR / "budget_expenses.json"
 budget_manager_module._INCOME_SOURCES_FILE = _TEMP_DATA_DIR / "income_sources.json"
 budget_manager_module._BUDGET_TARGETS_FILE = _TEMP_DATA_DIR / "budget_targets.json"
+budget_manager_module._BUSINESS_ENTITIES_FILE = _TEMP_DATA_DIR / "business_entities.json"
+budget_manager_module._DEBTS_FILE = _TEMP_DATA_DIR / "debts.json"
+# 2026-09-27 conversational audit: Kitchen + the parts/materials/products
+# usage logs, so seeding and any future executed call stay in the temp dir.
+kitchen_manager_module._DATA_DIR = _TEMP_DATA_DIR
+for _attr in ("_RECIPES_FILE", "_PANTRY_FILE", "_GROCERY_LIST_FILE", "_MEAL_LOG_FILE", "_RECIPE_USER_STATS_FILE"):
+    setattr(kitchen_manager_module, _attr, _TEMP_DATA_DIR / getattr(kitchen_manager_module, _attr).name)
+component_manager_module._USAGE_LOG_FILE = _TEMP_DATA_DIR / "component_usage_log.json"
+material_manager_module._USAGE_LOG_FILE = _TEMP_DATA_DIR / "material_usage_log.json"
+product_manager_module._USAGE_LOG_FILE = _TEMP_DATA_DIR / "product_usage_log.json"
 real_estate_manager_module._DATA_DIR = _TEMP_DATA_DIR
 real_estate_manager_module._PROPERTIES_FILE = _TEMP_DATA_DIR / "properties.json"
 data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -139,6 +150,7 @@ from core.device_help_manager import DeviceHelpManager
 from core.event_bus import EventBus
 from core.expedition_manager import ExpeditionManager
 from core.inventory_manager import InventoryManager
+from core.kitchen_manager import KitchenManager
 from core.data_logger_manager import DataLoggerManager
 from core.job_manager import JobManager
 from core.journal_manager import JournalManager
@@ -385,10 +397,10 @@ GOLDEN_CASES = [
     ("complete maintenance task", "I renewed the tags on my Truck", "complete_maintenance_task"),
     ("log a meter reading", "Log a reading of 46000 miles for the Oil Change on my Truck", "log_maintenance_reading"),
     (
-        "known accepted gap: bare 'Log <value> <unit>' with no other maintenance wording doesn't gate open "
-        "(same trade-off this registry already accepts for 'note ' — too common a word to match safely)",
+        "formerly a known gap (bare 'Log <value> <unit>' never gated open); closed 2026-09-27 by matching "
+        "the user's own record names ('Truck') and maintenance vocabulary",
         "Log 46000 miles for the Oil Change on my Truck",
-        None,
+        "log_maintenance_reading",
     ),
     ("delete maintenance task", "Delete the Renew Tags maintenance task", "delete_maintenance_task"),
     (
@@ -526,6 +538,43 @@ GOLDEN_CASES = [
         "Teach me how to add a mission",
         None,
     ),
+    # --- 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md) ---
+    # Assets and plants in the user's own words.
+    ("reading on an asset by nickname", "I just put 120 hours on the mower", "log_maintenance_reading", {"asset_name": "mower", "value": 120}),
+    ("completion in casual words", "Sharpened the mower blades this morning", "complete_maintenance_task", {"asset_name": "mower"}),
+    ("completion for a plant", "I watered the tomatoes", "complete_maintenance_task", {"asset_name": "tomato"}),
+    ("asset details", "My mower is a John Deere Z315E", "update_maintenance_asset", {"asset_name": "mower", "manufacturer": "John Deere"}),
+    ("what MIA knows about an asset", "Tell me about my mower", "get_maintenance_asset", {"asset_name": "mower"}),
+    ("observation note on a plant", "Note that the peppers are starting to flower", "add_asset_note", {"asset_name": "pepper"}),
+    ("new greenhouse plant", "Add the lettuce bed to the greenhouse", "add_maintenance_asset", {"name": "lettuce"}),
+    ("plant care schedule", "Remind me to water the pepper plants every 3 days", "add_maintenance_task", {"interval_days": 3}),
+    ("greenhouse status", "What's due in the greenhouse?", "list_maintenance_tasks"),
+    # Money.
+    ("new debt with rate", "I owe $5,100 on my Capital One card at 27.49 percent", "add_debt", {"balance": 5100, "interest_rate": 27.49}),
+    ("debt payment", "I paid $200 toward my Chase card", "record_debt_payment", {"debt_name": "chase", "amount": 200}),
+    ("payoff advice", "Which debt should I pay off first?", "get_debt_payoff_plan"),
+    ("total debt", "How much do I owe in total?", "list_debts"),
+    ("budget target", "Set my grocery budget to $600 a month", "set_budget_target", {"monthly_amount": 600}),
+    # Kitchen.
+    ("new recipe", "Add a recipe for garden salsa", "add_recipe", {"name": "salsa"}),
+    ("what to cook", "What can I make with what I have?", "suggest_recipes"),
+    ("meal log by nickname", "I made the venison chili tonight", "log_meal", {"recipe_name": "chili"}),
+    ("grocery add, multiple items", "Add milk and coffee to the grocery list", "add_grocery_item", {"items": "coffee"}),
+    ("grocery check-off", "I bought the eggs", "check_off_grocery_item", {"items": "eggs"}),
+    ("pantry out of", "We're out of flour", "update_pantry_item", {"name": "flour", "quantity": 0}),
+    ("recipe shopping", "Add what I need for the venison chili to the grocery list", "add_recipe_ingredients_to_grocery_list"),
+    # Workshop.
+    ("parts used", "I used two 10k resistors", "adjust_component_quantity", {"delta": -2}),
+    ("materials bought", "I bought 4 more sheets of plywood", "adjust_material_quantity", {"name": "plywood", "delta": 4}),
+    ("material price", "Plywood costs $42 a sheet now", "update_material", {"unit_cost": 42}),
+    ("products made", "I made 5 more cutting boards", "adjust_product_stock", {"delta": 5}),
+    # How-to questions are answered, never executed.
+    ("how-to must not execute", "How do I add a bill?", None),
+    ("how-to must not execute (record name present)", "How do I track my mower?", None),
+    # Passing mentions of the user's things now offer tools (documented
+    # trade-off); the model must still not write anything.
+    ("passing mention of an asset: no write", "I was driving the truck home and it felt great", "safe"),
+    ("passing mention of an asset: no write", "Tell me a story about a mower", "safe"),
 ]
 
 
@@ -569,6 +618,7 @@ def _build_context() -> AppContext:
     context.memories = MemoryManager(context)
     context.missions = MissionManager(context)
     context.materials = MaterialManager(context)
+    context.kitchen = KitchenManager(context)
     context.jobs = JobManager(context)
     context.products = ProductManager(context)
     context.ledger = LedgerManager(context)
@@ -630,6 +680,43 @@ def _seed_fixtures(context: AppContext) -> None:
     fake_pdf_path.write_bytes(b"%PDF-1.4 fake trail map contents")
     context.trail_maps.add_from_local_file("Mammoth Cave", "Kentucky", fake_pdf_path)
 
+    # 2026-09-27 conversational audit fixtures.
+    mower = context.maintenance.add_asset(name="Riding Mower", category="Power Equipment")
+    context.maintenance.add_task(mower.asset_id, "Sharpen blades", interval_days=30)
+    bed = context.maintenance.add_asset(name="Tomato Bed", category="Garden/Plant")
+    context.maintenance.add_task(bed.asset_id, "Water", interval_days=2)
+    context.maintenance.add_asset(name="Pepper Plants", category="Garden/Plant")
+    context.budget.add_debt(name="Chase Freedom", balance=4200.0, interest_rate=24.99, minimum_payment=90.0)
+    context.budget.add_debt(name="Truck Loan", balance=18250.0, interest_rate=6.9, minimum_payment=455.0, debt_type="Auto Loan")
+    chili = context.kitchen.add_recipe(name="Venison Chili", category="Dinner")
+    context.kitchen.add_ingredient(chili.recipe_id, "ground venison", quantity=2, unit="lb")
+    context.kitchen.add_recipe(name="Garden Omelette", category="Breakfast")
+    context.kitchen.add_pantry_item("Flour", quantity=10, unit="lb")
+    context.kitchen.add_grocery_item("Eggs")
+    context.components.add_component(name="Resistor", value="10k", quantity=30, category="Resistor")
+    context.products.add_product(name="Cutting Board", quantity_in_stock=3, base_price=40.0)
+
+
+def _arguments_match(arguments: dict, expected: dict) -> tuple[bool, str]:
+    """2026-09-27: did the model pass the user's actual words/numbers?
+    Strings match case-insensitively as substrings either way ("mower" vs
+    "Riding Mower"); numbers must be equal. Only listed keys are checked."""
+    for key, want in expected.items():
+        got = arguments.get(key)
+        if isinstance(want, (int, float)):
+            try:
+                if abs(float(str(got).replace(",", "").replace("$", "")) - float(want)) > 1e-6:
+                    return False, f"argument {key}={got!r}, expected {want!r}"
+            except (TypeError, ValueError):
+                return False, f"argument {key}={got!r}, expected {want!r}"
+        else:
+            got_text = " ".join(got) if isinstance(got, list) else str(got or "")
+            if want.lower() not in got_text.lower() and got_text.lower() not in want.lower():
+                return False, f"argument {key}={got!r}, expected something like {want!r}"
+            if not got_text:
+                return False, f"argument {key} missing"
+    return True, f"called with {arguments}"
+
 
 def main() -> int:
     context = _build_context()
@@ -640,7 +727,7 @@ def main() -> int:
         return 1
 
     failures = []
-    for description, prompt, expected in GOLDEN_CASES:
+    for description, prompt, expected, *expected_args in GOLDEN_CASES:
         # A fresh, empty conversation per case — this golden set verifies
         # tool-gating/grounding decisions in isolation, one case at a
         # time, not multi-turn history behavior (see
@@ -667,6 +754,9 @@ def main() -> int:
         else:
             ok = called == [expected]
             detail = f"expected [{expected}], got {called}"
+            if ok and expected_args:
+                arguments = reply.tool_calls[0].arguments
+                ok, detail = _arguments_match(arguments, expected_args[0])
 
         status = "PASS" if ok else "FAIL"
         print(f"[{status}] {description}: {prompt!r} — {detail}")

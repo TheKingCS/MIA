@@ -116,7 +116,7 @@ class _FakeAssistantActions:
         self._keywords = keywords
         self._tools = tools
 
-    def matching_actions(self, prompt):
+    def matching_actions(self, prompt, context=None):
         lowered = f" {prompt.lower().strip()} "
         if any(keyword in lowered for keyword in self._keywords):
             return self._tools

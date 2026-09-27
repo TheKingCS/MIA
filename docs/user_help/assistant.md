@@ -63,6 +63,56 @@ say so rather than guess.
 - "How many M3 bolts do I have?"
 - "Add a component to my workshop inventory"
 
+## Your vehicles, equipment, and plants
+
+MIA recognizes your things by the names you use: "the truck", "the
+mower", "the tomatoes". You don't need their exact names in MIA.
+
+- "I changed the oil in the truck"
+- "Sharpened the mower blades this morning"
+- "I just put 120 hours on the mower"
+- "My mower is a John Deere Z315E" (saves make, model, serial number,
+  purchase date)
+- "Tell me about my mower" (details, what's due, latest readings, notes)
+- "Note that the mower's deck belt is fraying" (a dated note on it)
+- "Add the tomato bed to the greenhouse"
+- "Remind me to water the tomatoes every 2 days"
+- "I watered the tomatoes"
+- "What's due in the greenhouse?"
+
+## Money: bills, spending, debts, and budgets
+
+- "I paid the electric bill"
+- "I spent $84 on groceries"
+- "Set my grocery budget to $600 a month"
+- "I owe $5,100 on my Capital One card at 27.49 percent"
+- "How much debt do I have?"
+- "I paid $200 toward my Chase card"
+- "Which debt should I pay off first?" (explains why, including promo
+  rates about to expire)
+- "My Chase balance is now $3,900"
+
+## Kitchen: recipes, groceries, and pantry
+
+- "Add a recipe for venison chili: 2 lb ground venison, 1 can black
+  beans, chili powder"
+- "What can I make with what I have?"
+- "I made the venison chili tonight"
+- "Add eggs and milk to the grocery list"
+- "What's on my grocery list?"
+- "I bought the eggs" (checks them off)
+- "Add what I need for the venison chili to the grocery list"
+- "I have 10 pounds of flour in the pantry"
+- "We're out of flour"
+
+## Workshop: parts, materials, and products
+
+- "I used two 10k resistors"
+- "I bought 4 more sheets of plywood"
+- "Plywood costs $42 a sheet now"
+- "I made 5 more cutting boards"
+- "I sold 2 cutting boards for $40 each"
+
 ## Projects and tasks
 
 - "Start a project called Garage Rewire"
@@ -77,6 +127,23 @@ say so rather than guess.
 - "Identify this hash: 5f4dcc3b5aa765d61d8327deb882cf99"
 - "Check the strength of this password"
 - "Calculate this subnet: 192.168.1.0/24"
+
+## Talking to MIA from your phone
+
+MIA can also be reached from your phone with headphones: tap once and
+talk hands-free, over Wi-Fi or cellular, and she answers in your ears
+using the same abilities as here. It runs through Tailscale, a private
+network between your own devices, and needs MIA running on your
+computer at home. For now the phone's screen must stay on with MIA
+open.
+
+## When MIA isn't sure
+
+If what you said could mean more than one thing ("the oil" when both
+the truck and the mower have oil changes), MIA asks which one instead
+of guessing. If she can't find something, she tells you what she does
+have so you can pick. She never deletes anything unless you use its
+exact name.
 
 ## A few things it won't do
 

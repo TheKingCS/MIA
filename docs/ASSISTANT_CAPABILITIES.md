@@ -141,7 +141,52 @@ of how many are registered in total. Domain-scoped attachment
 matched domain(s) plus a small always-on "system" set) instead of
 attaching the full registry to every message.
 
-## Tool registry (74 actions, 19 domains, as of 2026-07-18)
+## How a request reaches a tool (2026-09-27 conversational audit)
+
+A tool can only be used if it's *offered* to the model for that
+message. `AssistantActionRegistry.matching_actions(prompt, context)`
+offers a domain's tools when the prompt contains:
+1. one of an action's `trigger_phrases` (exact phrase),
+2. one of the domain's registered vocabulary words
+   (`register_domain_keywords()`, whole words only), or
+3. the name of one of the user's own records in that domain
+   (`register_entity_names()`), matched on its head noun ("the mower"
+   → "Riding Mower", "the peppers" → "Pepper Plants"). Domains whose
+   names share words (debts: "Truck Loan") require every word.
+
+How-to questions ("how do I…", "where do I…", "how does X work",
+"what does the X module do") skip tools entirely and get help-doc
+grounding (`looks_like_how_to_question()`).
+
+Handlers find records with `core/assistant_lookup.resolve_by_name()`:
+the user's own words, one unambiguous match only, otherwise ask or list
+what exists. Destructive actions keep exact names.
+
+**Keep it measured, not guessed.** `tests/assistant_routing_corpus.py`
+holds realistic requests with the tool each must reach, plus small talk
+that must stay tool-free; `tests/test_assistant_routing.py` enforces it.
+Add a line there whenever MIA misses something. The live model's half
+is `tests/live_model_check.py` (run on the owner's machine). Full
+findings: `docs/ASSISTANT_AUDIT.md`.
+
+## Tool registry (135 actions, 27 domains, as of 2026-09-27)
+
+**Added 2026-09-27** (`core/assistant_domain_actions.py`):
+- maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
+  `add_asset_note`. Greenhouse/garden plants are Maintenance assets
+  in the Garden/Plant category.
+- debts: `add_debt`, `update_debt`, `list_debts`,
+  `record_debt_payment`, `get_debt_payoff_plan`
+- budget: `set_budget_target`
+- kitchen: `add_recipe`, `list_recipes`, `suggest_recipes`, `log_meal`
+- groceries: `add_grocery_item`, `list_grocery_list`,
+  `check_off_grocery_item`, `add_recipe_ingredients_to_grocery_list`,
+  `add_pantry_item`, `update_pantry_item`, `list_pantry`
+- components/materials/products: `adjust_component_quantity`,
+  `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+The per-domain list below predates these additions (last full pass
+2026-07-18).
 
 **Do not hand-edit this section.** Regenerate it with:
 

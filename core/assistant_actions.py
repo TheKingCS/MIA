@@ -60,8 +60,9 @@ verification writeup.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Iterable, Optional
 
 from core.logger import get_logger
 
@@ -129,6 +130,15 @@ class AssistantAction:
 
 class AssistantActionRegistry:
     def __init__(self) -> None:
+        # 2026-09-27 conversational audit: exact trigger phrases alone
+        # missed how people actually talk ("I just put 120 hours on the
+        # mower", "I watered the tomatoes"). Two more ways a domain
+        # gets attached: its everyday vocabulary (whole words), and the
+        # names of the user's own records in it (mention "the mower"
+        # and Maintenance's tools come along).
+        self._domain_keywords: dict[str, tuple[str, ...]] = {}
+        self._entity_providers: dict[str, Callable[["AppContext"], Iterable[str]]] = {}
+        self._entity_match_all: set[str] = set()
         self._actions: dict[str, AssistantAction] = {}
 
     def register(self, action: AssistantAction) -> None:
@@ -162,7 +172,60 @@ class AssistantActionRegistry:
             keywords.extend(action.trigger_phrases)
         return keywords
 
-    def matching_actions(self, prompt: str) -> list[AssistantAction]:
+    def register_domain_keywords(self, domain: str, keywords: Iterable[str]) -> None:
+        """Whole-word vocabulary that attaches `domain` (e.g. "debt", "plywood")."""
+        existing = self._domain_keywords.get(domain, ())
+        self._domain_keywords[domain] = existing + tuple(k.lower() for k in keywords)
+
+    def register_entity_names(
+        self, domain: str, provider: Callable[["AppContext"], Iterable[str]], match_all_words: bool = False,
+    ) -> None:
+        """`provider(context)` returns the names of the user's records in
+        `domain`; mentioning one of them attaches the domain. By default
+        any significant word of a name counts ("the truck" -> "Pickup
+        Truck"); `match_all_words` requires every one of them, for
+        domains whose names share words with others ("Truck Loan" must
+        not fire on "the truck")."""
+        self._entity_providers[domain] = provider
+        if match_all_words:
+            self._entity_match_all.add(domain)
+
+    def _keyword_domains(self, lowered: str) -> set[str]:
+        return {
+            domain for domain, keywords in self._domain_keywords.items()
+            if any(re.search(rf"(?<![a-z0-9]){re.escape(k)}(?![a-z0-9])", lowered) for k in keywords)
+        }
+
+    def _entity_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
+        if context is None or not self._entity_providers:
+            return set()
+        from core.assistant_lookup import head_word, name_tokens
+
+        prompt_tokens = name_tokens(prompt)
+        lowered = prompt.lower()
+        domains = set()
+        for domain, provider in self._entity_providers.items():
+            try:
+                names = list(provider(context))
+            except Exception:
+                log.exception("Entity-name provider for domain '%s' failed", domain)
+                continue
+            for name in names:
+                name_l = str(name).strip().lower()
+                if not name_l:
+                    continue
+                if domain in self._entity_match_all:
+                    significant = {t for t in name_tokens(name_l) if len(t) >= 4}
+                    hit = bool(significant) and significant <= prompt_tokens
+                else:
+                    head = head_word(name_l)
+                    hit = bool(head) and head in prompt_tokens
+                if name_l in lowered or hit:
+                    domains.add(domain)
+                    break
+        return domains
+
+    def matching_actions(self, prompt: str, context: Optional["AppContext"] = None) -> list[AssistantAction]:
         """
         Actions to actually attach as tools for this specific prompt —
         see this module's docstring on domain-scoped attachment. Empty
@@ -177,6 +240,8 @@ class AssistantActionRegistry:
         for action in self._actions.values():
             if any(phrase in lowered for phrase in action.trigger_phrases):
                 matched_domains.add(action.domain)
+        matched_domains |= self._keyword_domains(lowered)
+        matched_domains |= self._entity_domains(prompt, context)
 
         if not matched_domains:
             return []
