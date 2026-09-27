@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from core.budget_manager import Bill, ExpenseEntry, IncomeEntry, IncomeSource
+from core.budget_manager import Bill, Debt, DebtPriority, ExpenseEntry, IncomeEntry, IncomeSource
 from modules.budget.module import (
     format_bill_row,
+    format_debt_row,
     format_expense_row,
     format_holding_row,
     format_income_row,
@@ -35,6 +36,31 @@ def _income_source(next_date="2026-09-07", recurrence=None, last_received_date=N
         recurrence=recurrence,
         last_received_date=last_received_date,
     )
+
+
+def _debt(balance=5000.0, interest_rate=24.99, promo_apr=None, promo_expires_date=None):
+    return Debt(
+        debt_id="d1", name="Chase Freedom", balance=balance, interest_rate=interest_rate,
+        minimum_payment=100.0, debt_type="Credit Card", promo_apr=promo_apr, promo_expires_date=promo_expires_date,
+    )
+
+
+def test_format_debt_row_no_priority():
+    debt = _debt()
+    assert format_debt_row(debt, date(2026, 9, 27)) == "Chase Freedom   $5,000.00 @ 24.99% APR  [Credit Card]"
+
+
+def test_format_debt_row_with_priority_includes_rank_and_reason():
+    debt = _debt()
+    priority = DebtPriority(debt=debt, rank=2, effective_apr=24.99, reason="Highest current APR (24.99%)")
+    assert format_debt_row(debt, date(2026, 9, 27), priority) == (
+        "#2  Chase Freedom   $5,000.00 @ 24.99% APR  [Credit Card]  — Highest current APR (24.99%)"
+    )
+
+
+def test_format_debt_row_uses_effective_promo_apr():
+    debt = _debt(interest_rate=24.99, promo_apr=0.0, promo_expires_date="2026-12-01")
+    assert format_debt_row(debt, date(2026, 9, 27)) == "Chase Freedom   $5,000.00 @ 0.00% APR  [Credit Card]"
 
 
 def test_format_bill_row_overdue():

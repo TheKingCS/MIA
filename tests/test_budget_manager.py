@@ -24,12 +24,16 @@ from core.budget_manager import (
     Bill,
     BudgetManager,
     BudgetTarget,
+    Debt,
     IncomeSource,
     days_until_bill_due,
     days_until_income_due,
+    days_until_promo_expires,
+    effective_apr,
     is_bill_due,
     next_bill_due_date,
     next_income_due_date,
+    rank_debts,
 )
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
@@ -47,6 +51,7 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(budget_manager_module, "_INCOME_SOURCES_FILE", data_dir / "income_sources.json")
     monkeypatch.setattr(budget_manager_module, "_BUDGET_TARGETS_FILE", data_dir / "budget_targets.json")
     monkeypatch.setattr(budget_manager_module, "_BUSINESS_ENTITIES_FILE", data_dir / "business_entities.json")
+    monkeypatch.setattr(budget_manager_module, "_DEBTS_FILE", data_dir / "debts.json")
     # Real once a test constructs a real ProfileManager too (2026-09-11
     # gamification hook tests below) — see test_workout_manager.py's
     # own isolated_paths for the identical reasoning.
@@ -838,3 +843,210 @@ def test_all_budget_targets_filters_to_one_entity(isolated_paths):
     ent1_only = manager.all_budget_targets(entity_id="ent1")
     assert len(ent1_only) == 1
     assert ent1_only[0].monthly_amount == 150.0
+
+
+# ----------------------------------------------------------------------
+# Debt — payoff-tracked liabilities, effective_apr()/rank_debts()
+# ----------------------------------------------------------------------
+
+def _debt(balance=5000.0, interest_rate=24.99, promo_apr=None, promo_expires_date=None):
+    return Debt(
+        debt_id="d1", name="Chase Freedom", balance=balance, interest_rate=interest_rate,
+        minimum_payment=100.0, debt_type="Credit Card", promo_apr=promo_apr, promo_expires_date=promo_expires_date,
+    )
+
+
+def test_effective_apr_no_promo_returns_standard_rate():
+    debt = _debt(interest_rate=19.99)
+    assert effective_apr(debt, date(2026, 9, 27)) == 19.99
+
+
+def test_effective_apr_active_promo_returns_promo_rate():
+    debt = _debt(interest_rate=24.99, promo_apr=0.0, promo_expires_date="2026-12-01")
+    assert effective_apr(debt, date(2026, 9, 27)) == 0.0
+
+
+def test_effective_apr_expired_promo_returns_standard_rate():
+    debt = _debt(interest_rate=24.99, promo_apr=0.0, promo_expires_date="2026-01-01")
+    assert effective_apr(debt, date(2026, 9, 27)) == 24.99
+
+
+def test_effective_apr_promo_expires_today_still_active():
+    debt = _debt(interest_rate=24.99, promo_apr=0.0, promo_expires_date="2026-09-27")
+    assert effective_apr(debt, date(2026, 9, 27)) == 0.0
+
+
+def test_effective_apr_promo_with_no_expiration_date_treated_as_expired():
+    debt = _debt(interest_rate=24.99, promo_apr=0.0, promo_expires_date=None)
+    assert effective_apr(debt, date(2026, 9, 27)) == 24.99
+
+
+def test_days_until_promo_expires_none_when_no_promo():
+    assert days_until_promo_expires(_debt(), date(2026, 9, 27)) is None
+
+
+def test_days_until_promo_expires_real_count():
+    debt = _debt(promo_apr=0.0, promo_expires_date="2026-10-07")
+    assert days_until_promo_expires(debt, date(2026, 9, 27)) == 10
+
+
+def test_rank_debts_avalanche_orders_by_highest_apr_first():
+    low = Debt(debt_id="low", name="Low APR", balance=1000.0, interest_rate=5.0)
+    high = Debt(debt_id="high", name="High APR", balance=1000.0, interest_rate=25.0)
+    ranked = rank_debts([low, high], date(2026, 9, 27), strategy="avalanche")
+    assert [p.debt.debt_id for p in ranked] == ["high", "low"]
+    assert ranked[0].rank == 1
+
+
+def test_rank_debts_snowball_orders_by_smallest_balance_first():
+    small = Debt(debt_id="small", name="Small Balance", balance=500.0, interest_rate=25.0)
+    large = Debt(debt_id="large", name="Large Balance", balance=5000.0, interest_rate=5.0)
+    ranked = rank_debts([small, large], date(2026, 9, 27), strategy="snowball")
+    assert [p.debt.debt_id for p in ranked] == ["small", "large"]
+
+
+def test_rank_debts_hybrid_bumps_soon_expiring_promo_ahead_of_higher_apr():
+    high_apr = Debt(debt_id="high", name="High APR", balance=1000.0, interest_rate=25.0)
+    expiring_promo = Debt(
+        debt_id="promo", name="Expiring Promo", balance=1000.0, interest_rate=25.0,
+        promo_apr=0.0, promo_expires_date="2026-10-10",  # 13 days out, inside the urgency window
+    )
+    ranked = rank_debts([high_apr, expiring_promo], date(2026, 9, 27), strategy="hybrid")
+    assert [p.debt.debt_id for p in ranked] == ["promo", "high"]
+    assert "ends in 13d" in ranked[0].reason
+
+
+def test_rank_debts_hybrid_ignores_promo_outside_urgency_window():
+    high_apr = Debt(debt_id="high", name="High APR", balance=1000.0, interest_rate=25.0)
+    far_promo = Debt(
+        debt_id="promo", name="Far Promo", balance=1000.0, interest_rate=10.0,
+        promo_apr=0.0, promo_expires_date="2027-06-01",  # well outside the urgency window
+    )
+    ranked = rank_debts([high_apr, far_promo], date(2026, 9, 27), strategy="hybrid")
+    # Not urgent yet, so it's ranked by its own low effective (promo) APR — last, not first.
+    assert [p.debt.debt_id for p in ranked] == ["high", "promo"]
+
+
+def test_rank_debts_excludes_paid_off_debts():
+    paid_off = Debt(debt_id="paid", name="Paid Off", balance=0.0, interest_rate=20.0)
+    open_debt = Debt(debt_id="open", name="Open", balance=100.0, interest_rate=10.0)
+    ranked = rank_debts([paid_off, open_debt], date(2026, 9, 27))
+    assert [p.debt.debt_id for p in ranked] == ["open"]
+
+
+def test_rank_debts_unknown_strategy_falls_back_to_hybrid():
+    a = Debt(debt_id="a", name="A", balance=100.0, interest_rate=10.0)
+    assert [p.debt.debt_id for p in rank_debts([a], date(2026, 9, 27), strategy="bogus")] == ["a"]
+
+
+def test_add_debt_persists_across_a_fresh_load(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="Chase Freedom", balance=5000.0, interest_rate=24.99, minimum_payment=100.0)
+
+    reloaded = _make_manager()
+    assert len(reloaded.all_debts()) == 1
+    assert reloaded.all_debts()[0].name == "Chase Freedom"
+
+
+def test_add_debt_rejects_negative_balance(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.add_debt(name="Bad", balance=-1.0, interest_rate=10.0)
+
+
+def test_add_debt_rejects_unknown_debt_type_falls_back_to_other(isolated_paths):
+    manager = _make_manager()
+    debt = manager.add_debt(name="Weird", balance=100.0, interest_rate=10.0, debt_type="Not A Real Type")
+    assert debt.debt_type == "Other"
+
+
+def test_add_debt_promo_apr_without_expiration_date_is_dropped(isolated_paths):
+    manager = _make_manager()
+    debt = manager.add_debt(name="X", balance=100.0, interest_rate=10.0, promo_apr=0.0, promo_expires_date=None)
+    assert debt.promo_apr == 0.0
+    assert debt.promo_expires_date is None
+
+
+def test_update_debt_clears_promo_expires_date_when_promo_apr_cleared(isolated_paths):
+    manager = _make_manager()
+    debt = manager.add_debt(name="X", balance=100.0, interest_rate=10.0, promo_apr=0.0, promo_expires_date="2026-12-01")
+    manager.update_debt(debt.debt_id, promo_apr=None)
+    assert manager.get_debt(debt.debt_id).promo_expires_date is None
+
+
+def test_delete_debt_removes_it(isolated_paths):
+    manager = _make_manager()
+    debt = manager.add_debt(name="X", balance=100.0, interest_rate=10.0)
+    manager.delete_debt(debt.debt_id)
+    assert manager.get_debt(debt.debt_id) is None
+
+
+def test_record_debt_payment_creates_expense_and_reduces_balance(isolated_paths):
+    manager = _make_manager()
+    debt = manager.add_debt(name="Chase Freedom", balance=1000.0, interest_rate=24.99, minimum_payment=50.0)
+
+    entry = manager.record_debt_payment(debt.debt_id, 200.0, date="2026-09-27")
+
+    assert entry.amount == 200.0
+    assert entry.category == "Debt Payment"
+    assert entry.description == "Chase Freedom"
+    updated = manager.get_debt(debt.debt_id)
+    assert updated.balance == 800.0
+    assert updated.last_payment_date == "2026-09-27"
+
+
+def test_record_debt_payment_clamps_balance_at_zero_on_overpayment(isolated_paths):
+    manager = _make_manager()
+    debt = manager.add_debt(name="X", balance=100.0, interest_rate=10.0)
+    manager.record_debt_payment(debt.debt_id, 500.0)
+    assert manager.get_debt(debt.debt_id).balance == 0.0
+
+
+def test_record_debt_payment_unknown_id_raises(isolated_paths):
+    manager = _make_manager()
+    with pytest.raises(ValueError):
+        manager.record_debt_payment("nonexistent", 100.0)
+
+
+def test_debt_payoff_priority_reflects_manager_state(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="Low", balance=100.0, interest_rate=5.0)
+    manager.add_debt(name="High", balance=100.0, interest_rate=25.0)
+
+    ranked = manager.debt_payoff_priority(strategy="avalanche", today=date(2026, 9, 27))
+    assert ranked[0].debt.name == "High"
+
+
+def test_total_debt_balance_sums_open_debts(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="A", balance=100.0, interest_rate=10.0)
+    manager.add_debt(name="B", balance=250.0, interest_rate=10.0)
+    assert manager.total_debt_balance() == 350.0
+
+
+def test_total_debt_balance_filters_by_entity(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="A", balance=100.0, interest_rate=10.0, entity_id="ent1")
+    manager.add_debt(name="B", balance=250.0, interest_rate=10.0)
+    assert manager.total_debt_balance(entity_id="ent1") == 100.0
+
+
+def test_total_minimum_debt_payments_ignores_paid_off_debts(isolated_paths):
+    manager = _make_manager()
+    d1 = manager.add_debt(name="A", balance=100.0, interest_rate=10.0, minimum_payment=25.0)
+    manager.add_debt(name="B", balance=50.0, interest_rate=10.0, minimum_payment=10.0)
+    manager.record_debt_payment(d1.debt_id, 100.0)  # pays it off
+    assert manager.total_minimum_debt_payments() == 10.0
+
+
+def test_weighted_average_debt_apr_weights_by_balance(isolated_paths):
+    manager = _make_manager()
+    manager.add_debt(name="Small", balance=100.0, interest_rate=10.0)
+    manager.add_debt(name="Large", balance=900.0, interest_rate=20.0)
+    # (100*10 + 900*20) / 1000 = 19.0
+    assert manager.weighted_average_debt_apr(today=date(2026, 9, 27)) == pytest.approx(19.0)
+
+
+def test_weighted_average_debt_apr_zero_when_no_open_debt(isolated_paths):
+    manager = _make_manager()
+    assert manager.weighted_average_debt_apr() == 0.0

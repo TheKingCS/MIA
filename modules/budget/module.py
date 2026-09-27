@@ -2,12 +2,20 @@
 modules.budget.module
 ========================
 
-Budget: household bills, income, expenses, and expected/recurring
-income. Seven tabs (Bills, Income Sources, Income, Expenses, Summary,
-Trends, Bank Sync) — same `QTabWidget` multi-feature-in-one-module
-shape as modules/maintenance/module.py and modules/workshop/module.py,
-since these are closely-related views over one connected data set
-rather than separate top-level modules.
+Budget: household bills, income, expenses, expected/recurring income,
+and debt payoff tracking. Eight tabs (Bills, Income Sources, Income,
+Expenses, Debts, Summary, Trends, Bank Sync) — same `QTabWidget`
+multi-feature-in-one-module shape as modules/maintenance/module.py and
+modules/workshop/module.py, since these are closely-related views over
+one connected data set rather than separate top-level modules.
+
+The Debts tab is the GUI half of core/budget_manager.py's Debt/
+rank_debts() (2026-09-27) — a strategy combo (Avalanche/Snowball/
+Hybrid) drives which order debts are listed in, with each row's own
+computed reason (highest current APR, or an expiring promo warning)
+shown inline. "Record Payment" mirrors the Bills tab's "Mark Paid"
+shape exactly: one click, two real effects (a real Expense entry + a
+real balance reduction) via BudgetManager.record_debt_payment().
 
 All persistence/recurrence/reporting logic lives in
 core/budget_manager.py (self.context.budget) — this module is the
@@ -91,12 +99,16 @@ from PySide6.QtWidgets import (
 from core.business_report import build_business_report_html, build_consolidated_business_report_html
 from core.budget_manager import (
     Bill,
+    DEBT_PAYOFF_STRATEGIES,
+    Debt,
+    DebtPriority,
     EXPENSE_CATEGORIES,
     ExpenseEntry,
     IncomeEntry,
     IncomeSource,
     days_until_bill_due,
     days_until_income_due,
+    effective_apr,
 )
 from core.real_estate_manager import (
     SCHEDULE_E_ELIGIBLE_PROPERTY_TYPES,
@@ -108,6 +120,7 @@ from core.real_estate_manager import (
 from core.search_manager import SearchResult
 from core.secrets_manager import SecretsError
 from gui.add_edit_bill_dialog import AddEditBillDialog
+from gui.add_edit_debt_dialog import AddEditDebtDialog
 from gui.add_edit_expense_dialog import AddEditExpenseDialog
 from gui.add_edit_income_dialog import AddEditIncomeDialog
 from gui.add_edit_income_source_dialog import AddEditIncomeSourceDialog
@@ -115,6 +128,7 @@ from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from gui.manage_business_entities_dialog import ManageBusinessEntitiesDialog
 from gui.mark_bill_paid_dialog import MarkBillPaidDialog
 from gui.mark_income_received_dialog import MarkIncomeReceivedDialog
+from gui.record_debt_payment_dialog import RecordDebtPaymentDialog
 from gui.password_dialog import PasswordPromptDialog
 from gui.plaid_connect_progress_dialog import PlaidConnectProgressDialog
 from gui.plaid_setup_dialog import PlaidSetupDialog
@@ -159,6 +173,21 @@ def format_expense_row(entry: ExpenseEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description_part = f"  {entry.description}" if entry.description else ""
     return f"{entry.date}   ${entry.amount:.2f}  [{entry.category}]{description_part}"
+
+
+def format_debt_row(debt: Debt, today: date, priority: Optional[DebtPriority] = None) -> str:
+    """Pure formatting logic — testable without Qt (see
+    tests/test_budget_module.py). `priority` is this debt's own entry
+    from core.budget_manager.rank_debts() for the currently-selected
+    strategy, when one was computed — carries the real "why this rank"
+    reason (a plain APR comparison, or a soon-to-expire promo warning)
+    straight into the row rather than requiring a second lookup."""
+    rate = effective_apr(debt, today)
+    rank_part = f"#{priority.rank}  " if priority is not None else ""
+    row = f"{rank_part}{debt.name}   ${debt.balance:,.2f} @ {rate:.2f}% APR  [{debt.debt_type}]"
+    if priority is not None:
+        row += f"  — {priority.reason}"
+    return row
 
 
 def format_holding_row(holding: dict) -> str:
@@ -211,6 +240,9 @@ class BudgetModule(ModuleBase):
         self._income_source_list: Optional[QListWidget] = None
         self._income_list: Optional[QListWidget] = None
         self._expense_list: Optional[QListWidget] = None
+        self._debt_list: Optional[QListWidget] = None
+        self._debt_strategy_combo: Optional[QComboBox] = None
+        self._debt_tab_summary_label: Optional[QLabel] = None
         self._summary_range_label: Optional[QLabel] = None
         self._summary_entity_combo: Optional[QComboBox] = None
         self._summary_income_label: Optional[QLabel] = None
@@ -218,6 +250,7 @@ class BudgetModule(ModuleBase):
         self._summary_net_label: Optional[QLabel] = None
         self._summary_tax_income_label: Optional[QLabel] = None
         self._summary_tax_expenses_label: Optional[QLabel] = None
+        self._summary_debt_label: Optional[QLabel] = None
         self._summary_start_date: Optional[str] = None
         self._summary_end_date: Optional[str] = None
         self._budget_target_spins: dict[str, QDoubleSpinBox] = {}
@@ -260,6 +293,7 @@ class BudgetModule(ModuleBase):
         tabs.addTab(self._build_income_sources_tab(), "Income Sources")
         tabs.addTab(self._build_income_tab(), "Income")
         tabs.addTab(self._build_expenses_tab(), "Expenses")
+        tabs.addTab(self._build_debts_tab(), "Debts")
         tabs.addTab(self._build_summary_tab(), "Summary")
         tabs.addTab(self._build_trends_tab(), "Trends")
         tabs.addTab(self._build_bank_sync_tab(), "Bank Sync")
@@ -281,6 +315,7 @@ class BudgetModule(ModuleBase):
         self._refresh_summary()
         self._refresh_budget_targets()
         self._refresh_trends_chart()
+        self._refresh_debt_list()
 
     # ------------------------------------------------------------------
     # Bills tab
@@ -753,6 +788,165 @@ class BudgetModule(ModuleBase):
         self._refresh_expense_list()
 
     # ------------------------------------------------------------------
+    # Debts tab — payoff-tracked liabilities, ranked by real priority
+    # (core.budget_manager.rank_debts()) under a chosen strategy. "Record
+    # Payment" mirrors the Bills tab's "Mark Paid" shape: one click,
+    # two real effects (a real Expense entry + a real balance
+    # reduction) via BudgetManager.record_debt_payment().
+    # ------------------------------------------------------------------
+
+    def _build_debts_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        self._debt_tab_summary_label = QLabel("")
+        self._debt_tab_summary_label.setObjectName("SubtitleLabel")
+        layout.addWidget(self._debt_tab_summary_label)
+
+        strategy_row = QHBoxLayout()
+        strategy_row.addWidget(QLabel("Payoff strategy:"))
+        self._debt_strategy_combo = QComboBox()
+        for strategy in DEBT_PAYOFF_STRATEGIES:
+            self._debt_strategy_combo.addItem(strategy.capitalize(), strategy)
+        # Hybrid (avalanche order, but an expiring promo jumps the
+        # queue) is the real default — see core.budget_manager.rank_debts()'s
+        # own docstring for why pure avalanche alone can miss a
+        # time-boxed promo emergency.
+        self._debt_strategy_combo.setCurrentIndex(DEBT_PAYOFF_STRATEGIES.index("hybrid"))
+        self._debt_strategy_combo.currentIndexChanged.connect(lambda _idx: self._refresh_debt_list())
+        strategy_row.addWidget(self._debt_strategy_combo, stretch=1)
+        layout.addLayout(strategy_row)
+
+        self._debt_list = QListWidget()
+        layout.addWidget(self._debt_list, stretch=1)
+
+        button_row = QHBoxLayout()
+        add_button = QPushButton("Add Debt")
+        add_button.clicked.connect(self._on_add_debt)
+        button_row.addWidget(add_button)
+
+        edit_button = QPushButton("Edit Selected")
+        edit_button.clicked.connect(self._on_edit_debt)
+        button_row.addWidget(edit_button)
+
+        payment_button = QPushButton("Record Payment")
+        payment_button.clicked.connect(self._on_record_debt_payment)
+        button_row.addWidget(payment_button)
+
+        delete_button = QPushButton("Delete Selected")
+        delete_button.clicked.connect(self._on_delete_debt)
+        button_row.addWidget(delete_button)
+
+        layout.addLayout(button_row)
+
+        self._refresh_debt_list()
+        return tab
+
+    def _refresh_debt_list(self) -> None:
+        if self._debt_list is None or self._debt_strategy_combo is None:
+            return  # not built yet — _on_tab_changed can fire before the Debts tab exists
+        today = date.today()
+        strategy = self._debt_strategy_combo.currentData()
+        debts = self.context.budget.all_debts()
+        priorities = {p.debt.debt_id: p for p in self.context.budget.debt_payoff_priority(strategy, today=today)}
+
+        self._debt_list.clear()
+        for debt in debts:
+            item = QListWidgetItem(format_debt_row(debt, today, priorities.get(debt.debt_id)))
+            item.setData(Qt.ItemDataRole.UserRole, debt.debt_id)
+            self._debt_list.addItem(item)
+        if self._debt_list.count() == 0:
+            add_empty_state_item(self._debt_list, "No debts tracked yet — click Add Debt to get started.")
+
+        total_balance = self.context.budget.total_debt_balance()
+        avg_apr = self.context.budget.weighted_average_debt_apr(today=today)
+        min_payments = self.context.budget.total_minimum_debt_payments()
+        self._debt_tab_summary_label.setText(
+            f"Total Debt: ${total_balance:,.2f}   ·   Weighted Avg APR: {avg_apr:.2f}%   ·   Min Payments/mo: ${min_payments:,.2f}"
+        )
+
+    def _selected_debt_id(self) -> Optional[str]:
+        return selected_item_data(self._debt_list)
+
+    def _on_add_debt(self) -> None:
+        dialog = AddEditDebtDialog(entities=self.context.budget.all_business_entities())
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.budget.add_debt(
+            name=dialog.entered_name,
+            balance=dialog.entered_balance,
+            interest_rate=dialog.entered_interest_rate,
+            minimum_payment=dialog.entered_minimum_payment,
+            debt_type=dialog.entered_debt_type,
+            promo_apr=dialog.entered_promo_apr,
+            promo_expires_date=dialog.entered_promo_expires_date,
+            entity_id=dialog.entered_entity_id,
+            notes=dialog.entered_notes,
+        )
+        self._refresh_debt_list()
+
+    def _on_edit_debt(self) -> None:
+        debt_id = self._selected_debt_id()
+        if debt_id is None:
+            QMessageBox.information(None, "No Debt Selected", "Select a debt to edit.")
+            return
+
+        debt = self.context.budget.get_debt(debt_id)
+        dialog = AddEditDebtDialog(debt=debt, entities=self.context.budget.all_business_entities())
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.budget.update_debt(
+            debt_id,
+            name=dialog.entered_name,
+            balance=dialog.entered_balance,
+            interest_rate=dialog.entered_interest_rate,
+            minimum_payment=dialog.entered_minimum_payment,
+            debt_type=dialog.entered_debt_type,
+            promo_apr=dialog.entered_promo_apr,
+            promo_expires_date=dialog.entered_promo_expires_date,
+            entity_id=dialog.entered_entity_id,
+            notes=dialog.entered_notes,
+        )
+        self._refresh_debt_list()
+
+    def _on_record_debt_payment(self) -> None:
+        debt_id = self._selected_debt_id()
+        if debt_id is None:
+            QMessageBox.information(None, "No Debt Selected", "Select a debt to record a payment against.")
+            return
+
+        debt = self.context.budget.get_debt(debt_id)
+        dialog = RecordDebtPaymentDialog(default_amount=debt.minimum_payment)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        self.context.budget.record_debt_payment(debt_id, dialog.entered_amount, date=dialog.entered_paid_date)
+        self._refresh_debt_list()
+        self._refresh_expense_list()
+
+    def _on_delete_debt(self) -> None:
+        debt_id = self._selected_debt_id()
+        if debt_id is None:
+            QMessageBox.information(None, "No Debt Selected", "Select a debt to delete.")
+            return
+
+        debt = self.context.budget.get_debt(debt_id)
+        confirm = QMessageBox.question(
+            None,
+            "Delete Debt",
+            f"Delete '{debt.name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        self.context.budget.delete_debt(debt_id)
+        self._refresh_debt_list()
+
+    # ------------------------------------------------------------------
     # Summary tab — computed on demand from core/budget_manager.py's
     # reporting functions, never a separately-stored figure that could
     # drift (same stance core.ledger_manager.LedgerManager.net_profit()
@@ -804,6 +998,8 @@ class BudgetModule(ModuleBase):
         layout.addWidget(self._summary_tax_income_label)
         self._summary_tax_expenses_label = QLabel()
         layout.addWidget(self._summary_tax_expenses_label)
+        self._summary_debt_label = QLabel()
+        layout.addWidget(self._summary_debt_label)
 
         layout.addWidget(self._build_budget_targets_group())
 
@@ -1022,6 +1218,10 @@ class BudgetModule(ModuleBase):
         self._summary_net_label.setText(f"Net: ${income - expenses:,.2f}")
         self._summary_tax_income_label.setText(f"Tax-relevant income: ${tax_income:,.2f}")
         self._summary_tax_expenses_label.setText(f"Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}")
+
+        total_debt = budget.total_debt_balance(entity_id=entity_id)
+        avg_apr = budget.weighted_average_debt_apr(entity_id=entity_id)
+        self._summary_debt_label.setText(f"Total Debt: ${total_debt:,.2f}  (weighted avg {avg_apr:.2f}% APR)")
 
     def _gather_entity_report_kwargs(
         self, entity_id: Optional[str], start: Optional[str], end: Optional[str], range_label: str,

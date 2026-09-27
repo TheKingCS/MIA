@@ -11535,3 +11535,94 @@ Five domains now prove the "shared object + user relationship" pattern
 discrete and continuous quantities, manual and cross-manager-triggered
 usage, and (for Products) two independent real event sources sharing
 one attribution point with no duplication.
+
+## Debt payoff tracker: interest rates, promo APY, and a real priority engine (2026-09-27)
+
+First slice of the user's own "finances as a firm foundation" ask — a
+real gap confirmed before building: `core/budget_manager.py` already
+covered bills, income, budget targets, and (via `core/real_estate_manager.py`)
+depreciation/Schedule E/1099 tracking, but had no concept of a
+payoff-tracked liability at all — no interest rate, no promotional-APR
+window, no priority ordering. Scoped down deliberately: mortgages stay
+owned by `Property.mortgage_balance`'s own amortization, not
+duplicated here — `Debt` covers everything else (credit cards,
+personal/auto/student/medical loans).
+
+New `core.budget_manager.Debt` (balance, standard `interest_rate`,
+`minimum_payment`, `debt_type`, an optional `promo_apr` +
+`promo_expires_date` pair, `entity_id`) plus three real pure functions:
+`effective_apr()` (the promo rate if one is active and hasn't expired,
+else the standard rate — a promo with no real expiration date is
+treated as already expired, same "don't guess a schema MIA can't
+confirm" stance `core.homestead_manager.py` already takes), and
+`rank_debts()`, offering three real payoff strategies over a plain
+list (no persisted ranking — "reporting is computed on demand," same
+stance every other report in this file takes): `"avalanche"` (highest
+effective APR first — mathematically minimizes total interest),
+`"snowball"` (smallest balance first — payoff-momentum motivation),
+and `"hybrid"` (avalanche order, except a debt whose promo expires
+within 45 days jumps to the front) — the real answer to "priority
+levels based on interest rates, promo APY deals": a 0% balance about
+to revert to 22.99% is a time-boxed emergency pure APR-today ordering
+would otherwise miss until it's too late to act on. `DebtPriority`
+carries a human-facing `reason` string per debt straight from the
+ranking computation, so the GUI never has to re-derive "why is this
+#1" separately from the ordering itself.
+
+`record_debt_payment()` mirrors `mark_bill_paid()`'s "one action, two
+real effects" shape exactly: a real `ExpenseEntry` (new `"Debt
+Payment"` category, so it flows into Budget Targets/Trends/the
+Business Report for free, confirmed by manual verification below) plus
+a real balance reduction, clamped at $0 rather than going negative —
+same boundary `MaterialManager.adjust_quantity()` already draws for a
+shared numeric quantity. `total_debt_balance()`/
+`total_minimum_debt_payments()`/`weighted_average_debt_apr()` (balance-
+weighted, not a bare average — a small high-rate balance and a large
+low-rate one shouldn't look equally concerning) round out the
+"financial summary" half of the ask.
+
+New Debts tab (`modules/budget/module.py`, 8th tab) — a strategy
+combo (default Hybrid) drives `format_debt_row()`'s ordering, each row
+showing its own rank + live reason string; Add/Edit/Record Payment/
+Delete mirror the Bills tab's button row exactly. The Summary tab
+gained one new line (Total Debt + weighted-avg APR, entity-filtered
+same as every other Summary figure). `gui/add_edit_debt_dialog.py`
+mirrors `add_edit_income_source_dialog.py`'s shape, with a promo
+checkbox gating the promo-rate/expiration fields (disabled until
+checked, same "a promo needs a real end date" stance the manager
+itself takes); `gui/record_debt_payment_dialog.py` mirrors
+`mark_income_received_dialog.py`, pre-filled with the debt's minimum
+payment but freely editable (paying more than the minimum is the
+entire point of a payoff strategy).
+
+**Verified for real**: `pytest -q` — full suite, 3257 passed, zero
+regressions (the one pre-existing failure, a sun/moon-angle test that
+depends on the sandbox's local timezone, reproduces identically on the
+prior commit with none of this change applied — confirmed via
+`git stash` before treating it as unrelated). 39 new tests in
+`tests/test_budget_manager.py` (effective_apr promo-active/expired/
+expires-today/no-expiration-date cases, all three rank_debts()
+strategies including the promo-urgency-window boundary and the
+outside-the-window case, CRUD validation, record_debt_payment's real
+Expense+balance effects including the overpayment clamp, and the three
+summary functions including entity filtering and the zero-open-debt
+case); 3 new formatter tests in `tests/test_budget_module.py`. Manual
+headless-Qt verification against a real isolated context (not just
+`TestClient`-style mocking): seeded 3 real debts including one with an
+expiring 0% promo, confirmed the Debts tab screenshot shows the exact
+expected Hybrid order (`#1` the expiring promo, correctly bumped ahead
+of a higher-standing-APR card) with the correct live reason text and
+correct summary math; recorded a real $200 payment and confirmed both
+the debt's balance and the Summary tab's new debt line updated
+correctly, and that the new "Debt Payment" category's $200 actual
+appeared on the existing Budget Targets section with zero code written
+for that specific integration — it fell out of reusing the existing
+category machinery rather than needing a new one.
+
+Next up, per the user's own stated sequence: homestead build/tool
+costs (wiring real tools/builds into the existing Workshop Materials/
+Jobs/Ledger pipeline), a business-use-percentage write-off engine for
+a personal asset used partly for contracted work (the mower/lawn-care
+case), then real phone dashboard access (extending the existing
+opt-in local server past login+push into a real Budget/Debt/Net Worth
+read view).

@@ -48,6 +48,32 @@ category — the one new concept with no existing precedent to mirror,
 kept deliberately minimal (no yearly overrides, no envelope rollover)
 to match the honest "budgeted amount per category" ask rather than
 building a full budgeting system.
+
+**Debt** (2026-09-27) is a payoff-tracked liability — credit cards,
+personal/auto/student loans, medical debt — deliberately NOT a
+mortgage: `core/real_estate_manager.py`'s `Property` already owns
+`mortgage_balance` plus real amortization, and duplicating that here
+would just create two disagreeing numbers for the same real loan.
+`effective_apr()` is the one real piece of domain logic: a debt can
+carry an optional promotional APR with its own expiration date (a
+"0% for 12 months" card offer), and the effective rate in force on any
+given day is the promo rate before that date, the standard
+`interest_rate` after — a promo with no real expiration date doesn't
+mean anything, so it's treated as already expired rather than assumed
+permanent. `record_debt_payment()` mirrors `mark_bill_paid()`'s "one
+action, two real effects" shape: a real `ExpenseEntry` (category
+`"Debt Payment"`) plus a real balance reduction, clamped at $0 rather
+than going negative (same stance `MaterialManager.adjust_quantity()`
+already takes for a shared numeric quantity). `rank_debts()` is a pure
+function over a plain list — no persisted ranking, same "reporting is
+computed on demand" precedent every other report in this file follows
+— offering three real strategies: `"avalanche"` (highest effective APR
+first, mathematically optimal total interest), `"snowball"` (smallest
+balance first, for payoff-momentum motivation), and `"hybrid"`
+(avalanche order, except a debt whose promo is expiring within
+`_PROMO_URGENCY_WINDOW_DAYS` jumps to the front — a 0% balance about to
+revert to 24.99% is a real, time-boxed emergency that pure APR-today
+ordering would otherwise miss entirely).
 """
 
 from __future__ import annotations
@@ -75,6 +101,7 @@ _EXPENSES_FILE = _DATA_DIR / "budget_expenses.json"
 _INCOME_SOURCES_FILE = _DATA_DIR / "income_sources.json"
 _BUDGET_TARGETS_FILE = _DATA_DIR / "budget_targets.json"
 _BUSINESS_ENTITIES_FILE = _DATA_DIR / "business_entities.json"
+_DEBTS_FILE = _DATA_DIR / "debts.json"
 
 INCOME_CATEGORIES = ["Salary", "Rental Income", "Investment", "Other"]
 EXPENSE_CATEGORIES = [
@@ -84,9 +111,18 @@ EXPENSE_CATEGORIES = [
     # all fell through to "Other", which meant a meaningful fraction of
     # real synced bank spending was invisible to category budgeting.
     "Medical", "Personal Care", "Shopping", "Bank Fees", "Entertainment", "Travel",
+    # 2026-09-27: Debt.record_debt_payment()'s own ExpenseEntry category.
+    "Debt Payment",
     "Other",
 ]
 BUSINESS_ENTITY_TYPES = ["LLC", "Sole Proprietorship", "Other"]
+# Deliberately excludes "Mortgage" — see Debt's own docstring note above
+# for why a mortgage stays owned by core.real_estate_manager.Property.
+DEBT_TYPES = ["Credit Card", "Personal Loan", "Auto Loan", "Student Loan", "Medical Debt", "Other"]
+DEBT_PAYOFF_STRATEGIES = ["avalanche", "snowball", "hybrid"]
+# Inside this window, a debt's expiring promo APR outranks pure
+# current-APR ordering in the "hybrid" strategy — see rank_debts().
+_PROMO_URGENCY_WINDOW_DAYS = 45
 # Real, stable IRS 1099-NEC threshold (years running) — see
 # payees_over_1099_threshold() below.
 US_1099_NEC_THRESHOLD = 600.0
@@ -366,6 +402,154 @@ class BusinessEntity:
         )
 
 
+@dataclass
+class Debt:
+    debt_id: str
+    name: str  # "Chase Freedom", "Sallie Mae — Student Loan"
+    balance: float
+    interest_rate: float  # standard APR, percent (e.g. 24.99, not 0.2499) — in effect once any promo expires
+    minimum_payment: float = 0.0
+    debt_type: str = "Credit Card"  # one of DEBT_TYPES
+    # A promotional APR (e.g. a "0% for 12 months" card offer) and the
+    # real date it reverts to interest_rate. promo_apr with no
+    # promo_expires_date is treated as already expired — see
+    # effective_apr() below.
+    promo_apr: Optional[float] = None
+    promo_expires_date: Optional[str] = None  # ISO date
+    entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
+    last_payment_date: Optional[str] = None
+    notes: str = ""
+    created_at: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "debt_id": self.debt_id, "name": self.name, "balance": self.balance,
+            "interest_rate": self.interest_rate, "minimum_payment": self.minimum_payment,
+            "debt_type": self.debt_type, "promo_apr": self.promo_apr,
+            "promo_expires_date": self.promo_expires_date, "entity_id": self.entity_id,
+            "last_payment_date": self.last_payment_date, "notes": self.notes, "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Debt":
+        return Debt(
+            debt_id=data.get("debt_id", uuid.uuid4().hex[:10]),
+            name=data.get("name", ""),
+            balance=data.get("balance", 0.0),
+            interest_rate=data.get("interest_rate", 0.0),
+            minimum_payment=data.get("minimum_payment", 0.0),
+            debt_type=data.get("debt_type", "Credit Card"),
+            promo_apr=data.get("promo_apr"),
+            promo_expires_date=data.get("promo_expires_date"),
+            entity_id=data.get("entity_id", ""),
+            last_payment_date=data.get("last_payment_date"),
+            notes=data.get("notes", ""),
+            created_at=data.get("created_at", ""),
+        )
+
+
+def effective_apr(debt: Debt, today: date) -> float:
+    """Pure logic — testable without Qt. The real APR in force today:
+    the promotional rate if one is set and hasn't expired yet,
+    otherwise the standard interest_rate. A promo_apr with no real
+    promo_expires_date (or an unparseable one) is treated as already
+    expired — same "don't guess a schema MIA can't confirm" stance
+    core.homestead_manager's own docstring takes, applied here to a
+    promo offer that needs a real end date to mean anything."""
+    if debt.promo_apr is not None and debt.promo_expires_date:
+        try:
+            expires = date.fromisoformat(debt.promo_expires_date)
+        except ValueError:
+            return debt.interest_rate
+        if today <= expires:
+            return debt.promo_apr
+    return debt.interest_rate
+
+
+def days_until_promo_expires(debt: Debt, today: date) -> Optional[int]:
+    """Pure logic — testable without Qt. None when there's no active
+    promo to expire (no promo_apr, no/unparseable promo_expires_date).
+    Negative means the promo has already lapsed."""
+    if debt.promo_apr is None or not debt.promo_expires_date:
+        return None
+    try:
+        expires = date.fromisoformat(debt.promo_expires_date)
+    except ValueError:
+        return None
+    return (expires - today).days
+
+
+@dataclass
+class DebtPriority:
+    """A computed, never-persisted payoff-order entry — same "reporting
+    is computed on demand" stance every other report in this file
+    takes. `reason` is a short, human-facing explanation of why this
+    debt landed at this rank, meant to be shown directly in the GUI."""
+    debt: Debt
+    rank: int
+    effective_apr: float
+    reason: str
+
+
+def rank_debts(debts: list[Debt], today: date, strategy: str = "hybrid") -> list[DebtPriority]:
+    """Pure logic — testable without Qt. Orders open (balance > 0)
+    debts by real payoff priority under one of DEBT_PAYOFF_STRATEGIES;
+    an unknown strategy falls back to "hybrid" rather than raising, same
+    "unmapped falls to a safe default" precedent category validation
+    elsewhere in this file already uses.
+
+    - "avalanche": highest effective_apr() first (tie-broken by larger
+      balance first) — mathematically minimizes total interest paid.
+    - "snowball": smallest balance first — payoff-momentum motivation,
+      not mathematically optimal but a real, common preference.
+    - "hybrid": avalanche order, except any debt whose promo is
+      expiring within _PROMO_URGENCY_WINDOW_DAYS jumps to the front
+      (soonest-expiring first) — a 0% balance about to revert to a
+      real double-digit rate is a time-boxed emergency pure
+      current-APR ordering would otherwise miss until the day it's
+      already too late to act.
+    """
+    if strategy not in DEBT_PAYOFF_STRATEGIES:
+        strategy = "hybrid"
+    open_debts = [d for d in debts if d.balance > 0]
+
+    def apr(d: Debt) -> float:
+        return effective_apr(d, today)
+
+    reasons: dict[str, str] = {}
+
+    if strategy == "snowball":
+        ordered = sorted(open_debts, key=lambda d: d.balance)
+        for d in ordered:
+            reasons[d.debt_id] = f"Smallest balance (${d.balance:,.2f})"
+    elif strategy == "avalanche":
+        ordered = sorted(open_debts, key=lambda d: (-apr(d), -d.balance))
+        for d in ordered:
+            reasons[d.debt_id] = f"Highest current APR ({apr(d):.2f}%)"
+    else:  # hybrid
+        urgent = [
+            d for d in open_debts
+            if (days_until_promo_expires(d, today) or -1) >= 0
+            and (days_until_promo_expires(d, today) or 0) <= _PROMO_URGENCY_WINDOW_DAYS
+        ]
+        urgent.sort(key=lambda d: days_until_promo_expires(d, today))
+        urgent_ids = {d.debt_id for d in urgent}
+        rest = sorted((d for d in open_debts if d.debt_id not in urgent_ids), key=lambda d: (-apr(d), -d.balance))
+        ordered = urgent + rest
+        for d in urgent:
+            days_left = days_until_promo_expires(d, today)
+            reasons[d.debt_id] = (
+                f"Promo {apr(d):.2f}% APR ends in {days_left}d — jumps to {d.interest_rate:.2f}%"
+            )
+        for d in rest:
+            reasons[d.debt_id] = f"Highest current APR ({apr(d):.2f}%)"
+
+    return [
+        DebtPriority(debt=d, rank=i + 1, effective_apr=apr(d), reason=reasons[d.debt_id])
+        for i, d in enumerate(ordered)
+    ]
+
+
 def next_income_due_date(source: IncomeSource) -> Optional[date]:
     """Pure logic — testable without Qt. Exact mirror of
     next_bill_due_date()'s shape, same bounded-forward-walk over
@@ -409,6 +593,7 @@ class BudgetManager:
         self._income_sources: list[IncomeSource] = []
         self._budget_targets: list[BudgetTarget] = []
         self._business_entities: list[BusinessEntity] = []
+        self._debts: list[Debt] = []
         self._load()
 
     # ------------------------------------------------------------------
@@ -422,6 +607,7 @@ class BudgetManager:
         self._income_sources = self._load_file(_INCOME_SOURCES_FILE, IncomeSource.from_dict)
         self._budget_targets = self._load_file(_BUDGET_TARGETS_FILE, BudgetTarget.from_dict)
         self._business_entities = self._load_file(_BUSINESS_ENTITIES_FILE, BusinessEntity.from_dict)
+        self._debts = self._load_file(_DEBTS_FILE, Debt.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
         if not path.exists():
@@ -457,6 +643,10 @@ class BudgetManager:
     def _save_business_entities(self) -> None:
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_BUSINESS_ENTITIES_FILE, json.dumps([e.to_dict() for e in self._business_entities], indent=2), encoding="utf-8")
+
+    def _save_debts(self) -> None:
+        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(_DEBTS_FILE, json.dumps([d.to_dict() for d in self._debts], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Bills
@@ -1001,3 +1191,152 @@ class BudgetManager:
 
     def all_business_entities(self) -> list[BusinessEntity]:
         return sorted(self._business_entities, key=lambda e: e.name.lower())
+
+    # ------------------------------------------------------------------
+    # Debts — payoff-tracked liabilities (credit cards, personal/auto/
+    # student loans). NOT mortgages — see Debt's own docstring above.
+    # ------------------------------------------------------------------
+
+    def add_debt(
+        self,
+        name: str,
+        balance: float,
+        interest_rate: float,
+        minimum_payment: float = 0.0,
+        debt_type: str = "Credit Card",
+        promo_apr: Optional[float] = None,
+        promo_expires_date: Optional[str] = None,
+        entity_id: str = "",
+        notes: str = "",
+    ) -> Debt:
+        if balance < 0:
+            raise ValueError(f"balance must not be negative, got {balance}")
+        if interest_rate < 0:
+            raise ValueError(f"interest_rate must not be negative, got {interest_rate}")
+        if minimum_payment < 0:
+            raise ValueError(f"minimum_payment must not be negative, got {minimum_payment}")
+        debt = Debt(
+            debt_id=uuid.uuid4().hex[:10],
+            name=name,
+            balance=balance,
+            interest_rate=interest_rate,
+            minimum_payment=minimum_payment,
+            debt_type=debt_type if debt_type in DEBT_TYPES else "Other",
+            promo_apr=promo_apr,
+            # A promo rate with no expiration date doesn't mean
+            # anything real — see effective_apr()'s own reasoning.
+            promo_expires_date=promo_expires_date if promo_apr is not None else None,
+            entity_id=entity_id,
+            notes=notes,
+            created_at=datetime.now().isoformat(timespec="seconds"),
+        )
+        self._debts.append(debt)
+        self._save_debts()
+        log.info("Debt added: '%s' $%.2f at %.2f%% APR", debt.name, debt.balance, debt.interest_rate)
+        return debt
+
+    def update_debt(self, debt_id: str, **fields) -> Debt:
+        debt = self.get_debt(debt_id)
+        if debt is None:
+            raise ValueError(f"No debt with id '{debt_id}'.")
+        for key, value in fields.items():
+            if not hasattr(debt, key):
+                raise ValueError(f"Debt has no field '{key}'.")
+            setattr(debt, key, value)
+        if debt.balance < 0:
+            debt.balance = 0.0
+        if debt.interest_rate < 0:
+            debt.interest_rate = 0.0
+        if debt.minimum_payment < 0:
+            debt.minimum_payment = 0.0
+        if debt.debt_type not in DEBT_TYPES:
+            debt.debt_type = "Other"
+        if debt.promo_apr is None:
+            debt.promo_expires_date = None
+        self._save_debts()
+        return debt
+
+    def delete_debt(self, debt_id: str) -> None:
+        self._debts = [d for d in self._debts if d.debt_id != debt_id]
+        self._save_debts()
+
+    def get_debt(self, debt_id: str) -> Optional[Debt]:
+        for debt in self._debts:
+            if debt.debt_id == debt_id:
+                return debt
+        return None
+
+    def all_debts(self, entity_id: Optional[str] = None) -> list[Debt]:
+        """entity_id=None (default) returns every stored debt, unfiltered
+        — same "None means no filter" convention total_income()/
+        all_budget_targets() already use."""
+        debts = self._debts if entity_id is None else [d for d in self._debts if d.entity_id == entity_id]
+        return sorted(debts, key=lambda d: d.name.lower())
+
+    def record_debt_payment(
+        self, debt_id: str, amount: float, date: Optional[str] = None, notes: str = "",
+    ) -> ExpenseEntry:
+        """Records a real ExpenseEntry (category "Debt Payment") AND
+        reduces the debt's balance — one action, two real effects, same
+        shape as mark_bill_paid()/mark_income_received(). Balance is
+        clamped at $0 rather than going negative — an overpayment's
+        excess isn't tracked as a separate credit, same boundary
+        core.material_manager.MaterialManager.adjust_quantity() already
+        draws for a shared numeric quantity."""
+        debt = self.get_debt(debt_id)
+        if debt is None:
+            raise ValueError(f"No debt with id '{debt_id}'.")
+        if amount < 0:
+            raise ValueError(f"amount must not be negative, got {amount}")
+        payment_date = date or _today_iso()
+
+        entry = self.add_expense(
+            amount=amount,
+            category="Debt Payment",
+            description=debt.name,
+            date=payment_date,
+            entity_id=debt.entity_id,
+            notes=notes,
+        )
+        debt.balance = max(0.0, debt.balance - amount)
+        debt.last_payment_date = payment_date
+        self._save_debts()
+        log.info("Debt payment recorded: '%s' $%.2f on %s (balance now $%.2f)", debt.name, amount, payment_date, debt.balance)
+        # "My Hero's Path" (2026-09-11) — same household-management XP
+        # hook mark_bill_paid() already grants for squaring away a bill.
+        grant_xp(
+            self.context,
+            5,
+            "\U0001F4B3 Debt payment made!",
+            f"Paid down '{debt.name}'.",
+            skill_weights=[SkillWeight("household_management", 5)],
+        )
+        return entry
+
+    def debt_payoff_priority(
+        self, strategy: str = "hybrid", entity_id: Optional[str] = None, today: Optional[date] = None,
+    ) -> list[DebtPriority]:
+        """Reporting — computed on demand, never persisted (see module
+        docstring). Thin wrapper: the real ordering logic is the pure
+        rank_debts() function above, testable without a manager."""
+        return rank_debts(self.all_debts(entity_id), today or date.today(), strategy)
+
+    def total_debt_balance(self, entity_id: Optional[str] = None) -> float:
+        return sum(d.balance for d in self.all_debts(entity_id))
+
+    def total_minimum_debt_payments(self, entity_id: Optional[str] = None) -> float:
+        return sum(d.minimum_payment for d in self.all_debts(entity_id) if d.balance > 0)
+
+    def weighted_average_debt_apr(self, entity_id: Optional[str] = None, today: Optional[date] = None) -> float:
+        """Balance-weighted average of each open debt's effective_apr()
+        today — a single real "how bad is this, on average" figure,
+        rather than a bare unweighted average that'd let a small
+        high-rate balance and a large low-rate one look equally
+        concerning. Returns 0.0 when there's no open debt (a real
+        answer, not a division-by-zero guard treated as an error)."""
+        today = today or date.today()
+        open_debts = [d for d in self.all_debts(entity_id) if d.balance > 0]
+        total_balance = sum(d.balance for d in open_debts)
+        if total_balance <= 0:
+            return 0.0
+        return sum(effective_apr(d, today) * d.balance for d in open_debts) / total_balance
