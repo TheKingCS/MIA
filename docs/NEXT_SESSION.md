@@ -5,7 +5,17 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-09-27 (evening)*
+*Last updated: 2026-09-27 (late evening)*
+
+**Waiting on your answer first:** the Cognitive Extension proposal
+(`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, from your "Cognitive
+Extension & Contextual Presence" document plus "talk to MIA like a
+therapist / living journal"). Its last section has 4 questions: build
+order (recommended: A "Talk it out" → B "Remember Why" → C "Know when
+to speak" → D Contextual Presence after the Android app → E Life
+Runway), journal encryption, a trusted contact for the safety floor,
+and quiet hours / daily message limit. Once answered, the chosen slice
+goes to the top of the build queue below.
 
 ---
 

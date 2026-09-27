@@ -11957,3 +11957,28 @@ changes. `tests/live_model_check.py` isolates the profiles folder too.
 **Verified:** `pytest -q`, 3574 passed (same one pre-existing timezone
 failure), real `data/` untouched. 27 new behavior tests, 165 routing
 tests, live checklist dry run 199 of 199 routed correctly.
+
+## Cognitive Extension direction: proposal only (2026-09-27)
+
+The owner supplied a design direction, "MIA — Cognitive Extension &
+Contextual Presence" (saved as `docs/COGNITIVE_EXTENSION.md`), plus a
+wish to talk to MIA like a therapist or living journal. The document
+asked for an architecture fit and implementation proposal, not a
+build, so nothing was implemented.
+
+`docs/COGNITIVE_EXTENSION_PROPOSAL.md` answers its 12 questions. Main
+calls:
+- Most of the foundation exists (Life State, Intents, idempotent
+  Insights, memory categories, journal, check-in, phone push).
+- Facts are assembled deterministically and the model only phrases
+  them, so a 3B model can't invent progress and tests can check facts
+  and properties instead of wording.
+- Six conversation modes, switched by explicit phrases, instead of the
+  document's twelve.
+- A deterministic safety floor in front of every mode. None existed
+  anywhere in the app before.
+- One communication gate for every proactive message; none existed
+  (each daily check had only its own once-a-day tracker).
+- Location via native-Android geofencing sending only transitions, so
+  it waits for the Android app.
+- Slices A–E with a recommended order; four open questions for the owner.
