@@ -12069,5 +12069,7 @@ already-running service; they now use startService() then.
 **Verified here:** the Kotlin compiles against Robolectric's Android
 14 framework jar (Google's SDK host is blocked in this workspace) and
 the 8 JVM unit tests pass (detector, WAV round-trip and chunk walking,
-goodbye phrases). **Not verifiable here:** the real APK build (GitHub
-Actions), and behavior on a real phone.
+goodbye phrases). **GitHub Actions run #1 passed** on the first try
+(unit tests + APK build), and published `MIA-Companion.apk` (830 KB)
+as the `android-latest` release. **Not verifiable here:** behavior on
+a real phone.
