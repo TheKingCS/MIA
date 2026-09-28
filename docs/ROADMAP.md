@@ -12419,3 +12419,28 @@ against its real screen offscreen.
 
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 8 new tests; routing corpus 210.
+
+## Smaller follow-ups: weekly reflection, offline notices, Plaid loans (2026-09-28)
+
+- **Weekly journal reflection** (opt-in, Settings → When MIA Speaks Up;
+  `core/journal_reflection.py`): Sunday evening, if the owner journaled
+  that week (counted from the journal's unencrypted dates, so it works
+  locked), a content-free "your reflection is ready" notice through the
+  gate. "How was my week?" (a private turn) gives sessions, the top
+  themes and how the mood words moved, from the unlocked journal.
+- **Offline notices** (`core/online_watch.py`): `OnlineWatch` reports a
+  change only after two agreeing readings; "offline" (timely) and "back
+  online" (ambient) go through the gate, at most one of each a day.
+  **"Remind me when we're back online"** (`remind_when_online`) is kept
+  in data/online_reminders.json and delivered directly when the
+  connection returns.
+- **Plaid loans**: auto/personal loans and lines of credit (from
+  /accounts/get, no new product) become Debts; the bank reports no rate
+  or minimum, so new ones start at 0% with a note; syncs update only the
+  balance. Mortgages and home equity stay with Real Estate; student
+  loans come from /liabilities/get when it's available.
+- Tools: 178 actions, 40 domains.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 11 new tests (6 reflection, 3 offline, 2 Plaid loans);
+routing corpus 212.

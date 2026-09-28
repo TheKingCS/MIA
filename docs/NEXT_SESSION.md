@@ -104,9 +104,10 @@ every step below in order, from a blank machine, with Windows notes.
    Perspective on the headless Core voice loop.
 4. ~~Cognitive Extension, slice C: "Know when to speak"~~ **built**
    (2026-09-27): one gate for every unprompted message, 5/day, no quiet
-   hours. Follow-ups: the opt-in weekly journal reflection (delivered
-   through the gate), and "learning from being ignored" (needs the
-   notification bell to record dismissals).
+   hours. The opt-in weekly journal reflection is **built** (Settings →
+   When MIA Speaks Up), and so are offline/back-online notices with "remind
+   me when we're back online" (2026-09-28). Left: "learning from being
+   ignored" (needs the notification bell to record dismissals).
 5. **Fix what the live conversation check turns up** (now 215 cases,
    including Workout, People & Pets, Household, Classroom, and 7
    personal-mode cases). ("Propose, you confirm" updates from things
@@ -144,10 +145,6 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 3. Ideas parked for later (need their own planning pass)
 
-- **Offline awareness follow-ups** (the base is built, 2026-09-27):
-  a notification when MIA goes offline or comes back, and actually
-  queuing "remind me when I'm back online" requests.
-
 
 ## 4. Known loose ends
 
@@ -160,9 +157,9 @@ every step below in order, from a blank machine, with Windows notes.
   timezone-dependent:
   `tests/test_navigation_module.py::test_sun_moon_summary_for_real_coordinates_has_sensible_shape`.
   It predates this session and probably passes on your computer.
-- Plaid: newer `loan`/`line_of_credit` liability types (personal/auto
-  loans) aren't mapped to Debts yet. Card payments may show both as an
-  expense and on the card; watch for double counting once real
-  accounts sync.
+- Plaid: auto/personal loans and lines of credit now become Debts too
+  (2026-09-28), but the bank doesn't report their rate or minimum: fill
+  those in on the Debts tab. Card payments may show both as an expense
+  and on the card; watch for double counting once real accounts sync.
 - The Bank Sync tab's intro text about Fidelity needing a support
   ticket may be outdated under Plaid's Trial plan.

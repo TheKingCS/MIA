@@ -274,6 +274,15 @@ missions she assigns. To keep that useful rather than naggy:
 - Urgent things, alarms you set, and answers to what you just did
   always come through.
 
+- If the internet drops, she tells you (once a day at most) and again
+  when it's back. Say **"remind me to sync the bank when we're back
+  online"** and she will, the moment the connection returns.
+- Optional: a **weekly journal reflection** (Settings → When MIA Speaks
+  Up). On Sunday evening, if you journaled that week, she lets you know
+  it's ready. The notice never shows what you wrote; ask **"how was my
+  week?"** (with the journal unlocked) to hear what came up most and how
+  your mood moved.
+
 There are no quiet hours; use your phone's Do Not Disturb for nights.
 Ask **"what didn't you tell me today?"** and she'll tell you what she
 held back and why.

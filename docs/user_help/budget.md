@@ -30,9 +30,13 @@ default "Hybrid" strategy pays the highest interest rate first, but
 moves a debt to the front when its promo rate ends within 45 days.
 Avalanche (highest rate first) and Snowball (smallest balance first)
 are also available. Record Payment logs the payment as an expense and
-lowers the balance. Cards and student loans from connected banks
-appear automatically, marked "(bank-synced)". The bank keeps their
-balance and rate current, but promo end dates are yours to enter.
+lowers the balance. Cards, student loans, auto and personal loans and
+lines of credit from connected banks appear automatically, marked
+"(bank-synced)". The bank keeps their balance current (and a card's or
+student loan's rate), but promo end dates are yours to enter. Banks
+don't report an auto or personal loan's interest rate or minimum
+payment, so add those yourself (the loan's note reminds you); until
+then it ranks as if it were interest-free.
 
 ## Builds and tools (Builds & Tools tab)
 
