@@ -38,6 +38,11 @@ her daily message limit, merged with anything else she has to say).
   the store.
 - **Manuals:** maintenance steps with an interval, like "change the
   engine oil every 50 hours".
+- **Details for the item's page:** model, serial number and maker from
+  a manual or warranty; the warranty's end date ("3-year limited
+  warranty" counted from the purchase date, or a date it states); and,
+  from the receipt for the item itself (not for parts), what you paid
+  and when.
 
 All of this is done by fixed rules, not the AI model, so it never
 invents a number.
@@ -62,7 +67,13 @@ click **File It**:
 - a manual, warranty or receipt for an item goes on that item's page
   in Maintenance (its documents);
 - ticked maintenance steps become maintenance tasks (hour-based steps
-  use the item's hour meter).
+  use the item's hour meter);
+- ticked details fill in the item's page. Empty fields are ticked for
+  you; if the document disagrees with something you already entered
+  (say, a different serial number), it's offered but left unticked, so
+  nothing you typed is replaced without you choosing it. A purchase
+  receipt sets the purchase price and is counted once in the item's
+  cost of ownership.
 
 **Dismiss** takes a document out of the list without filing it. Filed
 and dismissed documents stay listed (✓ and ✕) and their files stay in

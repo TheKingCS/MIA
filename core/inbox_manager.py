@@ -48,8 +48,8 @@ from core.data_recovery import notify_data_corruption
 from core.document_text import EMAIL_SUFFIXES, extract
 from core.ocr import IMAGE_SUFFIXES, read_result, unavailable_note
 from core.inbox_classify import (
-    DOC_TYPE_LABELS, INVOICE, MANUAL, RECEIPT, WARRANTY, ScheduleItem, document_type, expense_category, maintenance_schedule,
-    match_asset, match_project, receipt_fields,
+    DOC_TYPE_LABELS, INVOICE, MANUAL, RECEIPT, WARRANTY, DetailProposal, ScheduleItem, detail_proposals, document_details,
+    document_type, expense_category, maintenance_schedule, match_asset, match_project, receipt_fields,
 )
 from core.logger import get_logger
 
@@ -63,6 +63,8 @@ _MIN_QUIET_SECONDS = 3.0  # a file still being copied in is left for the next sc
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 PENDING, FILED, DISMISSED = "pending", "filed", "dismissed"
+_DETAIL_WORDS = {"model": "model", "serial_number": "serial number", "manufacturer": "maker",
+                 "purchase": "purchase price", "warranty_until": "warranty date"}
 
 
 @dataclass
@@ -89,6 +91,10 @@ class InboxItem:
     filed_note: str = ""
     email_date: str = ""  # an emailed document's sent date, the fallback receipt date
     reading: bool = False  # waiting on OCR (core/ocr.py) for a photo or scan
+    # What it says about the item it's for (model, serial, maker, warranty,
+    # a purchase), core/inbox_classify.document_details(); offered as
+    # updates to the item's page when filing.
+    details: dict = field(default_factory=dict)
 
     @staticmethod
     def from_dict(data: dict) -> "InboxItem":
@@ -270,7 +276,7 @@ class InboxManager:
     def _classify(self, item: InboxItem, text: str, filename: str, email_date: str) -> None:
         # Start clean: an item is classified again once its OCR finishes.
         item.amount, item.amount_basis, item.doc_date, item.vendor, item.category = None, "", "", "", ""
-        item.schedule = []
+        item.schedule, item.details = [], {}
         item.excerpt = " ".join(text.split())[:400]
         haystack = f"{item.subject}\n{filename}\n{text}"
         item.doc_type = document_type(text, filename, item.subject)
@@ -280,12 +286,15 @@ class InboxManager:
         project = match_project(haystack, projects.all_projects()) if projects else None
         item.asset_id = asset.asset_id if asset else ""
         item.project_id = project.project_id if project else ""
+        fields = None
         if item.doc_type in (RECEIPT, INVOICE):
             fields = receipt_fields(text, item.sender)
             item.amount, item.amount_basis = fields.amount, fields.amount_basis
             item.doc_date = fields.date or email_date or ""
             item.vendor = fields.vendor
             item.category = expense_category(item.vendor, asset, project, text)
+            fields.date = item.doc_date
+        item.details = document_details(text, item.doc_type, fields)
         if item.doc_type in (MANUAL, WARRANTY) or (item.doc_type == "other" and asset is not None):
             item.schedule = [asdict(s) for s in maintenance_schedule(text)]
 
@@ -293,12 +302,24 @@ class InboxManager:
     # Filing
     # ------------------------------------------------------------------
 
+    def detail_proposals(self, item: InboxItem, asset_id: Optional[str] = None) -> list[DetailProposal]:
+        """What filing would update on the item's page (for `asset_id`, or
+        the item it was matched to)."""
+        maintenance = getattr(self.context, "maintenance", None)
+        asset_id = item.asset_id if asset_id is None else asset_id
+        asset = maintenance.get_asset(asset_id) if maintenance and asset_id else None
+        return detail_proposals(item.details, asset)
+
     def file_item(
         self, item_id: str, asset_id: Optional[str] = None, project_id: Optional[str] = None,
         amount: Optional[float] = None, category: Optional[str] = None, schedule_indexes: Optional[list[int]] = None,
+        detail_fields: Optional[list[str]] = None,
     ) -> str:
         """File a pending item with MIA's proposal, or the owner's
-        corrections. Returns what was done, in one sentence."""
+        corrections. `detail_fields`: which detail updates to apply
+        ("model", "serial_number", "manufacturer", "purchase",
+        "warranty_until"); None applies the ones ticked by default (the
+        item's empty fields). Returns what was done, in one sentence."""
         item = self.get_item(item_id)
         if item is None or item.status != PENDING:
             raise ValueError("That item isn't waiting in the inbox.")
@@ -307,6 +328,9 @@ class InboxManager:
         amount = item.amount if amount is None else amount
         maintenance = getattr(self.context, "maintenance", None)
         asset = maintenance.get_asset(asset_id) if maintenance and asset_id else None
+        proposals = detail_proposals(item.details, asset)
+        chosen_details = [p for p in proposals if (p.default_on if detail_fields is None else p.field in detail_fields)]
+        is_purchase = any(p.field == "purchase" for p in chosen_details)
         done: list[str] = []
 
         if item.doc_type in (RECEIPT, INVOICE):
@@ -314,10 +338,14 @@ class InboxManager:
                 raise ValueError("I need the amount before I can file this receipt.")
             budget = self.context.budget
             budget.add_expense(
-                amount=amount, category=category or item.category or "Shopping",
-                description=f"{item.vendor or 'Receipt'}" + (f" ({asset.name})" if asset else ""),
+                amount=amount,
+                category=category or ("Tools & Equipment" if is_purchase else item.category) or "Shopping",
+                description=(f"Bought {asset.name}" if is_purchase and asset else
+                             f"{item.vendor or 'Receipt'}" + (f" ({asset.name})" if asset else "")),
                 date=item.doc_date or date.today().isoformat(), payee=item.vendor,
                 asset_id=asset_id or "", project_id=project_id or "", notes=f"From the inbox: {', '.join(item.files)}",
+                # The purchase itself counts once in the tool's cost (core/homestead_costs.py).
+                asset_purchase=is_purchase,
             )
             done.append(f"logged ${amount:,.2f}" + (f" for the {asset.name}" if asset else ""))
             if project_id and getattr(self.context, "projects", None):
@@ -346,6 +374,19 @@ class InboxManager:
                                          notes=f"From the manual: {step.source}")
             if chosen:
                 done.append(f"added {len(chosen)} maintenance task{'s' if len(chosen) != 1 else ''}")
+            if chosen_details:
+                updates: dict = {}
+                for proposal in chosen_details:
+                    if proposal.field == "purchase":
+                        price, when = proposal.value
+                        updates["purchase_price"] = float(amount if amount else price)
+                        if when and not asset.purchase_date:
+                            updates["purchase_date"] = when
+                    else:
+                        updates[proposal.field] = proposal.value
+                maintenance.update_asset(asset.asset_id, **updates)
+                names = [_DETAIL_WORDS[p.field] for p in chosen_details]
+                done.append("filled in its " + (names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]))
         if not done:
             done.append("kept it in the inbox's filed documents")
 
@@ -389,6 +430,14 @@ class InboxManager:
         return best
 
 
+def describe_detail_updates(proposals: list[DetailProposal]) -> str:
+    """Pure logic. 'serial number and warranty date' for the updates ticked by default."""
+    names = [_DETAIL_WORDS[p.field] for p in proposals if p.default_on]
+    if not names:
+        return ""
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
 def describe_new_items(items: list[InboxItem], context) -> str:
     """Pure-ish: the announcement for newly arrived documents."""
     maintenance = getattr(context, "maintenance", None)
@@ -397,7 +446,9 @@ def describe_new_items(items: list[InboxItem], context) -> str:
         text = item.label
         asset = maintenance.get_asset(item.asset_id) if maintenance and item.asset_id else None
         if asset is not None:
-            text += f" (looks like it's for the {asset.name})"
+            text += f" (looks like it's for the {asset.name}"
+            news = describe_detail_updates(detail_proposals(item.details, asset))
+            text += f"; it has its {news})" if news else ")"
         parts.append(text)
     more = f" and {len(items) - 4} more" if len(items) > 4 else ""
     return "New in your inbox: " + "; ".join(parts) + more + ". Open Inbox to file them, or tell me \"file it\"."

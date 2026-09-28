@@ -12331,3 +12331,26 @@ framework jar.
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 7 new tests, including switching the real server on, off and
 on again on the same port, and the Settings page offscreen.
+
+## Machine details from filed documents (2026-09-28)
+
+"Update information based on those documents": filing now also offers
+to fill in the item's page.
+- `core/inbox_classify.document_details()` reads model, serial number,
+  maker (known brands), warranty length or end date, and, from a receipt
+  that isn't for parts, the purchase; `detail_proposals()` compares them
+  with the chosen item: empty fields ticked, a different existing value
+  offered unticked, the same value left out.
+- New `MaintenanceAsset.warranty_until` (Edit dialog, the
+  `get_maintenance_asset` tool).
+- A purchase receipt filed this way sets the purchase price/date and
+  logs the expense as the asset's purchase (`asset_purchase`, Tools &
+  Equipment), so cost of ownership counts it once.
+- Inbox screen: an "Update its page" tick list that follows the "For
+  item" choice; announcements and "what's in my inbox" mention it; voice
+  filing applies the ticked-by-default ones.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 5 new tests (reading and comparing details, a warranty filling
+in a mower's page, a purchase receipt counted once, choosing which
+details apply, the Inbox screen's list).

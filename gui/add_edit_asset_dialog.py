@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QTextEdit,
     QVBoxLayout,
@@ -110,6 +111,11 @@ class AddEditAssetDialog(QDialog):
         self.purchase_price_spin.setSpecialValueText("Unknown")
         layout.addWidget(self.purchase_price_spin)
 
+        layout.addWidget(QLabel("Warranty Until (YYYY-MM-DD, optional):"))
+        self.warranty_edit = QLineEdit()
+        self.warranty_edit.setPlaceholderText("e.g. 2029-05-02")
+        layout.addWidget(self.warranty_edit)
+
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("Notes (optional)")
@@ -168,6 +174,7 @@ class AddEditAssetDialog(QDialog):
         self._manufacturer: str = ""
         self._model: str = ""
         self._purchase_price: float = 0.0
+        self._warranty_until: str = ""
 
     def _prefill(self, asset: Optional[MaintenanceAsset]) -> None:
         if asset is not None:
@@ -179,6 +186,7 @@ class AddEditAssetDialog(QDialog):
             self.model_edit.setText(asset.model)
             self.serial_edit.setText(asset.serial_number)
             self.purchase_price_spin.setValue(asset.purchase_price)
+            self.warranty_edit.setText(asset.warranty_until)
             if asset.purchase_date:
                 self.purchase_date_edit.setDate(QDate.fromString(asset.purchase_date, _ISO_DATE_FORMAT))
                 self._purchase_date_cleared = False
@@ -262,6 +270,11 @@ class AddEditAssetDialog(QDialog):
         self._serial_number = self.serial_edit.text().strip()
         self._purchase_date = "" if self._purchase_date_cleared else self.purchase_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._purchase_price = self.purchase_price_spin.value()
+        warranty = self.warranty_edit.text().strip()
+        if warranty and not QDate.fromString(warranty, _ISO_DATE_FORMAT).isValid():
+            QMessageBox.warning(self, "Warranty Until", "Use the form YYYY-MM-DD, e.g. 2029-05-02, or leave it empty.")
+            return
+        self._warranty_until = warranty
         self.accept()
 
     @property
@@ -295,3 +308,7 @@ class AddEditAssetDialog(QDialog):
     @property
     def entered_purchase_price(self) -> float:
         return self._purchase_price
+
+    @property
+    def entered_warranty_until(self) -> str:
+        return self._warranty_until

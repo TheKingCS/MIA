@@ -29,3 +29,11 @@ assets (a greenhouse, an aquaponics system, raised beds). All three
 have a "Manage in Maintenance" button, because adding, editing, or
 completing a task always happens here in Maintenance itself — they
 never add or edit anything on their own.
+
+## Warranty
+
+Each asset has an optional Warranty Until date (Edit, YYYY-MM-DD). MIA
+fills it in for you when you file a warranty or manual from the Inbox
+that states the warranty length ("3-year limited warranty", counted
+from the purchase date) or its end date. Ask "tell me about the mower"
+and she mentions it.

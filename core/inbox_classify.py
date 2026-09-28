@@ -244,3 +244,136 @@ def maintenance_schedule(text: str, limit: int = 12) -> list[ScheduleItem]:
         if len(items) >= limit:
             break
     return items
+
+
+# ---------------------------------------------------------------------------
+# Details for the item's page (2026-09-28): "update information based on
+# those documents". Read here, offered in the Inbox with a tick box each;
+# empty fields are ticked, a different existing value is offered unticked.
+# ---------------------------------------------------------------------------
+
+KNOWN_MAKERS = (
+    "John Deere", "Husqvarna", "Craftsman", "Cub Cadet", "Troy-Bilt", "Toro", "Honda", "Stihl", "Echo", "Ryobi",
+    "DeWalt", "Milwaukee", "Makita", "Kubota", "Kohler", "Briggs & Stratton", "Greenworks", "EGO", "Snapper",
+    "Ariens", "Poulan", "Generac", "Champion", "Ford", "Chevrolet", "GMC", "Toyota", "Ram", "Dodge", "Nissan",
+    "Polaris", "Can-Am", "Yamaha", "Kawasaki", "Mahindra", "New Holland", "Bobcat", "Whirlpool", "GE",
+    "Samsung", "LG", "Maytag", "Kenmore", "Rheem", "Carrier", "Trane",
+)
+_SERIAL = re.compile(r"\b(?:serial(?:\s*(?:number|no\.?|#))?|s/n)\s*[:#.]?\s*([A-Z0-9][A-Z0-9\-]{4,24})\b", re.IGNORECASE)
+_MODEL = re.compile(r"\bmodel(?:\s*(?:number|no\.?|#))?\s*[:#.]?\s*([A-Z0-9][A-Z0-9\-]{1,20})\b", re.IGNORECASE)
+_NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "ten": 10}
+_WARRANTY_LENGTH = re.compile(
+    r"\b(\d{1,2}|one|two|three|four|five|six|seven|ten)[- ](year|yr|month)s?\s+(?:limited\s+|full\s+|residential\s+)?warranty"
+    r"|\bwarranty\s+(?:period\s+|coverage\s+)?(?:of|is|for|lasts)\s+(\d{1,2}|one|two|three|four|five|six|seven|ten)\s+(year|month)s?",
+    re.IGNORECASE,
+)
+_WARRANTY_UNTIL = re.compile(r"\bwarranty\s+(?:expires|ends|valid\s+(?:until|through)|coverage\s+ends)(?:\s+on)?\s*:?\s*(.{6,20})", re.IGNORECASE)
+_PARTS_WORDS = re.compile(r"\b(oil|filter|blade|belt|spark plug|repair|service|parts?|tune|labor)\b", re.IGNORECASE)
+
+DETAIL_LABELS = {
+    "model": "Model", "serial_number": "Serial number", "manufacturer": "Maker",
+    "purchase": "Purchase", "warranty_until": "Warranty until",
+}
+
+
+def _line_of(text: str, match: re.Match) -> str:
+    start = text.rfind("\n", 0, match.start()) + 1
+    end = text.find("\n", match.end())
+    return " ".join(text[start:end if end != -1 else None].split())[:120]
+
+
+def _count(word: str) -> int:
+    return int(word) if word.isdigit() else _NUMBER_WORDS[word.lower()]
+
+
+def document_details(text: str, doc_type: str, receipt: Optional[ReceiptFields] = None) -> dict:
+    """Pure logic. What the document says about the thing it's for:
+    {field: {"value": ..., "source": the line it came from}}. Fields:
+    model, serial_number, manufacturer, warranty (months, or an until
+    date), purchase (a receipt that looks like buying the item itself,
+    not parts)."""
+    details: dict = {}
+    for key, pattern in (("serial_number", _SERIAL), ("model", _MODEL)):
+        for match in pattern.finditer(text):
+            value = match.group(1).upper().strip("-")
+            if any(ch.isdigit() for ch in value) and value.lower() not in ("year",):
+                details[key] = {"value": value, "source": _line_of(text, match)}
+                break
+    lowered = _norm(text)
+    found = [(lowered.find(_norm(m)), m) for m in KNOWN_MAKERS if _contains_phrase(lowered, m)]
+    if found:
+        index, maker = min(found)
+        details["manufacturer"] = {"value": maker, "source": " ".join(text[max(0, index - 30):index + 50].split())}
+    until = _WARRANTY_UNTIL.search(text)
+    if until and _parse_date(until.group(1)):
+        details["warranty"] = {"until": _parse_date(until.group(1)), "source": _line_of(text, until)}
+    else:
+        length = _WARRANTY_LENGTH.search(text)
+        if length:
+            count, unit = (length.group(1), length.group(2)) if length.group(1) else (length.group(3), length.group(4))
+            months = _count(count) * (1 if unit.lower() == "month" else 12)
+            details["warranty"] = {"months": months, "source": _line_of(text, length)}
+    if doc_type in (RECEIPT, INVOICE) and receipt is not None and receipt.amount and not _PARTS_WORDS.search(text):
+        details["purchase"] = {"price": receipt.amount, "date": receipt.date or "", "source": receipt.amount_basis}
+    return details
+
+
+def _add_months(start: str, months: int) -> Optional[str]:
+    try:
+        day = date.fromisoformat(start)
+    except ValueError:
+        return None
+    year, month = divmod(day.month - 1 + months, 12)
+    year, month = day.year + year, month + 1
+    for d in (day.day, 30, 29, 28):
+        try:
+            return date(year, month, min(day.day, d)).isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+@dataclass
+class DetailProposal:
+    field: str  # "model", "serial_number", "manufacturer", "purchase", "warranty_until"
+    value: object  # str, or (price, date) for "purchase"
+    text: str  # what the Inbox shows: 'Serial number: 1GX…'
+    current: str = ""  # what the item has now, if anything
+    default_on: bool = True
+    source: str = ""
+
+
+def detail_proposals(details: dict, asset) -> list[DetailProposal]:
+    """Pure logic. The changes the document suggests for `asset`, empty
+    fields ticked by default; unchanged values left out."""
+    if asset is None or not details:
+        return []
+    proposals: list[DetailProposal] = []
+    for key in ("model", "serial_number", "manufacturer"):
+        if key not in details:
+            continue
+        value, current = details[key]["value"], str(getattr(asset, key, "") or "")
+        if current.strip().lower() == value.lower():
+            continue
+        text = f"{DETAIL_LABELS[key]}: {value}" + (f" (now {current})" if current else "")
+        proposals.append(DetailProposal(key, value, text, current, not current, details[key]["source"]))
+    purchase = details.get("purchase")
+    purchase_date = ""
+    if purchase and not getattr(asset, "purchase_price", 0):
+        purchase_date = purchase.get("date") or ""
+        when = f" on {purchase_date}" if purchase_date else ""
+        proposals.append(DetailProposal(
+            "purchase", (purchase["price"], purchase_date), f"Bought for ${purchase['price']:,.2f}{when}",
+            "", True, purchase.get("source", ""),
+        ))
+    warranty = details.get("warranty")
+    if warranty:
+        until = warranty.get("until")
+        if not until and warranty.get("months"):
+            start = getattr(asset, "purchase_date", "") or purchase_date
+            until = _add_months(start, warranty["months"]) if start else None
+        current = str(getattr(asset, "warranty_until", "") or "")
+        if until and until != current:
+            text = f"Warranty until {until}" + (f" (now {current})" if current else "")
+            proposals.append(DetailProposal("warranty_until", until, text, current, not current, warranty["source"]))
+    return proposals

@@ -162,6 +162,9 @@ def _action_get_maintenance_asset(context: AppContext, arguments: dict) -> str:
         parts.append(f"serial {asset.serial_number}")
     if asset.purchase_date:
         parts.append(f"bought {asset.purchase_date}")
+    if getattr(asset, "warranty_until", ""):
+        ended = asset.warranty_until < date.today().isoformat()
+        parts.append(f"warranty {'ended' if ended else 'until'} {asset.warranty_until}")
     lines = [", ".join(parts) + "."]
 
     task_bits = []

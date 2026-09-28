@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
+from core.inbox_manager import describe_detail_updates
 
 _S = {"type": "string"}
 
@@ -34,6 +35,9 @@ def _describe(context: AppContext, item) -> str:
         text += f" for the {name}"
     if item.schedule:
         text += f", with {len(item.schedule)} maintenance step{'s' if len(item.schedule) != 1 else ''}"
+    news = describe_detail_updates(context.inbox.detail_proposals(item)) if name else ""
+    if news:
+        text += f" (it has the {name}'s {news})"
     if not item.readable:
         text += " (I couldn't read it)"
     return text

@@ -136,6 +136,9 @@ class MaintenanceAsset:
     # Cost of ownership adds the expenses tagged with this asset_id; see
     # core/homestead_costs.py and ExpenseEntry.asset_purchase.
     purchase_price: float = 0.0
+    # 2026-09-28: warranty end (ISO date, "" = unknown), filled in by hand
+    # or from a filed warranty/manual (core/inbox_classify.detail_proposals).
+    warranty_until: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -151,6 +154,7 @@ class MaintenanceAsset:
             "documents": list(self.documents),
             "owner_profile_id": self.owner_profile_id,
             "purchase_price": self.purchase_price,
+            "warranty_until": self.warranty_until,
         }
 
     @staticmethod
@@ -168,6 +172,7 @@ class MaintenanceAsset:
             documents=list(data.get("documents", [])),
             owner_profile_id=data.get("owner_profile_id"),
             purchase_price=float(data.get("purchase_price", 0.0) or 0.0),
+            warranty_until=data.get("warranty_until", "") or "",
         )
 
 

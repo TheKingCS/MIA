@@ -139,9 +139,15 @@ class InboxModule(ModuleBase):
         form.addRow("Amount:", self._amount_spin)
         form.addRow("Category:", self._category_combo)
         detail_layout.addLayout(form)
+        self._details_label = QLabel("Update its page (tick what to fill in):")
+        detail_layout.addWidget(self._details_label)
+        self._details_list = QListWidget()
+        self._details_list.setMaximumHeight(120)
+        detail_layout.addWidget(self._details_list)
         detail_layout.addWidget(QLabel("Maintenance schedule found (tick to add as tasks):"))
         self._schedule_list = QListWidget()
         detail_layout.addWidget(self._schedule_list, stretch=1)
+        self._asset_combo.currentIndexChanged.connect(lambda _i: self._show_detail_proposals())
         actions = QHBoxLayout()
         for text, handler in (("File It", self._on_file), ("Dismiss", self._on_dismiss), ("Open File", self._on_open_file)):
             button = QPushButton(text)
@@ -220,14 +226,17 @@ class InboxModule(ModuleBase):
         self._asset_combo.clear()
         self._project_combo.clear()
         self._schedule_list.clear()
+        self._details_list.clear()
         if item is None:
             self._summary.setText("Nothing in the inbox yet.")
             return
         self._summary.setText(describe_item(item, self._asset_name(item.asset_id), self._project_name(item.project_id)))
+        self._asset_combo.blockSignals(True)
         self._asset_combo.addItem("(none)", "")
         for asset in self.context.maintenance.all_assets() if self.context.maintenance else []:
             self._asset_combo.addItem(asset.name, asset.asset_id)
         self._asset_combo.setCurrentIndex(max(0, self._asset_combo.findData(item.asset_id)))
+        self._asset_combo.blockSignals(False)
         self._project_combo.addItem("(none)", "")
         for project in self.context.projects.all_projects() if self.context.projects else []:
             self._project_combo.addItem(project.name, project.project_id)
@@ -247,12 +256,30 @@ class InboxModule(ModuleBase):
             row.setFlags(row.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             row.setCheckState(Qt.CheckState.Checked)
             self._schedule_list.addItem(row)
+        self._show_detail_proposals()
         pending = item.status == PENDING
-        for widget in (self._asset_combo, self._project_combo, self._schedule_list):
+        for widget in (self._asset_combo, self._project_combo, self._schedule_list, self._details_list):
             widget.setEnabled(pending)
         if not pending:
             self._amount_spin.setEnabled(False)
             self._category_combo.setEnabled(False)
+
+    def _show_detail_proposals(self) -> None:
+        """The detail updates for whichever item is chosen in "For item"."""
+        self._details_list.clear()
+        item = self._selected()
+        proposals = self._inbox.detail_proposals(item, self._asset_combo.currentData() or "") if item else []
+        if item is not None and item.status != PENDING:
+            proposals = []
+        for proposal in proposals:
+            row = QListWidgetItem(proposal.text)
+            row.setData(Qt.ItemDataRole.UserRole, proposal.field)
+            row.setToolTip(f"From: {proposal.source}" if proposal.source else "")
+            row.setFlags(row.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            row.setCheckState(Qt.CheckState.Checked if proposal.default_on else Qt.CheckState.Unchecked)
+            self._details_list.addItem(row)
+        self._details_label.setVisible(bool(proposals))
+        self._details_list.setVisible(bool(proposals))
 
     # ------------------------------------------------------------------
 
@@ -294,6 +321,9 @@ class InboxModule(ModuleBase):
                 amount=self._amount_spin.value() if self._amount_spin.isEnabled() else None,
                 category=self._category_combo.currentText() if self._category_combo.isEnabled() else None,
                 schedule_indexes=chosen,
+                detail_fields=[self._details_list.item(i).data(Qt.ItemDataRole.UserRole)
+                               for i in range(self._details_list.count())
+                               if self._details_list.item(i).checkState() == Qt.CheckState.Checked],
             )
         except (ValueError, OSError) as exc:
             QMessageBox.warning(None, "File It", str(exc))

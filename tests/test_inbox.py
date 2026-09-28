@@ -10,6 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 import core.budget_manager as budget_module
@@ -419,4 +420,101 @@ def test_inbox_screen(ctx):
     drop(ctx, "receipt.txt", RECEIPT_TEXT)
     ctx.events.publish("inbox.updated")
     assert module._list.count() == 2
+    widget.deleteLater()
+
+
+# ------------------------------------------------------------------ details for the item's page
+
+WARRANTY_TEXT = """John Deere Limited Warranty
+Model: Z315E  Serial No. 1GXZ315EXKJ999999
+This mower has a 3-year limited warranty from the date of purchase."""
+
+MOWER_RECEIPT = """TRACTOR SUPPLY CO.
+05/02/2026
+JOHN DEERE Z315E ZTRAK MOWER   3,299.00
+SALES TAX                        230.93
+TOTAL                          3,529.93
+VISA"""
+
+
+def test_document_details_and_proposals():
+    from core.inbox_classify import detail_proposals, document_details
+
+    details = document_details(WARRANTY_TEXT, WARRANTY)
+    assert details["serial_number"]["value"] == "1GXZ315EXKJ999999" and details["model"]["value"] == "Z315E"
+    assert details["manufacturer"]["value"] == "John Deere" and details["warranty"]["months"] == 36
+    blank = SimpleNamespace(model="", serial_number="", manufacturer="", purchase_price=0, purchase_date="2026-05-02",
+                            warranty_until="")
+    proposals = {p.field: p for p in detail_proposals(details, blank)}
+    assert set(proposals) == {"model", "serial_number", "manufacturer", "warranty_until"}
+    assert proposals["warranty_until"].value == "2029-05-02" and all(p.default_on for p in proposals.values())
+    # A different existing value is offered but not ticked; the same value isn't offered.
+    known = SimpleNamespace(model="Z315E", serial_number="OLD123456", manufacturer="John Deere", purchase_price=0,
+                            purchase_date="", warranty_until="")
+    proposals = {p.field: p for p in detail_proposals(details, known)}
+    assert set(proposals) == {"serial_number"} and not proposals["serial_number"].default_on
+    assert "now OLD123456" in proposals["serial_number"].text  # no purchase date: no warranty end to work out
+    assert document_details("Model year 2020, nothing else", MANUAL) == {}
+    # A receipt for parts isn't the purchase of the machine.
+    parts = document_details("Oil filter 12.99\nTOTAL 12.99", RECEIPT, receipt_fields("Oil filter 12.99\nTOTAL 12.99"))
+    assert "purchase" not in parts
+
+
+def test_filing_a_warranty_fills_in_the_mowers_page(ctx):
+    mower = ctx.maintenance.add_asset("Zero Turn", purchase_date="2026-05-02")
+    [item] = drop(ctx, "Zero Turn warranty.txt", WARRANTY_TEXT.replace("mower", "Zero Turn").replace("Z315E", "Z530M"))
+    assert item.asset_id == mower.asset_id
+    assert "serial number" in describe_new_items([item], ctx)
+    note = ctx.inbox.file_item(item.item_id)
+    mower = ctx.maintenance.get_asset(mower.asset_id)
+    assert (mower.model, mower.serial_number, mower.manufacturer, mower.warranty_until) == (
+        "Z530M", "1GXZ530MXKJ999999", "John Deere", "2029-05-02")
+    assert "filled in its model, serial number, maker and warranty date" in note
+    assert "warranty until 2029-05-02" in say(ctx, "get_maintenance_asset", asset_name="zero turn")
+    # Persisted.
+    assert MaintenanceManager(ctx).get_asset(mower.asset_id).warranty_until == "2029-05-02"
+
+
+def test_filing_the_mowers_purchase_receipt_counts_it_once(ctx):
+    from core.homestead_costs import tool_cost
+
+    [item] = drop(ctx, "receipt.txt", MOWER_RECEIPT)
+    assert item.asset_id == ctx.mower.asset_id and item.details["purchase"]["price"] == 3529.93
+    [purchase] = ctx.inbox.detail_proposals(item)
+    assert purchase.field == "purchase" and purchase.text == "Bought for $3,529.93 on 2026-05-02"
+    note = ctx.inbox.file_item(item.item_id)
+    mower = ctx.maintenance.get_asset(ctx.mower.asset_id)
+    assert mower.purchase_price == 3529.93 and mower.purchase_date == "2026-05-02"
+    [expense] = ctx.budget.all_expenses()
+    assert expense.asset_purchase and expense.category == "Tools & Equipment" and expense.description == "Bought Riding Mower"
+    cost = tool_cost(ctx, mower)
+    assert cost.purchase_price == 3529.93 and cost.upkeep == 0
+    assert "purchase price" in note
+
+
+def test_choosing_which_details_to_apply(ctx):
+    ctx.maintenance.update_asset(ctx.mower.asset_id, serial_number="OLD123456")
+    [item] = drop(ctx, "Z315E warranty.txt", WARRANTY_TEXT)
+    ctx.inbox.file_item(item.item_id, detail_fields=["serial_number"])  # the owner ticked the replacement
+    mower = ctx.maintenance.get_asset(ctx.mower.asset_id)
+    assert mower.serial_number == "1GXZ315EXKJ999999" and mower.warranty_until == ""
+    [second] = drop(ctx, "Z315E warranty.txt", WARRANTY_TEXT)
+    ctx.inbox.file_item(second.item_id, detail_fields=[])
+    assert ctx.maintenance.get_asset(ctx.mower.asset_id).warranty_until == ""
+
+
+def test_inbox_screen_offers_details_for_the_chosen_item(ctx):
+    from modules.inbox.module import InboxModule
+
+    ctx.maintenance.update_asset(ctx.mower.asset_id, serial_number="OLD123456")
+    drop(ctx, "Z315E warranty.txt", WARRANTY_TEXT)
+    ctx.inbox_mail = None
+    module = InboxModule(ctx)
+    widget = module.get_widget()
+    rows = {module._details_list.item(i).data(Qt.ItemDataRole.UserRole): module._details_list.item(i)
+            for i in range(module._details_list.count())}
+    assert set(rows) == {"serial_number"} and rows["serial_number"].checkState() == Qt.CheckState.Unchecked
+    module._asset_combo.setCurrentIndex(module._asset_combo.findData(ctx.truck.asset_id))
+    fields = {module._details_list.item(i).data(Qt.ItemDataRole.UserRole) for i in range(module._details_list.count())}
+    assert fields == {"model", "serial_number", "manufacturer"}  # the truck has other values
     widget.deleteLater()
