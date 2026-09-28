@@ -54,8 +54,7 @@ def write_pdf(path: Path, pages: list[str], qapp) -> Path:
     return path
 
 
-@pytest.fixture
-def ctx(tmp_path, monkeypatch, qapp):
+def make_ctx(tmp_path, monkeypatch):
     for module in (classroom_module, textbook_module, conversation_module):
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -70,6 +69,11 @@ def ctx(tmp_path, monkeypatch, qapp):
     context.assistant_actions = build_desktop_registry()
     context.tmp = tmp_path
     return context
+
+
+@pytest.fixture
+def ctx(tmp_path, monkeypatch, qapp):
+    return make_ctx(tmp_path, monkeypatch)
 
 
 def add_wiring_book(ctx):
@@ -102,9 +106,9 @@ def test_extract_pdf_text_and_email_and_html(ctx):
 def test_unreadable_files_say_why(ctx):
     photo = ctx.tmp / "receipt.jpg"
     photo.write_bytes(b"\xff\xd8")
-    assert not extract(photo).readable and "OCR" in extract(photo).note
+    assert not extract(photo).readable and extract(photo).needs_ocr
     blank = extract(write_pdf(ctx.tmp / "scan.pdf", [""], None))
-    assert not blank.readable and "scan" in blank.note
+    assert not blank.readable and blank.needs_ocr and "scan" in blank.note
     odd = ctx.tmp / "x.xyz"
     odd.write_text("?")
     assert not extract(odd).readable
@@ -160,7 +164,7 @@ def test_find_book_and_chapter(ctx):
 def test_refuses_unsupported_and_scanned(ctx):
     with pytest.raises(ValueError, match="isn't supported"):
         ctx.textbooks.add_book(ctx.tmp / "book.epub")
-    with pytest.raises(ValueError, match="scan"):
+    with pytest.raises(ValueError, match="scan"):  # no OCR in this context
         ctx.textbooks.add_book(write_pdf(ctx.tmp / "scan.pdf", [""], None))
     assert ctx.textbooks.all_books() == []
 

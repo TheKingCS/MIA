@@ -32,6 +32,25 @@
             </intent-filter>
         </activity>
 
+        <!-- Share to MIA: files and text from any app's Share menu go to
+             MIA's document inbox at home (ShareActivity). -->
+        <activity
+            android:name=".ShareActivity"
+            android:exported="true"
+            android:label="MIA inbox"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.DeviceDefault.Light.Dialog.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="message/rfc822" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".VoiceService"
             android:exported="false"

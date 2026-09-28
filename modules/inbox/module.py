@@ -48,6 +48,8 @@ _STATUS_MARK = {PENDING: "●", FILED: "✓", DISMISSED: "✕"}
 def format_inbox_row(item: InboxItem, asset_name: str = "") -> str:
     """Pure formatting logic."""
     text = f"{_STATUS_MARK.get(item.status, '')} {item.label}"
+    if item.reading:
+        text += "  (reading…)"
     if asset_name:
         text += f"  →  {asset_name}"
     return text + f"   ({item.received_at[:10]}, {item.source})"

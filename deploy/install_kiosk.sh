@@ -124,3 +124,11 @@ echo "  systemctl --user restart mia         # restart manually"
 echo "  systemctl --user disable mia         # stop launching at boot"
 echo ""
 echo "To exit kiosk mode on the device itself: Ctrl+Shift+Q"
+
+# Optional: text recognition for photos of receipts and scanned
+# manuals/textbooks (core/ocr.py). MIA works without it.
+if ! command -v tesseract >/dev/null 2>&1; then
+    echo ""
+    echo "Optional: to let MIA read photos and scanned documents, run:"
+    echo "  sudo apt install -y tesseract-ocr"
+fi

@@ -16,10 +16,9 @@ Formats:
   subject, sender, date, the text body as a page, and every attachment
   returned as raw bytes so the caller can store and read it too.
 
-**Not supported: photos and scanned pages.** Reading text out of an
-image needs OCR (Tesseract or similar), which isn't installed and isn't
-worth pulling in blind. A photo of a receipt still gets filed; it just
-has no text, and callers say so instead of pretending.
+**Photos and scanned pages** have no text to extract here; they come
+back readable=False with needs_ocr=True, and the caller hands them to
+core/ocr.py (Tesseract, in the background) when it's installed.
 """
 
 from __future__ import annotations
@@ -61,6 +60,7 @@ class ExtractedDocument:
     attachments: list[Attachment] = field(default_factory=list)  # email only
     readable: bool = True  # False for images / unknown types: nothing could be read
     note: str = ""  # why not, when not readable
+    needs_ocr: bool = False  # a photo or scanned PDF: core/ocr.py can read it
 
     @property
     def text(self) -> str:
@@ -156,8 +156,8 @@ def extract(path: Path) -> ExtractedDocument:
         if suffix in PDF_SUFFIXES:
             pages, title = pdf_pages(path)
             if not any(p.strip() for p in pages):
-                return ExtractedDocument(pages=pages, title=title, readable=False,
-                                         note="The PDF has no text layer (probably a scan), and MIA can't read images yet.")
+                return ExtractedDocument(pages=pages, title=title, readable=False, needs_ocr=True,
+                                         note="The PDF has no text layer (probably a scan).")
             return ExtractedDocument(pages=pages, title=title)
         if suffix in TEXT_SUFFIXES:
             return ExtractedDocument(pages=[_decode(path.read_bytes())])
@@ -166,7 +166,7 @@ def extract(path: Path) -> ExtractedDocument:
         if suffix in EMAIL_SUFFIXES:
             return parse_email(path.read_bytes())
         if suffix in IMAGE_SUFFIXES:
-            return ExtractedDocument(readable=False, note="It's a photo, and MIA can't read text from images yet (no OCR).")
+            return ExtractedDocument(readable=False, needs_ocr=True, note="It's a photo.")
         return ExtractedDocument(readable=False, note=f"MIA can't read '{suffix or 'unknown'}' files yet.")
     except (OSError, ValueError) as exc:
         log.warning("Couldn't read %s: %s", path, exc)

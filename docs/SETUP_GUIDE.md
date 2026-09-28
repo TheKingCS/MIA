@@ -60,17 +60,22 @@ in [Part 12](#part-12-report-back-to-claude).
 ```bash
 sudo apt update
 sudo apt install -y git curl unzip python3 python3-venv python3-pip gh \
-    libportaudio2 libegl1 libgl1 libxkbcommon0 libxcb-cursor0 libpulse0
+    libportaudio2 libegl1 libgl1 libxkbcommon0 libxcb-cursor0 libpulse0 \
+    tesseract-ocr
 ```
 
 (`libportaudio2` is for the microphone and speakers; the `lib…` ones let
-the MIA window open.)
+the MIA window open; `tesseract-ocr` lets MIA read photos of receipts
+and scanned manuals or textbooks. Everything else works without it.)
 
 > 🪟 **Windows:** install these, accepting the defaults unless noted:
 > - **Python 3.12** from python.org. On the first installer screen, tick
 >   **"Add python.exe to PATH"**.
 > - **Git for Windows** from git-scm.com (it includes **Git Bash**, used
 >   once in Part 4).
+> - Optional, to read photos and scans: **Tesseract** from
+>   github.com/UB-Mannheim/tesseract/wiki (the "tesseract-ocr-w64-setup"
+>   installer). Keep its default folder; MIA finds it there.
 >
 > Then use **PowerShell** for the commands below.
 
@@ -371,11 +376,15 @@ The web app needs the screen on. The app doesn't. Full detail:
    she heard you. Try your **headset button** (pause/resume) and saying
    *"goodbye"*.
 6. Optional: tick **Use my Bluetooth headset's microphone** and compare.
+7. **Share to MIA:** in Gmail, Files or Photos, open a receipt or manual
+   → **Share** → **MIA inbox**. It goes straight to the Inbox at home
+   (Part 10b).
 
 Updates: install the newest APK from the same page; it keeps your
 sign-in.
 
 - [ ] Hands-free works with the phone locked
+- [ ] A file shared to **MIA inbox** shows up in the Inbox
 - [ ] **Show money** in the app (or the **Money** tab in the web app)
       matches Budget on the computer
 
@@ -387,8 +396,10 @@ sign-in.
 
 1. MIA → **Classroom → 📚 Textbooks → Add Textbook…** → pick a textbook PDF
    (or a .txt/.md file) and give it a title. MIA finds the chapters and
-   indexes every page. **Scanned PDFs (pictures of pages, no text layer)
-   can't be read yet**; MIA says so instead of pretending.
+   indexes every page. A **scanned** PDF (pictures of pages) is read with
+   Tesseract in the background: the list shows "reading the scan… page
+   12 of 300" (roughly 4 seconds a page on the Pi), and you can keep
+   using MIA meanwhile.
 2. Optional: **Make a Course** turns the book into a Classroom course,
    one lesson per chapter, so you can tick chapters off.
 3. In chat or on the phone, try:
@@ -442,11 +453,15 @@ Then try it with the mower:
    Budget. Or just say *"file the Lowe's receipt under the
    greenhouse"*.
 
-Photos of paper receipts are kept but can't be read yet (no text
-recognition); type the amount in the Inbox screen and file it.
+**Paper receipts:** take a photo and send it (Share → **MIA inbox** in
+the Android app, or Send a file in the web app). It shows as "reading…"
+for a moment, then MIA announces what it read. Check the amount before
+filing: reading a crumpled or faded receipt can get a digit wrong, and
+the Inbox screen shows which line the total came from.
 
 - [ ] A manual filed onto the mower with its tasks
 - [ ] A receipt filed as an expense
+- [ ] A photo of a paper receipt read and filed
 - [ ] (optional) Email set up and a forwarded receipt arrived
 
 ---

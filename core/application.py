@@ -143,6 +143,7 @@ from core.business_use import BusinessUseManager
 from core.textbook_manager import TextbookManager
 from core.inbox_manager import InboxManager, describe_new_items
 from core.inbox_mail import MailChecker, MailSettings, MailVault
+from core.ocr import OcrQueue
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -301,6 +302,7 @@ class MIAApplication:
         self.context.private_journal = PrivateJournalManager(self.context)
         self.context.communication = CommunicationGate(self.context)
         self.context.business_use = BusinessUseManager(self.context)
+        self.context.ocr = OcrQueue(self.context)
         self.context.textbooks = TextbookManager(self.context)
         self.context.inbox = InboxManager(self.context)
         self.context.inbox_mail = MailChecker(self.context.inbox, MailSettings(self.context), MailVault())
@@ -424,11 +426,13 @@ class MIAApplication:
         self._lite_capture_timer.start(60_000)
 
         # Document inbox (core/inbox_manager.py): take in dropped/uploaded/
-        # emailed files every minute; check the mailbox (if set up and
-        # unlocked) every 10 minutes on its own background thread.
+        # emailed files, and pick up finished OCR (core/ocr.py) for the
+        # inbox and scanned textbooks, every 30 seconds (a folder listing,
+        # cheap); check the mailbox (if set up and unlocked) every 10
+        # minutes on its own background thread.
         self._inbox_timer = QTimer()
         self._inbox_timer.timeout.connect(self._check_inbox)
-        self._inbox_timer.start(60_000)
+        self._inbox_timer.start(30_000)
         self._inbox_mail_timer = QTimer()
         self._inbox_mail_timer.timeout.connect(self._check_inbox_mail)
         self._inbox_mail_timer.start(600_000)
@@ -476,6 +480,8 @@ class MIAApplication:
             )
 
     def _check_inbox(self) -> None:
+        if self.context.textbooks is not None and self.context.textbooks.finish_reading():
+            self.context.events.publish("textbooks.updated")
         if self.context.inbox is None:
             return
         new_items = self.context.inbox.scan()

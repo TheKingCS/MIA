@@ -46,6 +46,7 @@ from typing import Optional
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.document_text import EMAIL_SUFFIXES, extract
+from core.ocr import IMAGE_SUFFIXES, read_result, unavailable_note
 from core.inbox_classify import (
     DOC_TYPE_LABELS, INVOICE, MANUAL, RECEIPT, WARRANTY, ScheduleItem, document_type, expense_category, maintenance_schedule,
     match_asset, match_project, receipt_fields,
@@ -86,6 +87,8 @@ class InboxItem:
     schedule: list[dict] = field(default_factory=list)  # ScheduleItem dicts
     status: str = PENDING
     filed_note: str = ""
+    email_date: str = ""  # an emailed document's sent date, the fallback receipt date
+    reading: bool = False  # waiting on OCR (core/ocr.py) for a photo or scan
 
     @staticmethod
     def from_dict(data: dict) -> "InboxItem":
@@ -168,23 +171,35 @@ class InboxManager:
         return path
 
     def scan(self, now: Optional[float] = None) -> list[InboxItem]:
-        """Turn every settled file in the inbox folder into a pending item."""
-        if not self.folder.exists():
-            return []
-        now = now or time.time()
-        new_items = []
-        for path in sorted(self.folder.iterdir()):
-            if not path.is_file() or path.name.startswith("."):
-                continue
-            if now - path.stat().st_mtime < _MIN_QUIET_SECONDS:
-                continue
-            try:
-                new_items.append(self._ingest(path))
-            except OSError:
-                log.exception("Couldn't take %s into the inbox.", path)
-        if new_items:
+        """Turn every settled file in the inbox folder into a pending item,
+        and pick up finished OCR. Returns the items that are ready to
+        announce: new ones MIA could read right away, and photos/scans
+        whose reading just finished (not ones still being read)."""
+        ready: list[InboxItem] = []
+        changed = False
+        for item in [i for i in self._items if i.reading and i.status == PENDING]:
+            self._read(item)
+            changed = True
+            if not item.reading:
+                ready.append(item)
+        if self.folder.exists():
+            now = now or time.time()
+            for path in sorted(self.folder.iterdir()):
+                if not path.is_file() or path.name.startswith("."):
+                    continue
+                if now - path.stat().st_mtime < _MIN_QUIET_SECONDS:
+                    continue
+                try:
+                    item = self._ingest(path)
+                except OSError:
+                    log.exception("Couldn't take %s into the inbox.", path)
+                    continue
+                changed = True
+                if not item.reading:
+                    ready.append(item)
+        if changed:
             self._save()
-        return new_items
+        return ready
 
     def _ingest(self, path: Path) -> InboxItem:
         source, name = "folder", path.name
@@ -196,32 +211,66 @@ class InboxManager:
         target.mkdir(parents=True, exist_ok=True)
         stored = target / name
         shutil.move(str(path), stored)
-
-        document = extract(stored)
-        texts = list(document.pages)
-        item.subject, item.sender = document.title, document.sender
+        item.files.append(stored.name)
         if stored.suffix.lower() in EMAIL_SUFFIXES:
-            item.files.append(stored.name)
-            notes = []
-            for attachment in document.attachments:
+            message = extract(stored)
+            item.subject, item.sender, item.email_date = message.title, message.sender, message.date
+            for attachment in message.attachments:
                 attachment_path = target / re.sub(r"[^\w.\- ]", "_", attachment.filename)
                 attachment_path.write_bytes(attachment.data)
                 item.files.append(attachment_path.name)
-                inner = extract(attachment_path)
-                texts += inner.pages
-                if not inner.readable:
-                    notes.append(f"{attachment.filename}: {inner.note}")
-            item.note = " ".join(notes)
-        else:
-            item.files.append(stored.name)
-            if not document.readable:
-                item.readable, item.note = False, document.note
-        self._classify(item, "\n".join(texts), name, document.date)
         self._items.append(item)
-        log.info("Inbox: %s from %s (%s)", item.label, source, item.doc_type)
+        self._read(item)
+        log.info("Inbox: %s from %s (%s%s)", item.label, source, item.doc_type, ", reading" if item.reading else "")
         return item
 
+    def _ocr_output(self, item: InboxItem, name: str) -> Path:
+        return self.item_folder(item.item_id) / ".ocr" / f"{name}.json"
+
+    def _read(self, item: InboxItem) -> None:
+        """Read every file of the item (an email's body and each
+        attachment), with OCR for photos and scans, then classify it.
+        Photos/scans not read yet are queued and the item is marked
+        `reading`; called again by scan() until they're done."""
+        folder = self.item_folder(item.item_id)
+        ocr = getattr(self.context, "ocr", None)
+        texts: list[str] = []
+        notes: list[str] = []
+        waiting = False
+        for name in item.files:
+            path = folder / name
+            document = extract(path)
+            if not item.subject and document.title:
+                item.subject = document.title
+            if document.readable:
+                texts += document.pages
+                continue
+            prefix = f"{name}: " if len(item.files) > 1 else ""
+            if not document.needs_ocr:
+                notes.append(prefix + document.note)
+                continue
+            result = read_result(self._ocr_output(item, name))
+            if result is not None:
+                if result.error:
+                    notes.append(prefix + result.error)
+                elif result.text.strip():
+                    texts.append(result.text)
+                else:
+                    notes.append(prefix + "No text could be found in it.")
+            elif ocr is not None and ocr.submit(f"inbox:{item.item_id}/{name}", path, self._ocr_output(item, name)):
+                waiting = True
+            else:
+                notes.append(prefix + unavailable_note("photo" if path.suffix.lower() in IMAGE_SUFFIXES else "scan"))
+        item.reading = waiting
+        item.readable = any(t.strip() for t in texts)
+        item.note = "Reading the text in it (OCR)…" if waiting else " ".join(notes)
+        main_name = next((f for f in item.files if not f.lower().endswith(".eml")), item.files[0] if item.files else "")
+        self._classify(item, "\n".join(texts), main_name, item.email_date)
+
     def _classify(self, item: InboxItem, text: str, filename: str, email_date: str) -> None:
+        # Start clean: an item is classified again once its OCR finishes.
+        item.amount, item.amount_basis, item.doc_date, item.vendor, item.category = None, "", "", "", ""
+        item.schedule = []
         item.excerpt = " ".join(text.split())[:400]
         haystack = f"{item.subject}\n{filename}\n{text}"
         item.doc_type = document_type(text, filename, item.subject)

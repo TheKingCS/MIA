@@ -58,8 +58,7 @@ def qapp():
     return QApplication.instance() or QApplication([])
 
 
-@pytest.fixture
-def ctx(tmp_path, monkeypatch, qapp):
+def make_ctx(tmp_path, monkeypatch):
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -80,6 +79,11 @@ def ctx(tmp_path, monkeypatch, qapp):
     context.greenhouse = context.projects.add_project("Greenhouse", status="Active")
     context.tmp = tmp_path
     return context
+
+
+@pytest.fixture
+def ctx(tmp_path, monkeypatch, qapp):
+    return make_ctx(tmp_path, monkeypatch)
 
 
 def say(ctx, action, **arguments):

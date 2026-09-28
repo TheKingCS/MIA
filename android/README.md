@@ -42,6 +42,9 @@ It installs over the old one and keeps your sign-in.
 - **Show money** opens a read-only money summary: this month, bills and
   paydays coming up, budget targets, debts in payoff order, net worth,
   builds and tools. Same numbers as the desktop.
+- **Share to MIA:** in any app (Gmail, Files, Photos), Share →
+  **MIA inbox** sends the file (or several) to MIA's document inbox at
+  home: receipts, manuals, warranties. Shared text works too.
 - If MIA at home restarted, the app signs in again by itself. Your
   password is kept encrypted in Android's secure key storage.
 

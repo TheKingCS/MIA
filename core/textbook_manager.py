@@ -49,6 +49,7 @@ from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.document_text import PDF_SUFFIXES, TEXT_SUFFIXES, extract, first_heading
 from core.logger import get_logger
+from core.ocr import read_result, unavailable_note
 
 log = get_logger(__name__)
 
@@ -112,6 +113,8 @@ class Textbook:
     chapters: list[Chapter] = field(default_factory=list)
     course_id: str = ""  # set once a Classroom course is made from it
     added_at: str = ""
+    reading: bool = False  # a scanned book whose pages OCR is still reading (core/ocr.py)
+    reading_error: str = ""  # why reading it failed, if it did
 
     @staticmethod
     def from_dict(data: dict) -> "Textbook":
@@ -120,6 +123,7 @@ class Textbook:
             page_count=int(data.get("page_count", 0)),
             chapters=[Chapter(**c) for c in data.get("chapters", [])],
             course_id=data.get("course_id", ""), added_at=data.get("added_at", ""),
+            reading=bool(data.get("reading", False)), reading_error=data.get("reading_error", ""),
         )
 
 
@@ -238,34 +242,94 @@ class TextbookManager:
 
     def add_book(self, source: Path, title: str = "") -> Textbook:
         """Copy, read and index a book. Raises ValueError with a plain
-        message for an unsupported or unreadable file."""
+        message for an unsupported or unreadable file. A scanned PDF is
+        added right away with `reading` set, and indexed by
+        finish_reading() once OCR has read its pages in the background."""
         source = Path(source)
         if source.suffix.lower() not in SUPPORTED_SUFFIXES:
             raise ValueError(f"MIA can read PDF and text books; '{source.suffix}' isn't supported yet.")
         document = extract(source)
-        if not document.readable or not any(p.strip() for p in document.pages):
+        scanned = document.needs_ocr
+        if scanned:
+            ocr = getattr(self.context, "ocr", None)
+            if ocr is None or not ocr.available:
+                raise ValueError(unavailable_note("scan"))
+        elif not document.readable or not any(p.strip() for p in document.pages):
             raise ValueError(document.note or "There's no readable text in that file.")
         book_id = uuid.uuid4().hex[:10]
         self.root.mkdir(parents=True, exist_ok=True)
         stored = self.root / f"{book_id}{source.suffix.lower()}"
         shutil.copy2(source, stored)
+        book = Textbook(
+            book_id=book_id, title=title.strip() or document.title or source.stem.replace("_", " "), filename=stored.name,
+            page_count=len(document.pages), added_at=datetime.now().isoformat(timespec="seconds"),
+        )
+        self._books.append(book)
+        if scanned:
+            book.reading = True
+            self.context.ocr.submit(self._ocr_key(book_id), stored, self._ocr_output(book_id))
+            self._save()
+            log.info("Textbook added: '%s', a %d-page scan; reading it in the background.", book.title, book.page_count)
+            return book
         pages = document.pages
         if source.suffix.lower() in TEXT_SUFFIXES:
             pages = self._split_text_pages(pages[0])
+        self._index(book, pages, keep_title=bool(title.strip() or document.title))
+        return book
+
+    def _index(self, book: Textbook, pages: list[str], keep_title: bool) -> None:
         chapters = find_chapters(pages)
         passages = split_passages(pages, chapters)
-        name = title.strip() or document.title or first_heading(pages[0]) or source.stem.replace("_", " ")
-        book = Textbook(
-            book_id=book_id, title=name, filename=stored.name, page_count=len(pages),
-            chapters=chapters, added_at=datetime.now().isoformat(timespec="seconds"),
-        )
+        if not keep_title:
+            book.title = first_heading(pages[0]) or book.title
+        book.page_count, book.chapters = len(pages), chapters
         _INDEX_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_INDEX_DIR / f"{book_id}.json", json.dumps([asdict(p) for p in passages]))
-        self._passages[book_id] = passages
-        self._books.append(book)
+        atomic_write_text(_INDEX_DIR / f"{book.book_id}.json", json.dumps([asdict(p) for p in passages]))
+        self._passages[book.book_id] = passages
         self._save()
-        log.info("Textbook added: '%s' (%d pages, %d chapters, %d passages)", name, len(pages), len(chapters), len(passages))
-        return book
+        log.info("Textbook indexed: '%s' (%d pages, %d chapters, %d passages)", book.title, len(pages), len(chapters), len(passages))
+
+    # -- scanned books (OCR) ----------------------------------------------
+
+    @staticmethod
+    def _ocr_key(book_id: str) -> str:
+        return f"textbook:{book_id}"
+
+    @staticmethod
+    def _ocr_output(book_id: str) -> Path:
+        return _INDEX_DIR / f"{book_id}.ocr.json"
+
+    def reading_progress(self, book_id: str) -> Optional[tuple[int, int]]:
+        """(pages read, total) while a scanned book is being read."""
+        ocr = getattr(self.context, "ocr", None)
+        return ocr.progress(self._ocr_key(book_id)) if ocr is not None else None
+
+    def finish_reading(self) -> bool:
+        """Index scanned books whose OCR has finished (GUI thread; called
+        by the app's regular check). After a restart, a book still being
+        read is queued again and resumes where it stopped. True when a
+        book changed."""
+        changed = False
+        ocr = getattr(self.context, "ocr", None)
+        for book in [b for b in self._books if b.reading]:
+            result = read_result(self._ocr_output(book.book_id))
+            if result is None:
+                if ocr is None or not ocr.submit(self._ocr_key(book.book_id), self.root / book.filename,
+                                                 self._ocr_output(book.book_id)):
+                    book.reading, book.reading_error = False, unavailable_note("scan")
+                    self._save()
+                    changed = True
+                continue
+            book.reading = False
+            if result.error or not result.text.strip():
+                book.reading_error = result.error or "No text could be found on its pages."
+                self._save()
+            else:
+                book.reading_error = ""
+                self._index(book, result.pages, keep_title=True)
+            self._ocr_output(book.book_id).unlink(missing_ok=True)
+            changed = True
+        return changed
 
     @staticmethod
     def _split_text_pages(text: str, lines_per_page: int = 60) -> list[str]:
@@ -280,7 +344,11 @@ class TextbookManager:
             return False
         self._books = [b for b in self._books if b.book_id != book_id]
         self._passages.pop(book_id, None)
-        for path in (self.root / book.filename, _INDEX_DIR / f"{book_id}.json"):
+        if getattr(self.context, "ocr", None) is not None:
+            self.context.ocr.cancel(self._ocr_key(book_id))
+        output = self._ocr_output(book_id)
+        for path in (self.root / book.filename, _INDEX_DIR / f"{book_id}.json", output,
+                     output.with_name(output.stem + ".partial.json")):
             try:
                 path.unlink()
             except OSError:
@@ -289,6 +357,8 @@ class TextbookManager:
         return True
 
     def passages(self, book_id: str) -> list[Passage]:
+        if book_id not in self._passages and not (_INDEX_DIR / f"{book_id}.json").exists():
+            return []  # still being read, or reading failed
         if book_id not in self._passages:
             try:
                 raw = json.loads((_INDEX_DIR / f"{book_id}.json").read_text(encoding="utf-8"))

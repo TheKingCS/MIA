@@ -16,6 +16,7 @@ import java.net.URL
  *   POST /api/voice/text   {text} -> a TurnResult
  *   POST /api/voice/reset  start a fresh conversation
  *   GET  /api/finance/summary  read-only money summary (Money view)
+ *   POST /api/inbox/upload  raw file body + X-Filename -> the document inbox (Share to MIA)
  *
  * Plain HttpURLConnection and the platform's org.json: no third-party
  * libraries to go stale. Blocking calls; callers run them off the main
@@ -52,11 +53,20 @@ class MiaClient(baseUrl: String) {
     /** Finance #4: the read-only money summary (core/finance_summary.py). */
     fun financeSummary(token: String): JSONObject = request("GET", "/api/finance/summary", token, null, null)
 
+    /** Share to MIA: a file for the document inbox (core/inbox_manager.py). */
+    fun uploadToInbox(token: String, fileName: String, data: ByteArray, mimeType: String?) {
+        request("POST", "/api/inbox/upload", token, data, mimeType ?: "application/octet-stream",
+            mapOf("X-Filename" to encodeFileNameHeader(fileName)))
+    }
+
     fun reset(token: String) {
         request("POST", "/api/voice/reset", token, ByteArray(0), "application/json")
     }
 
-    private fun request(method: String, path: String, token: String?, body: ByteArray?, contentType: String?): JSONObject {
+    private fun request(
+        method: String, path: String, token: String?, body: ByteArray?, contentType: String?,
+        headers: Map<String, String> = emptyMap(),
+    ): JSONObject {
         val connection = URL(base + path).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
@@ -64,6 +74,7 @@ class MiaClient(baseUrl: String) {
             // A reply can take a while: speech-to-text, the model, then the voice.
             connection.readTimeout = 120_000
             token?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
+            headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
             if (body != null) {
                 connection.doOutput = true
                 contentType?.let { connection.setRequestProperty("Content-Type", it) }

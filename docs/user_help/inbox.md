@@ -11,8 +11,9 @@ you say so.**
 
 - **Drop a file** in the `inbox` folder inside MIA's folder, or use
   Inbox → Add Files….
-- **From your phone:** Send a file in the phone app (PDF, photo or
-  text, up to 25 MB).
+- **From your phone:** in any Android app, Share → **MIA inbox** (a
+  PDF from Gmail, a photo of a receipt, a manual from Files; several at
+  once works too). Or Send a file in the phone web app. Up to 25 MB each.
 - **By email (optional):** Inbox → Email Settings… connects a mailbox
   you choose (best: a separate address used only for MIA). MIA checks
   it every 10 minutes and takes each new message and its attachments.
@@ -39,8 +40,16 @@ her daily message limit, merged with anything else she has to say).
   engine oil every 50 hours".
 
 All of this is done by fixed rules, not the AI model, so it never
-invents a number. Photos of paper receipts and scanned PDFs are kept
-but can't be read yet; type the amount yourself.
+invents a number.
+
+**Photos and scans** (a phone picture of a paper receipt, a scanned
+manual) are read with text recognition (Tesseract) in the background.
+They show "(reading…)" for a moment and are announced once read.
+Reading a faded or crumpled receipt can get a digit wrong, so check the
+amount (the screen shows which line it came from) before filing. If
+Tesseract isn't installed, the document is kept and the note says how
+to enable reading it; you can still type the amount and file it.
+iPhone HEIC photos can't be read; send them as JPEG.
 
 ## Filing
 

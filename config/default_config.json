@@ -66,6 +66,11 @@
         "host": "127.0.0.1",
         "port": 8765
     },
+    "ocr": {
+        "enabled": true,
+        "tesseract_path": "",
+        "language": "eng"
+    },
     "communication": {
         "daily_budget": 5,
         "min_spacing_minutes": 90,

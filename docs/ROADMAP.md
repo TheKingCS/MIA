@@ -12281,3 +12281,36 @@ failure), real `data/` untouched. 42 new tests (17 tutor, 25 inbox:
 classification, intake, emailed PDFs, filing, the tools, the mail vault,
 IMAP with a fake server, the upload endpoint, the Inbox screen);
 routing corpus 206; live checklist 219.
+
+## Reading photos and scans; Share to MIA (2026-09-28)
+
+The first two follow-ups to the inbox and tutor.
+
+- `core/ocr.py`: Tesseract run as a separate program (no new Python
+  package; `sudo apt install tesseract-ocr`, or the Windows installer,
+  or `ocr.tesseract_path`). Photos are prepared with Qt first: the
+  phone's EXIF rotation applied (Tesseract ignores it), grayscale,
+  capped at 4000 px. Scanned PDF pages are rendered at 300 DPI onto
+  white. HEIC isn't readable (the note says to send JPEG).
+- `OcrQueue` (`context.ocr`): one document at a time on one background
+  thread at lower priority (`nice`, one core); it only writes result
+  files, which the inbox and the library pick up on their GUI-thread
+  checks (every 30 s, and every 3 s while the Textbooks page shows a
+  book being read). A long book's progress is saved every 5 pages and
+  resumes after a restart.
+- Inbox: photos and scans (including email attachments) show
+  "(reading…)" and are announced only once read, then classified like
+  any document. Failures say why and the item can still be filed by hand.
+- Textbooks: a scanned book is added at once and indexed when read,
+  with "reading the scan… page N of M"; removing it cancels the read.
+- Android: **Share → MIA inbox** from any app (`ShareActivity`; PDF,
+  images, text, email; several at once; 25 MB cap checked on the phone;
+  signs in again after a MIA restart), uploading to the existing
+  `/api/inbox/upload`. Pure helpers in `ShareNames.kt`, JVM-tested.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure), real `data/` untouched. 16 new tests in `tests/test_ocr.py`,
+3 of them against the real Tesseract (a sideways EXIF-rotated phone
+photo, a scanned PDF with resume, a photo through the inbox); 6 new
+Kotlin tests; the Android sources compile against the Android 14
+framework jar.

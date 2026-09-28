@@ -91,6 +91,7 @@ if TYPE_CHECKING:
     from core.textbook_manager import TextbookManager
     from core.inbox_manager import InboxManager
     from core.inbox_mail import MailChecker
+    from core.ocr import OcrQueue
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -187,6 +188,9 @@ class AppContext:
     # for filing; inbox_mail checks the optional mailbox (core/inbox_mail.py).
     inbox: Optional["InboxManager"] = field(default=None, repr=False)
     inbox_mail: Optional["MailChecker"] = field(default=None, repr=False)
+    # Reading photos and scanned pages (core/ocr.py, Tesseract), in the
+    # background; used by the inbox and the textbook tutor.
+    ocr: Optional["OcrQueue"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

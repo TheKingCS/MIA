@@ -53,6 +53,10 @@ Then in chat or on the phone:
   page number.
 - "I'm done studying" or "back to normal" to leave study mode.
 
-A scanned PDF (pictures of pages with no text layer) can't be read
-yet; MIA tells you instead of adding an empty book. Your books are
+A scanned PDF (pictures of pages with no text layer) is read with
+text recognition (Tesseract) in the background; the list shows its
+progress ("reading the scan… page 12 of 300") and it's ready to study
+when that's done. If it closes midway, MIA picks up where it stopped
+next time. Without Tesseract installed, MIA says so instead of adding
+an empty book. Your books are
 never copied anywhere but MIA's own folder.

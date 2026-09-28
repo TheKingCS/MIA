@@ -128,7 +128,8 @@ bill"). Nothing is saved on the phone; it's fetched fresh each time.
 
 Under the talk button, **Send a file** lets you pick a PDF, a photo or a
 text file on the phone (a receipt, a manual, a warranty) and send it to
-MIA's document inbox at home (up to 25 MB). MIA reads it within a
+MIA's document inbox at home (up to 25 MB). In the Android app it's
+even simpler: Share → **MIA inbox** from any app. MIA reads it within a
 minute and tells you what it thinks it is; file it from the Inbox screen
 or by saying *"file it"*. See `docs/user_help/inbox.md`.
 

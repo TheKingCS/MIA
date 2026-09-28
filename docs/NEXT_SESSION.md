@@ -74,7 +74,10 @@ every step below in order, from a blank machine, with Windows notes.
 - [ ] **Try the textbook tutor and the document inbox**
       (`docs/SETUP_GUIDE.md`, Part 10): add a textbook and study from
       it; send the mower's manual and a receipt to the inbox and file
-      them. Email intake is optional (a separate Gmail address with an
+      them. Install `tesseract-ocr` (Part 1a) and try a photo of a
+      paper receipt, and Share → **MIA inbox** from the Android app.
+      Tell Claude how well real receipts read (which digits it gets
+      wrong, if any). Email intake is optional (a separate Gmail address with an
       app password; never paste the app password into a chat).
 - [ ] **Claude Design pass.** Upload `docs/design_handoff/` (or the zip
       Claude sent) plus your inspiration pictures to Claude Design and
@@ -125,10 +128,9 @@ every step below in order, from a blank machine, with Windows notes.
    builds and tools → business use → phone) is complete.
 11. ~~Textbook tutor and document inbox~~ **built** (2026-09-28). Try
    them: Part 10 of `docs/SETUP_GUIDE.md`. Follow-ups, roughly in order:
-   - reading photos and scans (OCR, e.g. Tesseract) so paper receipts
-     and scanned manuals work;
-   - "Share to MIA" from any Android app (share a PDF or photo straight
-     into the inbox);
+   - ~~reading photos and scans~~ and ~~"Share to MIA" on Android~~
+     **built** (2026-09-28): Tesseract OCR in the background (install
+     `tesseract-ocr`, Part 1a), Share → MIA inbox in the Android app;
    - the model's help on messy manuals (propose extra schedule steps,
      still confirmed by you), and updating an item's details (model,
      serial, warranty end) from its documents;

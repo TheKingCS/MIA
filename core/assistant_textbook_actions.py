@@ -26,7 +26,8 @@ def _action_list_textbooks(context: AppContext, arguments: dict) -> str:
     books = library.all_books() if library is not None else []
     if not books:
         return "You don't have any textbooks yet. Add one in Classroom under Textbooks, a PDF or a text file."
-    parts = [f"{b.title} ({b.page_count} pages, {len(b.chapters)} chapter{'s' if len(b.chapters) != 1 else ''})" for b in books]
+    parts = [f"{b.title} (still reading the scan)" if b.reading else
+             f"{b.title} ({b.page_count} pages, {len(b.chapters)} chapter{'s' if len(b.chapters) != 1 else ''})" for b in books]
     return f"You have {len(books)} textbook{'s' if len(books) != 1 else ''}: " + "; ".join(parts) + \
         ". Say \"let's study\" and a book's name, or \"quiz me on\" a chapter."
 
