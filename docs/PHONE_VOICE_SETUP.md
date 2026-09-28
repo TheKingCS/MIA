@@ -107,6 +107,23 @@ road.
 
 ---
 
+## Money on your phone
+
+Tap **Money** at the top of the phone app (or **Show money** in the
+Android app) for a read-only view of your finances, the same numbers as
+the desktop:
+
+- this month's money in, money out and net
+- bills due and paydays expected in the next two weeks
+- budget targets (amber near the limit, red over it)
+- debts in payoff order, with why #1 is first
+- net worth (debts you entered by hand are listed separately, since
+  they aren't part of a bank's synced total)
+- builds against their budgets, and what your tools have cost
+
+It's read-only: to change something, tell MIA ("I paid the electric
+bill"). Nothing is saved on the phone; it's fetched fresh each time.
+
 ## Daily use: the drive home
 
 1. Put in your headphones. Make sure Tailscale is on (it usually stays

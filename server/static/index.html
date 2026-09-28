@@ -67,6 +67,20 @@
         #text-row button { width: auto; margin-top: 0; padding: 12px 16px; }
         #status { margin-top: 12px; font-size: 13px; color: var(--text-dim); min-height: 18px; }
         #status.error { color: var(--crit); }
+        #tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+        #tabs button { flex: 1; margin-top: 0; background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+        #tabs button.active { background: var(--panel); color: var(--accent); border-color: var(--accent-deep); }
+        .money-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 12px; }
+        .money-card h2 { font-size: 15px; margin: 0 0 8px; color: var(--accent); }
+        .money-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 15px; }
+        .money-row:first-of-type { border-top: none; }
+        .money-row .sub { display: block; font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+        .money-row .value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .money-row.good .value { color: var(--accent); }
+        .money-row.warn .value { color: var(--warn); }
+        .money-row.bad .value { color: var(--crit); }
+        .money-note { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+        #money-updated { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; }
         details { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 12px; color: var(--text-dim); }
         summary { cursor: pointer; }
     </style>
@@ -83,6 +97,16 @@
     </section>
 
     <section id="talk-section" hidden>
+        <div id="tabs">
+            <button id="tab-talk" class="active">Talk</button>
+            <button id="tab-money">Money</button>
+        </div>
+        <div id="money-view" hidden>
+            <button id="money-refresh" class="secondary">Refresh</button>
+            <div id="money-cards"></div>
+            <div id="money-updated"></div>
+        </div>
+        <div id="talk-view">
         <div id="orb" class="idle" role="button" aria-label="Talk to MIA">Tap to talk</div>
         <div id="state-line">Ready</div>
         <div id="controls">
@@ -94,6 +118,7 @@
             <button id="text-send">Send</button>
         </div>
         <div id="log"></div>
+        </div>
 
         <details>
             <summary>Notifications & settings</summary>
@@ -107,6 +132,7 @@
     <div id="status"></div>
 
     <script src="/voice.js"></script>
+    <script src="/money.js"></script>
     <script src="/app.js"></script>
 </body>
 </html>

@@ -62,6 +62,7 @@ from starlette.concurrency import run_in_threadpool
 from core.app_context import AppContext
 from core.assistant_turn import AssistantTurn, run_assistant_turn
 from core.talk_it_out import apply_followup
+from core.finance_summary import build_finance_summary
 from core.conversation_manager import Conversation
 from core.logger import get_logger
 from core.web_push import get_or_create_vapid_keys, send_web_push
@@ -273,6 +274,14 @@ def create_app(context: AppContext) -> FastAPI:
         if not text:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Say or type something first.")
         return respond(profile_id, text, background)
+
+    # Finance #4 (2026-09-28): read-only money summary for the phone
+    # apps. Same numbers as the desktop (core/finance_summary.py); taken
+    # under the turn lock so it never reads half of a phone-made change.
+    @app.get("/api/finance/summary")
+    def finance_summary(profile_id: str = Depends(require_profile_id)) -> dict:
+        with app.state.turn_lock:
+            return build_finance_summary(context)
 
     @app.post("/api/voice/reset")
     def voice_reset(profile_id: str = Depends(require_profile_id)) -> dict:

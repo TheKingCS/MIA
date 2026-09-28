@@ -1,0 +1,79 @@
+{
+  "as_of": "2026-09-28",
+  "available": true,
+  "month": {
+    "label": "September 2026",
+    "income": 3000.0,
+    "expenses": 1949.0,
+    "net": 1051.0
+  },
+  "bills_due": [
+    {
+      "name": "Electric",
+      "amount": 120.0,
+      "days": 3
+    }
+  ],
+  "income_expected": [
+    {
+      "name": "Paycheck",
+      "amount": 2400.0,
+      "days": 5
+    }
+  ],
+  "budget_targets": [
+    {
+      "category": "Groceries",
+      "budget": 400.0,
+      "spent": 420.0
+    }
+  ],
+  "debts": {
+    "total": 15000.0,
+    "minimum_payments": 545.0,
+    "ranked": [
+      {
+        "name": "Chase card",
+        "balance": 3000.0,
+        "apr": 24.9,
+        "bank_synced": false,
+        "reason": "Highest current APR (24.90%)"
+      },
+      {
+        "name": "Truck loan",
+        "balance": 12000.0,
+        "apr": 6.9,
+        "bank_synced": true,
+        "reason": "Highest current APR (6.90%)"
+      }
+    ]
+  },
+  "net_worth": {
+    "total": 130000.0,
+    "sources": [
+      {
+        "label": "Property equity",
+        "value": 130000.0
+      }
+    ],
+    "manual_debts_not_in_net_worth": 3000.0
+  },
+  "builds": [
+    {
+      "name": "Greenhouse",
+      "spent": 1200,
+      "budget": 5000,
+      "remaining": 3800,
+      "status": "Active"
+    }
+  ],
+  "tools": [
+    {
+      "name": "Chainsaw",
+      "total": 329,
+      "purchase": 329,
+      "upkeep": 0,
+      "per_hour": null
+    }
+  ]
+}

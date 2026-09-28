@@ -12207,3 +12207,30 @@ stay with the owner or a tax preparer.
 **Verified:** `pytest -q`, 3776 passed (same one pre-existing timezone
 failure), real `data/` untouched. 16 new tests; routing corpus 193;
 live checklist 215, dry run routes all correctly.
+
+## Finance #4: money on your phone (2026-09-28)
+
+The last of the owner's finance sequence (debts → builds and tools →
+business use → phone).
+
+- `core/finance_summary.py` builds one read-only, JSON-ready snapshot
+  from the functions the desktop already uses: this month's in/out/net,
+  bills and paydays in the next 14 days, budget targets, debts in hybrid
+  payoff order with reasons, net worth by Home's rule, builds and tools.
+  **Honesty detail:** bank-synced debts are already inside their bank's
+  total, hand-entered ones aren't, so the latter are reported separately
+  (`manual_debts_not_in_net_worth`) and labeled on the phone.
+- `GET /api/finance/summary` behind the phone login, read under the
+  turn lock.
+- Web app: Talk/Money tabs; `server/static/money.js` (pure) formats the
+  sections, tested under Node against the real Python output. Nothing is
+  cached on the phone.
+- Android: Show money, `MoneyFormat.kt` (a port of money.js), with a
+  JVM test reading a fixture that `tests/test_finance_summary.py`
+  regenerates from the real server code and checks for drift.
+
+**Verified:** `pytest -q`, 3783 passed (same one pre-existing timezone
+failure), real `data/` untouched. 7 new Python tests (incl. two running
+money.js under Node) and 5 Kotlin tests; the Android sources compile
+against the Android 14 framework jar, and the APK build runs in GitHub
+Actions.

@@ -39,6 +39,9 @@ It installs over the old one and keeps your sign-in.
   microphone" to talk through the headset instead of the phone's mic
   (better in a pocket or a car; the sound is phone-call quality).
 - You can also type to MIA from the app.
+- **Show money** opens a read-only money summary: this month, bills and
+  paydays coming up, budget targets, debts in payoff order, net worth,
+  builds and tools. Same numbers as the desktop.
 - If MIA at home restarted, the app signs in again by itself. Your
   password is kept encrypted in Android's secure key storage.
 

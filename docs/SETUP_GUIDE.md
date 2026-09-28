@@ -376,6 +376,8 @@ Updates: install the newest APK from the same page; it keeps your
 sign-in.
 
 - [ ] Hands-free works with the phone locked
+- [ ] **Show money** in the app (or the **Money** tab in the web app)
+      matches Budget on the computer
 
 ---
 

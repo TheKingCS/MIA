@@ -15,6 +15,7 @@ import java.net.URL
  *   POST /api/voice/turn   raw 16 kHz mono WAV body -> a TurnResult
  *   POST /api/voice/text   {text} -> a TurnResult
  *   POST /api/voice/reset  start a fresh conversation
+ *   GET  /api/finance/summary  read-only money summary (Money view)
  *
  * Plain HttpURLConnection and the platform's org.json: no third-party
  * libraries to go stale. Blocking calls; callers run them off the main
@@ -47,6 +48,9 @@ class MiaClient(baseUrl: String) {
 
     fun textTurn(token: String, text: String): TurnResult =
         parseTurn(request("POST", "/api/voice/text", token, JSONObject().put("text", text).toString().toByteArray(), "application/json"))
+
+    /** Finance #4: the read-only money summary (core/finance_summary.py). */
+    fun financeSummary(token: String): JSONObject = request("GET", "/api/finance/summary", token, null, null)
 
     fun reset(token: String) {
         request("POST", "/api/voice/reset", token, ByteArray(0), "application/json")

@@ -114,9 +114,10 @@ every step below in order, from a blank machine, with Windows notes.
    (Budget → Builds & Tools). Follow-up idea: an "Equipment business
    use" section in the Business Report, and the standard mileage rate
    option for vehicles.
-10. **Finance, #4: money on your phone.** A read view of Budget, Debts
-   and Net Worth in the phone app (it already has login and a secure
-   connection).
+10. ~~Finance, #4: money on your phone~~ **built** (2026-09-28):
+   `/api/finance/summary`, a Money tab in the web app, Show money in the
+   Android app. Read-only by design. Your finance sequence (debts →
+   builds and tools → business use → phone) is complete.
 
 ## 3. Ideas parked for later (need their own planning pass)
 

@@ -44,6 +44,8 @@ class MainActivity : Activity() {
     private lateinit var pauseButton: Button
     private lateinit var logView: TextView
     private lateinit var typeField: EditText
+    private lateinit var moneyButton: Button
+    private lateinit var moneySection: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,6 +123,15 @@ class MainActivity : Activity() {
         talkSection.addView(detailLabel)
         talkSection.addView(buttons)
 
+        // Finance #4: read-only money summary, same numbers as the desktop.
+        moneyButton = button("Show money") { toggleMoney() }
+        talkSection.addView(moneyButton)
+        moneySection = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+        }
+        talkSection.addView(moneySection)
+
         typeField = field("Or type to MIA…", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES).apply {
             imeOptions = EditorInfo.IME_ACTION_SEND
             setOnEditorActionListener { _, actionId, _ ->
@@ -186,6 +197,81 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+    // ------------------------------------------------------------------
+    // Money (Finance #4)
+    // ------------------------------------------------------------------
+
+    private fun toggleMoney() {
+        if (moneySection.visibility == View.VISIBLE) {
+            moneySection.visibility = View.GONE
+            moneyButton.text = "Show money"
+            return
+        }
+        moneySection.visibility = View.VISIBLE
+        moneyButton.text = "Hide money"
+        loadMoney()
+    }
+
+    private fun loadMoney() {
+        moneySection.removeAllViews()
+        moneySection.addView(label("Loading…", 14f))
+        Thread {
+            val result = try {
+                val client = MiaClient(store.serverUrl)
+                val summary = try {
+                    client.financeSummary(store.token ?: signInAgain(client))
+                } catch (e: MiaClient.HttpError) {
+                    if (e.code != 401) throw e
+                    client.financeSummary(signInAgain(client))
+                }
+                Result.success(moneySections(summary))
+            } catch (e: Exception) {
+                Result.failure<List<MoneySection>>(e)
+            }
+            runOnUiThread {
+                result.onSuccess(::renderMoney).onFailure {
+                    moneySection.removeAllViews()
+                    moneySection.addView(label("Couldn't load money: ${it.message ?: "network error"}", 14f))
+                }
+            }
+        }.start()
+    }
+
+    private fun signInAgain(client: MiaClient): String {
+        val password = store.password() ?: throw IOException("Sign in again.")
+        return client.login(store.name, password).token.also { store.token = it }
+    }
+
+    private fun renderMoney(sections: List<MoneySection>) {
+        moneySection.removeAllViews()
+        moneySection.addView(button("Refresh") { loadMoney() })
+        for (section in sections) {
+            moneySection.addView(label(section.title, 17f, bold = true).apply { setPadding(0, dp(14), 0, dp(4)) })
+            for (row in section.rows) {
+                val line = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                val left = label(if (row.sub.isEmpty()) row.label else "${row.label}\n${row.sub}", 15f)
+                val right = label(row.value, 15f, bold = true).apply {
+                    gravity = Gravity.END
+                    toneColor(row.tone)?.let { setTextColor(it) }
+                }
+                line.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                line.addView(right, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+                moneySection.addView(line)
+            }
+            if (section.note.isNotEmpty()) {
+                moneySection.addView(label(section.note, 13f).apply { setTextColor(Color.GRAY) })
+            }
+        }
+        moneySection.addView(label("Read-only. Tell MIA to change anything.", 13f).apply { setTextColor(Color.GRAY) })
+    }
+
+    private fun toneColor(tone: String): Int? = when (tone) {
+        "good" -> Color.rgb(13, 148, 136)
+        "warn" -> Color.rgb(202, 138, 4)
+        "bad" -> Color.rgb(220, 38, 38)
+        else -> null
     }
 
     private fun signOut() {

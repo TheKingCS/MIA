@@ -304,6 +304,66 @@ async function sendTestPush() {
 
 // ---------------------------------------------------------------- wiring
 
+// ---------------------------------------------------------------- Money (Finance #4)
+
+function showTab(name) {
+    $("tab-talk").classList.toggle("active", name === "talk");
+    $("tab-money").classList.toggle("active", name === "money");
+    $("talk-view").hidden = name !== "talk";
+    $("money-view").hidden = name !== "money";
+    if (name === "money") loadMoney();
+}
+
+function renderMoney(summary) {
+    const container = $("money-cards");
+    container.replaceChildren();
+    for (const section of MIAMoney.moneySections(summary)) {
+        const card = document.createElement("div");
+        card.className = "money-card";
+        const title = document.createElement("h2");
+        title.textContent = section.title;
+        card.appendChild(title);
+        for (const r of section.rows) {
+            const line = document.createElement("div");
+            line.className = `money-row ${r.tone}`;
+            const label = document.createElement("span");
+            label.textContent = r.label;
+            if (r.sub) {
+                const sub = document.createElement("span");
+                sub.className = "sub";
+                sub.textContent = r.sub;
+                label.appendChild(sub);
+            }
+            const value = document.createElement("span");
+            value.className = "value";
+            value.textContent = r.value;
+            line.append(label, value);
+            card.appendChild(line);
+        }
+        if (section.note) {
+            const note = document.createElement("div");
+            note.className = "money-note";
+            note.textContent = section.note;
+            card.appendChild(note);
+        }
+        container.appendChild(card);
+    }
+    $("money-updated").textContent = `Updated ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. Read-only: tell MIA to change anything.`;
+}
+
+async function loadMoney() {
+    setStatus("Loading money…");
+    try {
+        renderMoney(await api("/api/finance/summary"));
+        setStatus("");
+    } catch (err) {
+        if (err.message !== "unauthorized") setStatus(`Couldn't load money: ${err.message}`, true);
+    }
+}
+
+$("tab-talk").addEventListener("click", () => showTab("talk"));
+$("tab-money").addEventListener("click", () => showTab("money"));
+$("money-refresh").addEventListener("click", loadMoney);
 $("login-button").addEventListener("click", login);
 $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
 $("orb").addEventListener("click", onOrbTap);
