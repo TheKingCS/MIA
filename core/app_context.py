@@ -87,6 +87,7 @@ if TYPE_CHECKING:
     from core.user_memory_manager import UserMemoryManager
     from core.private_journal import PrivateJournalManager
     from core.communication_gate import CommunicationGate
+    from core.business_use import BusinessUseManager
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -172,6 +173,9 @@ class AppContext:
     # "Know when to speak" (core/communication_gate.py, Cognitive
     # Extension slice C): every unprompted message goes through here.
     communication: Optional["CommunicationGate"] = field(default=None, repr=False)
+    # Finance #3 (core/business_use.py): business-use log for personal
+    # equipment (the mower's lawn-care jobs) and the write-off worksheet.
+    business_use: Optional["BusinessUseManager"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

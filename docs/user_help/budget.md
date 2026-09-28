@@ -55,6 +55,29 @@ See what your homestead builds and your tools really cost.
   bought a chainsaw for $329", "I changed the mower's oil, $35", "How
   much have I spent on the greenhouse?", "What has the mower cost me?"
 
+## Business use of equipment (write-off records)
+
+If you use personal equipment partly for business (the mower for
+contract lawn care or your rentals), MIA keeps the record that backs up
+the business share.
+
+- **Log the business jobs:** Builds & Tools → **Log Business Use**, or
+  tell MIA "I mowed the Maple duplex for 2 hours". If the job was for
+  one of your rentals, it's credited to that rental's business.
+- **Keep the hour meter current:** log engine-hour readings in
+  Maintenance, at least at the start and end of the year. Total use
+  comes from the meter; personal use is everything not logged as
+  business.
+- **See the worksheet:** Builds & Tools → **Business Use Worksheet**
+  (export as PDF). It shows the business-use percentage, the business
+  share of the year's running costs (split by business), the business
+  share of the purchase price, the job log, and notes about anything
+  weak in the record.
+
+It's records and arithmetic from your own data, not tax advice. How to
+depreciate the purchase and where each amount goes on your return are
+for you or your tax preparer.
+
 ## Summary, Trends, and entities
 
 The Summary tab totals everything for This Month/This Year/All Time,

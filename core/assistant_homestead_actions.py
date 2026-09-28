@@ -198,7 +198,118 @@ def _action_set_build_budget(context: AppContext, arguments: dict) -> str:
     return reply
 
 
+# ---------------------------------------------------------------------------
+# Finance #3: business use of personal equipment (core/business_use.py)
+# ---------------------------------------------------------------------------
+
+
+def _business_tool(context: AppContext, name: str):
+    """(asset, question). With no name, the one tool that already has
+    business use logged, if there's exactly one."""
+    if name:
+        tool, question = _find_tool(context, name)
+        return tool, (question or (f"I don't have a tool called '{name}'." if tool is None else None))
+    ids = context.business_use.assets_with_business_use()
+    if len(ids) == 1:
+        return context.maintenance.get_asset(ids[0]), None
+    return None, "Which tool or piece of equipment was it?"
+
+
+def _action_log_business_use(context: AppContext, arguments: dict) -> str:
+    if getattr(context, "business_use", None) is None or context.maintenance is None:
+        return "Business-use tracking isn't available right now."
+    hours = _amount(arguments.get("hours"))
+    if hours is None:
+        return "How many hours was it?"
+    tool, question = _business_tool(context, str(arguments.get("tool") or "").strip())
+    if tool is None:
+        return question
+    purpose = "personal" if str(arguments.get("purpose") or "").lower().startswith("personal") else "business"
+    for_whom = str(arguments.get("for_whom") or "").strip()
+    property_id = entity_id = ""
+    if for_whom and getattr(context, "real_estate", None) is not None:
+        prop, _ = _find(context.real_estate.all_properties(), for_whom, lambda p: p.name, "property")
+        if prop is not None:
+            property_id, entity_id = prop.property_id, prop.entity_id
+    business_name = str(arguments.get("business") or "").strip()
+    if business_name and context.budget is not None:
+        entity, _ = _find(context.budget.all_business_entities(), business_name, lambda e: e.name, "business")
+        if entity is not None:
+            entity_id = entity.entity_id
+    entry = context.business_use.log_use(
+        tool.asset_id, hours, purpose=purpose, use_date=arguments.get("date") or None,
+        entity_id=entity_id, property_id=property_id, client=for_whom, note=str(arguments.get("note") or ""),
+    )
+    year = int(entry.date[:4])
+    logged = sum(e.hours for e in context.business_use.entries_for(tool.asset_id, year) if e.purpose == purpose)
+    target = f" for {for_whom}" if for_whom else ""
+    return (
+        f"Logged {hours:g} {purpose} hour{'s' if hours != 1 else ''} on the {tool.name}{target}. "
+        f"{year} so far: {logged:g} {purpose} hours."
+    )
+
+
+def _action_get_business_use(context: AppContext, arguments: dict) -> str:
+    if getattr(context, "business_use", None) is None or context.maintenance is None:
+        return "Business-use tracking isn't available right now."
+    from datetime import date as _date
+
+    from core.business_use import build_worksheet, describe_worksheet
+
+    try:
+        year = int(arguments.get("year") or _date.today().year)
+    except (TypeError, ValueError):
+        year = _date.today().year
+    name = str(arguments.get("tool") or "").strip()
+    if name:
+        tool, question = _business_tool(context, name)
+        if tool is None:
+            return question
+        tools = [tool]
+    else:
+        tools = [context.maintenance.get_asset(i) for i in context.business_use.assets_with_business_use()]
+        tools = [t for t in tools if t is not None]
+        if not tools:
+            return "You haven't logged any business use yet. Try: 'I mowed the Maple duplex for 2 hours.'"
+    summaries = [describe_worksheet(build_worksheet(context, tool, year)) for tool in tools[:3]]
+    return " ".join(summaries) + " The full worksheet is in Budget → Builds & Tools. It's records, not tax advice."
+
+
 def register_homestead_actions(registry: AssistantActionRegistry) -> None:
+    registry.register(AssistantAction(
+        name="log_business_use", domain="business_use",
+        description=(
+            "Log hours a tool or piece of equipment was used for BUSINESS (a lawn-care client, one of the user's "
+            "rentals, contract work), for write-off records. Only when the user says it was for business, a client "
+            "or a rental; ordinary home use is not logged."
+        ),
+        parameters={"type": "object", "properties": {
+            "tool": {**_S, "description": "The equipment, e.g. 'mower'."},
+            "hours": {**_N, "description": "Hours of use."},
+            "for_whom": {**_S, "description": "Client or property, e.g. 'Maple duplex', 'Johnson lawn'."},
+            "business": {**_S, "description": "Which of the user's businesses, if said."},
+            "purpose": {**_S, "description": "'business' (default) or 'personal'."},
+            "date": {**_S, "description": "YYYY-MM-DD if not today."},
+            "note": {**_S, "description": "Anything else they said."},
+        }, "required": ["hours"]},
+        handler=_action_log_business_use,
+        trigger_phrases=("for business", "business use", "business hours", "lawn job", "lawn care", "mowing job",
+                         "for a client", "for the client", "mowed the", "contract job"),
+    ))
+    registry.register(AssistantAction(
+        name="get_business_use", domain="business_use",
+        description=(
+            "The business-use percentage of a tool this year, and the business share of its running costs and "
+            "purchase price, from the logged business use and its hour meter. For write-off questions."
+        ),
+        parameters={"type": "object", "properties": {
+            "tool": {**_S, "description": "The equipment, or omit for everything with business use."},
+            "year": {"type": "integer", "description": "Tax year, default this year."},
+        }, "required": []},
+        handler=_action_get_business_use,
+        trigger_phrases=("write off", "write-off", "writeoff", "deduct", "deduction", "business use", "business percentage",
+                         "business share"),
+    ))
     registry.register(AssistantAction(
         name="log_build_expense", domain="homestead_costs",
         description=(

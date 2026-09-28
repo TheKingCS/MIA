@@ -619,6 +619,9 @@ GOLDEN_CASES = [
     ("build cost: lumber", "I spent $240 on lumber for the greenhouse", "log_build_expense", {"amount": 240, "build": "greenhouse"}),
     ("tool purchase", "I just bought a chainsaw for $329", "record_tool_purchase", {"tool": "chainsaw", "price": 329}),
     ("tool cost question", "What has the chainsaw cost me so far?", "get_tool_costs"),
+    # Finance #3: business use of equipment.
+    ("business use: log a job", "I mowed the Maple duplex for 2 hours with the mower", "log_business_use", {"hours": 2}),
+    ("business use: write-off question", "How much of the mower can I write off this year?", "get_business_use"),
     # Slice C: when MIA speaks up.
     ("speaking up: what was held back", "What didn't you tell me today?", "get_held_back_messages"),
     ("speaking up: set the limit", "Only message me 3 times a day", "set_message_limit", {"count": 3}),

@@ -98,6 +98,10 @@ mower", "the tomatoes". You don't need their exact names in MIA.
 - "I changed the oil in the mower, $35" (counts toward the mower's cost)
 - "How much have I spent on the greenhouse?"
 - "What has the mower cost me?" (with engine hours: its cost per hour)
+- "I mowed the Maple duplex for 2 hours" (logs business use of the
+  mower for write-off records)
+- "How much of the mower can I write off this year?" (the business-use
+  percentage and shares; records, not tax advice)
 
 ## Kitchen: recipes, groceries, and pantry
 

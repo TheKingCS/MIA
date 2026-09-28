@@ -12176,3 +12176,34 @@ assets, money out is Budget expenses.
 failure), real `data/` untouched. 14 new tests; routing corpus 189;
 live checklist 213 (3 new), dry run routes all correctly with about 16
 tools offered on average.
+
+## Finance #3: business use of personal equipment (2026-09-28)
+
+The owner's ask: "help me with write offs for my real estate businesses
+with things like the mower if I do a certain amount of contracted lawn
+care with it."
+
+**Records and arithmetic, not tax advice** (stated on every worksheet):
+MIA keeps the record that backs up a business-use percentage and does
+the math from its own data; depreciation method and return placement
+stay with the owner or a tax preparer.
+
+- `core/business_use.py`: a business-use log (`data/business_use.json`,
+  `AppContext.business_use`) of dated jobs with hours and who they were
+  for (client text, a rental property, a business entity). Total use
+  for a year comes from the hour meter (last reading in the year minus
+  the last reading before it); without a meter, from logged business +
+  personal use, flagged as the weaker record.
+- The worksheet: business-use %, the business share of that year's
+  running costs (Finance #2's tagged expenses, split by business in
+  proportion to hours), the business share of the cost basis, the job
+  log, and notes (no meter, logged more than the meter, over/under 50%,
+  missing price). Printable HTML and PDF export.
+- A job for a rental is credited to that rental's business entity.
+- Assistant: `log_business_use`, `get_business_use` (168 actions).
+  Budget → Builds & Tools: Log Business Use, Business Use Worksheet.
+- `core/homestead_costs.hour_readings()` now exposes dated readings.
+
+**Verified:** `pytest -q`, 3776 passed (same one pre-existing timezone
+failure), real `data/` untouched. 16 new tests; routing corpus 193;
+live checklist 215, dry run routes all correctly.

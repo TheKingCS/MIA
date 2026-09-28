@@ -142,6 +142,11 @@ CORPUS: list[tuple[str, str]] = [
     ("What has the mower cost me?", "get_tool_costs"),
     ("What's the mower's cost per hour?", "get_tool_costs"),
     ("Set a budget for the greenhouse of $5,000", "set_build_budget"),
+    # ---- Business use of equipment (Finance #3) --------------------------------------
+    ("I mowed the Maple duplex for 2 hours", "log_business_use"),
+    ("Log 3 hours on the mower for the Johnson lawn job", "log_business_use"),
+    ("How much of the mower can I write off this year?", "get_business_use"),
+    ("What's the mower's business use percentage?", "get_business_use"),
     # ---- When MIA speaks up (core/assistant_comm_actions.py) ------------------------
     ("What didn't you tell me today?", "get_held_back_messages"),
     ("Is there anything you held back?", "get_held_back_messages"),

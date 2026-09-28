@@ -137,6 +137,7 @@ from core.trip_manager import ACTIVITY_TYPES, TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.private_journal import PrivateJournalManager
 from core.communication_gate import AMBIENT, TIMELY, Candidate, CommunicationGate
+from core.business_use import BusinessUseManager
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -294,6 +295,7 @@ class MIAApplication:
         self.context.user_memories = UserMemoryManager(self.context)
         self.context.private_journal = PrivateJournalManager(self.context)
         self.context.communication = CommunicationGate(self.context)
+        self.context.business_use = BusinessUseManager(self.context)
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)

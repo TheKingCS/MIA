@@ -94,7 +94,7 @@ every step below in order, from a blank machine, with Windows notes.
    hours. Follow-ups: the opt-in weekly journal reflection (delivered
    through the gate), and "learning from being ignored" (needs the
    notification bell to record dismissals).
-5. **Fix what the live conversation check turns up** (now 213 cases,
+5. **Fix what the live conversation check turns up** (now 215 cases,
    including Workout, People & Pets, Household, Classroom, and 7
    personal-mode cases). Then
    "propose, you confirm" record updates from things mentioned in
@@ -109,9 +109,11 @@ every step below in order, from a blank machine, with Windows notes.
    (2026-09-28): expenses tagged to builds and tools, build budgets,
    tool cost of ownership and cost per hour, Budget → Builds & Tools,
    five Assistant tools. Try it: Part 7 of `docs/SETUP_GUIDE.md`.
-9. **Finance, #3: mower business-use write-off.** A business-use-
-   percentage engine for personal equipment used partly for contract
-   lawn care.
+9. ~~Finance, #3: mower business-use write-off~~ **built**
+   (2026-09-28): business-use log, hour-meter totals, worksheet with PDF
+   (Budget → Builds & Tools). Follow-up idea: an "Equipment business
+   use" section in the Business Report, and the standard mileage rate
+   option for vehicles.
 10. **Finance, #4: money on your phone.** A read view of Budget, Debts
    and Net Worth in the phone app (it already has login and a secure
    connection).

@@ -93,12 +93,14 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QTabWidget,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
 
 from core.business_report import build_business_report_html, build_consolidated_business_report_html
 from core.homestead_costs import BuildCost, ToolCost, all_build_costs, all_tool_costs, record_tool_purchase
+from core.business_use import build_worksheet, build_worksheet_html
 from core.budget_manager import (
     Bill,
     DEBT_PAYOFF_STRATEGIES,
@@ -384,6 +386,13 @@ class BudgetModule(ModuleBase):
         purchase_button = QPushButton("Record Tool Purchase…")
         purchase_button.clicked.connect(self._on_record_tool_purchase)
         tool_buttons.addWidget(purchase_button)
+        # Finance #3 (core/business_use.py): business use of equipment.
+        use_button = QPushButton("Log Business Use…")
+        use_button.clicked.connect(self._on_log_business_use)
+        tool_buttons.addWidget(use_button)
+        worksheet_button = QPushButton("Business Use Worksheet…")
+        worksheet_button.clicked.connect(self._on_business_use_worksheet)
+        tool_buttons.addWidget(worksheet_button)
         tool_buttons.addStretch(1)
         layout.addLayout(tool_buttons)
 
@@ -422,6 +431,68 @@ class BudgetModule(ModuleBase):
         if ok:
             self.context.projects.update_project(project.project_id, budget=amount)
             self._refresh_homestead()
+
+    def _pick_tool(self, title: str):
+        assets = self.context.maintenance.all_assets() if self.context.maintenance is not None else []
+        if not assets:
+            QMessageBox.information(None, title, "Add the equipment in Maintenance first.")
+            return None
+        names = [a.name for a in assets]
+        name, ok = QInputDialog.getItem(None, title, "Tool or equipment:", names, 0, False)
+        return assets[names.index(name)] if ok else None
+
+    def _on_log_business_use(self) -> None:
+        if self.context.business_use is None:
+            return
+        asset = self._pick_tool("Log Business Use")
+        if asset is None:
+            return
+        hours, ok = QInputDialog.getDouble(None, "Log Business Use", f"Business hours on the {asset.name}:", 1, 0.1, 1000, 1)
+        if not ok:
+            return
+        client, ok = QInputDialog.getText(None, "Log Business Use", "Who or what was it for? (e.g. 'Johnson lawn', 'Maple duplex')")
+        if not ok:
+            return
+        entity_id = ""
+        entities = self.context.budget.all_business_entities()
+        if entities:
+            names = ["(No specific business)"] + [e.name for e in entities]
+            choice, ok = QInputDialog.getItem(None, "Log Business Use", "Which business?", names, 0, False)
+            if ok and choice != names[0]:
+                entity_id = entities[names.index(choice) - 1].entity_id
+        self.context.business_use.log_use(asset.asset_id, hours, client=client.strip(), entity_id=entity_id)
+        QMessageBox.information(None, "Log Business Use", f"Logged {hours:g} business hours on the {asset.name}.")
+
+    def _on_business_use_worksheet(self) -> None:
+        if self.context.business_use is None:
+            return
+        asset = self._pick_tool("Business Use Worksheet")
+        if asset is None:
+            return
+        this_year = date.today().year
+        year, ok = QInputDialog.getInt(None, "Business Use Worksheet", "Tax year:", this_year, 2000, this_year + 1)
+        if not ok:
+            return
+        html = build_worksheet_html(build_worksheet(self.context, asset, year), datetime.now().strftime("%Y-%m-%d %H:%M"))
+        dialog = QDialog()
+        dialog.setWindowTitle(f"Business Use: {asset.name}, {year}")
+        dialog.resize(720, 640)
+        dialog_layout = QVBoxLayout(dialog)
+        viewer = QTextBrowser()
+        viewer.setHtml(html)
+        dialog_layout.addWidget(viewer, stretch=1)
+        buttons = QHBoxLayout()
+        export_button = QPushButton("Export PDF…")
+        export_button.clicked.connect(
+            lambda: self._export_report_html_to_pdf(html, "Export Business Use Worksheet", f"Business_Use_{asset.name.replace(' ', '_')}_{year}")
+        )
+        buttons.addWidget(export_button)
+        buttons.addStretch(1)
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(dialog.accept)
+        buttons.addWidget(close_button)
+        dialog_layout.addLayout(buttons)
+        dialog.exec()
 
     def _on_record_tool_purchase(self) -> None:
         if self.context.maintenance is None:

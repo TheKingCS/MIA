@@ -292,6 +292,14 @@ cost me?"*
 
 - [ ] A build budget set and a tool's cost recorded
 
+**Business use of the mower:** log the mower's engine hours in
+Maintenance (now, and again at year end), then log business jobs as
+they happen: *"I mowed the Maple duplex for 2 hours."* Budget → Builds &
+Tools → **Business Use Worksheet** shows the business share and exports
+a PDF for your records or tax preparer.
+
+- [ ] Mower hours logged and a business job recorded
+
 ---
 
 ## Part 8: Reach MIA from your phone (Tailscale)

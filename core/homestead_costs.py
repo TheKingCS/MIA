@@ -142,17 +142,24 @@ def describe_build(cost: BuildCost) -> str:
 # ---------------------------------------------------------------------------
 
 
-def current_hours(context, asset) -> Optional[float]:
-    """The asset's latest engine-hour reading, from its own hour meter or
-    any runtime (hours-based) maintenance task. None without readings."""
+def hour_readings(context, asset) -> list[tuple[str, float]]:
+    """Every engine-hour reading for the asset as (timestamp, value),
+    oldest first: its own hour meter plus any runtime (hours-based)
+    maintenance task's readings."""
     maintenance = context.maintenance
-    values: list[float] = []
+    readings = []
     for meter in maintenance.asset_meter_names(asset.asset_id):
         if "hour" in meter.lower():
-            values += [r.value for r in maintenance.asset_readings(asset.asset_id, meter)]
+            readings += maintenance.asset_readings(asset.asset_id, meter)
     for task in maintenance.tasks_for_asset(asset.asset_id):
         if task.trigger_type == "runtime":
-            values += [r.value for r in maintenance.readings_for_task(task.task_id)]
+            readings += maintenance.readings_for_task(task.task_id)
+    return sorted(((r.timestamp or "", float(r.value)) for r in readings), key=lambda pair: pair[0])
+
+
+def current_hours(context, asset) -> Optional[float]:
+    """The asset's latest (highest) engine-hour reading. None without readings."""
+    values = [value for _, value in hour_readings(context, asset)]
     return max(values) if values else None
 
 
