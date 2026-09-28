@@ -131,7 +131,7 @@ from core.assistant_chat import (
     split_safe_tool_calls,
     suggested_prompts_for_module,
 )
-from core.talk_it_out import after_fixed_reply, apply_followup, plan_followup, pre_turn
+from core.talk_it_out import after_fixed_reply, apply_followup, plan_followup, pre_turn, with_offer
 from core.safety_floor import detect_danger
 from core.chat_worker import ChatWorker
 from core.conversation_manager import DEFAULT_TITLE
@@ -571,9 +571,10 @@ class CharacterPanel(QFrame):
             return
 
         user_message = self._conversation.messages[-1].content if self._conversation.messages else ""
-        self.context.conversations.add_message(self._conversation.conversation_id, "assistant", reply.content)
+        content = with_offer(self._conversation, reply.content)  # "want me to note that?" (core/passing_mentions.py)
+        self.context.conversations.add_message(self._conversation.conversation_id, "assistant", content)
         self._status_label.setText("")
-        self._speak(reply.content)
+        self._speak(content)
         if not self._conversation.current_privacy():
             self._maybe_generate_title(user_message, reply.content)
         self._extract_memories(user_message)

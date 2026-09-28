@@ -12354,3 +12354,24 @@ to fill in the item's page.
 failure). 5 new tests (reading and comparing details, a warranty filling
 in a mower's page, a purchase receipt counted once, choosing which
 details apply, the Inbox screen's list).
+
+## "Propose, you confirm" from things mentioned in passing (2026-09-28)
+
+- `core/passing_mentions.py`: in code, not the model, it spots work done
+  on a tracked item (its name plus a done-verb; a matching maintenance
+  task is marked done, anything else becomes a note, a dollar amount
+  becomes the cost), a bill paid, a payment on a debt, and "we're out
+  of ..." (not already on the grocery list). Plans, questions and
+  negations never count.
+- `core/talk_it_out.py`: `pre_turn()` detects the offer; `with_offer()`
+  adds MIA's question after her plain reply (every chat surface: Home,
+  character panel, Assistant, phone/voice); a yes on the next turn runs
+  the same tools the owner could have asked for, as a fixed reply (no
+  model call). Anything else drops it; an offer never said (the model
+  ran a tool instead) or older than 30 minutes can't be accepted, so
+  nothing is ever recorded twice. No offers while listening, journaling,
+  off the record, tutoring or reading the journal back.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 18 new tests, including whole turns on the shared phone/voice
+path with a stand-in model.

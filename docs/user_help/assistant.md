@@ -278,6 +278,28 @@ There are no quiet hours; use your phone's Do Not Disturb for nights.
 Ask **"what didn't you tell me today?"** and she'll tell you what she
 held back and why.
 
+## When you mention something in passing
+
+If you mention something MIA keeps track of while you're just talking,
+she answers normally and then offers to record it. She only does it if
+you say yes ("yes", "sure", "go ahead"); anything else and she lets it
+go.
+
+- "Ugh, the mower got a new battery today, $120." → "Want me to note
+  that on the Riding Mower's page and log the $120?"
+- "Sharpened the mower blades this morning." → "Want me to mark
+  'Sharpen blades' done on the Riding Mower?"
+- "Finally paid the electric bill." → "Want me to mark the Electric bill
+  paid?"
+- "Paid $200 on the Chase card." → "Want me to record the $200 payment on
+  Chase Freedom?"
+- "We're out of milk and bread." → "Want me to add milk and bread to the
+  grocery list?"
+
+She doesn't offer for plans or questions ("I need to change the oil"),
+and never while she's just listening, journaling, off the record, or
+tutoring.
+
 ## When MIA isn't sure
 
 If what you said could mean more than one thing ("the oil" when both

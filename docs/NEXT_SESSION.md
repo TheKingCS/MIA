@@ -104,10 +104,9 @@ every step below in order, from a blank machine, with Windows notes.
    notification bell to record dismissals).
 5. **Fix what the live conversation check turns up** (now 215 cases,
    including Workout, People & Pets, Household, Classroom, and 7
-   personal-mode cases). Then
-   "propose, you confirm" record updates from things mentioned in
-   passing (e.g. "the mower got a new battery" → offer to note it on
-   the mower).
+   personal-mode cases). ("Propose, you confirm" updates from things
+   mentioned in passing are **built**, 2026-09-28: try "the mower got a
+   new battery today, $120" and answer "yes".)
 6. **Cognitive Extension, slice D: Contextual Presence** (after the
    Android app): Places, geofenced transitions sent from the phone,
    Welcome Home, "you're at Lowe's, want the materials list?". Then

@@ -44,8 +44,9 @@ from core.app_context import AppContext
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 from core.assistant_chat import build_memory_extraction_prompt, parse_extracted_memories
 from core.conversation_manager import DEFAULT_TITLE, PRIVACY_JOURNAL, Conversation
-from core.conversation_modes import COMPANION, LISTEN, detect_mode_change
+from core.conversation_modes import COMPANION, DIRECT, LISTEN, MOMENTUM, PLAN, detect_mode_change
 from core.logger import get_logger
+from core.passing_mentions import carry_out, detect_offer, is_yes
 from core.private_journal import JournalExchange, JournalLockedError, PrivateJournalEntry
 from core.safety_floor import detect_danger, safety_reply, trusted_contact_from
 from core.textbook_study import is_study_mode, update_study_target
@@ -78,7 +79,9 @@ def _looks_like_journal_read(prompt: str) -> bool:
 
 @dataclass
 class PreTurn:
-    fixed_reply: Optional[str] = None  # the safety floor fired: say this, skip the model
+    # Say this and skip the model: the safety floor fired, or the owner
+    # said yes to MIA's offer to record something (core/passing_mentions.py).
+    fixed_reply: Optional[str] = None
     notice: Optional[str] = None  # say this first, then continue to the model as usual
 
 
@@ -98,6 +101,13 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     message itself is stored with the privacy its own words asked for."""
     result = PreTurn()
     conversation.private_turn = _looks_like_journal_read(prompt)
+
+    # "Propose, you confirm": a yes to the offer MIA just made records it;
+    # anything else lets the offer go.
+    offer, conversation.pending_offer = conversation.pending_offer, None
+    if offer is not None and getattr(offer, "shown", False) and not offer.expired() and is_yes(prompt):
+        result.fixed_reply = carry_out(context, offer)
+        return result
 
     change = detect_mode_change(prompt)
     if not change.is_empty:
@@ -134,7 +144,32 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
         conversation.mode = LISTEN
         _persist(context, conversation)
         result.fixed_reply = safety_reply(trusted_contact_from(context))
+        return result
+
+    if _offers_allowed(conversation) and getattr(context, "assistant_actions", None) is not None:
+        conversation.pending_offer = detect_offer(prompt, context)
     return result
+
+
+_OFFER_MODES = (COMPANION, DIRECT, MOMENTUM, PLAN)
+
+
+def _offers_allowed(conversation: Conversation) -> bool:
+    """Not while MIA is just listening, journaling, off the record,
+    tutoring or reading the private journal back."""
+    return (conversation.mode in _OFFER_MODES and not conversation.journal and not conversation.off_record
+            and not conversation.private_turn)
+
+
+def with_offer(conversation: Conversation, reply: str) -> str:
+    """Call on MIA's plain reply (not when she ran a tool): adds her offer
+    to record what the owner just mentioned, if there is one. The offer
+    counts for the next turn only if it was actually said."""
+    offer = conversation.pending_offer
+    if offer is None:
+        return reply
+    offer.shown = True
+    return f"{reply.rstrip()} {offer.question}" if reply.strip() else offer.question
 
 
 # ---------------------------------------------------------------------------

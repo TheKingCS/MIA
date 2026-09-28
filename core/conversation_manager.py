@@ -108,6 +108,9 @@ class Conversation:
     # the open journal session, so re-saving it doesn't need to read the
     # encrypted entry back (which would need the passphrase).
     journal_organization: Optional[dict] = field(default=None, repr=False, compare=False)
+    # Transient: MIA's offer to record something the owner mentioned in
+    # passing (core/passing_mentions.py), waiting for a yes on the next turn.
+    pending_offer: Optional[object] = field(default=None, repr=False, compare=False)
     # Transient: the open journal session's entry id and where it starts
     # in `messages`. Not persisted on purpose: after a restart the
     # earlier session's messages are gone from memory (they were never

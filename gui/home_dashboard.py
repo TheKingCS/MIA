@@ -128,7 +128,7 @@ from core.assistant_chat import (
     parse_extracted_memories,
     split_safe_tool_calls,
 )
-from core.talk_it_out import after_fixed_reply, apply_followup, plan_followup, pre_turn
+from core.talk_it_out import after_fixed_reply, apply_followup, plan_followup, pre_turn, with_offer
 from core.safety_floor import detect_danger
 from core.chat_worker import ChatWorker
 from core.context_assembler import assemble_life_state, format_life_state_glance_line
@@ -1779,8 +1779,9 @@ class HomeDashboard(QFrame):
             return
 
         user_message = conversation.messages[-1].content if conversation.messages else ""
-        self.context.conversations.add_message(conversation.conversation_id, "assistant", reply.content)
-        self._speak(reply.content)
+        content = with_offer(conversation, reply.content)  # "want me to note that?" (core/passing_mentions.py)
+        self.context.conversations.add_message(conversation.conversation_id, "assistant", content)
+        self._speak(content)
         if not conversation.current_privacy():
             self._maybe_generate_title(conversation, user_message, reply.content)
         self._extract_memories(conversation, user_message)

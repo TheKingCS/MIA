@@ -27,7 +27,7 @@ from core.app_context import AppContext
 from core.assistant_chat import build_chat_request, split_safe_tool_calls
 from core.conversation_manager import Conversation, ConversationMessage
 from core.logger import get_logger
-from core.talk_it_out import Followup, after_fixed_reply, apply_followup, plan_followup, pre_turn
+from core.talk_it_out import Followup, after_fixed_reply, apply_followup, plan_followup, pre_turn, with_offer
 
 log = get_logger(__name__)
 
@@ -85,8 +85,9 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
             replies.append(confirmation)
         return AssistantTurn(replies=replies)
 
-    add_message(conversation, "assistant", reply.content)
-    return AssistantTurn(replies=notices + [reply.content], followup=plan_followup(context, conversation, prompt))
+    content = with_offer(conversation, reply.content)
+    add_message(conversation, "assistant", content)
+    return AssistantTurn(replies=notices + [content], followup=plan_followup(context, conversation, prompt))
 
 
 def run_followup(context: AppContext, conversation: Conversation, followup: Optional[Followup]) -> None:
