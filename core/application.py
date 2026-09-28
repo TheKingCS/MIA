@@ -62,6 +62,7 @@ from core.assistant_domain_actions import register_domain_actions
 from core.assistant_life_actions import register_life_actions
 from core.talk_it_out import register_journal_actions
 from core.journal_reflection import journal_reflection_action, reflection_due, reflection_notice
+from core.warranty_watch import due_notices, warranty_message
 from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_homestead_actions import register_homestead_actions
@@ -610,6 +611,7 @@ class MIAApplication:
             ("rewards", self._check_rewards),
             ("walkthrough_suggestion", self._check_walkthrough_suggestion),
             ("journal_reflection", self._check_journal_reflection),
+            ("warranty", self._check_warranties),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -701,6 +703,26 @@ class MIAApplication:
                 )
                 config.set("system.last_checkin_date", today_iso)
                 config.save()
+
+    def _check_warranties(self, now: datetime, today_iso: str) -> None:
+        """A heads-up a month and a week before a warranty ends (core/warranty_watch.py)."""
+        maintenance = self.context.maintenance
+        if maintenance is None:
+            return
+        config = self.context.config
+        already = dict(config.get("system.warranty_notices", {}) or {})
+        notices = due_notices(maintenance.all_assets(), now.date(), already)
+        for asset, stage, days_left in notices:
+            self._offer(
+                topic="warranty", title="\U0001F6E1 Warranty ending",
+                message=warranty_message(asset.name, asset.warranty_until, days_left),
+                urgency=TIMELY, source="maintenance",
+            )
+            said = [s for s in str(already.get(asset.asset_id, "")).split(",") if s]
+            already[asset.asset_id] = ",".join(said + [f"{asset.warranty_until}|{stage}"])
+        if notices:
+            config.set("system.warranty_notices", already)
+            config.save()
 
     def _check_journal_reflection(self, now: datetime, today_iso: str) -> None:
         """The opt-in weekly journal reflection (core/journal_reflection.py):

@@ -12461,3 +12461,11 @@ The last piece of Cognitive Extension slice C.
 
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 5 new tests with the real NotificationManager.
+
+## Warranty heads-up (2026-09-28)
+
+`core/warranty_watch.py` + a daily check: a month and a week before an
+asset's `warranty_until`, a timely message through the communication
+gate ("The Riding Mower's warranty ends Oct 27 (in 29 days)..."). Each
+stage is said once per item and date (config `system.warranty_notices`);
+a new date starts over. 4 new tests.

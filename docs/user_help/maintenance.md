@@ -36,4 +36,6 @@ Each asset has an optional Warranty Until date (Edit, YYYY-MM-DD). MIA
 fills it in for you when you file a warranty or manual from the Inbox
 that states the warranty length ("3-year limited warranty", counted
 from the purchase date) or its end date. Ask "tell me about the mower"
-and she mentions it.
+and she mentions it. About a month before a warranty ends, and again a week
+before, she gives you a heads-up, so anything that's been acting up can
+be looked at while it's still covered.
