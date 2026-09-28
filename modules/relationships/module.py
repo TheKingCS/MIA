@@ -78,6 +78,11 @@ class RelationshipsModule(ModuleBase):
         self._person_list: Optional[QListWidget] = None
         self._pet_list: Optional[QListWidget] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_person_list()
+        self._refresh_pet_list()
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)

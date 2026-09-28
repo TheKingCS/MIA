@@ -81,6 +81,7 @@ class MainWindow(QMainWindow):
         # Cache of already-built module widgets, so switching back to a
         # module the user already opened doesn't rebuild it from scratch.
         self._module_widgets: dict[str, QWidget] = {}
+        self._stale_modules: set[str] = set()  # cached screens to refresh when next opened
 
         # Navigation history — a stack of previously-viewed widgets, so
         # "Back" means "go where I just was," distinct from "Main Menu"
@@ -142,6 +143,10 @@ class MainWindow(QMainWindow):
         """
         self.context.events.subscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.subscribe("modules.rescanned", self._on_modules_changed)
+        # 2026-09-28: records changed elsewhere (an Assistant tool, often
+        # from the phone): refresh the screen on show now, the others when
+        # next opened. Always delivered on the GUI thread (core/main_thread.py).
+        self.context.events.subscribe("records.changed", self._on_records_changed)
         # docs/ROADMAP.md milestone 5.5 — the Assistant's "open_module"
         # action (core/application.py's _action_open_module) publishes
         # this rather than ever touching MainWindow directly, since a
@@ -278,6 +283,7 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
+        self.context.events.unsubscribe("records.changed", self._on_records_changed)
         self.context.events.unsubscribe(
             "assistant.open_module_requested", self._on_assistant_open_module_requested
         )
@@ -694,6 +700,9 @@ class MainWindow(QMainWindow):
             self._stack.addWidget(widget)
             log.info("Opened module '%s' for the first time.", module_id)
 
+        elif module_id in self._stale_modules:
+            self._refresh_module(module_id)
+
         if record_id is not None:
             module.focus_record(record_id)
 
@@ -703,6 +712,23 @@ class MainWindow(QMainWindow):
         # any future subscriber) react to whichever module is active
         # without MainWindow needing to know who's listening.
         self.context.events.publish("module.opened", module_id=module_id)
+
+    def _on_records_changed(self, **_kwargs) -> None:
+        self._stale_modules = set(self._module_widgets)
+        current = self._stack.currentWidget()
+        for module_id, widget in self._module_widgets.items():
+            if widget is current:
+                self._refresh_module(module_id)
+
+    def _refresh_module(self, module_id: str) -> None:
+        self._stale_modules.discard(module_id)
+        module = self.module_manager.get(module_id)
+        if module is None:
+            return
+        try:
+            module.refresh()
+        except Exception:  # a module's refresh must never take the window down
+            log.exception("Refreshing module '%s' failed.", module_id)
 
     def show_home(self) -> None:
         """

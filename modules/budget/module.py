@@ -302,6 +302,17 @@ class BudgetModule(ModuleBase):
         super().on_load()
         self.context.search.register_provider("budget", self._search)
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_bill_list()
+        self._refresh_expense_list()
+        self._refresh_income_list()
+        self._refresh_income_source_list()
+        self._refresh_debt_list()
+        self._refresh_budget_targets()
+        self._refresh_summary()
+        self._refresh_homestead()
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)

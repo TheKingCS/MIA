@@ -51,7 +51,9 @@ It installs over the old one and keeps your sign-in.
 ## Not yet
 
 - Replies arrive all at once, not word by word.
-- Phone conversations aren't saved to the desktop's chat History.
+- (Phone conversations now appear in the desktop's History, titled
+  "📱 …". Each answer's log line ends with how long hearing, thinking and
+  speaking took; send those to Claude if replies feel slow.)
 - After a phone restart, open the app and tap Start again (Android
   doesn't let a microphone app start itself in the background).
 

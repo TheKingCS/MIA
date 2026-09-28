@@ -204,6 +204,14 @@ class WorkshopModule(ModuleBase):
         self._expense_list: Optional[QListWidget] = None
         self._net_profit_label: Optional[QLabel] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_components_list()
+        self._refresh_materials_list()
+        self._refresh_products_list()
+        self._refresh_jobs_list()
+        self._refresh_ledger()
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)

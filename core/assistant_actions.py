@@ -65,6 +65,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Iterable, Optional
 
 from core.logger import get_logger
+from core.main_thread import records_changed
 
 if TYPE_CHECKING:
     from core.app_context import AppContext
@@ -260,7 +261,11 @@ class AssistantActionRegistry:
             log.warning("Assistant tried to call unknown action '%s'", name)
             return f"(I tried to do something I don't know how to do: '{name}'.)"
         try:
-            return action.handler(context, arguments)
+            result = action.handler(context, arguments)
         except Exception:
             log.exception("Assistant action '%s' failed", name)
             return f"(Sorry, '{name}' didn't work.)"
+        # Open screens re-read their data (core/main_thread.py), also when
+        # the change came from the phone, on the server's thread.
+        records_changed(context, name)
+        return result

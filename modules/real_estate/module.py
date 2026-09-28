@@ -184,6 +184,10 @@ class RealEstateModule(ModuleBase):
         self._detail_payoff_date_label: Optional[QLabel] = None
         self._detail_range_label: Optional[QLabel] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_property_list()
+
     def get_widget(self) -> QWidget:
         """Nature re-skin, real reorganization (2026-09-14) — the
         reference mockup shows a real master-detail split (the

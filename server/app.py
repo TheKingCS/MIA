@@ -52,6 +52,7 @@ import tempfile
 from urllib.parse import unquote
 import threading
 import wave
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -65,8 +66,9 @@ from core.app_context import AppContext
 from core.assistant_turn import AssistantTurn, run_assistant_turn
 from core.talk_it_out import apply_followup
 from core.finance_summary import build_finance_summary
-from core.conversation_manager import Conversation
+from core.conversation_manager import DEFAULT_TITLE, Conversation
 from core.logger import get_logger
+from core.main_thread import publish as publish_on_main_thread
 from core.web_push import get_or_create_vapid_keys, send_web_push
 
 log = get_logger(__name__)
@@ -113,6 +115,40 @@ class PushKeys(BaseModel):
 class SubscribeRequest(BaseModel):
     endpoint: str
     keys: PushKeys
+
+
+PHONE_CONVERSATION_IDLE = timedelta(hours=6)
+
+
+def _idle_too_long(conversation: Conversation, now: Optional[datetime] = None) -> bool:
+    try:
+        last = datetime.fromisoformat(conversation.updated_at)
+    except (TypeError, ValueError):
+        return False
+    return (now or datetime.now()) - last > PHONE_CONVERSATION_IDLE
+
+
+def phone_title(prompt: str) -> str:
+    """Pure logic. '📱 What's on my schedule today' from the first thing said."""
+    words = " ".join(prompt.split())
+    return "\U0001F4F1 " + (words[:40].rstrip() + "…" if len(words) > 40 else words or "Phone")
+
+
+def turn_timings(hearing: Optional[float], thinking: float, speaking: float) -> dict:
+    """Pure logic. Where a phone turn's time went, in seconds (one decimal),
+    so "MIA is slow on the drive home" can be traced to one stage:
+    hearing (speech-to-text), thinking (the model and any tools), speaking
+    (making the voice reply)."""
+    timings = {"thinking": round(thinking, 1), "speaking": round(speaking, 1)}
+    if hearing is not None:
+        timings = {"hearing": round(hearing, 1), **timings}
+    return timings
+
+
+def describe_timings(timings: dict) -> str:
+    """Pure logic. 'heard 1.2s · thought 3.4s · spoke 0.8s'."""
+    words = {"hearing": "heard", "thinking": "thought", "speaking": "spoke"}
+    return " · ".join(f"{words[k]} {v:.1f}s" for k, v in timings.items())
 
 
 def create_app(context: AppContext) -> FastAPI:
@@ -193,10 +229,34 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.turn_lock = threading.Lock()
 
     def conversation_for(profile_id: str) -> Conversation:
+        """2026-09-28: phone conversations are saved with the desktop's
+        (the Assistant's History, titled "📱 ..."), so a drive-home chat
+        can be picked up at the desk. A new one after PHONE_CONVERSATION_IDLE
+        of quiet, like starting a new chat. Without a conversation store
+        (tests, headless), kept in memory as before."""
         conversations = app.state.voice_conversations
-        if profile_id not in conversations:
-            conversations[profile_id] = Conversation(conversation_id=f"phone-{profile_id}")
-        return conversations[profile_id]
+        current = conversations.get(profile_id)
+        manager = getattr(context, "conversations", None)
+        if manager is None:
+            if current is None:
+                current = conversations[profile_id] = Conversation(conversation_id=f"phone-{profile_id}")
+            return current
+        stored = manager.get_conversation(current.conversation_id) if current is not None else None
+        if stored is None or _idle_too_long(stored):
+            stored = manager.create_conversation()
+            conversations[profile_id] = stored
+        return stored
+
+    def after_phone_turn(conversation: Conversation, prompt: str) -> None:
+        """Save the turn and let the desktop's History show it."""
+        manager = getattr(context, "conversations", None)
+        if manager is None or manager.get_conversation(conversation.conversation_id) is not conversation:
+            return
+        if conversation.title == DEFAULT_TITLE and not conversation.current_privacy():
+            conversation.title = phone_title(prompt)
+        conversation.updated_at = datetime.now().isoformat(timespec="seconds")
+        manager.save()
+        publish_on_main_thread(context, "conversation.updated", conversation_id=conversation.conversation_id)
 
     def speak_to_base64(text: str) -> Optional[str]:
         if context.voice is None or not text:
@@ -214,11 +274,17 @@ def create_app(context: AppContext) -> FastAPI:
         raw = context.llm.generate(followup.prompt) if context.llm is not None else None
         with app.state.turn_lock:
             apply_followup(context, conversation, followup, raw)
+            manager = getattr(context, "conversations", None)
+            if manager is not None and manager.get_conversation(conversation.conversation_id) is conversation:
+                manager.save()
 
-    def respond(profile_id: str, transcript: str, background: BackgroundTasks) -> dict:
+    def respond(profile_id: str, transcript: str, background: BackgroundTasks, hearing: Optional[float] = None) -> dict:
         conversation = conversation_for(profile_id)
+        started = time.monotonic()
         with app.state.turn_lock:
             turn: AssistantTurn = run_assistant_turn(context, conversation, transcript)
+            after_phone_turn(conversation, transcript)
+        thinking = time.monotonic() - started
         if not turn.llm_available:
             replies = turn.replies + [LLM_UNAVAILABLE_REPLY]
         else:
@@ -226,11 +292,16 @@ def create_app(context: AppContext) -> FastAPI:
         reply_text = " ".join(replies)
         if turn.followup is not None:
             background.add_task(followup_locked, conversation, turn.followup)
+        started = time.monotonic()
+        audio = speak_to_base64(reply_text)
+        timings = turn_timings(hearing, thinking, time.monotonic() - started)
+        log.info("Phone turn: %s", describe_timings(timings))
         return {
             "transcript": transcript,
             "replies": replies,
             "reply_text": reply_text,
-            "audio_wav_base64": speak_to_base64(reply_text),
+            "audio_wav_base64": audio,
+            "timings": timings,
         }
 
     def transcribe_bytes(audio: bytes) -> Optional[str]:
@@ -262,7 +333,9 @@ def create_app(context: AppContext) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
 
+        started = time.monotonic()
         transcript = await run_in_threadpool(transcribe_bytes, audio)
+        hearing = time.monotonic() - started
         if transcript is None:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Speech-to-text isn't available on MIA's computer.")
         if not transcript.strip():
@@ -270,7 +343,7 @@ def create_app(context: AppContext) -> FastAPI:
                 "transcript": "", "replies": [NOT_HEARD_REPLY], "reply_text": NOT_HEARD_REPLY,
                 "audio_wav_base64": await run_in_threadpool(speak_to_base64, NOT_HEARD_REPLY),
             }
-        return await run_in_threadpool(respond, profile_id, transcript.strip(), background)
+        return await run_in_threadpool(respond, profile_id, transcript.strip(), background, hearing)
 
     @app.post("/api/voice/text")
     def voice_text(

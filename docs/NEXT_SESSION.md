@@ -88,11 +88,13 @@ every step below in order, from a blank machine, with Windows notes.
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were
    built without being able to reach Plaid or a real phone.
-2. **Phone voice, phase 2, the rest** (the Android app itself is built,
-   see `android/README.md`): phone conversations saved to the
-   desktop's History, desktop screens refreshing after phone-made
-   changes, and streaming replies so MIA starts talking sooner. Plus
-   whatever your first real use of the app turns up.
+2. **Phone voice, phase 2, the rest.** Built (2026-09-28): phone
+   conversations in the desktop's History, desktop screens refreshing
+   after phone-made changes, and per-turn timings ("heard 1.2s ·
+   thought 3.4s · spoke 0.8s"). **Left: faster replies**, waiting on your
+   timings from a real drive: the slow stage decides the fix (streaming
+   the model's words, speaking the first sentence early, or a faster
+   speech-to-text model). Plus whatever your first real use turns up.
 3. ~~Cognitive Extension, slice B: "Remember Why"~~ **built**
    (2026-09-27). Try it: Part 6 of `docs/SETUP_GUIDE.md`. Follow-ups:
    MIA asking which kind of support you want when it's unclear, and

@@ -70,6 +70,10 @@ class ExpeditionsModule(ModuleBase):
         self._expedition_list: Optional[QListWidget] = None
         self._trip_list: Optional[QListWidget] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_expedition_list()
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)

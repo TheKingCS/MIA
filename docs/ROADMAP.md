@@ -12375,3 +12375,29 @@ details apply, the Inbox screen's list).
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 18 new tests, including whole turns on the shared phone/voice
 path with a stand-in model.
+
+## Phone conversations in History; screens refresh; turn timings (2026-09-28)
+
+- **History:** `server/app.py` keeps each profile's phone conversation in
+  the desktop's ConversationManager (titled "📱 <first words>", a new
+  one after 6 idle hours) and saves after every turn and follow-up;
+  message privacy (off the record, journal) applies exactly as on the
+  desktop.
+- **Screens refresh:** `core/main_thread.py` publishes events from
+  background threads through `context.main_thread_call` (a queued Qt
+  signal, `MainThreadInvoker` in core/application.py), so the phone
+  server never touches widgets. Every Assistant tool that changes
+  something publishes `records.changed`; MainWindow refreshes the screen
+  on show at once and marks the others stale for their next opening.
+  New `ModuleBase.refresh()` (default: the module's own `_refresh()`),
+  overridden in Budget, Kitchen, Maintenance, Notes, Classroom, Workout,
+  People & Pets, Real Estate, Workshop, Expeditions and Navigation.
+- **Timings:** each phone turn returns and logs `timings` (hearing,
+  thinking, speaking); both phone apps show them under the answer.
+  Streaming waits on real numbers.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 12 new Python tests (thread hand-off incl. the real Qt
+invoker, refresh behavior, History saving/new-after-idle/off the
+record, timings), 1 Kotlin test; every changed module's refresh() ran
+against its real screen offscreen.

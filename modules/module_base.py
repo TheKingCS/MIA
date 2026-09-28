@@ -78,6 +78,20 @@ class ModuleBase(ABC):
         """Called if the module is being torn down. Optional override."""
         self._loaded = False
 
+    def refresh(self) -> None:
+        """
+        Re-read this screen's data (2026-09-28). Called by the main window
+        when records changed somewhere else, e.g. the owner told MIA from
+        the phone to add milk to the grocery list while Kitchen was open
+        (event "records.changed", core/main_thread.py). Only called once
+        get_widget() has built the screen. Default: the module's own
+        no-argument `_refresh()`, if it has one; modules with several
+        lists override this.
+        """
+        own = getattr(self, "_refresh", None)
+        if callable(own):
+            own()
+
     def focus_record(self, record_id: str) -> None:
         """
         Cross-module deep-linking (2026-09-13) — called right after

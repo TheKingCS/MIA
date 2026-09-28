@@ -273,6 +273,7 @@ class VoiceService : Service() {
         }
         if (result.transcript.isNotBlank()) addLog("You: ${result.transcript}")
         if (result.replyText.isNotBlank()) addLog("MIA: ${result.replyText}")
+        if (result.timings.isNotBlank()) addLog("   (${result.timings})")
         result.audioWav?.let { wav ->
             publish(State.SPEAKING, "")
             play(wav)

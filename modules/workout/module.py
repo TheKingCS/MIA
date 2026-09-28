@@ -166,6 +166,12 @@ class WorkoutModule(ModuleBase):
         self._session_sets_list: Optional[QListWidget] = None
         self._session_calories_spin: Optional[QDoubleSpinBox] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_exercise_list()
+        self._refresh_history_list()
+        self._refresh_template_list()
+
     def get_widget(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")

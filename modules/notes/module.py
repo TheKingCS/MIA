@@ -74,6 +74,10 @@ class NotesModule(ModuleBase):
         super().on_load()
         self.context.search.register_provider("notes", self._search)
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_list()
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)

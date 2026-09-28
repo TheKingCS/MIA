@@ -22,7 +22,7 @@ and constructed in core/application.py, not scattered as ad-hoc imports.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 from core.assistant_actions import AssistantActionRegistry
 from core.calculator_engine import CalculatorEngine
@@ -195,6 +195,10 @@ class AppContext:
     # The phone API server (server/app.py), switched on/off from Settings
     # (core/phone_server.py).
     phone_server: Optional["PhoneServer"] = field(default=None, repr=False)
+    # Runs a function on the main (GUI) thread; set by core/application.py.
+    # Used by core/main_thread.publish() so events raised on the phone
+    # server's thread reach screens safely.
+    main_thread_call: Optional[Callable[[Callable[[], None]], None]] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

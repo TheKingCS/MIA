@@ -24,6 +24,16 @@ encrypted connection.
 - The screen stays awake during a conversation.
 - Say **"goodbye"**, **"stop listening"** or **"that's all"** to end it.
 - You can also type to MIA from the same screen.
+- Your phone conversations show up in the desktop Assistant's History,
+  titled "📱 …" (a new one after 6 quiet hours), so you can pick up at
+  the desk where you left off in the truck. Off the record and journal
+  turns stay private, same as on the desktop.
+- Anything MIA changes from the phone (the grocery list, a bill paid, a
+  maintenance task) shows on the desktop right away, even on a screen
+  that's already open.
+- Under each answer, a small line like "heard 1.2s · thought 3.4s · spoke
+  0.8s" shows where the time went. If MIA feels slow, send Claude a few
+  of those lines.
 
 **Android: the native app is here.** It keeps listening with the
 phone locked and works with your headset button. Install steps:
@@ -35,8 +45,6 @@ phone locked and works with your headset button. Install steps:
   apply to web apps. Mount the phone and leave MIA on screen.
 - Your headphones' play/pause button may or may not start or stop a
   conversation, depending on the phone.
-- Phone conversations aren't saved to the desktop's chat History yet.
-  Things MIA *does* (missions, notes, events) are saved normally.
 
 **Safety:** this is built to be used without looking at the screen.
 Start the conversation before you pull out, and keep your eyes on the

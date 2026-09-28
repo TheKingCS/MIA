@@ -25,7 +25,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 
@@ -200,6 +200,28 @@ def _load_bundled_fonts() -> None:
             log.warning("Could not load bundled font: %s", filename)
 
 
+
+class MainThreadInvoker(QObject):
+    """Runs functions on the GUI thread: call() may be used from any
+    thread; the queued signal delivers to the thread this object lives
+    in (the GUI thread, where MIAApplication creates it)."""
+
+    _run = Signal(object)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._run.connect(self._execute, Qt.ConnectionType.QueuedConnection)
+
+    def call(self, fn) -> None:
+        self._run.emit(fn)
+
+    @staticmethod
+    def _execute(fn) -> None:
+        try:
+            fn()
+        except Exception:
+            log.exception("A function handed to the GUI thread failed.")
+
 class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
@@ -211,6 +233,10 @@ class MIAApplication:
         self.config = ConfigManager()
         self.events = EventBus()
         self.context = AppContext(config=self.config, events=self.events)
+        # Lets background threads (the phone server) hand work to the GUI
+        # thread safely (core/main_thread.py).
+        self._main_thread_invoker = MainThreadInvoker()
+        self.context.main_thread_call = self._main_thread_invoker.call
 
         # Applied once, at the QApplication level — Qt's stylesheet
         # cascade means every widget/dialog inherits this automatically,

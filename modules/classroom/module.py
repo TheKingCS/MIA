@@ -84,6 +84,10 @@ class ClassroomModule(ModuleBase):
         self._current_subject_id: Optional[str] = None
         self._current_course_id: Optional[str] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_subject_list()
+
     def get_widget(self) -> QWidget:
         self._stack = QStackedWidget()
         self._subjects_page = self._build_subjects_page()

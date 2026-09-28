@@ -169,6 +169,13 @@ class KitchenModule(ModuleBase):
         self._meal_log_list: Optional[QListWidget] = None
         self._suggestions_list: Optional[QListWidget] = None
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_grocery_list()
+        self._refresh_pantry_list()
+        self._refresh_recipe_list()
+        self._refresh_meal_log_list()
+
     def get_widget(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")

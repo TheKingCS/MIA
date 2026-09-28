@@ -29,7 +29,7 @@ class MiaClient(baseUrl: String) {
 
     data class LoginResult(val token: String, val name: String)
 
-    data class TurnResult(val transcript: String, val replyText: String, val audioWav: ByteArray?)
+    data class TurnResult(val transcript: String, val replyText: String, val audioWav: ByteArray?, val timings: String = "")
 
     data class Status(val speechToText: Boolean, val textToSpeech: Boolean, val assistant: Boolean)
 
@@ -112,7 +112,16 @@ class MiaClient(baseUrl: String) {
                 transcript = json.optString("transcript"),
                 replyText = json.optString("reply_text"),
                 audioWav = audio?.let { Base64.decode(it, Base64.DEFAULT) },
+                timings = describeTimings(json.optJSONObject("timings")),
             )
+        }
+
+        /** "heard 1.2s · thought 3.4s · spoke 0.8s": where a turn's time went (server/app.py turn_timings). */
+        fun describeTimings(timings: JSONObject?): String {
+            if (timings == null) return ""
+            val words = listOf("hearing" to "heard", "thinking" to "thought", "speaking" to "spoke")
+            return words.filter { timings.has(it.first) }
+                .joinToString(" · ") { (key, word) -> "$word ${String.format(java.util.Locale.US, "%.1f", timings.getDouble(key))}s" }
         }
     }
 }

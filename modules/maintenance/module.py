@@ -208,6 +208,12 @@ class MaintenanceModule(ModuleBase):
         super().on_load()
         self.context.search.register_provider("maintenance", self._search)
 
+    def refresh(self) -> None:
+        """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_asset_list()
+        self._refresh_task_list()
+        self._refresh_overview()
+
     def get_widget(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)

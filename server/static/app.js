@@ -197,7 +197,16 @@ async function handleUtterance(wavBytes) {
     }
 }
 
+/** "heard 1.2s · thought 3.4s · spoke 0.8s": where a turn's time went. */
+function describeTimings(timings) {
+    if (!timings) return "";
+    const words = { hearing: "heard", thinking: "thought", speaking: "spoke" };
+    return Object.keys(words).filter((k) => typeof timings[k] === "number")
+        .map((k) => `${words[k]} ${timings[k].toFixed(1)}s`).join(" · ");
+}
+
 async function speak(reply) {
+    addBubble("timing", describeTimings(reply.timings));
     addBubble("mia", reply.reply_text);
     setOrb("speaking", "");
     await playReply(reply.audio_wav_base64);
