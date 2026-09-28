@@ -159,6 +159,9 @@ CORPUS: list[tuple[str, str]] = [
     ("File the Lowe's receipt under the greenhouse", "file_inbox_item"),
     ("File the mower manual without the tasks", "file_inbox_item"),
     ("Don't file the Amazon receipt, just dismiss it", "dismiss_inbox_item"),
+    ("How was my week?", "get_journal_reflection"),
+    # ---- Offline awareness ------------------------------------------------------------
+    ("Remind me to sync the bank when we're back online", "remind_when_online"),
     # ---- Sorting bank charges to businesses ---------------------------------------
     ("Which charges need a business?", "list_untagged_charges"),
     ("Any untagged bank charges?", "list_untagged_charges"),

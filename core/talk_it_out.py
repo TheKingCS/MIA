@@ -69,6 +69,8 @@ JOURNAL_READ_PHRASES = (
     "i've been writing about", "have i been writing about", "what have i been writing",
     "what did i journal", "what have i journaled", "when did i last feel", "last time i felt",
     "what's been on my mind", "whats been on my mind", "journal themes",
+    # The weekly reflection (core/journal_reflection.py) reads the journal too.
+    "how was my week", "reflect on my week", "weekly reflection", "journal reflection",
 )
 
 

@@ -257,6 +257,15 @@ class SettingsModule(ModuleBase):
         speak_row.addWidget(self._daily_budget_spin)
         speak_row.addStretch(1)
         outer.addLayout(speak_row)
+        # The opt-in weekly journal reflection (core/journal_reflection.py).
+        self._reflection_checkbox = QCheckBox("Weekly journal reflection (Sunday evenings)")
+        self._reflection_checkbox.setToolTip(
+            "If you journaled that week, MIA lets you know a reflection is ready. The notice never shows what you "
+            "wrote; ask her \"how was my week?\" for it (the journal must be unlocked)."
+        )
+        self._reflection_checkbox.setChecked(bool(self.context.config.get("journal.weekly_reflection", False)))
+        self._reflection_checkbox.toggled.connect(self._on_reflection_toggled)
+        outer.addWidget(self._reflection_checkbox)
 
         self._build_phone_section(outer)
 
@@ -467,6 +476,10 @@ class SettingsModule(ModuleBase):
         self._phone_status_label.setText(
             self._phone_status_label.text() + "\nCopied. Paste it into a terminal, then press Check Again."
         )
+
+    def _on_reflection_toggled(self, checked: bool) -> None:
+        self.context.config.set("journal.weekly_reflection", bool(checked))
+        self.context.config.save()
 
     def _on_daily_budget_changed(self, value: int) -> None:
         self.context.config.set("communication.daily_budget", int(value))

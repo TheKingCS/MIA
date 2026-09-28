@@ -21,7 +21,7 @@ import sys
 import tempfile
 import threading
 import urllib.error
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Callable
 
@@ -57,9 +57,11 @@ from core.ledger_manager import LedgerManager
 from core.product_manager import ProductManager
 from core.config_manager import ConfigManager
 from core.connectivity import ConnectivityMonitor, connectivity_action
+from core.online_watch import CAME_BACK, WENT_OFFLINE, OnlineReminders, OnlineWatch, remind_when_online_action, transition_message
 from core.assistant_domain_actions import register_domain_actions
 from core.assistant_life_actions import register_life_actions
 from core.talk_it_out import register_journal_actions
+from core.journal_reflection import journal_reflection_action, reflection_due, reflection_notice
 from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_homestead_actions import register_homestead_actions
@@ -284,6 +286,8 @@ class MIAApplication:
         # background; see core/connectivity.py.
         self.context.connectivity = ConnectivityMonitor(self.context)
         self.context.connectivity.refresh_async()
+        self.context.online_reminders = OnlineReminders(self.context)
+        self._online_watch = OnlineWatch()
         self.context.voice = VoiceManager(self.context)
         self.context.waypoints = WaypointManager(self.context)
         self.context.power = PowerManager(self.context)
@@ -464,6 +468,13 @@ class MIAApplication:
         self._inbox_mail_timer.timeout.connect(self._check_inbox_mail)
         self._inbox_mail_timer.start(600_000)
 
+        # Offline awareness (core/online_watch.py): tell the owner when the
+        # internet drops or returns, and deliver "remind me when I'm back
+        # online". Reading .status never blocks (core/connectivity.py).
+        self._online_timer = QTimer()
+        self._online_timer.timeout.connect(self._check_online)
+        self._online_timer.start(60_000)
+
         # Same "always alive for the whole app session" reasoning as the
         # timers above — "MIA should assign me missions sometimes"
         # (docs/VISION.md's gamification goal) needs to fire regardless
@@ -525,6 +536,26 @@ class MIAApplication:
         elif self.context.notifications is not None:
             self.context.notifications.notify(candidate.title, candidate.message)
 
+    def _check_online(self) -> None:
+        monitor = self.context.connectivity
+        if monitor is None:
+            return
+        kind = self._online_watch.observe(monitor.status)
+        if kind is None:
+            return
+        reminders = self.context.online_reminders.take_all() if kind == CAME_BACK and self.context.online_reminders else []
+        if self.context.notifications is not None:
+            for what in reminders:  # asked for by the owner: delivered directly, not rate-limited
+                self.context.notifications.notify("\U0001F514 Back online", f"You asked me to remind you: {what}")
+        title, message = transition_message(kind, 0)
+        candidate = Candidate(
+            topic="connectivity", title=title, message=message,
+            urgency=TIMELY if kind == WENT_OFFLINE else AMBIENT, source="connectivity",
+            fingerprint=f"{kind}-{datetime.now().date().isoformat()}",
+        )
+        if self.context.communication is not None:
+            self.context.communication.offer(candidate)
+
     def _check_inbox_mail(self) -> None:
         if self.context.inbox_mail is not None:
             self.context.inbox_mail.check_now()
@@ -578,6 +609,7 @@ class MIAApplication:
             ("recurring_mission", self._check_recurring_missions),
             ("rewards", self._check_rewards),
             ("walkthrough_suggestion", self._check_walkthrough_suggestion),
+            ("journal_reflection", self._check_journal_reflection),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -669,6 +701,22 @@ class MIAApplication:
                 )
                 config.set("system.last_checkin_date", today_iso)
                 config.save()
+
+    def _check_journal_reflection(self, now: datetime, today_iso: str) -> None:
+        """The opt-in weekly journal reflection (core/journal_reflection.py):
+        only a "your reflection is ready" notice, never journal content."""
+        config = self.context.config
+        journal = self.context.private_journal
+        if not config.get("journal.weekly_reflection", False) or journal is None or not journal.is_set_up():
+            return
+        if not reflection_due(now, int(config.get("journal.reflection_weekday", 6)), config.get("system.last_journal_reflection_date")):
+            return
+        notice = reflection_notice(journal.count_since((now - timedelta(days=7)).isoformat(timespec="seconds")))
+        if notice is not None:
+            self._offer(topic="journal_reflection", title=notice[0], message=notice[1], urgency=TIMELY, source="journal",
+                        daily=True)
+        config.set("system.last_journal_reflection_date", today_iso)
+        config.save()
 
     def _check_budget_nudge(self, now: datetime, today_iso: str) -> None:
         config = self.context.config
@@ -1072,9 +1120,11 @@ class MIAApplication:
         having to duplicate this class or its Qt/gui-heavy imports.
         """
         self.context.assistant_actions.register(connectivity_action())
+        self.context.assistant_actions.register(remind_when_online_action())
         register_domain_actions(self.context.assistant_actions)
         register_life_actions(self.context.assistant_actions)
         register_journal_actions(self.context.assistant_actions)
+        self.context.assistant_actions.register(journal_reflection_action())
         register_why_actions(self.context.assistant_actions)
         register_communication_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)

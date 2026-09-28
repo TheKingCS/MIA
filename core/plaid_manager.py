@@ -80,8 +80,15 @@ bank is the source of truth for those); the user owns everything else
 expiration — Plaid's "special" APR type carries no expiration date, so
 it can't populate a promo that `effective_apr()` would honor anyway).
 Mortgages are deliberately skipped (see Debt's own docstring — they
-belong to core.real_estate_manager.Property); Plaid's newer generic
-`loan`/`line_of_credit` liability types are not mapped yet.
+belong to core.real_estate_manager.Property).
+
+**Other loans (added 2026-09-28)**: auto loans, personal loans and lines
+of credit aren't in /liabilities/get, but every sync's /accounts/get
+already returns them (type `loan`, or `credit` with subtype `line of
+credit`) with a balance. `loan_account_debt_fields()` turns those into
+Debts too (no extra Plaid product or consent needed). Plaid reports no
+rate or minimum for them, so a new one starts at 0% with a note asking
+the owner to fill them in; syncs only ever update the balance.
 
 **Connect request fix (2026-09-27)**: `create_hosted_link_session()`
 originally listed `balance` in `products`, which Plaid's
@@ -411,6 +418,37 @@ def liability_debt_fields(kind: str, liability, account, institution_name: str) 
             "minimum_payment": liability.minimum_payment_amount,
         }
     return None
+
+
+_LOAN_DEBT_TYPES = {"auto": "Auto Loan", "personal": "Personal Loan", "consumer": "Personal Loan",
+                    "loan": "Personal Loan", "line of credit": "Personal Loan", "student": "Student Loan"}
+_NOT_A_DEBT_HERE = {"mortgage", "home equity"}  # the house's, in Real Estate (see Debt's docstring)
+LOAN_RATE_NOTE = "The bank doesn't report this loan's interest rate or minimum payment. Add them so payoff advice is right."
+
+
+def loan_account_debt_fields(account: dict, institution_name: str, liabilities_enabled: bool = False) -> Optional[dict]:
+    """Pure logic. One /accounts/get account (as _account_to_dict makes
+    it) -> Debt fields, for loans /liabilities/get doesn't cover: auto,
+    personal, lines of credit (and student loans when the item has no
+    Liabilities access). None for anything else, or no balance."""
+    kind = (account.get("type") or "").lower()
+    subtype = (account.get("subtype") or "").lower()
+    if kind == "credit" and subtype != "line of credit":
+        return None  # credit cards come from /liabilities/get
+    if kind not in ("loan", "credit") or subtype in _NOT_A_DEBT_HERE:
+        return None
+    if subtype == "student" and liabilities_enabled:
+        return None  # /liabilities/get has the real rate and minimum
+    balance = (account.get("balances") or {}).get("current")
+    if balance is None:
+        return None
+    mask = account.get("mask")
+    name = account.get("name") or account.get("official_name") or "Loan"
+    return {
+        "name": f"{institution_name} {name}" + (f" \u2022\u2022{mask}" if mask else ""),
+        "debt_type": _LOAN_DEBT_TYPES.get(subtype, "Other"),
+        "balance": max(0.0, float(balance)),
+    }
 
 
 class PlaidManager:
@@ -840,6 +878,11 @@ class PlaidManager:
             self._write_snapshot_file(snapshot_data)
             written.append(snapshot_data)
 
+            if self.context.budget is not None:
+                added, updated = self._sync_loan_accounts(item, accounts)
+                debts_added += added
+                debts_updated += updated
+
             if item.investments_enabled:
                 holdings_snapshot = self._holdings_snapshot_for_item(item)
                 if holdings_snapshot is not None:
@@ -977,6 +1020,28 @@ class PlaidManager:
                         plaid_item_id=item.item_id,
                     )
                     added += 1
+        return added, updated
+
+    def _sync_loan_accounts(self, item: PlaidItem, accounts: list[dict]) -> tuple[int, int]:
+        """Auto/personal loans and lines of credit -> Debts (see the module
+        docstring). Only the balance is Plaid's to update."""
+        budget = self.context.budget
+        added = updated = 0
+        for account in accounts:
+            fields = loan_account_debt_fields(account, item.institution_name, item.liabilities_enabled)
+            if fields is None:
+                continue
+            existing = budget.get_debt_by_plaid_account_id(account["account_id"])
+            if existing is not None:
+                budget.update_debt(existing.debt_id, balance=fields["balance"], plaid_item_id=item.item_id)
+                updated += 1
+            else:
+                budget.add_debt(
+                    name=fields["name"], balance=fields["balance"], interest_rate=0.0, minimum_payment=0.0,
+                    debt_type=fields["debt_type"], notes=LOAN_RATE_NOTE,
+                    plaid_account_id=account["account_id"], plaid_item_id=item.item_id,
+                )
+                added += 1
         return added, updated
 
     def _sync_transactions_for_item(self, item: PlaidItem) -> tuple[int, int]:

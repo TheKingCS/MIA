@@ -236,6 +236,11 @@ class PrivateJournalManager:
         """Works while locked."""
         return len(self._records)
 
+    def count_since(self, iso_datetime: str) -> int:
+        """Entries started at or after this time. Works while locked: only
+        the (unencrypted) dates are read, never the content."""
+        return sum(1 for r in self._records if str(r.get("created_at", "")) >= iso_datetime)
+
     def save_entry(self, entry: PrivateJournalEntry) -> PrivateJournalEntry:
         """Insert or replace by entry_id. Works while locked (public key only)."""
         if not self.is_set_up():

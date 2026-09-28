@@ -1404,3 +1404,40 @@ def test_sync_liabilities_records_item_id_on_new_debt(isolated_paths_with_budget
     manager._client = SimpleNamespace(liabilities_get=lambda req: _liabilities_response(credit=[_card()]))
     manager._sync_liabilities_for_item(item)
     assert manager.context.budget.all_debts()[0].plaid_item_id == "item-1"
+
+
+# ------------------------------------------------------------------
+# Other loans from /accounts/get (2026-09-28): auto, personal, lines of credit
+# ------------------------------------------------------------------
+
+def _loan(account_id, subtype, current, kind="loan", name="Auto Loan", mask="4821"):
+    return {"account_id": account_id, "name": name, "official_name": None, "type": kind, "subtype": subtype,
+            "mask": mask, "balances": {"current": current}}
+
+
+def test_loan_account_debt_fields_maps_only_the_loans_liabilities_miss():
+    from core.plaid_manager import loan_account_debt_fields
+
+    assert loan_account_debt_fields(_loan("a", "auto", 18250.0), "Ally") == {
+        "name": "Ally Auto Loan ••4821", "debt_type": "Auto Loan", "balance": 18250.0}
+    assert loan_account_debt_fields(_loan("b", "line of credit", 900.0, kind="credit", name="LOC"), "Chase")["debt_type"] == "Personal Loan"
+    assert loan_account_debt_fields(_loan("c", "credit card", 900.0, kind="credit"), "Chase") is None  # liabilities' job
+    assert loan_account_debt_fields(_loan("d", "mortgage", 150000.0), "Chase") is None  # Real Estate's
+    assert loan_account_debt_fields(_loan("e", "student", 9000.0), "Nelnet")["debt_type"] == "Student Loan"
+    assert loan_account_debt_fields(_loan("e", "student", 9000.0), "Nelnet", liabilities_enabled=True) is None
+    assert loan_account_debt_fields(_loan("f", "auto", None), "Ally") is None
+    assert loan_account_debt_fields({"type": "depository", "subtype": "checking", "balances": {"current": 5}}, "Ally") is None
+
+
+def test_sync_loan_accounts_creates_then_updates_only_the_balance(isolated_paths_with_budget):
+    from core.plaid_manager import LOAN_RATE_NOTE
+
+    manager = _make_manager_with_budget()
+    item = PlaidItem(item_id="item-1", access_token="access-abc", institution_name="Ally", connected_at="2026-09-01T00:00:00")
+    assert manager._sync_loan_accounts(item, [_loan("acct-auto", "auto", 18250.0)]) == (1, 0)
+    [debt] = manager.context.budget.all_debts()
+    assert (debt.debt_type, debt.balance, debt.interest_rate, debt.notes) == ("Auto Loan", 18250.0, 0.0, LOAN_RATE_NOTE)
+    manager.context.budget.update_debt(debt.debt_id, interest_rate=6.9, minimum_payment=455.0)  # the owner fills them in
+    assert manager._sync_loan_accounts(item, [_loan("acct-auto", "auto", 17800.0)]) == (0, 1)
+    [debt] = manager.context.budget.all_debts()
+    assert (debt.balance, debt.interest_rate, debt.minimum_payment) == (17800.0, 6.9, 455.0)

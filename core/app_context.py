@@ -92,6 +92,7 @@ if TYPE_CHECKING:
     from core.inbox_manager import InboxManager
     from core.inbox_mail import MailChecker
     from core.ocr import OcrQueue
+    from core.online_watch import OnlineReminders
     from core.phone_server import PhoneServer
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
@@ -199,6 +200,8 @@ class AppContext:
     # Used by core/main_thread.publish() so events raised on the phone
     # server's thread reach screens safely.
     main_thread_call: Optional[Callable[[Callable[[], None]], None]] = field(default=None, repr=False)
+    # "Remind me when I'm back online" (core/online_watch.py).
+    online_reminders: Optional["OnlineReminders"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)
