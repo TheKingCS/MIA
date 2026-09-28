@@ -266,6 +266,18 @@ class SettingsModule(ModuleBase):
         self._reflection_checkbox.setChecked(bool(self.context.config.get("journal.weekly_reflection", False)))
         self._reflection_checkbox.toggled.connect(self._on_reflection_toggled)
         outer.addWidget(self._reflection_checkbox)
+        # Learning from being ignored (core/communication_gate.py): kinds of
+        # message on a break because the owner kept dismissing them.
+        breaks_row = QHBoxLayout()
+        self._breaks_label = QLabel("")
+        self._breaks_label.setWordWrap(True)
+        self._breaks_label.setObjectName("SubtitleLabel")
+        breaks_row.addWidget(self._breaks_label, stretch=1)
+        self._resume_breaks_button = QPushButton("Bring Them Back")
+        self._resume_breaks_button.clicked.connect(self._on_resume_breaks)
+        breaks_row.addWidget(self._resume_breaks_button)
+        outer.addLayout(breaks_row)
+        self._refresh_breaks()
 
         self._build_phone_section(outer)
 
@@ -476,6 +488,24 @@ class SettingsModule(ModuleBase):
         self._phone_status_label.setText(
             self._phone_status_label.text() + "\nCopied. Paste it into a terminal, then press Check Again."
         )
+
+    def _refresh_breaks(self) -> None:
+        gate = self.context.communication
+        paused = gate.paused() if gate is not None else []
+        if paused:
+            items = "; ".join(f"{p['label']} (until {p['until']:%b %d})" for p in paused)
+            self._breaks_label.setText(f"You kept dismissing these, so MIA is taking a break from them: {items}.")
+        else:
+            self._breaks_label.setText("")
+        self._breaks_label.setVisible(bool(paused))
+        self._resume_breaks_button.setVisible(bool(paused))
+
+    def _on_resume_breaks(self) -> None:
+        gate = self.context.communication
+        if gate is not None:
+            for p in gate.paused():
+                gate.resume(p["topic"])
+        self._refresh_breaks()
 
     def _on_reflection_toggled(self, checked: bool) -> None:
         self.context.config.set("journal.weekly_reflection", bool(checked))

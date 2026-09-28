@@ -12444,3 +12444,20 @@ failure). 8 new tests; routing corpus 210.
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 11 new tests (6 reflection, 3 offline, 2 Plaid loans);
 routing corpus 212.
+
+## Learning from being ignored (2026-09-28)
+
+The last piece of Cognitive Extension slice C.
+- NotificationManager.dismiss() publishes `notification.dismissed` (not
+  clear_all, not opening the bell). The gate logs which notification
+  carried each message and marks it dismissed.
+- `paused_topics()` (pure): 3 of the last 4 non-urgent messages of a
+  topic dismissed within 2 days of arriving → that topic is dropped for
+  14 days, with the reason logged ("you dismissed the last few...").
+  `resume()` ends it early (dismissals before it stop counting).
+- "What didn't you tell me today?" lists the breaks; new tool
+  `resume_message_topic`; Settings → When MIA Speaks Up shows them with
+  Bring Them Back.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 5 new tests with the real NotificationManager.

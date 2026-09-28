@@ -106,8 +106,10 @@ every step below in order, from a blank machine, with Windows notes.
    (2026-09-27): one gate for every unprompted message, 5/day, no quiet
    hours. The opt-in weekly journal reflection is **built** (Settings →
    When MIA Speaks Up), and so are offline/back-online notices with "remind
-   me when we're back online" (2026-09-28). Left: "learning from being
-   ignored" (needs the notification bell to record dismissals).
+   me when we're back online" (2026-09-28). "Learning from being ignored"
+   is **built** too: 3 of the last 4 of a kind dismissed → a 2-week break
+   from that kind (Settings or "you can tell me about ... again" ends it).
+   Slice C is complete.
 5. **Fix what the live conversation check turns up** (now 215 cases,
    including Workout, People & Pets, Household, Classroom, and 7
    personal-mode cases). ("Propose, you confirm" updates from things

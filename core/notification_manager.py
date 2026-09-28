@@ -181,6 +181,9 @@ class NotificationManager:
     def dismiss(self, notification_id: str) -> None:
         self._notifications = [n for n in self._notifications if n.notification_id != notification_id]
         self._save()
+        # The owner closed this one on purpose (not "clear all"): the
+        # communication gate learns from it (core/communication_gate.py).
+        self.context.events.publish("notification.dismissed", notification_id=notification_id)
         self.context.events.publish("notification.updated")
 
     def clear_all(self) -> None:

@@ -30,6 +30,15 @@ together:
 5. **Consolidation.** Everything that passes in one batch goes out as
    **one** message and counts once against the budget.
 
+**Learning from being ignored** (2026-09-28): each delivered message
+remembers its notification. Closing one with its X (not "clear all", not
+just opening the bell) counts as "not interested". When the owner has
+dismissed 3 of the last 4 messages of one kind (budget check-ins,
+insights, tips...), MIA takes a `PAUSE_DAYS` break from that kind,
+logged like any other decision, reported by "what didn't you tell me",
+and ended early with "you can tell me about budget again" or Settings.
+Urgent messages are never paused.
+
 No quiet hours: the owner uses the phone's Do Not Disturb instead
 (2026-09-27 decision). Every decision, including "said nothing", is
 logged with its reason (data/communication_log.json), so "what didn't
@@ -71,6 +80,11 @@ _KEEP_LOG_DAYS = 30
 
 DEFAULT_SETTINGS = {"daily_budget": 5, "min_spacing_minutes": 90, "repeat_days": 7}
 
+PAUSE_DAYS = 14
+_PAUSE_LOOKBACK = 4  # the last this-many messages of a kind...
+_PAUSE_DISMISSED = 3  # ...of which this many were dismissed
+_DISMISS_COUNTS_WITHIN = timedelta(days=2)  # a message closed weeks later isn't a reaction to it
+
 
 @dataclass
 class Candidate:
@@ -109,6 +123,7 @@ class GateState:
 
     sent: list[dict] = field(default_factory=list)  # {at, key, topic, urgency, digest_id}
     user_busy: bool = False
+    paused: dict = field(default_factory=dict)  # topic -> until (datetime), from paused_topics()
 
 
 def _parse(iso: str) -> Optional[datetime]:
@@ -134,6 +149,33 @@ def _unprompted_sends_today(state: GateState, now: datetime) -> list[datetime]:
     return times
 
 
+def paused_topics(log: list[dict], now: datetime, resumed: Optional[dict] = None) -> dict:
+    """Pure logic. topic -> until (datetime) for kinds of message the
+    owner keeps dismissing. `resumed`: topic -> ISO time the owner ended
+    a break; dismissals before it don't count any more."""
+    resumed = resumed or {}
+    by_topic: dict[str, list[dict]] = {}
+    for entry in log:
+        if entry.get("action") != ACT or entry.get("urgency") == URGENT or not entry.get("topic"):
+            continue
+        if entry.get("at", "") <= resumed.get(entry["topic"], ""):
+            continue
+        by_topic.setdefault(entry["topic"], []).append(entry)
+    paused = {}
+    for topic, entries in by_topic.items():
+        last = sorted(entries, key=lambda e: e.get("at", ""))[-_PAUSE_LOOKBACK:]
+        dismissals = []
+        for entry in last:
+            sent_at, dismissed_at = _parse(entry.get("at", "")), _parse(entry.get("dismissed_at", ""))
+            if sent_at and dismissed_at and dismissed_at - sent_at <= _DISMISS_COUNTS_WITHIN:
+                dismissals.append(dismissed_at)
+        if len(dismissals) >= _PAUSE_DISMISSED:
+            until = max(dismissals) + timedelta(days=PAUSE_DAYS)
+            if until > now:
+                paused[topic] = until
+    return paused
+
+
 def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, settings: dict) -> list[Decision]:
     """Pure logic. One Decision per candidate, in order."""
     budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]))
@@ -152,6 +194,10 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
     for candidate in candidates:
         if candidate.urgency == URGENT:
             decisions.append(Decision(candidate, ACT, "urgent", "alone"))
+            continue
+        until = state.paused.get(candidate.topic)
+        if until is not None:
+            decisions.append(Decision(candidate, DROP, f"you dismissed the last few, so I'm taking a break from these until {until:%b %d}"))
             continue
         sent_at = recent_keys.get(candidate.key())
         if sent_at is not None:
@@ -217,7 +263,12 @@ class CommunicationGate:
         self.context = context
         self._log: list[dict] = []
         self._pending: list[dict] = []
+        self._resumed: dict = {}  # topic -> ISO time the owner ended a break
+        self.clock = datetime.now  # replaceable in tests
         self._load()
+        events = getattr(context, "events", None)
+        if events is not None:
+            events.subscribe("notification.dismissed", self._on_notification_dismissed)
 
     # ------------------------------------------------------------------
     # Persistence
@@ -230,6 +281,7 @@ class CommunicationGate:
             data = json.loads(_LOG_FILE.read_text(encoding="utf-8"))
             self._log = list(data.get("log", []))
             self._pending = list(data.get("pending", []))
+            self._resumed = dict(data.get("resumed", {}))
         except (json.JSONDecodeError, OSError, AttributeError):
             log.exception("communication_log.json unreadable — starting fresh.")
 
@@ -237,7 +289,8 @@ class CommunicationGate:
         cutoff = (now - timedelta(days=_KEEP_LOG_DAYS)).isoformat()
         self._log = [e for e in self._log if e.get("at", "") >= cutoff]
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_LOG_FILE, json.dumps({"log": self._log, "pending": self._pending}, indent=2))
+        atomic_write_text(_LOG_FILE, json.dumps({"log": self._log, "pending": self._pending, "resumed": self._resumed},
+                                                indent=2))
 
     # ------------------------------------------------------------------
     # Settings and state
@@ -269,7 +322,7 @@ class CommunicationGate:
 
     def _state(self, now: datetime) -> GateState:
         sent = [e for e in self._log if e.get("action") == ACT]
-        return GateState(sent=sent, user_busy=self._user_busy(now))
+        return GateState(sent=sent, user_busy=self._user_busy(now), paused=paused_topics(self._log, now, self._resumed))
 
     # ------------------------------------------------------------------
     # Offering
@@ -292,13 +345,17 @@ class CommunicationGate:
         digest_members = [d.candidate for d in decisions if d.action == ACT and d.delivered_as == "digest"]
         digest_id = hashlib.sha1(f"{now.isoformat()}|digest".encode()).hexdigest()[:12] if digest_members else ""
         notifications = getattr(self.context, "notifications", None)
+        notification_ids: dict[int, str] = {}  # which notification carried each candidate
         for decision in decisions:
             if decision.action == ACT and decision.delivered_as == "alone" and notifications is not None:
                 c = decision.candidate
-                notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
+                sent = notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
+                notification_ids[id(c)] = getattr(sent, "notification_id", "") or ""
         if digest_members and notifications is not None:
             title, message = compose_digest(digest_members)
-            notifications.notify(title=title, message=message, level="info", source="system")
+            sent = notifications.notify(title=title, message=message, level="info", source="system")
+            for c in digest_members:
+                notification_ids[id(c)] = getattr(sent, "notification_id", "") or ""
 
         for decision in decisions:
             c = decision.candidate
@@ -312,6 +369,7 @@ class CommunicationGate:
                 "action": decision.action,
                 "reason": decision.reason,
                 "digest_id": digest_id if decision.delivered_as == "digest" else "",
+                "notification_id": notification_ids.get(id(c), ""),
             })
             if decision.action == DEFER:
                 self._pending.append(asdict(c))
@@ -342,6 +400,39 @@ class CommunicationGate:
     # ------------------------------------------------------------------
     # Looking back
     # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # Learning from being ignored
+    # ------------------------------------------------------------------
+
+    def _on_notification_dismissed(self, notification_id: str = "", **_kwargs) -> None:
+        now = self.clock()
+        changed = False
+        for entry in self._log:
+            if notification_id and entry.get("notification_id") == notification_id and not entry.get("dismissed_at"):
+                entry["dismissed_at"] = now.isoformat(timespec="seconds")
+                changed = True
+        if changed:
+            try:
+                self._save(now)
+            except OSError:
+                log.exception("Couldn't save communication_log.json.")
+
+    def paused(self, now: Optional[datetime] = None) -> list[dict]:
+        """Kinds of message on a break: [{topic, label, until}], soonest first."""
+        now = now or self.clock()
+        labels = {e["topic"]: e.get("title", "") for e in self._log if e.get("topic")}
+        return sorted(
+            ({"topic": t, "label": labels.get(t) or t.replace("_", " "), "until": until}
+             for t, until in paused_topics(self._log, now, self._resumed).items()),
+            key=lambda p: p["until"],
+        )
+
+    def resume(self, topic: str, now: Optional[datetime] = None) -> None:
+        """End a break early: past dismissals of this kind stop counting."""
+        now = now or self.clock()
+        self._resumed[topic] = now.isoformat(timespec="seconds")
+        self._save(now)
 
     def entries_for_day(self, day: Optional[str] = None) -> list[dict]:
         day = day or datetime.now().date().isoformat()

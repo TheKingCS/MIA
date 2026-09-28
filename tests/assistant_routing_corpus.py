@@ -172,6 +172,7 @@ CORPUS: list[tuple[str, str]] = [
     ("Is there anything you held back?", "get_held_back_messages"),
     ("Only message me 3 times a day", "set_message_limit"),
     ("You can message me more", "set_message_limit"),
+    ("You can tell me about budget check-ins again", "resume_message_topic"),
     # ---- Self-knowledge / how-to (answer from help docs, no tools) ------------
     ("How do I add a bill?", INFO),
     ("How do I track my mower?", INFO),

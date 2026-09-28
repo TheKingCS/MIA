@@ -283,6 +283,14 @@ missions she assigns. To keep that useful rather than naggy:
   week?"** (with the journal unlocked) to hear what came up most and how
   your mood moved.
 
+- She learns from what you close. If you dismiss three of the last four
+  messages of one kind (budget check-ins, say) with their X, she takes a
+  two-week break from that kind and tells you so when you ask "what
+  didn't you tell me today?". Say **"you can tell me about budget
+  check-ins again"**, or use Settings → When MIA Speaks Up → Bring Them
+  Back. Opening the bell or "clear all" doesn't count; urgent things are
+  never paused.
+
 There are no quiet hours; use your phone's Do Not Disturb for nights.
 Ask **"what didn't you tell me today?"** and she'll tell you what she
 held back and why.
