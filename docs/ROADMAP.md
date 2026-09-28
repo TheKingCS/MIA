@@ -12401,3 +12401,21 @@ failure). 12 new Python tests (thread hand-off incl. the real Qt
 invoker, refresh behavior, History saving/new-after-idle/off the
 record, timings), 1 Kotlin test; every changed module's refresh() ran
 against its real screen offscreen.
+
+## Sorting bank charges to businesses (2026-09-28)
+
+- `core/business_tagging.py`: learns merchant → business (or personal)
+  from the owner's own decisions (any tagged expense; MIA's automatic
+  tags never teach her). After a sync, `auto_tag_new()` applies sure
+  suggestions (3+ times, 90%+ one way; a rental property's business),
+  marked `entity_auto`; the rest wait in `pending_review()` with a guess
+  and its reason. New ExpenseEntry fields `entity_reviewed`,
+  `entity_auto`. Only bank-synced charges from the last 120 days are
+  asked about, and only once a business exists.
+- Budget → Bank Sync → Review Business Tags (`gui/business_tags_dialog.py`):
+  the waiting list with guesses preselected, and MIA's automatic tags to
+  correct. The sync message reports what was tagged and what waits.
+- Tools `list_untagged_charges`, `tag_charge` (176 actions, 39 domains).
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 8 new tests; routing corpus 210.

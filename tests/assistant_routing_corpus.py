@@ -159,6 +159,11 @@ CORPUS: list[tuple[str, str]] = [
     ("File the Lowe's receipt under the greenhouse", "file_inbox_item"),
     ("File the mower manual without the tasks", "file_inbox_item"),
     ("Don't file the Amazon receipt, just dismiss it", "dismiss_inbox_item"),
+    # ---- Sorting bank charges to businesses ---------------------------------------
+    ("Which charges need a business?", "list_untagged_charges"),
+    ("Any untagged bank charges?", "list_untagged_charges"),
+    ("The Shell charge was for lawn care", "tag_charge"),
+    ("The Walmart one was personal", "tag_charge"),
     # ---- When MIA speaks up (core/assistant_comm_actions.py) ------------------------
     ("What didn't you tell me today?", "get_held_back_messages"),
     ("Is there anything you held back?", "get_held_back_messages"),

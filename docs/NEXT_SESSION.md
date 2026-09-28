@@ -95,6 +95,9 @@ every step below in order, from a blank machine, with Windows notes.
    timings from a real drive: the slow stage decides the fix (streaming
    the model's words, speaking the first sentence early, or a faster
    speech-to-text model). Plus whatever your first real use turns up.
+   Also built today: **sorting bank charges to your businesses** (Budget →
+   Bank Sync → Review Business Tags; set up your businesses under Summary
+   → Manage Entities first).
 3. ~~Cognitive Extension, slice B: "Remember Why"~~ **built**
    (2026-09-27). Try it: Part 6 of `docs/SETUP_GUIDE.md`. Follow-ups:
    MIA asking which kind of support you want when it's unclear, and
@@ -145,8 +148,6 @@ every step below in order, from a blank machine, with Windows notes.
   a notification when MIA goes offline or comes back, and actually
   queuing "remind me when I'm back online" requests.
 
-- **Auto-tagging business transactions** (lawn care, rentals,
-  homestead) to the right business entity after bank sync.
 
 ## 4. Known loose ends
 

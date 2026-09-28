@@ -640,6 +640,9 @@ GOLDEN_CASES = [
     ("textbooks: lookup", "What does my wiring textbook say about GFCI outlets?", "search_textbook", {"query": "gfci"}),
     ("inbox: what's waiting", "Anything new in my inbox?", "list_inbox"),
     ("inbox: file with a correction", "File the Lowe's receipt under the greenhouse", "file_inbox_item", {"for": "greenhouse"}),
+    # Sorting bank charges to businesses.
+    ("business tags: what's waiting", "Which bank charges still need a business?", "list_untagged_charges"),
+    ("business tags: sort one", "The Shell charge was for lawn care", "tag_charge", {"business": "lawn"}),
     ("small talk: a dog", "What's a good name for a dog?", None),
 ]
 

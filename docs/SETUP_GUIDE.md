@@ -289,6 +289,14 @@ dates by hand on the Debts tab.
 - [ ] Sandbox test done and reported
 - [ ] Real accounts connected
 
+**Your businesses:** Budget → Summary → **Manage Entities…** → add your
+lawn care business, the rentals LLC, the homestead (whatever you file
+separately). After a sync, Bank Sync → **Review Business Tags** asks
+which business each charge was for; MIA learns each store after a few
+answers and sorts them herself from then on.
+
+- [ ] Businesses added and the first charges sorted
+
 **Your builds and tools:** in Budget → **Builds & Tools**, set a budget
 for a build (the greenhouse) and record what your tools cost. Then tag
 expenses to them, or just tell MIA: *"I spent $240 on lumber for the

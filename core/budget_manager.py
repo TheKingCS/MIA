@@ -199,6 +199,11 @@ class ExpenseEntry:
     project_id: str = ""
     asset_id: str = ""
     asset_purchase: bool = False
+    # 2026-09-28, business tagging (core/business_tagging.py): the owner
+    # (or MIA, confidently) decided which business this is for, or that
+    # it's personal (entity_id ""); entity_auto marks MIA's own choice.
+    entity_reviewed: bool = False
+    entity_auto: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -208,6 +213,7 @@ class ExpenseEntry:
             "plaid_transaction_id": self.plaid_transaction_id, "payee": self.payee,
             "notes": self.notes, "created_at": self.created_at,
             "project_id": self.project_id, "asset_id": self.asset_id, "asset_purchase": self.asset_purchase,
+            "entity_reviewed": self.entity_reviewed, "entity_auto": self.entity_auto,
         }
 
     @staticmethod
@@ -229,6 +235,8 @@ class ExpenseEntry:
             project_id=data.get("project_id", ""),
             asset_id=data.get("asset_id", ""),
             asset_purchase=bool(data.get("asset_purchase", False)),
+            entity_reviewed=bool(data.get("entity_reviewed", False)),
+            entity_auto=bool(data.get("entity_auto", False)),
         )
 
 

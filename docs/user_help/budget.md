@@ -98,3 +98,20 @@ connection slots), and Reset Plaid Setup… disconnects everything, for
 example to switch from sandbox testing to your real accounts. Export Business Report (PDF)… and
 Export Consolidated Report (All Entities)… on the Summary tab generate
 a real PDF report for accountant/business use.
+
+## Sorting bank charges to your businesses
+
+Once you have at least one business (Summary tab → Manage Entities…),
+MIA sorts synced bank charges to them. She learns from you: every charge
+you tag to a business, or mark personal, teaches her where that store's
+charges go. After a store has been sorted the same way three times, its
+new charges are tagged automatically after each sync (the sync message
+says how many). A charge for a rental property goes to the business that
+owns the property.
+
+Bank Sync → **Review Business Tags (N)** lists what's still waiting, with
+MIA's guess preselected and why, plus what she tagged on her own so you
+can correct it. "Decide later" leaves a charge for next time.
+
+By voice: "which charges need a business?", "the Shell charge was for
+lawn care", "the Walmart one was personal".

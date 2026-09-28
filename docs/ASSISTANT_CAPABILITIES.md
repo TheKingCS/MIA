@@ -169,7 +169,7 @@ Add a line there whenever MIA misses something. The live model's half
 is `tests/live_model_check.py` (run on the owner's machine). Full
 findings: `docs/ASSISTANT_AUDIT.md`.
 
-## Tool registry (174 actions, 38 domains, as of 2026-09-28)
+## Tool registry (176 actions, 39 domains, as of 2026-09-28)
 
 **Added 2026-09-27** (`core/assistant_domain_actions.py`):
 - maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
@@ -184,6 +184,10 @@ findings: `docs/ASSISTANT_AUDIT.md`.
   `add_pantry_item`, `update_pantry_item`, `list_pantry`
 - components/materials/products: `adjust_component_quantity`,
   `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+**Added 2026-09-28** (sorting bank charges, `core/assistant_tagging_actions.py`):
+`list_untagged_charges`, `tag_charge` (domain `business_tags`,
+`core/business_tagging.py`).
 
 **Added 2026-09-28** (textbook tutor, `core/assistant_textbook_actions.py`):
 `list_textbooks`, `search_textbook`, `make_textbook_course` (domain

@@ -65,6 +65,7 @@ from core.assistant_comm_actions import register_communication_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
 from core.assistant_inbox_actions import register_inbox_actions
+from core.assistant_tagging_actions import register_tagging_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
@@ -1079,6 +1080,7 @@ class MIAApplication:
         register_homestead_actions(self.context.assistant_actions)
         register_textbook_actions(self.context.assistant_actions)
         register_inbox_actions(self.context.assistant_actions)
+        register_tagging_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",

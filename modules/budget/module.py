@@ -100,6 +100,7 @@ from PySide6.QtWidgets import (
 
 from core.business_report import build_business_report_html, build_consolidated_business_report_html
 from core.homestead_costs import BuildCost, ToolCost, all_build_costs, all_tool_costs, record_tool_purchase
+from core.business_tagging import auto_tag_new, pending_review
 from core.business_use import build_worksheet, build_worksheet_html
 from core.budget_manager import (
     Bill,
@@ -1750,6 +1751,10 @@ class BudgetModule(ModuleBase):
         self._plaid_reset_button = QPushButton("Reset Plaid Setup…")
         self._plaid_reset_button.clicked.connect(self._on_plaid_reset)
         manage_row.addWidget(self._plaid_reset_button)
+        # Which business each bank charge is for (core/business_tagging.py).
+        self._business_tags_button = QPushButton("Review Business Tags")
+        self._business_tags_button.clicked.connect(self._on_review_business_tags)
+        manage_row.addWidget(self._business_tags_button)
         manage_row.addStretch(1)
         layout.addLayout(manage_row)
 
@@ -1778,6 +1783,13 @@ class BudgetModule(ModuleBase):
         self._plaid_add_liabilities_button.setEnabled(unlocked and self._selected_plaid_item_needs_liabilities_upgrade())
         self._plaid_disconnect_button.setEnabled(unlocked and self._selected_plaid_item_id() is not None)
         self._plaid_reset_button.setEnabled(unlocked)
+        waiting = len(pending_review(self.context))
+        has_businesses = bool(self.context.budget.all_business_entities())
+        self._business_tags_button.setEnabled(has_businesses)
+        self._business_tags_button.setText(f"Review Business Tags ({waiting})" if waiting else "Review Business Tags")
+        self._business_tags_button.setToolTip(
+            "Which business each bank charge is for." if has_businesses else "Add a business first (Summary tab → Manage Entities…)."
+        )
 
         if not configured:
             self._plaid_status_label.setText("Not set up yet.")
@@ -2110,11 +2122,21 @@ class BudgetModule(ModuleBase):
             message += f" Synced holdings for {result.investment_accounts_synced} investment account(s)."
         if result.debts_added or result.debts_updated:
             message += f" Debts: {result.debts_added} new, {result.debts_updated} updated (see the Debts tab)."
+        tagging = auto_tag_new(self.context).describe()
+        if tagging:
+            message += f" {tagging}"
         QMessageBox.information(None, "Synced", message)
         self._refresh_plaid_tab()
         self._refresh_debt_list()
         self._refresh_expense_list()
         self._refresh_income_list()
+
+    def _on_review_business_tags(self) -> None:
+        from gui.business_tags_dialog import BusinessTagsDialog
+
+        if BusinessTagsDialog(self.context).exec() == QDialog.DialogCode.Accepted:
+            self._refresh_expense_list()
+            self._refresh_plaid_tab()
 
     # ------------------------------------------------------------------
     # Search
