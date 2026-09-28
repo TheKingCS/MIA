@@ -326,18 +326,12 @@ network between your own devices. Full detail:
    > sign in from its tray icon.
 2. In a browser: **login.tailscale.com → DNS** → make sure **MagicDNS** is
    on → **Enable HTTPS**.
-3. Turn on MIA's phone server: open `config/config.json` in the MIA
-   folder (it exists after the first launch) and make its `"server"`
-   section say:
-   ```json
-   "server": {
-       "enabled": true,
-       "host": "127.0.0.1",
-       "port": 8765
-   }
-   ```
-   Keep the commas valid. Restart MIA.
-4. Publish MIA on your Tailscale network over https:
+3. Turn on MIA's phone server: MIA → **Settings → Phone Access** → tick
+   **Let my phone reach MIA**. No restart needed. The checklist under it
+   shows what's still missing (a profile password, Tailscale) and, once
+   everything is ready, your phone address.
+4. Publish MIA on your Tailscale network over https (Settings' **Copy
+   Tailscale Command** button copies the first line for you):
    ```bash
    sudo tailscale serve --bg http://127.0.0.1:8765
    tailscale serve status
@@ -346,7 +340,9 @@ network between your own devices. Full detail:
    > administrator**, without `sudo`.
 
    `status` prints your MIA address, like
-   `https://your-computer.your-tailnet.ts.net`. **Write it down.**
+   `https://your-computer.your-tailnet.ts.net`. **Write it down.** Press
+   **Check Again** in Settings: it should now say "✓ Your phone
+   address: …".
 
 **On the phone:**
 

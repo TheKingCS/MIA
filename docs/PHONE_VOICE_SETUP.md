@@ -65,18 +65,12 @@ road.
    MIA → Settings → change password. The phone login refuses profiles
    without a password, since this is a line into everything MIA knows.
 
-4. **Turn on MIA's phone server.** Open `config/config.json` in your
-   MIA folder and add (or edit) this section, keeping the commas valid:
-   ```json
-   "server": {
-       "enabled": true,
-       "host": "127.0.0.1",
-       "port": 8765
-   }
-   ```
-   Then restart MIA. `127.0.0.1` means only this computer can reach
-   the server directly; your phone gets in through Tailscale in the next
-   step.
+4. **Turn on MIA's phone server:** Settings → **Phone Access** → tick
+   **Let my phone reach MIA** (no restart). It listens only on this
+   computer (`127.0.0.1`, port 8765); your phone gets in through
+   Tailscale in the next step. The checklist under the switch tells you
+   what's left, and **Copy Tailscale Command** copies step 5's first
+   line. (Advanced: `server.host`/`server.port` in `config/config.json`.)
 
 5. **Publish MIA to your Tailscale network over https:**
    ```bash
@@ -86,7 +80,9 @@ road.
    `status` prints your MIA address, something like
    `https://your-computer.your-tailnet.ts.net`. **Write it down.** Only
    devices signed in to your Tailscale account can open it. `--bg`
-   keeps it running after reboots.
+   keeps it running after reboots. Settings → Phone Access → **Check
+   Again** shows the address too, and later when your phone last
+   connected.
 
 6. **Make sure MIA's brain is running:** Ollama (the local AI model)
    should be running, as it is for the desktop Assistant.

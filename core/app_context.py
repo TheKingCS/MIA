@@ -92,6 +92,7 @@ if TYPE_CHECKING:
     from core.inbox_manager import InboxManager
     from core.inbox_mail import MailChecker
     from core.ocr import OcrQueue
+    from core.phone_server import PhoneServer
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -191,6 +192,9 @@ class AppContext:
     # Reading photos and scanned pages (core/ocr.py, Tesseract), in the
     # background; used by the inbox and the textbook tutor.
     ocr: Optional["OcrQueue"] = field(default=None, repr=False)
+    # The phone API server (server/app.py), switched on/off from Settings
+    # (core/phone_server.py).
+    phone_server: Optional["PhoneServer"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

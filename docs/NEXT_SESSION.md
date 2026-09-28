@@ -44,8 +44,8 @@ every step below in order, from a blank machine, with Windows notes.
       2. login.tailscale.com → DNS: turn on MagicDNS and **Enable
          HTTPS**.
       3. Give your MIA profile a password (Settings).
-      4. In `config/config.json` set `"server": {"enabled": true,
-         "host": "127.0.0.1", "port": 8765}`, then restart MIA.
+      4. Settings → **Phone Access** → tick **Let my phone reach MIA**
+         (its checklist shows what's left).
       5. `sudo tailscale serve --bg http://127.0.0.1:8765`, then
          `tailscale serve status` to get your `https://…ts.net`
          address.
@@ -164,5 +164,3 @@ every step below in order, from a blank machine, with Windows notes.
   accounts sync.
 - The Bank Sync tab's intro text about Fidelity needing a support
   ticket may be outdated under Plaid's Trial plan.
-- Phone server: there's no Settings toggle yet; you turn it on by
-  editing `config/config.json`.

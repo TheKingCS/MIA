@@ -4928,59 +4928,14 @@ class MIAApplication:
         self._boot_sound_worker.start()
 
     def _start_mobile_server(self) -> None:
-        """
-        Mobile access, Phase 1 (2026-09-12) — opt-in local API server
-        for the PWA + Web Push pipeline (server/app.py), off by default
-        (server.enabled). Started here, in the same process and on the
-        same self.context every GUI screen already shares, rather than
-        as a separate process — that's what lets Phase 2's
-        "notification.created" -> push relay (registered right below)
-        see events raised anywhere in the running app; a standalone
-        server process would have its own disconnected event bus. See
-        the Mobile Phase 1 plan's own architecture note for the full
-        reasoning.
+        """The phone API server (core/phone_server.py): created always so
+        Settings can switch it on later; started now only when enabled
+        (server.enabled). Never blocks or fails boot."""
+        from core.phone_server import PhoneServer
 
-        Runs on a daemon thread via uvicorn — a real, accepted
-        simplification for v1: the server thread reads/writes the same
-        manager instances the GUI thread does, with no new locking
-        (same category of simplification CLAUDE.md's "Known intentional
-        simplifications" already accepts for no threading/async in
-        core — added here, scoped to this one opt-in feature, not
-        speculatively). Never blocks or fails boot: a missing
-        fastapi/uvicorn install (only needed if this feature is turned
-        on) or a bind failure is logged and swallowed, not raised.
-        """
-        if not self.config.get("server.enabled", False):
-            return
-        try:
-            import uvicorn
-
-            from core.web_push import register_notification_relay
-            from server.app import create_app
-        except ImportError:
-            log.warning("server.enabled is true but fastapi/uvicorn/pywebpush aren't installed — mobile server not started.")
-            return
-
-        port = self.config.get("server.port", 8765)
-        app = create_app(self.context)
-        # Loopback by default: the phone reaches MIA through `tailscale
-        # serve`, which terminates HTTPS (required for the phone's
-        # microphone) and forwards to localhost. Listening on 0.0.0.0
-        # would expose login + voice over plain HTTP to the whole LAN.
-        host = self.config.get("server.host", "127.0.0.1")
-        server_config = uvicorn.Config(app, host=host, port=port, log_level="warning")
-        server = uvicorn.Server(server_config)
-        thread = threading.Thread(target=server.run, daemon=True, name="mia-mobile-server")
-        thread.start()
-        log.info("Mobile API server started on %s:%d.", host, port)
-
-        # Mobile access, Phase 2 (2026-09-12) — real notifications now
-        # actually reach subscribed phones, not just the on-demand test
-        # push. Registered only when the server itself is enabled: with
-        # it off, no subscription could ever exist anyway, and this
-        # keeps the whole feature under the one server.enabled flag a
-        # user actually sees/controls.
-        register_notification_relay(self.context)
+        self.context.phone_server = PhoneServer(self.context)
+        if self.context.phone_server.enabled:
+            self.context.phone_server.start()
 
     def _boot_step_core_systems(self) -> str:
         return "CORE SYSTEMS... ONLINE"

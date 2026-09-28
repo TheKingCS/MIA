@@ -19,3 +19,14 @@ folders, and install a new module from a folder or .zip file.
 Multiple people can have their own profile on the same device. "Switch
 User" in the header bar opens the profile picker; password-protected
 profiles will prompt for their password there.
+
+## Phone Access
+
+Tick **Let my phone reach MIA** to turn on the phone server (the phone
+web app and the Android app use it); untick it to turn it off. It takes
+effect right away, no restart. Under the switch, a checklist shows
+what's ready and what's missing: the server itself, a profile password
+(the phone sign-in needs one), Tailscale and its forwarding command
+(**Copy Tailscale Command** copies it), your phone address, and when a
+phone last connected. **Check Again** refreshes it. Full steps:
+docs/PHONE_VOICE_SETUP.md.

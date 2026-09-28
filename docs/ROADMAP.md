@@ -12314,3 +12314,20 @@ failure), real `data/` untouched. 16 new tests in `tests/test_ocr.py`,
 photo, a scanned PDF with resume, a photo through the inbox); 6 new
 Kotlin tests; the Android sources compile against the Android 14
 framework jar.
+
+## Phone access switch in Settings (2026-09-28)
+
+- `core/phone_server.py` (`context.phone_server`) now owns the phone API
+  server that `core/application.py` used to start inline: start/stop
+  live (uvicorn `should_exit`), a clear reason when it can't (packages
+  missing, port in use), and a checklist for Settings: running, a
+  profile with a password, Tailscale connected and `tailscale serve`
+  forwarding to MIA (with the exact command and a copy button), the
+  phone address, and when a phone last connected (`app.state.last_seen`
+  in `server/app.py`).
+- Settings → Phone Access replaces hand-editing `server.enabled` in
+  `config/config.json`.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 7 new tests, including switching the real server on, off and
+on again on the same port, and the Settings page offscreen.

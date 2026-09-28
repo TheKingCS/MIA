@@ -47,6 +47,7 @@ from __future__ import annotations
 import base64
 import io
 import secrets
+import time
 import tempfile
 from urllib.parse import unquote
 import threading
@@ -118,6 +119,8 @@ def create_app(context: AppContext) -> FastAPI:
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
+    # token -> when that phone last used MIA (Settings shows "phone last connected").
+    app.state.last_seen: dict[str, float] = {}
 
     def require_profile_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> str:
         if credentials is None:
@@ -125,6 +128,7 @@ def create_app(context: AppContext) -> FastAPI:
         profile_id = app.state.sessions.get(credentials.credentials)
         if profile_id is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
+        app.state.last_seen[credentials.credentials] = time.time()
         return profile_id
 
     @app.post("/api/login")
@@ -147,6 +151,7 @@ def create_app(context: AppContext) -> FastAPI:
             )
         token = secrets.token_urlsafe(32)
         app.state.sessions[token] = profile.profile_id
+        app.state.last_seen[token] = time.time()
         log.info("Mobile login for profile '%s'.", profile.profile_id)
         return {"token": token, "profile_id": profile.profile_id, "name": profile.name}
 

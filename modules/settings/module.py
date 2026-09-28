@@ -35,11 +35,13 @@ check) does the actual set/remove.
 from __future__ import annotations
 
 import tempfile
+import time
 from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -58,6 +60,7 @@ from PySide6.QtWidgets import (
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
+from core.phone_server import DEFAULT_PORT, describe_status, serve_command, tailscale_info
 from core.tts_worker import TTSWorker
 from core.voice_manager import DEFAULT_PLAYBACK_VOLUME, MAX_PLAYBACK_VOLUME, MIN_PLAYBACK_VOLUME
 from core.update_manager import apply_update_package, peek_update_manifest
@@ -255,6 +258,8 @@ class SettingsModule(ModuleBase):
         speak_row.addStretch(1)
         outer.addLayout(speak_row)
 
+        self._build_phone_section(outer)
+
         backup_section = QLabel("Backup & Restore")
         backup_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(backup_section)
@@ -397,6 +402,71 @@ class SettingsModule(ModuleBase):
         self.context.config.set("system.device_profile", profile_id)
         self.context.config.save()
         self._set_status(f"Device profile changed to {_PROFILE_DISPLAY_NAMES[profile_id]}.")
+
+    # ------------------------------------------------------------------
+    # Phone access (core/phone_server.py)
+    # ------------------------------------------------------------------
+
+    def _build_phone_section(self, outer: QVBoxLayout) -> None:
+        phone_section = QLabel("Phone Access")
+        phone_section.setObjectName("SettingsSectionHeader")
+        outer.addWidget(phone_section)
+        phone_desc = QLabel(
+            "Talk to MIA from your phone (the phone web app or the Android app) through Tailscale. "
+            "Full steps: docs/PHONE_VOICE_SETUP.md."
+        )
+        phone_desc.setObjectName("SubtitleLabel")
+        phone_desc.setWordWrap(True)
+        outer.addWidget(phone_desc)
+        self._phone_checkbox = QCheckBox("Let my phone reach MIA")
+        server = self.context.phone_server
+        self._phone_checkbox.setChecked(bool(server and server.enabled))
+        self._phone_checkbox.setEnabled(server is not None)
+        self._phone_checkbox.toggled.connect(self._on_phone_toggled)
+        outer.addWidget(self._phone_checkbox)
+        self._phone_status_label = QLabel("")
+        self._phone_status_label.setWordWrap(True)
+        self._phone_status_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        outer.addWidget(self._phone_status_label)
+        phone_buttons = QHBoxLayout()
+        check_button = QPushButton("Check Again")
+        check_button.clicked.connect(self._refresh_phone_status)
+        phone_buttons.addWidget(check_button)
+        self._copy_serve_button = QPushButton("Copy Tailscale Command")
+        self._copy_serve_button.setToolTip("Copies the one-time command that lets Tailscale forward your phone to MIA.")
+        self._copy_serve_button.clicked.connect(self._on_copy_serve_command)
+        phone_buttons.addWidget(self._copy_serve_button)
+        phone_buttons.addStretch(1)
+        outer.addLayout(phone_buttons)
+        self._refresh_phone_status()
+
+    def _on_phone_toggled(self, checked: bool) -> None:
+        server = self.context.phone_server
+        if server is None:
+            return
+        self._phone_status_label.setText("Starting…" if checked else "Stopping…")
+        QApplication.processEvents()
+        server.set_enabled(checked)
+        self._refresh_phone_status()
+
+    def _refresh_phone_status(self) -> None:
+        server = self.context.phone_server
+        if server is None:
+            self._phone_status_label.setText("Phone access isn't available in this mode.")
+            self._copy_serve_button.setVisible(False)
+            return
+        status = server.status()
+        tailscale = tailscale_info(status.port) if status.enabled else None
+        self._phone_status_label.setText("\n".join(describe_status(status, tailscale, time.time())))
+        self._copy_serve_button.setVisible(bool(tailscale and tailscale.running and not tailscale.serving_mia))
+
+    def _on_copy_serve_command(self) -> None:
+        server = self.context.phone_server
+        port = server.port if server is not None else DEFAULT_PORT
+        QApplication.clipboard().setText(serve_command(port))
+        self._phone_status_label.setText(
+            self._phone_status_label.text() + "\nCopied. Paste it into a terminal, then press Check Again."
+        )
 
     def _on_daily_budget_changed(self, value: int) -> None:
         self.context.config.set("communication.daily_budget", int(value))
