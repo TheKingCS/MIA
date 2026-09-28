@@ -111,6 +111,10 @@ class Conversation:
     # Transient: MIA's offer to record something the owner mentioned in
     # passing (core/passing_mentions.py), waiting for a yes on the next turn.
     pending_offer: Optional[object] = field(default=None, repr=False, compare=False)
+    # Transient: MIA just asked which kind of support the user wants
+    # (core/support_choice.py), and when she last asked.
+    awaiting_support: bool = field(default=False, repr=False, compare=False)
+    support_asked_at: Optional[float] = field(default=None, repr=False, compare=False)
     # Transient: the open journal session's entry id and where it starts
     # in `messages`. Not persisted on purpose: after a restart the
     # earlier session's messages are gone from memory (they were never

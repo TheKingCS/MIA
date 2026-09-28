@@ -16,6 +16,8 @@ caught here, not just in the handler tests.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 import core.alarm_manager as alarm_manager_module
@@ -70,6 +72,14 @@ def context(tmp_path, monkeypatch):
     # for real (e.g. ProfileManager) — without this, a throwaway test
     # write would land in the actual config/config.json.
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    # 2026-09-28: Core also loads what "remind me why" reads.
+    import core.budget_manager, core.intent_manager, core.project_manager, core.real_estate_manager, core.why_graph
+    for _module in (core.budget_manager, core.intent_manager, core.project_manager, core.real_estate_manager,
+                    core.why_graph):
+        _original = _module._DATA_DIR
+        for _attr, _value in list(vars(_module).items()):
+            if isinstance(_value, Path) and (_value == _original or _original in _value.parents):
+                monkeypatch.setattr(_module, _attr, data_dir / _value.relative_to(_original))
     monkeypatch.setattr(notification_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(notification_manager_module, "_NOTIFICATIONS_FILE", data_dir / "notifications.json")
     monkeypatch.setattr(calendar_manager_module, "_DATA_DIR", data_dir)
@@ -600,3 +610,33 @@ def test_recall_recent_activity_returns_entries(context):
     context.events.publish("module.opened", module_id="notes")
     result = _action_recall_recent_activity(context, {})
     assert "notes" in result.lower()
+
+
+def test_perspective_works_on_core(context):
+    """2026-09-28: "remind me why" on the headless voice loop gets the
+    owner's own reasons, like on the desktop and the phone."""
+    from core.assistant_turn import run_assistant_turn
+    from core.conversation_manager import Conversation
+    from core.conversation_modes import PERSPECTIVE
+    from core.llm_manager import ChatReply
+
+    factory = context.intents.add_intent("Factory work")
+    freedom = context.intents.add_intent("Control over my time")
+    context.intents.set_serves(factory.intent_id, freedom.intent_id, "the factory pays the bills")
+    seen = []
+
+    class FakeLLM:
+        def chat_with_tools(self, messages, tools):
+            seen.append((messages, tools))
+            return ChatReply(content="Because it buys you your time back.")
+
+        def generate(self, prompt):
+            return ""
+
+    context.llm = FakeLLM()
+    conversation = Conversation(conversation_id="core")
+    turn = run_assistant_turn(context, conversation, "Remind me why I'm doing all this")
+    assert conversation.mode == PERSPECTIVE and turn.replies == ["Because it buys you your time back."]
+    system = seen[0][0][0]["content"]
+    assert "Control over my time" in system and "Factory work" in system
+    assert "link_my_reason" in context.assistant_actions._actions

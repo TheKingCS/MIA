@@ -204,6 +204,15 @@ for the rest of the conversation until you say "back to normal":
 - **"Help me figure out what to do"** or "I'm overwhelmed": she helps
   make it smaller and suggests one next step. The decision stays yours.
 
+**If you don't say, she asks.** When you sound worn down ("rough day",
+"I'm so tired of this") without asking for anything, she asks once:
+"Do you want me to just listen, help you figure out what to do, or
+remind you why you're doing all this?" Answer however you like ("just
+listen", "the second one", "just talk"). After the same answer three
+times running she stops asking and does that, saying so, and you can
+switch anytime. At most once every few hours; turn it off in Settings →
+Support & Safety.
+
 In these modes MIA won't change your records because you mentioned
 them ("the truck broke down again" is a vent, not a maintenance log).
 A clear command still works: "add milk to the grocery list".

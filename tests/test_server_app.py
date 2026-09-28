@@ -49,6 +49,14 @@ from core.push_subscription_manager import PushSubscriptionManager
 def context(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
+    # 2026-09-28: Core also loads what "remind me why" reads.
+    import core.budget_manager, core.intent_manager, core.project_manager, core.real_estate_manager, core.why_graph
+    for _module in (core.budget_manager, core.intent_manager, core.project_manager, core.real_estate_manager,
+                    core.why_graph):
+        _original = _module._DATA_DIR
+        for _attr, _value in list(vars(_module).items()):
+            if isinstance(_value, Path) and (_value == _original or _original in _value.parents):
+                monkeypatch.setattr(_module, _attr, data_dir / _value.relative_to(_original))
     monkeypatch.setattr(notification_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(notification_manager_module, "_NOTIFICATIONS_FILE", data_dir / "notifications.json")
     monkeypatch.setattr(calendar_manager_module, "_DATA_DIR", data_dir)

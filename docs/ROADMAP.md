@@ -12501,3 +12501,20 @@ a real screen offscreen.
 
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 2 new tests; routing corpus 214.
+
+## Slice B follow-ups: asking which support; Perspective on Core (2026-09-28)
+
+- `core/support_choice.py` + `pre_turn()`: something heavy said in
+  normal mode (not journaling, not private, not in the last 3 hours)
+  gets one fixed question (no model call): just listen, figure it out,
+  or remember why. Short answers and the usual mode phrases both work;
+  choices are remembered (`assistant.support_choices`), and the same
+  one three times running is used without asking, with a one-line
+  notice. After the safety floor, always. Setting:
+  `assistant.ask_support_kind` (Settings → Support & Safety).
+- Core (`core/core_runtime.py`) now loads intents, budget, projects and
+  real estate (all gui-free) and registers the why tools, so Perspective
+  has its fact sheet on the headless voice loop.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 19 new tests (18 support choice, 1 Core Perspective turn).

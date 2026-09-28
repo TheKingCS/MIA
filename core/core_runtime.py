@@ -87,6 +87,11 @@ from core.private_journal import PrivateJournalManager
 from core.talk_it_out import register_journal_actions
 from core.voice_manager import VoiceManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
+from core.assistant_why_actions import register_why_actions
+from core.budget_manager import BudgetManager
+from core.intent_manager import IntentManager
+from core.project_manager import ProjectManager
+from core.real_estate_manager import RealEstateManager
 
 log = get_logger(__name__)
 
@@ -137,6 +142,13 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.discovery = DiscoveryManager(context)
     context.user_memories = UserMemoryManager(context)
     context.private_journal = PrivateJournalManager(context)
+    # 2026-09-28: what "remind me why" (Perspective, core/why_graph.py)
+    # reads: the owner's reasons and the evidence for them (debts paid
+    # down, builds, rentals). All gui-free, cheap JSON loads.
+    context.intents = IntentManager(context)
+    context.budget = BudgetManager(context)
+    context.projects = ProjectManager(context)
+    context.real_estate = RealEstateManager(context)
 
     # Constructed but never `.discover()`-ed — stays empty for the life
     # of a headless Core process, so `open_module` (not registered
@@ -159,6 +171,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
+    register_why_actions(registry)
 
     registry.register(AssistantAction(
         name="add_alarm",

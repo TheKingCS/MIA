@@ -99,9 +99,10 @@ every step below in order, from a blank machine, with Windows notes.
    Bank Sync → Review Business Tags; set up your businesses under Summary
    → Manage Entities first).
 3. ~~Cognitive Extension, slice B: "Remember Why"~~ **built**
-   (2026-09-27). Try it: Part 6 of `docs/SETUP_GUIDE.md`. Follow-ups:
-   MIA asking which kind of support you want when it's unclear, and
-   Perspective on the headless Core voice loop.
+   (2026-09-27). Try it: Part 6 of `docs/SETUP_GUIDE.md`. Both follow-ups
+   are **built** (2026-09-28): MIA asks which kind of support you want
+   when you sound worn down (and learns your usual answer), and "remind
+   me why" works on the headless Core voice loop too.
 4. ~~Cognitive Extension, slice C: "Know when to speak"~~ **built**
    (2026-09-27): one gate for every unprompted message, 5/day, no quiet
    hours. The opt-in weekly journal reflection is **built** (Settings →

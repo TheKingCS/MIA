@@ -34,6 +34,7 @@ only has anything to say while the journal is unlocked.
 from __future__ import annotations
 
 import re
+import time
 import uuid
 from collections import Counter
 from dataclasses import dataclass
@@ -47,6 +48,7 @@ from core.conversation_manager import DEFAULT_TITLE, PRIVACY_JOURNAL, Conversati
 from core.conversation_modes import COMPANION, DIRECT, LISTEN, MOMENTUM, PLAN, detect_mode_change
 from core.logger import get_logger
 from core.passing_mentions import carry_out, detect_offer, is_yes
+from core.support_choice import ASK_EVERY_HOURS, HABIT_NOTICE, QUESTION, habit, interpret_answer, remember, remembered, sounds_heavy
 from core.private_journal import JournalExchange, JournalLockedError, PrivateJournalEntry
 from core.safety_floor import detect_danger, safety_reply, trusted_contact_from
 from core.textbook_study import is_study_mode, update_study_target
@@ -111,7 +113,18 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
         result.fixed_reply = carry_out(context, offer)
         return result
 
+    # MIA asked which kind of support last turn (core/support_choice.py).
+    awaiting, conversation.awaiting_support = conversation.awaiting_support, False
+
     change = detect_mode_change(prompt)
+    if awaiting:
+        chosen = change.mode if change.mode is not None else (interpret_answer(prompt) if change.is_empty else None)
+        if chosen is not None:
+            if change.mode is None:
+                conversation.mode = chosen
+                _persist(context, conversation)
+            if getattr(context, "config", None) is not None:
+                remember(context.config, chosen)
     if not change.is_empty:
         if change.mode is not None:
             conversation.mode = change.mode
@@ -148,9 +161,36 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
         result.fixed_reply = safety_reply(trusted_contact_from(context))
         return result
 
+    if not awaiting and change.is_empty and _may_ask_support(context, conversation, prompt):
+        conversation.support_asked_at = time.time()
+        usual = habit(remembered(getattr(context, "config", None)))
+        if usual is not None:
+            # The same choice three times running: use it, say so, don't ask.
+            conversation.mode = usual
+            _persist(context, conversation)
+            result.notice = result.notice or HABIT_NOTICE[usual]
+        else:
+            conversation.awaiting_support = True
+            result.fixed_reply = QUESTION
+            return result
+
     if _offers_allowed(conversation) and getattr(context, "assistant_actions", None) is not None:
         conversation.pending_offer = detect_offer(prompt, context)
     return result
+
+
+def _may_ask_support(context: AppContext, conversation: Conversation, prompt: str) -> bool:
+    """Something heavy said in normal mode, not journaling or private, not
+    asked in the last few hours, and the owner hasn't turned it off."""
+    config = getattr(context, "config", None)
+    if config is not None and config.get("assistant.ask_support_kind", True) is False:
+        return False
+    if conversation.mode != COMPANION or conversation.journal or conversation.private_turn:
+        return False
+    asked = conversation.support_asked_at
+    if asked is not None and time.time() - asked < ASK_EVERY_HOURS * 3600:
+        return False
+    return sounds_heavy(prompt)
 
 
 _OFFER_MODES = (COMPANION, DIRECT, MOMENTUM, PLAN)

@@ -234,6 +234,15 @@ class SettingsModule(ModuleBase):
         self._trusted_contact_edit.editingFinished.connect(self._on_trusted_contact_changed)
         contact_row.addWidget(self._trusted_contact_edit, stretch=1)
         outer.addLayout(contact_row)
+        # core/support_choice.py: ask instead of guessing.
+        self._ask_support_checkbox = QCheckBox("When I sound worn down, ask what kind of support I want")
+        self._ask_support_checkbox.setToolTip(
+            "Just listen, help figure it out, or remind me why. After the same answer three times, MIA uses it "
+            "without asking."
+        )
+        self._ask_support_checkbox.setChecked(self.context.config.get("assistant.ask_support_kind", True) is not False)
+        self._ask_support_checkbox.toggled.connect(self._on_ask_support_toggled)
+        outer.addWidget(self._ask_support_checkbox)
 
         # Cognitive Extension slice C: how often MIA speaks up on her own
         # (core/communication_gate.py).
@@ -506,6 +515,10 @@ class SettingsModule(ModuleBase):
             for p in gate.paused():
                 gate.resume(p["topic"])
         self._refresh_breaks()
+
+    def _on_ask_support_toggled(self, checked: bool) -> None:
+        self.context.config.set("assistant.ask_support_kind", bool(checked))
+        self.context.config.save()
 
     def _on_reflection_toggled(self, checked: bool) -> None:
         self.context.config.set("journal.weekly_reflection", bool(checked))
