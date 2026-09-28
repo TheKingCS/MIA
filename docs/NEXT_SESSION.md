@@ -144,7 +144,9 @@ every step below in order, from a blank machine, with Windows notes.
      serial, warranty end) from its documents;
    - meaning-based search for textbooks (embeddings), so "why do
      breakers trip" finds a passage that never uses those words;
-   - a receipt's line items (not just the total) for build materials.
+   - ~~a receipt's line items~~ **built** (2026-09-28): kept on the
+     expense; "what did I buy for the greenhouse?". Later: splitting one
+     receipt across two builds.
 
 ## 3. Ideas parked for later (need their own planning pass)
 

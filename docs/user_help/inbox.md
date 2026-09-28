@@ -43,6 +43,10 @@ her daily message limit, merged with anything else she has to say).
   warranty" counted from the purchase date, or a date it states); and,
   from the receipt for the item itself (not for parts), what you paid
   and when.
+- **Receipt items:** each line of a receipt (description, quantity,
+  price), checked against the receipt's subtotal; the Inbox says when
+  they don't add up, so a misread line is visible. Filed receipts keep
+  their items, so "what did I buy for the greenhouse?" lists them.
 
 All of this is done by fixed rules, not the AI model, so it never
 invents a number.

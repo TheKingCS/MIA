@@ -12488,3 +12488,16 @@ The Finance #3 follow-ups.
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 4 new tests; the Budget screen's report gathering ran against
 a real screen offscreen.
+
+## Receipt line items (2026-09-28)
+
+- `core/inbox_classify.receipt_items()`: item lines (description,
+  quantity @ unit price, amount), skipping totals, tax and payment
+  lines, with a note on whether they add up to the subtotal.
+- Inbox items carry them (shown in the Inbox screen); filing saves them
+  on the expense (`ExpenseEntry.items`).
+- Tool `list_build_purchases`: "what did I buy for the greenhouse?",
+  biggest first, from receipt items or plain expenses (180 actions).
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 2 new tests; routing corpus 214.

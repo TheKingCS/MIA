@@ -377,3 +377,63 @@ def detail_proposals(details: dict, asset) -> list[DetailProposal]:
             text = f"Warranty until {until}" + (f" (now {current})" if current else "")
             proposals.append(DetailProposal("warranty_until", until, text, current, not current, warranty["source"]))
     return proposals
+
+
+# ---------------------------------------------------------------------------
+# Line items (2026-09-28): what was bought, not just the total
+# ---------------------------------------------------------------------------
+
+_ITEM_LINE = re.compile(
+    r"^(?P<desc>.*?[A-Za-z].*?)\s+"
+    r"(?:(?P<qty>\d+(?:\.\d+)?)\s*(?:@|x|X|EA\s*@)\s*\$?(?P<unit>\d+\.\d{2})\s+)?"
+    r"\$?(?P<amount>\d{1,3}(?:,\d{3})*\.\d{2})\s*[A-Z]{0,2}$"
+)
+_NOT_AN_ITEM = re.compile(
+    r"\b(sub\s?total|total|tax|change|cash|visa|mastercard|amex|discover|debit|credit|balance|tender|payment|paid|"
+    r"amount due|savings|you saved|discount|coupon|rewards|points|card|auth|approval|ref|tip)\b",
+    re.IGNORECASE,
+)
+_SUBTOTAL = re.compile(r"\bsub\s?total\b.*?(\d{1,3}(?:,\d{3})*\.\d{2})", re.IGNORECASE)
+
+
+@dataclass
+class LineItem:
+    description: str
+    amount: float
+    quantity: Optional[float] = None
+    unit_price: Optional[float] = None
+
+    def describe(self) -> str:
+        qty = f" ×{self.quantity:g}" if self.quantity and self.quantity != 1 else ""
+        return f"{self.description}{qty} ${self.amount:,.2f}"
+
+
+def receipt_items(text: str) -> tuple[list[LineItem], str]:
+    """Pure logic. (items, a note about how far to trust them). The note
+    says when the items don't add up to the receipt's subtotal, so a
+    misread line is visible instead of silently wrong."""
+    items: list[LineItem] = []
+    for raw in text.splitlines():
+        line = " ".join(raw.split())
+        if not line or _NOT_AN_ITEM.search(line):
+            continue
+        match = _ITEM_LINE.match(line)
+        if not match:
+            continue
+        description = match.group("desc").strip(" .:-*#")
+        if len(description) < 2 or re.fullmatch(r"[\d\W]+", description):
+            continue
+        amount = float(match.group("amount").replace(",", ""))
+        quantity = float(match.group("qty")) if match.group("qty") else None
+        unit_price = float(match.group("unit")) if match.group("unit") else None
+        items.append(LineItem(description.title() if description.isupper() else description, amount, quantity, unit_price))
+    if not items:
+        return [], ""
+    total = round(sum(i.amount for i in items), 2)
+    subtotal = _SUBTOTAL.search(text)
+    if subtotal:
+        expected = float(subtotal.group(1).replace(",", ""))
+        if abs(expected - total) <= 0.01:
+            return items, f"The items add up to the subtotal (${expected:,.2f})."
+        return items, f"The items add up to ${total:,.2f} but the subtotal is ${expected:,.2f}; a line may be misread or missing."
+    return items, f"The items add up to ${total:,.2f} (no subtotal on the receipt to check against)."

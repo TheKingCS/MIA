@@ -13,6 +13,7 @@ It (or Dismiss). All logic lives in core/inbox_manager.py
 
 from __future__ import annotations
 
+import html
 from pathlib import Path
 from typing import Optional
 
@@ -55,6 +56,11 @@ def format_inbox_row(item: InboxItem, asset_name: str = "") -> str:
     return text + f"   ({item.received_at[:10]}, {item.source})"
 
 
+def _item_text(line: dict) -> str:
+    qty = line.get("quantity")
+    return f"{line.get('description', '')}" + (f" ×{qty:g}" if qty and qty != 1 else "") + f"  ${line.get('amount', 0):,.2f}"
+
+
 def describe_item(item: InboxItem, asset_name: str = "", project_name: str = "") -> str:
     """Pure formatting logic: what MIA read, in plain lines."""
     lines = [f"<b>{DOC_TYPE_LABELS.get(item.doc_type, 'Document')}</b> · from {item.source} · {item.received_at.replace('T', ' ')[:16]}"]
@@ -66,6 +72,12 @@ def describe_item(item: InboxItem, asset_name: str = "", project_name: str = "")
         amount = f"${item.amount:,.2f}" if item.amount is not None else "not found"
         lines.append(f"Total: {amount}" + (f" (read from {item.amount_basis})" if item.amount_basis else ""))
         lines.append(f"Date: {item.doc_date or 'not found'} · Store: {item.vendor or 'not found'}")
+    if item.items:
+        shown = [f"&nbsp;&nbsp;• {html.escape(_item_text(i))}" for i in item.items[:8]]
+        more = f"<br>&nbsp;&nbsp;…and {len(item.items) - 8} more" if len(item.items) > 8 else ""
+        lines.append("Items:<br>" + "<br>".join(shown) + more)
+        if item.items_note:
+            lines.append(f"<i>{html.escape(item.items_note)}</i>")
     lines.append(f"For: {asset_name or 'no match'}" + (f" · Build: {project_name}" if project_name else ""))
     if not item.readable or item.note:
         lines.append(f"<i>{item.note}</i>")

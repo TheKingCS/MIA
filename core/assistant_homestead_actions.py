@@ -161,6 +161,37 @@ def _action_get_build_costs(context: AppContext, arguments: dict) -> str:
     return f"You've spent ${total:,.2f} across {len(costs)} build{'s' if len(costs) != 1 else ''}: " + "; ".join(lines) + "."
 
 
+def _action_list_build_purchases(context: AppContext, arguments: dict) -> str:
+    """What was bought for a build: receipt line items where filed from the
+    inbox (core/inbox_classify.receipt_items), otherwise each expense."""
+    problem = _unavailable(context)
+    if problem:
+        return problem
+    name = str(arguments.get("build") or "").strip()
+    if not name:
+        return "Which build?"
+    project, question = _find(context.projects.all_projects(), name, lambda p: p.name, "build")
+    if project is None:
+        return question or f"I don't have a build called '{name}'."
+    expenses = sorted((e for e in context.budget.all_expenses() if e.project_id == project.project_id), key=lambda e: e.date)
+    if not expenses:
+        return f"Nothing is logged for the {project.name} yet."
+    lines: list[tuple[float, str]] = []
+    for e in expenses:
+        if e.items:
+            for item in e.items:
+                qty = item.get("quantity")
+                text = item.get("description", "") + (f" ×{qty:g}" if qty and qty != 1 else "")
+                lines.append((float(item.get("amount", 0)), f"{text} ${float(item.get('amount', 0)):,.2f}"))
+        else:
+            lines.append((e.amount, f"{e.description or e.payee or e.category} ${e.amount:,.2f}"))
+    total = sum(e.amount for e in expenses)
+    biggest = [text for _, text in sorted(lines, key=lambda pair: -pair[0])[:8]]
+    more = f", and {len(lines) - 8} smaller" if len(lines) > 8 else ""
+    return (f"For the {project.name} you've bought (${total:,.2f} in all, biggest first): "
+            + "; ".join(biggest) + more + ".")
+
+
 def _action_get_tool_costs(context: AppContext, arguments: dict) -> str:
     problem = _unavailable(context)
     if problem:
@@ -355,6 +386,14 @@ def register_homestead_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_get_build_costs,
         trigger_phrases=("spent on the", "have i spent on", "build costs", "cost of the build", "over budget on", "under budget on",
                          "how much has the"),
+    ))
+    registry.register(AssistantAction(
+        name="list_build_purchases", domain="homestead_costs",
+        description="List what the user has bought for a build (receipt items, biggest first).",
+        parameters={"type": "object", "properties": {"build": {**_S, "description": "The build, e.g. 'greenhouse'."}},
+                    "required": ["build"]},
+        handler=_action_list_build_purchases,
+        trigger_phrases=("did i buy for", "have i bought for", "what did i get for", "materials for the", "bought for the"),
     ))
     registry.register(AssistantAction(
         name="get_tool_costs", domain="homestead_costs",

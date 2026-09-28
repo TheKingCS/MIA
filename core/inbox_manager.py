@@ -49,7 +49,7 @@ from core.document_text import EMAIL_SUFFIXES, extract
 from core.ocr import IMAGE_SUFFIXES, read_result, unavailable_note
 from core.inbox_classify import (
     DOC_TYPE_LABELS, INVOICE, MANUAL, RECEIPT, WARRANTY, DetailProposal, ScheduleItem, detail_proposals, document_details,
-    document_type, expense_category, maintenance_schedule, match_asset, match_project, receipt_fields,
+    document_type, expense_category, maintenance_schedule, match_asset, match_project, receipt_fields, receipt_items,
 )
 from core.logger import get_logger
 
@@ -95,6 +95,10 @@ class InboxItem:
     # a purchase), core/inbox_classify.document_details(); offered as
     # updates to the item's page when filing.
     details: dict = field(default_factory=dict)
+    # A receipt's lines (core/inbox_classify.receipt_items) and how far
+    # to trust them; saved on the expense when filed.
+    items: list[dict] = field(default_factory=list)
+    items_note: str = ""
 
     @staticmethod
     def from_dict(data: dict) -> "InboxItem":
@@ -276,7 +280,7 @@ class InboxManager:
     def _classify(self, item: InboxItem, text: str, filename: str, email_date: str) -> None:
         # Start clean: an item is classified again once its OCR finishes.
         item.amount, item.amount_basis, item.doc_date, item.vendor, item.category = None, "", "", "", ""
-        item.schedule, item.details = [], {}
+        item.schedule, item.details, item.items, item.items_note = [], {}, [], ""
         item.excerpt = " ".join(text.split())[:400]
         haystack = f"{item.subject}\n{filename}\n{text}"
         item.doc_type = document_type(text, filename, item.subject)
@@ -294,6 +298,8 @@ class InboxManager:
             item.vendor = fields.vendor
             item.category = expense_category(item.vendor, asset, project, text)
             fields.date = item.doc_date
+            lines, item.items_note = receipt_items(text)
+            item.items = [asdict(line) for line in lines]
         item.details = document_details(text, item.doc_type, fields)
         if item.doc_type in (MANUAL, WARRANTY) or (item.doc_type == "other" and asset is not None):
             item.schedule = [asdict(s) for s in maintenance_schedule(text)]
@@ -346,6 +352,7 @@ class InboxManager:
                 asset_id=asset_id or "", project_id=project_id or "", notes=f"From the inbox: {', '.join(item.files)}",
                 # The purchase itself counts once in the tool's cost (core/homestead_costs.py).
                 asset_purchase=is_purchase,
+                items=item.items,
             )
             done.append(f"logged ${amount:,.2f}" + (f" for the {asset.name}" if asset else ""))
             if project_id and getattr(self.context, "projects", None):

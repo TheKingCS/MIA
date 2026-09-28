@@ -80,7 +80,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -204,6 +204,9 @@ class ExpenseEntry:
     # it's personal (entity_id ""); entity_auto marks MIA's own choice.
     entity_reviewed: bool = False
     entity_auto: bool = False
+    # 2026-09-28: what was bought, from a filed receipt's lines
+    # (core/inbox_classify.receipt_items): [{description, amount, quantity, unit_price}].
+    items: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -214,6 +217,7 @@ class ExpenseEntry:
             "notes": self.notes, "created_at": self.created_at,
             "project_id": self.project_id, "asset_id": self.asset_id, "asset_purchase": self.asset_purchase,
             "entity_reviewed": self.entity_reviewed, "entity_auto": self.entity_auto,
+            "items": list(self.items),
         }
 
     @staticmethod
@@ -237,6 +241,7 @@ class ExpenseEntry:
             asset_purchase=bool(data.get("asset_purchase", False)),
             entity_reviewed=bool(data.get("entity_reviewed", False)),
             entity_auto=bool(data.get("entity_auto", False)),
+            items=list(data.get("items", []) or []),
         )
 
 
@@ -972,6 +977,7 @@ class BudgetManager:
         project_id: str = "",
         asset_id: str = "",
         asset_purchase: bool = False,
+        items: Optional[list] = None,
     ) -> ExpenseEntry:
         if amount < 0:
             raise ValueError(f"amount must not be negative, got {amount}")
@@ -992,6 +998,7 @@ class BudgetManager:
             project_id=project_id,
             asset_id=asset_id,
             asset_purchase=asset_purchase,
+            items=list(items or []),
         )
         self._expenses.append(entry)
         self._save_expenses()

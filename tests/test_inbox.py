@@ -518,3 +518,34 @@ def test_inbox_screen_offers_details_for_the_chosen_item(ctx):
     fields = {module._details_list.item(i).data(Qt.ItemDataRole.UserRole) for i in range(module._details_list.count())}
     assert fields == {"model", "serial_number", "manufacturer"}  # the truck has other values
     widget.deleteLater()
+
+
+# ------------------------------------------------------------------ line items (2026-09-28)
+
+
+def test_receipt_items_and_how_far_to_trust_them():
+    from core.inbox_classify import receipt_items
+
+    items, note = receipt_items(RECEIPT_TEXT)
+    assert [(i.description, i.quantity, i.unit_price, i.amount) for i in items] == [
+        ("2X4X8 Pine Stud", 6.0, 3.98, 23.88), ("Deck Screws 1Lb", None, None, 9.98)]
+    assert note == "The items add up to the subtotal ($33.86)."
+    misread = RECEIPT_TEXT.replace("DECK SCREWS 1LB              9.98\n", "")
+    assert "a line may be misread or missing" in receipt_items(misread)[1]
+    assert receipt_items("Thanks for your order!") == ([], "")
+
+
+def test_filed_items_travel_with_the_expense_and_answer_what_did_i_buy(ctx):
+    from modules.inbox.module import describe_item
+
+    [item] = drop(ctx, "receipt.txt", RECEIPT_TEXT)
+    assert len(item.items) == 2 and "Deck Screws" in describe_item(item) and "subtotal" in describe_item(item)
+    ctx.inbox.file_item(item.item_id, project_id=ctx.greenhouse.project_id)
+    [expense] = ctx.budget.all_expenses()
+    assert [i["description"] for i in expense.items] == ["2X4X8 Pine Stud", "Deck Screws 1Lb"]
+    assert BudgetManager(ctx).all_expenses()[0].items == expense.items  # persisted
+    ctx.budget.add_expense(amount=120, category="Building Materials", description="Greenhouse film",
+                           project_id=ctx.greenhouse.project_id)
+    reply = say(ctx, "list_build_purchases", build="greenhouse")
+    assert reply.startswith("For the Greenhouse you've bought ($156.23 in all, biggest first): Greenhouse film $120.00; "
+                            "2X4X8 Pine Stud ×6 $23.88; Deck Screws 1Lb $9.98.")
