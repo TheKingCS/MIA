@@ -184,13 +184,15 @@ class ProjectTool(ToolboxTool):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
-        self.context.projects.add_project(
+        added = self.context.projects.add_project(
             name=dialog.entered_name,
             status=dialog.entered_status,
             due_date=dialog.entered_due_date,
             description=dialog.entered_description,
             intent_id=dialog.entered_intent_id,
         )
+        if dialog.entered_budget:
+            self.context.projects.update_project(added.project_id, budget=dialog.entered_budget)
         self._refresh_project_list()
 
     def _on_edit_project(self) -> None:
@@ -211,6 +213,7 @@ class ProjectTool(ToolboxTool):
             due_date=dialog.entered_due_date,
             description=dialog.entered_description,
             intent_id=dialog.entered_intent_id,
+            budget=dialog.entered_budget,
         )
         self._refresh_project_list()
 

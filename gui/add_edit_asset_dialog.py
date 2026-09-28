@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QDateEdit,
     QDialog,
     QDialogButtonBox,
+    QDoubleSpinBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -55,7 +56,7 @@ class AddEditAssetDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Asset" if asset is not None else "New Asset")
-        self.setFixedSize(380, 600)
+        self.setFixedSize(380, 650)
         self._asset = asset
         self._maintenance = maintenance
 
@@ -100,6 +101,14 @@ class AddEditAssetDialog(QDialog):
         self.purchase_date_clear_button.clicked.connect(self._on_clear_purchase_date)
         purchase_row.addWidget(self.purchase_date_clear_button)
         layout.addLayout(purchase_row)
+
+        # Finance #2: counts toward its cost of ownership (Budget → Builds & Tools).
+        layout.addWidget(QLabel("Purchase Price ($, optional):"))
+        self.purchase_price_spin = QDoubleSpinBox()
+        self.purchase_price_spin.setRange(0, 10_000_000)
+        self.purchase_price_spin.setDecimals(2)
+        self.purchase_price_spin.setSpecialValueText("Unknown")
+        layout.addWidget(self.purchase_price_spin)
 
         layout.addWidget(QLabel("Notes:"))
         self.notes_edit = QTextEdit()
@@ -158,6 +167,7 @@ class AddEditAssetDialog(QDialog):
         self._serial_number: str = ""
         self._manufacturer: str = ""
         self._model: str = ""
+        self._purchase_price: float = 0.0
 
     def _prefill(self, asset: Optional[MaintenanceAsset]) -> None:
         if asset is not None:
@@ -168,6 +178,7 @@ class AddEditAssetDialog(QDialog):
             self.manufacturer_edit.setText(asset.manufacturer)
             self.model_edit.setText(asset.model)
             self.serial_edit.setText(asset.serial_number)
+            self.purchase_price_spin.setValue(asset.purchase_price)
             if asset.purchase_date:
                 self.purchase_date_edit.setDate(QDate.fromString(asset.purchase_date, _ISO_DATE_FORMAT))
                 self._purchase_date_cleared = False
@@ -250,6 +261,7 @@ class AddEditAssetDialog(QDialog):
         self._model = self.model_edit.text().strip()
         self._serial_number = self.serial_edit.text().strip()
         self._purchase_date = "" if self._purchase_date_cleared else self.purchase_date_edit.date().toString(_ISO_DATE_FORMAT)
+        self._purchase_price = self.purchase_price_spin.value()
         self.accept()
 
     @property
@@ -279,3 +291,7 @@ class AddEditAssetDialog(QDialog):
     @property
     def entered_model(self) -> str:
         return self._model
+
+    @property
+    def entered_purchase_price(self) -> float:
+        return self._purchase_price

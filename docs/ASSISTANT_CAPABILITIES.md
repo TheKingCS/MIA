@@ -169,7 +169,7 @@ Add a line there whenever MIA misses something. The live model's half
 is `tests/live_model_check.py` (run on the owner's machine). Full
 findings: `docs/ASSISTANT_AUDIT.md`.
 
-## Tool registry (161 actions, 34 domains, as of 2026-09-27)
+## Tool registry (166 actions, 35 domains, as of 2026-09-28)
 
 **Added 2026-09-27** (`core/assistant_domain_actions.py`):
 - maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
@@ -184,6 +184,12 @@ findings: `docs/ASSISTANT_AUDIT.md`.
   `add_pantry_item`, `update_pantry_item`, `list_pantry`
 - components/materials/products: `adjust_component_quantity`,
   `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+**Added 2026-09-28** (`core/assistant_homestead_actions.py`, Finance #2):
+`log_build_expense`, `record_tool_purchase`, `get_build_costs`,
+`get_tool_costs`, `set_build_budget` (domain `homestead_costs`); and
+`complete_maintenance_task` takes an optional `cost`, logged as a
+Maintenance expense tagged to the item.
 
 **Also added 2026-09-27** (`core/assistant_comm_actions.py`, Cognitive
 Extension slice C): `get_held_back_messages` ("what didn't you tell me

@@ -34,10 +34,13 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditExpenseDialog(QDialog):
-    def __init__(self, parent=None, entry: Optional[ExpenseEntry] = None, entities: Optional[list] = None) -> None:
+    def __init__(
+        self, parent=None, entry: Optional[ExpenseEntry] = None, entities: Optional[list] = None,
+        projects: Optional[list] = None, assets: Optional[list] = None,
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Expense" if entry is not None else "New Expense")
-        self.setFixedSize(360, 540)
+        self.setFixedSize(360, 640)
 
         self._entities = entities or []
 
@@ -72,6 +75,21 @@ class AddEditExpenseDialog(QDialog):
             self.entity_combo.addItem(ent.name, ent.entity_id)
         layout.addWidget(self.entity_combo)
 
+        # Finance #2 (core/homestead_costs.py): what the money was for.
+        layout.addWidget(QLabel("For build:"))
+        self.project_combo = QComboBox()
+        self.project_combo.addItem("(None)", "")
+        for project in projects or []:
+            self.project_combo.addItem(project.name, project.project_id)
+        layout.addWidget(self.project_combo)
+
+        layout.addWidget(QLabel("For tool or equipment:"))
+        self.asset_combo = QComboBox()
+        self.asset_combo.addItem("(None)", "")
+        for asset in assets or []:
+            self.asset_combo.addItem(asset.name, asset.asset_id)
+        layout.addWidget(self.asset_combo)
+
         self.tax_relevant_checkbox = QCheckBox("Tax relevant")
         layout.addWidget(self.tax_relevant_checkbox)
 
@@ -103,6 +121,8 @@ class AddEditExpenseDialog(QDialog):
         self._tax_relevant: bool = False
         self._payee: str = ""
         self._notes: str = ""
+        self._project_id: str = ""
+        self._asset_id: str = ""
 
     def _prefill(self, entry: Optional[ExpenseEntry]) -> None:
         if entry is not None:
@@ -116,6 +136,9 @@ class AddEditExpenseDialog(QDialog):
                 idx = self.entity_combo.findData(entry.entity_id)
                 self.entity_combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.tax_relevant_checkbox.setChecked(entry.tax_relevant)
+            for combo, value in ((self.project_combo, entry.project_id), (self.asset_combo, entry.asset_id)):
+                idx = combo.findData(value) if value else 0
+                combo.setCurrentIndex(idx if idx >= 0 else 0)
             self.payee_edit.setText(entry.payee)
             self.notes_edit.setPlainText(entry.notes)
         else:
@@ -130,6 +153,8 @@ class AddEditExpenseDialog(QDialog):
         self._tax_relevant = self.tax_relevant_checkbox.isChecked()
         self._payee = self.payee_edit.text().strip()
         self._notes = self.notes_edit.toPlainText().strip()
+        self._project_id = self.project_combo.currentData() or ""
+        self._asset_id = self.asset_combo.currentData() or ""
         self.accept()
 
     @property
@@ -163,3 +188,11 @@ class AddEditExpenseDialog(QDialog):
     @property
     def entered_notes(self) -> str:
         return self._notes
+
+    @property
+    def entered_project_id(self) -> str:
+        return self._project_id
+
+    @property
+    def entered_asset_id(self) -> str:
+        return self._asset_id

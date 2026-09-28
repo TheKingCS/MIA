@@ -12141,3 +12141,38 @@ failure), real `data/` untouched. 20 new tests including every rule on
 a fake clock and a scripted day; routing corpus 181; the live
 checklist gains 2 cases (210) and the dry run still routes all 199
 older ones correctly.
+
+## Finance #2: homestead build and tool costs (2026-09-28)
+
+The owner's ask: "help me manage my homestead I am building and the
+costs associated with my tools, and builds."
+
+**Changed approach from the original note.** It said to wire builds and
+tools into the Workshop Materials → Jobs → Products → Ledger pipeline.
+On inspection that pipeline models making products to sell; a
+greenhouse build or a drill fits it badly. Instead this connects what
+already represents them: builds are Projects, tools are Maintenance
+assets, money out is Budget expenses.
+
+- `ExpenseEntry` gains `project_id`, `asset_id` and `asset_purchase`;
+  `Project` gains `budget`; `MaintenanceAsset` gains `purchase_price`.
+  All optional, so existing data loads unchanged.
+- `core/homestead_costs.py` computes, never stores: a build's spend vs
+  budget with a category breakdown and tools bought for it; a tool's
+  cost of ownership (purchase counted once + everything tagged since)
+  and **cost per engine hour** from its hour meter, the base Finance #3
+  (the mower's business-use write-off) needs.
+- `record_tool_purchase()` adds the asset and its purchase expense in
+  one step, linked and optionally tagged to a build.
+- Assistant: `log_build_expense` (a new build name creates the build),
+  `record_tool_purchase`, `get_build_costs`, `get_tool_costs`,
+  `set_build_budget` (166 actions), and `complete_maintenance_task`
+  takes an optional cost.
+- Screens: Budget → **Builds & Tools** tab; build/tool pickers on the
+  expense form; budget on the project form; purchase price on the
+  equipment form.
+
+**Verified:** `pytest -q`, 3756 passed (same one pre-existing timezone
+failure), real `data/` untouched. 14 new tests; routing corpus 189;
+live checklist 213 (3 new), dry run routes all correctly with about 16
+tools offered on average.

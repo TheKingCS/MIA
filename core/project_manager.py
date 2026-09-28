@@ -76,6 +76,10 @@ class Project:
     # Mission.rewards_credited (added the same day, same reasoning)
     # closed it.
     skill_weights_credited: bool = False
+    # 2026-09-28, Finance #2: what the owner plans to spend on this build.
+    # 0 means no budget set. Spending is the sum of expenses tagged with
+    # this project_id (core/homestead_costs.py), never stored here.
+    budget: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -89,6 +93,7 @@ class Project:
             "intent_id": self.intent_id,
             "skill_weights": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_weights],
             "skill_weights_credited": self.skill_weights_credited,
+            "budget": self.budget,
         }
 
     @staticmethod
@@ -106,6 +111,7 @@ class Project:
                 SkillWeight(skill_id=d["skill_id"], xp=d["xp"]) for d in data.get("skill_weights", [])
             ],
             skill_weights_credited=bool(data.get("skill_weights_credited", False)),
+            budget=float(data.get("budget", 0.0) or 0.0),
         )
 
 

@@ -309,6 +309,7 @@ class MaintenanceModule(ModuleBase):
             serial_number=dialog.entered_serial_number,
             manufacturer=dialog.entered_manufacturer,
             model=dialog.entered_model,
+            purchase_price=dialog.entered_purchase_price,
         )
         self._refresh_asset_list()
 
@@ -332,6 +333,7 @@ class MaintenanceModule(ModuleBase):
             serial_number=dialog.entered_serial_number,
             manufacturer=dialog.entered_manufacturer,
             model=dialog.entered_model,
+            purchase_price=dialog.entered_purchase_price,
         )
         self._refresh_asset_list()
         self._refresh_task_list()

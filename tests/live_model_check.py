@@ -615,6 +615,10 @@ GOLDEN_CASES = [
     ("finish a lesson", "I finished the lesson on circuit breakers", "complete_lesson", {"lesson": "circuit breaker"}),
     ("learning progress", "What am I learning right now?", "get_learning_progress"),
     ("small talk: 'of course'", "Of course, that makes sense", None),
+    # Finance #2: homestead builds and tools.
+    ("build cost: lumber", "I spent $240 on lumber for the greenhouse", "log_build_expense", {"amount": 240, "build": "greenhouse"}),
+    ("tool purchase", "I just bought a chainsaw for $329", "record_tool_purchase", {"tool": "chainsaw", "price": 329}),
+    ("tool cost question", "What has the chainsaw cost me so far?", "get_tool_costs"),
     # Slice C: when MIA speaks up.
     ("speaking up: what was held back", "What didn't you tell me today?", "get_held_back_messages"),
     ("speaking up: set the limit", "Only message me 3 times a day", "set_message_limit", {"count": 3}),

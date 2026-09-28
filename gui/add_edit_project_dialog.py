@@ -21,6 +21,7 @@ from typing import Optional
 
 from PySide6.QtCore import QDate
 from PySide6.QtWidgets import (
+    QDoubleSpinBox,
     QComboBox,
     QDateEdit,
     QDialog,
@@ -41,7 +42,7 @@ class AddEditProjectDialog(QDialog):
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Edit Project" if project is not None else "New Project")
-        self.setFixedSize(360, 520)
+        self.setFixedSize(360, 580)
 
         layout = QVBoxLayout(self)
 
@@ -70,6 +71,14 @@ class AddEditProjectDialog(QDialog):
         self.due_date_edit.setDisplayFormat(_ISO_DATE_FORMAT)
         layout.addWidget(self.due_date_edit)
 
+        # Finance #2: planned spend for a build (0 = no budget).
+        layout.addWidget(QLabel("Budget ($, optional):"))
+        self.budget_spin = QDoubleSpinBox()
+        self.budget_spin.setRange(0, 10_000_000)
+        self.budget_spin.setDecimals(2)
+        self.budget_spin.setSpecialValueText("No budget")
+        layout.addWidget(self.budget_spin)
+
         layout.addWidget(QLabel("Description:"))
         self.description_edit = QTextEdit()
         self.description_edit.setPlaceholderText("Description (optional)")
@@ -89,6 +98,7 @@ class AddEditProjectDialog(QDialog):
         self._due_date: str = ""
         self._description: str = ""
         self._intent_id: Optional[str] = None
+        self._budget: float = 0.0
 
     def _prefill(self, project: Optional[Project]) -> None:
         if project is not None:
@@ -102,6 +112,7 @@ class AddEditProjectDialog(QDialog):
             else:
                 self.due_date_edit.setDate(QDate.currentDate())
             self.description_edit.setPlainText(project.description)
+            self.budget_spin.setValue(project.budget)
         else:
             self.due_date_edit.setDate(QDate.currentDate())
 
@@ -116,6 +127,7 @@ class AddEditProjectDialog(QDialog):
         self._intent_id = self.intent_combo.currentData()
         self._due_date = self.due_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._description = self.description_edit.toPlainText()
+        self._budget = self.budget_spin.value()
         self.accept()
 
     @property
@@ -137,3 +149,7 @@ class AddEditProjectDialog(QDialog):
     @property
     def entered_description(self) -> str:
         return self._description
+
+    @property
+    def entered_budget(self) -> float:
+        return self._budget

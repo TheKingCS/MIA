@@ -284,6 +284,14 @@ dates by hand on the Debts tab.
 - [ ] Sandbox test done and reported
 - [ ] Real accounts connected
 
+**Your builds and tools:** in Budget → **Builds & Tools**, set a budget
+for a build (the greenhouse) and record what your tools cost. Then tag
+expenses to them, or just tell MIA: *"I spent $240 on lumber for the
+greenhouse"*, *"I bought a chainsaw for $329"*, *"What has the mower
+cost me?"*
+
+- [ ] A build budget set and a tool's cost recorded
+
 ---
 
 ## Part 8: Reach MIA from your phone (Tailscale)

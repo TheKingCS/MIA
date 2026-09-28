@@ -94,7 +94,7 @@ every step below in order, from a blank machine, with Windows notes.
    hours. Follow-ups: the opt-in weekly journal reflection (delivered
    through the gate), and "learning from being ignored" (needs the
    notification bell to record dismissals).
-5. **Fix what the live conversation check turns up** (now 210 cases,
+5. **Fix what the live conversation check turns up** (now 213 cases,
    including Workout, People & Pets, Household, Classroom, and 7
    personal-mode cases). Then
    "propose, you confirm" record updates from things mentioned in
@@ -105,9 +105,10 @@ every step below in order, from a blank machine, with Windows notes.
    Welcome Home, "you're at Lowe's, want the materials list?". Then
    slice E, Life Runway.
 7. **Claude Design direction → new theme** (after you bring designs back).
-8. **Finance, #2: homestead build and tool costs.** Wire your real
-   tools and builds into the existing Workshop Materials/Jobs/Ledger
-   pipeline.
+8. ~~Finance, #2: homestead build and tool costs~~ **built**
+   (2026-09-28): expenses tagged to builds and tools, build budgets,
+   tool cost of ownership and cost per hour, Budget → Builds & Tools,
+   five Assistant tools. Try it: Part 7 of `docs/SETUP_GUIDE.md`.
 9. **Finance, #3: mower business-use write-off.** A business-use-
    percentage engine for personal equipment used partly for contract
    lawn care.

@@ -132,6 +132,10 @@ class MaintenanceAsset:
     # — "she may not have the same [vehicle miles] I have"), and its
     # readings count ONLY toward that profile's own stats from then on.
     owner_profile_id: Optional[str] = None
+    # 2026-09-28, Finance #2: what the owner paid for it (0 = unknown).
+    # Cost of ownership adds the expenses tagged with this asset_id; see
+    # core/homestead_costs.py and ExpenseEntry.asset_purchase.
+    purchase_price: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -146,6 +150,7 @@ class MaintenanceAsset:
             "model": self.model,
             "documents": list(self.documents),
             "owner_profile_id": self.owner_profile_id,
+            "purchase_price": self.purchase_price,
         }
 
     @staticmethod
@@ -162,6 +167,7 @@ class MaintenanceAsset:
             model=data.get("model", ""),
             documents=list(data.get("documents", [])),
             owner_profile_id=data.get("owner_profile_id"),
+            purchase_price=float(data.get("purchase_price", 0.0) or 0.0),
         )
 
 
@@ -539,6 +545,7 @@ class MaintenanceManager:
         manufacturer: str = "",
         model: str = "",
         owner_profile_id: Optional[str] = None,
+        purchase_price: float = 0.0,
     ) -> MaintenanceAsset:
         asset = MaintenanceAsset(
             asset_id=uuid.uuid4().hex[:10],
@@ -551,6 +558,7 @@ class MaintenanceManager:
             manufacturer=manufacturer,
             model=model,
             owner_profile_id=owner_profile_id,
+            purchase_price=purchase_price,
         )
         self._assets.append(asset)
         self._save()

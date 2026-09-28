@@ -113,6 +113,9 @@ EXPENSE_CATEGORIES = [
     "Medical", "Personal Care", "Shopping", "Bank Fees", "Entertainment", "Travel",
     # 2026-09-27: Debt.record_debt_payment()'s own ExpenseEntry category.
     "Debt Payment",
+    # 2026-09-28, Finance #2 (homestead builds and tools, see
+    # core/homestead_costs.py).
+    "Building Materials", "Tools & Equipment",
     "Other",
 ]
 BUSINESS_ENTITY_TYPES = ["LLC", "Sole Proprietorship", "Other"]
@@ -186,6 +189,16 @@ class ExpenseEntry:
     payee: str = ""
     notes: str = ""
     created_at: str = ""  # ISO datetime
+    # 2026-09-28, Finance #2 (core/homestead_costs.py): what the money was
+    # for. project_id: a build (core.project_manager.Project, e.g. the
+    # greenhouse); asset_id: a tool or piece of equipment
+    # (core.maintenance_manager.MaintenanceAsset). Either, both or neither.
+    # asset_purchase marks the expense that bought the tool itself, so its
+    # cost of ownership counts the purchase once (it's also the asset's
+    # purchase_price).
+    project_id: str = ""
+    asset_id: str = ""
+    asset_purchase: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -194,6 +207,7 @@ class ExpenseEntry:
             "bill_id": self.bill_id, "property_id": self.property_id, "entity_id": self.entity_id,
             "plaid_transaction_id": self.plaid_transaction_id, "payee": self.payee,
             "notes": self.notes, "created_at": self.created_at,
+            "project_id": self.project_id, "asset_id": self.asset_id, "asset_purchase": self.asset_purchase,
         }
 
     @staticmethod
@@ -212,6 +226,9 @@ class ExpenseEntry:
             payee=data.get("payee", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
+            project_id=data.get("project_id", ""),
+            asset_id=data.get("asset_id", ""),
+            asset_purchase=bool(data.get("asset_purchase", False)),
         )
 
 
@@ -944,6 +961,9 @@ class BudgetManager:
         plaid_transaction_id: str = "",
         payee: str = "",
         notes: str = "",
+        project_id: str = "",
+        asset_id: str = "",
+        asset_purchase: bool = False,
     ) -> ExpenseEntry:
         if amount < 0:
             raise ValueError(f"amount must not be negative, got {amount}")
@@ -961,6 +981,9 @@ class BudgetManager:
             payee=payee,
             notes=notes,
             created_at=datetime.now().isoformat(timespec="seconds"),
+            project_id=project_id,
+            asset_id=asset_id,
+            asset_purchase=asset_purchase,
         )
         self._expenses.append(entry)
         self._save_expenses()

@@ -133,6 +133,15 @@ CORPUS: list[tuple[str, str]] = [
     ("Show my why", "show_my_why"),
     ("What am I working toward?", "show_my_why"),
     ("I achieved my goal of paying off my debt", "mark_goal_achieved"),
+    # ---- Homestead builds and tools (Finance #2) --------------------------------------
+    ("I spent $240 on lumber for the greenhouse", "log_build_expense"),
+    ("Spent 85 bucks on concrete for the fence posts", "log_build_expense"),
+    ("I bought a DeWalt drill for $199 for the greenhouse", "record_tool_purchase"),
+    ("I just bought a chainsaw for $329", "record_tool_purchase"),
+    ("How much have I spent on the greenhouse?", "get_build_costs"),
+    ("What has the mower cost me?", "get_tool_costs"),
+    ("What's the mower's cost per hour?", "get_tool_costs"),
+    ("Set a budget for the greenhouse of $5,000", "set_build_budget"),
     # ---- When MIA speaks up (core/assistant_comm_actions.py) ------------------------
     ("What didn't you tell me today?", "get_held_back_messages"),
     ("Is there anything you held back?", "get_held_back_messages"),

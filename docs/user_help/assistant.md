@@ -91,6 +91,13 @@ mower", "the tomatoes". You don't need their exact names in MIA.
 - "Which debt should I pay off first?" (explains why, including promo
   rates about to expire)
 - "My Chase balance is now $3,900"
+- "I spent $240 on lumber for the greenhouse" (a build it hasn't heard
+  of becomes a new one)
+- "Set a budget for the greenhouse of $5,000"
+- "I bought a DeWalt drill for $199 for the greenhouse"
+- "I changed the oil in the mower, $35" (counts toward the mower's cost)
+- "How much have I spent on the greenhouse?"
+- "What has the mower cost me?" (with engine hours: its cost per hour)
 
 ## Kitchen: recipes, groceries, and pantry
 

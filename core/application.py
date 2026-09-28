@@ -62,6 +62,7 @@ from core.assistant_life_actions import register_life_actions
 from core.talk_it_out import register_journal_actions
 from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
+from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
@@ -1002,6 +1003,7 @@ class MIAApplication:
         register_journal_actions(self.context.assistant_actions)
         register_why_actions(self.context.assistant_actions)
         register_communication_actions(self.context.assistant_actions)
+        register_homestead_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",
@@ -2629,6 +2631,10 @@ class MIAApplication:
                     "meter_value": {
                         "type": "number",
                         "description": "For a mileage/runtime/cycles/condition task, the meter reading at completion. Omit to use the latest logged reading.",
+                    },
+                    "cost": {
+                        "type": "number",
+                        "description": "What it cost, if the user said (e.g. '$35 for the oil change'). Recorded as a maintenance expense for that item.",
                     },
                 },
                 "required": [],
@@ -4378,7 +4384,20 @@ class MIAApplication:
         meter_value = float(meter_value) if meter_value not in (None, "") else None
         context.maintenance.mark_complete(task.task_id, meter_value=meter_value)
         asset = context.maintenance.get_asset(task.asset_id)
-        return f"Marked '{task.title}' complete" + (f" for {asset.name}." if asset is not None else ".")
+        reply = f"Marked '{task.title}' complete" + (f" for {asset.name}." if asset is not None else ".")
+        # Finance #2: a stated cost becomes an expense tagged to the item,
+        # so it counts toward its cost of ownership (core/homestead_costs.py).
+        try:
+            cost = float(str(arguments.get("cost") or 0).replace("$", "").replace(",", ""))
+        except ValueError:
+            cost = 0.0
+        if cost > 0 and context.budget is not None:
+            context.budget.add_expense(
+                amount=cost, category="Maintenance", description=task.title + (f" ({asset.name})" if asset else ""),
+                asset_id=task.asset_id,
+            )
+            reply += f" Logged ${cost:,.2f} toward it."
+        return reply
 
     @staticmethod
     def _action_log_maintenance_reading(context: AppContext, arguments: dict) -> str:

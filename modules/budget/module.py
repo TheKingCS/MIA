@@ -85,6 +85,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -97,6 +98,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.business_report import build_business_report_html, build_consolidated_business_report_html
+from core.homestead_costs import BuildCost, ToolCost, all_build_costs, all_tool_costs, record_tool_purchase
 from core.budget_manager import (
     Bill,
     DEBT_PAYOFF_STRATEGIES,
@@ -190,6 +192,25 @@ def format_debt_row(debt: Debt, today: date, priority: Optional[DebtPriority] = 
     if priority is not None:
         row += f"  — {priority.reason}"
     return row
+
+
+def format_build_row(cost: BuildCost) -> str:
+    """Pure formatting logic — Builds & Tools tab (Finance #2)."""
+    text = f"{cost.name}  —  ${cost.spent:,.2f} spent"
+    if cost.budget > 0:
+        if cost.remaining >= 0:
+            text += f" of ${cost.budget:,.2f} ({cost.percent_used:g}%), ${cost.remaining:,.2f} left"
+        else:
+            text += f" of ${cost.budget:,.2f}, ${-cost.remaining:,.2f} OVER"
+    return text + f"   [{cost.status}]"
+
+
+def format_tool_row(cost: ToolCost) -> str:
+    """Pure formatting logic — Builds & Tools tab (Finance #2)."""
+    text = f"{cost.name}  —  ${cost.total:,.2f} total (${cost.purchase_price:,.2f} to buy + ${cost.upkeep:,.2f} since)"
+    if cost.cost_per_hour is not None:
+        text += f", ${cost.cost_per_hour:,.2f}/hr over {cost.hours:g} hrs"
+    return text
 
 
 def format_holding_row(holding: dict) -> str:
@@ -299,6 +320,7 @@ class BudgetModule(ModuleBase):
         tabs.addTab(self._build_income_tab(), "Income")
         tabs.addTab(self._build_expenses_tab(), "Expenses")
         tabs.addTab(self._build_debts_tab(), "Debts")
+        tabs.addTab(self._build_homestead_tab(), "Builds & Tools")
         tabs.addTab(self._build_summary_tab(), "Summary")
         tabs.addTab(self._build_trends_tab(), "Trends")
         tabs.addTab(self._build_bank_sync_tab(), "Bank Sync")
@@ -321,6 +343,105 @@ class BudgetModule(ModuleBase):
         self._refresh_budget_targets()
         self._refresh_trends_chart()
         self._refresh_debt_list()
+        self._refresh_homestead()
+
+    # ------------------------------------------------------------------
+    # Builds & Tools tab (Finance #2, core/homestead_costs.py)
+    # ------------------------------------------------------------------
+
+    def _expense_link_choices(self) -> dict:
+        """The build and tool pickers for the expense dialog."""
+        return {
+            "projects": self.context.projects.all_projects() if self.context.projects is not None else [],
+            "assets": self.context.maintenance.all_assets() if self.context.maintenance is not None else [],
+        }
+
+    def _build_homestead_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        hint = QLabel(
+            "What your builds and tools really cost. Tag an expense with its build or tool (Expenses → Add/Edit), "
+            "or tell MIA: \"I spent $240 on lumber for the greenhouse\", \"I bought a chainsaw for $329\"."
+        )
+        hint.setObjectName("SubtitleLabel")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        layout.addWidget(QLabel("Builds"))
+        self._builds_list = QListWidget()
+        layout.addWidget(self._builds_list, stretch=1)
+        build_buttons = QHBoxLayout()
+        budget_button = QPushButton("Set Build Budget…")
+        budget_button.clicked.connect(self._on_set_build_budget)
+        build_buttons.addWidget(budget_button)
+        build_buttons.addStretch(1)
+        layout.addLayout(build_buttons)
+
+        layout.addWidget(QLabel("Tools & equipment"))
+        self._tools_list = QListWidget()
+        layout.addWidget(self._tools_list, stretch=1)
+        tool_buttons = QHBoxLayout()
+        purchase_button = QPushButton("Record Tool Purchase…")
+        purchase_button.clicked.connect(self._on_record_tool_purchase)
+        tool_buttons.addWidget(purchase_button)
+        tool_buttons.addStretch(1)
+        layout.addLayout(tool_buttons)
+
+        self._refresh_homestead()
+        return tab
+
+    def _refresh_homestead(self) -> None:
+        if not hasattr(self, "_builds_list"):
+            return
+        self._builds_list.clear()
+        self._tools_list.clear()
+        if self.context.projects is not None:
+            builds = all_build_costs(self.context)
+            for cost in builds:
+                self._builds_list.addItem(format_build_row(cost))
+            if not builds:
+                self._builds_list.addItem("No build costs yet.")
+        if self.context.maintenance is not None:
+            tools = all_tool_costs(self.context)
+            for cost in tools:
+                self._tools_list.addItem(format_tool_row(cost))
+            if not tools:
+                self._tools_list.addItem("No tool costs yet.")
+
+    def _on_set_build_budget(self) -> None:
+        projects = self.context.projects.all_projects() if self.context.projects is not None else []
+        if not projects:
+            QMessageBox.information(None, "No Builds", "Add a build first (Toolbox → Projects), or tell MIA about one.")
+            return
+        names = [p.name for p in projects]
+        name, ok = QInputDialog.getItem(None, "Set Build Budget", "Build:", names, 0, False)
+        if not ok:
+            return
+        project = projects[names.index(name)]
+        amount, ok = QInputDialog.getDouble(None, "Set Build Budget", f"Budget for {name} ($):", project.budget, 0, 10_000_000, 2)
+        if ok:
+            self.context.projects.update_project(project.project_id, budget=amount)
+            self._refresh_homestead()
+
+    def _on_record_tool_purchase(self) -> None:
+        if self.context.maintenance is None:
+            return
+        name, ok = QInputDialog.getText(None, "Record Tool Purchase", "Tool (e.g. 'DeWalt drill'):")
+        if not ok or not name.strip():
+            return
+        price, ok = QInputDialog.getDouble(None, "Record Tool Purchase", f"What did the {name.strip()} cost ($)?", 0, 0, 10_000_000, 2)
+        if not ok or price <= 0:
+            return
+        project_id = ""
+        projects = self.context.projects.all_projects() if self.context.projects is not None else []
+        if projects:
+            names = ["(Not for a build)"] + [p.name for p in projects]
+            choice, ok = QInputDialog.getItem(None, "Record Tool Purchase", "Bought for a build?", names, 0, False)
+            if ok and choice != names[0]:
+                project_id = projects[names.index(choice) - 1].project_id
+        record_tool_purchase(self.context, name.strip(), price, project_id=project_id)
+        self._refresh_homestead()
+        self._refresh_expense_list()
 
     # ------------------------------------------------------------------
     # Bills tab
@@ -733,7 +854,7 @@ class BudgetModule(ModuleBase):
         return selected_item_data(self._expense_list)
 
     def _on_add_expense(self) -> None:
-        dialog = AddEditExpenseDialog(entities=self.context.budget.all_business_entities())
+        dialog = AddEditExpenseDialog(entities=self.context.budget.all_business_entities(), **self._expense_link_choices())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -746,6 +867,8 @@ class BudgetModule(ModuleBase):
             tax_relevant=dialog.entered_tax_relevant,
             payee=dialog.entered_payee,
             notes=dialog.entered_notes,
+            project_id=dialog.entered_project_id,
+            asset_id=dialog.entered_asset_id,
         )
         self._refresh_expense_list()
 
@@ -756,7 +879,7 @@ class BudgetModule(ModuleBase):
             return
 
         entry = self.context.budget.get_expense(entry_id)
-        dialog = AddEditExpenseDialog(entry=entry, entities=self.context.budget.all_business_entities())
+        dialog = AddEditExpenseDialog(entry=entry, entities=self.context.budget.all_business_entities(), **self._expense_link_choices())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -770,6 +893,8 @@ class BudgetModule(ModuleBase):
             tax_relevant=dialog.entered_tax_relevant,
             payee=dialog.entered_payee,
             notes=dialog.entered_notes,
+            project_id=dialog.entered_project_id,
+            asset_id=dialog.entered_asset_id,
         )
         self._refresh_expense_list()
 

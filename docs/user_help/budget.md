@@ -34,6 +34,27 @@ lowers the balance. Cards and student loans from connected banks
 appear automatically, marked "(bank-synced)". The bank keeps their
 balance and rate current, but promo end dates are yours to enter.
 
+## Builds and tools (Builds & Tools tab)
+
+See what your homestead builds and your tools really cost.
+
+- **Builds** are your projects (the greenhouse, the fence, the coop).
+  Give one a budget (Set Build Budget, or the Budget field when editing
+  a project in Toolbox → Projects), then tag expenses to it. The tab
+  shows spent vs. budget, what's left, and any overrun.
+- **Tools and equipment** are the items on your Maintenance list. Give
+  one a purchase price (edit it in Maintenance) or use **Record Tool
+  Purchase**, which adds the tool and the expense together. Everything
+  tagged to it afterwards (parts, repairs, fuel, oil changes) adds to
+  its **total cost of ownership**. With engine-hour readings, you also
+  see its **cost per hour**.
+- **Tagging an expense:** Expenses → Add or Edit → "For build" and
+  "For tool or equipment". Bank-synced expenses can be tagged the same
+  way.
+- Or just tell MIA: "I spent $240 on lumber for the greenhouse", "I
+  bought a chainsaw for $329", "I changed the mower's oil, $35", "How
+  much have I spent on the greenhouse?", "What has the mower cost me?"
+
 ## Summary, Trends, and entities
 
 The Summary tab totals everything for This Month/This Year/All Time,
