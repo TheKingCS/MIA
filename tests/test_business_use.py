@@ -183,7 +183,7 @@ def test_log_business_use_tool(ctx):
     assert entry.entity_id == llc.entity_id and entry.property_id
     # With one tool already in use for business, the tool can be left out.
     assert say(ctx, "log_business_use", hours="1.5", for_whom="Johnson lawn").endswith(f"{year} so far: 3.5 business hours.")
-    assert say(ctx, "log_business_use", tool="mower") == "How many hours was it?"
+    assert say(ctx, "log_business_use", tool="mower") == "How many hours was it (or miles, for a vehicle)?"
 
 
 def test_log_business_use_asks_which_tool(ctx):
@@ -200,3 +200,82 @@ def test_get_business_use_tool(ctx):
     reply = say(ctx, "get_business_use", tool="mower", year=2026)
     assert reply.startswith("In 2026 the Riding Mower ran 40 hours (logged use), 10 of them for business: 25% business use.")
     assert reply.endswith("It's records, not tax advice.")
+
+
+# ------------------------------------------------------------------ vehicles in miles (2026-09-28)
+
+
+def truck_with_costs(ctx):
+    truck = ctx.maintenance.add_asset("Pickup Truck", category="Vehicle", purchase_date="2024-03-01", purchase_price=30000)
+    ctx.budget.add_expense(400, "Transportation", "Gas", date="2026-06-01", asset_id=truck.asset_id)
+    ctx.budget.add_expense(600, "Maintenance", "Brakes", date="2026-07-01", asset_id=truck.asset_id)
+    return truck
+
+
+def test_a_vehicle_is_measured_in_miles_from_the_odometer(ctx, monkeypatch):
+    from core.business_use import MILES
+
+    truck = truck_with_costs(ctx)
+    monkeypatch.setattr(business_use_module, "odometer_readings",
+                        lambda c, a: [("2025-12-30T10:00", 40000), ("2026-12-15T10:00", 52000)])
+    ctx.business_use.log_use(truck.asset_id, miles=2400, use_date="2026-04-02", client="Johnson lawn")
+    ctx.business_use.log_use(truck.asset_id, miles=600, use_date="2026-05-02", client="Maple duplex")
+    sheet = build_worksheet(ctx, truck, 2026)
+    assert (sheet.unit, sheet.total_hours, sheet.total_method, sheet.business_hours) == (MILES, 12000, "odometer", 3000)
+    assert sheet.business_pct == 25.0 and sheet.business_running_costs == 250.0
+    assert sheet.standard_mileage is None and any("IRS standard mileage rate for 2026" in n for n in sheet.notes)
+    html = build_worksheet_html(sheet, "now")
+    assert "3000 miles" in html and "Needs the rate" in html
+
+
+def test_the_owner_enters_the_mileage_rate(ctx, monkeypatch):
+    from core.business_use import mileage_rate, set_mileage_rate
+
+    truck = truck_with_costs(ctx)
+    monkeypatch.setattr(business_use_module, "odometer_readings", lambda c, a: [])
+    ctx.business_use.log_use(truck.asset_id, miles=1000, use_date="2026-04-02")
+    set_mileage_rate(ctx, 2026, 0.5)
+    assert mileage_rate(ctx, 2026) == 0.5 and mileage_rate(ctx, 2027) is None
+    sheet = build_worksheet(ctx, truck, 2026)
+    assert sheet.standard_mileage == 500.0
+    assert "standard mileage rate ($0.5 a mile)" in describe_worksheet(sheet)
+    assert "$500.00" in build_worksheet_html(sheet, "now")
+
+
+def test_logging_miles_by_voice(ctx):
+    truck_with_costs(ctx)
+    reply = say(ctx, "log_business_use", tool="truck", miles=42, for_whom="Johnson lawn")
+    assert reply.startswith("Logged 42 business miles on the Pickup Truck for Johnson lawn.")
+    assert "How many hours" in say(ctx, "log_business_use", tool="truck")
+
+
+# ------------------------------------------------------------------ the Business Report section
+
+
+def test_equipment_rows_follow_the_reports_business(ctx, monkeypatch):
+    from core.business_report import build_business_report_html
+    from core.business_use import equipment_report_rows
+
+    lawn = ctx.budget.add_business_entity("Johnson Lawn Care")
+    mower = mower_with_costs(ctx)
+    monkeypatch.setattr(business_use_module, "hour_readings", lambda c, a: [])
+    ctx.business_use.log_use(mower.asset_id, 30, use_date="2026-05-10", entity_id=lawn.entity_id)
+    ctx.business_use.log_use(mower.asset_id, 10, use_date="2026-05-12", client="friend's yard")
+    ctx.business_use.log_use(mower.asset_id, 40, purpose="personal", use_date="2026-05-11")
+    sheets = [build_worksheet(ctx, mower, 2026)]
+    names = {lawn.name}
+    [everything] = equipment_report_rows(sheets, None, names)
+    assert (everything["business"], everything["pct"], everything["running_share"]) == (40, 50.0, 50.0)
+    [lawn_row] = equipment_report_rows(sheets, lawn.name, names)
+    assert (lawn_row["business"], lawn_row["pct"], lawn_row["running_share"], lawn_row["basis_share"]) == (30, 37.5, 37.5, 900.0)
+    [unassigned] = equipment_report_rows(sheets, "", names)
+    assert unassigned["business"] == 10
+    assert equipment_report_rows(sheets, "Some Other LLC", names) == []
+
+    common = dict(range_label="This Year", start_date="2026-01-01", end_date="2026-12-31", income_total=0,
+                  expenses_total=0, tax_income_total=0, tax_expenses_total=0, income_by_category={},
+                  expenses_by_category={}, budget_targets=[], actual_by_category={}, properties=[], generated_at="now")
+    html = build_business_report_html(**common, equipment_use=[lawn_row])
+    assert "Equipment business use" in html and "30 of 80 hours" in html and "$37.50" in html
+    assert "Equipment business use" not in build_business_report_html(**common)
+    assert "No business use of equipment" in build_business_report_html(**common, equipment_use=[])

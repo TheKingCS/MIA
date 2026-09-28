@@ -78,9 +78,21 @@ the business share.
   share of the purchase price, the job log, and notes about anything
   weak in the record.
 
+- **Vehicles, in miles:** for an item in the Vehicle category, Log
+  Business Use asks for miles ("I drove 42 miles for the Johnson lawn
+  job" works too), and total use comes from its odometer readings. The
+  worksheet then also shows the **standard mileage** figure (business
+  miles × the IRS rate) next to the actual-cost share. MIA doesn't guess
+  the IRS rate: press **Set Mileage Rate…** in the worksheet and enter
+  that year's rate from irs.gov once.
+- **In the Business Report:** with "This Year" selected, the report has
+  an "Equipment business use" section, each business's share of each
+  item (hours or miles, business %, running costs, cost basis, standard
+  mileage).
+
 It's records and arithmetic from your own data, not tax advice. How to
-depreciate the purchase and where each amount goes on your return are
-for you or your tax preparer.
+depreciate the purchase, which method to use for a vehicle, and where
+each amount goes on your return are for you or your tax preparer.
 
 ## Summary, Trends, and entities
 

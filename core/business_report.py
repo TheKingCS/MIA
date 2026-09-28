@@ -30,6 +30,7 @@ in one place (the caller, which already knows the selected range).
 
 from __future__ import annotations
 
+import html
 from typing import Optional
 
 _TABLE_OPEN = '<table border="1" cellspacing="0" cellpadding="4" width="100%" style="border-collapse:collapse">'
@@ -381,6 +382,7 @@ def build_business_report_html(
     net_worth_by_source: Optional[dict[str, float]] = None,
     investment_holdings: Optional[list[dict]] = None,
     include_net_worth_section: bool = True,
+    equipment_use: Optional[list[dict]] = None,
 ) -> str:
     """Pure logic — testable without Qt. properties is a list of plain
     dicts: {"name", "type", "current_value", "mortgage_balance",
@@ -449,8 +451,32 @@ def build_business_report_html(
         sections.append(_schedule_e_table(schedule_e_properties))
     if payees_over_threshold is not None:
         sections.append(_payees_over_threshold_table(payees_over_threshold, _US_1099_NEC_THRESHOLD))
+    if equipment_use is not None:
+        sections.append(_equipment_use_table(equipment_use))
 
     return "\n".join(sections)
+
+
+def _equipment_use_table(rows: list[dict]) -> str:
+    """2026-09-28: the business share of personal equipment and vehicles
+    (core/business_use.py), annual like Schedule E. None = omitted by the
+    caller; [] = this year, nothing logged."""
+    title = "<h2>Equipment business use (this year)</h2>"
+    if not rows:
+        return title + "<p>No business use of equipment or vehicles logged this year.</p>"
+    money = lambda v: _money(v) if v is not None else "—"  # noqa: E731
+    head = ("<tr><th>Item</th><th>Business use</th><th>Business %</th><th>Share of running costs</th>"
+            "<th>Share of cost basis</th><th>Standard mileage</th></tr>")
+    body = "".join(
+        f"<tr><td>{html.escape(r['name'])}</td><td>{r['business']:g} of {r['total']:g} {r['unit']}</td>"
+        f"<td>{(str(r['pct']) + '%') if r['pct'] is not None else '—'}</td><td>{money(r['running_share'])}</td>"
+        f"<td>{money(r['basis_share'])}</td><td>{money(r['standard_mileage'])}</td></tr>"
+        for r in rows
+    )
+    return (title + _TABLE_OPEN + head + body + "</table>"
+            "<p><i>From each item's business-use log and meter readings; each item's worksheet (Budget → Builds &amp; "
+            "Tools) shows the jobs and the arithmetic. Records, not tax advice: how to depreciate and which method "
+            "to use for a vehicle are for you or your tax preparer.</i></p>")
 
 
 def build_consolidated_business_report_html(

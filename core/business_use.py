@@ -28,6 +28,15 @@ that as a weaker record.
 Costs come from Finance #2's expense tags (`ExpenseEntry.asset_id`):
 this year's running costs (fuel, repairs, maintenance) and the purchase
 price as the cost basis.
+
+**Vehicles, in miles** (2026-09-28): a job logged in miles makes the
+worksheet count miles instead of hours, with total use from the
+odometer readings. It also shows the **standard mileage** figure
+(business miles × the IRS rate for that year) next to the actual-cost
+share, because vehicle owners choose between the two. MIA doesn't know
+future IRS rates: the owner enters each year's rate once
+(`business_use.mileage_rates`, from irs.gov), and until then the
+worksheet says it's missing instead of guessing.
 """
 
 from __future__ import annotations
@@ -53,6 +62,7 @@ _USE_FILE = _DATA_DIR / "business_use.json"
 
 BUSINESS = "business"
 PERSONAL = "personal"
+HOURS, MILES = "hours", "miles"
 
 DISCLAIMER = (
     "These are records and arithmetic from MIA's own data, not tax advice. How to depreciate the purchase "
@@ -66,13 +76,17 @@ class UseEntry:
     entry_id: str
     asset_id: str
     date: str  # ISO date
-    hours: float
+    hours: float  # hours of use; 0 for a job measured in miles
     purpose: str = BUSINESS  # "business" | "personal"
     entity_id: str = ""  # which business (core.budget_manager.BusinessEntity), if any
     property_id: str = ""  # a rental it was for (core.real_estate_manager.Property), if any
     client: str = ""  # who the work was for, free text ("Johnson lawn", "Maple duplex")
     note: str = ""
     created_at: str = ""
+    miles: float = 0.0  # vehicles: miles driven for this job (2026-09-28)
+
+    def amount(self, unit: str) -> float:
+        return self.miles if unit == MILES else self.hours
 
     @staticmethod
     def from_dict(data: dict) -> "UseEntry":
@@ -101,17 +115,17 @@ class BusinessUseManager:
         atomic_write_text(_USE_FILE, json.dumps([asdict(e) for e in self._entries], indent=2))
 
     def log_use(
-        self, asset_id: str, hours: float, purpose: str = BUSINESS, use_date: Optional[str] = None,
-        entity_id: str = "", property_id: str = "", client: str = "", note: str = "",
+        self, asset_id: str, hours: float = 0.0, purpose: str = BUSINESS, use_date: Optional[str] = None,
+        entity_id: str = "", property_id: str = "", client: str = "", note: str = "", miles: float = 0.0,
     ) -> UseEntry:
-        if hours <= 0:
-            raise ValueError("hours must be positive")
+        if hours <= 0 and miles <= 0:
+            raise ValueError("hours or miles must be positive")
         if purpose not in (BUSINESS, PERSONAL):
             raise ValueError(f"purpose must be '{BUSINESS}' or '{PERSONAL}'")
         entry = UseEntry(
             entry_id=uuid.uuid4().hex[:10], asset_id=asset_id, date=use_date or date.today().isoformat(),
-            hours=float(hours), purpose=purpose, entity_id=entity_id, property_id=property_id,
-            client=client, note=note, created_at=datetime.now().isoformat(timespec="seconds"),
+            hours=float(hours or 0), purpose=purpose, entity_id=entity_id, property_id=property_id,
+            client=client, note=note, created_at=datetime.now().isoformat(timespec="seconds"), miles=float(miles or 0),
         )
         self._entries.append(entry)
         self._save()
@@ -154,22 +168,54 @@ def meter_hours_in_year(readings: list[tuple[str, float]], year: int) -> Optiona
     return round(moved, 2) if moved > 0 else None
 
 
+def mileage_rate(context, year: int) -> Optional[float]:
+    """The owner-entered IRS standard mileage rate for `year` ($/mile), or None."""
+    rates = context.config.get("business_use.mileage_rates", {}) or {} if getattr(context, "config", None) else {}
+    try:
+        return float(rates[str(year)]) if str(year) in rates else None
+    except (TypeError, ValueError):
+        return None
+
+
+def set_mileage_rate(context, year: int, rate: float) -> None:
+    rates = dict(context.config.get("business_use.mileage_rates", {}) or {})
+    rates[str(year)] = round(float(rate), 4)
+    context.config.set("business_use.mileage_rates", rates)
+    context.config.save()
+
+
+def odometer_readings(context, asset) -> list[tuple[str, float]]:
+    """Every odometer (miles) reading for the asset, oldest first: its own
+    mileage meter plus any mileage-based maintenance task's readings."""
+    maintenance = context.maintenance
+    readings = []
+    for meter in maintenance.asset_meter_names(asset.asset_id):
+        if "mile" in meter.lower() or "odometer" in meter.lower():
+            readings += maintenance.asset_readings(asset.asset_id, meter)
+    for task in maintenance.tasks_for_asset(asset.asset_id):
+        if task.trigger_type == "mileage":
+            readings += maintenance.readings_for_task(task.task_id)
+    return sorted(((r.timestamp or "", float(r.value)) for r in readings), key=lambda pair: pair[0])
+
+
 @dataclass
 class Worksheet:
     asset_id: str
     asset_name: str
     year: int
-    business_hours: float
+    business_hours: float  # business use, in `unit` (hours, or miles for a vehicle)
     personal_logged_hours: float
     total_hours: Optional[float]
-    total_method: str  # "hour meter" | "logged use" | ""
+    total_method: str  # "hour meter" | "odometer" | "logged use" | ""
     running_costs: float
     running_by_category: dict[str, float] = field(default_factory=dict)
     cost_basis: float = 0.0
     placed_in_service: str = ""
-    by_business: list[tuple[str, float]] = field(default_factory=list)  # (label, business hours)
+    by_business: list[tuple[str, float]] = field(default_factory=list)  # (label, business use in `unit`)
     jobs: list[UseEntry] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    unit: str = HOURS
+    mileage_rate: Optional[float] = None  # $/mile, owner-entered, vehicles only
 
     @property
     def business_pct(self) -> Optional[float]:
@@ -187,8 +233,15 @@ class Worksheet:
         pct = self.business_pct
         return round(self.cost_basis * pct / 100, 2) if pct is not None and self.cost_basis else None
 
+    @property
+    def standard_mileage(self) -> Optional[float]:
+        """Business miles × the year's IRS rate, when both are known."""
+        if self.unit != MILES or self.mileage_rate is None or not self.business_hours:
+            return None
+        return round(self.business_hours * self.mileage_rate, 2)
+
     def business_costs_by_business(self) -> list[tuple[str, float, float]]:
-        """(label, business hours, share of business running costs)."""
+        """(label, business use, share of business running costs)."""
         total_business = self.business_running_costs
         if total_business is None or not self.business_hours:
             return []
@@ -197,27 +250,31 @@ class Worksheet:
 
 def build_worksheet(context, asset, year: int) -> Worksheet:
     entries = context.business_use.entries_for(asset.asset_id, year)
-    business = [e for e in entries if e.purpose == BUSINESS]
-    business_hours = round(sum(e.hours for e in business), 2)
-    personal_hours = round(sum(e.hours for e in entries if e.purpose == PERSONAL), 2)
+    unit = MILES if any(e.miles > 0 for e in entries) else HOURS
+    word = "miles" if unit == MILES else "hours"
+    business = [e for e in entries if e.purpose == BUSINESS and e.amount(unit) > 0]
+    business_hours = round(sum(e.amount(unit) for e in business), 2)
+    personal_hours = round(sum(e.amount(unit) for e in entries if e.purpose == PERSONAL), 2)
 
     meter = None
     try:
-        meter = meter_hours_in_year(hour_readings(context, asset), year)
+        readings = odometer_readings(context, asset) if unit == MILES else hour_readings(context, asset)
+        meter = meter_hours_in_year(readings, year)
     except AttributeError:
         pass  # no data logger wired
+    meter_name = "odometer" if unit == MILES else "hour meter"
     notes: list[str] = []
     if meter is not None:
-        total, method = max(meter, business_hours + personal_hours), "hour meter"
+        total, method = max(meter, business_hours + personal_hours), meter_name
         if business_hours + personal_hours > meter:
             notes.append(
-                f"You logged {business_hours + personal_hours:g} hours but the hour meter moved only {meter:g} this year; "
-                "the logged total is used. Check the meter readings."
+                f"You logged {business_hours + personal_hours:g} {word} but the {meter_name} moved only {meter:g} this year; "
+                f"the logged total is used. Check the {meter_name} readings."
             )
     elif business_hours + personal_hours > 0:
         total, method = business_hours + personal_hours, "logged use"
         notes.append(
-            "There are no hour-meter readings for this year, so total use is only what you logged. Logging a "
+            f"There are no {meter_name.replace(' ', '-')} readings for this year, so total use is only what you logged. Logging a "
             "reading at the start and end of the year makes the percentage much easier to back up."
         )
     else:
@@ -235,7 +292,7 @@ def build_worksheet(context, asset, year: int) -> Worksheet:
 
     labels: dict[str, float] = defaultdict(float)
     for e in business:
-        labels[_business_label(context, e)] += e.hours
+        labels[_business_label(context, e)] += e.amount(unit)
 
     sheet = Worksheet(
         asset_id=asset.asset_id, asset_name=asset.name, year=year,
@@ -245,7 +302,8 @@ def build_worksheet(context, asset, year: int) -> Worksheet:
         running_by_category={k: round(v, 2) for k, v in sorted(by_category.items(), key=lambda kv: -kv[1])},
         cost_basis=round(basis, 2), placed_in_service=asset.purchase_date,
         by_business=sorted(labels.items(), key=lambda kv: -kv[1]),
-        jobs=business, notes=notes,
+        jobs=business, notes=notes, unit=unit,
+        mileage_rate=mileage_rate(context, year) if unit == MILES else None,
     )
     if not business:
         sheet.notes.append("No business use is logged for this year yet.")
@@ -257,6 +315,18 @@ def build_worksheet(context, asset, year: int) -> Worksheet:
         sheet.notes.append(
             f"Business use is {side} than 50%. That threshold matters for some depreciation choices, so mention it "
             "to your tax preparer."
+        )
+    if unit == MILES:
+        if sheet.mileage_rate is None:
+            sheet.notes.append(
+                f"Enter the IRS standard mileage rate for {year} (from irs.gov) to see the standard-mileage figure; "
+                "MIA doesn't guess it."
+            )
+        sheet.notes.append(
+            "Vehicles have two methods: the standard mileage rate (business miles × the rate, in place of the actual "
+            "gas, repairs, insurance and depreciation) or the actual-cost share. Rules decide which you may use, "
+            "for example choosing standard mileage in the first year the vehicle is used for business. Ask your "
+            "tax preparer; parking and tolls for business trips are separate either way."
         )
     return sheet
 
@@ -277,21 +347,27 @@ def _business_label(context, entry: UseEntry) -> str:
                 if entity is not None:
                     return entity.name
             return f"Rentals ({prop.name})"
-    return "Business (no entity set)"
+    return UNASSIGNED_LABEL
+
+
+UNASSIGNED_LABEL = "Business (no entity set)"
 
 
 def describe_worksheet(sheet: Worksheet) -> str:
     """Pure logic: a short spoken summary."""
     if sheet.total_hours is None:
         return f"I don't have any use logged for the {sheet.asset_name} in {sheet.year} yet."
+    verb = "was driven" if sheet.unit == MILES else "ran"
     text = (
-        f"In {sheet.year} the {sheet.asset_name} ran {sheet.total_hours:g} hours ({sheet.total_method}), "
+        f"In {sheet.year} the {sheet.asset_name} {verb} {sheet.total_hours:g} {sheet.unit} ({sheet.total_method}), "
         f"{sheet.business_hours:g} of them for business: {sheet.business_pct:g}% business use."
     )
     if sheet.business_running_costs is not None and sheet.running_costs:
         text += f" Business share of this year's running costs: ${sheet.business_running_costs:,.2f} of ${sheet.running_costs:,.2f}."
     if sheet.business_basis is not None:
         text += f" Business share of its ${sheet.cost_basis:,.2f} cost: ${sheet.business_basis:,.2f}."
+    if sheet.standard_mileage is not None:
+        text += f" At the standard mileage rate (${sheet.mileage_rate:g} a mile) the business miles come to ${sheet.standard_mileage:,.2f}."
     text += f" That's backed by {len(sheet.jobs)} logged business job{'s' if len(sheet.jobs) != 1 else ''}."
     return text
 
@@ -302,9 +378,9 @@ def build_worksheet_html(sheet: Worksheet, generated_at: str) -> str:
     money = lambda v: f"${v:,.2f}"  # noqa: E731
     pct = sheet.business_pct
     rows = [
-        ("Total use this year", f"{sheet.total_hours:g} hours ({sheet.total_method})" if sheet.total_hours else "Unknown"),
-        ("Business use (logged)", f"{sheet.business_hours:g} hours"),
-        ("Personal use", f"{(sheet.total_hours or 0) - sheet.business_hours:g} hours" if sheet.total_hours else "Unknown"),
+        ("Total use this year", f"{sheet.total_hours:g} {sheet.unit} ({sheet.total_method})" if sheet.total_hours else "Unknown"),
+        ("Business use (logged)", f"{sheet.business_hours:g} {sheet.unit}"),
+        ("Personal use", f"{(sheet.total_hours or 0) - sheet.business_hours:g} {sheet.unit}" if sheet.total_hours else "Unknown"),
         ("Business-use percentage", f"{pct:g}%" if pct is not None else "Unknown"),
         ("Running costs this year", money(sheet.running_costs)),
         ("Business share of running costs", money(sheet.business_running_costs) if sheet.business_running_costs is not None else "Unknown"),
@@ -312,6 +388,10 @@ def build_worksheet_html(sheet: Worksheet, generated_at: str) -> str:
         ("Placed in service", sheet.placed_in_service or "Not recorded"),
         ("Business share of cost basis", money(sheet.business_basis) if sheet.business_basis is not None else "Unknown"),
     ]
+    if sheet.unit == MILES:
+        rows.append(("Standard mileage rate", f"${sheet.mileage_rate:g} a mile" if sheet.mileage_rate is not None else "Not entered"))
+        rows.append(("Standard mileage figure (business miles × rate)",
+                     money(sheet.standard_mileage) if sheet.standard_mileage is not None else "Needs the rate"))
     table = '<table border="1" cellspacing="0" cellpadding="4" width="100%" style="border-collapse:collapse">'
     parts = [
         f"<h2>Business use worksheet: {esc(sheet.asset_name)}, {sheet.year}</h2>",
@@ -325,15 +405,48 @@ def build_worksheet_html(sheet: Worksheet, generated_at: str) -> str:
     split = sheet.business_costs_by_business()
     if split:
         parts.append("<h3>Business share by business</h3>" + table
-                     + "<tr><th>Business</th><th>Hours</th><th>Share of running costs</th></tr>" + "".join(
+                     + f"<tr><th>Business</th><th>{sheet.unit.title()}</th><th>Share of running costs</th></tr>" + "".join(
             f"<tr><td>{esc(label)}</td><td>{hours:g}</td><td>{money(share)}</td></tr>" for label, hours, share in split
         ) + "</table>")
     if sheet.jobs:
         parts.append("<h3>Business use log</h3>" + table
-                     + "<tr><th>Date</th><th>Hours</th><th>For</th><th>Note</th></tr>" + "".join(
-            f"<tr><td>{esc(e.date)}</td><td>{e.hours:g}</td><td>{esc(e.client)}</td><td>{esc(e.note)}</td></tr>" for e in sheet.jobs
+                     + f"<tr><th>Date</th><th>{sheet.unit.title()}</th><th>For</th><th>Note</th></tr>" + "".join(
+            f"<tr><td>{esc(e.date)}</td><td>{e.amount(sheet.unit):g}</td><td>{esc(e.client)}</td><td>{esc(e.note)}</td></tr>" for e in sheet.jobs
         ) + "</table>")
     if sheet.notes:
         parts.append("<h3>Notes</h3><ul>" + "".join(f"<li>{esc(n)}</li>" for n in sheet.notes) + "</ul>")
     parts.append(f"<p><i>{esc(DISCLAIMER)}</i></p>")
     return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# The Business Report's "Equipment business use" section (2026-09-28)
+# ---------------------------------------------------------------------------
+
+
+def equipment_report_rows(sheets: list[Worksheet], entity_name: Optional[str], entity_names: set[str]) -> list[dict]:
+    """Pure logic. One row per tool with business use, scoped like the
+    report: entity_name None = every business; a business's name = only
+    its share; "" = the unassigned bucket (work not tied to one of the
+    owner's businesses)."""
+    rows = []
+    for sheet in sheets:
+        if not sheet.business_hours:
+            continue
+        if entity_name is None:
+            amount = sheet.business_hours
+        elif entity_name == "":
+            amount = sum(v for label, v in sheet.by_business if label not in entity_names)
+        else:
+            amount = dict(sheet.by_business).get(entity_name, 0.0)
+        if not amount:
+            continue
+        fraction = amount / sheet.business_hours
+        scale = lambda value: round(value * fraction, 2) if value is not None else None  # noqa: E731
+        rows.append({
+            "name": sheet.asset_name, "unit": sheet.unit, "total": sheet.total_hours, "business": round(amount, 2),
+            "pct": round(100 * amount / sheet.total_hours, 1) if sheet.total_hours else None,
+            "running_share": scale(sheet.business_running_costs), "basis_share": scale(sheet.business_basis),
+            "standard_mileage": scale(sheet.standard_mileage),
+        })
+    return rows

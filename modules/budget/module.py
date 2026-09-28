@@ -101,7 +101,7 @@ from PySide6.QtWidgets import (
 from core.business_report import build_business_report_html, build_consolidated_business_report_html
 from core.homestead_costs import BuildCost, ToolCost, all_build_costs, all_tool_costs, record_tool_purchase
 from core.business_tagging import auto_tag_new, pending_review
-from core.business_use import build_worksheet, build_worksheet_html
+from core.business_use import build_worksheet, build_worksheet_html, equipment_report_rows, set_mileage_rate
 from core.budget_manager import (
     Bill,
     DEBT_PAYOFF_STRATEGIES,
@@ -459,9 +459,13 @@ class BudgetModule(ModuleBase):
         asset = self._pick_tool("Log Business Use")
         if asset is None:
             return
-        hours, ok = QInputDialog.getDouble(None, "Log Business Use", f"Business hours on the {asset.name}:", 1, 0.1, 1000, 1)
+        # Vehicles are measured in miles (core/business_use.py), everything else in hours.
+        in_miles = asset.category == "Vehicle"
+        unit = "miles" if in_miles else "hours"
+        amount, ok = QInputDialog.getDouble(None, "Log Business Use", f"Business {unit} on the {asset.name}:", 1, 0.1, 100_000, 1)
         if not ok:
             return
+        hours, miles = (0.0, amount) if in_miles else (amount, 0.0)
         client, ok = QInputDialog.getText(None, "Log Business Use", "Who or what was it for? (e.g. 'Johnson lawn', 'Maple duplex')")
         if not ok:
             return
@@ -472,8 +476,8 @@ class BudgetModule(ModuleBase):
             choice, ok = QInputDialog.getItem(None, "Log Business Use", "Which business?", names, 0, False)
             if ok and choice != names[0]:
                 entity_id = entities[names.index(choice) - 1].entity_id
-        self.context.business_use.log_use(asset.asset_id, hours, client=client.strip(), entity_id=entity_id)
-        QMessageBox.information(None, "Log Business Use", f"Logged {hours:g} business hours on the {asset.name}.")
+        self.context.business_use.log_use(asset.asset_id, hours, client=client.strip(), entity_id=entity_id, miles=miles)
+        QMessageBox.information(None, "Log Business Use", f"Logged {amount:g} business {unit} on the {asset.name}.")
 
     def _on_business_use_worksheet(self) -> None:
         if self.context.business_use is None:
@@ -485,20 +489,36 @@ class BudgetModule(ModuleBase):
         year, ok = QInputDialog.getInt(None, "Business Use Worksheet", "Tax year:", this_year, 2000, this_year + 1)
         if not ok:
             return
-        html = build_worksheet_html(build_worksheet(self.context, asset, year), datetime.now().strftime("%Y-%m-%d %H:%M"))
+        sheet = build_worksheet(self.context, asset, year)
+        state = {"html": build_worksheet_html(sheet, datetime.now().strftime("%Y-%m-%d %H:%M"))}
         dialog = QDialog()
         dialog.setWindowTitle(f"Business Use: {asset.name}, {year}")
         dialog.resize(720, 640)
         dialog_layout = QVBoxLayout(dialog)
         viewer = QTextBrowser()
-        viewer.setHtml(html)
+        viewer.setHtml(state["html"])
         dialog_layout.addWidget(viewer, stretch=1)
         buttons = QHBoxLayout()
         export_button = QPushButton("Export PDF…")
         export_button.clicked.connect(
-            lambda: self._export_report_html_to_pdf(html, "Export Business Use Worksheet", f"Business_Use_{asset.name.replace(' ', '_')}_{year}")
+            lambda: self._export_report_html_to_pdf(state["html"], "Export Business Use Worksheet", f"Business_Use_{asset.name.replace(' ', '_')}_{year}")
         )
         buttons.addWidget(export_button)
+        if sheet.unit == "miles":
+            def set_rate() -> None:
+                current = sheet.mileage_rate or 0.0
+                rate, ok = QInputDialog.getDouble(
+                    None, "Standard Mileage Rate", f"IRS standard mileage rate for {year}, in dollars per mile (from irs.gov):",
+                    current, 0.0, 5.0, 3,
+                )
+                if ok and rate > 0:
+                    set_mileage_rate(self.context, year, rate)
+                    state["html"] = build_worksheet_html(build_worksheet(self.context, asset, year),
+                                                         datetime.now().strftime("%Y-%m-%d %H:%M"))
+                    viewer.setHtml(state["html"])
+            rate_button = QPushButton("Set Mileage Rate…")
+            rate_button.clicked.connect(set_rate)
+            buttons.addWidget(rate_button)
         buttons.addStretch(1)
         close_button = QPushButton("Close")
         close_button.clicked.connect(dialog.accept)
@@ -1436,6 +1456,25 @@ class BudgetModule(ModuleBase):
         avg_apr = budget.weighted_average_debt_apr(entity_id=entity_id)
         self._summary_debt_label.setText(f"Total Debt: ${total_debt:,.2f}  (weighted avg {avg_apr:.2f}% APR)")
 
+    def _gather_equipment_use(self, entity_id: Optional[str], year: int) -> list[dict]:
+        if self.context.business_use is None or self.context.maintenance is None:
+            return []
+        budget = self.context.budget
+        sheets = []
+        for asset_id in self.context.business_use.assets_with_business_use():
+            asset = self.context.maintenance.get_asset(asset_id)
+            if asset is not None:
+                sheets.append(build_worksheet(self.context, asset, year))
+        entity_names = {e.name for e in budget.all_business_entities()}
+        if entity_id is None:
+            scope = None
+        elif entity_id == "":
+            scope = ""
+        else:
+            entity = budget.get_business_entity(entity_id)
+            scope = entity.name if entity is not None else ""
+        return equipment_report_rows(sheets, scope, entity_names)
+
     def _gather_entity_report_kwargs(
         self, entity_id: Optional[str], start: Optional[str], end: Optional[str], range_label: str,
     ) -> dict:
@@ -1483,7 +1522,10 @@ class BudgetModule(ModuleBase):
         # own docstring for why that's distinct from a real empty result.
         schedule_e_properties = None
         payees_over_threshold = None
+        equipment_use = None
         if range_label == "This Year":
+            # 2026-09-28: the business share of equipment and vehicles.
+            equipment_use = self._gather_equipment_use(entity_id, int((start or date.today().isoformat())[:4]))
             schedule_e_properties = []
             for prop in real_estate.all_properties():
                 if entity_id is not None and prop.entity_id != entity_id:
@@ -1530,6 +1572,7 @@ class BudgetModule(ModuleBase):
             properties=properties,
             schedule_e_properties=schedule_e_properties,
             payees_over_threshold=payees_over_threshold,
+            equipment_use=equipment_use,
         )
 
     def _gather_net_worth_by_source(self) -> dict[str, float]:

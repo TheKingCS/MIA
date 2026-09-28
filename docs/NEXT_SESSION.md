@@ -126,9 +126,10 @@ every step below in order, from a blank machine, with Windows notes.
    five Assistant tools. Try it: Part 7 of `docs/SETUP_GUIDE.md`.
 9. ~~Finance, #3: mower business-use write-off~~ **built**
    (2026-09-28): business-use log, hour-meter totals, worksheet with PDF
-   (Budget → Builds & Tools). Follow-up idea: an "Equipment business
-   use" section in the Business Report, and the standard mileage rate
-   option for vehicles.
+   (Budget → Builds & Tools). Follow-ups **built** (2026-09-28): the
+   Business Report's "Equipment business use" section, and vehicles in
+   miles with the standard mileage figure (enter each year's IRS rate
+   in the worksheet).
 10. ~~Finance, #4: money on your phone~~ **built** (2026-09-28):
    `/api/finance/summary`, a Money tab in the web app, Show money in the
    Android app. Read-only by design. Your finance sequence (debts →

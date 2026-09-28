@@ -219,8 +219,9 @@ def _action_log_business_use(context: AppContext, arguments: dict) -> str:
     if getattr(context, "business_use", None) is None or context.maintenance is None:
         return "Business-use tracking isn't available right now."
     hours = _amount(arguments.get("hours"))
-    if hours is None:
-        return "How many hours was it?"
+    miles = _amount(arguments.get("miles"))
+    if hours is None and miles is None:
+        return "How many hours was it (or miles, for a vehicle)?"
     tool, question = _business_tool(context, str(arguments.get("tool") or "").strip())
     if tool is None:
         return question
@@ -237,15 +238,19 @@ def _action_log_business_use(context: AppContext, arguments: dict) -> str:
         if entity is not None:
             entity_id = entity.entity_id
     entry = context.business_use.log_use(
-        tool.asset_id, hours, purpose=purpose, use_date=arguments.get("date") or None,
+        tool.asset_id, hours or 0.0, purpose=purpose, use_date=arguments.get("date") or None,
         entity_id=entity_id, property_id=property_id, client=for_whom, note=str(arguments.get("note") or ""),
+        miles=miles or 0.0,
     )
     year = int(entry.date[:4])
-    logged = sum(e.hours for e in context.business_use.entries_for(tool.asset_id, year) if e.purpose == purpose)
+    unit = "miles" if miles else "hours"
+    amount = miles if miles else hours
+    logged = sum(e.amount(unit) for e in context.business_use.entries_for(tool.asset_id, year) if e.purpose == purpose)
     target = f" for {for_whom}" if for_whom else ""
+    singular = unit[:-1] if amount == 1 else unit
     return (
-        f"Logged {hours:g} {purpose} hour{'s' if hours != 1 else ''} on the {tool.name}{target}. "
-        f"{year} so far: {logged:g} {purpose} hours."
+        f"Logged {amount:g} {purpose} {singular} on the {tool.name}{target}. "
+        f"{year} so far: {logged:g} {purpose} {unit}."
     )
 
 
@@ -285,16 +290,18 @@ def register_homestead_actions(registry: AssistantActionRegistry) -> None:
         ),
         parameters={"type": "object", "properties": {
             "tool": {**_S, "description": "The equipment, e.g. 'mower'."},
-            "hours": {**_N, "description": "Hours of use."},
+            "hours": {**_N, "description": "Hours of use (equipment)."},
+            "miles": {**_N, "description": "Miles driven (a vehicle), instead of hours."},
             "for_whom": {**_S, "description": "Client or property, e.g. 'Maple duplex', 'Johnson lawn'."},
             "business": {**_S, "description": "Which of the user's businesses, if said."},
             "purpose": {**_S, "description": "'business' (default) or 'personal'."},
             "date": {**_S, "description": "YYYY-MM-DD if not today."},
             "note": {**_S, "description": "Anything else they said."},
-        }, "required": ["hours"]},
+        }, "required": []},
         handler=_action_log_business_use,
         trigger_phrases=("for business", "business use", "business hours", "lawn job", "lawn care", "mowing job",
-                         "for a client", "for the client", "mowed the", "contract job"),
+                         "for a client", "for the client", "mowed the", "contract job", "business miles",
+                         "miles for", "drove to"),
     ))
     registry.register(AssistantAction(
         name="get_business_use", domain="business_use",

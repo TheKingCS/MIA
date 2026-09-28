@@ -12469,3 +12469,22 @@ asset's `warranty_until`, a timely message through the communication
 gate ("The Riding Mower's warranty ends Oct 27 (in 29 days)..."). Each
 stage is said once per item and date (config `system.warranty_notices`);
 a new date starts over. 4 new tests.
+
+## Equipment in the Business Report; vehicles in miles (2026-09-28)
+
+The Finance #3 follow-ups.
+- `UseEntry.miles`: a job logged in miles makes the worksheet count
+  miles, with total use from odometer readings (`odometer_readings()`),
+  and show the standard mileage figure (business miles × the year's
+  rate). The rate is owner-entered per year (`business_use.mileage_rates`,
+  worksheet → Set Mileage Rate…); MIA never guesses an IRS rate, and the
+  worksheet says when it's missing. Log Business Use asks for miles for
+  Vehicle-category items; `log_business_use` takes `miles`.
+- Business Report, "This Year": "Equipment business use" per scope
+  (all, one business, or the unassigned bucket) via
+  `equipment_report_rows()`: business use, %, and the scope's share of
+  running costs, cost basis and standard mileage.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 4 new tests; the Budget screen's report gathering ran against
+a real screen offscreen.
