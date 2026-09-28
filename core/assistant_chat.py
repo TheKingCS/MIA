@@ -59,6 +59,7 @@ from core.conversation_modes import (
     PERSPECTIVE,
     looks_like_direct_command,
 )
+from core.textbook_study import is_study_mode, study_block
 from core.why_graph import build_why_sheet
 
 # Perspective asked for before the owner has told MIA any reasons:
@@ -519,7 +520,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     return messages, tools
 
 
-def build_personal_system_message(context, mode: str) -> str:
+def build_personal_system_message(context, mode: str, conversation=None, prompt: str = "") -> str:
     """The personal path's system message (Cognitive Extension slice A):
     who MIA is, the human-agency line, what she knows about the user,
     recent private-journal sessions when unlocked, and the one tone line
@@ -528,9 +529,14 @@ def build_personal_system_message(context, mode: str) -> str:
     from core.talk_it_out import journal_context_block  # local: talk_it_out imports this module
 
     parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + " " + AGENCY_LINE, build_user_context_block(context)]
-    journal_block = journal_context_block(context)
+    journal_block = "" if is_study_mode(mode) else journal_context_block(context)
     if journal_block:
         parts.append(journal_block)
+    if is_study_mode(mode) and conversation is not None:
+        # Textbook tutor: the book's own passages for this turn.
+        block = study_block(context, conversation, prompt)
+        if block:
+            parts.append(block)
     if mode == PERSPECTIVE:
         # Slice B: the facts come from code (core/why_graph.py); the model only phrases them.
         sheet = build_why_sheet(context)
@@ -556,7 +562,7 @@ def _build_personal_request(context, conversation, prompt: str, mode: str) -> tu
     if matched_actions:
         system = _IDENTITY_LINE
     else:
-        system = build_personal_system_message(context, mode if mode in PERSONAL_MODES else LISTEN)
+        system = build_personal_system_message(context, mode if mode in PERSONAL_MODES else LISTEN, conversation, prompt)
     messages = [{"role": "system", "content": system}]
     messages.extend({"role": m.role, "content": m.content} for m in history)
     messages.append({"role": "user", "content": prompt})

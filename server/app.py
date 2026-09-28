@@ -48,6 +48,7 @@ import base64
 import io
 import secrets
 import tempfile
+from urllib.parse import unquote
 import threading
 import wave
 from pathlib import Path
@@ -274,6 +275,24 @@ def create_app(context: AppContext) -> FastAPI:
         if not text:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Say or type something first.")
         return respond(profile_id, text, background)
+
+    # Document inbox (core/inbox_manager.py): a file sent from the phone
+    # (a receipt photo, a manual PDF). Raw body + X-Filename header, so no
+    # multipart parser dependency. Only writes the file; the desktop's
+    # inbox scan takes it from there within a minute.
+    @app.post("/api/inbox/upload")
+    async def inbox_upload(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        if context.inbox is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The inbox isn't available on MIA's computer.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No file received.")
+        filename = unquote(request.headers.get("x-filename", "upload"))
+        try:
+            context.inbox.receive_file(filename, data, source="phone")
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, str(exc)) from exc
+        return {"received": filename, "message": "Got it. It'll be in your inbox in a minute."}
 
     # Finance #4 (2026-09-28): read-only money summary for the phone
     # apps. Same numbers as the desktop (core/finance_summary.py); taken

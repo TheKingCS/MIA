@@ -12234,3 +12234,50 @@ failure), real `data/` untouched. 7 new Python tests (incl. two running
 money.js under Node) and 5 Kotlin tests; the Android sources compile
 against the Android 14 framework jar, and the APK build runs in GitHub
 Actions.
+
+## Textbook tutor and document inbox (2026-09-28)
+
+Two of the owner's parked ideas, built together because both start with
+reading a document (`core/document_text.py`: PDF text via QtPdf, text,
+HTML, and email with attachments; no OCR yet, and scans/photos say so).
+
+**Textbook tutor** ("textbooks MIA can reference to help educate the
+user on subjects of their choice"):
+- `core/textbook_manager.py`: books copied into `textbooks/`
+  (gitignored), chapters found from headings (contents pages skipped),
+  passages indexed per page, keyword search with IDF weighting, and a
+  Classroom course from a book (one lesson per chapter).
+- Study and Quiz conversation modes ("let's study the wiring book",
+  "quiz me on chapter 3"; "I'm done studying"). `core/textbook_study.py`
+  puts up to four passages, with page numbers, in the system message, so
+  the small model teaches from the book instead of from memory.
+- Classroom → 📚 Textbooks; tools `list_textbooks`, `search_textbook`,
+  `make_textbook_course`.
+
+**Document inbox** ("an email inbox I can send receipts and owners
+manuals to, and it classifies them and files the mower's manual and
+maintenance schedule onto the mower"):
+- `core/inbox_manager.py`: one intake folder (`inbox/`, gitignored).
+  Files arrive by dropping them in, the phone's Send a file
+  (`POST /api/inbox/upload`), or email.
+- `core/inbox_mail.py`: optional IMAP check every 10 minutes on a
+  background thread (stdlib imaplib, 30 s timeout), password encrypted
+  with the owner's passphrase and unlocked along with the Private
+  Journal. It only writes .eml files into the folder.
+- `core/inbox_classify.py` (deterministic, no model): receipt / invoice
+  / manual / warranty; asset match by serial, model, name, maker (clear
+  unique winner only); receipt total from the Total line, date, store;
+  maintenance steps with intervals from manuals.
+- Propose, then confirm: the Inbox module shows what MIA read; File It
+  makes a tagged Budget expense, attaches the documents to the item's
+  Maintenance page, and adds the ticked steps as tasks (hour-based steps
+  use the hour meter). New arrivals are announced through the
+  communication gate.
+- Tools `list_inbox`, `file_inbox_item`, `dismiss_inbox_item`
+  (174 actions, 38 domains).
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure), real `data/` untouched. 42 new tests (17 tutor, 25 inbox:
+classification, intake, emailed PDFs, filing, the tools, the mail vault,
+IMAP with a fake server, the upload endpoint, the Inbox screen);
+routing corpus 206; live checklist 219.

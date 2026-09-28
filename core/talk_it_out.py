@@ -48,6 +48,7 @@ from core.conversation_modes import COMPANION, LISTEN, detect_mode_change
 from core.logger import get_logger
 from core.private_journal import JournalExchange, JournalLockedError, PrivateJournalEntry
 from core.safety_floor import detect_danger, safety_reply, trusted_contact_from
+from core.textbook_study import is_study_mode, update_study_target
 
 log = get_logger(__name__)
 
@@ -119,6 +120,15 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
         if conversation.title == DEFAULT_TITLE and (conversation.journal or conversation.off_record):
             conversation.title = JOURNAL_TITLE if conversation.journal else OFF_RECORD_TITLE
         _persist(context, conversation)
+
+    # Textbook tutor: which book/chapter this study or quiz turn is on.
+    if is_study_mode(conversation.mode):
+        before = (conversation.study_book_id, conversation.study_chapter)
+        notice = update_study_target(context, conversation, prompt)
+        if notice and not result.notice:
+            result.notice = notice
+        if (conversation.study_book_id, conversation.study_chapter) != before:
+            _persist(context, conversation)
 
     if detect_danger(prompt):
         conversation.mode = LISTEN

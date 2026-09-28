@@ -217,6 +217,10 @@ class PrivateJournalPanel(QWidget):
         self.refresh()
 
     def _unlock_plaid_too(self, passphrase: str) -> None:
+        # The document inbox's mailbox password shares the passphrase too.
+        mail = getattr(self.context, "inbox_mail", None)
+        if mail is not None and mail.vault.exists() and not mail.vault.unlocked:
+            mail.vault.try_unlock(passphrase)
         plaid = getattr(self.context, "plaid", None)
         if plaid is None or not plaid.is_configured() or plaid.is_unlocked():
             return

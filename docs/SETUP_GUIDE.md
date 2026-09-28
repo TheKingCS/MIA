@@ -8,7 +8,7 @@ and the Claude Design pass. Written 2026-09-27.
 Work top to bottom. Each part ends with a checkbox. You can stop after
 any part and pick up later. When something fails, jump to
 [Troubleshooting](#troubleshooting) or send Claude the report described
-in [Part 11](#part-11-report-back-to-claude).
+in [Part 12](#part-12-report-back-to-claude).
 
 **Time:** about 1 to 2 hours total, most of it downloads.
 
@@ -271,7 +271,7 @@ Full detail is in **`docs/PLAID_SETUP.md`**. The short version:
    back in MIA, enter the passphrase to save the connection.
 4. **Sync Now** (passphrase again). Check **Expenses**, **Income** and
    **Debts**. Sync a second time and confirm nothing appears twice.
-5. **Tell Claude how it went** (Part 11). This is the first time MIA's
+5. **Tell Claude how it went** (Part 12). This is the first time MIA's
    bank code has talked to the real Plaid service.
 
 **Then your real accounts** (`docs/PLAID_SETUP.md`, Part 6): **Reset Plaid
@@ -381,7 +381,77 @@ sign-in.
 
 ---
 
-## Part 10: The Claude Design pass
+## Part 10: Textbooks and the document inbox
+
+### 10a. The textbook tutor
+
+1. MIA → **Classroom → 📚 Textbooks → Add Textbook…** → pick a textbook PDF
+   (or a .txt/.md file) and give it a title. MIA finds the chapters and
+   indexes every page. **Scanned PDFs (pictures of pages, no text layer)
+   can't be read yet**; MIA says so instead of pretending.
+2. Optional: **Make a Course** turns the book into a Classroom course,
+   one lesson per chapter, so you can tick chapters off.
+3. In chat or on the phone, try:
+   - *"Let's study the wiring book"* or *"Teach me from the wiring book"*: MIA
+     explains from the book itself and names the pages.
+   - *"Quiz me on chapter 3"*: one question at a time, checked against
+     the book.
+   - *"What does my textbook say about GFCI outlets?"*: a quick lookup
+     with the page.
+   - *"I'm done studying"* (or *"back to normal"*) to go back to normal.
+
+- [ ] A book added and a study session tried
+
+### 10b. The document inbox
+
+Send MIA receipts, manuals and warranties; it reads each one, suggests
+where it goes, and files it when you say so. **Nothing is filed until
+you confirm.**
+
+Three ways in (use any):
+
+- **Drop files** in the `inbox` folder inside the MIA folder, or
+  **Inbox → Add Files…**.
+- **From your phone:** in the phone web app, **Send a file** (a PDF,
+  a photo, a text file). Needs Part 8.
+- **By email (optional):** make a separate email address just for MIA
+  (a new Gmail account is easiest), then:
+  1. In that Gmail account: **Google Account → Security → 2-Step
+     Verification** (turn it on), then **App passwords** → create one
+     named "MIA". Google shows a 16-letter password once. **Don't
+     paste it into a chat with Claude.**
+  2. MIA → **Inbox → Email Settings…** → server `imap.gmail.com`, the
+     address, the app password, and a passphrase to encrypt it (use
+     your journal/vault passphrase so unlocking the Private Journal
+     unlocks email too).
+  3. Forward or send a receipt to that address. MIA checks every 10
+     minutes while unlocked (or press **Check Now**).
+
+Then try it with the mower:
+
+1. Make sure the mower in Maintenance has its **model** (e.g. Z315E)
+   and **serial number** filled in; that's how MIA recognizes its
+   documents.
+2. Put the mower's manual (PDF) in the inbox. Within a minute MIA
+   says it arrived and that it looks like it's for the mower.
+3. **Inbox**: check what MIA read, untick any maintenance steps you
+   don't want, **File It**. The manual shows on the mower's page and
+   the steps become maintenance tasks.
+4. Send a store receipt. Check the total/date/store MIA read, pick the
+   build or tool it's for, **File It**: it becomes a tagged expense in
+   Budget. Or just say *"file the Lowe's receipt under the
+   greenhouse"*.
+
+Photos of paper receipts are kept but can't be read yet (no text
+recognition); type the amount in the Inbox screen and file it.
+
+- [ ] A manual filed onto the mower with its tasks
+- [ ] A receipt filed as an expense
+- [ ] (optional) Email set up and a forwarded receipt arrived
+
+---
+
+## Part 11: The Claude Design pass
 
 1. Get the design package: the `docs/design_handoff/` folder on your
    computer (or the zip Claude sent earlier), plus the inspiration
@@ -395,7 +465,7 @@ sign-in.
 
 ---
 
-## Part 11: Report back to Claude
+## Part 12: Report back to Claude
 
 Start a new Claude session on the MIA repo and say *"read
 docs/NEXT_SESSION.md"*. Then send, for each part you did:

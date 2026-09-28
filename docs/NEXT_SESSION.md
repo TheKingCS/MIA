@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-09-27 (night)*
+*Last updated: 2026-09-28*
 
 **Cognitive Extension:** you approved slices A → B → C → D → E
 (`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
@@ -71,6 +71,11 @@ every step below in order, from a blank machine, with Windows notes.
       phone voice setup at home done first. Tell Claude what works and
       what doesn't: locked-screen listening, the headset button, the
       Bluetooth mic option, signing back in after MIA restarts.
+- [ ] **Try the textbook tutor and the document inbox**
+      (`docs/SETUP_GUIDE.md`, Part 10): add a textbook and study from
+      it; send the mower's manual and a receipt to the inbox and file
+      them. Email intake is optional (a separate Gmail address with an
+      app password; never paste the app password into a chat).
 - [ ] **Claude Design pass.** Upload `docs/design_handoff/` (or the zip
       Claude sent) plus your inspiration pictures to Claude Design and
       paste the prompt at the top of its README. Bring the 3 directions
@@ -118,6 +123,18 @@ every step below in order, from a blank machine, with Windows notes.
    `/api/finance/summary`, a Money tab in the web app, Show money in the
    Android app. Read-only by design. Your finance sequence (debts →
    builds and tools → business use → phone) is complete.
+11. ~~Textbook tutor and document inbox~~ **built** (2026-09-28). Try
+   them: Part 10 of `docs/SETUP_GUIDE.md`. Follow-ups, roughly in order:
+   - reading photos and scans (OCR, e.g. Tesseract) so paper receipts
+     and scanned manuals work;
+   - "Share to MIA" from any Android app (share a PDF or photo straight
+     into the inbox);
+   - the model's help on messy manuals (propose extra schedule steps,
+     still confirmed by you), and updating an item's details (model,
+     serial, warranty end) from its documents;
+   - meaning-based search for textbooks (embeddings), so "why do
+     breakers trip" finds a passage that never uses those words;
+   - a receipt's line items (not just the total) for build materials.
 
 ## 3. Ideas parked for later (need their own planning pass)
 
@@ -125,14 +142,6 @@ every step below in order, from a blank machine, with Windows notes.
   a notification when MIA goes offline or comes back, and actually
   queuing "remind me when I'm back online" requests.
 
-- **MIA email inbox**: forward receipts, manuals and business
-  documents; MIA classifies them and files them to the right place
-  (e.g. the mower's manual and maintenance schedule onto the mower's
-  page) and updates records from them. Open question: how an offline-
-  first app receives email (IMAP polling vs. a forwarding address).
-- **Textbook tutor**: add textbooks and course material and have MIA
-  teach from them. Builds on the existing Reference Library, Classroom
-  and the Assistant's retrieval.
 - **Auto-tagging business transactions** (lawn care, rentals,
   homestead) to the right business entity after bank sync.
 

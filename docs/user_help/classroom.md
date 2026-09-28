@@ -34,3 +34,25 @@ Deleting a Subject or Course removes everything underneath it too (its
 Courses and their Lessons, or just its Lessons) — there's no way to
 delete just the parent and keep orphaned children around, since a
 Lesson or Course doesn't mean much without what it belongs to.
+
+## Textbooks: MIA teaches from your own books
+
+Classroom → 📚 Textbooks → Add Textbook… takes a PDF (or a .txt/.md
+file). MIA copies it into its `textbooks` folder, finds the chapters,
+and indexes every page so it can quote and cite them. Make a Course
+turns a book into a Classroom course with one lesson per chapter.
+
+Then in chat or on the phone:
+
+- "Let's study the wiring book" or "Teach me from the wiring book":
+  MIA explains using passages from the book and names the pages, and
+  says so when the book doesn't cover something rather than guessing.
+- "Quiz me on chapter 3": one question at a time, checked against the
+  book.
+- "What does my textbook say about grounding?": a quick lookup with the
+  page number.
+- "I'm done studying" or "back to normal" to leave study mode.
+
+A scanned PDF (pictures of pages with no text layer) can't be read
+yet; MIA tells you instead of adding an empty book. Your books are
+never copied anywhere but MIA's own folder.

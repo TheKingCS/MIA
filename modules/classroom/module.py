@@ -132,8 +132,27 @@ class ClassroomModule(ModuleBase):
 
         layout.addLayout(buttons)
 
+        # Textbook tutor (2026-09-28): the owner's books, a page of its own.
+        if self.context.textbooks is not None:
+            textbooks_button = QPushButton("\U0001F4DA  Textbooks")
+            textbooks_button.clicked.connect(self._on_open_textbooks)
+            layout.addWidget(textbooks_button)
+
         self._refresh_subject_list()
         return page
+
+    def _on_open_textbooks(self) -> None:
+        from gui.textbooks_panel import TextbooksPanel
+
+        if getattr(self, "_textbooks_page", None) is None:
+            self._textbooks_page = TextbooksPanel(self.context, on_back=self._back_from_textbooks)
+            self._stack.addWidget(self._textbooks_page)
+        self._textbooks_page.refresh()
+        self._stack.setCurrentWidget(self._textbooks_page)
+
+    def _back_from_textbooks(self) -> None:
+        self._refresh_subject_list()  # a course may have been made
+        self._stack.setCurrentWidget(self._subjects_page)
 
     def _refresh_subject_list(self) -> None:
         self._subject_list.clear()

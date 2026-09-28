@@ -370,5 +370,5 @@ def register_homestead_actions(registry: AssistantActionRegistry) -> None:
     registry.register_domain_keywords("homestead_costs", ("lumber", "2x4s", "2x4", "rebar", "concrete"))
     registry.register_entity_names(
         "homestead_costs",
-        lambda ctx: [p.name for p in ctx.projects.all_projects()] if ctx.projects else [],
+        lambda ctx: [p.name for p in ctx.projects.all_projects()] if getattr(ctx, "projects", None) else [],
     )

@@ -147,6 +147,18 @@ CORPUS: list[tuple[str, str]] = [
     ("Log 3 hours on the mower for the Johnson lawn job", "log_business_use"),
     ("How much of the mower can I write off this year?", "get_business_use"),
     ("What's the mower's business use percentage?", "get_business_use"),
+    # ---- Textbook tutor ------------------------------------------------------------------
+    ("What textbooks do I have?", "list_textbooks"),
+    ("What does my textbook say about GFCI outlets?", "search_textbook"),
+    ("Which page talks about grounding?", "search_textbook"),
+    ("Make a course from my wiring textbook", "make_textbook_course"),
+    # ---- Document inbox ------------------------------------------------------------------
+    ("What's in my inbox?", "list_inbox"),
+    ("Any new documents?", "list_inbox"),
+    ("File it", "file_inbox_item"),
+    ("File the Lowe's receipt under the greenhouse", "file_inbox_item"),
+    ("File the mower manual without the tasks", "file_inbox_item"),
+    ("Don't file the Amazon receipt, just dismiss it", "dismiss_inbox_item"),
     # ---- When MIA speaks up (core/assistant_comm_actions.py) ------------------------
     ("What didn't you tell me today?", "get_held_back_messages"),
     ("Is there anything you held back?", "get_held_back_messages"),
@@ -200,4 +212,7 @@ NO_TOOLS: list[str] = [
     "I'm tired of doing the same thing every day",
     "Work was awful today",
     "I'm saving up so I can buy a boat someday",
+    "I love my books",
+    "I checked my email this morning",
+    "The filing cabinet is full",
 ]

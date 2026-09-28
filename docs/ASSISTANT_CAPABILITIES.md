@@ -169,7 +169,7 @@ Add a line there whenever MIA misses something. The live model's half
 is `tests/live_model_check.py` (run on the owner's machine). Full
 findings: `docs/ASSISTANT_AUDIT.md`.
 
-## Tool registry (168 actions, 36 domains, as of 2026-09-28)
+## Tool registry (174 actions, 38 domains, as of 2026-09-28)
 
 **Added 2026-09-27** (`core/assistant_domain_actions.py`):
 - maintenance: `update_maintenance_asset`, `get_maintenance_asset`,
@@ -184,6 +184,17 @@ findings: `docs/ASSISTANT_AUDIT.md`.
   `add_pantry_item`, `update_pantry_item`, `list_pantry`
 - components/materials/products: `adjust_component_quantity`,
   `adjust_material_quantity`, `update_material`, `adjust_product_stock`
+
+**Added 2026-09-28** (textbook tutor, `core/assistant_textbook_actions.py`):
+`list_textbooks`, `search_textbook`, `make_textbook_course` (domain
+`textbooks`). Studying and quizzing are conversation modes (Study, Quiz;
+`core/textbook_study.py` puts the book's own passages, with page
+numbers, into the system message), not tools.
+
+**Added 2026-09-28** (document inbox, `core/assistant_inbox_actions.py`):
+`list_inbox`, `file_inbox_item`, `dismiss_inbox_item` (domain `inbox`).
+Filing by voice adds every maintenance step found in a manual unless
+the owner says "without the tasks".
 
 **Added 2026-09-28** (Finance #3, same file): `log_business_use`,
 `get_business_use` (domain `business_use`, `core/business_use.py`).

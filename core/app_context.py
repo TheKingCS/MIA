@@ -88,6 +88,9 @@ if TYPE_CHECKING:
     from core.private_journal import PrivateJournalManager
     from core.communication_gate import CommunicationGate
     from core.business_use import BusinessUseManager
+    from core.textbook_manager import TextbookManager
+    from core.inbox_manager import InboxManager
+    from core.inbox_mail import MailChecker
     from core.voice_manager import VoiceManager
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
@@ -176,6 +179,14 @@ class AppContext:
     # Finance #3 (core/business_use.py): business-use log for personal
     # equipment (the mower's lawn-care jobs) and the write-off worksheet.
     business_use: Optional["BusinessUseManager"] = field(default=None, repr=False)
+    # Textbook tutor (core/textbook_manager.py): the owner's books, indexed
+    # by page and chapter, for study and quiz conversations.
+    textbooks: Optional["TextbookManager"] = field(default=None, repr=False)
+    # Document inbox (core/inbox_manager.py): receipts, manuals and other
+    # documents dropped, uploaded from the phone or emailed in, proposed
+    # for filing; inbox_mail checks the optional mailbox (core/inbox_mail.py).
+    inbox: Optional["InboxManager"] = field(default=None, repr=False)
+    inbox_mail: Optional["MailChecker"] = field(default=None, repr=False)
     dashboard_widgets: Optional["DashboardWidgetRegistry"] = field(default=None, repr=False)
     avatar: Optional["AvatarManager"] = field(default=None, repr=False)
     finance: Optional["FinanceManager"] = field(default=None, repr=False)

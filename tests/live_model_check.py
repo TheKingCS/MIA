@@ -122,6 +122,16 @@ for _module in (classroom_manager_module, recurring_mission_manager_module, rela
         if isinstance(_value, Path) and _value.parent == _module._DATA_DIR:
             setattr(_module, _attr, _TEMP_DATA_DIR / _value.name)
     _module._DATA_DIR = _TEMP_DATA_DIR
+# 2026-09-28: textbook tutor and document inbox (their folders too).
+import core.inbox_manager as inbox_manager_module  # noqa: E402
+import core.textbook_manager as textbook_manager_module  # noqa: E402
+for _module in (inbox_manager_module, textbook_manager_module):
+    for _attr, _value in list(vars(_module).items()):
+        if isinstance(_value, Path) and _value.parent == _module._DATA_DIR:
+            setattr(_module, _attr, _TEMP_DATA_DIR / _value.name)
+    _module._DATA_DIR = _TEMP_DATA_DIR
+inbox_manager_module._DEFAULT_FOLDER = _TEMP_DATA_DIR / "inbox"
+textbook_manager_module._DEFAULT_ROOT = _TEMP_DATA_DIR / "textbooks"
 real_estate_manager_module._DATA_DIR = _TEMP_DATA_DIR
 real_estate_manager_module._PROPERTIES_FILE = _TEMP_DATA_DIR / "properties.json"
 data_logger_manager_module._DATA_DIR = _TEMP_DATA_DIR
@@ -625,6 +635,11 @@ GOLDEN_CASES = [
     # Slice C: when MIA speaks up.
     ("speaking up: what was held back", "What didn't you tell me today?", "get_held_back_messages"),
     ("speaking up: set the limit", "Only message me 3 times a day", "set_message_limit", {"count": 3}),
+    # Textbook tutor and document inbox.
+    ("textbooks: list", "What textbooks do I have?", "list_textbooks"),
+    ("textbooks: lookup", "What does my wiring textbook say about GFCI outlets?", "search_textbook", {"query": "gfci"}),
+    ("inbox: what's waiting", "Anything new in my inbox?", "list_inbox"),
+    ("inbox: file with a correction", "File the Lowe's receipt under the greenhouse", "file_inbox_item", {"for": "greenhouse"}),
     ("small talk: a dog", "What's a good name for a dog?", None),
 ]
 
@@ -720,6 +735,8 @@ def _build_context() -> AppContext:
     context.workout = WorkoutManager(context)
     context.relationships = RelationshipsManager(context)
     context.classroom = ClassroomManager(context)
+    context.textbooks = textbook_manager_module.TextbookManager(context)
+    context.inbox = inbox_manager_module.InboxManager(context)
     context.jobs = JobManager(context)
     context.products = ProductManager(context)
     context.ledger = LedgerManager(context)

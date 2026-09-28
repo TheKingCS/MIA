@@ -97,3 +97,11 @@ htmlcov/
 android/.gradle/
 android/local.properties
 *.apk
+
+# Textbooks added to the tutor (core/textbook_manager.py) — the owner's
+# own books, possibly large and copyrighted; never committed.
+/textbooks/
+
+# Document inbox (core/inbox_manager.py) — the owner's receipts, manuals
+# and emails; never committed.
+/inbox/

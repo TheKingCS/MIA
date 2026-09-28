@@ -153,6 +153,18 @@ mower", "the tomatoes". You don't need their exact names in MIA.
 - "I finished the lesson on circuit breakers"
 - "Add to my notes for GFCI outlets: test them monthly"
 - "What's my next lesson?"
+- "Let's study the wiring book" / "Quiz me on chapter 3" (from your own
+  textbooks; "I'm done studying" to stop)
+- "What does my textbook say about GFCI outlets?"
+- "Make a course from my wiring textbook"
+
+## Your document inbox
+
+- "What's in my inbox?"
+- "File it" (the oldest waiting document, as MIA suggested)
+- "File the Lowe's receipt under the greenhouse"
+- "File the mower manual without the tasks"
+- "Don't file the Amazon receipt, just dismiss it"
 
 ## Projects and tasks
 

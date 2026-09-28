@@ -57,6 +57,7 @@ def demo_context() -> SimpleNamespace:
         recurring_missions=SimpleNamespace(all_templates=lambda: [
             SimpleNamespace(name=n, category="Household", active=True) for n in ("Laundry", "Dishes")
         ]),
+        projects=SimpleNamespace(all_projects=lambda: _named("Greenhouse", "Chicken Coop")),
         classroom=SimpleNamespace(
             all_subjects=lambda: [SimpleNamespace(name="Electrical", subject_id="s1")],
             courses_for_subject=lambda sid: [SimpleNamespace(name="Residential Wiring", course_id="c1")],

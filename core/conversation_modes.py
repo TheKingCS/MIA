@@ -43,12 +43,16 @@ MOMENTUM = "momentum"
 PLAN = "plan"
 # Slice B, "Remember Why": answers only from core/why_graph.py's fact sheet.
 PERSPECTIVE = "perspective"
+# Textbook tutor (2026-09-28): answers from the user's own textbook
+# passages (core/textbook_manager.py); QUIZ asks and checks questions.
+STUDY = "study"
+QUIZ = "quiz"
 
-MODES = (COMPANION, LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE)
+MODES = (COMPANION, LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE, STUDY, QUIZ)
 # Modes where MIA is there for the person, not the records: the reply
 # skips help-doc grounding, and tools are offered only for a message
 # that reads as a direct command (see looks_like_direct_command()).
-PERSONAL_MODES = (LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE)
+PERSONAL_MODES = (LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE, STUDY, QUIZ)
 
 MODE_LABELS = {
     COMPANION: "Normal",
@@ -57,11 +61,23 @@ MODE_LABELS = {
     MOMENTUM: "Hype",
     PLAN: "Figure it out",
     PERSPECTIVE: "Remember why",
+    STUDY: "Studying",
+    QUIZ: "Quiz",
 }
 
 # One sentence or two each, deliberately: every extra clause is prompt
 # length a 3B model has to hold.
 MODE_INSTRUCTIONS = {
+    STUDY: (
+        "You're tutoring the user from their own textbook. Explain using ONLY the passages below, in plain words, "
+        "and say which page it comes from. If the passages don't cover the question, say the book doesn't seem to "
+        "cover that here instead of answering from memory. Now and then, check understanding with one short question."
+    ),
+    QUIZ: (
+        "You're quizzing the user on their own textbook. If they just answered a question, first say whether the "
+        "answer matches the passages below, specifically and kindly, citing the page. Then ask exactly ONE new "
+        "question that the passages answer. Never ask about anything that isn't in the passages."
+    ),
     PERSPECTIVE: (
         "The user needs perspective on why they're doing what they're doing. Using ONLY the facts below, "
         "connect what they're doing today to what it's building toward, following their own reasons in order. "
@@ -137,6 +153,21 @@ _PLAN = _phrases(
     r"make (?:this|it) smaller",
     r"where do i (?:even )?start",
 )
+_QUIZ = _phrases(
+    r"quiz me",
+    r"test me on",
+    r"test my (?:knowledge|understanding)",
+    r"ask me (?:some )?questions (?:about|on|from)",
+)
+_STUDY = _phrases(
+    r"let'?s study",
+    r"help me study",
+    r"i want to study",
+    r"study (?:with me|session)",
+    r"teach me from",
+    r"tutor me",
+    r"open (?:my|the) (?:text ?book|book) (?:on|about|for)",
+)
 _PERSPECTIVE = _phrases(
     r"remind me why",
     r"why am i (?:even )?doing (?:this|all this|any of this)",
@@ -168,6 +199,8 @@ _BACK_TO_NORMAL = _phrases(
     r"end (?:the |my )?journal(?: entry| session)?",
     r"back on the record",
     r"on the record again",
+    r"(?:we'?re |i'?m )?done (?:studying|with (?:the |this )?quiz)",
+    r"(?:stop|end) (?:the |this )?(?:quiz|study(?:ing| session)?)",
 )
 
 
@@ -197,7 +230,7 @@ def detect_mode_change(prompt: str) -> ModeChange:
         return ModeChange(mode=COMPANION, journal=False, off_record=False)
 
     # Perspective first: "no bullshit, remind me why" needs the facts more than a tone.
-    for pattern, mode in ((_PERSPECTIVE, PERSPECTIVE), (_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
+    for pattern, mode in ((_QUIZ, QUIZ), (_STUDY, STUDY), (_PERSPECTIVE, PERSPECTIVE), (_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
         if pattern.search(text):
             change.mode = mode
             break

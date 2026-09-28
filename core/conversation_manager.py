@@ -97,6 +97,10 @@ class Conversation:
     mode: str = "companion"
     journal: bool = False
     off_record: bool = False
+    # Textbook tutor (core/textbook_study.py): which book and chapter a
+    # study or quiz conversation is on. Persisted, like the mode.
+    study_book_id: Optional[str] = None
+    study_chapter: Optional[int] = None
     # Transient, this run only: the current turn reads private data
     # (the private journal), so its messages must not be persisted.
     private_turn: bool = field(default=False, repr=False, compare=False)
@@ -131,6 +135,8 @@ class Conversation:
             "mode": self.mode,
             "journal": self.journal,
             "off_record": self.off_record,
+            "study_book_id": self.study_book_id,
+            "study_chapter": self.study_chapter,
         }
 
     @staticmethod
@@ -144,6 +150,8 @@ class Conversation:
             mode=data.get("mode", "companion"),
             journal=bool(data.get("journal", False)),
             off_record=bool(data.get("off_record", False)),
+            study_book_id=data.get("study_book_id"),
+            study_chapter=data.get("study_chapter"),
         )
 
 

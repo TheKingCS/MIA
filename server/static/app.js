@@ -361,6 +361,27 @@ async function loadMoney() {
     }
 }
 
+// ---------------------------------------------------------------- Send a file to the inbox
+
+async function sendFile() {
+    const input = $("file-input");
+    const file = input.files && input.files[0];
+    if (!file) return;
+    setStatus(`Sending ${file.name}…`);
+    try {
+        const res = await api("/api/inbox/upload", {
+            method: "POST",
+            headers: { "X-Filename": encodeURIComponent(file.name), "Content-Type": "application/octet-stream" },
+            body: file,
+        });
+        setStatus(res.message);
+    } catch (err) {
+        if (err.message !== "unauthorized") setStatus(`Couldn't send it: ${err.message}`, true);
+    }
+    input.value = "";
+}
+
+$("file-input").addEventListener("change", sendFile);
 $("tab-talk").addEventListener("click", () => showTab("talk"));
 $("tab-money").addEventListener("click", () => showTab("money"));
 $("money-refresh").addEventListener("click", loadMoney);

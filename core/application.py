@@ -63,6 +63,8 @@ from core.talk_it_out import register_journal_actions
 from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_homestead_actions import register_homestead_actions
+from core.assistant_textbook_actions import register_textbook_actions
+from core.assistant_inbox_actions import register_inbox_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
@@ -138,6 +140,9 @@ from core.user_memory_manager import UserMemoryManager
 from core.private_journal import PrivateJournalManager
 from core.communication_gate import AMBIENT, TIMELY, Candidate, CommunicationGate
 from core.business_use import BusinessUseManager
+from core.textbook_manager import TextbookManager
+from core.inbox_manager import InboxManager, describe_new_items
+from core.inbox_mail import MailChecker, MailSettings, MailVault
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -296,6 +301,9 @@ class MIAApplication:
         self.context.private_journal = PrivateJournalManager(self.context)
         self.context.communication = CommunicationGate(self.context)
         self.context.business_use = BusinessUseManager(self.context)
+        self.context.textbooks = TextbookManager(self.context)
+        self.context.inbox = InboxManager(self.context)
+        self.context.inbox_mail = MailChecker(self.context.inbox, MailSettings(self.context), MailVault())
         self.context.dashboard_widgets = DashboardWidgetRegistry(self.context)
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
@@ -415,6 +423,16 @@ class MIAApplication:
         self._lite_capture_timer.timeout.connect(self._check_lite_captures)
         self._lite_capture_timer.start(60_000)
 
+        # Document inbox (core/inbox_manager.py): take in dropped/uploaded/
+        # emailed files every minute; check the mailbox (if set up and
+        # unlocked) every 10 minutes on its own background thread.
+        self._inbox_timer = QTimer()
+        self._inbox_timer.timeout.connect(self._check_inbox)
+        self._inbox_timer.start(60_000)
+        self._inbox_mail_timer = QTimer()
+        self._inbox_mail_timer.timeout.connect(self._check_inbox_mail)
+        self._inbox_mail_timer.start(600_000)
+
         # Same "always alive for the whole app session" reasoning as the
         # timers above — "MIA should assign me missions sometimes"
         # (docs/VISION.md's gamification goal) needs to fire regardless
@@ -456,6 +474,27 @@ class MIAApplication:
                 "New homestead snapshot imported",
                 f"Imported an updated snapshot from '{snapshot.source}'.",
             )
+
+    def _check_inbox(self) -> None:
+        if self.context.inbox is None:
+            return
+        new_items = self.context.inbox.scan()
+        if not new_items:
+            return
+        self.context.events.publish("inbox.updated")
+        message = describe_new_items(new_items, self.context)
+        candidate = Candidate(
+            topic="inbox", title="\U0001F4E5 New in your inbox", message=message, urgency=TIMELY,
+            source="inbox", fingerprint="|".join(i.item_id for i in new_items),
+        )
+        if self.context.communication is not None:
+            self.context.communication.offer(candidate)
+        elif self.context.notifications is not None:
+            self.context.notifications.notify(candidate.title, candidate.message)
+
+    def _check_inbox_mail(self) -> None:
+        if self.context.inbox_mail is not None:
+            self.context.inbox_mail.check_now()
 
     def _check_lite_captures(self) -> None:
         new_proposals = self.context.lite_captures.scan_for_new_captures()
@@ -1006,6 +1045,8 @@ class MIAApplication:
         register_why_actions(self.context.assistant_actions)
         register_communication_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)
+        register_textbook_actions(self.context.assistant_actions)
+        register_inbox_actions(self.context.assistant_actions)
         self.context.assistant_actions.register(AssistantAction(
             name="open_module",
             domain="system",
