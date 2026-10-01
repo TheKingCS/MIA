@@ -6,57 +6,82 @@ to feel like a custom desktop environment: a unified interface for
 engineering, survival, robotics, networking, local AI, and personal
 knowledge management.
 
-**Status: v0.1 — Core Framework.** This release does *not* include AI.
-It establishes the application shell, first-run setup, and the module
-architecture that every future feature will plug into.
+**Status: actively developed.** The core framework has grown into a
+working system: 33 implemented modules, a local-first AI assistant
+(Ollama/llama3.2, ~175 tools), hold-to-talk voice, a phone web server
+with an Android companion app, and a headless voice-first runtime for
+Pi-class hardware.
 
 ## Core principles
 
 - Offline first
+- Local-first AI — your data stays on your machines
 - Modular architecture
 - Cross-platform during development (Windows + Ubuntu/WSL), Linux is the primary deployment target
 - Python as the primary language
 - Clean, documented, scalable code over clever shortcuts
 - Every feature is a module whenever practical
 
-## What's in v0.1
+## What's implemented
 
-- Application startup sequence with an animated splash screen (pulsing
-  core graphic, "INITIALIZING CORE SYSTEMS..." status text)
-- First-time setup wizard (name, date, time confirmation)
-- Persistent configuration (`config/config.json`, seeded from `config/default_config.json`)
-- Main menu with placeholder module buttons: Assistant, Files, Knowledge,
-  Maps, Music, Notes, Diagnostics, Modules, Settings
-- A reserved panel for the future animated character (`gui/character_panel.py`)
-- Automatic module discovery — drop a folder in `modules/` and it appears
-  on the menu, no registry file to edit
+- **33 feature modules, zero placeholders** — greenhouse, garage,
+  kitchen, workout, real estate, maintenance, missions, skills
+  ("My Hero's Path" skill tree), budget with Plaid bank sync,
+  notes/journal, knowledge (offline ZIM packs), maps (offline tiles),
+  music, navigation, and more
+- **Local-first assistant** — Ollama/llama3.2 with ~175 tools and
+  hold-to-talk voice, grounded in live system state. Unprompted
+  communication is gated (max 5/day); the assistant drafts email but
+  the human presses Send
+- **Phone access** — web server (default port 8765) plus an Android
+  companion app (CI-built APK)
+- **Headless runtime** — `core_main.py`, a voice-first runtime for
+  Pi-class deployment that never touches the GUI layer
+- **Strict layering** — `core` → `modules` → `gui` with an event bus
+  and explicit `AppContext` (no global singletons); broken modules are
+  logged and skipped at boot, never crash it
+- Application startup sequence with animated splash screen and
+  first-run setup wizard (name, date, time confirmation)
+- Persistent configuration (`config/config.json`, seeded from
+  `config/default_config.json`)
+- Automatic module discovery — drop a folder in `modules/` and it
+  appears on the menu, no registry file to edit
 - A standalone module test harness for fast module development
+  (`tests/run_module.py`)
+- A functional character panel (`gui/character_panel.py`; final
+  animated character artwork still to come)
+- Thousands of automated checks (`pytest`)
 
 ## Project layout
 
 ```
-assets/     Icons, images, fonts (placeholders for now)
-config/     default_config.json (versioned) + config.json (user, gitignored)
-core/       The kernel: config, logging, event bus, module discovery, boot sequencing
-data/       User/application data (gitignored)
-docs/       Architecture notes and the "how to add a module" guide
-gui/        Presentation layer — splash, wizard, main window, widgets
-logs/       Rotating log files (gitignored)
-modules/    One folder per feature module
-tests/      Unit tests + tests/run_module.py (single-module dev harness)
-main.py     Two-line entry point
+android/      Kotlin/Gradle companion app (CI-built APK)
+assets/       Icons, images, fonts
+config/       default_config.json (versioned) + config.json (user, gitignored)
+core/         The kernel: config, logging, event bus, module discovery, boot sequencing
+core_main.py  Headless voice-first runtime for Pi-class hardware
+data/         User/application data (gitignored)
+docs/         Vision, architecture, roadmap, and the "how to add a module" guide
+gui/          Presentation layer — splash, wizard, main window, widgets
+logs/         Rotating log files (gitignored)
+modules/      One folder per feature module (33 implemented)
+server/       Phone web app (default port 8765)
+tests/        Unit tests + tests/run_module.py (single-module dev harness)
+main.py       Desktop entry point (MIAApplication)
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the reasoning
-behind these decisions, and [`docs/ADDING_MODULES.md`](docs/ADDING_MODULES.md)
-for how to add a new module.
+See [`docs/VISION.md`](docs/VISION.md) for the vision,
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the reasoning behind
+these decisions, [`docs/ADDING_MODULES.md`](docs/ADDING_MODULES.md) for
+how to add a new module, and
+[`docs/ASSISTANT_CAPABILITIES.md`](docs/ASSISTANT_CAPABILITIES.md) for
+what the local assistant can do.
 
 ## Getting started
 
 **Setting MIA up on a new computer?** Follow
 [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md): install, the local AI and
 voice, the Private Journal, bank sync, and phone access, step by step.
-
 
 ### Install (the easy way)
 
@@ -100,14 +125,13 @@ Full guide: [`docs/ADDING_MODULES.md`](docs/ADDING_MODULES.md).
 pytest
 ```
 
-## Roadmap (not yet built — noted here so scope is explicit)
+## Roadmap
 
-- Real functionality inside the stub modules (Notes, Files, Diagnostics
-  are natural first candidates)
-- Local AI / Assistant module
-- Animated character implementation behind `gui/character_panel.py`
-- Robotics and networking modules
-- Settings module UI for editing config live
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full plan. Open items
+include final animated character artwork for `gui/character_panel.py`
+(the panel itself is functional) and the Meta glasses interface track —
+glanceable cards and voice on current Display hardware, building toward
+AR.
 
 ## License
 
