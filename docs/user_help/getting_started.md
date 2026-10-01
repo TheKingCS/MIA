@@ -116,6 +116,16 @@ alone. Press **Ctrl+Shift+R** on any screen and MIA reads it aloud; press
 it again to stop. Or just say "make the text bigger", "turn on high
 contrast" or "read this screen to me".
 
+## Child accounts
+
+A child can have their own MIA. **Add User** → tick **This is a child's
+account**, pick your household and type your password to approve. They
+see only kid-friendly apps (learning, missions, skills, music, notes,
+maps and more); money, documents and admin say "ask a parent". MIA talks
+with them simply. If they forget their password, open your **Account**
+window (Settings → Email, Recovery Code & Household) to reset it; when
+they're older, make it a regular account there too.
+
 ## Quick capture
 
 Click **✚** at the top (or press Ctrl+Shift+Space) and type anything:

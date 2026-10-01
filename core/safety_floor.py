@@ -71,12 +71,15 @@ def detect_danger(prompt: str) -> bool:
     return not _NOT_DANGER.search(text)
 
 
-def safety_reply(trusted_contact: Optional[str] = None, where: Optional[Region] = None) -> str:
+def safety_reply(trusted_contact: Optional[str] = None, where: Optional[Region] = None, child: bool = False) -> str:
     """The fixed reply. Kept plain and short enough to be spoken aloud.
-    `where` is the person's region (core/region.py); the US if not given."""
+    `where` is the person's region (core/region.py); the US if not given.
+    For a child (core/child_accounts.py) it also asks them to tell an adult."""
     where = where or region(DEFAULT)
     contact = (trusted_contact or "").strip()
     contact_line = f" You could also reach out to {contact}." if contact else ""
+    if child:
+        contact_line += " Please tell a parent or another grown-up you trust right now, too."
     return (
         "I'm really glad you told me, and I'm taking it seriously. You don't have to carry this alone. "
         f"Please talk to someone who can be with you right now: {where.crisis}. If you or anyone else is in "

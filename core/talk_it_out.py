@@ -159,7 +159,10 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     if detect_danger(prompt):
         conversation.mode = LISTEN
         _persist(context, conversation)
-        result.fixed_reply = safety_reply(trusted_contact_from(context), region_for(context))
+        from core.child_accounts import is_child
+
+        result.fixed_reply = safety_reply(trusted_contact_from(context), region_for(context),
+                                          child=getattr(context, "config", None) is not None and is_child(context))
         return result
 
     if not awaiting and change.is_empty and _may_ask_support(context, conversation, prompt):

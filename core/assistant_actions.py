@@ -248,7 +248,11 @@ class AssistantActionRegistry:
             return []
 
         matched_domains.add(_ALWAYS_ON_DOMAIN)
-        return [action for action in self._actions.values() if action.domain in matched_domains]
+        # A child is never offered grown-up tools (core/child_accounts.py).
+        from core.child_accounts import tool_allowed
+
+        return [action for action in self._actions.values()
+                if action.domain in matched_domains and tool_allowed(context, action.domain)]
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:
         """
@@ -260,6 +264,11 @@ class AssistantActionRegistry:
         if action is None:
             log.warning("Assistant tried to call unknown action '%s'", name)
             return f"(I tried to do something I don't know how to do: '{name}'.)"
+        from core.child_accounts import ASK_A_PARENT, tool_allowed
+
+        if not tool_allowed(context, action.domain):
+            log.info("Refused '%s' for a child account.", name)
+            return ASK_A_PARENT
         # "Undo that" (core/undo_log.py): what this tool changes can be put back.
         undo = getattr(context, "undo", None)
         recording = undo is not None and changes_records(name) and name != "undo_last_change"

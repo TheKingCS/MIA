@@ -426,8 +426,13 @@ def create_app(context: AppContext) -> FastAPI:
     # under the turn lock so it never reads half of a phone-made change.
     @app.get("/api/finance/summary")
     def finance_summary(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.child_accounts import ASK_A_PARENT, is_child
+
+        if is_child(context, profile_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
         with app.state.turn_lock:
-            return build_finance_summary(context)
+            # The phone user's own money: a private budget if they keep one.
+            return build_finance_summary(view_for(context, profile_id))
 
     @app.post("/api/voice/reset")
     def voice_reset(profile_id: str = Depends(require_profile_id)) -> dict:

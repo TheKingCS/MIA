@@ -2015,7 +2015,9 @@ class HomeDashboard(QFrame):
         last, so a disabled widget's refresh is simply skipped rather
         than erroring on a body label that doesn't exist."""
         try:
-            self._today_card.refresh()
+            today_card = getattr(self, "_today_card", None)  # not built yet on the first grid refresh
+            if today_card is not None:
+                today_card.refresh()
         except Exception:
             log.exception("Today card refresh failed.")
         if "power" in self._widget_bodies:

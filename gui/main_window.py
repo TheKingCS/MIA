@@ -750,6 +750,11 @@ class MainWindow(QMainWindow):
         if module is None:
             log.warning("Attempted to open unknown module_id '%s'", module_id)
             return
+        from core.child_accounts import ASK_A_PARENT, app_allowed
+
+        if not app_allowed(self.context, module_id):  # a child account (core/child_accounts.py)
+            self.statusBar().showMessage(ASK_A_PARENT, 6000)
+            return
 
         if module_id not in self._module_widgets:
             module.on_load()

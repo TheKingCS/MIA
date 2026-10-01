@@ -173,8 +173,10 @@ def current(context) -> tuple[Optional[str], list[str], list[str]]:
 
 
 def menu_modules(context, modules: list) -> list:
+    from core.child_accounts import app_allowed
+
     _focus, featured, hidden = current(context)
-    return arrange(modules, featured, hidden)
+    return [m for m in arrange(modules, featured, hidden) if app_allowed(context, m.module_id)]
 
 
 def hidden_modules(context, modules: list) -> list:

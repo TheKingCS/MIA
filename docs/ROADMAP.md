@@ -12922,3 +12922,40 @@ app applying it, the Assistant, screen text, reading a real screen with a
 password field, the named-element recoloring for every theme) and 4
 routing lines; the real main window rendered with Largest + high
 contrast. Full suite passes (same one pre-existing timezone failure).
+
+## Child accounts (2026-10-01)
+
+A child in a household gets their own MIA, looked after by a parent
+(`core/child_accounts.py`; stored on the profile as `child` and
+`guardians`). All rules are in code, never left to the model:
+
+- **Setting one up**: Add User → "This is a child's account". It must
+  join a household; the member who approves it becomes the guardian.
+- **Apps**: only `CHILD_APPS` (learning, missions, skills, music, notes,
+  maps, kitchen, workouts...) show in the menu; opening anything else
+  (money, inbox, workshop, the Modules screen...) says "ask a parent".
+  Settings shows only Switch User, text size and contrast.
+- **The Assistant** is never offered the tools in
+  `CHILD_BLOCKED_DOMAINS` (money, business, household admin, device and
+  security) and refuses them if one is called anyway; its prompt says
+  it's talking with a child (with their age when the birthday is set).
+  The context block now uses the phone user's own profile, not the
+  desktop's signed-in person.
+- **Today** leaves out bills, maintenance and the inbox for a child; the
+  phone's money view answers 403.
+- **Safety**: the same floor, plus "please tell a parent or another
+  grown-up you trust right now".
+- **Privacy**: a child's things (journal included) are theirs. A guardian
+  can reset the child's password (typing their own) and make it a
+  regular account from their Account window.
+
+**Open:** whether to notify the guardian when the safety floor triggers
+for a child (not done; a decision for the owner).
+
+**Verified:** 11 new tests (who is a child, the menu and apps, tool
+filtering and refusal, the prompt note and phone context, the safety
+reply, Today, guardian reset and make-regular, the phone money 403, the
+child Settings, the Add User rules); the real main window booted as a
+child. Also fixed: Home's first widget refresh ran before the Today card
+existed and logged an error at every boot. Full suite passes (same one
+pre-existing timezone failure).

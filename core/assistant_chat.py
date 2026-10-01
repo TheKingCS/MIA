@@ -400,7 +400,19 @@ def build_user_context_block(context) -> str:
     """
     facts: list[str] = []
 
-    active_profile = context.profiles.get_active_profile() if context.profiles is not None else None
+    # The person this turn is for: the phone user on their own view, or
+    # whoever is signed in (core/person_settings.py).
+    from core.child_accounts import prompt_note
+
+    profiles = getattr(context, "profiles", None)
+    own = getattr(context, "profile_id", None)
+    if profiles is None:
+        active_profile = None
+    elif isinstance(own, str) and own:
+        active_profile = profiles.get_profile(own)
+    else:
+        active_profile = profiles.get_active_profile()
+    child_note = prompt_note(context) if profiles is not None else ""
     if active_profile is not None:
         facts.append(f"Name: {active_profile.name}")
         birthday = getattr(active_profile, "birthday", None)
@@ -411,10 +423,11 @@ def build_user_context_block(context) -> str:
         for memory in context.user_memories.all_memories()[:_MAX_INJECTED_MEMORIES]:
             facts.append(memory.text)
 
+    lead = f"{child_note}\n" if child_note else ""
     if not facts:
-        return "You don't know much about this user yet — a great opportunity to ask and learn."
+        return lead + "You don't know much about this user yet — a great opportunity to ask and learn."
     bullet_list = "\n".join(f"- {fact}" for fact in facts)
-    return f"What you know about this user so far:\n{bullet_list}"
+    return f"{lead}What you know about this user so far:\n{bullet_list}"
 
 
 def format_birthday(iso_date: str) -> str:

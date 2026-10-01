@@ -188,6 +188,10 @@ class ProfileSelectScreen(QWidget):
             if dialog.household_choice is not None and not dialog.household_choice.apply(profile.profile_id):
                 QMessageBox.warning(self, "Household", f"{profile.name} has a household of their own for now. "
                                     "They can join one later from Settings, Account & household.")
+            elif dialog.is_child:
+                from core.child_accounts import make_child
+
+                make_child(self.context, profile.profile_id, [dialog.household_choice.approver_id])
             if password:
                 show_recovery_code(self.context.profiles.issue_recovery_code(profile.profile_id), self)
             # "Getting to know you" (2026-10-01, gui/onboarding_dialog.py):

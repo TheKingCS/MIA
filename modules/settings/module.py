@@ -92,7 +92,45 @@ class SettingsModule(ModuleBase):
         self._tts_worker: Optional[TTSWorker] = None
         self._account_desc_label: Optional[QLabel] = None
 
+    def _child_widget(self) -> QWidget:
+        """A child's Settings (core/child_accounts.py): switching user and
+        their own text size and contrast; the rest is for grown-ups."""
+        widget = QWidget()
+        outer = QVBoxLayout(widget)
+        outer.setContentsMargins(24, 24, 24, 24)
+        outer.setSpacing(12)
+        header = QLabel(f"{self.icon}  {self.display_name}")
+        header.setObjectName("TitleLabel")
+        outer.addWidget(header)
+        note = QLabel("Ask a parent to change anything else.")
+        note.setObjectName("SubtitleLabel")
+        outer.addWidget(note)
+        switch_user_button = QPushButton("\u21C4 Switch User")
+        switch_user_button.setObjectName("ModuleButton")
+        switch_user_button.clicked.connect(self._on_switch_user_clicked)
+        outer.addWidget(switch_user_button)
+        size_row = QHBoxLayout()
+        size_row.addWidget(QLabel("Text size:"))
+        self._text_size_combo = QComboBox()
+        for size_id, (label, _scale) in accessibility.TEXT_SIZES.items():
+            self._text_size_combo.addItem(label, size_id)
+        current_size, current_contrast = accessibility.look_for(self.context)
+        self._text_size_combo.setCurrentIndex(max(0, self._text_size_combo.findData(current_size)))
+        self._text_size_combo.currentIndexChanged.connect(self._on_text_size_changed)
+        size_row.addWidget(self._text_size_combo, stretch=1)
+        outer.addLayout(size_row)
+        self._contrast_checkbox = QCheckBox("High contrast (black and white, yellow highlights)")
+        self._contrast_checkbox.setChecked(current_contrast)
+        self._contrast_checkbox.toggled.connect(self._on_contrast_toggled)
+        outer.addWidget(self._contrast_checkbox)
+        outer.addStretch(1)
+        return widget
+
     def get_widget(self) -> QWidget:
+        from core.child_accounts import is_child
+
+        if self.context.profiles is not None and is_child(self.context):
+            return self._child_widget()
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)

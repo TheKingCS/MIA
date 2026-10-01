@@ -149,6 +149,10 @@ Settings that belong to a person go through `core/person_settings.py`.
 Tools always use the `context` they're given, never a global, because the
 phone runs a turn on the signed-in person's own view (`view_for()`).
 Never hardcode the owner's names, places or things in code or prompts.
+A child account (`core/child_accounts.py`) sees only `CHILD_APPS` and is
+never offered `CHILD_BLOCKED_DOMAINS` tools; give a new module or tool
+domain a place in one of those lists when it's clearly for (or not for)
+children.
 
 ### Other core services
 

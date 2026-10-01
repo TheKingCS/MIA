@@ -301,6 +301,24 @@ class AccountDialog(QDialog):
         data_row.addWidget(export)
         data_row.addWidget(delete)
         layout.addLayout(data_row)
+        # Looking after a child's account (core/child_accounts.py).
+        from core.child_accounts import children_of
+
+        self._children = children_of(context, profile.profile_id)
+        if self._children:
+            layout.addWidget(QLabel("Children you look after:"))
+            family_row = QHBoxLayout()
+            self.child_combo = QComboBox()
+            for child in self._children:
+                self.child_combo.addItem(child.name, child.profile_id)
+            reset = QPushButton("Reset their password")
+            reset.clicked.connect(self._on_reset_child_password)
+            grown = QPushButton("Make a regular account")
+            grown.clicked.connect(self._on_make_adult)
+            family_row.addWidget(self.child_combo, stretch=1)
+            family_row.addWidget(reset)
+            family_row.addWidget(grown)
+            layout.addLayout(family_row)
         self.message_label = QLabel("")
         self.message_label.setWordWrap(True)
         layout.addWidget(self.message_label)
@@ -390,6 +408,36 @@ class AccountDialog(QDialog):
             return
         self.accept()
         self.context.events.publish("profile.switch_requested")
+
+    def _on_reset_child_password(self) -> None:
+        from PySide6.QtWidgets import QInputDialog
+
+        from core.child_accounts import guardian_reset_password
+
+        child_id, child_name = self.child_combo.currentData(), self.child_combo.currentText()
+        mine = ""
+        if self.profile.has_password:
+            mine, ok = QInputDialog.getText(self, "Confirm", "Your password:", QLineEdit.EchoMode.Password)
+            if not ok:
+                return
+        new, ok = QInputDialog.getText(self, "New password", f"{child_name}'s new password (empty: none):",
+                                       QLineEdit.EchoMode.Password)
+        if not ok:
+            return
+        if guardian_reset_password(self.context, child_id, self.profile.profile_id, mine, new):
+            self.message_label.setText(f"{child_name}'s password is reset.")
+        else:
+            self.message_label.setText("That password doesn't match.")
+
+    def _on_make_adult(self) -> None:
+        from core.child_accounts import make_adult
+
+        child_id, child_name = self.child_combo.currentData(), self.child_combo.currentText()
+        if QMessageBox.question(self, "Regular account", f"Make {child_name}'s account a regular one? They'll see "
+                                "every app and tool, like any adult account.") != QMessageBox.StandardButton.Yes:
+            return
+        if make_adult(self.context, child_id, self.profile.profile_id):
+            self.message_label.setText(f"{child_name} has a regular account now.")
 
     def _on_rename_household(self) -> None:
         from PySide6.QtWidgets import QInputDialog

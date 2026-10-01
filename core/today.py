@@ -223,7 +223,12 @@ _SOURCES = (("calendar", _calendar), ("alarms", _alarms), ("bills", _bills), ("m
 def today_items(context, today: Optional[date] = None) -> list[TodayItem]:
     today = today or date.today()
     items: list[TodayItem] = []
+    from core.child_accounts import is_child
+
+    child = getattr(context, "config", None) is not None and is_child(context)
     for name, gather in _SOURCES:
+        if child and name in ("bills", "maintenance", "waiting"):
+            continue  # grown-up things (core/child_accounts.py)
         items += _safe(name, lambda g=gather: g(context, today))
     # Overdue, then today (timed things in time order first), waiting, soon.
     return sorted(items, key=lambda i: (_ORDER[i.when], i.time == "" if i.when == TODAY else 0, i.time))

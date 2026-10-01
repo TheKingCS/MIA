@@ -79,6 +79,13 @@ looks wrong (the text on screen, never passwords or keys).
       size and high contrast (switch back after). Press Ctrl+Shift+R on
       any screen to hear it (needs MIA's voice installed). Tell Claude
       anything that's still hard to read.
+- [ ] **Child accounts (only if a child will use MIA).** Add User →
+      tick "This is a child's account", pick your household and type
+      your password to approve. Sign in as them: only kid-friendly apps
+      show, money and admin apps say "ask a parent", Settings has just
+      text size and contrast. Your Account window (Settings → Email,
+      Recovery Code & Household) can reset their password or make it a
+      regular account later.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -196,9 +203,16 @@ it, and went with Claude's recommendations. The plan, in order:
   tools and appliances; "the truck is mine", "whose mower is it?".
 - **Accessibility: built** (2026-10-01): Settings → Accessibility (text
   size, high contrast), Ctrl+Shift+R reads the screen aloud.
-- **Next in this line, in order:** child accounts (a parent-managed
-  account with age-appropriate apps and no private journal lock-out),
-  starter templates, and a real Habits module.
+- **Child accounts: built** (2026-10-01): Add User → "This is a
+  child's account"; kid-friendly apps only, no money or admin tools,
+  the Assistant speaks simply, the safety reply also asks them to tell
+  an adult. A child's journal stays private to them.
+- **Open question for the owner:** should MIA also tell a child's
+  parent when the safety floor triggers for the child? Today it does
+  not (it tells the child to talk to an adult right away). Decide and
+  tell Claude.
+- **Next in this line, in order:** starter templates (a household,
+  homestead or student starting set) and a real Habits module.
 
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were

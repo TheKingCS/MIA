@@ -57,9 +57,14 @@ class AddProfileDialog(QDialog):
         layout.addWidget(self.password_edit)
 
         self.household_choice = None
+        self.child_checkbox = None
         if context is not None and getattr(context, "households", None) is not None:
             from gui.account_dialogs import HouseholdChoice
 
+            # A child's account (core/child_accounts.py): joins a household,
+            # and the parent who approves it looks after it.
+            self.child_checkbox = QCheckBox("This is a child's account (a parent in the household looks after it)")
+            layout.addWidget(self.child_checkbox)
             self.household_choice = HouseholdChoice(context, self)
             layout.addWidget(self.household_choice)
 
@@ -106,6 +111,9 @@ class AddProfileDialog(QDialog):
                 self.error_label.setText("Signing in with an email needs a password too.")
                 self.password_checkbox.setChecked(True)
                 return
+        if self.is_child and (self.household_choice is None or not self.household_choice.household_id):
+            self.error_label.setText("A child's account joins a household: pick it, and a parent there approves.")
+            return
         if self.household_choice is not None and not self.household_choice.approval_ok():
             self.error_label.setText("That household member's password doesn't match.")
             return
@@ -118,6 +126,10 @@ class AddProfileDialog(QDialog):
     @property
     def entered_name(self) -> str:
         return self._name
+
+    @property
+    def is_child(self) -> bool:
+        return self.child_checkbox is not None and self.child_checkbox.isChecked()
 
     @property
     def entered_email(self) -> str:
