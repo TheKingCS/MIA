@@ -155,7 +155,11 @@ def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str
 
 
 class LedgerManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._revenue_file = self.data_dir / "revenue.json" if data_dir is not None else _REVENUE_FILE
+        self._expenses_file = self.data_dir / "expenses.json" if data_dir is not None else _EXPENSES_FILE
         self.context = context
         self._revenue: list[RevenueEntry] = []
         self._expenses: list[ExpenseEntry] = []
@@ -166,8 +170,8 @@ class LedgerManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        self._revenue = self._load_file(_REVENUE_FILE, RevenueEntry.from_dict)
-        self._expenses = self._load_file(_EXPENSES_FILE, ExpenseEntry.from_dict)
+        self._revenue = self._load_file(self._revenue_file, RevenueEntry.from_dict)
+        self._expenses = self._load_file(self._expenses_file, ExpenseEntry.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
         if not path.exists():
@@ -181,12 +185,12 @@ class LedgerManager:
             return []
 
     def _save_revenue(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_REVENUE_FILE, json.dumps([r.to_dict() for r in self._revenue], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._revenue_file, json.dumps([r.to_dict() for r in self._revenue], indent=2), encoding="utf-8")
 
     def _save_expenses(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_EXPENSES_FILE, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._expenses_file, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Revenue

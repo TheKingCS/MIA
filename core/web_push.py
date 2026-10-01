@@ -52,7 +52,7 @@ from __future__ import annotations
 import json
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import requests
 from cryptography.hazmat.primitives import serialization
@@ -174,14 +174,18 @@ def send_web_push(
         return False
 
 
-def _relay_notification_to_all_subscriptions(context: "AppContext", notification: "Notification") -> None:
+def _relay_notification_to_all_subscriptions(context: "AppContext", notification: "Notification",
+                                             profile_id: Optional[str] = None) -> None:
     """The actual fan-out for one notification — separated from
     register_notification_relay()'s event-bus callback so it can be
     called (and tested) directly and synchronously, independent of the
     background-thread hand-off described in this module's docstring."""
     if context.push_subscriptions is None:
         return
-    for subscription in context.push_subscriptions.all_subscriptions():
+    # A person's own notification goes only to their phones (accounts, 2026-10-01).
+    subscriptions = (context.push_subscriptions.subscriptions_for_profile(profile_id) if profile_id
+                     else context.push_subscriptions.all_subscriptions())
+    for subscription in subscriptions:
         send_web_push(subscription, notification.title, notification.message, context.push_subscriptions)
 
 
@@ -192,10 +196,10 @@ def register_notification_relay(context: "AppContext") -> None:
     profile-scoped and why the actual send happens on a background
     thread rather than inline on the publishing thread."""
 
-    def _on_notification_created(notification: "Notification", **kwargs) -> None:
+    def _on_notification_created(notification: "Notification", profile_id: Optional[str] = None, **kwargs) -> None:
         threading.Thread(
             target=_relay_notification_to_all_subscriptions,
-            args=(context, notification),
+            args=(context, notification, profile_id),
             daemon=True,
             name="mia-push-relay",
         ).start()

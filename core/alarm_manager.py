@@ -73,7 +73,10 @@ class Alarm:
 
 
 class AlarmManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._alarms_file = self.data_dir / "alarms.json" if data_dir is not None else _ALARMS_FILE
         self.context = context
         self._alarms: list[Alarm] = []
         self._load()
@@ -83,11 +86,11 @@ class AlarmManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _ALARMS_FILE.exists():
+        if not self._alarms_file.exists():
             self._alarms = []
             return
         try:
-            raw = json.loads(_ALARMS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._alarms_file.read_text(encoding="utf-8"))
             self._alarms = [Alarm.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load alarms.json — starting with an empty list.")
@@ -95,8 +98,8 @@ class AlarmManager:
             self._alarms = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_ALARMS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._alarms_file,
             json.dumps([a.to_dict() for a in self._alarms], indent=2),
             encoding="utf-8",
         )

@@ -28,13 +28,15 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.profile_manager import looks_like_email
 from gui.widgets.interview_form import InterviewForm
 
 log = get_logger(__name__)
 
 
 class _WelcomePage(QWizardPage):
-    """Collects the user's name."""
+    """Collects the user's name, and optionally the email and password they
+    sign in with (accounts, 2026-10-01)."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -52,6 +54,30 @@ class _WelcomePage(QWizardPage):
         # wizard.field("user_name") from any page, and QWizard will
         # enforce that it's non-empty before allowing "Next".
         self.registerField("user_name*", self.name_edit)
+
+        layout.addWidget(QLabel("Email to sign in with (optional):"))
+        self.email_edit = QLineEdit()
+        self.email_edit.setPlaceholderText("you@example.com")
+        layout.addWidget(self.email_edit)
+        self.password_edit = QLineEdit()
+        self.password_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.password_edit.setPlaceholderText("Password (optional without an email)")
+        layout.addWidget(self.password_edit)
+        self.error_label = QLabel("")
+        self.error_label.setStyleSheet("color: #e06666;")
+        self.error_label.setWordWrap(True)
+        layout.addWidget(self.error_label)
+
+    def validatePage(self) -> bool:  # noqa: N802 (Qt override signature)
+        email = self.email_edit.text().strip()
+        if email and not looks_like_email(email):
+            self.error_label.setText("That doesn't look like an email address.")
+            return False
+        if email and not self.password_edit.text():
+            self.error_label.setText("Signing in with an email needs a password too.")
+            return False
+        self.error_label.setText("")
+        return True
 
 
 class _DateTimePage(QWizardPage):
@@ -132,7 +158,15 @@ class SetupWizard(QWizard):
         # Creating the first profile also activates it and saves config,
         # so no separate config.save() call is needed here — see
         # core/profile_manager.py's create_profile().
-        profile = self.context.profiles.create_profile(name, make_active=True)
+        email = self._welcome_page.email_edit.text().strip()
+        password = self._welcome_page.password_edit.text()
+        profile = self.context.profiles.create_profile(
+            name, password=password or None, make_active=True, email=email or None)
+        if password:
+            # Accounts (2026-10-01): the recovery code, shown once.
+            from gui.account_dialogs import show_recovery_code
+
+            show_recovery_code(self.context.profiles.issue_recovery_code(profile.profile_id), self)
         # Profile-creation interview (2026-09-14) — optional, so an
         # empty interests list / blank notes is a real, valid answer
         # ("skipped"), not an error; still saved so downstream code

@@ -110,7 +110,10 @@ def initial_bearing_degrees(lat1: float, lon1: float, lat2: float, lon2: float) 
 
 
 class WaypointManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._waypoints_file = self.data_dir / "waypoints.json" if data_dir is not None else _WAYPOINTS_FILE
         self.context = context
         self._waypoints: list[Waypoint] = []
         self._load()
@@ -120,11 +123,11 @@ class WaypointManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _WAYPOINTS_FILE.exists():
+        if not self._waypoints_file.exists():
             self._waypoints = []
             return
         try:
-            raw = json.loads(_WAYPOINTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._waypoints_file.read_text(encoding="utf-8"))
             self._waypoints = [Waypoint.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load waypoints.json — starting with an empty list.")
@@ -136,8 +139,8 @@ class WaypointManager:
         self._load()
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_WAYPOINTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._waypoints_file,
             json.dumps([w.to_dict() for w in self._waypoints], indent=2),
             encoding="utf-8",
         )

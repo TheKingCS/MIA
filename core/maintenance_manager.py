@@ -489,7 +489,10 @@ def next_occurrence_date(task: MaintenanceTask, readings: list[Reading], today: 
 
 
 class MaintenanceManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._maintenance_file = self.data_dir / "maintenance.json" if data_dir is not None else _MAINTENANCE_FILE
         self.context = context
         self._assets: list[MaintenanceAsset] = []
         self._tasks: list[MaintenanceTask] = []
@@ -508,11 +511,11 @@ class MaintenanceManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _MAINTENANCE_FILE.exists():
+        if not self._maintenance_file.exists():
             self._assets, self._tasks = [], []
             return
         try:
-            raw = json.loads(_MAINTENANCE_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._maintenance_file.read_text(encoding="utf-8"))
             self._assets = [MaintenanceAsset.from_dict(d) for d in raw.get("assets", [])]
             self._tasks = [MaintenanceTask.from_dict(d) for d in raw.get("tasks", [])]
         except (json.JSONDecodeError, OSError):
@@ -524,8 +527,8 @@ class MaintenanceManager:
         self._load()
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_MAINTENANCE_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._maintenance_file,
             json.dumps(
                 {
                     "assets": [a.to_dict() for a in self._assets],

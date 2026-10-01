@@ -57,6 +57,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core import person_settings
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
@@ -128,6 +129,12 @@ class SettingsModule(ModuleBase):
         change_password_button.setObjectName("ModuleButton")
         change_password_button.clicked.connect(self._on_change_password_clicked)
         outer.addWidget(change_password_button)
+
+        # Accounts and households (2026-10-01, gui/account_dialogs.py).
+        account_button = QPushButton("Email, Recovery Code & Household")
+        account_button.setObjectName("ModuleButton")
+        account_button.clicked.connect(self._on_account_clicked)
+        outer.addWidget(account_button)
 
         appearance_section = QLabel("Appearance & Device Profile")
         appearance_section.setObjectName("SettingsSectionHeader")
@@ -229,7 +236,7 @@ class SettingsModule(ModuleBase):
         outer.addWidget(support_desc)
         contact_row = QHBoxLayout()
         contact_row.addWidget(QLabel("Trusted person:"))
-        self._trusted_contact_edit = QLineEdit(self.context.config.get("assistant.safety.trusted_contact", "") or "")
+        self._trusted_contact_edit = QLineEdit(person_settings.get(self.context, "assistant.safety.trusted_contact", "") or "")
         self._trusted_contact_edit.setPlaceholderText("e.g. my brother Josh, 555-0142")
         self._trusted_contact_edit.editingFinished.connect(self._on_trusted_contact_changed)
         contact_row.addWidget(self._trusted_contact_edit, stretch=1)
@@ -240,7 +247,7 @@ class SettingsModule(ModuleBase):
             "Just listen, help figure it out, or remind me why. After the same answer three times, MIA uses it "
             "without asking."
         )
-        self._ask_support_checkbox.setChecked(self.context.config.get("assistant.ask_support_kind", True) is not False)
+        self._ask_support_checkbox.setChecked(person_settings.get(self.context, "assistant.ask_support_kind", True) is not False)
         self._ask_support_checkbox.toggled.connect(self._on_ask_support_toggled)
         outer.addWidget(self._ask_support_checkbox)
 
@@ -261,7 +268,7 @@ class SettingsModule(ModuleBase):
         speak_row.addWidget(QLabel("Messages per day, at most:"))
         self._daily_budget_spin = QSpinBox()
         self._daily_budget_spin.setRange(1, 20)
-        self._daily_budget_spin.setValue(int(self.context.config.get("communication.daily_budget", 5)))
+        self._daily_budget_spin.setValue(int(person_settings.get(self.context, "communication.daily_budget", 5)))
         self._daily_budget_spin.valueChanged.connect(self._on_daily_budget_changed)
         speak_row.addWidget(self._daily_budget_spin)
         speak_row.addStretch(1)
@@ -272,7 +279,7 @@ class SettingsModule(ModuleBase):
             "If you journaled that week, MIA lets you know a reflection is ready. The notice never shows what you "
             "wrote; ask her \"how was my week?\" for it (the journal must be unlocked)."
         )
-        self._reflection_checkbox.setChecked(bool(self.context.config.get("journal.weekly_reflection", False)))
+        self._reflection_checkbox.setChecked(bool(person_settings.get(self.context, "journal.weekly_reflection", False)))
         self._reflection_checkbox.toggled.connect(self._on_reflection_toggled)
         outer.addWidget(self._reflection_checkbox)
         # Learning from being ignored (core/communication_gate.py): kinds of
@@ -371,6 +378,15 @@ class SettingsModule(ModuleBase):
         self.context.profiles.rename_profile(profile.profile_id, dialog.entered_name)
         self._account_desc_label.setText(f"Signed in as {dialog.entered_name}.")
 
+    def _on_account_clicked(self) -> None:
+        from gui.account_dialogs import AccountDialog
+
+        profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        if profile is None or getattr(self.context, "households", None) is None:
+            QMessageBox.information(None, "No Active Profile", "There's no active profile to update.")
+            return
+        AccountDialog(self.context, profile).exec()
+
     def _on_change_password_clicked(self) -> None:
         """Verifies the CURRENT password first (same two-call
         prompt_for_password()/verify_password() pattern
@@ -404,6 +420,11 @@ class SettingsModule(ModuleBase):
         new_password = dialog.entered_new_password or current_password
         self.context.profiles.set_password(profile.profile_id, new_password)
         QMessageBox.information(None, "Password Updated", "Password updated.")
+        if not self.context.profiles.has_recovery_code(profile.profile_id):
+            # Accounts (2026-10-01): a first password gets a recovery code.
+            from gui.account_dialogs import show_recovery_code
+
+            show_recovery_code(self.context.profiles.issue_recovery_code(profile.profile_id))
 
     # ------------------------------------------------------------------
     # Backup
@@ -517,20 +538,16 @@ class SettingsModule(ModuleBase):
         self._refresh_breaks()
 
     def _on_ask_support_toggled(self, checked: bool) -> None:
-        self.context.config.set("assistant.ask_support_kind", bool(checked))
-        self.context.config.save()
+        person_settings.put(self.context, "assistant.ask_support_kind", bool(checked))
 
     def _on_reflection_toggled(self, checked: bool) -> None:
-        self.context.config.set("journal.weekly_reflection", bool(checked))
-        self.context.config.save()
+        person_settings.put(self.context, "journal.weekly_reflection", bool(checked))
 
     def _on_daily_budget_changed(self, value: int) -> None:
-        self.context.config.set("communication.daily_budget", int(value))
-        self.context.config.save()
+        person_settings.put(self.context, "communication.daily_budget", int(value))
 
     def _on_trusted_contact_changed(self) -> None:
-        self.context.config.set("assistant.safety.trusted_contact", self._trusted_contact_edit.text().strip())
-        self.context.config.save()
+        person_settings.put(self.context, "assistant.safety.trusted_contact", self._trusted_contact_edit.text().strip())
 
     def _on_voice_changed(self) -> None:
         voice_id = self._voice_combo.currentData()

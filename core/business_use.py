@@ -95,24 +95,27 @@ class UseEntry:
 
 
 class BusinessUseManager:
-    def __init__(self, context) -> None:
+    def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._use_file = self.data_dir / "business_use.json" if data_dir is not None else _USE_FILE
         self.context = context
         self._entries: list[UseEntry] = []
         self._load()
 
     def _load(self) -> None:
-        if not _USE_FILE.exists():
+        if not self._use_file.exists():
             return
         try:
-            self._entries = [UseEntry.from_dict(d) for d in json.loads(_USE_FILE.read_text(encoding="utf-8"))]
+            self._entries = [UseEntry.from_dict(d) for d in json.loads(self._use_file.read_text(encoding="utf-8"))]
         except (json.JSONDecodeError, OSError, TypeError):
             log.exception("business_use.json unreadable — starting empty.")
             notify_data_corruption(self.context, "business_use.json")
             self._entries = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_USE_FILE, json.dumps([asdict(e) for e in self._entries], indent=2))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._use_file, json.dumps([asdict(e) for e in self._entries], indent=2))
 
     def log_use(
         self, asset_id: str, hours: float = 0.0, purpose: str = BUSINESS, use_date: Optional[str] = None,

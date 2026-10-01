@@ -99,7 +99,7 @@ class MainActivity : Activity() {
         signInSection = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         signInSection.addView(label("Sign in to MIA at home. Use the Tailscale address from docs/PHONE_VOICE_SETUP.md, e.g. mia-home.your-tailnet.ts.net"))
         serverField = field("MIA's address", InputType.TYPE_TEXT_VARIATION_URI).apply { setText(store.serverUrl) }
-        nameField = field("Your name (your MIA profile)", InputType.TYPE_CLASS_TEXT).apply { setText(store.name) }
+        nameField = field("Your email (or your MIA name)", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS).apply { setText(store.name) }
         passwordField = field("Password", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
         signInStatus = label("")
         signInSection.addView(serverField)

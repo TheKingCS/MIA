@@ -78,6 +78,7 @@ from core.skill_manager import SkillManager
 from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.power_manager import PowerManager
+from core.household_manager import HouseholdManager
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.system_health import format_system_health, read_system_health
@@ -108,6 +109,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context = AppContext(config=config, events=events)
 
     context.profiles = ProfileManager(context)
+    context.households = HouseholdManager(context)
     context.notifications = NotificationManager(context)
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)

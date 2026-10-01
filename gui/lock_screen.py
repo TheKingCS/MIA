@@ -86,14 +86,24 @@ class LockScreen(QWidget):
             unlock_button.setObjectName("ModuleButton")
             unlock_button.clicked.connect(self._try_unlock)
 
+            forgot_button = QPushButton("Forgot password?")
+            forgot_button.setFlat(True)
+            forgot_button.clicked.connect(self._on_forgot)
+
             layout.addWidget(self.password_edit)
             layout.addWidget(self.error_label)
             layout.addWidget(unlock_button)
+            layout.addWidget(forgot_button)
         else:
             continue_button = QPushButton("Continue")
             continue_button.setObjectName("ModuleButton")
             continue_button.clicked.connect(self.unlocked.emit)
             layout.addWidget(continue_button)
+
+    def _on_forgot(self) -> None:
+        from gui.account_dialogs import RecoverPasswordDialog
+
+        RecoverPasswordDialog(self.context, self.profile.email or self.profile.profile_id, self).exec()
 
     def _try_unlock(self) -> None:
         password = self.password_edit.text()

@@ -100,18 +100,8 @@ def _make_bundle(tmp_path) -> Path:
     try:
         pi_context = AppContext(config=ConfigManager(), events=EventBus())
         pi_context.config.set("trips.photo_root_path", str(tmp_path / "pi_trip_photos"))
-        pi_expeditions = ExpeditionManager.__new__(ExpeditionManager)
-        pi_expeditions.context = pi_context
-        pi_expeditions._expeditions = []
-        import core.expedition_manager as em
-        original_exp_dir, original_exp_file = em._DATA_DIR, em._EXPEDITIONS_FILE
-        em._DATA_DIR = pi_data_dir
-        em._EXPEDITIONS_FILE = pi_data_dir / "expeditions.json"
-        try:
-            pi_expeditions._load()
-            pi_expeditions.add_expedition(name="Field Season", start_date="2026-08-14")
-        finally:
-            em._DATA_DIR, em._EXPEDITIONS_FILE = original_exp_dir, original_exp_file
+        pi_expeditions = ExpeditionManager(pi_context, data_dir=pi_data_dir)
+        pi_expeditions.add_expedition(name="Field Season", start_date="2026-08-14")
 
         mount_dir = tmp_path / "docked_mount"
         mount_dir.mkdir(parents=True, exist_ok=True)

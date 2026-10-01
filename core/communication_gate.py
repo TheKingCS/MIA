@@ -301,13 +301,17 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def settings(self) -> dict:
-        config = self.context.config
-        return {key: config.get(f"communication.{key}", default) for key, default in DEFAULT_SETTINGS.items()}
+        """This person's own limits (core/person_settings.py)."""
+        from core import person_settings
+
+        return {key: person_settings.get(self.context, f"communication.{key}", default)
+                for key, default in DEFAULT_SETTINGS.items()}
 
     def set_daily_budget(self, count: int) -> int:
+        from core import person_settings
+
         count = max(1, min(20, int(count)))
-        self.context.config.set("communication.daily_budget", count)
-        self.context.config.save()
+        person_settings.put(self.context, "communication.daily_budget", count)
         return count
 
     def _user_busy(self, now: datetime) -> bool:

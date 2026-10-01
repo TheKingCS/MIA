@@ -12543,11 +12543,10 @@ biggest gap was that almost all data was stored once for the household.
   leaked test folders into this sandbox's data/profiles, caught and
   removed).
 
-**Next steps for "people and ownership":** per-person settings (message
-limit, reflection, support question are household-wide config today);
-notifications per person (the bell is shared); workouts and learning
-(Classroom) per person; an optional "private" budget; then roles and
-ownership marks on shared records (who owns the truck), which
+**Next steps for "people and ownership":** per-person settings,
+notifications, workouts and Classroom were built in step 2 (below). Still
+to come: an optional "private" budget; then roles and ownership marks on
+shared records (who owns the truck), which
 `MaintenanceAsset.owner_profile_id` already starts.
 
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
@@ -12555,3 +12554,70 @@ failure). 8 new tests (two people's separation, sign-in switching, the
 one-time move to the owner, separate private journals, the phone as its
 own person, checkpoints, a replaced store stops listening, a new active
 profile).
+
+## People and ownership, step 2: accounts and households (2026-10-01)
+
+The owner asked to approach MIA "as if hundreds of different people may
+use it": sign up and sign in with email, each person's data their own,
+nothing shared unless they create a household by adding a second user
+and choosing to join the existing household. Decisions (the owner went
+with Claude's recommendations): a separate install per person or
+household (a shared server stays possible later); no email check
+(the account lives on the device) and a recovery code shown at sign-up;
+joining needs a current member to type their password on the device;
+the profiles already on a device become one household.
+
+- **Accounts** (`core/profile_manager.py`): `email` on the profile
+  (unique, lowercase), `find_by_email`, `find_for_sign_in` (email; or
+  id or a name nobody else has, for older profiles), `sign_in`,
+  `set_email`. Recovery codes: `issue_recovery_code` (four groups of
+  four, no look-alike characters, stored hashed like the password) and
+  `reset_password_with_code` (a used code stops working; a fresh one is
+  shown). The private journal's passphrase is still unrecoverable, and
+  the screens say so.
+- **Households** (`core/household_manager.py`): every new account starts
+  in a household of its own. `join(profile, household, approver,
+  approver_password)`, `leave` (a new empty household; shared things
+  stay), `rename`, `members`, `shares_with`. The device's first
+  household keeps the main `data/` folder; others get
+  `data/households/<id>/`. Upgrading puts existing profiles into one.
+- **Household stores** (`core/personal_data.py`, `HOUSEHOLD_STORES`): the
+  29 shared stores (calendar, alarms, inventory, kitchen, budget,
+  maintenance, builds, rentals, energy, Plaid, inbox, textbooks...) take
+  an optional `data_dir`, like the personal ones. A person's view holds
+  their own stores and their household's; sign-in swaps both; joining or
+  leaving swaps the household half (`household.changed`) and refreshes
+  the screens.
+- **Now personal too:** workouts, Classroom, and notifications (a
+  person's notification shows as a toast only to whoever is signed in,
+  and its phone push goes only to that person's phones). Formerly
+  shared files move to the owner once each; the marker now lists what
+  was claimed.
+- **Per-person settings** (`core/person_settings.py`): MIA's daily
+  message limit and spacing, the weekly reflection, the support
+  question and its remembered answers, and the safety floor's trusted
+  contact. The first account keeps older device-wide values; nobody
+  else inherits them.
+- **Screens:** the first-run wizard and New Profile take an email and
+  password; New Profile asks who to share household things with
+  (nobody by default) and checks the member's password before creating
+  anything; the recovery code is shown once with Copy. The profile
+  screen has "Sign in with email"; the lock screen and the sign-in
+  dialog have "Forgot password?". Settings → "Email, Recovery Code &
+  Household" (`gui/account_dialogs.py`). The phone web app and the
+  Android app sign in with an email (or the name, as before).
+
+**Limits, for later:** the email mailbox for the document inbox, the
+field kit's expedition sync, backups and the reports read the device's
+first household (the main `data/` folder). Deleting a profile doesn't
+yet tidy an emptied household. Email is never verified; a shared server
+would need that, plus rate limits on sign-in.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 16 new tests (email sign-up and sign-in, taken and malformed
+emails, same names, recovery codes, existing profiles becoming one
+household, a new account sharing nothing, joining with approval,
+leaving, a fresh device, workouts claimed under an older marker,
+per-person settings, per-person notifications and pushes, phone sign-in
+by email, the New Profile, sign-in, recovery and account dialogs). The
+real app boots with two accounts and keeps their calendars apart.

@@ -170,15 +170,10 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.post("/api/login")
     def login(body: LoginRequest) -> dict:
-        # Accepts either the real profile_id or the profile's display
-        # name (case-insensitive) — a person testing this from a phone
-        # has no way to know their own internal profile_id, only their
-        # name, matching what the login form itself now asks for.
-        identifier = body.profile_id.strip().lower()
-        profile = next(
-            (p for p in context.profiles.list_profiles() if p.profile_id == body.profile_id or p.name.strip().lower() == identifier),
-            None,
-        )
+        # Accepts the person's email (accounts, 2026-10-01), or for
+        # profiles made before emails their profile_id or display name
+        # (case-insensitive, only when no one else has that name).
+        profile = context.profiles.find_for_sign_in(body.profile_id)
         if profile is None or not context.profiles.verify_password(profile.profile_id, body.password):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
         if not profile.has_password:

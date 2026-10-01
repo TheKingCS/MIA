@@ -94,7 +94,10 @@ class EnergySource:
 
 
 class EnergyManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._energy_sources_file = self.data_dir / "energy_sources.json" if data_dir is not None else _ENERGY_SOURCES_FILE
         self.context = context
         self._sources: list[EnergySource] = []
         self._load()
@@ -104,11 +107,11 @@ class EnergyManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _ENERGY_SOURCES_FILE.exists():
+        if not self._energy_sources_file.exists():
             self._sources = []
             return
         try:
-            raw = json.loads(_ENERGY_SOURCES_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._energy_sources_file.read_text(encoding="utf-8"))
             self._sources = [EnergySource.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load energy_sources.json — starting with an empty list.")
@@ -116,8 +119,8 @@ class EnergyManager:
             self._sources = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_ENERGY_SOURCES_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._energy_sources_file,
             json.dumps([s.to_dict() for s in self._sources], indent=2), encoding="utf-8",
         )
 

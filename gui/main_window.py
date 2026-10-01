@@ -239,8 +239,11 @@ class MainWindow(QMainWindow):
         self.context.events.subscribe("notification.updated", self._on_notification_updated)
         self._update_notification_badge()
 
-    def _on_notification_created(self, notification) -> None:
+    def _on_notification_created(self, notification, profile_id=None, **_kwargs) -> None:
         self._update_notification_badge()
+        active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        if profile_id and active is not None and active.profile_id != profile_id:
+            return  # someone else's (e.g. a phone user's), not for this screen
         toast = NotificationToast(self, notification)
         toast.show_in_corner()
 

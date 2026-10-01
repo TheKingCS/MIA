@@ -116,7 +116,10 @@ class Project:
 
 
 class ProjectManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._projects_file = self.data_dir / "projects.json" if data_dir is not None else _PROJECTS_FILE
         self.context = context
         self._projects: list[Project] = []
         self._load()
@@ -126,11 +129,11 @@ class ProjectManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _PROJECTS_FILE.exists():
+        if not self._projects_file.exists():
             self._projects = []
             return
         try:
-            raw = json.loads(_PROJECTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._projects_file.read_text(encoding="utf-8"))
             self._projects = [Project.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load projects.json — starting with an empty list.")
@@ -138,8 +141,8 @@ class ProjectManager:
             self._projects = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_PROJECTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._projects_file,
             json.dumps([p.to_dict() for p in self._projects], indent=2),
             encoding="utf-8",
         )

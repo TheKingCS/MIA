@@ -75,7 +75,10 @@ class Expedition:
 
 
 class ExpeditionManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._expeditions_file = self.data_dir / "expeditions.json" if data_dir is not None else _EXPEDITIONS_FILE
         self.context = context
         self._expeditions: list[Expedition] = []
         self._load()
@@ -85,11 +88,11 @@ class ExpeditionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _EXPEDITIONS_FILE.exists():
+        if not self._expeditions_file.exists():
             self._expeditions = []
             return
         try:
-            raw = json.loads(_EXPEDITIONS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._expeditions_file.read_text(encoding="utf-8"))
             self._expeditions = [Expedition.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load expeditions.json — starting with an empty list.")
@@ -107,8 +110,8 @@ class ExpeditionManager:
         self._load()
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_EXPEDITIONS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._expeditions_file,
             json.dumps([e.to_dict() for e in self._expeditions], indent=2),
             encoding="utf-8",
         )

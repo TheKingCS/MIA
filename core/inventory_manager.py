@@ -127,7 +127,11 @@ class InventoryUsageEntry:
 
 
 class InventoryManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._items_file = self.data_dir / "inventory_items.json" if data_dir is not None else _ITEMS_FILE
+        self._usage_log_file = self.data_dir / "inventory_usage_log.json" if data_dir is not None else _USAGE_LOG_FILE
         self.context = context
         self._items: list[InventoryItem] = []
         self._usage_log: list[InventoryUsageEntry] = []
@@ -139,11 +143,11 @@ class InventoryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _ITEMS_FILE.exists():
+        if not self._items_file.exists():
             self._items = []
             return
         try:
-            raw = json.loads(_ITEMS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._items_file.read_text(encoding="utf-8"))
             self._items = [InventoryItem.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load inventory_items.json — starting with an empty list.")
@@ -151,11 +155,11 @@ class InventoryManager:
             self._items = []
 
     def _load_usage_log(self) -> None:
-        if not _USAGE_LOG_FILE.exists():
+        if not self._usage_log_file.exists():
             self._usage_log = []
             return
         try:
-            raw = json.loads(_USAGE_LOG_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._usage_log_file.read_text(encoding="utf-8"))
             self._usage_log = [InventoryUsageEntry.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load inventory_usage_log.json — starting with an empty list.")
@@ -168,16 +172,16 @@ class InventoryManager:
         self._load_usage_log()
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_ITEMS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._items_file,
             json.dumps([i.to_dict() for i in self._items], indent=2),
             encoding="utf-8",
         )
 
     def _save_usage_log(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(
-            _USAGE_LOG_FILE,
+            self._usage_log_file,
             json.dumps([e.to_dict() for e in self._usage_log], indent=2),
             encoding="utf-8",
         )

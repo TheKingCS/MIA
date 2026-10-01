@@ -119,6 +119,7 @@ from core.password_strength import assess_password
 from core.port_scanner import scan_ports
 from core.energy_manager import EnergyManager
 from core.power_manager import PowerManager
+from core.household_manager import HouseholdManager
 from core.profile_manager import ProfileManager
 from core.push_subscription_manager import PushSubscriptionManager
 from core.insight_manager import InsightManager
@@ -258,6 +259,7 @@ class MIAApplication:
         # Its __init__ also runs the legacy-user migration — see
         # core/profile_manager.py.
         self.context.profiles = ProfileManager(self.context)
+        self.context.households = HouseholdManager(self.context)
         self.context.notifications = NotificationManager(self.context)
         # Mobile access, Phase 1 (2026-09-12) — cheap to construct
         # unconditionally like every other manager here; only the
@@ -344,11 +346,6 @@ class MIAApplication:
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
         self.context.lite_captures = LiteCaptureManager(self.context)
-        # Each person's own conversations, memories, journal, notes and
-        # reasons (core/personal_data.py): swapped in on every sign-in.
-        self.context.personal_data = PersonalData(self.context)
-        self.context.personal_data.watch(self.context.events)
-        self.context.personal_data.activate_current()
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.insights = InsightManager(self.context)
         self.context.budget = BudgetManager(self.context)
@@ -366,6 +363,12 @@ class MIAApplication:
         self.context.rewards = RewardsManager(self.context)
         self.context.relationships = RelationshipsManager(self.context)
         self.context.classroom = ClassroomManager(self.context)
+        # Each person's own things and their household's shared things
+        # (core/personal_data.py): swapped in on every sign-in. After every
+        # store above, so the device's first household keeps those.
+        self.context.personal_data = PersonalData(self.context)
+        self.context.personal_data.watch(self.context.events)
+        self.context.personal_data.activate_current()
         self.context.workshop_machines = WorkshopMachineRegistry(self.context)
         # Registered by default so the registry has something real to
         # demonstrate end-to-end — it's a stub (no real driver), not a
@@ -733,18 +736,21 @@ class MIAApplication:
     def _check_journal_reflection(self, now: datetime, today_iso: str) -> None:
         """The opt-in weekly journal reflection (core/journal_reflection.py):
         only a "your reflection is ready" notice, never journal content."""
-        config = self.context.config
-        journal = self.context.private_journal
-        if not config.get("journal.weekly_reflection", False) or journal is None or not journal.is_set_up():
+        # The signed-in person's own setting and journal (core/person_settings.py).
+        from core import person_settings
+
+        context = self.context
+        journal = context.private_journal
+        if not person_settings.get(context, "journal.weekly_reflection", False) or journal is None or not journal.is_set_up():
             return
-        if not reflection_due(now, int(config.get("journal.reflection_weekday", 6)), config.get("system.last_journal_reflection_date")):
+        if not reflection_due(now, int(person_settings.get(context, "journal.reflection_weekday", 6)),
+                              person_settings.get(context, "system.last_journal_reflection_date")):
             return
         notice = reflection_notice(journal.count_since((now - timedelta(days=7)).isoformat(timespec="seconds")))
         if notice is not None:
             self._offer(topic="journal_reflection", title=notice[0], message=notice[1], urgency=TIMELY, source="journal",
                         daily=True)
-        config.set("system.last_journal_reflection_date", today_iso)
-        config.save()
+        person_settings.put(context, "system.last_journal_reflection_date", today_iso)
 
     def _check_budget_nudge(self, now: datetime, today_iso: str) -> None:
         config = self.context.config

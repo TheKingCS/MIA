@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-09-28*
+*Last updated: 2026-10-01*
 
 **Cognitive Extension:** you approved slices A → B → C → D → E
 (`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
@@ -17,6 +17,14 @@ of the Android app.
 ---
 
 ## 1. Your hands-on steps (need your computer, not Claude)
+
+- [ ] **Accounts (new, 2026-10-01).** After `git pull`: Settings →
+      Email, Recovery Code & Household → add your email. Settings →
+      Change Password gives you a recovery code if you don't have one
+      (write it down). Your existing profiles are one household; check
+      that everything still shows. Try making a test account that shares
+      nothing, then delete it. The phone and Android app now take your
+      email to sign in.
 
 **New computer? Start with `docs/SETUP_GUIDE.md`.** It walks through
 every step below in order, from a blank machine, with Windows notes.
@@ -88,12 +96,29 @@ every step below in order, from a blank machine, with Windows notes.
 
 **Direction (2026-10-01):** keep perfecting MIA for personal use, but
 built for any person or household, not just you. The youth/school
-initiative is parked (`docs/future/MIA_YOUTH_INITIATIVE.md`). Step 1 is
-built: each person's conversations, memories, journal, notes and
-reasons are their own (see ROADMAP "People and ownership"). Next in
-that line: per-person settings and notifications, workouts and
-learning per person, an optional private budget, then a real Habits
-module (useful for anyone; parked youth docs describe it well).
+initiative is parked (`docs/future/MIA_YOUTH_INITIATIVE.md`). Then
+(2026-10-01) you asked to approach MIA as if hundreds of people may use
+it, and went with Claude's recommendations. The plan, in order:
+
+- **Stage 1, accounts and households: built** (ROADMAP "People and
+  ownership", steps 1 and 2). Email sign-in with a recovery code,
+  each account its own household, joining with a member's password,
+  per-person settings, notifications, workouts and Classroom.
+- **Stage 2:** a conversational setup (MIA asks what would help most),
+  focus presets (Personal, Home & Family, Homestead, Business, Student)
+  that order and hide apps without blocking anything, and app
+  visibility per person.
+- **Stage 3:** email drafts from the Assistant: Send (only when you
+  press Send), Copy, or open in your mail app; using the inbox mailbox's
+  outgoing side; on the phone too.
+- **Stage 4:** country-aware safety numbers (988/911 are US-only) and
+  currency.
+- **Stage 5:** a first-run checker/installer, export and delete my
+  account, and an undo log ("why are you suggesting this?" too).
+- Later in this line: an optional private budget, ownership marks on
+  shared things, starter templates and imports (.ics, contacts, bank
+  CSV), a universal capture button, a "Today" view, accessibility,
+  child accounts, a real Habits module.
 
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were
@@ -173,6 +198,9 @@ module (useful for anyone; parked youth docs describe it well).
   timezone-dependent:
   `tests/test_navigation_module.py::test_sun_moon_summary_for_real_coordinates_has_sensible_shape`.
   It predates this session and probably passes on your computer.
+- Accounts: the inbox's email mailbox, the field kit's expedition sync,
+  backups and reports still read the device's first household (the main
+  `data/` folder). Deleting a profile doesn't tidy an emptied household.
 - Plaid: auto/personal loans and lines of credit now become Debts too
   (2026-09-28), but the bank doesn't report their rate or minimum: fill
   those in on the Debts tab. Card payments may show both as an expense

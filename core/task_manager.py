@@ -66,7 +66,10 @@ class Task:
 
 
 class TaskManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._tasks_file = self.data_dir / "tasks.json" if data_dir is not None else _TASKS_FILE
         self.context = context
         self._tasks: list[Task] = []
         self._load()
@@ -76,11 +79,11 @@ class TaskManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _TASKS_FILE.exists():
+        if not self._tasks_file.exists():
             self._tasks = []
             return
         try:
-            raw = json.loads(_TASKS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._tasks_file.read_text(encoding="utf-8"))
             self._tasks = [Task.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load tasks.json — starting with an empty list.")
@@ -88,8 +91,8 @@ class TaskManager:
             self._tasks = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_TASKS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._tasks_file,
             json.dumps([t.to_dict() for t in self._tasks], indent=2),
             encoding="utf-8",
         )

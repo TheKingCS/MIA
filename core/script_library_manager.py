@@ -75,7 +75,10 @@ class Script:
 
 
 class ScriptLibraryManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._scripts_file = self.data_dir / "scripts.json" if data_dir is not None else _SCRIPTS_FILE
         self.context = context
         self._scripts: list[Script] = []
         self._load()
@@ -85,11 +88,11 @@ class ScriptLibraryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _SCRIPTS_FILE.exists():
+        if not self._scripts_file.exists():
             self._scripts = []
             return
         try:
-            raw = json.loads(_SCRIPTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._scripts_file.read_text(encoding="utf-8"))
             self._scripts = [Script.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load scripts.json — starting with an empty list.")
@@ -97,8 +100,8 @@ class ScriptLibraryManager:
             self._scripts = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_SCRIPTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._scripts_file,
             json.dumps([s.to_dict() for s in self._scripts], indent=2),
             encoding="utf-8",
         )

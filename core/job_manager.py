@@ -181,7 +181,10 @@ def job_total_cost(job: Job, materials_by_id: dict[str, Material], labor_rate_pe
 
 
 class JobManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._jobs_file = self.data_dir / "jobs.json" if data_dir is not None else _JOBS_FILE
         self.context = context
         self._jobs: list[Job] = []
         self._load()
@@ -191,11 +194,11 @@ class JobManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _JOBS_FILE.exists():
+        if not self._jobs_file.exists():
             self._jobs = []
             return
         try:
-            raw = json.loads(_JOBS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._jobs_file.read_text(encoding="utf-8"))
             self._jobs = [Job.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load jobs.json — starting with an empty list.")
@@ -203,8 +206,8 @@ class JobManager:
             self._jobs = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_JOBS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._jobs_file,
             json.dumps([j.to_dict() for j in self._jobs], indent=2),
             encoding="utf-8",
         )

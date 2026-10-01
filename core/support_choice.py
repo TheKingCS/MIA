@@ -16,7 +16,8 @@ same one three times running she stops asking, uses it, and says so.
 Pure logic here; core/talk_it_out.pre_turn() wires it in (so every chat
 surface and the phone behave the same), after the safety floor, which
 always comes first. At most one question per conversation every
-`ASK_EVERY` hours; config `assistant.ask_support_kind` turns it off.
+`ASK_EVERY` hours; `assistant.ask_support_kind` turns it off. Both it and
+the remembered choices are each person's own (core/person_settings.py).
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+from core import person_settings
 from core.conversation_modes import COMPANION, LISTEN, PERSPECTIVE, PLAN
 
 ASK_EVERY_HOURS = 3
@@ -85,12 +87,13 @@ def habit(choices: list[str]) -> Optional[str]:
     return None
 
 
-def remember(config, mode: str) -> None:
-    choices = list(config.get("assistant.support_choices", []) or [])
-    choices = (choices + [mode])[-_MAX_REMEMBERED:]
-    config.set("assistant.support_choices", choices)
-    config.save()
+def remember(context, mode: str) -> None:
+    """Each person's own choices (core/person_settings.py)."""
+    choices = remembered(context)
+    person_settings.put(context, "assistant.support_choices", (choices + [mode])[-_MAX_REMEMBERED:])
 
 
-def remembered(config) -> list[str]:
-    return list(config.get("assistant.support_choices", []) or []) if config is not None else []
+def remembered(context) -> list[str]:
+    if context is None or getattr(context, "config", None) is None:
+        return []
+    return list(person_settings.get(context, "assistant.support_choices", []) or [])

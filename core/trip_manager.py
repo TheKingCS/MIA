@@ -170,7 +170,10 @@ class Trip:
 
 
 class TripManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._trips_file = self.data_dir / "trips.json" if data_dir is not None else _TRIPS_FILE
         self.context = context
         self._trips: list[Trip] = []
         self._load()
@@ -196,11 +199,11 @@ class TripManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _TRIPS_FILE.exists():
+        if not self._trips_file.exists():
             self._trips = []
             return
         try:
-            raw = json.loads(_TRIPS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._trips_file.read_text(encoding="utf-8"))
             self._trips = [Trip.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load trips.json — starting with an empty list.")
@@ -212,8 +215,8 @@ class TripManager:
         self._load()
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_TRIPS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._trips_file,
             json.dumps([t.to_dict() for t in self._trips], indent=2),
             encoding="utf-8",
         )

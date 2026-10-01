@@ -124,7 +124,11 @@ class ComponentUsageEntry:
 
 
 class ComponentManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._components_file = self.data_dir / "components.json" if data_dir is not None else _COMPONENTS_FILE
+        self._usage_log_file = self.data_dir / "component_usage_log.json" if data_dir is not None else _USAGE_LOG_FILE
         self.context = context
         self._components: list[Component] = []
         self._usage_log: list[ComponentUsageEntry] = []
@@ -136,11 +140,11 @@ class ComponentManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _COMPONENTS_FILE.exists():
+        if not self._components_file.exists():
             self._components = []
             return
         try:
-            raw = json.loads(_COMPONENTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._components_file.read_text(encoding="utf-8"))
             self._components = [Component.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load components.json — starting with an empty list.")
@@ -148,11 +152,11 @@ class ComponentManager:
             self._components = []
 
     def _load_usage_log(self) -> None:
-        if not _USAGE_LOG_FILE.exists():
+        if not self._usage_log_file.exists():
             self._usage_log = []
             return
         try:
-            raw = json.loads(_USAGE_LOG_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._usage_log_file.read_text(encoding="utf-8"))
             self._usage_log = [ComponentUsageEntry.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load component_usage_log.json — starting with an empty list.")
@@ -160,16 +164,16 @@ class ComponentManager:
             self._usage_log = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_COMPONENTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._components_file,
             json.dumps([c.to_dict() for c in self._components], indent=2),
             encoding="utf-8",
         )
 
     def _save_usage_log(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(
-            _USAGE_LOG_FILE,
+            self._usage_log_file,
             json.dumps([e.to_dict() for e in self._usage_log], indent=2),
             encoding="utf-8",
         )

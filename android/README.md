@@ -17,7 +17,7 @@ first (Tailscale, a profile password, `server.enabled`).
 3. Android asks whether your browser may **install unknown apps**:
    allow it once, go back, and tap **Install**.
 4. Open **MIA**, sign in with your MIA address (the `https://…ts.net`
-   one), your profile name and password.
+   one), your email (or profile name) and password.
 5. Tap **Start hands-free** and allow the **microphone** and
    **notifications**.
 6. Tap **Let MIA run in the background** and allow it, so Android

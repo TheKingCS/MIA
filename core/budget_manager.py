@@ -625,7 +625,16 @@ def days_until_income_due(source: IncomeSource, today: date) -> Optional[int]:
 
 
 class BudgetManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._bills_file = self.data_dir / "bills.json" if data_dir is not None else _BILLS_FILE
+        self._income_file = self.data_dir / "income.json" if data_dir is not None else _INCOME_FILE
+        self._expenses_file = self.data_dir / "budget_expenses.json" if data_dir is not None else _EXPENSES_FILE
+        self._income_sources_file = self.data_dir / "income_sources.json" if data_dir is not None else _INCOME_SOURCES_FILE
+        self._budget_targets_file = self.data_dir / "budget_targets.json" if data_dir is not None else _BUDGET_TARGETS_FILE
+        self._business_entities_file = self.data_dir / "business_entities.json" if data_dir is not None else _BUSINESS_ENTITIES_FILE
+        self._debts_file = self.data_dir / "debts.json" if data_dir is not None else _DEBTS_FILE
         self.context = context
         self._bills: list[Bill] = []
         self._income: list[IncomeEntry] = []
@@ -641,13 +650,13 @@ class BudgetManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        self._bills = self._load_file(_BILLS_FILE, Bill.from_dict)
-        self._income = self._load_file(_INCOME_FILE, IncomeEntry.from_dict)
-        self._expenses = self._load_file(_EXPENSES_FILE, ExpenseEntry.from_dict)
-        self._income_sources = self._load_file(_INCOME_SOURCES_FILE, IncomeSource.from_dict)
-        self._budget_targets = self._load_file(_BUDGET_TARGETS_FILE, BudgetTarget.from_dict)
-        self._business_entities = self._load_file(_BUSINESS_ENTITIES_FILE, BusinessEntity.from_dict)
-        self._debts = self._load_file(_DEBTS_FILE, Debt.from_dict)
+        self._bills = self._load_file(self._bills_file, Bill.from_dict)
+        self._income = self._load_file(self._income_file, IncomeEntry.from_dict)
+        self._expenses = self._load_file(self._expenses_file, ExpenseEntry.from_dict)
+        self._income_sources = self._load_file(self._income_sources_file, IncomeSource.from_dict)
+        self._budget_targets = self._load_file(self._budget_targets_file, BudgetTarget.from_dict)
+        self._business_entities = self._load_file(self._business_entities_file, BusinessEntity.from_dict)
+        self._debts = self._load_file(self._debts_file, Debt.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
         if not path.exists():
@@ -661,32 +670,32 @@ class BudgetManager:
             return []
 
     def _save_bills(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_BILLS_FILE, json.dumps([b.to_dict() for b in self._bills], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._bills_file, json.dumps([b.to_dict() for b in self._bills], indent=2), encoding="utf-8")
 
     def _save_income(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_INCOME_FILE, json.dumps([i.to_dict() for i in self._income], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._income_file, json.dumps([i.to_dict() for i in self._income], indent=2), encoding="utf-8")
 
     def _save_expenses(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_EXPENSES_FILE, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._expenses_file, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
 
     def _save_income_sources(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_INCOME_SOURCES_FILE, json.dumps([s.to_dict() for s in self._income_sources], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._income_sources_file, json.dumps([s.to_dict() for s in self._income_sources], indent=2), encoding="utf-8")
 
     def _save_budget_targets(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_BUDGET_TARGETS_FILE, json.dumps([t.to_dict() for t in self._budget_targets], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._budget_targets_file, json.dumps([t.to_dict() for t in self._budget_targets], indent=2), encoding="utf-8")
 
     def _save_business_entities(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_BUSINESS_ENTITIES_FILE, json.dumps([e.to_dict() for e in self._business_entities], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._business_entities_file, json.dumps([e.to_dict() for e in self._business_entities], indent=2), encoding="utf-8")
 
     def _save_debts(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_DEBTS_FILE, json.dumps([d.to_dict() for d in self._debts], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._debts_file, json.dumps([d.to_dict() for d in self._debts], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Bills

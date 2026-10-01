@@ -34,6 +34,8 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
+import re
+import secrets
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -129,6 +131,14 @@ class Profile:
     # zero real facts came back, since "nothing to extract" is still a
     # real, final answer for these particular notes.
     interview_notes_extracted: bool = False
+    # Accounts (2026-10-01, docs/ROADMAP.md "People and ownership"): the
+    # email a person signs in with (unique on this device, compared
+    # lowercase), a one-time recovery code (stored hashed, like the
+    # password) and the household they belong to (core/household_manager.py).
+    email: str = ""
+    recovery_hash: str = field(default="", repr=False)
+    recovery_salt: str = field(default="", repr=False)
+    household_id: str = ""
 
     @property
     def has_password(self) -> bool:
@@ -144,6 +154,60 @@ class Profile:
         per-user storage convention.
         """
         return _DATA_PROFILES_DIR / self.profile_id
+
+
+def _profile_from_record(profile_id: str, data: dict) -> Profile:
+    return Profile(
+        profile_id=profile_id,
+        name=data.get("name", "Unknown"),
+        created_at=data.get("created_at", ""),
+        password_hash=data.get("password_hash", ""),
+        password_salt=data.get("password_salt", ""),
+        birthday=data.get("birthday"),
+        total_xp=data.get("total_xp", 0),
+        total_credits=data.get("total_credits", 0),
+        prestige_tier=data.get("prestige_tier", 0),
+        unlocked_reward_ids=list(data.get("unlocked_reward_ids", [])),
+        interests=list(data.get("interests", [])),
+        interview_notes=data.get("interview_notes", ""),
+        interview_notes_extracted=data.get("interview_notes_extracted", False),
+        email=data.get("email", ""),
+        recovery_hash=data.get("recovery_hash", ""),
+        recovery_salt=data.get("recovery_salt", ""),
+        household_id=data.get("household_id", ""),
+    )
+
+
+def normalize_email(email: Optional[str]) -> str:
+    """Pure logic. Emails are compared lowercase, without spaces."""
+    return (email or "").strip().lower()
+
+
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def looks_like_email(text: Optional[str]) -> bool:
+    """Pure logic. Good enough to catch typos. MIA doesn't need to send a
+    check email: the account lives on this device."""
+    return bool(_EMAIL.match(normalize_email(text)))
+
+
+# Recovery codes: easy to read aloud and copy by hand (no 0/O, 1/I/L).
+_RECOVERY_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def new_recovery_code() -> str:
+    """Pure logic (random). Four groups of four, e.g. "K7QM-2XRP-9HTA-WC4E"."""
+    raw = "".join(secrets.choice(_RECOVERY_ALPHABET) for _ in range(16))
+    return "-".join(raw[i:i + 4] for i in range(0, 16, 4))
+
+
+def _canonical_code(code: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", (code or "").upper())
+
+
+class AccountError(ValueError):
+    """A sign-up or account change MIA refuses, with a message to show."""
 
 
 class ProfileManager:
@@ -181,10 +245,16 @@ class ProfileManager:
     # CRUD
     # ------------------------------------------------------------------
 
-    def create_profile(self, name: str, password: Optional[str] = None, make_active: bool = True) -> Profile:
-        """Create a new profile, optionally password-protected, and optionally activate it."""
+    def create_profile(self, name: str, password: Optional[str] = None, make_active: bool = True,
+                       email: Optional[str] = None) -> Profile:
+        """Create a new profile, optionally password-protected, and optionally
+        activate it. With an email, the person can sign in with it; a taken or
+        malformed email raises AccountError before anything is saved."""
+        email = self._checked_email(email) if email else ""
         profile = self._create_profile_record(name)
         record = {"name": profile.name, "created_at": profile.created_at}
+        if email:
+            record["email"] = profile.email = email
 
         if password:
             salt_hex, hash_hex = _hash_password(password)
@@ -217,24 +287,7 @@ class ProfileManager:
     def list_profiles(self) -> list[Profile]:
         """Return all known profiles, oldest first."""
         raw = self.context.config.get("profiles", {})
-        profiles = [
-            Profile(
-                profile_id=pid,
-                name=data.get("name", "Unknown"),
-                created_at=data.get("created_at", ""),
-                password_hash=data.get("password_hash", ""),
-                password_salt=data.get("password_salt", ""),
-                birthday=data.get("birthday"),
-                total_xp=data.get("total_xp", 0),
-                total_credits=data.get("total_credits", 0),
-                prestige_tier=data.get("prestige_tier", 0),
-                unlocked_reward_ids=list(data.get("unlocked_reward_ids", [])),
-                interests=list(data.get("interests", [])),
-                interview_notes=data.get("interview_notes", ""),
-                interview_notes_extracted=data.get("interview_notes_extracted", False),
-            )
-            for pid, data in raw.items()
-        ]
+        profiles = [_profile_from_record(pid, data) for pid, data in raw.items()]
         return sorted(profiles, key=lambda p: p.created_at)
 
     def get_active_profile(self) -> Optional[Profile]:
@@ -245,21 +298,7 @@ class ProfileManager:
         raw = self.context.config.get(f"profiles.{active_id}")
         if raw is None:
             return None
-        return Profile(
-            profile_id=active_id,
-            name=raw.get("name", "Unknown"),
-            created_at=raw.get("created_at", ""),
-            password_hash=raw.get("password_hash", ""),
-            password_salt=raw.get("password_salt", ""),
-            birthday=raw.get("birthday"),
-            total_xp=raw.get("total_xp", 0),
-            total_credits=raw.get("total_credits", 0),
-            prestige_tier=raw.get("prestige_tier", 0),
-            unlocked_reward_ids=list(raw.get("unlocked_reward_ids", [])),
-            interests=list(raw.get("interests", [])),
-            interview_notes=raw.get("interview_notes", ""),
-            interview_notes_extracted=raw.get("interview_notes_extracted", False),
-        )
+        return _profile_from_record(active_id, raw)
 
     def get_profile(self, profile_id: str) -> Optional[Profile]:
         """Look up any profile by id, active or not — a real, missing
@@ -496,6 +535,106 @@ class ProfileManager:
     def needs_profile_selection(self) -> bool:
         """True if there's more than one profile and the user should be asked which one to use."""
         return len(self.list_profiles()) > 1
+
+    # ------------------------------------------------------------------
+    # Accounts: email sign-in and recovery codes
+    # ------------------------------------------------------------------
+
+    def _checked_email(self, email: str, for_profile: Optional[str] = None) -> str:
+        email = normalize_email(email)
+        if not looks_like_email(email):
+            raise AccountError("That doesn't look like an email address.")
+        taken = self.find_by_email(email)
+        if taken is not None and taken.profile_id != for_profile:
+            raise AccountError("Someone on this MIA already signs in with that email.")
+        return email
+
+    def find_by_email(self, email: str) -> Optional[Profile]:
+        wanted = normalize_email(email)
+        if not wanted:
+            return None
+        return next((p for p in self.list_profiles() if normalize_email(p.email) == wanted), None)
+
+    def find_for_sign_in(self, identifier: str) -> Optional[Profile]:
+        """The profile someone means when signing in: their email, or (for
+        profiles made before emails) their id or name, ignoring case."""
+        text = (identifier or "").strip()
+        if not text:
+            return None
+        if "@" in text:
+            return self.find_by_email(text)
+        by_id = self.get_profile(text)
+        if by_id is not None:
+            return by_id
+        lowered = text.lower()
+        named = [p for p in self.list_profiles() if p.name.strip().lower() == lowered]
+        return named[0] if len(named) == 1 else None
+
+    def set_email(self, profile_id: str, email: Optional[str]) -> bool:
+        """Set (or, with an empty email, remove) a profile's sign-in email.
+        Raises AccountError for a malformed or taken email."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            return False
+        record = dict(raw)
+        if email:
+            record["email"] = self._checked_email(email, for_profile=profile_id)
+        else:
+            record.pop("email", None)
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        self.context.events.publish("profile.email_changed", profile_id=profile_id)
+        log.info("Sign-in email %s for profile '%s'", "set" if email else "removed", profile_id)
+        return True
+
+    def sign_in(self, identifier: str, password: str) -> Optional[Profile]:
+        """The profile, if `identifier` names one and the password is right.
+        A profile with no password can't be signed into this way (the
+        phone needs one; the desktop picks it from the list)."""
+        profile = self.find_for_sign_in(identifier)
+        if profile is None or not profile.has_password:
+            return None
+        return profile if self.verify_password(profile.profile_id, password) else None
+
+    def issue_recovery_code(self, profile_id: str) -> Optional[str]:
+        """Make a new recovery code, store only its hash, and return the code
+        to show once. Any older code stops working."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            return None
+        code = new_recovery_code()
+        salt_hex, hash_hex = _hash_password(_canonical_code(code))
+        record = dict(raw)
+        record["recovery_salt"], record["recovery_hash"] = salt_hex, hash_hex
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("New recovery code issued for profile '%s'", profile_id)
+        return code
+
+    def has_recovery_code(self, profile_id: str) -> bool:
+        profile = self.get_profile(profile_id)
+        return bool(profile and profile.recovery_hash)
+
+    def check_recovery_code(self, profile_id: str, code: str) -> bool:
+        raw = self.context.config.get(f"profiles.{profile_id}")
+        if raw is None or not raw.get("recovery_hash"):
+            return False
+        salt = bytes.fromhex(raw.get("recovery_salt", ""))
+        computed = hashlib.pbkdf2_hmac("sha256", _canonical_code(code).encode("utf-8"), salt, _PBKDF2_ITERATIONS).hex()
+        return hmac.compare_digest(computed, raw["recovery_hash"])
+
+    def reset_password_with_code(self, identifier: str, code: str, new_password: str) -> Optional[str]:
+        """Forgot your password: the recovery code sets a new one. Returns a
+        fresh recovery code (the used one stops working), or None when the
+        account or code is wrong. The private journal's passphrase is
+        separate and can't be recovered this way, by design."""
+        profile = self.find_for_sign_in(identifier)
+        if profile is None or not new_password or not self.check_recovery_code(profile.profile_id, code):
+            return None
+        self.set_password(profile.profile_id, new_password)
+        return self.issue_recovery_code(profile.profile_id)
 
     # ------------------------------------------------------------------
     # Passwords

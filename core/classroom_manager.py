@@ -166,7 +166,12 @@ class Lesson:
 
 
 class ClassroomManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._subjects_file = self.data_dir / "classroom_subjects.json" if data_dir is not None else _SUBJECTS_FILE
+        self._courses_file = self.data_dir / "classroom_courses.json" if data_dir is not None else _COURSES_FILE
+        self._lessons_file = self.data_dir / "classroom_lessons.json" if data_dir is not None else _LESSONS_FILE
         self.context = context
         self._subjects: list[Subject] = []
         self._courses: list[Course] = []
@@ -178,9 +183,9 @@ class ClassroomManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        self._subjects = self._load_file(_SUBJECTS_FILE, Subject.from_dict)
-        self._courses = self._load_file(_COURSES_FILE, Course.from_dict)
-        self._lessons = self._load_file(_LESSONS_FILE, Lesson.from_dict)
+        self._subjects = self._load_file(self._subjects_file, Subject.from_dict)
+        self._courses = self._load_file(self._courses_file, Course.from_dict)
+        self._lessons = self._load_file(self._lessons_file, Lesson.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
         if not path.exists():
@@ -194,16 +199,16 @@ class ClassroomManager:
             return []
 
     def _save_subjects(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_SUBJECTS_FILE, json.dumps([s.to_dict() for s in self._subjects], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._subjects_file, json.dumps([s.to_dict() for s in self._subjects], indent=2), encoding="utf-8")
 
     def _save_courses(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_COURSES_FILE, json.dumps([c.to_dict() for c in self._courses], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._courses_file, json.dumps([c.to_dict() for c in self._courses], indent=2), encoding="utf-8")
 
     def _save_lessons(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_LESSONS_FILE, json.dumps([l.to_dict() for l in self._lessons], indent=2), encoding="utf-8")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._lessons_file, json.dumps([l.to_dict() for l in self._lessons], indent=2), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Subjects

@@ -83,7 +83,6 @@ def safety_reply(trusted_contact: Optional[str] = None) -> str:
 
 
 def trusted_contact_from(context) -> Optional[str]:
-    config = getattr(context, "config", None)
-    if config is None:
-        return None
-    return config.get("assistant.safety.trusted_contact", None) or None
+    from core import person_settings  # each person's own contact (accounts, 2026-10-01)
+
+    return person_settings.get(context, "assistant.safety.trusted_contact", None) or None

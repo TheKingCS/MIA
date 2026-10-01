@@ -140,7 +140,11 @@ class Recommendation:
 
 
 class InsightManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._insights_file = self.data_dir / "insights.json" if data_dir is not None else _INSIGHTS_FILE
+        self._recommendations_file = self.data_dir / "recommendations.json" if data_dir is not None else _RECOMMENDATIONS_FILE
         self.context = context
         self._insights: list[Insight] = []
         self._recommendations: list[Recommendation] = []
@@ -151,17 +155,17 @@ class InsightManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if _INSIGHTS_FILE.exists():
+        if self._insights_file.exists():
             try:
-                raw = json.loads(_INSIGHTS_FILE.read_text(encoding="utf-8"))
+                raw = json.loads(self._insights_file.read_text(encoding="utf-8"))
                 self._insights = [Insight.from_dict(d) for d in raw]
             except (json.JSONDecodeError, OSError):
                 log.exception("Failed to load insights.json — starting with an empty list.")
                 notify_data_corruption(self.context, "insights.json")
                 self._insights = []
-        if _RECOMMENDATIONS_FILE.exists():
+        if self._recommendations_file.exists():
             try:
-                raw = json.loads(_RECOMMENDATIONS_FILE.read_text(encoding="utf-8"))
+                raw = json.loads(self._recommendations_file.read_text(encoding="utf-8"))
                 self._recommendations = [Recommendation.from_dict(d) for d in raw]
             except (json.JSONDecodeError, OSError):
                 log.exception("Failed to load recommendations.json — starting with an empty list.")
@@ -169,14 +173,14 @@ class InsightManager:
                 self._recommendations = []
 
     def _save_insights(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_INSIGHTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._insights_file,
             json.dumps([i.to_dict() for i in self._insights], indent=2), encoding="utf-8"
         )
 
     def _save_recommendations(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_RECOMMENDATIONS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._recommendations_file,
             json.dumps([r.to_dict() for r in self._recommendations], indent=2), encoding="utf-8"
         )
 

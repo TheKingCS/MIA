@@ -387,7 +387,9 @@ def test_upload_endpoint(ctx):
     import server.app as server_app
 
     ctx.profiles = SimpleNamespace(
-        list_profiles=lambda: [SimpleNamespace(profile_id="p1", name="Zac", has_password=True)],
+        list_profiles=lambda: [SimpleNamespace(profile_id="p1", name="Zac", has_password=True, created_at="")],
+        find_for_sign_in=lambda who: (SimpleNamespace(profile_id="p1", name="Zac", has_password=True)
+                                      if who.strip().lower() in ("p1", "zac") else None),
         verify_password=lambda pid, pw: pw == "pw",
     )
     ctx.voice = ctx.llm = ctx.push_subscriptions = None

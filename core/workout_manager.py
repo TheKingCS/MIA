@@ -187,7 +187,12 @@ def weight_progression(exercise_id: str, sessions: list[WorkoutSession]) -> list
 
 
 class WorkoutManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._exercises_file = self.data_dir / "workout_exercises.json" if data_dir is not None else _EXERCISES_FILE
+        self._templates_file = self.data_dir / "workout_templates.json" if data_dir is not None else _TEMPLATES_FILE
+        self._sessions_file = self.data_dir / "workout_sessions.json" if data_dir is not None else _SESSIONS_FILE
         self.context = context
         self._exercises: list[Exercise] = []
         self._templates: list[WorkoutTemplate] = []
@@ -199,9 +204,9 @@ class WorkoutManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        self._exercises = self._load_file(_EXERCISES_FILE, Exercise)
-        self._templates = self._load_file(_TEMPLATES_FILE, WorkoutTemplate)
-        self._sessions = self._load_file(_SESSIONS_FILE, WorkoutSession)
+        self._exercises = self._load_file(self._exercises_file, Exercise)
+        self._templates = self._load_file(self._templates_file, WorkoutTemplate)
+        self._sessions = self._load_file(self._sessions_file, WorkoutSession)
 
     def _load_file(self, path: Path, cls) -> list:
         if not path.exists():
@@ -214,19 +219,18 @@ class WorkoutManager:
             notify_data_corruption(self.context, path.name)
             return []
 
-    @staticmethod
-    def _save_file(path: Path, records: list) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+    def _save_file(self, path: Path, records: list) -> None:
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
 
     def _save_exercises(self) -> None:
-        self._save_file(_EXERCISES_FILE, self._exercises)
+        self._save_file(self._exercises_file, self._exercises)
 
     def _save_templates(self) -> None:
-        self._save_file(_TEMPLATES_FILE, self._templates)
+        self._save_file(self._templates_file, self._templates)
 
     def _save_sessions(self) -> None:
-        self._save_file(_SESSIONS_FILE, self._sessions)
+        self._save_file(self._sessions_file, self._sessions)
 
     # ------------------------------------------------------------------
     # Exercise CRUD

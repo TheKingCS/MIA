@@ -61,12 +61,24 @@ Assistant to switch themes for you.
 
 ## More than one person
 
-Each person who uses MIA gets their own profile (Settings → Switch
-User, or the profile screen at start). What's personal stays with the
-person who said it: conversations, what MIA remembers about you, your
-private journal (with your own passphrase), notes, your reasons
-("remember why"), and how often MIA speaks up to you. Things that belong
-to the household are shared: maintenance and the mower, the kitchen and
-grocery list, builds, rentals, inventory, chores, the document inbox,
-the calendar and the budget. On the phone, MIA talks to whoever signed
-in there, even if someone else is at the computer.
+Each person who uses MIA gets their own account (Settings → Switch
+User → New Profile, or the profile screen at start). Give it an email
+and a password to sign in with, here ("Sign in with email") and on your
+phone. MIA shows a **recovery code** once: write it down. If you forget
+your password, "Forgot password?" and that code set a new one. Nobody
+can recover the private journal's passphrase.
+
+What's yours stays yours: conversations, what MIA remembers about you,
+your private journal, notes, your reasons ("remember why"), workouts,
+classes, your notifications, and your settings (how often MIA speaks
+up, the weekly reflection, your trusted contact).
+
+**Households.** A new account shares nothing. To share the calendar,
+kitchen and grocery list, budget, maintenance, builds, rentals,
+inventory, chores and the document inbox, choose the household when you
+make the account; someone already in it types their password to approve.
+Later: Settings → Email, Recovery Code & Household (join, rename, or
+leave; leaving starts an empty household, and the shared things stay).
+People who were already on this MIA before accounts are one household.
+On the phone, MIA talks to whoever signed in there, even if someone else
+is at the computer.

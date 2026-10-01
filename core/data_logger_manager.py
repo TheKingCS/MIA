@@ -87,7 +87,10 @@ class Reading:
 
 
 class DataLoggerManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._readings_file = self.data_dir / "data_logger_readings.json" if data_dir is not None else _READINGS_FILE
         self.context = context
         self._readings: list[Reading] = []
         self._load()
@@ -97,11 +100,11 @@ class DataLoggerManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _READINGS_FILE.exists():
+        if not self._readings_file.exists():
             self._readings = []
             return
         try:
-            raw = json.loads(_READINGS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._readings_file.read_text(encoding="utf-8"))
             self._readings = [Reading.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load data_logger_readings.json — starting with an empty list.")
@@ -109,8 +112,8 @@ class DataLoggerManager:
             self._readings = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_READINGS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._readings_file,
             json.dumps([r.to_dict() for r in self._readings], indent=2),
             encoding="utf-8",
         )

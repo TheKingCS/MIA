@@ -125,7 +125,10 @@ def parse_snapshot_content(content: str) -> Optional[HomesteadSnapshot]:
 class HomesteadManager:
     """Core-level Homestead service (`AppContext.homestead`)."""
 
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._snapshots_file = self.data_dir / "homestead_snapshots.json" if data_dir is not None else _SNAPSHOTS_FILE
         self.context = context
         self._snapshots: dict[str, HomesteadSnapshot] = {}
         self._load()
@@ -148,13 +151,13 @@ class HomesteadManager:
         return _DEFAULT_IMPORT_DIR
 
     def _load(self) -> None:
-        if not _SNAPSHOTS_FILE.exists():
+        if not self._snapshots_file.exists():
             return
         try:
-            raw = json.loads(_SNAPSHOTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._snapshots_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            log.warning("Could not read %s — starting with no stored snapshots.", _SNAPSHOTS_FILE)
-            notify_data_corruption(self.context, _SNAPSHOTS_FILE.name)
+            log.warning("Could not read %s — starting with no stored snapshots.", self._snapshots_file)
+            notify_data_corruption(self.context, self._snapshots_file.name)
             return
         for source, snapshot_raw in raw.items():
             try:
@@ -163,8 +166,8 @@ class HomesteadManager:
                 continue
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_SNAPSHOTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._snapshots_file,
             json.dumps({source: snap.to_dict() for source, snap in self._snapshots.items()}, indent=2),
             encoding="utf-8",
         )

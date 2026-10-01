@@ -117,7 +117,10 @@ class InboxItem:
 
 
 class InboxManager:
-    def __init__(self, context) -> None:
+    def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._items_file = self.data_dir / "inbox.json" if data_dir is not None else _ITEMS_FILE
         self.context = context
         self._items: list[InboxItem] = []
         self._load()
@@ -135,18 +138,18 @@ class InboxManager:
         return self.folder / "items" / item_id
 
     def _load(self) -> None:
-        if not _ITEMS_FILE.exists():
+        if not self._items_file.exists():
             return
         try:
-            self._items = [InboxItem.from_dict(d) for d in json.loads(_ITEMS_FILE.read_text(encoding="utf-8"))]
+            self._items = [InboxItem.from_dict(d) for d in json.loads(self._items_file.read_text(encoding="utf-8"))]
         except (json.JSONDecodeError, OSError, TypeError):
             log.exception("inbox.json unreadable — starting empty.")
             notify_data_corruption(self.context, "inbox.json")
             self._items = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_ITEMS_FILE, json.dumps([asdict(i) for i in self._items], indent=2))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._items_file, json.dumps([asdict(i) for i in self._items], indent=2))
 
     def all_items(self) -> list[InboxItem]:
         """Pending first, then newest first."""

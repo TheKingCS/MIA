@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from gui.account_dialogs import SignInDialog, show_recovery_code
 from gui.add_profile_dialog import AddProfileDialog
 from gui.password_dialog import prompt_for_password
 from gui.profile_interview_dialog import ProfileInterviewDialog
@@ -60,6 +61,11 @@ class ProfileSelectScreen(QWidget):
         self._list_container = QVBoxLayout()
         layout.addLayout(self._list_container)
         self._populate_profiles()
+
+        sign_in_button = QPushButton("Sign in with email")
+        sign_in_button.setObjectName("ModuleButton")
+        sign_in_button.clicked.connect(self._on_sign_in_with_email)
+        layout.addWidget(sign_in_button)
 
         add_button = QPushButton("+ New Profile")
         add_button.setObjectName("ModuleButton")
@@ -132,6 +138,13 @@ class ProfileSelectScreen(QWidget):
         log.info("Profile selected: %s", profile.profile_id)
         self.profile_selected.emit()
 
+    def _on_sign_in_with_email(self) -> None:
+        dialog = SignInDialog(self.context, self)
+        if dialog.exec() == SignInDialog.DialogCode.Accepted and dialog.profile is not None:
+            self.context.profiles.set_active_profile(dialog.profile.profile_id)
+            log.info("Signed in with email: %s", dialog.profile.profile_id)
+            self.profile_selected.emit()
+
     def _on_delete_requested(self, profile) -> None:
         confirm = QMessageBox.question(
             self,
@@ -164,10 +177,19 @@ class ProfileSelectScreen(QWidget):
         self._populate_profiles()
 
     def _on_add_profile(self) -> None:
-        dialog = AddProfileDialog(self)
+        dialog = AddProfileDialog(self, context=self.context)
         if dialog.exec() == AddProfileDialog.DialogCode.Accepted and dialog.entered_name:
             password = dialog.entered_password or None
-            profile = self.context.profiles.create_profile(dialog.entered_name, password=password, make_active=False)
+            profile = self.context.profiles.create_profile(
+                dialog.entered_name, password=password, make_active=False, email=dialog.entered_email or None)
+            # Accounts (2026-10-01): sharing a household only with its
+            # member's approval (already checked in the dialog), and the
+            # recovery code shown once.
+            if dialog.household_choice is not None and not dialog.household_choice.apply(profile.profile_id):
+                QMessageBox.warning(self, "Household", f"{profile.name} has a household of their own for now. "
+                                    "They can join one later from Settings, Account & household.")
+            if password:
+                show_recovery_code(self.context.profiles.issue_recovery_code(profile.profile_id), self)
             # Profile-creation interview (2026-09-14) — a real, separate
             # second dialog right after creation, not folded into
             # AddProfileDialog itself (see that class's own docstring

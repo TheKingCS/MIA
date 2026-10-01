@@ -452,7 +452,10 @@ def loan_account_debt_fields(account: dict, institution_name: str, liabilities_e
 
 
 class PlaidManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._vault_file = self.data_dir / "plaid_vault.enc" if data_dir is not None else _VAULT_FILE
         self.context = context
         self._vault: Optional[PlaidVault] = None
         self._client: Optional[plaid_api.PlaidApi] = None
@@ -462,7 +465,7 @@ class PlaidManager:
     # ------------------------------------------------------------------
 
     def is_configured(self) -> bool:
-        return _VAULT_FILE.exists()
+        return self._vault_file.exists()
 
     def is_unlocked(self) -> bool:
         return self._vault is not None
@@ -474,10 +477,10 @@ class PlaidManager:
 
     def verify_passphrase(self, passphrase: str) -> bool:
         """True if passphrase decrypts the saved vault file."""
-        if not _VAULT_FILE.exists():
+        if not self._vault_file.exists():
             return False
         try:
-            decrypt_bytes(_VAULT_FILE.read_bytes(), passphrase)
+            decrypt_bytes(self._vault_file.read_bytes(), passphrase)
         except SecretsError:
             return False
         return True
@@ -499,9 +502,9 @@ class PlaidManager:
 
     def unlock(self, passphrase: str) -> None:
         """Raises core.secrets_manager.SecretsError on a wrong passphrase or corrupted vault file."""
-        if not _VAULT_FILE.exists():
+        if not self._vault_file.exists():
             raise SecretsError("No Plaid vault has been set up yet.")
-        blob = _VAULT_FILE.read_bytes()
+        blob = self._vault_file.read_bytes()
         plaintext = decrypt_bytes(blob, passphrase)
         vault = PlaidVault.from_dict(json.loads(plaintext))
         self._vault = vault
@@ -511,8 +514,8 @@ class PlaidManager:
     def _save_vault(self, vault: PlaidVault, passphrase: str) -> None:
         plaintext = json.dumps(vault.to_dict()).encode("utf-8")
         blob = encrypt_bytes(plaintext, passphrase)
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        _VAULT_FILE.write_bytes(blob)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self._vault_file.write_bytes(blob)
 
     @staticmethod
     def _build_client(vault: PlaidVault) -> plaid_api.PlaidApi:
@@ -817,7 +820,7 @@ class PlaidManager:
             leftover = [s.source for s in self.context.finance.all_latest_snapshots() if s.source.startswith("plaid_")]
             self.context.finance.remove_snapshots(leftover)
 
-        _VAULT_FILE.unlink(missing_ok=True)
+        self._vault_file.unlink(missing_ok=True)
         self._vault = None
         self._client = None
         log.info("Plaid reset complete — vault deleted, %d item(s) removed.", len(result.removed))

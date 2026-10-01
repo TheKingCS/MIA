@@ -124,7 +124,7 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
                 conversation.mode = chosen
                 _persist(context, conversation)
             if getattr(context, "config", None) is not None:
-                remember(context.config, chosen)
+                remember(context, chosen)
     if not change.is_empty:
         if change.mode is not None:
             conversation.mode = change.mode
@@ -163,7 +163,7 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
 
     if not awaiting and change.is_empty and _may_ask_support(context, conversation, prompt):
         conversation.support_asked_at = time.time()
-        usual = habit(remembered(getattr(context, "config", None)))
+        usual = habit(remembered(context))
         if usual is not None:
             # The same choice three times running: use it, say so, don't ask.
             conversation.mode = usual
@@ -182,8 +182,9 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
 def _may_ask_support(context: AppContext, conversation: Conversation, prompt: str) -> bool:
     """Something heavy said in normal mode, not journaling or private, not
     asked in the last few hours, and the owner hasn't turned it off."""
-    config = getattr(context, "config", None)
-    if config is not None and config.get("assistant.ask_support_kind", True) is False:
+    from core import person_settings
+
+    if getattr(context, "config", None) is not None and person_settings.get(context, "assistant.ask_support_kind", True) is False:
         return False
     if conversation.mode != COMPANION or conversation.journal or conversation.private_turn:
         return False

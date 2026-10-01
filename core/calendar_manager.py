@@ -128,7 +128,10 @@ def occurs_on(event: CalendarEvent, check_date: date) -> bool:
 
 
 class CalendarManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._events_file = self.data_dir / "calendar_events.json" if data_dir is not None else _EVENTS_FILE
         self.context = context
         self._events: list[CalendarEvent] = []
         self._load()
@@ -138,11 +141,11 @@ class CalendarManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _EVENTS_FILE.exists():
+        if not self._events_file.exists():
             self._events = []
             return
         try:
-            raw = json.loads(_EVENTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._events_file.read_text(encoding="utf-8"))
             self._events = [CalendarEvent.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load calendar_events.json — starting with an empty list.")
@@ -150,8 +153,8 @@ class CalendarManager:
             self._events = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_EVENTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._events_file,
             json.dumps([e.to_dict() for e in self._events], indent=2),
             encoding="utf-8",
         )

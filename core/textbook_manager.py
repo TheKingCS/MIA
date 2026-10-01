@@ -209,7 +209,11 @@ def split_passages(pages: list[str], chapters: list[Chapter], max_chars: int = _
 
 
 class TextbookManager:
-    def __init__(self, context) -> None:
+    def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._library_file = self.data_dir / "textbooks.json" if data_dir is not None else _LIBRARY_FILE
+        self._index_dir = self.data_dir / "textbook_index" if data_dir is not None else _INDEX_DIR
         self.context = context
         self._books: list[Textbook] = []
         self._passages: dict[str, list[Passage]] = {}  # loaded lazily per book
@@ -221,18 +225,18 @@ class TextbookManager:
         return Path(configured) if configured else _DEFAULT_ROOT
 
     def _load(self) -> None:
-        if not _LIBRARY_FILE.exists():
+        if not self._library_file.exists():
             return
         try:
-            self._books = [Textbook.from_dict(d) for d in json.loads(_LIBRARY_FILE.read_text(encoding="utf-8"))]
+            self._books = [Textbook.from_dict(d) for d in json.loads(self._library_file.read_text(encoding="utf-8"))]
         except (json.JSONDecodeError, OSError, KeyError, TypeError):
             log.exception("textbooks.json unreadable — starting with an empty library.")
             notify_data_corruption(self.context, "textbooks.json")
             self._books = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_LIBRARY_FILE, json.dumps([asdict(b) for b in self._books], indent=2))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._library_file, json.dumps([asdict(b) for b in self._books], indent=2))
 
     def all_books(self) -> list[Textbook]:
         return list(self._books)
@@ -283,8 +287,8 @@ class TextbookManager:
         if not keep_title:
             book.title = first_heading(pages[0]) or book.title
         book.page_count, book.chapters = len(pages), chapters
-        _INDEX_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_INDEX_DIR / f"{book.book_id}.json", json.dumps([asdict(p) for p in passages]))
+        self._index_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._index_dir / f"{book.book_id}.json", json.dumps([asdict(p) for p in passages]))
         self._passages[book.book_id] = passages
         self._save()
         log.info("Textbook indexed: '%s' (%d pages, %d chapters, %d passages)", book.title, len(pages), len(chapters), len(passages))
@@ -295,9 +299,8 @@ class TextbookManager:
     def _ocr_key(book_id: str) -> str:
         return f"textbook:{book_id}"
 
-    @staticmethod
-    def _ocr_output(book_id: str) -> Path:
-        return _INDEX_DIR / f"{book_id}.ocr.json"
+    def _ocr_output(self, book_id: str) -> Path:
+        return self._index_dir / f"{book_id}.ocr.json"
 
     def reading_progress(self, book_id: str) -> Optional[tuple[int, int]]:
         """(pages read, total) while a scanned book is being read."""
@@ -347,7 +350,7 @@ class TextbookManager:
         if getattr(self.context, "ocr", None) is not None:
             self.context.ocr.cancel(self._ocr_key(book_id))
         output = self._ocr_output(book_id)
-        for path in (self.root / book.filename, _INDEX_DIR / f"{book_id}.json", output,
+        for path in (self.root / book.filename, self._index_dir / f"{book_id}.json", output,
                      output.with_name(output.stem + ".partial.json")):
             try:
                 path.unlink()
@@ -357,11 +360,11 @@ class TextbookManager:
         return True
 
     def passages(self, book_id: str) -> list[Passage]:
-        if book_id not in self._passages and not (_INDEX_DIR / f"{book_id}.json").exists():
+        if book_id not in self._passages and not (self._index_dir / f"{book_id}.json").exists():
             return []  # still being read, or reading failed
         if book_id not in self._passages:
             try:
-                raw = json.loads((_INDEX_DIR / f"{book_id}.json").read_text(encoding="utf-8"))
+                raw = json.loads((self._index_dir / f"{book_id}.json").read_text(encoding="utf-8"))
                 self._passages[book_id] = [Passage(**p) for p in raw]
             except (OSError, json.JSONDecodeError, TypeError):
                 log.exception("Textbook index for %s unreadable.", book_id)

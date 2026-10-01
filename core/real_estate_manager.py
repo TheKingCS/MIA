@@ -312,7 +312,10 @@ def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str
 
 
 class RealEstateManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._properties_file = self.data_dir / "properties.json" if data_dir is not None else _PROPERTIES_FILE
         self.context = context
         self._properties: list[Property] = []
         self._load()
@@ -322,11 +325,11 @@ class RealEstateManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _PROPERTIES_FILE.exists():
+        if not self._properties_file.exists():
             self._properties = []
             return
         try:
-            raw = json.loads(_PROPERTIES_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._properties_file.read_text(encoding="utf-8"))
             self._properties = [Property.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load properties.json — starting with an empty list.")
@@ -334,8 +337,8 @@ class RealEstateManager:
             self._properties = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_PROPERTIES_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._properties_file,
             json.dumps([p.to_dict() for p in self._properties], indent=2), encoding="utf-8",
         )
 

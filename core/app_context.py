@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.pathway_manager import PathwayManager
     from core.power_manager import PowerManager
+    from core.household_manager import HouseholdManager
     from core.profile_manager import ProfileManager
     from core.product_manager import ProductManager
     from core.push_subscription_manager import PushSubscriptionManager
@@ -113,6 +114,8 @@ class AppContext:
     # dataclass __init__ call — see core/application.py). Optional here
     # so AppContext remains constructible on its own for tests.
     profiles: Optional["ProfileManager"] = field(default=None, repr=False)
+    # Who shares household things with whom (core/household_manager.py).
+    households: Optional["HouseholdManager"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)
     search: Optional["SearchManager"] = field(default=None, repr=False)
     calendar: Optional["CalendarManager"] = field(default=None, repr=False)

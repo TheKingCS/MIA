@@ -77,7 +77,10 @@ class Notification:
 
 
 class NotificationManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._notifications_file = self.data_dir / "notifications.json" if data_dir is not None else _NOTIFICATIONS_FILE
         self.context = context
         self._notifications: list[Notification] = []
         self._load()
@@ -87,11 +90,11 @@ class NotificationManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _NOTIFICATIONS_FILE.exists():
+        if not self._notifications_file.exists():
             self._notifications = []
             return
         try:
-            raw = json.loads(_NOTIFICATIONS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._notifications_file.read_text(encoding="utf-8"))
             self._notifications = [Notification.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load notifications.json — starting with an empty list.")
@@ -110,8 +113,8 @@ class NotificationManager:
             )
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_NOTIFICATIONS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._notifications_file,
             json.dumps([n.to_dict() for n in self._notifications], indent=2),
             encoding="utf-8",
         )
@@ -152,7 +155,11 @@ class NotificationManager:
         self._notifications.insert(0, notification)  # newest first
         self._save()
         log.info("Notification raised [%s] from '%s': %s", level, source, title)
-        self.context.events.publish("notification.created", notification=notification)
+        # Whose notification (accounts, 2026-10-01): a person's own list
+        # (core/personal_data.py) tells the desktop and the phone push
+        # relay, so a toast or push only reaches that person.
+        self.context.events.publish("notification.created", notification=notification,
+                                    profile_id=getattr(self.context, "profile_id", None))
         return notification
 
     # ------------------------------------------------------------------

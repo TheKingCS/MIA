@@ -134,7 +134,10 @@ def format_capture_journal_title(captured_at: str) -> str:
 
 
 class LiteCaptureManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._proposals_file = self.data_dir / "capture_proposals.json" if data_dir is not None else _PROPOSALS_FILE
         self.context = context
         self._proposals: list[CaptureProposal] = []
         self._load()
@@ -162,10 +165,10 @@ class LiteCaptureManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _PROPOSALS_FILE.exists():
+        if not self._proposals_file.exists():
             return
         try:
-            raw = json.loads(_PROPOSALS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._proposals_file.read_text(encoding="utf-8"))
             self._proposals = [CaptureProposal.from_dict(d) for d in raw.get("proposals", [])]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load capture_proposals.json — starting with no proposals.")
@@ -173,8 +176,8 @@ class LiteCaptureManager:
             self._proposals = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_PROPOSALS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._proposals_file,
             json.dumps({"proposals": [p.to_dict() for p in self._proposals]}, indent=2),
             encoding="utf-8",
         )

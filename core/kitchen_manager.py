@@ -346,7 +346,14 @@ def recipes_makeable_from_pantry(
 
 
 class KitchenManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._recipes_file = self.data_dir / "kitchen_recipes.json" if data_dir is not None else _RECIPES_FILE
+        self._pantry_file = self.data_dir / "kitchen_pantry.json" if data_dir is not None else _PANTRY_FILE
+        self._grocery_list_file = self.data_dir / "kitchen_grocery_list.json" if data_dir is not None else _GROCERY_LIST_FILE
+        self._meal_log_file = self.data_dir / "kitchen_meal_log.json" if data_dir is not None else _MEAL_LOG_FILE
+        self._recipe_user_stats_file = self.data_dir / "kitchen_recipe_user_stats.json" if data_dir is not None else _RECIPE_USER_STATS_FILE
         self.context = context
         self._recipes: list[Recipe] = []
         self._pantry: list[PantryItem] = []
@@ -360,11 +367,11 @@ class KitchenManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        self._recipes = self._load_file(_RECIPES_FILE, Recipe)
-        self._pantry = self._load_file(_PANTRY_FILE, PantryItem)
-        self._grocery_list = self._load_file(_GROCERY_LIST_FILE, GroceryListItem)
-        self._meal_log = self._load_file(_MEAL_LOG_FILE, MealLogEntry)
-        self._recipe_user_stats = self._load_file(_RECIPE_USER_STATS_FILE, RecipeUserStats)
+        self._recipes = self._load_file(self._recipes_file, Recipe)
+        self._pantry = self._load_file(self._pantry_file, PantryItem)
+        self._grocery_list = self._load_file(self._grocery_list_file, GroceryListItem)
+        self._meal_log = self._load_file(self._meal_log_file, MealLogEntry)
+        self._recipe_user_stats = self._load_file(self._recipe_user_stats_file, RecipeUserStats)
 
     def _load_file(self, path: Path, cls) -> list:
         if not path.exists():
@@ -377,25 +384,24 @@ class KitchenManager:
             notify_data_corruption(self.context, path.name)
             return []
 
-    @staticmethod
-    def _save_file(path: Path, records: list) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+    def _save_file(self, path: Path, records: list) -> None:
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
 
     def _save_recipes(self) -> None:
-        self._save_file(_RECIPES_FILE, self._recipes)
+        self._save_file(self._recipes_file, self._recipes)
 
     def _save_pantry(self) -> None:
-        self._save_file(_PANTRY_FILE, self._pantry)
+        self._save_file(self._pantry_file, self._pantry)
 
     def _save_grocery_list(self) -> None:
-        self._save_file(_GROCERY_LIST_FILE, self._grocery_list)
+        self._save_file(self._grocery_list_file, self._grocery_list)
 
     def _save_meal_log(self) -> None:
-        self._save_file(_MEAL_LOG_FILE, self._meal_log)
+        self._save_file(self._meal_log_file, self._meal_log)
 
     def _save_recipe_user_stats(self) -> None:
-        self._save_file(_RECIPE_USER_STATS_FILE, self._recipe_user_stats)
+        self._save_file(self._recipe_user_stats_file, self._recipe_user_stats)
 
     # ------------------------------------------------------------------
     # Recipe CRUD

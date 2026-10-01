@@ -155,7 +155,7 @@ class ActivityLogManager:
         display_name = self._display_name_for(module_id)
         self._log("module.opened", f"Opened the {display_name} module.")
 
-    def _on_notification_created(self, notification) -> None:
+    def _on_notification_created(self, notification, **_kwargs) -> None:
         self._log("notification.created", f'Notification: "{notification.title}" — {notification.message}')
 
     def _on_profile_switched(self, profile_id: str) -> None:

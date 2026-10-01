@@ -134,7 +134,11 @@ def days_until_birthday(birthday_iso: str, today: date) -> Optional[int]:
 
 
 class RelationshipsManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._people_file = self.data_dir / "relationships_people.json" if data_dir is not None else _PEOPLE_FILE
+        self._pets_file = self.data_dir / "relationships_pets.json" if data_dir is not None else _PETS_FILE
         self.context = context
         self._people: list[Person] = []
         self._pets: list[Pet] = []
@@ -145,8 +149,8 @@ class RelationshipsManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        self._people = self._load_file(_PEOPLE_FILE, Person)
-        self._pets = self._load_file(_PETS_FILE, Pet)
+        self._people = self._load_file(self._people_file, Person)
+        self._pets = self._load_file(self._pets_file, Pet)
 
     def _load_file(self, path: Path, cls) -> list:
         if not path.exists():
@@ -159,16 +163,15 @@ class RelationshipsManager:
             notify_data_corruption(self.context, path.name)
             return []
 
-    @staticmethod
-    def _save_file(path: Path, records: list) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+    def _save_file(self, path: Path, records: list) -> None:
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
 
     def _save_people(self) -> None:
-        self._save_file(_PEOPLE_FILE, self._people)
+        self._save_file(self._people_file, self._people)
 
     def _save_pets(self) -> None:
-        self._save_file(_PETS_FILE, self._pets)
+        self._save_file(self._pets_file, self._pets)
 
     # ------------------------------------------------------------------
     # Person CRUD

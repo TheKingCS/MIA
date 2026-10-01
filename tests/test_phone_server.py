@@ -33,7 +33,9 @@ def ctx(tmp_path, monkeypatch):
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.config.set("server.port", free_port())
     context.profiles = SimpleNamespace(
-        list_profiles=lambda: [SimpleNamespace(profile_id="p1", name="Zac", has_password=True)],
+        list_profiles=lambda: [SimpleNamespace(profile_id="p1", name="Zac", has_password=True, created_at="")],
+        find_for_sign_in=lambda who: (SimpleNamespace(profile_id="p1", name="Zac", has_password=True)
+                                      if who.strip().lower() in ("p1", "zac") else None),
         verify_password=lambda pid, pw: pw == "pw",
     )
     context.voice = context.llm = context.push_subscriptions = None

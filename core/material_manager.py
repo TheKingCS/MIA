@@ -161,7 +161,11 @@ def materials_needing_restock(materials: list[Material]) -> list[Material]:
 
 
 class MaterialManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
+        self._materials_file = self.data_dir / "materials.json" if data_dir is not None else _MATERIALS_FILE
+        self._usage_log_file = self.data_dir / "material_usage_log.json" if data_dir is not None else _USAGE_LOG_FILE
         self.context = context
         self._materials: list[Material] = []
         self._usage_log: list[MaterialUsageEntry] = []
@@ -173,11 +177,11 @@ class MaterialManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _MATERIALS_FILE.exists():
+        if not self._materials_file.exists():
             self._materials = []
             return
         try:
-            raw = json.loads(_MATERIALS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._materials_file.read_text(encoding="utf-8"))
             self._materials = [Material.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load materials.json — starting with an empty list.")
@@ -185,11 +189,11 @@ class MaterialManager:
             self._materials = []
 
     def _load_usage_log(self) -> None:
-        if not _USAGE_LOG_FILE.exists():
+        if not self._usage_log_file.exists():
             self._usage_log = []
             return
         try:
-            raw = json.loads(_USAGE_LOG_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._usage_log_file.read_text(encoding="utf-8"))
             self._usage_log = [MaterialUsageEntry.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load material_usage_log.json — starting with an empty list.")
@@ -197,16 +201,16 @@ class MaterialManager:
             self._usage_log = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_MATERIALS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._materials_file,
             json.dumps([m.to_dict() for m in self._materials], indent=2),
             encoding="utf-8",
         )
 
     def _save_usage_log(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(
-            _USAGE_LOG_FILE,
+            self._usage_log_file,
             json.dumps([e.to_dict() for e in self._usage_log], indent=2),
             encoding="utf-8",
         )
