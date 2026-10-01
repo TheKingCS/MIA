@@ -52,10 +52,13 @@ development — confirms nothing broke in transit:
 python3 scenarios/scenarios.py
 ```
 
-Should print `7 passed, 0 failed`. If it doesn't, something about the
-environment differs from where this was built and tested — check the
-Python version (3.10+ required for the `list[str] | None` type hints
-used throughout) before debugging the logic itself.
+Should print roughly 200 passed, 0 failed (the scenario suite has grown
+substantially since this doc was first written — the exact count moves
+as scenarios are added; what matters is 0 failed). If it doesn't,
+something about the environment differs from where this was built and
+tested — check the Python version (3.10+ required for the
+`list[str] | None` type hints used throughout) before debugging the
+logic itself.
 
 ## 5. Run it
 
@@ -66,8 +69,7 @@ python3 drivers/simulator.py --db mia_homestead.db --run
 # Terminal 2 — the actual control loop
 python3 main.py --db mia_homestead.db
 
-# Terminal 3 (optional) — the assistant
-export ANTHROPIC_API_KEY=your_key_here
+# Terminal 3 (optional) — the assistant (local Ollama by default; no API key needed)
 python3 assistant/greenhouse_assistant.py
 
 # Digital twin viewer
