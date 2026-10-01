@@ -12858,3 +12858,21 @@ Also fixed: the Today card drew nothing on an empty day.
 failure, the box with Undo) and 1 for the empty Today card; the real main
 window boots with the button and card. Full suite passes (same one
 pre-existing timezone failure).
+
+## A private budget (2026-10-01)
+
+One person inside a household can keep their money to themselves
+(Budget → "Keep my money private..."). `core/personal_data.py`:
+`PRIVATE_MONEY_STORES` (the budget and Plaid bank sync) come from
+`data/profiles/<id>/private_budget/` for that person; everyone else keeps
+the household's. The choice is a person setting (`budget.private`) and
+survives restarts; switching back keeps the private budget for next time.
+Everything that reads the budget follows (Today, the phone's Money tab,
+"what's my budget?", budget nudges). A private bank connection's balance
+snapshots are not written into the household's net worth. The Budget
+screen says whose budget it is. Also fixed: the "Builds & Tools" tab
+showed as "Builds _Tools".
+
+**Verified:** 5 new tests (only yours, switching back keeps it, survives a
+restart, private balances kept out of net worth, the screen). Full suite
+passes (same one pre-existing timezone failure).

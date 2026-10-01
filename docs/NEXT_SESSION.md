@@ -69,6 +69,9 @@ looks wrong (the text on screen, never passwords or keys).
       "dentist Tuesday at 2", "idea: rain barrel by the shed". Each says
       where it went (Undo is right there); anything MIA can't place
       becomes a note tagged "capture". Tell Claude what landed wrong.
+- [ ] **Private budget (optional).** Budget shows whose budget it is.
+      Only if you want your own money separate from the household's:
+      "Keep my money private...". Switching back keeps it for later.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -180,8 +183,9 @@ it, and went with Claude's recommendations. The plan, in order:
   the phone, "what's on today?".
 - **Quick capture: built** (2026-10-01): the "✚" in the header or
   Ctrl+Shift+Space.
-- **Next in this line, in order:** (3) an optional
-  **private budget** for one person inside a household; (4) **ownership
+- **Private budget: built** (2026-10-01): Budget → "Keep my money
+  private...".
+- **Next in this line, in order:** (4) **ownership
   marks** on shared things (whose truck); then accessibility (text size,
   contrast, read-aloud), child accounts, starter templates, and a real
   Habits module.

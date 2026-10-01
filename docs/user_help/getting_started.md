@@ -81,6 +81,12 @@ Later: Settings → Email, Recovery Code & Household (join, rename, or
 leave; leaving starts an empty household, and the shared things stay).
 People who were already on this MIA before accounts are one household.
 
+**Your own money.** The budget is shared within a household. To keep
+yours separate, open Budget and choose "Keep my money private...": your
+bills, income, expenses, debts and bank sync become yours alone, and
+everyone else keeps the household budget. "Use the household budget"
+switches back (your private one is kept).
+
 **Your Apps screen.** When you make an account, MIA asks what you want
 help with and how often to speak up, then puts the most useful apps
 first (a "focus": Personal, Home & Family, Homestead, Business or

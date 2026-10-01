@@ -171,6 +171,13 @@ LEGACY_FILES = FIRST_LEGACY_FILES + (
     "classroom_subjects.json", "classroom_courses.json", "classroom_lessons.json", "notifications.json",
 )
 
+# A person who keeps their money private gets these from their own folder
+# instead of the household's (set_private_budget()).
+PRIVATE_MONEY_STORES: tuple[tuple[str, type], ...] = (
+    ("budget", BudgetManager),
+    ("plaid", PlaidManager),
+)
+
 PERSONAL_ATTRIBUTES = tuple(attr for attr, _ in PERSONAL_STORES)
 HOUSEHOLD_ATTRIBUTES = tuple(attr for attr, _ in HOUSEHOLD_STORES)
 
@@ -215,6 +222,7 @@ class PersonalData:
         self._households: dict[str, dict] = {}  # household_id -> its stores
         self._boot_household: Optional[dict] = None  # the stores built at boot: the first household's
         self._views: dict[str, ScopedView] = {}
+        self._private: dict[str, dict] = {}  # profile_id -> their private budget and bank sync
         self.active_profile_id: Optional[str] = None
 
     # ------------------------------------------------------------------
@@ -269,9 +277,48 @@ class PersonalData:
                 setattr(view, attr, store)
             for attr, store in self._personal_stores(profile_id, view).items():
                 setattr(view, attr, store)
+            # A private budget (and its bank sync) instead of the household's.
+            if self.has_private_budget(profile_id):
+                for attr, store in self._private_money(profile_id, view).items():
+                    setattr(view, attr, store)
             object.__setattr__(view, "household_id", household_id)
             self._views[profile_id] = view
         return self._views[profile_id]
+
+    # ------------------------------------------------------------------
+    # A private budget (2026-10-01): one person's money kept apart from
+    # the household's. Budget and bank sync come from the person's own
+    # folder; everyone else keeps the shared ones.
+    # ------------------------------------------------------------------
+
+    def has_private_budget(self, profile_id: str) -> bool:
+        record = (self.context.config.get(f"profiles.{profile_id}") or {}) if getattr(self.context, "config", None) else {}
+        return bool((record.get("settings") or {}).get("budget.private"))
+
+    def _private_money(self, profile_id: str, view) -> dict:
+        if profile_id not in self._private:
+            folder = self.folder(profile_id) / "private_budget"
+            stores = {attr: store(view, data_dir=folder) for attr, store in PRIVATE_MONEY_STORES
+                      if attr in (self._boot_household or {})}
+            if "plaid" in stores:
+                stores["plaid"].private = True  # keeps its balances out of the household's net worth
+            self._private[profile_id] = stores
+            log.info("Loaded a private budget for profile %s.", profile_id)
+        return self._private[profile_id]
+
+    def set_private_budget(self, profile_id: str, private: bool) -> None:
+        """Turn a person's private budget on or off. Off keeps it saved;
+        turning it on again brings it back."""
+        record = dict(self.context.config.get(f"profiles.{profile_id}") or {})
+        record["settings"] = {**(record.get("settings") or {}), "budget.private": bool(private)}
+        self.context.config.set(f"profiles.{profile_id}", record)
+        self.context.config.save()
+        self._views.pop(profile_id, None)  # rebuilt with the right budget
+        if profile_id == self.active_profile_id:
+            self.activate(profile_id)
+        publish = getattr(self.context.events, "publish", None)
+        if publish is not None:
+            publish("records.changed", action="budget.private")
 
     def stores_for(self, profile_id: str) -> dict:
         view = self.view(profile_id)
@@ -321,7 +368,7 @@ class PersonalData:
     def _on_deleted(self, profile_id: str = "", **_kwargs) -> None:
         """A deleted account's stores stop, so nothing writes into its
         archived (or erased) folder again."""
-        for store in self._personal.pop(profile_id, {}).values():
+        for store in list(self._personal.pop(profile_id, {}).values()) + list(self._private.pop(profile_id, {}).values()):
             _close(store)
         self._views.pop(profile_id, None)
         if self.active_profile_id == profile_id:
@@ -348,6 +395,7 @@ class PersonalData:
         """Swap a store everywhere it's referenced: the main context, every
         person's view, and the household and personal caches."""
         groups = [self._boot_household or {}] + list(self._personal.values()) + list(self._households.values())
+        groups += list(self._private.values())
         groups += [view._stores for view in self._views.values()]
         for group in groups:
             for attr, store in list(group.items()):
@@ -360,7 +408,7 @@ class PersonalData:
 
     def _all_stores(self) -> list:
         stores = list((self._boot_household or {}).values())
-        for group in list(self._personal.values()) + list(self._households.values()):
+        for group in list(self._personal.values()) + list(self._households.values()) + list(self._private.values()):
             stores.extend(group.values())
         return stores
 

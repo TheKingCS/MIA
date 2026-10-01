@@ -300,12 +300,60 @@ class BudgetModule(ModuleBase):
         self._plaid_sync_button: Optional[QPushButton] = None
         self._plaid_holdings_list: Optional[QListWidget] = None
 
+    def _private_budget_state(self) -> tuple[Optional[str], bool, list[str]]:
+        """(signed-in profile id, private?, the other people sharing the household budget)."""
+        profiles = getattr(self.context, "profiles", None)
+        active = profiles.get_active_profile() if profiles is not None else None
+        personal = getattr(self.context, "personal_data", None)
+        if active is None or personal is None:
+            return None, False, []
+        households = getattr(self.context, "households", None)
+        others = [p.name for p in households.shares_with(active.profile_id)] if households is not None else []
+        return active.profile_id, personal.has_private_budget(active.profile_id), others
+
+    def _refresh_budget_owner(self) -> None:
+        label = getattr(self, "_budget_owner_label", None)
+        if label is None:
+            return
+        profile_id, private, others = self._private_budget_state()
+        if profile_id is None:
+            label.setText("")
+            self._budget_owner_button.hide()
+            return
+        self._budget_owner_button.show()
+        if private:
+            label.setText("\U0001F512 Your private budget: only you see it.")
+            self._budget_owner_button.setText("Use the household budget")
+        else:
+            shared = f" with {', '.join(others)}" if others else ""
+            label.setText(f"\U0001F3E0 The household budget, shared{shared}." if others else
+                          "\U0001F3E0 Your household's budget (nobody else is in your household).")
+            self._budget_owner_button.setText("Keep my money private...")
+
+    def _on_toggle_private_budget(self) -> None:
+        profile_id, private, others = self._private_budget_state()
+        if profile_id is None:
+            return
+        if not private:
+            text = ("Keep your own budget, separate from the household's? Your bills, income, expenses, debts "
+                    "and bank sync will be yours alone; " + (f"{', '.join(others)} won't see them, and " if others else "")
+                    + "the household budget stays as it is for everyone else. You can switch back any time; "
+                    "your private budget is kept.")
+        else:
+            text = ("Go back to the household budget? Your private budget is kept, and comes back if you switch "
+                    "again.")
+        if QMessageBox.question(None, "Budget", text) != QMessageBox.StandardButton.Yes:
+            return
+        self.context.personal_data.set_private_budget(profile_id, not private)
+        self.refresh()
+
     def on_load(self) -> None:
         super().on_load()
         self.context.search.register_provider("budget", self._search)
 
     def refresh(self) -> None:
         """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
+        self._refresh_budget_owner()
         self._refresh_bill_list()
         self._refresh_expense_list()
         self._refresh_income_list()
@@ -329,13 +377,26 @@ class BudgetModule(ModuleBase):
         subtitle.setObjectName("SubtitleLabel")
         layout.addWidget(subtitle)
 
+        # Whose budget this is: the household's, or a private one
+        # (core/personal_data.py, 2026-10-01).
+        owner_row = QHBoxLayout()
+        self._budget_owner_label = QLabel("")
+        self._budget_owner_label.setObjectName("SubtitleLabel")
+        self._budget_owner_label.setWordWrap(True)
+        self._budget_owner_button = QPushButton("")
+        self._budget_owner_button.clicked.connect(self._on_toggle_private_budget)
+        owner_row.addWidget(self._budget_owner_label, stretch=1)
+        owner_row.addWidget(self._budget_owner_button)
+        layout.addLayout(owner_row)
+        self._refresh_budget_owner()
+
         tabs = QTabWidget()
         tabs.addTab(self._build_bills_tab(), "Bills")
         tabs.addTab(self._build_income_sources_tab(), "Income Sources")
         tabs.addTab(self._build_income_tab(), "Income")
         tabs.addTab(self._build_expenses_tab(), "Expenses")
         tabs.addTab(self._build_debts_tab(), "Debts")
-        tabs.addTab(self._build_homestead_tab(), "Builds & Tools")
+        tabs.addTab(self._build_homestead_tab(), "Builds && Tools")  # "&&": a plain "&" in a tab name
         tabs.addTab(self._build_summary_tab(), "Summary")
         tabs.addTab(self._build_trends_tab(), "Trends")
         tabs.addTab(self._build_bank_sync_tab(), "Bank Sync")

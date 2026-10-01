@@ -40,6 +40,7 @@ PERSONAL_SETTINGS = (
     "email.send.security",
     "region.country",
     "region.currency",
+    "budget.private",
 )
 
 

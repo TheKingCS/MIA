@@ -1138,6 +1138,11 @@ class PlaidManager:
         }
 
     def _write_snapshot_file(self, snapshot_data: dict) -> None:
+        if getattr(self, "private", False):
+            # A private budget's bank connection (core/personal_data.py):
+            # its balances never go into the household's net worth.
+            log.info("Private bank connection: balances snapshot kept out of the household's net worth.")
+            return
         import_folder = self.context.finance.import_folder_path
         import_folder.mkdir(parents=True, exist_ok=True)
         filename = f"{snapshot_data['source']}_{uuid.uuid4().hex[:8]}.json"
