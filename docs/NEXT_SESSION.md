@@ -18,26 +18,52 @@ of the Android app.
 
 ## 1. Your hands-on steps (need your computer, not Claude)
 
-- [ ] **Try the installer (new, 2026-10-01).** After `git pull`, in the MIA
-      folder: `bash install.sh` (Ubuntu). It skips what you already have,
-      so it's safe on your set-up machine; it adds the "MIA" app-menu
-      shortcut and ends with the setup check. On Windows, double-click
-      `install.bat` (never run on Windows yet: tell Claude what it says).
+### New on 2026-10-01: try these first (about 30 minutes)
 
-- [ ] **Accounts (new, 2026-10-01).** After `git pull`: Settings →
-      Email, Recovery Code & Household → add your email. Settings →
-      Change Password gives you a recovery code if you don't have one
-      (write it down). Your existing profiles are one household; check
-      that everything still shows. Try making a test account that shares
-      nothing, then delete it. The phone and Android app now take your
-      email to sign in. Then Settings → My Apps → "Ask Me the Setup
-      Questions Again" to see MIA's new-account questions and pick a
-      focus (or keep "Show everything"). Email drafts: ask MIA to "write
-      an email to <your own address> saying hi", try Copy and "Open in
-      my mail app"; optionally Settings → Sending Email with a Gmail app
-      password (never paste it into a chat) and press Send. Then
-      Settings → Check My Setup, and try "undo that" after asking MIA to
-      add something.
+Start with `git pull` in your MIA folder. Tell Claude anything that
+looks wrong (the text on screen, never passwords or keys).
+
+- [ ] **Run the installer.** Ubuntu: `bash install.sh` in the MIA folder.
+      It skips what you already have, adds a "MIA" shortcut to the app
+      menu and ends with a setup check. Check that the shortcut opens
+      MIA. On a Windows PC, if you have one: double-click `install.bat`
+      (it has never run on Windows: send Claude what it prints).
+- [ ] **Your account.** Settings → Email, Recovery Code & Household →
+      add your email and Save. If you have a password: "Make a new
+      recovery code" and **write the code down** (it's shown once). No
+      password yet: Settings → Change Password gives you one and the
+      code. Your existing profiles are now one household: check that the
+      calendar, budget and kitchen still show everything.
+- [ ] **Sign in by email.** Switch User → "Sign in with email". On the
+      phone and in the Android app, sign in with your email too.
+- [ ] **A test account.** Switch User → New Profile, choose "Nobody"
+      for sharing: check it sees an empty calendar and budget. Then
+      Settings → Email, Recovery Code & Household → Delete my account
+      (tick "erase") while signed in as the test account.
+- [ ] **MIA's setup questions.** Settings → My Apps → "Ask Me the Setup
+      Questions Again". Pick a focus, or "Show me everything".
+- [ ] **Country.** Settings → Support & Safety → Your country (United
+      States keeps everything as before).
+- [ ] **Email drafts.** In People & Pets, give someone an email (use your
+      own address for the test), or say "Pat's email is ...". Then say
+      "write an email to Pat saying hi": a draft opens; try Copy and "Open in my mail app".
+      Optional: Settings → Sending Email with a Gmail **app password**
+      (never paste it into a chat), then press Send. On the phone, the
+      Android app's "Email drafts".
+- [ ] **Imports.** Settings → Import from Another App: a calendar export
+      (Google Calendar → Settings → Import & export → Export, unzip the
+      .ics), your phone's contacts (.vcf), or a bank's "download
+      transactions" .csv. Check the categories the bank import guessed
+      in Budget. Say "undo that" if an import isn't what you wanted.
+- [ ] **Undo and why.** Ask MIA to add something ("add milk to the
+      grocery list"), then "undo that". When MIA messages you on her own,
+      ask "why did you tell me that?".
+- [ ] **Check My Setup.** Settings → Check My Setup (or ask "is
+      everything set up?"); fix or report anything marked ❌.
+- [ ] **Export your data** once, to see what's in it (Settings → Email,
+      Recovery Code & Household → Export my data).
+
+### Still waiting from before
 
 **New computer? Start with `docs/SETUP_GUIDE.md`.** It walks through
 every step below in order, from a blank machine, with Windows notes.
@@ -141,9 +167,14 @@ it, and went with Claude's recommendations. The plan, in order:
   Linux/Pi (`--kiosk` for a Pi), double-click `install.bat` on Windows.
 - **Imports: built** (2026-10-01): Settings → Import from Another App
   (.ics calendars, .vcf contacts, bank .csv statements).
-- Later in this line: an optional private budget, ownership marks on
-  shared things, starter templates, a universal capture button, a
-  "Today" view, accessibility, child accounts, a real Habits module.
+- **Next in this line, in order:** (1) a **"Today" view**: one screen
+  with what matters today across apps (calendar, bills due, maintenance
+  due, tasks, drafts waiting, MIA's held messages); (2) a **universal
+  capture** button (type or say anything; MIA files it); (3) an optional
+  **private budget** for one person inside a household; (4) **ownership
+  marks** on shared things (whose truck); then accessibility (text size,
+  contrast, read-aloud), child accounts, starter templates, and a real
+  Habits module.
 
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were
