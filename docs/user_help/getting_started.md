@@ -81,6 +81,11 @@ Later: Settings → Email, Recovery Code & Household (join, rename, or
 leave; leaving starts an empty household, and the shared things stay).
 People who were already on this MIA before accounts are one household.
 
+**Whose is it.** A vehicle, tool or appliance can belong to one person
+or to the whole household: edit it in Maintenance → "Belongs to", or tell
+MIA "the truck is mine". Your Today list shows maintenance for your
+things and shared ones; everyone can still see everything.
+
 **Your own money.** The budget is shared within a household. To keep
 yours separate, open Budget and choose "Keep my money private...": your
 bills, income, expenses, debts and bank sync become yours alone, and

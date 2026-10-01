@@ -18,6 +18,9 @@ their own):
   sent yet.
 - **Soon** (the next 3 days): bills, maintenance, birthdays.
 
+Maintenance on something that belongs to someone else in the household
+(core/ownership.py) is theirs, so it's left off your list.
+
 Facts only, assembled in code; the Assistant only phrases them. Every
 source is optional, so a store this MIA doesn't have is just left out.
 """
@@ -120,8 +123,14 @@ def _maintenance(context, today: date):
     maintenance = getattr(context, "maintenance", None)
     if maintenance is None:
         return
-    names = {a.asset_id: a.name for a in maintenance.all_assets()}
+    from core.ownership import is_for_me
+
+    assets = {a.asset_id: a for a in maintenance.all_assets()}
+    names = {a.asset_id: a.name for a in assets.values()}
     for task in maintenance.all_tasks():
+        asset = assets.get(task.asset_id)
+        if asset is not None and not is_for_me(context, asset.owner_profile_id):
+            continue  # someone else's truck (core/ownership.py)
         readings = [] if task.trigger_type == "calendar" else (maintenance.readings_for_task(task.task_id) or [])
         urgency = task_urgency(task, readings, today)
         title = f"{task.title}: {names.get(task.asset_id, 'maintenance')}"

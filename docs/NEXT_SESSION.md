@@ -72,6 +72,9 @@ looks wrong (the text on screen, never passwords or keys).
 - [ ] **Private budget (optional).** Budget shows whose budget it is.
       Only if you want your own money separate from the household's:
       "Keep my money private...". Switching back keeps it for later.
+- [ ] **Whose is it.** In Maintenance, edit the truck (or anything) →
+      "Belongs to". Or tell MIA "the truck is mine". Things marked as
+      someone else's drop off your Today list.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -185,8 +188,9 @@ it, and went with Claude's recommendations. The plan, in order:
   Ctrl+Shift+Space.
 - **Private budget: built** (2026-10-01): Budget → "Keep my money
   private...".
-- **Next in this line, in order:** (4) **ownership
-  marks** on shared things (whose truck); then accessibility (text size,
+- **Ownership marks: built** (2026-10-01): "Belongs to" on vehicles,
+  tools and appliances; "the truck is mine", "whose mower is it?".
+- **Next in this line, in order:** accessibility (text size,
   contrast, read-aloud), child accounts, starter templates, and a real
   Habits module.
 

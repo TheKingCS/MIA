@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.ownership import possessive
 from core.data_logger_manager import Reading
 from core.gamification import SkillWeight
 from core.maintenance_manager import (
@@ -292,7 +293,8 @@ class MaintenanceModule(ModuleBase):
 
         self._asset_list.clear()
         for asset in assets:
-            item = QListWidgetItem(format_asset_row(asset))
+            whose = possessive(self.context, asset.owner_profile_id) if asset.owner_profile_id else ""
+            item = QListWidgetItem(format_asset_row(asset) + (f"  ·  {whose}" if whose else ""))
             item.setData(Qt.ItemDataRole.UserRole, asset.asset_id)
             self._asset_list.addItem(item)
 
@@ -303,11 +305,12 @@ class MaintenanceModule(ModuleBase):
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_asset(self) -> None:
-        dialog = AddEditAssetDialog()
+        dialog = AddEditAssetDialog(context=self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         self.context.maintenance.add_asset(
+            owner_profile_id=dialog.entered_owner_profile_id,
             name=dialog.entered_name,
             category=dialog.entered_category,
             notes=dialog.entered_notes,
@@ -327,12 +330,13 @@ class MaintenanceModule(ModuleBase):
             return
 
         asset = self.context.maintenance.get_asset(asset_id)
-        dialog = AddEditAssetDialog(asset=asset, maintenance=self.context.maintenance)
+        dialog = AddEditAssetDialog(asset=asset, maintenance=self.context.maintenance, context=self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         self.context.maintenance.update_asset(
             asset_id,
+            owner_profile_id=dialog.entered_owner_profile_id,
             name=dialog.entered_name,
             category=dialog.entered_category,
             notes=dialog.entered_notes,

@@ -41,6 +41,11 @@ CORPUS: list[tuple[str, str]] = [
     ("What's on today?", "get_today"),
     ("What does my day look like?", "get_today"),
     ("What do I need to do today?", "get_today"),
+    # ---- Whose is it (core/ownership.py) ---------------------------------
+    ("The truck is mine", "set_item_owner"),
+    ("The tractor belongs to the whole household", "set_item_owner"),
+    ("Whose mower is it?", "get_item_owner"),
+    ("Who owns the generator?", "get_item_owner"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),

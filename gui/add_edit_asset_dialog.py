@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from core.ownership import SHARED_LABEL, owner_choices
 from core.maintenance_manager import ASSET_CATEGORIES, MaintenanceAsset, MaintenanceManager
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
@@ -54,12 +55,14 @@ class AddEditAssetDialog(QDialog):
         parent=None,
         asset: Optional[MaintenanceAsset] = None,
         maintenance: Optional[MaintenanceManager] = None,
+        context=None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Asset" if asset is not None else "New Asset")
-        self.setFixedSize(380, 650)
+        self.setFixedSize(380, 700)
         self._asset = asset
         self._maintenance = maintenance
+        self._context = context
 
         layout = QVBoxLayout(self)
 
@@ -72,6 +75,13 @@ class AddEditAssetDialog(QDialog):
         self.category_combo = QComboBox()
         self.category_combo.addItems(ASSET_CATEGORIES)
         layout.addWidget(self.category_combo)
+
+        # Whose is it (core/ownership.py): shared by the household, or one person's.
+        layout.addWidget(QLabel("Belongs to:"))
+        self.owner_combo = QComboBox()
+        for label, owner_id in (owner_choices(context) if context is not None else [(SHARED_LABEL, None)]):
+            self.owner_combo.addItem(label, owner_id)
+        layout.addWidget(self.owner_combo)
 
         layout.addWidget(QLabel("Manufacturer:"))
         self.manufacturer_edit = QLineEdit()
@@ -179,6 +189,9 @@ class AddEditAssetDialog(QDialog):
     def _prefill(self, asset: Optional[MaintenanceAsset]) -> None:
         if asset is not None:
             self.name_edit.setText(asset.name)
+            index = self.owner_combo.findData(asset.owner_profile_id)
+            if index != -1:
+                self.owner_combo.setCurrentIndex(index)
             if asset.category in ASSET_CATEGORIES:
                 self.category_combo.setCurrentText(asset.category)
             self.notes_edit.setPlainText(asset.notes)
@@ -276,6 +289,10 @@ class AddEditAssetDialog(QDialog):
             return
         self._warranty_until = warranty
         self.accept()
+
+    @property
+    def entered_owner_profile_id(self) -> Optional[str]:
+        return self.owner_combo.currentData()
 
     @property
     def entered_name(self) -> str:

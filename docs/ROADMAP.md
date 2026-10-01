@@ -12876,3 +12876,21 @@ showed as "Builds _Tools".
 **Verified:** 5 new tests (only yours, switching back keeps it, survives a
 restart, private balances kept out of net worth, the screen). Full suite
 passes (same one pre-existing timezone failure).
+
+## Whose is it: owner marks (2026-10-01)
+
+Vehicles, tools and appliances (maintenance items) can belong to one
+person or to the household (`core/ownership.py`, using the existing
+`MaintenanceAsset.owner_profile_id`):
+
+- The item window has "Belongs to" (Shared, or a household member); the
+  Maintenance list shows "yours" / "Faith's".
+- Today shows maintenance for your things and shared ones, not for
+  someone else's truck.
+- The Assistant: `set_item_owner` ("the truck is mine", "the tractor is
+  shared") and `get_item_owner` ("whose mower is it?").
+- Marks say whose it is; they never hide anything from the household.
+
+**Verified:** 4 new tests (choices and words, the Assistant from two
+people's sides, Today per person, the item window) and 4 routing lines.
+Full suite passes (same one pre-existing timezone failure).

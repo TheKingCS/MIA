@@ -67,6 +67,7 @@ from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
+from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
@@ -1177,6 +1178,7 @@ class MIAApplication:
         register_email_actions(self.context.assistant_actions)
         register_undo_actions(self.context.assistant_actions)
         register_today_actions(self.context.assistant_actions)
+        register_ownership_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)
         register_textbook_actions(self.context.assistant_actions)
         register_inbox_actions(self.context.assistant_actions)
