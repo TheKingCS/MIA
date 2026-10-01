@@ -54,6 +54,16 @@ class MiaClient(baseUrl: String) {
     /** Finance #4: the read-only money summary (core/finance_summary.py). */
     fun financeSummary(token: String): JSONObject = request("GET", "/api/finance/summary", token, null, null)
 
+    /** Email drafts (core/email_drafts.py). Only sendDraft() sends, and only when Send is tapped. */
+    fun emailDrafts(token: String): JSONObject = request("GET", "/api/email/drafts", token, null, null)
+
+    fun sendDraft(token: String, id: String): String =
+        request("POST", "/api/email/drafts/$id/send", token, ByteArray(0), "application/json").optString("message")
+
+    fun discardDraft(token: String, id: String) {
+        request("POST", "/api/email/drafts/$id/discard", token, ByteArray(0), "application/json")
+    }
+
     /** Share to MIA: a file for the document inbox (core/inbox_manager.py). */
     fun uploadToInbox(token: String, fileName: String, data: ByteArray, mimeType: String?) {
         request("POST", "/api/inbox/upload", token, data, mimeType ?: "application/octet-stream",
@@ -118,14 +128,14 @@ class MiaClient(baseUrl: String) {
             )
         }
 
-        /** An email MIA drafted (core/email_drafts.py): shown in the log; Send and Copy are in the
-         *  web app and on the computer. MIA never sends by herself. */
+        /** An email MIA drafted (core/email_drafts.py): shown in the log; Send and Copy are under
+         *  Email drafts. MIA never sends by herself. */
         fun describeDraft(draft: JSONObject?): String {
             if (draft == null) return ""
             val to = draft.optJSONArray("to")
             val names = (0 until (to?.length() ?: 0)).joinToString(", ") { to!!.getString(it) }
             return "Email draft to ${names.ifBlank { "(no address yet)" }}: ${draft.optString("subject")}\n" +
-                draft.optString("body") + "\n(Send or copy it in MIA's web app or on the computer.)"
+                draft.optString("body") + "\n(Tap Email drafts to send or copy it.)"
         }
 
         /** "heard 1.2s · thought 3.4s · spoke 0.8s": where a turn's time went (server/app.py turn_timings). */

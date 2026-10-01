@@ -159,7 +159,7 @@ class RelationshipsModule(ModuleBase):
         self.context.relationships.add_person(
             name=dialog.entered_name, relationship=dialog.entered_relationship,
             birthday=dialog.entered_birthday, favorite_things=dialog.entered_favorite_things,
-            gift_ideas=dialog.entered_gift_ideas, notes=dialog.entered_notes,
+            gift_ideas=dialog.entered_gift_ideas, notes=dialog.entered_notes, email=dialog.entered_email,
         )
         self._refresh_person_list()
 
@@ -175,7 +175,7 @@ class RelationshipsModule(ModuleBase):
         self.context.relationships.update_person(
             person_id, name=dialog.entered_name, relationship=dialog.entered_relationship,
             birthday=dialog.entered_birthday, favorite_things=dialog.entered_favorite_things,
-            gift_ideas=dialog.entered_gift_ideas, notes=dialog.entered_notes,
+            gift_ideas=dialog.entered_gift_ideas, notes=dialog.entered_notes, email=dialog.entered_email,
         )
         self._refresh_person_list()
 

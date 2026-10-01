@@ -3,6 +3,8 @@ package com.mia.companion
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -46,6 +48,8 @@ class MainActivity : Activity() {
     private lateinit var typeField: EditText
     private lateinit var moneyButton: Button
     private lateinit var moneySection: LinearLayout
+    private lateinit var draftsButton: Button
+    private lateinit var draftsSection: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,6 +135,15 @@ class MainActivity : Activity() {
             visibility = View.GONE
         }
         talkSection.addView(moneySection)
+
+        // Email drafts MIA wrote: Send (only when tapped), Copy, or the mail app.
+        draftsButton = button("Email drafts") { toggleDrafts() }
+        talkSection.addView(draftsButton)
+        draftsSection = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+        }
+        talkSection.addView(draftsSection)
 
         typeField = field("Or type to MIA…", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES).apply {
             imeOptions = EditorInfo.IME_ACTION_SEND
@@ -237,6 +250,96 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+    // ------------------------------------------------------------------
+    // Email drafts (core/email_drafts.py)
+    // ------------------------------------------------------------------
+
+    private fun toggleDrafts() {
+        if (draftsSection.visibility == View.VISIBLE) {
+            draftsSection.visibility = View.GONE
+            draftsButton.text = "Email drafts"
+            return
+        }
+        draftsSection.visibility = View.VISIBLE
+        draftsButton.text = "Hide email drafts"
+        loadDrafts()
+    }
+
+    /** Runs a call home off the screen's thread, signing in again once if MIA restarted. */
+    private fun <T> callHome(work: (MiaClient, String) -> T, done: (Result<T>) -> Unit) {
+        Thread {
+            val result = try {
+                val client = MiaClient(store.serverUrl)
+                Result.success(try {
+                    work(client, store.token ?: signInAgain(client))
+                } catch (e: MiaClient.HttpError) {
+                    if (e.code != 401) throw e
+                    work(client, signInAgain(client))
+                })
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+            runOnUiThread { done(result) }
+        }.start()
+    }
+
+    private fun loadDrafts() {
+        draftsSection.removeAllViews()
+        draftsSection.addView(label("Loading…", 14f))
+        callHome({ client, token -> parseDrafts(client.emailDrafts(token)) }) { result ->
+            draftsSection.removeAllViews()
+            result.onSuccess { (drafts, canSend) -> renderDrafts(drafts, canSend) }.onFailure {
+                draftsSection.addView(label("Couldn't load drafts: ${it.message ?: "network error"}", 14f))
+            }
+        }
+    }
+
+    private fun renderDrafts(drafts: List<DraftView>, canSend: Boolean) {
+        draftsSection.addView(button("Refresh") { loadDrafts() })
+        if (drafts.isEmpty()) {
+            draftsSection.addView(label("No drafts. Ask MIA to write an email.", 14f))
+            return
+        }
+        for (draft in drafts) {
+            draftsSection.addView(label("To: ${draft.to.joinToString(", ").ifBlank { "(add an address)" }}\n${draft.subject}", 15f, bold = true)
+                .apply { setPadding(0, dp(14), 0, dp(4)) })
+            draftsSection.addView(label(draft.body, 15f))
+            val status = label("MIA only sends when you tap Send.", 13f).apply { setTextColor(Color.GRAY) }
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            val send = button("Send") {}
+            send.isEnabled = canSend && draft.to.isNotEmpty()
+            send.setOnClickListener {
+                send.isEnabled = false
+                status.text = "Sending…"
+                callHome({ client, token -> client.sendDraft(token, draft.id) }) { result ->
+                    result.onSuccess { status.text = it; send.text = "Sent" }
+                        .onFailure { status.text = it.message ?: "Couldn't send."; send.isEnabled = true }
+                }
+            }
+            val copy = button("Copy") {
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Email draft", draft.text))
+                status.text = "Copied."
+            }
+            val mailApp = button("Mail app") {
+                try {
+                    startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse(draft.mailto)))
+                } catch (e: Exception) {
+                    status.text = "No mail app found; use Copy."
+                }
+            }
+            val discard = button("Discard") {
+                callHome({ client, token -> client.discardDraft(token, draft.id) }) { loadDrafts() }
+            }
+            for (b in listOf(send, copy, mailApp, discard)) {
+                row.addView(b, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            }
+            draftsSection.addView(row)
+            draftsSection.addView(status)
+            if (!canSend) draftsSection.addView(label("To send from MIA, set up Sending Email in MIA's Settings on the computer.", 13f))
+        }
     }
 
     private fun signInAgain(client: MiaClient): String {

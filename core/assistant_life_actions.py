@@ -16,6 +16,7 @@ import re
 from datetime import date
 from typing import Optional
 
+from core.email_drafts import addresses_in
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 from core.assistant_domain_actions import _as_list, _list, _n, _num, _obj, _s
@@ -218,6 +219,7 @@ def _action_add_person(context: AppContext, arguments: dict) -> str:
     person = context.relationships.add_person(
         name=name, relationship=str(arguments.get("relationship", "") or "").strip(), birthday=birthday,
         notes=str(arguments.get("note", "") or "").strip(),
+        email=(addresses_in(str(arguments.get("email", "") or "")) or [""])[0],
     )
     extra = f", birthday {speak_birthday(birthday)}" if birthday else ""
     rel = f" ({person.relationship})" if person.relationship else ""
@@ -239,6 +241,10 @@ def _action_update_person(context: AppContext, arguments: dict) -> str:
             return f"I couldn't read '{arguments['birthday']}' as a date. Try something like 'March 3'."
         fields["birthday"] = birthday
         said.append(f"birthday {speak_birthday(birthday)}")
+    email = addresses_in(str(arguments.get("email", "") or ""))
+    if email:
+        fields["email"] = email[0]
+        said.append(f"email {email[0]}")
     for key, field, label, dated in (
         ("favorite_thing", "favorite_things", "likes", False),
         ("gift_idea", "gift_ideas", "gift idea", False),
@@ -263,6 +269,8 @@ def _action_get_person(context: AppContext, arguments: dict) -> str:
         days = days_until(person.birthday, date.today())
         soon = "" if days is None else (" (today!)" if days == 0 else f" ({days} days away)")
         parts.append(f"birthday {speak_birthday(person.birthday)}{soon}")
+    if person.email:
+        parts.append(f"email {person.email}")
     reply = ", ".join(parts) + "."
     if person.favorite_things.strip():
         reply += f" Likes: {'; '.join(person.favorite_things.strip().splitlines())}."
@@ -537,19 +545,22 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         parameters=_obj({
             "name": _s("Their name."), "relationship": _s("e.g. Sister, Best friend, Coworker."),
             "birthday": _s("e.g. 'March 3' or YYYY-MM-DD."), "note": _s("Anything else the user said about them."),
+            "email": _s("Their email address, if given."),
         }, ["name"]),
         handler=_action_add_person,
         trigger_phrases=("add a person", "add someone", "add my sister", "add my brother", "add my friend", "add my mom", "add my dad"),
     ))
     registry.register(AssistantAction(
         name="update_person", domain="relationships",
-        description="Remember something about a person: their birthday, relationship, something they like, a gift idea, or a dated note (e.g. 'Sarah got a new job').",
+        description="Remember something about a person: their birthday, relationship, email address, something they like, a gift idea, or a dated note (e.g. 'Sarah got a new job').",
         parameters=_obj({
             "name": _s("The person."), "relationship": _s("Relationship, if stated."), "birthday": _s("Birthday, if stated."),
             "favorite_thing": _s("Something they like."), "gift_idea": _s("A gift idea for them."), "note": _s("Any other news or memory."),
+            "email": _s("Their email address, if given."),
         }, ["name"]),
         handler=_action_update_person,
-        trigger_phrases=("'s birthday is", "birthday is on", "gift idea", "would love"),
+        trigger_phrases=("'s birthday is", "birthday is on", "gift idea", "would love", "email address is",
+                         "'s email is", "email is"),
     ))
     registry.register(AssistantAction(
         name="get_person", domain="relationships",

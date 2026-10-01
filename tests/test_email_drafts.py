@@ -196,3 +196,49 @@ def test_draft_window_copy_and_edit(home, monkeypatch):
     assert context.email_drafts.get(draft.draft_id).to == ["pat@example.com"]
     dialog._on_discard()
     assert context.email_drafts.open_drafts() == []
+
+
+# ------------------------------------------------------------------ addressing by name
+
+
+def test_drafts_find_the_address_by_name(home, tmp_path, monkeypatch):
+    import core.relationships_manager as rel_module
+    from core.assistant_email_actions import resolve_recipients
+    from core.household_manager import HouseholdManager
+    from core.relationships_manager import RelationshipsManager
+
+    context, zac, sam = home
+    monkeypatch.setattr(rel_module, "_DATA_DIR", tmp_path / "rel")
+    monkeypatch.setattr(rel_module, "_PEOPLE_FILE", tmp_path / "rel" / "people.json")
+    monkeypatch.setattr(rel_module, "_PETS_FILE", tmp_path / "rel" / "pets.json")
+    context.relationships = RelationshipsManager(context)
+    context.relationships.add_person("Pat Lee", relationship="Landlord", email="Pat@Example.com")
+    context.relationships.add_person("Grandma")
+    assert resolve_recipients(context, "Pat Lee") == (["pat@example.com"], [])
+    assert resolve_recipients(context, "my landlord Pat") == (["pat@example.com"], [])  # a unique first name
+    assert resolve_recipients(context, "other@x.org") == (["other@x.org"], [])  # written addresses win
+    assert resolve_recipients(context, "Grandma") == ([], ["Grandma"])
+    reply = _action_draft_email(context, {"to": "Grandma", "subject": "Hi", "body": "Love you"})
+    assert "I don't have an email address for Grandma" in reply
+    # Household members are known by their sign-in email.
+    context.households = HouseholdManager(context)
+    context.profiles.set_email(sam.profile_id, "sam@example.com")
+    hid = context.households.household_of(zac.profile_id)
+    context.households._set_household(sam.profile_id, hid)
+    assert resolve_recipients(context, "Sam") == (["sam@example.com"], [])
+
+
+def test_people_keep_an_email(tmp_path, monkeypatch):
+    import core.relationships_manager as rel_module
+    from core.assistant_life_actions import _action_add_person, _action_get_person, _action_update_person
+    from core.relationships_manager import RelationshipsManager
+
+    monkeypatch.setattr(rel_module, "_DATA_DIR", tmp_path)
+    monkeypatch.setattr(rel_module, "_PEOPLE_FILE", tmp_path / "people.json")
+    monkeypatch.setattr(rel_module, "_PETS_FILE", tmp_path / "pets.json")
+    ctx = SimpleNamespace(events=EventBus())
+    ctx.relationships = RelationshipsManager(ctx)
+    _action_add_person(ctx, {"name": "Pat", "email": "pat@example.com"})
+    assert "email bo@x.org" in _action_update_person(ctx, {"name": "Pat", "email": "it's bo@x.org"})
+    assert "email bo@x.org" in _action_get_person(ctx, {"name": "Pat"})
+    assert RelationshipsManager(ctx).all_people()[0].email == "bo@x.org"  # saved

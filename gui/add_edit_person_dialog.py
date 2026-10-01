@@ -45,6 +45,11 @@ class AddEditPersonDialog(QDialog):
         self.relationship_edit.setPlaceholderText("e.g. Sister, Best friend, Coworker (optional)")
         layout.addWidget(self.relationship_edit)
 
+        layout.addWidget(QLabel("Email:"))
+        self.email_edit = QLineEdit()
+        self.email_edit.setPlaceholderText("So MIA can address emails to them (optional)")
+        layout.addWidget(self.email_edit)
+
         self.birthday_checkbox = QCheckBox("Track birthday")
         self.birthday_checkbox.toggled.connect(self._on_birthday_toggle)
         layout.addWidget(self.birthday_checkbox)
@@ -89,6 +94,7 @@ class AddEditPersonDialog(QDialog):
         self._favorite_things: str = ""
         self._gift_ideas: str = ""
         self._notes: str = ""
+        self._email: str = ""
 
     def _on_birthday_toggle(self, checked: bool) -> None:
         self.birthday_edit.setEnabled(checked)
@@ -98,6 +104,7 @@ class AddEditPersonDialog(QDialog):
             return
         self.name_edit.setText(person.name)
         self.relationship_edit.setText(person.relationship)
+        self.email_edit.setText(person.email)
         if person.birthday:
             self.birthday_checkbox.setChecked(True)
             self.birthday_edit.setDate(QDate.fromString(person.birthday, _ISO_DATE_FORMAT))
@@ -119,7 +126,12 @@ class AddEditPersonDialog(QDialog):
         self._favorite_things = self.favorite_things_edit.toPlainText().strip()
         self._gift_ideas = self.gift_ideas_edit.toPlainText().strip()
         self._notes = self.notes_edit.toPlainText().strip()
+        self._email = self.email_edit.text().strip().lower()
         self.accept()
+
+    @property
+    def entered_email(self) -> str:
+        return self._email
 
     @property
     def entered_name(self) -> str:

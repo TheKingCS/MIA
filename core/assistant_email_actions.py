@@ -16,6 +16,42 @@ from core.main_thread import publish
 from core.person_settings import person_id
 
 
+def known_addresses(context) -> list[tuple[str, str]]:
+    """(name, email) MIA can address by name: People & Pets, and the other
+    people in this household (their sign-in email)."""
+    known = []
+    relationships = getattr(context, "relationships", None)
+    for person in (relationships.all_people() if relationships is not None else []):
+        if getattr(person, "email", ""):
+            known.append((person.name, person.email))
+    households = getattr(context, "households", None)
+    me = person_id(context)
+    if households is not None and me:
+        known += [(p.name, p.email) for p in households.shares_with(me) if p.email]
+    return known
+
+
+def resolve_recipients(context, to: str) -> tuple[list[str], list[str]]:
+    """Pure-ish. (addresses, names said but without a known address).
+    Written addresses win; otherwise names are looked up, whole words only."""
+    written = addresses_in(to)
+    if written:
+        return written, []
+    text = f" {(to or '').lower()} "
+    found, by_first = [], {}
+    for name, email in known_addresses(context):
+        by_first.setdefault(name.lower().split()[0], []).append(email)
+        if f" {name.lower()} " in text:
+            found.append(email)
+    for first, emails in by_first.items():
+        if not found and f" {first} " in text and len(emails) == 1:
+            found.append(emails[0])
+    if found:
+        return list(dict.fromkeys(found)), []
+    words = [w.strip(".,") for w in (to or "").split() if w[:1].isupper()]
+    return [], words
+
+
 def _action_draft_email(context, arguments: dict) -> str:
     drafts = getattr(context, "email_drafts", None)
     if drafts is None:
@@ -23,7 +59,7 @@ def _action_draft_email(context, arguments: dict) -> str:
     body = str(arguments.get("body") or "").strip()
     if not body:
         return "What should the email say?"
-    to = addresses_in(str(arguments.get("to") or ""))
+    to, unknown = resolve_recipients(context, str(arguments.get("to") or ""))
     subject = str(arguments.get("subject") or "").strip()
     draft = drafts.create(to, subject, body)
     # A phone turn runs on the person's own view (it has a profile_id); its
@@ -31,7 +67,13 @@ def _action_draft_email(context, arguments: dict) -> str:
     on_phone = bool(getattr(context, "profile_id", None))
     publish(context, "email.draft_ready", draft_id=draft.draft_id, profile_id=person_id(context), on_phone=on_phone)
     who = f" to {', '.join(to)}" if to else ""
-    missing = "" if to else " Add who it goes to (their email address)."
+    if to:
+        missing = ""
+    elif unknown:
+        missing = (f" I don't have an email address for {' '.join(unknown)}: add it in the draft, or tell me "
+                   f"(\"{unknown[0]}'s email is ...\") and I'll remember it.")
+    else:
+        missing = " Add who it goes to (their email address)."
     return (f"I wrote a draft{who}: \"{subject or 'no subject'}\". Have a look: you can Send it, Copy it, or open it "
             f"in your mail app. I won't send anything unless you press Send.{missing}")
 
@@ -45,7 +87,7 @@ def register_email_actions(registry: AssistantActionRegistry) -> None:
             "user sends it by pressing Send, copies it, or opens it in their mail app."
         ),
         parameters={"type": "object", "properties": {
-            "to": {"type": "string", "description": "Recipient email address(es), if the user gave them."},
+            "to": {"type": "string", "description": "Who it's to: an email address, or the person's name."},
             "subject": {"type": "string", "description": "The subject line."},
             "body": {"type": "string", "description": "The full email text."},
         }, "required": ["subject", "body"]},

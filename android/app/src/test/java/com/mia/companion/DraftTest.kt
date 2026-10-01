@@ -11,7 +11,7 @@ class DraftTest {
         val draft = JSONObject("""{"to": ["pat@example.com"], "subject": "Leaky faucet", "body": "Hi Pat"}""")
         val text = MiaClient.describeDraft(draft)
         assertTrue(text.startsWith("Email draft to pat@example.com: Leaky faucet\nHi Pat"))
-        assertTrue(text.contains("web app"))
+        assertTrue(text.contains("Email drafts"))
         assertTrue(MiaClient.describeDraft(JSONObject("""{"to": [], "subject": "x", "body": "y"}""")).contains("(no address yet)"))
         assertEquals("", MiaClient.describeDraft(null))
     }

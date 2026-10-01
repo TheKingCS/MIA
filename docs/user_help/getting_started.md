@@ -120,6 +120,9 @@ faucet". She opens a draft you can change, then **Send**, **Copy**, or
 **Open in my mail app**. She never sends anything unless you press Send.
 To send from MIA, set up your own address once in Settings → Sending
 Email (for Gmail, use an app password). On the phone, the draft shows
-under her reply with the same buttons.
+under her reply with the same buttons (in the Android app: "Email
+drafts"). Say a name instead of an address ("email Pat about Saturday")
+and MIA uses the email saved for them in People & Pets, or for someone in
+your household; "Pat's email is pat@example.com" saves one.
 On the phone, MIA talks to whoever signed in there, even if someone else
 is at the computer.

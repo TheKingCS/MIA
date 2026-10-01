@@ -27,6 +27,7 @@ CORPUS: list[tuple[str, str]] = [
     ("Write an email to my landlord at pat@example.com about the leaky faucet", "draft_email"),
     ("Draft a thank-you email to grandma", "draft_email"),
     ("Help me reply to the school about the field trip", "draft_email"),
+    ("Pat's email is pat@example.com", "update_person"),
     # ---- Undo and why (core/undo_log.py, core/message_reasons.py) --------
     ("Undo that", "undo_last_change"),
     ("No, take that back", "undo_last_change"),

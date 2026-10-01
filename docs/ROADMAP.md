@@ -12790,3 +12790,12 @@ missing, the launcher, no Ollama, the printed check, a failed download).
 The downloads themselves couldn't be tried from Claude's sandbox (the
 hosts are blocked here); they use the same URLs as the existing voice
 script.
+
+**Email follow-ups (2026-10-01):** People & Pets has an email field (the
+dialog, `add_person`/`update_person`, "Pat's email is ..."), and
+`draft_email` addresses a draft by name: People & Pets, then the
+household's members by their sign-in email; a written address always
+wins; a name without an address gets "I don't have an email address
+for ...". The Android app has an "Email drafts" section (Send only when
+tapped, Copy, Mail app, Discard). 2 new Python tests, 1 routing line,
+Android `EmailDraftsTest`.

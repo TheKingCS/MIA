@@ -57,12 +57,14 @@ class Person:
     gift_ideas: str = ""
     notes: str = ""          # "shared memories" — freeform
     created_at: str = ""
+    email: str = ""          # 2026-10-01: so MIA can address email drafts by name
 
     def to_dict(self) -> dict:
         return {
             "person_id": self.person_id, "name": self.name, "relationship": self.relationship,
             "birthday": self.birthday, "favorite_things": self.favorite_things,
             "gift_ideas": self.gift_ideas, "notes": self.notes, "created_at": self.created_at,
+            "email": self.email,
         }
 
     @staticmethod
@@ -76,6 +78,7 @@ class Person:
             gift_ideas=data.get("gift_ideas", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
+            email=data.get("email", ""),
         )
 
 
@@ -179,7 +182,7 @@ class RelationshipsManager:
 
     def add_person(
         self, name: str, relationship: str = "", birthday: str = "",
-        favorite_things: str = "", gift_ideas: str = "", notes: str = "",
+        favorite_things: str = "", gift_ideas: str = "", notes: str = "", email: str = "",
     ) -> Person:
         person = Person(
             person_id=uuid.uuid4().hex[:10],
@@ -189,6 +192,7 @@ class RelationshipsManager:
             favorite_things=favorite_things,
             gift_ideas=gift_ideas,
             notes=notes,
+            email=email.strip().lower(),
             created_at=datetime.now().isoformat(timespec="seconds"),
         )
         self._people.append(person)

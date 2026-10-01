@@ -126,9 +126,10 @@ it, and went with Claude's recommendations. The plan, in order:
   pat@example.com about the faucet": a draft window with Send (only when
   you press it), Copy, or your mail app; a card on the phone's web app.
   Sending is optional and per person (Settings → Sending Email; your own
-  address, not the inbox mailbox). Follow-up: Send and Copy buttons in
-  the Android app (it shows the draft in its log for now), and finding a
-  person's address by name (People & Pets has no email field yet).
+  address, not the inbox mailbox). Follow-ups **built** (2026-10-01): the
+  Android app's "Email drafts" (Send, Copy, Mail app, Discard), and
+  addressing by name (People & Pets has an email field; household members
+  by their sign-in email; "Pat's email is ..." remembers it).
 - **Stage 4, country-aware crisis lines and currency: built** (ROADMAP
   step 5). US, Canada, UK, Ireland, Australia, New Zealand; elsewhere
   general advice and findahelpline.com. Settings → Support & Safety.
