@@ -24,7 +24,9 @@ of the Android app.
       (write it down). Your existing profiles are one household; check
       that everything still shows. Try making a test account that shares
       nothing, then delete it. The phone and Android app now take your
-      email to sign in.
+      email to sign in. Then Settings → My Apps → "Ask Me the Setup
+      Questions Again" to see MIA's new-account questions and pick a
+      focus (or keep "Show everything").
 
 **New computer? Start with `docs/SETUP_GUIDE.md`.** It walks through
 every step below in order, from a blank machine, with Windows notes.
@@ -104,10 +106,11 @@ it, and went with Claude's recommendations. The plan, in order:
   ownership", steps 1 and 2). Email sign-in with a recovery code,
   each account its own household, joining with a member's password,
   per-person settings, notifications, workouts and Classroom.
-- **Stage 2:** a conversational setup (MIA asks what would help most),
-  focus presets (Personal, Home & Family, Homestead, Business, Student)
-  that order and hide apps without blocking anything, and app
-  visibility per person.
+- **Stage 2, MIA asks and each person's Apps screen: built** (ROADMAP
+  step 3). New accounts get MIA's setup questions; focuses (Personal,
+  Home & Family, Homestead, Business, Student) order and tuck away apps
+  per person without blocking any. Settings → My Apps; Modules → Hide
+  from my Apps; or ask MIA ("switch me to student mode").
 - **Stage 3:** email drafts from the Assistant: Send (only when you
   press Send), Copy, or open in your mail app; using the inbox mailbox's
   outgoing side; on the phone too.

@@ -30,7 +30,7 @@ from core.logger import get_logger
 from gui.account_dialogs import SignInDialog, show_recovery_code
 from gui.add_profile_dialog import AddProfileDialog
 from gui.password_dialog import prompt_for_password
-from gui.profile_interview_dialog import ProfileInterviewDialog
+from gui.onboarding_dialog import OnboardingDialog, module_names
 
 log = get_logger(__name__)
 
@@ -190,15 +190,9 @@ class ProfileSelectScreen(QWidget):
                                     "They can join one later from Settings, Account & household.")
             if password:
                 show_recovery_code(self.context.profiles.issue_recovery_code(profile.profile_id), self)
-            # Profile-creation interview (2026-09-14) — a real, separate
-            # second dialog right after creation, not folded into
-            # AddProfileDialog itself (see that class's own docstring
-            # for why it stays small). Skipping is a real, valid answer
-            # (ProfileInterviewDialog.reject()) — nothing is saved, the
-            # profile still exists either way.
-            interview = ProfileInterviewDialog(self.context, dialog.entered_name, self)
-            if interview.exec() == ProfileInterviewDialog.DialogCode.Accepted:
-                self.context.profiles.set_interview_answers(
-                    profile.profile_id, interview.form.selected_interests(), interview.form.entered_notes(),
-                )
+            # "Getting to know you" (2026-10-01, gui/onboarding_dialog.py):
+            # MIA's setup questions, which replaced the checkbox interview.
+            # Skipping is fine; every app keeps showing.
+            OnboardingDialog(self.context, profile, module_names(getattr(self.context, "module_manager", None)),
+                             self).exec()
             self._populate_profiles()

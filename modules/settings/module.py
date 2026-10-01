@@ -57,7 +57,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core import person_settings
+from core import focus_presets, person_settings
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
@@ -135,6 +135,31 @@ class SettingsModule(ModuleBase):
         account_button.setObjectName("ModuleButton")
         account_button.clicked.connect(self._on_account_clicked)
         outer.addWidget(account_button)
+
+        # Each person's focus (core/focus_presets.py, 2026-10-01).
+        apps_section = QLabel("My Apps")
+        apps_section.setObjectName("SettingsSectionHeader")
+        outer.addWidget(apps_section)
+        apps_desc = QLabel("Which apps come first for you. Nothing is ever locked: hidden apps still open from "
+                           "the Modules screen, search, or by asking MIA. Show or hide single apps in Modules.")
+        apps_desc.setObjectName("SubtitleLabel")
+        apps_desc.setWordWrap(True)
+        outer.addWidget(apps_desc)
+        focus_row = QHBoxLayout()
+        focus_row.addWidget(QLabel("Focus:"))
+        self._focus_combo = QComboBox()
+        self._focus_combo.addItem("Show everything", "")
+        for focus in focus_presets.FOCUSES.values():
+            self._focus_combo.addItem(f"{focus.name}: {focus.description}", focus.focus_id)
+        index = self._focus_combo.findData(focus_presets.current(self.context)[0] or "")
+        self._focus_combo.setCurrentIndex(max(0, index))
+        self._focus_combo.currentIndexChanged.connect(self._on_focus_changed)
+        focus_row.addWidget(self._focus_combo, stretch=1)
+        outer.addLayout(focus_row)
+        questions_button = QPushButton("Ask Me the Setup Questions Again")
+        questions_button.setObjectName("ModuleButton")
+        questions_button.clicked.connect(self._on_setup_questions_clicked)
+        outer.addWidget(questions_button)
 
         appearance_section = QLabel("Appearance & Device Profile")
         appearance_section.setObjectName("SettingsSectionHeader")
@@ -377,6 +402,25 @@ class SettingsModule(ModuleBase):
 
         self.context.profiles.rename_profile(profile.profile_id, dialog.entered_name)
         self._account_desc_label.setText(f"Signed in as {dialog.entered_name}.")
+
+    def _on_focus_changed(self) -> None:
+        focus_id = self._focus_combo.currentData()
+        if focus_id:
+            focus_presets.apply_focus(self.context, focus_id)
+        else:
+            focus_presets.apply(self.context, focus_presets.Recommendation("", [], []))
+
+    def _on_setup_questions_clicked(self) -> None:
+        from gui.onboarding_dialog import OnboardingDialog, module_names
+
+        profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        if profile is None:
+            return
+        OnboardingDialog(self.context, profile, module_names(getattr(self.context, "module_manager", None))).exec()
+        index = self._focus_combo.findData(focus_presets.current(self.context)[0] or "")
+        self._focus_combo.blockSignals(True)
+        self._focus_combo.setCurrentIndex(max(0, index))
+        self._focus_combo.blockSignals(False)
 
     def _on_account_clicked(self) -> None:
         from gui.account_dialogs import AccountDialog

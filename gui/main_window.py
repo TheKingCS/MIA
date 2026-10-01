@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
     QWidgetAction,
 )
 
+from core import focus_presets
 from core.app_context import AppContext
 from core.leveling import compute_prestige_level_progress, prestige_color_for_tier
 from core.logger import get_logger
@@ -143,6 +144,7 @@ class MainWindow(QMainWindow):
         """
         self.context.events.subscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.subscribe("modules.rescanned", self._on_modules_changed)
+        self.context.events.subscribe("apps.arrangement_changed", self._on_modules_changed)
         # 2026-09-28: records changed elsewhere (an Assistant tool, often
         # from the phone): refresh the screen on show now, the others when
         # next opened. Always delivered on the GUI thread (core/main_thread.py).
@@ -286,6 +288,7 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
+        self.context.events.unsubscribe("apps.arrangement_changed", self._on_modules_changed)
         self.context.events.unsubscribe("records.changed", self._on_records_changed)
         self.context.events.unsubscribe(
             "assistant.open_module_requested", self._on_assistant_open_module_requested
@@ -668,7 +671,9 @@ class MainWindow(QMainWindow):
         # the excess room.
         grid.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
-        modules = self.module_manager.enabled_modules()
+        # Each person's focus (core/focus_presets.py): their most useful
+        # apps first, the ones they tucked away left out (still in Modules).
+        modules = focus_presets.menu_modules(self.context, self.module_manager.enabled_modules())
         columns = 3
         for index, module in enumerate(modules):
             button = ModuleButton(module)

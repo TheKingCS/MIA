@@ -12621,3 +12621,38 @@ leaving, a fresh device, workouts claimed under an older marker,
 per-person settings, per-person notifications and pushes, phone sign-in
 by email, the New Profile, sign-in, recovery and account dialogs). The
 real app boots with two accounts and keeps their calendars apart.
+
+## People and ownership, step 3: MIA asks, and each person's Apps screen (2026-10-01)
+
+Stage 2 of the accounts plan: MIA asks what would be most useful, and
+"MIA for business, school..." presents the most useful apps without
+blocking any.
+
+- **Focuses** (`core/focus_presets.py`): Personal, Home & Family,
+  Homestead, Business, Student. Each puts its apps first and tucks a few
+  unlikely ones away; Dashboard, Assistant, Settings and Modules are never
+  hidden. A tucked-away app still opens from Modules, Ctrl+K and the
+  Assistant. Stored per person (`apps.focus`, `apps.featured`,
+  `apps.hidden` in `core/person_settings.py`); nobody's choice changes
+  anyone else's screen.
+- **"Getting to know you"** (`gui/onboarding_dialog.py`): right after an
+  account is made (first-run wizard or New Profile), MIA asks, as a
+  conversation: what to help with most (eight goals), how often to speak
+  up (2, 5 or 8 a day), and anything else. `recommend()` (pure logic)
+  picks the focus and adds each goal's apps; MIA says what she'll put
+  first and what she tucked away, and does it on "Sounds good" ("Show me
+  everything" keeps every app). The goals fill in the Skills interests,
+  the last answer is the interview notes. It replaced the checkbox
+  interview at account creation (`gui/widgets/interview_form.py` and
+  `gui/profile_interview_dialog.py` are no longer shown).
+- **Changing it:** Settings → My Apps (focus, or "Ask Me the Setup
+  Questions Again"); Modules → "Hide from my Apps" / "Show on my Apps"
+  per app (Disable stays the device-wide switch); the Assistant:
+  `set_app_focus`, `set_app_visibility`, `get_app_focus` (domain `apps`,
+  `core/assistant_focus_actions.py`).
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 8 new tests (goals to focus and apps, the never-hidden apps,
+arranging, wording, two people's separate screens, the Assistant tools,
+the conversation saving for the new person and not the one signed in,
+skipping) and 5 new routing-corpus lines.

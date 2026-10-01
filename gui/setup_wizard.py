@@ -2,8 +2,10 @@
 gui.setup_wizard
 =================
 
-First-time setup wizard: collects the user's name and confirms the
-system date/time, then saves them via ConfigManager.
+First-time setup wizard: collects the user's name (and optionally the
+email and password they sign in with) and confirms the system
+date/time, then saves them via ConfigManager. MIA's setup questions
+follow as a conversation (gui/onboarding_dialog.py).
 
 Implemented as a QWizard (rather than a sequence of ad-hoc dialogs)
 because QWizard gives us Back/Next/Finish flow, page validation, and a
@@ -29,7 +31,6 @@ from PySide6.QtWidgets import (
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.profile_manager import looks_like_email
-from gui.widgets.interview_form import InterviewForm
 
 log = get_logger(__name__)
 
@@ -100,30 +101,6 @@ class _DateTimePage(QWizardPage):
         layout.addWidget(self.time_edit)
 
 
-class _InterviewPage(QWizardPage):
-    """Profile-creation interview (2026-09-14) — see
-    gui/widgets/interview_form.py's own docstring for the full design.
-    Wired here, not just in the later "Add Profile" flow, since a
-    first-run profile is created right when this wizard finishes —
-    same moment, no separate second dialog needed for the very first
-    profile."""
-
-    def __init__(self, context: AppContext) -> None:
-        super().__init__()
-        self.setTitle("Tell MIA About You")
-        self.setSubTitle("Optional — helps MIA suggest things that actually fit your life.")
-        layout = QVBoxLayout(self)
-        self.form = InterviewForm(context)
-        layout.addWidget(self.form)
-
-    def initializePage(self) -> None:  # noqa: N802 (Qt override signature)
-        # Re-reads the name field once this page is actually shown, so
-        # the greeting uses the real name typed on the earlier Welcome
-        # page rather than "" at construction time (this page is built
-        # before the user has typed anything).
-        self.form.set_profile_name(self.field("user_name") or "")
-
-
 class SetupWizard(QWizard):
     """
     First-run wizard. On completion, writes user.name, user.setup_date,
@@ -138,11 +115,9 @@ class SetupWizard(QWizard):
 
         self._welcome_page = _WelcomePage()
         self._datetime_page = _DateTimePage()
-        self._interview_page = _InterviewPage(context)
 
         self.addPage(self._welcome_page)
         self.addPage(self._datetime_page)
-        self.addPage(self._interview_page)
 
         self.accepted.connect(self._save_setup)
 
@@ -167,14 +142,13 @@ class SetupWizard(QWizard):
             from gui.account_dialogs import show_recovery_code
 
             show_recovery_code(self.context.profiles.issue_recovery_code(profile.profile_id), self)
-        # Profile-creation interview (2026-09-14) — optional, so an
-        # empty interests list / blank notes is a real, valid answer
-        # ("skipped"), not an error; still saved so downstream code
-        # never has to guess "never asked" vs. "asked, said nothing."
-        self.context.profiles.set_interview_answers(
-            profile.profile_id, self._interview_page.form.selected_interests(), self._interview_page.form.entered_notes(),
-        )
         config.mark_setup_complete()  # also saves
+        # "Getting to know you" (2026-10-01): MIA's setup questions, which
+        # replaced the checkbox interview page; they fill in the interview
+        # answers and pick which apps come first (gui/onboarding_dialog.py).
+        from gui.onboarding_dialog import OnboardingDialog, module_names
+
+        OnboardingDialog(self.context, profile, module_names(getattr(self.context, "module_manager", None)), self).exec()
 
         log.info("First-time setup complete for '%s' at %s %s", name, date_str, time_str)
         self.context.events.publish("user.setup_complete", name=name)

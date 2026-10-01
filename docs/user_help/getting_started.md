@@ -80,5 +80,13 @@ make the account; someone already in it types their password to approve.
 Later: Settings → Email, Recovery Code & Household (join, rename, or
 leave; leaving starts an empty household, and the shared things stay).
 People who were already on this MIA before accounts are one household.
+
+**Your Apps screen.** When you make an account, MIA asks what you want
+help with and how often to speak up, then puts the most useful apps
+first (a "focus": Personal, Home & Family, Homestead, Business or
+Student) and tucks a few unlikely ones away. Nothing is locked: tucked
+away apps still open from Modules, search, or by asking MIA. Change it
+in Settings → My Apps, hide or show one app in Modules, or just say
+"switch me to student mode" or "hide the Lab".
 On the phone, MIA talks to whoever signed in there, even if someone else
 is at the computer.

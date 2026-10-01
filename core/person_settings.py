@@ -5,7 +5,8 @@ core.person_settings
 Settings that belong to a person, not the device (2026-10-01, accounts):
 how many messages MIA may send you a day, the weekly journal reflection,
 whether she asks what kind of support you want (and what you usually
-pick), and your trusted contact for the safety floor.
+pick), your trusted contact for the safety floor, and which apps you
+see first (core/focus_presets.py).
 
 Kept on the profile record, `profiles.<id>.settings`, under the same key
 names the device config used. The person is the context's own
@@ -29,6 +30,10 @@ PERSONAL_SETTINGS = (
     "assistant.ask_support_kind",
     "assistant.support_choices",
     "assistant.safety.trusted_contact",
+    "apps.focus",
+    "apps.featured",
+    "apps.hidden",
+    "setup.questions_done",
 )
 
 

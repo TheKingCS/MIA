@@ -213,6 +213,11 @@ the owner says "without the tasks".
 **Added 2026-09-28** (Finance #3, same file): `log_business_use`,
 `get_business_use` (domain `business_use`, `core/business_use.py`).
 
+**Added 2026-10-01** (`core/assistant_focus_actions.py`, accounts stage
+2): `set_app_focus` ("switch me to student mode"), `set_app_visibility`
+("hide the Lab from my apps"), `get_app_focus` (domain `apps`). Each
+changes only the speaker's own Apps screen.
+
 **Added 2026-09-28** (`core/assistant_homestead_actions.py`, Finance #2):
 `log_build_expense`, `record_tool_purchase`, `get_build_costs`,
 `get_tool_costs`, `set_build_budget` (domain `homestead_costs`); and

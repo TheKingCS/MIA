@@ -52,6 +52,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core import focus_presets
 from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
 from modules.module_base import ModuleBase
@@ -368,6 +369,20 @@ class ModuleBrowserModule(ModuleBase):
         text_layout.addWidget(subtitle)
         outer.addLayout(text_layout, stretch=3)
 
+        # Each person's own Apps screen (core/focus_presets.py): show or
+        # tuck away without disabling it for everyone.
+        if is_enabled and module.module_id not in focus_presets.ALWAYS_VISIBLE:
+            tucked = module.module_id in focus_presets.current(self.context)[2]
+            mine_button = QPushButton("Show on my Apps" if tucked else "Hide from my Apps")
+            mine_button.setMinimumHeight(40)
+            mine_button.setToolTip("Only for you. It still opens from here, search and the Assistant.")
+            mine_button.clicked.connect(
+                lambda checked=False, mid=module.module_id, t=tucked: self._on_mine_clicked(mid, t)
+            )
+            outer.addWidget(mine_button, stretch=1)
+            if tucked:
+                title.setText(title.text() + "  (hidden from your Apps)")
+
         toggle_button = QPushButton("Disable" if is_enabled else "Enable")
         toggle_button.setMinimumHeight(40)
         toggle_button.setEnabled(not is_locked)
@@ -378,6 +393,10 @@ class ModuleBrowserModule(ModuleBase):
         outer.addWidget(toggle_button, stretch=1)
 
         return row
+
+    def _on_mine_clicked(self, module_id: str, currently_tucked: bool) -> None:
+        focus_presets.set_app_visible(self.context, module_id, currently_tucked)
+        self._populate_rows()
 
     def _on_toggle_clicked(self, module_id: str, currently_enabled: bool) -> None:
         if self.module_manager is None:

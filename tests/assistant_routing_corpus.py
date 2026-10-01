@@ -17,6 +17,12 @@ from __future__ import annotations
 INFO = "INFO"
 
 CORPUS: list[tuple[str, str]] = [
+    # ---- Each person's Apps screen (core/focus_presets.py) --------------
+    ("Switch me to student mode", "set_app_focus"),
+    ("Set my apps up for my business", "set_app_focus"),
+    ("Hide the Lab from my apps", "set_app_visibility"),
+    ("Show the Greenhouse on my apps screen again", "set_app_visibility"),
+    ("What's my focus?", "get_app_focus"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),
