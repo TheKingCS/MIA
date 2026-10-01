@@ -62,6 +62,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
+from core.email_drafts import as_dict as draft_as_dict
+from core.mail_send import SendError, send_draft, sender_for
 from core.app_context import AppContext
 from core.assistant_turn import AssistantTurn, run_assistant_turn
 from core.talk_it_out import apply_followup
@@ -281,9 +283,15 @@ def create_app(context: AppContext) -> FastAPI:
         view = view_for(context, profile_id)
         conversation = conversation_for(profile_id, view)
         started = time.monotonic()
+        drafts = getattr(view, "email_drafts", None)
         with app.state.turn_lock:
+            before = drafts.latest() if drafts is not None else None
             turn: AssistantTurn = run_assistant_turn(view, conversation, transcript)
             after_phone_turn(conversation, transcript, view)
+            # An email MIA drafted this turn, shown with Send / Copy / mail app
+            # (core/email_drafts.py); sent only when the phone's Send is pressed.
+            after = drafts.latest() if drafts is not None else None
+            new_draft = draft_as_dict(after) if after is not None and after is not before else None
         thinking = time.monotonic() - started
         if not turn.llm_available:
             replies = turn.replies + [LLM_UNAVAILABLE_REPLY]
@@ -302,6 +310,7 @@ def create_app(context: AppContext) -> FastAPI:
             "reply_text": reply_text,
             "audio_wav_base64": audio,
             "timings": timings,
+            "draft": new_draft,
         }
 
     def transcribe_bytes(audio: bytes) -> Optional[str]:
@@ -311,6 +320,38 @@ def create_app(context: AppContext) -> FastAPI:
             wav_path = Path(tmp) / "utterance.wav"
             wav_path.write_bytes(audio)
             return context.voice.transcribe(wav_path)
+
+    # ---------------------------------------------------------------- email drafts
+
+    def person_drafts(profile_id: str):
+        drafts = getattr(view_for(context, profile_id), "email_drafts", None)
+        if drafts is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No drafts here.")
+        return drafts
+
+    @app.get("/api/email/drafts")
+    def email_drafts(profile_id: str = Depends(require_profile_id)) -> dict:
+        return {"drafts": [draft_as_dict(d) for d in person_drafts(profile_id).open_drafts()],
+                "can_send": sender_for(context, profile_id).configured}
+
+    @app.post("/api/email/drafts/{draft_id}/send")
+    def email_send(draft_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Only the phone's Send button calls this; MIA never sends by herself."""
+        sender = sender_for(context, profile_id)
+        if sender.configured and not sender.unlocked:
+            raise HTTPException(status.HTTP_423_LOCKED,
+                                "Sending is locked: press Send once on the computer this session, or use Copy.")
+        with app.state.turn_lock:
+            try:
+                return {"message": send_draft(context, profile_id, draft_id)}
+            except SendError as exc:
+                raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.post("/api/email/drafts/{draft_id}/discard")
+    def email_discard(draft_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        with app.state.turn_lock:
+            person_drafts(profile_id).mark(draft_id, "discarded")
+        return {"discarded": True}
 
     @app.get("/api/voice/status")
     def voice_status(profile_id: str = Depends(require_profile_id)) -> dict:

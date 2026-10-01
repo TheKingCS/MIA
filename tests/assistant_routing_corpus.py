@@ -23,6 +23,10 @@ CORPUS: list[tuple[str, str]] = [
     ("Hide the Lab from my apps", "set_app_visibility"),
     ("Show the Greenhouse on my apps screen again", "set_app_visibility"),
     ("What's my focus?", "get_app_focus"),
+    # ---- Email drafts (core/email_drafts.py; never sent without Send) -----
+    ("Write an email to my landlord at pat@example.com about the leaky faucet", "draft_email"),
+    ("Draft a thank-you email to grandma", "draft_email"),
+    ("Help me reply to the school about the field trip", "draft_email"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),

@@ -61,6 +61,7 @@ from core.communication_gate import CommunicationGate
 from core.component_manager import ComponentManager
 from core.conversation_manager import ConversationManager
 from core.data_logger_manager import DataLoggerManager
+from core.email_drafts import EmailDrafts
 from core.energy_manager import EnergyManager
 from core.expedition_manager import ExpeditionManager
 from core.finance_manager import FinanceManager
@@ -120,6 +121,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("workout", WorkoutManager),
     ("classroom", ClassroomManager),
     ("notifications", NotificationManager),
+    ("email_drafts", EmailDrafts),
 )
 
 # Shared by the people in one household (core/household_manager.py), in

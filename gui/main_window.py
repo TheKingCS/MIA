@@ -145,6 +145,8 @@ class MainWindow(QMainWindow):
         self.context.events.subscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.subscribe("modules.rescanned", self._on_modules_changed)
         self.context.events.subscribe("apps.arrangement_changed", self._on_modules_changed)
+        # An email MIA drafted for whoever is signed in (core/email_drafts.py).
+        self.context.events.subscribe("email.draft_ready", self._on_email_draft_ready)
         # 2026-09-28: records changed elsewhere (an Assistant tool, often
         # from the phone): refresh the screen on show now, the others when
         # next opened. Always delivered on the GUI thread (core/main_thread.py).
@@ -183,6 +185,22 @@ class MainWindow(QMainWindow):
 
     def _on_modules_changed(self, **kwargs) -> None:
         self._rebuild_menu()
+
+    def _on_email_draft_ready(self, draft_id: str = "", profile_id=None, on_phone: bool = False, **_kwargs) -> None:
+        if on_phone:
+            return  # shown on the phone that asked for it
+        active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+        if profile_id and active is not None and active.profile_id != profile_id:
+            return  # a phone user's draft: it's on their phone
+        drafts = getattr(self.context, "email_drafts", None)
+        draft = drafts.get(draft_id) if drafts is not None else None
+        if draft is None:
+            return
+        from gui.email_draft_dialog import EmailDraftDialog
+
+        dialog = EmailDraftDialog(self.context, draft, active.profile_id if active else None, self)
+        dialog.setModal(False)
+        dialog.show()
 
     def _on_profile_renamed(self, profile_id: str, old_name: str, new_name: str) -> None:
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
@@ -289,6 +307,7 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
         self.context.events.unsubscribe("apps.arrangement_changed", self._on_modules_changed)
+        self.context.events.unsubscribe("email.draft_ready", self._on_email_draft_ready)
         self.context.events.unsubscribe("records.changed", self._on_records_changed)
         self.context.events.unsubscribe(
             "assistant.open_module_requested", self._on_assistant_open_module_requested

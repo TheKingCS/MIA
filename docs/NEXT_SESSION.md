@@ -26,7 +26,10 @@ of the Android app.
       nothing, then delete it. The phone and Android app now take your
       email to sign in. Then Settings → My Apps → "Ask Me the Setup
       Questions Again" to see MIA's new-account questions and pick a
-      focus (or keep "Show everything").
+      focus (or keep "Show everything"). Email drafts: ask MIA to "write
+      an email to <your own address> saying hi", try Copy and "Open in
+      my mail app"; optionally Settings → Sending Email with a Gmail app
+      password (never paste it into a chat) and press Send.
 
 **New computer? Start with `docs/SETUP_GUIDE.md`.** It walks through
 every step below in order, from a blank machine, with Windows notes.
@@ -111,9 +114,13 @@ it, and went with Claude's recommendations. The plan, in order:
   Home & Family, Homestead, Business, Student) order and tuck away apps
   per person without blocking any. Settings → My Apps; Modules → Hide
   from my Apps; or ask MIA ("switch me to student mode").
-- **Stage 3:** email drafts from the Assistant: Send (only when you
-  press Send), Copy, or open in your mail app; using the inbox mailbox's
-  outgoing side; on the phone too.
+- **Stage 3, email drafts: built** (ROADMAP step 4). "Write an email to
+  pat@example.com about the faucet": a draft window with Send (only when
+  you press it), Copy, or your mail app; a card on the phone's web app.
+  Sending is optional and per person (Settings → Sending Email; your own
+  address, not the inbox mailbox). Follow-up: Send and Copy buttons in
+  the Android app (it shows the draft in its log for now), and finding a
+  person's address by name (People & Pets has no email field yet).
 - **Stage 4:** country-aware safety numbers (988/911 are US-only) and
   currency.
 - **Stage 5:** a first-run checker/installer, export and delete my

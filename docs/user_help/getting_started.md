@@ -88,5 +88,14 @@ Student) and tucks a few unlikely ones away. Nothing is locked: tucked
 away apps still open from Modules, search, or by asking MIA. Change it
 in Settings → My Apps, hide or show one app in Modules, or just say
 "switch me to student mode" or "hide the Lab".
+
+## Emails
+
+Ask MIA to write one: "write an email to pat@example.com about the leaky
+faucet". She opens a draft you can change, then **Send**, **Copy**, or
+**Open in my mail app**. She never sends anything unless you press Send.
+To send from MIA, set up your own address once in Settings → Sending
+Email (for Gmail, use an app password). On the phone, the draft shows
+under her reply with the same buttons.
 On the phone, MIA talks to whoever signed in there, even if someone else
 is at the computer.

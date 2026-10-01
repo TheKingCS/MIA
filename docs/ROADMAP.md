@@ -12656,3 +12656,37 @@ failure). 8 new tests (goals to focus and apps, the never-hidden apps,
 arranging, wording, two people's separate screens, the Assistant tools,
 the conversation saving for the new person and not the one signed in,
 skipping) and 5 new routing-corpus lines.
+
+## People and ownership, step 4: MIA writes emails, you send them (2026-10-01)
+
+Stage 3 of the accounts plan: the Assistant drafts an email and the
+person sends it on approval or copies it.
+
+- **Drafts** (`core/email_drafts.py`, a personal store): `draft_email`
+  (`core/assistant_email_actions.py`, domain `email`) writes the subject
+  and body; addresses come only from what the person said. There is **no
+  tool that sends**: sending happens only when a person presses Send.
+- **Desktop** (`gui/email_draft_dialog.py`): the draft opens in a window,
+  editable, with Send, Copy, Open in my mail app (a mailto: link),
+  Discard, Keep for later. Drafts asked for on the phone don't pop up at
+  the desk.
+- **Phone:** the turn's reply carries the draft; the web app shows it as a
+  card with Send, Copy and Mail app. `GET /api/email/drafts`,
+  `POST /api/email/drafts/{id}/send` (423 while sending is locked this
+  session, 409 when it can't send), `.../discard`. The Android app shows
+  the draft in its log (Send and Copy there are a follow-up).
+- **Sending** (`core/mail_send.py`): optional, per person (Settings →
+  Sending Email): their address, the server guessed for Gmail, Outlook,
+  Yahoo, iCloud and AOL, and the mail password (a Gmail app password)
+  encrypted with a passphrase in `data/profiles/<id>/mail_send.enc`,
+  asked once per session. Plain SMTP over SSL or STARTTLS, Python's own
+  smtplib; sending runs off the screen's thread. A wrong password or a
+  dead network keeps the draft.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 7 new tests (addresses, mailto and copy text, server guesses,
+the message; the tool only drafts; drafts per person; sending needs setup
+and the passphrase, then sends once; a wrong password keeps the draft;
+the phone's draft card, listing, locked and discard; the desktop window)
+and 3 routing-corpus lines. The Android sources type-check and their
+unit tests pass (new DraftTest).

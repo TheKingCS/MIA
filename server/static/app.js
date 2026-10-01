@@ -41,6 +41,50 @@ function addBubble(who, text) {
     $("log").prepend(div);
 }
 
+/** An email MIA drafted: Send (only when tapped), Copy, or the phone's mail app. */
+function addDraftCard(draft) {
+    const card = document.createElement("div");
+    card.className = "bubble draft";
+    const head = document.createElement("div");
+    head.className = "draft-head";
+    head.textContent = `To: ${draft.to.join(", ") || "(add an address)"} · ${draft.subject || "(no subject)"}`;
+    const body = document.createElement("div");
+    body.className = "draft-body";
+    body.textContent = draft.body;
+    const note = document.createElement("div");
+    note.className = "draft-note";
+    note.textContent = "MIA only sends when you tap Send.";
+    const row = document.createElement("div");
+    row.className = "draft-row";
+    const button = (label, onClick) => {
+        const b = document.createElement("button");
+        b.textContent = label;
+        b.addEventListener("click", onClick);
+        row.appendChild(b);
+        return b;
+    };
+    const send = button("Send", async () => {
+        send.disabled = true;
+        note.textContent = "Sending…";
+        try {
+            const res = await api(`/api/email/drafts/${draft.draft_id}/send`, { method: "POST" });
+            note.textContent = res.message;
+            send.textContent = "Sent";
+        } catch (err) {
+            note.textContent = err.message;
+            send.disabled = false;
+        }
+    });
+    if (!draft.to.length) send.disabled = true;
+    button("Copy", async () => {
+        try { await navigator.clipboard.writeText(draft.text); note.textContent = "Copied."; }
+        catch (err) { note.textContent = "Couldn't copy here; press and hold the text instead."; }
+    });
+    button("Mail app", () => { window.location.href = draft.mailto; });
+    card.append(head, body, row, note);
+    $("log").prepend(card);
+}
+
 function showLoggedIn(loggedIn) {
     $("login-section").hidden = loggedIn;
     $("talk-section").hidden = !loggedIn;
@@ -207,6 +251,7 @@ function describeTimings(timings) {
 
 async function speak(reply) {
     addBubble("timing", describeTimings(reply.timings));
+    if (reply.draft) addDraftCard(reply.draft);
     addBubble("mia", reply.reply_text);
     setOrb("speaking", "");
     await playReply(reply.audio_wav_base64);

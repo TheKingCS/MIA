@@ -65,6 +65,7 @@ from core.journal_reflection import journal_reflection_action, reflection_due, r
 from core.warranty_watch import due_notices, warranty_message
 from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
+from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
@@ -1163,6 +1164,7 @@ class MIAApplication:
         register_why_actions(self.context.assistant_actions)
         register_communication_actions(self.context.assistant_actions)
         register_focus_actions(self.context.assistant_actions)
+        register_email_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)
         register_textbook_actions(self.context.assistant_actions)
         register_inbox_actions(self.context.assistant_actions)

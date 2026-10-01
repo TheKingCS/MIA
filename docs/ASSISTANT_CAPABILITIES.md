@@ -213,6 +213,10 @@ the owner says "without the tasks".
 **Added 2026-09-28** (Finance #3, same file): `log_business_use`,
 `get_business_use` (domain `business_use`, `core/business_use.py`).
 
+**Added 2026-10-01** (`core/assistant_email_actions.py`, accounts stage
+3): `draft_email` (domain `email`) writes a draft the person reviews.
+Deliberately no tool sends; only a Send button does.
+
 **Added 2026-10-01** (`core/assistant_focus_actions.py`, accounts stage
 2): `set_app_focus` ("switch me to student mode"), `set_app_visibility`
 ("hide the Lab from my apps"), `get_app_focus` (domain `apps`). Each

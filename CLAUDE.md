@@ -167,6 +167,9 @@ Never hardcode the owner's names, places or things in code or prompts.
   never straight to `notifications.notify()`: it merges, rate-limits
   (owner's limit: 5/day), drops repeats and logs every decision. Replies
   to something the user just did, alarms and low battery stay direct.
+- **Email** (`core/email_drafts.py`, `core/mail_send.py`) — the Assistant
+  only drafts; an email is sent only when a person presses Send (desktop
+  dialog or phone). Never add a tool that sends.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

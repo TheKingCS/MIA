@@ -136,6 +136,13 @@ class SettingsModule(ModuleBase):
         account_button.clicked.connect(self._on_account_clicked)
         outer.addWidget(account_button)
 
+        # Sending the email drafts you approve (core/mail_send.py, 2026-10-01).
+        sending_button = QPushButton("Sending Email")
+        sending_button.setObjectName("ModuleButton")
+        sending_button.setToolTip("Optional. Without it, Copy and \"open in my mail app\" always work.")
+        sending_button.clicked.connect(self._on_sending_email_clicked)
+        outer.addWidget(sending_button)
+
         # Each person's focus (core/focus_presets.py, 2026-10-01).
         apps_section = QLabel("My Apps")
         apps_section.setObjectName("SettingsSectionHeader")
@@ -421,6 +428,12 @@ class SettingsModule(ModuleBase):
         self._focus_combo.blockSignals(True)
         self._focus_combo.setCurrentIndex(max(0, index))
         self._focus_combo.blockSignals(False)
+
+    def _on_sending_email_clicked(self) -> None:
+        from gui.email_draft_dialog import SendingSetupDialog
+
+        profile = self.context.profiles.get_active_profile() if self.context.profiles else None
+        SendingSetupDialog(self.context, profile.profile_id if profile else None).exec()
 
     def _on_account_clicked(self) -> None:
         from gui.account_dialogs import AccountDialog

@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.pathway_manager import PathwayManager
     from core.power_manager import PowerManager
+    from core.email_drafts import EmailDrafts
     from core.household_manager import HouseholdManager
     from core.profile_manager import ProfileManager
     from core.product_manager import ProductManager
@@ -116,6 +117,8 @@ class AppContext:
     profiles: Optional["ProfileManager"] = field(default=None, repr=False)
     # Who shares household things with whom (core/household_manager.py).
     households: Optional["HouseholdManager"] = field(default=None, repr=False)
+    # Each person's email drafts (core/email_drafts.py), set on sign-in.
+    email_drafts: Optional["EmailDrafts"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)
     search: Optional["SearchManager"] = field(default=None, repr=False)
     calendar: Optional["CalendarManager"] = field(default=None, repr=False)

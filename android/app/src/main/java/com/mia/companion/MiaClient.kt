@@ -29,7 +29,8 @@ class MiaClient(baseUrl: String) {
 
     data class LoginResult(val token: String, val name: String)
 
-    data class TurnResult(val transcript: String, val replyText: String, val audioWav: ByteArray?, val timings: String = "")
+    data class TurnResult(val transcript: String, val replyText: String, val audioWav: ByteArray?, val timings: String = "",
+                          val draft: String = "")
 
     data class Status(val speechToText: Boolean, val textToSpeech: Boolean, val assistant: Boolean)
 
@@ -113,7 +114,18 @@ class MiaClient(baseUrl: String) {
                 replyText = json.optString("reply_text"),
                 audioWav = audio?.let { Base64.decode(it, Base64.DEFAULT) },
                 timings = describeTimings(json.optJSONObject("timings")),
+                draft = describeDraft(json.optJSONObject("draft")),
             )
+        }
+
+        /** An email MIA drafted (core/email_drafts.py): shown in the log; Send and Copy are in the
+         *  web app and on the computer. MIA never sends by herself. */
+        fun describeDraft(draft: JSONObject?): String {
+            if (draft == null) return ""
+            val to = draft.optJSONArray("to")
+            val names = (0 until (to?.length() ?: 0)).joinToString(", ") { to!!.getString(it) }
+            return "Email draft to ${names.ifBlank { "(no address yet)" }}: ${draft.optString("subject")}\n" +
+                draft.optString("body") + "\n(Send or copy it in MIA's web app or on the computer.)"
         }
 
         /** "heard 1.2s · thought 3.4s · spoke 0.8s": where a turn's time went (server/app.py turn_timings). */

@@ -34,6 +34,10 @@ PERSONAL_SETTINGS = (
     "apps.featured",
     "apps.hidden",
     "setup.questions_done",
+    "email.send.address",
+    "email.send.host",
+    "email.send.port",
+    "email.send.security",
 )
 
 
