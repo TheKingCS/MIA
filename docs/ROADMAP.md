@@ -12690,3 +12690,33 @@ and the passphrase, then sends once; a wrong password keeps the draft;
 the phone's draft card, listing, locked and discard; the desktop window)
 and 3 routing-corpus lines. The Android sources type-check and their
 unit tests pass (new DraftTest).
+
+## People and ownership, step 5: crisis lines and money for your country (2026-10-01)
+
+Stage 4 of the accounts plan, and safety-relevant: the safety floor gave
+US numbers (988, 911) to everyone.
+
+- **`core/region.py`**: crisis line and emergency number for the US,
+  Canada, the UK, Ireland, Australia and New Zealand (only ones known
+  well; re-check before adding a country). Anywhere else: "your local
+  emergency number (112 works from mobile phones in many countries)" and
+  findahelpline.com, never a number that might be wrong.
+- The country is each person's own (`region.country`), falling back to
+  the device's (asked in the first-run wizard) and then the US, as
+  before. Settings → Support & Safety: "Your country" and "Currency".
+- **Money:** `money(amount, spec)` formats in the signed-in person's
+  currency (country's, or one they choose); a script moved all 110
+  `$`-formatted amounts in Python (core, modules, GUI) onto it. The
+  phone's Money tab and the Android app read `currency_symbol` from the
+  finance summary. Amounts typed or read with £ or € are understood
+  (passing mentions, receipts).
+
+**Limits:** US-only features stay US (the IRS mileage rate, the US tax
+notes in the Business Report). A phone turn for someone in another
+currency than the person at the desk is phrased with the desk person's
+symbol. No currency conversion: amounts are whatever was entered.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 5 new tests (every listed country's reply, the general advice,
+each person's country, money following the signed-in person, a UK safety
+reply end to end). The Android sources type-check and their tests pass.

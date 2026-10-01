@@ -42,6 +42,7 @@ from core.inbox_classify import DOC_TYPE_LABELS, INVOICE, RECEIPT
 from core.inbox_manager import DISMISSED, FILED, PENDING, InboxItem
 from core.secrets_manager import SecretsError
 from modules.module_base import ModuleBase
+from core.region import money
 
 _STATUS_MARK = {PENDING: "●", FILED: "✓", DISMISSED: "✕"}
 
@@ -58,7 +59,7 @@ def format_inbox_row(item: InboxItem, asset_name: str = "") -> str:
 
 def _item_text(line: dict) -> str:
     qty = line.get("quantity")
-    return f"{line.get('description', '')}" + (f" ×{qty:g}" if qty and qty != 1 else "") + f"  ${line.get('amount', 0):,.2f}"
+    return f"{line.get('description', '')}" + (f" ×{qty:g}" if qty and qty != 1 else "") + f"  {money(line.get('amount', 0), ',.2f')}"
 
 
 def describe_item(item: InboxItem, asset_name: str = "", project_name: str = "") -> str:
@@ -69,7 +70,7 @@ def describe_item(item: InboxItem, asset_name: str = "", project_name: str = "")
     if item.sender:
         lines.append(f"From: {item.sender}")
     if item.doc_type in (RECEIPT, INVOICE):
-        amount = f"${item.amount:,.2f}" if item.amount is not None else "not found"
+        amount = f"{money(item.amount, ',.2f')}" if item.amount is not None else "not found"
         lines.append(f"Total: {amount}" + (f" (read from {item.amount_basis})" if item.amount_basis else ""))
         lines.append(f"Date: {item.doc_date or 'not found'} · Store: {item.vendor or 'not found'}")
     if item.items:

@@ -52,6 +52,7 @@ from core.inbox_classify import (
     document_type, expense_category, maintenance_schedule, match_asset, match_project, receipt_fields, receipt_items,
 )
 from core.logger import get_logger
+from core.region import money
 
 log = get_logger(__name__)
 
@@ -112,7 +113,7 @@ class InboxItem:
         who = self.vendor or self.subject or (self.files[0] if self.files else "document")
         text = f"{who} {kind.lower()}" if self.doc_type != "other" else who
         if self.amount is not None and self.doc_type in (RECEIPT, INVOICE):
-            text += f", ${self.amount:,.2f}"
+            text += f", {money(self.amount, ',.2f')}"
         return text
 
 
@@ -357,7 +358,7 @@ class InboxManager:
                 asset_purchase=is_purchase,
                 items=item.items,
             )
-            done.append(f"logged ${amount:,.2f}" + (f" for the {asset.name}" if asset else ""))
+            done.append(f"logged {money(amount, ',.2f')}" + (f" for the {asset.name}" if asset else ""))
             if project_id and getattr(self.context, "projects", None):
                 project = self.context.projects.get_project(project_id)
                 if project:

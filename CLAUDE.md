@@ -186,7 +186,9 @@ Ubuntu-WSL deployment.
 
 - Assistant runs on a small local model (llama3.2:3b via Ollama); facts
   are assembled in code and the model only phrases them. Crisis handling
-  (`core/safety_floor.py`) never depends on the model.
+  (`core/safety_floor.py`) never depends on the model, and its numbers
+  follow the person's country (`core/region.py`). Format money with
+  `core.region.money()`, never a literal "$".
 - No plugin sandboxing for modules — acceptable for a single-user offline
   tool; would need revisiting before loading untrusted third-party
   modules.

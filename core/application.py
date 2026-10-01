@@ -161,6 +161,7 @@ from gui.profile_select import ProfileSelectScreen
 from gui.setup_wizard import SetupWizard
 from gui.splash_screen import SplashScreen
 from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES, get_theme_stylesheet
+from core.region import money
 
 log = get_logger(__name__)
 
@@ -4105,14 +4106,14 @@ class MIAApplication:
         except (TypeError, ValueError):
             return "I need a numeric quantity and sale amount to record a sale."
         context.ledger.record_sale(product.product_id, quantity, amount)
-        return f"Recorded a sale of {quantity:g} '{product.name}' for ${amount:.2f}."
+        return f"Recorded a sale of {quantity:g} '{product.name}' for {money(amount, '.2f')}."
 
     @staticmethod
     def _action_get_ledger_summary(context: AppContext, arguments: dict) -> str:
         revenue = context.ledger.total_revenue()
         expenses = context.ledger.total_expenses()
         profit = context.ledger.net_profit()
-        return f"Total revenue: ${revenue:.2f}. Total expenses: ${expenses:.2f}. Net profit: ${profit:.2f}."
+        return f"Total revenue: {money(revenue, '.2f')}. Total expenses: {money(expenses, '.2f')}. Net profit: {money(profit, '.2f')}."
 
     @staticmethod
     def _action_list_connected_devices(context: AppContext, arguments: dict) -> str:
@@ -4561,7 +4562,7 @@ class MIAApplication:
                 amount=cost, category="Maintenance", description=task.title + (f" ({asset.name})" if asset else ""),
                 asset_id=task.asset_id,
             )
-            reply += f" Logged ${cost:,.2f} toward it."
+            reply += f" Logged {money(cost, ',.2f')} toward it."
         return reply
 
     @staticmethod
@@ -4701,7 +4702,7 @@ class MIAApplication:
             name=name, amount=float(amount), due_date=due_date, category=category, recurrence=recurrence,
         )
         recurrence_part = f", repeating {bill.recurrence}" if bill.recurrence else ""
-        return f"Bill '{bill.name}' added for ${bill.amount:.2f} due {bill.due_date}{recurrence_part}."
+        return f"Bill '{bill.name}' added for {money(bill.amount, '.2f')} due {bill.due_date}{recurrence_part}."
 
     @staticmethod
     def _action_list_bills(context: AppContext, arguments: dict) -> str:
@@ -4720,7 +4721,7 @@ class MIAApplication:
                 status = "due today"
             else:
                 status = f"due in {remaining} days"
-            lines.append(f"- {bill.name} (${bill.amount:.2f}, {bill.category}): {status}")
+            lines.append(f"- {bill.name} ({money(bill.amount, '.2f')}, {bill.category}): {status}")
         return "Your bills:\n" + "\n".join(lines)
 
     @staticmethod
@@ -4734,7 +4735,7 @@ class MIAApplication:
         amount = arguments.get("amount")
         amount = float(amount) if amount not in (None, "") else None
         entry = context.budget.mark_bill_paid(bill.bill_id, amount=amount)
-        return f"Marked '{bill.name}' paid — recorded ${entry.amount:.2f}."
+        return f"Marked '{bill.name}' paid — recorded {money(entry.amount, '.2f')}."
 
     @staticmethod
     def _action_add_income(context: AppContext, arguments: dict) -> str:
@@ -4745,7 +4746,7 @@ class MIAApplication:
         description = str(arguments.get("description", "") or "")
         date_str = str(arguments.get("date", "") or "").strip() or None
         entry = context.budget.add_income(amount=float(amount), category=category, description=description, date=date_str)
-        return f"Recorded ${entry.amount:.2f} of income ({entry.category})."
+        return f"Recorded {money(entry.amount, '.2f')} of income ({entry.category})."
 
     @staticmethod
     def _action_add_expense(context: AppContext, arguments: dict) -> str:
@@ -4756,7 +4757,7 @@ class MIAApplication:
         description = str(arguments.get("description", "") or "")
         date_str = str(arguments.get("date", "") or "").strip() or None
         entry = context.budget.add_expense(amount=float(amount), category=category, description=description, date=date_str)
-        return f"Recorded ${entry.amount:.2f} expense ({entry.category})."
+        return f"Recorded {money(entry.amount, '.2f')} expense ({entry.category})."
 
     @staticmethod
     def _action_get_budget_summary(context: AppContext, arguments: dict) -> str:
@@ -4767,8 +4768,8 @@ class MIAApplication:
         tax_income = context.budget.total_income(start_date, end_date, tax_relevant_only=True)
         tax_expenses = context.budget.total_expenses(start_date, end_date, tax_relevant_only=True)
         return (
-            f"Income: ${income:,.2f}. Expenses: ${expenses:,.2f}. Net: ${income - expenses:,.2f}. "
-            f"Tax-relevant income: ${tax_income:,.2f}. Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}."
+            f"Income: {money(income, ',.2f')}. Expenses: {money(expenses, ',.2f')}. Net: {money(income - expenses, ',.2f')}. "
+            f"Tax-relevant income: {money(tax_income, ',.2f')}. Tax-relevant (deductible) expenses: {money(tax_expenses, ',.2f')}."
         )
 
     @staticmethod
@@ -4797,7 +4798,7 @@ class MIAApplication:
             name=name, expected_amount=float(expected_amount), next_date=next_date, category=category, recurrence=recurrence,
         )
         recurrence_part = f", repeating {source.recurrence}" if source.recurrence else ""
-        return f"Income source '{source.name}' added — ${source.expected_amount:.2f} expected {source.next_date}{recurrence_part}."
+        return f"Income source '{source.name}' added — {money(source.expected_amount, '.2f')} expected {source.next_date}{recurrence_part}."
 
     @staticmethod
     def _action_mark_income_received(context: AppContext, arguments: dict) -> str:
@@ -4810,7 +4811,7 @@ class MIAApplication:
         amount = arguments.get("amount")
         amount = float(amount) if amount not in (None, "") else None
         entry = context.budget.mark_income_received(source.source_id, amount=amount)
-        return f"Marked '{source.name}' received — recorded ${entry.amount:.2f}."
+        return f"Marked '{source.name}' received — recorded {money(entry.amount, '.2f')}."
 
     @staticmethod
     def _action_get_financial_checkin(context: AppContext, arguments: dict) -> str:
@@ -4858,7 +4859,7 @@ class MIAApplication:
         properties = context.real_estate.all_properties()
         if not properties:
             return "You have no properties tracked."
-        lines = [f"- {p.name} ({p.property_type}): ${property_equity(p):,.2f} equity" for p in properties]
+        lines = [f"- {p.name} ({p.property_type}): {money(property_equity(p), ',.2f')} equity" for p in properties]
         return "Your properties:\n" + "\n".join(lines)
 
     @staticmethod
@@ -4874,7 +4875,7 @@ class MIAApplication:
             return error
         date_str = str(arguments.get("date", "") or "").strip() or None
         entry = context.real_estate.record_rental_income(prop.property_id, amount=float(amount), date_str=date_str)
-        return f"Recorded ${entry.amount:.2f} rental income for '{prop.name}'."
+        return f"Recorded {money(entry.amount, '.2f')} rental income for '{prop.name}'."
 
     @staticmethod
     def _action_get_property_summary(context: AppContext, arguments: dict) -> str:
@@ -4888,8 +4889,8 @@ class MIAApplication:
         cap_rate = context.real_estate.cap_rate(prop.property_id)
         cap_rate_text = f"{cap_rate * 100:.2f}%" if cap_rate is not None else "n/a (no current value set)"
         return (
-            f"'{prop.name}': equity ${property_equity(prop):,.2f}, "
-            f"net operating income ${noi:,.2f}, cap rate {cap_rate_text}."
+            f"'{prop.name}': equity {money(property_equity(prop), ',.2f')}, "
+            f"net operating income {money(noi, ',.2f')}, cap rate {cap_rate_text}."
         )
 
     @staticmethod

@@ -166,6 +166,7 @@ from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
 from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from gui.widgets.toggle_switch import ToggleSwitch
+from core.region import money
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
 _CLOCK_TICK_MS = 1000
@@ -271,10 +272,10 @@ def format_real_estate_line(snapshot: Optional[FinancialSnapshot]) -> str:
     equity = summary.get("total_equity")
     if equity is None:
         return "Snapshot imported, but no summary data found."
-    line = f"${equity:,.0f} equity"
+    line = f"{money(equity, ',.0f')} equity"
     cash_flow = summary.get("monthly_cash_flow")
     if cash_flow is not None:
-        line += f"  —  ${cash_flow:,.0f}/mo cash flow"
+        line += f"  —  {money(cash_flow, ',.0f')}/mo cash flow"
     return line
 
 
@@ -292,7 +293,7 @@ def format_kraken_line(snapshot: Optional[FinancialSnapshot]) -> str:
     total_value = summary.get("total_value")
     if total_value is None:
         return "Snapshot imported, but no summary data found."
-    line = f"${total_value:,.0f}"
+    line = f"{money(total_value, ',.0f')}"
     gain_loss_pct = summary.get("gain_loss_pct")
     if gain_loss_pct is not None:
         sign = "+" if gain_loss_pct >= 0 else ""
@@ -332,7 +333,7 @@ def format_net_worth_line(
     total = sum(value for _, value in contributions)
     count = len(contributions)
     noun = "source" if count == 1 else "sources"
-    return f"${total:,.0f}  —  from {count} {noun}"
+    return f"{money(total, ',.0f')}  —  from {count} {noun}"
 
 
 def format_homestead_line(snapshot: Optional[HomesteadSnapshot]) -> str:
@@ -480,7 +481,7 @@ def format_property_portfolio_line(properties: list[Property]) -> str:
         return "No properties tracked yet."
     total_equity = sum(property_equity(p) for p in properties)
     noun = "property" if len(properties) == 1 else "properties"
-    return f"{len(properties)} {noun}  —  ${total_equity:,.0f} total equity"
+    return f"{len(properties)} {noun}  —  {money(total_equity, ',.0f')} total equity"
 
 
 def format_music_line(now_playing: Optional[NowPlaying]) -> str:

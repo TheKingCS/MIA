@@ -45,6 +45,7 @@ from typing import Optional
 
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
+from core.region import money
 
 log = get_logger(__name__)
 
@@ -61,7 +62,7 @@ _WORK_WORDS = re.compile(r"\b(work|job|shift|factory|paycheck|income|overtime|wa
 
 
 def _money(value: float) -> str:
-    return f"${value:,.0f}"
+    return f"{money(value, ',.0f')}"
 
 
 def _month_name(month: str) -> str:

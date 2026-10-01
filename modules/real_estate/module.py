@@ -89,11 +89,12 @@ from gui.add_edit_property_dialog import AddEditPropertyDialog
 from gui.list_widget_helpers import add_empty_state_item
 from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from modules.module_base import ModuleBase
+from core.region import money
 
 
 def format_property_glance_line(prop: Property, equity_value: float) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_real_estate_module.py)."""
-    return f"{prop.name}   [{prop.property_type}]   Equity: ${equity_value:,.2f}"
+    return f"{prop.name}   [{prop.property_type}]   Equity: {money(equity_value, ',.2f')}"
 
 
 def format_linked_task_line(task: MaintenanceTask, today: date, readings: Optional[list] = None) -> str:
@@ -139,13 +140,13 @@ def format_linked_task_line(task: MaintenanceTask, today: date, readings: Option
 def format_income_row(entry: IncomeEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description_part = f"  {entry.description}" if entry.description else ""
-    return f"{entry.date}   ${entry.amount:.2f}{description_part}"
+    return f"{entry.date}   {money(entry.amount, '.2f')}{description_part}"
 
 
 def format_expense_row(entry: ExpenseEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description_part = f"  {entry.description}" if entry.description else ""
-    return f"{entry.date}   ${entry.amount:.2f}  [{entry.category}]{description_part}"
+    return f"{entry.date}   {money(entry.amount, '.2f')}  [{entry.category}]{description_part}"
 
 
 class RealEstateModule(ModuleBase):
@@ -413,7 +414,7 @@ class RealEstateModule(ModuleBase):
 
         self._tracked_label.setText(str(len(properties)))
         total_equity = sum(equity(p) for p in properties)
-        self._equity_label.setText(f"${total_equity:,.2f}")
+        self._equity_label.setText(f"{money(total_equity, ',.2f')}")
 
         today = date.today()
         month_start = today.replace(day=1).isoformat()
@@ -421,7 +422,7 @@ class RealEstateModule(ModuleBase):
             sum(e.amount for e in self.context.real_estate.income_for_property(p.property_id, month_start))
             for p in properties
         )
-        self._rental_label.setText(f"${total_rental:,.2f}")
+        self._rental_label.setText(f"{money(total_rental, ',.2f')}")
 
         if not properties:
             empty_text = (
@@ -523,9 +524,9 @@ class RealEstateModule(ModuleBase):
         info_layout = QVBoxLayout(info_card)
         info_layout.setContentsMargins(18, 16, 18, 16)
         info = QLabel(
-            f"Purchased {prop.purchase_date or 'unknown'} for ${prop.purchase_price:,.2f}\n"
-            f"Current value: ${prop.current_value:,.2f}   Mortgage balance: ${prop.mortgage_balance:,.2f}   "
-            f"Equity: ${equity(prop):,.2f}\n"
+            f"Purchased {prop.purchase_date or 'unknown'} for {money(prop.purchase_price, ',.2f')}\n"
+            f"Current value: {money(prop.current_value, ',.2f')}   Mortgage balance: {money(prop.mortgage_balance, ',.2f')}   "
+            f"Equity: {money(equity(prop), ',.2f')}\n"
             f"Entity: {entity_name}"
         )
         info.setObjectName("NatureAssetLine")
@@ -918,7 +919,7 @@ class RealEstateModule(ModuleBase):
         self._detail_range_label.setText(label)
         noi = self.context.real_estate.net_operating_income(property_id, start_date, end_date)
         cap_rate = self.context.real_estate.cap_rate(property_id, start_date, end_date)
-        self._detail_noi_label.setText(f"Net Operating Income: ${noi:,.2f}")
+        self._detail_noi_label.setText(f"Net Operating Income: {money(noi, ',.2f')}")
         cap_rate_text = f"{cap_rate * 100:.2f}%" if cap_rate is not None else "n/a (set a current value)"
         self._detail_cap_rate_label.setText(f"Cap Rate: {cap_rate_text}")
 
@@ -935,9 +936,9 @@ class RealEstateModule(ModuleBase):
             # convention Cap Rate's own "n/a (set a current value)" text
             # already uses on this exact view.
             land_value_caveat = " (land value not set — this may overstate depreciation)" if annual > 0 and prop.land_value <= 0 else ""
-            self._detail_annual_depreciation_label.setText(f"Annual Depreciation: ${annual:,.2f}{land_value_caveat}")
+            self._detail_annual_depreciation_label.setText(f"Annual Depreciation: {money(annual, ',.2f')}{land_value_caveat}")
             accumulated = accumulated_depreciation(prop, date.today())
-            self._detail_accumulated_depreciation_label.setText(f"Accumulated Depreciation: ${accumulated:,.2f}{land_value_caveat}")
+            self._detail_accumulated_depreciation_label.setText(f"Accumulated Depreciation: {money(accumulated, ',.2f')}{land_value_caveat}")
 
             # Loan terms are a separate, optional concept from the
             # manually-tracked mortgage_balance shown elsewhere — this
@@ -946,9 +947,9 @@ class RealEstateModule(ModuleBase):
             # same authoritative figure (see remaining_balance_as_of()'s
             # own docstring in core/real_estate_manager.py).
             if has_loan_terms(prop):
-                self._detail_monthly_payment_label.setText(f"Monthly Payment (P&I): ${monthly_payment(prop):,.2f}")
+                self._detail_monthly_payment_label.setText(f"Monthly Payment (P&I): {money(monthly_payment(prop), ',.2f')}")
                 balance = remaining_balance_as_of(prop, date.today())
-                self._detail_loan_balance_label.setText(f"Est. Remaining Loan Balance (per loan terms): ${balance:,.2f}")
+                self._detail_loan_balance_label.setText(f"Est. Remaining Loan Balance (per loan terms): {money(balance, ',.2f')}")
                 self._detail_payoff_date_label.setText(f"Est. Payoff Date: {payoff_date(prop)}")
             else:
                 self._detail_monthly_payment_label.setText("Monthly Payment: enter loan terms to calculate")

@@ -30,6 +30,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 from core.assistant_lookup import resolve_by_name
+from core.region import money
 
 _NO_PARAMS = {"type": "object", "properties": {}, "required": []}
 
@@ -102,7 +103,7 @@ def _num(value, default: Optional[float] = None) -> Optional[float]:
 
 
 def _money(amount: float) -> str:
-    return f"${amount:,.2f}"
+    return f"{money(amount, ',.2f')}"
 
 
 def _qty(quantity: float, unit: str) -> str:

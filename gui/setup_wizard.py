@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QDate, QTime
 from PySide6.QtWidgets import (
+    QComboBox,
     QDateEdit,
     QLabel,
     QLineEdit,
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.profile_manager import looks_like_email
+from core.region import REGIONS
 
 log = get_logger(__name__)
 
@@ -64,6 +66,14 @@ class _WelcomePage(QWizardPage):
         self.password_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_edit.setPlaceholderText("Password (optional without an email)")
         layout.addWidget(self.password_edit)
+        # Crisis lines and money follow the country (core/region.py).
+        layout.addWidget(QLabel("Where do you live?"))
+        self.country_combo = QComboBox()
+        for code, reg in REGIONS.items():
+            self.country_combo.addItem(reg.name, code)
+        self.country_combo.addItem("Somewhere else", "OTHER")
+        layout.addWidget(self.country_combo)
+
         self.error_label = QLabel("")
         self.error_label.setStyleSheet("color: #e06666;")
         self.error_label.setWordWrap(True)
@@ -128,6 +138,8 @@ class SetupWizard(QWizard):
 
         config = self.context.config
         config.set("system.setup_date", date_str)
+        # The device's country (each person can change their own in Settings).
+        config.set("region.country", self._welcome_page.country_combo.currentData())
         config.set("system.setup_time", time_str)
 
         # Creating the first profile also activates it and saves config,

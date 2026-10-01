@@ -14,6 +14,7 @@ import re
 from core.app_context import AppContext
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 from core.business_tagging import PERSONAL, apply_choice, merchant_key, pending_review
+from core.region import money
 
 _S = {"type": "string"}
 
@@ -31,7 +32,7 @@ def _action_list_untagged(context: AppContext, arguments: dict) -> str:
     names = _names(context)
     parts = []
     for expense, suggestion in pending[:5]:
-        text = f"{expense.payee or expense.description} ${expense.amount:,.2f} on {expense.date}"
+        text = f"{expense.payee or expense.description} {money(expense.amount, ',.2f')} on {expense.date}"
         if suggestion is not None:
             text += " (probably personal)" if suggestion.entity_id == PERSONAL else f" (probably {names[suggestion.entity_id]})"
         parts.append(text)
@@ -69,7 +70,7 @@ def _action_tag_charge(context: AppContext, arguments: dict) -> str:
     where = "personal" if choice == PERSONAL else _names(context)[choice]
     others = len(matches) - 1
     tail = f" {others} more from there are still waiting." if others else ""
-    return f"Marked the {expense.payee or expense.description} charge (${expense.amount:,.2f}, {expense.date}) as {where}. I'll remember that.{tail}"
+    return f"Marked the {expense.payee or expense.description} charge ({money(expense.amount, ',.2f')}, {expense.date}) as {where}. I'll remember that.{tail}"
 
 
 def register_tagging_actions(registry: AssistantActionRegistry) -> None:

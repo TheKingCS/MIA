@@ -139,6 +139,7 @@ from gui.password_dialog import PasswordPromptDialog
 from gui.plaid_connect_progress_dialog import PlaidConnectProgressDialog
 from gui.plaid_setup_dialog import PlaidSetupDialog
 from modules.module_base import ModuleBase
+from core.region import money
 
 
 def format_bill_row(bill: Bill, today: date) -> str:
@@ -152,7 +153,7 @@ def format_bill_row(bill: Bill, today: date) -> str:
         status = "[DUE TODAY]"
     else:
         status = f"[DUE IN {remaining}d]"
-    return f"{status}  {bill.name}   ${bill.amount:.2f}  [{bill.category}]"
+    return f"{status}  {bill.name}   {money(bill.amount, '.2f')}  [{bill.category}]"
 
 
 def format_income_source_row(source: IncomeSource, today: date) -> str:
@@ -166,19 +167,19 @@ def format_income_source_row(source: IncomeSource, today: date) -> str:
         status = "[DUE TODAY]"
     else:
         status = f"[DUE IN {remaining}d]"
-    return f"{status}  {source.name}   ${source.expected_amount:.2f}  [{source.category}]"
+    return f"{status}  {source.name}   {money(source.expected_amount, '.2f')}  [{source.category}]"
 
 
 def format_income_row(entry: IncomeEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description_part = f"  {entry.description}" if entry.description else ""
-    return f"{entry.date}   ${entry.amount:.2f}  [{entry.category}]{description_part}"
+    return f"{entry.date}   {money(entry.amount, '.2f')}  [{entry.category}]{description_part}"
 
 
 def format_expense_row(entry: ExpenseEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description_part = f"  {entry.description}" if entry.description else ""
-    return f"{entry.date}   ${entry.amount:.2f}  [{entry.category}]{description_part}"
+    return f"{entry.date}   {money(entry.amount, '.2f')}  [{entry.category}]{description_part}"
 
 
 def format_debt_row(debt: Debt, today: date, priority: Optional[DebtPriority] = None) -> str:
@@ -191,7 +192,7 @@ def format_debt_row(debt: Debt, today: date, priority: Optional[DebtPriority] = 
     rate = effective_apr(debt, today)
     rank_part = f"#{priority.rank}  " if priority is not None else ""
     synced_part = "  (bank-synced)" if debt.plaid_account_id else ""
-    row = f"{rank_part}{debt.name}   ${debt.balance:,.2f} @ {rate:.2f}% APR  [{debt.debt_type}]{synced_part}"
+    row = f"{rank_part}{debt.name}   {money(debt.balance, ',.2f')} @ {rate:.2f}% APR  [{debt.debt_type}]{synced_part}"
     if priority is not None:
         row += f"  — {priority.reason}"
     return row
@@ -199,20 +200,20 @@ def format_debt_row(debt: Debt, today: date, priority: Optional[DebtPriority] = 
 
 def format_build_row(cost: BuildCost) -> str:
     """Pure formatting logic — Builds & Tools tab (Finance #2)."""
-    text = f"{cost.name}  —  ${cost.spent:,.2f} spent"
+    text = f"{cost.name}  —  {money(cost.spent, ',.2f')} spent"
     if cost.budget > 0:
         if cost.remaining >= 0:
-            text += f" of ${cost.budget:,.2f} ({cost.percent_used:g}%), ${cost.remaining:,.2f} left"
+            text += f" of {money(cost.budget, ',.2f')} ({cost.percent_used:g}%), {money(cost.remaining, ',.2f')} left"
         else:
-            text += f" of ${cost.budget:,.2f}, ${-cost.remaining:,.2f} OVER"
+            text += f" of {money(cost.budget, ',.2f')}, {money(-cost.remaining, ',.2f')} OVER"
     return text + f"   [{cost.status}]"
 
 
 def format_tool_row(cost: ToolCost) -> str:
     """Pure formatting logic — Builds & Tools tab (Finance #2)."""
-    text = f"{cost.name}  —  ${cost.total:,.2f} total (${cost.purchase_price:,.2f} to buy + ${cost.upkeep:,.2f} since)"
+    text = f"{cost.name}  —  {money(cost.total, ',.2f')} total ({money(cost.purchase_price, ',.2f')} to buy + {money(cost.upkeep, ',.2f')} since)"
     if cost.cost_per_hour is not None:
-        text += f", ${cost.cost_per_hour:,.2f}/hr over {cost.hours:g} hrs"
+        text += f", {money(cost.cost_per_hour, ',.2f')}/hr over {cost.hours:g} hrs"
     return text
 
 
@@ -226,7 +227,7 @@ def format_holding_row(holding: dict) -> str:
     quantity = holding.get("quantity")
     value = holding.get("institution_value")
     qty_part = f"{quantity:,.4g} sh  —  " if quantity is not None else ""
-    value_part = f"${value:,.2f}" if value is not None else "value unknown"
+    value_part = f"{money(value, ',.2f')}" if value is not None else "value unknown"
     return f"{label}   {qty_part}{value_part}"
 
 
@@ -1095,7 +1096,7 @@ class BudgetModule(ModuleBase):
         avg_apr = self.context.budget.weighted_average_debt_apr(today=today)
         min_payments = self.context.budget.total_minimum_debt_payments()
         self._debt_tab_summary_label.setText(
-            f"Total Debt: ${total_balance:,.2f}   ·   Weighted Avg APR: {avg_apr:.2f}%   ·   Min Payments/mo: ${min_payments:,.2f}"
+            f"Total Debt: {money(total_balance, ',.2f')}   ·   Weighted Avg APR: {avg_apr:.2f}%   ·   Min Payments/mo: {money(min_payments, ',.2f')}"
         )
 
     def _selected_debt_id(self) -> Optional[str]:
@@ -1315,7 +1316,7 @@ class BudgetModule(ModuleBase):
         series.attachAxis(axis_y)
 
         self._trends_chart_view.setChart(chart)
-        self._trends_net_label.setText(f"Net cash flow (last 12 months): ${net_total:,.2f}")
+        self._trends_net_label.setText(f"Net cash flow (last 12 months): {money(net_total, ',.2f')}")
 
     def _budget_target_entity_id(self) -> str:
         """Budget Targets are always edited for one specific entity
@@ -1381,7 +1382,7 @@ class BudgetModule(ModuleBase):
             spin.blockSignals(True)
             spin.setValue(targets_by_category.get(category, 0.0))
             spin.blockSignals(False)
-            self._budget_target_actual_labels[category].setText(f"actual: ${actual_by_category.get(category, 0.0):,.2f}")
+            self._budget_target_actual_labels[category].setText(f"actual: {money(actual_by_category.get(category, 0.0), ',.2f')}")
 
     def _on_budget_target_changed(self, category: str) -> None:
         entity_id = self._budget_target_entity_id()
@@ -1446,15 +1447,15 @@ class BudgetModule(ModuleBase):
         tax_income = budget.total_income(start, end, tax_relevant_only=True, entity_id=entity_id)
         tax_expenses = budget.total_expenses(start, end, tax_relevant_only=True, entity_id=entity_id)
 
-        self._summary_income_label.setText(f"Income: ${income:,.2f}")
-        self._summary_expenses_label.setText(f"Expenses: ${expenses:,.2f}")
-        self._summary_net_label.setText(f"Net: ${income - expenses:,.2f}")
-        self._summary_tax_income_label.setText(f"Tax-relevant income: ${tax_income:,.2f}")
-        self._summary_tax_expenses_label.setText(f"Tax-relevant (deductible) expenses: ${tax_expenses:,.2f}")
+        self._summary_income_label.setText(f"Income: {money(income, ',.2f')}")
+        self._summary_expenses_label.setText(f"Expenses: {money(expenses, ',.2f')}")
+        self._summary_net_label.setText(f"Net: {money(income - expenses, ',.2f')}")
+        self._summary_tax_income_label.setText(f"Tax-relevant income: {money(tax_income, ',.2f')}")
+        self._summary_tax_expenses_label.setText(f"Tax-relevant (deductible) expenses: {money(tax_expenses, ',.2f')}")
 
         total_debt = budget.total_debt_balance(entity_id=entity_id)
         avg_apr = budget.weighted_average_debt_apr(entity_id=entity_id)
-        self._summary_debt_label.setText(f"Total Debt: ${total_debt:,.2f}  (weighted avg {avg_apr:.2f}% APR)")
+        self._summary_debt_label.setText(f"Total Debt: {money(total_debt, ',.2f')}  (weighted avg {avg_apr:.2f}% APR)")
 
     def _gather_equipment_use(self, entity_id: Optional[str], year: int) -> list[dict]:
         if self.context.business_use is None or self.context.maintenance is None:
@@ -1883,7 +1884,7 @@ class BudgetModule(ModuleBase):
                     self._plaid_holdings_list.addItem(format_holding_row(holding))
                 total = snapshot.data.get("holdings_total_value")
                 if total is not None:
-                    self._plaid_holdings_list.addItem(f"Total holdings value: ${total:,.2f}")
+                    self._plaid_holdings_list.addItem(f"Total holdings value: {money(total, ',.2f')}")
         else:
             self._plaid_holdings_list.addItem("Select a connected account to see its holdings.")
 
@@ -2195,7 +2196,7 @@ class BudgetModule(ModuleBase):
             if query_lower in bill.name.lower() or query_lower in bill.category.lower():
                 results.append(SearchResult(
                     title=bill.name,
-                    description=f"Bill — ${bill.amount:.2f} [{bill.category}]",
+                    description=f"Bill — {money(bill.amount, '.2f')} [{bill.category}]",
                     source=self.display_name,
                     action_type="open_module",
                     action_target=self.module_id,

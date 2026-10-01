@@ -22,13 +22,14 @@ from PySide6.QtWidgets import (
 )
 
 from core.business_tagging import PERSONAL, apply_choice, auto_tagged, pending_review
+from core.region import money
 
 LATER = "__later__"
 
 
 def format_charge(expense) -> str:
     """Pure formatting logic."""
-    return f"{expense.date}  {expense.payee or expense.description or 'Charge'}  ${expense.amount:,.2f}"
+    return f"{expense.date}  {expense.payee or expense.description or 'Charge'}  {money(expense.amount, ',.2f')}"
 
 
 class BusinessTagsDialog(QDialog):

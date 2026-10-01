@@ -84,6 +84,7 @@ from core.plaid_manager import PlaidManager
 from core.private_journal import PrivateJournalManager
 from core.product_manager import ProductManager
 from core.project_manager import ProjectManager
+from core import region
 from core.real_estate_manager import RealEstateManager
 from core.relationships_manager import RelationshipsManager
 from core.script_library_manager import ScriptLibraryManager
@@ -289,6 +290,7 @@ class PersonalData:
                 _close(previous)  # a boot-time store for personal data: stop it listening
             setattr(self.context, attr, store)
         self.active_profile_id = profile_id
+        region.use_for(self.context)  # money in this person's currency (core/region.py)
 
     def watch(self, events) -> None:
         """Follow sign-ins: a switch, and a new profile made active

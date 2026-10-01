@@ -121,8 +121,9 @@ it, and went with Claude's recommendations. The plan, in order:
   address, not the inbox mailbox). Follow-up: Send and Copy buttons in
   the Android app (it shows the draft in its log for now), and finding a
   person's address by name (People & Pets has no email field yet).
-- **Stage 4:** country-aware safety numbers (988/911 are US-only) and
-  currency.
+- **Stage 4, country-aware crisis lines and currency: built** (ROADMAP
+  step 5). US, Canada, UK, Ireland, Australia, New Zealand; elsewhere
+  general advice and findahelpline.com. Settings → Support & Safety.
 - **Stage 5:** a first-run checker/installer, export and delete my
   account, and an undo log ("why are you suggesting this?" too).
 - Later in this line: an optional private budget, ownership marks on

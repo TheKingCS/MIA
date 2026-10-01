@@ -38,6 +38,8 @@ PERSONAL_SETTINGS = (
     "email.send.host",
     "email.send.port",
     "email.send.security",
+    "region.country",
+    "region.currency",
 )
 
 
@@ -45,8 +47,8 @@ def person_id(context) -> Optional[str]:
     own = getattr(context, "profile_id", None)
     if isinstance(own, str) and own:
         return own
-    profiles = getattr(context, "profiles", None)
-    active = profiles.get_active_profile() if profiles is not None else None
+    get_active = getattr(getattr(context, "profiles", None), "get_active_profile", None)
+    active = get_active() if callable(get_active) else None
     return active.profile_id if active is not None else None
 
 

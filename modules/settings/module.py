@@ -58,6 +58,7 @@ from PySide6.QtWidgets import (
 )
 
 from core import focus_presets, person_settings
+from core import region as region_module
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
@@ -255,17 +256,38 @@ class SettingsModule(ModuleBase):
             outer.addLayout(volume_row)
 
         # Cognitive Extension slice A: the safety floor (core/safety_floor.py)
-        # always gives 988 and 911; this adds a person of the owner's choosing.
+        # gives the crisis line and emergency number for the person's country
+        # (core/region.py); this adds a person of their choosing.
         support_section = QLabel("Support & Safety")
         support_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(support_section)
         support_desc = QLabel(
-            "If you ever tell MIA you're thinking of hurting yourself or you're in danger, she gives you "
-            "988 (call or text) and 911. Add someone you trust and she'll name them too."
+            "If you ever tell MIA you're thinking of hurting yourself or you're in danger, she gives you the "
+            "crisis line and emergency number for your country. Add someone you trust and she'll name them too."
         )
         support_desc.setObjectName("SubtitleLabel")
         support_desc.setWordWrap(True)
         outer.addWidget(support_desc)
+        country_row = QHBoxLayout()
+        country_row.addWidget(QLabel("Your country:"))
+        self._country_combo = QComboBox()
+        for code, reg in region_module.REGIONS.items():
+            self._country_combo.addItem(reg.name, code)
+        self._country_combo.addItem("Somewhere else", "OTHER")
+        index = self._country_combo.findData(region_module.country_of(self.context))
+        self._country_combo.setCurrentIndex(index if index != -1 else self._country_combo.count() - 1)
+        self._country_combo.currentIndexChanged.connect(self._on_country_changed)
+        country_row.addWidget(self._country_combo, stretch=1)
+        country_row.addWidget(QLabel("Currency:"))
+        self._currency_combo = QComboBox()
+        self._currency_combo.addItem("Country's", "")
+        for code, sign in region_module.CURRENCIES.items():
+            self._currency_combo.addItem(f"{code} {sign.strip()}", code)
+        index = self._currency_combo.findData(person_settings.get(self.context, "region.currency", "") or "")
+        self._currency_combo.setCurrentIndex(max(0, index))
+        self._currency_combo.currentIndexChanged.connect(self._on_currency_changed)
+        country_row.addWidget(self._currency_combo)
+        outer.addLayout(country_row)
         contact_row = QHBoxLayout()
         contact_row.addWidget(QLabel("Trusted person:"))
         self._trusted_contact_edit = QLineEdit(person_settings.get(self.context, "assistant.safety.trusted_contact", "") or "")
@@ -602,6 +624,14 @@ class SettingsModule(ModuleBase):
 
     def _on_daily_budget_changed(self, value: int) -> None:
         person_settings.put(self.context, "communication.daily_budget", int(value))
+
+    def _on_country_changed(self) -> None:
+        person_settings.put(self.context, "region.country", self._country_combo.currentData())
+        region_module.use_for(self.context)
+
+    def _on_currency_changed(self) -> None:
+        person_settings.put(self.context, "region.currency", self._currency_combo.currentData() or None)
+        region_module.use_for(self.context)
 
     def _on_trusted_contact_changed(self) -> None:
         person_settings.put(self.context, "assistant.safety.trusted_contact", self._trusted_contact_edit.text().strip())

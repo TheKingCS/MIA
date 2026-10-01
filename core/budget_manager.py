@@ -91,6 +91,7 @@ from core.gamification import SkillWeight, grant_xp
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
+from core.region import money
 
 log = get_logger(__name__)
 
@@ -561,7 +562,7 @@ def rank_debts(debts: list[Debt], today: date, strategy: str = "hybrid") -> list
     if strategy == "snowball":
         ordered = sorted(open_debts, key=lambda d: d.balance)
         for d in ordered:
-            reasons[d.debt_id] = f"Smallest balance (${d.balance:,.2f})"
+            reasons[d.debt_id] = f"Smallest balance ({money(d.balance, ',.2f')})"
     elif strategy == "avalanche":
         ordered = sorted(open_debts, key=lambda d: (-apr(d), -d.balance))
         for d in ordered:

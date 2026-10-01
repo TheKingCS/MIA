@@ -16,13 +16,16 @@ data class MoneyRow(val label: String, val value: String, val tone: String = "",
 
 data class MoneySection(val title: String, val rows: List<MoneyRow>, val note: String = "")
 
+/** The person's currency (core/region.py), set from each summary. */
+var currencySymbol = "$"
+
 fun formatMoney(value: Double?, cents: Boolean = false): String {
     if (value == null) return "—"
     val format = NumberFormat.getNumberInstance(Locale.US).apply {
         minimumFractionDigits = if (cents) 2 else 0
         maximumFractionDigits = if (cents) 2 else 0
     }
-    return (if (value < 0) "-$" else "$") + format.format(abs(value))
+    return (if (value < 0) "-" else "") + currencySymbol + format.format(abs(value))
 }
 
 fun whenLabel(days: Int, verb: String): String = when {
@@ -40,6 +43,7 @@ private fun aprText(value: Double): String =
     if (value == Math.floor(value)) value.toLong().toString() else value.toString()
 
 fun moneySections(s: JSONObject): List<MoneySection> {
+    currencySymbol = s.optString("currency_symbol").ifBlank { "$" }
     if (!s.optBoolean("available")) {
         return listOf(MoneySection("Money", emptyList(), "Budget isn't available on MIA's computer right now."))
     }

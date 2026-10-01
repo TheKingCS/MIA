@@ -6,12 +6,15 @@
 (function (root) {
     "use strict";
 
+    // The person's currency (core/region.py), from the summary itself.
+    let symbol = "$";
+
     function formatMoney(value, cents = false) {
         if (value === null || value === undefined) return "—";
         const abs = Math.abs(value).toLocaleString("en-US", {
             minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0,
         });
-        return (value < 0 ? "-$" : "$") + abs;
+        return (value < 0 ? "-" : "") + symbol + abs;
     }
 
     function whenLabel(days, verb) {
@@ -26,6 +29,7 @@
     }
 
     function moneySections(s) {
+        symbol = (s && s.currency_symbol) || "$";
         if (!s || !s.available) {
             return [{ title: "Money", rows: [], note: "Budget isn't available on MIA's computer right now." }];
         }

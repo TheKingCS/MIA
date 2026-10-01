@@ -54,6 +54,7 @@ from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.homestead_costs import hour_readings
 from core.logger import get_logger
+from core.region import money
 
 log = get_logger(__name__)
 
@@ -366,11 +367,11 @@ def describe_worksheet(sheet: Worksheet) -> str:
         f"{sheet.business_hours:g} of them for business: {sheet.business_pct:g}% business use."
     )
     if sheet.business_running_costs is not None and sheet.running_costs:
-        text += f" Business share of this year's running costs: ${sheet.business_running_costs:,.2f} of ${sheet.running_costs:,.2f}."
+        text += f" Business share of this year's running costs: {money(sheet.business_running_costs, ',.2f')} of {money(sheet.running_costs, ',.2f')}."
     if sheet.business_basis is not None:
-        text += f" Business share of its ${sheet.cost_basis:,.2f} cost: ${sheet.business_basis:,.2f}."
+        text += f" Business share of its {money(sheet.cost_basis, ',.2f')} cost: {money(sheet.business_basis, ',.2f')}."
     if sheet.standard_mileage is not None:
-        text += f" At the standard mileage rate (${sheet.mileage_rate:g} a mile) the business miles come to ${sheet.standard_mileage:,.2f}."
+        text += f" At the standard mileage rate ({money(sheet.mileage_rate, 'g')} a mile) the business miles come to {money(sheet.standard_mileage, ',.2f')}."
     text += f" That's backed by {len(sheet.jobs)} logged business job{'s' if len(sheet.jobs) != 1 else ''}."
     return text
 
@@ -378,23 +379,23 @@ def describe_worksheet(sheet: Worksheet) -> str:
 def build_worksheet_html(sheet: Worksheet, generated_at: str) -> str:
     """Pure logic: the printable worksheet."""
     esc = html.escape
-    money = lambda v: f"${v:,.2f}"  # noqa: E731
+    cash = lambda v: f"{money(v, ',.2f')}"  # noqa: E731
     pct = sheet.business_pct
     rows = [
         ("Total use this year", f"{sheet.total_hours:g} {sheet.unit} ({sheet.total_method})" if sheet.total_hours else "Unknown"),
         ("Business use (logged)", f"{sheet.business_hours:g} {sheet.unit}"),
         ("Personal use", f"{(sheet.total_hours or 0) - sheet.business_hours:g} {sheet.unit}" if sheet.total_hours else "Unknown"),
         ("Business-use percentage", f"{pct:g}%" if pct is not None else "Unknown"),
-        ("Running costs this year", money(sheet.running_costs)),
-        ("Business share of running costs", money(sheet.business_running_costs) if sheet.business_running_costs is not None else "Unknown"),
-        ("Cost basis (purchase price)", money(sheet.cost_basis) if sheet.cost_basis else "Not recorded"),
+        ("Running costs this year", cash(sheet.running_costs)),
+        ("Business share of running costs", cash(sheet.business_running_costs) if sheet.business_running_costs is not None else "Unknown"),
+        ("Cost basis (purchase price)", cash(sheet.cost_basis) if sheet.cost_basis else "Not recorded"),
         ("Placed in service", sheet.placed_in_service or "Not recorded"),
-        ("Business share of cost basis", money(sheet.business_basis) if sheet.business_basis is not None else "Unknown"),
+        ("Business share of cost basis", cash(sheet.business_basis) if sheet.business_basis is not None else "Unknown"),
     ]
     if sheet.unit == MILES:
-        rows.append(("Standard mileage rate", f"${sheet.mileage_rate:g} a mile" if sheet.mileage_rate is not None else "Not entered"))
+        rows.append(("Standard mileage rate", f"{money(sheet.mileage_rate, 'g')} a mile" if sheet.mileage_rate is not None else "Not entered"))
         rows.append(("Standard mileage figure (business miles × rate)",
-                     money(sheet.standard_mileage) if sheet.standard_mileage is not None else "Needs the rate"))
+                     cash(sheet.standard_mileage) if sheet.standard_mileage is not None else "Needs the rate"))
     table = '<table border="1" cellspacing="0" cellpadding="4" width="100%" style="border-collapse:collapse">'
     parts = [
         f"<h2>Business use worksheet: {esc(sheet.asset_name)}, {sheet.year}</h2>",
@@ -403,13 +404,13 @@ def build_worksheet_html(sheet: Worksheet, generated_at: str) -> str:
     ]
     if sheet.running_by_category:
         parts.append("<h3>Running costs by category</h3>" + table + "".join(
-            f"<tr><td>{esc(cat)}</td><td>{money(amount)}</td></tr>" for cat, amount in sheet.running_by_category.items()
+            f"<tr><td>{esc(cat)}</td><td>{cash(amount)}</td></tr>" for cat, amount in sheet.running_by_category.items()
         ) + "</table>")
     split = sheet.business_costs_by_business()
     if split:
         parts.append("<h3>Business share by business</h3>" + table
                      + f"<tr><th>Business</th><th>{sheet.unit.title()}</th><th>Share of running costs</th></tr>" + "".join(
-            f"<tr><td>{esc(label)}</td><td>{hours:g}</td><td>{money(share)}</td></tr>" for label, hours, share in split
+            f"<tr><td>{esc(label)}</td><td>{hours:g}</td><td>{cash(share)}</td></tr>" for label, hours, share in split
         ) + "</table>")
     if sheet.jobs:
         parts.append("<h3>Business use log</h3>" + table

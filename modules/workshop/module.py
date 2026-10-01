@@ -69,6 +69,7 @@ from gui.add_expense_dialog import AddExpenseDialog
 from gui.add_revenue_dialog import AddRevenueDialog
 from gui.pick_item_quantity_dialog import PickItemQuantityDialog
 from modules.module_base import ModuleBase
+from core.region import money
 
 
 def format_component_row(component: Component) -> str:
@@ -103,7 +104,7 @@ def format_component_detail_line(
 def format_material_row(material: Material) -> str:
     """Pure formatting logic — testable without Qt."""
     unit = f" {material.unit}" if material.unit else ""
-    line = f"{material.name}  —  {material.quantity_on_hand:g}{unit} on hand  —  ${material.unit_cost:.2f}/{material.unit or 'unit'}"
+    line = f"{material.name}  —  {material.quantity_on_hand:g}{unit} on hand  —  {money(material.unit_cost, '.2f')}/{material.unit or 'unit'}"
     if material.quantity_on_hand <= material.reorder_threshold:
         line += "  ⚠ LOW STOCK"
     return line
@@ -144,7 +145,7 @@ def format_product_row(product: Product) -> str:
     """Pure formatting logic — testable without Qt."""
     listing_count = len(product.listings)
     listing_note = f"  —  {listing_count} listing{'s' if listing_count != 1 else ''}" if listing_count else ""
-    return f"{product.name}  —  {product.quantity_in_stock:g} in stock  —  ${product.base_price:.2f} base{listing_note}"
+    return f"{product.name}  —  {product.quantity_in_stock:g} in stock  —  {money(product.base_price, '.2f')} base{listing_note}"
 
 
 def format_product_detail_line(
@@ -172,13 +173,13 @@ def format_product_detail_line(
 def format_revenue_row(entry: RevenueEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description = f"  —  {entry.description}" if entry.description else ""
-    return f"{entry.date}  —  ${entry.amount:.2f}{description}"
+    return f"{entry.date}  —  {money(entry.amount, '.2f')}{description}"
 
 
 def format_expense_row(entry: ExpenseEntry) -> str:
     """Pure formatting logic — testable without Qt."""
     description = f"  —  {entry.description}" if entry.description else ""
-    return f"{entry.date}  —  ${entry.amount:.2f}  [{entry.category}]{description}"
+    return f"{entry.date}  —  {money(entry.amount, '.2f')}  [{entry.category}]{description}"
 
 
 class WorkshopModule(ModuleBase):
@@ -568,7 +569,7 @@ class WorkshopModule(ModuleBase):
             cost = self.context.jobs.total_cost(job.job_id)
             line = format_job_row(job)
             if cost is not None:
-                line += f"  —  cost: ${cost:.2f}"
+                line += f"  —  cost: {money(cost, '.2f')}"
             item = QListWidgetItem(line)
             item.setData(Qt.ItemDataRole.UserRole, job.job_id)
             self._job_list.addItem(item)
@@ -874,9 +875,9 @@ class WorkshopModule(ModuleBase):
 
     def _refresh_ledger(self) -> None:
         self._net_profit_label.setText(
-            f"Net Profit: ${self.context.ledger.net_profit():.2f}  "
-            f"(Revenue ${self.context.ledger.total_revenue():.2f}  —  "
-            f"Expenses ${self.context.ledger.total_expenses():.2f})"
+            f"Net Profit: {money(self.context.ledger.net_profit(), '.2f')}  "
+            f"(Revenue {money(self.context.ledger.total_revenue(), '.2f')}  —  "
+            f"Expenses {money(self.context.ledger.total_expenses(), '.2f')})"
         )
 
         self._revenue_list.clear()
@@ -913,7 +914,7 @@ class WorkshopModule(ModuleBase):
         if not products:
             QMessageBox.information(None, "No Products", "Add a product first.")
             return
-        items = [(p.product_id, f"{p.name} (${p.base_price:.2f} base)") for p in products]
+        items = [(p.product_id, f"{p.name} ({money(p.base_price, '.2f')} base)") for p in products]
         dialog = PickItemQuantityDialog(
             title="Record Sale", item_label="Product:", items=items, quantity_label="Quantity Sold:",
             include_amount=True, amount_label="Sale Amount ($):",

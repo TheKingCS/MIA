@@ -243,3 +243,9 @@ def test_parse_organization(raw, title, themes):
 @pytest.mark.parametrize("raw", [None, "", "I'm not sure what to say.", "Mood: fine"])
 def test_parse_organization_rejects_junk(raw):
     assert parse_journal_organization(raw) is None
+
+
+def test_safety_floor_gives_the_persons_own_country(ctx):
+    ctx.config.set("region.country", "GB")
+    _, result = turn(ctx, "I want to end it all")
+    assert "116 123" in result.replies[0] and "999" in result.replies[0] and "988" not in result.replies[0]

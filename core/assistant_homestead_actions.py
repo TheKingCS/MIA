@@ -26,6 +26,7 @@ from core.budget_manager import EXPENSE_CATEGORIES
 from core.homestead_costs import (
     all_build_costs, all_tool_costs, build_cost, describe_build, describe_tool, record_tool_purchase, tool_cost,
 )
+from core.region import money
 
 _S = {"type": "string"}
 _N = {"type": "number"}
@@ -97,12 +98,12 @@ def _action_log_build_expense(context: AppContext, arguments: dict) -> str:
         project_id=project.project_id, asset_id=asset_id,
     )
     cost = build_cost(context, project)
-    reply = f"Logged ${amount:,.2f} for {description.lower() if description != f'For {project.name}' else 'it'} on {project.name}"
+    reply = f"Logged {money(amount, ',.2f')} for {description.lower() if description != f'For {project.name}' else 'it'} on {project.name}"
     reply += " (a new build)." if created else "."
     if cost.budget > 0:
-        reply += f" {cost.name}: ${cost.spent:,.2f} of ${cost.budget:,.2f} spent."
+        reply += f" {cost.name}: {money(cost.spent, ',.2f')} of {money(cost.budget, ',.2f')} spent."
     else:
-        reply += f" Total so far: ${cost.spent:,.2f}."
+        reply += f" Total so far: {money(cost.spent, ',.2f')}."
     return reply
 
 
@@ -132,7 +133,7 @@ def _action_record_tool_purchase(context: AppContext, arguments: dict) -> str:
             amount=price, category="Tools & Equipment", description=f"Bought {existing.name}",
             date=arguments.get("date") or None, asset_id=existing.asset_id, project_id=project_id, asset_purchase=True,
         )
-        return f"Recorded ${price:,.2f} for the {existing.name}{build_note}."
+        return f"Recorded {money(price, ',.2f')} for the {existing.name}{build_note}."
     category = str(arguments.get("category") or "Tool")
     if category not in ("Tool", "Power Equipment", "Vehicle", "Appliance", "Other"):
         category = "Tool"
@@ -140,7 +141,7 @@ def _action_record_tool_purchase(context: AppContext, arguments: dict) -> str:
     asset, _ = record_tool_purchase(
         context, clean, price, category=category, project_id=project_id, purchase_date=arguments.get("date") or None,
     )
-    return f"Added the {asset.name} to your tools, ${price:,.2f}{build_note}. I'll track what it costs you from here."
+    return f"Added the {asset.name} to your tools, {money(price, ',.2f')}{build_note}. I'll track what it costs you from here."
 
 
 def _action_get_build_costs(context: AppContext, arguments: dict) -> str:
@@ -157,8 +158,8 @@ def _action_get_build_costs(context: AppContext, arguments: dict) -> str:
     if not costs:
         return "You haven't logged any build costs yet. Try: 'I spent $240 on lumber for the greenhouse.'"
     total = sum(c.spent for c in costs)
-    lines = [f"{c.name} ${c.spent:,.0f}" + (f" of ${c.budget:,.0f}" if c.budget else "") for c in costs[:5]]
-    return f"You've spent ${total:,.2f} across {len(costs)} build{'s' if len(costs) != 1 else ''}: " + "; ".join(lines) + "."
+    lines = [f"{c.name} {money(c.spent, ',.0f')}" + (f" of {money(c.budget, ',.0f')}" if c.budget else "") for c in costs[:5]]
+    return f"You've spent {money(total, ',.2f')} across {len(costs)} build{'s' if len(costs) != 1 else ''}: " + "; ".join(lines) + "."
 
 
 def _action_list_build_purchases(context: AppContext, arguments: dict) -> str:
@@ -182,13 +183,13 @@ def _action_list_build_purchases(context: AppContext, arguments: dict) -> str:
             for item in e.items:
                 qty = item.get("quantity")
                 text = item.get("description", "") + (f" ×{qty:g}" if qty and qty != 1 else "")
-                lines.append((float(item.get("amount", 0)), f"{text} ${float(item.get('amount', 0)):,.2f}"))
+                lines.append((float(item.get("amount", 0)), f"{text} {money(float(item.get('amount', 0)), ',.2f')}"))
         else:
-            lines.append((e.amount, f"{e.description or e.payee or e.category} ${e.amount:,.2f}"))
+            lines.append((e.amount, f"{e.description or e.payee or e.category} {money(e.amount, ',.2f')}"))
     total = sum(e.amount for e in expenses)
     biggest = [text for _, text in sorted(lines, key=lambda pair: -pair[0])[:8]]
     more = f", and {len(lines) - 8} smaller" if len(lines) > 8 else ""
-    return (f"For the {project.name} you've bought (${total:,.2f} in all, biggest first): "
+    return (f"For the {project.name} you've bought ({money(total, ',.2f')} in all, biggest first): "
             + "; ".join(biggest) + more + ".")
 
 
@@ -206,8 +207,8 @@ def _action_get_tool_costs(context: AppContext, arguments: dict) -> str:
     if not costs:
         return "I don't have any tool costs yet. Try: 'I bought a chainsaw for $329.'"
     total = sum(c.total for c in costs)
-    lines = [f"{c.name} ${c.total:,.0f}" for c in costs[:5]]
-    return f"Your tools and equipment have cost ${total:,.2f} in all. The biggest: " + "; ".join(lines) + "."
+    lines = [f"{c.name} {money(c.total, ',.0f')}" for c in costs[:5]]
+    return f"Your tools and equipment have cost {money(total, ',.2f')} in all. The biggest: " + "; ".join(lines) + "."
 
 
 def _action_set_build_budget(context: AppContext, arguments: dict) -> str:
@@ -223,9 +224,9 @@ def _action_set_build_budget(context: AppContext, arguments: dict) -> str:
         return question
     context.projects.update_project(project.project_id, budget=amount)
     cost = build_cost(context, project)
-    reply = f"Set the {project.name} budget to ${amount:,.2f}" + (" (a new build)." if created else ".")
+    reply = f"Set the {project.name} budget to {money(amount, ',.2f')}" + (" (a new build)." if created else ".")
     if cost.spent:
-        reply += f" You've spent ${cost.spent:,.2f} of it so far."
+        reply += f" You've spent {money(cost.spent, ',.2f')} of it so far."
     return reply
 
 

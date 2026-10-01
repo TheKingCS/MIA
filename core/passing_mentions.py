@@ -38,6 +38,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from typing import Optional
+from core.region import money
 
 OFFER_LIFETIME_SECONDS = 30 * 60
 
@@ -52,7 +53,7 @@ _NOT_DONE = re.compile(
     r"hasn't|haven't|can't|cannot|couldn't|if|maybe|might|thinking about|plan(?:ning)? to|when should|how do)\b",
     re.IGNORECASE,
 )
-_MONEY = re.compile(r"\$\s?(\d{1,3}(?:,\d{3})*|\d+)(?:\.(\d{2}))?")
+_MONEY = re.compile(r"[$£€]\s?(\d{1,3}(?:,\d{3})*|\d+)(?:\.(\d{2}))?")  # any listed currency (core/region.py)
 _OUT_OF = re.compile(r"\b(?:we're|we are|i'm|i am|we|i)\s+(?:all\s+|almost\s+|about\s+|nearly\s+)?(?:out of|low on|running low on|running out of)\s+([a-z][a-z ,'&-]{1,60})",
                      re.IGNORECASE)
 _PAID = re.compile(r"\b(?:paid|payed|made (?:a|the) payment)\b", re.IGNORECASE)
@@ -144,12 +145,12 @@ def detect_offer(text: str, context) -> Optional[Offer]:
         named = _names_in(text, bills)
         if len(named) == 1:
             args = {"name": named[0], **({"amount": amount} if amount else {})}
-            return Offer("bill", f"Want me to mark the {named[0]} bill paid" + (f" (${amount:,.2f})" if amount else "") + "?",
+            return Offer("bill", f"Want me to mark the {named[0]} bill paid" + (f" ({money(amount, ',.2f')})" if amount else "") + "?",
                          [("mark_bill_paid", args)])
         debts = [d.name for d in budget.all_debts()]
         named = _names_in(text, debts)
         if len(named) == 1 and amount:
-            return Offer("debt", f"Want me to record the ${amount:,.2f} payment on {named[0]}?",
+            return Offer("debt", f"Want me to record the {money(amount, ',.2f')} payment on {named[0]}?",
                          [("record_debt_payment", {"debt_name": named[0], "amount": amount})])
 
     # Work done on a tracked item.
@@ -167,7 +168,7 @@ def detect_offer(text: str, context) -> Optional[Offer]:
                 overlap = len(wanted & said)
                 if wanted and overlap >= min(2, len(wanted)) and overlap > best_overlap:
                     best, best_overlap = task, overlap
-            cost = f" and log the ${amount:,.2f}" if amount else ""
+            cost = f" and log the {money(amount, ',.2f')}" if amount else ""
             if best is not None:
                 args = {"title": best.title, "asset_name": asset.name, **({"cost": amount} if amount else {})}
                 return Offer("task", f"Want me to mark “{best.title}” done on the {asset.name}{cost}?",
@@ -202,5 +203,5 @@ def carry_out(context, offer: Offer) -> str:
             amount=offer.expense["amount"], category="Maintenance", description=offer.expense["description"],
             asset_id=offer.expense["asset_id"], notes="From something you mentioned to MIA.",
         )
-        replies.append(f"Logged ${offer.expense['amount']:,.2f} as a Maintenance expense.")
+        replies.append(f"Logged {money(offer.expense['amount'], ',.2f')} as a Maintenance expense.")
     return " ".join(r for r in replies if r)

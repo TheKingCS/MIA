@@ -34,6 +34,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
+from core.region import money
 
 TOOL_PURCHASE_CATEGORY = "Tools & Equipment"
 
@@ -80,7 +81,7 @@ class ToolCost:
 
 
 def _money(value: float) -> str:
-    return f"${value:,.2f}".replace(".00", "")
+    return f"{money(value, ',.2f')}".replace(".00", "")
 
 
 # ---------------------------------------------------------------------------

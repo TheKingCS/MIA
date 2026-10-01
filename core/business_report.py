@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import html
 from typing import Optional
+from core.region import money
 
 _TABLE_OPEN = '<table border="1" cellspacing="0" cellpadding="4" width="100%" style="border-collapse:collapse">'
 
@@ -45,7 +46,7 @@ _US_1099_NEC_THRESHOLD = 600.0
 
 
 def _money(amount: float) -> str:
-    return f"${amount:,.2f}"
+    return f"{money(amount, ',.2f')}"
 
 
 def _money_whole(amount: float) -> str:
@@ -56,7 +57,7 @@ def _money_whole(amount: float) -> str:
     real data, and dropping them is what actually keeps those wide
     6-7-figure columns from wrapping on a real rendered page (confirmed
     visually, not assumed)."""
-    return f"${amount:,.0f}"
+    return f"{money(amount, ',.0f')}"
 
 
 def _category_table(title: str, totals: dict[str, float], empty_message: str) -> str:
@@ -464,13 +465,13 @@ def _equipment_use_table(rows: list[dict]) -> str:
     title = "<h2>Equipment business use (this year)</h2>"
     if not rows:
         return title + "<p>No business use of equipment or vehicles logged this year.</p>"
-    money = lambda v: _money(v) if v is not None else "—"  # noqa: E731
+    cash = lambda v: _money(v) if v is not None else "—"  # noqa: E731
     head = ("<tr><th>Item</th><th>Business use</th><th>Business %</th><th>Share of running costs</th>"
             "<th>Share of cost basis</th><th>Standard mileage</th></tr>")
     body = "".join(
         f"<tr><td>{html.escape(r['name'])}</td><td>{r['business']:g} of {r['total']:g} {r['unit']}</td>"
-        f"<td>{(str(r['pct']) + '%') if r['pct'] is not None else '—'}</td><td>{money(r['running_share'])}</td>"
-        f"<td>{money(r['basis_share'])}</td><td>{money(r['standard_mileage'])}</td></tr>"
+        f"<td>{(str(r['pct']) + '%') if r['pct'] is not None else '—'}</td><td>{cash(r['running_share'])}</td>"
+        f"<td>{cash(r['basis_share'])}</td><td>{cash(r['standard_mileage'])}</td></tr>"
         for r in rows
     )
     return (title + _TABLE_OPEN + head + body + "</table>"

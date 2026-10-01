@@ -89,6 +89,14 @@ away apps still open from Modules, search, or by asking MIA. Change it
 in Settings → My Apps, hide or show one app in Modules, or just say
 "switch me to student mode" or "hide the Lab".
 
+## Your country and money
+
+Settings → Support & Safety → "Your country" sets the crisis line MIA
+gives if you're ever in danger (988 in the US and Canada, Samaritans in
+the UK and Ireland, Lifeline in Australia, 1737 in New Zealand; anywhere
+else she points you to findahelpline.com and your local emergency
+number). "Currency" sets the money symbol everywhere in MIA.
+
 ## Emails
 
 Ask MIA to write one: "write an email to pat@example.com about the leaky

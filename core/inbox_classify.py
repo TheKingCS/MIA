@@ -27,6 +27,7 @@ import re
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional
+from core.region import money
 
 RECEIPT, INVOICE, MANUAL, WARRANTY, OTHER = "receipt", "invoice", "manual", "warranty", "other"
 DOC_TYPE_LABELS = {RECEIPT: "Receipt", INVOICE: "Invoice", MANUAL: "Manual", WARRANTY: "Warranty", OTHER: "Document"}
@@ -48,7 +49,7 @@ KNOWN_STORES = (
 _HARDWARE_STORES = {"Lowe's", "Home Depot", "Menards", "Ace Hardware", "True Value", "Harbor Freight", "Northern Tool"}
 _AUTO_STORES = {"AutoZone", "O'Reilly", "NAPA"}
 
-_MONEY = re.compile(r"\$?\s?(\d{1,3}(?:,\d{3})*|\d+)\.(\d{2})\b")
+_MONEY = re.compile(r"[$£€]?\s?(\d{1,3}(?:,\d{3})*|\d+)\.(\d{2})\b")
 _TOTAL_LINE = re.compile(r"\b(grand total|order total|total due|amount paid|amount due|balance due|total)\b", re.IGNORECASE)
 _MONTHS = {m: i for i, m in enumerate(
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], start=1)}
@@ -363,7 +364,7 @@ def detail_proposals(details: dict, asset) -> list[DetailProposal]:
         purchase_date = purchase.get("date") or ""
         when = f" on {purchase_date}" if purchase_date else ""
         proposals.append(DetailProposal(
-            "purchase", (purchase["price"], purchase_date), f"Bought for ${purchase['price']:,.2f}{when}",
+            "purchase", (purchase["price"], purchase_date), f"Bought for {money(purchase['price'], ',.2f')}{when}",
             "", True, purchase.get("source", ""),
         ))
     warranty = details.get("warranty")
@@ -385,8 +386,8 @@ def detail_proposals(details: dict, asset) -> list[DetailProposal]:
 
 _ITEM_LINE = re.compile(
     r"^(?P<desc>.*?[A-Za-z].*?)\s+"
-    r"(?:(?P<qty>\d+(?:\.\d+)?)\s*(?:@|x|X|EA\s*@)\s*\$?(?P<unit>\d+\.\d{2})\s+)?"
-    r"\$?(?P<amount>\d{1,3}(?:,\d{3})*\.\d{2})\s*[A-Z]{0,2}$"
+    r"(?:(?P<qty>\d+(?:\.\d+)?)\s*(?:@|x|X|EA\s*@)\s*[$£€]?(?P<unit>\d+\.\d{2})\s+)?"
+    r"[$£€]?(?P<amount>\d{1,3}(?:,\d{3})*\.\d{2})\s*[A-Z]{0,2}$"
 )
 _NOT_AN_ITEM = re.compile(
     r"\b(sub\s?total|total|tax|change|cash|visa|mastercard|amex|discover|debit|credit|balance|tender|payment|paid|"
@@ -405,7 +406,7 @@ class LineItem:
 
     def describe(self) -> str:
         qty = f" ×{self.quantity:g}" if self.quantity and self.quantity != 1 else ""
-        return f"{self.description}{qty} ${self.amount:,.2f}"
+        return f"{self.description}{qty} {money(self.amount, ',.2f')}"
 
 
 def receipt_items(text: str) -> tuple[list[LineItem], str]:
@@ -434,6 +435,6 @@ def receipt_items(text: str) -> tuple[list[LineItem], str]:
     if subtotal:
         expected = float(subtotal.group(1).replace(",", ""))
         if abs(expected - total) <= 0.01:
-            return items, f"The items add up to the subtotal (${expected:,.2f})."
-        return items, f"The items add up to ${total:,.2f} but the subtotal is ${expected:,.2f}; a line may be misread or missing."
-    return items, f"The items add up to ${total:,.2f} (no subtotal on the receipt to check against)."
+            return items, f"The items add up to the subtotal ({money(expected, ',.2f')})."
+        return items, f"The items add up to {money(total, ',.2f')} but the subtotal is {money(expected, ',.2f')}; a line may be misread or missing."
+    return items, f"The items add up to {money(total, ',.2f')} (no subtotal on the receipt to check against)."

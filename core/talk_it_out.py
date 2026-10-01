@@ -50,6 +50,7 @@ from core.logger import get_logger
 from core.passing_mentions import carry_out, detect_offer, is_yes
 from core.support_choice import ASK_EVERY_HOURS, HABIT_NOTICE, QUESTION, habit, interpret_answer, remember, remembered, sounds_heavy
 from core.private_journal import JournalExchange, JournalLockedError, PrivateJournalEntry
+from core.region import region_for
 from core.safety_floor import detect_danger, safety_reply, trusted_contact_from
 from core.textbook_study import is_study_mode, update_study_target
 
@@ -158,7 +159,7 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     if detect_danger(prompt):
         conversation.mode = LISTEN
         _persist(context, conversation)
-        result.fixed_reply = safety_reply(trusted_contact_from(context))
+        result.fixed_reply = safety_reply(trusted_contact_from(context), region_for(context))
         return result
 
     if not awaiting and change.is_empty and _may_ask_support(context, conversation, prompt):

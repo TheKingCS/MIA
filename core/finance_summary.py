@@ -34,6 +34,7 @@ from typing import Optional
 
 from core.budget_manager import days_until_bill_due, days_until_income_due, rank_debts
 from core.homestead_costs import all_build_costs, all_tool_costs
+from core.region import currency_symbol_for
 
 UPCOMING_DAYS = 14
 
@@ -65,7 +66,8 @@ def _net_worth(context) -> dict:
 def build_finance_summary(context, today: Optional[date] = None) -> dict:
     today = today or date.today()
     budget = getattr(context, "budget", None)
-    summary: dict = {"generated_at": datetime.now().isoformat(timespec="seconds"), "as_of": today.isoformat()}
+    summary: dict = {"generated_at": datetime.now().isoformat(timespec="seconds"), "as_of": today.isoformat(),
+                     "currency_symbol": currency_symbol_for(context)}
     if budget is None:
         summary["available"] = False
         return summary

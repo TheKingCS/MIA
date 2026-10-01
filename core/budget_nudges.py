@@ -29,6 +29,7 @@ from datetime import date
 from typing import Optional
 
 from core.budget_manager import Bill, BudgetTarget, IncomeSource, days_until_bill_due, days_until_income_due
+from core.region import money
 
 _UPCOMING_WITHIN_DAYS = 7
 
@@ -54,7 +55,7 @@ def upcoming_bills_summary(bills: list[Bill], today: date, within_days: int = _U
     ]
     if not upcoming:
         return None
-    parts = [f"{b.name} (${b.amount:.2f})" for b in sorted(upcoming, key=lambda b: days_until_bill_due(b, today))]
+    parts = [f"{b.name} ({money(b.amount, '.2f')})" for b in sorted(upcoming, key=lambda b: days_until_bill_due(b, today))]
     return f"Due within {within_days} days: {', '.join(parts)}."
 
 
@@ -71,7 +72,7 @@ def upcoming_income_summary(sources: list[IncomeSource], today: date, within_day
     soonest = min(upcoming, key=lambda s: days_until_income_due(s, today))
     remaining = days_until_income_due(soonest, today)
     when = "today" if remaining == 0 else f"in {remaining} days"
-    return f"Next expected income: {soonest.name}, ${soonest.expected_amount:.2f} {when}."
+    return f"Next expected income: {soonest.name}, {money(soonest.expected_amount, '.2f')} {when}."
 
 
 def budget_overage_summary(targets: list[BudgetTarget], actual_by_category: dict[str, float]) -> Optional[str]:
@@ -86,7 +87,7 @@ def budget_overage_summary(targets: list[BudgetTarget], actual_by_category: dict
             over.append((target.category, actual, target.monthly_amount))
     if not over:
         return None
-    parts = [f"{category} (${actual:.2f} of ${planned:.2f} planned)" for category, actual, planned in over]
+    parts = [f"{category} ({money(actual, '.2f')} of {money(planned, '.2f')} planned)" for category, actual, planned in over]
     return f"Over budget this month: {', '.join(parts)}."
 
 

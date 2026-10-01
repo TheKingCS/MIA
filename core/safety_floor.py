@@ -21,17 +21,19 @@ tests/test_safety_floor.py lists both what must trigger and what must
 not ("this traffic is killing me"). False positives cost a caring
 message; false negatives are why the wording errs broad.
 
-Contacts are US numbers (988 Suicide & Crisis Lifeline, call or text;
-911 for immediate danger), matching the owner's location. The owner
-can add a trusted person in config (`assistant.safety.trusted_contact`,
-free text like "my brother Josh, 555-0142"), which is named in the
-reply when set.
+Contacts follow the person's country (core/region.py, 2026-10-01): 988
+and 911 in the US, Samaritans and 999 in the UK, and so on; elsewhere,
+general advice and findahelpline.com rather than a number that might be
+wrong. Each person can add a trusted person (`assistant.safety.trusted_contact`,
+free text like "my brother, 555-0142"), named in the reply when set.
 """
 
 from __future__ import annotations
 
 import re
 from typing import Optional
+
+from core.region import DEFAULT, Region, region
 
 _DANGER = re.compile(
     r"\b(?:"
@@ -69,16 +71,17 @@ def detect_danger(prompt: str) -> bool:
     return not _NOT_DANGER.search(text)
 
 
-def safety_reply(trusted_contact: Optional[str] = None) -> str:
-    """The fixed reply. Kept plain and short enough to be spoken aloud."""
+def safety_reply(trusted_contact: Optional[str] = None, where: Optional[Region] = None) -> str:
+    """The fixed reply. Kept plain and short enough to be spoken aloud.
+    `where` is the person's region (core/region.py); the US if not given."""
+    where = where or region(DEFAULT)
     contact = (trusted_contact or "").strip()
     contact_line = f" You could also reach out to {contact}." if contact else ""
     return (
         "I'm really glad you told me, and I'm taking it seriously. You don't have to carry this alone. "
-        "Please talk to someone who can be with you right now: call or text 988, the Suicide and Crisis "
-        "Lifeline. It's free and open all day and night. If you or anyone else is in immediate danger, "
-        f"call 911.{contact_line} I'm right here and I'll keep talking with you. Do you want to tell me "
-        "what's going on?"
+        f"Please talk to someone who can be with you right now: {where.crisis}. If you or anyone else is in "
+        f"immediate danger, call {where.emergency}.{contact_line} I'm right here and I'll keep talking with "
+        "you. Do you want to tell me what's going on?"
     )
 
 
