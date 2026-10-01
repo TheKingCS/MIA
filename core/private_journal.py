@@ -137,7 +137,12 @@ def _unb64(text: str) -> bytes:
 
 
 class PrivateJournalManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or the
+        # shared data/ folder by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _KEYS_FILE.parent
+        self._keys_file = self.data_dir / _KEYS_FILE.name if data_dir is not None else _KEYS_FILE
+        self._entries_file = self.data_dir / _ENTRIES_FILE.name if data_dir is not None else _ENTRIES_FILE
         self.context = context
         self._public_key = None
         self._private_key = None  # set only while unlocked
@@ -149,25 +154,25 @@ class PrivateJournalManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if _KEYS_FILE.exists():
+        if self._keys_file.exists():
             try:
-                keys = json.loads(_KEYS_FILE.read_text(encoding="utf-8"))
+                keys = json.loads(self._keys_file.read_text(encoding="utf-8"))
                 self._public_key = serialization.load_pem_public_key(keys["public_key"].encode("ascii"))
             except (json.JSONDecodeError, OSError, KeyError, ValueError):
                 log.exception("Failed to load private_journal_keys.json — the private journal can't be written.")
                 notify_data_corruption(self.context, "private_journal_keys.json")
                 self._public_key = None
-        if _ENTRIES_FILE.exists():
+        if self._entries_file.exists():
             try:
-                self._records = list(json.loads(_ENTRIES_FILE.read_text(encoding="utf-8")).get("entries", []))
+                self._records = list(json.loads(self._entries_file.read_text(encoding="utf-8")).get("entries", []))
             except (json.JSONDecodeError, OSError, AttributeError):
                 log.exception("Failed to load private_journal.json — starting with an empty list.")
                 notify_data_corruption(self.context, "private_journal.json")
                 self._records = []
 
     def _save_records(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_ENTRIES_FILE, json.dumps({"version": 1, "entries": self._records}, indent=2))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._entries_file, json.dumps({"version": 1, "entries": self._records}, indent=2))
 
     # ------------------------------------------------------------------
     # Setup / lock state
@@ -192,8 +197,8 @@ class PrivateJournalManager:
         public_pem = private_key.public_key().public_bytes(
             serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
         )
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_KEYS_FILE, json.dumps({
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._keys_file, json.dumps({
             "version": 1,
             "public_key": public_pem.decode("ascii"),
             "private_key": _b64(encrypt_bytes(private_pem, passphrase)),
@@ -218,10 +223,10 @@ class PrivateJournalManager:
         self._private_key = None
 
     def _decrypt_private_key(self, passphrase: str):
-        if not _KEYS_FILE.exists():
+        if not self._keys_file.exists():
             raise SecretsError("The private journal hasn't been set up yet.")
         try:
-            keys = json.loads(_KEYS_FILE.read_text(encoding="utf-8"))
+            keys = json.loads(self._keys_file.read_text(encoding="utf-8"))
             blob = _unb64(keys["private_key"])
         except (json.JSONDecodeError, OSError, KeyError, ValueError) as exc:
             raise SecretsError("The private journal's key file is unreadable.") from exc

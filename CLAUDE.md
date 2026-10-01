@@ -129,6 +129,21 @@ from and merged with the defaults on load
 keys without wiping user settings, and lets a user factory-reset by
 deleting `config/config.json`.
 
+### Built for anyone; each person's data is their own
+
+MIA is perfected for personal use but designed for any person or
+household, not one owner (2026-10-01 decision; the youth/school idea is
+parked in `docs/future/MIA_YOUTH_INITIATIVE.md`). Personal stores live in
+each profile's folder, `data/profiles/<id>/` (`core/personal_data.py`):
+conversations, memories, private journal, notes, reasons, MIA's message
+log, online reminders. Household things (maintenance, kitchen, builds,
+rentals, inventory, chores, inbox, calendar, budget for now) stay shared.
+A new store that holds something personal takes an optional `data_dir`
+in its constructor and is added to `PERSONAL_STORES`. Tools always use
+the `context` they're given, never a global, because the phone runs a
+turn on the signed-in person's own view (`view_for()`). Never hardcode
+the owner's names, places or things in code or prompts.
+
 ### Other core services
 
 - **Event bus** (`core/event_bus.py`) — synchronous pub/sub, deliberately

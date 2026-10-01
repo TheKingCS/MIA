@@ -259,7 +259,11 @@ class CommunicationGate:
     NotificationManager, so the toast, bell and phone push all work
     unchanged."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or the
+        # shared data/ folder by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _LOG_FILE.parent
+        self._log_file = self.data_dir / _LOG_FILE.name if data_dir is not None else _LOG_FILE
         self.context = context
         self._log: list[dict] = []
         self._pending: list[dict] = []
@@ -275,10 +279,10 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _LOG_FILE.exists():
+        if not self._log_file.exists():
             return
         try:
-            data = json.loads(_LOG_FILE.read_text(encoding="utf-8"))
+            data = json.loads(self._log_file.read_text(encoding="utf-8"))
             self._log = list(data.get("log", []))
             self._pending = list(data.get("pending", []))
             self._resumed = dict(data.get("resumed", {}))
@@ -288,8 +292,8 @@ class CommunicationGate:
     def _save(self, now: datetime) -> None:
         cutoff = (now - timedelta(days=_KEEP_LOG_DAYS)).isoformat()
         self._log = [e for e in self._log if e.get("at", "") >= cutoff]
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_LOG_FILE, json.dumps({"log": self._log, "pending": self._pending, "resumed": self._resumed},
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._log_file, json.dumps({"log": self._log, "pending": self._pending, "resumed": self._resumed},
                                                 indent=2))
 
     # ------------------------------------------------------------------
@@ -404,6 +408,12 @@ class CommunicationGate:
     # ------------------------------------------------------------------
     # Learning from being ignored
     # ------------------------------------------------------------------
+
+    def close(self) -> None:
+        """Stop listening (a replaced store, core/personal_data.py)."""
+        events = getattr(self.context, "events", None)
+        if events is not None:
+            events.unsubscribe("notification.dismissed", self._on_notification_dismissed)
 
     def _on_notification_dismissed(self, notification_id: str = "", **_kwargs) -> None:
         now = self.clock()

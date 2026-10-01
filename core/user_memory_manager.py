@@ -280,7 +280,11 @@ def memory_relationship_trees(all_memories: list["UserMemory"]) -> list["MemoryT
 
 
 class UserMemoryManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or the
+        # shared data/ folder by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _USER_MEMORIES_FILE.parent
+        self._user_memories_file = self.data_dir / _USER_MEMORIES_FILE.name if data_dir is not None else _USER_MEMORIES_FILE
         self.context = context
         self._memories: list[UserMemory] = []
         self._load()
@@ -290,11 +294,11 @@ class UserMemoryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _USER_MEMORIES_FILE.exists():
+        if not self._user_memories_file.exists():
             self._memories = []
             return
         try:
-            raw = json.loads(_USER_MEMORIES_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._user_memories_file.read_text(encoding="utf-8"))
             self._memories = [UserMemory.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load user_memories.json — starting with an empty list.")
@@ -302,8 +306,8 @@ class UserMemoryManager:
             self._memories = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_USER_MEMORIES_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._user_memories_file,
             json.dumps([m.to_dict() for m in self._memories], indent=2),
             encoding="utf-8",
         )

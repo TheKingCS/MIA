@@ -12518,3 +12518,40 @@ failure). 2 new tests; routing corpus 214.
 
 **Verified:** full `pytest -q` passes (same one pre-existing timezone
 failure). 19 new tests (18 support choice, 1 Core Perspective turn).
+
+## People and ownership, step 1: each person's data is their own (2026-10-01)
+
+The owner parked the youth/school initiative
+(`docs/future/MIA_YOUTH_INITIATIVE.md`) and asked to keep perfecting MIA
+for personal use, designed for any person or household. The review's
+biggest gap was that almost all data was stored once for the household.
+
+- `core/personal_data.py`: conversations, memories, private journal
+  (each person's own passphrase), notes, reasons and their checkpoints,
+  MIA's message log and breaks, and online reminders live in
+  `data/profiles/<id>/`. Each of those stores takes an optional
+  `data_dir` (default unchanged). `PersonView` is a person's context:
+  their stores, everything else read live from the main context.
+- Sign-in (`profile.switched`, or a new profile created active) puts
+  that person's stores on the main context; the screens rebuild.
+- The phone server runs each turn on the signed-in phone user's view
+  (`view_for()`), so a phone user and a different desktop user don't mix.
+- Existing shared files move once to the first profile ever created
+  (the owner), whoever signs in first; a marker records it.
+- Tests: the suite can never move real files (tests/conftest.py points
+  the move's source at a temp folder; a first version of this change
+  leaked test folders into this sandbox's data/profiles, caught and
+  removed).
+
+**Next steps for "people and ownership":** per-person settings (message
+limit, reflection, support question are household-wide config today);
+notifications per person (the bell is shared); workouts and learning
+(Classroom) per person; an optional "private" budget; then roles and
+ownership marks on shared records (who owns the truck), which
+`MaintenanceAsset.owner_profile_id` already starts.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 8 new tests (two people's separation, sign-in switching, the
+one-time move to the owner, separate private journals, the phone as its
+own person, checkpoints, a replaced store stops listening, a new active
+profile).

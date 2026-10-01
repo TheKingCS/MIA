@@ -87,7 +87,11 @@ class JournalEntry:
 
 
 class JournalManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or the
+        # shared data/ folder by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _ENTRIES_FILE.parent
+        self._entries_file = self.data_dir / _ENTRIES_FILE.name if data_dir is not None else _ENTRIES_FILE
         self.context = context
         self._entries: list[JournalEntry] = []
         self._load()
@@ -97,11 +101,11 @@ class JournalManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _ENTRIES_FILE.exists():
+        if not self._entries_file.exists():
             self._entries = []
             return
         try:
-            raw = json.loads(_ENTRIES_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._entries_file.read_text(encoding="utf-8"))
             self._entries = [JournalEntry.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load journal_entries.json — starting with an empty list.")
@@ -113,8 +117,8 @@ class JournalManager:
         self._load()
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_ENTRIES_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._entries_file,
             json.dumps([e.to_dict() for e in self._entries], indent=2),
             encoding="utf-8",
         )

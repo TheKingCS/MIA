@@ -75,19 +75,23 @@ def transition_message(kind: str, waiting: int) -> tuple[str, str]:
 
 
 class OnlineReminders:
-    def __init__(self, context) -> None:
+    def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or the
+        # shared data/ folder by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _REMINDERS_FILE.parent
+        self._reminders_file = self.data_dir / _REMINDERS_FILE.name if data_dir is not None else _REMINDERS_FILE
         self.context = context
         self._items: list[dict] = []
-        if _REMINDERS_FILE.exists():
+        if self._reminders_file.exists():
             try:
-                self._items = list(json.loads(_REMINDERS_FILE.read_text(encoding="utf-8")))
+                self._items = list(json.loads(self._reminders_file.read_text(encoding="utf-8")))
             except (OSError, ValueError, TypeError):
                 log.exception("online_reminders.json unreadable, starting empty.")
                 notify_data_corruption(context, "online_reminders.json")
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_REMINDERS_FILE, json.dumps(self._items, indent=2))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._reminders_file, json.dumps(self._items, indent=2))
 
     def add(self, what: str) -> None:
         self._items.append({"what": what.strip(), "created": datetime.now().isoformat(timespec="seconds")})

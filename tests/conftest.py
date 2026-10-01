@@ -65,6 +65,15 @@ logger_module._LOG_FILE = _TEST_LOG_DIR / "mia.log"
 _TEST_PROFILES_DIR = Path(tempfile.mkdtemp(prefix="mia_test_profiles_"))
 profile_manager_module._DATA_PROFILES_DIR = _TEST_PROFILES_DIR
 
+# 2026-10-01: core.personal_data moves the formerly shared personal files
+# (conversations, journal...) from data/ into the owner's profile folder
+# once. In a test run that must never touch real files: point its
+# "formerly shared" folder at an empty temp dir. (Its profiles folder is
+# ProfileManager's, redirected just above.)
+import core.personal_data as personal_data_module  # noqa: E402
+
+personal_data_module._DATA_DIR = Path(tempfile.mkdtemp(prefix="mia_test_shared_"))
+
 _TEST_USAGE_DIR = Path(tempfile.mkdtemp(prefix="mia_test_usage_"))
 usage_tracker_module._DATA_DIR = _TEST_USAGE_DIR
 usage_tracker_module._USAGE_FILE = _TEST_USAGE_DIR / "module_usage.json"

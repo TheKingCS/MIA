@@ -90,6 +90,7 @@ from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from core.assistant_why_actions import register_why_actions
 from core.budget_manager import BudgetManager
 from core.intent_manager import IntentManager
+from core.personal_data import PersonalData
 from core.project_manager import ProjectManager
 from core.real_estate_manager import RealEstateManager
 
@@ -149,6 +150,10 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.budget = BudgetManager(context)
     context.projects = ProjectManager(context)
     context.real_estate = RealEstateManager(context)
+    # Each person's own stores (core/personal_data.py), as on the desktop.
+    context.personal_data = PersonalData(context)
+    context.personal_data.watch(events)
+    context.personal_data.activate_current()
 
     # Constructed but never `.discover()`-ed — stays empty for the life
     # of a headless Core process, so `open_module` (not registered

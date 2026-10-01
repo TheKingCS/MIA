@@ -58,3 +58,15 @@ you want a bigger view for a longer conversation.
 MIA has 4 visual themes — Dark Field, Low Energy, Colored, and Anime
 Monochrome — changeable any time from Settings, or by asking the
 Assistant to switch themes for you.
+
+## More than one person
+
+Each person who uses MIA gets their own profile (Settings → Switch
+User, or the profile screen at start). What's personal stays with the
+person who said it: conversations, what MIA remembers about you, your
+private journal (with your own passphrase), notes, your reasons
+("remember why"), and how often MIA speaks up to you. Things that belong
+to the household are shared: maintenance and the mower, the kitchen and
+grocery list, builds, rentals, inventory, chores, the document inbox,
+the calendar and the budget. On the phone, MIA talks to whoever signed
+in there, even if someone else is at the computer.

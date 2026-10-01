@@ -1017,6 +1017,17 @@ a working device. This document is the North Star. `ROADMAP.md` is the
 map of the next several steps. Neither should be edited to look like
 the other.
 
+## Built for anyone; the youth initiative is parked (2026-10-01)
+
+The owner wrote a larger vision: MIA as a free human-development and
+life-skills platform for young people, in schools and communities. His
+decision: park it as a future direction, keep perfecting MIA for
+personal use, but **design it for more than one person or household**
+so it's ready if that direction is taken. The full handoff and Claude's
+review: `docs/future/MIA_YOUTH_INITIATIVE.md`. In practice: each
+person's data is their own (`core/personal_data.py`), nothing assumes a
+particular owner, and new work avoids single-owner shortcuts.
+
 ## Critical evaluation (honest assessment, not just enthusiasm)
 
 - **Scope is the primary risk.** An Expert Council of debating

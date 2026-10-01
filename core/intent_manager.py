@@ -94,7 +94,11 @@ class Intent:
 
 
 class IntentManager:
-    def __init__(self, context: AppContext) -> None:
+    def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
+        # Whose data: a person's own folder (core/personal_data.py), or the
+        # shared data/ folder by default.
+        self.data_dir = Path(data_dir) if data_dir is not None else _INTENTS_FILE.parent
+        self._intents_file = self.data_dir / _INTENTS_FILE.name if data_dir is not None else _INTENTS_FILE
         self.context = context
         self._intents: list[Intent] = []
         self._load()
@@ -104,11 +108,11 @@ class IntentManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _INTENTS_FILE.exists():
+        if not self._intents_file.exists():
             self._intents = []
             return
         try:
-            raw = json.loads(_INTENTS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._intents_file.read_text(encoding="utf-8"))
             self._intents = [Intent.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load intents.json — starting with an empty list.")
@@ -116,8 +120,8 @@ class IntentManager:
             self._intents = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_INTENTS_FILE,
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._intents_file,
             json.dumps([i.to_dict() for i in self._intents], indent=2),
             encoding="utf-8",
         )

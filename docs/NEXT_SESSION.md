@@ -86,6 +86,16 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**Direction (2026-10-01):** keep perfecting MIA for personal use, but
+built for any person or household, not just you. The youth/school
+initiative is parked (`docs/future/MIA_YOUTH_INITIATIVE.md`). Step 1 is
+built: each person's conversations, memories, journal, notes and
+reasons are their own (see ROADMAP "People and ownership"). Next in
+that line: per-person settings and notifications, workouts and
+learning per person, an optional private budget, then a real Habits
+module (useful for anyone; parked youth docs describe it well).
+
+
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were
    built without being able to reach Plaid or a real phone.
 2. **Phone voice, phase 2, the rest.** Built (2026-09-28): phone

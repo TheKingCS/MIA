@@ -148,6 +148,7 @@ from core.textbook_manager import TextbookManager
 from core.inbox_manager import InboxManager, describe_new_items
 from core.inbox_mail import MailChecker, MailSettings, MailVault
 from core.ocr import OcrQueue
+from core.personal_data import PersonalData
 from core.voice_manager import VoiceManager
 from core.volume_manager import VolumeManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
@@ -343,6 +344,11 @@ class MIAApplication:
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
         self.context.lite_captures = LiteCaptureManager(self.context)
+        # Each person's own conversations, memories, journal, notes and
+        # reasons (core/personal_data.py): swapped in on every sign-in.
+        self.context.personal_data = PersonalData(self.context)
+        self.context.personal_data.watch(self.context.events)
+        self.context.personal_data.activate_current()
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.insights = InsightManager(self.context)
         self.context.budget = BudgetManager(self.context)

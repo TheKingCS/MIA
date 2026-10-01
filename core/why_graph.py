@@ -150,11 +150,22 @@ def headline_numbers(context, today: Optional[date] = None) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def load_checkpoints() -> list[dict]:
-    if not _CHECKPOINTS_FILE.exists():
+def _checkpoints_file(context=None) -> Path:
+    """Next to the owner's reasons: their own folder when the intents
+    store has one (core/personal_data.py), else the shared data/ folder."""
+    intents = getattr(context, "intents", None) if context is not None else None
+    intents_dir = getattr(intents, "data_dir", None)
+    if intents_dir is not None and Path(intents_dir) != _DATA_DIR:
+        return Path(intents_dir) / _CHECKPOINTS_FILE.name
+    return _CHECKPOINTS_FILE
+
+
+def load_checkpoints(context=None) -> list[dict]:
+    path = _checkpoints_file(context)
+    if not path.exists():
         return []
     try:
-        data = json.loads(_CHECKPOINTS_FILE.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
         return [c for c in data if isinstance(c, dict) and "month" in c]
     except (json.JSONDecodeError, OSError):
         log.exception("why_checkpoints.json unreadable — ignoring it.")
@@ -166,12 +177,13 @@ def record_checkpoint_if_due(context, today: Optional[date] = None) -> None:
     is built that month. Cheap, and never overwrites an earlier month."""
     today = today or date.today()
     month = today.strftime("%Y-%m")
-    checkpoints = load_checkpoints()
+    checkpoints = load_checkpoints(context)
     if any(c["month"] == month for c in checkpoints):
         return
     checkpoints.append({"month": month, **headline_numbers(context, today)})
-    _DATA_DIR.mkdir(parents=True, exist_ok=True)
-    atomic_write_text(_CHECKPOINTS_FILE, json.dumps(checkpoints, indent=2))
+    path = _checkpoints_file(context)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(path, json.dumps(checkpoints, indent=2))
 
 
 def describe_changes(first: dict, now: dict) -> list[str]:
@@ -284,7 +296,7 @@ def build_why_sheet(context, today: Optional[date] = None, record_checkpoint: bo
         except OSError:
             log.exception("Couldn't record the monthly why checkpoint.")
     numbers = headline_numbers(context, today)
-    checkpoints = sorted(load_checkpoints(), key=lambda c: c["month"])
+    checkpoints = sorted(load_checkpoints(context), key=lambda c: c["month"])
     this_month = today.strftime("%Y-%m")
     earlier = [c for c in checkpoints if c["month"] < this_month]
     first = earlier[0] if earlier else None

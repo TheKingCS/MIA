@@ -142,7 +142,10 @@ def phone(context, tmp_path, monkeypatch):  # noqa: F811  (context is the import
     client = TestClient(server_app_module.create_app(context))
     token = client.post("/api/login", json={"profile_id": "Alice", "password": "hunter2"}).json()["token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
-    return SimpleNamespace(client=client, context=context, handed=handed, file=tmp_path / "data" / "conversations.json")
+    # Phone turns go to the signed-in person's own conversations (core/personal_data.py).
+    alice = context.profiles.list_profiles()[0].profile_id
+    own = context.personal_data.view(alice).conversations
+    return SimpleNamespace(client=client, context=context, handed=handed, conversations=own, file=own._conversations_file)
 
 
 def test_phone_turns_are_saved_for_the_desktop_history(phone):
@@ -150,7 +153,7 @@ def test_phone_turns_are_saved_for_the_desktop_history(phone):
     phone.context.events.subscribe("conversation.updated", lambda **kw: updates.append(kw["conversation_id"]))
     first = phone.client.post("/api/voice/text", json={"text": "What's on my schedule today?"}).json()
     phone.client.post("/api/voice/text", json={"text": "And tomorrow?"})
-    [conversation] = phone.context.conversations.all_conversations()
+    [conversation] = phone.conversations.all_conversations()
     assert conversation.title == "\U0001F4F1 What's on my schedule today?"
     assert [m.role for m in conversation.messages] == ["user", "assistant", "user", "assistant"]
     saved = json.loads(phone.file.read_text())
@@ -165,15 +168,15 @@ def test_phone_turns_are_saved_for_the_desktop_history(phone):
 
 def test_a_new_phone_conversation_after_hours_of_quiet(phone):
     phone.client.post("/api/voice/text", json={"text": "Good morning"})
-    [morning] = phone.context.conversations.all_conversations()
+    [morning] = phone.conversations.all_conversations()
     morning.updated_at = (datetime.now() - timedelta(hours=7)).isoformat(timespec="seconds")
     phone.client.post("/api/voice/text", json={"text": "Heading home now"})
-    assert len(phone.context.conversations.all_conversations()) == 2
+    assert len(phone.conversations.all_conversations()) == 2
 
 
 def test_off_the_record_on_the_phone_stays_off_the_record(phone):
     phone.client.post("/api/voice/text", json={"text": "Off the record, work was rough"})
-    [conversation] = phone.context.conversations.all_conversations()
+    [conversation] = phone.conversations.all_conversations()
     assert conversation.title == "Off the record"
     saved = json.loads(phone.file.read_text())
     assert all("rough" not in m["content"] for c in saved for m in c["messages"])

@@ -69,6 +69,7 @@ from core.finance_summary import build_finance_summary
 from core.conversation_manager import DEFAULT_TITLE, Conversation
 from core.logger import get_logger
 from core.main_thread import publish as publish_on_main_thread
+from core.personal_data import view_for
 from core.web_push import get_or_create_vapid_keys, send_web_push
 
 log = get_logger(__name__)
@@ -228,7 +229,7 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.voice_conversations: dict[str, Conversation] = {}
     app.state.turn_lock = threading.Lock()
 
-    def conversation_for(profile_id: str) -> Conversation:
+    def conversation_for(profile_id: str, view=None) -> Conversation:
         """2026-09-28: phone conversations are saved with the desktop's
         (the Assistant's History, titled "📱 ..."), so a drive-home chat
         can be picked up at the desk. A new one after PHONE_CONVERSATION_IDLE
@@ -236,7 +237,7 @@ def create_app(context: AppContext) -> FastAPI:
         (tests, headless), kept in memory as before."""
         conversations = app.state.voice_conversations
         current = conversations.get(profile_id)
-        manager = getattr(context, "conversations", None)
+        manager = getattr(view if view is not None else context, "conversations", None)
         if manager is None:
             if current is None:
                 current = conversations[profile_id] = Conversation(conversation_id=f"phone-{profile_id}")
@@ -247,9 +248,9 @@ def create_app(context: AppContext) -> FastAPI:
             conversations[profile_id] = stored
         return stored
 
-    def after_phone_turn(conversation: Conversation, prompt: str) -> None:
+    def after_phone_turn(conversation: Conversation, prompt: str, view=None) -> None:
         """Save the turn and let the desktop's History show it."""
-        manager = getattr(context, "conversations", None)
+        manager = getattr(view if view is not None else context, "conversations", None)
         if manager is None or manager.get_conversation(conversation.conversation_id) is not conversation:
             return
         if conversation.title == DEFAULT_TITLE and not conversation.current_privacy():
@@ -267,23 +268,27 @@ def create_app(context: AppContext) -> FastAPI:
                 return None
             return base64.b64encode(Path(synthesized).read_bytes()).decode("ascii")
 
-    def followup_locked(conversation: Conversation, followup) -> None:
+    def followup_locked(conversation: Conversation, followup, view=None) -> None:
         # The model call runs outside the lock (it's slow); saving the
         # journal/memories runs inside it, so it can't interleave with
         # the next turn changing the same conversation.
+        view = view if view is not None else context
         raw = context.llm.generate(followup.prompt) if context.llm is not None else None
         with app.state.turn_lock:
-            apply_followup(context, conversation, followup, raw)
-            manager = getattr(context, "conversations", None)
+            apply_followup(view, conversation, followup, raw)
+            manager = getattr(view, "conversations", None)
             if manager is not None and manager.get_conversation(conversation.conversation_id) is conversation:
                 manager.save()
 
     def respond(profile_id: str, transcript: str, background: BackgroundTasks, hearing: Optional[float] = None) -> dict:
-        conversation = conversation_for(profile_id)
+        # The phone user's own view: their conversations, memories, journal
+        # and reasons, whoever is signed in at the desktop (core/personal_data.py).
+        view = view_for(context, profile_id)
+        conversation = conversation_for(profile_id, view)
         started = time.monotonic()
         with app.state.turn_lock:
-            turn: AssistantTurn = run_assistant_turn(context, conversation, transcript)
-            after_phone_turn(conversation, transcript)
+            turn: AssistantTurn = run_assistant_turn(view, conversation, transcript)
+            after_phone_turn(conversation, transcript, view)
         thinking = time.monotonic() - started
         if not turn.llm_available:
             replies = turn.replies + [LLM_UNAVAILABLE_REPLY]
@@ -291,7 +296,7 @@ def create_app(context: AppContext) -> FastAPI:
             replies = turn.replies or ["Done."]
         reply_text = " ".join(replies)
         if turn.followup is not None:
-            background.add_task(followup_locked, conversation, turn.followup)
+            background.add_task(followup_locked, conversation, turn.followup, view)
         started = time.monotonic()
         audio = speak_to_base64(reply_text)
         timings = turn_timings(hearing, thinking, time.monotonic() - started)
