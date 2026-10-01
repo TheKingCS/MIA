@@ -55,13 +55,15 @@ def _has_package(name: str) -> bool:
     return importlib.util.find_spec(name) is not None
 
 
-def check_model(config, models: Callable[[str], Optional[list[str]]] = _ollama_models) -> Check:
+def check_model(config, models: Optional[Callable[[str], Optional[list[str]]]] = None) -> Check:
+    models = models or _ollama_models
     base_url = config.get("llm.base_url", "http://localhost:11434")
     model = config.get("llm.model", "llama3.2:3b")
     found = models(base_url)
     if found is None:
         return Check("Assistant's model", MISSING, f"Ollama isn't answering at {base_url}.",
-                     "Install Ollama (ollama.com), start it, then run: ollama pull " + model)
+                     "Run MIA's installer again (install.sh, or install.bat on Windows), or install Ollama "
+                     "from ollama.com and run: ollama pull " + model)
     wanted = model if ":" in model else model + ":latest"
     if not any(name in (model, wanted) for name in found):
         return Check("Assistant's model", MISSING, f"Ollama is running but doesn't have {model}.",
@@ -69,7 +71,7 @@ def check_model(config, models: Callable[[str], Optional[list[str]]] = _ollama_m
     return Check("Assistant's model", OK, f"{model} is ready.")
 
 
-def run_checks(context, models: Callable[[str], Optional[list[str]]] = _ollama_models,
+def run_checks(context, models: Optional[Callable[[str], Optional[list[str]]]] = None,
                data_dir: Optional[Path] = None) -> list[Check]:
     config = context.config
     checks: list[Check] = []
@@ -84,24 +86,24 @@ def run_checks(context, models: Callable[[str], Optional[list[str]]] = _ollama_m
     tts = bool(voice and voice.is_tts_available())
     checks.append(Check("Hearing you (speech to text)", OK if stt else OPTIONAL,
                         "Ready." if stt else "No speech-to-text model yet; typing still works.",
-                        "" if stt else "Run deploy/download_voice_models.sh (fetches the speech models into voice_models/)."))
+                        "" if stt else "Run MIA's installer again (it downloads the speech models)."))
     checks.append(Check("Speaking (text to speech)", OK if tts else OPTIONAL,
                         "Ready." if tts else "No voice yet; replies are shown as text.",
-                        "" if tts else "Run deploy/download_voice_models.sh (fetches Piper's voice into voice_models/)."))
+                        "" if tts else "Run MIA's installer again (it downloads the voices)."))
 
     from core.ocr import available as ocr_available
 
     ocr = ocr_available(config)
     checks.append(Check("Reading photos and scans", OK if ocr else OPTIONAL,
                         "Tesseract is installed." if ocr else "Photos of receipts and scanned books can't be read yet.",
-                        "" if ocr else "Install Tesseract: sudo apt install tesseract-ocr (Windows: SETUP_GUIDE.md, Part 1a)."))
+                        "" if ocr else "Run MIA's installer again, or: sudo apt install tesseract-ocr."))
 
     phone = _has_package("fastapi") and _has_package("uvicorn")
     checks.append(Check("Phone access", OK if phone else OPTIONAL,
                         ("Ready" + (" and switched on." if config.get("server.enabled", False) else
                                     "; switch it on in Settings when you want it.")) if phone else
                         "The phone server's packages aren't installed.",
-                        "" if phone else "Run: pip install -r requirements.txt"))
+                        "" if phone else "Run MIA's installer again (it installs the packages)."))
     checks.append(Check("Bank sync (Plaid)", OK if _has_package("plaid") else OPTIONAL,
                         "Installed." if _has_package("plaid") else "Not installed; budgets work without it.",
                         "" if _has_package("plaid") else "Run: pip install -r requirements.txt"))

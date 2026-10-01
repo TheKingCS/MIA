@@ -12759,3 +12759,34 @@ password and erase, archive, undo putting a store back and reloading it,
 undo of a newly made file, undo per person, why and mute, every message
 kind explained, the model check, the setup summary, the window) and 8
 routing-corpus lines.
+
+## People and ownership, step 7: MIA's own installer (2026-10-01)
+
+The owner asked for a real installer so setting up MIA is easy for
+anyone.
+
+- **`install.sh`** (Linux, Raspberry Pi): asks before each step; apt
+  packages (only the missing ones), Ollama from ollama.com, the .venv and
+  `requirements.txt`, then `deploy/finish_install.py`; `--kiosk` runs
+  `deploy/install_kiosk.sh`. `--yes`, `--no-system`, `--no-ollama`,
+  `--no-voice`, `--dry-run`. Safe to re-run.
+- **`install.bat` → `install.ps1`** (Windows): Python 3.12, Ollama and
+  Tesseract through winget if missing, the .venv and packages,
+  `finish_install.py`, and MIA shortcuts on the desktop and Start menu.
+  Written without a Windows machine to test on: the owner's first run is
+  its test.
+- **`deploy/finish_install.py`** (both): the voice models (from
+  `core/voice_catalog.py`, no hand-kept list), `ollama pull` of the
+  configured model, an app-menu (and desktop) launcher on Linux, and the
+  setup check printed. A failed download is reported and the rest
+  continues.
+- An icon (`assets/mia_icon.png` / `.ico`) for the shortcuts and the
+  window. Check My Setup's fixes now say "run MIA's installer again".
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 7 new tests (install.sh syntax and dry run changing nothing,
+bad options, the Windows files, voice downloads listing only what's
+missing, the launcher, no Ollama, the printed check, a failed download).
+The downloads themselves couldn't be tried from Claude's sandbox (the
+hosts are blocked here); they use the same URLs as the existing voice
+script.

@@ -239,6 +239,11 @@ class MIAApplication:
     def __init__(self) -> None:
         self.qt_app = QApplication(sys.argv)
         self.qt_app.setApplicationName("MIA")
+        icon_path = Path(__file__).resolve().parent.parent / "assets" / "mia_icon.png"
+        if icon_path.exists():
+            from PySide6.QtGui import QIcon
+
+            self.qt_app.setWindowIcon(QIcon(str(icon_path)))
         _load_bundled_fonts()
 
         self.config = ConfigManager()

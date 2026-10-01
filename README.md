@@ -56,9 +56,22 @@ for how to add a new module.
 **Setting MIA up on a new computer?** Follow
 [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md): install, the local AI and
 voice, the Private Journal, bank sync, and phone access, step by step.
-The short version for developers:
 
-### Quick start (Ubuntu / WSL)
+
+### Install (the easy way)
+
+Download MIA (GitHub → Code → Download ZIP, unzip it; or `git clone`), then:
+
+- **Linux / Raspberry Pi:** open a terminal in the MIA folder and run
+  `bash install.sh` (add `--kiosk` on a Pi that should boot straight into
+  MIA).
+- **Windows:** double-click **install.bat**.
+
+The installer asks before each big step and is safe to run again: system
+tools, MIA's brain (Ollama and its model), MIA's packages, the voices, a
+"MIA" shortcut, and a setup check that lists anything left to do.
+
+### Quick start for developers (Ubuntu / WSL)
 
 ```bash
 git clone <your-fork-url> mia

@@ -18,6 +18,12 @@ of the Android app.
 
 ## 1. Your hands-on steps (need your computer, not Claude)
 
+- [ ] **Try the installer (new, 2026-10-01).** After `git pull`, in the MIA
+      folder: `bash install.sh` (Ubuntu). It skips what you already have,
+      so it's safe on your set-up machine; it adds the "MIA" app-menu
+      shortcut and ends with the setup check. On Windows, double-click
+      `install.bat` (never run on Windows yet: tell Claude what it says).
+
 - [ ] **Accounts (new, 2026-10-01).** After `git pull`: Settings →
       Email, Recovery Code & Household → add your email. Settings →
       Change Password gives you a recovery code if you don't have one
@@ -130,6 +136,8 @@ it, and went with Claude's recommendations. The plan, in order:
   delete your account, "undo that", "why did you tell me that?", "stop
   telling me about ...", and Settings → Check My Setup. The accounts plan
   is complete.
+- **MIA's installer: built** (ROADMAP step 7): `bash install.sh` on
+  Linux/Pi (`--kiosk` for a Pi), double-click `install.bat` on Windows.
 - Later in this line: an optional private budget, ownership marks on
   shared things, starter templates and imports (.ics, contacts, bank
   CSV), a universal capture button, a "Today" view, accessibility,

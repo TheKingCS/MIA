@@ -53,6 +53,19 @@ in [Part 12](#part-12-report-back-to-claude).
 
 ## Part 1: Install MIA
 
+> ⭐ **The easy way (2026-10-01): the installer.** Get MIA onto the
+> computer (1b below, or GitHub → Code → Download ZIP and unzip it), then:
+>
+> - **Ubuntu / Raspberry Pi:** in a terminal in the MIA folder,
+>   `bash install.sh` (on a Pi that should boot into MIA:
+>   `bash install.sh --kiosk`).
+> - **Windows:** double-click **install.bat** in the MIA folder.
+>
+> It asks before each step and does 1a, 1c, Part 3 and Part 4's
+> downloads for you, makes a "MIA" shortcut, and ends with a setup check
+> listing anything left. Safe to run again any time. If it works, skip to
+> Part 2. The manual steps below are the same thing by hand.
+
 ### 1a. System tools
 
 **Ubuntu:** open a terminal (Ctrl+Alt+T) and run:
