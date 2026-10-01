@@ -299,6 +299,7 @@ class PersonalData:
         events.subscribe("profile.switched", self._on_switched)
         events.subscribe("profile.created", self._on_created)
         events.subscribe("household.changed", self._on_household_changed)
+        events.subscribe("profile.deleted", self._on_deleted)
 
     def _on_switched(self, profile_id: str = "", **_kwargs) -> None:
         self.activate(profile_id)
@@ -317,11 +318,45 @@ class PersonalData:
             if publish is not None:
                 publish("records.changed", action="household.changed")
 
+    def _on_deleted(self, profile_id: str = "", **_kwargs) -> None:
+        """A deleted account's stores stop, so nothing writes into its
+        archived (or erased) folder again."""
+        for store in self._personal.pop(profile_id, {}).values():
+            _close(store)
+        self._views.pop(profile_id, None)
+        if self.active_profile_id == profile_id:
+            self.active_profile_id = None
+
     def activate_current(self) -> None:
         profiles = getattr(self.context, "profiles", None)
         active = profiles.get_active_profile() if profiles is not None else None
         if active is not None:
             self.activate(active.profile_id)
+
+    # ------------------------------------------------------------------
+    # Undo (core/undo_log.py): a store re-read from its restored files
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def registered_store_types() -> set:
+        return {store for _attr, store in PERSONAL_STORES + HOUSEHOLD_STORES}
+
+    def all_known_stores(self) -> list:
+        return self._all_stores()
+
+    def replace_store(self, old, new) -> None:
+        """Swap a store everywhere it's referenced: the main context, every
+        person's view, and the household and personal caches."""
+        groups = [self._boot_household or {}] + list(self._personal.values()) + list(self._households.values())
+        groups += [view._stores for view in self._views.values()]
+        for group in groups:
+            for attr, store in list(group.items()):
+                if store is old:
+                    group[attr] = new
+        for attr, value in list(vars(self.context).items()):
+            if value is old:
+                setattr(self.context, attr, new)
+        _close(old)
 
     def _all_stores(self) -> list:
         stores = list((self._boot_household or {}).values())

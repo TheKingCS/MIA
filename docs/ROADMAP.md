@@ -12720,3 +12720,42 @@ symbol. No currency conversion: amounts are whatever was entered.
 failure). 5 new tests (every listed country's reply, the general advice,
 each person's country, money following the signed-in person, a UK safety
 reply end to end). The Android sources type-check and their tests pass.
+
+## People and ownership, step 6: your data to take, MIA's changes to undo (2026-10-01)
+
+Stage 5 of the accounts plan, its last.
+
+- **Export** (`core/account_data.py`): one .zip with a README, your
+  account (no password or recovery hashes), every file in your folder
+  (the private journal stays encrypted) and optionally your household's
+  shared files. The stored mail password is never exported.
+- **Delete:** your password confirms it; your folder is archived as
+  before, or erased for good if you tick the box. The deleted account's
+  stores stop (`PersonalData` forgets it) so nothing writes into its
+  folder again; a household nobody's in is forgotten. The device's only
+  account can't be deleted. Both in Settings → Email, Recovery Code &
+  Household.
+- **"Undo that"** (`core/undo_log.py`): while an Assistant tool that
+  changes things runs, `atomic_write_text` keeps each file's previous
+  contents; `undo_last_change` writes them back and the stores that read
+  them reload (registered stores are rebuilt and swapped everywhere,
+  others re-run `_load()`), then screens refresh. In memory, the last 20
+  changes per person. `get_recent_changes` lists them.
+- **"Why did you tell me that?"** (`core/message_reasons.py`): a reason
+  for every kind of message MIA sends on her own (a test keeps the list
+  complete); `get_message_reason` explains the latest one. **"Stop
+  telling me about ..."**: `mute_message_topic` puts that kind on a break
+  (30 days unless said); "you can tell me about ..." ends it.
+- **Check My Setup** (`core/system_check.py`, Settings and
+  `check_my_setup`): the model (and the exact `ollama pull`), hearing and
+  speaking, reading photos, the phone, bank sync, saving data and disk
+  space, and your password and email, each with the step to fix it.
+  Read-only: MIA doesn't install software by herself, so the "installer"
+  part of this stage is these steps rather than an automatic one.
+
+**Verified:** full `pytest -q` passes (same one pre-existing timezone
+failure). 11 new tests (export contents and no secrets, delete with the
+password and erase, archive, undo putting a store back and reloading it,
+undo of a newly made file, undo per person, why and mute, every message
+kind explained, the model check, the setup summary, the window) and 8
+routing-corpus lines.

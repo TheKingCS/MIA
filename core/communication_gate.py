@@ -268,6 +268,7 @@ class CommunicationGate:
         self._log: list[dict] = []
         self._pending: list[dict] = []
         self._resumed: dict = {}  # topic -> ISO time the owner ended a break
+        self._muted: dict = {}  # topic -> ISO time a break the person asked for ends
         self.clock = datetime.now  # replaceable in tests
         self._load()
         events = getattr(context, "events", None)
@@ -286,6 +287,7 @@ class CommunicationGate:
             self._log = list(data.get("log", []))
             self._pending = list(data.get("pending", []))
             self._resumed = dict(data.get("resumed", {}))
+            self._muted = dict(data.get("muted", {}))
         except (json.JSONDecodeError, OSError, AttributeError):
             log.exception("communication_log.json unreadable — starting fresh.")
 
@@ -293,7 +295,8 @@ class CommunicationGate:
         cutoff = (now - timedelta(days=_KEEP_LOG_DAYS)).isoformat()
         self._log = [e for e in self._log if e.get("at", "") >= cutoff]
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(self._log_file, json.dumps({"log": self._log, "pending": self._pending, "resumed": self._resumed},
+        atomic_write_text(self._log_file, json.dumps({"log": self._log, "pending": self._pending, "resumed": self._resumed,
+                                                 "muted": self._muted},
                                                 indent=2))
 
     # ------------------------------------------------------------------
@@ -330,7 +333,16 @@ class CommunicationGate:
 
     def _state(self, now: datetime) -> GateState:
         sent = [e for e in self._log if e.get("action") == ACT]
-        return GateState(sent=sent, user_busy=self._user_busy(now), paused=paused_topics(self._log, now, self._resumed))
+        return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now))
+
+    def _all_paused(self, now: datetime) -> dict:
+        """Breaks from dismissing a kind of message, and ones asked for."""
+        paused = paused_topics(self._log, now, self._resumed)
+        for topic, until_iso in self._muted.items():
+            until = _parse(until_iso)
+            if until is not None and until > now:
+                paused[topic] = max(until, paused.get(topic, until))
+        return paused
 
     # ------------------------------------------------------------------
     # Offering
@@ -438,7 +450,7 @@ class CommunicationGate:
         labels = {e["topic"]: e.get("title", "") for e in self._log if e.get("topic")}
         return sorted(
             ({"topic": t, "label": labels.get(t) or t.replace("_", " "), "until": until}
-             for t, until in paused_topics(self._log, now, self._resumed).items()),
+             for t, until in self._all_paused(now).items()),
             key=lambda p: p["until"],
         )
 
@@ -446,7 +458,21 @@ class CommunicationGate:
         """End a break early: past dismissals of this kind stop counting."""
         now = now or self.clock()
         self._resumed[topic] = now.isoformat(timespec="seconds")
+        self._muted.pop(topic, None)
         self._save(now)
+
+    def mute(self, topic: str, days: int = 30, now: Optional[datetime] = None) -> datetime:
+        """"Stop telling me about that": a break from one kind of message,
+        asked for. Urgent ones still come through."""
+        now = now or self.clock()
+        until = now + timedelta(days=max(1, int(days)))
+        self._muted[topic] = until.isoformat(timespec="seconds")
+        self._save(now)
+        return until
+
+    def last_sent(self) -> Optional[dict]:
+        """The most recent message MIA sent on her own."""
+        return next((e for e in reversed(self._log) if e.get("action") == ACT), None)
 
     def entries_for_day(self, day: Optional[str] = None) -> list[dict]:
         day = day or datetime.now().date().isoformat()

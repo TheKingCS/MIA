@@ -27,6 +27,15 @@ CORPUS: list[tuple[str, str]] = [
     ("Write an email to my landlord at pat@example.com about the leaky faucet", "draft_email"),
     ("Draft a thank-you email to grandma", "draft_email"),
     ("Help me reply to the school about the field trip", "draft_email"),
+    # ---- Undo and why (core/undo_log.py, core/message_reasons.py) --------
+    ("Undo that", "undo_last_change"),
+    ("No, take that back", "undo_last_change"),
+    ("What did you just change?", "get_recent_changes"),
+    ("Why did you tell me that?", "get_message_reason"),
+    ("Why are you suggesting that?", "get_message_reason"),
+    ("Stop telling me about my budget", "mute_message_topic"),
+    ("Stop checking in on me every day", "mute_message_topic"),
+    ("Is everything set up?", "check_my_setup"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),

@@ -79,6 +79,7 @@ from core.module_manager import ModuleManager
 from core.notification_manager import NotificationManager
 from core.power_manager import PowerManager
 from core.household_manager import HouseholdManager
+from core.undo_log import UndoLog
 from core.profile_manager import ProfileManager
 from core.reference_library_manager import ReferenceLibraryManager
 from core.system_health import format_system_health, read_system_health
@@ -110,6 +111,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 
     context.profiles = ProfileManager(context)
     context.households = HouseholdManager(context)
+    context.undo = UndoLog()
     context.notifications = NotificationManager(context)
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)

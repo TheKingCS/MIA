@@ -45,6 +45,11 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
     calling this).
     """
     path = Path(path)
+    # "Undo that" (core/undo_log.py): keep the old contents while an
+    # Assistant change is being recorded.
+    from core.undo_log import before_write
+
+    before_write(path)
     fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     tmp_path = Path(tmp_name)
     try:

@@ -29,7 +29,9 @@ of the Android app.
       focus (or keep "Show everything"). Email drafts: ask MIA to "write
       an email to <your own address> saying hi", try Copy and "Open in
       my mail app"; optionally Settings → Sending Email with a Gmail app
-      password (never paste it into a chat) and press Send.
+      password (never paste it into a chat) and press Send. Then
+      Settings → Check My Setup, and try "undo that" after asking MIA to
+      add something.
 
 **New computer? Start with `docs/SETUP_GUIDE.md`.** It walks through
 every step below in order, from a blank machine, with Windows notes.
@@ -124,8 +126,10 @@ it, and went with Claude's recommendations. The plan, in order:
 - **Stage 4, country-aware crisis lines and currency: built** (ROADMAP
   step 5). US, Canada, UK, Ireland, Australia, New Zealand; elsewhere
   general advice and findahelpline.com. Settings → Support & Safety.
-- **Stage 5:** a first-run checker/installer, export and delete my
-  account, and an undo log ("why are you suggesting this?" too).
+- **Stage 5, your data and undo: built** (ROADMAP step 6). Export and
+  delete your account, "undo that", "why did you tell me that?", "stop
+  telling me about ...", and Settings → Check My Setup. The accounts plan
+  is complete.
 - Later in this line: an optional private budget, ownership marks on
   shared things, starter templates and imports (.ics, contacts, bank
   CSV), a universal capture button, a "Today" view, accessibility,

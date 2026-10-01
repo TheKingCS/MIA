@@ -67,6 +67,7 @@ from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
+from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
 from core.assistant_inbox_actions import register_inbox_actions
@@ -122,6 +123,7 @@ from core.port_scanner import scan_ports
 from core.energy_manager import EnergyManager
 from core.power_manager import PowerManager
 from core.household_manager import HouseholdManager
+from core.undo_log import UndoLog
 from core.profile_manager import ProfileManager
 from core.push_subscription_manager import PushSubscriptionManager
 from core.insight_manager import InsightManager
@@ -263,6 +265,7 @@ class MIAApplication:
         # core/profile_manager.py.
         self.context.profiles = ProfileManager(self.context)
         self.context.households = HouseholdManager(self.context)
+        self.context.undo = UndoLog()
         self.context.notifications = NotificationManager(self.context)
         # Mobile access, Phase 1 (2026-09-12) — cheap to construct
         # unconditionally like every other manager here; only the
@@ -1166,6 +1169,7 @@ class MIAApplication:
         register_communication_actions(self.context.assistant_actions)
         register_focus_actions(self.context.assistant_actions)
         register_email_actions(self.context.assistant_actions)
+        register_undo_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)
         register_textbook_actions(self.context.assistant_actions)
         register_inbox_actions(self.context.assistant_actions)

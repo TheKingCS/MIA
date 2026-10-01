@@ -97,6 +97,22 @@ the UK and Ireland, Lifeline in Australia, 1737 in New Zealand; anywhere
 else she points you to findahelpline.com and your local emergency
 number). "Currency" sets the money symbol everywhere in MIA.
 
+## Undo, and why MIA says things
+
+If MIA changes something wrongly, say **"undo that"** (or "what did you
+just change?" to see her last changes). If she tells you something on her
+own, ask **"why did you tell me that?"**; "stop telling me about the
+budget" gives that kind of message a break.
+
+## Your data, and checking your setup
+
+Settings → Email, Recovery Code & Household → **Export my data** saves
+everything that's yours in one .zip (and the household's things, if you
+like). **Delete my account** removes it; tick the box to erase it for
+good. Settings → **Check My Setup** lists what works on this device and
+the exact step to fix anything that doesn't (or ask "is everything set
+up?").
+
 ## Emails
 
 Ask MIA to write one: "write an email to pat@example.com about the leaky

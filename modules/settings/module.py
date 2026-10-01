@@ -137,6 +137,12 @@ class SettingsModule(ModuleBase):
         account_button.clicked.connect(self._on_account_clicked)
         outer.addWidget(account_button)
 
+        # What works on this device and what to fix (core/system_check.py).
+        check_button = QPushButton("Check My Setup")
+        check_button.setObjectName("ModuleButton")
+        check_button.clicked.connect(self._on_check_setup_clicked)
+        outer.addWidget(check_button)
+
         # Sending the email drafts you approve (core/mail_send.py, 2026-10-01).
         sending_button = QPushButton("Sending Email")
         sending_button.setObjectName("ModuleButton")
@@ -450,6 +456,11 @@ class SettingsModule(ModuleBase):
         self._focus_combo.blockSignals(True)
         self._focus_combo.setCurrentIndex(max(0, index))
         self._focus_combo.blockSignals(False)
+
+    def _on_check_setup_clicked(self) -> None:
+        from gui.setup_check_dialog import SetupCheckDialog
+
+        SetupCheckDialog(self.context).exec()
 
     def _on_sending_email_clicked(self) -> None:
         from gui.email_draft_dialog import SendingSetupDialog

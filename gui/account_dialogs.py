@@ -16,6 +16,7 @@ Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt
@@ -291,6 +292,15 @@ class AccountDialog(QDialog):
         for button in (rename, join, self.leave_button):
             household_row.addWidget(button)
         layout.addLayout(household_row)
+        # Your data is yours (core/account_data.py).
+        data_row = QHBoxLayout()
+        export = QPushButton("Export my data...")
+        export.clicked.connect(self._on_export)
+        delete = QPushButton("Delete my account...")
+        delete.clicked.connect(self._on_delete)
+        data_row.addWidget(export)
+        data_row.addWidget(delete)
+        layout.addLayout(data_row)
         self.message_label = QLabel("")
         self.message_label.setWordWrap(True)
         layout.addWidget(self.message_label)
@@ -335,6 +345,51 @@ class AccountDialog(QDialog):
             return
         if self._confirm_password():
             show_recovery_code(self.context.profiles.issue_recovery_code(self.profile.profile_id), self)
+
+    def _on_export(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+
+        from core.account_data import export_account
+
+        folder = QFileDialog.getExistingDirectory(self, "Where should the export go?")
+        if not folder:
+            return
+        shared = bool(self.context.households.shares_with(self.profile.profile_id))
+        include = QMessageBox.question(
+            self, "Export", "Include the household's shared things too (calendar, kitchen, budget...)?"
+            + (" Others in your household will be in it too." if shared else "")
+        ) == QMessageBox.StandardButton.Yes
+        path = export_account(self.context, self.profile.profile_id, Path(folder), include_household=include)
+        self.message_label.setText(f"Saved: {path}")
+
+    def _on_delete(self) -> None:
+        from PySide6.QtWidgets import QCheckBox, QInputDialog
+
+        from core.account_data import delete_account
+
+        if len(self.context.profiles.list_profiles()) <= 1:
+            self.message_label.setText("This is the only account on this MIA, so it can't be deleted. "
+                                       "You can still export your data.")
+            return
+        box = QMessageBox(self)
+        box.setWindowTitle("Delete my account")
+        box.setText(f"Delete {self.profile.name}'s account? Your conversations, memories, journal, notes and "
+                    "settings go with it. Things you share with a household stay with the household.")
+        erase = QCheckBox("Erase my data for good (otherwise it's archived on this device)")
+        box.setCheckBox(erase)
+        box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
+        if box.exec() != QMessageBox.StandardButton.Yes:
+            return
+        password = ""
+        if self.profile.has_password:
+            password, ok = QInputDialog.getText(self, "Confirm", "Your password:", QLineEdit.EchoMode.Password)
+            if not ok:
+                return
+        if not delete_account(self.context, self.profile.profile_id, password, erase=erase.isChecked()):
+            self.message_label.setText("That password doesn't match.")
+            return
+        self.accept()
+        self.context.events.publish("profile.switch_requested")
 
     def _on_rename_household(self) -> None:
         from PySide6.QtWidgets import QInputDialog

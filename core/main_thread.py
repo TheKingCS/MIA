@@ -37,7 +37,11 @@ def publish(context, event_name: str, **kwargs) -> None:
 _READ_ONLY_PREFIXES = ("get_", "list_", "search_", "check_", "what_", "find_", "read_", "show_", "describe_")
 
 
+def changes_records(action_name: str) -> bool:
+    return not action_name.startswith(_READ_ONLY_PREFIXES)
+
+
 def records_changed(context, action_name: str) -> None:
     """After an Assistant tool ran: tell open screens to re-read their data."""
-    if not action_name.startswith(_READ_ONLY_PREFIXES):
+    if changes_records(action_name):
         publish(context, "records.changed", action=action_name)

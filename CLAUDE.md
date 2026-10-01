@@ -170,6 +170,10 @@ Never hardcode the owner's names, places or things in code or prompts.
 - **Email** (`core/email_drafts.py`, `core/mail_send.py`) — the Assistant
   only drafts; an email is sent only when a person presses Send (desktop
   dialog or phone). Never add a tool that sends.
+- **Undo** (`core/undo_log.py`) — Assistant changes are undoable because
+  stores write through `core.atomic_write.atomic_write_text`; keep new
+  stores on it (and give them `_load()` or a `data_dir` constructor) so
+  "undo that" can restore and reload them.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

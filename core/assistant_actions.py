@@ -65,7 +65,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Iterable, Optional
 
 from core.logger import get_logger
-from core.main_thread import records_changed
+from core.main_thread import changes_records, records_changed
 
 if TYPE_CHECKING:
     from core.app_context import AppContext
@@ -260,8 +260,19 @@ class AssistantActionRegistry:
         if action is None:
             log.warning("Assistant tried to call unknown action '%s'", name)
             return f"(I tried to do something I don't know how to do: '{name}'.)"
+        # "Undo that" (core/undo_log.py): what this tool changes can be put back.
+        undo = getattr(context, "undo", None)
+        recording = undo is not None and changes_records(name) and name != "undo_last_change"
         try:
-            result = action.handler(context, arguments)
+            if recording:
+                from core.person_settings import person_id
+                from core.undo_log import recording as record_change
+
+                with record_change(name, person_id(context)) as change:
+                    result = action.handler(context, arguments)
+                undo.add(change)
+            else:
+                result = action.handler(context, arguments)
         except Exception:
             log.exception("Assistant action '%s' failed", name)
             return f"(Sorry, '{name}' didn't work.)"
