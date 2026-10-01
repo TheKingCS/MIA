@@ -193,6 +193,8 @@ class RecurringMissionManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._templates: list[RecurringMissionTemplate] = []
+        # On the instance so "undo that" (core/undo_log.py) can find and reload it.
+        self._templates_file = _TEMPLATES_FILE
         self._load()
         self.context.events.subscribe("mission.completed", self._on_mission_completed)
 
@@ -201,11 +203,11 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _TEMPLATES_FILE.exists():
+        if not self._templates_file.exists():
             self._templates = []
             return
         try:
-            raw = json.loads(_TEMPLATES_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(self._templates_file.read_text(encoding="utf-8"))
             self._templates = [RecurringMissionTemplate.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load recurring_mission_templates.json — starting with an empty list.")
@@ -213,8 +215,8 @@ class RecurringMissionManager:
             self._templates = []
 
     def _save(self) -> None:
-        _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(_TEMPLATES_FILE,
+        self._templates_file.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._templates_file,
             json.dumps([t.to_dict() for t in self._templates], indent=2),
             encoding="utf-8",
         )

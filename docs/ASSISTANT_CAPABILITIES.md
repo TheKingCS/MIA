@@ -217,6 +217,10 @@ the owner says "without the tasks".
 `set_text_size`, `set_high_contrast`, `read_screen` (domain
 `accessibility`).
 
+**Added 2026-10-01** (`core/assistant_starter_actions.py`):
+`list_starter_sets`, `add_starter_set` (domain `starters`; adding is one
+undoable change, never adds anything twice).
+
 **Added 2026-10-01** (`core/assistant_ownership_actions.py`):
 `set_item_owner`, `get_item_owner` (domain `ownership`).
 

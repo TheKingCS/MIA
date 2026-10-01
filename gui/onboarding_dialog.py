@@ -19,6 +19,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QButtonGroup,
+    QCheckBox,
     QDialog,
     QFrame,
     QHBoxLayout,
@@ -33,7 +34,10 @@ from PySide6.QtWidgets import (
 
 from core import focus_presets, person_settings
 from core.focus_presets import GOALS, SPEAK_UP
+from core.logger import get_logger
 from core.personal_data import ScopedView
+
+log = get_logger(__name__)
 
 
 def _bubble(text: str, mine: bool = False) -> QLabel:
@@ -162,12 +166,35 @@ class OnboardingDialog(QDialog):
         self._clear_answers()
         self.recommendation = focus_presets.recommend(self.goals)
         self._say(focus_presets.describe(self.recommendation, self.module_names))
+        # Starter sets (core/starter_templates.py) the goals suggest, so
+        # there's something to check off on day one. Ticked by default;
+        # "Show me everything" adds none.
+        from core.starter_templates import STARTERS, for_goals
+
+        self.starter_checks = {}
+        suggested = for_goals(self.goals)
+        if suggested:
+            self._say("I can also fill in the usual things to start with (rename or delete anything later):")
+            for starter_id in suggested:
+                starter = STARTERS[starter_id]
+                check = QCheckBox(f"{starter.name}: {starter.description}")
+                check.setChecked(True)
+                self.starter_checks[starter_id] = check
+                self._answer_area.addWidget(check)
         self.next_button.setText("Sounds good")
         self.skip_button.setText("Show me everything")
         self._next(self._on_agree)
 
     def _on_agree(self) -> None:
         self.save(apply_focus=True)
+        from core import starter_templates
+
+        for starter_id, check in getattr(self, "starter_checks", {}).items():
+            if check.isChecked():
+                try:
+                    starter_templates.apply(self.person, starter_id)
+                except Exception:  # a starter set never stops setup from finishing
+                    log.exception("Couldn't add the %s starter set.", starter_id)
         self.accept()
 
     def reject(self) -> None:

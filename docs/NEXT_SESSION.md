@@ -86,6 +86,10 @@ looks wrong (the text on screen, never passwords or keys).
       text size and contrast. Your Account window (Settings → Email,
       Recovery Code & Household) can reset their password or make it a
       regular account later.
+- [ ] **Starter sets.** Settings → My Apps → "Add a Starter Set...":
+      look through the six sets and add any that fit (untick the parts
+      that don't). Or tell MIA "set me up with the homestead starter
+      set". Tell Claude what's missing or doesn't belong.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -211,8 +215,10 @@ it, and went with Claude's recommendations. The plan, in order:
   parent when the safety floor triggers for the child? Today it does
   not (it tells the child to talk to an adult right away). Decide and
   tell Claude.
-- **Next in this line, in order:** starter templates (a household,
-  homestead or student starting set) and a real Habits module.
+- **Starter sets: built** (2026-10-01): Home & Family, Homestead,
+  Student, Personal, Business, Fitness; offered at the end of the setup
+  questions, in Settings → My Apps, and by asking MIA.
+- **Next in this line:** a real Habits module.
 
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were

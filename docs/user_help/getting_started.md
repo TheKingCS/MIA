@@ -116,6 +116,20 @@ alone. Press **Ctrl+Shift+R** on any screen and MIA reads it aloud; press
 it again to stop. Or just say "make the text bigger", "turn on high
 contrast" or "read this screen to me".
 
+## Starter sets
+
+A new MIA starts empty. A **starter set** fills in the usual things for
+your kind of life so there's something to check off on day one: **Home
+& Family** (chores, smoke alarms, filters, dryer vent...), **Homestead**
+(animal and garden chores, well, generator, fences), **Student** (study
+and reading streaks), **Personal**, **Business** and **Fitness** (a
+beginner workout). MIA offers the right ones after the setup questions;
+any time later, use Settings → My Apps → **Add a Starter Set...** or say
+"set me up with the homestead starter set". Untick what doesn't fit.
+Upkeep is counted from today, so nothing shows up overdue; mark a task
+done with its real date if you know it. Adding a set twice adds nothing
+twice, and "undo that" takes it back.
+
 ## Child accounts
 
 A child can have their own MIA. **Add User** → tick **This is a child's

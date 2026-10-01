@@ -51,6 +51,11 @@ CORPUS: list[tuple[str, str]] = [
     ("I can't read the text, it's too small", "set_text_size"),
     ("Turn on high contrast", "set_high_contrast"),
     ("Read this screen to me", "read_screen"),
+    # ---- Starter sets (core/starter_templates.py) ------------------------
+    ("What starter sets are there?", "list_starter_sets"),
+    ("Set me up with the homestead starter set", "add_starter_set"),
+    ("Add the student starter set", "add_starter_set"),
+    ("Help me get started, I just moved into a house", "list_starter_sets"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),

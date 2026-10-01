@@ -126,6 +126,11 @@ class SettingsModule(ModuleBase):
         outer.addStretch(1)
         return widget
 
+    def _on_starter_clicked(self) -> None:
+        from gui.starter_dialog import StarterDialog
+
+        StarterDialog(self.context).exec()
+
     def get_widget(self) -> QWidget:
         from core.child_accounts import is_child
 
@@ -220,6 +225,11 @@ class SettingsModule(ModuleBase):
         questions_button.setObjectName("ModuleButton")
         questions_button.clicked.connect(self._on_setup_questions_clicked)
         outer.addWidget(questions_button)
+        # Starter sets (core/starter_templates.py): chores, upkeep, workouts.
+        starter_button = QPushButton("Add a Starter Set...")
+        starter_button.setObjectName("ModuleButton")
+        starter_button.clicked.connect(self._on_starter_clicked)
+        outer.addWidget(starter_button)
 
         # Accessibility (core/accessibility.py, 2026-10-01): each person's own.
         access_section = QLabel("Accessibility")

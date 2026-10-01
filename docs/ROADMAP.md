@@ -12959,3 +12959,40 @@ child Settings, the Add User rules); the real main window booted as a
 child. Also fixed: Home's first widget refresh ran before the Today card
 existed and logged an error at every boot. Full suite passes (same one
 pre-existing timezone failure).
+
+## Starter sets (2026-10-01)
+
+A new MIA is empty, which is hard to start with. Starter sets
+(`core/starter_templates.py`) fill in the usual things for a kind of
+life, as recurring routines (Missions, shown in Household or Workouts by
+category), maintenance assets with calendar tasks, and workout
+templates:
+
+- **Home & Family**: dishes, tidying, laundry, trash; the house's upkeep
+  (smoke and CO alarms, heating/cooling filter, dryer vent, fridge
+  coils, fire extinguisher, gutters).
+- **Homestead**: animal and garden chores, walking the property; the
+  house upkeep; well and water; generator; fences.
+- **Student**: study and reading streaks; planning the week.
+- **Personal**: a daily walk, planning tomorrow, a weekly journal.
+- **Business**: weekly receipts, books and follow-ups.
+- **Fitness**: a beginner bodyweight workout; a daily movement goal.
+
+Each set has parts the person can leave out. Adding is idempotent by
+name (the house upkeep shared by two sets is added once), one undoable
+change, and upkeep counts from today so nothing starts overdue. A child
+gets routines and workouts but not house upkeep. Contents are general:
+no names, places or amounts (money targets are personal, so none).
+
+Offered at the end of the setup questions (ticked for the goals chosen),
+in Settings → My Apps → "Add a Starter Set..." (`gui/starter_dialog.py`)
+and by the Assistant (`list_starter_sets`, `add_starter_set`).
+`RecurringMissionManager` now keeps its file path on the instance so
+"undo that" can reload it.
+
+**Verified:** 13 new tests (every set well formed, goals to sets, name
+matching, parts left out, nothing twice, upkeep not overdue, workouts
+reusing exercises, one-step undo, a child, missing stores, the Assistant
+with "leave out", the dialog, the setup questions) and 4 routing lines;
+the real app added the Homestead set and showed it in Household and
+Maintenance. Full suite passes (same one pre-existing timezone failure).
