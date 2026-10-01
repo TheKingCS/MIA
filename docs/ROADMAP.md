@@ -12842,3 +12842,19 @@ hides the rest.
 done things dropping off, a broken source, the Assistant and Home card,
 the phone) and 3 routing lines. Full suite passes (same one pre-existing
 timezone failure).
+
+## Quick capture (2026-10-01)
+
+One box from anywhere: the "✚" in the header or Ctrl+Shift+Space
+(`gui/quick_capture_dialog.py`, `core/quick_capture.py`). Type anything;
+the Assistant files it with its usual tools, in a conversation of its own
+("✚ Quick capture" in History). If a tool changed something, MIA says what
+and Undo is right there; if not (unsure, a question back, the model off,
+an error), the text is saved as a note tagged "capture", so nothing is
+lost. Runs off the screen's thread; the box stays open for the next one.
+Also fixed: the Today card drew nothing on an empty day.
+
+**Verified:** 4 new tests (filed by a tool, kept as a note, no model or a
+failure, the box with Undo) and 1 for the empty Today card; the real main
+window boots with the button and card. Full suite passes (same one
+pre-existing timezone failure).

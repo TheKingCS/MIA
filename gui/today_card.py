@@ -10,6 +10,8 @@ dashboard's regular refresh doesn't make it flicker.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
 
@@ -27,7 +29,7 @@ class TodayCard(QFrame):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(20, 14, 20, 14)
         self._layout.setSpacing(4)
-        self._shown: list = []
+        self._shown: Optional[list] = None  # None: not drawn yet (an empty day still draws)
         self.refresh()
 
     def refresh(self) -> None:

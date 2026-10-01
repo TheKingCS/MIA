@@ -131,3 +131,14 @@ def test_the_phone_gets_today(ctx, tmp_path, monkeypatch):
     body = client.get("/api/today", headers={"Authorization": f"Bearer {token}"}).json()
     assert body["items"][0]["title"] == "Dentist" and body["items"][0]["time"] == "14:00"
     assert "14:00 Dentist" in body["spoken"]
+
+
+def test_an_empty_day_still_shows_the_card(ctx):
+    from PySide6.QtWidgets import QApplication
+
+    from gui.today_card import TodayCard
+
+    QApplication.instance() or QApplication([])
+    card = TodayCard(ctx)
+    texts = [card._layout.itemAt(i).widget().text() for i in range(card._layout.count())]
+    assert texts == ["TODAY", "Nothing needs you today. Enjoy it."]

@@ -97,6 +97,14 @@ the UK and Ireland, Lifeline in Australia, 1737 in New Zealand; anywhere
 else she points you to findahelpline.com and your local emergency
 number). "Currency" sets the money symbol everywhere in MIA.
 
+## Quick capture
+
+Click **✚** at the top (or press Ctrl+Shift+Space) and type anything:
+"milk and eggs", "oil change on the truck today", "dentist Tuesday at 2".
+MIA files it in the right place and tells you where, with Undo. If she
+can't tell where it goes, it's saved as a note tagged "capture", so
+nothing you jot down is lost.
+
 ## Today
 
 The **Today** card on Home lists what needs you today from every app:

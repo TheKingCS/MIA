@@ -64,6 +64,11 @@ looks wrong (the text on screen, never passwords or keys).
       greeting); tap a row to jump to its app. On the phone, the Today
       tab. Ask "what's on today?". Tell Claude if something you'd expect
       is missing.
+- [ ] **Quick capture.** Click the "✚" in the header (or Ctrl+Shift+Space)
+      and try a few: "milk and eggs", "changed the truck's oil today",
+      "dentist Tuesday at 2", "idea: rain barrel by the shed". Each says
+      where it went (Undo is right there); anything MIA can't place
+      becomes a note tagged "capture". Tell Claude what landed wrong.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -173,8 +178,9 @@ it, and went with Claude's recommendations. The plan, in order:
   (.ics calendars, .vcf contacts, bank .csv statements).
 - **Today: built** (2026-10-01): a Today card on Home, a Today tab on
   the phone, "what's on today?".
-- **Next in this line, in order:** (2) a **universal
-  capture** button (type or say anything; MIA files it); (3) an optional
+- **Quick capture: built** (2026-10-01): the "✚" in the header or
+  Ctrl+Shift+Space.
+- **Next in this line, in order:** (3) an optional
   **private budget** for one person inside a household; (4) **ownership
   marks** on shared things (whose truck); then accessibility (text size,
   contrast, read-aloud), child accounts, starter templates, and a real

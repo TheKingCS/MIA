@@ -111,6 +111,13 @@ class MainWindow(QMainWindow):
         common command-palette convention (VS Code, Slack, etc.)."""
         shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
         shortcut.activated.connect(self._open_search)
+        capture_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Space"), self)
+        capture_shortcut.activated.connect(self._open_quick_capture)
+
+    def _open_quick_capture(self) -> None:
+        from gui.quick_capture_dialog import QuickCaptureDialog
+
+        QuickCaptureDialog(self.context, parent=self).exec()
 
     def _open_search(self) -> None:
         dialog = SearchDialog(self.context, parent=self)
@@ -600,6 +607,13 @@ class MainWindow(QMainWindow):
         self._search_bar.setFixedWidth(220)
         self._search_bar.mousePressEvent = lambda event: self._open_search()
 
+        # Quick capture (core/quick_capture.py, 2026-10-01): jot anything,
+        # MIA files it. Also Ctrl+Shift+Space.
+        self._capture_button = QPushButton("\u271A")
+        self._capture_button.setObjectName("HeaderButton")
+        self._capture_button.setToolTip("Quick capture: type anything, MIA files it (Ctrl+Shift+Space)")
+        self._capture_button.clicked.connect(self._open_quick_capture)
+
         # 2026-07-18: replaces the notification bell — a circular avatar
         # showing the active profile's first initial, opening a menu with
         # Notifications (preserving that access point, just relocated),
@@ -654,6 +668,7 @@ class MainWindow(QMainWindow):
             self._level_badge.hide()
 
         layout.addWidget(self._search_bar)
+        layout.addWidget(self._capture_button)
         layout.addWidget(self._level_badge)
         layout.addWidget(self._profile_button)
 
