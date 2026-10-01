@@ -63,6 +63,7 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from core.email_drafts import as_dict as draft_as_dict
+from core.today import describe as describe_today, today_items
 from core.mail_send import SendError, send_draft, sender_for
 from core.app_context import AppContext
 from core.assistant_turn import AssistantTurn, run_assistant_turn
@@ -352,6 +353,13 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             person_drafts(profile_id).mark(draft_id, "discarded")
         return {"discarded": True}
+
+    @app.get("/api/today")
+    def today(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Today on the phone (core/today.py): the person's own day."""
+        with app.state.turn_lock:
+            items = today_items(view_for(context, profile_id))
+        return {"items": [i.as_dict() for i in items], "spoken": describe_today(items)}
 
     @app.get("/api/voice/status")
     def voice_status(profile_id: str = Depends(require_profile_id)) -> dict:

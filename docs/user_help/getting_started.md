@@ -97,6 +97,14 @@ the UK and Ireland, Lifeline in Australia, 1737 in New Zealand; anywhere
 else she points you to findahelpline.com and your local emergency
 number). "Currency" sets the money symbol everywhere in MIA.
 
+## Today
+
+The **Today** card on Home lists what needs you today from every app:
+anything overdue first, then today's events, bills, maintenance, tasks,
+paydays and birthdays, what's waiting on you (documents to file, drafts
+not sent), and what's coming in the next 3 days. Tap a line to open it.
+On the phone it's the **Today** tab; or ask "what's on today?".
+
 ## Bring things from other apps
 
 Settings → **Import from Another App...** takes a calendar export (.ics,

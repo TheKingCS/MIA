@@ -37,6 +37,10 @@ CORPUS: list[tuple[str, str]] = [
     ("Stop telling me about my budget", "mute_message_topic"),
     ("Stop checking in on me every day", "mute_message_topic"),
     ("Is everything set up?", "check_my_setup"),
+    # ---- Today (core/today.py) -----------------------------------------
+    ("What's on today?", "get_today"),
+    ("What does my day look like?", "get_today"),
+    ("What do I need to do today?", "get_today"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),

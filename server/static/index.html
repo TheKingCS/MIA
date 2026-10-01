@@ -82,6 +82,11 @@
         .money-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 15px; }
         .money-row:first-of-type { border-top: none; }
         .money-row .sub { display: block; font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+        .today-group { margin: 14px 0 4px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); }
+        .today-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .today-row .time { min-width: 44px; font-variant-numeric: tabular-nums; color: var(--accent); }
+        .today-row .detail { display: block; font-size: 13px; color: var(--text-dim); }
+        .today-row.overdue .title { color: var(--crit); }
         .money-row .value { white-space: nowrap; font-variant-numeric: tabular-nums; }
         .money-row.good .value { color: var(--accent); }
         .money-row.warn .value { color: var(--warn); }
@@ -106,7 +111,12 @@
     <section id="talk-section" hidden>
         <div id="tabs">
             <button id="tab-talk" class="active">Talk</button>
+            <button id="tab-today">Today</button>
             <button id="tab-money">Money</button>
+        </div>
+        <div id="today-view" hidden>
+            <button id="today-refresh" class="secondary">Refresh</button>
+            <div id="today-list"></div>
         </div>
         <div id="money-view" hidden>
             <button id="money-refresh" class="secondary">Refresh</button>

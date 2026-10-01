@@ -361,11 +361,65 @@ async function sendTestPush() {
 // ---------------------------------------------------------------- Money (Finance #4)
 
 function showTab(name) {
-    $("tab-talk").classList.toggle("active", name === "talk");
-    $("tab-money").classList.toggle("active", name === "money");
-    $("talk-view").hidden = name !== "talk";
-    $("money-view").hidden = name !== "money";
+    for (const tab of ["talk", "today", "money"]) {
+        $(`tab-${tab}`).classList.toggle("active", name === tab);
+        $(`${tab}-view`).hidden = name !== tab;
+    }
     if (name === "money") loadMoney();
+    if (name === "today") loadToday();
+}
+
+// ---------------------------------------------------------------- Today (core/today.py)
+
+const TODAY_GROUPS = { overdue: "Overdue", today: "Today", waiting: "Waiting on you", soon: "Coming up" };
+
+function renderToday(items) {
+    const list = $("today-list");
+    list.replaceChildren();
+    if (!items.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "Nothing needs you today. Enjoy it.";
+        list.appendChild(empty);
+        return;
+    }
+    let group = null;
+    for (const item of items) {
+        if (item.when !== group) {
+            group = item.when;
+            const heading = document.createElement("div");
+            heading.className = "today-group";
+            heading.textContent = TODAY_GROUPS[group] || group;
+            list.appendChild(heading);
+        }
+        const row = document.createElement("div");
+        row.className = `today-row ${item.when}`;
+        const time = document.createElement("span");
+        time.className = "time";
+        time.textContent = item.time || item.icon;
+        const text = document.createElement("span");
+        const title = document.createElement("span");
+        title.className = "title";
+        title.textContent = item.title;
+        text.appendChild(title);
+        if (item.detail) {
+            const detail = document.createElement("span");
+            detail.className = "detail";
+            detail.textContent = item.detail;
+            text.appendChild(detail);
+        }
+        row.append(time, text);
+        list.appendChild(row);
+    }
+}
+
+async function loadToday() {
+    setStatus("Loading today…");
+    try {
+        renderToday((await api("/api/today")).items);
+        setStatus("");
+    } catch (err) {
+        if (err.message !== "unauthorized") setStatus(`Couldn't load today: ${err.message}`, true);
+    }
 }
 
 function renderMoney(summary) {
@@ -438,6 +492,8 @@ async function sendFile() {
 $("file-input").addEventListener("change", sendFile);
 $("tab-talk").addEventListener("click", () => showTab("talk"));
 $("tab-money").addEventListener("click", () => showTab("money"));
+$("tab-today").addEventListener("click", () => showTab("today"));
+$("today-refresh").addEventListener("click", loadToday);
 $("money-refresh").addEventListener("click", loadMoney);
 $("login-button").addEventListener("click", login);
 $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });

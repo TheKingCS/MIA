@@ -160,6 +160,8 @@ from core.project_manager import Project
 from core.push_to_talk_trigger import PushToTalkTrigger
 from core.startup_briefing import build_stat_highlights, build_startup_briefing, greeting_for_hour
 from core.tts_worker import TTSWorker
+from core.logger import get_logger
+from gui.today_card import TodayCard
 from gui.dashboard_customize_dialog import DashboardCustomizeDialog
 from gui.widgets.avatar_camera_widget import AvatarCameraWidget
 from gui.widgets.blueprint_frame import BlueprintFrame
@@ -167,6 +169,8 @@ from gui.widgets.glow import apply_panel_glow
 from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from gui.widgets.toggle_switch import ToggleSwitch
 from core.region import money
+
+log = get_logger(__name__)
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
 _CLOCK_TICK_MS = 1000
@@ -667,6 +671,9 @@ class HomeDashboard(QFrame):
         self._build_widgets_grid()
 
         outer.addWidget(self._build_briefing_banner())
+        # What needs you today, across every app (core/today.py).
+        self._today_card = TodayCard(self.context)
+        outer.addWidget(self._today_card)
 
         widgets_label = QLabel("WIDGETS")
         widgets_label.setObjectName("DashboardOverlineLabel")
@@ -2007,6 +2014,10 @@ class HomeDashboard(QFrame):
         context.dashboard_widgets.enabled_widgets_in_order() produced
         last, so a disabled widget's refresh is simply skipped rather
         than erroring on a body label that doesn't exist."""
+        try:
+            self._today_card.refresh()
+        except Exception:
+            log.exception("Today card refresh failed.")
         if "power" in self._widget_bodies:
             self._refresh_power()
         if "mission" in self._widget_bodies:

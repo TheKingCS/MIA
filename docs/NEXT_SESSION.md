@@ -60,6 +60,10 @@ looks wrong (the text on screen, never passwords or keys).
       ask "why did you tell me that?".
 - [ ] **Check My Setup.** Settings → Check My Setup (or ask "is
       everything set up?"); fix or report anything marked ❌.
+- [ ] **Today.** Look at the new Today card on Home (under the
+      greeting); tap a row to jump to its app. On the phone, the Today
+      tab. Ask "what's on today?". Tell Claude if something you'd expect
+      is missing.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -167,9 +171,9 @@ it, and went with Claude's recommendations. The plan, in order:
   Linux/Pi (`--kiosk` for a Pi), double-click `install.bat` on Windows.
 - **Imports: built** (2026-10-01): Settings → Import from Another App
   (.ics calendars, .vcf contacts, bank .csv statements).
-- **Next in this line, in order:** (1) a **"Today" view**: one screen
-  with what matters today across apps (calendar, bills due, maintenance
-  due, tasks, drafts waiting, MIA's held messages); (2) a **universal
+- **Today: built** (2026-10-01): a Today card on Home, a Today tab on
+  the phone, "what's on today?".
+- **Next in this line, in order:** (2) a **universal
   capture** button (type or say anything; MIA files it); (3) an optional
   **private budget** for one person inside a household; (4) **ownership
   marks** on shared things (whose truck); then accessibility (text size,

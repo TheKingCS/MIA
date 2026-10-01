@@ -12820,3 +12820,25 @@ So nobody starts from an empty MIA (`core/imports.py`, Settings →
 variants, US and UK statement layouts, file detection, importing twice,
 undoing an import, day-first dates). Full suite passes (same one
 pre-existing timezone failure).
+
+## Today (2026-10-01)
+
+One list of what needs you today, across every app (`core/today.py`):
+overdue bills, maintenance and tasks first; then today's events (timed
+ones in order), alarms, bills and maintenance due, tasks, paydays,
+birthdays and pantry items about to expire; then what's waiting on you
+(documents to file, unsent email drafts); then the next 3 days (bills,
+maintenance, birthdays). Each source is optional and a broken one never
+hides the rest.
+
+- **Home:** a Today card under the briefing (`gui/today_card.py`); each
+  row opens its app; refreshed with the dashboard, rebuilt only on change.
+- **Phone:** a Today tab in the web app (`GET /api/today`, the phone
+  user's own day).
+- **Assistant:** `get_today` ("what's on today?", "what does my day look
+  like?").
+
+**Verified:** 6 new tests (an empty day, every source in order, paid and
+done things dropping off, a broken source, the Assistant and Home card,
+the phone) and 3 routing lines. Full suite passes (same one pre-existing
+timezone failure).

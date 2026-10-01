@@ -213,6 +213,9 @@ the owner says "without the tasks".
 **Added 2026-09-28** (Finance #3, same file): `log_business_use`,
 `get_business_use` (domain `business_use`, `core/business_use.py`).
 
+**Added 2026-10-01** (`core/assistant_today_actions.py`): `get_today`
+(domain `today`), everything that needs the person today (core/today.py).
+
 **Added 2026-10-01** (`core/assistant_undo_actions.py`, accounts stage
 5): `undo_last_change`, `get_recent_changes` (domain `undo`),
 `get_message_reason`, `mute_message_topic` (domain `communication`),
