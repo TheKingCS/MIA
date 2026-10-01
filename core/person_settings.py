@@ -41,6 +41,8 @@ PERSONAL_SETTINGS = (
     "region.country",
     "region.currency",
     "budget.private",
+    "display.text_size",
+    "display.high_contrast",
 )
 
 

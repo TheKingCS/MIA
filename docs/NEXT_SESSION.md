@@ -75,6 +75,10 @@ looks wrong (the text on screen, never passwords or keys).
 - [ ] **Whose is it.** In Maintenance, edit the truck (or anything) →
       "Belongs to". Or tell MIA "the truck is mine". Things marked as
       someone else's drop off your Today list.
+- [ ] **Accessibility.** Settings → Accessibility: try a bigger text
+      size and high contrast (switch back after). Press Ctrl+Shift+R on
+      any screen to hear it (needs MIA's voice installed). Tell Claude
+      anything that's still hard to read.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 
@@ -190,9 +194,11 @@ it, and went with Claude's recommendations. The plan, in order:
   private...".
 - **Ownership marks: built** (2026-10-01): "Belongs to" on vehicles,
   tools and appliances; "the truck is mine", "whose mower is it?".
-- **Next in this line, in order:** accessibility (text size,
-  contrast, read-aloud), child accounts, starter templates, and a real
-  Habits module.
+- **Accessibility: built** (2026-10-01): Settings → Accessibility (text
+  size, high contrast), Ctrl+Shift+R reads the screen aloud.
+- **Next in this line, in order:** child accounts (a parent-managed
+  account with age-appropriate apps and no private journal lock-out),
+  starter templates, and a real Habits module.
 
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were

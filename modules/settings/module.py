@@ -58,6 +58,7 @@ from PySide6.QtWidgets import (
 )
 
 from core import focus_presets, person_settings
+from core import accessibility
 from core import region as region_module
 from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
 from core.device_profile import CORE, HOME, get_device_profile
@@ -181,6 +182,29 @@ class SettingsModule(ModuleBase):
         questions_button.setObjectName("ModuleButton")
         questions_button.clicked.connect(self._on_setup_questions_clicked)
         outer.addWidget(questions_button)
+
+        # Accessibility (core/accessibility.py, 2026-10-01): each person's own.
+        access_section = QLabel("Accessibility")
+        access_section.setObjectName("SettingsSectionHeader")
+        outer.addWidget(access_section)
+        size_row = QHBoxLayout()
+        size_row.addWidget(QLabel("Text size:"))
+        self._text_size_combo = QComboBox()
+        for size_id, (label, _scale) in accessibility.TEXT_SIZES.items():
+            self._text_size_combo.addItem(label, size_id)
+        current_size, current_contrast = accessibility.look_for(self.context)
+        self._text_size_combo.setCurrentIndex(max(0, self._text_size_combo.findData(current_size)))
+        self._text_size_combo.currentIndexChanged.connect(self._on_text_size_changed)
+        size_row.addWidget(self._text_size_combo, stretch=1)
+        outer.addLayout(size_row)
+        self._contrast_checkbox = QCheckBox("High contrast (black and white, yellow highlights)")
+        self._contrast_checkbox.setChecked(current_contrast)
+        self._contrast_checkbox.toggled.connect(self._on_contrast_toggled)
+        outer.addWidget(self._contrast_checkbox)
+        read_button = QPushButton("Read This Screen Aloud (Ctrl+Shift+R)")
+        read_button.setObjectName("ModuleButton")
+        read_button.clicked.connect(lambda: self.context.events.publish("accessibility.read_screen"))
+        outer.addWidget(read_button)
 
         appearance_section = QLabel("Appearance & Device Profile")
         appearance_section.setObjectName("SettingsSectionHeader")
@@ -444,6 +468,14 @@ class SettingsModule(ModuleBase):
 
         self.context.profiles.rename_profile(profile.profile_id, dialog.entered_name)
         self._account_desc_label.setText(f"Signed in as {dialog.entered_name}.")
+
+    def _on_text_size_changed(self) -> None:
+        person_settings.put(self.context, "display.text_size", self._text_size_combo.currentData())
+        self.context.events.publish("display.changed")
+
+    def _on_contrast_toggled(self, checked: bool) -> None:
+        person_settings.put(self.context, "display.high_contrast", bool(checked))
+        self.context.events.publish("display.changed")
 
     def _on_focus_changed(self) -> None:
         focus_id = self._focus_combo.currentData()

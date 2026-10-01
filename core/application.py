@@ -23,7 +23,7 @@ import threading
 import urllib.error
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QFontDatabase
@@ -67,6 +67,7 @@ from core.assistant_why_actions import register_why_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
+from core.assistant_accessibility_actions import register_accessibility_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_undo_actions import register_undo_actions
@@ -164,7 +165,7 @@ from gui.main_window import MainWindow
 from gui.profile_select import ProfileSelectScreen
 from gui.setup_wizard import SetupWizard
 from gui.splash_screen import SplashScreen
-from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES, get_theme_stylesheet
+from gui.theme_manager import THEME_DISPLAY_NAMES, THEMES, build_stylesheet, get_theme_stylesheet
 from core.region import money
 
 log = get_logger(__name__)
@@ -272,6 +273,12 @@ class MIAApplication:
         # core/profile_manager.py.
         self.context.profiles = ProfileManager(self.context)
         self.context.households = HouseholdManager(self.context)
+        # Each person's text size and contrast (core/accessibility.py),
+        # applied now and whenever someone signs in or changes them.
+        self._base_font = self.qt_app.font()
+        self._apply_look()
+        for event in ("profile.switched", "profile.created", "display.changed"):
+            self.events.subscribe(event, self._apply_look)
         self.context.undo = UndoLog()
         self.context.notifications = NotificationManager(self.context)
         # Mobile access, Phase 1 (2026-09-12) — cheap to construct
@@ -1045,7 +1052,24 @@ class MIAApplication:
 
     def _on_theme_changed(self, theme_id: str, **_kwargs) -> None:
         """Live theme swap — published by modules/settings/module.py's Theme dropdown. No restart required."""
-        self.qt_app.setStyleSheet(get_theme_stylesheet(theme_id))
+        self._apply_look(theme_id=theme_id)
+
+    def _apply_look(self, theme_id: Optional[str] = None, **_kwargs) -> None:
+        """The theme plus the signed-in person's text size and contrast
+        (core/accessibility.py, gui/theme_manager.py's build_stylesheet())."""
+        from PySide6.QtGui import QFont
+
+        from core.accessibility import look_for, text_scale
+
+        size, high_contrast = look_for(self.context)
+        theme = theme_id or self.config.get("gui.theme", "dark_field")
+        self.qt_app.setStyleSheet(build_stylesheet(theme, size, high_contrast))
+        base = getattr(self, "_base_font", None)
+        if base is not None:
+            font = QFont(base)
+            if base.pointSizeF() > 0:
+                font.setPointSizeF(base.pointSizeF() * text_scale(size))
+            self.qt_app.setFont(font)
 
     def _register_search_providers(self) -> None:
         """
@@ -1179,6 +1203,7 @@ class MIAApplication:
         register_undo_actions(self.context.assistant_actions)
         register_today_actions(self.context.assistant_actions)
         register_ownership_actions(self.context.assistant_actions)
+        register_accessibility_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)
         register_textbook_actions(self.context.assistant_actions)
         register_inbox_actions(self.context.assistant_actions)

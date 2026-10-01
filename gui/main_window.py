@@ -113,6 +113,19 @@ class MainWindow(QMainWindow):
         shortcut.activated.connect(self._open_search)
         capture_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Space"), self)
         capture_shortcut.activated.connect(self._open_quick_capture)
+        read_shortcut = QShortcut(QKeySequence("Ctrl+Shift+R"), self)
+        read_shortcut.activated.connect(self._read_screen_aloud)
+
+    def _on_read_screen_requested(self, **_kwargs) -> None:
+        self._read_screen_aloud()
+
+    def _read_screen_aloud(self) -> None:
+        """Accessibility (gui/read_aloud.py): the open screen, in MIA's voice."""
+        from gui.read_aloud import ReadAloud
+
+        if getattr(self, "_read_aloud", None) is None:
+            self._read_aloud = ReadAloud(self.context)
+        self.statusBar().showMessage(self._read_aloud.toggle(self._stack.currentWidget()), 6000)
 
     def _open_quick_capture(self) -> None:
         from gui.quick_capture_dialog import QuickCaptureDialog
@@ -152,6 +165,7 @@ class MainWindow(QMainWindow):
         self.context.events.subscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.subscribe("modules.rescanned", self._on_modules_changed)
         self.context.events.subscribe("apps.arrangement_changed", self._on_modules_changed)
+        self.context.events.subscribe("accessibility.read_screen", self._on_read_screen_requested)
         # An email MIA drafted for whoever is signed in (core/email_drafts.py).
         self.context.events.subscribe("email.draft_ready", self._on_email_draft_ready)
         # 2026-09-28: records changed elsewhere (an Assistant tool, often
@@ -314,6 +328,7 @@ class MainWindow(QMainWindow):
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)
         self.context.events.unsubscribe("modules.rescanned", self._on_modules_changed)
         self.context.events.unsubscribe("apps.arrangement_changed", self._on_modules_changed)
+        self.context.events.unsubscribe("accessibility.read_screen", self._on_read_screen_requested)
         self.context.events.unsubscribe("email.draft_ready", self._on_email_draft_ready)
         self.context.events.unsubscribe("records.changed", self._on_records_changed)
         self.context.events.unsubscribe(
@@ -631,6 +646,7 @@ class MainWindow(QMainWindow):
         self._notifications_menu_action = self._profile_menu.addAction(
             "\U0001F514 Notifications", self._open_notification_center
         )
+        self._profile_menu.addAction("\U0001F50A Read this screen aloud (Ctrl+Shift+R)", self._read_screen_aloud)
         self._profile_menu.addSeparator()
         self._volume_quick_control = VolumeQuickControl(self.context)
         volume_action = QWidgetAction(self._profile_menu)

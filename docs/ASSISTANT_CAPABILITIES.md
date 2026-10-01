@@ -213,6 +213,10 @@ the owner says "without the tasks".
 **Added 2026-09-28** (Finance #3, same file): `log_business_use`,
 `get_business_use` (domain `business_use`, `core/business_use.py`).
 
+**Added 2026-10-01** (`core/assistant_accessibility_actions.py`):
+`set_text_size`, `set_high_contrast`, `read_screen` (domain
+`accessibility`).
+
 **Added 2026-10-01** (`core/assistant_ownership_actions.py`):
 `set_item_owner`, `get_item_owner` (domain `ownership`).
 

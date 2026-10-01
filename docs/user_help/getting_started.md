@@ -108,6 +108,14 @@ the UK and Ireland, Lifeline in Australia, 1737 in New Zealand; anywhere
 else she points you to findahelpline.com and your local emergency
 number). "Currency" sets the money symbol everywhere in MIA.
 
+## Easier to see and hear
+
+Settings → **Accessibility**: a bigger **text size** (Larger, Largest,
+Huge) and **high contrast** (black, white and yellow). Both are yours
+alone. Press **Ctrl+Shift+R** on any screen and MIA reads it aloud; press
+it again to stop. Or just say "make the text bigger", "turn on high
+contrast" or "read this screen to me".
+
 ## Quick capture
 
 Click **✚** at the top (or press Ctrl+Shift+Space) and type anything:

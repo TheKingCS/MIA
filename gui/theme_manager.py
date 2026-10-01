@@ -1141,3 +1141,69 @@ THEME_DISPLAY_NAMES: dict[str, str] = {
 def get_theme_stylesheet(theme_id: str) -> str:
     """Falls back to DEFAULT_THEME_ID for an unrecognized id (e.g. after a config downgrade)."""
     return THEMES.get(theme_id, THEMES[DEFAULT_THEME_ID])
+
+
+# Accessibility (2026-10-01, core/accessibility.py): laid over any theme.
+# Later rules win in Qt stylesheets, so this only needs the common
+# selectors: plain black and white, yellow for focus and highlights, thick
+# borders so buttons and fields are easy to find.
+HIGH_CONTRAST_OVERLAY = """
+QWidget { background-color: #000000; color: #ffffff; }
+QLabel, QCheckBox, QRadioButton, QGroupBox { color: #ffffff; background-color: transparent; }
+QLabel#SubtitleLabel, QLabel#DashboardOverlineLabel, QLabel#SettingsSectionHeader { color: #ffffff; }
+QLabel#TitleLabel { color: #ffff00; }
+QPushButton, QToolButton {
+    background-color: #000000; color: #ffffff; border: 2px solid #ffffff; border-radius: 6px; padding: 6px 10px;
+}
+QPushButton:hover, QToolButton:hover { border-color: #ffff00; color: #ffff00; }
+QPushButton:focus, QToolButton:focus, QLineEdit:focus, QTextEdit:focus, QComboBox:focus, QListWidget:focus {
+    border: 3px solid #ffff00;
+}
+QPushButton:disabled { color: #9a9a9a; border-color: #9a9a9a; }
+QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QTimeEdit {
+    background-color: #000000; color: #ffffff; border: 2px solid #ffffff;
+}
+QListWidget, QTreeWidget, QTableWidget { background-color: #000000; color: #ffffff; border: 2px solid #ffffff; }
+QListWidget::item:selected, QTreeWidget::item:selected, QTableWidget::item:selected {
+    background-color: #ffff00; color: #000000;
+}
+QTabBar::tab { background-color: #000000; color: #ffffff; border: 2px solid #ffffff; padding: 6px 10px; }
+QTabBar::tab:selected { background-color: #ffff00; color: #000000; }
+QFrame#DashboardCard, QFrame#HeaderBar { background-color: #000000; border: 2px solid #ffffff; }
+QToolTip { background-color: #ffff00; color: #000000; border: 1px solid #000000; }
+"""
+
+
+def _contrast_for_named(theme_qss: str) -> str:
+    """The theme's own named elements (QPushButton#Chip, QLabel#Clock...)
+    outrank the plain overlay above, so each gets plain black and white too;
+    hover, pressed and checked states turn yellow."""
+    import re
+
+    plain, active = [], []
+    without_comments = re.sub(r"/\*.*?\*/", "", theme_qss, flags=re.S)
+    for block in re.findall(r"([^{}]+)\{", without_comments):
+        for selector in block.split(","):
+            selector = " ".join(selector.split())
+            if "#" not in selector or selector.startswith(("/*", "*")):
+                continue
+            (active if re.search(r":(hover|pressed|checked|selected)", selector) else plain).append(selector)
+    rules = []
+    if plain:
+        rules.append(",\n".join(dict.fromkeys(plain)) + " { color: #ffffff; background-color: #000000; }")
+    buttons = [s for s in dict.fromkeys(plain) if "QPushButton" in s.split()[-1] and ":" not in s]
+    if buttons:  # a button you can't press still has to look like it
+        rules.append(",\n".join(f"{s}:disabled" for s in buttons) + " { color: #9a9a9a; border-color: #9a9a9a; }")
+    if active:
+        rules.append(",\n".join(dict.fromkeys(active)) + " { color: #000000; background-color: #ffff00; }")
+    return "\n".join(rules) + "\n"
+
+
+def build_stylesheet(theme_id: str, text_size: str = "normal", high_contrast: bool = False) -> str:
+    """The whole look: the theme, then high contrast if wanted, with every
+    font size scaled for the person's text size."""
+    from core.accessibility import scale_font_sizes, text_scale
+
+    theme = get_theme_stylesheet(theme_id)
+    sheet = theme + (_contrast_for_named(theme) + HIGH_CONTRAST_OVERLAY if high_contrast else "")
+    return scale_font_sizes(sheet, text_scale(text_size))

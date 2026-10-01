@@ -46,6 +46,11 @@ CORPUS: list[tuple[str, str]] = [
     ("The tractor belongs to the whole household", "set_item_owner"),
     ("Whose mower is it?", "get_item_owner"),
     ("Who owns the generator?", "get_item_owner"),
+    # ---- Accessibility (core/accessibility.py) ---------------------------
+    ("Make the text bigger", "set_text_size"),
+    ("I can't read the text, it's too small", "set_text_size"),
+    ("Turn on high contrast", "set_high_contrast"),
+    ("Read this screen to me", "read_screen"),
     # ---- Assets & maintenance -------------------------------------------
     ("Start tracking my chainsaw", "add_maintenance_asset"),
     ("Add my Honda generator to maintenance", "add_maintenance_asset"),

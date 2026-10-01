@@ -12894,3 +12894,31 @@ person or to the household (`core/ownership.py`, using the existing
 **Verified:** 4 new tests (choices and words, the Assistant from two
 people's sides, Today per person, the item window) and 4 routing lines.
 Full suite passes (same one pre-existing timezone failure).
+
+## Accessibility (2026-10-01)
+
+Each person's own (`display.text_size`, `display.high_contrast`), applied
+on sign-in (`MIAApplication._apply_look()`):
+
+- **Text size** Normal / Larger / Largest / Huge: every font size in the
+  theme scaled (`core/accessibility.py`), plus the app's base font.
+- **High contrast**: black, white and yellow, laid over any theme
+  (`gui/theme_manager.py`'s `build_stylesheet()`): a general overlay plus
+  plain black-and-white for each of the theme's own named elements, with
+  hover in yellow and disabled buttons in grey.
+- **Read this screen aloud**: Ctrl+Shift+R, the profile menu, Settings or
+  "read this screen to me" (`gui/read_aloud.py`): the open screen's
+  visible text in reading order, in MIA's voice; again to stop; passwords
+  are never read.
+- Settings → Accessibility; the Assistant: `set_text_size`,
+  `set_high_contrast`, `read_screen`.
+
+**Limits:** text a screen styles inline (some small labels and gradients)
+keeps its own size and colors; the phone apps use the phone's own text
+size settings.
+
+**Verified:** 8 new tests (font scaling, the whole look, per person, the
+app applying it, the Assistant, screen text, reading a real screen with a
+password field, the named-element recoloring for every theme) and 4
+routing lines; the real main window rendered with Largest + high
+contrast. Full suite passes (same one pre-existing timezone failure).
