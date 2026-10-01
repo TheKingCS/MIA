@@ -139,10 +139,11 @@ it, and went with Claude's recommendations. The plan, in order:
   is complete.
 - **MIA's installer: built** (ROADMAP step 7): `bash install.sh` on
   Linux/Pi (`--kiosk` for a Pi), double-click `install.bat` on Windows.
+- **Imports: built** (2026-10-01): Settings → Import from Another App
+  (.ics calendars, .vcf contacts, bank .csv statements).
 - Later in this line: an optional private budget, ownership marks on
-  shared things, starter templates and imports (.ics, contacts, bank
-  CSV), a universal capture button, a "Today" view, accessibility,
-  child accounts, a real Habits module.
+  shared things, starter templates, a universal capture button, a
+  "Today" view, accessibility, child accounts, a real Habits module.
 
 
 1. **Fix whatever the Plaid and phone-voice tests turn up.** Both were

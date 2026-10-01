@@ -137,6 +137,13 @@ class SettingsModule(ModuleBase):
         account_button.clicked.connect(self._on_account_clicked)
         outer.addWidget(account_button)
 
+        # Bring things from other apps (core/imports.py).
+        import_button = QPushButton("Import from Another App...")
+        import_button.setObjectName("ModuleButton")
+        import_button.setToolTip("A calendar (.ics), contacts (.vcf) or a bank statement (.csv).")
+        import_button.clicked.connect(self._on_import_clicked)
+        outer.addWidget(import_button)
+
         # What works on this device and what to fix (core/system_check.py).
         check_button = QPushButton("Check My Setup")
         check_button.setObjectName("ModuleButton")
@@ -456,6 +463,24 @@ class SettingsModule(ModuleBase):
         self._focus_combo.blockSignals(True)
         self._focus_combo.setCurrentIndex(max(0, index))
         self._focus_combo.blockSignals(False)
+
+    def _on_import_clicked(self) -> None:
+        from core import imports
+
+        path, _ = QFileDialog.getOpenFileName(
+            None, "Import into MIA", str(Path.home()),
+            "Calendar, contacts or bank statement (*.ics *.vcf *.vcard *.csv);;All files (*)")
+        if not path:
+            return
+        try:
+            summary = imports.run(self.context, Path(path))
+        except (ValueError, OSError) as exc:
+            QMessageBox.warning(None, "Import", str(exc))
+            return
+        extra = ""
+        if summary.kind == imports.BANK:
+            extra = " Categories are guesses from each description; change any in Budget."
+        QMessageBox.information(None, "Import", f"{summary.describe()}{extra} Say \"undo that\" to take it back.")
 
     def _on_check_setup_clicked(self) -> None:
         from gui.setup_check_dialog import SetupCheckDialog

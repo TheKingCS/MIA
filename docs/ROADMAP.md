@@ -12799,3 +12799,24 @@ wins; a name without an address gets "I don't have an email address
 for ...". The Android app has an "Email drafts" section (Send only when
 tapped, Copy, Mail app, Discard). 2 new Python tests, 1 routing line,
 Android `EmailDraftsTest`.
+
+## Imports from other apps (2026-10-01)
+
+So nobody starts from an empty MIA (`core/imports.py`, Settings →
+"Import from Another App..."):
+
+- **Calendar (.ics)** from Google, Outlook or Apple: title, date, time
+  (UTC times shown locally), notes and location, and weekly / every two
+  weeks / monthly / yearly repeats.
+- **Contacts (.vcf)** into People & Pets: name (or company), email,
+  birthday (one without a year goes in the notes), phone in the notes.
+  Someone already there gets a missing email or birthday filled in.
+- **Bank statement (.csv)**: finds the Date and Amount (or Money out /
+  Money in) columns under any heading rows; expenses and income, with a
+  category guessed from the description; day-first dates outside the US.
+- Re-importing adds nothing twice; each import is one "undo that".
+
+**Verified:** 8 new tests (folded lines and escapes, repeats, UTC, vCard
+variants, US and UK statement layouts, file detection, importing twice,
+undoing an import, day-first dates). Full suite passes (same one
+pre-existing timezone failure).

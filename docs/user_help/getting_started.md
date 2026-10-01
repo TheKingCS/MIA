@@ -97,6 +97,15 @@ the UK and Ireland, Lifeline in Australia, 1737 in New Zealand; anywhere
 else she points you to findahelpline.com and your local emergency
 number). "Currency" sets the money symbol everywhere in MIA.
 
+## Bring things from other apps
+
+Settings → **Import from Another App...** takes a calendar export (.ics,
+from Google, Outlook or Apple Calendar), contacts (.vcf, from your phone
+or email) or a bank statement (.csv, "download transactions" on your
+bank's website). Importing the same file again adds nothing twice, and
+"undo that" takes an import back. Bank categories are guesses from each
+description; change any in Budget.
+
 ## Undo, and why MIA says things
 
 If MIA changes something wrongly, say **"undo that"** (or "what did you
