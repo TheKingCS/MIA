@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -127,6 +128,7 @@ class TaskManager:
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No task with id '{task_id}'.")
+        was_done = task.done
         for key, value in fields.items():
             if key == "created_at":
                 raise ValueError("'created_at' can't be set through update_task().")
@@ -135,6 +137,9 @@ class TaskManager:
             setattr(task, key, value)
         task.updated_at = datetime.now().isoformat(timespec="seconds")
         self._save()
+        if task.done and not was_done:
+            life_events.record(self, "task_done", f"Done: {task.title}",
+                               [f"task:{task.task_id}"] + ([f"project:{task.project_id}"] if task.project_id else []))
         return task
 
     def toggle_done(self, task_id: str) -> Task:

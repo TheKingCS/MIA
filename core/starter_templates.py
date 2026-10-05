@@ -299,6 +299,11 @@ def apply(context, starter_id: str, part_ids: Optional[Iterable[str]] = None,
     if undo is not None:
         undo.add(change)
     if result.added:
+        from core import life_events
+
+        life_events.record(getattr(context, "life_events", None), "starter_added",
+                           f"Added the {starter.name} starter set ({len(result.added)} things)", [],
+                           {"starter": starter_id, "added": result.added})
         from core.main_thread import publish
 
         publish(context, "records.changed", action=f"starter_{starter_id}")

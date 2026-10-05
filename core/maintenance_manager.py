@@ -64,6 +64,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.data_logger_manager import Reading
 from core.gamification import SkillWeight, grant_xp
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -744,6 +745,10 @@ class MaintenanceManager:
                 task.last_completed_meter_value = _latest_reading_value(self.readings_for_task(task_id))
         self._save()
         log.info("Maintenance task completed: '%s' on %s", task.title, task.last_completed)
+        asset = self.get_asset(task.asset_id)
+        life_events.record(self, "maintenance_done", f"{task.title}" + (f": {asset.name}" if asset else ""),
+                           [f"maintenance_task:{task.task_id}", f"asset:{task.asset_id}"],
+                           {"date": task.last_completed, "meter": task.last_completed_meter_value})
         # 2026-09-11 gamification pass — a real, distinct completion
         # event each call, including a recurring task's own legitimate
         # re-completion on schedule (same reasoning as a recurring

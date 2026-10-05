@@ -41,6 +41,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -372,6 +373,11 @@ class WorkoutManager:
             f"Nice work — {set_note}",
             skill_weights=[SkillWeight("strength", 10)],
         )
+        template = self.get_template(template_id) if template_id else None
+        life_events.record(self, "workout_logged", f"Worked out: {template.name if template else 'a session'}"
+                           + (f", {session.duration_minutes:g} min" if session.duration_minutes else ""),
+                           [f"workout:{session.session_id}"] + ([f"workout_template:{template_id}"] if template_id else []),
+                           {"date": session.date, "minutes": session.duration_minutes, "sets": set_count})
         # Event-sourced groundwork (2026-09-14) — see
         # core/rewards_manager.py's own docstring for the full design.
         self.context.events.publish(

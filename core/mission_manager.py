@@ -108,6 +108,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -551,6 +552,9 @@ class MissionManager:
             # this codebase reacted to a Mission actually finishing
             # before this. Fires exactly once, on the same real
             # transition as the celebration/reward-crediting above.
+            life_events.record(self, "mission_completed", f"Completed the mission {mission.name}",
+                               [f"mission:{mission.mission_id}"] + [f"skill:{w.skill_id}" for w in mission.skill_rewards],
+                               {"xp": mission.reward_xp})
             self.context.events.publish("mission.completed", mission_id=mission.mission_id)
         # "Mission failure/struggle signal" (2026-09-11) — same
         # transition-detection shape as mission.completed above, fires
@@ -627,6 +631,10 @@ class MissionManager:
             if mission.skill_rewards and self.context.skills is not None:
                 for weight in mission.skill_rewards:
                     self.context.skills.add_skill_xp(profile_id, weight.skill_id, weight.xp)
+                    # Evidence: this mission is why the skill grew (EVIDENCE_FOR).
+                    life_events.record(self, "skill_evidence", f"{weight.xp} XP in {weight.skill_id} from {mission.name}",
+                                       [f"skill:{weight.skill_id}", f"mission:{mission.mission_id}"],
+                                       {"xp": weight.xp}, profile_id=profile_id)
 
     def _unlock_mission_recipes(self, mission: Mission) -> None:
         """

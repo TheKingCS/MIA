@@ -28,6 +28,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -211,6 +212,8 @@ class ProjectManager:
             # Active -> Complete again; this activity event fires only
             # for the first sighting of a genuine completion, mirroring
             # the skill_weights_credited guard right above).
+            life_events.record(self, "project_completed", f"Finished the project {project.name}",
+                               [f"project:{project.project_id}"])
             self.context.events.publish(
                 "activity.logged", source="project", category="project_completed",
                 timestamp=datetime.now().isoformat(timespec="seconds"),

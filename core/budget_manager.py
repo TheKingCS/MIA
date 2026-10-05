@@ -88,6 +88,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.calendar_manager import RECURRENCE_TYPES, date_recurs_on
 from core.gamification import SkillWeight, grant_xp
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -775,18 +776,22 @@ class BudgetManager:
         paid_date = paid_date or _today_iso()
         paid_amount = bill.amount if amount is None else max(0.0, amount)
 
-        entry = self.add_expense(
-            amount=paid_amount,
-            category=bill.category,
-            description=bill.name,
-            date=paid_date,
-            tax_relevant=bill.tax_relevant,
-            bill_id=bill.bill_id,
-            entity_id=bill.entity_id,
-        )
+        with life_events.quiet():
+            entry = self.add_expense(
+                amount=paid_amount,
+                category=bill.category,
+                description=bill.name,
+                date=paid_date,
+                tax_relevant=bill.tax_relevant,
+                bill_id=bill.bill_id,
+                entity_id=bill.entity_id,
+            )
         bill.last_paid_date = paid_date
         self._save_bills()
         log.info("Bill paid: '%s' $%.2f on %s", bill.name, paid_amount, paid_date)
+        life_events.record(self, "bill_paid", f"Paid {bill.name}: {money(paid_amount)}",
+                           [f"bill:{bill.bill_id}", f"expense:{entry.entry_id}"],
+                           {"amount": paid_amount, "date": paid_date})
         # 2026-09-11 gamification pass — same "recurring completion is a
         # real, distinct event each time" reasoning as
         # core.maintenance_manager.MaintenanceManager.mark_complete().
@@ -879,16 +884,20 @@ class BudgetManager:
         received_date = received_date or _today_iso()
         received_amount = source.expected_amount if amount is None else max(0.0, amount)
 
-        entry = self.add_income(
-            amount=received_amount,
-            category=source.category,
-            description=source.name,
-            date=received_date,
-            entity_id=source.entity_id,
-        )
+        with life_events.quiet():
+            entry = self.add_income(
+                amount=received_amount,
+                category=source.category,
+                description=source.name,
+                date=received_date,
+                entity_id=source.entity_id,
+            )
         source.last_received_date = received_date
         self._save_income_sources()
         log.info("Income received: '%s' $%.2f on %s", source.name, received_amount, received_date)
+        life_events.record(self, "income_received", f"Received {source.name}: {money(received_amount)}",
+                           [f"income_source:{source.source_id}", f"income:{entry.entry_id}"],
+                           {"amount": received_amount, "date": received_date})
         return entry
 
     # ------------------------------------------------------------------
@@ -925,6 +934,11 @@ class BudgetManager:
         self._income.append(entry)
         self._save_income()
         log.info("Income recorded: $%.2f (%s)", entry.amount, entry.category)
+        refs = [f"income:{entry.entry_id}"] + [f"{kind}:{value}" for kind, value in (
+            ("property", property_id), ("business", entity_id)) if value]
+        life_events.record(self, "income_added", f"Earned {money(entry.amount)}: {entry.description or entry.category}",
+                           refs, {"amount": entry.amount, "category": entry.category, "date": entry.date},
+                           source="import" if plaid_transaction_id else None)
         return entry
 
     def update_income(self, entry_id: str, **fields) -> IncomeEntry:
@@ -1013,6 +1027,11 @@ class BudgetManager:
         self._expenses.append(entry)
         self._save_expenses()
         log.info("Expense recorded: $%.2f (%s)", entry.amount, entry.category)
+        refs = [f"expense:{entry.entry_id}"] + [f"{kind}:{value}" for kind, value in (
+            ("project", project_id), ("asset", asset_id), ("property", property_id), ("business", entity_id)) if value]
+        life_events.record(self, "expense_added", f"Spent {money(entry.amount)}: {entry.description or entry.category}",
+                           refs, {"amount": entry.amount, "category": entry.category, "date": entry.date},
+                           source="import" if plaid_transaction_id else None)
         return entry
 
     def update_expense(self, entry_id: str, **fields) -> ExpenseEntry:
@@ -1403,17 +1422,21 @@ class BudgetManager:
             raise ValueError(f"amount must not be negative, got {amount}")
         payment_date = date or _today_iso()
 
-        entry = self.add_expense(
-            amount=amount,
-            category="Debt Payment",
-            description=debt.name,
-            date=payment_date,
-            entity_id=debt.entity_id,
-            notes=notes,
-        )
+        with life_events.quiet():
+            entry = self.add_expense(
+                amount=amount,
+                category="Debt Payment",
+                description=debt.name,
+                date=payment_date,
+                entity_id=debt.entity_id,
+                notes=notes,
+            )
         debt.balance = max(0.0, debt.balance - amount)
         debt.last_payment_date = payment_date
         self._save_debts()
+        life_events.record(self, "debt_payment", f"Paid {money(amount)} on {debt.name} ({money(debt.balance)} left)",
+                           [f"debt:{debt.debt_id}", f"expense:{entry.entry_id}"],
+                           {"amount": amount, "balance": debt.balance, "date": payment_date})
         log.info("Debt payment recorded: '%s' $%.2f on %s (balance now $%.2f)", debt.name, amount, payment_date, debt.balance)
         # "My Hero's Path" (2026-09-11) — same household-management XP
         # hook mark_bill_paid() already grants for squaring away a bill.

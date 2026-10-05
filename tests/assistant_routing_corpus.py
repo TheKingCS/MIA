@@ -51,6 +51,11 @@ CORPUS: list[tuple[str, str]] = [
     ("I can't read the text, it's too small", "set_text_size"),
     ("Turn on high contrast", "set_high_contrast"),
     ("Read this screen to me", "read_screen"),
+    # ---- What happened (core/life_events.py) -----------------------------
+    ("What did I get done this week?", "get_life_events"),
+    ("What changed this month?", "get_life_events"),
+    ("What bills did I pay this month?", "get_life_events"),
+    ("How many workouts did I do this month?", "get_life_events"),
     # ---- Starter sets (core/starter_templates.py) ------------------------
     ("What starter sets are there?", "list_starter_sets"),
     ("Set me up with the homestead starter set", "add_starter_set"),

@@ -401,13 +401,20 @@ def run(context, path: Path) -> Summary:
     from core.region import country_of
     from core.undo_log import recording
 
-    with recording(f"import_{kind}", person_id(context)) as change:
-        if kind == CALENDAR:
-            summary = import_calendar(context, text)
-        elif kind == CONTACTS:
-            summary = import_contacts(context, text)
-        else:
-            summary = import_bank(context, text, day_first=country_of(context) != "US")
+    from core import life_events
+
+    with recording(f"import_{kind}", person_id(context)) as change, life_events.acting("import", person_id(context)):
+        with life_events.quiet():  # one "imported" entry, not one per row
+            if kind == CALENDAR:
+                summary = import_calendar(context, text)
+            elif kind == CONTACTS:
+                summary = import_contacts(context, text)
+            else:
+                summary = import_bank(context, text, day_first=country_of(context) != "US")
+        where = getattr(context, "budget", None) if kind == BANK else getattr(context, "life_events", None)
+        life_events.record(where or getattr(context, "life_events", None), "imported",
+                           f"Imported {kind} from {path.name}: {summary.describe()}", [],
+                           {"kind": kind, "added": summary.added, "skipped": summary.skipped})
     undo = getattr(context, "undo", None)
     if undo is not None:
         undo.add(change)

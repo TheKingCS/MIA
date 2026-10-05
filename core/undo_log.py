@@ -140,6 +140,11 @@ def undo_last(context, profile_id: Optional[str]) -> Optional[Change]:
     if change is None:
         return None
     reload_stores(context, _restore(change))
+    # History stays: the undo is one more thing that happened (core/life_events.py).
+    from core import life_events
+
+    life_events.record(getattr(context, "life_events", None), "undone", f"Undid: {change.label.replace('_', ' ')}",
+                       [], {"label": change.label}, profile_id=profile_id)
     from core.main_thread import publish
 
     publish(context, "records.changed", action="undo")

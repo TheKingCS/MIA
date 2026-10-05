@@ -47,6 +47,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
+from core import life_events
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -690,6 +691,8 @@ class KitchenManager:
             for mission in self.context.missions.all_missions():
                 if mission.status == "active" and recipe_id in mission.recipe_unlocks:
                     self.context.missions.update_mission(mission.mission_id, status="completed")
+        life_events.record(self, "meal_logged", f"Cooked {recipe.name}" if recipe is not None else "Logged a meal",
+                           [f"meal:{entry.entry_id}", f"recipe:{recipe_id}"], {"date": entry.date})
         # Event-sourced groundwork (2026-09-14) — see
         # core/rewards_manager.py's own docstring for the full design.
         self.context.events.publish(

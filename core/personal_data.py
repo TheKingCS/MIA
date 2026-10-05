@@ -74,6 +74,7 @@ from core.job_manager import JobManager
 from core.journal_manager import JournalManager
 from core.kitchen_manager import KitchenManager
 from core.ledger_manager import LedgerManager
+from core.life_events import LifeEventLog, PersonalLifeEventLog
 from core.lite_capture_manager import LiteCaptureManager
 from core.logger import get_logger
 from core.maintenance_manager import MaintenanceManager
@@ -123,6 +124,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("classroom", ClassroomManager),
     ("notifications", NotificationManager),
     ("email_drafts", EmailDrafts),
+    ("personal_life_events", PersonalLifeEventLog),
 )
 
 # Shared by the people in one household (core/household_manager.py), in
@@ -157,6 +159,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("plaid", PlaidManager),
     ("kitchen", KitchenManager),
     ("relationships", RelationshipsManager),
+    ("life_events", LifeEventLog),
 )
 
 # The files that used to live in the shared data/ folder, moved into the

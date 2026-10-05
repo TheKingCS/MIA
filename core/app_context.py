@@ -69,6 +69,7 @@ if TYPE_CHECKING:
     from core.pathway_manager import PathwayManager
     from core.power_manager import PowerManager
     from core.email_drafts import EmailDrafts
+    from core.life_events import LifeEventLog, PersonalLifeEventLog
     from core.household_manager import HouseholdManager
     from core.undo_log import UndoLog
     from core.profile_manager import ProfileManager
@@ -120,6 +121,10 @@ class AppContext:
     households: Optional["HouseholdManager"] = field(default=None, repr=False)
     # Each person's email drafts (core/email_drafts.py), set on sign-in.
     email_drafts: Optional["EmailDrafts"] = field(default=None, repr=False)
+    # What happened (core/life_events.py): the household's history and
+    # the person's own, both swapped in on sign-in.
+    life_events: Optional["LifeEventLog"] = field(default=None, repr=False)
+    personal_life_events: Optional["PersonalLifeEventLog"] = field(default=None, repr=False)
     # "Undo that" for MIA's changes (core/undo_log.py).
     undo: Optional["UndoLog"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)

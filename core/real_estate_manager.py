@@ -43,6 +43,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from core.app_context import AppContext
+from core import life_events
+from core.region import money
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -440,10 +442,15 @@ class RealEstateManager:
         prop = self.get_property(property_id)
         if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
-        return self.context.budget.add_income(
-            amount=amount, category="Rental Income", description=description, date=date_str,
-            property_id=property_id, entity_id=prop.entity_id, notes=notes,
-        )
+        with life_events.quiet():
+            entry = self.context.budget.add_income(
+                amount=amount, category="Rental Income", description=description, date=date_str,
+                property_id=property_id, entity_id=prop.entity_id, notes=notes,
+            )
+        # In the budget's folder: a private budget's history stays private.
+        life_events.record(self.context.budget, "rent_received", f"Rent from {prop.name}: {money(amount)}",
+                           [f"property:{property_id}", f"income:{entry.entry_id}"], {"amount": amount, "date": entry.date})
+        return entry
 
     def record_property_expense(
         self,
@@ -457,10 +464,16 @@ class RealEstateManager:
         prop = self.get_property(property_id)
         if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
-        return self.context.budget.add_expense(
-            amount=amount, category=category, description=description, date=date_str,
-            property_id=property_id, entity_id=prop.entity_id, notes=notes,
-        )
+        with life_events.quiet():
+            entry = self.context.budget.add_expense(
+                amount=amount, category=category, description=description, date=date_str,
+                property_id=property_id, entity_id=prop.entity_id, notes=notes,
+            )
+        life_events.record(self.context.budget, "property_expense",
+                           f"{category} for {prop.name}: {money(amount)}",
+                           [f"property:{property_id}", f"expense:{entry.entry_id}"],
+                           {"amount": amount, "category": category, "date": entry.date})
+        return entry
 
     def income_for_property(self, property_id: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list["IncomeEntry"]:
         return [

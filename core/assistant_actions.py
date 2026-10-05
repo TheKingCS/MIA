@@ -272,16 +272,20 @@ class AssistantActionRegistry:
         # "Undo that" (core/undo_log.py): what this tool changes can be put back.
         undo = getattr(context, "undo", None)
         recording = undo is not None and changes_records(name) and name != "undo_last_change"
-        try:
-            if recording:
-                from core.person_settings import person_id
-                from core.undo_log import recording as record_change
+        from core.life_events import acting
+        from core.person_settings import person_id
 
-                with record_change(name, person_id(context)) as change:
+        try:
+            # What it changes is recorded as MIA's doing, for this person (core/life_events.py).
+            with acting("assistant", person_id(context)):
+                if recording:
+                    from core.undo_log import recording as record_change
+
+                    with record_change(name, person_id(context)) as change:
+                        result = action.handler(context, arguments)
+                    undo.add(change)
+                else:
                     result = action.handler(context, arguments)
-                undo.add(change)
-            else:
-                result = action.handler(context, arguments)
         except Exception:
             log.exception("Assistant action '%s' failed", name)
             return f"(Sorry, '{name}' didn't work.)"

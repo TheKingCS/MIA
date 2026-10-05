@@ -154,6 +154,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.budget = BudgetManager(context)
     context.projects = ProjectManager(context)
     context.real_estate = RealEstateManager(context)
+    from core.life_events import LifeEventLog
+
+    context.life_events = LifeEventLog(context)
     # Each person's own stores (core/personal_data.py), as on the desktop.
     context.personal_data = PersonalData(context)
     context.personal_data.watch(events)
