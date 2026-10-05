@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Missions — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    /* missions-local: thread + invent form (one screen's furniture) */
+    .invent-form { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .invent-form input {
+      flex: 1; min-width: 200px; min-height: var(--touch);
+      border-radius: var(--radius-sm); border: 1px solid var(--glass-line-strong);
+      background: var(--glass-strong); color: var(--text);
+      padding: 10px 14px; font: var(--text-md) var(--font);
+    }
+    .invent-form input::placeholder { color: var(--text-faint); }
+    .invent-thread { display: grid; gap: 8px; margin-top: 12px; }
+    .invent-thread:empty { display: none; }
+    .invent-thread .bubble {
+      max-width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+      background: rgba(251, 191, 36, 0.07); border: 1px solid rgba(251, 191, 36, 0.25);
+      font-size: var(--text-md); line-height: 1.5; white-space: pre-wrap;
+    }
+    .dim { color: var(--text-dim); font-size: var(--text-sm); margin: 6px 0 0; }
+    .streak-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .streak-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--glass); border: 1px solid var(--glass-line);
+      border-radius: 999px; padding: 8px 16px; font-size: var(--text-md);
+    }
+    .streak-pill .sname { color: var(--text-dim); font-size: var(--text-sm); }
+  </style>
+</head>
+<body>
+  <!--
+    Missions (muse, 2026-10-05). Concept material, engine data only.
+    Active = the engine's due items with their real actions
+    (propose -> confirm -> approve -> undo, DEC-0009). Completed = the
+    engine's recent wins. "Invent one" asks MIA herself via MIA.talk() —
+    she reads the same life state and proposes; nothing is invented here.
+    Offline: no CDNs, no web fonts. Placeholders only (DEC-0002).
+  -->
+  <form class="sign-in" id="sign-in" hidden aria-label="Sign in to MIA">
+    <p>Sign in to MIA</p>
+    <input id="who" autocomplete="username" placeholder="Email" required aria-label="Email">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+    <button class="btn btn-amber" type="submit">Sign in</button>
+  </form>
+
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Modules">
+      <a class="brand" href="index.html">🌿 MIA<small>Your Life. In Sync.</small></a>
+      <a class="nav" href="index.html"><span class="ico" aria-hidden="true">⌂</span>Home</a>
+      <a class="nav" href="missions.html" aria-current="page"><span class="ico" aria-hidden="true">◎</span>Missions</a>
+      <a class="nav" href="skills.html"><span class="ico" aria-hidden="true">★</span>Skills</a>
+      <div class="side-foot">More modules arrive as they ship.</div>
+    </nav>
+
+    <main class="layout-main">
+      <header class="hero hero-missions">
+        <h1><span aria-hidden="true">◎</span> Missions</h1>
+        <p class="tagline">Explore. Complete. Level Up.</p>
+      </header>
+
+      <section class="strip" id="strip" aria-label="Mission status"></section>
+
+      <section class="glass" id="streaks-wrap" hidden aria-label="Streaks">
+        <h3>Streaks<span class="stag" id="streaks-stag"></span></h3>
+        <div class="streak-row" id="streaks"></div>
+      </section>
+
+      <div class="sect"><h2>Mission log</h2><span class="stag" id="log-stag"></span></div>
+      <div class="ptabs" role="tablist" id="tabs" aria-label="Mission log tabs">
+        <button role="tab" aria-selected="true" data-tab="all">All</button>
+        <button role="tab" aria-selected="false" data-tab="active">Active</button>
+        <button role="tab" aria-selected="false" data-tab="done">Completed</button>
+      </div>
+      <div class="rows" id="rows"></div>
+
+      <div class="sect"><h2>New mission</h2></div>
+      <section class="glass" id="invent">
+        <h3>Ask MIA to invent one</h3>
+        <p class="dim">She reads your life state and proposes from what's actually going on. You approve before anything is real.</p>
+        <form id="invent-form" class="invent-form">
+          <input id="invent-input" placeholder="A focus, if you want one — garage, kitchen…" aria-label="Mission focus" autocomplete="off">
+          <button class="btn btn-amber" type="submit" id="invent-send">Invent a mission</button>
+        </form>
+        <div id="invent-thread" class="invent-thread" aria-live="polite"></div>
+      </section>
+
+      <p class="status-line" id="status" role="status" style="margin-top: calc(var(--gap) * 1.5);"></p>
+    </main>
+  </div>
+
+  <dialog class="confirm" id="confirm" aria-labelledby="confirm-text">
+    <p id="confirm-text"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" value="no" id="confirm-no">Not now</button>
+      <button class="btn btn-amber" value="yes" id="confirm-yes">Yes</button>
+    </div>
+  </dialog>
+
+  <script src="mia.js"></script>
+  <script src="missions.js"></script>
+</body>
+</html>
