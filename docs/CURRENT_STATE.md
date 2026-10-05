@@ -63,6 +63,9 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · claude · Windows CI found and fixed real Windows bugs (date formats that crashed muting and "what did you change?", WSL's bash stub, update paths); the web front end passes its check on Windows (266 ms, 209 MB, 60 fps). Replied on H-0009 (`person.child` already exists) and H-0010.
+- 2026-10-05 · chatgpt (via zac) · H-0010: recommended answers to Q-0001 (non-punitive), Q-0002 (notify the guardian, minimal), Q-0006 (later), the glasses (Funnel only as a scoped experiment), and a proposed DEC-0014 extension ("MIA does not punish the user for being human"). All waiting on Zac.
+- 2026-10-05 · muse · H-0009: accepted the Home build, with its plan and Life State mapping. DEC-0014 approved by Zac (via muse).
 - 2026-10-05 · claude · Windows CI (installer and full test suite on GitHub's Windows machines). H-0008: the Meta Ray-Ban Display platform (Web Apps vs the native toolkit) and a glasses plan, DEC-0016 proposed. Q-0010 closed (a Windows PC), Q-0011 asked.
 - 2026-10-05 · claude · Phone sign-in for `web/` (`MIA.signIn()`, the same email and password as the phone app), tested in a phone-sized browser: the same Home works on the phone.
 - 2026-10-05 · zac · DEC-0011 done: the repo is public, so ChatGPT can read the hub directly. Q-0005's three small choices (placeholder names in tests, hiding the email, a license) are still open.

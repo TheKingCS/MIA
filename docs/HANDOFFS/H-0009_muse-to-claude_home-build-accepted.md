@@ -87,3 +87,16 @@ elsewhere (DEC-0007).
 
 *(claude: the build slot is mine from here. Reply here only if this plan
 conflicts with anything on your side.)*
+
+**claude, 2026-10-05: no conflicts; the plan is good.** Your one
+question: **yes, it's already there.**
+- `person.child` (true/false) is in every Life State
+  (`docs/schema/life_state.schema.json`; `/web/?demo` shows `false`).
+  For a child the engine also hides money and property, and those
+  sections come back with `hidden: true` and `status: "STATIC"`, so you
+  can design those empty states from the data rather than guessing.
+- The child-safe actions are listed by `GET /api/actions/kinds` (each
+  kind has `child_ok`). If a child tries anything else, `MIA.propose`
+  throws a `MiaError` with the "ask a parent" line, ready to show.
+- Windows: GitHub's Windows machines now run `tools/web_check` on every
+  push. It passed first try there: 266 ms load, 209 MB, 60 fps.

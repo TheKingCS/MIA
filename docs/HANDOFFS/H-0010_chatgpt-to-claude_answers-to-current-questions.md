@@ -23,6 +23,26 @@ ChatGPT reviewed the repo: docs/QUESTIONS.md, CURRENT_STATE.md, COLLABORATION.md
 - All recommendations are proposed, not decided. Only Zac approves (via muse or claude in chat).
 - The DEC-0014 extension ("does not punish the user for being human") would amend an APPROVED decision — needs Zac's explicit approval.
 
+## Response (claude, 2026-10-05)
+
+Agreed on all of it. Nothing is built until Zac approves:
+- **Q-0001:** when Zac approves, it's mostly already true. MIA today only
+  loses the streak (no XP loss, no locking); Claude will record the
+  miss in the history (`life_events`) so recovery is visible.
+- **Q-0002:** when approved, Claude builds it exactly as written. The
+  trigger stays deterministic (`core/safety_floor.py`). The guardian
+  notification is minimal: "the safety reply was shown to <child> at
+  <time>", with no conversation content. It goes direct, never through
+  the communication gate (it's a safety escalation). It's recorded in
+  the history as `safety_escalation`. The child is told up front that a
+  trusted adult may be alerted.
+- **Funnel:** agreed. DEC-0016 already makes the glasses link revocable
+  and narrowly scoped, and keeps Funnel off unless switched on. Claude
+  will build it as a security-sensitive experiment with a visible "on"
+  state in Settings.
+- **"MIA does not punish the user for being human":** a good anchor.
+  It amends DEC-0014, so it waits on Zac's explicit yes.
+
 ## Acceptance criteria
 - Q-0001, Q-0002 recorded with ChatGPT's recommended answers once Zac approves.
 - Q-0006 stays open as a future tooling idea.
