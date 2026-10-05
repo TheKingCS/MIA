@@ -20,7 +20,8 @@ the same refs core/life_events.py uses). Two sources:
   never stored, so they can't drift: who OWNS an asset
   (core/ownership.py), a task or maintenance task PART_OF its project or
   asset, a property, bill or debt PART_OF a business, a project or an
-  intent SUPPORTS an intent (core/why_graph.py), a completed mission
+  intent SUPPORTS an intent (core/why_graph.py), a property's upkeep
+  record RELATED_TO the property, a completed mission
   EVIDENCE_FOR each skill it trained. Status: DERIVED.
 
 Pure logic where possible; the stores are only read.
@@ -258,6 +259,9 @@ def derived_links(context) -> list[Link]:
         for record in _records(context, KINDS[kind]):
             if getattr(record, "entity_id", ""):
                 add(ref_of(kind, record), "PART_OF", f"business:{record.entity_id}")
+    for prop in _records(context, KINDS["property"]):
+        if getattr(prop, "maintenance_asset_id", ""):
+            add(f"asset:{prop.maintenance_asset_id}", "RELATED_TO", ref_of("property", prop))
     for project in _records(context, KINDS["project"]):
         if getattr(project, "intent_id", None):
             add(ref_of("project", project), "SUPPORTS", f"intent:{project.intent_id}")

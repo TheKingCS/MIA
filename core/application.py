@@ -83,7 +83,8 @@ from core.assistant_tagging_actions import register_tagging_actions
 from core.assistant_lookup import resolve_by_name
 from core.conversation_manager import ConversationManager
 from core.budget_nudges import build_nudge_message
-from core.context_assembler import assemble_life_state, format_life_state_summary
+from core.context_assembler import (assemble_life_state, assemble_life_state_v2, describe_life_state_v2,
+                                     format_life_state_summary)
 from core.daily_occasions import calendar_events_today, is_birthday_today, should_run_once_daily, should_send_checkin
 from core.maintenance_insights import format_maintenance_insights_message, scan_maintenance_insights
 from core.mission_insights import format_mission_insights_message, scan_mission_insights
@@ -3727,11 +3728,17 @@ class MIAApplication:
         """
         if context.profiles is None:
             return "Life state isn't available without an active profile."
-        active_profile = context.profiles.get_active_profile()
-        if active_profile is None:
+        from core.person_settings import person_id
+
+        # The person this turn is for (the phone user on their own view).
+        profile_id = person_id(context)
+        if profile_id is None:
             return "No active profile — nothing to report."
-        snapshot = assemble_life_state(context, active_profile.profile_id, date.today())
-        return format_life_state_summary(snapshot)
+        # Life State v2 (wins, friction, waiting chains, the monthly
+        # plan), then v1's missions-and-skills line.
+        wider = describe_life_state_v2(assemble_life_state_v2(context, date.today()))
+        snapshot = assemble_life_state(context, profile_id, date.today())
+        return " ".join(part for part in (wider, format_life_state_summary(snapshot)) if part)
 
     @staticmethod
     def _action_add_waypoint(context: AppContext, arguments: dict) -> str:

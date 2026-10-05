@@ -630,7 +630,8 @@ class MissionManager:
                 self.context.profiles.add_credits(profile_id, mission.reward_credits)
             if mission.skill_rewards and self.context.skills is not None:
                 for weight in mission.skill_rewards:
-                    self.context.skills.add_skill_xp(profile_id, weight.skill_id, weight.xp)
+                    if self.context.skills.add_skill_xp(profile_id, weight.skill_id, weight.xp) is None:
+                        continue  # not a real skill: no XP, so no evidence
                     # Evidence: this mission is why the skill grew (EVIDENCE_FOR).
                     life_events.record(self, "skill_evidence", f"{weight.xp} XP in {weight.skill_id} from {mission.name}",
                                        [f"skill:{weight.skill_id}", f"mission:{mission.mission_id}"],
