@@ -1,9 +1,13 @@
 /*
- * home.css — MIA's Home look (muse, 2026-10-05).
+ * home.css — MIA's Home look (muse, 2026-10-05; reskinned to the concept
+ * material 2026-10-05).
  *
  * Home is her presence: the orb, one line at most, the one due item when
  * there is one, the briefing one tap away, and Talk on the same screen.
  * Never a dashboard, never a module list (Q-0004).
+ *
+ * Same DOM contract as home.js — this file is material only. Shared
+ * pieces (status taxonomy tags, buttons, dialogs) live in components.css.
  */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -13,8 +17,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(1200px 700px at 50% -10%, rgba(63, 214, 181, 0.07), transparent 60%),
-    radial-gradient(900px 600px at 50% 115%, rgba(246, 196, 83, 0.05), transparent 60%),
+    radial-gradient(1200px 700px at 50% -10%, rgba(63, 214, 181, 0.08), transparent 60%),
+    radial-gradient(900px 600px at 50% 115%, rgba(251, 191, 36, 0.06), transparent 60%),
+    radial-gradient(700px 500px at 8% 40%, rgba(22, 101, 52, 0.10), transparent 65%),
     var(--bg);
   color: var(--text);
   font: var(--text-md)/1.55 var(--font);
@@ -69,7 +74,7 @@ body {
   position: absolute;
   inset: -14px;
   border-radius: 50%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--glass-line);
   opacity: 0.7;
 }
 
@@ -131,18 +136,19 @@ body {
   max-width: 34ch;
 }
 
-/* ---------- The one due item ---------- */
+/* ---------- The one due item (glassy, concept material) ---------- */
 .focus {
   width: 100%;
-  background: var(--surface);
+  background: var(--glass);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border: 1px solid var(--line);
+  border: 1px solid var(--glass-line);
   border-radius: var(--radius);
   padding: calc(var(--gap) * 1.25) calc(var(--gap) * 1.35);
   display: grid;
   gap: 6px;
   border-left: 3px solid var(--attention);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 .focus-kicker {
   margin: 0;
@@ -155,12 +161,12 @@ body {
 .focus-detail { margin: 0 0 var(--gap); color: var(--text-dim); }
 .focus-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons (Home's own; module pages use .btn) ---------- */
 button {
   font: inherit;
   color: var(--text);
-  background: var(--surface-raised);
-  border: 1px solid var(--line-strong);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line-strong);
   border-radius: var(--radius-sm);
   padding: 10px 20px;
   min-height: var(--touch);
@@ -170,13 +176,13 @@ button {
 button:hover { background: rgba(44, 56, 47, 0.9); }
 button:active { transform: scale(0.98); }
 button.primary {
-  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  background: linear-gradient(180deg, var(--xp), var(--soon-deep));
   border-color: transparent;
-  color: #04110c;
+  color: #241a06;
   font-weight: 650;
-  box-shadow: 0 4px 22px rgba(63, 214, 181, 0.28);
+  box-shadow: 0 4px 22px var(--xp-glow);
 }
-button.primary:hover { box-shadow: 0 4px 28px rgba(63, 214, 181, 0.42); }
+button.primary:hover { filter: brightness(1.07); box-shadow: 0 4px 28px var(--xp-glow); }
 button.ghost { background: transparent; }
 button:focus-visible, input:focus-visible {
   outline: 3px solid var(--accent);
@@ -194,8 +200,10 @@ button:focus-visible, input:focus-visible {
   width: min(680px, 100%);
   max-height: 72vh;
   overflow-y: auto;
-  background: var(--surface-solid);
-  border: 1px solid var(--line-strong);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-line-strong);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
   box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.55);
@@ -210,8 +218,8 @@ button:focus-visible, input:focus-visible {
   align-items: center;
   justify-content: space-between;
   padding: var(--gap) calc(var(--gap) * 1.25);
-  background: var(--surface-solid);
-  border-bottom: 1px solid var(--line);
+  background: var(--glass-strong);
+  border-bottom: 1px solid var(--glass-line);
   z-index: 1;
 }
 .briefing-head h2 { margin: 0; font-size: var(--text-md); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); }
@@ -228,8 +236,8 @@ button:focus-visible, input:focus-visible {
 }
 .briefing-section ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .briefing-section li {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
 }
@@ -237,18 +245,6 @@ button:focus-visible, input:focus-visible {
 .briefing-section li.calm { color: var(--text-dim); }
 .briefing-section .chain { font-family: var(--font-mono); font-size: var(--text-sm); }
 .briefing-section .muted { color: var(--text-faint); font-size: var(--text-sm); border: none; background: none; padding: 4px 0; }
-
-/* Honest status taxonomy (DEC-0007): small, never loud */
-.stag {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--text-faint);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 1px 8px;
-  white-space: nowrap;
-}
 
 /* ---------- Talk: conversation lives on Home ---------- */
 .talk {
@@ -279,8 +275,8 @@ button:focus-visible, input:focus-visible {
 }
 .bubble.you {
   justify-self: end;
-  background: var(--surface-raised);
-  border: 1px solid var(--line-strong);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line-strong);
   border-bottom-right-radius: 4px;
 }
 .bubble.mia {
@@ -295,8 +291,8 @@ button:focus-visible, input:focus-visible {
   flex: 1;
   font: inherit;
   color: var(--text);
-  background: var(--surface-solid);
-  border: 1px solid var(--line-strong);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line-strong);
   border-radius: 999px;
   padding: 0 20px;
   min-height: var(--touch);
@@ -318,8 +314,8 @@ button:focus-visible, input:focus-visible {
 .sign-in input {
   font: inherit;
   color: var(--text);
-  background: var(--surface-solid);
-  border: 1px solid var(--line-strong);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line-strong);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
   min-height: var(--touch);
@@ -327,9 +323,9 @@ button:focus-visible, input:focus-visible {
 
 /* ---------- Confirm + status ---------- */
 dialog {
-  background: var(--surface-solid);
+  background: var(--glass-strong);
   color: var(--text);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--glass-line-strong);
   border-radius: var(--radius);
   max-width: min(420px, calc(100vw - 48px));
   padding: calc(var(--gap) * 1.25);
@@ -348,8 +344,8 @@ dialog menu { display: flex; gap: 10px; justify-content: flex-end; padding: 0; m
   max-width: min(560px, calc(100vw - 32px));
   text-align: center;
   color: var(--text-dim);
-  background: var(--surface-solid);
-  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line);
   border-radius: 999px;
   padding: 8px 18px;
   z-index: 40;
