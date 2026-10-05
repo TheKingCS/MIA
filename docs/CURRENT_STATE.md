@@ -63,6 +63,7 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · muse · H-0012: design review of DEC-0016 (endorses A-then-B with ChatGPT's security posture; additive-display rules; two-gesture approve; a visible connection state). Claude replied: no conflicts; proposes a GitHub Pages mock prototype for the glasses (placeholder data only, nothing private exposed), waiting on Zac.
 - 2026-10-05 · claude · Built Q-0002: a child's safety-floor trigger alerts their guardians directly (who and when only, never the words), tells the child plainly, and is recorded for audit in their own histories, never the household's (`core/safety_escalation.py`). Built Q-0001: a missed daily is recorded gently ("no points lost"). Q-0012 asks about cases where the guardian isn't safe. Windows CI: 6 failures left (chapter detection on Windows PDFs, being diagnosed; stopping shell scripts, a known issue).
 - 2026-10-05 · zac (via muse) · Approved H-0011: Q-0001 (non-punitive), Q-0002 (notify the guardian, minimal), DEC-0014 extended ("MIA does not punish the user for being human").
 - 2026-10-05 · claude · Windows CI found and fixed real Windows bugs (date formats that crashed muting and "what did you change?", WSL's bash stub, update paths); the web front end passes its check on Windows (266 ms, 209 MB, 60 fps). Replied on H-0009 (`person.child` already exists) and H-0010.
