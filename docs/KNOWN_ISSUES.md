@@ -371,3 +371,17 @@ background color that every `QLabel` inherited, painting its own solid
 box that didn't match whatever frame it visually sat on top of. Fixed
 by adding `QLabel { background: transparent; }` to the shared theme in
 `gui/styles.py`. **Confirmed fixed on real hardware.**
+
+## Stopping a running shell script on Windows (2026-10-05)
+
+Symptom: in Field Kit, stopping a shell script that started a long
+child command (e.g. `sleep 30`) leaves that child running until it ends
+on its own. Found by the Windows CI run.
+
+Cause: on Windows, shell scripts run under Git for Windows' bash
+(`core/script_runner.find_bash()`). Its children are MSYS processes that
+`taskkill /T` doesn't always reach.
+
+Status: known and accepted for now. Field Kit's shell scripts are a
+Linux-oriented feature, and the test is skipped on Windows. Revisit if
+scripts become a Windows need (e.g. kill through MSYS's own `kill`).

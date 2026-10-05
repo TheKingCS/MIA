@@ -73,7 +73,11 @@ TYPES = {
     "imported": "imports",
     "starter_added": "starter sets added",
     "undone": "changes undone",
+    "mission_missed": "missed days (no points lost)",
+    "safety_escalation": "safety alerts",
 }
+# Kept for audit, never shown in a feed (wins, "what happened?").
+AUDIT_ONLY = frozenset({"safety_escalation"})
 # Money: never shown to a child account (core/child_accounts.py).
 MONEY_TYPES = frozenset({"bill_paid", "income_received", "expense_added", "income_added", "debt_payment",
                          "rent_received", "property_expense", "imported"})
@@ -287,6 +291,7 @@ def describe(events: list[LifeEvent], period: str = "week", limit: int = 10) -> 
     """Pure logic. What MIA says for "what did I get done this week?"."""
     label = {"today": "today", "week": "in the last 7 days", "month": "in the last 30 days",
              "year": "in the last year"}.get(period, "lately")
+    events = [e for e in events if e.type not in AUDIT_ONLY]
     if not events:
         return f"Nothing recorded {label} yet."
     wins = [e for e in events if e.type in WINS]

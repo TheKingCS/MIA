@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import sys
 import time
+
+import pytest
 from types import SimpleNamespace
 
 import core.script_runner as script_runner_module
@@ -86,6 +88,9 @@ def test_cleanup_script_file_is_idempotent():
     cleanup_script_file(script_path)  # already gone — must not raise
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason=(
+    "Field Kit's shell scripts are a Linux feature; on Windows, Git Bash's own children (e.g. `sleep`) "
+    "outlive taskkill /T (KNOWN_ISSUES: stopping a shell script on Windows)"))
 def test_script_can_be_terminated_before_completion():
     """
     Simulates a Stop button click on a long-running script — reading

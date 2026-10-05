@@ -12,7 +12,7 @@ Answer under the question; Claude moves closed ones to the bottom.*
 - Answer (chatgpt recommendation, approved by zac, 2026-10-05, via muse): non-punitive by default. Missed daily = streak resets, miss is recorded, no XP loss, no stat damage, no punishment; recovery always possible. Core behavioral rule, not a game-balance choice. Related: H-0011, DEC-0014.
 
 ### Q-0002: Tell a parent when a child triggers the safety floor? (claude → zac)
-- Asked: 2026-10-01 · Status: ANSWERED
+- Asked: 2026-10-01 · Status: ANSWERED · **Built 2026-10-05 (claude): `core/safety_escalation.py`**
 - Answer (chatgpt recommendation, approved by zac, 2026-10-05, via muse): yes, as a safety escalation, not ordinary monitoring. Immediate child response first; parent/guardian notified with minimum necessary information only; child told transparently that escalation may occur; deterministic in code, never LLM-decided; event auditable; ordinary conversations/journals stay private. Guardrail: the configured guardian is not automatically the safe path in every circumstance — design separately, does not block implementation. Related: H-0011, core/safety_floor.py, core/child_accounts.py.
 - Question: when a child account says something that triggers the
   crisis reply, should MIA also notify the child's parent? Today it
@@ -56,6 +56,19 @@ Answer under the question; Claude moves closed ones to the bottom.*
   PC; the work continues meanwhile on GitHub's Windows machines.)
   (4) In the Developer Center: are Web Apps and the Device Access
   Toolkit enabled for your account?
+
+### Q-0012: When the guardian isn't the safe person to tell (claude → zac, chatgpt)
+- Asked: 2026-10-05 · Status: OPEN
+- Question: Q-0002 is built: a child's safety-floor trigger alerts the
+  child's guardians (who and when only). H-0011's guardrail says the
+  guardian isn't automatically safe in every case: unavailable,
+  implicated in the danger, or otherwise the wrong path. What should MIA
+  do then? Options to design: a second trusted adult the child or
+  household names in advance; the child's own trusted contact (it
+  already exists in Settings, `assistant.safety.trusted_contact`) shown
+  more prominently; crisis-line numbers only, with no guardian alert,
+  when the child names the guardian as the danger (needs careful,
+  deterministic wording rules). Not blocking anything.
 
 ## Closed
 

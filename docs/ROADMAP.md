@@ -13094,3 +13094,26 @@ then Meta Display glasses (soon), then their own Pi devices (eventually).
 The Phase 2 "Pi 5 check" is now a check on the new computer and the
 phone (`tools/web_check.py` runs on any computer). CLAUDE.md,
 HARDWARE.md, the decisions and the handoffs are corrected.
+
+## Safety escalation for children, and gentle misses (2026-10-05)
+
+Approved by Zac (H-0011, ChatGPT's recommendations):
+- **Q-0002** (`core/safety_escalation.py`): when a child account
+  triggers the safety floor, the child gets the usual safety reply plus
+  a plain notice that a parent who looks after the account will be told
+  (and won't see what they wrote). Each guardian gets a `critical`
+  notification on their own list and phone push: who and when only. It
+  goes direct, never through the communication gate, even with
+  notifications off. It's recorded as a `safety_escalation` life event in
+  the child's and each guardian's own history (never the household's),
+  audit-only (kept out of wins and "what happened?"). At most one alert
+  per guardian every 30 minutes; every trigger is recorded. The trigger
+  is deterministic (`detect_danger`), and failures never block the
+  child's reply. Open design for when the guardian isn't safe: Q-0012.
+- **Q-0001**: a missed daily routine is recorded once as
+  `mission_missed` ("the streak starts again today; no points lost")
+  when the next day's mission is made. Nothing is ever taken away
+  (DEC-0014: MIA does not punish the user for being human).
+
+**Verified:** 9 new tests (`tests/test_safety_escalation.py`), plus the
+full suite.

@@ -123,7 +123,8 @@ class NotificationManager:
     # Raising notifications
     # ------------------------------------------------------------------
 
-    def notify(self, title: str, message: str, level: str = "info", source: str = "system") -> Optional[Notification]:
+    def notify(self, title: str, message: str, level: str = "info", source: str = "system",
+               always: bool = False) -> Optional[Notification]:
         """
         Raise a new notification. Any module can call this via
         self.context.notifications.notify(...) — no registration needed.
@@ -135,7 +136,9 @@ class NotificationManager:
         No existing caller inspects the return value (checked before
         this change), so this is safe.
         """
-        if not self.context.config.get("notifications.enabled", True):
+        # `always`: a safety escalation (core/safety_escalation.py) gets
+        # through even with notifications switched off.
+        if not always and not self.context.config.get("notifications.enabled", True):
             log.info("Notification suppressed (notifications disabled) [%s] from '%s': %s", level, source, title)
             return None
 

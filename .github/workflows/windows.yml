@@ -41,6 +41,11 @@ jobs:
           cache: pip
       - name: Install MIA's packages
         run: python -m pip install -r requirements.txt
+      - name: "Diagnostic: the text Windows extracts from a test PDF (temporary)"
+        if: always()
+        env:
+          PYTHONUTF8: "1"
+        run: python tools/pdf_text_probe.py
       - name: Test suite
         # Qt's normal Windows display mode, like the real PC (the headless
         # "offscreen" mode has no fonts on Windows, so test PDFs came out blank).

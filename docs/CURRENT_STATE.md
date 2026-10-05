@@ -63,6 +63,8 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · claude · Built Q-0002: a child's safety-floor trigger alerts their guardians directly (who and when only, never the words), tells the child plainly, and is recorded for audit in their own histories, never the household's (`core/safety_escalation.py`). Built Q-0001: a missed daily is recorded gently ("no points lost"). Q-0012 asks about cases where the guardian isn't safe. Windows CI: 6 failures left (chapter detection on Windows PDFs, being diagnosed; stopping shell scripts, a known issue).
+- 2026-10-05 · zac (via muse) · Approved H-0011: Q-0001 (non-punitive), Q-0002 (notify the guardian, minimal), DEC-0014 extended ("MIA does not punish the user for being human").
 - 2026-10-05 · claude · Windows CI found and fixed real Windows bugs (date formats that crashed muting and "what did you change?", WSL's bash stub, update paths); the web front end passes its check on Windows (266 ms, 209 MB, 60 fps). Replied on H-0009 (`person.child` already exists) and H-0010.
 - 2026-10-05 · chatgpt (via zac) · H-0010: recommended answers to Q-0001 (non-punitive), Q-0002 (notify the guardian, minimal), Q-0006 (later), the glasses (Funnel only as a scoped experiment), and a proposed DEC-0014 extension ("MIA does not punish the user for being human"). All waiting on Zac.
 - 2026-10-05 · muse · H-0009: accepted the Home build, with its plan and Life State mapping. DEC-0014 approved by Zac (via muse).

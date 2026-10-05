@@ -334,6 +334,22 @@ class RecurringMissionManager:
         log.info("Created this week's recurring Mission: '%s' (target %.3g)", template.name, target)
         return mission
 
+    def _record_missed_yesterday(self, template: RecurringMissionTemplate, today: date) -> None:
+        """Q-0001 (approved 2026-10-05, DEC-0014): a missed day is
+        recorded, gently: the streak simply starts again, no XP is lost,
+        nothing is locked. Recorded once, when the next day's Mission is
+        made, so the history shows the miss and the recovery."""
+        from datetime import timedelta
+
+        from core import life_events
+
+        yesterday = self._find_occurrence(template.template_id, "daily", (today - timedelta(days=1)).isoformat())
+        if yesterday is None or yesterday.status == "completed":
+            return
+        life_events.record(self, "mission_missed",
+                           f"{template.name} wasn't done yesterday. The streak starts again today; no points lost.",
+                           [f"mission:{yesterday.mission_id}"], {"template": template.template_id})
+
     def _ensure_current_missions_daily(
         self, template: RecurringMissionTemplate, today: date
     ) -> tuple[Mission, Mission]:
@@ -347,6 +363,7 @@ class RecurringMissionManager:
 
         daily_mission = self._find_occurrence(template.template_id, "daily", today_key)
         if daily_mission is None:
+            self._record_missed_yesterday(template, today)
             target = current_target_for(template, today)
             daily_mission = self.context.missions.add_mission(
                 # Dated in the name (not just template.name) — caught via

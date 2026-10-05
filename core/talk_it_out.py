@@ -161,8 +161,15 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
         _persist(context, conversation)
         from core.child_accounts import is_child
 
-        result.fixed_reply = safety_reply(trusted_contact_from(context), region_for(context),
-                                          child=getattr(context, "config", None) is not None and is_child(context))
+        child = getattr(context, "config", None) is not None and is_child(context)
+        result.fixed_reply = safety_reply(trusted_contact_from(context), region_for(context), child=child)
+        if child:
+            # Q-0002: a parent who looks after the account is told, who and
+            # when only (core/safety_escalation.py). Never blocks the reply.
+            from core.person_settings import person_id
+            from core.safety_escalation import escalate
+
+            escalate(context, person_id(context))
         return result
 
     if not awaiting and change.is_empty and _may_ask_support(context, conversation, prompt):

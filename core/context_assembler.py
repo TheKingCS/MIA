@@ -418,7 +418,8 @@ def _recent_wins(context, today: date) -> dict:
     from core import life_events
 
     since = (today - timedelta(days=_RECENT_DAYS - 1)).isoformat()
-    events = life_events.events_for(context, since=since, until=today.isoformat())
+    events = [e for e in life_events.events_for(context, since=since, until=today.isoformat())
+              if e.type not in life_events.AUDIT_ONLY]
     wins = [e for e in events if e.type in life_events.WINS]
     return _section("DERIVED", "core/life_events.py", days=_RECENT_DAYS, counts=life_events.counts(wins),
                     latest=[{"at": e.at, "type": e.type, "summary": e.summary, "refs": e.refs, "source": e.source}
