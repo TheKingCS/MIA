@@ -14,6 +14,13 @@
     update). Its look is a placeholder for Muse to replace; the structure
     follows Muse's Q-0004 answer. See web/README.md.
   -->
+  <form class="sign-in" id="sign-in" hidden>
+    <p>Sign in to MIA</p>
+    <input id="who" autocomplete="username" placeholder="Email" required>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary">Sign in</button>
+  </form>
+
   <main class="home" aria-live="polite">
     <section class="presence" id="presence" data-mood="quiet" aria-label="MIA">
       <div class="orb" aria-hidden="true"></div>

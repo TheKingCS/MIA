@@ -20,6 +20,8 @@ components, data and actions, and each arranges them for its screen.
   is at the desktop (`modules/web_home/`).
 - **Phone:** the same pages, at the phone address, once the phone
   version is designed (later step).
+- **Phone and any browser:** `/web/` shows a sign-in (email and
+  password, the same as the phone app), then the Home. `MIA.signIn()`.
 - **Without MIA's data:** open `/web/?demo` to render the published
   placeholder example (`docs/schema/life_state.example.json`). Actions
   are off in the demo.

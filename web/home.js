@@ -119,14 +119,35 @@
 
   async function refresh() {
     try { render(await MIA.state()); }
-    catch (e) { say(e.status === 401 ? "Open MIA's Home from the desktop app to sign in." : e.message); }
+    catch (e) {
+      if (e.status === 401) {  // signed out (MIA restarted): sign in again
+        try { sessionStorage.removeItem("mia.token"); } catch (x) { /* fine */ }
+        location.reload();
+      } else {
+        say(e.message);
+      }
+    }
+  }
+
+  function start() {
+    $("sign-in").hidden = true;
+    document.querySelector(".home").hidden = false;
+    if (MIA.demo) say("Demo: placeholder data; actions are off.");
+    refresh();
+    MIA.onChange(refresh); // live: re-read the state whenever MIA's data changes
   }
 
   if (!MIA.signedIn) {
-    say("Open MIA's Home from the desktop app (or add ?demo to see the example).");
+    // The phone: sign in like the phone app (the desktop signs in for you).
+    document.querySelector(".home").hidden = true;
+    const form = $("sign-in");
+    form.hidden = false;
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      try { await MIA.signIn($("who").value.trim(), $("password").value); say(""); start(); }
+      catch (e) { say(e.message); }
+    };
     return;
   }
-  if (MIA.demo) say("Demo: placeholder data; actions are off.");
-  refresh();
-  MIA.onChange(refresh); // live: re-read the state whenever MIA's data changes
+  start();
 })();

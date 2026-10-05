@@ -12,7 +12,8 @@
  *   MIA.demo                    -> true when showing the placeholder example
  *
  * Sign-in: the desktop opens this page with #token=... (its own session);
- * the token is kept for this tab only. With ?demo, it reads the published
+ * on the phone, MIA.signIn(email, password). The token is kept for this
+ * tab only. With ?demo, it reads the published
  * placeholder example instead, and actions are disabled.
  * No dependencies, no network beyond MIA itself (offline-first).
  */
@@ -75,8 +76,24 @@
     return () => { closed = true; if (source) source.close(); clearTimeout(timer); };
   }
 
+  // The phone (and any browser): sign in with the person's email (or
+  // name) and password, the same as the phone app (POST /api/login).
+  async function signIn(who, password) {
+    const response = await fetch("/api/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile_id: who, password: password }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new MiaError(response.status, data.detail || "Couldn't sign in.");
+    token = data.token;
+    try { sessionStorage.setItem("mia.token", token); } catch (e) { /* this tab only */ }
+    window.MIA.signedIn = true;
+    return data;
+  }
+
   window.MIA = {
     demo,
+    signIn,
     signedIn: Boolean(token) || demo,
     MiaError,
     state: () => demo ? fetch("/schema/life_state.example.json").then((r) => r.json()) : call("GET", "/api/state"),
