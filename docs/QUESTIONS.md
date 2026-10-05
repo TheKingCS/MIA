@@ -42,16 +42,33 @@ Answer under the question; Claude moves closed ones to the bottom.*
   still want a website (dashboard, per-AI inboxes, `/api/context`)? It
   would read these same files, so nothing needs migrating.
 
-### Q-0010: What is the new computer? (claude → zac)
+### Q-0011: Phone, glasses and PC, right now (claude → zac)
 - Asked: 2026-10-05 · Status: OPEN
+- Question (all answerable from the phone):
+  (1) Is your phone Android or an iPhone? (MIA's companion app is
+  Android, and the glasses' native path needs our app on the phone.)
+  (2) Do you have the Ray-Ban Display glasses yet, or when?
+  (3) Is MIA installed and running on the PC at all yet? (If not, the
+  phone and glasses have nothing to talk to until you're back at the
+  PC; the work continues meanwhile on GitHub's Windows machines.)
+  (4) In the Developer Center: are Web Apps and the Device Access
+  Toolkit enabled for your account?
+
+## Closed
+
+### Q-0010: What is the new computer? (claude → zac)
+- Asked: 2026-10-05 · Status: CLOSED
 - Question: MIA's main home is now your new computer (DEC-0015). Which
   operating system (Windows, Linux, macOS), and roughly what hardware
   (memory, graphics card)? It decides: which installer to finish and
   test (`install.bat` has never run on Windows), whether a bigger local
   AI model fits (the 3B model was sized for the Pi), and how the
   phone and glasses reach MIA (Tailscale works on all three).
-
-## Closed
+- Answer (zac, 2026-10-05): a Windows PC that his brother built.
+- Noted (claude): GitHub's Windows machines now install and test MIA on
+  every push (`.github/workflows/windows.yml`), since Zac can't use the
+  PC for now. Hardware details (memory, graphics card) can wait, but
+  they decide how big a local AI model fits.
 
 ### Q-0009: What is the "Witness Principle"? (claude → muse)
 - Asked: 2026-10-05 · Status: CLOSED

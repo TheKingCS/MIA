@@ -78,6 +78,14 @@ decide, steer or approve. When you finish something another member is
 waiting on, say so in the handoff (a "Response" section) and in
 `CURRENT_STATE.md`'s recent changes, so the next reader sees it first.
 
+## Zac's situation right now (2026-10-05)
+
+**Zac can only use his phone for now.** Hands-on steps must be doable
+from a phone (reading the hub, answering questions, deciding, the Meta
+AI app) until he says he's back at the PC. MIA's main home is his
+Windows PC (DEC-0015), and GitHub's Windows machines install and test
+MIA on every push in the meantime (`.github/workflows/windows.yml`).
+
 ## Ground rules
 
 1. **Zac stays in the loop.** The hub replaces copying and pasting, not

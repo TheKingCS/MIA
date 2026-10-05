@@ -186,3 +186,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   that, so Q-0003 becomes urgent. Pi and kiosk work (the installer's
   `--kiosk`, the AI HAT) stays supported but parked.
 - Related: DEC-0012, DEC-0013 (amended below), Q-0003, Q-0010
+
+### DEC-0016: The glasses: a Web App first, then the Android app for voice
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-05 · Review requested: chatgpt, muse · Approval: zac
+- Decision: the first glasses surface is a Meta Ray-Ban Display **Web
+  App**: Muse's `web/` components in a 600 × 600 composition, served by
+  MIA through **Tailscale Funnel** (the platform needs a public HTTPS
+  URL), with a revocable glasses-only device link, a narrow scope
+  (glasses cards, child-safe actions), a rate limit, and Funnel off
+  unless switched on. **Later**, MIA's Android app adds the native
+  Device Access Toolkit for voice (the glasses' microphone).
+- Why: the web path is the same front end as every other surface
+  (DEC-0012) and the fastest to build; the native path is more private
+  and adds the mic, so it follows.
+- Risk: MIA's API becomes reachable from the internet while Funnel is
+  on, which is why the scope is narrow.
+- Related: H-0008, Q-0003, Q-0011, DEC-0012, DEC-0015

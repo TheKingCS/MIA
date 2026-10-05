@@ -27,7 +27,30 @@ of the Android app.
 
 ---
 
-## 1. Your hands-on steps (need your computer, not Claude)
+## 1. Your hands-on steps
+
+### From your phone, now (you're phone-only for the moment)
+
+Everything here works from a phone: the GitHub app (or github.com) for
+the hub, and the Meta AI app.
+
+- [ ] **Read `docs/CURRENT_STATE.md`** in the GitHub app: where the
+      whole team is.
+- [ ] **Decide DEC-0014** (Muse's Witness Principle) and **DEC-0016**
+      (the glasses: a Web App first, H-0008) in `docs/DECISIONS.md`.
+      Telling Claude, Muse or ChatGPT "approve DEC-0016" is enough.
+- [ ] **Answer Q-0011** (`docs/QUESTIONS.md`): Android or iPhone, do
+      you have the Display glasses yet, and is MIA running on the PC.
+- [ ] **In the Meta Wearables Developer Center:** check that Web Apps
+      (and the Device Access Toolkit) are enabled for your account.
+- [ ] **In the Meta AI app:** turn on Developer Mode (Settings › App
+      Info › tap the version number 5 times). It's needed to load
+      MIA's glasses app later.
+- [ ] **See MIA install and pass on Windows without your PC:** github.com
+      → TheKingCS/MIA → Actions → "Windows". Green means GitHub's Windows
+      machines installed MIA and passed its tests.
+
+### At the PC, when you're back (your Windows PC, DEC-0015)
 
 ### New on 2026-10-01: try these first (about 30 minutes)
 
