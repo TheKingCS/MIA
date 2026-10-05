@@ -10,6 +10,13 @@
  * surface-specific compositions). Offline: system fonts only, no web
  * fonts, no CDNs. --scale follows the person's text size;
  * [data-contrast="high"] is the high-contrast look.
+ *
+ * Concept system (2026-10-05): the module screens share this material —
+ * deep green-black, glassy cards, amber for XP and primary actions,
+ * green = healthy/tracked, red = needs attention (calm, never
+ * game-ified for emergencies), Borderlands rarity on
+ * missions/achievements/unlockables ONLY. Additive: every existing
+ * token keeps its meaning.
  */
 :root {
   /* Field */
@@ -20,6 +27,12 @@
   --surface-raised: rgba(32, 42, 34, 0.82);
   --line: rgba(140, 180, 150, 0.16);
   --line-strong: rgba(140, 180, 150, 0.34);
+
+  /* Glass (concept material) */
+  --glass: rgba(16, 24, 19, 0.66);
+  --glass-strong: rgba(22, 32, 26, 0.88);
+  --glass-line: rgba(150, 195, 165, 0.20);
+  --glass-line-strong: rgba(150, 195, 165, 0.38);
 
   /* Ink */
   --text: #edf3ec;
@@ -39,6 +52,30 @@
   /* Calm amber — the one thing that needs you */
   --attention: #ffa26b;
   --attention-glow: rgba(255, 162, 107, 0.32);
+
+  /* Status (concept): green = healthy/tracked, red = needs attention
+     (calm, factual — never game-ified), amber = next up */
+  --ok: #4ade80;
+  --ok-deep: #166534;
+  --ok-bg: rgba(74, 222, 128, 0.10);
+  --bad: #f87171;
+  --bad-deep: #7f1d1d;
+  --bad-bg: rgba(248, 113, 113, 0.10);
+  --soon: #fbbf24;
+  --soon-deep: #b45309;
+  --soon-bg: rgba(251, 191, 36, 0.10);
+
+  /* XP + primary actions: amber/gold */
+  --xp: #fbbf24;
+  --xp-glow: rgba(251, 191, 36, 0.35);
+
+  /* Rarity (Borderlands logic): missions, achievements, unlockables
+     ONLY — never emergencies, never bills (design addendum §5) */
+  --rarity-common: #9aa5a1;
+  --rarity-uncommon: #4ade80;
+  --rarity-rare: #60a5fa;
+  --rarity-epic: #c084fc;
+  --rarity-legendary: #fb923c;
 
   /* Shape and space */
   --radius: 16px;
@@ -67,6 +104,10 @@
   --surface: #000;
   --surface-solid: #000;
   --surface-raised: #0a0a0a;
+  --glass: #000;
+  --glass-strong: #0a0a0a;
+  --glass-line: #ffffff;
+  --glass-line-strong: #ffffff;
   --line: #ffffff;
   --line-strong: #ffffff;
   --text: #ffffff;
@@ -78,6 +119,14 @@
   --win-glow: transparent;
   --attention: #ffd400;
   --attention-glow: transparent;
+  --ok: #00e676;
+  --ok-bg: transparent;
+  --bad: #ff5252;
+  --bad-bg: transparent;
+  --soon: #ffd400;
+  --soon-bg: transparent;
+  --xp: #ffd400;
+  --xp-glow: transparent;
 }
 
 /* Phone composition: the same components, arranged for 390px touch */
@@ -85,5 +134,12 @@
   :root {
     --orb-size: 148px;
     --gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
   }
 }
