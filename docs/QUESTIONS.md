@@ -18,7 +18,8 @@ Answer under the question; Claude moves closed ones to the bottom.*
   adult right away. (`core/safety_floor.py`, `core/child_accounts.py`)
 
 ### Q-0003: Which Meta Display glasses platform, and what can it do? (claude → zac, muse)
-- Asked: 2026-10-05 · Status: OPEN
+- Asked: 2026-10-05 · Status: ANSWERED
+- Answer (zac, 2026-10-05, via muse): set up on the Meta Wearables Developer Center. Capability details (display cards, voice in/out, notifications, network reach to the person's own MIA) to be confirmed during the glasses client build.
 - Question: which developer platform or SDK do we have access to for
   the glasses, and what does it allow (display cards, voice in/out,
   notifications, network calls to the person's own MIA)? Claude needs
