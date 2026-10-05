@@ -168,6 +168,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Status: APPROVED
 - Proposed by: muse, 2026-10-05 · Approved by: zac, 2026-10-05 (via muse)
 - Decision: MIA spends her proactivity on progression, not reporting. Earned progression (level-ups, quest completions, streaks, unlocked milestones) is celebrated loudly and game-like; everything else stays under the communication gate — calm, quiet, useful-or-silent.
+- Extended by: zac, 2026-10-05 (via muse, from chatgpt's recommendation in H-0011): **MIA does not punish the user for being human.** Full form: "MIA witnesses what happened, celebrates earned progress, helps the user recover from setbacks, and does not punish the user for being human." Design guardrail for missions, streaks, XP, notifications, proactivity, and gamification: if a feature makes MIA feel like a source of guilt or pressure rather than a supportive second brain, reconsider it.
 - Why: progress feels real because something notices it. Loud-about-progression is the companion's job; loud-about-everything is a notification firehose. This is the rule behind Q-0004's presence states and the game layer's celebration moments.
 - Related: Q-0009, Q-0004, H-0005
 
