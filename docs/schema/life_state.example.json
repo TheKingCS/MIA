@@ -84,6 +84,77 @@
       }
     ]
   },
+  "assets": {
+    "status": "REAL",
+    "source": "core/maintenance_manager.py, core/ownership.py",
+    "items": [
+      {
+        "ref": "asset:e2c7a91752",
+        "name": "Mower",
+        "category": "Power Equipment",
+        "owner": null,
+        "mine": false,
+        "tasks_overdue": 1,
+        "tasks_due_soon": 0,
+        "next_task": {
+          "title": "Sharpen blades",
+          "days": -10
+        }
+      },
+      {
+        "ref": "asset:2f2617d955",
+        "name": "Truck",
+        "category": "Vehicle",
+        "owner": "Robin",
+        "mine": true,
+        "tasks_overdue": 0,
+        "tasks_due_soon": 0,
+        "next_task": {
+          "title": "Oil change",
+          "days": 5
+        }
+      }
+    ]
+  },
+  "kitchen": {
+    "status": "REAL",
+    "source": "core/kitchen_manager.py",
+    "pantry_items": 2,
+    "expiring_soon": [
+      {
+        "name": "Milk",
+        "days": 2
+      }
+    ],
+    "grocery_list": [
+      {
+        "name": "Eggs",
+        "checked": false
+      }
+    ],
+    "recipes": 1,
+    "recent_meals": [
+      {
+        "recipe": "Chili",
+        "date": "2026-10-05"
+      }
+    ]
+  },
+  "workout": {
+    "status": "REAL",
+    "source": "core/workout_manager.py",
+    "days": 7,
+    "sessions": 1,
+    "minutes": 30,
+    "last_session": {
+      "date": "2026-10-05",
+      "template": "Beginner full body",
+      "minutes": 30
+    },
+    "templates": [
+      "Beginner full body"
+    ]
+  },
   "projects": {
     "status": "REAL",
     "source": "core/project_manager.py, core/task_manager.py, core/links.py",
@@ -119,6 +190,15 @@
     "source": "core/today.py",
     "items": [
       {
+        "when": "overdue",
+        "title": "Sharpen blades: Mower",
+        "detail": "10 days late",
+        "time": "",
+        "module_id": "maintenance",
+        "record_id": "393b6999cf",
+        "icon": "🔧"
+      },
+      {
         "when": "today",
         "title": "Payday: Pay",
         "detail": "$1,500.00",
@@ -144,10 +224,32 @@
     "source": "core/life_events.py",
     "days": 7,
     "counts": {
+      "meal_logged": 1,
+      "workout_logged": 1,
       "mission_completed": 1,
       "bill_paid": 1
     },
     "latest": [
+      {
+        "at": "2026-10-05T13:52:46",
+        "type": "meal_logged",
+        "summary": "Cooked Chili",
+        "refs": [
+          "meal:fb995db25d",
+          "recipe:a02d99d614"
+        ],
+        "source": "manual"
+      },
+      {
+        "at": "2026-10-05T13:52:46",
+        "type": "workout_logged",
+        "summary": "Worked out: Beginner full body, 30 min",
+        "refs": [
+          "workout:31bcaa7420",
+          "workout_template:a9a782c839"
+        ],
+        "source": "manual"
+      },
       {
         "at": "2026-10-05T13:08:51",
         "type": "mission_completed",
@@ -185,6 +287,11 @@
     "source": "this file, from due, projects and finances",
     "items": [
       {
+        "kind": "overdue",
+        "text": "Sharpen blades: Mower (10 days late)",
+        "module": "maintenance"
+      },
+      {
         "kind": "waiting",
         "text": "Greenhouse waits on Vacant lot",
         "ref": "project:c6a3ec04a5"
@@ -212,7 +319,7 @@
     "status": "DERIVED",
     "source": "core/links.py",
     "stated": 3,
-    "derived": 1
+    "derived": 4
   },
   "opportunities": {
     "status": "PLANNED",

@@ -17,3 +17,34 @@ Add `vehicles` (or `assets`), `kitchen`, and `workout` sections to `docs/schema/
 - Schema validates with the new sections (or documents their PLANNED status).
 - `docs/schema/life_state.example.json` includes placeholder entries.
 - The consumer (Muse) can render Garage/Kitchen/Workout from `/api/state` with no invented fields.
+
+## Response (claude, 2026-10-05): DONE
+Built as asked; nothing marked PLANNED. Three new Life State v2 sections,
+each with `status` and `source`, in `/api/state`, the export, the schema
+and the example:
+
+- **`assets`** (REAL, `core/maintenance_manager.py`, `core/ownership.py`):
+  every vehicle, tool and appliance with `ref`, `name`, `category`,
+  `owner` (a name, or `null` for the whole household), `mine`,
+  `tasks_overdue`, `tasks_due_soon`, and `next_task` (`title`, `days`;
+  negative days means late; `null` when nothing is scheduled by date).
+  Hidden for a child (STATIC, `hidden: true`), like properties.
+- **`kitchen`** (REAL, `core/kitchen_manager.py`): `pantry_items`
+  (count), `expiring_soon` (within 3 days: `name`, `days`),
+  `grocery_list` (`name`, `checked`), `recipes` (count), `recent_meals`
+  (last 7 days: `recipe`, `date`).
+- **`workout`** (REAL, `core/workout_manager.py`, the person's own):
+  `days` (7), `sessions` and `minutes` in those days, `last_session`
+  (`date`, `template`, `minutes`), `templates` (names).
+
+Children see `kitchen` and `workout` (both are kid apps). Streaks for
+fitness routines stay in `missions_and_skills.streaks`, and workout,
+meal and maintenance history is in `recent_wins` (from the life-event
+log). One note on your guardrail answer: "a meal SUPPORTS the budget"
+isn't a link MIA keeps; meals link to their recipe through the history
+refs (`meal:<id>`, `recipe:<id>`).
+
+Verified: `tests/test_life_state_v2.py` (the three sections, plus the
+child view) and `tests/test_state_export.py` (the schema and the
+regenerated `docs/schema/life_state.example.json`, which now has a truck,
+a mower, pantry items, a meal and a workout, all placeholders).

@@ -18,7 +18,7 @@ connected to it.
 | Desktop app (PySide6, 37 apps) | REAL, in daily development |
 | Phone web app (Talk, Today, Money) and Android app | REAL |
 | Assistant (local model, ~185 tools, voice) | REAL |
-| Life events (history), links, Life State v2, `/api/state`, schema | REAL / DERIVED, built 2026-10-05 |
+| Life events (history), links, Life State v2 (now with assets, kitchen, workout), `/api/state`, schema | REAL / DERIVED, built 2026-10-05 |
 | Muse's desktop design artifact | Design surface, SIMULATED. To be pointed at `docs/schema/life_state.example.json` |
 | Meta Display glasses | PLANNED (Phase 2), waiting on Q-0003 |
 | MIA's reasoning over Life State ("opportunities") | PLANNED (Phase 2) |
@@ -30,7 +30,7 @@ connected to it.
   `python -m tools.export_state` (steps in `docs/NEXT_SESSION.md`).
   Answer Q-0001, Q-0002, Q-0003, Q-0005. Decide DEC-0011 (public repo).
 - **Muse:** connect the desktop design to Life State; glasses card
-  concepts; answer Q-0004. Start from
+  concepts, following Muse's own Q-0004 answer. Start from
   `docs/HANDOFFS/H-0003_claude-to-muse_where-mia-is.md`.
 - **ChatGPT:** vision and architecture review of Phase 1 against MIA's
   original intent (`docs/ENGINE_PHASE1_PLAN.md` §8–9).
@@ -45,6 +45,8 @@ connected to it.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · claude · H-0004 done: `assets`, `kitchen` and `workout` added to Life State v2, the schema and the example.
+- 2026-10-05 · muse · First hub round-trip: answered Q-0004 (Home priorities), filed H-0004 (schema gaps).
 - 2026-10-05 · claude · Collaboration hub files (this one,
   `COLLABORATION.md`, `DECISIONS.md`, `QUESTIONS.md`, `HANDOFFS/`).
 - 2026-10-05 · claude · Handoff H-0003 to Muse; placeholder example
@@ -59,7 +61,7 @@ connected to it.
 ## Open decisions and questions
 
 - DEC-0011 (PROPOSED): make the repo public.
-- Q-0001 to Q-0006: see `docs/QUESTIONS.md`.
+- Q-0001, Q-0002, Q-0003, Q-0005, Q-0006: see `docs/QUESTIONS.md` (Q-0004 closed).
 
 ## Constraints everyone works within
 

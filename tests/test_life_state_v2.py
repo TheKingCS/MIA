@@ -18,7 +18,7 @@ from core.event_bus import EventBus
 from core.gamification import SkillWeight
 from tests.engine_world import build_world
 
-SECTIONS = ("finances", "properties", "projects", "due", "missions_and_skills", "recent_wins", "friction",
+SECTIONS = ("finances", "properties", "assets", "kitchen", "workout", "projects", "due", "missions_and_skills", "recent_wins", "friction",
             "goals", "links", "opportunities")
 TODAY = date.today()
 
@@ -135,3 +135,38 @@ def test_what_s_going_on_with_me_uses_v2(world):
     world.workout.add_session(duration_minutes=30)
     reply = MIAApplication._action_get_life_state(world, {})
     assert reply.startswith("This week: 1 workouts.")
+
+
+def test_assets_kitchen_and_workout_for_muse_h_0004(world):
+    """H-0004: Garage, Kitchen and Workout are in the read model."""
+    truck = world.maintenance.add_asset("Truck", "Vehicle", owner_profile_id=world.me.profile_id)
+    world.maintenance.add_task(truck.asset_id, "Oil change", interval_days=90,
+                               last_completed=(TODAY - timedelta(days=100)).isoformat())
+    world.maintenance.add_asset("Mower", "Power Equipment")
+    world.kitchen.add_pantry_item("Milk", 1, "gal", expiration_date=(TODAY + timedelta(days=1)).isoformat())
+    world.kitchen.add_grocery_item("Eggs", 12)
+    chili = world.kitchen.add_recipe("Chili")
+    world.kitchen.log_meal(chili.recipe_id)
+    template = world.workout.add_template("Beginner full body")
+    world.workout.add_session(template_id=template.template_id, duration_minutes=30)
+    world.workout.add_session(duration_minutes=15, date_str=(TODAY - timedelta(days=20)).isoformat())
+    state = assemble_life_state_v2(world)
+    truck_item = next(a for a in state["assets"]["items"] if a["name"] == "Truck")
+    assert (truck_item["owner"], truck_item["mine"], truck_item["tasks_overdue"]) == ("Robin", True, 1)
+    assert truck_item["next_task"] == {"title": "Oil change", "days": -10}
+    mower = next(a for a in state["assets"]["items"] if a["name"] == "Mower")
+    assert mower["owner"] is None and mower["next_task"] is None  # the whole household's, no upkeep yet
+    kitchen = state["kitchen"]
+    assert kitchen["expiring_soon"] == [{"name": "Milk", "days": 1}]
+    assert kitchen["grocery_list"] == [{"name": "Eggs", "checked": False}]
+    assert kitchen["recent_meals"] == [{"recipe": "Chili", "date": TODAY.isoformat()}]
+    workout = state["workout"]
+    assert (workout["sessions"], workout["minutes"]) == (1, 30)  # the old one is outside the 7 days
+    assert workout["last_session"]["template"] == "Beginner full body"
+    # A child sees the kitchen and their workouts, not the household's vehicles.
+    kid = world.profiles.create_profile("Ari", make_active=False)
+    make_child(world, kid.profile_id, [world.me.profile_id])
+    world.profiles.set_active_profile(kid.profile_id)
+    child = assemble_life_state_v2(world)
+    assert child["assets"]["hidden"] and child["assets"]["items"] == []
+    assert child["kitchen"]["status"] == "REAL"

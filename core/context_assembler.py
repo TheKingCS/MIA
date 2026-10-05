@@ -204,7 +204,9 @@ def format_life_state_glance_line(snapshot: LifeStateSnapshot) -> str:
 # ======================================================================
 #
 # The same idea as v1, widened to the whole life and shaped as data:
-# money, properties, projects, what's due, missions and skills, recent
+# money, properties, vehicles/tools/appliances, kitchen, workouts
+# (the last three added 2026-10-05 for Muse's H-0004), projects, what's
+# due, missions and skills, recent
 # wins (core/life_events.py), friction, goals and what waits on what
 # (core/links.py). Every number comes from the function the rest of MIA
 # already uses (finance_summary, today, rank_debts, v1 above); nothing
@@ -282,6 +284,86 @@ def _properties(context) -> dict:
             "equity": round(equity(prop), 2),
         })
     return _section("REAL", "core/real_estate_manager.py", items=items)
+
+
+def _assets(context, today: date) -> dict:
+    """Vehicles, tools and appliances (Maintenance, Garage): who they
+    belong to and what upkeep is overdue or coming (H-0004)."""
+    maintenance = getattr(context, "maintenance", None)
+    if maintenance is None:
+        return _section("PLANNED", "core/maintenance_manager.py", items=[])
+    from core.maintenance_manager import days_until_due, task_urgency
+    from core.ownership import is_for_me
+
+    profiles = getattr(context, "profiles", None)
+    tasks = maintenance.all_tasks()
+    items = []
+    for asset in maintenance.all_assets():
+        own = [t for t in tasks if t.asset_id == asset.asset_id]
+        overdue = soon = 0
+        upcoming = []
+        for task in own:
+            readings = [] if task.trigger_type == "calendar" else (maintenance.readings_for_task(task.task_id) or [])
+            urgency = task_urgency(task, readings, today)
+            overdue += urgency == "overdue"
+            soon += urgency == "due_soon"
+            left = days_until_due(task, today) if task.trigger_type == "calendar" else None
+            if left is not None:
+                upcoming.append((left, task.title))
+        owner = getattr(asset, "owner_profile_id", None)
+        owner_profile = profiles.get_profile(owner) if profiles is not None and owner else None
+        nxt = min(upcoming) if upcoming else None
+        items.append({
+            "ref": f"asset:{asset.asset_id}", "name": asset.name, "category": asset.category,
+            "owner": getattr(owner_profile, "name", None), "mine": bool(owner) and is_for_me(context, owner),
+            "tasks_overdue": overdue, "tasks_due_soon": soon,
+            "next_task": {"title": nxt[1], "days": nxt[0]} if nxt else None,
+        })
+    return _section("REAL", "core/maintenance_manager.py, core/ownership.py", items=items)
+
+
+def _kitchen(context, today: date) -> dict:
+    """Pantry, groceries and meals (Kitchen), H-0004."""
+    kitchen = getattr(context, "kitchen", None)
+    if kitchen is None:
+        return _section("PLANNED", "core/kitchen_manager.py", available=False)
+    from core.kitchen_manager import days_until_expiration
+
+    pantry = kitchen.all_pantry_items()
+    expiring = []
+    for item in pantry:
+        left = days_until_expiration(item, today)
+        if left is not None and left <= 3:
+            expiring.append({"name": item.name, "days": left})
+    since = (today - timedelta(days=_RECENT_DAYS - 1)).isoformat()
+    recipes = {r.recipe_id: r.name for r in kitchen.all_recipes()}
+    meals = sorted((m for m in kitchen.all_meal_log_entries() if m.date >= since), key=lambda m: m.date, reverse=True)
+    return _section(
+        "REAL", "core/kitchen_manager.py",
+        pantry_items=len(pantry), expiring_soon=sorted(expiring, key=lambda e: e["days"]),
+        grocery_list=[{"name": g.name, "checked": g.checked} for g in kitchen.all_grocery_items()],
+        recipes=len(recipes),
+        recent_meals=[{"recipe": recipes.get(m.recipe_id, "a meal"), "date": m.date} for m in meals[:10]],
+    )
+
+
+def _workout(context, today: date) -> dict:
+    """The person's own training (Workout), H-0004."""
+    workout = getattr(context, "workout", None)
+    if workout is None:
+        return _section("PLANNED", "core/workout_manager.py", available=False)
+    since = (today - timedelta(days=_RECENT_DAYS - 1)).isoformat()
+    sessions = sorted(workout.all_sessions(), key=lambda s: s.date, reverse=True)
+    recent = [s for s in sessions if since <= s.date <= today.isoformat()]
+    templates = {t.template_id: t.name for t in workout.all_templates()}
+    last = sessions[0] if sessions else None
+    return _section(
+        "REAL", "core/workout_manager.py",
+        days=_RECENT_DAYS, sessions=len(recent), minutes=round(sum(s.duration_minutes for s in recent), 1),
+        last_session={"date": last.date, "template": templates.get(last.template_id) if last.template_id else None,
+                      "minutes": last.duration_minutes} if last else None,
+        templates=sorted(templates.values()),
+    )
 
 
 def _waiting_on(context, ref: str, all_links: list) -> list[str]:
@@ -407,9 +489,11 @@ def assemble_life_state_v2(context, today: Optional[date] = None) -> dict:
         finances = _section("STATIC", "core/child_accounts.py", hidden=True,
                             note="Money isn't shown to a child account.")
         properties = _section("STATIC", "core/child_accounts.py", hidden=True, items=[])
+        assets = _section("STATIC", "core/child_accounts.py", hidden=True, items=[])
     else:
         finances = _finances(context, today)
         properties = _properties(context)
+        assets = _assets(context, today)
     stated = getattr(context, "links", None)
     return {
         "version": LIFE_STATE_VERSION,
@@ -419,6 +503,9 @@ def assemble_life_state_v2(context, today: Optional[date] = None) -> dict:
         "person": person,
         "finances": finances,
         "properties": properties,
+        "assets": assets,
+        "kitchen": _kitchen(context, today),
+        "workout": _workout(context, today),
         "projects": projects,
         "due": due,
         "missions_and_skills": _missions_and_skills(context, person["profile_id"], today),

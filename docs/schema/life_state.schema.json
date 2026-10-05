@@ -13,6 +13,9 @@
     "person",
     "finances",
     "properties",
+    "assets",
+    "kitchen",
+    "workout",
     "projects",
     "due",
     "missions_and_skills",
@@ -468,6 +471,239 @@
       ],
       "additionalProperties": false,
       "description": "Properties (core/real_estate_manager.py)."
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/$defs/ref"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "owner": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mine": {
+                "type": "boolean"
+              },
+              "tasks_overdue": {
+                "type": "integer"
+              },
+              "tasks_due_soon": {
+                "type": "integer"
+              },
+              "next_task": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "days": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "title",
+                  "days"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "ref",
+              "name",
+              "category",
+              "owner",
+              "mine",
+              "tasks_overdue",
+              "tasks_due_soon",
+              "next_task"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "Vehicles, tools and appliances (core/maintenance_manager.py): owner and upkeep. Hidden for a child. Added for H-0004."
+    },
+    "kitchen": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "pantry_items": {
+          "type": "integer"
+        },
+        "expiring_soon": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "days": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "days"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "grocery_list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "checked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "checked"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "recipes": {
+          "type": "integer"
+        },
+        "recent_meals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "recipe": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "recipe",
+              "date"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source"
+      ],
+      "additionalProperties": false,
+      "description": "Pantry, grocery list and meals (core/kitchen_manager.py). Added for H-0004."
+    },
+    "workout": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "days": {
+          "type": "integer"
+        },
+        "sessions": {
+          "type": "integer"
+        },
+        "minutes": {
+          "type": "number"
+        },
+        "last_session": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "template": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "minutes": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "date",
+            "template",
+            "minutes"
+          ],
+          "additionalProperties": false
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source"
+      ],
+      "additionalProperties": false,
+      "description": "The person's own workouts over the last days (core/workout_manager.py). Added for H-0004."
     },
     "projects": {
       "type": "object",

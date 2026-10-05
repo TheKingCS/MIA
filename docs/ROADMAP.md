@@ -13036,3 +13036,10 @@ with what was built, the acceptance results and the guardrail.
 lines. The export command ran on placeholder data in a scratch copy
 (0.6 s, schema-clean). Full suite passes (same one pre-existing
 timezone failure).
+
+**Follow-up (2026-10-05, Muse's handoff H-0004, the first one through
+the collaboration hub):** Life State v2 gained `assets` (vehicles, tools
+and appliances: owner, overdue and next upkeep; hidden for a child),
+`kitchen` (pantry, expiring, grocery list, recent meals) and `workout`
+(the person's sessions and minutes this week, last session, templates),
+in the schema and the placeholder example too.
