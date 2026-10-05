@@ -63,7 +63,7 @@ SUPPORTED_SUFFIXES = PDF_SUFFIXES | TEXT_SUFFIXES
 _PASSAGE_CHARS = 900
 
 _CHAPTER_LINE = re.compile(
-    r"^\s*(?:chapter|unit|lesson|part|module)\s+([0-9]{1,3}|[ivxlc]{1,7})\b[\s:.\-–—]*(.{0,80})$", re.IGNORECASE,
+    r"^\s*(?:chapter|unit|lesson|part|module)\s+([0-9]{1,3}|[ivxlc]{1,7})\b[\s:.\-–—]*(.{0,400})$", re.IGNORECASE,
 )
 _MARKDOWN_HEADING = re.compile(r"^#{1,2}\s+(.{2,80})$")
 _WORD = re.compile(r"[a-z0-9][a-z0-9'\-]*")
@@ -144,6 +144,21 @@ class SearchHit:
 # ---------------------------------------------------------------------------
 
 
+def _heading_part(label: str) -> str:
+    """Pure logic. Some PDFs (Windows' reader, two-column layouts) run a
+    heading into its first sentence: "Grounding The grounding conductor
+    gives...". Headings are short; keep the words before the capitalised
+    word that starts the sentence (the last one before a lowercase word)."""
+    if len(label) <= 80:
+        return label
+    words = label.split()
+    first_lower = next((i for i, w in enumerate(words) if w[:1].islower()), None)
+    if first_lower is None or first_lower < 2:
+        return ""
+    heading = " ".join(words[:first_lower - 1]).strip(" .:-–—")
+    return heading if len(heading) <= 80 else ""
+
+
 def find_chapters(pages: list[str]) -> list[Chapter]:
     """Pure logic. Chapter starts, skipping table-of-contents pages."""
     chapters: list[Chapter] = []
@@ -154,7 +169,9 @@ def find_chapters(pages: list[str]) -> list[Chapter]:
             line = line.strip()
             m = _CHAPTER_LINE.match(line)
             if m:
-                label = m.group(2).strip(" .:-–—")
+                label = _heading_part(m.group(2).strip(" .:-–—"))
+                if not label and m.group(2).strip():
+                    continue  # a long sentence that only starts like a heading
                 # A dotted leader or trailing page number is a TOC entry, not a heading.
                 if re.search(r"\.{3,}|\s\d{1,4}$", label):
                     matches.append(None)

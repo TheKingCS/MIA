@@ -124,6 +124,14 @@ def test_find_chapters_skips_the_contents_page():
     ]
 
 
+def test_find_chapters_when_the_heading_runs_into_the_text():
+    """Windows' PDF reader joined these two lines (2026-10-05 CI)."""
+    page = "Chapter 3: Grounding The grounding conductor gives fault current a safe path back to the panel."
+    assert [c.title for c in find_chapters(["Intro", page])] == ["Chapter 3: Grounding"]
+    long_sentence = "Chapter 3 " + "covers why every outlet in an older house might need checking " * 2
+    assert find_chapters([long_sentence]) == [Chapter("Whole book", 1)]
+
+
 def test_find_chapters_markdown_and_fallback():
     assert [c.title for c in find_chapters(["# Soil\ntext", "# Water\ntext"])] == ["Soil", "Water"]
     assert find_chapters(["no headings here"]) == [Chapter("Whole book", 1)]
