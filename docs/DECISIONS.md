@@ -146,3 +146,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   goes through the hub as a handoff.
 - Why: the engine is ahead; what MIA needs now is to feel like MIA.
 - Related: H-0005, DEC-0012
+
+### DEC-0014: The Witness Principle (companion proactivity)
+- Status: PROPOSED
+- Proposed by: muse, 2026-10-05 · Approval: zac
+- Decision: MIA spends her proactivity on progression, not reporting. Earned progression (level-ups, quest completions, streaks, unlocked milestones) is celebrated loudly and game-like; everything else stays under the communication gate — calm, quiet, useful-or-silent.
+- Why: progress feels real because something notices it. Loud-about-progression is the companion's job; loud-about-everything is a notification firehose. This is the rule behind Q-0004's presence states and the game layer's celebration moments.
+- Related: Q-0009, Q-0004, H-0005
