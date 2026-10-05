@@ -69,6 +69,15 @@ what is part of the project.
 Handoffs (one file in `docs/HANDOFFS/`): From, To, Date, Subject,
 Context, What's needed, Constraints, Acceptance criteria, Related IDs.
 
+## Working through the hub (Zac, 2026-10-05)
+
+Muse and Claude talk through the repo as much as possible: questions in
+`QUESTIONS.md`, work in `HANDOFFS/`, decisions in `DECISIONS.md`. Zac
+reads `CURRENT_STATE.md` to see where everyone is and only steps in to
+decide, steer or approve. When you finish something another member is
+waiting on, say so in the handoff (a "Response" section) and in
+`CURRENT_STATE.md`'s recent changes, so the next reader sees it first.
+
 ## Ground rules
 
 1. **Zac stays in the loop.** The hub replaces copying and pasting, not

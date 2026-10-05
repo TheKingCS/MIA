@@ -6,10 +6,13 @@ session. Last updated: 2026-10-05, by claude.*
 
 ## Phase
 
-**Engine ↔ Experience integration.** Engine Phase 1 is done: the engine
-now exposes one read model (Life State v2 at `/api/state`) that every
-surface consumes (DEC-0005). Next, the designed interface gets
-connected to it.
+**Between phases: Phase 2 ("Experience") proposed.** Engine Phase 1 is
+done (Life State v2 at `/api/state`, DEC-0005). The back end is far
+ahead of the front end, and Muse's designs can't reach the real app
+because the UI is Qt code. H-0005 proposes one web front end, built by
+Muse on Claude's APIs (DEC-0012), and a Phase 2 plan (DEC-0013).
+**Waiting on Zac's decision, with Muse's (Q-0007, Q-0009) and
+ChatGPT's (Q-0008) input.**
 
 ## Where things stand
 
@@ -26,17 +29,18 @@ connected to it.
 
 ## Who's doing what
 
-- **Zac:** enter real data through MIA, then run
+- **Zac:** decide DEC-0012 and DEC-0013 (H-0005). Enter real data through MIA, then run
   `python -m tools.export_state` (steps in `docs/NEXT_SESSION.md`).
   Answer Q-0001, Q-0002, Q-0003, Q-0005. Decide DEC-0011 (public repo).
-- **Muse:** connect the desktop design to Life State; glasses card
-  concepts, following Muse's own Q-0004 answer. Start from
+- **Muse:** answer Q-0007 and Q-0009; review H-0005. Then (if DEC-0012
+  is approved) design tokens and the Home/presence components, following
+  Muse's own Q-0004 answer. Start from
   `docs/HANDOFFS/H-0003_claude-to-muse_where-mia-is.md`.
-- **ChatGPT:** vision and architecture review of Phase 1 against MIA's
-  original intent (`docs/ENGINE_PHASE1_PLAN.md` §8–9).
-- **Claude:** waiting on Zac's next priority. Queue: a real Habits
-  module, the glasses client (after Q-0003), Phase 2 reasoning over
-  Life State.
+- **ChatGPT:** answer Q-0008: a vision review of H-0005 (and of Phase 1,
+  `docs/ENGINE_PHASE1_PLAN.md` §8–9).
+- **Claude:** waiting on DEC-0012/0013. Then the Phase 2 foundation
+  (`web/` served by MIA, the action API, live updates, the Pi check).
+  Later: Phase 2 reasoning, the glasses client (after Q-0003), Habits.
 
 ## Blocked
 
@@ -45,6 +49,7 @@ connected to it.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · claude · H-0005: where MIA is and the Phase 2 proposal (DEC-0012, DEC-0013, Q-0007 to Q-0009).
 - 2026-10-05 · claude · H-0004 done: `assets`, `kitchen` and `workout` added to Life State v2, the schema and the example.
 - 2026-10-05 · muse · First hub round-trip: answered Q-0004 (Home priorities), filed H-0004 (schema gaps).
 - 2026-10-05 · claude · Collaboration hub files (this one,
@@ -60,8 +65,9 @@ connected to it.
 
 ## Open decisions and questions
 
+- DEC-0012, DEC-0013 (PROPOSED): the web front end and the Phase 2 plan.
 - DEC-0011 (PROPOSED): make the repo public.
-- Q-0001, Q-0002, Q-0003, Q-0005, Q-0006: see `docs/QUESTIONS.md` (Q-0004 closed).
+- Q-0001, Q-0002, Q-0003, Q-0005 to Q-0009: see `docs/QUESTIONS.md` (Q-0004 closed).
 
 ## Constraints everyone works within
 

@@ -26,3 +26,4 @@ handoff: use placeholders.*
 | H-0002 | muse → claude | 2026-10-05 | MIA Engine Kickoff Spec | Not in the repo: it contained real personal seed data (DEC-0002). Answered by `docs/ENGINE_PHASE1_PLAN.md` |
 | H-0003 | claude → muse | 2026-10-05 | Where MIA is, and how design connects to the engine | [`H-0003_claude-to-muse_where-mia-is.md`](H-0003_claude-to-muse_where-mia-is.md) |
 | H-0004 | muse → claude | 2026-10-05 | Life State v2 schema gaps: vehicles, kitchen, workout missing from the read model | [`H-0004_muse-to-claude_life-state-schema-gaps.md`](H-0004_muse-to-claude_life-state-schema-gaps.md) (DONE, claude 2026-10-05) |
+| H-0005 | claude → zac, muse, chatgpt | 2026-10-05 | Where MIA is, what she needs, and a Phase 2 proposal (web front end) | [`H-0005_claude-to-all_where-mia-is-and-phase-2.md`](H-0005_claude-to-all_where-mia-is-and-phase-2.md) |

@@ -119,3 +119,30 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   commits. There is no LICENSE file, which means "all rights reserved"
   (people can read it but not reuse it).
 - Waiting on: Zac (Q-0005).
+
+### DEC-0012: MIA's interface becomes one web front end, built by Muse
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-05 · Review requested: muse (Q-0007), chatgpt (Q-0008) · Approval: zac
+- Decision: (A, recommended) a single HTML/CSS/JS front end in `web/`,
+  written by Muse, served by MIA's own local server and shown in the
+  desktop's PySide6 window (QtWebEngine), on the phone and, later, on the
+  glasses. Claude provides the APIs. The Qt screens keep working until
+  each one is replaced. (B) Keep the Qt UI: Muse designs, Claude
+  implements every screen in Qt.
+- Why: the front end lags because Muse's designs have to be
+  hand-translated into Qt by Claude; one web front end removes that step
+  and serves every surface.
+- Risks: memory and performance on the Pi 5 (checked first, with a
+  Chromium kiosk fallback); a second language in the codebase.
+- Related: H-0005, DEC-0005, DEC-0013
+
+### DEC-0013: Phase 2 is "Experience": the front end catches up
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-05 · Approval: zac
+- Decision: the next phase is, in order: the foundation (`web/`, the
+  action API, live updates, the Pi check); Home and MIA's presence;
+  Talk; then the domain screens one at a time; glasses cards after
+  Q-0003. Phase 2 reasoning ("opportunities") runs alongside. Every step
+  goes through the hub as a handoff.
+- Why: the engine is ahead; what MIA needs now is to feel like MIA.
+- Related: H-0005, DEC-0012
