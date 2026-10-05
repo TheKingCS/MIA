@@ -7,11 +7,15 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-10-05*
 
+**Collaboration hub (2026-10-05):** the team shares memory through
+`docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
+`QUESTIONS.md` and `HANDOFFS/`. Start there too.
+
 **Engine Phase 1 (2026-10-05): approved and built.** Life events
 (history), links (how things relate), Life State v2 and the read model
 (`/api/state`, `python -m tools.export_state`, the published schema).
 Details, acceptance results and the 10-question guardrail for new
-proposals: `docs/ENGINE_PHASE1_PLAN.md` sections 8 and 9. For Muse (design): `docs/MUSE_HANDOFF.md`, with a placeholder sample state in `docs/schema/life_state.example.json`. Never put
+proposals: `docs/ENGINE_PHASE1_PLAN.md` sections 8 and 9. For Muse (design): `docs/HANDOFFS/H-0003_claude-to-muse_where-mia-is.md`, with a placeholder sample state in `docs/schema/life_state.example.json`. Never put
 real personal data (seed data) in the repo.
 
 **Cognitive Extension:** you approved slices A → B → C → D → E

@@ -20,6 +20,13 @@ sessions (the owner's pending hands-on steps, the build queue, parked
 ideas, loose ends); cloud sessions keep no memory of earlier chats.
 Update it before ending a session.
 
+MIA is built by a team (2026-10-05): Zac (owner), ChatGPT (vision),
+Muse (design) and Claude (engine), sharing memory through files in this
+repo (`docs/COLLABORATION.md`). Also read `docs/CURRENT_STATE.md`, and
+check `docs/QUESTIONS.md` and `docs/HANDOFFS/` for anything addressed to
+Claude. At the end of a session, rewrite `docs/CURRENT_STATE.md` and log
+new decisions in `docs/DECISIONS.md`. Only Zac approves a decision.
+
 ## Commands
 
 ```bash
