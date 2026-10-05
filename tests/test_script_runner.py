@@ -157,3 +157,23 @@ def test_terminate_process_tree_swallows_taskkill_errors_on_windows(monkeypatch)
     fake_process = SimpleNamespace(pid=4242)
 
     terminate_process_tree(fake_process)  # must not raise
+
+
+def test_windows_prefers_git_bash_over_the_wsl_stub(monkeypatch, tmp_path):
+    """On Windows, `bash` on the PATH is usually WSL's stub, which can't run
+    a script by its Windows path; Git for Windows' bash is used instead."""
+    import shutil
+
+    from core import script_runner
+
+    git_bash = tmp_path / "Git" / "bin" / "bash.exe"
+    git_bash.parent.mkdir(parents=True)
+    git_bash.write_text("")
+    monkeypatch.setattr(script_runner.sys, "platform", "win32")
+    monkeypatch.setenv("ProgramFiles", str(tmp_path))
+    assert script_runner.find_bash() == str(git_bash)
+    git_bash.unlink()
+    monkeypatch.setenv("ProgramFiles(x86)", str(tmp_path))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "nothing"))
+    monkeypatch.setattr(shutil, "which", lambda name: r"C:\Windows\System32\bash.exe")
+    assert script_runner.find_bash() == "bash"  # the WSL stub is never chosen

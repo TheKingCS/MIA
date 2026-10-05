@@ -68,7 +68,7 @@ def test_read_system_health_converts_units_correctly(monkeypatch):
         "net_io_counters",
         lambda: SimpleNamespace(bytes_sent=5 * system_health._BYTES_PER_MB, bytes_recv=15 * system_health._BYTES_PER_MB),
     )
-    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", lambda: {})
+    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", lambda: {}, raising=False)
 
     snapshot = read_system_health()
 
@@ -87,12 +87,13 @@ def test_read_cpu_temperature_returns_first_reading(monkeypatch):
         system_health.psutil,
         "sensors_temperatures",
         lambda: {"coretemp": [SimpleNamespace(current=61.5, label="Package")]},
+        raising=False,  # psutil has no sensors_temperatures() on Windows
     )
     assert system_health._read_cpu_temperature() == 61.5
 
 
 def test_read_cpu_temperature_returns_none_when_empty(monkeypatch):
-    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", lambda: {})
+    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", lambda: {}, raising=False)
     assert system_health._read_cpu_temperature() is None
 
 
@@ -100,7 +101,7 @@ def test_read_cpu_temperature_returns_none_when_not_implemented(monkeypatch):
     def _raise():
         raise AttributeError("module 'psutil' has no attribute 'sensors_temperatures'")
 
-    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", _raise)
+    monkeypatch.setattr(system_health.psutil, "sensors_temperatures", _raise, raising=False)
     assert system_health._read_cpu_temperature() is None
 
 

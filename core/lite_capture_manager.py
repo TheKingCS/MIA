@@ -128,7 +128,8 @@ def format_capture_journal_title(captured_at: str) -> str:
     docstring for why — always-correct beats "maybe clever")."""
     try:
         when = datetime.fromisoformat(captured_at)
-        return f"Field Note — {when.strftime('%b %-d, %Y %-I:%M %p')}"
+        # Built by hand: "%-d"/"%-I" (no leading zero) don't exist on Windows.
+        return f"Field Note — {when:%b} {when.day}, {when.year} {when.hour % 12 or 12}:{when:%M %p}"
     except ValueError:
         return "Field Note"
 

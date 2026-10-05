@@ -16,6 +16,10 @@ sys.path.insert(0, str(ROOT / "deploy"))
 import finish_install  # noqa: E402
 
 
+LINUX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="the Linux installer and app menu; Windows uses install.ps1")
+
+
+@LINUX_ONLY
 def test_install_sh_is_valid_and_its_dry_run_changes_nothing(tmp_path):
     assert subprocess.run(["bash", "-n", str(ROOT / "install.sh")]).returncode == 0
     before = sorted(p.name for p in ROOT.iterdir())
@@ -55,6 +59,7 @@ def test_voice_downloads_list_only_whats_missing(tmp_path):
     assert finish_install.voice_downloads(tmp_path) == []
 
 
+@LINUX_ONLY
 def test_shortcut_goes_to_the_app_menu_and_an_existing_desktop(tmp_path):
     entry = finish_install.desktop_entry(ROOT)
     assert "Name=MIA" in entry and f'"{ROOT / ".venv" / "bin" / "python"}" "{ROOT / "main.py"}"' in entry

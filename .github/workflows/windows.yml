@@ -42,8 +42,9 @@ jobs:
       - name: Install MIA's packages
         run: python -m pip install -r requirements.txt
       - name: Test suite
+        # Qt's normal Windows display mode, like the real PC (the headless
+        # "offscreen" mode has no fonts on Windows, so test PDFs came out blank).
         env:
-          QT_QPA_PLATFORM: offscreen
           PYTHONUTF8: "1"
         run: python -m pytest -q -p no:cacheprovider --deselect tests/test_navigation_module.py::test_sun_moon_summary_for_real_coordinates_has_sensible_shape
       - name: Web front end device check

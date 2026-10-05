@@ -18,6 +18,11 @@ from core.person_settings import person_id
 from core.undo_log import undo_last
 
 
+
+def _clock(when: datetime) -> str:
+    """Pure logic. "2:05 PM". By hand: "%-I" doesn't exist on Windows."""
+    return f"{when.hour % 12 or 12}:{when:%M %p}"
+
 def _words(label: str) -> str:
     return label.replace("_", " ")
 
@@ -34,7 +39,7 @@ def _action_get_recent_changes(context, arguments: dict) -> str:
     changes = undo.recent(person_id(context)) if undo is not None else []
     if not changes:
         return "I haven't changed anything for you since MIA started."
-    items = "; ".join(f"{_words(c.label)} at {datetime.fromisoformat(c.at):%-I:%M %p}" for c in changes[:5])
+    items = "; ".join(f"{_words(c.label)} at {_clock(datetime.fromisoformat(c.at))}" for c in changes[:5])
     return f"Most recent first: {items}. Say \"undo that\" to take back the latest."
 
 
@@ -58,7 +63,7 @@ def _action_mute_message_topic(context, arguments: dict) -> str:
         topic = last["topic"]
     days = int(arguments.get("days") or 30)
     until = gate.mute(topic, days)
-    return (f"Okay, no more {name_of(topic)} until {until:%B %-d}. Urgent things still come through. "
+    return (f"Okay, no more {name_of(topic)} until {until:%B} {until.day}. Urgent things still come through. "
             f"Say \"you can tell me about {name_of(topic)}\" to bring them back sooner.")
 
 

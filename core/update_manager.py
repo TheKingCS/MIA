@@ -143,7 +143,7 @@ def apply_update_package(source_path: Path) -> UpdateResult:
             destination = _PROJECT_ROOT / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(staged_path, destination)
-            applied_files.append(str(relative_path))
+            applied_files.append(relative_path.as_posix())  # "core/x.py" on Windows too
 
     except OSError as exc:
         return UpdateResult(passed=False, errors=[f"Update failed while writing to disk: {exc}"])

@@ -54,10 +54,30 @@ _INTERPRETER_SUFFIXES = {"python": ".py", "shell": ".sh"}
 _TASKKILL_TIMEOUT_SECONDS = 5.0
 
 
+def find_bash() -> str:
+    """The bash to run shell scripts with. On Windows, `bash` on the PATH
+    is usually WSL's stub (C:\\Windows\\System32\\bash.exe), which can't
+    run a script by its Windows path, so Git for Windows' bash is
+    preferred when it's installed."""
+    if sys.platform == "win32":
+        import shutil
+
+        for root in (os.environ.get("ProgramFiles", r"C:\Program Files"),
+                     os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+                     os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs")):
+            candidate = Path(root) / "Git" / "bin" / "bash.exe"
+            if candidate.is_file():
+                return str(candidate)
+        found = shutil.which("bash")
+        if found and "system32" not in found.lower():
+            return found
+    return "bash"
+
+
 def _interpreter_command(interpreter: str, script_path: Path) -> list[str]:
     if interpreter == "python":
         return [sys.executable, str(script_path)]
-    return ["bash", str(script_path)]
+    return [find_bash(), str(script_path)]
 
 
 def start_script_process(interpreter: str, content: str) -> tuple[subprocess.Popen, Path]:
