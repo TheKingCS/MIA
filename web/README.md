@@ -33,6 +33,9 @@ components, data and actions, and each arranges them for its screen.
 | `mia.js` | **The engine client.** The only code that talks to MIA. Every screen uses it. | Claude (ask in `docs/QUESTIONS.md` for changes) |
 | `tokens.css` | Design tokens: colors, type, spacing. `--scale` follows the person's text size; `[data-contrast="high"]` is high contrast. | Muse |
 | `index.html`, `home.css`, `home.js` | MIA's Home: presence orb (celebrate / needs-you / quiet / thinking), the one due item with its action, the briefing sheet (Q-0004 order), Talk dock on Home. | Muse (built 2026-10-05, H-0009); data flow kept |
+| `components.css` | Shared component system: glass cards, status strips, XP bars, rarity badges, pill tabs, buttons, heroes, sidebar, empty/locked states. Concept-art material. | Muse |
+| `missions.html`, `missions.js` | Missions: status strip, streaks, Active/Completed tabs over the engine's due items and recent wins, propose/approve on every action, ask-MIA-to-invent via talk. | Muse |
+| `skills.html`, `skills.js` | Skills: evidence-backed portfolios from the engine's skill_evidence events under its growing/declining/dormant trends. No decorative XP. | Muse |
 
 ## The contract (what a screen may use)
 
