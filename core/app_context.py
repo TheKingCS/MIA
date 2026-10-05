@@ -70,6 +70,7 @@ if TYPE_CHECKING:
     from core.power_manager import PowerManager
     from core.email_drafts import EmailDrafts
     from core.life_events import LifeEventLog, PersonalLifeEventLog
+    from core.links import LinkStore
     from core.household_manager import HouseholdManager
     from core.undo_log import UndoLog
     from core.profile_manager import ProfileManager
@@ -125,6 +126,8 @@ class AppContext:
     # the person's own, both swapped in on sign-in.
     life_events: Optional["LifeEventLog"] = field(default=None, repr=False)
     personal_life_events: Optional["PersonalLifeEventLog"] = field(default=None, repr=False)
+    # How things relate (core/links.py): the household's stated links.
+    links: Optional["LinkStore"] = field(default=None, repr=False)
     # "Undo that" for MIA's changes (core/undo_log.py).
     undo: Optional["UndoLog"] = field(default=None, repr=False)
     notifications: Optional["NotificationManager"] = field(default=None, repr=False)

@@ -56,6 +56,13 @@ CORPUS: list[tuple[str, str]] = [
     ("What changed this month?", "get_life_events"),
     ("What bills did I pay this month?", "get_life_events"),
     ("How many workouts did I do this month?", "get_life_events"),
+    # ---- How things relate (core/links.py) ------------------------------
+    ("The greenhouse project depends on selling the lot", "link_things"),
+    ("The land loan funds the rental", "link_things"),
+    ("Fixing the tractor has to happen before the barn", "link_things"),
+    ("What depends on selling the lot?", "get_links"),
+    ("What's connected to the truck?", "get_links"),
+    ("The barn no longer depends on the tractor", "unlink_things"),
     # ---- Starter sets (core/starter_templates.py) ------------------------
     ("What starter sets are there?", "list_starter_sets"),
     ("Set me up with the homestead starter set", "add_starter_set"),

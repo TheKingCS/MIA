@@ -157,6 +157,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.life_events import LifeEventLog
 
     context.life_events = LifeEventLog(context)
+    from core.links import LinkStore
+
+    context.links = LinkStore(context)
     # Each person's own stores (core/personal_data.py), as on the desktop.
     context.personal_data = PersonalData(context)
     context.personal_data.watch(events)

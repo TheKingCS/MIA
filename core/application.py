@@ -31,6 +31,7 @@ from PySide6.QtWidgets import QApplication
 
 from core.activity_log_manager import ActivityLogManager
 from core.life_events import LifeEventLog
+from core.links import LinkStore
 from core.usage_tracker import UsageTracker
 from core.alarm_manager import AlarmManager
 from core.avatar_manager import AvatarManager
@@ -71,6 +72,7 @@ from core.assistant_focus_actions import register_focus_actions
 from core.assistant_accessibility_actions import register_accessibility_actions
 from core.assistant_starter_actions import register_starter_actions
 from core.assistant_life_event_actions import register_life_event_actions
+from core.assistant_link_actions import register_link_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_undo_actions import register_undo_actions
@@ -388,6 +390,8 @@ class MIAApplication:
         self.context.classroom = ClassroomManager(self.context)
         # What happened (core/life_events.py): the household's history.
         self.context.life_events = LifeEventLog(self.context)
+        # How things relate (core/links.py): the household's stated links.
+        self.context.links = LinkStore(self.context)
         # Each person's own things and their household's shared things
         # (core/personal_data.py): swapped in on every sign-in. After every
         # store above, so the device's first household keeps those.
@@ -1211,6 +1215,7 @@ class MIAApplication:
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)
         register_life_event_actions(self.context.assistant_actions)
+        register_link_actions(self.context.assistant_actions)
         register_homestead_actions(self.context.assistant_actions)
         register_textbook_actions(self.context.assistant_actions)
         register_inbox_actions(self.context.assistant_actions)

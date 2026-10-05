@@ -42,7 +42,7 @@ CHILD_APPS = frozenset({
 CHILD_BLOCKED_DOMAINS = frozenset({
     "budget", "debts", "real_estate", "homestead_costs", "business_use", "business_tags", "ledger", "jobs",
     "products", "materials", "components", "security", "lab", "field_kit", "power", "toolbox", "inbox", "system",
-    "ownership", "private_budget",
+    "ownership", "private_budget", "links",
 })
 
 ASK_A_PARENT = "That one's for grown-ups. Ask a parent if you need it."

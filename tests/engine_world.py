@@ -25,6 +25,7 @@ from core.event_bus import EventBus
 from core.intent_manager import IntentManager
 from core.kitchen_manager import KitchenManager
 from core.life_events import LifeEventLog, PersonalLifeEventLog
+from core.links import LinkStore
 from core.maintenance_manager import MaintenanceManager
 from core.mission_manager import MissionManager
 from core.profile_manager import ProfileManager
@@ -68,5 +69,6 @@ def build_world(tmp_path, monkeypatch) -> AppContext:
     context.intents = IntentManager(context, data_dir=mine)
     context.life_events = LifeEventLog(context, data_dir=home)
     context.personal_life_events = PersonalLifeEventLog(context, data_dir=mine)
+    context.links = LinkStore(context, data_dir=home)
     context.home_dir, context.my_dir, context.device_dir = home, mine, device
     return context
