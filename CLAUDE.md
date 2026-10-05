@@ -197,6 +197,15 @@ children.
   code; `tests/test_state_export.py` checks it). Every section carries a
   REAL/DERIVED/SIMULATED/STATIC/PLANNED status. New proposals go through
   the plan's section 9 checklist.
+- **Phase 2 front end** (2026-10-05, DEC-0012/0013) — `web/` is MIA's
+  one web front end (Muse's; `web/README.md`), served at `/web/` by
+  `server/app.py` and shown on the desktop by `modules/web_home`. It
+  only talks to the engine through `web/mia.js`: `/api/state` to read,
+  `/api/actions` to change things (`core/actions.py`: Propose → Approve
+  → Execute → Record → Undo; add new action kinds there, never logic
+  in `web/`), `/api/live` to know when to re-read (`core/live.py`,
+  bumped by every `atomic_write_text`). Due items carry their suggested
+  `action`.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

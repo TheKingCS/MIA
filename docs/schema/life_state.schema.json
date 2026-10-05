@@ -39,6 +39,30 @@
       "type": "string",
       "pattern": "^[a-z_]+:.+$",
       "description": "kind:id, the id the store uses (core/links.py KINDS)."
+    },
+    "suggested_action": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "What a surface can propose for this item (POST /api/actions/propose). See docs/schema/action.schema.json.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "params"
+      ],
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -819,6 +843,9 @@
               },
               "icon": {
                 "type": "string"
+              },
+              "action": {
+                "$ref": "#/$defs/suggested_action"
               }
             },
             "required": [
@@ -828,7 +855,8 @@
               "time",
               "module_id",
               "record_id",
-              "icon"
+              "icon",
+              "action"
             ],
             "additionalProperties": false
           }

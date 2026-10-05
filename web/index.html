@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <!--
+    SCAFFOLD (claude, 2026-10-05): the Phase 2 vertical slice that proves
+    the plumbing (engine → /api/state → this page → an action → live
+    update). Its look is a placeholder for Muse to replace; the structure
+    follows Muse's Q-0004 answer. See web/README.md.
+  -->
+  <main class="home" aria-live="polite">
+    <section class="presence" id="presence" data-mood="quiet" aria-label="MIA">
+      <div class="orb" aria-hidden="true"></div>
+      <p class="presence-line" id="presence-line">…</p>
+    </section>
+
+    <section class="focus" id="focus" hidden>
+      <p class="focus-title" id="focus-title"></p>
+      <p class="focus-detail" id="focus-detail"></p>
+      <div class="focus-actions" id="focus-actions"></div>
+    </section>
+
+    <details class="briefing" id="briefing">
+      <summary>Briefing</summary>
+      <div id="briefing-body"></div>
+    </details>
+  </main>
+
+  <dialog id="confirm">
+    <form method="dialog">
+      <p id="confirm-text"></p>
+      <menu>
+        <button value="no">Not now</button>
+        <button value="yes" class="primary">Yes</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <p class="status" id="status" role="status"></p>
+  <script src="mia.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>

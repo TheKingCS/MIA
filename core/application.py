@@ -30,6 +30,7 @@ from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 
 from core.activity_log_manager import ActivityLogManager
+from core.actions import ActionCenter
 from core.life_events import LifeEventLog
 from core.links import LinkStore
 from core.usage_tracker import UsageTracker
@@ -286,6 +287,8 @@ class MIAApplication:
         for event in ("profile.switched", "profile.created", "display.changed"):
             self.events.subscribe(event, self._apply_look)
         self.context.undo = UndoLog()
+        # Propose → Approve → Execute → Record → Undo (core/actions.py).
+        self.context.actions = ActionCenter()
         self.context.notifications = NotificationManager(self.context)
         # Mobile access, Phase 1 (2026-09-12) — cheap to construct
         # unconditionally like every other manager here; only the

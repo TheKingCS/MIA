@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TheKingCS/MIA/docs/schema/action.schema.json",
+  "title": "MIA action proposal",
+  "description": "The action contract (core/actions.py): Propose \u2192 Approve \u2192 Execute \u2192 Record \u2192 Undo. A surface proposes (POST /api/actions/propose {kind, params}), shows `summary` to the person, and on yes approves (POST /api/actions/{proposal_id}/approve). The engine executes, records the history and keeps it undoable (POST /api/actions/{proposal_id}/undo). Surfaces hold no business logic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id",
+    "kind",
+    "params",
+    "summary",
+    "profile_id",
+    "proposed_by",
+    "status",
+    "created_at",
+    "decided_at",
+    "result",
+    "undoable"
+  ],
+  "properties": {
+    "proposal_id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "bill.pay",
+        "income.receive",
+        "maintenance.done",
+        "task.done",
+        "routine.log"
+      ]
+    },
+    "params": {
+      "type": "object"
+    },
+    "summary": {
+      "type": "string",
+      "description": "The sentence the person approves, made in code."
+    },
+    "profile_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "proposed_by": {
+      "enum": [
+        "person",
+        "mia"
+      ]
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "executed",
+        "failed",
+        "rejected",
+        "undone",
+        "expired"
+      ]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "decided_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "result": {
+      "type": "string",
+      "description": "What happened (executed), or why not (failed)."
+    },
+    "undoable": {
+      "type": "boolean"
+    }
+  }
+}

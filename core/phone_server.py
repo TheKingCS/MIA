@@ -129,6 +129,8 @@ class PhoneServer:
         self._thread: Optional[threading.Thread] = None
         self._app = None
         self._relay_registered = False
+        self._local = False  # the desktop's own web view uses it (ensure_local)
+        self._local_tokens: set[str] = set()
         self.last_error = ""
 
     @property
@@ -158,6 +160,10 @@ class PhoneServer:
         self.config.save()
         if enabled:
             return self.start()
+        if self._local:
+            # The desktop's web view still needs it; with phone access off,
+            # server/app.py turns away anything forwarded from outside.
+            return self.running
         self.stop()
         return False
 
@@ -205,6 +211,31 @@ class PhoneServer:
             self._relay_registered = True
         return True
 
+    def ensure_local(self) -> bool:
+        """For the desktop's own web view (Phase 2, DEC-0012): make sure
+        the server runs, even with phone access off. With phone access
+        off, server/app.py turns away anything forwarded from outside, so
+        this doesn't open MIA to the phone. Returns whether it's running."""
+        self._local = True
+        return self.start()
+
+    def local_session(self, profile_id: str) -> Optional[str]:
+        """A sign-in token for the person already signed in at the
+        desktop, so the web view needs no second password. None if the
+        server isn't running."""
+        if self._app is None:
+            return None
+        import secrets
+
+        token = secrets.token_urlsafe(32)
+        self._app.state.sessions[token] = profile_id
+        self._local_tokens.add(token)  # the desktop, not a phone: left out of "phone last connected"
+        return token
+
+    @property
+    def local_url(self) -> str:
+        return f"http://127.0.0.1:{self.port}"
+
     def stop(self) -> None:
         if self._server is not None:
             self._server.should_exit = True
@@ -219,7 +250,8 @@ class PhoneServer:
         phones: list[tuple[str, float]] = []
         if self._app is not None and self.running:
             sessions, last_seen = self._app.state.sessions, getattr(self._app.state, "last_seen", {})
-            phones = sorted(((sessions[t], seen) for t, seen in list(last_seen.items()) if t in sessions),
+            phones = sorted(((sessions[t], seen) for t, seen in list(last_seen.items())
+                             if t in sessions and t not in self._local_tokens),
                             key=lambda pair: -pair[1])
         return PhoneServerStatus(
             enabled=self.enabled, running=self.running, host=self.host, port=self.port, error=self.last_error,

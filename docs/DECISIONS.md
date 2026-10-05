@@ -121,8 +121,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Waiting on: Zac (Q-0005).
 
 ### DEC-0012: MIA's interface becomes one web front end, built by Muse
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-05 · Review requested: muse (Q-0007), chatgpt (Q-0008) · Approval: zac
+- Status: APPROVED (option A, with chatgpt's refinement)
+- Proposed by: claude, 2026-10-05 · Reviewed by: chatgpt, 2026-10-05 (approved with refinement); muse (Q-0007 pending) · Approved by: zac, 2026-10-05 (forwarded chatgpt's review with its green light)
+- Refinement (chatgpt): not one identical layout everywhere, but **one MIA
+  component system with surface-specific compositions**. Desktop, phone
+  and glasses share components, state, actions and visual language, and
+  each arranges them for its surface.
 - Decision: (A, recommended) a single HTML/CSS/JS front end in `web/`,
   written by Muse, served by MIA's own local server and shown in the
   desktop's PySide6 window (QtWebEngine), on the phone and, later, on the
@@ -137,8 +141,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: H-0005, DEC-0005, DEC-0013
 
 ### DEC-0013: Phase 2 is "Experience": the front end catches up
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-05 · Approval: zac
+- Status: APPROVED
+- Proposed by: claude, 2026-10-05 · Reviewed by: chatgpt, 2026-10-05 · Approved by: zac, 2026-10-05
+- Order (chatgpt's review): web foundation → action API → live updates
+  → Pi 5 validation → Home and presence → Talk → domain screens one at
+  a time → glasses cards, with MIA's reasoning alongside. Prove one
+  complete vertical slice (engine → `/api/state` → web Home → real data →
+  an action → updated state) on the Pi 5 **before** any broad migration.
+- The action API is a first-class contract: **Propose → Approve →
+  Execute → Record → Undo**. The front end holds no business logic: it
+  shows Life State and proposed actions, and the engine executes and
+  owns safety, history and undo.
 - Decision: the next phase is, in order: the foundation (`web/`, the
   action API, live updates, the Pi check); Home and MIA's presence;
   Talk; then the domain screens one at a time; glasses cards after

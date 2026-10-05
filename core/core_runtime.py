@@ -112,6 +112,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.profiles = ProfileManager(context)
     context.households = HouseholdManager(context)
     context.undo = UndoLog()
+    from core.actions import ActionCenter
+
+    context.actions = ActionCenter()
     context.notifications = NotificationManager(context)
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)

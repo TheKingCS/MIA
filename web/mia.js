@@ -1,0 +1,91 @@
+/*
+ * mia.js — the engine client every MIA surface shares (Phase 2, DEC-0012).
+ *
+ * The ONLY place the web front end talks to MIA's engine. Screens call
+ * these functions and render what comes back; they never compute facts,
+ * totals or permissions themselves (DEC-0004, DEC-0013).
+ *
+ *   MIA.state()                 -> Life State v2 (docs/schema/life_state.schema.json)
+ *   MIA.propose(kind, params)   -> a proposal (docs/schema/action.schema.json)
+ *   MIA.approve(id) / reject(id) / undo(id)
+ *   MIA.onChange(callback)      -> calls back whenever MIA's data changes
+ *   MIA.demo                    -> true when showing the placeholder example
+ *
+ * Sign-in: the desktop opens this page with #token=... (its own session);
+ * the token is kept for this tab only. With ?demo, it reads the published
+ * placeholder example instead, and actions are disabled.
+ * No dependencies, no network beyond MIA itself (offline-first).
+ */
+(function () {
+  "use strict";
+
+  const params = new URLSearchParams(location.search);
+  const demo = params.has("demo");
+  const fromHash = new URLSearchParams(location.hash.slice(1)).get("token");
+  if (fromHash) {
+    try { sessionStorage.setItem("mia.token", fromHash); } catch (e) { /* private mode */ }
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+  // The person's look, passed by the desktop (text size, high contrast).
+  if (params.get("scale")) document.documentElement.style.setProperty("--scale", params.get("scale"));
+  if (params.get("contrast") === "high") document.documentElement.dataset.contrast = "high";
+
+  let token = fromHash;
+  if (!token) {
+    try { token = sessionStorage.getItem("mia.token"); } catch (e) { token = null; }
+  }
+
+  class MiaError extends Error {
+    constructor(status, message) { super(message); this.status = status; }
+  }
+
+  async function call(method, path, body) {
+    if (!token) throw new MiaError(401, "Not signed in.");
+    const response = await fetch(path, {
+      method,
+      headers: Object.assign({ Authorization: "Bearer " + token },
+                             body ? { "Content-Type": "application/json" } : {}),
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
+    return data;
+  }
+
+  function demoOnly() { return Promise.reject(new MiaError(400, "Actions are off in the demo.")); }
+
+  function onChange(callback) {
+    if (demo || !token) return () => {};
+    let version = -1, source = null, timer = null, closed = false;
+    function connect() {
+      if (closed) return;
+      source = new EventSource("/api/live?token=" + encodeURIComponent(token) + "&since=" + version);
+      source.addEventListener("state", (event) => {
+        const next = JSON.parse(event.data).version;
+        const first = version === -1;
+        version = next;
+        if (!first) callback(next);
+      });
+      source.onerror = () => {
+        source.close();
+        timer = setTimeout(connect, 3000); // MIA restarting, or the network blinked
+      };
+    }
+    connect();
+    return () => { closed = true; if (source) source.close(); clearTimeout(timer); };
+  }
+
+  window.MIA = {
+    demo,
+    signedIn: Boolean(token) || demo,
+    MiaError,
+    state: () => demo ? fetch("/schema/life_state.example.json").then((r) => r.json()) : call("GET", "/api/state"),
+    kinds: () => call("GET", "/api/actions/kinds"),
+    pending: () => call("GET", "/api/actions"),
+    propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }),
+    approve: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/approve"),
+    reject: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/reject"),
+    undo: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/undo"),
+    onChange,
+  };
+})();

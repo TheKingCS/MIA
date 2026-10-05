@@ -13043,3 +13043,47 @@ and appliances: owner, overdue and next upkeep; hidden for a child),
 `kitchen` (pantry, expiring, grocery list, recent meals) and `workout`
 (the person's sessions and minutes this week, last session, templates),
 in the schema and the placeholder example too.
+
+## Phase 2 foundation: the web front end's plumbing (2026-10-05)
+
+DEC-0012 (one web front end, built by Muse, on Claude's APIs; "one
+component system, surface-specific compositions") and DEC-0013 (Phase 2
+"Experience") were approved with ChatGPT's refinements. The foundation:
+
+- **The action contract** (`core/actions.py`): Propose → Approve →
+  Execute → Record → Undo. Typed kinds (`bill.pay`, `income.receive`,
+  `maintenance.done`, `task.done`, `routine.log`). Each one checks
+  itself and writes the sentence to approve in code, executes through
+  the store's own method under undo recording, and records the history
+  as the person's (or MIA's, for `proposed_by: "mia"`). Undo works
+  while the action is still the person's latest change. Children only
+  get the `child_ok` kinds. Proposals live in memory for a day.
+  `/api/actions/*` serves it, and `docs/schema/action.schema.json`
+  publishes it. Today's due items carry their suggested `action`.
+- **Live updates** (`core/live.py`): a state version bumped by every
+  `atomic_write_text`, life event and undo. `/api/live` streams it
+  (Server-Sent Events, token in the query) and `/api/live/version`
+  reads it.
+- **`web/`**: served at `/web/` (and the schemas at `/schema/`). It
+  holds `mia.js` (the only engine client), `tokens.css` (Muse's design
+  tokens), and a working Home scaffold following Muse's Q-0004 answer.
+  `web/README.md` is Muse's guide.
+- **Desktop**: `modules/web_home`, "Home (preview)", shows `web/` in
+  QtWebEngine, signed in with a local session token (no second
+  password) and the person's text size and contrast.
+  `PhoneServer.ensure_local()` keeps the server up for it; with phone
+  access off, `server/app.py` turns away forwarded requests (Tailscale
+  and proxies). Desktop sessions don't count as phones.
+- **The Pi check**: `python -m tools.web_check` measures browser start,
+  page load, memory and animation fps, with a PASS/CHECK verdict.
+
+**Verified:** 15 new tests (`tests/test_actions.py`: the five steps,
+bad and others' proposals, undo order, children, MIA-proposed, live
+version on writes, every endpoint, the stream, `/web/` and `/schema/`
+serving, the phone-off guard, desktop sessions, the address, the
+verdict). The slice ran end to end in headless Chromium against the real
+server: about 110 ms load, the action proposed, confirmed, executed and
+undoable, and a change from another device shown live in 0.4 s. The
+desktop module showed it inside MIA with phone access off. The web check
+here: 56 ms page load, 373 MB, 60 fps. Full suite passes (same one
+pre-existing timezone failure).

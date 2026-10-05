@@ -35,7 +35,7 @@ from core.person_settings import person_id
 CHILD_APPS = frozenset({
     "dashboard", "assistant", "character", "classroom", "household", "kitchen", "knowledge", "maps", "memories",
     "missions", "music", "navigation", "notes", "observations", "relationships", "skills", "workout", "greenhouse",
-    "expeditions", "settings",
+    "expeditions", "settings", "web_home",
 })
 
 # Assistant tool domains a child is never offered.

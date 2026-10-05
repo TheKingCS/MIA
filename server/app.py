@@ -78,6 +78,12 @@ from core.web_push import get_or_create_vapid_keys, send_web_push
 log = get_logger(__name__)
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
+# Phase 2 (DEC-0012): MIA's one web front end (Muse's), and the published
+# schemas it builds against.
+_WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+_SCHEMA_DIR = Path(__file__).resolve().parent.parent / "docs" / "schema"
+LIVE_TICK_SECONDS = 0.5
+LIVE_PING_SECONDS = 15.0
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -104,6 +110,11 @@ def validate_voice_wav(audio: bytes) -> None:
 
 class VoiceTextRequest(BaseModel):
     text: str
+
+
+class ProposeRequest(BaseModel):
+    kind: str
+    params: dict = {}
 
 
 class LoginRequest(BaseModel):
@@ -161,6 +172,20 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
     # token -> when that phone last used MIA (Settings shows "phone last connected").
     app.state.last_seen: dict[str, float] = {}
+
+    @app.middleware("http")
+    async def phone_access_switch(request: Request, call_next):
+        """When phone access is off, the server may still run for the
+        desktop's own web view (core/phone_server.py ensure_local()), but
+        anything forwarded in from outside (Tailscale serve, a proxy) is
+        turned away."""
+        server = getattr(context, "phone_server", None)
+        forwarded = any(h in request.headers for h in ("x-forwarded-for", "tailscale-user-login", "forwarded"))
+        if forwarded and server is not None and not getattr(server, "enabled", True):
+            from fastapi.responses import JSONResponse
+
+            return JSONResponse({"detail": "Phone access is off in MIA's Settings."}, status_code=403)
+        return await call_next(request)
 
     def require_profile_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> str:
         if credentials is None:
@@ -446,10 +471,115 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return assemble_life_state_v2(view_for(context, profile_id))
 
+    # ------------------------------------------------------------------
+    # The action contract (core/actions.py, DEC-0013):
+    # Propose → Approve → Execute → Record → Undo. Each step runs on the
+    # person's own view, under the turn lock like any other change.
+    # ------------------------------------------------------------------
+
+    def _actions():
+        center = getattr(context, "actions", None)
+        if center is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Actions aren't available.")
+        return center
+
+    def _decide(step, profile_id: str, proposal_id: str) -> dict:
+        from core.actions import ActionError
+
+        try:
+            with app.state.turn_lock:
+                return step(view_for(context, profile_id), proposal_id).as_dict()
+        except KeyError:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No such proposal.") from None
+        except ActionError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    @app.get("/api/actions/kinds")
+    def action_kinds(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.actions import ACTION_TYPES
+
+        return {"kinds": [a.as_dict() for a in ACTION_TYPES.values()]}
+
+    @app.post("/api/actions/propose")
+    def propose_action(body: ProposeRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.actions import ActionError
+
+        try:
+            with app.state.turn_lock:
+                return _actions().propose(view_for(context, profile_id), body.kind, body.params).as_dict()
+        except ActionError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    @app.get("/api/actions")
+    def pending_actions(profile_id: str = Depends(require_profile_id)) -> dict:
+        return {"proposals": [p.as_dict() for p in _actions().pending(profile_id)]}
+
+    @app.post("/api/actions/{proposal_id}/approve")
+    def approve_action(proposal_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        return _decide(_actions().approve, profile_id, proposal_id)
+
+    @app.post("/api/actions/{proposal_id}/reject")
+    def reject_action(proposal_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        return _decide(_actions().reject, profile_id, proposal_id)
+
+    @app.post("/api/actions/{proposal_id}/undo")
+    def undo_action(proposal_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        return _decide(_actions().undo, profile_id, proposal_id)
+
+    # ------------------------------------------------------------------
+    # Live updates (core/live.py): the state version, as one read or a
+    # stream (Server-Sent Events; EventSource can't send headers, so the
+    # stream takes the token as ?token=). A surface re-reads /api/state
+    # when the version moves.
+    # ------------------------------------------------------------------
+
+    @app.get("/api/live/version")
+    def live_version(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core import live
+
+        return {"version": live.version()}
+
+    @app.get("/api/live")
+    async def live_stream(request: Request, token: str = "", since: int = -1, once: bool = False):
+        import asyncio
+        import json as json_module
+
+        from fastapi.responses import StreamingResponse
+
+        from core import live
+
+        if app.state.sessions.get(token) is None:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
+
+        async def events():
+            seen, quiet = since, 0.0
+            while True:
+                current = live.version()
+                if current != seen:
+                    seen, quiet = current, 0.0
+                    yield f"event: state\ndata: {json_module.dumps({'version': current})}\n\n"
+                    if once:
+                        return
+                elif quiet >= LIVE_PING_SECONDS:
+                    quiet = 0.0
+                    yield ": ping\n\n"
+                if await request.is_disconnected():
+                    return
+                await asyncio.sleep(LIVE_TICK_SECONDS)
+                quiet += LIVE_TICK_SECONDS
+
+        return StreamingResponse(events(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     @app.post("/api/voice/reset")
     def voice_reset(profile_id: str = Depends(require_profile_id)) -> dict:
         app.state.voice_conversations.pop(profile_id, None)
         return {"reset": True}
 
+    # The web front end (web/, DEC-0012) and the schemas it's built on.
+    # Mounted before "/" so the phone app keeps the root.
+    if _WEB_DIR.is_dir():
+        app.mount("/web", StaticFiles(directory=_WEB_DIR, html=True), name="web")
+    app.mount("/schema", StaticFiles(directory=_SCHEMA_DIR), name="schema")
     app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
     return app

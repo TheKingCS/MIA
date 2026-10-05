@@ -196,7 +196,14 @@
         "time": "",
         "module_id": "maintenance",
         "record_id": "393b6999cf",
-        "icon": "🔧"
+        "icon": "🔧",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "393b6999cf"
+          }
+        }
       },
       {
         "when": "today",
@@ -204,8 +211,15 @@
         "detail": "$1,500.00",
         "time": "",
         "module_id": "budget",
-        "record_id": null,
-        "icon": "💰"
+        "record_id": "79dd290116",
+        "icon": "💰",
+        "action": {
+          "kind": "income.receive",
+          "label": "Mark received",
+          "params": {
+            "source_id": "79dd290116"
+          }
+        }
       }
     ]
   },

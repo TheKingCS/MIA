@@ -109,6 +109,13 @@ looks wrong (the text on screen, never passwords or keys).
       in the MIA folder and look it over (it stays on your computer;
       never paste it anywhere public). Ask MIA "what did I get done this
       week?" and "what depends on selling the lot?".
+- [ ] **The Pi 5 check for the new front end (Phase 2).** On the Pi, in
+      the MIA folder: `git pull`, then `python -m tools.web_check`. It
+      opens MIA's new web Home in the built-in browser and prints one
+      line (load time, memory, smoothness) and PASS or CHECK. Paste that
+      line into the hub (`docs/CURRENT_STATE.md` under Recent changes),
+      or send it to Claude. Then open MIA → Apps → "Home (preview)" and
+      try "Done" on something that's due.
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 

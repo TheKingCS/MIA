@@ -61,3 +61,7 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
     except BaseException:
         tmp_path.unlink(missing_ok=True)
         raise
+    # Live updates (core/live.py): open screens re-read the state.
+    from core import live
+
+    live.bump()

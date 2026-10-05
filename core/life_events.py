@@ -184,6 +184,9 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
     except Exception:
         log.exception("Couldn't record the life event '%s'.", type)
         return None
+    from core import live
+
+    live.bump()
     return event
 
 

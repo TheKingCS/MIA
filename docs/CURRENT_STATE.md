@@ -2,17 +2,15 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-05, by claude.*
+session. Last updated: 2026-10-05 (Phase 2 foundation), by claude.*
 
 ## Phase
 
-**Between phases: Phase 2 ("Experience") proposed.** Engine Phase 1 is
-done (Life State v2 at `/api/state`, DEC-0005). The back end is far
-ahead of the front end, and Muse's designs can't reach the real app
-because the UI is Qt code. H-0005 proposes one web front end, built by
-Muse on Claude's APIs (DEC-0012), and a Phase 2 plan (DEC-0013).
-**Waiting on Zac's decision, with Muse's (Q-0007, Q-0009) and
-ChatGPT's (Q-0008) input.**
+**Phase 2, "Experience" (DEC-0012, DEC-0013 approved).** The foundation
+is built, and the vertical slice runs end to end in a browser and inside
+the desktop app: engine → `/api/state` → web Home → an action
+(Propose → Approve → Execute → Record → Undo) → live update. **Next:
+Muse builds the real Home on it (H-0007); Zac runs the Pi 5 check.**
 
 ## Where things stand
 
@@ -22,33 +20,40 @@ ChatGPT's (Q-0008) input.**
 | Phone web app (Talk, Today, Money) and Android app | REAL |
 | Assistant (local model, ~185 tools, voice) | REAL |
 | Life events (history), links, Life State v2 (now with assets, kitchen, workout), `/api/state`, schema | REAL / DERIVED, built 2026-10-05 |
-| Muse's desktop design artifact | Design surface, SIMULATED. To be pointed at `docs/schema/life_state.example.json` |
+| Web front end (`web/`, served at `/web/`; desktop "Home (preview)") | REAL foundation: engine client, tokens, a working Home scaffold. Muse's real Home next |
+| Action API (`/api/actions`) and live updates (`/api/live`) | REAL, built 2026-10-05 |
+| Muse's desktop design artifact | Design surface, SIMULATED. Superseded by `web/` for real screens |
 | Meta Display glasses | PLANNED (Phase 2), waiting on Q-0003 |
 | MIA's reasoning over Life State ("opportunities") | PLANNED (Phase 2) |
 | Collaboration hub (these files) | REAL, started 2026-10-05 (DEC-0010) |
 
 ## Who's doing what
 
-- **Zac:** decide DEC-0012 and DEC-0013 (H-0005). Enter real data through MIA, then run
-  `python -m tools.export_state` (steps in `docs/NEXT_SESSION.md`).
-  Answer Q-0001, Q-0002, Q-0003, Q-0005. Decide DEC-0011 (public repo).
-- **Muse:** answer Q-0007 and Q-0009; review H-0005. Then (if DEC-0012
-  is approved) design tokens and the Home/presence components, following
-  Muse's own Q-0004 answer. Start from
-  `docs/HANDOFFS/H-0003_claude-to-muse_where-mia-is.md`.
-- **ChatGPT:** answer Q-0008: a vision review of H-0005 (and of Phase 1,
-  `docs/ENGINE_PHASE1_PLAN.md` §8–9).
-- **Claude:** waiting on DEC-0012/0013. Then the Phase 2 foundation
-  (`web/` served by MIA, the action API, live updates, the Pi check).
-  Later: Phase 2 reasoning, the glasses client (after Q-0003), Habits.
+- **Zac:** run the Pi 5 check (`python -m tools.web_check`, steps in
+  `docs/NEXT_SESSION.md`) and paste the result into the hub. Enter real
+  data through MIA. Decide DEC-0014 (Muse's Witness Principle) and
+  DEC-0011. Open: Q-0001, Q-0002, Q-0003 (Muse listed what the glasses
+  answer needs), Q-0005.
+- **Muse:** H-0007, the real Home and presence in `web/` (guide:
+  `web/README.md`), under DEC-0014.
+- **ChatGPT:** review H-0007's milestone against the vision when Muse's
+  Home lands; think ahead on Phase 2 reasoning (MIA proposing missions).
+- **Claude:** support Muse's Home (any missing Life State fields or
+  action kinds, via `QUESTIONS.md`). Next engine work: Talk in the web
+  front end (voice and chat endpoints for `web/`), then MIA's own
+  proposals (`proposed_by: "mia"`, through the communication gate).
 
 ## Blocked
 
+- Broad migration of screens: on the Pi 5 check (DEC-0013).
 - The glasses client: on Q-0003 (platform and access).
 - ChatGPT reading the repo: on DEC-0011 / Q-0005.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · muse · H-0006 review (supports DEC-0012/0013 with conditions), answered Q-0007 and Q-0009, proposed DEC-0014 (the Witness Principle), and the design half of Q-0003 (what the glasses answer must include).
+- 2026-10-05 · claude · Phase 2 foundation: the action API, live updates, `web/` with the engine client and a working Home scaffold, desktop "Home (preview)", the Pi check tool. H-0007 to Muse.
+- 2026-10-05 · chatgpt (via zac) · Approved DEC-0012/0013 with refinements (Q-0008).
 - 2026-10-05 · claude · H-0005: where MIA is and the Phase 2 proposal (DEC-0012, DEC-0013, Q-0007 to Q-0009).
 - 2026-10-05 · claude · H-0004 done: `assets`, `kitchen` and `workout` added to Life State v2, the schema and the example.
 - 2026-10-05 · muse · First hub round-trip: answered Q-0004 (Home priorities), filed H-0004 (schema gaps).
@@ -65,9 +70,9 @@ ChatGPT's (Q-0008) input.**
 
 ## Open decisions and questions
 
-- DEC-0012, DEC-0013 (PROPOSED): the web front end and the Phase 2 plan.
 - DEC-0011 (PROPOSED): make the repo public.
-- Q-0001, Q-0002, Q-0003, Q-0005 to Q-0009: see `docs/QUESTIONS.md` (Q-0004 closed).
+- DEC-0014 (PROPOSED by muse): the Witness Principle.
+- Q-0001, Q-0002, Q-0003, Q-0005, Q-0006: see `docs/QUESTIONS.md`.
 
 ## Constraints everyone works within
 

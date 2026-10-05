@@ -1,0 +1,41 @@
+/*
+ * tokens.css — MIA's design tokens (owner: Muse). One file every surface
+ * uses (DEC-0012: one component system, surface-specific compositions).
+ * These starting values are the current desktop "Dark Field" theme; Muse
+ * replaces them. Accessibility: --scale follows the person's text size,
+ * and [data-contrast="high"] is the high-contrast look.
+ */
+:root {
+  --bg: #0b0f14;
+  --surface: #111821;
+  --surface-raised: #16202b;
+  --line: #1f2c3a;
+  --text: #e6edf3;
+  --text-dim: #8b9bab;
+  --accent: #2ec4b6;
+  --accent-glow: rgba(46, 196, 182, 0.35);
+  --win: #f2c94c;
+  --attention: #ff8a65;
+  --radius: 14px;
+  --gap: 16px;
+  --scale: 1;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --text-sm: calc(13px * var(--scale));
+  --text-md: calc(16px * var(--scale));
+  --text-lg: calc(22px * var(--scale));
+  --text-xl: calc(32px * var(--scale));
+}
+
+[data-contrast="high"] {
+  --bg: #000;
+  --surface: #000;
+  --surface-raised: #000;
+  --line: #fff;
+  --text: #fff;
+  --text-dim: #fff;
+  --accent: #ffd400;
+  --accent-glow: transparent;
+  --win: #ffd400;
+  --attention: #ffd400;
+}

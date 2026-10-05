@@ -49,9 +49,18 @@ class TodayItem:
     module_id: str = ""  # where to go to act on it
     record_id: Optional[str] = None
     icon: str = "•"
+    # What a surface can propose for it (core/actions.py), e.g.
+    # {"kind": "bill.pay", "label": "Mark paid", "params": {"bill_id": ...}}.
+    action: Optional[dict] = None
 
     def as_dict(self) -> dict:
         return dict(self.__dict__)
+
+
+def _act(kind: str, **params) -> dict:
+    from core.actions import suggested
+
+    return suggested(kind, **params)
 
 
 def _days(n: int) -> str:
@@ -106,15 +115,18 @@ def _bills(context, today: date):
             continue
         amount = money(bill.amount)
         if left < 0:
-            yield TodayItem(OVERDUE, f"Pay {bill.name}", f"{amount}, {_late(-left)}", "", "budget", bill.bill_id, "\U0001F4B8")
+            yield TodayItem(OVERDUE, f"Pay {bill.name}", f"{amount}, {_late(-left)}", "", "budget", bill.bill_id, "\U0001F4B8",
+                            _act("bill.pay", bill_id=bill.bill_id))
         elif left == 0:
-            yield TodayItem(TODAY, f"Pay {bill.name}", f"{amount}, due today", "", "budget", bill.bill_id, "\U0001F4B8")
+            yield TodayItem(TODAY, f"Pay {bill.name}", f"{amount}, due today", "", "budget", bill.bill_id, "\U0001F4B8",
+                            _act("bill.pay", bill_id=bill.bill_id))
         elif left <= SOON_DAYS:
-            yield TodayItem(SOON, f"{bill.name} is due {_days(left)}", amount, "", "budget", bill.bill_id, "\U0001F4B8")
+            yield TodayItem(SOON, f"{bill.name} is due {_days(left)}", amount, "", "budget", bill.bill_id, "\U0001F4B8",
+                            _act("bill.pay", bill_id=bill.bill_id))
     for source in budget.all_income_sources():
         if days_until_income_due(source, today) == 0:
-            yield TodayItem(TODAY, f"Payday: {source.name}", money(source.expected_amount), "", "budget", None,
-                            "\U0001F4B0")
+            yield TodayItem(TODAY, f"Payday: {source.name}", money(source.expected_amount), "", "budget",
+                            source.source_id, "\U0001F4B0", _act("income.receive", source_id=source.source_id))
 
 
 def _maintenance(context, today: date):
@@ -137,14 +149,15 @@ def _maintenance(context, today: date):
         if urgency == "overdue":
             left = days_until_due(task, today) if task.trigger_type == "calendar" else None
             yield TodayItem(OVERDUE, title, _late(-left) if left is not None and left < 0 else "due now",
-                            "", "maintenance", task.task_id, "\U0001F527")
+                            "", "maintenance", task.task_id, "\U0001F527", _act("maintenance.done", task_id=task.task_id))
         elif urgency == "due_soon":
             left = days_until_due(task, today) if task.trigger_type == "calendar" else None
             if left == 0:
-                yield TodayItem(TODAY, title, "due today", "", "maintenance", task.task_id, "\U0001F527")
+                yield TodayItem(TODAY, title, "due today", "", "maintenance", task.task_id, "\U0001F527",
+                                _act("maintenance.done", task_id=task.task_id))
             else:
                 yield TodayItem(SOON, title, f"due {_days(left)}" if left else "due soon", "", "maintenance",
-                                task.task_id, "\U0001F527")
+                                task.task_id, "\U0001F527", _act("maintenance.done", task_id=task.task_id))
 
 
 def _tasks(context, today: date):
@@ -159,9 +172,11 @@ def _tasks(context, today: date):
         except ValueError:
             continue
         if due < today:
-            yield TodayItem(OVERDUE, task.title, _late((today - due).days), "", "toolbox", task.task_id, "✅")
+            yield TodayItem(OVERDUE, task.title, _late((today - due).days), "", "toolbox", task.task_id, "✅",
+                            _act("task.done", task_id=task.task_id))
         elif due == today:
-            yield TodayItem(TODAY, task.title, "due today", "", "toolbox", task.task_id, "✅")
+            yield TodayItem(TODAY, task.title, "due today", "", "toolbox", task.task_id, "✅",
+                            _act("task.done", task_id=task.task_id))
 
 
 def _birthdays(context, today: date):
