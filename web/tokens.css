@@ -1,41 +1,89 @@
 /*
- * tokens.css — MIA's design tokens (owner: Muse). One file every surface
- * uses (DEC-0012: one component system, surface-specific compositions).
- * These starting values are the current desktop "Dark Field" theme; Muse
- * replaces them. Accessibility: --scale follows the person's text size,
- * and [data-contrast="high"] is the high-contrast look.
+ * tokens.css — MIA's design tokens (owner: Muse).
+ *
+ * Dark Field: the concept art's direction — dark green/amber glassy HUD,
+ * MVS x Borderlands — with restraint. Home is her presence, not a
+ * dashboard, so the tokens serve one job: make the orb feel alive and
+ * everything else get out of the way.
+ *
+ * One file every surface uses (DEC-0012: one component system,
+ * surface-specific compositions). Offline: system fonts only, no web
+ * fonts, no CDNs. --scale follows the person's text size;
+ * [data-contrast="high"] is the high-contrast look.
  */
 :root {
-  --bg: #0b0f14;
-  --surface: #111821;
-  --surface-raised: #16202b;
-  --line: #1f2c3a;
-  --text: #e6edf3;
-  --text-dim: #8b9bab;
-  --accent: #2ec4b6;
-  --accent-glow: rgba(46, 196, 182, 0.35);
-  --win: #f2c94c;
-  --attention: #ff8a65;
-  --radius: 14px;
+  /* Field */
+  --bg: #070b08;
+  --bg-soft: #0b100c;
+  --surface: rgba(22, 30, 24, 0.62);
+  --surface-solid: #131a14;
+  --surface-raised: rgba(32, 42, 34, 0.82);
+  --line: rgba(140, 180, 150, 0.16);
+  --line-strong: rgba(140, 180, 150, 0.34);
+
+  /* Ink */
+  --text: #edf3ec;
+  --text-dim: #a4b4a7;
+  --text-faint: #6d7f71;
+
+  /* MIA teal — her voice, the default state */
+  --accent: #3fd6b5;
+  --accent-deep: #1d8f78;
+  --accent-glow: rgba(63, 214, 181, 0.32);
+
+  /* Earned gold — celebration only (DEC-0014: loud about progression) */
+  --win: #f6c453;
+  --win-deep: #a87e1c;
+  --win-glow: rgba(246, 196, 83, 0.45);
+
+  /* Calm amber — the one thing that needs you */
+  --attention: #ffa26b;
+  --attention-glow: rgba(255, 162, 107, 0.32);
+
+  /* Shape and space */
+  --radius: 16px;
+  --radius-sm: 10px;
   --gap: 16px;
   --scale: 1;
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --text-sm: calc(13px * var(--scale));
+  --touch: 44px;
+
+  /* Type — system stacks only (offline) */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  --text-xs: calc(12px * var(--scale));
+  --text-sm: calc(13.5px * var(--scale));
   --text-md: calc(16px * var(--scale));
-  --text-lg: calc(22px * var(--scale));
-  --text-xl: calc(32px * var(--scale));
+  --text-lg: calc(21px * var(--scale));
+  --text-xl: calc(30px * var(--scale));
+  --text-2xl: calc(40px * var(--scale));
+
+  /* Presence */
+  --orb-size: 208px;
 }
 
 [data-contrast="high"] {
   --bg: #000;
+  --bg-soft: #000;
   --surface: #000;
-  --surface-raised: #000;
-  --line: #fff;
-  --text: #fff;
-  --text-dim: #fff;
+  --surface-solid: #000;
+  --surface-raised: #0a0a0a;
+  --line: #ffffff;
+  --line-strong: #ffffff;
+  --text: #ffffff;
+  --text-dim: #ffffff;
+  --text-faint: #e8e8e8;
   --accent: #ffd400;
   --accent-glow: transparent;
   --win: #ffd400;
+  --win-glow: transparent;
   --attention: #ffd400;
+  --attention-glow: transparent;
+}
+
+/* Phone composition: the same components, arranged for 390px touch */
+@media (max-width: 560px) {
+  :root {
+    --orb-size: 148px;
+    --gap: 12px;
+  }
 }
