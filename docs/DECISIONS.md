@@ -107,8 +107,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0011
 
 ### DEC-0011: Make the MIA repo public so ChatGPT can read it
-- Status: PROPOSED
-- Proposed by: zac, 2026-10-05 · Reviewed by: claude (privacy audit, 2026-10-05)
+- Status: IMPLEMENTED
+- Proposed by: zac, 2026-10-05 · Reviewed by: claude (privacy audit, 2026-10-05) · Approved by: zac, 2026-10-05 (repo is public)
 - Decision: switch `github.com/TheKingCS/MIA` from private to public.
 - Why: ChatGPT can only read public repos.
 - Audit (claude, all 373 commits): no API keys, tokens, passwords,
