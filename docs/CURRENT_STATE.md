@@ -36,8 +36,7 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 - **Zac:** run the check on the new computer (`python -m tools.web_check`,
   steps in `docs/NEXT_SESSION.md`), open the new Home on the phone, answer
   Q-0010 (what the new computer is) and Q-0003 (the glasses, now urgent) and paste the result into the hub. Enter real
-  data through MIA. Decide DEC-0014 (Muse's Witness Principle) and
-  DEC-0011. Open: Q-0001, Q-0002, Q-0003 (Muse listed what the glasses
+  data through MIA. Decide DEC-0014 (Muse's Witness Principle). Open: Q-0001, Q-0002, Q-0003 (Muse listed what the glasses
   answer needs), Q-0005.
 - **Muse:** H-0007, the real Home and presence in `web/` (guide:
   `web/README.md`), under DEC-0014.
@@ -53,10 +52,10 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 - Broad migration of screens: on the check on the new computer and the
   phone (DEC-0013, DEC-0015).
 - The glasses client: on Q-0003 (platform and access).
-- ChatGPT reading the repo: on DEC-0011 / Q-0005.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · zac · DEC-0011 done: the repo is public, so ChatGPT can read the hub directly. Q-0005's three small choices (placeholder names in tests, hiding the email, a license) are still open.
 - 2026-10-05 · zac · DEC-0015: MIA runs on the new computer first, then the phone, the glasses (soon) and Pi devices (eventually). The Pi is not the main target; the docs are corrected.
 - 2026-10-05 · muse · H-0006 review (supports DEC-0012/0013 with conditions), answered Q-0007 and Q-0009, proposed DEC-0014 (the Witness Principle), and the design half of Q-0003 (what the glasses answer must include).
 - 2026-10-05 · claude · Phase 2 foundation: the action API, live updates, `web/` with the engine client and a working Home scaffold, desktop "Home (preview)", the Pi check tool. H-0007 to Muse.
@@ -77,7 +76,6 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 
 ## Open decisions and questions
 
-- DEC-0011 (PROPOSED): make the repo public.
 - DEC-0014 (PROPOSED by muse): the Witness Principle.
 - Q-0010: what the new computer is (OS, hardware).
 - Q-0001, Q-0002, Q-0003, Q-0005, Q-0006: see `docs/QUESTIONS.md`.
