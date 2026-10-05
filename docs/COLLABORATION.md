@@ -81,7 +81,10 @@ waiting on, say so in the handoff (a "Response" section) and in
 ## Ground rules
 
 1. **Zac stays in the loop.** The hub replaces copying and pasting, not
-   Zac's judgement. Nothing is approved until Zac approves it.
+   Zac's judgement. Nothing is approved until Zac approves it. He gives
+   approvals through Muse or Claude in chat (not by editing the repo
+   himself); the recorder marks them approved with `(via muse)` or
+   `(via claude)`.
 2. **No personal data in the repo, ever:** no real names beyond first
    names already used, addresses, loans, lenders, amounts, accounts,
    passwords or keys. Use placeholders ("Robin", "Rental A", "Lender A").
