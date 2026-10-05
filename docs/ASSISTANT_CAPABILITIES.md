@@ -217,6 +217,13 @@ the owner says "without the tasks".
 `set_text_size`, `set_high_contrast`, `read_screen` (domain
 `accessibility`).
 
+**Added 2026-10-05** (Engine Phase 1, `docs/ENGINE_PHASE1_PLAN.md`):
+`get_life_events` (domain `life_events`; "what did I get done this
+week?", from `core/life_events.py`), `link_things`, `unlink_things`,
+`get_links` (domain `links`, `core/links.py`; not offered to children).
+`get_life_state` now answers from Life State v2 for the person the turn
+is for.
+
 **Added 2026-10-01** (`core/assistant_starter_actions.py`):
 `list_starter_sets`, `add_starter_set` (domain `starters`; adding is one
 undoable change, never adds anything twice).

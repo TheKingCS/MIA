@@ -7,12 +7,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-10-05*
 
-**Engine Phase 1 (2026-10-05):** Muse's "MIA Engine Kickoff Spec" got
-a reply, `docs/ENGINE_PHASE1_PLAN.md`: most of it already exists; the
-real gaps are an activity log, a relationship index, Life State v2 and
-a state export with a schema. **Waiting on the owner's three answers in
-its section 6** before building. Never put real personal data (seed
-data) in the repo.
+**Engine Phase 1 (2026-10-05): approved and built.** Life events
+(history), links (how things relate), Life State v2 and the read model
+(`/api/state`, `python -m tools.export_state`, the published schema).
+Details, acceptance results and the 10-question guardrail for new
+proposals: `docs/ENGINE_PHASE1_PLAN.md` sections 8 and 9. Never put
+real personal data (seed data) in the repo.
 
 **Cognitive Extension:** you approved slices A → B → C → D → E
 (`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
@@ -97,6 +97,14 @@ looks wrong (the text on screen, never passwords or keys).
       look through the six sets and add any that fit (untick the parts
       that don't). Or tell MIA "set me up with the homestead starter
       set". Tell Claude what's missing or doesn't belong.
+- [ ] **Your real life, entered through MIA (Engine Phase 1).** Put in
+      your properties, loans, bills, income, vehicles and people the way
+      any user would (or tell MIA). Tell MIA how things connect: "the
+      land loan funds the lot", "the greenhouse depends on selling the
+      lot". Then run `python -m tools.export_state --out me.state.json`
+      in the MIA folder and look it over (it stays on your computer;
+      never paste it anywhere public). Ask MIA "what did I get done this
+      week?" and "what depends on selling the lot?".
 - [ ] **Export your data** once, to see what's in it (Settings → Email,
       Recovery Code & Household → Export my data).
 

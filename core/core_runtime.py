@@ -154,6 +154,22 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.budget = BudgetManager(context)
     context.projects = ProjectManager(context)
     context.real_estate = RealEstateManager(context)
+    # 2026-10-05 (Engine Phase 1): the rest of what Life State v2 reads
+    # (core/context_assembler.py), so a headless MIA (the state export,
+    # a server without the desktop) sees the same picture. Cheap JSON loads.
+    from core.data_logger_manager import DataLoggerManager
+    from core.kitchen_manager import KitchenManager
+    from core.maintenance_manager import MaintenanceManager
+    from core.recurring_mission_manager import RecurringMissionManager
+    from core.relationships_manager import RelationshipsManager
+    from core.task_manager import TaskManager
+
+    context.data_logger = DataLoggerManager(context)
+    context.maintenance = MaintenanceManager(context)
+    context.tasks = TaskManager(context)
+    context.kitchen = KitchenManager(context)
+    context.relationships = RelationshipsManager(context)
+    context.recurring_missions = RecurringMissionManager(context)
     from core.life_events import LifeEventLog
 
     context.life_events = LifeEventLog(context)

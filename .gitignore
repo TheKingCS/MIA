@@ -105,3 +105,6 @@ android/local.properties
 # Document inbox (core/inbox_manager.py) — the owner's receipts, manuals
 # and emails; never committed.
 /inbox/
+
+# A person's exported Life State (tools/export_state.py): real personal data.
+*.state.json

@@ -1,0 +1,914 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TheKingCS/MIA/docs/schema/life_state.schema.json",
+  "title": "MIA Life State v2",
+  "description": "The person's whole picture as MIA computes it (core/context_assembler.py assemble_life_state_v2). The read model for every surface: the desktop, the phone (/api/state), mock-ups, glasses. Every section carries a status: REAL (stored records), DERIVED (computed from them), SIMULATED, STATIC (fixed text) or PLANNED (not built yet). Facts only: no section is written by the language model.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "schema",
+    "as_of",
+    "generated_at",
+    "person",
+    "finances",
+    "properties",
+    "projects",
+    "due",
+    "missions_and_skills",
+    "recent_wins",
+    "friction",
+    "goals",
+    "links",
+    "opportunities"
+  ],
+  "$defs": {
+    "status": {
+      "enum": [
+        "REAL",
+        "DERIVED",
+        "SIMULATED",
+        "STATIC",
+        "PLANNED"
+      ]
+    },
+    "ref": {
+      "type": "string",
+      "pattern": "^[a-z_]+:.+$",
+      "description": "kind:id, the id the store uses (core/links.py KINDS)."
+    }
+  },
+  "properties": {
+    "version": {
+      "enum": [
+        2
+      ]
+    },
+    "schema": {
+      "type": "string"
+    },
+    "as_of": {
+      "type": "string",
+      "description": "ISO date the state is for."
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO time it was computed."
+    },
+    "person": {
+      "type": "object",
+      "properties": {
+        "profile_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "household_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "household_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "child": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "profile_id",
+        "name",
+        "household_id",
+        "household_name",
+        "child"
+      ],
+      "additionalProperties": false,
+      "description": "Who this is for: the signed-in person."
+    },
+    "finances": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "as_of": {
+          "type": "string"
+        },
+        "currency_symbol": {
+          "type": "string"
+        },
+        "month": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "income": {
+              "type": "number"
+            },
+            "expenses": {
+              "type": "number"
+            },
+            "net": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "label",
+            "income",
+            "expenses",
+            "net"
+          ],
+          "additionalProperties": false
+        },
+        "bills_due": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "days": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "amount",
+              "days"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "income_expected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "days": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "amount",
+              "days"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "budget_targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string"
+              },
+              "budget": {
+                "type": "number"
+              },
+              "spent": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "category",
+              "budget",
+              "spent"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "debts": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "number"
+            },
+            "minimum_payments": {
+              "type": "number"
+            },
+            "ranked": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  },
+                  "apr": {
+                    "type": "number"
+                  },
+                  "bank_synced": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "balance",
+                  "apr",
+                  "bank_synced",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "total",
+            "minimum_payments",
+            "ranked"
+          ],
+          "additionalProperties": false
+        },
+        "net_worth": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "label",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "manual_debts_not_in_net_worth": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "total",
+            "sources",
+            "manual_debts_not_in_net_worth"
+          ],
+          "additionalProperties": false
+        },
+        "builds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "spent": {
+                "type": "number"
+              },
+              "budget": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "remaining": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "spent",
+              "budget",
+              "remaining",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              },
+              "purchase": {
+                "type": "number"
+              },
+              "upkeep": {
+                "type": "number"
+              },
+              "per_hour": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "total",
+              "purchase",
+              "upkeep",
+              "per_hour"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "monthly_plan": {
+          "type": "object",
+          "properties": {
+            "expected_income": {
+              "type": "number"
+            },
+            "bills": {
+              "type": "number"
+            },
+            "debt_minimums": {
+              "type": "number"
+            },
+            "gap": {
+              "type": "number"
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "expected_income",
+            "bills",
+            "debt_minimums",
+            "gap",
+            "note"
+          ],
+          "additionalProperties": false,
+          "description": "Repeating income vs repeating bills and debt minimums, per month."
+        }
+      },
+      "required": [
+        "status",
+        "source"
+      ],
+      "additionalProperties": false,
+      "description": "Money (core/finance_summary.py) plus the monthly plan. Hidden for a child."
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/$defs/ref"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "mortgage_balance": {
+                "type": "number"
+              },
+              "equity": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "ref",
+              "name",
+              "type",
+              "value",
+              "mortgage_balance",
+              "equity"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "Properties (core/real_estate_manager.py)."
+    },
+    "projects": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/$defs/ref"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "due_date": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tasks_open": {
+                "type": "integer"
+              },
+              "tasks_done": {
+                "type": "integer"
+              },
+              "supports": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "waiting_on": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "ref",
+              "name",
+              "status",
+              "due_date",
+              "tasks_open",
+              "tasks_done",
+              "supports",
+              "waiting_on"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "Open projects, what they support and what they wait on."
+    },
+    "due": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "when": {
+                "enum": [
+                  "overdue",
+                  "today",
+                  "waiting",
+                  "soon"
+                ]
+              },
+              "title": {
+                "type": "string"
+              },
+              "detail": {
+                "type": "string"
+              },
+              "time": {
+                "type": "string"
+              },
+              "module_id": {
+                "type": "string"
+              },
+              "record_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "icon": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "when",
+              "title",
+              "detail",
+              "time",
+              "module_id",
+              "record_id",
+              "icon"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "What needs the person: overdue, today, waiting, soon (core/today.py)."
+    },
+    "missions_and_skills": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "active_missions": {
+          "type": "integer"
+        },
+        "streaks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "days": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "days"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "skills_growing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skills_declining": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skills_dormant": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source"
+      ],
+      "additionalProperties": false,
+      "description": "Missions, streaks and skill trends (Life State v1)."
+    },
+    "recent_wins": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "days": {
+          "type": "integer"
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "latest": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "source": {
+                "enum": [
+                  "manual",
+                  "assistant",
+                  "phone",
+                  "import",
+                  "inferred"
+                ]
+              }
+            },
+            "required": [
+              "at",
+              "type",
+              "summary",
+              "refs",
+              "source"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "days",
+        "counts",
+        "latest"
+      ],
+      "additionalProperties": false,
+      "description": "What got done in the last days (core/life_events.py)."
+    },
+    "friction": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "overdue",
+                  "waiting",
+                  "money_gap",
+                  "over_budget"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "module": {
+                "type": "string"
+              },
+              "ref": {
+                "$ref": "#/$defs/ref"
+              },
+              "amount": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "kind",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "What's in the way, computed from due, projects and finances."
+    },
+    "goals": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/$defs/ref"
+              },
+              "name": {
+                "type": "string"
+              },
+              "primary": {
+                "type": "boolean"
+              },
+              "serves": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "supported_by": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "ref",
+              "name",
+              "primary",
+              "serves",
+              "supported_by"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "chains": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items",
+        "chains"
+      ],
+      "additionalProperties": false,
+      "description": "Active goals and the chains of things waiting on each other (core/links.py)."
+    },
+    "links": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "stated": {
+          "type": "integer"
+        },
+        "derived": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "stated",
+        "derived"
+      ],
+      "additionalProperties": false,
+      "description": "How many links there are (core/links.py)."
+    },
+    "opportunities": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "items": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "PLANNED: MIA's reasoning over this state (Phase 2)."
+    }
+  }
+}

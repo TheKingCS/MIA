@@ -178,6 +178,18 @@ children.
   stores write through `core.atomic_write.atomic_write_text`; keep new
   stores on it (and give them `_load()` or a `data_dir` constructor) so
   "undo that" can restore and reload them.
+- **Engine read model** (2026-10-05, `docs/ENGINE_PHASE1_PLAN.md`) —
+  stores are the current state; `core/life_events.py` is the history
+  beside them (a store calls `life_events.record(self, ...)` after a
+  meaningful change; never rewrite it); `core/links.py` holds how things
+  relate (by `kind:id` ref, stated or derived, never a copy of a record);
+  `assemble_life_state_v2()` in `core/context_assembler.py` is the
+  derived picture, served as `/api/state` and
+  `python -m tools.export_state`, shaped by
+  `docs/schema/life_state.schema.json` (update the schema with the
+  code; `tests/test_state_export.py` checks it). Every section carries a
+  REAL/DERIVED/SIMULATED/STATIC/PLANNED status. New proposals go through
+  the plan's section 9 checklist.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

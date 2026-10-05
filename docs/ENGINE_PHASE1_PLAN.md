@@ -1,8 +1,12 @@
 # MIA Engine Phase 1: response to the kickoff spec
 
 *Claude Code, 2026-10-05. Replies to "MIA Engine Kickoff Spec" (drafted
-by Rocky/Muse, 2026-10-05). For the owner, Muse and ChatGPT. Nothing here is
-built yet; it's the plan, waiting on the owner's answers in section 6.*
+by Rocky/Muse, 2026-10-05). For the owner, Muse and ChatGPT.*
+
+> **Status (2026-10-05): approved and built.** The owner said yes to all
+> three questions (section 6), and steps 1–4 are built and tested. See
+> section 8 for what exists now and how the acceptance criteria came
+> out, and section 9 for the checklist every new proposal goes through.
 
 ## 1. The short version
 
@@ -163,3 +167,73 @@ repo.
   placeholders ("Home", "Rental", "Lender A").
 - `docs/NEXT_SESSION.md` is the running to-do list, and
   `docs/ROADMAP.md` records what was built and why.
+
+## 8. Built (2026-10-05)
+
+The model the owner approved:
+
+```
+CURRENT STATE   the existing stores (unchanged; the source of truth)
+HISTORY         core/life_events.py      what happened
+RELATIONSHIPS   core/links.py            how things relate
+DERIVED         Life State v2            core/context_assembler.py
+READ MODEL      /api/state, python -m tools.export_state,
+                docs/schema/life_state.schema.json
+```
+
+| Piece | Status | Where |
+|---|---|---|
+| Life events: bill paid, income, expense, debt payment, mission completed, skill evidence, workout, meal, maintenance done, rent, property expense, task done, project finished, import, starter set, undo. Each has refs, payload, source (manual, assistant, import...) and who. | REAL | `core/life_events.py`, recorded by the stores themselves |
+| Links: stated (per household, undoable) and derived from fields the stores already have (ownership, task in project, maintenance task on asset, things in a business, project or goal supporting a goal, mission as evidence for a skill, a property's upkeep record) | REAL / DERIVED | `core/links.py` |
+| Life State v2: finances and a monthly plan, properties, projects (what they support and wait on), due, missions and skills, recent wins, friction, goals and waiting chains, links, opportunities | DERIVED (opportunities: PLANNED) | `core/context_assembler.py` |
+| Read model | DERIVED | `/api/state` (signed-in, per person), `python -m tools.export_state`, `docs/schema/life_state.schema.json` |
+| Assistant | REAL | "what did I get done this week?" (`get_life_events`), "the greenhouse depends on selling the lot", "what depends on selling the lot?" (`link_things`, `get_links`, `unlink_things`), "what's going on with me?" now answers from v2 |
+
+The acceptance criteria:
+
+1. **One command dumps Life State JSON:** `python -m tools.export_state`
+   (add `--out file.state.json` to save it; those files are git-ignored).
+   Done.
+2. **Paying a bill clears it from "due":** marking it paid records
+   `bill_paid` and drops it from `due` and `friction`. Tested in
+   `tests/test_life_state_v2.py`.
+3. **A mission logs skill evidence:** completing it logs
+   `mission_completed`, plus a `skill_evidence` entry for each skill that
+   really gained XP. It also appears as an EVIDENCE_FOR link. Tested.
+4. **Every section is labeled:** each one carries `status` and `source`.
+   Done.
+5. **The export matches the schema:** checked in
+   `tests/test_state_export.py` (full, child and empty states, and the
+   phone's `/api/state`). The mock-up can render from it.
+
+Kept as decided: the stores stay the source of truth, and the history
+sits beside them. Undo adds an `undone` entry instead of erasing
+anything. The history follows the data (a household's events go in its
+folder, a person's own in theirs, a private budget's stays private). A
+child never sees money in the history or in Life State. No personal data
+went into the repo: the tests use placeholders.
+
+**Next, when the owner wants it:** enter the real data through MIA
+(section 4a), then look at `python -m tools.export_state`. After that,
+Phase 2: the mock-up and the glasses read `/api/state`, and
+"opportunities" gets MIA's reasoning over this state.
+
+## 9. The guardrail: every new proposal goes through this
+
+Agreed with the owner and ChatGPT (2026-10-05), so the design and the
+engine don't drift apart. For each proposed screen or feature:
+
+1. Does MIA already support it?
+2. If so, where (file, service, `/api/...`)?
+3. If not, is it really missing, or just not shown yet?
+4. If it's missing, does it belong in the engine or only in the UI?
+5. Can it be added without duplicating an existing system?
+6. Does it need to be part of Life State?
+7. Does it create a life event?
+8. Does it create or use links?
+9. Should `/api/state` expose it (and the schema describe it)?
+10. What is its status: REAL, DERIVED, SIMULATED, STATIC or PLANNED?
+
+Surfaces (desktop, phone, Android, mock-ups, glasses, voice) consume
+MIA. None of them is a second implementation of it. A surface shows a
+capability MIA doesn't have only when it's marked PLANNED.

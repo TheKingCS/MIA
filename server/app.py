@@ -434,6 +434,18 @@ def create_app(context: AppContext) -> FastAPI:
             # The phone user's own money: a private budget if they keep one.
             return build_finance_summary(view_for(context, profile_id))
 
+    # Engine Phase 1 (2026-10-05): the person's whole Life State v2
+    # (core/context_assembler.py), the one read model every surface
+    # uses: this phone app, a mock-up, glasses. Shape:
+    # docs/schema/life_state.schema.json. Their own view, so a phone
+    # user gets their own picture (a child, no money).
+    @app.get("/api/state")
+    def life_state(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.context_assembler import assemble_life_state_v2
+
+        with app.state.turn_lock:
+            return assemble_life_state_v2(view_for(context, profile_id))
+
     @app.post("/api/voice/reset")
     def voice_reset(profile_id: str = Depends(require_profile_id)) -> dict:
         app.state.voice_conversations.pop(profile_id, None)

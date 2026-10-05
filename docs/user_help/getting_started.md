@@ -116,6 +116,16 @@ alone. Press **Ctrl+Shift+R** on any screen and MIA reads it aloud; press
 it again to stop. Or just say "make the text bigger", "turn on high
 contrast" or "read this screen to me".
 
+## What happened, and what waits on what
+
+MIA keeps a history of what you get done: bills paid, missions,
+workouts, maintenance, rent and more. Ask "what did I get done this
+week?" or "what bills did I pay this month?". Tell her how things
+connect ("the greenhouse depends on selling the lot", "the land loan
+funds the lot"), then ask "what depends on selling the lot?". "What's
+going on with me?" puts it all together: wins, what's in the way, what's
+waiting in order, and your monthly plan.
+
 ## Starter sets
 
 A new MIA starts empty. A **starter set** fills in the usual things for

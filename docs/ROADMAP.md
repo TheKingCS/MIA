@@ -12996,3 +12996,43 @@ reusing exercises, one-step undo, a child, missing stores, the Assistant
 with "leave out", the dialog, the setup questions) and 4 routing lines;
 the real app added the Homestead set and showed it in Household and
 Maintenance. Full suite passes (same one pre-existing timezone failure).
+
+## Engine Phase 1: history, links, Life State v2, read model (2026-10-05)
+
+Answering the kickoff spec from the design side (Muse) and ChatGPT's
+architecture handoff, approved by the owner: connect what MIA already
+has, don't rebuild it. The full record is `docs/ENGINE_PHASE1_PLAN.md`,
+with what was built, the acceptance results and the guardrail.
+
+- **Life events** (`core/life_events.py`): an append-only JSONL history
+  beside the stores, which stay the source of truth. Stores record their
+  own meaningful changes (bills, income, expenses, debt payments,
+  missions with per-skill evidence, workouts, meals, maintenance, rent,
+  tasks, projects, imports, starter sets, undo), with refs, payload,
+  source (manual/assistant/import/inferred) and who. Entries go in the
+  folder the data lives in: household, personal, private budget,
+  device. Undo appends `undone` instead of erasing anything. Children
+  never see money events. This isn't `activity_log_manager` (app usage).
+- **Links** (`core/links.py`): typed relations (OWNS, PART_OF,
+  DEPENDS_ON, FUNDS, SUPPORTS, BLOCKED_BY, EVIDENCE_FOR...) by `kind:id`
+  ref. Stated links live per household (undoable); derived ones are
+  computed from fields the stores already have, never stored.
+  `downstream()` follows what waits on what.
+- **Life State v2** (`assemble_life_state_v2()`, extending v1 in
+  `core/context_assembler.py`): finances and a monthly plan, properties,
+  projects, due, missions and skills, recent wins, friction, goals and
+  waiting chains, links, opportunities (PLANNED). Each section carries a
+  status and a source. A child gets no money or property.
+- **Read model**: `/api/state` (per signed-in person), `python -m
+  tools.export_state` and `docs/schema/life_state.schema.json`, checked
+  by `core/schema_check.py` (standard library). The headless boot
+  (`core/core_runtime.py`) now builds the stores Life State reads.
+- **Assistant**: `get_life_events`, `link_things`, `unlink_things`,
+  `get_links`. `get_life_state` answers from v2 for the person the turn
+  is for (it used the desktop's signed-in person before).
+
+**Verified:** 38 new tests across `test_life_events.py`, `test_links.py`,
+`test_life_state_v2.py` and `test_state_export.py`, plus 10 routing
+lines. The export command ran on placeholder data in a scratch copy
+(0.6 s, schema-clean). Full suite passes (same one pre-existing
+timezone failure).
