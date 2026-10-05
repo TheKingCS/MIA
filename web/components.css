@@ -1,0 +1,507 @@
+/*
+ * components.css — MIA's shared component system (muse, 2026-10-05).
+ *
+ * One component system, every surface (DEC-0012: one component system,
+ * surface-specific compositions). Concept-art material: deep green-black,
+ * glassy cards, amber for XP and primary actions, green = healthy/tracked,
+ * red = needs attention (calm, factual — never game-ified for
+ * emergencies), Borderlands rarity on missions/achievements/unlockables
+ * only. Offline: system fonts only, no images, no CDNs.
+ *
+ * Dense, glanceable status → value → action → progress hierarchy. If a
+ * screen needs a paragraph to explain itself, the screen is wrong.
+ */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+/* ---------- module page frame ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 100vh;
+}
+.layout-main {
+  min-width: 0;
+  padding: calc(var(--gap) * 1.5) calc(var(--gap) * 1.75) calc(var(--gap) * 3);
+  max-width: 1080px;
+}
+
+/* ---------- sidebar (concept nav) ---------- */
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: calc(var(--gap) * 1.25) var(--gap);
+  background: linear-gradient(180deg, rgba(10, 16, 12, 0.96), rgba(6, 10, 8, 0.98));
+  border-right: 1px solid var(--glass-line);
+}
+.side .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px calc(var(--gap) * 0.9);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  letter-spacing: 0.06em;
+}
+.side .brand small {
+  display: block;
+  font-weight: 400;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+.side a.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--touch);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: var(--text-md);
+  border: 1px solid transparent;
+}
+.side a.nav .ico { width: 22px; text-align: center; }
+.side a.nav:hover { background: var(--glass); color: var(--text); }
+.side a.nav[aria-current="page"] {
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: var(--text);
+  font-weight: 600;
+}
+.side .side-foot {
+  margin-top: auto;
+  padding: 10px;
+  border-top: 1px solid var(--glass-line);
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+}
+
+/* ---------- module hero (scenic, pure CSS) ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 1.75) calc(var(--gap) * 1.5) calc(var(--gap) * 1.4);
+  margin-bottom: calc(var(--gap) * 1.25);
+  background:
+    radial-gradient(120% 90% at 72% -10%, rgba(251, 191, 36, 0.16), transparent 55%),
+    radial-gradient(90% 70% at 12% 108%, rgba(63, 214, 181, 0.12), transparent 60%),
+    radial-gradient(70% 55% at 88% 100%, rgba(22, 101, 52, 0.20), transparent 65%),
+    linear-gradient(180deg, #0d1a12 0%, #070d09 68%, #050805 100%);
+}
+.hero::after { /* ridgeline silhouette, pure CSS */
+  content: "";
+  position: absolute;
+  inset: auto -10% -38% -10%;
+  height: 78%;
+  background:
+    linear-gradient(173deg, transparent 58%, rgba(4, 8, 6, 0.9) 59%),
+    linear-gradient(187deg, transparent 66%, rgba(6, 12, 9, 0.85) 67%);
+  pointer-events: none;
+}
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: var(--text-2xl);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero .tagline {
+  position: relative;
+  z-index: 1;
+  margin: 6px 0 0;
+  color: var(--text-dim);
+  font-size: var(--text-md);
+}
+.hero .hero-chip {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--gap) * 1.1);
+  right: calc(var(--gap) * 1.2);
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  background: rgba(6, 10, 8, 0.55);
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+.hero-missions {
+  background:
+    radial-gradient(120% 90% at 72% -10%, rgba(251, 146, 60, 0.20), transparent 55%),
+    radial-gradient(90% 70% at 12% 108%, rgba(251, 191, 36, 0.10), transparent 60%),
+    linear-gradient(180deg, #171006 0%, #0d0a06 68%, #070503 100%);
+}
+.hero-skills {
+  background:
+    radial-gradient(120% 90% at 72% -10%, rgba(192, 132, 252, 0.14), transparent 55%),
+    radial-gradient(90% 70% at 12% 108%, rgba(63, 214, 181, 0.12), transparent 60%),
+    linear-gradient(180deg, #0e1220 0%, #070a10 68%, #04060a 100%);
+}
+
+/* ---------- glass card ---------- */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 1.1) calc(var(--gap) * 1.2);
+  backdrop-filter: blur(6px);
+}
+.glass > h3 { margin: 0 0 8px; font-size: var(--text-md); }
+
+/* ---------- status strip: Tracked / Needs Attention / Next Up ---------- */
+.strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap);
+  margin-bottom: calc(var(--gap) * 1.25);
+}
+.strip .cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  min-height: 64px;
+}
+.strip .cell .n {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1;
+}
+.strip .cell .t {
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+.strip .cell.ok { border-left: 3px solid var(--ok); }
+.strip .cell.ok .n { color: var(--ok); }
+.strip .cell.bad { border-left: 3px solid var(--bad); }
+.strip .cell.bad .n { color: var(--bad); }
+.strip .cell.soon { border-left: 3px solid var(--soon); }
+.strip .cell.soon .n { color: var(--soon); }
+
+/* ---------- needs-attention panel (calm, factual) ---------- */
+.attention-panel {
+  background: var(--bad-bg);
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 1.1) calc(var(--gap) * 1.2);
+  margin-bottom: calc(var(--gap) * 1.25);
+}
+.attention-panel h3 {
+  margin: 0 0 8px;
+  color: var(--bad);
+  font-size: var(--text-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.attention-panel ul { margin: 0; padding-left: 20px; color: var(--text-dim); }
+.attention-panel li { margin: 4px 0; }
+.attention-panel .late { color: var(--bad); font-size: var(--text-sm); }
+
+/* ---------- mission / list rows ---------- */
+.rows { display: grid; gap: 10px; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 14px;
+  align-items: center;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.row .row-title { font-weight: 600; }
+.row .row-sub { color: var(--text-dim); font-size: var(--text-sm); margin-top: 2px; }
+.row .row-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.row .when {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-line-strong);
+  color: var(--text-dim);
+}
+.row .when.overdue { color: var(--bad); border-color: rgba(248, 113, 113, 0.5); }
+.row .when.today { color: var(--soon); border-color: rgba(251, 191, 36, 0.5); }
+.row .xp {
+  color: var(--xp);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-shadow: 0 0 12px var(--xp-glow);
+}
+
+/* ---------- rarity (Borderlands logic: missions/achievements/unlockables only) ---------- */
+.rarity { border-left-width: 3px; border-left-style: solid; }
+.r-common { border-left-color: var(--rarity-common); }
+.r-uncommon { border-left-color: var(--rarity-uncommon); }
+.r-rare { border-left-color: var(--rarity-rare); }
+.r-epic { border-left-color: var(--rarity-epic); }
+.r-legendary {
+  border-left-color: var(--rarity-legendary);
+  box-shadow: 0 0 18px rgba(251, 146, 60, 0.18);
+}
+.rarity-tag {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+.r-common .rarity-tag { color: var(--rarity-common); }
+.r-uncommon .rarity-tag { color: var(--rarity-uncommon); }
+.r-rare .rarity-tag { color: var(--rarity-rare); }
+.r-epic .rarity-tag { color: var(--rarity-epic); }
+.r-legendary .rarity-tag { color: var(--rarity-legendary); }
+
+/* ---------- XP bar ---------- */
+.xpbar { margin-top: 8px; }
+.xpbar .xpbar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(150, 195, 165, 0.14);
+  overflow: hidden;
+}
+.xpbar .xpbar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--soon-deep), var(--xp));
+  box-shadow: 0 0 10px var(--xp-glow);
+}
+.xpbar .xpbar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.xpbar .xpbar-label strong { color: var(--xp); }
+
+/* ---------- streak flame ---------- */
+.flame {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--soon);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+/* ---------- pill tabs (every tab works) ---------- */
+.ptabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--gap);
+  flex-wrap: wrap;
+}
+.ptabs button {
+  min-height: var(--touch);
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-line-strong);
+  background: transparent;
+  color: var(--text-dim);
+  font: 600 var(--text-sm) var(--font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ptabs button[aria-selected="true"] {
+  background: rgba(74, 222, 128, 0.16);
+  border-color: rgba(74, 222, 128, 0.5);
+  color: var(--text);
+}
+.ptabs button:hover { color: var(--text); border-color: var(--text-faint); }
+
+/* ---------- buttons ---------- */
+.btn {
+  min-height: var(--touch);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-line-strong);
+  background: var(--glass-strong);
+  color: var(--text);
+  font: 600 var(--text-md) var(--font);
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--text-faint); }
+.btn-amber {
+  background: linear-gradient(180deg, #f6c453, #d99a26);
+  border-color: #a87e1c;
+  color: #241a06;
+  text-shadow: none;
+}
+.btn-amber:hover { filter: brightness(1.07); }
+.btn-green {
+  background: linear-gradient(180deg, #34d399, #1d8f68);
+  border-color: #166534;
+  color: #04120c;
+}
+.btn-green:hover { filter: brightness(1.07); }
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--glass-line); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- status taxonomy tag (DEC-0007: on everything) ---------- */
+.stag {
+  font: 600 var(--text-xs) var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  border: 1px solid var(--glass-line);
+  border-radius: 6px;
+  padding: 2px 7px;
+  margin-left: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* ---------- honest empty state ---------- */
+.empty {
+  text-align: center;
+  padding: calc(var(--gap) * 2) var(--gap);
+  color: var(--text-dim);
+  border: 1px dashed var(--glass-line-strong);
+  border-radius: var(--radius);
+  background: rgba(16, 24, 19, 0.35);
+}
+.empty strong { display: block; color: var(--text); margin-bottom: 6px; font-size: var(--text-md); }
+.empty p { margin: 0; font-size: var(--text-sm); }
+
+/* ---------- locked (honest: only when the engine says so) ---------- */
+.locked {
+  position: relative;
+  opacity: 0.75;
+}
+.locked .lock-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  margin-top: 8px;
+}
+
+/* ---------- section heading ---------- */
+.sect {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: calc(var(--gap) * 1.5) 0 calc(var(--gap) * 0.75);
+}
+.sect h2 { margin: 0; font-size: var(--text-lg); }
+.sect .more { font-size: var(--text-sm); color: var(--text-faint); }
+
+/* ---------- sign-in (shared) ---------- */
+.sign-in {
+  max-width: 360px;
+  margin: 12vh auto;
+  display: grid;
+  gap: 12px;
+  padding: calc(var(--gap) * 1.5);
+}
+.sign-in input {
+  min-height: var(--touch);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-line-strong);
+  background: var(--glass-strong);
+  color: var(--text);
+  padding: 10px 14px;
+  font: var(--text-md) var(--font);
+}
+
+/* ---------- status line + undo toast ---------- */
+.status-line {
+  min-height: 24px;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.status-line button {
+  background: none;
+  border: 1px solid var(--glass-line-strong);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 6px 14px;
+  font: 600 var(--text-sm) var(--font);
+  cursor: pointer;
+}
+
+/* ---------- modal confirm ---------- */
+dialog.confirm {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: calc(var(--gap) * 1.5);
+  max-width: 420px;
+}
+dialog.confirm::backdrop { background: rgba(0, 0, 0, 0.6); }
+dialog.confirm .confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: var(--gap);
+}
+
+/* ---------- focus ---------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- phone: sidebar becomes a top rail ---------- */
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .side {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-line);
+    padding: 8px var(--gap);
+    gap: 6px;
+  }
+  .side .brand { padding: 6px 8px; font-size: var(--text-md); }
+  .side .brand small { display: none; }
+  .side a.nav { white-space: nowrap; min-height: 40px; padding: 6px 10px; font-size: var(--text-sm); }
+  .side .side-foot { display: none; }
+  .layout-main { padding: var(--gap) var(--gap) calc(var(--gap) * 3); }
+  .strip { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .strip .cell { padding: 10px; gap: 8px; }
+  .strip .cell .n { font-size: var(--text-lg); }
+  .hero .hero-chip { display: none; }
+}
+@media (max-width: 560px) {
+  .strip { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 1fr; }
+  .row .row-meta { justify-content: flex-start; flex-wrap: wrap; }
+}
