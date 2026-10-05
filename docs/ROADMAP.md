@@ -13087,3 +13087,10 @@ undoable, and a change from another device shown live in 0.4 s. The
 desktop module showed it inside MIA with phone access off. The web check
 here: 56 ms page load, 373 MB, 60 fps. Full suite passes (same one
 pre-existing timezone failure).
+
+**Correction (2026-10-05, DEC-0015):** the Raspberry Pi is not MIA's
+primary device. The order is the owner's new computer, then their phone,
+then Meta Display glasses (soon), then their own Pi devices (eventually).
+The Phase 2 "Pi 5 check" is now a check on the new computer and the
+phone (`tools/web_check.py` runs on any computer). CLAUDE.md,
+HARDWARE.md, the decisions and the handoffs are corrected.

@@ -10,7 +10,10 @@ session. Last updated: 2026-10-05 (Phase 2 foundation), by claude.*
 is built, and the vertical slice runs end to end in a browser and inside
 the desktop app: engine → `/api/state` → web Home → an action
 (Propose → Approve → Execute → Record → Undo) → live update. **Next:
-Muse builds the real Home on it (H-0007); Zac runs the Pi 5 check.**
+Muse builds the real Home on it (H-0007); Zac runs the check on his new
+computer and phone.** MIA's devices, in order (DEC-0015): the new
+computer, the phone, the Meta Display glasses (soon), then Pi devices
+(eventually).
 
 ## Where things stand
 
@@ -23,14 +26,16 @@ Muse builds the real Home on it (H-0007); Zac runs the Pi 5 check.**
 | Web front end (`web/`, served at `/web/`; desktop "Home (preview)") | REAL foundation: engine client, tokens, a working Home scaffold. Muse's real Home next |
 | Action API (`/api/actions`) and live updates (`/api/live`) | REAL, built 2026-10-05 |
 | Muse's desktop design artifact | Design surface, SIMULATED. Superseded by `web/` for real screens |
-| Meta Display glasses | PLANNED (Phase 2), waiting on Q-0003 |
+| Meta Display glasses | PLANNED, priority 3 (DEC-0015), waiting on Q-0003 |
+| Raspberry Pi devices | Supported but parked: priority 4 (DEC-0015) |
 | MIA's reasoning over Life State ("opportunities") | PLANNED (Phase 2) |
 | Collaboration hub (these files) | REAL, started 2026-10-05 (DEC-0010) |
 
 ## Who's doing what
 
-- **Zac:** run the Pi 5 check (`python -m tools.web_check`, steps in
-  `docs/NEXT_SESSION.md`) and paste the result into the hub. Enter real
+- **Zac:** run the check on the new computer (`python -m tools.web_check`,
+  steps in `docs/NEXT_SESSION.md`), open the new Home on the phone, answer
+  Q-0010 (what the new computer is) and Q-0003 (the glasses, now urgent) and paste the result into the hub. Enter real
   data through MIA. Decide DEC-0014 (Muse's Witness Principle) and
   DEC-0011. Open: Q-0001, Q-0002, Q-0003 (Muse listed what the glasses
   answer needs), Q-0005.
@@ -45,12 +50,14 @@ Muse builds the real Home on it (H-0007); Zac runs the Pi 5 check.**
 
 ## Blocked
 
-- Broad migration of screens: on the Pi 5 check (DEC-0013).
+- Broad migration of screens: on the check on the new computer and the
+  phone (DEC-0013, DEC-0015).
 - The glasses client: on Q-0003 (platform and access).
 - ChatGPT reading the repo: on DEC-0011 / Q-0005.
 
 ## Recent changes (newest first)
 
+- 2026-10-05 · zac · DEC-0015: MIA runs on the new computer first, then the phone, the glasses (soon) and Pi devices (eventually). The Pi is not the main target; the docs are corrected.
 - 2026-10-05 · muse · H-0006 review (supports DEC-0012/0013 with conditions), answered Q-0007 and Q-0009, proposed DEC-0014 (the Witness Principle), and the design half of Q-0003 (what the glasses answer must include).
 - 2026-10-05 · claude · Phase 2 foundation: the action API, live updates, `web/` with the engine client and a working Home scaffold, desktop "Home (preview)", the Pi check tool. H-0007 to Muse.
 - 2026-10-05 · chatgpt (via zac) · Approved DEC-0012/0013 with refinements (Q-0008).
@@ -72,6 +79,7 @@ Muse builds the real Home on it (H-0007); Zac runs the Pi 5 check.**
 
 - DEC-0011 (PROPOSED): make the repo public.
 - DEC-0014 (PROPOSED by muse): the Witness Principle.
+- Q-0010: what the new computer is (OS, hardware).
 - Q-0001, Q-0002, Q-0003, Q-0005, Q-0006: see `docs/QUESTIONS.md`.
 
 ## Constraints everyone works within

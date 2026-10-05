@@ -13,9 +13,11 @@ components, data and actions, and each arranges them for its screen.
 - MIA's own local server (`server/app.py`) serves this folder at
   **`/web/`**. Nothing loads from the internet: bundle fonts, images and
   any libraries in this folder.
-- **Desktop:** the "Home (preview)" app inside MIA shows this page in a
-  built-in browser, already signed in as whoever is at the desktop
-  (`modules/web_home/`). Kiosk mode and fullscreen are unchanged.
+- **Devices, in order (DEC-0015):** Zac's new computer, his phone, Meta
+  Display glasses (soon), his own Pi devices (eventually).
+- **Desktop (the new computer):** the "Home (preview)" app inside MIA
+  shows this page in a built-in browser, already signed in as whoever
+  is at the desktop (`modules/web_home/`).
 - **Phone:** the same pages, at the phone address, once the phone
   version is designed (later step).
 - **Without MIA's data:** open `/web/?demo` to render the published
@@ -75,7 +77,10 @@ await MIA.undo(done.proposal_id);
 
 ## What's next (DEC-0013)
 
-1. **Prove the slice on the Pi 5:** `python -m tools.web_check` (Zac).
-2. **Muse:** the real Home and presence look (tokens, orb states,
-   the focus card, the briefing), then Talk.
-3. Then the domain screens one at a time, each with its own handoff.
+1. **Prove the slice on the new computer and the phone:**
+   `python -m tools.web_check` (Zac).
+2. **Muse:** the real Home and presence look (tokens, orb states, the
+   focus card, the briefing) for the desktop, then the phone
+   composition, then Talk.
+3. Glasses cards as soon as Q-0003 is answered.
+4. Then the domain screens one at a time, each with its own handoff.

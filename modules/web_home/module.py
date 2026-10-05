@@ -5,7 +5,8 @@ modules.web_home
 "Home (preview)" (2026-10-05, Phase 2, DEC-0012/DEC-0013): MIA's new web
 front end (`web/`, Muse's) shown inside the desktop window, so the first
 vertical slice (engine → /api/state → web Home → an action → live update)
-runs on the real desktop and the Pi 5 before anything else moves over.
+runs on the real devices (the owner's new computer first, DEC-0015)
+before anything else moves over.
 
 How: MIA's local server (core/phone_server.py `ensure_local()`, loopback
 only; with phone access off, nothing from outside gets in) serves
@@ -16,7 +17,7 @@ them. If this computer's PySide6 has no QtWebEngine, it offers to open
 the page in the normal browser instead.
 
 A preview next to the current Home, not a replacement: the Qt Home stays
-until the web one is proven on the Pi (DEC-0013).
+until the web one is proven on the real devices (DEC-0013, DEC-0015).
 """
 
 from __future__ import annotations

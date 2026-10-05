@@ -136,18 +136,22 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: the front end lags because Muse's designs have to be
   hand-translated into Qt by Claude; one web front end removes that step
   and serves every surface.
-- Risks: memory and performance on the Pi 5 (checked first, with a
-  Chromium kiosk fallback); a second language in the codebase.
+- Risks: memory and performance on the devices MIA runs on (the new
+  computer and the phone first, DEC-0015); a second language in the
+  codebase.
 - Related: H-0005, DEC-0005, DEC-0013
 
 ### DEC-0013: Phase 2 is "Experience": the front end catches up
 - Status: APPROVED
 - Proposed by: claude, 2026-10-05 · Reviewed by: chatgpt, 2026-10-05 · Approved by: zac, 2026-10-05
 - Order (chatgpt's review): web foundation → action API → live updates
-  → Pi 5 validation → Home and presence → Talk → domain screens one at
+  → performance check (on the new computer and the phone, DEC-0015; it
+  read "Pi 5 validation" before) → Home and presence → Talk → domain screens one at
   a time → glasses cards, with MIA's reasoning alongside. Prove one
   complete vertical slice (engine → `/api/state` → web Home → real data →
-  an action → updated state) on the Pi 5 **before** any broad migration.
+  an action → updated state) on the real devices **before** any broad
+  migration: the new computer and the phone (amended by DEC-0015; it
+  said "the Pi 5").
 - The action API is a first-class contract: **Propose → Approve →
   Execute → Record → Undo**. The front end holds no business logic: it
   shows Life State and proposed actions, and the engine executes and
@@ -166,3 +170,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Decision: MIA spends her proactivity on progression, not reporting. Earned progression (level-ups, quest completions, streaks, unlocked milestones) is celebrated loudly and game-like; everything else stays under the communication gate — calm, quiet, useful-or-silent.
 - Why: progress feels real because something notices it. Loud-about-progression is the companion's job; loud-about-everything is a notification firehose. This is the rule behind Q-0004's presence states and the game layer's celebration moments.
 - Related: Q-0009, Q-0004, H-0005
+
+### DEC-0015: Where MIA runs, in order: the new computer, the phone, the glasses, then Pi devices
+- Status: APPROVED
+- Proposed by: zac, 2026-10-05 · Approved by: zac, 2026-10-05
+- Decision: MIA's devices, by priority: (1) **Zac's new computer**, the
+  main home of MIA's engine and desktop; (2) **his phone**; (3) **Meta
+  Display glasses**, soon; (4) **his own Raspberry Pi devices**,
+  eventually. The Pi is not the primary target. Older docs that say
+  "target: Raspberry Pi 5 kiosk" describe that later step, not now.
+- Why: "the pi is one of the least relevant devices right now" (Zac).
+- Consequences: Phase 2's performance check runs on the new computer and
+  the phone, not the Pi. The phone composition of the web front end
+  moves up, right after the desktop Home. The glasses are next after
+  that, so Q-0003 becomes urgent. Pi and kiosk work (the installer's
+  `--kiosk`, the AI HAT) stays supported but parked.
+- Related: DEC-0012, DEC-0013 (amended below), Q-0003, Q-0010

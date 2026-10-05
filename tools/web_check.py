@@ -2,8 +2,10 @@
 tools.web_check
 =================
 
-The Pi 5 check for the new web front end (Phase 2, DEC-0013: "run the
-slice on the Pi 5 before committing to broad migration"). Opens the web
+The device check for the new web front end (Phase 2, DEC-0013: prove
+the slice on the real devices before any broad migration; per DEC-0015
+that's Zac's new computer first, then the phone; Pi devices later). Run
+it on any computer MIA runs on. Opens the web
 Home (`web/`, in demo mode with the placeholder example) inside the same
 built-in browser MIA uses (QtWebEngine) and measures:
 
@@ -13,10 +15,10 @@ built-in browser MIA uses (QtWebEngine) and measures:
 - how much memory the browser adds (MIA plus its web helper processes);
 - how smooth the presence orb animates (frames per second over 5 s).
 
-    python -m tools.web_check            # on the Pi, from the MIA folder
+    python -m tools.web_check            # from the MIA folder, on that computer
 
 Prints a plain report, and the verdict, for Zac to paste into the hub
-(`docs/CURRENT_STATE.md` or a reply on H-0006). Touches no data.
+(`docs/CURRENT_STATE.md`). Touches no data.
 """
 
 from __future__ import annotations
@@ -33,7 +35,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 SMOOTH_FPS = 45  # at or above: smooth enough for the presence animation
-MEMORY_BUDGET_MB = 600  # what the web view may add on an 8 GB Pi 5
+MEMORY_BUDGET_MB = 600  # what the web view may add; sized so a small Pi still passes later
 
 
 class _Handler(http.server.SimpleHTTPRequestHandler):
@@ -92,7 +94,7 @@ def main(seconds: float = 5.0) -> int:
         from PySide6.QtWebEngineWidgets import QWebEngineView
     except ImportError as problem:
         print(f"QtWebEngine isn't available in this PySide6 ({problem}).")
-        print("Fallback: MIA's Home (preview) offers to open the page in the system browser (Chromium on the Pi).")
+        print("Fallback: MIA's Home (preview) offers to open the page in the system browser instead.")
         return 2
     app = QApplication.instance() or QApplication(sys.argv)
     server, port = _serve()

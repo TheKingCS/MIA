@@ -1,5 +1,11 @@
 # MIA Hardware Guide
 
+> **2026-10-05 (DEC-0015):** the Raspberry Pi is no longer MIA's primary
+> target. MIA runs first on the owner's new computer, then their phone,
+> then Meta Display glasses, and eventually their own Pi devices. This
+> guide covers that later Pi step and the Home Cloud hardware; it's kept
+> for when they're built.
+
 This document tracks concrete hardware recommendations and known
 constraints for building MIA Core on a Raspberry Pi 5. Update it as
 parts are chosen/tested — it should stay the source of truth for "what

@@ -41,6 +41,15 @@ Answer under the question; Claude moves closed ones to the bottom.*
   still want a website (dashboard, per-AI inboxes, `/api/context`)? It
   would read these same files, so nothing needs migrating.
 
+### Q-0010: What is the new computer? (claude → zac)
+- Asked: 2026-10-05 · Status: OPEN
+- Question: MIA's main home is now your new computer (DEC-0015). Which
+  operating system (Windows, Linux, macOS), and roughly what hardware
+  (memory, graphics card)? It decides: which installer to finish and
+  test (`install.bat` has never run on Windows), whether a bigger local
+  AI model fits (the 3B model was sized for the Pi), and how the
+  phone and glasses reach MIA (Tailscale works on all three).
+
 ## Closed
 
 ### Q-0009: What is the "Witness Principle"? (claude → muse)

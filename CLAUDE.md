@@ -5,8 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 MIA (Multifunctional Intelligent Assistant) is an offline-first, modular
-desktop shell for Linux (target: kiosk mode on a Raspberry Pi 5), built with
-Python + PySide6. It has a core framework, many feature modules, and a
+personal assistant, built with Python + PySide6. Where it runs, in order
+(DEC-0015, 2026-10-05): the owner's new computer (the engine and the
+desktop), their phone, Meta Display glasses (soon), and eventually
+their own Raspberry Pi devices. The Pi/kiosk material below is that
+later step, not the current target. It has a core framework, many feature modules, and a
 local-model Assistant with ~175 tools (`docs/ASSISTANT_CAPABILITIES.md`);
 `docs/COGNITIVE_EXTENSION_PROPOSAL.md` is the current direction for it.
 See `docs/VISION.md` for the long-term four-project mission and
@@ -236,7 +239,8 @@ Ubuntu-WSL deployment.
 
 ## Deployment notes
 
-Kiosk deployment (Raspberry Pi 5) uses a systemd **user** service (not
+*Later step (DEC-0015): the Pi is priority 4, after the new computer,
+the phone and the glasses.* Kiosk deployment (Raspberry Pi 5) uses a systemd **user** service (not
 system-level — GUI apps need the logged-in graphical session), installed
 via `deploy/install_kiosk.sh` from the `deploy/mia.service` template.
 Don't hand-edit the `__MIA_*__` placeholders in that template — edit the

@@ -3,6 +3,10 @@
 - Related: DEC-0005, DEC-0012, DEC-0013, Q-0007, Q-0008, Q-0009,
   `docs/vision_assets/user_os_concept.png`, `docs/design_handoff/`
 
+> **Amended 2026-10-05 by DEC-0015:** MIA runs first on Zac's new
+> computer, then his phone, then the glasses, and only later on Pi
+> devices. Read every "Pi 5" below as "the new computer and the phone".
+
 ## Context: an honest picture
 
 Zac's read is right: **the back end is far ahead of the front end.**

@@ -7,7 +7,8 @@
 
 DEC-0012 and DEC-0013 are approved, with ChatGPT's refinement: one
 component system, surface-specific compositions; the action contract is
-first-class; prove one vertical slice on the Pi 5 first. Claude built
+first-class; prove one vertical slice on the real devices first (Zac's
+new computer and phone, DEC-0015; the Pi is a later device). Claude built
 the foundation, and the slice runs end to end:
 
 **engine → `/api/state` → web Home → real data → an action → updated
@@ -46,8 +47,9 @@ page in MIA's window, signed in automatically, with phone access off.
    `docs/schema/action.schema.json`.
 4. **Live updates documented:** `MIA.onChange()` in `web/mia.js`
    (`/api/live` underneath).
-5. **The Pi check includes the frame rate:** `python -m tools.web_check`
-   prints load time, memory and fps on the actual Pi.
+5. **The device check includes the frame rate:** `python -m tools.web_check`
+   prints load time, memory and fps on the real device (now Zac's new
+   computer first, DEC-0015).
 6. **Your constraints hold:**
    - Home is presence, not a dashboard; the briefing is one tap away.
    - The scaffold's presence only celebrates earned progression, and
@@ -83,9 +85,13 @@ page in MIA's window, signed in automatically, with phone access off.
    - The undo toast after an action.
    - Empty and child states: a child gets no money or property, and
      only the `task.done` and `routine.log` actions.
-3. **Compositions:** desktop first (1280×800 up to full screen, mouse,
-   keyboard, sometimes touch), then a phone composition of the same
-   components (390 px wide). The glasses come later (Q-0003).
+3. **Compositions, in the order of DEC-0015:**
+   - The desktop first: Zac's new computer, a normal window up to full
+     screen, mouse and keyboard.
+   - The phone right after: 390 px wide, touch. It replaces the phone
+     app's Today tab and later Talk and Money.
+   - The glasses next, as soon as Q-0003 is answered.
+   - The Pi devices much later.
 4. Send back a short handoff (template in `docs/HANDOFFS/README.md`)
    listing what each screen uses from Life State. If anything is
    missing, ask in `QUESTIONS.md`, and Claude adds it to the engine.
@@ -109,8 +115,8 @@ page in MIA's window, signed in automatically, with phone access off.
   shows, otherwise it's quiet. It updates live when something changes on
   another device.
 - One action works end to end with your confirm step and undo.
-- Zac's Pi 5 check passes (`python -m tools.web_check`; see
-  `docs/NEXT_SESSION.md`).
+- The check passes on Zac's new computer (`python -m tools.web_check`;
+  see `docs/NEXT_SESSION.md`), and the Home is usable on his phone.
 - The Qt Home and all 37 screens still work.
 
 ## Response
