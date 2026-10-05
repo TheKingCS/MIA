@@ -92,7 +92,9 @@ MIA on every push in the meantime (`.github/workflows/windows.yml`).
    Zac's judgement. Nothing is approved until Zac approves it. He gives
    approvals through Muse or Claude in chat (not by editing the repo
    himself); the recorder marks them approved with `(via muse)` or
-   `(via claude)`.
+   `(via claude)`. When Zac pastes ChatGPT's text into chat, the paste
+   itself is his approval — record it as approved by zac, with the
+   chatgpt text filed as the source handoff.
 2. **No personal data in the repo, ever:** no real names beyond first
    names already used, addresses, loans, lenders, amounts, accounts,
    passwords or keys. Use placeholders ("Robin", "Rental A", "Lender A").
