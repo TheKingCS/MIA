@@ -10,8 +10,8 @@
  * State via MIA.state(); every change goes Propose -> visible
  * confirmation (the engine's summary) -> Approve -> Undo. No business
  * logic here: no totals, no date math, no permissions (DEC-0004).
- * Talk posts to /api/voice/text with the same session the engine client
- * uses; TODO(claude): promote this into mia.js as MIA.talk().
+ * Talk goes through MIA.talk() (web/mia.js), the same engine turn as the
+ * phone chat (POST /api/voice/text).
  */
 (function () {
   "use strict";
@@ -229,19 +229,7 @@
   }
 
   async function talk(text) {
-    // Same session the engine client uses; promoted to MIA.talk() later.
-    let token = null;
-    try { token = sessionStorage.getItem("mia.token"); } catch (e) { /* private mode */ }
-    if (MIA.demo || !token) {
-      throw new Error("Talk needs MIA running — this is the placeholder demo.");
-    }
-    const res = await fetch("/api/voice/text", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.detail || res.statusText || "MIA didn't answer.");
+    const data = await MIA.talk(text); // the engine client (web/mia.js)
     return data.reply_text || arr(data.replies).join("\n") || "…";
   }
 

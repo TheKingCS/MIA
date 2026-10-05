@@ -39,6 +39,7 @@ components, data and actions, and each arranges them for its screen.
 ```js
 const state = await MIA.state();          // Life State v2: docs/schema/life_state.schema.json
 MIA.onChange(() => refresh());            // fires whenever MIA's data changes (any device)
+const turn = await MIA.talk("what's on today?");  // one Assistant turn: turn.reply_text
 
 // Changing anything: always Propose → Approve → Execute → Record → Undo.
 const p = await MIA.propose(item.action.kind, item.action.params);  // nothing changes yet

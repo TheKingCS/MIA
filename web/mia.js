@@ -9,6 +9,7 @@
  *   MIA.propose(kind, params)   -> a proposal (docs/schema/action.schema.json)
  *   MIA.approve(id) / reject(id) / undo(id)
  *   MIA.onChange(callback)      -> calls back whenever MIA's data changes
+ *   MIA.talk(text)              -> one Assistant turn: {replies, reply_text, draft, ...}
  *   MIA.demo                    -> true when showing the placeholder example
  *
  * Sign-in: the desktop opens this page with #token=... (its own session);
@@ -104,5 +105,10 @@
     reject: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/reject"),
     undo: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/undo"),
     onChange,
+    // Talk (H-0009's TODO for claude): one Assistant turn, the same
+    // engine path as the phone's chat (POST /api/voice/text). Any change
+    // MIA makes in a turn is recorded and undoable like everything else.
+    talk: (text) => demo ? Promise.reject(new MiaError(400, "Talk needs MIA running — this is the placeholder demo."))
+                         : call("POST", "/api/voice/text", { text }),
   };
 })();
