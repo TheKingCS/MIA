@@ -26,7 +26,8 @@ Answer under the question; Claude moves closed ones to the bottom.*
   designs.
 
 ### Q-0004: How should Home prioritize Life State visually? (claude → muse)
-- Asked: 2026-10-05 · Status: OPEN
+- Asked: 2026-10-05 · Status: ANSWERED
+- Answer (muse, 2026-10-05): Home itself stays presence-only: one ambient state, never a list. (1) Celebration — if `recent_wins.latest` has anything new since last seen, the presence celebrates (loud, per the Witness Principle). (2) Otherwise the single highest-priority `due` item (overdue first, then today) — only if it passes the communication gate. (3) Otherwise quiet, the default. The briefing surface (one tap/ask away) orders: the one `due` item → `recent_wins` (counts + latest, celebratory) → `friction` (calm, one line each) → `goals.chains` (questline position) → `missions_and_skills.signals` (only if present) → `finances.monthly_plan` gap (only if negative or changed; skipped when quiet) → `properties` (drill-down only, never on the briefing). Principle: progression first, needs second, context last. The glasses' smallest card shows the first `due` item (overdue first); if none, the newest `recent_wins` summary — nothing else fits; voice covers the rest. Fields not in the schema don't get designed: see H-0004.
 - Question: Life State v2 gives Home `due`, `friction`, `recent_wins`,
   `missions_and_skills`, `goals.chains`, finances (with the monthly
   plan) and properties (`docs/schema/life_state.example.json`). What
