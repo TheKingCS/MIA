@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Skills — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    /* skills-local: the tile grid (one screen's furniture) */
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: var(--gap);
+    }
+    .tile { display: flex; flex-direction: column; gap: 8px; }
+    .tile .tile-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .tile .tile-name { font-weight: 700; font-size: var(--text-lg); margin: 0; text-transform: capitalize; }
+    .tile .trend {
+      font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 3px 10px; border-radius: 999px; border: 1px solid var(--glass-line-strong);
+      white-space: nowrap;
+    }
+    .tile .trend.growing { color: var(--ok); border-color: rgba(74, 222, 128, 0.5); }
+    .tile .trend.declining { color: var(--soon); border-color: rgba(251, 191, 36, 0.5); }
+    .tile .trend.dormant { color: var(--text-faint); }
+    .tile .xp-total { color: var(--xp); font-weight: 700; font-size: var(--text-md); }
+    .tile .xp-total small { color: var(--text-faint); font-weight: 400; }
+    .tile ul.evidence { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+    .tile ul.evidence li {
+      font-size: var(--text-sm); color: var(--text-dim);
+      border-left: 2px solid var(--glass-line-strong); padding-left: 10px;
+    }
+    .tile ul.evidence li strong { color: var(--xp); }
+    .tile .no-evidence { color: var(--text-faint); font-size: var(--text-sm); }
+  </style>
+</head>
+<body>
+  <!--
+    Skills (muse, 2026-10-05). Concept material, engine data only.
+    Skill tiles are evidence-backed portfolios: every XP number comes
+    from the engine's skill_evidence events (recent_wins), grouped under
+    the engine's own trend lists (growing / declining / dormant). No
+    decorative XP bars, no invented levels, no fake locks — a skill with
+    no evidence says so honestly.
+    Offline: no CDNs, no web fonts. Placeholders only (DEC-0002).
+  -->
+  <form class="sign-in" id="sign-in" hidden aria-label="Sign in to MIA">
+    <p>Sign in to MIA</p>
+    <input id="who" autocomplete="username" placeholder="Email" required aria-label="Email">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+    <button class="btn btn-amber" type="submit">Sign in</button>
+  </form>
+
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Modules">
+      <a class="brand" href="index.html">🌿 MIA<small>Your Life. In Sync.</small></a>
+      <a class="nav" href="index.html"><span class="ico" aria-hidden="true">⌂</span>Home</a>
+      <a class="nav" href="missions.html"><span class="ico" aria-hidden="true">◎</span>Missions</a>
+      <a class="nav" href="skills.html" aria-current="page"><span class="ico" aria-hidden="true">★</span>Skills</a>
+      <div class="side-foot">More modules arrive as they ship.</div>
+    </nav>
+
+    <main class="layout-main">
+      <header class="hero hero-skills">
+        <h1><span aria-hidden="true">★</span> Skills</h1>
+        <p class="tagline">Do the thing. Earn the level. Unlock the next thing.</p>
+      </header>
+
+      <section class="strip" id="strip" aria-label="Skill status"></section>
+
+      <div class="sect"><h2>Skill tree</h2><span class="stag" id="tree-stag"></span></div>
+      <div class="ptabs" role="tablist" id="tabs" aria-label="Skill trend tabs">
+        <button role="tab" aria-selected="true" data-tab="all">All</button>
+        <button role="tab" aria-selected="false" data-tab="growing">Growing</button>
+        <button role="tab" aria-selected="false" data-tab="declining">Declining</button>
+        <button role="tab" aria-selected="false" data-tab="dormant">Dormant</button>
+      </div>
+      <div class="tiles" id="tiles"></div>
+
+      <p class="status-line" id="status" role="status" style="margin-top: calc(var(--gap) * 1.5);"></p>
+    </main>
+  </div>
+
+  <script src="mia.js"></script>
+  <script src="skills.js"></script>
+</body>
+</html>
