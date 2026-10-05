@@ -96,7 +96,8 @@ def run_checks(context, models: Optional[Callable[[str], Optional[list[str]]]] =
     ocr = ocr_available(config)
     checks.append(Check("Reading photos and scans", OK if ocr else OPTIONAL,
                         "Tesseract is installed." if ocr else "Photos of receipts and scanned books can't be read yet.",
-                        "" if ocr else "Run MIA's installer again, or: sudo apt install tesseract-ocr."))
+                        "" if ocr else "Run MIA's installer again" + (
+                            " (install.bat)." if sys.platform == "win32" else ", or: sudo apt install tesseract-ocr.")))
 
     phone = _has_package("fastapi") and _has_package("uvicorn")
     checks.append(Check("Phone access", OK if phone else OPTIONAL,

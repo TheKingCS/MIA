@@ -111,3 +111,6 @@ foreach ($folder in @([Environment]::GetFolderPath("Desktop"), [Environment]::Ge
 
 Write-Host "`nDone. Start MIA from the MIA shortcut on your desktop or Start menu."
 Write-Host "Run install.bat again any time to finish or update anything."
+# The setup check's warnings (e.g. Ollama not installed yet) are advice,
+# not a failed install: finishing here means everything above worked.
+exit 0
