@@ -190,7 +190,23 @@ button:focus-visible, input:focus-visible {
 }
 
 /* ---------- Briefing: one tap away ---------- */
-.home-actions { display: flex; gap: 10px; }
+.home-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* H-0014: quiet module links on Home — the ghost-button look for anchors */
+.home-actions a.ghost {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 10px 20px;
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.home-actions a.ghost:hover { background: rgba(44, 56, 47, 0.9); }
 
 .briefing-sheet {
   position: fixed;
