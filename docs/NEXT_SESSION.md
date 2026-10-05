@@ -5,7 +5,14 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-01*
+*Last updated: 2026-10-05*
+
+**Engine Phase 1 (2026-10-05):** Muse's "MIA Engine Kickoff Spec" got
+a reply, `docs/ENGINE_PHASE1_PLAN.md`: most of it already exists; the
+real gaps are an activity log, a relationship index, Life State v2 and
+a state export with a schema. **Waiting on the owner's three answers in
+its section 6** before building. Never put real personal data (seed
+data) in the repo.
 
 **Cognitive Extension:** you approved slices A → B → C → D → E
 (`docs/COGNITIVE_EXTENSION_PROPOSAL.md`, "Decisions"). **Slice A
