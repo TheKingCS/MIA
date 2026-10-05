@@ -1,0 +1,222 @@
+{
+  "version": 2,
+  "schema": "docs/schema/life_state.schema.json",
+  "as_of": "2026-10-05",
+  "generated_at": "2026-10-05T09:00:00",
+  "person": {
+    "profile_id": "a1b2c3d4",
+    "name": "Robin",
+    "household_id": "h1h2h3h4",
+    "household_name": "Robin's household",
+    "child": false
+  },
+  "finances": {
+    "status": "DERIVED",
+    "source": "core/finance_summary.py, core/budget_manager.py",
+    "as_of": "2026-10-05",
+    "currency_symbol": "$",
+    "available": true,
+    "month": {
+      "label": "October 2026",
+      "income": 0.0,
+      "expenses": 120.0,
+      "net": -120.0
+    },
+    "bills_due": [
+      {
+        "name": "Insurance",
+        "amount": 340.0,
+        "days": 5
+      }
+    ],
+    "income_expected": [
+      {
+        "name": "Pay",
+        "amount": 1500.0,
+        "days": 0
+      }
+    ],
+    "budget_targets": [],
+    "debts": {
+      "total": 40000.0,
+      "minimum_payments": 500.0,
+      "ranked": [
+        {
+          "name": "Land loan",
+          "balance": 40000.0,
+          "apr": 7.5,
+          "bank_synced": false,
+          "reason": "Highest current APR (7.50%)"
+        }
+      ]
+    },
+    "net_worth": {
+      "total": 60000.0,
+      "sources": [
+        {
+          "label": "Property equity",
+          "value": 60000.0
+        }
+      ],
+      "manual_debts_not_in_net_worth": 40000.0
+    },
+    "builds": [],
+    "tools": [],
+    "monthly_plan": {
+      "expected_income": 3250.0,
+      "bills": 460.0,
+      "debt_minimums": 500.0,
+      "gap": 2290.0,
+      "note": "Repeating income sources and bills turned into a monthly amount, minus debt minimums."
+    }
+  },
+  "properties": {
+    "status": "REAL",
+    "source": "core/real_estate_manager.py",
+    "items": [
+      {
+        "ref": "property:b3871b57fa",
+        "name": "Vacant lot",
+        "type": "Land",
+        "value": 60000.0,
+        "mortgage_balance": 0.0,
+        "equity": 60000.0
+      }
+    ]
+  },
+  "projects": {
+    "status": "REAL",
+    "source": "core/project_manager.py, core/task_manager.py, core/links.py",
+    "items": [
+      {
+        "ref": "project:c6a3ec04a5",
+        "name": "Greenhouse",
+        "status": "Planning",
+        "due_date": null,
+        "tasks_open": 0,
+        "tasks_done": 0,
+        "supports": null,
+        "waiting_on": [
+          "Vacant lot"
+        ]
+      },
+      {
+        "ref": "project:33c94a04aa",
+        "name": "Solar",
+        "status": "Planning",
+        "due_date": null,
+        "tasks_open": 0,
+        "tasks_done": 0,
+        "supports": null,
+        "waiting_on": [
+          "Greenhouse"
+        ]
+      }
+    ]
+  },
+  "due": {
+    "status": "DERIVED",
+    "source": "core/today.py",
+    "items": [
+      {
+        "when": "today",
+        "title": "Payday: Pay",
+        "detail": "$1,500.00",
+        "time": "",
+        "module_id": "budget",
+        "record_id": null,
+        "icon": "💰"
+      }
+    ]
+  },
+  "missions_and_skills": {
+    "status": "DERIVED",
+    "source": "core/context_assembler.py (v1), core/mission_manager.py, core/skill_manager.py",
+    "active_missions": 0,
+    "streaks": [],
+    "skills_growing": [],
+    "skills_declining": [],
+    "skills_dormant": [],
+    "signals": []
+  },
+  "recent_wins": {
+    "status": "DERIVED",
+    "source": "core/life_events.py",
+    "days": 7,
+    "counts": {
+      "mission_completed": 1,
+      "bill_paid": 1
+    },
+    "latest": [
+      {
+        "at": "2026-10-05T13:08:51",
+        "type": "mission_completed",
+        "summary": "Completed the mission Plan the week",
+        "refs": [
+          "mission:6bbf1dcc16",
+          "skill:organization"
+        ],
+        "source": "manual"
+      },
+      {
+        "at": "2026-10-05T13:08:51",
+        "type": "skill_evidence",
+        "summary": "10 XP in organization from Plan the week",
+        "refs": [
+          "skill:organization",
+          "mission:6bbf1dcc16"
+        ],
+        "source": "manual"
+      },
+      {
+        "at": "2026-10-05T13:08:51",
+        "type": "bill_paid",
+        "summary": "Paid Electric: $120.00",
+        "refs": [
+          "bill:c73103169b",
+          "expense:71ca0ed1d2"
+        ],
+        "source": "manual"
+      }
+    ]
+  },
+  "friction": {
+    "status": "DERIVED",
+    "source": "this file, from due, projects and finances",
+    "items": [
+      {
+        "kind": "waiting",
+        "text": "Greenhouse waits on Vacant lot",
+        "ref": "project:c6a3ec04a5"
+      },
+      {
+        "kind": "waiting",
+        "text": "Solar waits on Greenhouse",
+        "ref": "project:33c94a04aa"
+      }
+    ]
+  },
+  "goals": {
+    "status": "DERIVED",
+    "source": "core/intent_manager.py, core/why_graph.py, core/links.py",
+    "items": [],
+    "chains": [
+      [
+        "Vacant lot",
+        "Greenhouse",
+        "Solar"
+      ]
+    ]
+  },
+  "links": {
+    "status": "DERIVED",
+    "source": "core/links.py",
+    "stated": 3,
+    "derived": 1
+  },
+  "opportunities": {
+    "status": "PLANNED",
+    "source": "Phase 2: MIA's reasoning over this state",
+    "items": []
+  }
+}

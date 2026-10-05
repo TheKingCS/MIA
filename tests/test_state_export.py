@@ -116,3 +116,10 @@ def test_the_phone_gets_its_own_state(world):
     assert res.status_code == 200
     state = res.json()
     assert state["person"]["name"] == "Robin" and schema_check.errors(state, SCHEMA) == []
+
+
+def test_the_published_example_matches_the_schema():
+    """docs/schema/life_state.example.json (placeholder data) is what
+    designers render from; it must stay in the published shape."""
+    example = json.loads((schema_check.SCHEMA_DIR / "life_state.example.json").read_text(encoding="utf-8"))
+    assert schema_check.errors(example, SCHEMA) == []
