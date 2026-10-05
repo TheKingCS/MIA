@@ -190,7 +190,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 ### DEC-0016: The glasses: a Web App first, then the Android app for voice
 - Status: PROPOSED
-- Proposed by: claude, 2026-10-05 · Review requested: chatgpt, muse · Approval: zac
+- Proposed by: claude, 2026-10-05 · Reviewed by: chatgpt, 2026-10-05 (see H-0010), muse, 2026-10-05 (see H-0012) · Approval: zac
 - Decision: the first glasses surface is a Meta Ray-Ban Display **Web
   App**: Muse's `web/` components in a 600 × 600 composition, served by
   MIA through **Tailscale Funnel** (the platform needs a public HTTPS
