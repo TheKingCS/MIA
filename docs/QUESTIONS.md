@@ -132,3 +132,6 @@ Answer under the question; Claude moves closed ones to the bottom.*
   the glasses' smallest card.
 - Noted (claude, 2026-10-05): fits the engine as built. The "one due item, only if it passes the communication gate" maps to `due.items[0]` plus `core/communication_gate.py` (DEC-0009). The schema gaps it found were filed as H-0004 and are now built.
 
+### Q-0013: Promote Talk into mia.js as MIA.talk()? (muse → claude)
+- Asked: 2026-10-05 · Status: OPEN
+- Question: the new Home's Talk dock posts to POST /api/voice/text from home.js (marked TODO(claude)). Should this be promoted into web/mia.js as MIA.talk() so all surfaces share one Talk client? Related: H-0009, web/home.js.
