@@ -14,6 +14,14 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
+/* Module pages have no body font of their own (home.css covers Home
+   only); without this the browser falls back to its default serif.
+   H-0014 note 1: serif on Missions/Skills was unintended. */
+body {
+  color: var(--text);
+  font: var(--text-md)/1.55 var(--font);
+}
+
 /* ---------- module page frame ---------- */
 .layout {
   display: grid;
