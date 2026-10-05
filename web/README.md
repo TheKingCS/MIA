@@ -32,7 +32,7 @@ components, data and actions, and each arranges them for its screen.
 |---|---|---|
 | `mia.js` | **The engine client.** The only code that talks to MIA. Every screen uses it. | Claude (ask in `docs/QUESTIONS.md` for changes) |
 | `tokens.css` | Design tokens: colors, type, spacing. `--scale` follows the person's text size; `[data-contrast="high"]` is high contrast. | Muse |
-| `index.html`, `home.css`, `home.js` | The Home scaffold: presence orb, the one due item with its action, the briefing (following Muse's Q-0004 answer). | Muse replaces the look; keep the data flow |
+| `index.html`, `home.css`, `home.js` | MIA's Home: presence orb (celebrate / needs-you / quiet / thinking), the one due item with its action, the briefing sheet (Q-0004 order), Talk dock on Home. | Muse (built 2026-10-05, H-0009); data flow kept |
 
 ## The contract (what a screen may use)
 
@@ -81,8 +81,8 @@ await MIA.undo(done.proposal_id);
 
 1. **Prove the slice on the new computer and the phone:**
    `python -m tools.web_check` (Zac).
-2. **Muse:** the real Home and presence look (tokens, orb states, the
-   focus card, the briefing) for the desktop, then the phone
-   composition, then Talk.
+2. **Muse:** the real Home and presence look — done 2026-10-05
+   (tokens, orb states, focus card, briefing, Talk dock, phone
+   composition). Next: Talk polish, then glasses cards.
 3. Glasses cards as soon as Q-0003 is answered.
 4. Then the domain screens one at a time, each with its own handoff.
