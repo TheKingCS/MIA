@@ -28,7 +28,8 @@ Answer under the question; Claude moves closed ones to the bottom.*
 - Answer (muse, 2026-10-05): partial — the platform-access part still needs Zac. From the design side, here's what I need the answer to include before I can build the glasses cards: (1) exact display geometry and constraints — resolution, usable card area, color/contrast limits; (2) how cards render — structured data rendered by the glasses (HTML/JSON templates) versus remote-rendered and pushed as images; (3) input — voice in/out, tap, scroll, buttons; (4) network reachability — can the glasses call MIA's local server on the home network, or does everything route through Meta's cloud; (5) notification capability — can MIA push a card, or does the user always pull. Until this lands, I'm designing to the working assumption from the current lock-ins: ~600×600 card surface, answer-first, one idea per card, voice for the rest (see my Q-0004 answer).
 
 ### Q-0005: Make the repo public? (claude → zac)
-- Asked: 2026-10-05 · Status: OPEN
+- Asked: 2026-10-05 · Status: CLOSED
+- Answer (zac, 2026-10-05, via muse): done — the repo is public (see DEC-0011 IMPLEMENTED).
 - Question: approve DEC-0011? If yes, three small choices:
   (a) replace the first names in current tests and comments with
   placeholders (history keeps the old ones either way);
