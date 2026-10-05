@@ -14,15 +14,17 @@
  *
  * Sign-in: the desktop opens this page with #token=... (its own session);
  * on the phone, MIA.signIn(email, password). The token is kept for this
- * tab only. With ?demo, it reads the published
- * placeholder example instead, and actions are disabled.
+ * tab only. With ?demo (always, on the public GitHub Pages preview), it
+ * reads the published placeholder example instead, and actions are
+ * disabled.
  * No dependencies, no network beyond MIA itself (offline-first).
  */
 (function () {
   "use strict";
 
   const params = new URLSearchParams(location.search);
-  const demo = params.has("demo");
+  // The public preview on GitHub Pages has no MIA behind it: placeholder data only.
+  const demo = params.has("demo") || location.hostname.endsWith(".github.io");
   const fromHash = new URLSearchParams(location.hash.slice(1)).get("token");
   if (fromHash) {
     try { sessionStorage.setItem("mia.token", fromHash); } catch (e) { /* private mode */ }
@@ -97,7 +99,7 @@
     signIn,
     signedIn: Boolean(token) || demo,
     MiaError,
-    state: () => demo ? fetch("/schema/life_state.example.json").then((r) => r.json()) : call("GET", "/api/state"),
+    state: () => demo ? fetch(new URL("../schema/life_state.example.json", location.href)).then((r) => r.json()) : call("GET", "/api/state"),
     kinds: () => call("GET", "/api/actions/kinds"),
     pending: () => call("GET", "/api/actions"),
     propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }),

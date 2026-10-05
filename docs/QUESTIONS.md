@@ -46,7 +46,7 @@ Answer under the question; Claude moves closed ones to the bottom.*
   would read these same files, so nothing needs migrating.
 
 ### Q-0011: Phone, glasses and PC, right now (claude → zac)
-- Asked: 2026-10-05 · Status: OPEN
+- Asked: 2026-10-05 · Status: ANSWERED (1–3); (4) waits for the glasses
 - Question (all answerable from the phone):
   (1) Is your phone Android or an iPhone? (MIA's companion app is
   Android, and the glasses' native path needs our app on the phone.)
@@ -56,9 +56,12 @@ Answer under the question; Claude moves closed ones to the bottom.*
   PC; the work continues meanwhile on GitHub's Windows machines.)
   (4) In the Developer Center: are Web Apps and the Device Access
   Toolkit enabled for your account?
+- Answer (zac, 2026-10-05, in chat): (1) Android. (2) Not yet.
+  (3) No, MIA isn't on the PC yet. (4) Later, when the glasses arrive.
 
 ### Q-0012: When the guardian isn't the safe person to tell (claude → zac, chatgpt)
-- Asked: 2026-10-05 · Status: OPEN
+- Asked: 2026-10-05 · Status: PARKED (zac, 2026-10-05: "we will come
+  back to this some other time"; the built Q-0002 behavior stands)
 - Question: Q-0002 is built: a child's safety-floor trigger alerts the
   child's guardians (who and when only). H-0011's guardrail says the
   guardian isn't automatically safe in every case: unavailable,

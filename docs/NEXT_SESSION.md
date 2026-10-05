@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-05*
+*Last updated: 2026-10-05 (late)*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -36,12 +36,15 @@ the hub, and the Meta AI app.
 
 - [ ] **Read `docs/CURRENT_STATE.md`** in the GitHub app: where the
       whole team is.
-- [ ] **Decide DEC-0014** (Muse's Witness Principle) and **DEC-0016**
-      (the glasses: a Web App first, H-0008) in `docs/DECISIONS.md`.
-      Telling Claude, Muse or ChatGPT "approve DEC-0016" is enough.
-- [ ] **Answer Q-0011** (`docs/QUESTIONS.md`): Android or iPhone, do
-      you have the Display glasses yet, and is MIA running on the PC.
-- [ ] **In the Meta Wearables Developer Center:** check that Web Apps
+- [x] DEC-0014 and DEC-0016 approved; Q-0011 answered (Android, no
+      glasses yet, MIA not on the PC yet); Q-0012 parked (2026-10-05).
+- [ ] **Switch on the public preview (one setting):** on github.com
+      (in the phone browser, "Desktop site" if the menu is missing) →
+      TheKingCS/MIA → Settings → Pages → "Build and deployment" →
+      Source: **GitHub Actions**. Then Actions → "Pages preview" → Run
+      workflow (or wait for the next push). The preview is at
+      https://thekingcs.github.io/MIA/ (placeholder data only).
+- [ ] *(When the glasses arrive)* **In the Meta Wearables Developer Center:** check that Web Apps
       (and the Device Access Toolkit) are enabled for your account.
 - [ ] **In the Meta AI app:** turn on Developer Mode (Settings › App
       Info › tap the version number 5 times). It's needed to load

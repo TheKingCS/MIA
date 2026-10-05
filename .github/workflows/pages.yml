@@ -1,0 +1,51 @@
+# The public preview (2026-10-05, approved by zac): GitHub Pages serves
+# web/ and docs/schema/ so the front end can be seen from a phone, and
+# later loaded on the glasses, with no PC and no MIA behind it.
+# On *.github.io, web/mia.js always runs the demo: it reads only the
+# published placeholder example (docs/schema/life_state.example.json)
+# and actions are off. Nothing private is ever published here (DEC-0002).
+#   https://thekingcs.github.io/MIA/  -> the Home, in demo mode
+name: Pages preview
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "web/**"
+      - "docs/schema/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the site (web/ and the schemas only)
+        run: |
+          mkdir -p _site/schema
+          cp -r web _site/web
+          cp docs/schema/*.json _site/schema/
+          cat > _site/index.html <<'HTML'
+          <!doctype html><meta charset="utf-8"><title>MIA preview</title>
+          <meta http-equiv="refresh" content="0; url=web/">
+          <a href="web/">MIA preview</a>
+          HTML
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

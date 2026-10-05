@@ -189,7 +189,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0012, DEC-0013 (amended below), Q-0003, Q-0010
 
 ### DEC-0016: The glasses: a Web App first, then the Android app for voice
-- Status: PROPOSED
+- Status: APPROVED (zac, 2026-10-05, in chat with claude)
 - Proposed by: claude, 2026-10-05 · Reviewed by: chatgpt, 2026-10-05 (see H-0010), muse, 2026-10-05 (see H-0012) · Approval: zac
 - Decision: the first glasses surface is a Meta Ray-Ban Display **Web
   App**: Muse's `web/` components in a 600 × 600 composition, served by
@@ -204,3 +204,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Risk: MIA's API becomes reachable from the internet while Funnel is
   on, which is why the scope is narrow.
 - Related: H-0008, Q-0003, Q-0011, DEC-0012, DEC-0015
+- Also approved with it (zac, 2026-10-05): a public **GitHub Pages
+  preview** of `web/` that only ever shows the placeholder example
+  (`.github/workflows/pages.yml`), so the screens can be seen on a phone
+  and, later, tried on the glasses with nothing private exposed.
+- Timing (Q-0011): Zac has no glasses yet and MIA isn't installed on the
+  PC, so the Funnel link waits; the Pages preview comes first.
