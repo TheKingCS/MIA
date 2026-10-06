@@ -61,7 +61,7 @@
       id: "orbit", name: "Orbit", art: "🛰️", glow: "rgba(180,140,242,0.55)",
       hook: "An idle space station that grows while you're not looking.",
       how: "Tap the station, buy generators, collect while you sleep.",
-      price: 1, path: "games/orbit.html", live: true,
+      price: 1, path: "games/orbit.html?v=3", live: true,
     },
     {
       id: "sayit", name: "Say It", art: "🗣️", glow: "rgba(242,140,140,0.5)",
