@@ -288,3 +288,135 @@ body.has-side .menu-button { display: none; }
   .bar-row { grid-template-columns: 1fr auto; }
   .bar-row .bar { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* =====================================================================
+ * Concept polish (muse, 2026-10-06, H-0018).
+ *
+ * The frame's working styles above stay intact — this section is look
+ * only: the ⋯ button and menu, the Money screen, and the form dialog,
+ * checked against Zac's concept pictures. Material only, no DOM or
+ * behavior changes, so Money keeps working end to end.
+ * ===================================================================== */
+
+/* ---------- ⋯ button: her mark, glowing ---------- */
+.menu-button {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--mod-line);
+  background:
+    radial-gradient(circle at 50% 38%, var(--mod-dim), transparent 70%),
+    var(--glass-strong);
+  box-shadow: 0 0 20px var(--mod-dim), 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: var(--mod);
+  text-shadow: 0 0 12px var(--mod-glow);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.menu-button:hover {
+  border-color: var(--mod-line);
+  box-shadow: 0 0 28px var(--mod-glow), 0 8px 24px rgba(0, 0, 0, 0.45);
+  transform: scale(1.05);
+}
+.menu-button[aria-expanded="true"] {
+  box-shadow: 0 0 32px var(--mod-glow), inset 0 0 14px var(--mod-dim);
+}
+
+/* ---------- menu: app tiles with icon chips ---------- */
+.menu-panel {
+  border: 1px solid var(--mod-line);
+  box-shadow: 0 0 34px var(--mod-dim), 0 24px 70px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.menu-brand { color: var(--mod); text-shadow: 0 0 16px var(--mod-glow); }
+.menu-item {
+  border: 1px solid var(--glass-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 55%), var(--glass);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.menu-item .ico {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 22px;
+  color: var(--mod);
+  border: 1px solid var(--mod-line);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 14px var(--mod-dim), inset 0 0 10px var(--mod-dim);
+}
+.menu-item:hover {
+  color: var(--text);
+  border-color: var(--mod-line);
+  box-shadow: 0 0 16px var(--mod-dim);
+  transform: translateY(-1px);
+}
+.menu-item[aria-current="page"] {
+  color: var(--text);
+  border-color: var(--mod-line);
+  background: linear-gradient(180deg, var(--mod-dim), transparent 60%), var(--glass);
+  box-shadow: 0 0 18px var(--mod-dim), inset 0 0 12px var(--mod-dim);
+}
+.menu-item[aria-current="page"] .ico { box-shadow: 0 0 18px var(--mod-glow), inset 0 0 10px var(--mod-dim); }
+
+/* ---------- Money: sections wear finance blue ---------- */
+.money-section {
+  border: 1px solid var(--mod-line);
+  box-shadow: 0 0 24px var(--mod-dim), 0 14px 44px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, var(--mod-dim), transparent 30%), var(--glass);
+}
+.money-section .sect h2 { text-shadow: 0 0 18px var(--mod-dim); }
+.figure {
+  border: 1px solid var(--glass-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 60%), var(--glass);
+}
+.figure-n { text-shadow: 0 0 14px currentColor; }
+.money-big { text-shadow: 0 0 18px var(--mod-glow); }
+.money-section .bar-fill {
+  background: linear-gradient(90deg, #1e40af, var(--mod-finance));
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.45);
+}
+.money-section .bar-fill.over {
+  background: linear-gradient(90deg, var(--bad-deep), var(--bad));
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.4);
+}
+.money-row:hover { border-color: var(--mod-line); box-shadow: 0 0 14px var(--mod-dim); }
+.trend-bar.in { box-shadow: 0 0 8px rgba(74, 222, 128, 0.5); }
+.trend-bar.out { box-shadow: 0 0 8px rgba(255, 162, 107, 0.5); }
+
+/* ---------- Money tabs: scroll on small screens, never wrap to 3 lines ---------- */
+@media (max-width: 860px) {
+  #tabs.ptabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
+  #tabs.ptabs button { flex: none; }
+}
+
+/* ---------- form dialog: the engine's questions, dressed ---------- */
+.form-dialog {
+  border: 1px solid var(--mod-line);
+  box-shadow: 0 0 34px var(--mod-dim), 0 24px 70px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, var(--mod-dim), transparent 26%), var(--glass-strong);
+}
+.form-dialog h3 { text-shadow: 0 0 18px var(--mod-dim); letter-spacing: 0.02em; }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+  outline: none;
+  border-color: var(--mod-line);
+  box-shadow: 0 0 14px var(--mod-dim);
+}
+#mia-confirm {
+  border: 1px solid var(--mod-line);
+  box-shadow: 0 0 30px var(--mod-dim), 0 24px 70px rgba(0, 0, 0, 0.65);
+}
+
+/* ---------- sidebar level block: XP glows like the concept ---------- */
+.side-level-n { text-shadow: 0 0 12px var(--xp-glow); }
+.nav-level .xpbar-fill { box-shadow: 0 0 10px var(--xp-glow); }
+
+/* ---------- floating orb: a touch more presence ---------- */
+.mia-orb-button {
+  border: 1px solid var(--win-glow);
+  box-shadow: 0 0 34px var(--win-glow), 0 8px 26px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.mia-orb-button:hover { transform: scale(1.06); box-shadow: 0 0 44px var(--win-glow), 0 8px 26px rgba(0, 0, 0, 0.5); }
+.talk-panel {
+  border: 1px solid var(--mod-line);
+  box-shadow: 0 0 30px var(--mod-dim), 0 20px 60px rgba(0, 0, 0, 0.6);
+}
