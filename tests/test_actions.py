@@ -131,7 +131,8 @@ def test_a_child_can_only_take_child_actions(world):
     # child-safe, except deleting a recipe; nothing about money or property is.
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
     kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "workout_template.")
-    assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility"}
+    assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility",
+                                                                                 "app.favorite"}
     assert "recipe.delete" not in child_ok and "meal.log" in child_ok and "workout.log" in child_ok
 
 

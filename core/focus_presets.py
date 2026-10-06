@@ -218,6 +218,19 @@ def set_app_visible(context, module_id: str, visible: bool) -> bool:
     return True
 
 
+def favorite_apps(context) -> list[str]:
+    """This person's favorite apps, in the order they starred them (Apps page, 2026-10-06)."""
+    return list(person_settings.get(context, "apps.favorites", []) or [])
+
+
+def set_app_favorite(context, module_id: str, favorite: bool) -> None:
+    favorites = [f for f in favorite_apps(context) if f != module_id]
+    if favorite:
+        favorites.append(module_id)
+    person_settings.put(context, "apps.favorites", favorites)
+    _changed(context)
+
+
 def find_focus(text: str) -> Optional[Focus]:
     """Pure logic. The focus someone named: 'student', 'home and family',
     'homesteading', 'my business'..."""

@@ -9,15 +9,23 @@
   let data = null;
   let filter = "all"; // all | web | ask
   let mode = "tiles"; // tiles (the concept's grid) | manage (every app in detail, show/hide)
+  let view = location.hash === "#favorites" ? "favorites" : "all"; // the grid: every app, or only your favorites
   // The concept's tile colors (presentation only).
   const COLORS = { web_home: "74,222,128", dashboard: "74,222,128", greenhouse: "74,222,128", garage: "251,146,60",
     kitchen: "248,113,113", workout: "96,165,250", real_estate: "45,212,191", budget: "167,139,250", missions: "251,191,36",
     skills: "192,132,252", maintenance: "251,146,60", property: "45,212,191", assistant: "74,222,128" };
   const askHref = (app) => "assistant.html?draft=" + encodeURIComponent(app.ask || ("About " + app.name + ": "));
 
+  const star = (app) => el("button", {
+    type: "button", class: "tile-star" + (app.favorite ? " on" : ""), "aria-pressed": String(app.favorite),
+    "aria-label": (app.favorite ? "Remove " : "Add ") + app.name + (app.favorite ? " from" : " to") + " favorites",
+    onclick: (e) => { e.preventDefault(); e.stopPropagation(); act({ kind: "app.favorite", params: { module_id: app.id, favorite: !app.favorite } }); },
+  }, app.favorite ? "★" : "☆");
+
   function tile(app) {
     return el("a", { class: "app-tile", href: app.on_web ? app.page : askHref(app), "data-id": app.id,
       style: "--tile-rgb:" + (COLORS[app.id] || "120,160,140") },
+    star(app),
     el("span", { class: "tile-icon", "aria-hidden": "true" }, app.icon),
     el("span", { class: "tile-name" }, app.name),
     el("span", { class: "tile-tag" }, app.on_web ? app.tagline : "Ask MIA"));
@@ -66,15 +74,29 @@
     let shown = 0;
     $("strip").hidden = mode !== "manage";
     $("mode").textContent = mode === "tiles" ? "Manage apps · what MIA can do in each" : "Back to the app grid";
+    $("views").hidden = mode !== "tiles";
+    $("views").replaceChildren(...[["all", "All apps"], ["favorites", "★ Favorites"]].map(([id, label]) => el("button", {
+      type: "button", role: "tab", "aria-selected": String(view === id),
+      onclick: () => { view = id; history.replaceState(null, "", id === "favorites" ? "#favorites" : location.pathname); draw(); },
+    }, label)));
     if (mode === "tiles") {
-      // The ones on the web first (the concept's grid), then the rest, reachable by asking MIA.
-      const apps = data.groups.flatMap((g) => g.apps).filter((a) => a.shown && matches(a, words))
-        .sort((x, y) => (y.on_web ? 1 : 0) - (x.on_web ? 1 : 0));
+      const all = data.groups.flatMap((g) => g.apps);
+      let apps;
+      if (view === "favorites") {
+        // In the order you starred them.
+        const byId = Object.fromEntries(all.map((a) => [a.id, a]));
+        apps = data.favorites.map((id) => byId[id]).filter((a) => a && matches(a, words));
+      } else {
+        // The ones on the web first (the concept's grid), then the rest, reachable by asking MIA.
+        apps = all.filter((a) => a.shown && matches(a, words)).sort((x, y) => (y.on_web ? 1 : 0) - (x.on_web ? 1 : 0));
+      }
       shown = apps.length;
       $("groups").replaceChildren(el("div", { class: "tile-grid" }, apps.map(tile)));
-      $("nothing").hidden = shown > 0;
+      $("nothing").hidden = shown > 0 || (view === "favorites" && !words);
+      $("no-favorites").hidden = !(view === "favorites" && !data.favorites.length && !words);
       return;
     }
+    $("no-favorites").hidden = true;
     $("groups").replaceChildren(...data.groups.map((g) => {
       const apps = g.apps.filter((a) => matches(a, words));
       shown += apps.length;

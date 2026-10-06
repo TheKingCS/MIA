@@ -23,7 +23,6 @@
     $("greeting").textContent = home.greeting;
     $("subtitle").textContent = home.subtitle;
     $("date-chip").textContent = home.date;
-    $("saying").textContent = home.saying;
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
     $("quick").replaceChildren(...home.quick_actions.filter((q) => SHOWN.includes(q.id)).map((q) =>

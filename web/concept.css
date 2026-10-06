@@ -211,24 +211,29 @@ body {
 }
 
 /* ---------------------------------------------------------------- the menu drawer (More) */
+/* It slides in from the right, the side the More button is on (Zac, 2026-10-06). */
 .menu-button { display: none !important; }
-.menu-sheet { justify-items: start; padding: 0; align-items: stretch; }
+.menu-sheet { justify-items: end; padding: 0; align-items: stretch; }
 .menu-panel {
   width: min(380px, 86vw);
   height: 100%;
   max-height: none;
-  border-radius: 0 18px 18px 0;
+  border-radius: 18px 0 0 18px;
   background:
-    linear-gradient(90deg, rgba(6, 11, 8, 0.97) 70%, rgba(6, 11, 8, 0.75)),
-    url("img/menu.jpg") right / cover no-repeat,
+    linear-gradient(270deg, rgba(6, 11, 8, 0.97) 70%, rgba(6, 11, 8, 0.75)),
+    url("img/menu.jpg") left / cover no-repeat,
     #060b08;
   border: 1px solid rgba(var(--mod-rgb), 0.30);
-  border-left: none;
-  padding: 18px 16px;
+  border-right: none;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto;
+  animation: menu-in 0.22s ease-out;
 }
+@keyframes menu-in { from { transform: translateX(100%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .menu-panel { animation: none; } }
 .menu-grid { display: grid; grid-template-columns: 1fr; gap: 2px; }
 .menu-item {
   display: flex;
@@ -264,11 +269,8 @@ body {
 .home-hero { min-height: 230px; position: relative; }
 .home-hero h1 { font-size: clamp(26px, 6vw, 40px); }
 .home-hero .weather-chip { display: block; }
-.home-row { display: grid; grid-template-columns: 1fr 34%; gap: 10px; margin: 12px 0; }
+.home-row { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 12px 0; }
 .home-focus h2 { margin: 0 0 8px; font-size: var(--text-lg); }
-.home-saying { display: grid; place-items: center; text-align: center; padding: 14px; }
-.home-saying p { margin: 0; font-size: var(--text-md); line-height: 1.5; color: #e7efe9; }
-.home-saying .leaf { font-size: 22px; opacity: 0.8; }
 .home-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
 .quick-tile {
   display: grid; justify-items: center; gap: 6px; padding: 14px 4px; color: var(--text); text-decoration: none;
@@ -283,7 +285,6 @@ body {
 .home-level-text small { color: var(--text-dim); }
 .home-level .xpbar { margin: 0; }
 @media (max-width: 560px) {
-  .home-row { grid-template-columns: 1fr 38%; }
   .home-quick { gap: 6px; }
   .quick-tile { padding: 10px 2px; font-size: 11px; }
 }
@@ -443,3 +444,14 @@ body {
 .asset-head .chip { white-space: nowrap; flex: none; }
 .log-form .form-row { margin: 0; }
 .log-form input, .log-form select { min-width: 0; }
+
+/* ---------------------------------------------------------------- Apps: favorites (2026-10-06) */
+.apps-views { margin-bottom: 14px; max-width: 360px; }
+.tile-star {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  width: 34px; height: 34px; display: grid; place-items: center;
+  border: none; border-radius: 50%; background: rgba(5, 10, 7, 0.45);
+  color: rgba(255, 255, 255, 0.55); font-size: 18px; cursor: pointer;
+}
+.tile-star:hover { color: #fff; }
+.tile-star.on { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.7); }

@@ -173,6 +173,33 @@ def test_show_and_hide_go_through_the_action_contract(world):
         world.actions.propose(world, "app.visibility", {"module_id": "nope"})
 
 
+def test_favorite_apps_in_the_order_starred_with_undo(world):
+    from core.web_surfaces import apps_page
+
+    for app_id in ("workout", "kitchen"):
+        proposal = world.actions.propose(world, "app.favorite", {"module_id": app_id, "favorite": True})
+        done = world.actions.approve(world, proposal.proposal_id)
+    assert proposal.summary == "Add Kitchen to your favorites"
+    page = apps_page(world)
+    assert page["favorites"] == ["workout", "kitchen"]
+    assert {a["id"] for g in page["groups"] for a in g["apps"] if a["favorite"]} == {"workout", "kitchen"}
+    world.actions.undo(world, done.proposal_id)
+    assert apps_page(world)["favorites"] == ["workout"]
+    proposal = world.actions.propose(world, "app.favorite", {"module_id": "workout", "favorite": False})
+    assert proposal.summary == "Remove Workout from your favorites"
+    world.actions.approve(world, proposal.proposal_id)
+    assert apps_page(world)["favorites"] == []
+
+
+def test_a_child_cannot_favorite_an_app_they_cannot_open(world):
+    from core.actions import ActionError
+
+    make_child(world, world.me.profile_id, [world.other.profile_id])
+    with pytest.raises(ActionError):
+        world.actions.propose(world, "app.favorite", {"module_id": "budget"})
+    assert world.actions.propose(world, "app.favorite", {"module_id": "kitchen"}).status == "proposed"
+
+
 def test_the_published_examples_match_the_app_list():
     """The public preview renders docs/schema/*.example.json; when a web
     screen is added, its examples must be regenerated (2026-10-06: the

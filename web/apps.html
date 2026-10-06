@@ -15,7 +15,8 @@
     Apps (claude, 2026-10-06, DEC-0017): every app MIA has, by life area,
     from MIA.apps() (core/web_surfaces.py). Open the ones on the web; the
     rest are reachable now by asking MIA (their Assistant tools are listed).
-    Show/hide goes through the app.visibility action (confirm, undo).
+    Show/hide goes through the app.visibility action (confirm, undo); the
+    ☆ on each tile through app.favorite, and Favorites shows only those.
     Muse owns the look.
   -->
   <div class="layout" id="app" hidden>
@@ -29,9 +30,11 @@
         <input id="find" type="search" placeholder="Find an app or something MIA can do…" aria-label="Find">
         <div class="ptabs" role="tablist" id="tabs"></div>
       </div>
+      <div class="ptabs apps-views" role="tablist" id="views" aria-label="Which apps"></div>
       <section class="strip" id="strip" aria-label="Counts" hidden></section>
       <div id="groups"></div>
       <p class="apps-manage-link"><button type="button" class="btn btn-ghost" id="mode">Manage apps · what MIA can do in each</button></p>
+      <p class="empty" id="no-favorites" hidden><strong>No favorites yet.</strong>Tap the ☆ on any app to keep it here.</p>
       <p class="empty" id="nothing" hidden><strong>Nothing matches.</strong>Try another word, or just ask MIA.</p>
     </main>
   </div>

@@ -261,6 +261,27 @@ def _set_app(context, params) -> str:
     return f"{app.name} is {'in your apps' if visible else 'tucked away. Show it again from Apps any time'}."
 
 
+def _favorite_on(params) -> bool:
+    return params.get("favorite", True) not in (False, "false", 0, "0")
+
+
+def _describe_favorite(context, params) -> str:
+    from core.child_accounts import ASK_A_PARENT, app_allowed
+
+    app = _app(params)
+    if not app_allowed(context, app.module_id):
+        raise ActionError(ASK_A_PARENT)
+    return f"{'Add' if _favorite_on(params) else 'Remove'} {app.name} {'to' if _favorite_on(params) else 'from'} your favorites"
+
+
+def _set_favorite(context, params) -> str:
+    from core.focus_presets import set_app_favorite
+
+    app = _app(params)
+    set_app_favorite(context, app.module_id, _favorite_on(params))
+    return f"{app.name} is {'a favorite' if _favorite_on(params) else 'no longer a favorite'}."
+
+
 ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
     ActionType("bill.pay", "Mark paid", {"bill_id": "the bill", "amount": "optional: what was paid, if different"},
                _describe_bill, _pay_bill),
@@ -275,6 +296,8 @@ ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
                _describe_routine, _log_routine, child_ok=True),
     ActionType("app.visibility", "Show / hide", {"module_id": "the app", "visible": "true to show, false to hide"},
                _describe_app, _set_app, child_ok=True),
+    ActionType("app.favorite", "Favorite", {"module_id": "the app", "favorite": "true or false"},
+               _describe_favorite, _set_favorite, child_ok=True),
 )}
 
 

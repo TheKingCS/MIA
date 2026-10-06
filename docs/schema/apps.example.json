@@ -14,7 +14,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "How are you, MIA?",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "dashboard",
@@ -138,7 +139,8 @@
               "does": "Unlink my reason",
               "detail": "Remove the link from one of the user's goals to the bigger goal it served."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "workout",
@@ -167,7 +169,8 @@
               "does": "Log workout",
               "detail": "Log a workout the user did."
             }
-          ]
+          ],
+          "favorite": true
         },
         {
           "id": "missions",
@@ -211,7 +214,8 @@
               "does": "Log mission progress",
               "detail": "Log progress toward a tally-type Objective on a Mission in MIA — e.g."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "skills",
@@ -224,7 +228,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "Which skills am I growing?",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "character",
@@ -237,7 +242,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "What have I done this week?",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "observations",
@@ -250,7 +256,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "What have you noticed lately?",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "relationships",
@@ -299,7 +306,8 @@
               "does": "Update pet",
               "detail": "Record something about a pet: a vet visit or medical note (dated), species, birthday, or another note."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "notes",
@@ -343,7 +351,8 @@
               "does": "Read private journal",
               "detail": "Read back the user's private journal (sessions they journaled by talking with MIA), newest first, optionally only entries about a topic."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "classroom",
@@ -397,7 +406,8 @@
               "does": "Search textbook",
               "detail": "Find where the user's textbooks talk about something, with the page."
             }
-          ]
+          ],
+          "favorite": false
         }
       ]
     },
@@ -436,7 +446,8 @@
               "does": "Record rental income",
               "detail": "When a specific property/address (e.g."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "budget",
@@ -575,7 +586,8 @@
               "does": "Tag charge",
               "detail": "Say which business a bank charge was for, or that it was personal."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "workshop",
@@ -674,7 +686,8 @@
               "does": "Record sale",
               "detail": "Record a sale of an existing Product in MIA's Workshop Ledger — deducts the sold quantity from the Product's stock and logs the revenue."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "inbox",
@@ -708,7 +721,8 @@
               "does": "Draft email",
               "detail": "Write an email for the user as a draft they review."
             }
-          ]
+          ],
+          "favorite": false
         }
       ]
     },
@@ -782,7 +796,8 @@
               "does": "Update maintenance asset",
               "detail": "Save details the user states about one of their tracked vehicles, tools, appliances or plants: make, model, serial number, purchase date, category, or a new name."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "garage",
@@ -851,7 +866,8 @@
               "does": "Update maintenance asset",
               "detail": "Save details the user states about one of their tracked vehicles, tools, appliances or plants: make, model, serial number, purchase date, category, or a new name."
             }
-          ]
+          ],
+          "favorite": true
         },
         {
           "id": "kitchen",
@@ -920,7 +936,8 @@
               "does": "Update pantry item",
               "detail": "Change how much of a pantry item is left."
             }
-          ]
+          ],
+          "favorite": true
         },
         {
           "id": "household",
@@ -949,7 +966,8 @@
               "does": "Log household routine",
               "detail": "Count progress on a household routine the user did (e.g."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "maintenance",
@@ -1028,7 +1046,8 @@
               "does": "Set item owner",
               "detail": "Say whose a vehicle, tool or appliance is: the user's, another household member's, or shared."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "property",
@@ -1062,7 +1081,8 @@
               "does": "See inventory",
               "detail": "List or search MIA's Inventory tool, including quantities."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "power",
@@ -1081,7 +1101,8 @@
               "does": "See power status",
               "detail": "Get this device's current battery/power status."
             }
-          ]
+          ],
+          "favorite": false
         }
       ]
     },
@@ -1155,7 +1176,8 @@
               "does": "Toggle gear packed",
               "detail": "Mark a gear checklist item on a Trip as packed or not packed (toggles its current state)."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "memories",
@@ -1168,7 +1190,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "Show me my last trip.",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "maps",
@@ -1197,7 +1220,8 @@
               "does": "See trail maps",
               "detail": "List the trail map PDFs cataloged in MIA's Maps module, optionally filtered by park name or state."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "navigation",
@@ -1236,7 +1260,8 @@
               "does": "Waypoint distance",
               "detail": "Get the distance and compass bearing between two of the user's saved waypoints, by name."
             }
-          ]
+          ],
+          "favorite": false
         }
       ]
     },
@@ -1254,7 +1279,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "How do I purify water?",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "toolbox",
@@ -1278,7 +1304,8 @@
               "does": "Convert units",
               "detail": "Convert a numeric value between two units of measurement using MIA's Unit Converter (length, area, volume, weight, temperature, speed, pressure, energy, power, time, data storage, angle, or fuel economy)."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "lab",
@@ -1307,7 +1334,8 @@
               "does": "Log lab reading",
               "detail": "Log a manual sensor/experiment/measurement reading in MIA's Lab (Data Logger) under a named series (e.g."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "field_kit",
@@ -1351,7 +1379,8 @@
               "does": "Scan ports",
               "detail": "Quickly check whether 3 common ports (22 SSH, 80 HTTP, 443 HTTPS) are open on a host."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "files",
@@ -1364,7 +1393,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "music",
@@ -1423,7 +1453,8 @@
               "does": "Stop music",
               "detail": "Stop music playback entirely (clears the play queue, unlike pause)."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "assistant",
@@ -1537,7 +1568,8 @@
               "does": "Set theme",
               "detail": "Change MIA's visual theme."
             }
-          ]
+          ],
+          "favorite": false
         },
         {
           "id": "diagnostics",
@@ -1550,7 +1582,8 @@
           "shown": true,
           "can_hide": true,
           "ask": "How is the computer doing?",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "module_browser",
@@ -1563,7 +1596,8 @@
           "shown": true,
           "can_hide": false,
           "ask": "",
-          "tools": []
+          "tools": [],
+          "favorite": false
         },
         {
           "id": "settings",
@@ -1617,10 +1651,16 @@
               "does": "See starter sets",
               "detail": "List the starter sets (ready-made chores, routines, upkeep schedules and workouts for a kind of life), or what's in one."
             }
-          ]
+          ],
+          "favorite": false
         }
       ]
     }
+  ],
+  "favorites": [
+    "kitchen",
+    "workout",
+    "garage"
   ],
   "counts": {
     "apps": 35,

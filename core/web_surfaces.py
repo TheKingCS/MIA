@@ -360,8 +360,9 @@ def apps_page(context) -> dict:
     of its domains, so even an app without a web screen yet is reachable
     by talking to MIA). Child-safe: a child sees only their apps and tools."""
     from core.child_accounts import app_allowed, tool_allowed
-    from core.focus_presets import ALWAYS_VISIBLE
+    from core.focus_presets import ALWAYS_VISIBLE, favorite_apps
 
+    favorites = favorite_apps(context)
     registry = getattr(context, "assistant_actions", None)
     actions = list(getattr(registry, "_actions", {}).values()) if registry is not None else []
     by_domain: dict[str, list] = {}
@@ -389,12 +390,15 @@ def apps_page(context) -> dict:
                 "description": app.description, "page": app.page, "on_web": bool(app.page),
                 "shown": _visible(context, app), "can_hide": app.module_id not in ALWAYS_VISIBLE,
                 "ask": app.ask, "tools": tools_of(app),
+                "favorite": app.module_id in favorites,
             })
         if apps:
             groups.append({"name": group, "apps": apps})
     total_apps = sum(len(g["apps"]) for g in groups)
+    allowed = {a["id"] for g in groups for a in g["apps"]}
     return {
         "groups": groups,
+        "favorites": [f for f in favorites if f in allowed],
         "counts": {"apps": total_apps, "on_web": sum(a["on_web"] for g in groups for a in g["apps"]),
                    "tools": len({t["name"] for g in groups for a in g["apps"] for t in a["tools"]})},
     }

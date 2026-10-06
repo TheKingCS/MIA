@@ -13,8 +13,9 @@
 <body data-app="web_home">
   <!--
     Home (DEC-0018, the mobile concept's Home; claude): MIA's greeting, the
-    day's focus as a checklist (ticking proposes the item's action), the
-    day's saying, quick actions into MIA Assistant, level and XP. Data:
+    day's focus as a checklist (ticking proposes the item's action), quick
+    actions into MIA Assistant, level and XP (Zac, 2026-10-06: no saying
+    card here; the Dashboard keeps it). Data:
     MIA.dashboard() + the frame's MIA.shell(). MIA's face: presence.html.
   -->
   <div class="layout" id="app" hidden>
@@ -39,10 +40,6 @@
           <h2 id="focus-h">Today's Focus</h2>
           <ul class="focus-list" id="focus"></ul>
           <p class="dim" id="focus-empty" hidden>Nothing needs you today. Enjoy it.</p>
-        </section>
-        <section class="glass home-saying" aria-label="Today's thought">
-          <p id="saying"></p>
-          <span class="leaf" aria-hidden="true">🍃</span>
         </section>
       </div>
 
