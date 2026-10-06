@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Finances — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="mod-finance">
+  <!--
+    Finances (muse, 2026-10-05). The desktop program's depth in the
+    concept's HUD language: month, bills, income, debts, net worth, and
+    the monthly plan — every number from Life State's finances section
+    (core/finance_summary.py, core/budget_manager.py). One-tap actions
+    (pay / mark received) live where the engine embeds them (due items);
+    this screen never invents an action contract.
+    Offline: no CDNs, no web fonts. Placeholders only (DEC-0002).
+  -->
+  <form class="sign-in" id="sign-in" hidden aria-label="Sign in to MIA">
+    <p>Sign in to MIA</p>
+    <input id="who" autocomplete="username" placeholder="Email" required aria-label="Email">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+    <button class="btn btn-amber" type="submit">Sign in</button>
+  </form>
+
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Modules">
+      <a class="brand" href="index.html">🌿 MIA<small>Your Life. In Sync.</small></a>
+      <a class="nav" href="index.html"><span class="ico" aria-hidden="true">⌂</span>Home</a>
+      <a class="nav" href="missions.html"><span class="ico" aria-hidden="true">◎</span>Missions</a>
+      <a class="nav" href="skills.html"><span class="ico" aria-hidden="true">★</span>Skills</a>
+      <a class="nav" href="finances.html" aria-current="page"><span class="ico" aria-hidden="true">💰</span>Finances</a>
+      <a class="nav" href="real-estate.html"><span class="ico" aria-hidden="true">🏠</span>Real Estate</a>
+      <a class="nav" href="garage.html"><span class="ico" aria-hidden="true">🔧</span>Garage</a>
+      <a class="nav" href="kitchen.html"><span class="ico" aria-hidden="true">🍳</span>Kitchen</a>
+      <a class="nav" href="workout.html"><span class="ico" aria-hidden="true">💪</span>Workout</a>
+      <div class="side-foot">More modules arrive as they ship.</div>
+    </nav>
+
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true">💰</span> Finances</h1>
+        <p class="tagline">Track it. Plan it. Build freedom.</p>
+      </header>
+
+      <section class="strip" id="strip" aria-label="Finance status"></section>
+
+      <div class="sect"><h2>This month</h2><span class="stag" id="month-stag"></span></div>
+      <section class="glass glow" id="month-card" aria-label="Monthly totals"></section>
+
+      <div class="sect"><h2>Bills due</h2><span class="stag" id="bills-stag"></span></div>
+      <div class="rows" id="bills"></div>
+
+      <div class="sect"><h2>Income expected</h2></div>
+      <div class="rows" id="income"></div>
+
+      <div class="sect"><h2>Debts</h2><span class="stag" id="debts-stag"></span></div>
+      <div class="rows" id="debts"></div>
+
+      <div class="sect"><h2>Net worth</h2></div>
+      <section class="glass glow" id="networth" aria-label="Net worth"></section>
+
+      <div class="sect"><h2>Monthly plan</h2></div>
+      <section class="glass glow" id="plan" aria-label="Monthly plan"></section>
+
+      <p class="status-line" id="status" role="status" style="margin-top: calc(var(--gap) * 1.5);"></p>
+    </main>
+  </div>
+
+  <script src="mia.js"></script>
+  <script src="finances.js"></script>
+</body>
+</html>
