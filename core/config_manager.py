@@ -50,6 +50,13 @@ class ConfigManager:
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
+        # Where it lives, so "undo that" (core/undo_log.py) can find and
+        # reload it: profiles (and their XP) are kept in this file.
+        self.path = _CONFIG_FILE
+        self.load()
+
+    def _load(self) -> None:
+        """Re-read after undo restored the file (core/undo_log.reload_stores)."""
         self.load()
 
     # ------------------------------------------------------------------

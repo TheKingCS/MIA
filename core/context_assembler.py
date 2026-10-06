@@ -420,6 +420,9 @@ def _recent_wins(context, today: date) -> dict:
     since = (today - timedelta(days=_RECENT_DAYS - 1)).isoformat()
     events = [e for e in life_events.events_for(context, since=since, until=today.isoformat())
               if e.type not in life_events.AUDIT_ONLY]
+    # An undone change isn't a win, and "I undid that" isn't news (both stay in the history).
+    taken_back = life_events.reversed_ids(events)
+    events = [e for e in events if e.event_id not in taken_back and e.type != "undone"]
     wins = [e for e in events if e.type in life_events.WINS]
     return _section("DERIVED", "core/life_events.py", days=_RECENT_DAYS, counts=life_events.counts(wins),
                     latest=[{"at": e.at, "type": e.type, "summary": e.summary, "refs": e.refs, "source": e.source}

@@ -236,3 +236,47 @@ def test_the_pi_check_verdict():
     assert verdict(56, 373, 60, 800).startswith("PASS")
     assert verdict(4000, 900, 20, 20000) == ("CHECK: slow browser start (20 s), slow to load (4000 ms), "
                                              "heavy (900 MB), choppy (20 fps).")
+
+
+def test_undo_takes_back_the_xp_and_the_win(world):
+    """2026-10-06, found driving the web Home: undoing "Done" on a
+    maintenance task left its XP (the config held in memory was never
+    re-read) and left it listed as a recent win."""
+    from core.context_assembler import assemble_life_state_v2
+
+    asset = world.maintenance.add_asset("Mower", "Power Equipment")
+    task = world.maintenance.add_task(asset.asset_id, "Sharpen blades", interval_days=30,
+                                      last_completed=(TODAY - timedelta(days=40)).isoformat())
+    me = world.me.profile_id
+    xp_before = world.profiles.get_profile(me).total_xp
+    proposal = world.actions.propose(world, "maintenance.done", {"task_id": task.task_id})
+    done = world.actions.approve(world, proposal.proposal_id)
+    assert world.profiles.get_profile(me).total_xp > xp_before
+    assert any(w["type"] == "maintenance_done" for w in assemble_life_state_v2(world)["recent_wins"]["latest"])
+
+    world.actions.undo(world, done.proposal_id)
+    assert world.profiles.get_profile(me).total_xp == xp_before
+    world.config.save()  # the next save mustn't write the XP back
+    assert world.profiles.get_profile(me).total_xp == xp_before
+    latest = assemble_life_state_v2(world)["recent_wins"]["latest"]
+    assert not any(w["type"] in ("maintenance_done", "undone") for w in latest)
+    assert any(e.type == "maintenance_done" for e in world.life_events.all_events())  # history kept
+
+
+def test_undo_through_a_persons_view_takes_back_the_xp(world):
+    """The phone and the web run on a person's view (ScopedView), whose
+    config lives on the main context underneath; undo must reload it there."""
+    from core.personal_data import ScopedView
+
+    view = ScopedView(world, ())
+    asset = world.maintenance.add_asset("Mower", "Power Equipment")
+    task = world.maintenance.add_task(asset.asset_id, "Sharpen blades", interval_days=30,
+                                      last_completed=(TODAY - timedelta(days=40)).isoformat())
+    me = world.me.profile_id
+    xp_before = world.profiles.get_profile(me).total_xp
+    done = world.actions.approve(view, world.actions.propose(view, "maintenance.done",
+                                                             {"task_id": task.task_id}).proposal_id)
+    assert world.profiles.get_profile(me).total_xp > xp_before
+    world.actions.undo(view, done.proposal_id)
+    world.config.save()
+    assert world.profiles.get_profile(me).total_xp == xp_before

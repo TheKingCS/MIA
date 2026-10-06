@@ -1,0 +1,140 @@
+/*
+ * shell.css — the shared frame's own pieces (claude, 2026-10-06, DEC-0017):
+ * the floating status/undo toast, MIA's orb button and Talk panel, the level
+ * card in the sidebar, and the Home dashboard grid. Working styles on Muse's
+ * tokens and components; Muse owns the look and restyles freely.
+ */
+
+/* the status line floats as a toast on every page */
+#mia-status {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 40;
+  max-width: min(92vw, 560px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line-strong);
+  color: var(--text);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* sidebar: level and XP at the bottom, like the concept */
+.side { overflow-y: auto; }
+.side .brand-mark { font-size: 26px; }
+.side .side-level { display: flex; justify-content: space-between; align-items: baseline; color: var(--text); }
+.side .side-level-n { font-weight: 700; color: var(--xp); }
+.side .side-level-xp { font-size: var(--text-xs); color: var(--text-dim); }
+.side .side-more { display: block; margin-top: 8px; color: var(--text-faint); }
+
+/* MIA, everywhere: the orb button and the Talk panel */
+.mia-orb-button {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 30;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-line-strong);
+  background: radial-gradient(circle at 50% 50%, rgba(246, 196, 83, 0.25), rgba(10, 16, 12, 0.9) 70%);
+  box-shadow: 0 0 28px var(--win-glow);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.mia-orb-core {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff4d1, var(--win) 45%, var(--win-deep) 100%);
+  box-shadow: 0 0 18px var(--win-glow);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mia-orb-core { animation: mia-breathe 4.5s ease-in-out infinite; }
+  @keyframes mia-breathe { 50% { transform: scale(1.08); box-shadow: 0 0 30px var(--win-glow); } }
+}
+.talk-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 98px;
+  z-index: 31;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--glass-strong);
+}
+.talk-head { display: flex; justify-content: space-between; align-items: center; }
+.talk-head .mia-line { margin: 0; font-weight: 700; }
+.talk-log { flex: 1; overflow-y: auto; display: grid; gap: 8px; align-content: start; min-height: 120px; }
+.talk-log .bubble { margin: 0; padding: 10px 14px; border-radius: var(--radius-sm); white-space: pre-wrap; line-height: 1.45; }
+.talk-log .bubble.me { justify-self: end; background: rgba(63, 214, 181, 0.12); border: 1px solid rgba(63, 214, 181, 0.3); }
+.talk-log .bubble.mia { justify-self: start; background: rgba(251, 191, 36, 0.07); border: 1px solid rgba(251, 191, 36, 0.25); }
+.talk-log .bubble.thinking { color: var(--text-faint); }
+.talk-form { display: flex; gap: 8px; }
+.talk-form input {
+  flex: 1;
+  min-height: var(--touch);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-line-strong);
+  background: var(--glass);
+  color: var(--text);
+  padding: 10px 14px;
+  font: var(--text-md) var(--font);
+}
+
+/* ---------------------------------------------------------------- Home dashboard */
+.home-hero { min-height: 190px; display: flex; flex-direction: column; justify-content: flex-end; }
+.home-hero h1 { font-size: var(--text-2xl); }
+.home-hero .hero-chip { position: absolute; top: 16px; right: 16px; z-index: 1; }
+.home-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap); margin-bottom: var(--gap); }
+.focus-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.focus-list li { display: flex; align-items: center; gap: 12px; min-height: var(--touch); padding: 4px 6px; border-radius: var(--radius-sm); }
+.focus-list li:hover { background: var(--glass); }
+.focus-list .tick {
+  width: 26px; height: 26px; flex: none; border-radius: 7px; cursor: pointer;
+  border: 2px solid var(--glass-line-strong); background: transparent; color: var(--ok);
+}
+.focus-list .tick:hover { border-color: var(--ok); }
+.focus-list .tick:disabled { cursor: default; opacity: 0.4; }
+.focus-list .what { flex: 1; min-width: 0; }
+.focus-list .what a { color: inherit; text-decoration: none; }
+.focus-list .what small { display: block; color: var(--text-dim); font-size: var(--text-sm); }
+.focus-list .overdue small { color: var(--bad); }
+.saying { display: grid; place-items: center; text-align: center; font-size: var(--text-lg); font-style: italic; color: var(--text); padding: var(--gap); }
+.quick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: var(--gap); }
+.quick button {
+  display: grid; place-items: center; gap: 6px; min-height: 92px; cursor: pointer;
+  border-radius: var(--radius); border: 1px solid var(--glass-line-strong);
+  background: var(--glass); color: var(--text); font: 600 var(--text-sm) var(--font);
+}
+.quick button span { font-size: 26px; }
+.quick button:hover { border-color: var(--ok); box-shadow: 0 0 16px rgba(74, 222, 128, 0.25); }
+.glance { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.glance a { color: inherit; text-decoration: none; display: block; }
+.glance .glass { height: 100%; }
+.glance .glass.attention { border-color: rgba(248, 113, 113, 0.5); }
+.glance h3 { display: flex; gap: 8px; align-items: center; }
+.glance p { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.wins { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.wins li { color: var(--text-dim); }
+.wins li::before { content: "✓ "; color: var(--ok); }
+
+@media (max-width: 860px) {
+  .home-grid { grid-template-columns: 1fr; }
+  .quick { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .quick button { min-height: 72px; font-size: var(--text-xs); }
+  .mia-orb-button { right: 14px; bottom: 14px; width: 56px; height: 56px; }
+  .talk-panel { right: 16px; bottom: 82px; }
+}
+
+/* the page's own background past the first screen (long pages, phones) */
+html { background: #040705; }
+@media (max-width: 560px) {
+  .home-hero h1 { font-size: var(--text-xl); }
+  .home-hero { min-height: 150px; }
+}

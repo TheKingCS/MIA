@@ -1,0 +1,100 @@
+{
+  "person": {
+    "profile_id": "a1b2c3d4",
+    "name": "Robin",
+    "child": false,
+    "level": 1,
+    "total_xp": 20,
+    "xp_into_level": 20,
+    "xp_for_level": 100
+  },
+  "date": "Tue, Oct 6, 2026",
+  "apps": [
+    {
+      "id": "dashboard",
+      "name": "Home",
+      "icon": "🏠",
+      "tagline": "Your life. In sync.",
+      "page": "index.html"
+    },
+    {
+      "id": "garage",
+      "name": "Garage",
+      "icon": "🚗",
+      "tagline": "Keep it running. Keep it ready.",
+      "page": "garage.html"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "icon": "🍳",
+      "tagline": "Good food. Good mood.",
+      "page": "kitchen.html"
+    },
+    {
+      "id": "workout",
+      "name": "Workout",
+      "icon": "🏋",
+      "tagline": "Stronger body. Clearer mind.",
+      "page": "workout.html"
+    },
+    {
+      "id": "real_estate",
+      "name": "Real Estate",
+      "icon": "🏘",
+      "tagline": "Cash flow. Equity. Freedom.",
+      "page": "real-estate.html"
+    },
+    {
+      "id": "missions",
+      "name": "Missions",
+      "icon": "🏆",
+      "tagline": "Explore. Complete. Level up.",
+      "page": "missions.html"
+    },
+    {
+      "id": "skills",
+      "name": "Skills",
+      "icon": "⚔",
+      "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+      "page": "skills.html"
+    },
+    {
+      "id": "budget",
+      "name": "Money",
+      "icon": "💰",
+      "tagline": "Know where it goes.",
+      "page": "finances.html"
+    }
+  ],
+  "on_pc_only": [
+    "Greenhouse",
+    "Household",
+    "Maintenance",
+    "Property",
+    "Workshop",
+    "Power",
+    "Character",
+    "Observations",
+    "People & Pets",
+    "Notes",
+    "Classroom",
+    "Inbox",
+    "Expeditions",
+    "Memories",
+    "Maps",
+    "Navigation",
+    "Knowledge",
+    "Toolbox",
+    "The Lab",
+    "Field Kit",
+    "Files",
+    "Music",
+    "MIA Assistant",
+    "Settings"
+  ],
+  "weather": {
+    "status": "PLANNED",
+    "text": null
+  }
+}

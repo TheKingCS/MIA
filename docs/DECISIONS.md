@@ -212,7 +212,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   PC, so the Funnel link waits; the Pages preview comes first.
 
 ### DEC-0017: The web front end becomes all of MIA, function first, in the concept's look
-- Status: PROPOSED
+- Status: APPROVED (zac, 2026-10-06, in chat with claude)
 - Proposed by: claude, 2026-10-06, at zac's request ("use the original program, all of MIA's functionality, the repo and the concept pictures to build a functional MIA tied to the back end that looks like the concepts") · Review: muse, chatgpt · Approval: zac
 - Decision:
   1. **Parity is the goal.** Every Qt screen and everything it can do

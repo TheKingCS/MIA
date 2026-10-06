@@ -188,8 +188,9 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
     except Exception:
         log.exception("Couldn't record the life event '%s'.", type)
         return None
-    from core import live
+    from core import live, undo_log
 
+    undo_log.note_event(event.event_id)
     live.bump()
     return event
 
@@ -235,6 +236,12 @@ class PersonalLifeEventLog(LifeEventLog):
     """The person's own log (their workouts, a private budget's
     payments); a separate type so core/personal_data.py keeps it apart
     from the household's."""
+
+
+def reversed_ids(events: Iterable["LifeEvent"]) -> set[str]:
+    """Pure logic. The events an "undone" event took back. They stay in the
+    history (nothing is rewritten), but they're no longer wins."""
+    return {i for e in events if e.type == "undone" for i in (e.payload.get("reverses") or [])}
 
 
 def events_for(context, since: Optional[str] = None, until: Optional[str] = None,

@@ -7,83 +7,60 @@
   <title>MIA</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
-  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="shell.css">
 </head>
-<body>
+<body data-app="dashboard">
   <!--
-    MIA Home (muse, 2026-10-05). Home is her presence, not a dashboard
-    (Q-0004): the orb shows one ambient state — an earned celebration, the
-    one due item, or quiet — the briefing is one tap away, and Talk lives
-    on this same screen. Everything shown comes from Life State
-    (docs/schema/life_state.schema.json); every change goes
-    Propose -> visible confirmation -> Approve -> Undo (DEC-0009).
-    Offline: no CDNs, no web fonts. Placeholders only (DEC-0002).
+    Home: the concept's desktop dashboard (DEC-0017; claude builds it
+    working, muse owns the look). Everything comes from the engine:
+    MIA.home() (core/web_surfaces.py) and the shared frame (shell.js).
+    Ticking a Today's Focus item proposes its action; nothing changes
+    until the person says yes. MIA's presence orb: presence.html.
   -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero home-hero">
+        <span class="hero-chip" id="date"></span>
+        <h1 id="greeting">MIA</h1>
+        <p class="tagline" id="subtitle"></p>
+      </header>
 
-  <form class="sign-in" id="sign-in" hidden aria-label="Sign in to MIA">
-    <div class="orb" aria-hidden="true"></div>
-    <p>Sign in to MIA</p>
-    <input id="who" autocomplete="username" placeholder="Email" required aria-label="Email">
-    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
-    <button class="primary" type="submit">Sign in</button>
-  </form>
+      <div class="home-grid">
+        <section class="glass glow" aria-labelledby="focus-h">
+          <div class="sect"><h2 id="focus-h">Today's Focus</h2><span class="more" id="focus-count"></span></div>
+          <ul class="focus-list" id="focus"></ul>
+          <div class="empty" id="focus-empty" hidden><strong>Nothing needs you today.</strong>
+            <p>Enjoy it. MIA will say when something comes up.</p></div>
+        </section>
+        <section class="glass saying" aria-label="Today's thought">
+          <p id="saying"></p>
+          <a href="presence.html" class="btn btn-ghost">MIA's presence</a>
+        </section>
+      </div>
 
-  <main class="home" id="home" aria-live="polite">
-    <section class="presence" id="presence" data-mood="quiet" aria-label="MIA">
-      <div class="orb" aria-hidden="true"></div>
-      <p class="presence-line" id="presence-line"></p>
-      <p class="presence-sub" id="presence-sub" hidden></p>
-    </section>
+      <nav class="quick" id="quick" aria-label="Quick actions"></nav>
 
-    <section class="focus" id="focus" hidden aria-label="One thing">
-      <p class="focus-kicker" id="focus-kicker"></p>
-      <h1 class="focus-title" id="focus-title"></h1>
-      <p class="focus-detail" id="focus-detail"></p>
-      <div class="focus-actions" id="focus-actions"></div>
-    </section>
+      <div class="home-grid">
+        <section class="glass" aria-labelledby="up-h">
+          <div class="sect"><h2 id="up-h">Upcoming</h2></div>
+          <ul class="focus-list" id="upcoming"></ul>
+          <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
+        </section>
+        <section class="glass" aria-labelledby="wins-h">
+          <div class="sect"><h2 id="wins-h">Recent wins</h2></div>
+          <ul class="wins" id="wins"></ul>
+          <p class="dim" id="wins-empty" hidden>Your wins will show up here.</p>
+        </section>
+      </div>
 
-    <div class="home-actions">
-      <button class="ghost" id="briefing-toggle" aria-expanded="false" aria-controls="briefing">Briefing</button>
-      <!-- H-0014 note 2: Home was a dead end on the phone preview — a quiet
-           way in and out of the module pages, styled like the ghost button. -->
-      <a class="ghost" href="missions.html">Missions</a>
-      <a class="ghost" href="skills.html">Skills</a>
-      <a class="ghost" href="finances.html">Finances</a>
-      <a class="ghost" href="real-estate.html">Real Estate</a>
-      <a class="ghost" href="garage.html">Garage</a>
-      <a class="ghost" href="kitchen.html">Kitchen</a>
-      <a class="ghost" href="workout.html">Workout</a>
-    </div>
-  </main>
-
-  <section class="briefing-sheet" id="briefing" hidden aria-label="Briefing">
-    <div class="briefing-head">
-      <h2>Briefing</h2>
-      <button class="ghost" id="briefing-close">Close</button>
-    </div>
-    <div class="briefing-body" id="briefing-body"></div>
-  </section>
-
-  <section class="talk" id="talk" aria-label="Talk with MIA">
-    <div class="talk-thread" id="talk-thread" aria-live="polite"></div>
-    <form class="talk-form" id="talk-form">
-      <input id="talk-input" placeholder="Talk to MIA…" autocomplete="off" aria-label="Message MIA">
-      <button class="primary" type="submit" id="talk-send">Send</button>
-    </form>
-    <p class="talk-note" id="talk-note" hidden></p>
-  </section>
-
-  <dialog id="confirm" aria-labelledby="confirm-text">
-    <p id="confirm-text"></p>
-    <menu>
-      <button value="no" id="confirm-no">Not now</button>
-      <button value="yes" class="primary" id="confirm-yes">Yes</button>
-    </menu>
-  </dialog>
-
-  <p class="status" id="status" role="status"></p>
+      <div class="sect"><h2>At a glance</h2></div>
+      <div class="glance" id="glance"></div>
+    </main>
+  </div>
 
   <script src="mia.js"></script>
-  <script src="home.js"></script>
+  <script src="shell.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>

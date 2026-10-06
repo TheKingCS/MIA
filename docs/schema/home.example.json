@@ -1,0 +1,178 @@
+{
+  "greeting": "Good morning, Robin",
+  "subtitle": "Another day to build the life you want.",
+  "date": "Tue, Oct 6, 2026",
+  "focus": [
+    {
+      "when": "overdue",
+      "title": "Sharpen blades: Mower",
+      "detail": "10 days late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "5d69cc9ef6",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "5d69cc9ef6"
+        }
+      },
+      "page": "garage.html"
+    },
+    {
+      "when": "today",
+      "title": "Payday: Pay",
+      "detail": "$1,500.00",
+      "time": "",
+      "module_id": "budget",
+      "record_id": "58fe573fe6",
+      "icon": "💰",
+      "action": {
+        "kind": "income.receive",
+        "label": "Mark received",
+        "params": {
+          "source_id": "58fe573fe6"
+        }
+      },
+      "page": "finances.html"
+    }
+  ],
+  "upcoming": [],
+  "saying": "Do the next right thing.",
+  "quick_actions": [
+    {
+      "id": "quick_add",
+      "label": "Quick Add",
+      "icon": "➕",
+      "talk": "Add "
+    },
+    {
+      "id": "voice",
+      "label": "Voice",
+      "icon": "🎙",
+      "talk": ""
+    },
+    {
+      "id": "calendar",
+      "label": "Calendar",
+      "icon": "📅",
+      "talk": "What's on my calendar this week?"
+    },
+    {
+      "id": "journal",
+      "label": "Journal",
+      "icon": "📓",
+      "talk": "I want to journal."
+    },
+    {
+      "id": "assistant",
+      "label": "MIA Assistant",
+      "icon": "🗨",
+      "talk": ""
+    }
+  ],
+  "glance": [
+    {
+      "app": "budget",
+      "icon": "💰",
+      "title": "Money",
+      "line": "Insurance $340.00 in 5d · $2,290.00 left each month after bills",
+      "tone": "calm",
+      "page": "finances.html"
+    },
+    {
+      "app": "garage",
+      "icon": "🚗",
+      "title": "Equipment",
+      "line": "2 tracked · 1 overdue · next: Sharpen blades (Mower)",
+      "tone": "attention",
+      "page": "garage.html"
+    },
+    {
+      "app": "real_estate",
+      "icon": "🏘",
+      "title": "Real Estate",
+      "line": "1 property · $60,000.00 equity",
+      "tone": "calm",
+      "page": "real-estate.html"
+    },
+    {
+      "app": "kitchen",
+      "icon": "🍳",
+      "title": "Kitchen",
+      "line": "1 recipe · 1 on the grocery list · Milk expires in 2d",
+      "tone": "attention",
+      "page": "kitchen.html"
+    },
+    {
+      "app": "workout",
+      "icon": "🏋",
+      "title": "Workout",
+      "line": "1 session this week · last: Beginner full body (2026-10-06)",
+      "tone": "calm",
+      "page": "workout.html"
+    },
+    {
+      "app": "missions",
+      "icon": "🏆",
+      "title": "Missions",
+      "line": "0 active",
+      "tone": "calm",
+      "page": "missions.html"
+    }
+  ],
+  "wins": [
+    {
+      "at": "2026-10-06T04:42:07",
+      "type": "meal_logged",
+      "summary": "Cooked Chili",
+      "refs": [
+        "meal:89a5f498c8",
+        "recipe:20ae5603aa"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T04:42:07",
+      "type": "workout_logged",
+      "summary": "Worked out: Beginner full body, 30 min",
+      "refs": [
+        "workout:ff0fde806a",
+        "workout_template:ca49d19431"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T04:42:06",
+      "type": "mission_completed",
+      "summary": "Completed the mission Plan the week",
+      "refs": [
+        "mission:dbaa93da02",
+        "skill:organization"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T04:42:06",
+      "type": "skill_evidence",
+      "summary": "10 XP in organization from Plan the week",
+      "refs": [
+        "skill:organization",
+        "mission:dbaa93da02"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T04:42:06",
+      "type": "bill_paid",
+      "summary": "Paid Electric: $120.00",
+      "refs": [
+        "bill:f8c2772f43",
+        "expense:7201b1abae"
+      ],
+      "source": "manual"
+    }
+  ],
+  "child": false
+}

@@ -218,6 +218,21 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**Now (2026-10-06, DEC-0017, approved): the web becomes all of MIA.**
+Track it in `docs/WEB_PARITY.md`. Done: the shared frame (`web/shell.js`)
+and the dashboard Home (`core/web_surfaces.py`, `/api/shell`,
+`/api/home`). Next, each one a full engine API (every read and every
+add/edit/delete/complete as an action kind in `core/actions.py`) plus a
+working screen on the frame, for Muse to restyle:
+1. **Money** (bills, income sources, income, expenses, debts with payoff
+   order, summary, trends, bank sync status).
+2. **Garage + Maintenance**, with the asset page (Zac's mower concept:
+   tasks, missions, documents, parts, history, meter hours).
+3. **Missions, Skills, Character** (absorbs H-0013).
+4. Calendar, Notes, Inbox, full Assistant chat; then Kitchen, Workout,
+   Real Estate to full parity; then the rest of the 59 rows.
+Ctrl+K search on the web is also still missing (Shell row).
+
 **Direction (2026-10-01):** keep perfecting MIA for personal use, but
 built for any person or household, not just you. The youth/school
 initiative is parked (`docs/future/MIA_YOUTH_INITIATIVE.md`). Then

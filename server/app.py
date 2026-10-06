@@ -471,6 +471,22 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return assemble_life_state_v2(view_for(context, profile_id))
 
+    # DEC-0017 (2026-10-06): the web shell (the person's apps, level and
+    # XP) and the Home dashboard, assembled in core/web_surfaces.py.
+    @app.get("/api/shell")
+    def web_shell(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_surfaces import shell
+
+        with app.state.turn_lock:
+            return shell(view_for(context, profile_id))
+
+    @app.get("/api/home")
+    def web_home(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_surfaces import home
+
+        with app.state.turn_lock:
+            return home(view_for(context, profile_id))
+
     # ------------------------------------------------------------------
     # The action contract (core/actions.py, DEC-0013):
     # Propose → Approve → Execute → Record → Undo. Each step runs on the

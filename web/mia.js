@@ -10,6 +10,8 @@
  *   MIA.approve(id) / reject(id) / undo(id)
  *   MIA.onChange(callback)      -> calls back whenever MIA's data changes
  *   MIA.talk(text)              -> one Assistant turn: {replies, reply_text, draft, ...}
+ *   MIA.shell()                 -> the sidebar: the person's apps, level and XP (core/web_surfaces.py)
+ *   MIA.home()                  -> the Home dashboard: greeting, Today's Focus, glance cards
  *   MIA.demo                    -> true when showing the placeholder example
  *
  * Sign-in: the desktop opens this page with #token=... (its own session);
@@ -56,6 +58,12 @@
     return data;
   }
 
+  // A read: the engine, or in the demo its published placeholder example.
+  function read(path, example) {
+    if (demo) return fetch(new URL("../schema/" + example + ".example.json", location.href)).then((r) => r.json());
+    return call("GET", path);
+  }
+
   function demoOnly() { return Promise.reject(new MiaError(400, "Actions are off in the demo.")); }
 
   function onChange(callback) {
@@ -99,7 +107,9 @@
     signIn,
     signedIn: Boolean(token) || demo,
     MiaError,
-    state: () => demo ? fetch(new URL("../schema/life_state.example.json", location.href)).then((r) => r.json()) : call("GET", "/api/state"),
+    state: () => read("/api/state", "life_state"),
+    shell: () => read("/api/shell", "shell"),
+    home: () => read("/api/home", "home"),
     kinds: () => call("GET", "/api/actions/kinds"),
     pending: () => call("GET", "/api/actions"),
     propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }),

@@ -43,6 +43,7 @@ class Change:
     profile_id: Optional[str]
     at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
     files: dict = field(default_factory=dict)  # Path -> previous bytes, or None if it didn't exist
+    events: list = field(default_factory=list)  # life events recorded during it (their ids)
 
 
 @contextmanager
@@ -55,6 +56,14 @@ def recording(label: str, profile_id: Optional[str]):
         yield change
     finally:
         _local.change = previous
+
+
+def note_event(event_id: str) -> None:
+    """Called by core/life_events.record: this event belongs to the change
+    being recorded, so undoing it can mark the event reversed."""
+    change = getattr(_local, "change", None)
+    if change is not None:
+        change.events.append(event_id)
 
 
 def before_write(path: Path) -> None:
@@ -116,7 +125,14 @@ def reload_stores(context, paths: list[Path]) -> int:
     personal = getattr(context, "personal_data", None)
     registered = personal.registered_store_types() if personal is not None else set()
     seen: dict[int, object] = {}
-    for store in list(vars(context).values()) + (personal.all_known_stores() if personal is not None else []):
+    candidates = list(vars(context).values())
+    # A person's view (core/personal_data.ScopedView, the phone and the web)
+    # keeps its own stores aside and reads the rest, the config among them,
+    # from the main context underneath.
+    base = vars(context).get("_base")
+    if base is not None:
+        candidates += list(vars(context).get("_stores", {}).values()) + list(vars(base).values())
+    for store in candidates + (personal.all_known_stores() if personal is not None else []):
         if store is not None and id(store) not in seen and _store_files(store) & wanted:
             seen[id(store)] = store
     reloaded = 0
@@ -147,7 +163,7 @@ def undo_last(context, profile_id: Optional[str]) -> Optional[Change]:
     from core import life_events
 
     life_events.record(getattr(context, "life_events", None), "undone", f"Undid: {change.label.replace('_', ' ')}",
-                       [], {"label": change.label}, profile_id=profile_id)
+                       [], {"label": change.label, "reverses": list(change.events)}, profile_id=profile_id)
     from core.main_thread import publish
 
     publish(context, "records.changed", action="undo")

@@ -209,6 +209,12 @@ children.
   in `web/`), `/api/live` to know when to re-read (`core/live.py`,
   bumped by every `atomic_write_text`). Due items carry their suggested
   `action`.
+  DEC-0017 (2026-10-06): the web becomes *all* of MIA, function first,
+  in Zac's concept look. Claude builds each module's working screen on
+  the shared frame (`web/shell.js`: sidebar from `/api/shell`, Talk,
+  `MIAShell.act`), with the screen's data assembled in core (Home:
+  `core/web_surfaces.py`); Muse owns the look. `docs/WEB_PARITY.md`
+  tracks every Qt screen until its web version does everything it does.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a
