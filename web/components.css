@@ -20,6 +20,13 @@
 body {
   color: var(--text);
   font: var(--text-md)/1.55 var(--font);
+  /* Concept atmosphere: deep-field nebula, pure CSS. Home keeps its
+     own body background (home.css loads after this). */
+  background:
+    radial-gradient(1100px 520px at 88% -6%, var(--mod-dim), transparent 62%),
+    radial-gradient(900px 620px at 6% 112%, rgba(22, 101, 52, 0.12), transparent 60%),
+    radial-gradient(140% 105% at 50% 0%, #0c1511 0%, #070b08 46%, #040705 100%);
+  background-attachment: fixed;
 }
 
 /* ---------- module page frame ---------- */
@@ -513,3 +520,178 @@ dialog.confirm .confirm-actions {
   .row { grid-template-columns: 1fr; }
   .row .row-meta { justify-content: flex-start; flex-wrap: wrap; }
 }
+
+/* =====================================================================
+ * Concept HUD material, second pass (muse, 2026-10-05).
+ *
+ * The concept art's signature is neon-per-module: glassy cards with a
+ * bright colored border and outer glow, circular icon badges, dense
+ * stat rows, and MIA herself at the top of her cards. Everything here
+ * is material only — it consumes var(--mod)/--mod-line/--mod-glow/
+ * --mod-dim, which one body class (.mod-missions, .mod-skills, ...)
+ * repoints. No data, no logic, no invented content.
+ * ===================================================================== */
+
+/* ---------- neon glass card: the concept's headline material ---------- */
+.glass.glow {
+  border: 1px solid var(--mod-line);
+  box-shadow:
+    0 0 26px var(--mod-dim),
+    0 14px 44px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(180deg, var(--mod-dim), transparent 34%),
+    var(--glass);
+}
+
+/* ---------- hero: circular icon badge + neon title ---------- */
+.hero h1 > span[aria-hidden="true"] {
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  font-size: 26px;
+  color: var(--mod);
+  border: 1px solid var(--mod-line);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 0 20px var(--mod-glow),
+    inset 0 0 14px var(--mod-dim);
+  flex: none;
+}
+.hero h1 {
+  text-shadow: 0 0 30px var(--mod-glow);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- MIA persona header: her mark on her cards ---------- */
+.mia-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mia-line .mia-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex: none;
+  background: radial-gradient(circle at 35% 32%, #8ff5d8, var(--accent-deep) 68%);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+.mia-line .mia-name {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: var(--text-sm);
+}
+
+/* ---------- status strip: neon cells ---------- */
+.strip .cell {
+  border: 1px solid var(--glass-line);
+  position: relative;
+  overflow: hidden;
+}
+.strip .cell::before { /* top sheen, concept-style */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+}
+.strip .cell.ok {
+  border-color: rgba(74, 222, 128, 0.42);
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.12);
+}
+.strip .cell.bad {
+  border-color: rgba(248, 113, 113, 0.42);
+  box-shadow: 0 0 18px rgba(248, 113, 113, 0.12);
+}
+.strip .cell.soon {
+  border-color: rgba(251, 191, 36, 0.42);
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.12);
+}
+.strip .cell .n { text-shadow: 0 0 16px currentColor; }
+
+/* ---------- rows: neon hover in the module color ---------- */
+.row { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.row:hover {
+  border-color: var(--mod-line);
+  box-shadow: 0 0 16px var(--mod-dim);
+}
+
+/* ---------- pill tabs: active tab wears the module neon ---------- */
+.ptabs button[aria-selected="true"] {
+  background: var(--mod-dim);
+  border-color: var(--mod-line);
+  color: var(--text);
+  box-shadow: 0 0 14px var(--mod-dim), inset 0 0 10px var(--mod-dim);
+}
+
+/* ---------- missions: streak badges in quest gold ---------- */
+.mod-missions .streak-pill {
+  border-color: var(--mod-line);
+  box-shadow: 0 0 16px var(--mod-dim), inset 0 0 12px var(--mod-dim);
+  background: linear-gradient(180deg, var(--mod-dim), transparent 70%), var(--glass);
+}
+.mod-missions .streak-pill strong {
+  color: var(--mod);
+  text-shadow: 0 0 12px var(--mod-glow);
+  font-size: var(--text-lg);
+}
+
+/* ---------- skills: tiles in skill violet ---------- */
+.mod-skills .tile {
+  border: 1px solid var(--mod-line);
+  box-shadow: 0 0 22px var(--mod-dim), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, var(--mod-dim), transparent 40%), var(--glass);
+}
+.mod-skills .tile .xp-total {
+  color: var(--mod);
+  text-shadow: 0 0 14px var(--mod-glow);
+}
+.mod-skills .tile ul.evidence li strong { color: var(--mod); }
+
+/* ---------- sidebar: the current page wears its module neon ---------- */
+.mod-missions .side a.nav[aria-current="page"] {
+  background: rgba(251, 191, 36, 0.13);
+  border-color: rgba(251, 191, 36, 0.45);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.12);
+}
+.mod-skills .side a.nav[aria-current="page"] {
+  background: rgba(192, 132, 252, 0.13);
+  border-color: rgba(192, 132, 252, 0.45);
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.12);
+}
+
+/* ---------- circular icon badge (concept card headers) ---------- */
+.chip-ico {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: none;
+  font-size: 21px;
+  color: var(--mod);
+  border: 1px solid var(--mod-line);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 16px var(--mod-glow), inset 0 0 10px var(--mod-dim);
+}
+
+/* ---------- dense HUD stat row: icon chip + label + big value ---------- */
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 2px;
+}
+.stat + .stat { border-top: 1px solid var(--glass-line); }
+.stat .stat-label { color: var(--text-dim); font-size: var(--text-sm); }
+.stat .stat-value {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text);
+}
+.stat .stat-value.hot { color: var(--mod); text-shadow: 0 0 14px var(--mod-glow); }
