@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Hangman · Lens Arcade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:#000;color:#f4ead0;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  #stage{
+    width:min(100vw,100vh);height:min(100vw,100vh);
+    max-width:600px;max-height:600px;position:relative;
+    display:flex;flex-direction:column;align-items:center;
+    padding:14px 26px 14px;gap:8px;
+  }
+  header{width:100%;display:flex;align-items:center;justify-content:space-between;}
+  header a{color:#f6c453;text-decoration:none;font-size:14px;letter-spacing:.08em;font-weight:600;}
+  header a:active{opacity:.6;}
+  .wordmark{font-size:11px;letter-spacing:.42em;color:rgba(246,196,83,.55);font-weight:600;}
+  #gallows{height:min(30vh,190px);flex:none;}
+  #gallows .frame{stroke:rgba(246,196,83,.4);stroke-width:5;stroke-linecap:round;}
+  #gallows .part{
+    stroke:#f6c453;stroke-width:5;stroke-linecap:round;fill:none;
+    opacity:0;transition:opacity .35s ease;
+    filter:drop-shadow(0 0 6px rgba(246,196,83,.7));
+  }
+  #gallows .part.on{opacity:1;}
+  #gallows .head{fill:rgba(246,196,83,.08);}
+  #category{
+    font-size:11px;letter-spacing:.34em;color:rgba(246,196,83,.6);
+    text-transform:uppercase;font-weight:600;
+  }
+  #word{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;min-height:44px;}
+  #word span{
+    width:30px;height:42px;display:grid;place-items:center;
+    font-size:26px;font-weight:700;color:#ffedb8;
+    border-bottom:2px solid rgba(246,196,83,.5);
+    text-shadow:0 0 14px rgba(246,196,83,.4);
+  }
+  #word span.miss{color:rgba(244,234,208,.35);text-shadow:none;}
+  #status{
+    min-height:26px;font-size:16px;letter-spacing:.22em;font-weight:700;
+    text-transform:uppercase;text-align:center;color:#ffedb8;
+  }
+  #status.win{color:#f6c453;text-shadow:0 0 20px rgba(246,196,83,.85);animation:pulse 1.1s ease-in-out infinite;}
+  #status.lose{color:#ff8f8f;text-shadow:0 0 18px rgba(255,120,120,.6);}
+  @keyframes pulse{50%{opacity:.65;}}
+  #letters{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:7px;
+    width:100%;max-width:430px;
+  }
+  #letters button{
+    touch-action:manipulation;cursor:pointer;user-select:none;
+    aspect-ratio:1;border-radius:10px;
+    background:rgba(246,196,83,.06);border:1px solid rgba(246,196,83,.32);
+    color:#f4ead0;font-size:16px;font-weight:700;
+    transition:opacity .2s,transform .1s;
+  }
+  #letters button:active{transform:scale(.92);}
+  #letters button.hit{background:rgba(246,196,83,.22);border-color:#f6c453;color:#ffedb8;opacity:.85;pointer-events:none;}
+  #letters button.miss{opacity:.22;color:#ff8f8f;border-color:rgba(255,140,140,.4);pointer-events:none;}
+  #letters button:disabled{pointer-events:none;}
+  .row{display:flex;align-items:center;gap:16px;}
+  .scores{display:flex;gap:20px;font-size:13px;letter-spacing:.12em;color:rgba(244,234,208,.55);text-transform:uppercase;}
+  .scores b{color:#f6c453;font-size:15px;margin-left:6px;}
+  #new{
+    touch-action:manipulation;cursor:pointer;
+    background:rgba(246,196,83,.1);border:1px solid #f6c453;color:#ffedb8;
+    border-radius:99px;padding:9px 30px;font-size:13px;letter-spacing:.14em;font-weight:700;
+    box-shadow:0 0 18px rgba(246,196,83,.3);text-transform:uppercase;
+  }
+  #new:active{transform:scale(.95);}
+  #misses{font-size:11px;letter-spacing:.2em;color:rgba(244,234,208,.35);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <a href="../index.html">‹ arcade</a>
+    <span class="wordmark">LENS ARCADE</span>
+    <span style="width:64px"></span>
+  </header>
+
+  <svg id="gallows" viewBox="0 0 200 230" aria-hidden="true">
+    <line class="frame" x1="20" y1="212" x2="120" y2="212"/>
+    <line class="frame" x1="60" y1="212" x2="60" y2="28"/>
+    <line class="frame" x1="60" y1="28" x2="152" y2="28"/>
+    <line class="frame" x1="152" y1="28" x2="152" y2="54"/>
+    <circle class="part head" id="p1" cx="152" cy="72" r="18"/>
+    <line class="part" id="p2" x1="152" y1="90" x2="152" y2="152"/>
+    <line class="part" id="p3" x1="152" y1="106" x2="130" y2="130"/>
+    <line class="part" id="p4" x1="152" y1="106" x2="174" y2="130"/>
+    <line class="part" id="p5" x1="152" y1="152" x2="134" y2="188"/>
+    <line class="part" id="p6" x1="152" y1="152" x2="170" y2="188"/>
+  </svg>
+
+  <div id="category">Animals</div>
+  <div id="word" aria-label="Hidden word"></div>
+  <div id="status"></div>
+
+  <div id="letters" aria-label="Letter picker"></div>
+
+  <div class="row">
+    <div class="scores">
+      <span>Wins<b id="s-w">0</b></span>
+      <span>Losses<b id="s-l">0</b></span>
+    </div>
+    <button id="new">New word</button>
+  </div>
+  <div id="misses">misses 0 / 6</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var WORDS = {
+    "Animals": ["ELEPHANT","GIRAFFE","PENGUIN","DOLPHIN","KANGAROO","CHEETAH","OCTOPUS","FLAMINGO","BADGER","COYOTE","WALRUS","PANDA"],
+    "Food": ["PIZZA","BURGER","TACOS","SPAGHETTI","PANCAKE","POPCORN","WAFFLE","LASAGNA","SUSHI","COOKIE","NOODLE","CHEESE"],
+    "Space": ["GALAXY","PLANET","ROCKET","ASTRONAUT","COMET","NEBULA","ORBIT","MOON","STAR","ECLIPSE","SATURN","METEOR"],
+    "Around the House": ["KITCHEN","SOFA","CURTAIN","MIRROR","PILLOW","CARPET","LAMP","CLOSET","TOASTER","BLANKET","SHELF","DOOR"]
+  };
+  var LS_KEY = "lensarcade_hangman_score_v1";
+  var MAX_WRONG = 6;
+
+  var word, category, guessed, wrong, over;
+  var scores = {w:0, l:0};
+
+  var wordEl = document.getElementById("word");
+  var catEl = document.getElementById("category");
+  var statusEl = document.getElementById("status");
+  var lettersEl = document.getElementById("letters");
+  var missesEl = document.getElementById("misses");
+
+  function loadScores(){
+    try{
+      var s = JSON.parse(localStorage.getItem(LS_KEY));
+      if(s && typeof s.w === "number") scores = s;
+    }catch(e){}
+  }
+  function saveScores(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(scores)); }catch(e){}
+  }
+  function paintScores(){
+    document.getElementById("s-w").textContent = scores.w;
+    document.getElementById("s-l").textContent = scores.l;
+  }
+
+  function buildLetters(){
+    lettersEl.innerHTML = "";
+    for(var i=0;i<26;i++){
+      (function(ch){
+        var b = document.createElement("button");
+        b.textContent = ch;
+        b.setAttribute("aria-label","Letter "+ch);
+        b.addEventListener("click", function(){ guess(ch, b); });
+        lettersEl.appendChild(b);
+      })(String.fromCharCode(65+i));
+    }
+  }
+
+  function pickWord(){
+    var cats = Object.keys(WORDS);
+    category = cats[Math.floor(Math.random()*cats.length)];
+    var list = WORDS[category];
+    word = list[Math.floor(Math.random()*list.length)];
+  }
+
+  function renderWord(revealAll){
+    wordEl.innerHTML = "";
+    for(var i=0;i<word.length;i++){
+      var s = document.createElement("span");
+      var ch = word[i];
+      if(guessed[ch] || revealAll){
+        s.textContent = ch;
+        if(revealAll && !guessed[ch]) s.className = "miss";
+      }else{
+        s.textContent = "\u00A0";
+      }
+      wordEl.appendChild(s);
+    }
+  }
+
+  function renderParts(){
+    for(var i=1;i<=MAX_WRONG;i++){
+      document.getElementById("p"+i).classList.toggle("on", wrong >= i);
+    }
+    missesEl.textContent = "misses " + wrong + " / " + MAX_WRONG;
+  }
+
+  function setStatus(text, cls){
+    statusEl.textContent = text;
+    statusEl.className = cls || "";
+  }
+
+  function disableLetters(){
+    var btns = lettersEl.querySelectorAll("button");
+    for(var i=0;i<btns.length;i++) btns[i].disabled = true;
+  }
+
+  function newRound(){
+    pickWord();
+    guessed = {}; wrong = 0; over = false;
+    catEl.textContent = category;
+    buildLetters();
+    renderWord(false);
+    renderParts();
+    setStatus("", "");
+  }
+
+  function checkWin(){
+    for(var i=0;i<word.length;i++){
+      if(!guessed[word[i]]) return false;
+    }
+    return true;
+  }
+
+  function guess(ch, btn){
+    if(over || guessed[ch]) return;
+    if(word.indexOf(ch) >= 0){
+      guessed[ch] = true;
+      btn.classList.add("hit");
+      renderWord(false);
+      if(checkWin()){
+        over = true;
+        scores.w++; saveScores(); paintScores();
+        setStatus("Solved", "win");
+        disableLetters();
+      }
+    }else{
+      guessed[ch] = true;
+      wrong++;
+      btn.classList.add("miss");
+      renderParts();
+      if(wrong >= MAX_WRONG){
+        over = true;
+        scores.l++; saveScores(); paintScores();
+        renderWord(true);
+        setStatus("Out of guesses", "lose");
+        disableLetters();
+      }
+    }
+  }
+
+  document.getElementById("new").addEventListener("click", newRound);
+
+  loadScores(); paintScores(); newRound();
+})();
+</script>
+</body>
+</html>
