@@ -61,7 +61,9 @@
 
   // A read: the engine, or in the demo its published placeholder example.
   function read(path, example) {
-    if (demo) return fetch(new URL("../schema/" + example + ".example.json", location.href)).then((r) => r.json());
+    // no-cache: the preview's examples change when a screen is added; never show a stale copy.
+    if (demo) return fetch(new URL("../schema/" + example + ".example.json", location.href), { cache: "no-cache" })
+      .then((r) => r.json());
     return call("GET", path);
   }
 
