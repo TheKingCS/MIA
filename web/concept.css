@@ -5,7 +5,7 @@
  * <body data-app>, a photo hero that fades into the dark, a glowing round
  * icon badge, glassy cards with thin glowing borders, the three-tile status
  * strip, the red needs-attention card, segmented tabs, and on the phone the
- * bottom bar (Home, Apps, Dashboard, More) with the menu drawer.
+ * bottom bar (Home, Apps, Dashboard; every app is on the Apps page).
  * Photos: web/img/<screen>.jpg (docs/design/IMAGE_REQUESTS.md); without
  * one, the hero falls back to a dark scenic gradient.
  */
@@ -177,7 +177,7 @@ body {
     bottom: calc(8px + env(safe-area-inset-bottom));
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     padding: 6px;
     border-radius: 18px;
     background: rgba(6, 11, 8, 0.94);
@@ -185,7 +185,7 @@ body {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(var(--mod-rgb), 0.10);
     backdrop-filter: blur(8px);
   }
-  .bottom-bar a, .bottom-bar button {
+  .bottom-bar a {
     display: grid;
     justify-items: center;
     gap: 2px;
@@ -209,50 +209,6 @@ body {
   .strip .cell .n { font-size: var(--text-lg); }
   .strip .cell .t { font-size: 11px; }
 }
-
-/* ---------------------------------------------------------------- the menu drawer (More) */
-/* It slides in from the right, the side the More button is on (Zac, 2026-10-06). */
-.menu-button { display: none !important; }
-.menu-sheet { justify-items: end; padding: 0; align-items: stretch; }
-.menu-panel {
-  width: min(380px, 86vw);
-  height: 100%;
-  max-height: none;
-  border-radius: 18px 0 0 18px;
-  background:
-    linear-gradient(270deg, rgba(6, 11, 8, 0.97) 70%, rgba(6, 11, 8, 0.75)),
-    url("img/menu.jpg") left / cover no-repeat,
-    #060b08;
-  border: 1px solid rgba(var(--mod-rgb), 0.30);
-  border-right: none;
-  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
-  animation: menu-in 0.22s ease-out;
-}
-@keyframes menu-in { from { transform: translateX(100%); } to { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .menu-panel { animation: none; } }
-.menu-grid { display: grid; grid-template-columns: 1fr; gap: 2px; }
-.menu-item {
-  display: flex;
-  justify-items: start;
-  align-items: center;
-  gap: 14px;
-  padding: 11px 12px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: none;
-  text-align: left;
-  font-size: var(--text-md);
-  color: var(--text);
-}
-.menu-item .ico { font-size: 20px; width: 26px; text-align: center; }
-.menu-item::after { content: "›"; margin-left: auto; color: var(--text-faint); font-size: 20px; }
-.menu-item[aria-current="page"] { background: rgba(var(--mod-rgb), 0.14); border-color: rgba(var(--mod-rgb), 0.5); }
-.menu-panel .nav-level { margin-top: auto; padding: 12px; border-radius: 12px; border: 1px solid rgba(var(--mod-rgb), 0.3); background: rgba(8, 14, 11, 0.85); }
-.menu-tagline { color: var(--text-faint); font-size: var(--text-xs); letter-spacing: 0.04em; }
 
 /* ---------------------------------------------------------------- Home (the concept's) */
 .home-main { max-width: 900px; }

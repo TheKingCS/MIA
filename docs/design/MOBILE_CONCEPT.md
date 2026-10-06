@@ -21,7 +21,7 @@ Placeholders only.*
 - **Tabs:** a segmented bar; the active tab is filled with the screen's
   color.
 - **Bottom bar (phone):** Home, Apps, Dashboard, More. The active item
-  glows in the screen's color. **More** opens the menu drawer.
+  glows in the screen's color. ~~**More** opens the menu drawer.~~ Zac (2026-10-06): no More button; every app is on the Apps page, so the bar is Home, Apps, Dashboard.
 - **Colors:** Greenhouse green, Garage orange, Kitchen red, Workout
   blue, Real Estate teal, Finances purple, Missions and Skills gold.
 
@@ -39,7 +39,7 @@ Placeholders only.*
 | **Missions** | "World Missions" with All, Active and Completed; each mission with its icon, XP reward, a progress bar with a count (3/6) and its objectives line | Missions: H-0013 is next |
 | **Skills** | Capability Status (overall level, XP to the next level); tabs by area (All, Health, Finance, Homestead, Tech); skill cards with tier, level, an XP bar, and Unlocked or Locked | Skills: H-0013 is next |
 | **MIA Assistant** | MIA's badge, "Always here. Always with you.", the chat (her replies in cards, yours in green bubbles), a message box with a mic button | `/api/voice/text` (Talk) |
-| **Menu drawer** | MIA logo; Home, Apps, Dashboard, Missions, Skills, Settings, Help & Support; level and XP at the bottom; a photo strip beside it ("Better Systems. Bigger Dreams.") | `/api/shell` |
+| ~~**Menu drawer**~~ (dropped 2026-10-06, Zac: the Apps page has everything) | MIA logo; Home, Apps, Dashboard, Missions, Skills, Settings, Help & Support; level and XP at the bottom; a photo strip beside it ("Better Systems. Bigger Dreams.") | `/api/shell` |
 
 ## Still to build for the look (engine)
 

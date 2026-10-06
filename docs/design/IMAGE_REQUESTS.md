@@ -36,6 +36,6 @@ background, so they can be added one at a time.*
 | `maintenance.jpg` | Maintenance | A tidy workshop wall at dusk: hanging tools, a workbench, warm light |
 | `dashboard.jpg` | Dashboard | A night-to-dawn sky over a quiet valley, stars fading, the first light on the peaks |
 | `assistant.jpg` | MIA Assistant | A soft, dark abstract: a gentle golden glow like a lantern in a deep green forest at night |
-| `menu.jpg` | The menu drawer | A tall (900 × 1600, portrait) mountain sunset, for the side of the menu |
+| ~~`menu.jpg`~~ | *No longer needed (2026-10-06: the More menu is gone; every app is on the Apps page)* | |
 
 Optional, nice to have later: one per app on the Apps screen (`apps-<name>.jpg`, 800 × 800, square), for the tile backgrounds.

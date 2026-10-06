@@ -170,72 +170,8 @@ html { background: #040705; }
 .app-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
 .app-actions .btn { text-decoration: none; }
 
-/* ---------------------------------------------------------------- the ⋯ menu
-   Phones, and Home at any size: one button that opens every choice
-   (Zac, 2026-10-06). Desktop module pages keep the concept's sidebar. */
-.menu-button {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 35;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-line-strong);
-  background: var(--glass-strong);
-  color: var(--text);
-  font: 700 26px/1 var(--font);
-  letter-spacing: 1px;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-.menu-button:hover { border-color: var(--ok); }
-body.has-side .menu-button { display: none; }
-.menu-sheet {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(2, 5, 3, 0.62);
-  backdrop-filter: blur(4px);
-  display: grid;
-  align-items: start;
-  justify-items: start;
-  padding: 12px;
-}
-.menu-sheet[hidden] { display: none !important; }
-.menu-panel {
-  width: min(420px, 100%);
-  max-height: calc(100vh - 24px);
-  overflow-y: auto;
-  background: var(--glass-strong);
-  display: grid;
-  gap: var(--gap);
-}
-.menu-head { display: flex; justify-content: space-between; align-items: center; }
-.menu-brand { font-weight: 700; font-size: var(--text-lg); letter-spacing: 0.06em; }
-.menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.menu-item {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  padding: 12px 6px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-line);
-  background: var(--glass);
-  color: var(--text-dim);
-  text-decoration: none;
-  font-size: var(--text-sm);
-  text-align: center;
-}
-.menu-item .ico { font-size: 24px; }
-.menu-item:hover { color: var(--text); border-color: var(--glass-line-strong); }
-.menu-item[aria-current="page"] { color: var(--text); border-color: rgba(74, 222, 128, 0.45); background: rgba(74, 222, 128, 0.12); }
-.menu-panel .side-more { color: var(--text-faint); font-size: var(--text-xs); }
-
 @media (max-width: 860px) {
-  body.has-side .menu-button { display: block; }
   .layout .side { display: none; }
-  .layout-main { padding-top: 74px; }
 }
 
 /* ---------------------------------------------------------------- forms */
@@ -293,69 +229,10 @@ body.has-side .menu-button { display: none; }
  * Concept polish (muse, 2026-10-06, H-0018).
  *
  * The frame's working styles above stay intact — this section is look
- * only: the ⋯ button and menu, the Money screen, and the form dialog,
+ * only: the Money screen and the form dialog,
  * checked against Zac's concept pictures. Material only, no DOM or
  * behavior changes, so Money keeps working end to end.
  * ===================================================================== */
-
-/* ---------- ⋯ button: her mark, glowing ---------- */
-.menu-button {
-  width: 52px;
-  height: 52px;
-  border: 1px solid var(--mod-line);
-  background:
-    radial-gradient(circle at 50% 38%, var(--mod-dim), transparent 70%),
-    var(--glass-strong);
-  box-shadow: 0 0 20px var(--mod-dim), 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  color: var(--mod);
-  text-shadow: 0 0 12px var(--mod-glow);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-.menu-button:hover {
-  border-color: var(--mod-line);
-  box-shadow: 0 0 28px var(--mod-glow), 0 8px 24px rgba(0, 0, 0, 0.45);
-  transform: scale(1.05);
-}
-.menu-button[aria-expanded="true"] {
-  box-shadow: 0 0 32px var(--mod-glow), inset 0 0 14px var(--mod-dim);
-}
-
-/* ---------- menu: app tiles with icon chips ---------- */
-.menu-panel {
-  border: 1px solid var(--mod-line);
-  box-shadow: 0 0 34px var(--mod-dim), 0 24px 70px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-.menu-brand { color: var(--mod); text-shadow: 0 0 16px var(--mod-glow); }
-.menu-item {
-  border: 1px solid var(--glass-line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 55%), var(--glass);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-.menu-item .ico {
-  display: inline-grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 22px;
-  color: var(--mod);
-  border: 1px solid var(--mod-line);
-  background: rgba(0, 0, 0, 0.35);
-  box-shadow: 0 0 14px var(--mod-dim), inset 0 0 10px var(--mod-dim);
-}
-.menu-item:hover {
-  color: var(--text);
-  border-color: var(--mod-line);
-  box-shadow: 0 0 16px var(--mod-dim);
-  transform: translateY(-1px);
-}
-.menu-item[aria-current="page"] {
-  color: var(--text);
-  border-color: var(--mod-line);
-  background: linear-gradient(180deg, var(--mod-dim), transparent 60%), var(--glass);
-  box-shadow: 0 0 18px var(--mod-dim), inset 0 0 12px var(--mod-dim);
-}
-.menu-item[aria-current="page"] .ico { box-shadow: 0 0 18px var(--mod-glow), inset 0 0 10px var(--mod-dim); }
 
 /* ---------- Money: sections wear finance blue ---------- */
 .money-section {

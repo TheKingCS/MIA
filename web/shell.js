@@ -155,9 +155,8 @@
   }
 
   // ---------------------------------------------------------------- navigation
-  // Desktop module pages: the concept's sidebar. Phones, and Home at any
-  // size: one "⋯" button that opens every choice (Zac, 2026-10-06: the
-  // wrapped phone rail looked clunky; Home stays centred on MIA).
+  // Desktop: the concept's sidebar. Phones: the bottom bar (Home, Apps,
+  // Dashboard). No More menu: every app is on the Apps page (Zac, 2026-10-06).
   function levelBlock(p) {
     const pct = p.xp_for_level ? Math.round((100 * p.xp_into_level) / p.xp_for_level) : 0;
     return el("div", { class: "nav-level" },
@@ -196,7 +195,7 @@
         ...appLinks(shell, "nav"),
         el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
     }
-    // Phone: the concept's bottom bar (Home, Apps, Dashboard, More); More opens the drawer.
+    // Phone: the concept's bottom bar.
     let bar = $("#mia-bottom-bar");
     if (!bar) {
       bar = el("nav", { id: "mia-bottom-bar", class: "bottom-bar", "aria-label": "Main" });
@@ -208,33 +207,7 @@
     bar.replaceChildren(
       tab("index.html", "web_home", "🏠", "Home"),
       tab("apps.html", "module_browser", "▦", "Apps"),
-      tab("dashboard.html", "dashboard", "📊", "Dashboard"),
-      el("button", { type: "button", id: "mia-menu-button", "aria-label": "More", "aria-expanded": "false",
-        "aria-controls": "mia-menu", onclick: () => toggleMenu() },
-      el("span", { class: "ico", "aria-hidden": "true" }, "⋯"), "More"));
-    let menu = $("#mia-menu");
-    if (!menu) {
-      menu = el("div", { id: "mia-menu", class: "menu-sheet", hidden: true, role: "dialog", "aria-label": "Menu",
-        onclick: (e) => { if (e.target === menu) toggleMenu(false); } });
-      document.body.append(menu);
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleMenu(false); });
-    }
-    menu.replaceChildren(el("div", { class: "menu-panel" },
-      el("div", { class: "menu-head" },
-        el("span", { class: "menu-brand" }, "🌿 MIA", el("small", { class: "menu-tagline" }, " Your Life. In Sync.")),
-        el("button", { type: "button", class: "btn btn-ghost", "aria-label": "Close", onclick: () => toggleMenu(false) }, "✕")),
-      el("nav", { class: "menu-grid", "aria-label": "Apps" }, ...appLinks(shell, "menu-item")),
-      levelBlock(shell.person), more(shell),
-      el("p", { class: "menu-tagline" }, "Better systems. Bigger dreams.")));
-  }
-
-  function toggleMenu(open) {
-    const menu = $("#mia-menu");
-    if (!menu) return;
-    const show = open == null ? menu.hidden : open;
-    menu.hidden = !show;
-    $("#mia-menu-button").setAttribute("aria-expanded", String(show));
-    if (show) { const first = menu.querySelector("a"); if (first) first.focus(); }
+      tab("dashboard.html", "dashboard", "📊", "Dashboard"));
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
