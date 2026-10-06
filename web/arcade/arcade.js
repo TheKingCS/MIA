@@ -153,5 +153,33 @@
     owned.pass = true; save(owned); render();
   });
 
+  /* ---- arcade profile (universal progression) ---- */
+  function renderProfile() {
+    if (!window.ArcadeProgress) return;
+    var p = ArcadeProgress.visit();
+    var box = document.getElementById("profile");
+    box.hidden = false;
+    document.getElementById("profile-level").textContent = "⭐ LVL " + p.level;
+    document.getElementById("profile-streak").textContent = p.streak > 1 ? "🔥 " + p.streak + "-day streak" : "";
+    document.getElementById("profile-trophies").textContent = "🏆 " + p.achievementCount + "/" + ArcadeProgress.achievements.length;
+    document.getElementById("profile-xpfill").style.width = Math.round(p.progress * 100) + "%";
+    var toNext = p.levelNext - p.xp;
+    document.getElementById("profile-xptext").textContent =
+      p.xp + " XP · " + toNext + " to Level " + (p.level + 1) + " · " + p.gameCount + "/11 games played";
+    var achBox = document.getElementById("profile-ach");
+    achBox.innerHTML = "";
+    p.achievements.forEach(function (id) {
+      var a = null;
+      ArcadeProgress.achievements.forEach(function (x) { if (x.id === id) a = x; });
+      if (!a) return;
+      var pill = document.createElement("span");
+      pill.className = "ach-pill";
+      pill.textContent = "🏆 " + a.name;
+      pill.title = a.desc;
+      achBox.appendChild(pill);
+    });
+  }
+
   render();
+  renderProfile();
 })();
