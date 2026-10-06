@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Hangman · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -229,6 +230,10 @@
       if(checkWin()){
         over = true;
         scores.w++; saveScores(); paintScores();
+        if(window.ArcadeProgress){
+          if(wrong <= 2) ArcadeProgress.award("hangman", "flawless", 60);
+          else ArcadeProgress.award("hangman", "solve", 40);
+        }
         setStatus("Solved", "win");
         disableLetters();
       }
