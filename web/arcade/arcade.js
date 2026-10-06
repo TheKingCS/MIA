@@ -40,6 +40,12 @@
       price: 1, path: "games/coin.html", live: true,
     },
     {
+      id: "pet", name: "Mote", art: "🔆", glow: "rgba(246,196,83,0.6)",
+      hook: "A tiny mote of light that lives in your glasses.",
+      how: "Feed it, play with it, pet it, tuck it in. It needs you — check in daily.",
+      price: 1, path: "games/pet.html", live: true,
+    },
+    {
       id: "orbit", name: "Orbit", art: "🛰️", glow: "rgba(95,214,200,0.5)",
       hook: "An idle space station that grows while you're not looking.",
       how: "Glance, tap to collect, spend on upgrades. The ultimate face-screen loop.",
