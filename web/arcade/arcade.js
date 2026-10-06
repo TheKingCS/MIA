@@ -13,13 +13,19 @@
       id: "tictactoe", name: "Tic-Tac-Toe", art: "⭕", glow: "rgba(246,196,83,0.5)",
       hook: "The classic, against an AI that trash-talks politely.",
       how: "Tap a square. Three difficulties — Hard is genuinely unbeatable.",
-      price: 1, path: "games/tictactoe.html", live: true,
+      price: 0, path: "games/tictactoe.html", live: true,
     },
     {
       id: "hangman", name: "Hangman", art: "🪢", glow: "rgba(180,140,242,0.5)",
       hook: "Guess the word before the gallows fills in.",
       how: "Tap letters on the on-screen picker. Six wrong guesses and it's over.",
       price: 1, path: "games/hangman.html", live: true,
+    },
+    {
+      id: "magic8ball", name: "Magic 8 Ball", art: "🎱", glow: "rgba(140,170,255,0.5)",
+      hook: "Ask a question, tap the ball, accept your fate.",
+      how: "Think of a yes-or-no question — ask it out loud — tap the ball to shake.",
+      price: 1, path: "games/magic8ball.html", live: true,
     },
     {
       id: "orbit", name: "Orbit", art: "🛰️", glow: "rgba(95,214,200,0.5)",
@@ -47,7 +53,11 @@
   }
   function save(state) { localStorage.setItem(STORE, JSON.stringify(state)); }
   var owned = load();
-  function owns(id) { return owned.pass || !!owned.games[id]; }
+  function owns(id) {
+    var g = GAMES.filter(function (x) { return x.id === id; })[0];
+    if (g && g.price === 0) return true; // free games are always owned
+    return owned.pass || !!owned.games[id];
+  }
 
   var grid = document.getElementById("grid");
 
@@ -56,7 +66,8 @@
     b.className = "tile" + (g.live ? "" : " soon");
     b.type = "button";
     var status = g.live
-      ? (owns(g.id) ? '<span class="price owned">PLAY</span>' : '<span class="price">$1</span>')
+      ? (g.price === 0 ? '<span class="price owned">FREE</span>'
+        : owns(g.id) ? '<span class="price owned">PLAY</span>' : '<span class="price">$1</span>')
       : '<span class="badge">soon</span>';
     b.innerHTML =
       '<span class="art" style="--glow:' + g.glow + '">' + g.art + "</span>" +
@@ -75,7 +86,9 @@
   /* ---- detail sheet ---- */
   var sheet = document.getElementById("sheet");
   function openSheet(g) {
-    document.getElementById("sheet-kicker").textContent = g.live ? (owns(g.id) ? "in your collection" : "$1 — yours forever") : "coming soon";
+    document.getElementById("sheet-kicker").textContent = g.live
+      ? (g.price === 0 ? "free forever" : owns(g.id) ? "in your collection" : "$1 — yours forever")
+      : "coming soon";
     document.getElementById("sheet-title").textContent = g.name;
     document.getElementById("sheet-hook").textContent = g.hook;
     document.getElementById("sheet-how").textContent = g.how;
@@ -90,7 +103,7 @@
     }
     if (!g.live) {
       btn("Coming soon", "", function () {}, "Season 1 keeps growing — pass holders get it on drop day.");
-    } else if (owns(g.id)) {
+    } else if (g.price === 0 || owns(g.id)) {
       btn("Play now", "primary", function () { location.href = g.path; });
     } else {
       btn("Play now", "primary", function () { location.href = g.path; }, "Demo: playing free while we build. Checkout connects at launch.");
