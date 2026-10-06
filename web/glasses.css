@@ -58,20 +58,20 @@ body {
 }
 #orb-wrap .ring {
   position: absolute; border-radius: 50%; pointer-events: none;
-  animation: spin 16s linear infinite;
+  border: 2px solid transparent;
   filter: drop-shadow(0 0 7px rgba(246, 196, 83, 0.9));
 }
 #orb-wrap .ring.r1 {
-  inset: 4px; opacity: 0.95;
-  background: conic-gradient(from 0deg, transparent 0deg, transparent 120deg, rgba(255, 237, 184, 0.95) 175deg, rgba(255, 237, 184, 0.95) 195deg, transparent 250deg, transparent 360deg);
-  -webkit-mask: radial-gradient(circle, transparent 62%, #000 63%, #000 69%, transparent 70%);
-  mask: radial-gradient(circle, transparent 62%, #000 63%, #000 69%, transparent 70%);
+  inset: 2px; opacity: 0.95;
+  border-top-color: rgba(255, 237, 184, 0.95);
+  border-right-color: rgba(255, 237, 184, 0.28);
+  animation: spin 14s linear infinite;
 }
 #orb-wrap .ring.r2 {
-  inset: -8px; opacity: 0.7; animation-duration: 26s; animation-direction: reverse;
-  background: conic-gradient(from 90deg, transparent 0deg, transparent 180deg, rgba(246, 196, 83, 0.85) 235deg, rgba(246, 196, 83, 0.85) 265deg, transparent 320deg, transparent 360deg);
-  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%, #000 70%, transparent 71%);
-  mask: radial-gradient(circle, transparent 64%, #000 65%, #000 70%, transparent 71%);
+  inset: -10px; opacity: 0.7;
+  border-bottom-color: rgba(246, 196, 83, 0.75);
+  border-left-color: rgba(246, 196, 83, 0.22);
+  animation: spin 24s linear infinite reverse;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 #orb-wrap .p {
