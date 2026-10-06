@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Coin Flip · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -75,7 +76,12 @@
       s.flips++;if(heads)s.heads++;
       var key=heads?"H":"T";
       s.streak=(s.last===key)?s.streak+1:1;s.last=key;
-      save();paint();busy=false;
+      save();paint();
+      if(window.ArcadeProgress){
+        ArcadeProgress.award("coin","flip",3);
+        if(s.streak===5)ArcadeProgress.award("coin","streak5",25);
+      }
+      busy=false;
       setTimeout(function(){coin.style.transform="";},900);
     },1050);
   }
