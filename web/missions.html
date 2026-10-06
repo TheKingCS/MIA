@@ -34,7 +34,7 @@
     .streak-pill .sname { color: var(--text-dim); font-size: var(--text-sm); }
   </style>
 </head>
-<body>
+<body class="mod-missions">
   <!--
     Missions (muse, 2026-10-05). Concept material, engine data only.
     Active = the engine's due items with their real actions
@@ -67,7 +67,7 @@
 
       <section class="strip" id="strip" aria-label="Mission status"></section>
 
-      <section class="glass" id="streaks-wrap" hidden aria-label="Streaks">
+      <section class="glass glow" id="streaks-wrap" hidden aria-label="Streaks">
         <h3>Streaks<span class="stag" id="streaks-stag"></span></h3>
         <div class="streak-row" id="streaks"></div>
       </section>
@@ -81,7 +81,8 @@
       <div class="rows" id="rows"></div>
 
       <div class="sect"><h2>New mission</h2></div>
-      <section class="glass" id="invent">
+      <section class="glass glow" id="invent">
+        <div class="mia-line" aria-hidden="true"><span class="mia-dot"></span><span class="mia-name">MIA</span></div>
         <h3>Ask MIA to invent one</h3>
         <p class="dim">She reads your life state and proposes from what's actually going on. You approve before anything is real.</p>
         <form id="invent-form" class="invent-form">
