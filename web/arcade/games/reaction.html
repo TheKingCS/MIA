@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Reaction Test · Lens Arcade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    user-select:none;-webkit-user-select:none;}
+  #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
+    display:grid;grid-template-rows:auto 1fr auto;justify-items:center;padding:18px 30px;row-gap:10px;}
+  header{width:100%;display:flex;justify-content:space-between;align-items:center;}
+  header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
+  header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
+  #pad{width:100%;max-width:460px;height:100%;min-height:280px;border-radius:22px;cursor:pointer;
+    display:grid;place-items:center;align-content:center;gap:12px;text-align:center;padding:24px;
+    border:1px solid rgba(246,196,83,.3);touch-action:manipulation;
+    transition:background-color .12s ease;}
+  #pad.idle{background:rgba(255,248,230,.04);}
+  #pad.waiting{background:#3d0f0f;border-color:rgba(242,140,140,.4);}
+  #pad.ready{background:#0f3d1e;border-color:rgba(95,214,150,.55);
+    box-shadow:0 0 60px rgba(95,214,150,.25);}
+  #pad.result{background:rgba(255,248,230,.04);}
+  #big{font-size:clamp(30px,7vmin,46px);font-weight:800;letter-spacing:.02em;line-height:1.2;}
+  #pad.waiting #big{color:#f28c8c;}
+  #pad.ready #big{color:#8ff0b6;text-shadow:0 0 30px rgba(95,214,150,.7);}
+  #pad.result #big{color:#ffedb8;text-shadow:0 0 26px rgba(246,196,83,.6);}
+  #sub{font-size:15px;color:rgba(244,234,208,.65);line-height:1.6;max-width:340px;}
+  #stats{width:100%;max-width:460px;display:flex;justify-content:space-between;
+    font-size:12.5px;letter-spacing:.1em;color:rgba(244,234,208,.5);text-transform:uppercase;}
+  #stats b{color:#ffedb8;font-size:15px;}
+  @media (prefers-reduced-motion:reduce){}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
+  <div id="pad" class="idle" role="button" tabindex="0" aria-label="Reaction test area">
+    <p id="big">tap to start</p>
+    <p id="sub">wait for green, then tap as fast as you can</p>
+  </div>
+  <div id="stats">
+    <span>last <b id="last">—</b></span>
+    <span>best <b id="best">—</b></span>
+    <span>avg <b id="avg">—</b></span>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var pad=document.getElementById("pad"), big=document.getElementById("big"),
+      sub=document.getElementById("sub"),
+      lastEl=document.getElementById("last"), bestEl=document.getElementById("best"),
+      avgEl=document.getElementById("avg");
+  var BESTKEY="laReactBest";
+  var best=parseInt(localStorage.getItem(BESTKEY)||"0",10)||0;
+  var times=[]; // rolling last 5
+  var state="idle", t0=0, timer=null;
+
+  function fmt(ms){ return Math.round(ms)+" ms"; }
+  function paintStats(){
+    lastEl.textContent=times.length?fmt(times[times.length-1]):"—";
+    bestEl.textContent=best?fmt(best):"—";
+    avgEl.textContent=times.length>=3
+      ? fmt(times.reduce(function(a,b){return a+b;},0)/times.length) : "—";
+  }
+  function setState(s, bigText, subText){
+    state=s; pad.className=s; big.textContent=bigText; sub.textContent=subText||"";
+  }
+  function clearTimer(){ if(timer){clearTimeout(timer);timer=null;} }
+
+  function startRound(){
+    clearTimer();
+    setState("waiting","wait for green…","don't tap yet");
+    var delay=1500+Math.random()*2500; // 1500–4000ms
+    timer=setTimeout(function(){
+      timer=null; t0=performance.now();
+      setState("ready","TAP!","");
+    },delay);
+  }
+  function finish(ms){
+    times.push(ms); if(times.length>5) times.shift();
+    if(!best||ms<best){best=Math.round(ms);
+      try{localStorage.setItem(BESTKEY,String(best));}catch(e){}}
+    paintStats();
+    var line="My reaction: "+Math.round(ms)+"ms — can you beat it?";
+    setState("result",fmt(ms),line+" · tap to go again");
+  }
+  function foul(){
+    clearTimer();
+    setState("result","too soon!","tap to try again");
+  }
+  pad.addEventListener("click",function(){
+    if(state==="idle"||state==="result") startRound();
+    else if(state==="waiting") foul();
+    else if(state==="ready"){ clearTimer(); finish(performance.now()-t0); }
+  });
+  pad.addEventListener("keydown",function(e){
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();pad.click();}
+  });
+  paintStats();
+})();
+</script>
+</body>
+</html>
