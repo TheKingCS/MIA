@@ -224,7 +224,7 @@
   "currency_symbol": "$",
   "properties": [
     {
-      "id": "54cbfb4a89",
+      "id": "ac6f646035",
       "name": "Maple House",
       "type": "Rental",
       "status": "Rented",
@@ -238,12 +238,12 @@
       "income_month": 1450.0,
       "expenses_month": 85.0,
       "noi_year": 1365.0,
-      "asset_id": "9750970046",
+      "asset_id": "2bcc9f674a",
       "tasks": [
         {
-          "id": "68d17e7842",
+          "id": "69869ef27b",
           "title": "HVAC filter",
-          "asset_id": "9750970046",
+          "asset_id": "2bcc9f674a",
           "asset": "Maple House",
           "trigger": "calendar",
           "unit": "",
@@ -259,7 +259,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "9750970046",
+            "asset_id": "2bcc9f674a",
             "title": "HVAC filter",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -275,15 +275,15 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "68d17e7842"
+              "task_id": "69869ef27b"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "af5f59c2ef",
+          "id": "444df10f48",
           "title": "Clean gutters",
-          "asset_id": "9750970046",
+          "asset_id": "2bcc9f674a",
           "asset": "Maple House",
           "trigger": "calendar",
           "unit": "",
@@ -299,7 +299,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "9750970046",
+            "asset_id": "2bcc9f674a",
             "title": "Clean gutters",
             "trigger_type": "calendar",
             "interval_days": 180,
@@ -315,7 +315,7 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "af5f59c2ef"
+              "task_id": "444df10f48"
             },
             "asks_meter": false
           }
@@ -341,7 +341,7 @@
       }
     },
     {
-      "id": "fd3113f59a",
+      "id": "3e3a0389b2",
       "name": "Oak Duplex",
       "type": "Rental",
       "status": "For Rent",
@@ -377,7 +377,7 @@
       }
     },
     {
-      "id": "a2cc3f1137",
+      "id": "2c24ddce32",
       "name": "Vacant lot",
       "type": "Land",
       "status": "",

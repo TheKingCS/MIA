@@ -281,7 +281,7 @@
   "available": true,
   "assets": [
     {
-      "id": "46dd01dc95",
+      "id": "f2fc8a1e59",
       "name": "Raised bed",
       "category": "Garden/Plant",
       "make_model": "",
@@ -289,9 +289,9 @@
       "overdue": 1,
       "tasks": [
         {
-          "id": "b9407f4d8f",
+          "id": "58c802b04b",
           "title": "Water",
-          "asset_id": "46dd01dc95",
+          "asset_id": "f2fc8a1e59",
           "asset": "Raised bed",
           "trigger": "calendar",
           "unit": "",
@@ -307,7 +307,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "46dd01dc95",
+            "asset_id": "f2fc8a1e59",
             "title": "Water",
             "trigger_type": "calendar",
             "interval_days": 2,
@@ -323,7 +323,7 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "b9407f4d8f"
+              "task_id": "58c802b04b"
             },
             "asks_meter": false
           }
@@ -337,9 +337,9 @@
   ],
   "attention": [
     {
-      "id": "b9407f4d8f",
+      "id": "58c802b04b",
       "title": "Water",
-      "asset_id": "46dd01dc95",
+      "asset_id": "f2fc8a1e59",
       "asset": "Raised bed",
       "trigger": "calendar",
       "unit": "",
@@ -355,7 +355,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "46dd01dc95",
+        "asset_id": "f2fc8a1e59",
         "title": "Water",
         "trigger_type": "calendar",
         "interval_days": 2,
@@ -371,7 +371,7 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "b9407f4d8f"
+          "task_id": "58c802b04b"
         },
         "asks_meter": false
       }
@@ -380,31 +380,31 @@
   "next_up": [],
   "all_assets": [
     {
-      "id": "6c61b32fc9",
+      "id": "b3f65dc0d2",
       "name": "Furnace"
     },
     {
-      "id": "daf6f142a6",
+      "id": "bd96ef42c9",
       "name": "Generator"
     },
     {
-      "id": "9750970046",
+      "id": "2bcc9f674a",
       "name": "Maple House"
     },
     {
-      "id": "7006233136",
+      "id": "e5f4bff5be",
       "name": "Mower"
     },
     {
-      "id": "09032649e3",
+      "id": "f2a88f650c",
       "name": "Pickup truck"
     },
     {
-      "id": "46dd01dc95",
+      "id": "f2fc8a1e59",
       "name": "Raised bed"
     },
     {
-      "id": "ca45b49e29",
+      "id": "d7e10280ec",
       "name": "Truck"
     }
   ]

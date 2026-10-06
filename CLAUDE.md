@@ -208,7 +208,9 @@ children.
   → Execute → Record → Undo; add new action kinds there, never logic
   in `web/`), `/api/live` to know when to re-read (`core/live.py`,
   bumped by every `atomic_write_text`). Due items carry their suggested
-  `action`.
+  `action`. An approved action runs as the person who approved it
+  (`core.profile_manager.crediting`), so XP and rewards earned from the
+  phone are theirs, not whoever is signed in on the PC.
   DEC-0017 (2026-10-06): the web becomes *all* of MIA, function first,
   in Zac's concept look. Claude builds each module's working screen on
   the shared frame (`web/shell.js`: sidebar from `/api/shell`, Talk,

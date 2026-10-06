@@ -3,10 +3,10 @@
     "profile_id": "a1b2c3d4",
     "name": "Robin",
     "child": false,
-    "level": 1,
-    "total_xp": 95,
-    "xp_into_level": 95,
-    "xp_for_level": 100
+    "level": 2,
+    "total_xp": 175,
+    "xp_into_level": 75,
+    "xp_for_level": 200
   },
   "date": "Tue, Oct 6, 2026",
   "apps": [
@@ -95,6 +95,13 @@
       "page": "property.html"
     },
     {
+      "id": "character",
+      "name": "Character",
+      "icon": "👤",
+      "tagline": "Your story so far.",
+      "page": "character.html"
+    },
+    {
       "id": "assistant",
       "name": "MIA Assistant",
       "icon": "🗨",
@@ -113,7 +120,6 @@
     "Household",
     "Workshop",
     "Power",
-    "Character",
     "Observations",
     "People & Pets",
     "Notes",

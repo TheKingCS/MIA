@@ -186,7 +186,14 @@ class SkillManager:
         self._definitions: dict[str, SkillDefinition] = {}
         self._progress: dict[tuple[str, str], SkillProgress] = {}
         self._xp_log: list[SkillXpEvent] = []
+        # The files it reads, so undo (core/undo_log.py) knows to reload it.
+        self.progress_path, self.xp_log_path = _SKILL_PROGRESS_FILE, _SKILL_XP_LOG_FILE
         self._load_definitions()
+        self._load()
+
+    def _load(self) -> None:
+        """(Re)reads each person's progress and the XP log (undo calls this)."""
+        self._progress, self._xp_log = {}, []
         self._load_progress()
         self._load_xp_log()
 

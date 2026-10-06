@@ -222,7 +222,7 @@
   "as_of": "2026-10-06",
   "recipes": [
     {
-      "id": "51004a94a4",
+      "id": "14b8d8d3d2",
       "name": "Chicken stir fry",
       "category": "Dinner",
       "servings": 2,
@@ -262,7 +262,7 @@
       }
     },
     {
-      "id": "417fff4e96",
+      "id": "377063ac0c",
       "name": "Chili",
       "category": "Dinner",
       "servings": 4,
@@ -294,7 +294,7 @@
       }
     },
     {
-      "id": "63ff49db19",
+      "id": "f469d354dd",
       "name": "Overnight oats",
       "category": "Breakfast",
       "servings": 1,
@@ -330,7 +330,7 @@
       }
     },
     {
-      "id": "b6c4d8b472",
+      "id": "d0ad0c7fe2",
       "name": "Pasta primavera",
       "category": "Dinner",
       "servings": 4,
@@ -372,7 +372,7 @@
       }
     },
     {
-      "id": "a99e8782ee",
+      "id": "a39c5562be",
       "name": "Homemade ramen",
       "category": "Dinner",
       "servings": 2,
@@ -406,7 +406,7 @@
   ],
   "pantry": [
     {
-      "id": "a9a08e87cc",
+      "id": "c43849ffd5",
       "name": "Milk",
       "quantity": 1,
       "unit": "gal",
@@ -423,7 +423,7 @@
       }
     },
     {
-      "id": "fb4d187066",
+      "id": "26e5b9b1a8",
       "name": "chicken",
       "quantity": 1.0,
       "unit": "lb",
@@ -440,7 +440,7 @@
       }
     },
     {
-      "id": "db8c0dc95d",
+      "id": "e61f24822a",
       "name": "milk",
       "quantity": 1.0,
       "unit": "gal",
@@ -457,7 +457,7 @@
       }
     },
     {
-      "id": "d394121bc4",
+      "id": "54bb3d9f1e",
       "name": "honey",
       "quantity": 1.0,
       "unit": "jar",
@@ -474,7 +474,7 @@
       }
     },
     {
-      "id": "9f49a72846",
+      "id": "893b60eeed",
       "name": "oats",
       "quantity": 2.0,
       "unit": "lb",
@@ -491,7 +491,7 @@
       }
     },
     {
-      "id": "d750763632",
+      "id": "1b10e17276",
       "name": "Rice",
       "quantity": 5,
       "unit": "lb",
@@ -508,7 +508,7 @@
       }
     },
     {
-      "id": "ddfe2fe8e6",
+      "id": "a1dd36222e",
       "name": "rice",
       "quantity": 5.0,
       "unit": "lb",
@@ -527,7 +527,7 @@
   ],
   "grocery": [
     {
-      "id": "117775ffd9",
+      "id": "3d177f6dd3",
       "name": "Eggs",
       "quantity": 12,
       "unit": "",
@@ -535,7 +535,7 @@
       "for_recipe": null
     },
     {
-      "id": "2a806de635",
+      "id": "5d7ee26eb5",
       "name": "broccoli",
       "quantity": 0.0,
       "unit": "",
@@ -543,7 +543,7 @@
       "for_recipe": "Chicken stir fry"
     },
     {
-      "id": "3c5c06c2ba",
+      "id": "ad8175d3b3",
       "name": "soy sauce",
       "quantity": 0.0,
       "unit": "",
@@ -551,7 +551,7 @@
       "for_recipe": "Chicken stir fry"
     },
     {
-      "id": "716f26b099",
+      "id": "53888cfc17",
       "name": "Eggs",
       "quantity": 12.0,
       "unit": "",
@@ -561,23 +561,23 @@
   ],
   "meals": [
     {
-      "id": "f27348f1d6",
+      "id": "ec40183646",
       "date": "2026-10-06",
       "recipe": "Chili",
-      "recipe_id": "417fff4e96",
+      "recipe_id": "377063ac0c",
       "notes": ""
     },
     {
-      "id": "fe6c5fe98c",
+      "id": "60d71de6d5",
       "date": "2026-10-05",
       "recipe": "Overnight oats",
-      "recipe_id": "63ff49db19",
+      "recipe_id": "f469d354dd",
       "notes": ""
     }
   ],
   "suggestions": [
     {
-      "id": "63ff49db19",
+      "id": "f469d354dd",
       "name": "Overnight oats",
       "category": "Breakfast",
       "servings": 1,
@@ -613,7 +613,7 @@
       }
     },
     {
-      "id": "51004a94a4",
+      "id": "14b8d8d3d2",
       "name": "Chicken stir fry",
       "category": "Dinner",
       "servings": 2,

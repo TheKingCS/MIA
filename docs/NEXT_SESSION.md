@@ -233,11 +233,14 @@ working screen on the frame, for Muse to restyle:
    stays on the PC: it needs the vault passphrase).
 2. ~~Garage + Maintenance~~ **done 2026-10-06** (plus Property,
    Greenhouse and the asset page; still to do: sensor graphs, parts per asset).
-3. **Missions, Skills, Character** (absorbs H-0013).
+3. ~~Missions, Skills, Character~~ **done 2026-10-06** (closes H-0013;
+   still to do: drawn prerequisite lines in the skill tree, character art).
 4. ~~Kitchen, Workout, Real Estate~~ **done 2026-10-06** (Zac asked for
    them next; still to do: recipe ratings and photos, rest timer and
    guided sessions, depreciation and selling a property).
-5. Calendar, Notes, Inbox, full Assistant chat; then the rest of the 59 rows.
+5. Photo fields for assets, recipes and properties (Q-0014, Muse said yes),
+   stored in each person's data folder, never `web/img/` (that's the public repo).
+6. Calendar, Notes, Inbox, full Assistant chat; then the rest of the 59 rows.
 Ctrl+K search on the web is also still missing (Shell row).
 
 **Direction (2026-10-01):** keep perfecting MIA for personal use, but

@@ -309,6 +309,7 @@ import core.equipment_actions  # noqa: E402,F401  (Garage, Property, Greenhouse,
 import core.kitchen_actions  # noqa: E402,F401
 import core.workout_actions  # noqa: E402,F401
 import core.estate_actions  # noqa: E402,F401
+import core.mission_actions  # noqa: E402,F401  (Missions, Skills, Character)
 
 
 # ------------------------------------------------------------------ the five steps
@@ -372,6 +373,7 @@ class ActionCenter:
         which records the history; the change is kept for undo."""
         from core import life_events
         from core.main_thread import publish
+        from core.profile_manager import crediting
         from core.undo_log import recording
 
         proposal = self.get(proposal_id, _who(context))
@@ -381,7 +383,7 @@ class ActionCenter:
         source = "assistant" if proposal.proposed_by == "mia" else "manual"
         try:
             with recording(f"action_{proposal.kind}", proposal.profile_id) as change, \
-                    life_events.acting(source, proposal.profile_id):
+                    life_events.acting(source, proposal.profile_id), crediting(context, proposal.profile_id):
                 proposal.result = action.execute(context, proposal.params)
         except ActionError as problem:
             proposal.status, proposal.result = FAILED, str(problem)

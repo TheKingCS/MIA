@@ -237,8 +237,8 @@
           "icon": "👤",
           "tagline": "Your story so far.",
           "description": "A living record of what you've actually done.",
-          "page": null,
-          "on_web": false,
+          "page": "character.html",
+          "on_web": true,
           "shown": true,
           "can_hide": true,
           "ask": "What have I done this week?",
@@ -1664,7 +1664,7 @@
   ],
   "counts": {
     "apps": 35,
-    "on_web": 14,
+    "on_web": 15,
     "tools": 201
   }
 }

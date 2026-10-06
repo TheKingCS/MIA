@@ -157,6 +157,8 @@ class PathwayManager:
         self.context = context
         self._pathways: dict[str, Pathway] = {}
         self._progress: list[PathwayProgress] = []
+        # The file it reads, so undo (core/undo_log.py) knows to reload it.
+        self.progress_path = _PROGRESS_FILE
         self._load_definitions()
         self._load_progress()
         self.context.events.subscribe("mission.completed", self._on_mission_completed)
@@ -191,6 +193,11 @@ class PathwayManager:
     # ------------------------------------------------------------------
     # Progress — owned, persisted
     # ------------------------------------------------------------------
+
+    def _load(self) -> None:
+        """Undo calls this after putting the progress file back (or taking it away)."""
+        self._progress = []
+        self._load_progress()
 
     def _load_progress(self) -> None:
         if not _PROGRESS_FILE.exists():

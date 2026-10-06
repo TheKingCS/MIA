@@ -127,13 +127,16 @@ def test_a_child_can_only_take_child_actions(world):
     project = world.projects.add_project("Room")
     todo = world.tasks.add_task(project.project_id, "Tidy desk")
     assert world.actions.propose(world, "task.done", {"task_id": todo.task_id}).status == "proposed"
-    # Kitchen and Workout are children's apps too (CHILD_APPS), so their kinds are
-    # child-safe, except deleting a recipe; nothing about money or property is.
+    # Kitchen, Workout, Missions, Skills and Character are children's apps too
+    # (CHILD_APPS), so their kinds are child-safe, except deleting a recipe or a
+    # mission; nothing about money or property is.
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
-    kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "workout_template.")
+    kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "workout_template.",
+                           "mission.", "objective.", "pathway.", "character.")
     assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite"}
     assert "recipe.delete" not in child_ok and "meal.log" in child_ok and "workout.log" in child_ok
+    assert "mission.delete" not in child_ok and "mission.complete" in child_ok
 
 
 def test_mia_proposed_actions_are_recorded_as_hers(world):

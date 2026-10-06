@@ -282,7 +282,7 @@
   "available": true,
   "assets": [
     {
-      "id": "7006233136",
+      "id": "e5f4bff5be",
       "name": "Mower",
       "category": "Power Equipment",
       "make_model": "Make Z-100",
@@ -290,9 +290,9 @@
       "overdue": 2,
       "tasks": [
         {
-          "id": "f2198c4d85",
+          "id": "055371f062",
           "title": "Check oil",
-          "asset_id": "7006233136",
+          "asset_id": "e5f4bff5be",
           "asset": "Mower",
           "trigger": "calendar",
           "unit": "",
@@ -308,7 +308,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "7006233136",
+            "asset_id": "e5f4bff5be",
             "title": "Check oil",
             "trigger_type": "calendar",
             "interval_days": 30,
@@ -324,15 +324,15 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "f2198c4d85"
+              "task_id": "055371f062"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "f7aa4b3b4a",
+          "id": "8fe541f12b",
           "title": "Sharpen blades",
-          "asset_id": "7006233136",
+          "asset_id": "e5f4bff5be",
           "asset": "Mower",
           "trigger": "calendar",
           "unit": "",
@@ -348,7 +348,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "7006233136",
+            "asset_id": "e5f4bff5be",
             "title": "Sharpen blades",
             "trigger_type": "calendar",
             "interval_days": 60,
@@ -364,15 +364,15 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "f7aa4b3b4a"
+              "task_id": "8fe541f12b"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "8a00494e9d",
+          "id": "88be20c93b",
           "title": "Oil & filter",
-          "asset_id": "7006233136",
+          "asset_id": "e5f4bff5be",
           "asset": "Mower",
           "trigger": "runtime",
           "unit": "engine hours",
@@ -388,7 +388,7 @@
           "latest": 12.8,
           "predicted": null,
           "values": {
-            "asset_id": "7006233136",
+            "asset_id": "e5f4bff5be",
             "title": "Oil & filter",
             "trigger_type": "runtime",
             "interval_days": null,
@@ -404,7 +404,7 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "8a00494e9d"
+              "task_id": "88be20c93b"
             },
             "asks_meter": true
           }
@@ -421,7 +421,7 @@
       "scope": "garage"
     },
     {
-      "id": "09032649e3",
+      "id": "f2a88f650c",
       "name": "Pickup truck",
       "category": "Vehicle",
       "make_model": "Make Model T",
@@ -429,9 +429,9 @@
       "overdue": 1,
       "tasks": [
         {
-          "id": "dbbf27c76d",
+          "id": "886642885c",
           "title": "Tire rotation",
-          "asset_id": "09032649e3",
+          "asset_id": "f2a88f650c",
           "asset": "Pickup truck",
           "trigger": "calendar",
           "unit": "",
@@ -447,7 +447,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "09032649e3",
+            "asset_id": "f2a88f650c",
             "title": "Tire rotation",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -463,15 +463,15 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "dbbf27c76d"
+              "task_id": "886642885c"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "7a78533f5c",
+          "id": "ea22fcf0a0",
           "title": "Brake check",
-          "asset_id": "09032649e3",
+          "asset_id": "f2a88f650c",
           "asset": "Pickup truck",
           "trigger": "calendar",
           "unit": "",
@@ -487,7 +487,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "09032649e3",
+            "asset_id": "f2a88f650c",
             "title": "Brake check",
             "trigger_type": "calendar",
             "interval_days": 180,
@@ -503,7 +503,7 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "7a78533f5c"
+              "task_id": "ea22fcf0a0"
             },
             "asks_meter": false
           }
@@ -515,7 +515,7 @@
       "scope": "garage"
     },
     {
-      "id": "daf6f142a6",
+      "id": "bd96ef42c9",
       "name": "Generator",
       "category": "Power Equipment",
       "make_model": "Make G5000",
@@ -523,9 +523,9 @@
       "overdue": 0,
       "tasks": [
         {
-          "id": "29ccbbea74",
+          "id": "d3bb962410",
           "title": "Test run",
-          "asset_id": "daf6f142a6",
+          "asset_id": "bd96ef42c9",
           "asset": "Generator",
           "trigger": "calendar",
           "unit": "",
@@ -541,7 +541,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "daf6f142a6",
+            "asset_id": "bd96ef42c9",
             "title": "Test run",
             "trigger_type": "calendar",
             "interval_days": 30,
@@ -557,7 +557,7 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "29ccbbea74"
+              "task_id": "d3bb962410"
             },
             "asks_meter": false
           }
@@ -569,7 +569,7 @@
       "scope": "garage"
     },
     {
-      "id": "ca45b49e29",
+      "id": "d7e10280ec",
       "name": "Truck",
       "category": "Vehicle",
       "make_model": "",
@@ -577,9 +577,9 @@
       "overdue": 0,
       "tasks": [
         {
-          "id": "b7d714d1ce",
+          "id": "0aea2e7054",
           "title": "Oil change",
-          "asset_id": "ca45b49e29",
+          "asset_id": "d7e10280ec",
           "asset": "Truck",
           "trigger": "calendar",
           "unit": "",
@@ -595,7 +595,7 @@
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "ca45b49e29",
+            "asset_id": "d7e10280ec",
             "title": "Oil change",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -611,7 +611,7 @@
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "b7d714d1ce"
+              "task_id": "0aea2e7054"
             },
             "asks_meter": false
           }
@@ -625,9 +625,9 @@
   ],
   "attention": [
     {
-      "id": "f2198c4d85",
+      "id": "055371f062",
       "title": "Check oil",
-      "asset_id": "7006233136",
+      "asset_id": "e5f4bff5be",
       "asset": "Mower",
       "trigger": "calendar",
       "unit": "",
@@ -643,7 +643,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "7006233136",
+        "asset_id": "e5f4bff5be",
         "title": "Check oil",
         "trigger_type": "calendar",
         "interval_days": 30,
@@ -659,15 +659,15 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "f2198c4d85"
+          "task_id": "055371f062"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "f7aa4b3b4a",
+      "id": "8fe541f12b",
       "title": "Sharpen blades",
-      "asset_id": "7006233136",
+      "asset_id": "e5f4bff5be",
       "asset": "Mower",
       "trigger": "calendar",
       "unit": "",
@@ -683,7 +683,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "7006233136",
+        "asset_id": "e5f4bff5be",
         "title": "Sharpen blades",
         "trigger_type": "calendar",
         "interval_days": 60,
@@ -699,15 +699,15 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "f7aa4b3b4a"
+          "task_id": "8fe541f12b"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "dbbf27c76d",
+      "id": "886642885c",
       "title": "Tire rotation",
-      "asset_id": "09032649e3",
+      "asset_id": "f2a88f650c",
       "asset": "Pickup truck",
       "trigger": "calendar",
       "unit": "",
@@ -723,7 +723,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "09032649e3",
+        "asset_id": "f2a88f650c",
         "title": "Tire rotation",
         "trigger_type": "calendar",
         "interval_days": 90,
@@ -739,7 +739,7 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "dbbf27c76d"
+          "task_id": "886642885c"
         },
         "asks_meter": false
       }
@@ -747,9 +747,9 @@
   ],
   "next_up": [
     {
-      "id": "29ccbbea74",
+      "id": "d3bb962410",
       "title": "Test run",
-      "asset_id": "daf6f142a6",
+      "asset_id": "bd96ef42c9",
       "asset": "Generator",
       "trigger": "calendar",
       "unit": "",
@@ -765,7 +765,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "daf6f142a6",
+        "asset_id": "bd96ef42c9",
         "title": "Test run",
         "trigger_type": "calendar",
         "interval_days": 30,
@@ -781,15 +781,15 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "29ccbbea74"
+          "task_id": "d3bb962410"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "b7d714d1ce",
+      "id": "0aea2e7054",
       "title": "Oil change",
-      "asset_id": "ca45b49e29",
+      "asset_id": "d7e10280ec",
       "asset": "Truck",
       "trigger": "calendar",
       "unit": "",
@@ -805,7 +805,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "ca45b49e29",
+        "asset_id": "d7e10280ec",
         "title": "Oil change",
         "trigger_type": "calendar",
         "interval_days": 90,
@@ -821,15 +821,15 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "b7d714d1ce"
+          "task_id": "0aea2e7054"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "7a78533f5c",
+      "id": "ea22fcf0a0",
       "title": "Brake check",
-      "asset_id": "09032649e3",
+      "asset_id": "f2a88f650c",
       "asset": "Pickup truck",
       "trigger": "calendar",
       "unit": "",
@@ -845,7 +845,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "09032649e3",
+        "asset_id": "f2a88f650c",
         "title": "Brake check",
         "trigger_type": "calendar",
         "interval_days": 180,
@@ -861,7 +861,7 @@
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "7a78533f5c"
+          "task_id": "ea22fcf0a0"
         },
         "asks_meter": false
       }
@@ -869,31 +869,31 @@
   ],
   "all_assets": [
     {
-      "id": "6c61b32fc9",
+      "id": "b3f65dc0d2",
       "name": "Furnace"
     },
     {
-      "id": "daf6f142a6",
+      "id": "bd96ef42c9",
       "name": "Generator"
     },
     {
-      "id": "9750970046",
+      "id": "2bcc9f674a",
       "name": "Maple House"
     },
     {
-      "id": "7006233136",
+      "id": "e5f4bff5be",
       "name": "Mower"
     },
     {
-      "id": "09032649e3",
+      "id": "f2a88f650c",
       "name": "Pickup truck"
     },
     {
-      "id": "46dd01dc95",
+      "id": "f2fc8a1e59",
       "name": "Raised bed"
     },
     {
-      "id": "ca45b49e29",
+      "id": "d7e10280ec",
       "name": "Truck"
     }
   ]

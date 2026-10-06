@@ -1,0 +1,1068 @@
+{
+  "available": true,
+  "forms": {
+    "mission": {
+      "noun": "mission",
+      "id_param": "mission_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "icon",
+          "label": "Icon",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": "📋"
+        },
+        {
+          "name": "summary",
+          "label": "What it's about",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "difficulty",
+          "label": "Difficulty",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "EASY",
+            "NORMAL",
+            "HARD"
+          ],
+          "default": "NORMAL"
+        },
+        {
+          "name": "region",
+          "label": "Area",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "reward_xp",
+          "label": "XP reward",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "reward_credits",
+          "label": "Credits",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        }
+      ]
+    },
+    "objective": {
+      "noun": "objective",
+      "id_param": "mission_id",
+      "fields": [
+        {
+          "name": "description",
+          "label": "Objective",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "target",
+          "label": "How many",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 1.0
+        }
+      ]
+    },
+    "abandon": {
+      "noun": "mission",
+      "id_param": "mission_id",
+      "fields": [
+        {
+          "name": "reason",
+          "label": "Why",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Too hard for now",
+            "Not interested anymore",
+            "No time right now",
+            "Something else"
+          ],
+          "default": "Something else"
+        }
+      ]
+    },
+    "skill_reward": {
+      "noun": "skill",
+      "id_param": "mission_id",
+      "fields": [
+        {
+          "name": "skill_id",
+          "label": "Skill",
+          "type": "pick",
+          "required": true,
+          "options": [
+            "skills"
+          ],
+          "default": null
+        },
+        {
+          "name": "xp",
+          "label": "XP",
+          "type": "int",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "as_of": "2026-10-06",
+  "me": {
+    "level": 2,
+    "xp_into_level": 75,
+    "xp_for_level": 200,
+    "total_xp": 175,
+    "credits": 0,
+    "prestige_tier": 0,
+    "prestige_color": null,
+    "next_prestige_color": "green",
+    "can_prestige": false,
+    "name": "Robin"
+  },
+  "skills": [
+    {
+      "id": "athleticism",
+      "name": "🏆 Athleticism"
+    },
+    {
+      "id": "calisthenics",
+      "name": "🤸‍♂️ Calisthenics"
+    },
+    {
+      "id": "coordination",
+      "name": "🤽 Coordination"
+    },
+    {
+      "id": "endurance",
+      "name": "🏃 Endurance"
+    },
+    {
+      "id": "mobility",
+      "name": "🤸 Mobility"
+    },
+    {
+      "id": "nutrition",
+      "name": "🥗 Nutrition"
+    },
+    {
+      "id": "recovery",
+      "name": "🛌 Recovery"
+    },
+    {
+      "id": "strength",
+      "name": "💪 Strength"
+    },
+    {
+      "id": "carpentry",
+      "name": "🪚 Carpentry"
+    },
+    {
+      "id": "code_standards",
+      "name": "📋 Code Standards"
+    },
+    {
+      "id": "concrete",
+      "name": "🪨 Concrete"
+    },
+    {
+      "id": "drywall",
+      "name": "⬜ Drywall"
+    },
+    {
+      "id": "electrical_wiring",
+      "name": "💡 Electrical Wiring"
+    },
+    {
+      "id": "foundation_work",
+      "name": "🧱 Foundation Work"
+    },
+    {
+      "id": "framing",
+      "name": "📐 Framing"
+    },
+    {
+      "id": "hvac",
+      "name": "🌡️ HVAC"
+    },
+    {
+      "id": "home_building",
+      "name": "🏡 Home Building"
+    },
+    {
+      "id": "insulation",
+      "name": "🛡️ Insulation"
+    },
+    {
+      "id": "masonry",
+      "name": "🏛️ Masonry"
+    },
+    {
+      "id": "painting_finishing",
+      "name": "🎨 Painting & Finishing"
+    },
+    {
+      "id": "permitting_inspection",
+      "name": "📝 Permitting & Inspection"
+    },
+    {
+      "id": "plumbing",
+      "name": "🚿 Plumbing"
+    },
+    {
+      "id": "roofing",
+      "name": "🏠 Roofing"
+    },
+    {
+      "id": "content_creation",
+      "name": "🎬 Content Creation"
+    },
+    {
+      "id": "costume_design",
+      "name": "🤻 Costume Design"
+    },
+    {
+      "id": "djing",
+      "name": "🎧 DJing"
+    },
+    {
+      "id": "lighting",
+      "name": "💡 Lighting"
+    },
+    {
+      "id": "music",
+      "name": "🎵 Music"
+    },
+    {
+      "id": "photography",
+      "name": "📷 Photography"
+    },
+    {
+      "id": "projection_mapping",
+      "name": "📽️ Projection Mapping"
+    },
+    {
+      "id": "storytelling",
+      "name": "📖 Storytelling"
+    },
+    {
+      "id": "videography",
+      "name": "🎥 Videography"
+    },
+    {
+      "id": "animal_care",
+      "name": "🐔 Animal Care"
+    },
+    {
+      "id": "aquaponics",
+      "name": "🐟 Aquaponics"
+    },
+    {
+      "id": "closed_loop_agriculture",
+      "name": "♻️ Closed-Loop Agriculture"
+    },
+    {
+      "id": "composting",
+      "name": "🍂 Composting"
+    },
+    {
+      "id": "construction",
+      "name": "🏗️ Construction"
+    },
+    {
+      "id": "energy_systems",
+      "name": "⚡ Energy Systems"
+    },
+    {
+      "id": "food_production",
+      "name": "🌽 Food Production"
+    },
+    {
+      "id": "gardening",
+      "name": "🌱 Gardening"
+    },
+    {
+      "id": "greenhouse_automation",
+      "name": "🤖 Greenhouse Automation"
+    },
+    {
+      "id": "greenhouse_management",
+      "name": "🏡 Greenhouse Management"
+    },
+    {
+      "id": "home_maintenance",
+      "name": "🪠 Home Maintenance"
+    },
+    {
+      "id": "hydroponics",
+      "name": "🍿 Hydroponics"
+    },
+    {
+      "id": "irrigation",
+      "name": "💧 Irrigation"
+    },
+    {
+      "id": "landscaping",
+      "name": "🏞️ Landscaping"
+    },
+    {
+      "id": "seed_starting",
+      "name": "🌿 Seed Starting"
+    },
+    {
+      "id": "soil_science",
+      "name": "🪱 Soil Science"
+    },
+    {
+      "id": "water_systems",
+      "name": "🚰 Water Systems"
+    },
+    {
+      "id": "3d_printing",
+      "name": "🖨️ 3D Printing"
+    },
+    {
+      "id": "cad",
+      "name": "📐 CAD / 3D Design"
+    },
+    {
+      "id": "electronics",
+      "name": "🔌 Electronics"
+    },
+    {
+      "id": "fabrication",
+      "name": "🔨 Fabrication"
+    },
+    {
+      "id": "laser_engraving",
+      "name": "✨ Laser Engraving"
+    },
+    {
+      "id": "mechanical_design",
+      "name": "⚙️ Mechanical Design"
+    },
+    {
+      "id": "metalworking",
+      "name": "⛏️ Metalworking"
+    },
+    {
+      "id": "prototyping",
+      "name": "🧪 Prototyping"
+    },
+    {
+      "id": "repair",
+      "name": "🛠️ Repair"
+    },
+    {
+      "id": "soldering",
+      "name": "🔥 Soldering"
+    },
+    {
+      "id": "woodworking",
+      "name": "🪵 Woodworking"
+    },
+    {
+      "id": "engineering",
+      "name": "⚙️ Engineering"
+    },
+    {
+      "id": "focus",
+      "name": "🎯 Focus"
+    },
+    {
+      "id": "learning",
+      "name": "📚 Learning"
+    },
+    {
+      "id": "mathematics",
+      "name": "➕ Mathematics"
+    },
+    {
+      "id": "memory",
+      "name": "🧠 Memory"
+    },
+    {
+      "id": "problem_solving",
+      "name": "🧩 Problem Solving"
+    },
+    {
+      "id": "programming",
+      "name": "💻 Programming"
+    },
+    {
+      "id": "research",
+      "name": "🔍 Research"
+    },
+    {
+      "id": "camping",
+      "name": "⛺ Camping"
+    },
+    {
+      "id": "fishing",
+      "name": "🎣 Fishing"
+    },
+    {
+      "id": "foraging",
+      "name": "🍄 Foraging"
+    },
+    {
+      "id": "hiking",
+      "name": "🥾 Hiking"
+    },
+    {
+      "id": "kayaking",
+      "name": "🛶 Kayaking"
+    },
+    {
+      "id": "navigation",
+      "name": "🧭 Navigation"
+    },
+    {
+      "id": "survival",
+      "name": "🔥 Survival"
+    },
+    {
+      "id": "wilderness_knowledge",
+      "name": "🌲 Wilderness Knowledge"
+    },
+    {
+      "id": "communication",
+      "name": "🗣️ Communication"
+    },
+    {
+      "id": "cooking",
+      "name": "🍳 Cooking"
+    },
+    {
+      "id": "hospitality",
+      "name": "🍽️ Hospitality"
+    },
+    {
+      "id": "household_management",
+      "name": "🏡 Household Management"
+    },
+    {
+      "id": "leadership",
+      "name": "🪡 Leadership"
+    },
+    {
+      "id": "organization",
+      "name": "🗂️ Organization"
+    },
+    {
+      "id": "teaching",
+      "name": "🎓 Teaching"
+    },
+    {
+      "id": "teamwork",
+      "name": "🤝 Teamwork"
+    },
+    {
+      "id": "ai",
+      "name": "🧠 AI"
+    },
+    {
+      "id": "arduino",
+      "name": "🔹 Arduino"
+    },
+    {
+      "id": "automation",
+      "name": "🦾 Automation"
+    },
+    {
+      "id": "autonomous_systems",
+      "name": "🚀 Autonomous Systems"
+    },
+    {
+      "id": "linux",
+      "name": "🐧 Linux"
+    },
+    {
+      "id": "networking",
+      "name": "🌐 Networking"
+    },
+    {
+      "id": "python",
+      "name": "🐍 Python"
+    },
+    {
+      "id": "raspberry_pi",
+      "name": "🍓 Raspberry Pi"
+    },
+    {
+      "id": "robotics",
+      "name": "🤖 Robotics"
+    },
+    {
+      "id": "sensors",
+      "name": "📡 Sensors"
+    },
+    {
+      "id": "smart_home",
+      "name": "🏠 Smart Home"
+    }
+  ],
+  "daily": [
+    {
+      "id": "96f6c44e5d",
+      "name": "Daily push-ups — Oct 06",
+      "icon": "💪",
+      "summary": "Today's real goal, week 1.",
+      "area": "",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 10,
+      "reward_credits": 0,
+      "skill_rewards": [],
+      "rewards_given": false,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Do 30 push-ups",
+          "progress": 0.0,
+          "target": 30.0,
+          "done": false,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 0,
+      "total": 1,
+      "percent": 0,
+      "ready": false,
+      "daily": true,
+      "weekly": false,
+      "streak": 0,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Daily push-ups — Oct 06",
+        "icon": "💪",
+        "summary": "Today's real goal, week 1.",
+        "difficulty": "NORMAL",
+        "region": "",
+        "reward_xp": 10,
+        "reward_credits": 0
+      }
+    },
+    {
+      "id": "6ae7093bf6",
+      "name": "Daily push-ups — Perfect Week 1",
+      "icon": "🏆",
+      "summary": "Complete every day's Daily push-ups goal this week for a bonus.",
+      "area": "",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 0,
+      "reward_credits": 0,
+      "skill_rewards": [],
+      "rewards_given": false,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Complete every day this week",
+          "progress": 0.0,
+          "target": 7.0,
+          "done": false,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 0,
+      "total": 1,
+      "percent": 0,
+      "ready": false,
+      "daily": false,
+      "weekly": true,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Daily push-ups — Perfect Week 1",
+        "icon": "🏆",
+        "summary": "Complete every day's Daily push-ups goal this week for a bonus.",
+        "difficulty": "NORMAL",
+        "region": "",
+        "reward_xp": 0,
+        "reward_credits": 0
+      }
+    }
+  ],
+  "active": [
+    {
+      "id": "8dc6e23a11",
+      "name": "Organize the garage",
+      "icon": "🧰",
+      "summary": "A place for everything.",
+      "area": "Home",
+      "difficulty": "EASY",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 60,
+      "reward_credits": 5,
+      "skill_rewards": [],
+      "rewards_given": false,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Sort the tools",
+          "progress": 1.0,
+          "target": 1.0,
+          "done": true,
+          "counts_itself": false,
+          "for": null
+        },
+        {
+          "index": 1,
+          "description": "Hang the bikes",
+          "progress": 1.0,
+          "target": 1.0,
+          "done": true,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 2,
+      "total": 2,
+      "percent": 100,
+      "ready": true,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Organize the garage",
+        "icon": "🧰",
+        "summary": "A place for everything.",
+        "difficulty": "EASY",
+        "region": "Home",
+        "reward_xp": 60,
+        "reward_credits": 5
+      }
+    },
+    {
+      "id": "b8509b0a7a",
+      "name": "Run a 5K",
+      "icon": "🏃",
+      "summary": "Build up to running 5 km without stopping.",
+      "area": "Fitness",
+      "difficulty": "HARD",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 250,
+      "reward_credits": 25,
+      "skill_rewards": [
+        {
+          "id": "endurance",
+          "name": "Endurance",
+          "icon": "🏃",
+          "xp": 40
+        }
+      ],
+      "rewards_given": false,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Training runs",
+          "progress": 5.0,
+          "target": 12.0,
+          "done": false,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 0,
+      "total": 1,
+      "percent": 0,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Run a 5K",
+        "icon": "🏃",
+        "summary": "Build up to running 5 km without stopping.",
+        "difficulty": "HARD",
+        "region": "Fitness",
+        "reward_xp": 250,
+        "reward_credits": 25
+      }
+    },
+    {
+      "id": "ef69cc8e82",
+      "name": "Cook 3 healthy meals",
+      "icon": "📋",
+      "summary": "",
+      "area": "",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 0,
+      "reward_credits": 0,
+      "skill_rewards": [],
+      "rewards_given": false,
+      "objectives": [],
+      "done": 0,
+      "total": 0,
+      "percent": 0,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [
+        "Homemade ramen"
+      ],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Cook 3 healthy meals",
+        "icon": "📋",
+        "summary": "",
+        "difficulty": "NORMAL",
+        "region": "",
+        "reward_xp": 0,
+        "reward_credits": 0
+      }
+    },
+    {
+      "id": "6b156b1396",
+      "name": "Prepare the garden for spring",
+      "icon": "🌱",
+      "summary": "Get the beds ready before the last frost.",
+      "area": "Homestead",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 120,
+      "reward_credits": 10,
+      "skill_rewards": [
+        {
+          "id": "gardening",
+          "name": "Gardening",
+          "icon": "🌱",
+          "xp": 25
+        }
+      ],
+      "rewards_given": false,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Turn the soil in 4 beds",
+          "progress": 3.0,
+          "target": 4.0,
+          "done": false,
+          "counts_itself": false,
+          "for": null
+        },
+        {
+          "index": 1,
+          "description": "Order seeds",
+          "progress": 1.0,
+          "target": 1.0,
+          "done": true,
+          "counts_itself": false,
+          "for": null
+        },
+        {
+          "index": 2,
+          "description": "Fix the hose",
+          "progress": 0.0,
+          "target": 1.0,
+          "done": false,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 1,
+      "total": 3,
+      "percent": 33,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Prepare the garden for spring",
+        "icon": "🌱",
+        "summary": "Get the beds ready before the last frost.",
+        "difficulty": "NORMAL",
+        "region": "Homestead",
+        "reward_xp": 120,
+        "reward_credits": 10
+      }
+    },
+    {
+      "id": "a50e715082",
+      "name": "Build a Birdhouse",
+      "icon": "🪚",
+      "summary": "A small, low-stakes first project to practice measuring, cutting, and assembling.",
+      "area": "",
+      "difficulty": "EASY",
+      "type": "OPTIONAL MISSION",
+      "status": "active",
+      "from_mia": true,
+      "abandon_reason": null,
+      "reward_xp": 20,
+      "reward_credits": 0,
+      "skill_rewards": [
+        {
+          "id": "carpentry",
+          "name": "Carpentry",
+          "icon": "🪚",
+          "xp": 20
+        }
+      ],
+      "rewards_given": false,
+      "objectives": [],
+      "done": 0,
+      "total": 0,
+      "percent": 0,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": "Carpentry Fundamentals · step 1 of 3",
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Build a Birdhouse",
+        "icon": "🪚",
+        "summary": "A small, low-stakes first project to practice measuring, cutting, and assembling.",
+        "difficulty": "EASY",
+        "region": "",
+        "reward_xp": 20,
+        "reward_credits": 0
+      }
+    }
+  ],
+  "completed": [
+    {
+      "id": "2c6c89cd66",
+      "name": "Read 3 books",
+      "icon": "📚",
+      "summary": "",
+      "area": "Mind",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "completed",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 80,
+      "reward_credits": 0,
+      "skill_rewards": [
+        {
+          "id": "learning",
+          "name": "Learning",
+          "icon": "📚",
+          "xp": 30
+        }
+      ],
+      "rewards_given": true,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Books finished",
+          "progress": 3.0,
+          "target": 3.0,
+          "done": true,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 1,
+      "total": 1,
+      "percent": 100,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Read 3 books",
+        "icon": "📚",
+        "summary": "",
+        "difficulty": "NORMAL",
+        "region": "Mind",
+        "reward_xp": 80,
+        "reward_credits": 0
+      }
+    },
+    {
+      "id": "4b954d4aa4",
+      "name": "Plan the week",
+      "icon": "📋",
+      "summary": "",
+      "area": "",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "completed",
+      "from_mia": false,
+      "abandon_reason": null,
+      "reward_xp": 0,
+      "reward_credits": 0,
+      "skill_rewards": [
+        {
+          "id": "organization",
+          "name": "Organization",
+          "icon": "🗂️",
+          "xp": 10
+        }
+      ],
+      "rewards_given": true,
+      "objectives": [],
+      "done": 0,
+      "total": 0,
+      "percent": 100,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Plan the week",
+        "icon": "📋",
+        "summary": "",
+        "difficulty": "NORMAL",
+        "region": "",
+        "reward_xp": 0,
+        "reward_credits": 0
+      }
+    }
+  ],
+  "set_aside": [
+    {
+      "id": "f9a9198f18",
+      "name": "Learn to juggle",
+      "icon": "🤹",
+      "summary": "",
+      "area": "",
+      "difficulty": "NORMAL",
+      "type": "OPTIONAL MISSION",
+      "status": "abandoned",
+      "from_mia": false,
+      "abandon_reason": "No time right now",
+      "reward_xp": 40,
+      "reward_credits": 0,
+      "skill_rewards": [],
+      "rewards_given": false,
+      "objectives": [],
+      "done": 0,
+      "total": 0,
+      "percent": 0,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Learn to juggle",
+        "icon": "🤹",
+        "summary": "",
+        "difficulty": "NORMAL",
+        "region": "",
+        "reward_xp": 40,
+        "reward_credits": 0
+      }
+    }
+  ],
+  "counts": {
+    "active": 7,
+    "ready": 1,
+    "completed": 2
+  }
+}

@@ -167,6 +167,19 @@
         el("div", { class: "xpbar-fill", style: "width:" + pct + "%" }))));
   }
 
+  /** The concept's level card (avatar, level, XP bar) from a page's `me`
+   *  (core.web_progress.level_block); its prestige color shows once earned. */
+  function levelCard(node, me) {
+    if (!node || !me) return;
+    const pct = me.xp_for_level ? Math.round((100 * me.xp_into_level) / me.xp_for_level) : 0;
+    node.className = "glass home-level page-level" + (me.prestige_color ? " prestige-" + me.prestige_color : "");
+    node.replaceChildren(
+      el("span", { class: "home-avatar", "aria-hidden": "true" }, "🧙"),
+      el("span", { class: "home-level-text" }, el("strong", {}, "lvl " + me.level + (me.prestige_tier ? " · P" + me.prestige_tier : "")),
+        el("small", {}, me.xp_into_level.toLocaleString() + " / " + me.xp_for_level.toLocaleString() + " XP · " + me.credits + " credits")),
+      el("span", { class: "xpbar" }, el("span", { class: "xpbar-track" }, el("span", { class: "xpbar-fill", style: "width:" + pct + "%" }))));
+  }
+
   function appLinks(shell, cls) {
     const here = document.body.dataset.app || "web_home";
     return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
@@ -309,7 +322,7 @@
     if (talkHere) mountTalk();
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, talk: toggleTalk };
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, talk: toggleTalk };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

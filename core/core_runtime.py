@@ -183,6 +183,11 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.personal_data = PersonalData(context)
     context.personal_data.watch(events)
     context.personal_data.activate_current()
+    # Challenge chains, hidden achievements and prestige emblems (the web's
+    # Skills and Character screens, 2026-10-06), as on the desktop.
+    from core.rewards_manager import RewardsManager
+
+    context.rewards = RewardsManager(context)
 
     # Constructed but never `.discover()`-ed — stays empty for the life
     # of a headless Core process, so `open_module` (not registered

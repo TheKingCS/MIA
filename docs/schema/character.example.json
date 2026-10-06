@@ -1,0 +1,124 @@
+{
+  "available": true,
+  "as_of": "2026-10-06",
+  "me": {
+    "level": 2,
+    "xp_into_level": 75,
+    "xp_for_level": 200,
+    "total_xp": 175,
+    "credits": 0,
+    "prestige_tier": 0,
+    "prestige_color": null,
+    "next_prestige_color": "green",
+    "can_prestige": false,
+    "name": "Robin"
+  },
+  "stats": [
+    {
+      "icon": "🚜",
+      "name": "Engine Hours Logged",
+      "unit": "hrs",
+      "value": 0.0
+    },
+    {
+      "icon": "💪",
+      "name": "Workout Hours Logged",
+      "unit": "hrs",
+      "value": 3.2
+    },
+    {
+      "icon": "🏆",
+      "name": "Missions Completed",
+      "unit": "",
+      "value": 2.0
+    },
+    {
+      "icon": "🚗",
+      "name": "Vehicle Miles Logged",
+      "unit": "mi",
+      "value": 0.0
+    },
+    {
+      "icon": "🍳",
+      "name": "Meals Cooked",
+      "unit": "",
+      "value": 2.0
+    },
+    {
+      "icon": "🛠️",
+      "name": "Projects Completed",
+      "unit": "",
+      "value": 0.0
+    }
+  ],
+  "collection": [],
+  "rarity": [
+    {
+      "rarity": 0,
+      "rarity_name": "Common",
+      "count": 0
+    },
+    {
+      "rarity": 1,
+      "rarity_name": "Uncommon",
+      "count": 0
+    },
+    {
+      "rarity": 2,
+      "rarity_name": "Rare",
+      "count": 0
+    },
+    {
+      "rarity": 3,
+      "rarity_name": "Epic",
+      "count": 0
+    },
+    {
+      "rarity": 4,
+      "rarity_name": "Legendary",
+      "count": 0
+    }
+  ],
+  "emblems": [],
+  "top_skills": [
+    {
+      "name": "Strength",
+      "icon": "💪",
+      "level": 4
+    },
+    {
+      "name": "Cooking",
+      "icon": "🍳",
+      "level": 2
+    },
+    {
+      "name": "Learning",
+      "icon": "📚",
+      "level": 2
+    },
+    {
+      "name": "Mobility",
+      "icon": "🤸",
+      "level": 2
+    },
+    {
+      "name": "Organization",
+      "icon": "🗂️",
+      "level": 1
+    }
+  ],
+  "missions_completed": 2,
+  "latest_missions": [
+    {
+      "name": "Read 3 books",
+      "icon": "📚",
+      "when": "2026-10-06"
+    },
+    {
+      "name": "Plan the week",
+      "icon": "📋",
+      "when": "2026-10-06"
+    }
+  ],
+  "member_since": "2026-10-06"
+}

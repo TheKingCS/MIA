@@ -1,312 +1,150 @@
 /*
- * missions.js — MIA's Missions screen (muse, 2026-10-05).
- *
- * Concept material, engine data only. Active missions are the engine's
- * due items with their real actions (Propose -> visible confirmation ->
- * Approve -> Undo, DEC-0009). Completed missions are the engine's recent
- * wins. "Invent one" goes through MIA.talk(): the assistant reads the
- * same life state and proposes — nothing is invented in this file.
- * No business logic here: no totals, no date math (DEC-0004).
+ * missions.js — the Missions screen (claude, 2026-10-06, DEC-0017/0018, H-0013).
+ * Renders MIA.missions() (core/web_progress.py): active missions (ready to
+ * complete first), daily missions with streaks, completed and set-aside ones;
+ * each opens to its objectives (+1, add, remove), rewards and the skills it
+ * teaches, with Complete, Give up for now, Pick back up, Edit and Delete.
+ * Every change is a mission action (core/mission_actions.py). Formatting only.
  */
 (function () {
   "use strict";
+  const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const arr = (v) => (Array.isArray(v) ? v : []);
-  let tab = "all";
+  const TABS = [["active", "Active"], ["daily", "Daily"], ["completed", "Completed"], ["set_aside", "Set aside"]];
+  let page = null;
+  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "active";
 
-  /* ---------- status line + undo ---------- */
-  function say(text, undoable) {
-    const status = $("status");
-    status.replaceChildren();
-    if (!text) return;
-    status.append(document.createTextNode(text));
-    if (undoable) {
-      const button = document.createElement("button");
-      button.className = "btn btn-ghost";
-      button.textContent = "Undo";
-      button.onclick = async () => {
-        try { await MIA.undo(undoable.proposal_id); say("Undone."); }
-        catch (e) { say(e && e.message ? e.message : "Couldn't undo that."); }
-      };
-      status.append(button);
-    }
+  const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
+  const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
+  const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+  const DIFF = { EASY: "chip-ok", NORMAL: "", HARD: "chip-bad" };
+  const section = (title, actions, ...body) =>
+    el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
+
+  function rewards(m) {
+    const bits = [m.reward_xp ? "+" + m.reward_xp + " XP" : null, m.reward_credits ? "+" + m.reward_credits + " credits" : null,
+      ...m.skill_rewards.map((s) => "+" + s.xp + " " + s.name)].filter(Boolean);
+    return bits.length ? bits.join(" · ") : null;
+  }
+  const bar = (pct) => el("div", { class: "bar", role: "progressbar", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100" },
+    el("div", { class: "bar-fill", style: "width:" + pct + "%" }));
+
+  // ------------------------------------------------------------ changes
+  async function add() {
+    const v = await form("A new mission", page.forms.mission.fields, {});
+    if (v) act({ kind: "mission.add", params: v });
+  }
+  async function edit(m) {
+    const v = await form("Edit " + m.name, page.forms.mission.fields, m.values);
+    if (v) act({ kind: "mission.edit", params: Object.assign({ mission_id: m.id }, v) });
+  }
+  async function addObjective(m) {
+    const v = await form("Add an objective to " + m.name, page.forms.objective.fields, {});
+    if (v) act({ kind: "objective.add", params: Object.assign({ mission_id: m.id }, v) });
+  }
+  async function abandon(m) {
+    const v = await form("Give up on " + m.name + " for now?", page.forms.abandon.fields, {});
+    if (v) act({ kind: "mission.abandon", params: Object.assign({ mission_id: m.id }, v) });
+  }
+  async function teaches(m) {
+    const v = await form(m.name + " also teaches…", page.forms.skill_reward.fields, {}, { skills: page.skills });
+    if (v) act({ kind: "mission.skill_reward", params: Object.assign({ mission_id: m.id }, v) });
+  }
+  const tick = (m, o) => act({ kind: "objective.tick", params: { mission_id: m.id, index: o.index } });
+
+  // ------------------------------------------------------------ a mission, opened
+  function sheet(m) {
+    const dialog = el("dialog", { class: "confirm form-dialog mission-sheet", "aria-label": m.name });
+    const close = () => { dialog.close(); dialog.remove(); };
+    const then = (fn) => () => { close(); fn(m); };
+    const active = m.status === "active";
+    dialog.append(...[
+      el("div", { class: "mission-sheet-head" }, el("span", { class: "mission-icon", "aria-hidden": "true" }, m.icon),
+        el("div", {}, el("h3", {}, m.name), el("p", { class: "dim" }, [m.area, m.pathway, m.from_mia ? "From MIA" : null].filter(Boolean).join(" · ")))),
+      m.summary ? el("p", { class: "mission-summary" }, m.summary) : null,
+      el("div", { class: "chip-row" }, el("span", { class: "chip " + (DIFF[m.difficulty] || "") }, m.difficulty.toLowerCase()),
+        m.streak ? el("span", { class: "chip chip-soon" }, "🔥 " + m.streak + "-day streak") : null,
+        m.party.length ? el("span", { class: "chip" }, "👥 " + m.party.join(", ")) : null,
+        m.status !== "active" ? el("span", { class: "chip" }, m.status === "abandoned" ? "set aside" + (m.abandon_reason ? ": " + m.abandon_reason.toLowerCase() : "") : m.status) : null),
+      el("h4", {}, "Objectives " + (m.total ? m.done + "/" + m.total : "")),
+      m.objectives.length ? el("ul", { class: "objective-list" }, m.objectives.map((o) => el("li", { class: o.done ? "done" : "" },
+        el("span", { class: "objective-check", "aria-hidden": "true" }, o.done ? "✓" : ""),
+        el("span", { class: "objective-text" }, o.description + (o.for ? " (" + o.for + ")" : ""),
+          o.target > 1 ? el("small", {}, " " + o.progress + "/" + o.target) : null),
+        active && !o.done && !o.counts_itself ? btn("+1", "btn-green btn-small", () => { close(); tick(m, o); }) : null,
+        active ? btn("✕", "btn-ghost btn-small", () => { close(); act({ kind: "objective.delete", params: { mission_id: m.id, index: o.index } }); }) : null)))
+        : el("p", { class: "dim" }, "No objectives yet. Add one, like “Clean the gutters”."),
+      m.my_part ? el("p", { class: "dim" }, "Your part: " + m.my_part.done + "/" + m.my_part.total) : null,
+      rewards(m) ? el("p", { class: "mission-rewards" }, "Rewards: " + rewards(m) + (m.rewards_given ? " (earned)" : "")) : null,
+      m.unlocks_recipes.length ? el("p", { class: "dim" }, "Unlocks the recipe" + (m.unlocks_recipes.length > 1 ? "s " : " ") + m.unlocks_recipes.join(", ")) : null,
+      m.asset ? el("p", { class: "dim" }, "For ", el("a", { href: "asset.html?id=" + encodeURIComponent(m.asset.id) }, m.asset.name)) : null,
+      el("div", { class: "confirm-actions mission-actions" },
+        active ? btn("Complete", "btn-green", then((x) => act({ kind: "mission.complete", params: { mission_id: x.id } }))) : null,
+        active ? btn("Add objective", "btn-ghost", then(addObjective)) : null,
+        btn("Teaches a skill", "btn-ghost", then(teaches)),
+        active ? btn("Give up for now", "btn-ghost", then(abandon)) : btn("Pick back up", "btn-amber", then((x) => act({ kind: "mission.reopen", params: { mission_id: x.id } }))),
+        btn("Edit", "btn-ghost", then(edit)),
+        btn("Delete", "btn-ghost", then((x) => act({ kind: "mission.delete", params: { mission_id: x.id } }))),
+        btn("Close", "btn-ghost", close)),
+    ].filter(Boolean));
+    dialog.oncancel = (e) => { e.preventDefault(); close(); };
+    document.body.append(dialog);
+    dialog.showModal();
   }
 
-  /* ---------- propose -> confirm -> approve ---------- */
-  function confirmWith(text) {
-    return new Promise((resolve) => {
-      const dialog = $("confirm");
-      $("confirm-text").textContent = text;
-      dialog.onclose = () => resolve(dialog.returnValue === "yes");
-      $("confirm-no").onclick = () => dialog.close("no");
-      $("confirm-yes").onclick = () => dialog.close("yes");
-      dialog.showModal();
-      $("confirm-yes").focus();
-    });
+  // ------------------------------------------------------------ cards
+  function card(m) {
+    const meta = [m.area, m.total ? m.done + "/" + m.total + " objectives" : "no objectives yet", m.streak ? "🔥 " + m.streak : null]
+      .filter(Boolean).join(" · ");
+    return el("article", { class: "glass mission-card" + (m.ready ? " ready" : "") + (m.status !== "active" ? " finished" : ""),
+      tabindex: "0", role: "button", "aria-label": "Open " + m.name,
+      onclick: () => sheet(m), onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sheet(m); } } },
+    el("div", { class: "mission-top" },
+      el("span", { class: "mission-icon", "aria-hidden": "true" }, m.icon),
+      el("div", { class: "mission-title" }, el("h3", {}, m.name), el("p", { class: "dim" }, meta)),
+      el("div", { class: "mission-chips" },
+        m.from_mia ? el("span", { class: "chip chip-soon" }, "✦ MIA") : null,
+        el("span", { class: "chip " + (DIFF[m.difficulty] || "") }, m.difficulty.toLowerCase()))),
+    m.status === "active" ? bar(m.percent) : null,
+    el("div", { class: "mission-foot" },
+      el("span", { class: "mission-rewards" }, rewards(m) || ""),
+      m.ready ? btn("Complete", "btn-green btn-small", (e) => { e.stopPropagation(); act({ kind: "mission.complete", params: { mission_id: m.id } }); })
+        : m.status === "active" ? (() => { const next = m.objectives.find((o) => !o.done && !o.counts_itself);
+          return next ? btn("+1 " + next.description, "btn-ghost btn-small", (e) => { e.stopPropagation(); tick(m, next); }) : null; })()
+          : el("span", { class: "dim" }, m.status === "completed" ? "Done " + day(m.updated) : "Set aside " + day(m.updated))));
   }
 
-  async function act(action) {
-    try {
-      const proposal = await MIA.propose(action.kind, action.params || {});
-      const ok = await confirmWith(proposal.summary + "?");
-      if (!ok) { await MIA.reject(proposal.proposal_id); return; }
-      const done = await MIA.approve(proposal.proposal_id);
-      say(done.result || "Done.", done.undoable ? done : null);
-      refresh();
-    } catch (e) {
-      say(e && e.message ? e.message : "That didn't go through.");
-    }
+  const EMPTY = {
+    active: "No active missions. Add one, or ask MIA for one.",
+    daily: "No daily missions. Ask MIA: “give me a daily push-up mission”.",
+    completed: "Nothing completed in the last two months yet.",
+    set_aside: "Nothing set aside.",
+  };
+
+  function draw() {
+    const c = page.counts;
+    $("strip").replaceChildren(
+      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.active), el("span", { class: "t" }, "Active")),
+      el("div", { class: "cell soon" }, el("span", { class: "n" }, c.ready), el("span", { class: "t" }, "Ready to complete")),
+      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.completed), el("span", { class: "t" }, "Completed")));
+    $("tabs").hidden = false;
+    $("tabs").replaceChildren(...TABS.map(([id, l]) =>
+      el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } },
+        l + (page[id].length ? " " + page[id].length : ""))));
+    const list = page[tab];
+    $("panel").replaceChildren(section(TABS.find(([t]) => t === tab)[1] + " missions",
+      buttons(btn("Ask MIA for one", "btn-ghost", () => MIAShell.talk(true, "Give me a new mission based on what's going on in my life.")),
+        btn("Add mission", "btn-amber", add)),
+      list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, EMPTY[tab])));
+    MIAShell.levelCard($("level"), page.me);
   }
 
-  /* ---------- status taxonomy tag (DEC-0007) ---------- */
-  function stag(status) {
-    const s = document.createElement("span");
-    s.className = "stag";
-    s.textContent = status || "STATIC";
-    return s;
-  }
-
-  /* ---------- status strip: Tracked / Needs Attention / Next Up ---------- */
-  function renderStrip(state) {
-    const strip = $("strip");
-    strip.replaceChildren();
-    const ms = state.missions_and_skills || {};
-    const items = arr(state.due && state.due.items);
-    const overdue = items.filter((i) => i.when === "overdue").length;
-    const today = items.filter((i) => i.when === "today").length;
-    const tracked = typeof ms.active_missions === "number" ? ms.active_missions : items.length;
-    const cells = [
-      { cls: "ok", n: tracked, t: "Tracked" },
-      { cls: "bad", n: overdue, t: "Needs Attention" },
-      { cls: "soon", n: today, t: "Next Up" },
-    ];
-    cells.forEach((c) => {
-      const cell = document.createElement("div");
-      cell.className = "cell " + c.cls;
-      const n = document.createElement("div");
-      n.className = "n";
-      n.textContent = c.n;
-      const t = document.createElement("div");
-      t.className = "t";
-      t.append(document.createTextNode(c.t), stag(ms.status));
-      cell.append(n, t);
-      strip.append(cell);
-    });
-  }
-
-  /* ---------- streaks ---------- */
-  function renderStreaks(state) {
-    const ms = state.missions_and_skills || {};
-    const streaks = arr(ms.streaks);
-    $("streaks-wrap").hidden = !streaks.length;
-    if (!streaks.length) return;
-    $("streaks-stag").textContent = ms.status || "STATIC";
-    const box = $("streaks");
-    box.replaceChildren();
-    streaks.forEach((s) => {
-      const pill = document.createElement("span");
-      pill.className = "streak-pill";
-      const flame = document.createElement("span");
-      flame.className = "flame";
-      flame.setAttribute("aria-hidden", "true");
-      flame.textContent = "🔥";
-      const days = document.createElement("strong");
-      days.textContent = s.days + "d";
-      const name = document.createElement("span");
-      name.className = "sname";
-      name.textContent = s.name || "";
-      pill.append(flame, days, name);
-      box.append(pill);
-    });
-  }
-
-  /* ---------- mission rows ---------- */
-  function missionRow(item) {
-    const row = document.createElement("div");
-    row.className = "row";
-    const main = document.createElement("div");
-    const title = document.createElement("div");
-    title.className = "row-title";
-    title.textContent = item.title || "";
-    main.append(title);
-    if (item.detail) {
-      const sub = document.createElement("div");
-      sub.className = "row-sub";
-      sub.textContent = item.detail;
-      main.append(sub);
-    }
-    const meta = document.createElement("div");
-    meta.className = "row-meta";
-    if (item.when) {
-      const when = document.createElement("span");
-      when.className = "when " + item.when;
-      when.textContent = item.when === "overdue" ? "Overdue" : item.when === "today" ? "Today" : item.when;
-      meta.append(when);
-    }
-    if (item.action && item.action.kind) {
-      const button = document.createElement("button");
-      button.className = "btn btn-green";
-      button.textContent = item.action.label || "Do it";
-      button.onclick = () => act(item.action);
-      meta.append(button);
-    }
-    row.append(main, meta);
-    return row;
-  }
-
-  function winRow(win) {
-    const row = document.createElement("div");
-    row.className = "row";
-    const main = document.createElement("div");
-    const title = document.createElement("div");
-    title.className = "row-title";
-    title.textContent = win.summary || "";
-    main.append(title);
-    const meta = document.createElement("div");
-    meta.className = "row-meta";
-    const kind = document.createElement("span");
-    kind.className = "when";
-    kind.textContent = (win.type || "win").replace(/_/g, " ");
-    meta.append(kind);
-    row.append(main, meta);
-    return row;
-  }
-
-  function emptyState(strong, text) {
-    const div = document.createElement("div");
-    div.className = "empty";
-    const s = document.createElement("strong");
-    s.textContent = strong;
-    const p = document.createElement("p");
-    p.textContent = text;
-    div.append(s, p);
-    return div;
-  }
-
-  function renderRows(state) {
-    const box = $("rows");
-    box.replaceChildren();
-    $("log-stag").textContent = (state.due && state.due.status) || "STATIC";
-    const items = arr(state.due && state.due.items)
-      .slice()
-      .sort((a, b) => (a.when === "overdue" ? -1 : 1) - (b.when === "overdue" ? -1 : 1));
-    const wins = arr(state.recent_wins && state.recent_wins.latest);
-
-    if (tab === "all" || tab === "active") {
-      if (items.length) items.forEach((i) => box.append(missionRow(i)));
-      else if (tab === "active") {
-        box.append(emptyState("Nothing active.",
-          "Ask MIA to invent a mission below — or enjoy the quiet."));
-      }
-    }
-    if (tab === "all" || tab === "done") {
-      if (wins.length) {
-        if (tab === "all" && items.length) {
-          const sect = document.createElement("div");
-          sect.className = "sect";
-          const h = document.createElement("h2");
-          h.textContent = "Completed";
-          sect.append(h);
-          box.append(sect);
-        }
-        wins.forEach((w) => box.append(winRow(w)));
-      } else if (tab === "done") {
-        box.append(emptyState("No completions yet.",
-          "Finish something and MIA will notice — that's the whole point."));
-      }
-    }
-    if (tab === "all" && !items.length && !wins.length) {
-      box.append(emptyState("No missions on the board.",
-        "Ask MIA to invent one below. She reads your life state and proposes from what's actually going on."));
-    }
-  }
-
-  /* ---------- tabs (every tab works) ---------- */
-  function wireTabs() {
-    $("tabs").querySelectorAll("button").forEach((b) => {
-      b.onclick = () => {
-        tab = b.dataset.tab;
-        $("tabs").querySelectorAll("button").forEach((x) =>
-          x.setAttribute("aria-selected", x === b ? "true" : "false"));
-        if (current) renderRows(current);
-      };
-    });
-  }
-
-  /* ---------- invent a mission: MIA herself, via talk ---------- */
-  function wireInvent() {
-    const form = $("invent-form");
-    const input = $("invent-input");
-    const thread = $("invent-thread");
-    const send = $("invent-send");
-    if (MIA.demo) {
-      input.disabled = true;
-      send.disabled = true;
-      const note = document.createElement("p");
-      note.className = "dim";
-      note.textContent = "Inventing is off in the demo — it needs MIA running.";
-      form.append(note);
+  MIAShell.start(async () => {
+    page = await MIA.missions();
+    if (!page.available) {
+      $("panel").replaceChildren(el("p", { class: "empty" }, el("strong", {}, "Missions aren't set up on this MIA."), ""));
       return;
     }
-    form.onsubmit = async (event) => {
-      event.preventDefault();
-      const focus = input.value.trim();
-      const prompt = "Invent a daily mission for me based on my life state" +
-        (focus ? " (focus: " + focus + ")" : "") + ".";
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.textContent = "Asking MIA…";
-      thread.replaceChildren(bubble);
-      try {
-        const data = await MIA.talk(prompt);
-        bubble.textContent = data.reply_text ||
-          arr(data.replies).join("\n") || "MIA didn't answer.";
-      } catch (e) {
-        bubble.textContent = e && e.message ? e.message : "MIA didn't answer.";
-      } finally {
-        refresh();
-      }
-    };
-  }
-
-  /* ---------- boot ---------- */
-  let current = null;
-  async function refresh() {
-    try {
-      current = await MIA.state();
-      renderStrip(current);
-      renderStreaks(current);
-      renderRows(current);
-    } catch (e) {
-      if (e && e.status === 401) {
-        try { sessionStorage.removeItem("mia.token"); } catch (x) { /* private mode */ }
-        location.reload();
-      } else {
-        say(e && e.message ? e.message : "Couldn't reach MIA.");
-      }
-    }
-  }
-
-  function start() {
-    $("sign-in").hidden = true;
-    $("app").hidden = false;
-    if (MIA.demo) say("Demo: placeholder data; actions are off.");
-    wireTabs();
-    wireInvent();
-    refresh();
-    MIA.onChange(refresh);
-  }
-
-  $("app").hidden = true;
-  if (!MIA.signedIn) {
-    const form = $("sign-in");
-    form.hidden = false;
-    form.onsubmit = async (event) => {
-      event.preventDefault();
-      try { await MIA.signIn($("who").value.trim(), $("password").value); say(""); start(); }
-      catch (e) { say(e && e.message ? e.message : "Couldn't sign in."); }
-    };
-    return;
-  }
-  start();
+    draw();
+  });
 })();

@@ -23,6 +23,7 @@ body[data-app="real_estate"] { --mod: #2dd4bf; --mod-rgb: 45, 212, 191; --hero-i
 body[data-app="budget"] { --mod: #a78bfa; --mod-rgb: 167, 139, 250; --hero-img: url("img/finances.jpg"); }
 body[data-app="missions"] { --mod: #fbbf24; --mod-rgb: 251, 191, 36; --hero-img: url("img/missions.jpg"); }
 body[data-app="skills"] { --mod: #fbbf24; --mod-rgb: 251, 191, 36; --hero-img: url("img/skills.jpg"); }
+body[data-app="character"] { --mod: #c084fc; --mod-rgb: 192, 132, 252; --hero-img: url("img/character.jpg"); }
 body[data-app="property"] { --mod: #2dd4bf; --mod-rgb: 45, 212, 191; --hero-img: url("img/property.jpg"); }
 body[data-app="maintenance"] { --mod: #fb923c; --mod-rgb: 251, 146, 60; --hero-img: url("img/maintenance.jpg"); }
 body[data-app="web_home"] { --hero-img: url("img/home.jpg"); }
@@ -411,3 +412,79 @@ body {
 }
 .tile-star:hover { color: #fff; }
 .tile-star.on { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.7); }
+
+/* ---------------------------------------------------------------- Missions, Skills, Character (DEC-0018, H-0013) */
+.btn-small { min-height: 34px !important; padding: 4px 12px !important; font-size: var(--text-sm) !important; }
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.page-level { margin-top: var(--gap); max-width: 460px; }
+.mission-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--gap); }
+.mission-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; cursor: pointer; }
+.mission-card:hover, .mission-card:focus-visible { border-color: rgba(var(--mod-rgb), 0.7); box-shadow: 0 0 18px rgba(var(--mod-rgb), 0.2); outline: none; }
+.mission-card.ready { border-color: rgba(74, 222, 128, 0.7); box-shadow: 0 0 18px rgba(74, 222, 128, 0.18); }
+.mission-card.finished { opacity: 0.8; }
+.mission-top { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; }
+.mission-icon {
+  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; font-size: 24px; flex: none;
+  background: radial-gradient(circle at 50% 40%, rgba(var(--mod-rgb), 0.3), rgba(5, 10, 7, 0.9) 70%);
+  border: 1.5px solid rgba(var(--mod-rgb), 0.7); box-shadow: 0 0 14px rgba(var(--mod-rgb), 0.35);
+}
+.mission-title h3 { margin: 0; font-size: var(--text-md); }
+.mission-title p { margin: 2px 0 0; }
+.mission-chips { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.mission-chips .chip { white-space: nowrap; }
+.mission-card .bar, .mission-sheet .bar, .skill-card .bar, .chain-row .bar { height: 8px; margin: 0; }
+.mission-card .bar-fill, .mission-sheet .bar-fill, .skill-card .bar-fill, .chain-row .bar-fill {
+  background: linear-gradient(90deg, rgba(var(--mod-rgb), 0.7), rgb(var(--mod-rgb))); box-shadow: 0 0 10px rgba(var(--mod-rgb), 0.5);
+}
+.mission-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
+.mission-rewards { color: rgb(var(--mod-rgb)); font-weight: 600; font-size: var(--text-sm); }
+.mission-sheet { max-width: 540px; }
+.mission-sheet-head { display: flex; gap: 12px; align-items: center; }
+.mission-sheet-head h3 { margin: 0; }
+.mission-sheet-head p { margin: 2px 0 0; }
+.mission-sheet h4 { margin: 14px 0 6px; color: rgb(var(--mod-rgb)); }
+.mission-summary { line-height: 1.5; }
+.objective-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.objective-list li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; align-items: center; padding: 6px 8px;
+  border-radius: 10px; background: rgba(var(--mod-rgb), 0.06); }
+.objective-list li.done .objective-text { color: var(--text-faint); text-decoration: line-through; }
+.objective-check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid rgba(var(--mod-rgb), 0.6);
+  display: grid; place-items: center; color: #04110a; font-weight: 800; font-size: 14px; }
+.objective-list li.done .objective-check { background: rgb(var(--mod-rgb)); }
+.objective-text small { color: var(--text-dim); }
+.mission-actions { flex-wrap: wrap; }
+.skills-layout { display: grid; grid-template-columns: 1fr 320px; gap: var(--gap); align-items: start; margin-bottom: var(--gap); }
+.skills-layout > .money-section, .skills-layout .stack > .money-section { margin-bottom: 0; }
+.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.skill-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; cursor: pointer; }
+.skill-card:hover, .skill-card:focus-visible { border-color: rgba(var(--mod-rgb), 0.7); outline: none; }
+.skill-card.locked { opacity: 0.6; border-style: dashed; }
+.skill-card.focus { border-color: rgba(var(--mod-rgb), 0.9); box-shadow: 0 0 20px rgba(var(--mod-rgb), 0.3); }
+.skill-head { display: flex; gap: 10px; align-items: center; }
+.skill-head h3 { margin: 0; font-size: var(--text-md); }
+.skill-head p { margin: 2px 0 0; }
+.skill-icon { font-size: 26px; width: 34px; text-align: center; }
+.skill-xp { margin: 0; font-size: 12px; }
+.chain-row { display: block; }
+.chain-row .row-sub { margin-top: 2px; }
+.chain-row .bar { margin-top: 6px; }
+.character-portrait { display: flex; gap: 16px; align-items: center; padding: 18px; margin-bottom: var(--gap); }
+.character-avatar { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 22px; font-size: 48px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.4), rgba(236, 72, 153, 0.3)); border: 1px solid rgba(167, 139, 250, 0.6); }
+.character-portrait strong { display: block; font-size: var(--text-lg); }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.stat-grid .stat-tile { display: grid; gap: 2px; padding: 12px; }
+.stat-grid .stat-tile .ico { font-size: 22px; }
+.stat-grid .stat-tile strong { font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+.stat-grid .stat-tile small { color: var(--text-dim); }
+.prestige-green { border-color: #4ade80 !important; color: #4ade80; }
+.prestige-blue { border-color: #60a5fa !important; color: #60a5fa; }
+.prestige-purple { border-color: #c084fc !important; color: #c084fc; }
+.prestige-orange { border-color: #fb923c !important; color: #fb923c; }
+.prestige-white { border-color: #e5e7eb !important; }
+.home-level.prestige-green, .home-level.prestige-blue, .home-level.prestige-purple, .home-level.prestige-orange { color: var(--text); }
+@media (max-width: 860px) {
+  .skills-layout { grid-template-columns: 1fr; }
+  .mission-grid { grid-template-columns: 1fr; }
+  .skill-grid { grid-template-columns: 1fr 1fr; }
+}

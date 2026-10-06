@@ -37,6 +37,7 @@ import os
 import re
 import secrets
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -735,3 +736,27 @@ class ProfileManager:
         self.context.events.publish("profile.deleted", profile_id=profile_id)
         log.info("Deleted profile '%s' (data archived, not erased).", profile_id)
         return True
+
+
+@contextmanager
+def crediting(context, profile_id):
+    """While a change runs for a person (an approved action from their
+    phone or the web), they are "the active profile", so the XP, credits
+    and skill XP it earns are theirs, not whoever is signed in on the PC
+    (2026-10-06). The PC's own choice comes back afterwards, also on disk
+    if anything saved the config meanwhile."""
+    config = getattr(context, "config", None)
+    if not profile_id or config is None or config.get(f"profiles.{profile_id}") is None:
+        yield
+        return
+    before = config.get("system.active_profile_id")
+    if before == profile_id:
+        yield
+        return
+    config.set("system.active_profile_id", profile_id)
+    try:
+        yield
+    finally:
+        config.set("system.active_profile_id", before)
+        config.save()
+

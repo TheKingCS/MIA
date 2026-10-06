@@ -399,6 +399,8 @@ class Mission:
 class MissionManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
+        # The file it reads, so undo (core/undo_log.py) knows to reload it.
+        self.path = _MISSIONS_FILE
         self._missions: list[Mission] = []
         self._load()
 

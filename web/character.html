@@ -4,35 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <title>Skills — MIA</title>
+  <title>Character — MIA</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
 </head>
-<body data-app="skills" class="mod-skills">
+<body data-app="character" class="mod-character">
   <!--
-    Skills (claude, 2026-10-06, DEC-0017/0018, H-0013): the skill tree by
-    category (levels, XP, capability, what unlocks a locked one), the
-    next honest step, pathways, challenge chains with rarity, hidden
-    achievements, prestige, from MIA.skills() (core/web_progress.py).
-    Replaces the 2026-10-05 summary page.
+    Character (claude, 2026-10-06, DEC-0017/0018, H-0013): level and
+    prestige, lifetime stats, the collection of everything unlocked by
+    rarity, top skills, missions done, from MIA.character()
+    (core/web_progress.py). Character art comes later (Zac).
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
       <header class="hero">
-        <h1><span aria-hidden="true" id="hero-icon">⚔</span> <span id="hero-name">Skills</span></h1>
-        <p class="tagline" id="hero-tagline">Do the thing. Earn the level. Unlock the next thing.</p>
+        <h1><span aria-hidden="true" id="hero-icon">👤</span> <span id="hero-name">Character</span></h1>
+        <p class="tagline" id="hero-tagline">Your story so far.</p>
       </header>
       <section class="strip" id="strip" aria-label="Status"></section>
       <div class="ptabs" role="tablist" id="tabs" hidden></div>
       <div id="panel"></div>
-      <a class="glass home-level page-level" id="level" href="character.html"></a>
     </main>
   </div>
   <script src="mia.js"></script>
   <script src="shell.js"></script>
-  <script src="skills.js"></script>
+  <script src="character.js"></script>
 </body>
 </html>

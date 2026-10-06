@@ -35,6 +35,7 @@ background, so they can be added one at a time.*
 | `property.jpg` | Property | A cozy country house in the evening, warm windows, a porch, a lawn |
 | `maintenance.jpg` | Maintenance | A tidy workshop wall at dusk: hanging tools, a workbench, warm light |
 | `dashboard.jpg` | Dashboard | A night-to-dawn sky over a quiet valley, stars fading, the first light on the peaks |
+| `character.jpg` | Character | A quiet campfire on a mountain ledge at dusk, purple and gold sky, a pack and a walking staff resting beside it (no people) |
 | `assistant.jpg` | MIA Assistant | A soft, dark abstract: a gentle golden glow like a lantern in a deep green forest at night |
 | ~~`menu.jpg`~~ | *No longer needed (2026-10-06: the More menu is gone; every app is on the Apps page)* | |
 

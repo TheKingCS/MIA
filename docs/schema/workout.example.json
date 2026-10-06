@@ -219,7 +219,7 @@
   "as_of": "2026-10-06",
   "exercises": [
     {
-      "id": "b20686cd5c",
+      "id": "671dda0f81",
       "name": "Bench press",
       "category": "Chest",
       "equipment": "Barbell",
@@ -255,7 +255,7 @@
       }
     },
     {
-      "id": "49e8e8b6ef",
+      "id": "0cd4796390",
       "name": "Push-ups",
       "category": "Chest",
       "equipment": "Bodyweight",
@@ -279,7 +279,7 @@
       }
     },
     {
-      "id": "39bdbf3ed6",
+      "id": "00daaca23c",
       "name": "Squats",
       "category": "Legs",
       "equipment": "Bodyweight",
@@ -305,7 +305,7 @@
   ],
   "templates": [
     {
-      "id": "d784e20b07",
+      "id": "4fb85956a2",
       "name": "Beginner full body",
       "notes": "",
       "exercises": [
@@ -332,7 +332,7 @@
   ],
   "sessions": [
     {
-      "id": "a11537e079",
+      "id": "67f5ccaec3",
       "date": "2026-10-06",
       "template": null,
       "minutes": 10.0,
@@ -341,7 +341,7 @@
       "notes": "Felt good"
     },
     {
-      "id": "3b0ad5ad98",
+      "id": "8bf6c694bb",
       "date": "2026-10-06",
       "template": "Beginner full body",
       "minutes": 30,
@@ -350,7 +350,7 @@
       "notes": ""
     },
     {
-      "id": "1b0191ec4a",
+      "id": "b9643b3889",
       "date": "2026-10-05",
       "template": null,
       "minutes": 15.0,
@@ -359,7 +359,7 @@
       "notes": ""
     },
     {
-      "id": "fa085bed9a",
+      "id": "6683450ad2",
       "date": "2026-10-03",
       "template": null,
       "minutes": 35.0,
@@ -368,7 +368,7 @@
       "notes": ""
     },
     {
-      "id": "5a0ed57f87",
+      "id": "0f131d9283",
       "date": "2026-09-30",
       "template": null,
       "minutes": 35.0,
@@ -377,7 +377,7 @@
       "notes": ""
     },
     {
-      "id": "2af3c38d67",
+      "id": "2f01f2cd97",
       "date": "2026-09-27",
       "template": null,
       "minutes": 35.0,
@@ -386,7 +386,7 @@
       "notes": ""
     },
     {
-      "id": "d42ee1b696",
+      "id": "dfd7ebb5e6",
       "date": "2026-09-24",
       "template": null,
       "minutes": 35.0,
@@ -396,7 +396,7 @@
     }
   ],
   "latest": {
-    "id": "a11537e079",
+    "id": "67f5ccaec3",
     "date": "2026-10-06",
     "template": null,
     "minutes": 10.0,
@@ -412,13 +412,13 @@
   },
   "daily_missions": [
     {
-      "id": "1e086eae8f",
+      "id": "96f6c44e5d",
       "name": "Daily push-ups — Oct 06",
       "progress": 0,
       "target": 30.0,
       "done": false,
       "streak": 0,
-      "template_id": "19bc6fdf3d"
+      "template_id": "1ee6f9699b"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "greeting": "Good morning, Robin",
+  "greeting": "Good afternoon, Robin",
   "subtitle": "Another day to build the life you want.",
   "date": "Tue, Oct 6, 2026",
   "focus": [
@@ -9,64 +9,13 @@
       "detail": "10 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "f7aa4b3b4a",
+      "record_id": "8fe541f12b",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "f7aa4b3b4a"
-        }
-      },
-      "page": "maintenance.html"
-    },
-    {
-      "when": "overdue",
-      "title": "Check oil: Mower",
-      "detail": "13 days late",
-      "time": "",
-      "module_id": "maintenance",
-      "record_id": "f2198c4d85",
-      "icon": "🔧",
-      "action": {
-        "kind": "maintenance.done",
-        "label": "Done",
-        "params": {
-          "task_id": "f2198c4d85"
-        }
-      },
-      "page": "maintenance.html"
-    },
-    {
-      "when": "overdue",
-      "title": "Tire rotation: Pickup truck",
-      "detail": "8 days late",
-      "time": "",
-      "module_id": "maintenance",
-      "record_id": "dbbf27c76d",
-      "icon": "🔧",
-      "action": {
-        "kind": "maintenance.done",
-        "label": "Done",
-        "params": {
-          "task_id": "dbbf27c76d"
-        }
-      },
-      "page": "maintenance.html"
-    },
-    {
-      "when": "overdue",
-      "title": "Water: Raised bed",
-      "detail": "1 day late",
-      "time": "",
-      "module_id": "maintenance",
-      "record_id": "b9407f4d8f",
-      "icon": "🔧",
-      "action": {
-        "kind": "maintenance.done",
-        "label": "Done",
-        "params": {
-          "task_id": "b9407f4d8f"
+          "task_id": "8fe541f12b"
         }
       },
       "page": "maintenance.html"
@@ -77,13 +26,64 @@
       "detail": "5 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "68d17e7842",
+      "record_id": "69869ef27b",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "68d17e7842"
+          "task_id": "69869ef27b"
+        }
+      },
+      "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "Check oil: Mower",
+      "detail": "13 days late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "055371f062",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "055371f062"
+        }
+      },
+      "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "Tire rotation: Pickup truck",
+      "detail": "8 days late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "886642885c",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "886642885c"
+        }
+      },
+      "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "Water: Raised bed",
+      "detail": "1 day late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "58c802b04b",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "58c802b04b"
         }
       },
       "page": "maintenance.html"
@@ -94,7 +94,7 @@
       "detail": "",
       "time": "",
       "module_id": "calendar",
-      "record_id": "41ecbd25a4",
+      "record_id": "395acee3d8",
       "icon": "📅",
       "action": null,
       "page": null
@@ -105,13 +105,13 @@
       "detail": "$1,500.00",
       "time": "",
       "module_id": "budget",
-      "record_id": "ba37d9ec0d",
+      "record_id": "4d4e8da331",
       "icon": "💰",
       "action": {
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "ba37d9ec0d"
+          "source_id": "4d4e8da331"
         }
       },
       "page": "money.html"
@@ -212,57 +212,58 @@
       "app": "missions",
       "icon": "🏆",
       "title": "Missions",
-      "line": "3 active",
+      "line": "7 active",
       "tone": "calm",
       "page": "missions.html"
     }
   ],
   "wins": [
     {
-      "at": "2026-10-06T07:01:15",
+      "at": "2026-10-06T15:18:45",
+      "type": "maintenance_done",
+      "summary": "Oil & filter: Mower",
+      "refs": [
+        "maintenance_task:88be20c93b",
+        "asset:e5f4bff5be"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T15:18:34",
+      "type": "mission_completed",
+      "summary": "Completed the mission Read 3 books",
+      "refs": [
+        "mission:2c6c89cd66",
+        "skill:learning"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T15:18:34",
+      "type": "skill_evidence",
+      "summary": "30 XP in learning from Read 3 books",
+      "refs": [
+        "skill:learning",
+        "mission:2c6c89cd66"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T15:18:34",
       "type": "property_expense",
       "summary": "Maintenance for Maple House: $85.00",
       "refs": [
-        "property:54cbfb4a89",
-        "expense:61ec8fceab"
+        "property:ac6f646035",
+        "expense:8e3ec9d652"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T07:01:15",
-      "type": "rent_received",
-      "summary": "Rent from Maple House: $1,450.00",
-      "refs": [
-        "property:54cbfb4a89",
-        "income:982c9381e8"
-      ],
-      "source": "manual"
-    },
-    {
-      "at": "2026-10-06T07:01:15",
+      "at": "2026-10-06T15:18:34",
       "type": "workout_logged",
       "summary": "Worked out: a session, 15 min",
       "refs": [
-        "workout:1b0191ec4a"
-      ],
-      "source": "manual"
-    },
-    {
-      "at": "2026-10-06T07:01:15",
-      "type": "meal_logged",
-      "summary": "Cooked Overnight oats",
-      "refs": [
-        "meal:fe6c5fe98c",
-        "recipe:63ff49db19"
-      ],
-      "source": "manual"
-    },
-    {
-      "at": "2026-10-06T07:01:15",
-      "type": "workout_logged",
-      "summary": "Worked out: a session, 10 min",
-      "refs": [
-        "workout:a11537e079"
+        "workout:b9643b3889"
       ],
       "source": "manual"
     }

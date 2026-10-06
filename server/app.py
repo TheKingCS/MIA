@@ -597,6 +597,25 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "real_estate", estate_page)
 
+    # Missions, Skills, Character (DEC-0017/0018, H-0013; core/web_progress.py).
+    @app.get("/api/missions")
+    def web_missions(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_progress import missions_page
+
+        return _screen(profile_id, "missions", missions_page)
+
+    @app.get("/api/skills")
+    def web_skills(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_progress import skills_page
+
+        return _screen(profile_id, "skills", skills_page)
+
+    @app.get("/api/character")
+    def web_character(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_progress import character_page
+
+        return _screen(profile_id, "character", character_page)
+
     @app.get("/api/dashboard")
     def web_dashboard(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_surfaces import dashboard

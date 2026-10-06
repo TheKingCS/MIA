@@ -96,7 +96,7 @@ APPS: tuple[App, ...] = (
         ("components", "materials", "jobs", "products", "ledger"), "How much plywood do I have?"),
     App("power", "Power", "🔋", "Energy, tracked.", None,
         "Battery status and manual energy/utility tracking.", HOME, ("power",), "How's the battery?"),
-    App("character", "Character", "👤", "Your story so far.", None,
+    App("character", "Character", "👤", "Your story so far.", "character.html",
         "A living record of what you've actually done.", LIFE, (), "What have I done this week?"),
     App("observations", "Observations", "🔍", "What MIA noticed.", None,
         "What MIA has noticed across your maintenance and missions.", LIFE, (), "What have you noticed lately?"),
