@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Orbit · Lens Arcade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;}
+  #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
+    display:grid;grid-template-rows:auto auto 1fr auto;justify-items:center;padding:16px 28px;row-gap:8px;}
+  header{width:100%;display:flex;justify-content:space-between;align-items:center;}
+  header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
+  header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
+  #bank{text-align:center;}
+  #bank-num{font-size:44px;font-weight:800;color:#ffedb8;text-shadow:0 0 26px rgba(246,196,83,.55);line-height:1;}
+  #bank-rate{font-size:13px;color:rgba(244,234,208,.55);letter-spacing:.1em;margin-top:4px;}
+  #station-zone{position:relative;display:grid;place-items:center;width:100%;min-height:0;}
+  #station{
+    width:min(38vw,38vh,210px);height:min(38vw,38vh,210px);border-radius:50%;cursor:pointer;position:relative;z-index:2;
+    background:radial-gradient(circle at 38% 30%, #fffdf4 0%, #ffedb8 18%, #f6c453 48%, #7a5208 82%, #241a03 100%);
+    box-shadow:0 0 50px rgba(246,196,83,.6), inset 0 0 24px rgba(255,250,225,.5);
+    transition:transform .08s ease;
+  }
+  #station:active{transform:scale(.94);}
+  #station .tap{position:absolute;font-weight:800;color:#ffedb8;pointer-events:none;
+    text-shadow:0 0 12px rgba(246,196,83,.9);animation:float .8s ease-out forwards;font-size:20px;}
+  @keyframes float{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-46px);}}
+  .sat{position:absolute;width:7px;height:7px;border-radius:50%;background:#5fd6c8;
+    box-shadow:0 0 10px 2px rgba(95,214,200,.7);z-index:1;}
+  #gens{width:100%;display:grid;gap:8px;overflow-y:auto;max-height:100%;padding:2px;}
+  .gen{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;
+    border:1px solid rgba(246,196,83,.22);border-radius:14px;padding:10px 14px;background:rgba(255,248,230,.03);}
+  .gen .nm{font-size:15px;font-weight:700;}
+  .gen .nm small{color:rgba(244,234,208,.5);font-weight:400;}
+  .gen .sub{font-size:12px;color:rgba(244,234,208,.5);grid-column:1;}
+  .buy{cursor:pointer;border:1px solid rgba(246,196,83,.5);background:rgba(246,196,83,.1);color:#ffedb8;
+    border-radius:99px;padding:9px 16px;font-size:14px;font-weight:700;white-space:nowrap;}
+  .buy.afford{background:#f6c453;color:#241a03;box-shadow:0 0 14px rgba(246,196,83,.45);}
+  .buy:active{transform:scale(.95);}
+  #foot{font-size:11.5px;color:rgba(244,234,208,.35);letter-spacing:.06em;text-align:center;line-height:1.7;}
+  #welcome{font-size:13px;color:#5fd6c8;min-height:18px;text-align:center;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
+  <div id="bank">
+    <p id="bank-num">0</p>
+    <p id="bank-rate">⚡0/s</p>
+    <p id="welcome"></p>
+  </div>
+  <div id="station-zone"><div id="station" role="button" tabindex="0" aria-label="Tap to generate energy"></div></div>
+  <div id="gens"></div>
+  <p id="foot"></p>
+</div>
+<script>
+(function(){
+  "use strict";
+  var STORE="laOrbit.v1", CAP=8*3600*1000, OFFRATE=0.5;
+  var DEFS=[
+    {id:"solar", name:"Solar Array", rate:1,   base:25},
+    {id:"fusion",name:"Fusion Cell", rate:6,   base:160},
+    {id:"ring",  name:"Orbital Ring",rate:25,  base:1400},
+    {id:"dyson", name:"Dyson Swarm", rate:120, base:12000}
+  ];
+  var s={bank:0,total:0,taps:0,gens:{},last:Date.now()};
+  try{var raw=localStorage.getItem(STORE);if(raw){var p=JSON.parse(raw);for(var k in s)if(p[k]!==undefined)s[k]=p[k];}}catch(e){}
+  function save(){s.last=Date.now();try{localStorage.setItem(STORE,JSON.stringify(s));}catch(e){}}
+  function cost(d){var n=s.gens[d.id]||0;return Math.ceil(d.base*Math.pow(1.6,n));}
+  function rate(){var r=0;DEFS.forEach(function(d){r+=d.rate*(s.gens[d.id]||0);});return r;}
+  function fmt(n){
+    if(n>=1e6)return (n/1e6).toFixed(2)+"M";
+    if(n>=1e3)return (n/1e3).toFixed(1)+"k";
+    return Math.floor(n).toString();
+  }
+  // offline progress
+  var away=Date.now()-(s.last||Date.now());
+  if(away>60000){
+    var eff=Math.min(away,CAP), gain=rate()*eff/1000*OFFRATE;
+    if(gain>=1){
+      s.bank+=gain;s.total+=gain;
+      document.getElementById("welcome").textContent="Welcome back: +"+fmt(gain)+" ⚡";
+    }
+  }
+  var bankNum=document.getElementById("bank-num"),bankRate=document.getElementById("bank-rate"),
+      gensEl=document.getElementById("gens"),foot=document.getElementById("foot"),
+      zone=document.getElementById("station-zone"),station=document.getElementById("station");
+  // tap the station
+  function tap(x,y){
+    s.bank+=1;s.total+=1;s.taps++;
+    var f=document.createElement("span");f.className="tap";f.textContent="+1";
+    var r=station.getBoundingClientRect(),zr=zone.getBoundingClientRect();
+    f.style.left=((x!==undefined?x:r.left+r.width/2)-zr.left-8)+"px";
+    f.style.top=((y!==undefined?y:r.top+r.height/2)-zr.top-14)+"px";
+    zone.appendChild(f);setTimeout(function(){f.remove();},800);
+    paint();
+  }
+  station.addEventListener("click",function(e){tap(e.clientX,e.clientY);});
+  station.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();tap();}});
+  // generator rows
+  var buyBtns={};
+  DEFS.forEach(function(d){
+    var row=document.createElement("div");row.className="gen";
+    row.innerHTML='<div class="nm">'+d.name+' <small>×<span class="cnt">0</span></small></div>'+
+      '<div class="sub">+'+d.rate+' ⚡/s each</div>';
+    var b=document.createElement("button");b.type="button";b.className="buy";
+    b.setAttribute("aria-label","Buy "+d.name);
+    b.onclick=function(){
+      var c=cost(d);if(s.bank<c)return;
+      s.bank-=c;s.gens[d.id]=(s.gens[d.id]||0)+1;paint();drawSats();
+    };
+    row.appendChild(b);gensEl.appendChild(row);buyBtns[d.id]=b;
+  });
+  // orbiting satellites = total generators (capped visually)
+  var sats=[];
+  function drawSats(){
+    sats.forEach(function(el){el.remove();});sats=[];
+    var total=DEFS.reduce(function(a,d){return a+(s.gens[d.id]||0);},0);
+    var n=Math.min(total,18),R=42;
+    for(var i=0;i<n;i++){
+      (function(i){
+        var el=document.createElement("i");el.className="sat";zone.appendChild(el);sats.push(el);
+        var a0=i/n*Math.PI*2;
+        function orbit(){
+          var t=Date.now()/1000*(0.5+ (i%3)*0.12)+a0;
+          var zr=zone.getBoundingClientRect(),sr=station.getBoundingClientRect();
+          var cx=sr.left+zr.width/2-zr.left, cy=sr.top+zr.height/2-zr.top;
+          // scale radius to station size
+          var rad=sr.width/2+26;
+          el.style.left=(zr.width/2+Math.cos(t)*rad-3)+"px";
+          el.style.top=(sr.top-zr.top+sr.height/2+Math.sin(t)*rad*0.62-3)+"px";
+          requestAnimationFrame(orbit);
+        }
+        orbit();
+      })(i);
+    }
+  }
+  function paint(){
+    bankNum.textContent=fmt(s.bank);
+    bankRate.textContent="⚡"+fmt(rate())+"/s";
+    DEFS.forEach(function(d){
+      var n=s.gens[d.id]||0,c=cost(d),b=buyBtns[d.id];
+      b.parentElement.querySelector(".cnt").textContent=n;
+      b.textContent="Buy "+fmt(c)+" ⚡";
+      b.classList.toggle("afford",s.bank>=c);
+    });
+    foot.innerHTML="Total earned: "+fmt(s.total)+" ⚡ · Station taps: "+s.taps;
+  }
+  // tick
+  setInterval(function(){var r=rate();if(r>0){s.bank+=r/10;s.total+=r/10;paint();}},100);
+  setInterval(save,5000);
+  window.addEventListener("beforeunload",save);
+  document.addEventListener("visibilitychange",function(){if(document.hidden)save();});
+  paint();drawSats();
+})();
+</script>
+</body>
+</html>
