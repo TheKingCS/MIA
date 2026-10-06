@@ -7,7 +7,7 @@
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const card = $("card"), orb = $("orb"), wave = $("wave");
+  const card = $("card"), orbWrap = $("orb-wrap"), wave = $("wave");
   const demo = MIA.demo;
   $("demo-tag").hidden = !demo;
 
@@ -33,8 +33,8 @@
     requestAnimationFrame(() => { $("xp-fill").style.width = pct + "%"; });
   }
   function setOrb(mode) {
-    orb.classList.toggle("listening", mode === "listening");
-    orb.classList.toggle("happy", mode === "happy");
+    orbWrap.classList.toggle("listening", mode === "listening");
+    orbWrap.classList.toggle("happy", mode === "happy");
     wave.hidden = mode !== "speaking";
   }
 
