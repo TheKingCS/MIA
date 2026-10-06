@@ -189,7 +189,7 @@
     document.getElementById("profile-xpfill").style.width = Math.round(p.progress * 100) + "%";
     var toNext = p.levelNext - p.xp;
     document.getElementById("profile-xptext").textContent =
-      p.xp + " XP · " + toNext + " to Level " + (p.level + 1) + " · " + p.gameCount + "/11 games played";
+      p.xp + " XP · " + toNext + " to Level " + (p.level + 1) + " · " + p.gameCount + "/" + GAMES.length + " games played";
     var achBox = document.getElementById("profile-ach");
     achBox.innerHTML = "";
     p.achievements.forEach(function (id) {
