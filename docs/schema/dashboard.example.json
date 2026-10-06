@@ -9,13 +9,13 @@
       "detail": "10 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "3410f83511",
+      "record_id": "f7aa4b3b4a",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "3410f83511"
+          "task_id": "f7aa4b3b4a"
         }
       },
       "page": "maintenance.html"
@@ -26,13 +26,13 @@
       "detail": "13 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "11ff9d37e9",
+      "record_id": "f2198c4d85",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "11ff9d37e9"
+          "task_id": "f2198c4d85"
         }
       },
       "page": "maintenance.html"
@@ -43,13 +43,13 @@
       "detail": "8 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "e22f8337d9",
+      "record_id": "dbbf27c76d",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "e22f8337d9"
+          "task_id": "dbbf27c76d"
         }
       },
       "page": "maintenance.html"
@@ -60,16 +60,44 @@
       "detail": "1 day late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "6ad6863b23",
+      "record_id": "b9407f4d8f",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "6ad6863b23"
+          "task_id": "b9407f4d8f"
         }
       },
       "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "HVAC filter: Maple House",
+      "detail": "5 days late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "68d17e7842",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "68d17e7842"
+        }
+      },
+      "page": "maintenance.html"
+    },
+    {
+      "when": "today",
+      "title": "Daily push-ups: 30 today",
+      "detail": "",
+      "time": "",
+      "module_id": "calendar",
+      "record_id": "41ecbd25a4",
+      "icon": "📅",
+      "action": null,
+      "page": null
     },
     {
       "when": "today",
@@ -77,16 +105,27 @@
       "detail": "$1,500.00",
       "time": "",
       "module_id": "budget",
-      "record_id": "c0c74330dd",
+      "record_id": "ba37d9ec0d",
       "icon": "💰",
       "action": {
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "c0c74330dd"
+          "source_id": "ba37d9ec0d"
         }
       },
       "page": "money.html"
+    },
+    {
+      "when": "today",
+      "title": "Use up soon",
+      "detail": "chicken",
+      "time": "",
+      "module_id": "kitchen",
+      "record_id": null,
+      "icon": "🥬",
+      "action": null,
+      "page": "kitchen.html"
     }
   ],
   "upcoming": [],
@@ -141,7 +180,7 @@
       "app": "garage",
       "icon": "🚗",
       "title": "Equipment",
-      "line": "6 tracked · 4 overdue · next: Replace filter (Furnace)",
+      "line": "7 tracked · 5 overdue · next: Replace filter (Furnace)",
       "tone": "attention",
       "page": "garage.html"
     },
@@ -149,7 +188,7 @@
       "app": "real_estate",
       "icon": "🏘",
       "title": "Real Estate",
-      "line": "1 property · $60,000.00 equity",
+      "line": "3 properties · $232,000.00 equity",
       "tone": "calm",
       "page": "real-estate.html"
     },
@@ -157,7 +196,7 @@
       "app": "kitchen",
       "icon": "🍳",
       "title": "Kitchen",
-      "line": "1 recipe · 1 on the grocery list · Milk expires in 2d",
+      "line": "5 recipes · 4 on the grocery list · chicken expires in 1d",
       "tone": "attention",
       "page": "kitchen.html"
     },
@@ -165,7 +204,7 @@
       "app": "workout",
       "icon": "🏋",
       "title": "Workout",
-      "line": "1 session this week · last: Beginner full body (2026-10-06)",
+      "line": "5 sessions this week · last: Beginner full body (2026-10-06)",
       "tone": "calm",
       "page": "workout.html"
     },
@@ -173,59 +212,57 @@
       "app": "missions",
       "icon": "🏆",
       "title": "Missions",
-      "line": "0 active",
+      "line": "3 active",
       "tone": "calm",
       "page": "missions.html"
     }
   ],
   "wins": [
     {
-      "at": "2026-10-06T06:18:53",
-      "type": "maintenance_done",
-      "summary": "Oil & filter: Mower",
+      "at": "2026-10-06T07:01:15",
+      "type": "property_expense",
+      "summary": "Maintenance for Maple House: $85.00",
       "refs": [
-        "maintenance_task:09fe88c4dd",
-        "asset:3e0a16a2c3"
+        "property:54cbfb4a89",
+        "expense:61ec8fceab"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T06:18:41",
-      "type": "meal_logged",
-      "summary": "Cooked Chili",
+      "at": "2026-10-06T07:01:15",
+      "type": "rent_received",
+      "summary": "Rent from Maple House: $1,450.00",
       "refs": [
-        "meal:9d55b60948",
-        "recipe:a28e67aea5"
+        "property:54cbfb4a89",
+        "income:982c9381e8"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T06:18:41",
+      "at": "2026-10-06T07:01:15",
       "type": "workout_logged",
-      "summary": "Worked out: Beginner full body, 30 min",
+      "summary": "Worked out: a session, 15 min",
       "refs": [
-        "workout:e08f9b6791",
-        "workout_template:00b3e8ecbe"
+        "workout:1b0191ec4a"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T06:18:40",
-      "type": "mission_completed",
-      "summary": "Completed the mission Plan the week",
+      "at": "2026-10-06T07:01:15",
+      "type": "meal_logged",
+      "summary": "Cooked Overnight oats",
       "refs": [
-        "mission:28549aa730",
-        "skill:organization"
+        "meal:fe6c5fe98c",
+        "recipe:63ff49db19"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T06:18:40",
-      "type": "skill_evidence",
-      "summary": "10 XP in organization from Plan the week",
+      "at": "2026-10-06T07:01:15",
+      "type": "workout_logged",
+      "summary": "Worked out: a session, 10 min",
       "refs": [
-        "skill:organization",
-        "mission:28549aa730"
+        "workout:a11537e079"
       ],
       "source": "manual"
     }

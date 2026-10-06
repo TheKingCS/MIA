@@ -10,56 +10,27 @@
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
 </head>
-<body class="mod-workout">
+<body data-app="workout" class="mod-workout">
   <!--
-    Workout (muse, 2026-10-05). Training volume from Life State's
-    workout section (core/workout_manager.py): sessions and minutes,
-    the last session, and the template library. Logging a session
-    happens where the engine owns it — this screen shows the record,
-    never invents one.
-    Offline: no CDNs, no web fonts. Placeholders only (DEC-0002).
+    Workout (claude, 2026-10-06, DEC-0017/0018): exercises, templates,
+    logging a session, history and progress, and today's daily mission,
+    from MIA.workout() (core/web_screens.py). Every change is a workout
+    action through MIAShell.act (core/workout_actions.py).
   -->
-  <form class="sign-in" id="sign-in" hidden aria-label="Sign in to MIA">
-    <p>Sign in to MIA</p>
-    <input id="who" autocomplete="username" placeholder="Email" required aria-label="Email">
-    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
-    <button class="btn btn-amber" type="submit">Sign in</button>
-  </form>
-
   <div class="layout" id="app" hidden>
-    <nav class="side" aria-label="Modules">
-      <a class="brand" href="index.html">🌿 MIA<small>Your Life. In Sync.</small></a>
-      <a class="nav" href="index.html"><span class="ico" aria-hidden="true">⌂</span>Home</a>
-      <a class="nav" href="missions.html"><span class="ico" aria-hidden="true">◎</span>Missions</a>
-      <a class="nav" href="skills.html"><span class="ico" aria-hidden="true">★</span>Skills</a>
-      <a class="nav" href="money.html"><span class="ico" aria-hidden="true">💰</span>Money</a>
-      <a class="nav" href="real-estate.html"><span class="ico" aria-hidden="true">🏠</span>Real Estate</a>
-      <a class="nav" href="garage.html"><span class="ico" aria-hidden="true">🔧</span>Garage</a>
-      <a class="nav" href="kitchen.html"><span class="ico" aria-hidden="true">🍳</span>Kitchen</a>
-      <a class="nav" href="workout.html" aria-current="page"><span class="ico" aria-hidden="true">💪</span>Workout</a>
-      <div class="side-foot">More modules arrive as they ship.</div>
-    </nav>
-
+    <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
       <header class="hero">
-        <h1><span aria-hidden="true">💪</span> Workout</h1>
-        <p class="tagline">Train smarter. Build the life you want.</p>
+        <h1><span aria-hidden="true" id="hero-icon">🏋</span> <span id="hero-name">Workout</span></h1>
+        <p class="tagline" id="hero-tagline">Stronger body. Clearer mind.</p>
       </header>
-
-      <section class="strip" id="strip" aria-label="Workout status"></section>
-
-      <div class="sect"><h2>Last session</h2><span class="stag" id="last-stag"></span></div>
-      <section class="glass glow" id="last" aria-label="Last workout session"></section>
-
-      <div class="sect"><h2>Templates</h2></div>
-      <div class="rows" id="templates"></div>
-
-      <p class="status-line" id="status" role="status" style="margin-top: calc(var(--gap) * 1.5);"></p>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
     </main>
   </div>
-
   <script src="mia.js"></script>
-  <script src="shell.js" data-frame="workout"></script>
+  <script src="shell.js"></script>
   <script src="workout.js"></script>
 </body>
 </html>

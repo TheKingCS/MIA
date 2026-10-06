@@ -1,0 +1,423 @@
+{
+  "available": true,
+  "forms": {
+    "property": {
+      "noun": "property",
+      "id_param": "property_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "property_type",
+          "label": "Kind",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Primary Residence",
+            "Rental",
+            "Investment",
+            "Land",
+            "Other"
+          ],
+          "default": "Rental"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "",
+            "Rented",
+            "Vacant",
+            "For Sale",
+            "For Rent",
+            "Owner Occupied",
+            "Under Renovation"
+          ],
+          "default": ""
+        },
+        {
+          "name": "location",
+          "label": "Where",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "monthly_rent",
+          "label": "Rent per month",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "current_value",
+          "label": "What it's worth",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "mortgage_balance",
+          "label": "Mortgage owed",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "purchase_date",
+          "label": "Bought on",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "purchase_price",
+          "label": "Price paid",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "original_loan_amount",
+          "label": "Loan amount (at the start)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "interest_rate_pct",
+          "label": "Mortgage rate (%)",
+          "type": "rate",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "loan_term_months",
+          "label": "Loan term (months)",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "loan_start_date",
+          "label": "Loan started",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "rent": {
+      "noun": "rent",
+      "id_param": "property_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "description",
+          "label": "What it was",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "expense": {
+      "noun": "expense",
+      "id_param": "property_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Utilities",
+            "Mortgage/Rent",
+            "Insurance",
+            "Groceries",
+            "Maintenance",
+            "Transportation",
+            "Taxes",
+            "Medical",
+            "Personal Care",
+            "Shopping",
+            "Bank Fees",
+            "Entertainment",
+            "Travel",
+            "Debt Payment",
+            "Building Materials",
+            "Tools & Equipment",
+            "Other"
+          ],
+          "default": "Maintenance"
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "description",
+          "label": "What it was",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "as_of": "2026-10-06",
+  "currency_symbol": "$",
+  "properties": [
+    {
+      "id": "54cbfb4a89",
+      "name": "Maple House",
+      "type": "Rental",
+      "status": "Rented",
+      "location": "Town, ST",
+      "rent": 1450.0,
+      "value": 240000.0,
+      "owed": 150000.0,
+      "equity": 90000.0,
+      "payment": 810.7,
+      "cash_flow": 639.3,
+      "income_month": 1450.0,
+      "expenses_month": 85.0,
+      "noi_year": 1365.0,
+      "asset_id": "9750970046",
+      "tasks": [
+        {
+          "id": "68d17e7842",
+          "title": "HVAC filter",
+          "asset_id": "9750970046",
+          "asset": "Maple House",
+          "trigger": "calendar",
+          "unit": "",
+          "priority": "normal",
+          "last_completed": "2026-07-03",
+          "interval_days": 90,
+          "meter_interval": null,
+          "urgency": "overdue",
+          "text": "overdue 5d",
+          "days": -5,
+          "needs_attention": true,
+          "quick_stat": false,
+          "latest": null,
+          "predicted": null,
+          "values": {
+            "asset_id": "9750970046",
+            "title": "HVAC filter",
+            "trigger_type": "calendar",
+            "interval_days": 90,
+            "meter_unit": "",
+            "meter_interval": null,
+            "threshold_value": null,
+            "threshold_direction": "below",
+            "priority": "normal",
+            "last_completed": "2026-07-03",
+            "notes": ""
+          },
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "68d17e7842"
+            },
+            "asks_meter": false
+          }
+        },
+        {
+          "id": "af5f59c2ef",
+          "title": "Clean gutters",
+          "asset_id": "9750970046",
+          "asset": "Maple House",
+          "trigger": "calendar",
+          "unit": "",
+          "priority": "normal",
+          "last_completed": "2026-05-09",
+          "interval_days": 180,
+          "meter_interval": null,
+          "urgency": "on_track",
+          "text": "due in 30d",
+          "days": 30,
+          "needs_attention": false,
+          "quick_stat": false,
+          "latest": null,
+          "predicted": null,
+          "values": {
+            "asset_id": "9750970046",
+            "title": "Clean gutters",
+            "trigger_type": "calendar",
+            "interval_days": 180,
+            "meter_unit": "",
+            "meter_interval": null,
+            "threshold_value": null,
+            "threshold_direction": "below",
+            "priority": "normal",
+            "last_completed": "2026-05-09",
+            "notes": ""
+          },
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "af5f59c2ef"
+            },
+            "asks_meter": false
+          }
+        }
+      ],
+      "missions": [],
+      "notes": "",
+      "values": {
+        "name": "Maple House",
+        "property_type": "Rental",
+        "status": "Rented",
+        "location": "Town, ST",
+        "monthly_rent": 1450.0,
+        "current_value": 240000.0,
+        "mortgage_balance": 150000.0,
+        "purchase_date": "2022-08-28",
+        "purchase_price": 185000.0,
+        "original_loan_amount": 160000.0,
+        "interest_rate_pct": 4.5,
+        "loan_term_months": 360,
+        "loan_start_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "fd3113f59a",
+      "name": "Oak Duplex",
+      "type": "Rental",
+      "status": "For Rent",
+      "location": "City, ST",
+      "rent": 0.0,
+      "value": 310000.0,
+      "owed": 228000.0,
+      "equity": 82000.0,
+      "payment": 0.0,
+      "cash_flow": null,
+      "income_month": 0.0,
+      "expenses_month": 0.0,
+      "noi_year": 0.0,
+      "asset_id": null,
+      "tasks": [],
+      "missions": [],
+      "notes": "",
+      "values": {
+        "name": "Oak Duplex",
+        "property_type": "Rental",
+        "status": "For Rent",
+        "location": "City, ST",
+        "monthly_rent": 0.0,
+        "current_value": 310000.0,
+        "mortgage_balance": 228000.0,
+        "purchase_date": null,
+        "purchase_price": 0.0,
+        "original_loan_amount": 0.0,
+        "interest_rate_pct": 0.0,
+        "loan_term_months": 0,
+        "loan_start_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "a2cc3f1137",
+      "name": "Vacant lot",
+      "type": "Land",
+      "status": "",
+      "location": "",
+      "rent": 0.0,
+      "value": 60000.0,
+      "owed": 0.0,
+      "equity": 60000.0,
+      "payment": 0.0,
+      "cash_flow": null,
+      "income_month": 0.0,
+      "expenses_month": 0.0,
+      "noi_year": 0.0,
+      "asset_id": null,
+      "tasks": [],
+      "missions": [],
+      "notes": "",
+      "values": {
+        "name": "Vacant lot",
+        "property_type": "Land",
+        "status": "",
+        "location": "",
+        "monthly_rent": 0.0,
+        "current_value": 60000.0,
+        "mortgage_balance": 0.0,
+        "purchase_date": "",
+        "purchase_price": 0.0,
+        "original_loan_amount": 0.0,
+        "interest_rate_pct": 0.0,
+        "loan_term_months": 0,
+        "loan_start_date": "",
+        "notes": ""
+      }
+    }
+  ],
+  "totals": {
+    "count": 3,
+    "equity": 232000.0,
+    "rent": 1450.0,
+    "cash_flow": 639.3,
+    "attention": 1
+  }
+}

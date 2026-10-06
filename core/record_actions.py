@@ -45,7 +45,9 @@ class Field:
     name: str  # the parameter, and the record's attribute
     label: str
     # text | textarea | money | rate | int | amount (≥ 0) | number (any) |
-    # date | choice | recurrence | asset (a maintenance asset's id)
+    # date | choice | recurrence | asset (a maintenance asset's id) |
+    # pick (one of a list the page supplies: options = (the list's name,);
+    # the action itself checks the id exists)
     kind: str
     required: bool = False
     options: tuple = ()
@@ -279,7 +281,8 @@ def field_dict(f: Field) -> dict:
     """A field as the web's forms read it (JSON-ready)."""
     from core.calendar_manager import RECURRENCE_TYPES
 
-    options = list(f.options) if f.kind == "choice" else (["none", *RECURRENCE_TYPES] if f.kind == "recurrence" else [])
+    options = (list(f.options) if f.kind in ("choice", "pick")
+               else (["none", *RECURRENCE_TYPES] if f.kind == "recurrence" else []))
     return {"name": f.name, "label": f.label, "type": f.kind, "required": f.required, "options": options,
             "default": f.default}
 

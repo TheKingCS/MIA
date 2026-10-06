@@ -1,0 +1,662 @@
+{
+  "available": true,
+  "forms": {
+    "recipe": {
+      "noun": "recipe",
+      "id_param": "recipe_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Meal",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Breakfast",
+            "Lunch",
+            "Dinner",
+            "Dessert",
+            "Snack",
+            "Side",
+            "Drink",
+            "Other"
+          ],
+          "default": "Dinner"
+        },
+        {
+          "name": "servings",
+          "label": "Servings",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 4
+        },
+        {
+          "name": "prep_time_minutes",
+          "label": "Prep (minutes)",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "cook_time_minutes",
+          "label": "Cook (minutes)",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "calories_per_serving",
+          "label": "Calories per serving",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "instructions",
+          "label": "Steps",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "source",
+          "label": "From",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "pantry": {
+      "noun": "pantry item",
+      "id_param": "item_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "label": "How much",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Shelf",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Produce",
+            "Dairy",
+            "Meat",
+            "Frozen",
+            "Pantry/Dry Goods",
+            "Spices",
+            "Condiments",
+            "Beverages",
+            "Other"
+          ],
+          "default": "Pantry/Dry Goods"
+        },
+        {
+          "name": "expiration_date",
+          "label": "Use by",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "grocery": {
+      "noun": "grocery item",
+      "id_param": "item_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Item",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "label": "How much",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "unit",
+          "label": "Unit",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "ingredients": {
+      "noun": "ingredients",
+      "id_param": "recipe_id",
+      "fields": [
+        {
+          "name": "ingredients",
+          "label": "Ingredients (one per line, e.g. \"2 cups rice\")",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "meal": {
+      "noun": "meal",
+      "id_param": "recipe_id",
+      "fields": [
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "as_of": "2026-10-06",
+  "recipes": [
+    {
+      "id": "51004a94a4",
+      "name": "Chicken stir fry",
+      "category": "Dinner",
+      "servings": 2,
+      "minutes": 25,
+      "calories": null,
+      "ingredients": [
+        "chicken",
+        "rice",
+        "broccoli",
+        "soy sauce"
+      ],
+      "ingredients_text": "1 lb chicken\n2 cups rice\nbroccoli\nsoy sauce",
+      "instructions": "Prep everything.\nCook.\nServe.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "broccoli",
+        "soy sauce"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": true,
+      "rating": null,
+      "values": {
+        "name": "Chicken stir fry",
+        "category": "Dinner",
+        "servings": 2,
+        "prep_time_minutes": 10,
+        "cook_time_minutes": 15,
+        "calories_per_serving": null,
+        "instructions": "Prep everything.\nCook.\nServe.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "417fff4e96",
+      "name": "Chili",
+      "category": "Dinner",
+      "servings": 4,
+      "minutes": 0,
+      "calories": null,
+      "ingredients": [],
+      "ingredients_text": "",
+      "instructions": "",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [],
+      "makeable": false,
+      "times_made": 1,
+      "last_made": "2026-10-06",
+      "favorite": false,
+      "rating": null,
+      "values": {
+        "name": "Chili",
+        "category": "Dinner",
+        "servings": 4,
+        "prep_time_minutes": 0,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "63ff49db19",
+      "name": "Overnight oats",
+      "category": "Breakfast",
+      "servings": 1,
+      "minutes": 5,
+      "calories": null,
+      "ingredients": [
+        "oats",
+        "milk",
+        "honey"
+      ],
+      "ingredients_text": "1 cup oats\n1 cup milk\nhoney",
+      "instructions": "Prep everything.\nCook.\nServe.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [],
+      "makeable": true,
+      "times_made": 1,
+      "last_made": "2026-10-05",
+      "favorite": false,
+      "rating": null,
+      "values": {
+        "name": "Overnight oats",
+        "category": "Breakfast",
+        "servings": 1,
+        "prep_time_minutes": 5,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "Prep everything.\nCook.\nServe.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "b6c4d8b472",
+      "name": "Pasta primavera",
+      "category": "Dinner",
+      "servings": 4,
+      "minutes": 30,
+      "calories": null,
+      "ingredients": [
+        "pasta",
+        "zucchini",
+        "bell pepper",
+        "parmesan"
+      ],
+      "ingredients_text": "1 lb pasta\nzucchini\nbell pepper\nparmesan",
+      "instructions": "Prep everything.\nCook.\nServe.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "pasta",
+        "zucchini",
+        "bell pepper",
+        "parmesan"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": false,
+      "rating": null,
+      "values": {
+        "name": "Pasta primavera",
+        "category": "Dinner",
+        "servings": 4,
+        "prep_time_minutes": 10,
+        "cook_time_minutes": 20,
+        "calories_per_serving": null,
+        "instructions": "Prep everything.\nCook.\nServe.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "a99e8782ee",
+      "name": "Homemade ramen",
+      "category": "Dinner",
+      "servings": 2,
+      "minutes": 60,
+      "calories": null,
+      "ingredients": [],
+      "ingredients_text": "",
+      "instructions": "",
+      "source": "",
+      "notes": "",
+      "locked": true,
+      "unlocked_by_mission": "Cook 3 healthy meals",
+      "missing": [],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": false,
+      "rating": null,
+      "values": {
+        "name": "Homemade ramen",
+        "category": "Dinner",
+        "servings": 2,
+        "prep_time_minutes": 20,
+        "cook_time_minutes": 40,
+        "calories_per_serving": null,
+        "instructions": "",
+        "source": "",
+        "notes": ""
+      }
+    }
+  ],
+  "pantry": [
+    {
+      "id": "a9a08e87cc",
+      "name": "Milk",
+      "quantity": 1,
+      "unit": "gal",
+      "category": "Dairy",
+      "expires_in": 2,
+      "expiring": true,
+      "values": {
+        "name": "Milk",
+        "quantity": 1,
+        "unit": "gal",
+        "category": "Dairy",
+        "expiration_date": "2026-10-08",
+        "notes": ""
+      }
+    },
+    {
+      "id": "fb4d187066",
+      "name": "chicken",
+      "quantity": 1.0,
+      "unit": "lb",
+      "category": "Meat",
+      "expires_in": 1,
+      "expiring": true,
+      "values": {
+        "name": "chicken",
+        "quantity": 1.0,
+        "unit": "lb",
+        "category": "Meat",
+        "expiration_date": "2026-10-07",
+        "notes": ""
+      }
+    },
+    {
+      "id": "db8c0dc95d",
+      "name": "milk",
+      "quantity": 1.0,
+      "unit": "gal",
+      "category": "Dairy",
+      "expires_in": 4,
+      "expiring": false,
+      "values": {
+        "name": "milk",
+        "quantity": 1.0,
+        "unit": "gal",
+        "category": "Dairy",
+        "expiration_date": "2026-10-10",
+        "notes": ""
+      }
+    },
+    {
+      "id": "d394121bc4",
+      "name": "honey",
+      "quantity": 1.0,
+      "unit": "jar",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "honey",
+        "quantity": 1.0,
+        "unit": "jar",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "9f49a72846",
+      "name": "oats",
+      "quantity": 2.0,
+      "unit": "lb",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "oats",
+        "quantity": 2.0,
+        "unit": "lb",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "d750763632",
+      "name": "Rice",
+      "quantity": 5,
+      "unit": "lb",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "Rice",
+        "quantity": 5,
+        "unit": "lb",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "ddfe2fe8e6",
+      "name": "rice",
+      "quantity": 5.0,
+      "unit": "lb",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "rice",
+        "quantity": 5.0,
+        "unit": "lb",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    }
+  ],
+  "grocery": [
+    {
+      "id": "117775ffd9",
+      "name": "Eggs",
+      "quantity": 12,
+      "unit": "",
+      "checked": false,
+      "for_recipe": null
+    },
+    {
+      "id": "2a806de635",
+      "name": "broccoli",
+      "quantity": 0.0,
+      "unit": "",
+      "checked": false,
+      "for_recipe": "Chicken stir fry"
+    },
+    {
+      "id": "3c5c06c2ba",
+      "name": "soy sauce",
+      "quantity": 0.0,
+      "unit": "",
+      "checked": false,
+      "for_recipe": "Chicken stir fry"
+    },
+    {
+      "id": "716f26b099",
+      "name": "Eggs",
+      "quantity": 12.0,
+      "unit": "",
+      "checked": false,
+      "for_recipe": null
+    }
+  ],
+  "meals": [
+    {
+      "id": "f27348f1d6",
+      "date": "2026-10-06",
+      "recipe": "Chili",
+      "recipe_id": "417fff4e96",
+      "notes": ""
+    },
+    {
+      "id": "fe6c5fe98c",
+      "date": "2026-10-05",
+      "recipe": "Overnight oats",
+      "recipe_id": "63ff49db19",
+      "notes": ""
+    }
+  ],
+  "suggestions": [
+    {
+      "id": "63ff49db19",
+      "name": "Overnight oats",
+      "category": "Breakfast",
+      "servings": 1,
+      "minutes": 5,
+      "calories": null,
+      "ingredients": [
+        "oats",
+        "milk",
+        "honey"
+      ],
+      "ingredients_text": "1 cup oats\n1 cup milk\nhoney",
+      "instructions": "Prep everything.\nCook.\nServe.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [],
+      "makeable": true,
+      "times_made": 1,
+      "last_made": "2026-10-05",
+      "favorite": false,
+      "rating": null,
+      "values": {
+        "name": "Overnight oats",
+        "category": "Breakfast",
+        "servings": 1,
+        "prep_time_minutes": 5,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "Prep everything.\nCook.\nServe.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "51004a94a4",
+      "name": "Chicken stir fry",
+      "category": "Dinner",
+      "servings": 2,
+      "minutes": 25,
+      "calories": null,
+      "ingredients": [
+        "chicken",
+        "rice",
+        "broccoli",
+        "soy sauce"
+      ],
+      "ingredients_text": "1 lb chicken\n2 cups rice\nbroccoli\nsoy sauce",
+      "instructions": "Prep everything.\nCook.\nServe.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "broccoli",
+        "soy sauce"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": true,
+      "rating": null,
+      "values": {
+        "name": "Chicken stir fry",
+        "category": "Dinner",
+        "servings": 2,
+        "prep_time_minutes": 10,
+        "cook_time_minutes": 15,
+        "calories_per_serving": null,
+        "instructions": "Prep everything.\nCook.\nServe.",
+        "source": "",
+        "notes": ""
+      }
+    }
+  ],
+  "counts": {
+    "recipes": 5,
+    "pantry": 7,
+    "expiring": 2,
+    "grocery": 4
+  }
+}

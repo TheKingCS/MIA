@@ -41,3 +41,4 @@ handoff: use placeholders.*
 | H-0017 | claude → muse (cc zac, chatgpt) | 2026-10-06 | DEC-0017 approved: the shared frame and the dashboard Home are in | [`H-0017_claude-to-muse_dec-0017-frame-and-home.md`](H-0017_claude-to-muse_dec-0017-frame-and-home.md) |
 | H-0018 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Home is MIA again, a ⋯ menu, and Money is complete | [`H-0018_claude-to-muse_home-menu-money.md`](H-0018_claude-to-muse_home-menu-money.md) |
 | H-0019 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Garage, Property, Greenhouse, Maintenance and the asset page are working | [`H-0019_claude-to-muse_equipment-screens.md`](H-0019_claude-to-muse_equipment-screens.md) |
+| H-0020 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Kitchen, Workout and Real Estate are working | [`H-0020_claude-to-muse_kitchen-workout-real-estate.md`](H-0020_claude-to-muse_kitchen-workout-real-estate.md) |

@@ -25,7 +25,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Budget: Summary | Monthly plan, totals, net worth | `budget__06_summary` | ✅ `/api/money` + money actions | ✅ this month, monthly plan, net worth, spending by category, next two weeks; budget targets set/change/remove | |
 | Budget: Trends | Spending and income over time | `budget__07_trends` | ✅ `/api/money` + money actions | ✅ last six months in and out | |
 | Budget: Bank sync | Plaid status, sync, linked accounts | `budget__08_bank_sync` | ✅ `/api/money` + money actions | status only (connect and sync need the vault passphrase: PC app) | |
-| Real Estate | Properties: value, equity, mortgage, rent, cash flow, depreciation, maintenance, sell | `real_estate` | | summary only | |
+| Real Estate | Properties: value, equity, mortgage, rent, cash flow, depreciation, maintenance, sell | `real_estate` | ✅ `/api/real-estate` + property actions | ✅ property cards (status, where, rent, balance, equity, payment, cash flow, this month), add, edit, delete, record rent, add expense (both into Money), track upkeep (its Maintenance asset) with Done, related missions (not yet: depreciation, sell, photos) | |
 | Workshop: Components | Parts inventory: add, edit, use | `workshop__01_components` | |  | |
 | Workshop: Materials | Fabrication materials | `workshop__02_materials` | |  | |
 | Workshop: Jobs | Costed jobs | `workshop__03_jobs` | |  | |
@@ -40,7 +40,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Maintenance: Tasks | Recurring tasks (calendar or meter-based), mark complete, log hours | `maintenance__02_tasks` | ✅ maintenance_task actions, maintenance.done, maintenance.reading | ✅ every task, calendar or meter-based, done, log reading, add, edit, delete | |
 | Maintenance: Overview | Calendar overview | `maintenance__03_overview` | ✅ calendar in `/api/equipment` | ✅ the next two months by day | |
 | Maintenance: Monitor | Sensor monitor | `maintenance__04_monitor` |  | not yet (sensor graphs) | |
-| Kitchen | Recipes, pantry, grocery list, meal log, suggestions, what can I make | `kitchen` | | summary only | |
+| Kitchen | Recipes, pantry, grocery list, meal log, suggestions, what can I make | `kitchen` | ✅ `/api/kitchen` + kitchen actions | ✅ recipe cards (missing, makeable, locked with the mission that unlocks it), view, add, edit, delete, ingredients one per line, favorite, log meal, add missing to the list; pantry add/edit/remove with use-by; grocery add, check off, clear checked; meal log; suggestions (not yet: ratings, photos) | |
 | Power: Battery | Battery status | `power__01_battery` | |  | |
 | Power: Energy sources | Energy and utility tracking | `power__02_energy_sources` | |  | |
 | Missions | Missions with objectives, difficulty, XP and credit rewards, MIA-assigned, add/edit, tick objectives, complete | `missions` | | summary only | |
@@ -48,7 +48,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Character | Lifetime stats, prestige, cosmetic rewards | `character` | |  | |
 | Dashboard | Recent activity, missions, memories, events, projects, tasks | `dashboard` | |  | |
 | Observations | What MIA noticed | `observations` | |  | |
-| Workout | Exercises, templates, log a session, history, progress, PRs, rest timer | `workout` | | summary only | |
+| Workout | Exercises, templates, log a session, history, progress, PRs, rest timer | `workout` | ✅ `/api/workout` + workout actions | ✅ inline log (an exercise or a template), latest entry, daily mission with progress and streak, week/minutes/streak, exercises with PRs, templates (add/remove exercises, log it), history, progress lines (not yet: rest timer, guided session) | |
 | People | People: birthdays, gift ideas, notes | `relationships__01_people` | |  | |
 | Pets | Pets: vet history | `relationships__02_pets` | |  | |
 | Notes | Dated, tagged notes and journal | `notes` | |  | |

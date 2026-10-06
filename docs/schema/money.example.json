@@ -8,9 +8,9 @@
     "available": true,
     "month": {
       "label": "October 2026",
-      "income": 0.0,
-      "expenses": 120.0,
-      "net": -120.0
+      "income": 1450.0,
+      "expenses": 205.0,
+      "net": 1245.0
     },
     "bills_due": [
       {
@@ -41,11 +41,11 @@
       ]
     },
     "net_worth": {
-      "total": 60000.0,
+      "total": 232000.0,
       "sources": [
         {
           "label": "Property equity",
-          "value": 60000.0
+          "value": 232000.0
         }
       ],
       "manual_debts_not_in_net_worth": 40000.0
@@ -477,11 +477,15 @@
     {
       "category": "Utilities",
       "amount": 120.0
+    },
+    {
+      "category": "Maintenance",
+      "amount": 85.0
     }
   ],
   "bills": [
     {
-      "id": "30d4e578dc",
+      "id": "7a72ab05ed",
       "name": "Insurance",
       "amount": 340.0,
       "category": "Utilities",
@@ -503,12 +507,12 @@
         "kind": "bill.pay",
         "label": "Mark paid",
         "params": {
-          "bill_id": "30d4e578dc"
+          "bill_id": "7a72ab05ed"
         }
       }
     },
     {
-      "id": "449a09884d",
+      "id": "227ef07d16",
       "name": "Electric",
       "amount": 120.0,
       "category": "Utilities",
@@ -530,14 +534,14 @@
         "kind": "bill.pay",
         "label": "Mark paid",
         "params": {
-          "bill_id": "449a09884d"
+          "bill_id": "227ef07d16"
         }
       }
     }
   ],
   "income_sources": [
     {
-      "id": "c0c74330dd",
+      "id": "ba37d9ec0d",
       "name": "Pay",
       "amount": 1500.0,
       "category": "Salary",
@@ -558,15 +562,49 @@
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "c0c74330dd"
+          "source_id": "ba37d9ec0d"
         }
       }
     }
   ],
-  "income": [],
+  "income": [
+    {
+      "id": "982c9381e8",
+      "date": "2026-10-06",
+      "amount": 1450.0,
+      "category": "Rental Income",
+      "description": "Rent: Maple House",
+      "from_bank": false,
+      "values": {
+        "amount": 1450.0,
+        "date": "2026-10-06",
+        "category": "Rental Income",
+        "description": "Rent: Maple House",
+        "notes": ""
+      }
+    }
+  ],
   "expenses": [
     {
-      "id": "49e9de06d5",
+      "id": "61ec8fceab",
+      "date": "2026-10-06",
+      "amount": 85.0,
+      "category": "Maintenance",
+      "description": "HVAC filters",
+      "from_bank": false,
+      "values": {
+        "amount": 85.0,
+        "date": "2026-10-06",
+        "category": "Maintenance",
+        "description": "HVAC filters",
+        "payee": "",
+        "notes": ""
+      },
+      "payee": "",
+      "from_bill": false
+    },
+    {
+      "id": "bb32c7385b",
       "date": "2026-10-06",
       "amount": 120.0,
       "category": "Utilities",
@@ -589,7 +627,7 @@
     "strategy": "hybrid",
     "ranked": [
       {
-        "id": "bd8c4ed586",
+        "id": "8aad70a3a9",
         "rank": 1,
         "name": "Land loan",
         "type": "Credit Card",
@@ -615,7 +653,7 @@
           "kind": "debt.pay",
           "label": "Record payment",
           "params": {
-            "debt_id": "bd8c4ed586",
+            "debt_id": "8aad70a3a9",
             "amount": 500.0
           }
         }
@@ -659,9 +697,9 @@
     },
     {
       "month": "Oct 2026",
-      "income": 0.0,
-      "expenses": 120.0,
-      "net": -120.0
+      "income": 1450.0,
+      "expenses": 205.0,
+      "net": 1245.0
     }
   ],
   "bank": {

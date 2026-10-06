@@ -110,9 +110,11 @@
         const id = "f-" + f.name;
         const value = values[f.name] != null ? values[f.name] : (f.default != null ? f.default : "");
         let input;
-        if (f.type === "asset") {
+        if (f.type === "asset" || f.type === "pick") {
+          const list = f.type === "asset" ? (extra.assets || []) : (extra[f.options[0]] || []);
           input = el("select", { id, required: f.required || null },
-            (extra.assets || []).map((a) => el("option", { value: a.id, selected: String(value) === a.id ? true : null }, a.name)));
+            f.required ? null : el("option", { value: "" }, "—"),
+            list.map((a) => el("option", { value: a.id, selected: String(value) === a.id ? true : null }, a.name)));
         } else if (f.type === "choice" || f.type === "recurrence") {
           input = el("select", { id },
             f.options.map((o) => el("option", { value: o, selected: String(value || "none") === o ? true : null },

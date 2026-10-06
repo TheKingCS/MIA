@@ -58,6 +58,9 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _PROPERTIES_FILE = _DATA_DIR / "properties.json"
 
 PROPERTY_TYPES = ["Primary Residence", "Rental", "Investment", "Land", "Other"]
+# 2026-10-06 (DEC-0018, the Real Estate concept): where a property stands.
+# "" = not set.
+PROPERTY_STATUSES = ["Rented", "Vacant", "For Sale", "For Rent", "Owner Occupied", "Under Renovation"]
 
 
 @dataclass
@@ -89,6 +92,10 @@ class Property:
     loan_start_date: str = ""
     notes: str = ""
     created_at: str = ""
+    # 2026-10-06 (DEC-0018): the concept's property card.
+    location: str = ""  # "Town, State": never needed, never shown unless entered
+    status: str = ""  # one of PROPERTY_STATUSES, or ""
+    monthly_rent: float = 0.0  # what it rents for (expected), per month
 
     def to_dict(self) -> dict:
         return {
@@ -101,6 +108,7 @@ class Property:
             "original_loan_amount": self.original_loan_amount, "interest_rate_pct": self.interest_rate_pct,
             "loan_term_months": self.loan_term_months, "loan_start_date": self.loan_start_date,
             "notes": self.notes, "created_at": self.created_at,
+            "location": self.location, "status": self.status, "monthly_rent": self.monthly_rent,
         }
 
     @staticmethod
@@ -123,6 +131,9 @@ class Property:
             loan_start_date=data.get("loan_start_date", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
+            location=data.get("location", "") or "",
+            status=data.get("status", "") or "",
+            monthly_rent=float(data.get("monthly_rent", 0.0) or 0.0),
         )
 
 
@@ -364,6 +375,9 @@ class RealEstateManager:
         loan_term_months: int = 0,
         loan_start_date: str = "",
         notes: str = "",
+        location: str = "",
+        status: str = "",
+        monthly_rent: float = 0.0,
     ) -> Property:
         prop = Property(
             property_id=uuid.uuid4().hex[:10],
@@ -378,6 +392,9 @@ class RealEstateManager:
             placed_in_service_date=placed_in_service_date,
             original_loan_amount=max(0.0, original_loan_amount),
             interest_rate_pct=max(0.0, interest_rate_pct),
+            location=location,
+            status=status if status in PROPERTY_STATUSES else "",
+            monthly_rent=max(0.0, monthly_rent),
             loan_term_months=max(0, loan_term_months),
             loan_start_date=loan_start_date,
             notes=notes,
@@ -398,9 +415,11 @@ class RealEstateManager:
             setattr(prop, key, value)
         if prop.property_type not in PROPERTY_TYPES:
             prop.property_type = "Other"
+        if prop.status not in PROPERTY_STATUSES:
+            prop.status = ""
         for numeric_field in (
             "purchase_price", "current_value", "mortgage_balance", "land_value",
-            "original_loan_amount", "interest_rate_pct",
+            "original_loan_amount", "interest_rate_pct", "monthly_rent",
         ):
             if getattr(prop, numeric_field) < 0:
                 setattr(prop, numeric_field, 0.0)

@@ -15,6 +15,7 @@
  *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
  *   MIA.money(strategy)         -> the Money screen: bills, income, expenses, debts, budgets, trends
+ *   MIA.kitchen() / MIA.workout() / MIA.realEstate() -> those screens (core/web_screens.py)
  *   MIA.equipment(scope)        -> Garage / Property / Greenhouse / Maintenance
  *   MIA.asset(id)               -> one asset's page (tasks, stats, missions, documents, costs, history)
  *   MIA.download(path) / MIA.upload(path, file) -> files (an asset's documents)
@@ -119,6 +120,9 @@
     shell: () => read("/api/shell", "shell"),
     dashboard: () => read("/api/dashboard", "dashboard"),
     apps: () => read("/api/apps", "apps"),
+    kitchen: () => read("/api/kitchen", "kitchen"),
+    workout: () => read("/api/workout", "workout"),
+    realEstate: () => read("/api/real-estate", "real_estate"),
     equipment: (scope) => read("/api/equipment?scope=" + encodeURIComponent(scope || "maintenance"), "equipment_" + (scope || "maintenance")),
     asset: (id) => read("/api/assets/" + encodeURIComponent(id), "asset"),
     // A stored file (an asset's document) as a Blob, with this tab's sign-in.

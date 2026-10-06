@@ -283,6 +283,9 @@ ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
 # so either module can be imported first.
 import core.money_actions  # noqa: E402,F401
 import core.equipment_actions  # noqa: E402,F401  (Garage, Property, Greenhouse, Maintenance)
+import core.kitchen_actions  # noqa: E402,F401
+import core.workout_actions  # noqa: E402,F401
+import core.estate_actions  # noqa: E402,F401
 
 
 # ------------------------------------------------------------------ the five steps

@@ -569,6 +569,34 @@ def create_app(context: AppContext) -> FastAPI:
                 stored = view.maintenance.add_document(asset.asset_id, source)
         return {"added": stored, "message": f"{stored} is on {asset.name} now."}
 
+    # Kitchen, Workout, Real Estate (DEC-0017/0018, core/web_screens.py).
+    def _screen(profile_id: str, app_id: str, build):
+        from core.child_accounts import ASK_A_PARENT, app_allowed
+
+        view = view_for(context, profile_id)
+        if not app_allowed(view, app_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+        with app.state.turn_lock:
+            return build(view)
+
+    @app.get("/api/kitchen")
+    def web_kitchen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_screens import kitchen_page
+
+        return _screen(profile_id, "kitchen", kitchen_page)
+
+    @app.get("/api/workout")
+    def web_workout(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_screens import workout_page
+
+        return _screen(profile_id, "workout", workout_page)
+
+    @app.get("/api/real-estate")
+    def web_real_estate(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_screens import estate_page
+
+        return _screen(profile_id, "real_estate", estate_page)
+
     @app.get("/api/dashboard")
     def web_dashboard(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_surfaces import dashboard

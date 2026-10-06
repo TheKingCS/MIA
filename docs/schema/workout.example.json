@@ -1,0 +1,424 @@
+{
+  "available": true,
+  "forms": {
+    "exercise": {
+      "noun": "exercise",
+      "id_param": "exercise_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Works",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Chest",
+            "Back",
+            "Shoulders",
+            "Arms",
+            "Legs",
+            "Core",
+            "Cardio",
+            "Full Body",
+            "Other"
+          ],
+          "default": "Full Body"
+        },
+        {
+          "name": "equipment",
+          "label": "Equipment",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "workout_template": {
+      "noun": "template",
+      "id_param": "template_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "log": {
+      "noun": "session",
+      "id_param": null,
+      "fields": [
+        {
+          "name": "exercise_id",
+          "label": "Exercise",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "exercises"
+          ],
+          "default": null
+        },
+        {
+          "name": "reps",
+          "label": "Reps",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "sets",
+          "label": "Sets",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "weight",
+          "label": "Weight",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "duration_minutes",
+          "label": "Minutes",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "log_template": {
+      "noun": "session",
+      "id_param": null,
+      "fields": [
+        {
+          "name": "template_id",
+          "label": "Template",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "templates"
+          ],
+          "default": null
+        },
+        {
+          "name": "duration_minutes",
+          "label": "Minutes",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "template_exercise": {
+      "noun": "exercise",
+      "id_param": "template_id",
+      "fields": [
+        {
+          "name": "exercise_id",
+          "label": "Exercise",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "exercises"
+          ],
+          "default": null
+        },
+        {
+          "name": "target_sets",
+          "label": "Sets",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 3
+        },
+        {
+          "name": "target_reps",
+          "label": "Reps",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 10
+        },
+        {
+          "name": "target_weight",
+          "label": "Weight",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        }
+      ]
+    }
+  },
+  "as_of": "2026-10-06",
+  "exercises": [
+    {
+      "id": "b20686cd5c",
+      "name": "Bench press",
+      "category": "Chest",
+      "equipment": "Barbell",
+      "notes": "",
+      "pr": {
+        "weight": 125.0,
+        "reps": 6,
+        "date": "2026-10-03"
+      },
+      "progress": [
+        [
+          "2026-09-24",
+          95.0
+        ],
+        [
+          "2026-09-27",
+          105.0
+        ],
+        [
+          "2026-09-30",
+          115.0
+        ],
+        [
+          "2026-10-03",
+          125.0
+        ]
+      ],
+      "values": {
+        "name": "Bench press",
+        "category": "Chest",
+        "equipment": "Barbell",
+        "notes": ""
+      }
+    },
+    {
+      "id": "49e8e8b6ef",
+      "name": "Push-ups",
+      "category": "Chest",
+      "equipment": "Bodyweight",
+      "notes": "",
+      "pr": {
+        "weight": 0.0,
+        "reps": 22,
+        "date": "2026-10-06"
+      },
+      "progress": [
+        [
+          "2026-10-06",
+          0.0
+        ]
+      ],
+      "values": {
+        "name": "Push-ups",
+        "category": "Chest",
+        "equipment": "Bodyweight",
+        "notes": ""
+      }
+    },
+    {
+      "id": "39bdbf3ed6",
+      "name": "Squats",
+      "category": "Legs",
+      "equipment": "Bodyweight",
+      "notes": "",
+      "pr": {
+        "weight": 0.0,
+        "reps": 15,
+        "date": "2026-10-05"
+      },
+      "progress": [
+        [
+          "2026-10-05",
+          0.0
+        ]
+      ],
+      "values": {
+        "name": "Squats",
+        "category": "Legs",
+        "equipment": "Bodyweight",
+        "notes": ""
+      }
+    }
+  ],
+  "templates": [
+    {
+      "id": "d784e20b07",
+      "name": "Beginner full body",
+      "notes": "",
+      "exercises": [
+        {
+          "index": 0,
+          "name": "Squats",
+          "sets": 3,
+          "reps": 12,
+          "weight": 0.0
+        },
+        {
+          "index": 1,
+          "name": "Push-ups",
+          "sets": 3,
+          "reps": 10,
+          "weight": 0.0
+        }
+      ],
+      "values": {
+        "name": "Beginner full body",
+        "notes": ""
+      }
+    }
+  ],
+  "sessions": [
+    {
+      "id": "a11537e079",
+      "date": "2026-10-06",
+      "template": null,
+      "minutes": 10.0,
+      "sets": 1,
+      "summary": "Push-ups 22 reps · 1 set",
+      "notes": "Felt good"
+    },
+    {
+      "id": "3b0ad5ad98",
+      "date": "2026-10-06",
+      "template": "Beginner full body",
+      "minutes": 30,
+      "sets": 0,
+      "summary": "Beginner full body",
+      "notes": ""
+    },
+    {
+      "id": "1b0191ec4a",
+      "date": "2026-10-05",
+      "template": null,
+      "minutes": 15.0,
+      "sets": 3,
+      "summary": "Squats 45 reps · 3 sets",
+      "notes": ""
+    },
+    {
+      "id": "fa085bed9a",
+      "date": "2026-10-03",
+      "template": null,
+      "minutes": 35.0,
+      "sets": 3,
+      "summary": "Bench press 18 reps · 3 sets",
+      "notes": ""
+    },
+    {
+      "id": "5a0ed57f87",
+      "date": "2026-09-30",
+      "template": null,
+      "minutes": 35.0,
+      "sets": 3,
+      "summary": "Bench press 24 reps · 3 sets",
+      "notes": ""
+    },
+    {
+      "id": "2af3c38d67",
+      "date": "2026-09-27",
+      "template": null,
+      "minutes": 35.0,
+      "sets": 3,
+      "summary": "Bench press 24 reps · 3 sets",
+      "notes": ""
+    },
+    {
+      "id": "d42ee1b696",
+      "date": "2026-09-24",
+      "template": null,
+      "minutes": 35.0,
+      "sets": 3,
+      "summary": "Bench press 30 reps · 3 sets",
+      "notes": ""
+    }
+  ],
+  "latest": {
+    "id": "a11537e079",
+    "date": "2026-10-06",
+    "template": null,
+    "minutes": 10.0,
+    "sets": 1,
+    "summary": "Push-ups 22 reps · 1 set",
+    "notes": "Felt good"
+  },
+  "stats": {
+    "this_week": 3,
+    "minutes_this_week": 55.0,
+    "streak": 2,
+    "total": 7
+  },
+  "daily_missions": [
+    {
+      "id": "1e086eae8f",
+      "name": "Daily push-ups — Oct 06",
+      "progress": 0,
+      "target": 30.0,
+      "done": false,
+      "streak": 0,
+      "template_id": "19bc6fdf3d"
+    }
+  ]
+}
