@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Orbit · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -111,7 +112,9 @@
     b.setAttribute("aria-label","Buy "+d.name);
     b.onclick=function(){
       var c=cost(d);if(s.bank<c)return;
-      s.bank-=c;s.gens[d.id]=(s.gens[d.id]||0)+1;paint();drawSats();
+      s.bank-=c;s.gens[d.id]=(s.gens[d.id]||0)+1;
+      if(window.ArcadeProgress)ArcadeProgress.award("orbit","buy",20);
+      paint();drawSats();
     };
     row.appendChild(b);gensEl.appendChild(row);buyBtns[d.id]=b;
   });
@@ -139,7 +142,15 @@
       })(i);
     }
   }
+  // one-time milestone: lifetime total energy crosses 10,000
+  function check10k(){
+    if(!s.milestone10k&&s.total>=10000){
+      s.milestone10k=true;save();
+      if(window.ArcadeProgress)ArcadeProgress.award("orbit","10k",100);
+    }
+  }
   function paint(){
+    check10k();
     bankNum.textContent=fmt(s.bank);
     bankRate.textContent="⚡"+fmt(rate())+"/s";
     DEFS.forEach(function(d){
