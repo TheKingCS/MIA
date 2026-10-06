@@ -44,12 +44,12 @@ body {
 }
 
 /* her: a sphere of light with orbiting trails. Expression is the light. */
-#orb-zone { display: grid; justify-items: center; row-gap: 0; margin-bottom: -6px; }
-#orb-wrap { position: relative; width: 172px; height: 172px; }
+#orb-zone { display: grid; justify-items: center; row-gap: 0; margin-bottom: -4px; }
+#orb-wrap { position: relative; width: 190px; height: 190px; }
 #orb {
-  position: absolute; inset: 26px; border-radius: 50%;
+  position: absolute; inset: 30px; border-radius: 50%;
   background: radial-gradient(circle at 38% 30%, #fffdf4 0%, #ffedb8 16%, var(--gold) 46%, #8a5f08 80%, #2b2003 100%);
-  box-shadow: 0 0 54px rgba(246, 196, 83, 0.65), 0 0 130px rgba(246, 196, 83, 0.26),
+  box-shadow: 0 0 60px rgba(246, 196, 83, 0.7), 0 0 150px rgba(246, 196, 83, 0.3),
               inset 0 0 26px rgba(255, 250, 225, 0.65), inset -8px -12px 30px rgba(60, 40, 4, 0.5);
   animation: breathe 5s ease-in-out infinite;
 }
@@ -58,19 +58,21 @@ body {
 }
 #orb-wrap .ring {
   position: absolute; border-radius: 50%; pointer-events: none;
-  border: 2px solid transparent;
-  filter: drop-shadow(0 0 7px rgba(246, 196, 83, 0.9));
+  border: 3px solid transparent;
+  filter: drop-shadow(0 0 8px rgba(246, 196, 83, 0.95));
 }
 #orb-wrap .ring.r1 {
-  inset: 2px; opacity: 0.95;
-  border-top-color: rgba(255, 237, 184, 0.95);
-  border-right-color: rgba(255, 237, 184, 0.28);
+  inset: 0; opacity: 1;
+  border-top-color: rgba(255, 240, 200, 1);
+  border-right-color: rgba(255, 240, 200, 0.35);
+  border-bottom-color: rgba(255, 240, 200, 0.08);
   animation: spin 14s linear infinite;
 }
 #orb-wrap .ring.r2 {
-  inset: -10px; opacity: 0.7;
-  border-bottom-color: rgba(246, 196, 83, 0.75);
-  border-left-color: rgba(246, 196, 83, 0.22);
+  inset: -12px; opacity: 0.85;
+  border-bottom-color: rgba(246, 196, 83, 0.9);
+  border-left-color: rgba(246, 196, 83, 0.3);
+  border-top-color: rgba(246, 196, 83, 0.08);
   animation: spin 24s linear infinite reverse;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
