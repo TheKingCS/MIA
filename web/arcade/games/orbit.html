@@ -244,7 +244,7 @@
       b.parentElement.classList.toggle("owned",owned);
       if(!owned){b.textContent="Buy "+fmt(u.cost)+" ⚡";b.classList.toggle("afford",s.bank>=u.cost);}
     });
-    foot.innerHTML="Total earned: "+fmt(s.total)+" ⚡ · Station taps: "+s.taps+" · Comets: "+s.comets;
+    foot.innerHTML="Total earned: "+fmt(s.total)+" ⚡ · Station taps: "+s.taps+" · Comets: "+s.comets+" · v3";
   }
   // tick
   setInterval(function(){var r=rate();if(r>0){s.bank+=r/10;s.total+=r/10;paint();}},100);
