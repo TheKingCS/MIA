@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Dice Roller · Lens Arcade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;}
+  #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
+    display:grid;grid-template-rows:auto auto 1fr auto;justify-items:center;padding:18px 30px;row-gap:10px;}
+  header{width:100%;display:flex;justify-content:space-between;align-items:center;}
+  header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
+  header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .pick{cursor:pointer;border:1px solid rgba(246,196,83,.3);background:rgba(255,248,230,.04);
+    color:#f4ead0;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:600;min-width:52px;}
+  .pick.on{background:#f6c453;color:#241a03;border-color:#f6c453;box-shadow:0 0 16px rgba(246,196,83,.5);}
+  #dice-zone{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;align-content:center;max-width:100%;}
+  .die{width:64px;height:64px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(145deg,#1c1a12,#0c0b08);border:1px solid rgba(246,196,83,.5);
+    box-shadow:0 0 18px rgba(246,196,83,.18), inset 0 1px 0 rgba(255,244,214,.12);
+    font-size:24px;font-weight:800;color:#ffedb8;}
+  .die.rolling{animation:tumble .5s ease;}
+  @keyframes tumble{0%{transform:rotate(0) scale(1);}50%{transform:rotate(180deg) scale(1.15);}100%{transform:rotate(360deg) scale(1);}}
+  #total{font-size:15px;color:rgba(244,234,208,.6);letter-spacing:.1em;min-height:22px;text-align:center;}
+  #total b{font-size:30px;color:#ffedb8;text-shadow:0 0 20px rgba(246,196,83,.6);letter-spacing:0;}
+  #roll{cursor:pointer;border:none;border-radius:99px;padding:16px 64px;font-size:19px;font-weight:800;
+    background:#f6c453;color:#241a03;box-shadow:0 0 30px rgba(246,196,83,.5);}
+  #roll:active{transform:scale(.96);}
+  #hist{font-size:12px;color:rgba(244,234,208,.35);letter-spacing:.06em;min-height:16px;}
+  @media (prefers-reduced-motion:reduce){.die.rolling{animation:none;}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
+  <div class="row" id="sides" aria-label="Die type"></div>
+  <div id="dice-zone"></div>
+  <div>
+    <p id="total"></p>
+    <div class="row" id="count" style="margin:10px 0;" aria-label="Number of dice"></div>
+  </div>
+  <div style="display:grid;justify-items:center;gap:8px;">
+    <button id="roll" type="button">ROLL</button>
+    <p id="hist"></p>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var SIDES=[4,6,8,10,12,20,100], sides=20, n=2, busy=false;
+  var sidesEl=document.getElementById("sides"), countEl=document.getElementById("count"),
+      zone=document.getElementById("dice-zone"), totalEl=document.getElementById("total"),
+      hist=document.getElementById("hist");
+  function paintPicks(){
+    sidesEl.innerHTML="";countEl.innerHTML="";
+    SIDES.forEach(function(s){
+      var b=document.createElement("button");b.type="button";b.className="pick"+(s===sides?" on":"");
+      b.textContent="d"+s;b.setAttribute("aria-label","d"+s+" die");
+      b.onclick=function(){sides=s;paintPicks();};sidesEl.appendChild(b);
+    });
+    for(var i=1;i<=6;i++){
+      (function(k){
+        var b=document.createElement("button");b.type="button";b.className="pick"+(k===n?" on":"");
+        b.textContent="×"+k;b.setAttribute("aria-label",k+" dice");
+        b.onclick=function(){n=k;paintPicks();};countEl.appendChild(b);
+      })(i);
+    }
+  }
+  function roll(){
+    if(busy)return;busy=true;
+    zone.innerHTML="";
+    var dice=[],sum=0;
+    for(var i=0;i<n;i++){
+      var v=1+Math.floor(Math.random()*sides);dice.push(v);sum+=v;
+      var d=document.createElement("div");d.className="die rolling";d.textContent="…";
+      zone.appendChild(d);
+    }
+    totalEl.innerHTML="";
+    setTimeout(function(){
+      var kids=zone.children;
+      for(var i=0;i<kids.length;i++){kids[i].classList.remove("rolling");kids[i].textContent=dice[i];}
+      totalEl.innerHTML="TOTAL<br><b>"+sum+"</b>";
+      hist.textContent=n+"d"+sides+": "+dice.join(" + ")+" = "+sum;
+      busy=false;
+    },520);
+  }
+  document.getElementById("roll").onclick=roll;
+  paintPicks();
+})();
+</script>
+</body>
+</html>
