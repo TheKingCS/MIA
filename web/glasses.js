@@ -85,7 +85,7 @@
       el("p", "g-say", 'say <b>"what\'s next"</b> · <b>"remind me"</b> · <b>"done"</b>'));
     card.replaceChildren(wrap);
     $("voice-input").placeholder = 'say "what\'s next"';
-    $("voice-input").focus();
+    if (demo) $("voice-input").focus();
   }
 
   function nudge() {
@@ -179,7 +179,7 @@
     card.replaceChildren(box);
     setTimeout(() => { setOrb("idle"); if (after) after(); }, 1400);
   }
-  $("voice").addEventListener("submit", async (e) => {
+  $("demo-console").addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $("voice-input");
     const text = input.value.trim();
@@ -197,6 +197,10 @@
 
   // ------------------------------------------------------------ boot
   (async () => {
+    if (demo) {
+      document.body.classList.add("demo");
+      $("demo-console").hidden = false;
+    }
     // the waveform's bars, each on its own phase
     for (let i = 0; i < 44; i++) {
       const b = document.createElement("i");
