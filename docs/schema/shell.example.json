@@ -4,8 +4,8 @@
     "name": "Robin",
     "child": false,
     "level": 1,
-    "total_xp": 20,
-    "xp_into_level": 20,
+    "total_xp": 30,
+    "xp_into_level": 30,
     "xp_for_level": 100
   },
   "date": "Tue, Oct 6, 2026",
@@ -23,6 +23,13 @@
       "icon": "📊",
       "tagline": "Your life. In sync.",
       "page": "dashboard.html"
+    },
+    {
+      "id": "greenhouse",
+      "name": "Greenhouse",
+      "icon": "🌱",
+      "tagline": "Grow food. Grow freedom.",
+      "page": "greenhouse.html"
     },
     {
       "id": "garage",
@@ -74,6 +81,20 @@
       "page": "money.html"
     },
     {
+      "id": "maintenance",
+      "name": "Maintenance",
+      "icon": "🔧",
+      "tagline": "Everything you own, cared for.",
+      "page": "maintenance.html"
+    },
+    {
+      "id": "property",
+      "name": "Property",
+      "icon": "🏠",
+      "tagline": "The house, the appliances, the tools.",
+      "page": "property.html"
+    },
+    {
       "id": "module_browser",
       "name": "Apps",
       "icon": "🧩",
@@ -82,10 +103,7 @@
     }
   ],
   "on_pc_only": [
-    "Greenhouse",
     "Household",
-    "Maintenance",
-    "Property",
     "Workshop",
     "Power",
     "Character",

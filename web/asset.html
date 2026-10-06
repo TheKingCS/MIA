@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Asset — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+</head>
+<body data-app="garage" class="mod-garage">
+  <!--
+    One asset (claude, 2026-10-06, DEC-0017), in the shape of Zac's mower
+    concept: quick stats, needs attention, and Overview / Maintenance /
+    Missions / Documents / Costs / History / Parts. From MIA.asset(id)
+    (core/web_equipment.py); every change is an equipment action.
+    Muse owns the look.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <a class="back-link" id="back" href="garage.html">← Back</a>
+      <header class="hero asset-hero">
+        <h1><span aria-hidden="true" id="hero-icon">🔧</span> <span id="hero-name"></span></h1>
+        <p class="tagline" id="hero-sub"></p>
+        <div class="hero-buttons" id="hero-buttons"></div>
+      </header>
+      <section class="stat-tiles" id="stats" aria-label="Quick stats"></section>
+      <div id="attention"></div>
+      <div class="ptabs" role="tablist" id="tabs"></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="asset.js"></script>
+</body>
+</html>

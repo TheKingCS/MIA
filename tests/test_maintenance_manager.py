@@ -331,8 +331,15 @@ def test_predicted_due_date_days_phrasing_for_short_estimates():
     result = predicted_due_date(task, readings, date(2026, 1, 2))
     assert result is not None
     estimated, caveat = result
-    assert "days" in caveat
+    assert caveat.startswith("~1 day at current usage")  # "1 day", not "1 days"
     assert "weeks" not in caveat
+
+
+def test_predicted_due_date_none_for_readings_logged_minutes_apart():
+    """2026-10-06: two readings seconds apart projected 342720 hours a week."""
+    task = _task(trigger_type="runtime", meter_unit="engine hours", meter_interval=50, last_completed_meter_value=0)
+    readings = [_reading(12.8, "2026-10-06T06:00:00"), _reading(31.5, "2026-10-06T06:00:20")]
+    assert predicted_due_date(task, readings, date(2026, 10, 6)) is None
 
 
 # ------------------------------------------------------------------

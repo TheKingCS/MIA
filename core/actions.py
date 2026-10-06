@@ -162,12 +162,24 @@ def _maintenance_task(context, params):
 
 def _describe_maintenance(context, params) -> str:
     task, asset = _maintenance_task(context, params)
-    return f"Mark \"{task.title}\" done" + (f" on {asset.name}" if asset else "") + " today"
+    meter = _meter_value(params)
+    at = f" at {meter:g} {task.meter_unit}".rstrip() if meter is not None else ""
+    return f"Mark \"{task.title}\" done" + (f" on {asset.name}" if asset else "") + " today" + at
+
+
+def _meter_value(params):
+    raw = params.get("meter_value")
+    if raw in (None, ""):
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        raise ActionError("The meter reading has to be a number.") from None
 
 
 def _do_maintenance(context, params) -> str:
     task, asset = _maintenance_task(context, params)
-    context.maintenance.mark_complete(task.task_id)
+    context.maintenance.mark_complete(task.task_id, meter_value=_meter_value(params))
     return f"{task.title} is done" + (f" on {asset.name}" if asset else "") + "."
 
 
@@ -254,7 +266,9 @@ ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
                _describe_bill, _pay_bill),
     ActionType("income.receive", "Mark received", {"source_id": "the income source", "amount": "optional"},
                _describe_income, _receive_income),
-    ActionType("maintenance.done", "Done", {"task_id": "the maintenance task"}, _describe_maintenance,
+    ActionType("maintenance.done", "Done", {"task_id": "the maintenance task",
+                                            "meter_value": "optional: the meter reading now (hour-based tasks)"},
+               _describe_maintenance,
                _do_maintenance),
     ActionType("task.done", "Done", {"task_id": "the project task"}, _describe_task, _do_task, child_ok=True),
     ActionType("routine.log", "Log it", {"template_id": "the routine", "amount": "optional: how many times"},
@@ -268,6 +282,7 @@ ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
 # builds on the classes above and adds its kinds to ACTION_TYPES itself,
 # so either module can be imported first.
 import core.money_actions  # noqa: E402,F401
+import core.equipment_actions  # noqa: E402,F401  (Garage, Property, Greenhouse, Maintenance)
 
 
 # ------------------------------------------------------------------ the five steps

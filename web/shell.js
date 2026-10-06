@@ -96,19 +96,24 @@
   // ---------------------------------------------------------------- forms
   /**
    * Ask for values with the engine's own field list ({name, label, type,
-   * required, options, default}; types: text, textarea, money, rate, date,
-   * choice, recurrence). Resolves to {name: value} or null if cancelled.
+   * required, options, default}; types: text, textarea, money, rate, int,
+   * amount, number, date, choice, recurrence, asset — `extra.assets` lists
+   * [{id, name}] for that one). Resolves to {name: value} or null if cancelled.
    * Checking the values is the engine's job (the proposal says what's wrong).
    */
-  function form(title, fields, values) {
+  function form(title, fields, values, extra) {
     values = values || {};
+    extra = extra || {};
     return new Promise((resolve) => {
       const inputs = {};
       const row = (f) => {
         const id = "f-" + f.name;
         const value = values[f.name] != null ? values[f.name] : (f.default != null ? f.default : "");
         let input;
-        if (f.type === "choice" || f.type === "recurrence") {
+        if (f.type === "asset") {
+          input = el("select", { id, required: f.required || null },
+            (extra.assets || []).map((a) => el("option", { value: a.id, selected: String(value) === a.id ? true : null }, a.name)));
+        } else if (f.type === "choice" || f.type === "recurrence") {
           input = el("select", { id },
             f.options.map((o) => el("option", { value: o, selected: String(value || "none") === o ? true : null },
               o === "none" ? "Doesn't repeat" : o)));
@@ -116,8 +121,10 @@
           input = el("textarea", { id, rows: "2" });
           input.value = value;
         } else {
-          const type = f.type === "date" ? "date" : (f.type === "money" || f.type === "rate") ? "number" : "text";
-          input = el("input", { id, type, step: type === "number" ? "0.01" : null, min: type === "number" ? "0" : null,
+          const numeric = ["money", "rate", "int", "amount", "number"].includes(f.type);
+          const type = f.type === "date" ? "date" : numeric ? "number" : "text";
+          input = el("input", { id, type, step: f.type === "int" ? "1" : numeric ? "any" : null,
+            min: numeric && f.type !== "number" ? "0" : null,
             inputmode: type === "number" ? "decimal" : null, required: f.required || null });
           input.value = value;
         }

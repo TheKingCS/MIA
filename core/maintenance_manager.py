@@ -400,7 +400,10 @@ def predicted_due_date(
     first_dt = datetime.fromisoformat(first.timestamp)
     last_dt = datetime.fromisoformat(last.timestamp)
     elapsed_days = (last_dt - first_dt).total_seconds() / 86400
-    if elapsed_days <= 0:
+    # Readings minutes apart (two logged in one sitting) say nothing about
+    # usage per week: 2026-10-06 the web showed "avg 342720.0 engine
+    # hours/week". At least a day of readings, or no projection.
+    if elapsed_days < 1:
         return None
     rate_per_day = (last.value - first.value) / elapsed_days
     if rate_per_day <= 0:
@@ -415,7 +418,8 @@ def predicted_due_date(
     if weeks_remaining >= 1.5:
         when = f"~{round(weeks_remaining)} weeks"
     else:
-        when = f"~{max(1, round(days_remaining))} days"
+        days = max(1, round(days_remaining))
+        when = f"~{days} day" + ("s" if days != 1 else "")
     caveat = f"{when} at current usage (avg {rate_per_week:.1f} {unit}/week over {len(readings)} logged readings)"
     return estimated, caveat
 
@@ -555,6 +559,7 @@ class MaintenanceManager:
         model: str = "",
         owner_profile_id: Optional[str] = None,
         purchase_price: float = 0.0,
+        warranty_until: str = "",
     ) -> MaintenanceAsset:
         asset = MaintenanceAsset(
             asset_id=uuid.uuid4().hex[:10],
@@ -568,6 +573,7 @@ class MaintenanceManager:
             model=model,
             owner_profile_id=owner_profile_id,
             purchase_price=purchase_price,
+            warranty_until=warranty_until or "",
         )
         self._assets.append(asset)
         self._save()
@@ -585,13 +591,16 @@ class MaintenanceManager:
         self._save()
         return asset
 
-    def delete_asset(self, asset_id: str) -> None:
+    def delete_asset(self, asset_id: str, keep_documents: bool = False) -> None:
         """Also deletes every task for this asset — an asset going away
         shouldn't leave orphaned tasks pointing at nothing — and removes
-        its stored document copies from disk."""
+        its stored document copies from disk (unless `keep_documents`:
+        the web's delete keeps them so "undo" brings the asset back whole)."""
         self._assets = [a for a in self._assets if a.asset_id != asset_id]
         self._tasks = [t for t in self._tasks if t.asset_id != asset_id]
         self._save()
+        if keep_documents:
+            return
         try:
             shutil.rmtree(_DOCUMENT_ROOT / asset_id, ignore_errors=True)
         except OSError:

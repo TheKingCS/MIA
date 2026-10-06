@@ -9,16 +9,67 @@
       "detail": "10 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "73b3fe836b",
+      "record_id": "3410f83511",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "73b3fe836b"
+          "task_id": "3410f83511"
         }
       },
-      "page": "garage.html"
+      "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "Check oil: Mower",
+      "detail": "13 days late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "11ff9d37e9",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "11ff9d37e9"
+        }
+      },
+      "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "Tire rotation: Pickup truck",
+      "detail": "8 days late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "e22f8337d9",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "e22f8337d9"
+        }
+      },
+      "page": "maintenance.html"
+    },
+    {
+      "when": "overdue",
+      "title": "Water: Raised bed",
+      "detail": "1 day late",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "6ad6863b23",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "6ad6863b23"
+        }
+      },
+      "page": "maintenance.html"
     },
     {
       "when": "today",
@@ -26,13 +77,13 @@
       "detail": "$1,500.00",
       "time": "",
       "module_id": "budget",
-      "record_id": "1884d0b36c",
+      "record_id": "c0c74330dd",
       "icon": "💰",
       "action": {
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "1884d0b36c"
+          "source_id": "c0c74330dd"
         }
       },
       "page": "money.html"
@@ -85,7 +136,7 @@
       "app": "garage",
       "icon": "🚗",
       "title": "Equipment",
-      "line": "2 tracked · 1 overdue · next: Sharpen blades (Mower)",
+      "line": "6 tracked · 4 overdue · next: Replace filter (Furnace)",
       "tone": "attention",
       "page": "garage.html"
     },
@@ -124,52 +175,52 @@
   ],
   "wins": [
     {
-      "at": "2026-10-06T05:32:15",
+      "at": "2026-10-06T06:18:53",
+      "type": "maintenance_done",
+      "summary": "Oil & filter: Mower",
+      "refs": [
+        "maintenance_task:09fe88c4dd",
+        "asset:3e0a16a2c3"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T06:18:41",
       "type": "meal_logged",
       "summary": "Cooked Chili",
       "refs": [
-        "meal:247e93544c",
-        "recipe:758ad32e0e"
+        "meal:9d55b60948",
+        "recipe:a28e67aea5"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T05:32:15",
+      "at": "2026-10-06T06:18:41",
       "type": "workout_logged",
       "summary": "Worked out: Beginner full body, 30 min",
       "refs": [
-        "workout:6f9525d2ee",
-        "workout_template:d55463ba16"
+        "workout:e08f9b6791",
+        "workout_template:00b3e8ecbe"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T05:32:14",
+      "at": "2026-10-06T06:18:40",
       "type": "mission_completed",
       "summary": "Completed the mission Plan the week",
       "refs": [
-        "mission:76b84b0f0a",
+        "mission:28549aa730",
         "skill:organization"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T05:32:14",
+      "at": "2026-10-06T06:18:40",
       "type": "skill_evidence",
       "summary": "10 XP in organization from Plan the week",
       "refs": [
         "skill:organization",
-        "mission:76b84b0f0a"
-      ],
-      "source": "manual"
-    },
-    {
-      "at": "2026-10-06T05:32:14",
-      "type": "bill_paid",
-      "summary": "Paid Electric: $120.00",
-      "refs": [
-        "bill:d86e12fa72",
-        "expense:b41ab0b4de"
+        "mission:28549aa730"
       ],
       "source": "manual"
     }

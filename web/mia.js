@@ -14,6 +14,9 @@
  *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
  *   MIA.money(strategy)         -> the Money screen: bills, income, expenses, debts, budgets, trends
+ *   MIA.equipment(scope)        -> Garage / Property / Greenhouse / Maintenance
+ *   MIA.asset(id)               -> one asset's page (tasks, stats, missions, documents, costs, history)
+ *   MIA.download(path) / MIA.upload(path, file) -> files (an asset's documents)
  *   MIA.demo                    -> true when showing the placeholder example
  *
  * Sign-in: the desktop opens this page with #token=... (its own session);
@@ -115,6 +118,25 @@
     shell: () => read("/api/shell", "shell"),
     dashboard: () => read("/api/dashboard", "dashboard"),
     apps: () => read("/api/apps", "apps"),
+    equipment: (scope) => read("/api/equipment?scope=" + encodeURIComponent(scope || "maintenance"), "equipment_" + (scope || "maintenance")),
+    asset: (id) => read("/api/assets/" + encodeURIComponent(id), "asset"),
+    // A stored file (an asset's document) as a Blob, with this tab's sign-in.
+    download: async (path) => {
+      if (demo) throw new MiaError(400, "Documents need MIA running — this is the placeholder demo.");
+      if (!token) throw new MiaError(401, "Not signed in.");
+      const response = await fetch(path, { headers: { Authorization: "Bearer " + token } });
+      if (!response.ok) throw new MiaError(response.status, (await response.json().catch(() => ({}))).detail || response.statusText);
+      return response.blob();
+    },
+    // Send a file (raw body + X-Filename), e.g. a manual onto an asset.
+    upload: (path, file) => demo ? demoOnly() : (async () => {
+      if (!token) throw new MiaError(401, "Not signed in.");
+      const response = await fetch(path, { method: "POST", body: file,
+        headers: { Authorization: "Bearer " + token, "X-Filename": encodeURIComponent(file.name) } });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
+      return data;
+    })(),
     money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),
     pending: () => call("GET", "/api/actions"),

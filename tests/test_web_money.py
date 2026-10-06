@@ -161,6 +161,6 @@ def test_either_module_can_be_imported_first():
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
-    for first in ("core.money_actions", "core.actions"):
+    for first in ("core.money_actions", "core.actions", "core.record_actions", "core.equipment_actions"):
         code = f"import {first}; from core.actions import ACTION_TYPES; assert 'bill.add' in ACTION_TYPES"
         assert subprocess.run([sys.executable, "-c", code], cwd=root).returncode == 0, first

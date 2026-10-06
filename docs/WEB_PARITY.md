@@ -31,15 +31,15 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Workshop: Jobs | Costed jobs | `workshop__03_jobs` | |  | |
 | Workshop: Products | Products | `workshop__04_products` | |  | |
 | Workshop: Ledger | Sales ledger | `workshop__05_ledger` | |  | |
-| Garage | Vehicles and equipment: tracked, overdue, next up, asset cards with tasks | `garage` | | summary only | |
-| Asset page | One asset: overview, maintenance, missions, documents, parts, history, meter hours | `(concept: the mower page)` | |  | |
-| Property | House, appliances, tools | `property` | |  | |
-| Greenhouse | Garden, greenhouse and aquaponics assets and tasks | `greenhouse` | |  | |
+| Garage | Vehicles and equipment: tracked, overdue, next up, asset cards with tasks | `garage` | ✅ `/api/equipment?scope=garage` + equipment actions | ✅ tracked / needs attention / next up, asset cards with tasks, Done (with meter value), add asset | |
+| Asset page | One asset: overview, maintenance, missions, documents, parts, history, meter hours | `(concept: the mower page)` | ✅ `/api/assets/{id}` + document upload/download | ✅ quick stats + log readings, needs attention, Overview / Maintenance (add, edit, delete, done, log) / Missions / Documents (upload, open, remove) / Costs / History; Parts PLANNED (not tracked per asset yet) | |
+| Property | House, appliances, tools | `property` | ✅ `/api/equipment?scope=property` | ✅ same as Garage, for appliances, the property and tools | |
+| Greenhouse | Garden, greenhouse and aquaponics assets and tasks | `greenhouse` | ✅ `/api/equipment?scope=greenhouse` | ✅ same as Garage, for garden and plants (child-safe) | |
 | Household | Routines with streaks | `(none)` | |  | |
-| Maintenance: Assets | Add, edit, delete assets | `maintenance__01_assets` | |  | |
-| Maintenance: Tasks | Recurring tasks (calendar or meter-based), mark complete, log hours | `maintenance__02_tasks` | |  | |
-| Maintenance: Overview | Calendar overview | `maintenance__03_overview` | |  | |
-| Maintenance: Monitor | Sensor monitor | `maintenance__04_monitor` | |  | |
+| Maintenance: Assets | Add, edit, delete assets | `maintenance__01_assets` | ✅ `/api/equipment?scope=maintenance` | ✅ every asset, add, edit, delete (undo) | |
+| Maintenance: Tasks | Recurring tasks (calendar or meter-based), mark complete, log hours | `maintenance__02_tasks` | ✅ maintenance_task actions, maintenance.done, maintenance.reading | ✅ every task, calendar or meter-based, done, log reading, add, edit, delete | |
+| Maintenance: Overview | Calendar overview | `maintenance__03_overview` | ✅ calendar in `/api/equipment` | ✅ the next two months by day | |
+| Maintenance: Monitor | Sensor monitor | `maintenance__04_monitor` |  | not yet (sensor graphs) | |
 | Kitchen | Recipes, pantry, grocery list, meal log, suggestions, what can I make | `kitchen` | | summary only | |
 | Power: Battery | Battery status | `power__01_battery` | |  | |
 | Power: Energy sources | Energy and utility tracking | `power__02_energy_sources` | |  | |

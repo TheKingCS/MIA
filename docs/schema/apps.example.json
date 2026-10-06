@@ -721,8 +721,8 @@
           "icon": "🌱",
           "tagline": "Grow food. Grow freedom.",
           "description": "At-a-glance status for garden, greenhouse, and aquaponics assets.",
-          "page": null,
-          "on_web": false,
+          "page": "greenhouse.html",
+          "on_web": true,
           "shown": true,
           "can_hide": true,
           "ask": "What needs doing in the greenhouse?",
@@ -957,8 +957,8 @@
           "icon": "🔧",
           "tagline": "Everything you own, cared for.",
           "description": "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.",
-          "page": null,
-          "on_web": false,
+          "page": "maintenance.html",
+          "on_web": true,
           "shown": true,
           "can_hide": true,
           "ask": "I put 120 hours on the mower.",
@@ -1036,8 +1036,8 @@
           "icon": "🏠",
           "tagline": "The house, the appliances, the tools.",
           "description": "At-a-glance status for the house, appliances, and tools.",
-          "page": null,
-          "on_web": false,
+          "page": "property.html",
+          "on_web": true,
           "shown": true,
           "can_hide": true,
           "ask": "Do I have any furnace filters left?",
@@ -1624,7 +1624,7 @@
   ],
   "counts": {
     "apps": 35,
-    "on_web": 10,
+    "on_web": 13,
     "tools": 201
   }
 }

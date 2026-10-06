@@ -227,8 +227,8 @@ add/edit/delete/complete as an action kind in `core/actions.py`) plus a
 working screen on the frame, for Muse to restyle:
 1. ~~Money~~ **done 2026-10-06** (`web/money.html`; bank connect/sync
    stays on the PC: it needs the vault passphrase).
-2. **Garage + Maintenance**, with the asset page (Zac's mower concept:
-   tasks, missions, documents, parts, history, meter hours).
+2. ~~Garage + Maintenance~~ **done 2026-10-06** (plus Property,
+   Greenhouse and the asset page; still to do: sensor graphs, parts per asset).
 3. **Missions, Skills, Character** (absorbs H-0013).
 4. Calendar, Notes, Inbox, full Assistant chat; then Kitchen, Workout,
    Real Estate to full parity; then the rest of the 59 rows.

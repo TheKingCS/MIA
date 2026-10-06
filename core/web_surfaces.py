@@ -60,7 +60,7 @@ APPS: tuple[App, ...] = (
     App("dashboard", "Dashboard", "📊", "Your life. In sync.", "dashboard.html",
         "Recent activity, active missions, memories, and upcoming items at a glance.", LIFE,
         ("today", "calendar", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
-    App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", None,
+    App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", "greenhouse.html",
         "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance",),
         "What needs doing in the greenhouse?"),
     App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html",
@@ -85,10 +85,10 @@ APPS: tuple[App, ...] = (
     App("budget", "Money", "💰", "Know where it goes.", "money.html",
         "Household bills, income, expenses, and tax-relevant totals.", MONEY,
         ("budget", "debts", "homestead_costs", "business_use", "business_tags"), "Which debt should I pay first?"),
-    App("maintenance", "Maintenance", "🔧", "Everything you own, cared for.", None,
+    App("maintenance", "Maintenance", "🔧", "Everything you own, cared for.", "maintenance.html",
         "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.", HOME,
         ("maintenance", "ownership"), "I put 120 hours on the mower."),
-    App("property", "Property", "🏠", "The house, the appliances, the tools.", None,
+    App("property", "Property", "🏠", "The house, the appliances, the tools.", "property.html",
         "At-a-glance status for the house, appliances, and tools.", HOME, ("inventory",),
         "Do I have any furnace filters left?"),
     App("workshop", "Workshop", "🔩", "Parts, jobs and products.", None,
@@ -306,7 +306,7 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
     state = assemble_life_state_v2(context, today)
     due = (state.get("due") or {}).get("items") or []
     page_of = {a.module_id: a.page for a in APPS}
-    page_of.update({"maintenance": "garage.html"})
+    page_of.update({"maintenance": "maintenance.html"})
 
     def item(d):
         return {**d, "page": page_of.get(d.get("module_id"))}

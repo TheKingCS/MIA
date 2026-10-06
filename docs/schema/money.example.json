@@ -51,7 +51,15 @@
       "manual_debts_not_in_net_worth": 40000.0
     },
     "builds": [],
-    "tools": [],
+    "tools": [
+      {
+        "name": "Mower",
+        "total": 2800.0,
+        "purchase": 2800.0,
+        "upkeep": 0,
+        "per_hour": 218.75
+      }
+    ],
     "monthly_plan": {
       "expected_income": 3250.0,
       "bills": 460.0,
@@ -473,7 +481,7 @@
   ],
   "bills": [
     {
-      "id": "260b0a83fb",
+      "id": "30d4e578dc",
       "name": "Insurance",
       "amount": 340.0,
       "category": "Utilities",
@@ -495,12 +503,12 @@
         "kind": "bill.pay",
         "label": "Mark paid",
         "params": {
-          "bill_id": "260b0a83fb"
+          "bill_id": "30d4e578dc"
         }
       }
     },
     {
-      "id": "11b3a3e6b1",
+      "id": "449a09884d",
       "name": "Electric",
       "amount": 120.0,
       "category": "Utilities",
@@ -522,14 +530,14 @@
         "kind": "bill.pay",
         "label": "Mark paid",
         "params": {
-          "bill_id": "11b3a3e6b1"
+          "bill_id": "449a09884d"
         }
       }
     }
   ],
   "income_sources": [
     {
-      "id": "c5987f9953",
+      "id": "c0c74330dd",
       "name": "Pay",
       "amount": 1500.0,
       "category": "Salary",
@@ -550,7 +558,7 @@
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "c5987f9953"
+          "source_id": "c0c74330dd"
         }
       }
     }
@@ -558,7 +566,7 @@
   "income": [],
   "expenses": [
     {
-      "id": "ba10755b09",
+      "id": "49e9de06d5",
       "date": "2026-10-06",
       "amount": 120.0,
       "category": "Utilities",
@@ -581,7 +589,7 @@
     "strategy": "hybrid",
     "ranked": [
       {
-        "id": "769b35cc3f",
+        "id": "bd8c4ed586",
         "rank": 1,
         "name": "Land loan",
         "type": "Credit Card",
@@ -607,7 +615,7 @@
           "kind": "debt.pay",
           "label": "Record payment",
           "params": {
-            "debt_id": "769b35cc3f",
+            "debt_id": "bd8c4ed586",
             "amount": 500.0
           }
         }

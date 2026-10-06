@@ -1,0 +1,551 @@
+{
+    "id": "3e0a16a2c3",
+    "name": "Mower",
+    "category": "Power Equipment",
+    "scope": "garage",
+    "scope_name": "Garage",
+    "owner": null,
+    "details": [
+        {
+            "label": "Make",
+            "value": "Make"
+        },
+        {
+            "label": "Model",
+            "value": "Z-100"
+        },
+        {
+            "label": "Serial number",
+            "value": "PLACEHOLDER-123"
+        },
+        {
+            "label": "Bought on",
+            "value": "2025-05-24"
+        }
+    ],
+    "notes": "",
+    "values": {
+        "name": "Mower",
+        "category": "Power Equipment",
+        "manufacturer": "Make",
+        "model": "Z-100",
+        "serial_number": "PLACEHOLDER-123",
+        "purchase_date": "2025-05-24",
+        "purchase_price": 2800.0,
+        "warranty_until": "",
+        "notes": ""
+    },
+    "tasks": [
+        {
+            "id": "11ff9d37e9",
+            "title": "Check oil",
+            "asset_id": "3e0a16a2c3",
+            "asset": "Mower",
+            "trigger": "calendar",
+            "unit": "",
+            "priority": "normal",
+            "last_completed": "2026-08-24",
+            "interval_days": 30,
+            "meter_interval": null,
+            "urgency": "overdue",
+            "text": "overdue 13d",
+            "days": -13,
+            "needs_attention": true,
+            "quick_stat": false,
+            "latest": null,
+            "predicted": null,
+            "values": {
+                "asset_id": "3e0a16a2c3",
+                "title": "Check oil",
+                "trigger_type": "calendar",
+                "interval_days": 30,
+                "meter_unit": "",
+                "meter_interval": null,
+                "threshold_value": null,
+                "threshold_direction": "below",
+                "priority": "normal",
+                "last_completed": "2026-08-24",
+                "notes": ""
+            },
+            "action": {
+                "kind": "maintenance.done",
+                "label": "Done",
+                "params": {
+                    "task_id": "11ff9d37e9"
+                },
+                "asks_meter": false
+            }
+        },
+        {
+            "id": "3410f83511",
+            "title": "Sharpen blades",
+            "asset_id": "3e0a16a2c3",
+            "asset": "Mower",
+            "trigger": "calendar",
+            "unit": "",
+            "priority": "normal",
+            "last_completed": "2026-07-28",
+            "interval_days": 60,
+            "meter_interval": null,
+            "urgency": "overdue",
+            "text": "overdue 10d",
+            "days": -10,
+            "needs_attention": true,
+            "quick_stat": false,
+            "latest": null,
+            "predicted": null,
+            "values": {
+                "asset_id": "3e0a16a2c3",
+                "title": "Sharpen blades",
+                "trigger_type": "calendar",
+                "interval_days": 60,
+                "meter_unit": "",
+                "meter_interval": null,
+                "threshold_value": null,
+                "threshold_direction": "below",
+                "priority": "normal",
+                "last_completed": "2026-07-28",
+                "notes": ""
+            },
+            "action": {
+                "kind": "maintenance.done",
+                "label": "Done",
+                "params": {
+                    "task_id": "3410f83511"
+                },
+                "asks_meter": false
+            }
+        },
+        {
+            "id": "09fe88c4dd",
+            "title": "Oil & filter",
+            "asset_id": "3e0a16a2c3",
+            "asset": "Mower",
+            "trigger": "runtime",
+            "unit": "engine hours",
+            "priority": "normal",
+            "last_completed": "2026-10-06",
+            "interval_days": null,
+            "meter_interval": 50.0,
+            "urgency": "on_track",
+            "text": "12.8/50 engine hours",
+            "days": null,
+            "needs_attention": false,
+            "quick_stat": false,
+            "latest": 12.8,
+            "predicted": null,
+            "values": {
+                "asset_id": "3e0a16a2c3",
+                "title": "Oil & filter",
+                "trigger_type": "runtime",
+                "interval_days": null,
+                "meter_unit": "engine hours",
+                "meter_interval": 50.0,
+                "threshold_value": null,
+                "threshold_direction": "below",
+                "priority": "normal",
+                "last_completed": "2026-10-06",
+                "notes": ""
+            },
+            "action": {
+                "kind": "maintenance.done",
+                "label": "Done",
+                "params": {
+                    "task_id": "09fe88c4dd"
+                },
+                "asks_meter": true
+            }
+        }
+    ],
+    "attention": [
+        {
+            "id": "11ff9d37e9",
+            "title": "Check oil",
+            "asset_id": "3e0a16a2c3",
+            "asset": "Mower",
+            "trigger": "calendar",
+            "unit": "",
+            "priority": "normal",
+            "last_completed": "2026-08-24",
+            "interval_days": 30,
+            "meter_interval": null,
+            "urgency": "overdue",
+            "text": "overdue 13d",
+            "days": -13,
+            "needs_attention": true,
+            "quick_stat": false,
+            "latest": null,
+            "predicted": null,
+            "values": {
+                "asset_id": "3e0a16a2c3",
+                "title": "Check oil",
+                "trigger_type": "calendar",
+                "interval_days": 30,
+                "meter_unit": "",
+                "meter_interval": null,
+                "threshold_value": null,
+                "threshold_direction": "below",
+                "priority": "normal",
+                "last_completed": "2026-08-24",
+                "notes": ""
+            },
+            "action": {
+                "kind": "maintenance.done",
+                "label": "Done",
+                "params": {
+                    "task_id": "11ff9d37e9"
+                },
+                "asks_meter": false
+            }
+        },
+        {
+            "id": "3410f83511",
+            "title": "Sharpen blades",
+            "asset_id": "3e0a16a2c3",
+            "asset": "Mower",
+            "trigger": "calendar",
+            "unit": "",
+            "priority": "normal",
+            "last_completed": "2026-07-28",
+            "interval_days": 60,
+            "meter_interval": null,
+            "urgency": "overdue",
+            "text": "overdue 10d",
+            "days": -10,
+            "needs_attention": true,
+            "quick_stat": false,
+            "latest": null,
+            "predicted": null,
+            "values": {
+                "asset_id": "3e0a16a2c3",
+                "title": "Sharpen blades",
+                "trigger_type": "calendar",
+                "interval_days": 60,
+                "meter_unit": "",
+                "meter_interval": null,
+                "threshold_value": null,
+                "threshold_direction": "below",
+                "priority": "normal",
+                "last_completed": "2026-07-28",
+                "notes": ""
+            },
+            "action": {
+                "kind": "maintenance.done",
+                "label": "Done",
+                "params": {
+                    "task_id": "3410f83511"
+                },
+                "asks_meter": false
+            }
+        }
+    ],
+    "forms": {
+        "asset": {
+            "noun": "asset",
+            "id_param": "asset_id",
+            "fields": [
+                {
+                    "name": "name",
+                    "label": "Name",
+                    "type": "text",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "category",
+                    "label": "Kind",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "Vehicle",
+                        "Power Equipment",
+                        "Appliance",
+                        "Property",
+                        "Garden/Plant",
+                        "Tool",
+                        "Other"
+                    ],
+                    "default": "Other"
+                },
+                {
+                    "name": "manufacturer",
+                    "label": "Make",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "model",
+                    "label": "Model",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "serial_number",
+                    "label": "Serial number",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "purchase_date",
+                    "label": "Bought on",
+                    "type": "date",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "purchase_price",
+                    "label": "Price paid",
+                    "type": "money",
+                    "required": false,
+                    "options": [],
+                    "default": 0.0
+                },
+                {
+                    "name": "warranty_until",
+                    "label": "Warranty until",
+                    "type": "date",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "notes",
+                    "label": "Notes",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "maintenance_task": {
+            "noun": "maintenance task",
+            "id_param": "task_id",
+            "fields": [
+                {
+                    "name": "asset_id",
+                    "label": "For",
+                    "type": "asset",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "title",
+                    "label": "What to do",
+                    "type": "text",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "trigger_type",
+                    "label": "Goes by",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "calendar",
+                        "runtime",
+                        "mileage",
+                        "cycles",
+                        "condition",
+                        "sensor"
+                    ],
+                    "default": "calendar"
+                },
+                {
+                    "name": "interval_days",
+                    "label": "Every (days)",
+                    "type": "int",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "meter_unit",
+                    "label": "Meter unit",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "meter_interval",
+                    "label": "Every (meter units)",
+                    "type": "amount",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "threshold_value",
+                    "label": "Due at reading",
+                    "type": "number",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "threshold_direction",
+                    "label": "Due when the reading is",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "below",
+                        "above"
+                    ],
+                    "default": "below"
+                },
+                {
+                    "name": "priority",
+                    "label": "Priority",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "low",
+                        "normal",
+                        "high"
+                    ],
+                    "default": "normal"
+                },
+                {
+                    "name": "last_completed",
+                    "label": "Last done",
+                    "type": "date",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "notes",
+                    "label": "Notes",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "task_reading": {
+            "noun": "reading",
+            "id_param": "task_id",
+            "fields": [
+                {
+                    "name": "value",
+                    "label": "Reading",
+                    "type": "number",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "note",
+                    "label": "Note",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "asset_reading": {
+            "noun": "reading",
+            "id_param": "asset_id",
+            "fields": [
+                {
+                    "name": "meter_name",
+                    "label": "Meter",
+                    "type": "text",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "value",
+                    "label": "Reading",
+                    "type": "number",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "unit",
+                    "label": "Unit",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "note",
+                    "label": "Note",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "done": {
+            "noun": "completion",
+            "id_param": "task_id",
+            "fields": [
+                {
+                    "name": "meter_value",
+                    "label": "Meter reading now (optional)",
+                    "type": "number",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        }
+    },
+    "as_of": "2026-10-06",
+    "quick_stats": [
+        {
+            "title": "Engine hours",
+            "text": "12.8 engine hours",
+            "task_id": "6486e3ff11"
+        },
+        {
+            "title": "Fuel",
+            "text": "72 %",
+            "meter": "Fuel"
+        }
+    ],
+    "missions": [],
+    "documents": [
+        {
+            "name": "owners_manual.txt"
+        }
+    ],
+    "costs": {
+        "purchase": 2800.0,
+        "upkeep": 0,
+        "total": 2800.0,
+        "hours": 12.8,
+        "per_hour": 218.75,
+        "by_category": [],
+        "for_builds": []
+    },
+    "history": [
+        {
+            "at": "2026-10-06T06:18:53",
+            "summary": "Oil & filter: Mower",
+            "type": "maintenance_done"
+        }
+    ],
+    "parts": {
+        "status": "PLANNED",
+        "items": []
+    }
+}

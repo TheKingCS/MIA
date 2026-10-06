@@ -420,3 +420,35 @@ body.has-side .menu-button { display: none; }
   border: 1px solid var(--mod-line);
   box-shadow: 0 0 30px var(--mod-dim), 0 20px 60px rgba(0, 0, 0, 0.6);
 }
+
+/* ---------------------------------------------------------------- equipment */
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--gap); }
+.asset-card { display: grid; gap: 6px; color: inherit; text-decoration: none; }
+.asset-card:hover { border-color: var(--glass-line-strong); }
+.asset-card.attention { border-color: rgba(248, 113, 113, 0.45); }
+.asset-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.asset-head h3 { margin: 0; }
+.asset-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: var(--text-sm); }
+.asset-tasks li { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.asset-tasks .when { font-size: var(--text-xs); }
+.back-link { display: inline-block; margin-bottom: 10px; color: var(--text-dim); text-decoration: none; }
+.back-link:hover { color: var(--text); }
+.asset-hero { position: relative; }
+.hero-buttons { position: absolute; top: 16px; right: 16px; z-index: 1; display: flex; gap: 6px; }
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: var(--gap); }
+.stat-tile { display: grid; gap: 4px; padding: 12px 14px; }
+.stat-t { font-size: var(--text-xs); color: var(--text-dim); }
+.stat-n { font-size: var(--text-lg); font-weight: 700; }
+.stat-tile .btn { justify-self: start; min-height: 30px; padding: 4px 10px; font-size: var(--text-xs); }
+.stat-add { cursor: pointer; color: var(--text-dim); font: 600 var(--text-sm) var(--font); place-items: center; border-style: dashed; }
+.asset-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--gap); }
+.asset-overview .money-section { margin: 0; }
+.asset-overview .span-all { grid-column: 1 / -1; }
+.details { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+.details dt { color: var(--text-dim); font-size: var(--text-sm); }
+.details dd { margin: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (max-width: 560px) {
+  .hero-buttons { position: static; margin-top: 12px; }
+  .asset-overview { grid-template-columns: 1fr; }
+}

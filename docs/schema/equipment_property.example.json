@@ -1,0 +1,409 @@
+{
+    "scope": "property",
+    "name": "Property",
+    "icon": "\ud83c\udfe0",
+    "tagline": "The house, the appliances, the tools.",
+    "default_category": "Appliance",
+    "categories": [
+        "Appliance",
+        "Property",
+        "Tool"
+    ],
+    "forms": {
+        "asset": {
+            "noun": "asset",
+            "id_param": "asset_id",
+            "fields": [
+                {
+                    "name": "name",
+                    "label": "Name",
+                    "type": "text",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "category",
+                    "label": "Kind",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "Vehicle",
+                        "Power Equipment",
+                        "Appliance",
+                        "Property",
+                        "Garden/Plant",
+                        "Tool",
+                        "Other"
+                    ],
+                    "default": "Other"
+                },
+                {
+                    "name": "manufacturer",
+                    "label": "Make",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "model",
+                    "label": "Model",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "serial_number",
+                    "label": "Serial number",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "purchase_date",
+                    "label": "Bought on",
+                    "type": "date",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "purchase_price",
+                    "label": "Price paid",
+                    "type": "money",
+                    "required": false,
+                    "options": [],
+                    "default": 0.0
+                },
+                {
+                    "name": "warranty_until",
+                    "label": "Warranty until",
+                    "type": "date",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "notes",
+                    "label": "Notes",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "maintenance_task": {
+            "noun": "maintenance task",
+            "id_param": "task_id",
+            "fields": [
+                {
+                    "name": "asset_id",
+                    "label": "For",
+                    "type": "asset",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "title",
+                    "label": "What to do",
+                    "type": "text",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "trigger_type",
+                    "label": "Goes by",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "calendar",
+                        "runtime",
+                        "mileage",
+                        "cycles",
+                        "condition",
+                        "sensor"
+                    ],
+                    "default": "calendar"
+                },
+                {
+                    "name": "interval_days",
+                    "label": "Every (days)",
+                    "type": "int",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "meter_unit",
+                    "label": "Meter unit",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "meter_interval",
+                    "label": "Every (meter units)",
+                    "type": "amount",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "threshold_value",
+                    "label": "Due at reading",
+                    "type": "number",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "threshold_direction",
+                    "label": "Due when the reading is",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "below",
+                        "above"
+                    ],
+                    "default": "below"
+                },
+                {
+                    "name": "priority",
+                    "label": "Priority",
+                    "type": "choice",
+                    "required": false,
+                    "options": [
+                        "low",
+                        "normal",
+                        "high"
+                    ],
+                    "default": "normal"
+                },
+                {
+                    "name": "last_completed",
+                    "label": "Last done",
+                    "type": "date",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "notes",
+                    "label": "Notes",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "task_reading": {
+            "noun": "reading",
+            "id_param": "task_id",
+            "fields": [
+                {
+                    "name": "value",
+                    "label": "Reading",
+                    "type": "number",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "note",
+                    "label": "Note",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "asset_reading": {
+            "noun": "reading",
+            "id_param": "asset_id",
+            "fields": [
+                {
+                    "name": "meter_name",
+                    "label": "Meter",
+                    "type": "text",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "value",
+                    "label": "Reading",
+                    "type": "number",
+                    "required": true,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "unit",
+                    "label": "Unit",
+                    "type": "text",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                },
+                {
+                    "name": "note",
+                    "label": "Note",
+                    "type": "textarea",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        },
+        "done": {
+            "noun": "completion",
+            "id_param": "task_id",
+            "fields": [
+                {
+                    "name": "meter_value",
+                    "label": "Meter reading now (optional)",
+                    "type": "number",
+                    "required": false,
+                    "options": [],
+                    "default": null
+                }
+            ]
+        }
+    },
+    "as_of": "2026-10-06",
+    "available": true,
+    "assets": [
+        {
+            "id": "ed5bc030a0",
+            "name": "Furnace",
+            "category": "Appliance",
+            "make_model": "Make",
+            "owner": null,
+            "overdue": 0,
+            "tasks": [
+                {
+                    "id": "daf5147acb",
+                    "title": "Replace filter",
+                    "asset_id": "ed5bc030a0",
+                    "asset": "Furnace",
+                    "trigger": "calendar",
+                    "unit": "",
+                    "priority": "normal",
+                    "last_completed": "2026-08-07",
+                    "interval_days": 90,
+                    "meter_interval": null,
+                    "urgency": "on_track",
+                    "text": "due in 30d",
+                    "days": 30,
+                    "needs_attention": false,
+                    "quick_stat": false,
+                    "latest": null,
+                    "predicted": null,
+                    "values": {
+                        "asset_id": "ed5bc030a0",
+                        "title": "Replace filter",
+                        "trigger_type": "calendar",
+                        "interval_days": 90,
+                        "meter_unit": "",
+                        "meter_interval": null,
+                        "threshold_value": null,
+                        "threshold_direction": "below",
+                        "priority": "normal",
+                        "last_completed": "2026-08-07",
+                        "notes": ""
+                    },
+                    "action": {
+                        "kind": "maintenance.done",
+                        "label": "Done",
+                        "params": {
+                            "task_id": "daf5147acb"
+                        },
+                        "asks_meter": false
+                    }
+                }
+            ],
+            "task_count": 1,
+            "quick_stats": [],
+            "warranty_until": "2027-04-24",
+            "scope": "property"
+        }
+    ],
+    "attention": [],
+    "next_up": [
+        {
+            "id": "daf5147acb",
+            "title": "Replace filter",
+            "asset_id": "ed5bc030a0",
+            "asset": "Furnace",
+            "trigger": "calendar",
+            "unit": "",
+            "priority": "normal",
+            "last_completed": "2026-08-07",
+            "interval_days": 90,
+            "meter_interval": null,
+            "urgency": "on_track",
+            "text": "due in 30d",
+            "days": 30,
+            "needs_attention": false,
+            "quick_stat": false,
+            "latest": null,
+            "predicted": null,
+            "values": {
+                "asset_id": "ed5bc030a0",
+                "title": "Replace filter",
+                "trigger_type": "calendar",
+                "interval_days": 90,
+                "meter_unit": "",
+                "meter_interval": null,
+                "threshold_value": null,
+                "threshold_direction": "below",
+                "priority": "normal",
+                "last_completed": "2026-08-07",
+                "notes": ""
+            },
+            "action": {
+                "kind": "maintenance.done",
+                "label": "Done",
+                "params": {
+                    "task_id": "daf5147acb"
+                },
+                "asks_meter": false
+            }
+        }
+    ],
+    "all_assets": [
+        {
+            "id": "ed5bc030a0",
+            "name": "Furnace"
+        },
+        {
+            "id": "88139e7656",
+            "name": "Generator"
+        },
+        {
+            "id": "3e0a16a2c3",
+            "name": "Mower"
+        },
+        {
+            "id": "d7c317af85",
+            "name": "Pickup truck"
+        },
+        {
+            "id": "9af9b6c434",
+            "name": "Raised bed"
+        },
+        {
+            "id": "1f6b077e1c",
+            "name": "Truck"
+        }
+    ]
+}

@@ -89,6 +89,7 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 
 # ~2.5 minutes of 16 kHz mono 16-bit audio — far longer than one spoken turn.
 MAX_VOICE_UPLOAD_BYTES = 5 * 1024 * 1024
+MAX_DOCUMENT_UPLOAD_BYTES = 25 * 1024 * 1024
 LLM_UNAVAILABLE_REPLY = "I can't think right now. My language model at home isn't responding."
 NOT_HEARD_REPLY = "Sorry, I didn't catch that."
 
@@ -498,6 +499,75 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
         with app.state.turn_lock:
             return money_page(view_for(context, profile_id), strategy=strategy)
+
+    # Garage, Property, Greenhouse, Maintenance and one page per asset
+    # (DEC-0017, core/web_equipment.py). A child reaches only the scopes
+    # their apps allow (core/child_accounts.CHILD_APPS: the greenhouse).
+    def _equipment_allowed(view, scope: str) -> None:
+        from core.child_accounts import ASK_A_PARENT, app_allowed
+
+        if not app_allowed(view, scope):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+
+    def _asset_for(view, asset_id: str):
+        from core.web_equipment import scope_of
+
+        maintenance = getattr(view, "maintenance", None)
+        asset = maintenance.get_asset(asset_id) if maintenance is not None else None
+        if asset is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That isn't here anymore.")
+        _equipment_allowed(view, scope_of(asset.category))
+        return asset
+
+    @app.get("/api/equipment")
+    def web_equipment(scope: str = "maintenance", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_equipment import SCOPES, equipment_page
+
+        view = view_for(context, profile_id)
+        _equipment_allowed(view, scope if scope in SCOPES else "maintenance")
+        with app.state.turn_lock:
+            return equipment_page(view, scope)
+
+    @app.get("/api/assets/{asset_id}")
+    def web_asset(asset_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_equipment import asset_page
+
+        view = view_for(context, profile_id)
+        with app.state.turn_lock:
+            _asset_for(view, asset_id)
+            return asset_page(view, asset_id)
+
+    @app.get("/api/assets/{asset_id}/documents/{filename}")
+    def web_asset_document(asset_id: str, filename: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        view = view_for(context, profile_id)
+        asset = _asset_for(view, asset_id)
+        if filename not in asset.documents or Path(filename).name != filename:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No such document.")
+        path = view.maintenance.document_path(asset_id, filename)
+        if not path.is_file():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That file is missing on MIA's computer.")
+        return FileResponse(path, filename=filename)
+
+    # A document sent from the phone or browser onto an asset (a manual,
+    # a receipt, a warranty): raw body + X-Filename, like the inbox.
+    @app.post("/api/assets/{asset_id}/documents")
+    async def web_asset_upload(asset_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        view = view_for(context, profile_id)
+        asset = _asset_for(view, asset_id)
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No file received.")
+        if len(data) > MAX_DOCUMENT_UPLOAD_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is over 25 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "document"))).name.strip() or "document"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            with app.state.turn_lock:
+                stored = view.maintenance.add_document(asset.asset_id, source)
+        return {"added": stored, "message": f"{stored} is on {asset.name} now."}
 
     @app.get("/api/dashboard")
     def web_dashboard(profile_id: str = Depends(require_profile_id)) -> dict:
