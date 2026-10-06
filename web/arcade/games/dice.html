@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Dice Roller · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -73,6 +74,7 @@
   }
   function roll(){
     if(busy)return;busy=true;
+    if(window.ArcadeProgress)ArcadeProgress.award("dice","roll",3);
     zone.innerHTML="";
     var dice=[],sum=0;
     for(var i=0;i<n;i++){
