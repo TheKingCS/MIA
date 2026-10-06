@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>MIA · Glasses</title>
+  <link rel="stylesheet" href="glasses.css">
+</head>
+<body>
+  <!--
+    MIA on Display glasses (muse, 2026-10-06, DEC-0016): the glasses Web App.
+    One card at a time on a 600x600 stage, pure black so it floats on a
+    waveguide display, gold airy like the concept. Same engine as every
+    other surface: MIA.dashboard() for the glance, MIA.shell() for level/XP,
+    MIA.talk() for voice. On the public preview (?demo) it reads the
+    published placeholder examples, and says so.
+  -->
+  <div id="stage">
+    <div id="orb-zone"><div id="orb" aria-hidden="true"></div><div id="wave" hidden aria-hidden="true"></div></div>
+    <main id="card" aria-live="polite"></main>
+    <footer id="foot">
+      <div id="xp"><span id="xp-label"></span><div id="xp-track"><div id="xp-fill"></div></div></div>
+      <form id="voice"><input id="voice-input" autocomplete="off" aria-label="Talk to MIA"><button type="submit" aria-label="Send">→</button></form>
+      <nav id="dots" aria-label="Moments"></nav>
+    </footer>
+    <p id="demo-tag" hidden>Demo · placeholder data</p>
+    <div id="burst" hidden><p id="burst-title"></p><p id="burst-sub"></p><button id="burst-ok" type="button">continue</button></div>
+  </div>
+  <script src="mia.js"></script>
+  <script src="glasses.js"></script>
+</body>
+</html>
