@@ -71,6 +71,6 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Files | File browser | `files` | |  | |
 | Music: Library | Music library | `music__01_library` | |  | |
 | Music: Playlists | Playlists | `music__02_playlists` | |  | |
-| Modules | Turn apps on and off, install | `module_browser__01_modules` | |  | |
+| Modules | Turn apps on and off, install | `module_browser__01_modules` | ✅ `/api/apps`, `app.visibility` | ✅ every app by life area, what MIA can do in each (201 tools), open or ask MIA, show/hide per person with undo (not yet: device-wide enable/disable, install, rescan) | |
 | Settings | Theme, profile, household, options | `settings` | |  | |
 | Diagnostics | System health | `diagnostics` | |  | |

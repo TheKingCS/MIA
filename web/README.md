@@ -34,6 +34,7 @@ components, data and actions, and each arranges them for its screen.
 | `tokens.css` | Design tokens: colors, type, spacing. `--scale` follows the person's text size; `[data-contrast="high"]` is high contrast. | Muse |
 | `shell.js`, `shell.css` | **The shared frame (DEC-0017).** Sign-in, the sidebar (the person's own apps, level and XP, from `MIA.shell()`), MIA's orb and Talk panel on every page, and `MIAShell.act(action)`: propose → confirm → approve → undo toast. New screens use `MIAShell.start(render)`; older ones get the frame with `<script src="shell.js" data-frame="<app id>">`. | Claude (function); Muse restyles freely |
 | `index.html`, `dashboard.js` | **Home: the concept's dashboard** (DEC-0017): greeting, Today's Focus (tick → its action), quick actions, Upcoming, recent wins, at-a-glance cards, all from `MIA.home()`. | Claude (function); Muse (look) |
+| `apps.html`, `apps.js` | **Apps (DEC-0017):** every app MIA has, by life area, from `MIA.apps()`: what it's for, open it (on the web) or ask MIA (its Assistant tools listed), find, show/hide per person (`app.visibility`). | Claude (function); Muse (look) |
 | `presence.html`, `home.css`, `home.js` | MIA's presence: the orb (celebrate / needs-you / quiet / thinking), the one due item, the briefing sheet, Talk. Was the Home until DEC-0017; linked from Home. | Muse (H-0009) |
 | `components.css` | Shared component system: glass cards, status strips, XP bars, rarity badges, pill tabs, buttons, heroes, sidebar, empty/locked states. Concept-art material. | Muse |
 | `missions.html`, `missions.js` | Missions: status strip, streaks, Active/Completed tabs over the engine's due items and recent wins, propose/approve on every action, ask-MIA-to-invent via talk. | Muse |
@@ -45,6 +46,7 @@ components, data and actions, and each arranges them for its screen.
 const state = await MIA.state();          // Life State v2: docs/schema/life_state.schema.json
 const shell = await MIA.shell();          // the sidebar: the person's apps, level and XP
 const home = await MIA.home();            // Home: greeting, Today's Focus, glance cards
+const apps = await MIA.apps();            // every app, grouped, with what MIA can do in each
 MIA.onChange(() => refresh());            // fires whenever MIA's data changes (any device)
 const turn = await MIA.talk("what's on today?");  // one Assistant turn: turn.reply_text
 
@@ -61,7 +63,7 @@ await MIA.undo(done.proposal_id);
   params: {bill_id}}`. Use its `label` for the button and pass it to
   `propose`. Don't build actions yourself.
 - **Action kinds today:** `bill.pay`, `income.receive`,
-  `maintenance.done`, `task.done`, `routine.log`
+  `maintenance.done`, `task.done`, `routine.log`, `app.visibility`
   (`GET /api/actions/kinds`). Need another? Ask in
   `docs/QUESTIONS.md` and Claude adds it to the engine.
 - **Proposal shape:** `docs/schema/action.schema.json`. Errors come back
