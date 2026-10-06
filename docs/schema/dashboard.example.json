@@ -96,31 +96,36 @@
       "id": "quick_add",
       "label": "Quick Add",
       "icon": "➕",
-      "talk": "Add "
+      "talk": "Add ",
+      "href": "assistant.html?draft=Add%20"
     },
     {
       "id": "voice",
       "label": "Voice",
       "icon": "🎙",
-      "talk": ""
+      "talk": "",
+      "href": "assistant.html?voice=1"
     },
     {
       "id": "calendar",
       "label": "Calendar",
       "icon": "📅",
-      "talk": "What's on my calendar this week?"
+      "talk": "What's on my calendar this week?",
+      "href": "assistant.html?ask=What%27s%20on%20my%20calendar%20this%20week%3F"
     },
     {
       "id": "journal",
       "label": "Journal",
       "icon": "📓",
-      "talk": "I want to journal."
+      "talk": "I want to journal.",
+      "href": "assistant.html?draft=I%20want%20to%20journal."
     },
     {
       "id": "assistant",
       "label": "MIA Assistant",
       "icon": "🗨",
-      "talk": ""
+      "talk": "",
+      "href": "assistant.html"
     }
   ],
   "glance": [

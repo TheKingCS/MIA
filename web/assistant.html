@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>MIA Assistant</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="assistant">
+  <!--
+    MIA Assistant (DEC-0018, the concept's chat; claude): talk to MIA by
+    typing or with the microphone. Same engine path as the phone
+    (/api/voice/text, /api/voice/turn); anything she changes is recorded and
+    undoable ("undo that"). ?ask= sends a question, ?draft= starts one,
+    ?voice=1 starts listening. MIA's face: presence.html.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main chat-main">
+      <header class="chat-head">
+        <a class="home-badge" href="presence.html" aria-label="MIA's presence">✦</a>
+        <div><h1>MIA Assistant</h1><p class="dim">Always here. Always with you.</p></div>
+      </header>
+      <div class="chat-log" id="log" aria-live="polite"></div>
+      <div class="chat-chips" id="chips"></div>
+      <form class="chat-form" id="form">
+        <input id="input" placeholder="Type a message…" autocomplete="off" aria-label="Message MIA">
+        <button type="button" class="chat-mic" id="mic" aria-label="Talk">🎙</button>
+        <button type="submit" class="btn btn-green">Send</button>
+      </form>
+      <p class="dim chat-note" id="note" hidden></p>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="assistant.js"></script>
+</body>
+</html>

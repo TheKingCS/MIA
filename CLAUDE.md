@@ -215,6 +215,10 @@ children.
   `MIAShell.act`), with the screen's data assembled in core (Home:
   `core/web_surfaces.py`); Muse owns the look. `docs/WEB_PARITY.md`
   tracks every Qt screen until its web version does everything it does.
+  DEC-0018 (2026-10-06): the target look is the mobile concept set
+  (`docs/design/MOBILE_CONCEPT.md`), built by Claude in `web/concept.css`;
+  photos live in `web/img/` (`docs/design/IMAGE_REQUESTS.md`), never
+  anything personal.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

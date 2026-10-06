@@ -95,6 +95,13 @@
       "page": "property.html"
     },
     {
+      "id": "assistant",
+      "name": "MIA Assistant",
+      "icon": "🗨",
+      "tagline": "Always here. Always with you.",
+      "page": "assistant.html"
+    },
+    {
       "id": "module_browser",
       "name": "Apps",
       "icon": "🧩",
@@ -122,7 +129,6 @@
     "Field Kit",
     "Files",
     "Music",
-    "MIA Assistant",
     "Diagnostics",
     "Settings"
   ],

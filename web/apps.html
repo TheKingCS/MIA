@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
 </head>
 <body data-app="module_browser">
   <!--
@@ -20,19 +21,17 @@
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
-      <header class="hero">
-        <h1><span aria-hidden="true">🧩</span> Apps</h1>
-        <p class="tagline">Everything MIA can do. Open it, or just ask her.</p>
+      <header class="apps-head">
+        <div><h1>Apps</h1><p class="dim">Your modules. Your world.</p></div>
+        <button type="button" class="apps-search-button" id="search-button" aria-label="Find">🔍</button>
       </header>
-
-      <section class="strip" id="strip" aria-label="Counts"></section>
-
-      <div class="apps-tools">
+      <div class="apps-tools" id="tools" hidden>
         <input id="find" type="search" placeholder="Find an app or something MIA can do…" aria-label="Find">
         <div class="ptabs" role="tablist" id="tabs"></div>
       </div>
-
+      <section class="strip" id="strip" aria-label="Counts" hidden></section>
       <div id="groups"></div>
+      <p class="apps-manage-link"><button type="button" class="btn btn-ghost" id="mode">Manage apps · what MIA can do in each</button></p>
       <p class="empty" id="nothing" hidden><strong>Nothing matches.</strong>Try another word, or just ask MIA.</p>
     </main>
   </div>

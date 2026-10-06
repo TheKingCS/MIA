@@ -7,77 +7,52 @@
   <title>MIA</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
-  <link rel="stylesheet" href="home.css">
   <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
 </head>
 <body data-app="web_home">
   <!--
-    MIA Home (muse, 2026-10-05). Home is her presence, not a dashboard
-    (Q-0004): the orb shows one ambient state — an earned celebration, the
-    one due item, or quiet — the briefing is one tap away, and Talk lives
-    on this same screen. Everything shown comes from Life State
-    (docs/schema/life_state.schema.json); every change goes
-    Propose -> visible confirmation -> Approve -> Undo (DEC-0009).
-    Offline: no CDNs, no web fonts. Placeholders only (DEC-0002).
+    Home (DEC-0018, the mobile concept's Home; claude): MIA's greeting, the
+    day's focus as a checklist (ticking proposes the item's action), the
+    day's saying, quick actions into MIA Assistant, level and XP. Data:
+    MIA.dashboard() + the frame's MIA.shell(). MIA's face: presence.html.
   -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main home-main">
+      <div class="home-top">
+        <a class="home-brand" href="presence.html" aria-label="MIA">
+          <span class="home-badge" aria-hidden="true">✦</span>
+          <span><strong>MIA</strong><small>Your Life. In Sync.</small></span>
+        </a>
+        <a class="home-gear" href="apps.html" aria-label="Apps and settings">⚙</a>
+      </div>
 
-  <form class="sign-in" id="sign-in" hidden aria-label="Sign in to MIA">
-    <div class="orb" aria-hidden="true"></div>
-    <p>Sign in to MIA</p>
-    <input id="who" autocomplete="username" placeholder="Email" required aria-label="Email">
-    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
-    <button class="primary" type="submit">Sign in</button>
-  </form>
+      <header class="hero home-hero">
+        <span class="weather-chip" id="date-chip"></span>
+        <h1 id="greeting">Good morning</h1>
+        <p class="tagline" id="subtitle"></p>
+      </header>
 
-  <main class="home" id="home" aria-live="polite">
-    <section class="presence" id="presence" data-mood="quiet" aria-label="MIA">
-      <div class="orb" aria-hidden="true"></div>
-      <p class="presence-line" id="presence-line"></p>
-      <p class="presence-sub" id="presence-sub" hidden></p>
-    </section>
+      <div class="home-row">
+        <section class="glass glow home-focus" aria-labelledby="focus-h">
+          <h2 id="focus-h">Today's Focus</h2>
+          <ul class="focus-list" id="focus"></ul>
+          <p class="dim" id="focus-empty" hidden>Nothing needs you today. Enjoy it.</p>
+        </section>
+        <section class="glass home-saying" aria-label="Today's thought">
+          <p id="saying"></p>
+          <span class="leaf" aria-hidden="true">🍃</span>
+        </section>
+      </div>
 
-    <section class="focus" id="focus" hidden aria-label="One thing">
-      <p class="focus-kicker" id="focus-kicker"></p>
-      <h1 class="focus-title" id="focus-title"></h1>
-      <p class="focus-detail" id="focus-detail"></p>
-      <div class="focus-actions" id="focus-actions"></div>
-    </section>
+      <nav class="home-quick" id="quick" aria-label="Quick actions"></nav>
 
-    <div class="home-actions">
-      <button class="ghost" id="briefing-toggle" aria-expanded="false" aria-controls="briefing">Briefing</button>
-      <a class="ghost" href="dashboard.html">Dashboard</a>
-    </div>
-  </main>
-
-  <section class="briefing-sheet" id="briefing" hidden aria-label="Briefing">
-    <div class="briefing-head">
-      <h2>Briefing</h2>
-      <button class="ghost" id="briefing-close">Close</button>
-    </div>
-    <div class="briefing-body" id="briefing-body"></div>
-  </section>
-
-  <section class="talk" id="talk" aria-label="Talk with MIA">
-    <div class="talk-thread" id="talk-thread" aria-live="polite"></div>
-    <form class="talk-form" id="talk-form">
-      <input id="talk-input" placeholder="Talk to MIA…" autocomplete="off" aria-label="Message MIA">
-      <button class="primary" type="submit" id="talk-send">Send</button>
-    </form>
-    <p class="talk-note" id="talk-note" hidden></p>
-  </section>
-
-  <dialog id="confirm" aria-labelledby="confirm-text">
-    <p id="confirm-text"></p>
-    <menu>
-      <button value="no" id="confirm-no">Not now</button>
-      <button value="yes" class="primary" id="confirm-yes">Yes</button>
-    </menu>
-  </dialog>
-
-  <p class="status" id="status" role="status"></p>
-
+      <a class="glass home-level" id="level" href="skills.html"></a>
+    </main>
+  </div>
   <script src="mia.js"></script>
-  <script src="shell.js" data-frame="web_home" data-talk="own"></script>
-  <script src="home.js"></script>
+  <script src="shell.js"></script>
+  <script src="welcome.js"></script>
 </body>
 </html>

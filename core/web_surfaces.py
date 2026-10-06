@@ -133,7 +133,7 @@ APPS: tuple[App, ...] = (
     App("files", "Files", "🗂", "Your files.", None, "Browse and manage local files and data.", KNOW, ()),
     App("music", "Music", "🎵", "Your music.", None, "Local audio library, playlists, and playback.", KNOW,
         ("music",), "Play something relaxing."),
-    App("assistant", "MIA Assistant", "🗨", "Talk it through.", None,
+    App("assistant", "MIA Assistant", "🗨", "Always here. Always with you.", "assistant.html",
         "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system"), "Undo that."),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
         "System health, logs, and hardware status.", KNOW, (), "How is the computer doing?"),
@@ -156,12 +156,16 @@ SAYINGS = (
     "Rest counts too.",
 )
 
+# Where each quick action goes: MIA Assistant (web/assistant.html), with
+# a question asked straight away (ask=) or a sentence started (draft=).
 QUICK_ACTIONS = (
-    {"id": "quick_add", "label": "Quick Add", "icon": "➕", "talk": "Add "},
-    {"id": "voice", "label": "Voice", "icon": "🎙", "talk": ""},
-    {"id": "calendar", "label": "Calendar", "icon": "📅", "talk": "What's on my calendar this week?"},
-    {"id": "journal", "label": "Journal", "icon": "📓", "talk": "I want to journal."},
-    {"id": "assistant", "label": "MIA Assistant", "icon": "🗨", "talk": ""},
+    {"id": "quick_add", "label": "Quick Add", "icon": "➕", "talk": "Add ", "href": "assistant.html?draft=Add%20"},
+    {"id": "voice", "label": "Voice", "icon": "🎙", "talk": "", "href": "assistant.html?voice=1"},
+    {"id": "calendar", "label": "Calendar", "icon": "📅", "talk": "What's on my calendar this week?",
+     "href": "assistant.html?ask=What%27s%20on%20my%20calendar%20this%20week%3F"},
+    {"id": "journal", "label": "Journal", "icon": "📓", "talk": "I want to journal.",
+     "href": "assistant.html?draft=I%20want%20to%20journal."},
+    {"id": "assistant", "label": "MIA Assistant", "icon": "🗨", "talk": "", "href": "assistant.html"},
 )
 
 

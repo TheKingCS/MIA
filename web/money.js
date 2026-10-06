@@ -57,13 +57,26 @@
     const s = page.summary;
     const plan = (s.monthly_plan) || null;
     const nw = s.net_worth || {};
-    const kids = [
+    const tile = (icon, label, value, cls) => el("div", { class: "glass nw-tile " + (cls || "") },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon), el("small", {}, label), el("strong", {}, value));
+    const kids = [];
+    // The concept's Finances: net worth first, then four tiles, then upcoming bills.
+    kids.push(el("section", { class: "glass glow money-section nw-card" },
+      el("span", { class: "nw-label" }, "Net worth"),
+      el("span", { class: "nw-value" }, nw.total != null ? fmt(nw.total) : "—"),
+      nw.total == null ? el("p", { class: "dim" }, "Add property values or connect a bank to see it.") : null));
+    kids.push(el("div", { class: "nw-tiles" },
+      tile("💵", "Monthly income", plan ? fmt(plan.expected_income) : fmt(s.month.income), "good"),
+      tile("🧾", "Monthly bills", plan ? fmt(plan.bills) : fmt(s.month.expenses)),
+      tile("🔻", "Total debt", fmt(page.debts.total), page.debts.total ? "bad" : ""),
+      tile("🏦", plan && plan.gap >= 0 ? "Left over each month" : "Short each month", plan ? fmt(Math.abs(plan.gap)) : "—",
+        plan && plan.gap < 0 ? "bad" : "good")));
+    kids.push(
       el("section", { class: "glass money-section" },
         el("div", { class: "sect" }, el("h2", {}, s.month ? s.month.label : "This month")),
         el("div", { class: "money-figures" },
           figure("Came in", fmt(s.month.income), "ok"), figure("Went out", fmt(s.month.expenses), "bad"),
-          figure("Left", fmt(s.month.net), s.month.net < 0 ? "bad" : "ok"))),
-    ];
+          figure("Left", fmt(s.month.net), s.month.net < 0 ? "bad" : "ok"))));
     if (plan) {
       kids.push(el("section", { class: "glass money-section" },
         el("div", { class: "sect" }, el("h2", {}, "Every month, planned")),
@@ -74,7 +87,7 @@
     }
     if (nw.total != null) {
       kids.push(el("section", { class: "glass money-section" },
-        el("div", { class: "sect" }, el("h2", {}, "Net worth"), el("span", { class: "money-big" }, fmt(nw.total))),
+        el("div", { class: "sect" }, el("h2", {}, "What net worth is made of")),
         el("div", { class: "rows" }, nw.sources.map((src) => row(src.label, null, fmt(src.value)))),
         nw.manual_debts_not_in_net_worth ? el("p", { class: "dim" },
           "Debts you entered by hand (" + fmt(nw.manual_debts_not_in_net_worth) + ") aren't counted in this total.") : null));

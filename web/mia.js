@@ -10,6 +10,7 @@
  *   MIA.approve(id) / reject(id) / undo(id)
  *   MIA.onChange(callback)      -> calls back whenever MIA's data changes
  *   MIA.talk(text)              -> one Assistant turn: {replies, reply_text, draft, ...}
+ *   MIA.voice(wavBlob)          -> the same, spoken (mono 16-bit WAV): {transcript, reply_text, audio_wav_base64}
  *   MIA.shell()                 -> the sidebar: the person's apps, level and XP (core/web_surfaces.py)
  *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
@@ -148,6 +149,17 @@
     // Talk (H-0009's TODO for claude): one Assistant turn, the same
     // engine path as the phone's chat (POST /api/voice/text). Any change
     // MIA makes in a turn is recorded and undoable like everything else.
+    // Voice (the phone's path): a mono 16-bit WAV in, MIA's reply (and her
+    // spoken reply as WAV, when voice is set up on her computer) out.
+    voice: (wavBlob) => demo ? Promise.reject(new MiaError(400, "Voice needs MIA running — this is the placeholder demo."))
+      : (async () => {
+        if (!token) throw new MiaError(401, "Not signed in.");
+        const response = await fetch("/api/voice/turn", { method: "POST", body: wavBlob,
+          headers: { Authorization: "Bearer " + token, "Content-Type": "audio/wav" } });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
+        return data;
+      })(),
     talk: (text) => demo ? Promise.reject(new MiaError(400, "Talk needs MIA running — this is the placeholder demo."))
                          : call("POST", "/api/voice/text", { text }),
   };

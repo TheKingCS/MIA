@@ -194,12 +194,22 @@
         ...appLinks(shell, "nav"),
         el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
     }
-    let button = $("#mia-menu-button");
-    if (!button) {
-      button = el("button", { type: "button", id: "mia-menu-button", class: "menu-button", "aria-label": "Menu",
-        "aria-expanded": "false", "aria-controls": "mia-menu", onclick: () => toggleMenu() }, "⋯");
-      document.body.append(button);
+    // Phone: the concept's bottom bar (Home, Apps, Dashboard, More); More opens the drawer.
+    let bar = $("#mia-bottom-bar");
+    if (!bar) {
+      bar = el("nav", { id: "mia-bottom-bar", class: "bottom-bar", "aria-label": "Main" });
+      document.body.append(bar);
     }
+    const here = document.body.dataset.app || "web_home";
+    const tab = (href, id, icon, label) => el("a", { href, "aria-current": here === id ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon), label);
+    bar.replaceChildren(
+      tab("index.html", "web_home", "🏠", "Home"),
+      tab("apps.html", "module_browser", "▦", "Apps"),
+      tab("dashboard.html", "dashboard", "📊", "Dashboard"),
+      el("button", { type: "button", id: "mia-menu-button", "aria-label": "More", "aria-expanded": "false",
+        "aria-controls": "mia-menu", onclick: () => toggleMenu() },
+      el("span", { class: "ico", "aria-hidden": "true" }, "⋯"), "More"));
     let menu = $("#mia-menu");
     if (!menu) {
       menu = el("div", { id: "mia-menu", class: "menu-sheet", hidden: true, role: "dialog", "aria-label": "Menu",
@@ -207,12 +217,13 @@
       document.body.append(menu);
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleMenu(false); });
     }
-    menu.replaceChildren(el("div", { class: "menu-panel glass glow" },
+    menu.replaceChildren(el("div", { class: "menu-panel" },
       el("div", { class: "menu-head" },
-        el("span", { class: "menu-brand" }, "🌿 MIA"),
-        el("button", { type: "button", class: "btn btn-ghost", onclick: () => toggleMenu(false) }, "Close")),
+        el("span", { class: "menu-brand" }, "🌿 MIA", el("small", { class: "menu-tagline" }, " Your Life. In Sync.")),
+        el("button", { type: "button", class: "btn btn-ghost", "aria-label": "Close", onclick: () => toggleMenu(false) }, "✕")),
       el("nav", { class: "menu-grid", "aria-label": "Apps" }, ...appLinks(shell, "menu-item")),
-      levelBlock(shell.person), more(shell)));
+      levelBlock(shell.person), more(shell),
+      el("p", { class: "menu-tagline" }, "Better systems. Bigger dreams.")));
   }
 
   function toggleMenu(open) {
@@ -303,7 +314,7 @@
       const app = $("#app") || $(".layout");
       if (app) app.hidden = false;
       try { renderNav(await MIA.shell()); } catch (e) { say(e.message); }
-      mountTalk();
+      if (!options || options.talk !== false) mountTalk();
       await refresh();
       if (!options || options.refreshOnChange !== false) {
         MIA.onChange(async () => {

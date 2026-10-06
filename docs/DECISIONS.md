@@ -287,3 +287,34 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   dashboard; the concept dashboard is its own Dashboard page. Navigation
   is one ⋯ button that opens every choice (phones, and Home at any size);
   desktop module pages keep the concept's sidebar.
+
+### DEC-0018: The mobile concept set is the target look; Claude builds it
+- Status: APPROVED (zac, 2026-10-06, in chat with claude)
+- Proposed by: claude (options), zac chose, 2026-10-06 · Review: muse, chatgpt
+- Decision:
+  1. **The target:** the mobile concept set ChatGPT made for Zac
+     (2026-10-06): Home, Apps, Greenhouse, Garage, Kitchen, Workout, Real
+     Estate, Finances, Missions, Skills, MIA Assistant and the menu
+     drawer. It is described in `docs/design/MOBILE_CONCEPT.md`; the
+     picture itself stays out of the public repo because it shows a real
+     name and addresses (DEC-0002).
+  2. **Home is the concept's Home** ("Good morning", the weather and
+     date, Today's Focus, the day's saying, quick actions, level and
+     XP). This supersedes the DEC-0017 amendment that made Home MIA's
+     face. Chatting with MIA is the **MIA Assistant** screen, one tap
+     away from Home and from the bottom bar.
+  3. **Navigation is the concept's bottom bar** on the phone (Home,
+     Apps, Dashboard, More; More opens the menu drawer). The desktop
+     keeps the sidebar.
+  4. **Claude builds the look** directly from the picture, on top of
+     the working screens (every button, form and action stays). Muse
+     reviews and polishes. This changes DEC-0017's split for this pass.
+  5. **Photos come from ChatGPT:** the images listed in
+     `docs/design/IMAGE_REQUESTS.md` (no names, addresses or personal
+     details), uploaded to `web/img/` and shipped inside MIA so they
+     work offline. Until one is there, its screen shows a plain scenic
+     background.
+- Why: Zac: "I like the direction this is going but it feels very off of
+  concept still… make exactly this basically while maintaining
+  functionality of all capabilities and features and modules."
+- Related: DEC-0012, DEC-0017, H-0016, H-0018, H-0019

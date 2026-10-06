@@ -38,6 +38,10 @@ the hub, and the Meta AI app.
       whole team is.
 - [x] DEC-0014 and DEC-0016 approved; Q-0011 answered (Android, no
       glasses yet, MIA not on the PC yet); Q-0012 parked (2026-10-05).
+- [ ] **The screens' photos (DEC-0018):** ask ChatGPT for the images in
+      `docs/design/IMAGE_REQUESTS.md` (paste that file), then on github.com
+      → TheKingCS/MIA → `web/img` → Add file → Upload files, with exactly
+      the filenames listed. They can come one at a time.
 - [ ] **Switch on the public preview (one setting):** on github.com
       (in the phone browser, "Desktop site" if the menu is missing) →
       TheKingCS/MIA → Settings → Pages → "Build and deployment" →

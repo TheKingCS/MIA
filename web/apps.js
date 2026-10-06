@@ -8,6 +8,20 @@
   const $ = (id) => document.getElementById(id);
   let data = null;
   let filter = "all"; // all | web | ask
+  let mode = "tiles"; // tiles (the concept's grid) | manage (every app in detail, show/hide)
+  // The concept's tile colors (presentation only).
+  const COLORS = { web_home: "74,222,128", dashboard: "74,222,128", greenhouse: "74,222,128", garage: "251,146,60",
+    kitchen: "248,113,113", workout: "96,165,250", real_estate: "45,212,191", budget: "167,139,250", missions: "251,191,36",
+    skills: "192,132,252", maintenance: "251,146,60", property: "45,212,191", assistant: "74,222,128" };
+  const askHref = (app) => "assistant.html?draft=" + encodeURIComponent(app.ask || ("About " + app.name + ": "));
+
+  function tile(app) {
+    return el("a", { class: "app-tile", href: app.on_web ? app.page : askHref(app), "data-id": app.id,
+      style: "--tile-rgb:" + (COLORS[app.id] || "120,160,140") },
+    el("span", { class: "tile-icon", "aria-hidden": "true" }, app.icon),
+    el("span", { class: "tile-name" }, app.name),
+    el("span", { class: "tile-tag" }, app.on_web ? app.tagline : "Ask MIA"));
+  }
 
   function card(app) {
     const tools = app.tools.length
@@ -17,8 +31,7 @@
       : null;
     const open = app.on_web
       ? el("a", { class: "btn btn-green", href: app.page }, "Open")
-      : el("button", { type: "button", class: "btn btn-amber", onclick: () => talk(true, app.ask || "") },
-        "Ask MIA");
+      : el("a", { class: "btn btn-amber", href: askHref(app) }, "Ask MIA");
     const toggle = app.can_hide
       ? el("button", {
         type: "button", class: "btn btn-ghost",
@@ -51,6 +64,17 @@
   function draw() {
     const words = $("find").value.trim().toLowerCase();
     let shown = 0;
+    $("strip").hidden = mode !== "manage";
+    $("mode").textContent = mode === "tiles" ? "Manage apps · what MIA can do in each" : "Back to the app grid";
+    if (mode === "tiles") {
+      // The ones on the web first (the concept's grid), then the rest, reachable by asking MIA.
+      const apps = data.groups.flatMap((g) => g.apps).filter((a) => a.shown && matches(a, words))
+        .sort((x, y) => (y.on_web ? 1 : 0) - (x.on_web ? 1 : 0));
+      shown = apps.length;
+      $("groups").replaceChildren(el("div", { class: "tile-grid" }, apps.map(tile)));
+      $("nothing").hidden = shown > 0;
+      return;
+    }
     $("groups").replaceChildren(...data.groups.map((g) => {
       const apps = g.apps.filter((a) => matches(a, words));
       shown += apps.length;
@@ -78,5 +102,7 @@
   }
 
   $("find").addEventListener("input", () => data && draw());
+  $("search-button").addEventListener("click", () => { $("tools").hidden = !$("tools").hidden; if (!$("tools").hidden) $("find").focus(); });
+  $("mode").addEventListener("click", () => { mode = mode === "tiles" ? "manage" : "tiles"; $("tools").hidden = mode === "tiles" && !$("find").value; draw(); });
   MIAShell.start(render);
 })();

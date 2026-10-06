@@ -1429,10 +1429,10 @@
           "id": "assistant",
           "name": "MIA Assistant",
           "icon": "🗨",
-          "tagline": "Talk it through.",
+          "tagline": "Always here. Always with you.",
           "description": "Conversational assistant and local AI.",
-          "page": null,
-          "on_web": false,
+          "page": "assistant.html",
+          "on_web": true,
           "shown": true,
           "can_hide": false,
           "ask": "Undo that.",
@@ -1624,7 +1624,7 @@
   ],
   "counts": {
     "apps": 35,
-    "on_web": 13,
+    "on_web": 14,
     "tools": 201
   }
 }
