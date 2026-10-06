@@ -94,8 +94,65 @@
   --text-xl: calc(30px * var(--scale));
   --text-2xl: calc(40px * var(--scale));
 
+  /* Module identities — the concept art's neon-per-module language
+     (design lock-in 2026-10-02: teal workout, amber recipes, blue
+     finances, purple real estate). Each module gets a neon, a border
+     line, a glow, and a faint wash. Pages opt in with one body class
+     (.mod-missions, .mod-skills, ...) which repoints --mod/--mod-line/
+     --mod-glow/--mod-dim; components consume only those four. */
+  --mod-workout: #2dd4bf;
+  --mod-kitchen: #fbbf24;
+  --mod-finance: #60a5fa;
+  --mod-estate: #c084fc;
+  --mod-missions: #fbbf24;
+  --mod-skills: #c084fc;
+
+  /* Active module context (default: MIA teal, her voice) */
+  --mod: var(--accent);
+  --mod-line: rgba(63, 214, 181, 0.5);
+  --mod-glow: var(--accent-glow);
+  --mod-dim: rgba(63, 214, 181, 0.12);
+
   /* Presence */
   --orb-size: 208px;
+}
+
+/* Module contexts: one class on <body> repoints the neon. */
+.mod-missions {
+  --mod: var(--mod-missions);
+  --mod-line: rgba(251, 191, 36, 0.5);
+  --mod-glow: rgba(251, 191, 36, 0.35);
+  --mod-dim: rgba(251, 191, 36, 0.10);
+}
+.mod-skills {
+  --mod: var(--mod-skills);
+  --mod-line: rgba(192, 132, 252, 0.5);
+  --mod-glow: rgba(192, 132, 252, 0.35);
+  --mod-dim: rgba(192, 132, 252, 0.10);
+}
+.mod-workout {
+  --mod: var(--mod-workout);
+  --mod-line: rgba(45, 212, 191, 0.5);
+  --mod-glow: rgba(45, 212, 191, 0.35);
+  --mod-dim: rgba(45, 212, 191, 0.10);
+}
+.mod-kitchen {
+  --mod: var(--mod-kitchen);
+  --mod-line: rgba(251, 191, 36, 0.5);
+  --mod-glow: rgba(251, 191, 36, 0.35);
+  --mod-dim: rgba(251, 191, 36, 0.10);
+}
+.mod-finance {
+  --mod: var(--mod-finance);
+  --mod-line: rgba(96, 165, 250, 0.5);
+  --mod-glow: rgba(96, 165, 250, 0.35);
+  --mod-dim: rgba(96, 165, 250, 0.10);
+}
+.mod-estate {
+  --mod: var(--mod-estate);
+  --mod-line: rgba(192, 132, 252, 0.5);
+  --mod-glow: rgba(192, 132, 252, 0.35);
+  --mod-dim: rgba(192, 132, 252, 0.10);
 }
 
 [data-contrast="high"] {
@@ -127,6 +184,10 @@
   --soon-bg: transparent;
   --xp: #ffd400;
   --xp-glow: transparent;
+  --mod: #ffd400;
+  --mod-line: #ffffff;
+  --mod-glow: transparent;
+  --mod-dim: transparent;
 }
 
 /* Phone composition: the same components, arranged for 390px touch */
