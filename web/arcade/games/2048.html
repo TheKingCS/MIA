@@ -183,6 +183,7 @@
         var target=(nr>=0&&nr<N&&nc>=0&&nc<N)?at(nr,nc):null;
         if(target&&!target.merged&&target.value===t.value){
           var m={id:nextId++,value:t.value*2,row:target.row,col:target.col};
+        m.merged=true; // a tile born from a merge can't merge again this turn
           t.row=target.row;t.col=target.col;t.dead=true;
           target.dead=true;
           tiles=tiles.filter(function(x){return x!==t&&x!==target;});
