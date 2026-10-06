@@ -148,7 +148,7 @@ body {
   display: grid;
   gap: 6px;
   border-left: 3px solid var(--attention);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 28px var(--attention-glow);
 }
 .focus-kicker {
   margin: 0;
