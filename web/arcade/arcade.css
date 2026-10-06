@@ -32,23 +32,30 @@ body {
 #tagline { margin: 8px 0 0; font-size: 19px; color: var(--ink); }
 #sub { margin: 8px 0 0; font-size: 14px; color: var(--ink-faint); }
 
-#pass-banner {
-  margin-top: 28px; width: 100%; max-width: 640px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  border: 1px solid var(--gold-dim); border-radius: 18px; padding: 18px 22px;
-  background: linear-gradient(135deg, rgba(246, 196, 83, 0.12), rgba(246, 196, 83, 0.03));
-  box-shadow: 0 0 40px rgba(246, 196, 83, 0.15);
+#pass-banner { display: none; } /* retired: bundles took its place */
+
+/* bundles */
+#bundles { margin-top: 28px; width: 100%; max-width: 720px; }
+.bundles-kicker { margin: 0; text-align: center; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-dim); }
+#bundle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 14px; }
+.bundle {
+  border: 1px solid var(--line); border-radius: 18px; padding: 22px 18px;
+  background: var(--card); text-align: center;
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
 }
-#pass-banner[hidden] { display: none; }
-.pass-kicker { margin: 0; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-dim); }
-.pass-title { margin: 6px 0 0; font-size: 21px; font-weight: 700; color: var(--gold-hi); }
-.pass-sub { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-dim); }
-#pass-buy {
-  flex: none; cursor: pointer; border: none; border-radius: 99px; padding: 14px 28px;
-  background: var(--gold); color: #241a03; font-size: 16px; font-weight: 700;
-  box-shadow: 0 0 24px rgba(246, 196, 83, 0.5);
+.bundle.featured {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(246, 196, 83, 0.14), rgba(246, 196, 83, 0.03));
+  box-shadow: 0 0 40px rgba(246, 196, 83, 0.18);
 }
-#pass-buy:active { transform: scale(0.97); }
+.bundle.owned { opacity: 0.65; }
+.bundle-tag { margin: 0; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--teal); }
+.bundle-name { margin: 0; font-size: 19px; font-weight: 700; color: var(--ink); }
+.bundle-price { margin: 0; font-size: 34px; font-weight: 800; color: var(--gold-hi); text-shadow: 0 0 20px rgba(246, 196, 83, 0.4); }
+.bundle-blurb { margin: 0; font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
+.bundle-count { margin: 0; font-size: 12px; color: var(--ink-faint); letter-spacing: 0.06em; }
+.bundle .btn { width: 100%; margin-top: 6px; }
+.bundle .fine { margin: 0; }
 
 #grid {
   margin-top: 30px; width: 100%; max-width: 720px;
