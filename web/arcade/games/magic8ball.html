@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Magic 8 Ball · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -92,6 +93,7 @@
       answer.textContent=ANSWERS[Math.floor(Math.random()*ANSWERS.length)];
       answer.classList.add("show");
       asked++;localStorage.setItem("la8ball",String(asked));paint();
+      if(window.ArcadeProgress)ArcadeProgress.award("magic8ball","ask",5);
       busy=false;
     },620);
   }
