@@ -28,7 +28,8 @@
         "income.receive",
         "maintenance.done",
         "task.done",
-        "routine.log"
+        "routine.log",
+        "app.visibility"
       ]
     },
     "params": {

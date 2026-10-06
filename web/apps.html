@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Apps — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+</head>
+<body data-app="module_browser">
+  <!--
+    Apps (claude, 2026-10-06, DEC-0017): every app MIA has, by life area,
+    from MIA.apps() (core/web_surfaces.py). Open the ones on the web; the
+    rest are reachable now by asking MIA (their Assistant tools are listed).
+    Show/hide goes through the app.visibility action (confirm, undo).
+    Muse owns the look.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true">🧩</span> Apps</h1>
+        <p class="tagline">Everything MIA can do. Open it, or just ask her.</p>
+      </header>
+
+      <section class="strip" id="strip" aria-label="Counts"></section>
+
+      <div class="apps-tools">
+        <input id="find" type="search" placeholder="Find an app or something MIA can do…" aria-label="Find">
+        <div class="ptabs" role="tablist" id="tabs"></div>
+      </div>
+
+      <div id="groups"></div>
+      <p class="empty" id="nothing" hidden><strong>Nothing matches.</strong>Try another word, or just ask MIA.</p>
+    </main>
+  </div>
+
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="apps.js"></script>
+</body>
+</html>

@@ -34,6 +34,10 @@ def test_pure_bits():
     assert greeting(21, None) == "Good evening"
     assert len({a.module_id for a in APPS}) == len(APPS)
     assert (plural(1, "recipe"), plural(2, "property", "properties")) == ("1 recipe", "2 properties")
+    from core.web_surfaces import tool_label
+
+    assert tool_label("add_maintenance_task") == "Add maintenance task"
+    assert tool_label("get_life_events") == "See life events" and tool_label("add_skill_xp") == "Add skill XP"
 
 
 def test_the_shell_is_the_persons_own(world):
@@ -81,3 +85,90 @@ def test_the_endpoints(world):
     client.headers.update({"Authorization": f"Bearer {token}"})
     assert client.get("/api/shell").json()["person"]["name"] == "Robin"
     assert client.get("/api/home").json()["focus"]
+
+
+# ------------------------------------------------------------------ the Apps page
+
+
+def _module_descriptions():
+    """Every module's id and own description, read from modules/*/module.py."""
+    import ast
+    from pathlib import Path
+
+    found = {}
+    for path in sorted(Path(__file__).resolve().parent.parent.glob("modules/*/module.py")):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.ClassDef):
+                values = {t.id: n.value for n in node.body if isinstance(n, ast.Assign)
+                          for t in n.targets if isinstance(t, ast.Name)}
+                if "module_id" in values:
+                    found[ast.literal_eval(values["module_id"])] = ast.literal_eval(values["description"])
+    return found
+
+
+def test_every_module_is_on_the_apps_page_with_its_own_description():
+    from core.web_surfaces import APPS_BY_ID, GROUPS
+
+    modules = _module_descriptions()
+    modules.pop("web_home")  # the web Home itself
+    assert set(modules) == set(APPS_BY_ID)
+    for module_id, description in modules.items():
+        assert APPS_BY_ID[module_id].description == description, module_id
+        assert APPS_BY_ID[module_id].group in GROUPS
+
+
+def test_every_assistant_tool_belongs_to_an_app():
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    domains = set()
+    for path in list(root.glob("core/*.py")) + list(root.glob("modules/*/*.py")):
+        domains |= set(re.findall(r'domain="([a-z_]+)"', path.read_text(encoding="utf-8")))
+    covered = {d for a in APPS for d in a.domains}
+    assert domains - covered == set()
+
+
+def test_the_apps_page(world):
+    from core.assistant_actions import AssistantAction
+    from core.web_surfaces import apps_page
+
+    world.assistant_actions.register(AssistantAction(
+        "add_bill", "Add a new bill. Use it when the user says so.", {"type": "object", "properties": {}},
+        lambda c, a: "", domain="budget"))
+    page = apps_page(world)
+    apps = {a["id"]: a for g in page["groups"] for a in g["apps"]}
+    assert apps["budget"]["on_web"] and apps["budget"]["tools"] == [
+        {"name": "add_bill", "does": "Add bill", "detail": "Add a new bill."}]
+    assert not apps["maintenance"]["on_web"] and apps["maintenance"]["ask"]
+    assert not apps["module_browser"]["can_hide"] and apps["kitchen"]["can_hide"]
+    assert page["counts"]["apps"] == len(apps)
+
+    set_app_visible(world, "kitchen", False)
+    assert not {a["id"]: a for g in apps_page(world)["groups"] for a in g["apps"]}["kitchen"]["shown"]
+
+
+def test_a_child_sees_only_their_apps_and_tools(world):
+    from core.assistant_actions import AssistantAction
+    from core.web_surfaces import apps_page
+
+    world.assistant_actions.register(AssistantAction(
+        "add_bill", "Add a new bill.", {"type": "object", "properties": {}}, lambda c, a: "", domain="budget"))
+    make_child(world, world.me.profile_id, [world.other.profile_id])
+    ids = {a["id"] for g in apps_page(world)["groups"] for a in g["apps"]}
+    assert "budget" not in ids and "missions" in ids
+
+
+def test_show_and_hide_go_through_the_action_contract(world):
+    from core.actions import ActionError
+
+    proposal = world.actions.propose(world, "app.visibility", {"module_id": "kitchen", "visible": False})
+    assert proposal.summary == "Hide Kitchen from your apps"
+    done = world.actions.approve(world, proposal.proposal_id)
+    assert "kitchen" not in [a["id"] for a in shell(world, TODAY)["apps"]]
+    world.actions.undo(world, done.proposal_id)
+    assert "kitchen" in [a["id"] for a in shell(world, TODAY)["apps"]]
+    with pytest.raises(ActionError, match="always stays"):
+        world.actions.propose(world, "app.visibility", {"module_id": "module_browser", "visible": False})
+    with pytest.raises(ActionError):
+        world.actions.propose(world, "app.visibility", {"module_id": "nope"})

@@ -127,7 +127,7 @@ def test_a_child_can_only_take_child_actions(world):
     project = world.projects.add_project("Room")
     todo = world.tasks.add_task(project.project_id, "Tidy desk")
     assert world.actions.propose(world, "task.done", {"task_id": todo.task_id}).status == "proposed"
-    assert {k for k, a in ACTION_TYPES.items() if a.child_ok} == {"task.done", "routine.log"}
+    assert {k for k, a in ACTION_TYPES.items() if a.child_ok} == {"task.done", "routine.log", "app.visibility"}
 
 
 def test_mia_proposed_actions_are_recorded_as_hers(world):

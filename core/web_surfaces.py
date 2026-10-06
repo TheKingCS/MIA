@@ -39,42 +39,103 @@ class App:
     icon: str
     tagline: str = ""
     page: Optional[str] = None  # the web screen, relative to /web/; None = not on the web yet
+    description: str = ""  # the module's own `description` (tests keep them equal)
+    group: str = ""  # the life area on the Apps page
+    domains: tuple[str, ...] = ()  # the Assistant tool domains that work in it
+    ask: str = ""  # an example of what to say to MIA about it
 
+
+MONEY, HOME, LIFE, OUTDOORS, KNOW = ("Money & business", "Home, homestead & equipment", "Life, goals & self",
+                                     "Outdoors & field", "Knowledge, tools & system")
+GROUPS = (LIFE, MONEY, HOME, OUTDOORS, KNOW)
 
 # The order of the concept's sidebar first, then the rest of MIA.
 APPS: tuple[App, ...] = (
-    App("dashboard", "Home", "🏠", "Your life. In sync.", "index.html"),
-    App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom."),
-    App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html"),
-    App("kitchen", "Kitchen", "🍳", "Good food. Good mood.", "kitchen.html"),
-    App("household", "Household", "🧺", "A home that runs itself."),
-    App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html"),
-    App("real_estate", "Real Estate", "🏘", "Cash flow. Equity. Freedom.", "real-estate.html"),
-    App("missions", "Missions", "🏆", "Explore. Complete. Level up.", "missions.html"),
-    App("skills", "Skills", "⚔", "Do the thing. Earn the level. Unlock the next thing.", "skills.html"),
-    App("budget", "Money", "💰", "Know where it goes.", "finances.html"),
-    App("maintenance", "Maintenance", "🔧", "Everything you own, cared for."),
-    App("property", "Property", "🏠", "The house, the appliances, the tools."),
-    App("workshop", "Workshop", "🔩", "Parts, jobs and products."),
-    App("power", "Power", "🔋", "Energy, tracked."),
-    App("character", "Character", "👤", "Your story so far."),
-    App("observations", "Observations", "🔍", "What MIA noticed."),
-    App("relationships", "People & Pets", "👥", "The ones who matter."),
-    App("notes", "Notes", "📝", "Write it down."),
-    App("classroom", "Classroom", "🎓", "Keep learning."),
-    App("inbox", "Inbox", "📥", "Paperwork, handled."),
-    App("expeditions", "Expeditions", "🏕", "Plan the trip."),
-    App("memories", "Memories", "📸", "Remember the trip."),
-    App("maps", "Maps", "🗺", "Know the ground."),
-    App("navigation", "Navigation", "🧭", "Find the way."),
-    App("knowledge", "Knowledge", "📚", "The offline library."),
-    App("toolbox", "Toolbox", "🧰", "Quick tools."),
-    App("lab", "The Lab", "🧪", "Experiments and sensors."),
-    App("field_kit", "Field Kit", "🛠", "Devices and scripts."),
-    App("files", "Files", "🗂", "Your files."),
-    App("music", "Music", "🎵", "Your music."),
-    App("assistant", "MIA Assistant", "🗨", "Talk it through."),
-    App("settings", "Settings", "⚙", "Make MIA yours."),
+    App("dashboard", "Home", "🏠", "Your life. In sync.", "index.html",
+        "Recent activity, active missions, memories, and upcoming items at a glance.", LIFE,
+        ("today", "calendar", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
+    App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", None,
+        "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance",),
+        "What needs doing in the greenhouse?"),
+    App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html",
+        "At-a-glance status for vehicles and motorized equipment.", HOME, ("maintenance",),
+        "What's overdue on my vehicles?"),
+    App("kitchen", "Kitchen", "🍳", "Good food. Good mood.", "kitchen.html",
+        "Recipes, pantry, grocery list, and meal tracking.", HOME, ("kitchen", "groceries"),
+        "What can I make with what's in the pantry?"),
+    App("household", "Household", "🧺", "A home that runs itself.", None,
+        "Daily and weekly household routines — laundry, dishes, chores.", HOME, ("household",),
+        "I did the dishes."),
+    App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html",
+        "Exercises, templates, guided sessions, and progress.", LIFE, ("workout",), "Log a 30 minute workout."),
+    App("real_estate", "Real Estate", "🏘", "Cash flow. Equity. Freedom.", "real-estate.html",
+        "Property values, equity, rental income, and linked maintenance.", MONEY, ("real_estate",),
+        "How are my rentals doing this month?"),
+    App("missions", "Missions", "🏆", "Explore. Complete. Level up.", "missions.html",
+        "Gamified goals and objectives, tied to a trip or general.", LIFE, ("missions",),
+        "Add a mission to build a chicken coop."),
+    App("skills", "Skills", "⚔", "Do the thing. Earn the level. Unlock the next thing.", "skills.html",
+        "My Hero's Path — skill tree and character progression.", LIFE, (), "Which skills am I growing?"),
+    App("budget", "Money", "💰", "Know where it goes.", "finances.html",
+        "Household bills, income, expenses, and tax-relevant totals.", MONEY,
+        ("budget", "debts", "homestead_costs", "business_use", "business_tags"), "Which debt should I pay first?"),
+    App("maintenance", "Maintenance", "🔧", "Everything you own, cared for.", None,
+        "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.", HOME,
+        ("maintenance", "ownership"), "I put 120 hours on the mower."),
+    App("property", "Property", "🏠", "The house, the appliances, the tools.", None,
+        "At-a-glance status for the house, appliances, and tools.", HOME, ("inventory",),
+        "Do I have any furnace filters left?"),
+    App("workshop", "Workshop", "🔩", "Parts, jobs and products.", None,
+        "Component inventory, fabrication materials/jobs/products, and a sales ledger.", MONEY,
+        ("components", "materials", "jobs", "products", "ledger"), "How much plywood do I have?"),
+    App("power", "Power", "🔋", "Energy, tracked.", None,
+        "Battery status and manual energy/utility tracking.", HOME, ("power",), "How's the battery?"),
+    App("character", "Character", "👤", "Your story so far.", None,
+        "A living record of what you've actually done.", LIFE, (), "What have I done this week?"),
+    App("observations", "Observations", "🔍", "What MIA noticed.", None,
+        "What MIA has noticed across your maintenance and missions.", LIFE, (), "What have you noticed lately?"),
+    App("relationships", "People & Pets", "👥", "The ones who matter.", None,
+        "Relationship profiles and pet profiles.", LIFE, ("relationships",), "When is the next birthday?"),
+    App("notes", "Notes", "📝", "Write it down.", None,
+        "Dated, searchable, taggable journal entries.", LIFE, ("notes", "journal", "private_journal"),
+        "Make a note: call the plumber Friday."),
+    App("classroom", "Classroom", "🎓", "Keep learning.", None,
+        "Your own subjects, courses, and lessons.", LIFE, ("classroom", "textbooks"), "Quiz me on chapter 2."),
+    App("inbox", "Inbox", "📥", "Paperwork, handled.", None,
+        "Receipts, manuals and documents MIA files for you.", MONEY, ("inbox", "email"),
+        "What's waiting in my inbox?"),
+    App("expeditions", "Expeditions", "🏕", "Plan the trip.", None,
+        "Expedition Mode: trip routes, gear, weather, and logged speed/distance for any outing.", OUTDOORS,
+        ("expeditions",), "Plan a weekend camping trip."),
+    App("memories", "Memories", "📸", "Remember the trip.", None,
+        "Trip recaps, stats, and photos from your Expeditions.", OUTDOORS, (), "Show me my last trip."),
+    App("maps", "Maps", "🗺", "Know the ground.", None,
+        "Waypoints, a real offline basemap, and official trail maps.", OUTDOORS, ("maps",),
+        "Which trail maps do I have?"),
+    App("navigation", "Navigation", "🧭", "Find the way.", None,
+        "Waypoints, distance/bearing, and sun/moon reference.", OUTDOORS, ("waypoints",),
+        "How far is camp from the trailhead?"),
+    App("knowledge", "Knowledge", "📚", "The offline library.", None,
+        "Offline reference material and personal knowledge base.", KNOW, (), "How do I purify water?"),
+    App("toolbox", "Toolbox", "🧰", "Quick tools.", None,
+        "Calculators, unit conversion, and other quick tools.", KNOW, ("toolbox",), "Convert 5 gallons to liters."),
+    App("lab", "The Lab", "🧪", "Experiments and sensors.", None,
+        "Sensor testing, experiments, calibration, and graphs.", KNOW, ("lab",), "Start a temperature experiment."),
+    App("field_kit", "Field Kit", "🛠", "Devices and scripts.", None,
+        "Detect and manage connected devices; run your own scripts.", KNOW, ("field_kit", "security"),
+        "What devices are connected?"),
+    App("files", "Files", "🗂", "Your files.", None, "Browse and manage local files and data.", KNOW, ()),
+    App("music", "Music", "🎵", "Your music.", None, "Local audio library, playlists, and playback.", KNOW,
+        ("music",), "Play something relaxing."),
+    App("assistant", "MIA Assistant", "🗨", "Talk it through.", None,
+        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system"), "Undo that."),
+    App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
+        "System health, logs, and hardware status.", KNOW, (), "How is the computer doing?"),
+    App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
+        "View, enable/disable, install, and rescan modules.", KNOW, ()),
+    App("settings", "Settings", "⚙", "Make MIA yours.", None,
+        "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters"),
+        "Make the text bigger."),
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
 
@@ -255,4 +316,75 @@ def home(context, now: Optional[datetime] = None) -> dict:
         "glance": _glance(state),
         "wins": ((state.get("recent_wins") or {}).get("latest") or [])[:5],
         "child": bool((state.get("person") or {}).get("child")),
+    }
+
+
+def _first_sentence(text: str) -> str:
+    """Pure logic. A tool's description, as one line for a person."""
+    text = " ".join((text or "").split())
+    for end in (". ", "? "):
+        if end in text:
+            text = text[: text.index(end) + 1]
+    return text.rstrip()
+
+
+_VERBS = {"get": "See", "list": "See", "show": "See", "check": "Check", "lookup": "Look up", "search": "Search",
+          "rm": "Remove", "del": "Delete"}
+_WORDS = {"xp": "XP", "apr": "APR", "mia": "MIA", "pdf": "PDF", "id": "ID", "rsvp": "RSVP", "url": "URL"}
+
+
+def tool_label(name: str) -> str:
+    """Pure logic. A tool's name, said for a person: "add_maintenance_task"
+    -> "Add maintenance task", "get_life_events" -> "See life events"."""
+    words = [w for w in (name or "").split("_") if w]
+    if not words:
+        return ""
+    first = _VERBS.get(words[0], words[0].capitalize())
+    return " ".join([first] + [_WORDS.get(w, w) for w in words[1:]])
+
+
+def apps_page(context) -> dict:
+    """The Apps page (DEC-0017): every app MIA has, grouped by life area,
+    with what it's for, whether it's on the web yet, whether it's shown in
+    this person's sidebar, and what MIA can do in it (the Assistant tools
+    of its domains, so even an app without a web screen yet is reachable
+    by talking to MIA). Child-safe: a child sees only their apps and tools."""
+    from core.child_accounts import app_allowed, tool_allowed
+    from core.focus_presets import ALWAYS_VISIBLE
+
+    registry = getattr(context, "assistant_actions", None)
+    actions = list(getattr(registry, "_actions", {}).values()) if registry is not None else []
+    by_domain: dict[str, list] = {}
+    for action in actions:
+        by_domain.setdefault(action.domain, []).append(action)
+
+    def tools_of(app: App) -> list[dict]:
+        found = []
+        for domain in app.domains:
+            if not tool_allowed(context, domain):
+                continue
+            for action in sorted(by_domain.get(domain, ()), key=lambda a: a.name):
+                found.append({"name": action.name, "does": tool_label(action.name),
+                              "detail": _first_sentence(action.description)})
+        return found
+
+    groups = []
+    for group in GROUPS:
+        apps = []
+        for app in APPS:
+            if app.group != group or not app_allowed(context, app.module_id):
+                continue
+            apps.append({
+                "id": app.module_id, "name": app.name, "icon": app.icon, "tagline": app.tagline,
+                "description": app.description, "page": app.page, "on_web": bool(app.page),
+                "shown": _visible(context, app), "can_hide": app.module_id not in ALWAYS_VISIBLE,
+                "ask": app.ask, "tools": tools_of(app),
+            })
+        if apps:
+            groups.append({"name": group, "apps": apps})
+    total_apps = sum(len(g["apps"]) for g in groups)
+    return {
+        "groups": groups,
+        "counts": {"apps": total_apps, "on_web": sum(a["on_web"] for g in groups for a in g["apps"]),
+                   "tools": len({t["name"] for g in groups for a in g["apps"] for t in a["tools"]})},
     }

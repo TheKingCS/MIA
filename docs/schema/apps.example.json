@@ -1,0 +1,1617 @@
+{
+  "groups": [
+    {
+      "name": "Life, goals & self",
+      "apps": [
+        {
+          "id": "dashboard",
+          "name": "Home",
+          "icon": "🏠",
+          "tagline": "Your life. In sync.",
+          "description": "Recent activity, active missions, memories, and upcoming items at a glance.",
+          "page": "index.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": false,
+          "ask": "What's on today?",
+          "tools": [
+            {
+              "name": "get_today",
+              "does": "See today",
+              "detail": "Everything that needs the user today across all apps: overdue things, today's events, bills, maintenance, tasks, birthdays, things waiting (inbox, drafts), and what's coming in 3 days."
+            },
+            {
+              "name": "add_calendar_event",
+              "does": "Add calendar event",
+              "detail": "Add a new event to MIA's Calendar, optionally repeating yearly/monthly/weekly."
+            },
+            {
+              "name": "delete_calendar_event",
+              "does": "Delete calendar event",
+              "detail": "Delete an existing Calendar event in MIA by its title."
+            },
+            {
+              "name": "list_calendar_events",
+              "does": "See calendar events",
+              "detail": "List the user's upcoming/scheduled Calendar events in MIA — what's coming up today, this week, or on any date."
+            },
+            {
+              "name": "add_alarm",
+              "does": "Add alarm",
+              "detail": "Create a new alarm in MIA for a specific clock time (e.g."
+            },
+            {
+              "name": "delete_alarm",
+              "does": "Delete alarm",
+              "detail": "Delete an existing alarm in MIA by its label."
+            },
+            {
+              "name": "list_alarms",
+              "does": "See alarms",
+              "detail": "List the user's current alarms in MIA"
+            },
+            {
+              "name": "add_project",
+              "does": "Add project",
+              "detail": "Start a new Project (a container for tasks) in MIA's Project Manager tool."
+            },
+            {
+              "name": "add_task",
+              "does": "Add task",
+              "detail": "Add a new Task under an existing Project in MIA's Project Manager tool."
+            },
+            {
+              "name": "delete_project",
+              "does": "Delete project",
+              "detail": "Delete an existing Project (and unlink, but not delete, its Tasks) in MIA by name."
+            },
+            {
+              "name": "delete_task",
+              "does": "Delete task",
+              "detail": "Delete an existing Task in MIA by title."
+            },
+            {
+              "name": "list_projects",
+              "does": "See projects",
+              "detail": "List the user's Projects in MIA's Project Manager tool."
+            },
+            {
+              "name": "list_tasks",
+              "does": "See tasks",
+              "detail": "List the user's Tasks in MIA, optionally filtered to one Project by name."
+            },
+            {
+              "name": "mark_task_done",
+              "does": "Mark task done",
+              "detail": "Mark an existing Task as done (complete) or not done in MIA by title."
+            },
+            {
+              "name": "get_life_events",
+              "does": "See life events",
+              "detail": "What happened in the user's life over a period, from MIA's history: bills paid, missions completed, workouts, maintenance done, rent received, tasks done, and so on."
+            },
+            {
+              "name": "get_links",
+              "does": "See links",
+              "detail": "What's connected to one of the user's things, and what is waiting on it (depends on it, blocked by it), directly or down a chain."
+            },
+            {
+              "name": "link_things",
+              "does": "Link things",
+              "detail": "Remember how two of the user's things relate: a loan FUNDS a property, a project DEPENDS_ON a sale, a task is BLOCKED_BY something, a project SUPPORTS a goal, something is PART_OF another."
+            },
+            {
+              "name": "unlink_things",
+              "does": "Unlink things",
+              "detail": "Forget a link the user stated between two things."
+            },
+            {
+              "name": "link_my_reason",
+              "does": "Link my reason",
+              "detail": "Save one of the user's reasons: something they do (goal) serves a bigger goal (serves)."
+            },
+            {
+              "name": "mark_goal_achieved",
+              "does": "Mark goal achieved",
+              "detail": "Mark one of the user's goals achieved (e.g."
+            },
+            {
+              "name": "show_my_why",
+              "does": "See my why",
+              "detail": "Read back the user's chain of reasons with the facts behind each one."
+            },
+            {
+              "name": "unlink_my_reason",
+              "does": "Unlink my reason",
+              "detail": "Remove the link from one of the user's goals to the bigger goal it served."
+            }
+          ]
+        },
+        {
+          "id": "workout",
+          "name": "Workout",
+          "icon": "🏋",
+          "tagline": "Stronger body. Clearer mind.",
+          "description": "Exercises, templates, guided sessions, and progress.",
+          "page": "workout.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Log a 30 minute workout.",
+          "tools": [
+            {
+              "name": "get_personal_record",
+              "does": "See personal record",
+              "detail": "The user's personal record (heaviest set) for one exercise."
+            },
+            {
+              "name": "get_workout_summary",
+              "does": "See workout summary",
+              "detail": "How many workouts this week and what the last one was."
+            },
+            {
+              "name": "log_workout",
+              "does": "Log workout",
+              "detail": "Log a workout the user did."
+            }
+          ]
+        },
+        {
+          "id": "missions",
+          "name": "Missions",
+          "icon": "🏆",
+          "tagline": "Explore. Complete. Level up.",
+          "description": "Gamified goals and objectives, tied to a trip or general.",
+          "page": "missions.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Add a mission to build a chicken coop.",
+          "tools": [
+            {
+              "name": "add_mission",
+              "does": "Add mission",
+              "detail": "Start a new gamified Mission in MIA (e.g."
+            },
+            {
+              "name": "add_objective",
+              "does": "Add objective",
+              "detail": "Add an Objective to an existing Mission in MIA — either a manually-tracked tally (e.g."
+            },
+            {
+              "name": "complete_mission",
+              "does": "Complete mission",
+              "detail": "Mark an existing Mission as completed in MIA by name."
+            },
+            {
+              "name": "delete_mission",
+              "does": "Delete mission",
+              "detail": "Delete an existing Mission in MIA by name."
+            },
+            {
+              "name": "list_missions",
+              "does": "See missions",
+              "detail": "List the user's Missions in MIA, including each objective's progress."
+            },
+            {
+              "name": "log_mission_progress",
+              "does": "Log mission progress",
+              "detail": "Log progress toward a tally-type Objective on a Mission in MIA — e.g."
+            }
+          ]
+        },
+        {
+          "id": "skills",
+          "name": "Skills",
+          "icon": "⚔",
+          "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+          "description": "My Hero's Path — skill tree and character progression.",
+          "page": "skills.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Which skills am I growing?",
+          "tools": []
+        },
+        {
+          "id": "character",
+          "name": "Character",
+          "icon": "👤",
+          "tagline": "Your story so far.",
+          "description": "A living record of what you've actually done.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What have I done this week?",
+          "tools": []
+        },
+        {
+          "id": "observations",
+          "name": "Observations",
+          "icon": "🔍",
+          "tagline": "What MIA noticed.",
+          "description": "What MIA has noticed across your maintenance and missions.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What have you noticed lately?",
+          "tools": []
+        },
+        {
+          "id": "relationships",
+          "name": "People & Pets",
+          "icon": "👥",
+          "tagline": "The ones who matter.",
+          "description": "Relationship profiles and pet profiles.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "When is the next birthday?",
+          "tools": [
+            {
+              "name": "add_person",
+              "does": "Add person",
+              "detail": "Add someone the user knows to People (family, friends, coworkers)."
+            },
+            {
+              "name": "add_pet",
+              "does": "Add pet",
+              "detail": "Add a pet."
+            },
+            {
+              "name": "get_person",
+              "does": "See person",
+              "detail": "Everything MIA knows about a person: relationship, birthday, likes, gift ideas, notes."
+            },
+            {
+              "name": "get_pet",
+              "does": "See pet",
+              "detail": "Everything MIA knows about a pet, including medical history."
+            },
+            {
+              "name": "list_upcoming_birthdays",
+              "does": "See upcoming birthdays",
+              "detail": "Birthdays coming up soon among the people the user knows."
+            },
+            {
+              "name": "update_person",
+              "does": "Update person",
+              "detail": "Remember something about a person: their birthday, relationship, email address, something they like, a gift idea, or a dated note (e.g."
+            },
+            {
+              "name": "update_pet",
+              "does": "Update pet",
+              "detail": "Record something about a pet: a vet visit or medical note (dated), species, birthday, or another note."
+            }
+          ]
+        },
+        {
+          "id": "notes",
+          "name": "Notes",
+          "icon": "📝",
+          "tagline": "Write it down.",
+          "description": "Dated, searchable, taggable journal entries.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Make a note: call the plumber Friday.",
+          "tools": [
+            {
+              "name": "add_note",
+              "does": "Add note",
+              "detail": "Add a new journal/note entry in MIA's Notes module."
+            },
+            {
+              "name": "delete_note",
+              "does": "Delete note",
+              "detail": "Delete an existing journal/note entry in MIA's Notes module by its title."
+            },
+            {
+              "name": "list_notes",
+              "does": "See notes",
+              "detail": "List or search the user's journal/note entries in MIA's Notes module."
+            },
+            {
+              "name": "get_journal_reflection",
+              "does": "See journal reflection",
+              "detail": "Reflect on the user's week from their private journal: how often they journaled, what came up most, how their mood moved."
+            },
+            {
+              "name": "get_journal_themes",
+              "does": "See journal themes",
+              "detail": "What the user has been journaling about lately: how often, the most common themes, and moods."
+            },
+            {
+              "name": "read_private_journal",
+              "does": "Read private journal",
+              "detail": "Read back the user's private journal (sessions they journaled by talking with MIA), newest first, optionally only entries about a topic."
+            }
+          ]
+        },
+        {
+          "id": "classroom",
+          "name": "Classroom",
+          "icon": "🎓",
+          "tagline": "Keep learning.",
+          "description": "Your own subjects, courses, and lessons.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Quiz me on chapter 2.",
+          "tools": [
+            {
+              "name": "add_course",
+              "does": "Add course",
+              "detail": "Add a course to Classroom under a subject (creating the subject if new), optionally with its lessons."
+            },
+            {
+              "name": "add_lesson",
+              "does": "Add lesson",
+              "detail": "Add lesson(s) to an existing Classroom course."
+            },
+            {
+              "name": "add_lesson_notes",
+              "does": "Add lesson notes",
+              "detail": "Add what the user learned to a lesson's notes."
+            },
+            {
+              "name": "complete_lesson",
+              "does": "Complete lesson",
+              "detail": "Mark a Classroom lesson finished."
+            },
+            {
+              "name": "get_learning_progress",
+              "does": "See learning progress",
+              "detail": "Progress through Classroom subjects and what's next."
+            },
+            {
+              "name": "list_textbooks",
+              "does": "See textbooks",
+              "detail": "List the textbooks the user has added to MIA."
+            },
+            {
+              "name": "make_textbook_course",
+              "does": "Make textbook course",
+              "detail": "Make a Classroom course from one of the user's textbooks, one lesson per chapter."
+            },
+            {
+              "name": "search_textbook",
+              "does": "Search textbook",
+              "detail": "Find where the user's textbooks talk about something, with the page."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Money & business",
+      "apps": [
+        {
+          "id": "real_estate",
+          "name": "Real Estate",
+          "icon": "🏘",
+          "tagline": "Cash flow. Equity. Freedom.",
+          "description": "Property values, equity, rental income, and linked maintenance.",
+          "page": "real-estate.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How are my rentals doing this month?",
+          "tools": [
+            {
+              "name": "add_property",
+              "does": "Add property",
+              "detail": "Add a new real estate property to MIA's portfolio (value, mortgage balance, purchase info)."
+            },
+            {
+              "name": "get_property_summary",
+              "does": "See property summary",
+              "detail": "Get net operating income, cap rate, and equity for one property in MIA's real estate portfolio, by name."
+            },
+            {
+              "name": "list_properties",
+              "does": "See properties",
+              "detail": "List every property in MIA's real estate portfolio with its equity (value minus mortgage)."
+            },
+            {
+              "name": "record_rental_income",
+              "does": "Record rental income",
+              "detail": "When a specific property/address (e.g."
+            }
+          ]
+        },
+        {
+          "id": "budget",
+          "name": "Money",
+          "icon": "💰",
+          "tagline": "Know where it goes.",
+          "description": "Household bills, income, expenses, and tax-relevant totals.",
+          "page": "finances.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Which debt should I pay first?",
+          "tools": [
+            {
+              "name": "add_bill",
+              "does": "Add bill",
+              "detail": "Add a recurring or one-time household BILL (e.g."
+            },
+            {
+              "name": "add_expense",
+              "does": "Add expense",
+              "detail": "Record a household expense entry in MIA (groceries, car repair, etc.) — NOT a bill (a recurring scheduled obligation, use add_bill) and NOT a Workshop job cost."
+            },
+            {
+              "name": "add_income",
+              "does": "Add income",
+              "detail": "When the user states a specific new dollar amount of income received (e.g."
+            },
+            {
+              "name": "add_income_source",
+              "does": "Add income source",
+              "detail": "Add a RECURRING or EXPECTED income source to MIA — a paycheck, rental income, or other income that arrives on a schedule (a future expectation, not money already received)."
+            },
+            {
+              "name": "get_budget_summary",
+              "does": "See budget summary",
+              "detail": "When the user wants specific TOTALS or NUMBERS — how much income, how much spent, net cash flow, or tax-relevant subtotals — for a date range (e.g."
+            },
+            {
+              "name": "get_financial_checkin",
+              "does": "See financial checkin",
+              "detail": "When the user asks a general STATUS question about their finances — 'how are we doing financially', 'are we on budget', 'are we ok with money' — rather than asking for specific totals, get MIA's proactive financial check-in here: overdue/upcoming bills, when the next paycheck is expected and for how much, and any budget categories running over plan this month."
+            },
+            {
+              "name": "list_bills",
+              "does": "See bills",
+              "detail": "List MIA's household bills and their real due/overdue status, most urgent first."
+            },
+            {
+              "name": "mark_bill_paid",
+              "does": "Mark bill paid",
+              "detail": "Mark a household bill paid in MIA by name — records a real expense and advances a recurring bill's next due date."
+            },
+            {
+              "name": "mark_income_received",
+              "does": "Mark income received",
+              "detail": "When a tracked, recurring income source (a paycheck, rent, or similar already set up in MIA) has arrived and the user does NOT restate a new dollar amount (e.g."
+            },
+            {
+              "name": "set_budget_target",
+              "does": "Set budget target",
+              "detail": "Set the monthly budget for one spending category (e.g."
+            },
+            {
+              "name": "add_debt",
+              "does": "Add debt",
+              "detail": "Start tracking a credit card, loan or other debt (not a mortgage, which lives with Real Estate)."
+            },
+            {
+              "name": "get_debt_payoff_plan",
+              "does": "See debt payoff plan",
+              "detail": "Rank debts in the order to pay them off and explain why (interest rates, expiring promo rates)."
+            },
+            {
+              "name": "list_debts",
+              "does": "See debts",
+              "detail": "Summarize every open debt: balances, current interest rates, total owed and monthly minimums."
+            },
+            {
+              "name": "record_debt_payment",
+              "does": "Record debt payment",
+              "detail": "Record a payment the user made toward a tracked debt; reduces its balance and logs the expense."
+            },
+            {
+              "name": "update_debt",
+              "does": "Update debt",
+              "detail": "Change a tracked debt's balance, interest rate, minimum payment, or promo rate/end date."
+            },
+            {
+              "name": "get_build_costs",
+              "does": "See build costs",
+              "detail": "How much the user has spent on a build (vs its budget), or on all builds."
+            },
+            {
+              "name": "get_tool_costs",
+              "does": "See tool costs",
+              "detail": "What a tool or piece of equipment has cost the user in total (purchase plus upkeep), or all tools."
+            },
+            {
+              "name": "list_build_purchases",
+              "does": "See build purchases",
+              "detail": "List what the user has bought for a build (receipt items, biggest first)."
+            },
+            {
+              "name": "log_build_expense",
+              "does": "Log build expense",
+              "detail": "Record money spent on one of the user's builds or projects (greenhouse, walipini, fence, shed...): materials, hardware, rentals, contractors."
+            },
+            {
+              "name": "record_tool_purchase",
+              "does": "Record tool purchase",
+              "detail": "Record that the user bought a tool or piece of equipment, what it cost, and which build it was for if they said."
+            },
+            {
+              "name": "set_build_budget",
+              "does": "Set build budget",
+              "detail": "Set how much the user plans to spend on a build."
+            },
+            {
+              "name": "get_business_use",
+              "does": "See business use",
+              "detail": "The business-use percentage of a tool this year, and the business share of its running costs and purchase price, from the logged business use and its hour meter."
+            },
+            {
+              "name": "log_business_use",
+              "does": "Log business use",
+              "detail": "Log hours a tool or piece of equipment was used for BUSINESS (a lawn-care client, one of the user's rentals, contract work), for write-off records."
+            },
+            {
+              "name": "list_untagged_charges",
+              "does": "See untagged charges",
+              "detail": "List bank charges that haven't been sorted to one of the user's businesses (or personal) yet."
+            },
+            {
+              "name": "tag_charge",
+              "does": "Tag charge",
+              "detail": "Say which business a bank charge was for, or that it was personal."
+            }
+          ]
+        },
+        {
+          "id": "workshop",
+          "name": "Workshop",
+          "icon": "🔩",
+          "tagline": "Parts, jobs and products.",
+          "description": "Component inventory, fabrication materials/jobs/products, and a sales ledger.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How much plywood do I have?",
+          "tools": [
+            {
+              "name": "add_component",
+              "does": "Add component",
+              "detail": "Add a new electronic component to MIA's Workshop & Electronics component database."
+            },
+            {
+              "name": "adjust_component_quantity",
+              "does": "Adjust component quantity",
+              "detail": "Change how many of an electronics part the user has: negative when they used some, positive when they got more."
+            },
+            {
+              "name": "delete_component",
+              "does": "Delete component",
+              "detail": "Delete an existing electronic component in MIA by name."
+            },
+            {
+              "name": "list_components",
+              "does": "See components",
+              "detail": "List or search the user's electronic components in MIA"
+            },
+            {
+              "name": "add_material",
+              "does": "Add material",
+              "detail": "Add a raw Material to MIA's Workshop production pipeline (Materials tab)."
+            },
+            {
+              "name": "adjust_material_quantity",
+              "does": "Adjust material quantity",
+              "detail": "Change how much of a fabrication material is on hand: negative when used, positive when bought."
+            },
+            {
+              "name": "list_materials",
+              "does": "See materials",
+              "detail": "List the user's raw Materials in MIA's Workshop production pipeline."
+            },
+            {
+              "name": "update_material",
+              "does": "Update material",
+              "detail": "Update a material's details: cost per unit, unit, supplier, storage location, amount on hand, or reorder level."
+            },
+            {
+              "name": "add_job",
+              "does": "Add job",
+              "detail": "Start a new production Job in MIA's Workshop pipeline."
+            },
+            {
+              "name": "consume_material",
+              "does": "Consume material",
+              "detail": "Record that an existing Job consumed some quantity of an existing Material — deducts that quantity from the Material's own stock automatically."
+            },
+            {
+              "name": "list_jobs",
+              "does": "See jobs",
+              "detail": "List the user's production Jobs in MIA's Workshop pipeline."
+            },
+            {
+              "name": "produce_product",
+              "does": "Produce product",
+              "detail": "Record that an existing Job produced some quantity of an existing Product — credits that quantity onto the Product's own stock automatically."
+            },
+            {
+              "name": "add_product",
+              "does": "Add product",
+              "detail": "Add a finished Product to MIA's Workshop production pipeline (Products tab)."
+            },
+            {
+              "name": "adjust_product_stock",
+              "does": "Adjust product stock",
+              "detail": "Change how many of a finished product are in stock: positive when the user made more, negative for giveaways/losses."
+            },
+            {
+              "name": "list_products",
+              "does": "See products",
+              "detail": "List the user's finished Products in MIA's Workshop production pipeline."
+            },
+            {
+              "name": "get_ledger_summary",
+              "does": "See ledger summary",
+              "detail": "Get the user's total revenue, expenses, and net profit from MIA's Workshop Ledger."
+            },
+            {
+              "name": "record_sale",
+              "does": "Record sale",
+              "detail": "Record a sale of an existing Product in MIA's Workshop Ledger — deducts the sold quantity from the Product's stock and logs the revenue."
+            }
+          ]
+        },
+        {
+          "id": "inbox",
+          "name": "Inbox",
+          "icon": "📥",
+          "tagline": "Paperwork, handled.",
+          "description": "Receipts, manuals and documents MIA files for you.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What's waiting in my inbox?",
+          "tools": [
+            {
+              "name": "dismiss_inbox_item",
+              "does": "Dismiss inbox item",
+              "detail": "Remove a document from the inbox without filing it."
+            },
+            {
+              "name": "file_inbox_item",
+              "does": "File inbox item",
+              "detail": "File a document from the inbox: a receipt becomes an expense, a manual goes on the tool's page and its maintenance steps become tasks."
+            },
+            {
+              "name": "list_inbox",
+              "does": "See inbox",
+              "detail": "List the documents waiting in the user's inbox (receipts, manuals, warranties sent to MIA)."
+            },
+            {
+              "name": "draft_email",
+              "does": "Draft email",
+              "detail": "Write an email for the user as a draft they review."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Home, homestead & equipment",
+      "apps": [
+        {
+          "id": "greenhouse",
+          "name": "Greenhouse",
+          "icon": "🌱",
+          "tagline": "Grow food. Grow freedom.",
+          "description": "At-a-glance status for garden, greenhouse, and aquaponics assets.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What needs doing in the greenhouse?",
+          "tools": [
+            {
+              "name": "add_asset_note",
+              "does": "Add asset note",
+              "detail": "Record an observation about a tracked item or plant (e.g."
+            },
+            {
+              "name": "add_maintenance_asset",
+              "does": "Add maintenance asset",
+              "detail": "Add a new vehicle, power equipment, appliance, property item, tool, or garden/greenhouse plant or bed (category Garden/Plant) to MIA's Maintenance tracker (not Inventory, and not Workshop's electronics parts)."
+            },
+            {
+              "name": "add_maintenance_task",
+              "does": "Add maintenance task",
+              "detail": "Add a recurring or one-time CALENDAR-based maintenance task tied to an existing vehicle/equipment/appliance/property/tool asset in MIA (e.g."
+            },
+            {
+              "name": "complete_maintenance_task",
+              "does": "Complete maintenance task",
+              "detail": "Mark an EXISTING maintenance task complete/done because the user is reporting they already did it (past tense — 'I changed the oil in the truck', 'sharpened the mower blades', 'I watered the tomatoes')."
+            },
+            {
+              "name": "delete_maintenance_asset",
+              "does": "Delete maintenance asset",
+              "detail": "Delete a vehicle/equipment/appliance/property/tool from MIA's Maintenance tracker by name (also deletes its tasks)."
+            },
+            {
+              "name": "delete_maintenance_task",
+              "does": "Delete maintenance task",
+              "detail": "Delete a maintenance task in MIA by title (optionally naming the asset to disambiguate)."
+            },
+            {
+              "name": "get_maintenance_asset",
+              "does": "See maintenance asset",
+              "detail": "Tell the user everything MIA knows about one tracked vehicle, tool, appliance or plant: details, maintenance status, latest readings and notes."
+            },
+            {
+              "name": "list_maintenance_assets",
+              "does": "See maintenance assets",
+              "detail": "List every vehicle, power equipment, appliance, property item, tool and garden/greenhouse plant tracked in MIA's Maintenance tracker."
+            },
+            {
+              "name": "list_maintenance_tasks",
+              "does": "See maintenance tasks",
+              "detail": "List MIA's maintenance tasks and their real due/overdue status, optionally filtered by a keyword matching the task title or asset name ('greenhouse' or 'garden' lists plant care)."
+            },
+            {
+              "name": "log_maintenance_reading",
+              "does": "Log maintenance reading",
+              "detail": "Log a meter/sensor reading (mileage, engine hours, start count, a sensor value like battery voltage) for a tracked vehicle or tool, e.g."
+            },
+            {
+              "name": "update_maintenance_asset",
+              "does": "Update maintenance asset",
+              "detail": "Save details the user states about one of their tracked vehicles, tools, appliances or plants: make, model, serial number, purchase date, category, or a new name."
+            }
+          ]
+        },
+        {
+          "id": "garage",
+          "name": "Garage",
+          "icon": "🚗",
+          "tagline": "Keep it running. Keep it ready.",
+          "description": "At-a-glance status for vehicles and motorized equipment.",
+          "page": "garage.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What's overdue on my vehicles?",
+          "tools": [
+            {
+              "name": "add_asset_note",
+              "does": "Add asset note",
+              "detail": "Record an observation about a tracked item or plant (e.g."
+            },
+            {
+              "name": "add_maintenance_asset",
+              "does": "Add maintenance asset",
+              "detail": "Add a new vehicle, power equipment, appliance, property item, tool, or garden/greenhouse plant or bed (category Garden/Plant) to MIA's Maintenance tracker (not Inventory, and not Workshop's electronics parts)."
+            },
+            {
+              "name": "add_maintenance_task",
+              "does": "Add maintenance task",
+              "detail": "Add a recurring or one-time CALENDAR-based maintenance task tied to an existing vehicle/equipment/appliance/property/tool asset in MIA (e.g."
+            },
+            {
+              "name": "complete_maintenance_task",
+              "does": "Complete maintenance task",
+              "detail": "Mark an EXISTING maintenance task complete/done because the user is reporting they already did it (past tense — 'I changed the oil in the truck', 'sharpened the mower blades', 'I watered the tomatoes')."
+            },
+            {
+              "name": "delete_maintenance_asset",
+              "does": "Delete maintenance asset",
+              "detail": "Delete a vehicle/equipment/appliance/property/tool from MIA's Maintenance tracker by name (also deletes its tasks)."
+            },
+            {
+              "name": "delete_maintenance_task",
+              "does": "Delete maintenance task",
+              "detail": "Delete a maintenance task in MIA by title (optionally naming the asset to disambiguate)."
+            },
+            {
+              "name": "get_maintenance_asset",
+              "does": "See maintenance asset",
+              "detail": "Tell the user everything MIA knows about one tracked vehicle, tool, appliance or plant: details, maintenance status, latest readings and notes."
+            },
+            {
+              "name": "list_maintenance_assets",
+              "does": "See maintenance assets",
+              "detail": "List every vehicle, power equipment, appliance, property item, tool and garden/greenhouse plant tracked in MIA's Maintenance tracker."
+            },
+            {
+              "name": "list_maintenance_tasks",
+              "does": "See maintenance tasks",
+              "detail": "List MIA's maintenance tasks and their real due/overdue status, optionally filtered by a keyword matching the task title or asset name ('greenhouse' or 'garden' lists plant care)."
+            },
+            {
+              "name": "log_maintenance_reading",
+              "does": "Log maintenance reading",
+              "detail": "Log a meter/sensor reading (mileage, engine hours, start count, a sensor value like battery voltage) for a tracked vehicle or tool, e.g."
+            },
+            {
+              "name": "update_maintenance_asset",
+              "does": "Update maintenance asset",
+              "detail": "Save details the user states about one of their tracked vehicles, tools, appliances or plants: make, model, serial number, purchase date, category, or a new name."
+            }
+          ]
+        },
+        {
+          "id": "kitchen",
+          "name": "Kitchen",
+          "icon": "🍳",
+          "tagline": "Good food. Good mood.",
+          "description": "Recipes, pantry, grocery list, and meal tracking.",
+          "page": "kitchen.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What can I make with what's in the pantry?",
+          "tools": [
+            {
+              "name": "add_recipe",
+              "does": "Add recipe",
+              "detail": "Save a new recipe."
+            },
+            {
+              "name": "list_recipes",
+              "does": "See recipes",
+              "detail": "List saved recipes, optionally filtered by name or category."
+            },
+            {
+              "name": "log_meal",
+              "does": "Log meal",
+              "detail": "Record that the user made/ate a saved recipe."
+            },
+            {
+              "name": "suggest_recipes",
+              "does": "Suggest recipes",
+              "detail": "Suggest recipes the user can make from what's in the pantry, and ones that need only an item or two."
+            },
+            {
+              "name": "add_grocery_item",
+              "does": "Add grocery item",
+              "detail": "Add one or more items to the grocery/shopping list."
+            },
+            {
+              "name": "add_pantry_item",
+              "does": "Add pantry item",
+              "detail": "Record something the user has in the pantry/fridge and how much (updates the amount if it's already listed)."
+            },
+            {
+              "name": "add_recipe_ingredients_to_grocery_list",
+              "does": "Add recipe ingredients to grocery list",
+              "detail": "Add whatever a saved recipe needs that isn't in the pantry to the grocery list."
+            },
+            {
+              "name": "check_off_grocery_item",
+              "does": "Check off grocery item",
+              "detail": "Check items off the grocery list once the user has bought them."
+            },
+            {
+              "name": "list_grocery_list",
+              "does": "See grocery list",
+              "detail": "Read back what's still on the grocery list."
+            },
+            {
+              "name": "list_pantry",
+              "does": "See pantry",
+              "detail": "Read back what's in the pantry and what's run out."
+            },
+            {
+              "name": "update_pantry_item",
+              "does": "Update pantry item",
+              "detail": "Change how much of a pantry item is left."
+            }
+          ]
+        },
+        {
+          "id": "household",
+          "name": "Household",
+          "icon": "🧺",
+          "tagline": "A home that runs itself.",
+          "description": "Daily and weekly household routines — laundry, dishes, chores.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "I did the dishes.",
+          "tools": [
+            {
+              "name": "add_household_routine",
+              "does": "Add household routine",
+              "detail": "Set up a new recurring household routine with a daily or weekly goal and a streak (e.g."
+            },
+            {
+              "name": "list_household_routines",
+              "does": "See household routines",
+              "detail": "Today's/this week's household routines (laundry, dishes, chores): progress and streaks."
+            },
+            {
+              "name": "log_household_routine",
+              "does": "Log household routine",
+              "detail": "Count progress on a household routine the user did (e.g."
+            }
+          ]
+        },
+        {
+          "id": "maintenance",
+          "name": "Maintenance",
+          "icon": "🔧",
+          "tagline": "Everything you own, cared for.",
+          "description": "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "I put 120 hours on the mower.",
+          "tools": [
+            {
+              "name": "add_asset_note",
+              "does": "Add asset note",
+              "detail": "Record an observation about a tracked item or plant (e.g."
+            },
+            {
+              "name": "add_maintenance_asset",
+              "does": "Add maintenance asset",
+              "detail": "Add a new vehicle, power equipment, appliance, property item, tool, or garden/greenhouse plant or bed (category Garden/Plant) to MIA's Maintenance tracker (not Inventory, and not Workshop's electronics parts)."
+            },
+            {
+              "name": "add_maintenance_task",
+              "does": "Add maintenance task",
+              "detail": "Add a recurring or one-time CALENDAR-based maintenance task tied to an existing vehicle/equipment/appliance/property/tool asset in MIA (e.g."
+            },
+            {
+              "name": "complete_maintenance_task",
+              "does": "Complete maintenance task",
+              "detail": "Mark an EXISTING maintenance task complete/done because the user is reporting they already did it (past tense — 'I changed the oil in the truck', 'sharpened the mower blades', 'I watered the tomatoes')."
+            },
+            {
+              "name": "delete_maintenance_asset",
+              "does": "Delete maintenance asset",
+              "detail": "Delete a vehicle/equipment/appliance/property/tool from MIA's Maintenance tracker by name (also deletes its tasks)."
+            },
+            {
+              "name": "delete_maintenance_task",
+              "does": "Delete maintenance task",
+              "detail": "Delete a maintenance task in MIA by title (optionally naming the asset to disambiguate)."
+            },
+            {
+              "name": "get_maintenance_asset",
+              "does": "See maintenance asset",
+              "detail": "Tell the user everything MIA knows about one tracked vehicle, tool, appliance or plant: details, maintenance status, latest readings and notes."
+            },
+            {
+              "name": "list_maintenance_assets",
+              "does": "See maintenance assets",
+              "detail": "List every vehicle, power equipment, appliance, property item, tool and garden/greenhouse plant tracked in MIA's Maintenance tracker."
+            },
+            {
+              "name": "list_maintenance_tasks",
+              "does": "See maintenance tasks",
+              "detail": "List MIA's maintenance tasks and their real due/overdue status, optionally filtered by a keyword matching the task title or asset name ('greenhouse' or 'garden' lists plant care)."
+            },
+            {
+              "name": "log_maintenance_reading",
+              "does": "Log maintenance reading",
+              "detail": "Log a meter/sensor reading (mileage, engine hours, start count, a sensor value like battery voltage) for a tracked vehicle or tool, e.g."
+            },
+            {
+              "name": "update_maintenance_asset",
+              "does": "Update maintenance asset",
+              "detail": "Save details the user states about one of their tracked vehicles, tools, appliances or plants: make, model, serial number, purchase date, category, or a new name."
+            },
+            {
+              "name": "get_item_owner",
+              "does": "See item owner",
+              "detail": "Whose a vehicle, tool or appliance is."
+            },
+            {
+              "name": "set_item_owner",
+              "does": "Set item owner",
+              "detail": "Say whose a vehicle, tool or appliance is: the user's, another household member's, or shared."
+            }
+          ]
+        },
+        {
+          "id": "property",
+          "name": "Property",
+          "icon": "🏠",
+          "tagline": "The house, the appliances, the tools.",
+          "description": "At-a-glance status for the house, appliances, and tools.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Do I have any furnace filters left?",
+          "tools": [
+            {
+              "name": "add_inventory_item",
+              "does": "Add inventory item",
+              "detail": "Add a new item to MIA's general Inventory tool."
+            },
+            {
+              "name": "adjust_inventory_quantity",
+              "does": "Adjust inventory quantity",
+              "detail": "Change the quantity of an existing inventory item by an amount (positive to add more, negative to use/remove some), e.g."
+            },
+            {
+              "name": "delete_inventory_item",
+              "does": "Delete inventory item",
+              "detail": "Remove an item entirely from MIA's Inventory tool by name."
+            },
+            {
+              "name": "list_inventory",
+              "does": "See inventory",
+              "detail": "List or search MIA's Inventory tool, including quantities."
+            }
+          ]
+        },
+        {
+          "id": "power",
+          "name": "Power",
+          "icon": "🔋",
+          "tagline": "Energy, tracked.",
+          "description": "Battery status and manual energy/utility tracking.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How's the battery?",
+          "tools": [
+            {
+              "name": "get_power_status",
+              "does": "See power status",
+              "detail": "Get this device's current battery/power status."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Outdoors & field",
+      "apps": [
+        {
+          "id": "expeditions",
+          "name": "Expeditions",
+          "icon": "🏕",
+          "tagline": "Plan the trip.",
+          "description": "Expedition Mode: trip routes, gear, weather, and logged speed/distance for any outing.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Plan a weekend camping trip.",
+          "tools": [
+            {
+              "name": "add_expedition",
+              "does": "Add expedition",
+              "detail": "Start a new Expedition (a dated outing that can hold multiple trips) in MIA's Expeditions module."
+            },
+            {
+              "name": "add_gear_item",
+              "does": "Add gear item",
+              "detail": "Add an item to a Trip's gear checklist in MIA"
+            },
+            {
+              "name": "add_trip",
+              "does": "Add trip",
+              "detail": "Add a new Trip (one hike, paddle, ride, fishing trip, etc.) under an existing Expedition in MIA"
+            },
+            {
+              "name": "add_trip_log_entry",
+              "does": "Add trip log entry",
+              "detail": "Add a dated journal/log entry to a specific Trip in MIA, optionally recording weather/conditions."
+            },
+            {
+              "name": "delete_expedition",
+              "does": "Delete expedition",
+              "detail": "Delete an existing Expedition in MIA by name."
+            },
+            {
+              "name": "delete_trip",
+              "does": "Delete trip",
+              "detail": "Delete an existing Trip in MIA by name."
+            },
+            {
+              "name": "get_trip_summary",
+              "does": "See trip summary",
+              "detail": "Get a Trip's logged distance, average speed, and planned route distance in MIA"
+            },
+            {
+              "name": "list_expeditions",
+              "does": "See expeditions",
+              "detail": "List the user's Expeditions in MIA"
+            },
+            {
+              "name": "list_trips",
+              "does": "See trips",
+              "detail": "List the user's Trips in MIA, optionally filtered to one Expedition by name."
+            },
+            {
+              "name": "recall_expedition",
+              "does": "Recall expedition",
+              "detail": "Get a detailed recap of ONE Expedition in MIA's Memories: duration, distance/pace per activity type, waypoint categories visited, latest journal/conditions entry, and photo count."
+            },
+            {
+              "name": "toggle_gear_packed",
+              "does": "Toggle gear packed",
+              "detail": "Mark a gear checklist item on a Trip as packed or not packed (toggles its current state)."
+            }
+          ]
+        },
+        {
+          "id": "memories",
+          "name": "Memories",
+          "icon": "📸",
+          "tagline": "Remember the trip.",
+          "description": "Trip recaps, stats, and photos from your Expeditions.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Show me my last trip.",
+          "tools": []
+        },
+        {
+          "id": "maps",
+          "name": "Maps",
+          "icon": "🗺",
+          "tagline": "Know the ground.",
+          "description": "Waypoints, a real offline basemap, and official trail maps.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Which trail maps do I have?",
+          "tools": [
+            {
+              "name": "add_trail_map_from_url",
+              "does": "Add trail map from URL",
+              "detail": "Download a trail map PDF from a direct URL and add it to MIA's trail map catalog."
+            },
+            {
+              "name": "delete_trail_map",
+              "does": "Delete trail map",
+              "detail": "Delete a cataloged trail map PDF from MIA's Maps module by park name."
+            },
+            {
+              "name": "list_trail_maps",
+              "does": "See trail maps",
+              "detail": "List the trail map PDFs cataloged in MIA's Maps module, optionally filtered by park name or state."
+            }
+          ]
+        },
+        {
+          "id": "navigation",
+          "name": "Navigation",
+          "icon": "🧭",
+          "tagline": "Find the way.",
+          "description": "Waypoints, distance/bearing, and sun/moon reference.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How far is camp from the trailhead?",
+          "tools": [
+            {
+              "name": "add_waypoint",
+              "does": "Add waypoint",
+              "detail": "Save a new named waypoint (location) in MIA's Navigation module."
+            },
+            {
+              "name": "delete_waypoint",
+              "does": "Delete waypoint",
+              "detail": "Delete an existing saved waypoint in MIA's Navigation module by name."
+            },
+            {
+              "name": "get_sun_moon_info",
+              "does": "See sun moon info",
+              "detail": "Get today's sunrise/sunset times and moon phase for a saved waypoint's location — real survival-relevant info (how much daylight is left, moon phase for night navigation)."
+            },
+            {
+              "name": "list_waypoints",
+              "does": "See waypoints",
+              "detail": "List or search the user's saved waypoints (named locations) in MIA's Navigation module."
+            },
+            {
+              "name": "waypoint_distance",
+              "does": "Waypoint distance",
+              "detail": "Get the distance and compass bearing between two of the user's saved waypoints, by name."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Knowledge, tools & system",
+      "apps": [
+        {
+          "id": "knowledge",
+          "name": "Knowledge",
+          "icon": "📚",
+          "tagline": "The offline library.",
+          "description": "Offline reference material and personal knowledge base.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How do I purify water?",
+          "tools": []
+        },
+        {
+          "id": "toolbox",
+          "name": "Toolbox",
+          "icon": "🧰",
+          "tagline": "Quick tools.",
+          "description": "Calculators, unit conversion, and other quick tools.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Convert 5 gallons to liters.",
+          "tools": [
+            {
+              "name": "calculate_ohms_law",
+              "does": "Calculate ohms law",
+              "detail": "Solve Ohm's Law (V = I x R) for voltage, current, or resistance, given the other two values, using MIA's Ohm's Law calculator."
+            },
+            {
+              "name": "convert_units",
+              "does": "Convert units",
+              "detail": "Convert a numeric value between two units of measurement using MIA's Unit Converter (length, area, volume, weight, temperature, speed, pressure, energy, power, time, data storage, angle, or fuel economy)."
+            }
+          ]
+        },
+        {
+          "id": "lab",
+          "name": "The Lab",
+          "icon": "🧪",
+          "tagline": "Experiments and sensors.",
+          "description": "Sensor testing, experiments, calibration, and graphs.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Start a temperature experiment.",
+          "tools": [
+            {
+              "name": "list_lab_readings",
+              "does": "See lab readings",
+              "detail": "List the logged readings for one Data Logger series in MIA's Lab module, oldest first."
+            },
+            {
+              "name": "list_lab_series",
+              "does": "See lab series",
+              "detail": "List every Data Logger series name in MIA's Lab module that has at least one logged reading."
+            },
+            {
+              "name": "log_lab_reading",
+              "does": "Log lab reading",
+              "detail": "Log a manual sensor/experiment/measurement reading in MIA's Lab (Data Logger) under a named series (e.g."
+            }
+          ]
+        },
+        {
+          "id": "field_kit",
+          "name": "Field Kit",
+          "icon": "🛠",
+          "tagline": "Devices and scripts.",
+          "description": "Detect and manage connected devices; run your own scripts.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What devices are connected?",
+          "tools": [
+            {
+              "name": "list_connected_devices",
+              "does": "See connected devices",
+              "detail": "List currently connected external USB storage and serial devices in MIA's Field Kit."
+            },
+            {
+              "name": "list_scripts",
+              "does": "See scripts",
+              "detail": "List the user's saved scripts in MIA's Field Kit script library."
+            },
+            {
+              "name": "calculate_subnet",
+              "does": "Calculate subnet",
+              "detail": "Calculate subnet/CIDR details (network address, broadcast, netmask, usable host range) for an IPv4 or IPv6 CIDR."
+            },
+            {
+              "name": "check_password_strength",
+              "does": "Check password strength",
+              "detail": "Estimate a password's strength (entropy-based rating and warnings)."
+            },
+            {
+              "name": "identify_hash",
+              "does": "Identify hash",
+              "detail": "Identify the likely algorithm(s) for a hash string (e.g."
+            },
+            {
+              "name": "scan_ports",
+              "does": "Scan ports",
+              "detail": "Quickly check whether 3 common ports (22 SSH, 80 HTTP, 443 HTTPS) are open on a host."
+            }
+          ]
+        },
+        {
+          "id": "files",
+          "name": "Files",
+          "icon": "🗂",
+          "tagline": "Your files.",
+          "description": "Browse and manage local files and data.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "",
+          "tools": []
+        },
+        {
+          "id": "music",
+          "name": "Music",
+          "icon": "🎵",
+          "tagline": "Your music.",
+          "description": "Local audio library, playlists, and playback.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Play something relaxing.",
+          "tools": [
+            {
+              "name": "get_now_playing",
+              "does": "See now playing",
+              "detail": "Get the title/artist and playback position of whatever song is currently playing."
+            },
+            {
+              "name": "next_track",
+              "does": "Next track",
+              "detail": "Skip to the next track in the current music queue."
+            },
+            {
+              "name": "pause_music",
+              "does": "Pause music",
+              "detail": "Pause the currently playing music."
+            },
+            {
+              "name": "play_playlist",
+              "does": "Play playlist",
+              "detail": "Play one of MIA's saved music playlists, by name."
+            },
+            {
+              "name": "play_track",
+              "does": "Play track",
+              "detail": "Play a specific song from MIA's local music library, by title or artist."
+            },
+            {
+              "name": "previous_track",
+              "does": "Previous track",
+              "detail": "Go back to the previous track in the current music queue."
+            },
+            {
+              "name": "resume_music",
+              "does": "Resume music",
+              "detail": "Resume/unpause the currently paused music."
+            },
+            {
+              "name": "set_music_volume",
+              "does": "Set music volume",
+              "detail": "Set the music player's own playback volume (separate from the device's system volume)."
+            },
+            {
+              "name": "stop_music",
+              "does": "Stop music",
+              "detail": "Stop music playback entirely (clears the play queue, unlike pause)."
+            }
+          ]
+        },
+        {
+          "id": "assistant",
+          "name": "MIA Assistant",
+          "icon": "🗨",
+          "tagline": "Talk it through.",
+          "description": "Conversational assistant and local AI.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": false,
+          "ask": "Undo that.",
+          "tools": [
+            {
+              "name": "get_held_back_messages",
+              "does": "See held back messages",
+              "detail": "What MIA chose not to tell the user today (held back or waiting), and why, plus how often she spoke up."
+            },
+            {
+              "name": "get_message_reason",
+              "does": "See message reason",
+              "detail": "Explain why MIA sent her most recent message on her own, and how to stop that kind."
+            },
+            {
+              "name": "mute_message_topic",
+              "does": "Mute message topic",
+              "detail": "Stop one kind of message MIA sends on her own (e.g."
+            },
+            {
+              "name": "resume_message_topic",
+              "does": "Resume message topic",
+              "detail": "Bring back a kind of message MIA stopped sending because the user kept dismissing it."
+            },
+            {
+              "name": "set_message_limit",
+              "does": "Set message limit",
+              "detail": "Change how many times a day MIA may message the user on her own."
+            },
+            {
+              "name": "get_recent_changes",
+              "does": "See recent changes",
+              "detail": "List what MIA recently changed for the user, newest first."
+            },
+            {
+              "name": "undo_last_change",
+              "does": "Undo last change",
+              "detail": "Undo the most recent change MIA made for the user (an item added, a chore checked off...)."
+            },
+            {
+              "name": "check_my_setup",
+              "does": "Check my setup",
+              "detail": "Check what's set up on this MIA (model, voice, reading photos, phone, data, account) and what to fix."
+            },
+            {
+              "name": "get_connectivity_status",
+              "does": "See connectivity status",
+              "detail": "Check whether MIA has an internet connection right now, and explain what she can still do offline versus what needs the internet."
+            },
+            {
+              "name": "get_device_profile",
+              "does": "See device profile",
+              "detail": "Tell the user which MIA EDITION (hardware/software variant) this device is running: Core (Pi 5 + AI HAT+ 2 field edition) or Home (desktop workstation edition)."
+            },
+            {
+              "name": "get_life_state",
+              "does": "See life state",
+              "detail": "Give a synthesized status report of what's currently going on in the active profile's life — active missions, live streaks, skill trends (growing/declining/dormant), open system observations, overdue maintenance, and active projects, all in one answer."
+            },
+            {
+              "name": "get_system_health",
+              "does": "See system health",
+              "detail": "Get a live snapshot of this device's system health: CPU, memory, disk, temperature, and network usage."
+            },
+            {
+              "name": "list_field_captures",
+              "does": "See field captures",
+              "detail": "List pending field captures — voice notes recorded on a MIA Lite field device, waiting for review before they become real Journal entries."
+            },
+            {
+              "name": "list_observations",
+              "does": "See observations",
+              "detail": "List everything MIA has currently noticed and hasn't resolved yet — overdue/due-soon Maintenance tasks and Missions that have gone stale."
+            },
+            {
+              "name": "list_profiles",
+              "does": "See profiles",
+              "detail": "List the user ACCOUNTS/PEOPLE set up on this MIA device (e.g."
+            },
+            {
+              "name": "open_module",
+              "does": "Open module",
+              "detail": "Open/navigate to a MIA module by its module_id."
+            },
+            {
+              "name": "recall_recent_activity",
+              "does": "Recall recent activity",
+              "detail": "Look up what the user has recently done in MIA (modules opened, notifications, profile switches), optionally filtered by a keyword."
+            },
+            {
+              "name": "remind_when_online",
+              "does": "Remind when online",
+              "detail": "Remind the user about something as soon as MIA's internet connection is back (e.g."
+            },
+            {
+              "name": "set_birthday",
+              "does": "Set birthday",
+              "detail": "Remember the current user's own birthday, so MIA can recognize and celebrate it."
+            },
+            {
+              "name": "set_theme",
+              "does": "Set theme",
+              "detail": "Change MIA's visual theme."
+            }
+          ]
+        },
+        {
+          "id": "diagnostics",
+          "name": "Diagnostics",
+          "icon": "🩺",
+          "tagline": "How MIA is doing.",
+          "description": "System health, logs, and hardware status.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How is the computer doing?",
+          "tools": []
+        },
+        {
+          "id": "module_browser",
+          "name": "Apps",
+          "icon": "🧩",
+          "tagline": "Everything MIA can do.",
+          "description": "View, enable/disable, install, and rescan modules.",
+          "page": "apps.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": false,
+          "ask": "",
+          "tools": []
+        },
+        {
+          "id": "settings",
+          "name": "Settings",
+          "icon": "⚙",
+          "tagline": "Make MIA yours.",
+          "description": "Configure MIA — theme, user info, module options.",
+          "page": null,
+          "on_web": false,
+          "shown": true,
+          "can_hide": false,
+          "ask": "Make the text bigger.",
+          "tools": [
+            {
+              "name": "read_screen",
+              "does": "Read screen",
+              "detail": "Read the screen that's open aloud to the user."
+            },
+            {
+              "name": "set_high_contrast",
+              "does": "Set high contrast",
+              "detail": "Turn high contrast (black and white with yellow highlights) on or off for the user."
+            },
+            {
+              "name": "set_text_size",
+              "does": "Set text size",
+              "detail": "Make the text on screen bigger or smaller for the user (normal, larger, largest, huge)."
+            },
+            {
+              "name": "get_app_focus",
+              "does": "See app focus",
+              "detail": "What focus the user's Apps screen has and which apps are tucked away."
+            },
+            {
+              "name": "set_app_focus",
+              "does": "Set app focus",
+              "detail": "Set which apps come first for the user: a focus of Personal, Home & Family, Homestead, Business or Student."
+            },
+            {
+              "name": "set_app_visibility",
+              "does": "Set app visibility",
+              "detail": "Show or hide one app on the user's own Apps screen (it still opens from Modules or by asking)."
+            },
+            {
+              "name": "add_starter_set",
+              "does": "Add starter set",
+              "detail": "Add a starter set: Home & Family, Homestead, Student, Personal, Business or Fitness."
+            },
+            {
+              "name": "list_starter_sets",
+              "does": "See starter sets",
+              "detail": "List the starter sets (ready-made chores, routines, upkeep schedules and workouts for a kind of life), or what's in one."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "apps": 34,
+    "on_web": 9,
+    "tools": 201
+  }
+}

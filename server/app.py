@@ -480,6 +480,13 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return shell(view_for(context, profile_id))
 
+    @app.get("/api/apps")
+    def web_apps(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_surfaces import apps_page
+
+        with app.state.turn_lock:
+            return apps_page(view_for(context, profile_id))
+
     @app.get("/api/home")
     def web_home(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_surfaces import home

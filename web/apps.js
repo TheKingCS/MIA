@@ -1,0 +1,82 @@
+/*
+ * apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps();
+ * filtering is only matching the words typed against what the engine sent.
+ */
+(function () {
+  "use strict";
+  const { el, act, talk } = MIAShell;
+  const $ = (id) => document.getElementById(id);
+  let data = null;
+  let filter = "all"; // all | web | ask
+
+  function card(app) {
+    const tools = app.tools.length
+      ? el("details", { class: "app-tools" },
+        el("summary", {}, "What MIA can do here (" + app.tools.length + ")"),
+        el("ul", {}, app.tools.map((t) => el("li", { title: t.detail }, t.does))))
+      : null;
+    const open = app.on_web
+      ? el("a", { class: "btn btn-green", href: app.page }, "Open")
+      : el("button", { type: "button", class: "btn btn-amber", onclick: () => talk(true, app.ask || "") },
+        "Ask MIA");
+    const toggle = app.can_hide
+      ? el("button", {
+        type: "button", class: "btn btn-ghost",
+        onclick: () => act({ kind: "app.visibility", params: { module_id: app.id, visible: !app.shown } }),
+      }, app.shown ? "Hide" : "Show")
+      : null;
+    return el("article", { class: "glass app-card" + (app.shown ? "" : " is-hidden"), "data-id": app.id },
+      el("div", { class: "app-head" },
+        el("span", { class: "app-icon", "aria-hidden": "true" }, app.icon),
+        el("div", {}, el("h3", {}, app.name), el("p", { class: "app-tag" }, app.tagline))),
+      el("p", { class: "app-desc" }, app.description),
+      el("div", { class: "app-chips" },
+        el("span", { class: "chip " + (app.on_web ? "chip-ok" : "chip-soon") },
+          app.on_web ? "On the web" : "In the PC app · ask MIA here"),
+        app.shown ? null : el("span", { class: "chip" }, "Hidden from your apps")),
+      app.ask ? el("p", { class: "app-ask" }, "Try: “" + app.ask + "”") : null,
+      tools,
+      el("div", { class: "app-actions" }, open, toggle));
+  }
+
+  function matches(app, words) {
+    if (filter === "web" && !app.on_web) return false;
+    if (filter === "ask" && app.on_web) return false;
+    if (!words) return true;
+    const text = [app.name, app.tagline, app.description, app.ask, ...app.tools.map((t) => t.does + " " + t.detail)]
+      .join(" ").toLowerCase();
+    return words.split(/\s+/).every((w) => text.includes(w));
+  }
+
+  function draw() {
+    const words = $("find").value.trim().toLowerCase();
+    let shown = 0;
+    $("groups").replaceChildren(...data.groups.map((g) => {
+      const apps = g.apps.filter((a) => matches(a, words));
+      shown += apps.length;
+      if (!apps.length) return "";
+      return el("section", { class: "app-group" },
+        el("div", { class: "sect" }, el("h2", {}, g.name), el("span", { class: "more" }, apps.length + "")),
+        el("div", { class: "app-grid" }, apps.map(card)));
+    }));
+    $("nothing").hidden = shown > 0;
+  }
+
+  async function render() {
+    data = await MIA.apps();
+    const c = data.counts;
+    $("strip").replaceChildren(
+      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.apps), el("span", { class: "t" }, "apps")),
+      el("div", { class: "cell soon" }, el("span", { class: "n" }, c.on_web), el("span", { class: "t" }, "on the web so far")),
+      el("div", { class: "cell" }, el("span", { class: "n" }, c.tools), el("span", { class: "t" }, "things MIA can do for you")));
+    const tabs = [["all", "All"], ["web", "On the web"], ["ask", "Ask MIA"]];
+    $("tabs").replaceChildren(...tabs.map(([id, label]) => el("button", {
+      type: "button", role: "tab", "aria-selected": String(filter === id),
+      onclick: () => { filter = id; render(); },
+    }, label)));
+    draw();
+  }
+
+  $("find").addEventListener("input", () => data && draw());
+  MIAShell.start(render);
+})();

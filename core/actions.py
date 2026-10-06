@@ -215,6 +215,40 @@ def _log_routine(context, params) -> str:
     return f"{template.name}: {objective.progress:g} of {objective.target:g}."
 
 
+def _app(params):
+    from core.web_surfaces import APPS_BY_ID
+
+    app = APPS_BY_ID.get(str(params.get("module_id", "")))
+    if app is None:
+        raise ActionError("There's no app by that name.")
+    return app
+
+
+def _describe_app(context, params) -> str:
+    from core.child_accounts import app_allowed
+    from core.focus_presets import ALWAYS_VISIBLE
+
+    app = _app(params)
+    if params.get("visible", True) in (False, "false", 0, "0"):
+        if app.module_id in ALWAYS_VISIBLE:
+            raise ActionError(f"{app.name} always stays, so you can always find your way back.")
+        return f"Hide {app.name} from your apps"
+    if not app_allowed(context, app.module_id):
+        from core.child_accounts import ASK_A_PARENT
+
+        raise ActionError(ASK_A_PARENT)
+    return f"Show {app.name} in your apps"
+
+
+def _set_app(context, params) -> str:
+    from core.focus_presets import set_app_visible
+
+    app = _app(params)
+    visible = params.get("visible", True) not in (False, "false", 0, "0")
+    set_app_visible(context, app.module_id, visible)
+    return f"{app.name} is {'in your apps' if visible else 'tucked away. Show it again from Apps any time'}."
+
+
 ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
     ActionType("bill.pay", "Mark paid", {"bill_id": "the bill", "amount": "optional: what was paid, if different"},
                _describe_bill, _pay_bill),
@@ -225,6 +259,8 @@ ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
     ActionType("task.done", "Done", {"task_id": "the project task"}, _describe_task, _do_task, child_ok=True),
     ActionType("routine.log", "Log it", {"template_id": "the routine", "amount": "optional: how many times"},
                _describe_routine, _log_routine, child_ok=True),
+    ActionType("app.visibility", "Show / hide", {"module_id": "the app", "visible": "true to show, false to hide"},
+               _describe_app, _set_app, child_ok=True),
 )}
 
 
