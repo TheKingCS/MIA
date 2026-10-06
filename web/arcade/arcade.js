@@ -46,10 +46,22 @@
       price: 1, path: "games/pet.html", live: true,
     },
     {
-      id: "orbit", name: "Orbit", art: "🛰️", glow: "rgba(95,214,200,0.5)",
+      id: "snake", name: "Snake", art: "🐍", glow: "rgba(95,214,200,0.55)",
+      hook: "The timeless one. Eat, grow, don't bite yourself.",
+      how: "Swipe or use the D-pad. Speeds up every bite.",
+      price: 1, path: "games/snake.html", live: true,
+    },
+    {
+      id: "reaction", name: "Reaction", art: "⚡", glow: "rgba(242,140,140,0.55)",
+      hook: "How fast are you, really?",
+      how: "Wait for green, then tap. Too soon counts against you.",
+      price: 1, path: "games/reaction.html", live: true,
+    },
+    {
+      id: "orbit", name: "Orbit", art: "🛰️", glow: "rgba(180,140,242,0.55)",
       hook: "An idle space station that grows while you're not looking.",
-      how: "Glance, tap to collect, spend on upgrades. The ultimate face-screen loop.",
-      price: 1, path: null, live: false,
+      how: "Tap the station, buy generators, collect while you sleep.",
+      price: 1, path: "games/orbit.html", live: true,
     },
     {
       id: "sayit", name: "Say It", art: "🗣️", glow: "rgba(242,140,140,0.5)",
