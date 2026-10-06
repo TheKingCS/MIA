@@ -10,10 +10,10 @@
 <body>
   <!--
     LENS ARCADE (working title) — Zac's game store for the Ray-Ban Display.
-    A web storefront + launcher: game tiles, per-game pages, $1 each or the
-    $10 Season 1 Pass. Games are 600x600 web apps under games/.
-    Payments are simulated in this build; real Stripe payment links plug into
-    the buy buttons (see arcade.js BUY FLOW).
+    A web storefront + launcher: game tiles, per-game pages, $0.99 each or
+    bundles ($3.99 / $6.99 / $9.99 All Access). Games are 600x600 web apps
+    under games/. Real Stripe payment links plug into STRIPE_LINKS in
+    arcade.js; empty links stay in demo mode (see stripe-setup-guide.md).
   -->
   <header id="hero">
     <p id="wordmark">Lens Arcade</p>
@@ -31,19 +31,15 @@
     </div>
   </header>
 
-  <section id="pass-banner" hidden>
-    <div>
-      <p class="pass-kicker">Season 1 Pass</p>
-      <p class="pass-title">$10 — every game, one price</p>
-      <p class="pass-sub">All Season 1 games, including every future drop. Twenty games planned.</p>
-    </div>
-    <button id="pass-buy" type="button">Get the pass</button>
+  <section id="bundles" aria-label="Bundles">
+    <p class="bundles-kicker">Bundles — save big</p>
+    <div id="bundle-grid"></div>
   </section>
 
   <main id="grid" aria-label="Games"></main>
 
   <footer>
-    <p>Demo storefront — checkout connects when we launch.</p>
+    <p id="store-note">Demo storefront — checkout connects when we launch.</p>
   </footer>
 
   <div id="sheet" hidden>
