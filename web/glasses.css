@@ -35,38 +35,43 @@ body {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   justify-items: center;
-  padding: 22px 30px 16px;
-  row-gap: 8px;
+  padding: 14px 30px 12px;
+  row-gap: 6px;
+}
+#stage::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 26%, rgba(246, 196, 83, 0.07), transparent 42%);
 }
 
 /* her: a sphere of light with orbiting trails. Expression is the light. */
-#orb-zone { display: grid; justify-items: center; row-gap: 2px; }
-#orb-wrap { position: relative; width: 148px; height: 148px; }
+#orb-zone { display: grid; justify-items: center; row-gap: 0; margin-bottom: -6px; }
+#orb-wrap { position: relative; width: 172px; height: 172px; }
 #orb {
-  position: absolute; inset: 24px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #fffbe9 0%, var(--gold-hi) 22%, var(--gold) 48%, #6e4c05 84%, #241a02 100%);
-  box-shadow: 0 0 42px rgba(246, 196, 83, 0.55), 0 0 110px rgba(246, 196, 83, 0.2),
-              inset 0 0 24px rgba(255, 248, 220, 0.5), inset -8px -10px 26px rgba(60, 40, 4, 0.55);
+  position: absolute; inset: 26px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #fffdf4 0%, #ffedb8 16%, var(--gold) 46%, #8a5f08 80%, #2b2003 100%);
+  box-shadow: 0 0 54px rgba(246, 196, 83, 0.65), 0 0 130px rgba(246, 196, 83, 0.26),
+              inset 0 0 26px rgba(255, 250, 225, 0.65), inset -8px -12px 30px rgba(60, 40, 4, 0.5);
   animation: breathe 5s ease-in-out infinite;
 }
 @keyframes breathe {
-  50% { transform: scale(1.045); box-shadow: 0 0 60px rgba(246, 196, 83, 0.7), 0 0 140px rgba(246, 196, 83, 0.26), inset 0 0 28px rgba(255, 248, 220, 0.6), inset -8px -10px 26px rgba(60, 40, 4, 0.55); }
+  50% { transform: scale(1.05); box-shadow: 0 0 74px rgba(246, 196, 83, 0.8), 0 0 160px rgba(246, 196, 83, 0.32), inset 0 0 32px rgba(255, 250, 225, 0.75), inset -8px -12px 30px rgba(60, 40, 4, 0.5); }
 }
 #orb-wrap .ring {
   position: absolute; border-radius: 50%; pointer-events: none;
   animation: spin 16s linear infinite;
+  filter: drop-shadow(0 0 7px rgba(246, 196, 83, 0.9));
 }
 #orb-wrap .ring.r1 {
-  inset: 6px;
-  background: conic-gradient(from 0deg, transparent 0deg, transparent 140deg, rgba(255, 237, 184, 0.75) 180deg, transparent 220deg, transparent 360deg);
-  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%, #000 68%, transparent 69%);
-  mask: radial-gradient(circle, transparent 64%, #000 65%, #000 68%, transparent 69%);
+  inset: 4px; opacity: 0.95;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 120deg, rgba(255, 237, 184, 0.95) 175deg, rgba(255, 237, 184, 0.95) 195deg, transparent 250deg, transparent 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 62%, #000 63%, #000 69%, transparent 70%);
+  mask: radial-gradient(circle, transparent 62%, #000 63%, #000 69%, transparent 70%);
 }
 #orb-wrap .ring.r2 {
-  inset: -6px; opacity: 0.55; animation-duration: 26s; animation-direction: reverse;
-  background: conic-gradient(from 90deg, transparent 0deg, transparent 200deg, rgba(246, 196, 83, 0.6) 250deg, transparent 300deg, transparent 360deg);
-  -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%, #000 69%, transparent 70%);
-  mask: radial-gradient(circle, transparent 66%, #000 67%, #000 69%, transparent 70%);
+  inset: -8px; opacity: 0.7; animation-duration: 26s; animation-direction: reverse;
+  background: conic-gradient(from 90deg, transparent 0deg, transparent 180deg, rgba(246, 196, 83, 0.85) 235deg, rgba(246, 196, 83, 0.85) 265deg, transparent 320deg, transparent 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%, #000 70%, transparent 71%);
+  mask: radial-gradient(circle, transparent 64%, #000 65%, #000 70%, transparent 71%);
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 #orb-wrap .p {
