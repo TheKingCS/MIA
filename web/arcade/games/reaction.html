@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Reaction Test · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -84,8 +85,13 @@
   }
   function finish(ms){
     times.push(ms); if(times.length>5) times.shift();
-    if(!best||ms<best){best=Math.round(ms);
+    var isBest=false;
+    if(!best||ms<best){best=Math.round(ms);isBest=true;
       try{localStorage.setItem(BESTKEY,String(best));}catch(e){}}
+    if(window.ArcadeProgress){
+      ArcadeProgress.award("reaction","round",5);
+      if(isBest)ArcadeProgress.award("reaction","newbest",50);
+    }
     paintStats();
     var line="My reaction: "+Math.round(ms)+"ms — can you beat it?";
     setState("result",fmt(ms),line+" · tap to go again");
