@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Drift · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -65,7 +66,12 @@
   function startRun(){reset();state="playing";last=performance.now();}
   function die(){
     state="dead";
-    if(score>best){best=score;try{localStorage.setItem(BEST_KEY,String(best));}catch(e){}}
+    var isBest=false;
+    if(score>best){best=score;isBest=true;try{localStorage.setItem(BEST_KEY,String(best));}catch(e){}}
+    if(window.ArcadeProgress){
+      ArcadeProgress.award("drift","run",10);
+      if(isBest)ArcadeProgress.award("drift","newbest",50);
+    }
   }
 
   function initStars(){
