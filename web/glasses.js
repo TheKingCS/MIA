@@ -40,7 +40,7 @@
 
   // ------------------------------------------------------------ moments
   function glance() {
-    setOrb("idle");
+    setOrb("idle"); showFinder(false);
     const f = (dash && dash.focus && dash.focus[0]) || null;
     const box = el("div", "g-card");
     box.append(
@@ -53,7 +53,7 @@
   }
 
   function quest() {
-    setOrb("idle");
+    setOrb("idle"); showFinder(false);
     const items = ((dash && dash.focus) || []).slice(0, 4);
     const first = items[0];
     const box = el("div", "g-card epic");
@@ -65,25 +65,25 @@
       list.append(li);
     });
     const verb = first && first.action ? first.action.label.toLowerCase() : "done";
+    const pct = questDone ? 100 : Math.round(100 / Math.max(1, items.length));
     box.append(
-      el("p", "g-kicker", "Focus quest"),
+      el("p", "g-kicker", "World quest"),
       el("p", "g-title", esc(first ? first.title : "Today's quest")),
-      el("p", "g-sub", esc(first && first.detail ? first.detail : "")),
       list,
-      el("div", "g-bar", '<i style="width:' + (questDone ? 100 : Math.round(100 / Math.max(1, items.length))) + '%"></i>'),
+      el("div", "g-bar", '<i style="width:' + pct + '%"></i>'),
+      demo ? el("p", "g-reward", "✦ +250 XP") : null,
       el("p", "g-say", questDone ? "complete — well done." : 'say <b>"' + esc(verb) + '"</b> to finish it'));
     card.replaceChildren(box);
     $("voice-input").placeholder = questDone ? 'say "what\'s next"' : 'say "' + verb + '"';
   }
 
   function voice() {
-    setOrb("idle");
-    const box = el("div", "g-card");
-    box.append(
-      el("p", "g-kicker", "Talk"),
-      el("p", "g-sub", "She's listening."),
+    setOrb("speaking"); showFinder(false);
+    const wrap = el("div", "g-voice");
+    wrap.append(
+      el("p", "g-say", "She's listening —"),
       el("p", "g-say", 'say <b>"what\'s next"</b> · <b>"remind me"</b> · <b>"done"</b>'));
-    card.replaceChildren(box);
+    card.replaceChildren(wrap);
     $("voice-input").placeholder = 'say "what\'s next"';
     $("voice-input").focus();
   }
@@ -91,8 +91,8 @@
   function nudge() {
     const late = ((dash && dash.focus) || []).find((f) => f.when === "overdue" || (f.days != null && f.days < 0));
     const it = late || ((dash && dash.focus) || [])[0];
-    setOrb("idle");
-    const box = el("div", "g-card");
+    setOrb("idle"); showFinder(false);
+    const box = el("div", "g-card nudge");
     box.append(
       el("p", "g-kicker", "Needs you"),
       el("p", "g-title", esc(it ? it.title : "Nothing needs you")),
@@ -100,6 +100,25 @@
       el("p", "g-say", 'say <b>"remind me"</b> · <b>"details"</b>'));
     card.replaceChildren(box);
     $("voice-input").placeholder = 'say "remind me"';
+  }
+
+  function see() {
+    setOrb("idle"); showFinder(true);
+    const box = el("div", "g-card see");
+    if (demo) {
+      box.append(
+        el("p", "g-kicker", "See"),
+        el("p", "g-title", "Tomato Plant"),
+        el("p", "g-sub", "Healthy · Est. harvest: 4–6 days"),
+        el("p", "g-say", "demo — the real glasses name what you look at"));
+    } else {
+      box.append(
+        el("p", "g-kicker", "See"),
+        el("p", "g-sub", "Look at something and ask her about it."),
+        el("p", "g-say", 'say <b>"what am I looking at"</b>'));
+    }
+    card.replaceChildren(box);
+    $("voice-input").placeholder = 'say "what am I looking at"';
   }
 
   function levelup(xpText, sub) {
@@ -115,6 +134,7 @@
     ["quest", "Quest", quest],
     ["voice", "Talk", voice],
     ["nudge", "Needs you", nudge],
+    ["see", "See", see],
   ];
   function drawDots() {
     $("dots").replaceChildren(...MOMENTS.map(([id, label]) => {
@@ -173,8 +193,16 @@
     } catch (err) { reply(err.message); }
   });
 
+  function showFinder(on) { $("finder").hidden = !on; }
+
   // ------------------------------------------------------------ boot
   (async () => {
+    // the waveform's bars, each on its own phase
+    for (let i = 0; i < 44; i++) {
+      const b = document.createElement("i");
+      b.style.animationDelay = (Math.random() * -1.4).toFixed(2) + "s";
+      wave.append(b);
+    }
     try { dash = await MIA.dashboard(); } catch (e) { dash = null; }
     try { shell = await MIA.shell(); } catch (e) { shell = null; }
     paintXp();
