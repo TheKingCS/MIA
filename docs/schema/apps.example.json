@@ -444,7 +444,7 @@
           "icon": "💰",
           "tagline": "Know where it goes.",
           "description": "Household bills, income, expenses, and tax-relevant totals.",
-          "page": "finances.html",
+          "page": "money.html",
           "on_web": true,
           "shown": true,
           "can_hide": true,

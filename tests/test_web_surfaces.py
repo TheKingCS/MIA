@@ -67,7 +67,7 @@ def test_the_dashboard(world):
     page = dashboard(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
     assert page["greeting"] == "Good morning, Robin"
     [bill] = [f for f in page["focus"] if f["title"] == "Pay Electric"]
-    assert bill["when"] == "overdue" and bill["action"]["kind"] == "bill.pay" and bill["page"] == "finances.html"
+    assert bill["when"] == "overdue" and bill["action"]["kind"] == "bill.pay" and bill["page"] == "money.html"
     assert any(c["app"] == "budget" and c["tone"] == "attention" for c in page["glance"])
     assert page["saying"] and [q["id"] for q in page["quick_actions"]][:2] == ["quick_add", "voice"]
 

@@ -487,6 +487,18 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return apps_page(view_for(context, profile_id))
 
+    # The Money screen (DEC-0017): everything the PC's Budget screen shows
+    # (core/web_money.py); changes are the money action kinds.
+    @app.get("/api/money")
+    def web_money(strategy: str = "hybrid", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.child_accounts import ASK_A_PARENT, is_child
+        from core.web_money import money_page
+
+        if is_child(context, profile_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+        with app.state.turn_lock:
+            return money_page(view_for(context, profile_id), strategy=strategy)
+
     @app.get("/api/dashboard")
     def web_dashboard(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_surfaces import dashboard

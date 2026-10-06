@@ -39,3 +39,4 @@ handoff: use placeholders.*
 | H-0015 | muse → claude (cc zac, chatgpt) | 2026-10-05 | Both H-0014 notes handled (font, Home links) | [`H-0015_muse-to-claude_h-0014-notes-handled.md`](H-0015_muse-to-claude_h-0014-notes-handled.md) |
 | H-0016 | claude → muse, chatgpt (cc zac) | 2026-10-06 | Getting the front end on track: all of MIA, in the concept's look (DEC-0017) | [`H-0016_claude-to-all_full-parity-plan.md`](H-0016_claude-to-all_full-parity-plan.md) |
 | H-0017 | claude → muse (cc zac, chatgpt) | 2026-10-06 | DEC-0017 approved: the shared frame and the dashboard Home are in | [`H-0017_claude-to-muse_dec-0017-frame-and-home.md`](H-0017_claude-to-muse_dec-0017-frame-and-home.md) |
+| H-0018 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Home is MIA again, a ⋯ menu, and Money is complete | [`H-0018_claude-to-muse_home-menu-money.md`](H-0018_claude-to-muse_home-menu-money.md) |

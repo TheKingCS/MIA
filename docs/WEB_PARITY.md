@@ -17,14 +17,14 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 |---|---|---|---|---|---|
 | Shell | Sidebar of apps (per person, child-safe), level and XP, date, search (Ctrl+K), Talk to MIA, the orb | `00_main_window_home` | |  | |
 | Home | Greeting, Today's Focus (tick to do), quick actions, at-a-glance cards (money, maintenance, kitchen, workout, real estate, net worth, observations, captures), daily briefing | `00_main_window_home` | ✅ `/api/dashboard` (Home is MIA's face + chat; this is the Dashboard page) | ✅ greeting, focus with tick → confirm → undo, quick actions, upcoming, wins, glance (not yet: net worth, observations, captures cards; spoken briefing) | |
-| Budget: Bills | List, add, edit, delete, mark paid, autopay, due dates | `budget__01_bills` | |  | |
-| Budget: Income sources | List, add, edit, delete, mark received | `budget__02_income_sources` | |  | |
-| Budget: Income | Log, edit, delete income | `budget__03_income` | |  | |
-| Budget: Expenses | Log, edit, delete, categories, business tags, receipts | `budget__04_expenses` | |  | |
-| Budget: Debts | Payoff order (avalanche/snowball/hybrid) and why, promo APR countdowns, record payments, add/edit | `budget__05_debts` | |  | |
-| Budget: Summary | Monthly plan, totals, net worth | `budget__06_summary` | | summary only | |
-| Budget: Trends | Spending and income over time | `budget__07_trends` | |  | |
-| Budget: Bank sync | Plaid status, sync, linked accounts | `budget__08_bank_sync` | |  | |
+| Budget: Bills | List, add, edit, delete, mark paid, autopay, due dates | `budget__01_bills` | ✅ `/api/money` + money actions | ✅ list, add, edit, delete, mark paid (undo) | |
+| Budget: Income sources | List, add, edit, delete, mark received | `budget__02_income_sources` | ✅ `/api/money` + money actions | ✅ list, add, edit, delete, mark received | |
+| Budget: Income | Log, edit, delete income | `budget__03_income` | ✅ `/api/money` + money actions | ✅ last 90 days, log, edit, delete | |
+| Budget: Expenses | Log, edit, delete, categories, business tags, receipts | `budget__04_expenses` | ✅ `/api/money` + money actions | ✅ last 90 days, log, edit, delete, find (not yet: business tags, receipt items) | |
+| Budget: Debts | Payoff order (avalanche/snowball/hybrid) and why, promo APR countdowns, record payments, add/edit | `budget__05_debts` | ✅ `/api/money` + money actions | ✅ payoff order + why under avalanche/snowball/hybrid, promo countdown, record payment, add, edit, delete | |
+| Budget: Summary | Monthly plan, totals, net worth | `budget__06_summary` | ✅ `/api/money` + money actions | ✅ this month, monthly plan, net worth, spending by category, next two weeks; budget targets set/change/remove | |
+| Budget: Trends | Spending and income over time | `budget__07_trends` | ✅ `/api/money` + money actions | ✅ last six months in and out | |
+| Budget: Bank sync | Plaid status, sync, linked accounts | `budget__08_bank_sync` | ✅ `/api/money` + money actions | status only (connect and sync need the vault passphrase: PC app) | |
 | Real Estate | Properties: value, equity, mortgage, rent, cash flow, depreciation, maintenance, sell | `real_estate` | | summary only | |
 | Workshop: Components | Parts inventory: add, edit, use | `workshop__01_components` | |  | |
 | Workshop: Materials | Fabrication materials | `workshop__02_materials` | |  | |

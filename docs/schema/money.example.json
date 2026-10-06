@@ -1,0 +1,665 @@
+{
+  "as_of": "2026-10-06",
+  "summary": {
+    "status": "DERIVED",
+    "source": "core/finance_summary.py, core/budget_manager.py",
+    "as_of": "2026-10-06",
+    "currency_symbol": "$",
+    "available": true,
+    "month": {
+      "label": "October 2026",
+      "income": 0.0,
+      "expenses": 120.0,
+      "net": -120.0
+    },
+    "bills_due": [
+      {
+        "name": "Insurance",
+        "amount": 340.0,
+        "days": 5
+      }
+    ],
+    "income_expected": [
+      {
+        "name": "Pay",
+        "amount": 1500.0,
+        "days": 0
+      }
+    ],
+    "budget_targets": [],
+    "debts": {
+      "total": 40000.0,
+      "minimum_payments": 500.0,
+      "ranked": [
+        {
+          "name": "Land loan",
+          "balance": 40000.0,
+          "apr": 7.5,
+          "bank_synced": false,
+          "reason": "Highest current APR (7.50%)"
+        }
+      ]
+    },
+    "net_worth": {
+      "total": 60000.0,
+      "sources": [
+        {
+          "label": "Property equity",
+          "value": 60000.0
+        }
+      ],
+      "manual_debts_not_in_net_worth": 40000.0
+    },
+    "builds": [],
+    "tools": [],
+    "monthly_plan": {
+      "expected_income": 3250.0,
+      "bills": 460.0,
+      "debt_minimums": 500.0,
+      "gap": 2290.0,
+      "note": "Repeating income sources and bills turned into a monthly amount, minus debt minimums."
+    }
+  },
+  "forms": {
+    "bill": {
+      "noun": "bill",
+      "id_param": "bill_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "due_date",
+          "label": "Due date",
+          "type": "date",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "recurrence",
+          "label": "Repeats",
+          "type": "recurrence",
+          "required": false,
+          "options": [
+            "none",
+            "yearly",
+            "monthly",
+            "weekly",
+            "biweekly"
+          ],
+          "default": "monthly"
+        },
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Utilities",
+            "Mortgage/Rent",
+            "Insurance",
+            "Groceries",
+            "Maintenance",
+            "Transportation",
+            "Taxes",
+            "Medical",
+            "Personal Care",
+            "Shopping",
+            "Bank Fees",
+            "Entertainment",
+            "Travel",
+            "Debt Payment",
+            "Building Materials",
+            "Tools & Equipment",
+            "Other"
+          ],
+          "default": "Utilities"
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "income_source": {
+      "noun": "income source",
+      "id_param": "source_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "expected_amount",
+          "label": "Expected amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "next_date",
+          "label": "Next date",
+          "type": "date",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "recurrence",
+          "label": "Repeats",
+          "type": "recurrence",
+          "required": false,
+          "options": [
+            "none",
+            "yearly",
+            "monthly",
+            "weekly",
+            "biweekly"
+          ],
+          "default": "biweekly"
+        },
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Salary",
+            "Rental Income",
+            "Investment",
+            "Other"
+          ],
+          "default": "Salary"
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "income": {
+      "noun": "income",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Salary",
+            "Rental Income",
+            "Investment",
+            "Other"
+          ],
+          "default": "Other"
+        },
+        {
+          "name": "description",
+          "label": "What it was",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "expense": {
+      "noun": "expense",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Utilities",
+            "Mortgage/Rent",
+            "Insurance",
+            "Groceries",
+            "Maintenance",
+            "Transportation",
+            "Taxes",
+            "Medical",
+            "Personal Care",
+            "Shopping",
+            "Bank Fees",
+            "Entertainment",
+            "Travel",
+            "Debt Payment",
+            "Building Materials",
+            "Tools & Equipment",
+            "Other"
+          ],
+          "default": "Other"
+        },
+        {
+          "name": "description",
+          "label": "What it was",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "payee",
+          "label": "Paid to",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "debt": {
+      "noun": "debt",
+      "id_param": "debt_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "balance",
+          "label": "Balance",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "interest_rate",
+          "label": "APR (%)",
+          "type": "rate",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "minimum_payment",
+          "label": "Minimum payment",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "debt_type",
+          "label": "Type",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Credit Card",
+            "Personal Loan",
+            "Auto Loan",
+            "Student Loan",
+            "Medical Debt",
+            "Other"
+          ],
+          "default": "Credit Card"
+        },
+        {
+          "name": "promo_apr",
+          "label": "Promo APR (%)",
+          "type": "rate",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "promo_expires_date",
+          "label": "Promo ends",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "debt_payment": {
+      "noun": "payment",
+      "id_param": "debt_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Payment",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "budget_target": {
+      "noun": "budget",
+      "id_param": null,
+      "fields": [
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "choice",
+          "required": true,
+          "options": [
+            "Utilities",
+            "Mortgage/Rent",
+            "Insurance",
+            "Groceries",
+            "Maintenance",
+            "Transportation",
+            "Taxes",
+            "Medical",
+            "Personal Care",
+            "Shopping",
+            "Bank Fees",
+            "Entertainment",
+            "Travel",
+            "Debt Payment",
+            "Building Materials",
+            "Tools & Equipment",
+            "Other"
+          ],
+          "default": null
+        },
+        {
+          "name": "monthly_amount",
+          "label": "Monthly budget",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "strategies": [
+    "avalanche",
+    "snowball",
+    "hybrid"
+  ],
+  "available": true,
+  "spending_by_category": [
+    {
+      "category": "Utilities",
+      "amount": 120.0
+    }
+  ],
+  "bills": [
+    {
+      "id": "260b0a83fb",
+      "name": "Insurance",
+      "amount": 340.0,
+      "category": "Utilities",
+      "recurrence": "monthly",
+      "next_due": "2026-10-11",
+      "days": 5,
+      "when": "in 5 days",
+      "last_paid": null,
+      "notes": "",
+      "values": {
+        "name": "Insurance",
+        "amount": 340.0,
+        "due_date": "2026-10-11",
+        "recurrence": "monthly",
+        "category": "Utilities",
+        "notes": ""
+      },
+      "action": {
+        "kind": "bill.pay",
+        "label": "Mark paid",
+        "params": {
+          "bill_id": "260b0a83fb"
+        }
+      }
+    },
+    {
+      "id": "11b3a3e6b1",
+      "name": "Electric",
+      "amount": 120.0,
+      "category": "Utilities",
+      "recurrence": "monthly",
+      "next_due": "2026-11-05",
+      "days": 30,
+      "when": "in 30 days",
+      "last_paid": "2026-10-06",
+      "notes": "",
+      "values": {
+        "name": "Electric",
+        "amount": 120.0,
+        "due_date": "2026-10-05",
+        "recurrence": "monthly",
+        "category": "Utilities",
+        "notes": ""
+      },
+      "action": {
+        "kind": "bill.pay",
+        "label": "Mark paid",
+        "params": {
+          "bill_id": "11b3a3e6b1"
+        }
+      }
+    }
+  ],
+  "income_sources": [
+    {
+      "id": "c5987f9953",
+      "name": "Pay",
+      "amount": 1500.0,
+      "category": "Salary",
+      "recurrence": "biweekly",
+      "next": "2026-10-06",
+      "days": 0,
+      "when": "today",
+      "last_received": null,
+      "values": {
+        "name": "Pay",
+        "expected_amount": 1500.0,
+        "next_date": "2026-10-06",
+        "recurrence": "biweekly",
+        "category": "Salary",
+        "notes": ""
+      },
+      "action": {
+        "kind": "income.receive",
+        "label": "Mark received",
+        "params": {
+          "source_id": "c5987f9953"
+        }
+      }
+    }
+  ],
+  "income": [],
+  "expenses": [
+    {
+      "id": "ba10755b09",
+      "date": "2026-10-06",
+      "amount": 120.0,
+      "category": "Utilities",
+      "description": "Electric",
+      "from_bank": false,
+      "values": {
+        "amount": 120.0,
+        "date": "2026-10-06",
+        "category": "Utilities",
+        "description": "Electric",
+        "payee": "",
+        "notes": ""
+      },
+      "payee": "",
+      "from_bill": true
+    }
+  ],
+  "recent_days": 90,
+  "debts": {
+    "strategy": "hybrid",
+    "ranked": [
+      {
+        "id": "769b35cc3f",
+        "rank": 1,
+        "name": "Land loan",
+        "type": "Credit Card",
+        "balance": 40000.0,
+        "apr": 7.5,
+        "standard_apr": 7.5,
+        "minimum": 500.0,
+        "reason": "Highest current APR (7.50%)",
+        "promo": null,
+        "from_bank": false,
+        "last_payment": null,
+        "values": {
+          "name": "Land loan",
+          "balance": 40000.0,
+          "interest_rate": 7.5,
+          "minimum_payment": 500.0,
+          "debt_type": "Credit Card",
+          "promo_apr": null,
+          "promo_expires_date": null,
+          "notes": ""
+        },
+        "action": {
+          "kind": "debt.pay",
+          "label": "Record payment",
+          "params": {
+            "debt_id": "769b35cc3f",
+            "amount": 500.0
+          }
+        }
+      }
+    ],
+    "paid_off": [],
+    "total": 40000.0,
+    "minimum_payments": 500.0
+  },
+  "budget_targets": [],
+  "trends": [
+    {
+      "month": "May 2026",
+      "income": 0.0,
+      "expenses": 0.0,
+      "net": 0.0
+    },
+    {
+      "month": "Jun 2026",
+      "income": 0.0,
+      "expenses": 0.0,
+      "net": 0.0
+    },
+    {
+      "month": "Jul 2026",
+      "income": 0.0,
+      "expenses": 0.0,
+      "net": 0.0
+    },
+    {
+      "month": "Aug 2026",
+      "income": 0.0,
+      "expenses": 0.0,
+      "net": 0.0
+    },
+    {
+      "month": "Sep 2026",
+      "income": 0.0,
+      "expenses": 0.0,
+      "net": 0.0
+    },
+    {
+      "month": "Oct 2026",
+      "income": 0.0,
+      "expenses": 120.0,
+      "net": -120.0
+    }
+  ],
+  "bank": {
+    "status": "PLANNED",
+    "configured": false,
+    "unlocked": false,
+    "banks": []
+  }
+}

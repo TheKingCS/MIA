@@ -71,7 +71,7 @@
       "name": "Money",
       "icon": "💰",
       "tagline": "Know where it goes.",
-      "page": "finances.html"
+      "page": "money.html"
     },
     {
       "id": "module_browser",

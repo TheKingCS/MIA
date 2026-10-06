@@ -34,6 +34,7 @@ components, data and actions, and each arranges them for its screen.
 | `tokens.css` | Design tokens: colors, type, spacing. `--scale` follows the person's text size; `[data-contrast="high"]` is high contrast. | Muse |
 | `shell.js`, `shell.css` | **The shared frame (DEC-0017).** Sign-in, navigation (desktop module pages: the sidebar; phones and Home: one ⋯ menu button; the person's own apps, level and XP, from `MIA.shell()`), MIA's orb and Talk panel on every page, and `MIAShell.act(action)`: propose → confirm → approve → undo toast. New screens use `MIAShell.start(render)`; older ones get the frame with `<script src="shell.js" data-frame="<app id>">`. | Claude (function); Muse restyles freely |
 | `dashboard.html`, `dashboard.js` | **Dashboard: the concept's dashboard** (DEC-0017): greeting, Today's Focus (tick → its action), quick actions, Upcoming, recent wins, at-a-glance cards, all from `MIA.dashboard()`. | Claude (function); Muse (look) |
+| `money.html`, `money.js` | **Money (DEC-0017):** everything the PC's Budget screen does, from `MIA.money()`: Overview, Bills, Income, Expenses, Debts (payoff order and why), Budgets, Trends, Bank status. Every change is a money action (`core/money_actions.py`); forms come from the engine (`MIAShell.form`). `finances.html` now redirects here. | Claude (function); Muse (look) |
 | `apps.html`, `apps.js` | **Apps (DEC-0017):** every app MIA has, by life area, from `MIA.apps()`: what it's for, open it (on the web) or ask MIA (its Assistant tools listed), find, show/hide per person (`app.visibility`). | Claude (function); Muse (look) |
 | `index.html`, `home.css`, `home.js` | **Home: MIA herself** (Zac, 2026-10-06: Home is MIA's face and a chat with her): the orb (celebrate / needs-you / quiet / thinking), the one due item, the briefing sheet, Talk. Navigation is the frame's ⋯ menu. | Muse (H-0009) |
 | `components.css` | Shared component system: glass cards, status strips, XP bars, rarity badges, pill tabs, buttons, heroes, sidebar, empty/locked states. Concept-art material. | Muse |
@@ -63,7 +64,7 @@ await MIA.undo(done.proposal_id);
   params: {bill_id}}`. Use its `label` for the button and pass it to
   `propose`. Don't build actions yourself.
 - **Action kinds today:** `bill.pay`, `income.receive`,
-  `maintenance.done`, `task.done`, `routine.log`, `app.visibility`
+  `maintenance.done`, `task.done`, `routine.log`, `app.visibility`, and the money kinds (`bill.add/edit/delete`, `income_source.*`, `income.*`, `expense.*`, `debt.*`, `debt.pay`, `budget_target.set/delete`)
   (`GET /api/actions/kinds`). Need another? Ask in
   `docs/QUESTIONS.md` and Claude adds it to the engine.
 - **Proposal shape:** `docs/schema/action.schema.json`. Errors come back

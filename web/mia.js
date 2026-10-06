@@ -13,6 +13,7 @@
  *   MIA.shell()                 -> the sidebar: the person's apps, level and XP (core/web_surfaces.py)
  *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
+ *   MIA.money(strategy)         -> the Money screen: bills, income, expenses, debts, budgets, trends
  *   MIA.demo                    -> true when showing the placeholder example
  *
  * Sign-in: the desktop opens this page with #token=... (its own session);
@@ -114,6 +115,7 @@
     shell: () => read("/api/shell", "shell"),
     dashboard: () => read("/api/dashboard", "dashboard"),
     apps: () => read("/api/apps", "apps"),
+    money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),
     pending: () => call("GET", "/api/actions"),
     propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }),

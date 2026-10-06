@@ -93,6 +93,58 @@
     }
   }
 
+  // ---------------------------------------------------------------- forms
+  /**
+   * Ask for values with the engine's own field list ({name, label, type,
+   * required, options, default}; types: text, textarea, money, rate, date,
+   * choice, recurrence). Resolves to {name: value} or null if cancelled.
+   * Checking the values is the engine's job (the proposal says what's wrong).
+   */
+  function form(title, fields, values) {
+    values = values || {};
+    return new Promise((resolve) => {
+      const inputs = {};
+      const row = (f) => {
+        const id = "f-" + f.name;
+        const value = values[f.name] != null ? values[f.name] : (f.default != null ? f.default : "");
+        let input;
+        if (f.type === "choice" || f.type === "recurrence") {
+          input = el("select", { id },
+            f.options.map((o) => el("option", { value: o, selected: String(value || "none") === o ? true : null },
+              o === "none" ? "Doesn't repeat" : o)));
+        } else if (f.type === "textarea") {
+          input = el("textarea", { id, rows: "2" });
+          input.value = value;
+        } else {
+          const type = f.type === "date" ? "date" : (f.type === "money" || f.type === "rate") ? "number" : "text";
+          input = el("input", { id, type, step: type === "number" ? "0.01" : null, min: type === "number" ? "0" : null,
+            inputmode: type === "number" ? "decimal" : null, required: f.required || null });
+          input.value = value;
+        }
+        inputs[f.name] = input;
+        return el("label", { class: "form-row", for: id }, el("span", {}, f.label + (f.required ? "" : " (optional)")), input);
+      };
+      const dialog = el("dialog", { class: "confirm form-dialog", "aria-label": title });
+      const done = (answer) => { dialog.close(); dialog.remove(); resolve(answer); };
+      dialog.append(el("form", { method: "dialog", onsubmit: (e) => {
+        e.preventDefault();
+        const out = {};
+        for (const [name, input] of Object.entries(inputs)) out[name] = input.value;
+        done(out);
+      } },
+        el("h3", {}, title),
+        ...fields.map(row),
+        el("div", { class: "confirm-actions" },
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => done(null) }, "Cancel"),
+          el("button", { type: "submit", class: "btn btn-green" }, "Next"))));
+      dialog.oncancel = (e) => { e.preventDefault(); done(null); };
+      document.body.append(dialog);
+      dialog.showModal();
+      const first = dialog.querySelector("input, select, textarea");
+      if (first) first.focus();
+    });
+  }
+
   // ---------------------------------------------------------------- navigation
   // Desktop module pages: the concept's sidebar. Phones, and Home at any
   // size: one "⋯" button that opens every choice (Zac, 2026-10-06: the
@@ -264,7 +316,7 @@
     if (talkHere) mountTalk();
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, talk: toggleTalk };
+  window.MIAShell = { start, act, say, el, refresh, frame, form, talk: toggleTalk };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

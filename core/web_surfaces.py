@@ -82,7 +82,7 @@ APPS: tuple[App, ...] = (
         "Add a mission to build a chicken coop."),
     App("skills", "Skills", "⚔", "Do the thing. Earn the level. Unlock the next thing.", "skills.html",
         "My Hero's Path — skill tree and character progression.", LIFE, (), "Which skills am I growing?"),
-    App("budget", "Money", "💰", "Know where it goes.", "finances.html",
+    App("budget", "Money", "💰", "Know where it goes.", "money.html",
         "Household bills, income, expenses, and tax-relevant totals.", MONEY,
         ("budget", "debts", "homestead_costs", "business_use", "business_tags"), "Which debt should I pay first?"),
     App("maintenance", "Maintenance", "🔧", "Everything you own, cared for.", None,
@@ -306,7 +306,7 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
     state = assemble_life_state_v2(context, today)
     due = (state.get("due") or {}).get("items") or []
     page_of = {a.module_id: a.page for a in APPS}
-    page_of.update({"budget": "finances.html", "maintenance": "garage.html"})
+    page_of.update({"maintenance": "garage.html"})
 
     def item(d):
         return {**d, "page": page_of.get(d.get("module_id"))}

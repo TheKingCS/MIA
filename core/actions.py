@@ -264,6 +264,12 @@ ACTION_TYPES: dict[str, ActionType] = {a.kind: a for a in (
 )}
 
 
+# Money (2026-10-06, DEC-0017): every change the Money screen makes. It
+# builds on the classes above and adds its kinds to ACTION_TYPES itself,
+# so either module can be imported first.
+import core.money_actions  # noqa: E402,F401
+
+
 # ------------------------------------------------------------------ the five steps
 
 

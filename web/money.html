@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Money — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+</head>
+<body data-app="budget" class="mod-finance">
+  <!--
+    Money (claude, 2026-10-06, DEC-0017): everything the PC app's Budget
+    screen does. Data from MIA.money() (core/web_money.py); every change is
+    a money action (core/money_actions.py) through MIAShell.act: the engine
+    checks it, says it in a sentence, you confirm, and it can be undone.
+    Forms come from the engine's field lists. Muse owns the look.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true">💰</span> Money</h1>
+        <p class="tagline">Know where it goes.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="This month"></section>
+      <div class="ptabs" role="tablist" id="tabs"></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="money.js"></script>
+</body>
+</html>

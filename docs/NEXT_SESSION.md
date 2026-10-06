@@ -225,8 +225,8 @@ the Dashboard (`core/web_surfaces.py`, `/api/shell`,
 (Muse's orb + chat) and the ⋯ menu. Next, each one a full engine API (every read and every
 add/edit/delete/complete as an action kind in `core/actions.py`) plus a
 working screen on the frame, for Muse to restyle:
-1. **Money** (bills, income sources, income, expenses, debts with payoff
-   order, summary, trends, bank sync status).
+1. ~~Money~~ **done 2026-10-06** (`web/money.html`; bank connect/sync
+   stays on the PC: it needs the vault passphrase).
 2. **Garage + Maintenance**, with the asset page (Zac's mower concept:
    tasks, missions, documents, parts, history, meter hours).
 3. **Missions, Skills, Character** (absorbs H-0013).
