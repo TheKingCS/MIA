@@ -234,8 +234,10 @@
     bankNum.textContent=fmt(s.bank);
     bankRate.textContent="⚡"+fmt(effRate())+"/s";
     DEFS.forEach(function(d){
-      var n=s.gens[d.id]||0,c=cost(d),b=buyBtns[d.id];
+      var n=s.gens[d.id]||0,c=cost(d),b=buyBtns[d.id],m=s.mult[d.id]||1;
       b.parentElement.querySelector(".cnt").textContent=n;
+      b.parentElement.querySelector(".sub").textContent=
+        "+"+fmt(d.rate*m)+" ⚡/s each"+(m>1?" (×"+m+")":"");
       b.textContent="Buy "+fmt(c)+" ⚡";
       b.classList.toggle("afford",s.bank>=c);
     });
