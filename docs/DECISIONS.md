@@ -282,3 +282,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Risk: it's a lot of screens. Parity per module keeps each step
   shippable, and the Qt app covers anything not yet moved.
 - Related: DEC-0012, DEC-0013 (amended), DEC-0015, Q-0004, H-0013, H-0016
+- Amended (zac, 2026-10-06, in chat with claude): **Home is MIA
+  herself** (her face and a chat with her, Muse's presence page), not the
+  dashboard; the concept dashboard is its own Dashboard page. Navigation
+  is one ⋯ button that opens every choice (phones, and Home at any size);
+  desktop module pages keep the concept's sidebar.

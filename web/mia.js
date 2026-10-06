@@ -11,7 +11,7 @@
  *   MIA.onChange(callback)      -> calls back whenever MIA's data changes
  *   MIA.talk(text)              -> one Assistant turn: {replies, reply_text, draft, ...}
  *   MIA.shell()                 -> the sidebar: the person's apps, level and XP (core/web_surfaces.py)
- *   MIA.home()                  -> the Home dashboard: greeting, Today's Focus, glance cards
+ *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
  *   MIA.demo                    -> true when showing the placeholder example
  *
@@ -112,7 +112,7 @@
     MiaError,
     state: () => read("/api/state", "life_state"),
     shell: () => read("/api/shell", "shell"),
-    home: () => read("/api/home", "home"),
+    dashboard: () => read("/api/dashboard", "dashboard"),
     apps: () => read("/api/apps", "apps"),
     kinds: () => call("GET", "/api/actions/kinds"),
     pending: () => call("GET", "/api/actions"),

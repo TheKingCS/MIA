@@ -16,7 +16,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Screen | What it does | Reference | API | Works | Look |
 |---|---|---|---|---|---|
 | Shell | Sidebar of apps (per person, child-safe), level and XP, date, search (Ctrl+K), Talk to MIA, the orb | `00_main_window_home` | |  | |
-| Home | Greeting, Today's Focus (tick to do), quick actions, at-a-glance cards (money, maintenance, kitchen, workout, real estate, net worth, observations, captures), daily briefing | `00_main_window_home` | ✅ `/api/home` | ✅ greeting, focus with tick → confirm → undo, quick actions, upcoming, wins, glance (not yet: net worth, observations, captures cards; spoken briefing) | |
+| Home | Greeting, Today's Focus (tick to do), quick actions, at-a-glance cards (money, maintenance, kitchen, workout, real estate, net worth, observations, captures), daily briefing | `00_main_window_home` | ✅ `/api/dashboard` (Home is MIA's face + chat; this is the Dashboard page) | ✅ greeting, focus with tick → confirm → undo, quick actions, upcoming, wins, glance (not yet: net worth, observations, captures cards; spoken briefing) | |
 | Budget: Bills | List, add, edit, delete, mark paid, autopay, due dates | `budget__01_bills` | |  | |
 | Budget: Income sources | List, add, edit, delete, mark received | `budget__02_income_sources` | |  | |
 | Budget: Income | Log, edit, delete income | `budget__03_income` | |  | |

@@ -49,7 +49,7 @@ def web_home_url(base: str, token: str, scale: float = 1.0, high_contrast: bool 
 class WebHomeModule(ModuleBase):
     module_id = "web_home"
     display_name = "Home (preview)"
-    description = "MIA's new Home, built on the web front end (Phase 2 preview)."
+    description = "MIA herself: her presence, today's one thing, and a chat with her."
     icon = "\U0001F52E"  # crystal ball: MIA's presence
 
     def __init__(self, context) -> None:

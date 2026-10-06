@@ -24,9 +24,9 @@
 /* sidebar: level and XP at the bottom, like the concept */
 .side { overflow-y: auto; }
 .side .brand-mark { font-size: 26px; }
-.side .side-level { display: flex; justify-content: space-between; align-items: baseline; color: var(--text); }
-.side .side-level-n { font-weight: 700; color: var(--xp); }
-.side .side-level-xp { font-size: var(--text-xs); color: var(--text-dim); }
+.side-level { display: flex; justify-content: space-between; align-items: baseline; color: var(--text); }
+.side-level-n { font-weight: 700; color: var(--xp); }
+.side-level-xp { font-size: var(--text-xs); color: var(--text-dim); }
 .side .side-more { display: block; margin-top: 8px; color: var(--text-faint); }
 
 /* MIA, everywhere: the orb button and the Talk panel */
@@ -75,8 +75,8 @@
 .talk-log .bubble.me { justify-self: end; background: rgba(63, 214, 181, 0.12); border: 1px solid rgba(63, 214, 181, 0.3); }
 .talk-log .bubble.mia { justify-self: start; background: rgba(251, 191, 36, 0.07); border: 1px solid rgba(251, 191, 36, 0.25); }
 .talk-log .bubble.thinking { color: var(--text-faint); }
-.talk-form { display: flex; gap: 8px; }
-.talk-form input {
+.talk-panel .talk-form { display: flex; gap: 8px; }
+.talk-panel .talk-form input {
   flex: 1;
   min-height: var(--touch);
   border-radius: var(--radius-sm);
@@ -170,10 +170,70 @@ html { background: #040705; }
 .app-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
 .app-actions .btn { text-decoration: none; }
 
-/* phone: every app visible at once (the one-line rail hid the last ones
-   off-screen with no hint, 2026-10-06). The brand gets its own line. */
+/* ---------------------------------------------------------------- the ⋯ menu
+   Phones, and Home at any size: one button that opens every choice
+   (Zac, 2026-10-06). Desktop module pages keep the concept's sidebar. */
+.menu-button {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 35;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-line-strong);
+  background: var(--glass-strong);
+  color: var(--text);
+  font: 700 26px/1 var(--font);
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.menu-button:hover { border-color: var(--ok); }
+body.has-side .menu-button { display: none; }
+.menu-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2, 5, 3, 0.62);
+  backdrop-filter: blur(4px);
+  display: grid;
+  align-items: start;
+  justify-items: start;
+  padding: 12px;
+}
+.menu-sheet[hidden] { display: none !important; }
+.menu-panel {
+  width: min(420px, 100%);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  background: var(--glass-strong);
+  display: grid;
+  gap: var(--gap);
+}
+.menu-head { display: flex; justify-content: space-between; align-items: center; }
+.menu-brand { font-weight: 700; font-size: var(--text-lg); letter-spacing: 0.06em; }
+.menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.menu-item {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 12px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-line);
+  background: var(--glass);
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.menu-item .ico { font-size: 24px; }
+.menu-item:hover { color: var(--text); border-color: var(--glass-line-strong); }
+.menu-item[aria-current="page"] { color: var(--text); border-color: rgba(74, 222, 128, 0.45); background: rgba(74, 222, 128, 0.12); }
+.menu-panel .side-more { color: var(--text-faint); font-size: var(--text-xs); }
+
 @media (max-width: 860px) {
-  .side { flex-wrap: wrap; overflow-x: visible; row-gap: 6px; }
-  .side .brand { flex-basis: 100%; }
-  .side a.nav { min-height: 36px; padding: 5px 10px; border-color: var(--glass-line); }
+  body.has-side .menu-button { display: block; }
+  .layout .side { display: none; }
+  .layout-main { padding-top: 74px; }
 }

@@ -93,31 +93,76 @@
     }
   }
 
-  // ---------------------------------------------------------------- sidebar
-  function renderSidebar(shell) {
-    let side = $("nav.side");
-    if (!side) {
-      side = el("nav", { class: "side", "aria-label": "Apps" });
-      $(".layout").prepend(side);
-    }
-    const here = document.body.dataset.app || "dashboard";
-    const p = shell.person;
+  // ---------------------------------------------------------------- navigation
+  // Desktop module pages: the concept's sidebar. Phones, and Home at any
+  // size: one "⋯" button that opens every choice (Zac, 2026-10-06: the
+  // wrapped phone rail looked clunky; Home stays centred on MIA).
+  function levelBlock(p) {
     const pct = p.xp_for_level ? Math.round((100 * p.xp_into_level) / p.xp_for_level) : 0;
-    side.replaceChildren(
-      el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark", "aria-hidden": "true" }, "🌿"),
-        el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
-      ...shell.apps.map((a) => el("a", { class: "nav", href: a.page, "aria-current": a.id === here ? "page" : null },
-        el("span", { class: "ico", "aria-hidden": "true" }, a.icon), a.name)),
-      el("div", { class: "side-foot" },
-        el("div", { class: "side-level" },
-          el("span", { class: "side-level-n" }, "lvl " + p.level),
-          el("span", { class: "side-level-xp" }, p.total_xp + " XP")),
-        el("div", { class: "xpbar" }, el("div", { class: "xpbar-track" },
-          el("div", { class: "xpbar-fill", style: "width:" + pct + "%" }))),
-        shell.on_pc_only.length
-          ? el("small", { class: "side-more", title: shell.on_pc_only.join(", ") },
-            shell.on_pc_only.length + " more apps in the PC app for now")
-          : null));
+    return el("div", { class: "nav-level" },
+      el("div", { class: "side-level" },
+        el("span", { class: "side-level-n" }, "lvl " + p.level),
+        el("span", { class: "side-level-xp" }, p.total_xp + " XP")),
+      el("div", { class: "xpbar" }, el("div", { class: "xpbar-track" },
+        el("div", { class: "xpbar-fill", style: "width:" + pct + "%" }))));
+  }
+
+  function appLinks(shell, cls) {
+    const here = document.body.dataset.app || "web_home";
+    return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, a.icon), el("span", { class: "label" }, a.name)));
+  }
+
+  function more(shell) {
+    return shell.on_pc_only.length
+      ? el("a", { class: "side-more", href: "apps.html", title: shell.on_pc_only.join(", ") },
+        shell.on_pc_only.length + " more apps in the PC app for now")
+      : null;
+  }
+
+  function renderNav(shell) {
+    const layout = $(".layout");
+    document.body.classList.toggle("has-side", Boolean(layout));
+    if (layout) {
+      let side = $("nav.side");
+      if (!side) {
+        side = el("nav", { class: "side", "aria-label": "Apps" });
+        layout.prepend(side);
+      }
+      side.replaceChildren(
+        el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark", "aria-hidden": "true" }, "🌿"),
+          el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
+        ...appLinks(shell, "nav"),
+        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
+    }
+    let button = $("#mia-menu-button");
+    if (!button) {
+      button = el("button", { type: "button", id: "mia-menu-button", class: "menu-button", "aria-label": "Menu",
+        "aria-expanded": "false", "aria-controls": "mia-menu", onclick: () => toggleMenu() }, "⋯");
+      document.body.append(button);
+    }
+    let menu = $("#mia-menu");
+    if (!menu) {
+      menu = el("div", { id: "mia-menu", class: "menu-sheet", hidden: true, role: "dialog", "aria-label": "Menu",
+        onclick: (e) => { if (e.target === menu) toggleMenu(false); } });
+      document.body.append(menu);
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggleMenu(false); });
+    }
+    menu.replaceChildren(el("div", { class: "menu-panel glass glow" },
+      el("div", { class: "menu-head" },
+        el("span", { class: "menu-brand" }, "🌿 MIA"),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: () => toggleMenu(false) }, "Close")),
+      el("nav", { class: "menu-grid", "aria-label": "Apps" }, ...appLinks(shell, "menu-item")),
+      levelBlock(shell.person), more(shell)));
+  }
+
+  function toggleMenu(open) {
+    const menu = $("#mia-menu");
+    if (!menu) return;
+    const show = open == null ? menu.hidden : open;
+    menu.hidden = !show;
+    $("#mia-menu-button").setAttribute("aria-expanded", String(show));
+    if (show) { const first = menu.querySelector("a"); if (first) first.focus(); }
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
@@ -198,12 +243,12 @@
     const go = async () => {
       const app = $("#app") || $(".layout");
       if (app) app.hidden = false;
-      try { renderSidebar(await MIA.shell()); } catch (e) { say(e.message); }
+      try { renderNav(await MIA.shell()); } catch (e) { say(e.message); }
       mountTalk();
       await refresh();
       if (!options || options.refreshOnChange !== false) {
         MIA.onChange(async () => {
-          try { renderSidebar(await MIA.shell()); } catch (e) { /* keep the old one */ }
+          try { renderNav(await MIA.shell()); } catch (e) { /* keep the old one */ }
           refresh();
         });
       }
@@ -215,8 +260,8 @@
 
   /** The frame alone (sidebar + MIA) for a page that runs its own render and sign-in. */
   async function frame() {
-    try { renderSidebar(await MIA.shell()); } catch (e) { return; }
-    mountTalk();
+    try { renderNav(await MIA.shell()); } catch (e) { return; }
+    if (talkHere) mountTalk();
   }
 
   window.MIAShell = { start, act, say, el, refresh, frame, talk: toggleTalk };
@@ -224,6 +269,8 @@
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).
   const me = document.currentScript;
+  // data-talk="own": the page has its own Talk (Home), so no floating one.
+  const talkHere = !(me && me.dataset.talk === "own");
   if (me && me.dataset.frame) {
     document.body.dataset.app = me.dataset.frame;
     const signIn = MIA.signIn;

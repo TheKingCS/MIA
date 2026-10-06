@@ -13,7 +13,7 @@ import pytest
 from core.actions import ActionCenter
 from core.child_accounts import make_child
 from core.focus_presets import set_app_visible
-from core.web_surfaces import APPS, date_text, greeting, home, plural, shell
+from core.web_surfaces import APPS, dashboard, date_text, greeting, plural, shell
 from tests.engine_world import build_world
 
 TODAY = date.today()
@@ -44,7 +44,7 @@ def test_the_shell_is_the_persons_own(world):
     data = shell(world, TODAY)
     assert data["person"]["name"] == "Robin" and data["person"]["level"] == 1
     ids = [a["id"] for a in data["apps"]]
-    assert ids[0] == "dashboard" and "budget" in ids and "real_estate" in ids
+    assert ids[:2] == ["web_home", "dashboard"] and "budget" in ids and "real_estate" in ids
     assert all(a["page"] for a in data["apps"])
     assert "Maintenance" in data["on_pc_only"]
 
@@ -58,13 +58,13 @@ def test_a_child_sees_only_child_apps(world):
     ids = {a["id"] for a in data["apps"]}
     assert data["person"]["child"]
     assert not ids & {"budget", "real_estate", "garage"}
-    assert {"dashboard", "missions", "kitchen"} <= ids
-    page = home(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
+    assert {"web_home", "dashboard", "missions", "kitchen"} <= ids
+    page = dashboard(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
     assert page["child"] and not any(c["app"] == "budget" for c in page["glance"])
 
 
-def test_home_is_the_dashboard(world):
-    page = home(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
+def test_the_dashboard(world):
+    page = dashboard(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
     assert page["greeting"] == "Good morning, Robin"
     [bill] = [f for f in page["focus"] if f["title"] == "Pay Electric"]
     assert bill["when"] == "overdue" and bill["action"]["kind"] == "bill.pay" and bill["page"] == "finances.html"
@@ -84,7 +84,7 @@ def test_the_endpoints(world):
     token = client.post("/api/login", json={"profile_id": world.me.profile_id, "password": "pw"}).json()["token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
     assert client.get("/api/shell").json()["person"]["name"] == "Robin"
-    assert client.get("/api/home").json()["focus"]
+    assert client.get("/api/dashboard").json()["focus"]
 
 
 # ------------------------------------------------------------------ the Apps page
@@ -110,7 +110,6 @@ def test_every_module_is_on_the_apps_page_with_its_own_description():
     from core.web_surfaces import APPS_BY_ID, GROUPS
 
     modules = _module_descriptions()
-    modules.pop("web_home")  # the web Home itself
     assert set(modules) == set(APPS_BY_ID)
     for module_id, description in modules.items():
         assert APPS_BY_ID[module_id].description == description, module_id

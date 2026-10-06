@@ -1,5 +1,5 @@
 /*
- * dashboard.js — Home (claude, 2026-10-06, DEC-0017). Renders MIA.home();
+ * dashboard.js — the Dashboard (claude, 2026-10-06, DEC-0017). Renders MIA.dashboard();
  * every number and sentence is the engine's. Ticking a focus item runs its
  * action through MIAShell.act (propose → confirm → approve → undo).
  */
@@ -22,7 +22,7 @@
   }
 
   async function render() {
-    const home = await MIA.home();
+    const home = await MIA.dashboard();
     $("greeting").textContent = home.greeting;
     $("subtitle").textContent = home.subtitle;
     $("date").textContent = home.date;

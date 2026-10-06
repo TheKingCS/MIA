@@ -4,12 +4,25 @@
       "name": "Life, goals & self",
       "apps": [
         {
-          "id": "dashboard",
+          "id": "web_home",
           "name": "Home",
-          "icon": "🏠",
+          "icon": "✨",
+          "tagline": "MIA, and a chat with her.",
+          "description": "MIA herself: her presence, today's one thing, and a chat with her.",
+          "page": "index.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How are you, MIA?",
+          "tools": []
+        },
+        {
+          "id": "dashboard",
+          "name": "Dashboard",
+          "icon": "📊",
           "tagline": "Your life. In sync.",
           "description": "Recent activity, active missions, memories, and upcoming items at a glance.",
-          "page": "index.html",
+          "page": "dashboard.html",
           "on_web": true,
           "shown": true,
           "can_hide": false,
@@ -1610,8 +1623,8 @@
     }
   ],
   "counts": {
-    "apps": 34,
-    "on_web": 9,
+    "apps": 35,
+    "on_web": 10,
     "tools": 201
   }
 }

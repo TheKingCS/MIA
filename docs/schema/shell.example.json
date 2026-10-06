@@ -11,11 +11,18 @@
   "date": "Tue, Oct 6, 2026",
   "apps": [
     {
-      "id": "dashboard",
+      "id": "web_home",
       "name": "Home",
-      "icon": "🏠",
-      "tagline": "Your life. In sync.",
+      "icon": "✨",
+      "tagline": "MIA, and a chat with her.",
       "page": "index.html"
+    },
+    {
+      "id": "dashboard",
+      "name": "Dashboard",
+      "icon": "📊",
+      "tagline": "Your life. In sync.",
+      "page": "dashboard.html"
     },
     {
       "id": "garage",

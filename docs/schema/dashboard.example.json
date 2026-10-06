@@ -9,13 +9,13 @@
       "detail": "10 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "cecf48bd31",
+      "record_id": "8e15cd9cd1",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "cecf48bd31"
+          "task_id": "8e15cd9cd1"
         }
       },
       "page": "garage.html"
@@ -26,13 +26,13 @@
       "detail": "$1,500.00",
       "time": "",
       "module_id": "budget",
-      "record_id": "cb87599050",
+      "record_id": "50fa213d2b",
       "icon": "💰",
       "action": {
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "cb87599050"
+          "source_id": "50fa213d2b"
         }
       },
       "page": "finances.html"
@@ -124,52 +124,52 @@
   ],
   "wins": [
     {
-      "at": "2026-10-06T04:45:09",
+      "at": "2026-10-06T05:21:33",
       "type": "meal_logged",
       "summary": "Cooked Chili",
       "refs": [
-        "meal:254384e065",
-        "recipe:5c63e2d9e2"
+        "meal:ab472cfcc0",
+        "recipe:9bbb5bcaa3"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:45:09",
-      "type": "workout_logged",
-      "summary": "Worked out: Beginner full body, 30 min",
-      "refs": [
-        "workout:65d3d22add",
-        "workout_template:1a12eea395"
-      ],
-      "source": "manual"
-    },
-    {
-      "at": "2026-10-06T04:45:08",
+      "at": "2026-10-06T05:21:33",
       "type": "mission_completed",
       "summary": "Completed the mission Plan the week",
       "refs": [
-        "mission:fa848e0258",
+        "mission:9f5fd86d0d",
         "skill:organization"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:45:08",
+      "at": "2026-10-06T05:21:33",
       "type": "skill_evidence",
       "summary": "10 XP in organization from Plan the week",
       "refs": [
         "skill:organization",
-        "mission:fa848e0258"
+        "mission:9f5fd86d0d"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:45:08",
+      "at": "2026-10-06T05:21:33",
       "type": "bill_paid",
       "summary": "Paid Electric: $120.00",
       "refs": [
-        "bill:c7809cba1d",
-        "expense:f19d493880"
+        "bill:7ec839f616",
+        "expense:f33f876426"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-06T05:21:33",
+      "type": "workout_logged",
+      "summary": "Worked out: Beginner full body, 30 min",
+      "refs": [
+        "workout:9657b33a7b",
+        "workout_template:c9c188b98d"
       ],
       "source": "manual"
     }

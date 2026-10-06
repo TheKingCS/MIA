@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Dashboard — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+</head>
+<body data-app="dashboard">
+  <!--
+    Dashboard: the concept's desktop dashboard (DEC-0017; claude builds it
+    working, muse owns the look). Everything comes from the engine:
+    MIA.dashboard() (core/web_surfaces.py) and the shared frame (shell.js).
+    Ticking a Today's Focus item proposes its action; nothing changes
+    until the person says yes. Home (index.html) is MIA herself: her
+    presence and a chat with her (Zac, 2026-10-06).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero home-hero">
+        <span class="hero-chip" id="date"></span>
+        <h1 id="greeting">MIA</h1>
+        <p class="tagline" id="subtitle"></p>
+      </header>
+
+      <div class="home-grid">
+        <section class="glass glow" aria-labelledby="focus-h">
+          <div class="sect"><h2 id="focus-h">Today's Focus</h2><span class="more" id="focus-count"></span></div>
+          <ul class="focus-list" id="focus"></ul>
+          <div class="empty" id="focus-empty" hidden><strong>Nothing needs you today.</strong>
+            <p>Enjoy it. MIA will say when something comes up.</p></div>
+        </section>
+        <section class="glass saying" aria-label="Today's thought">
+          <p id="saying"></p>
+        </section>
+      </div>
+
+      <nav class="quick" id="quick" aria-label="Quick actions"></nav>
+
+      <div class="home-grid">
+        <section class="glass" aria-labelledby="up-h">
+          <div class="sect"><h2 id="up-h">Upcoming</h2></div>
+          <ul class="focus-list" id="upcoming"></ul>
+          <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
+        </section>
+        <section class="glass" aria-labelledby="wins-h">
+          <div class="sect"><h2 id="wins-h">Recent wins</h2></div>
+          <ul class="wins" id="wins"></ul>
+          <p class="dim" id="wins-empty" hidden>Your wins will show up here.</p>
+        </section>
+      </div>
+
+      <div class="sect"><h2>At a glance</h2></div>
+      <div class="glance" id="glance"></div>
+    </main>
+  </div>
+
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

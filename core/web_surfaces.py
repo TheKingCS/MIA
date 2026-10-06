@@ -11,9 +11,13 @@ the upcoming list and the at-a-glance cards.
 - `shell(context)`: the sidebar (the person's apps, child-safe and
   respecting the apps they've tucked away), their level and XP, today's
   date. Served as `/api/shell`.
-- `home(context)`: the Home dashboard (the concept's "Good morning",
+- `dashboard(context)`: the Dashboard (the concept's "Good morning",
   Today's Focus, a line of encouragement, quick actions, Upcoming and
-  at-a-glance cards). Served as `/api/home`.
+  at-a-glance cards). Served as `/api/dashboard`. Home itself
+  (`web/index.html`) is MIA's presence and a chat with her (Zac,
+  2026-10-06), reading Life State.
+- `apps_page(context)`: every app, grouped, with what MIA can do in each.
+  Served as `/api/apps`.
 
 Apps appear in the sidebar once they have a web screen (`page`); the
 rest are counted in `on_pc_only` until they arrive. `docs/WEB_PARITY.md`
@@ -51,7 +55,9 @@ GROUPS = (LIFE, MONEY, HOME, OUTDOORS, KNOW)
 
 # The order of the concept's sidebar first, then the rest of MIA.
 APPS: tuple[App, ...] = (
-    App("dashboard", "Home", "🏠", "Your life. In sync.", "index.html",
+    App("web_home", "Home", "✨", "MIA, and a chat with her.", "index.html",
+        "MIA herself: her presence, today's one thing, and a chat with her.", LIFE, (), "How are you, MIA?"),
+    App("dashboard", "Dashboard", "📊", "Your life. In sync.", "dashboard.html",
         "Recent activity, active missions, memories, and upcoming items at a glance.", LIFE,
         ("today", "calendar", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
     App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", None,
@@ -162,7 +168,7 @@ QUICK_ACTIONS = (
 def _visible(context, app: App) -> bool:
     from core.child_accounts import app_allowed
 
-    if app.module_id == "dashboard":
+    if app.module_id == "web_home":
         return True
     try:
         if not app_allowed(context, app.module_id):
@@ -291,7 +297,7 @@ def _glance(state: dict) -> list[dict]:
     return cards
 
 
-def home(context, now: Optional[datetime] = None) -> dict:
+def dashboard(context, now: Optional[datetime] = None) -> dict:
     from core.context_assembler import assemble_life_state_v2
 
     now = now or datetime.now()

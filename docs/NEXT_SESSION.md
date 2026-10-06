@@ -220,8 +220,9 @@ every step below in order, from a blank machine, with Windows notes.
 
 **Now (2026-10-06, DEC-0017, approved): the web becomes all of MIA.**
 Track it in `docs/WEB_PARITY.md`. Done: the shared frame (`web/shell.js`)
-and the dashboard Home (`core/web_surfaces.py`, `/api/shell`,
-`/api/home`). Next, each one a full engine API (every read and every
+the Dashboard (`core/web_surfaces.py`, `/api/shell`,
+`/api/dashboard`), the Apps page (`/api/apps`), Home as MIA herself
+(Muse's orb + chat) and the ⋯ menu. Next, each one a full engine API (every read and every
 add/edit/delete/complete as an action kind in `core/actions.py`) plus a
 working screen on the frame, for Muse to restyle:
 1. **Money** (bills, income sources, income, expenses, debts with payoff
