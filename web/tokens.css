@@ -154,6 +154,12 @@
   --mod-glow: rgba(192, 132, 252, 0.35);
   --mod-dim: rgba(192, 132, 252, 0.10);
 }
+.mod-garage {
+  --mod: #fb923c;
+  --mod-line: rgba(251, 146, 60, 0.5);
+  --mod-glow: rgba(251, 146, 60, 0.35);
+  --mod-dim: rgba(251, 146, 60, 0.10);
+}
 
 [data-contrast="high"] {
   --bg: #000;
