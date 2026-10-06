@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Say It · Lens Arcade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;}
+  #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
+    display:grid;grid-template-rows:auto auto auto 1fr auto;justify-items:center;padding:16px 28px;row-gap:10px;}
+  header{width:100%;display:flex;justify-content:space-between;align-items:center;}
+  header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
+  header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
+  #meta{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:14px;}
+  #score{font-weight:800;color:#ffedb8;font-size:20px;}
+  #streak{color:rgba(244,234,208,.5);}
+  #timer{width:100%;height:6px;border-radius:99px;background:rgba(246,196,83,.14);overflow:hidden;}
+  #timer i{display:block;height:100%;width:100%;border-radius:99px;
+    background:linear-gradient(90deg,#f6c453,#ffedb8);box-shadow:0 0 10px rgba(246,196,83,.7);}
+  #q{font-size:clamp(19px,4.6vmin,27px);font-weight:700;text-align:center;line-height:1.35;
+    color:#ffedb8;text-shadow:0 0 18px rgba(246,196,83,.35);align-self:center;max-width:100%;}
+  #answers{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:center;}
+  .ans{cursor:pointer;border:1px solid rgba(246,196,83,.35);background:rgba(255,248,230,.045);
+    color:#f4ead0;border-radius:16px;padding:18px 10px;font-size:clamp(15px,3.6vmin,19px);font-weight:600;
+    min-height:76px;transition:transform .08s ease;}
+  .ans:active{transform:scale(.96);}
+  .ans.right{background:rgba(246,196,83,.28);border-color:#f6c453;box-shadow:0 0 20px rgba(246,196,83,.5);}
+  .ans.wrong{background:rgba(242,140,140,.16);border-color:rgba(242,140,140,.6);}
+  .ans:disabled{cursor:default;}
+  #overlay{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:14px;
+    background:rgba(0,0,0,.82);text-align:center;padding:30px;z-index:5;}
+  #overlay[hidden]{display:none;}
+  #overlay h1{font-size:40px;color:#ffedb8;text-shadow:0 0 30px rgba(246,196,83,.6);letter-spacing:.06em;margin:0;}
+  #overlay p{color:rgba(244,234,208,.65);font-size:15px;line-height:1.7;margin:0;max-width:340px;}
+  #overlay .big{font-size:64px;font-weight:800;color:#ffedb8;}
+  #gobtn{cursor:pointer;border:none;border-radius:99px;padding:15px 54px;font-size:18px;font-weight:800;
+    background:#f6c453;color:#241a03;box-shadow:0 0 26px rgba(246,196,83,.5);}
+  #gobtn:active{transform:scale(.96);}
+</style>
+</head>
+<body>
+<div id="stage" style="position:relative;">
+  <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
+  <div id="meta"><span id="score">0</span><span id="streak"></span><span id="qnum"></span></div>
+  <div id="timer"><i></i></div>
+  <p id="q"></p>
+  <div id="answers"></div>
+  <div id="overlay">
+    <h1 id="ov-title">SAY IT</h1>
+    <p id="ov-sub">60 seconds. Tap the right answer.<br>+100 per correct — no penalties, just speed.</p>
+    <button id="gobtn" type="button">START</button>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  // correct answer is always first in `a`; shuffled at runtime
+  var BANK=[
+    {q:"H2O is better known as…",a:["Water","Hydrogen","Salt","Oxygen"]},
+    {q:"Closest planet to the Sun?",a:["Mercury","Venus","Mars","Jupiter"]},
+    {q:"What do plants absorb from the air?",a:["Carbon dioxide","Oxygen","Nitrogen","Helium"]},
+    {q:"How many bones in the adult human body?",a:["206","186","226","256"]},
+    {q:"Rough speed of light?",a:["300,000 km/s","30,000 km/s","3,000 km/s","3,000,000 km/s"]},
+    {q:"First person on the Moon?",a:["Neil Armstrong","Buzz Aldrin","Yuri Gagarin","Michael Collins"]},
+    {q:"The ancient pyramids are in…",a:["Egypt","Mexico","Peru","Greece"]},
+    {q:"The Titanic sank in…",a:["1912","1905","1923","1898"]},
+    {q:"The Berlin Wall fell in…",a:["1989","1979","1991","1985"]},
+    {q:"World War I began in…",a:["1914","1918","1939","1905"]},
+    {q:"How many blocks in a Tetris piece?",a:["4","3","5","7"]},
+    {q:"Mario's brother is…",a:["Luigi","Wario","Yoshi","Toad"]},
+    {q:"Minecraft was made by…",a:["Mojang","Nintendo","Epic","Valve"]},
+    {q:"Pokémon's yellow mascot?",a:["Pikachu","Charmander","Squirtle","Eevee"]},
+    {q:"Best-selling video game ever?",a:["Minecraft","Tetris","GTA V","Wii Sports"]},
+    {q:"Sushi comes from…",a:["Japan","China","Thailand","Korea"]},
+    {q:"Main ingredient in guacamole?",a:["Avocado","Tomato","Lime","Onion"]},
+    {q:"Espresso + steamed milk = …",a:["Latte","Cappuccino","Mocha","Macchiato"]},
+    {q:"Which pepper is the hottest?",a:["Ghost pepper","Habanero","Jalapeño","Cayenne"]},
+    {q:"Famous for croissants?",a:["France","Italy","Spain","Belgium"]},
+    {q:"Largest planet in our solar system?",a:["Jupiter","Saturn","Neptune","Earth"]},
+    {q:"The galaxy we live in?",a:["Milky Way","Andromeda","Triangulum","Sombrero"]},
+    {q:"First artificial satellite?",a:["Sputnik 1","Explorer 1","Voyager 1","Mir"]},
+    {q:"The Red Planet?",a:["Mars","Venus","Jupiter","Mercury"]},
+    {q:"Stars are mostly made of…",a:["Hydrogen","Helium","Carbon","Iron"]},
+    {q:"How many Olympic rings?",a:["5","4","6","7"]},
+    {q:"The World Cup happens every…",a:["4 years","2 years","3 years","5 years"]},
+    {q:"In tennis, zero points is called…",a:["Love","Nil","Duck","Blank"]},
+    {q:"Players per basketball team on court?",a:["5","6","7","4"]},
+    {q:"A marathon is about…",a:["26 miles","13 miles","30 miles","20 miles"]},
+    {q:"The 'King of Pop'?",a:["Michael Jackson","Prince","Elvis","Beyoncé"]},
+    {q:"Strings on a violin?",a:["4","6","5","8"]},
+    {q:"John, Paul, George and Ringo?",a:["The Beatles","The Stones","Queen","ABBA"]},
+    {q:"'Bohemian Rhapsody' is by…",a:["Queen","Led Zeppelin","Pink Floyd","The Who"]},
+    {q:"'May the Force be with you'?",a:["Star Wars","Star Trek","Dune","Avatar"]},
+    {q:"Woody's space-ranger friend?",a:["Buzz Lightyear","Rex","Hamm","Slinky"]},
+    {q:"'I'll be back'?",a:["The Terminator","Rambo","Rocky","Die Hard"]},
+    {q:"The ship in 'Titanic'?",a:["Titanic","Lusitania","Queen Mary","Britannic"]},
+    {q:"Largest hot desert?",a:["Sahara","Gobi","Kalahari","Mojave"]},
+    {q:"Capital of Japan?",a:["Tokyo","Kyoto","Osaka","Seoul"]},
+    {q:"Longest river in the world?",a:["The Nile","The Amazon","The Yangtze","The Mississippi"]},
+    {q:"Country with the most lakes?",a:["Canada","Russia","USA","Finland"]},
+    {q:"'www' stands for…",a:["World Wide Web","World Web Window","Web World Wide","Wide World Web"]},
+    {q:"First iPhone released in…",a:["2007","2005","2010","2008"]},
+    {q:"Google was founded in…",a:["1998","2004","1995","2001"]},
+    {q:"In binary, 1 + 1 = …",a:["10","2","11","1"]},
+    {q:"'CPU' stands for…",a:["Central Processing Unit","Computer Personal Unit","Central Program Utility","Core Processing Unit"]},
+    {q:"Inventor of the World Wide Web?",a:["Tim Berners-Lee","Bill Gates","Steve Jobs","Vint Cerf"]}
+  ];
+  var TIME=60,score=0,streak=0,best=0,answered=0,correct=0,left=TIME,timer=null,lock=false,deck=[];
+  try{best=parseInt(localStorage.getItem("laSayItBest")||"0",10)||0;}catch(e){}
+  var qEl=document.getElementById("q"),aEl=document.getElementById("answers"),
+      scoreEl=document.getElementById("score"),streakEl=document.getElementById("streak"),
+      qnumEl=document.getElementById("qnum"),fill=document.querySelector("#timer i"),
+      ov=document.getElementById("overlay"),ovTitle=document.getElementById("ov-title"),
+      ovSub=document.getElementById("ov-sub"),go=document.getElementById("gobtn");
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function next(){
+    lock=false;
+    if(deck.length===0)deck=shuffle(BANK.slice());
+    var item=deck.pop();
+    var opts=shuffle(item.a.map(function(t){return {t:t,ok:t===item.a[0]};}));
+    qEl.textContent=item.q;
+    aEl.innerHTML="";
+    opts.forEach(function(o){
+      var b=document.createElement("button");b.type="button";b.className="ans";b.textContent=o.t;
+      b.onclick=function(){pick(b,o.ok);};
+      aEl.appendChild(b);
+    });
+    qnumEl.textContent="#"+(answered+1);
+  }
+  function pick(btn,ok){
+    if(lock)return;lock=true;answered++;
+    var kids=aEl.children;
+    for(var i=0;i<kids.length;i++){kids[i].disabled=true;}
+    if(ok){
+      score+=100;correct++;streak++;
+      btn.classList.add("right");
+      scoreEl.textContent=score;
+      streakEl.textContent=streak>1?"🔥×"+streak:"";
+    }else{
+      streak=0;streakEl.textContent="";
+      btn.classList.add("wrong");
+      for(var j=0;j<kids.length;j++){if(kids[j].textContent===BANKcorrectText())kids[j].classList.add("right");}
+    }
+    setTimeout(next,ok?350:900);
+  }
+  function BANKcorrectText(){
+    // find the correct text of the current question by matching qEl text
+    for(var i=0;i<BANK.length;i++)if(BANK[i].q===qEl.textContent)return BANK[i].a[0];
+    return "";
+  }
+  function end(){
+    clearInterval(timer);
+    var acc=answered?Math.round(correct/answered*100):0;
+    if(score>best){best=score;try{localStorage.setItem("laSayItBest",String(best));}catch(e){}}
+    ovTitle.innerHTML='<span class="big">'+score+'</span>';
+    ovSub.innerHTML=correct+" correct · "+acc+"% accuracy<br>Best: "+best+"<br><br>Think it out loud, tap it fast.";
+    go.textContent="PLAY AGAIN";
+    ov.hidden=false;
+  }
+  function start(){
+    score=0;streak=0;answered=0;correct=0;left=TIME;deck=[];
+    scoreEl.textContent="0";streakEl.textContent="";
+    ov.hidden=true;next();
+    clearInterval(timer);
+    timer=setInterval(function(){
+      left-=0.1;
+      fill.style.width=Math.max(0,left/TIME*100)+"%";
+      if(left<=0)end();
+    },100);
+  }
+  go.onclick=start;
+})();
+</script>
+</body>
+</html>
