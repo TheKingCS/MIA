@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Say It · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -155,7 +156,12 @@
   function end(){
     clearInterval(timer);
     var acc=answered?Math.round(correct/answered*100):0;
-    if(score>best){best=score;try{localStorage.setItem("laSayItBest",String(best));}catch(e){}}
+    var isBest=false;
+    if(score>best){best=score;isBest=true;try{localStorage.setItem("laSayItBest",String(best));}catch(e){}}
+    if(window.ArcadeProgress){
+      ArcadeProgress.award("sayit","round",correct*2);
+      if(isBest)ArcadeProgress.award("sayit","newbest",50);
+    }
     ovTitle.innerHTML='<span class="big">'+score+'</span>';
     ovSub.innerHTML=correct+" correct · "+acc+"% accuracy<br>Best: "+best+"<br><br>Think it out loud, tap it fast.";
     go.textContent="PLAY AGAIN";
