@@ -94,10 +94,10 @@
       price: 1, path: "games/2048.html", live: true,
     },
     {
-      id: "fruitninja", name: "Fruit Ninja", art: "🍉", glow: "rgba(255,120,90,0.55)",
+      id: "fruitslice", name: "Fruit Slice", art: "🍉", glow: "rgba(255,120,90,0.55)",
       hook: "Swipe to slice. Don't hit the bombs.",
       how: "Fruits arc upward — slice them mid-air. 3 misses and you're out.",
-      price: 1, path: "games/fruitninja.html", live: true,
+      price: 1, path: "games/fruitslice.html", live: true,
     },
   ];
 
