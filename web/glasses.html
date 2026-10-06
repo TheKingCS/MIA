@@ -17,7 +17,14 @@
     published placeholder examples, and says so.
   -->
   <div id="stage">
-    <div id="orb-zone"><div id="orb" aria-hidden="true"></div><div id="wave" hidden aria-hidden="true"></div></div>
+    <div id="orb-zone">
+      <div id="orb-wrap" aria-hidden="true">
+        <span class="ring r1"></span><span class="ring r2"></span>
+        <div id="orb"></div>
+        <i class="p p1"></i><i class="p p2"></i><i class="p p3"></i>
+      </div>
+      <div id="wave" hidden aria-hidden="true"></div>
+    </div>
     <main id="card" aria-live="polite"></main>
     <footer id="foot">
       <div id="xp"><span id="xp-label"></span><div id="xp-track"><div id="xp-fill"></div></div></div>
