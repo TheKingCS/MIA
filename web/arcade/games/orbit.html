@@ -106,10 +106,18 @@
   var bankNum=document.getElementById("bank-num"),bankRate=document.getElementById("bank-rate"),
       gensEl=document.getElementById("gens"),foot=document.getElementById("foot"),
       zone=document.getElementById("station-zone"),station=document.getElementById("station");
+  // rolling tap log: effective per-second includes click points
+  var tapLog=[];
+  function effRate(){
+    var now=Date.now();
+    while(tapLog.length&&now-tapLog[0]>5000)tapLog.shift();
+    return rate()+(tapLog.length/5)*(s.tapPow||1);
+  }
   // tap the station
   function tap(x,y){
     var v=s.tapPow||1;
     s.bank+=v;s.total+=v;s.taps++;
+    tapLog.push(Date.now());
     var f=document.createElement("span");f.className="tap";f.textContent="+"+v;
     var r=station.getBoundingClientRect(),zr=zone.getBoundingClientRect();
     f.style.left=((x!==undefined?x:r.left+r.width/2)-zr.left-8)+"px";
@@ -219,7 +227,7 @@
   function paint(){
     check10k();
     bankNum.textContent=fmt(s.bank);
-    bankRate.textContent="⚡"+fmt(rate())+"/s";
+    bankRate.textContent="⚡"+fmt(effRate())+"/s";
     DEFS.forEach(function(d){
       var n=s.gens[d.id]||0,c=cost(d),b=buyBtns[d.id];
       b.parentElement.querySelector(".cnt").textContent=n;
