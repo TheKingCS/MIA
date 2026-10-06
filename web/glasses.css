@@ -24,8 +24,11 @@ body {
   background: #000;
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   overflow: hidden;
 }
 #stage {
@@ -35,10 +38,15 @@ body {
   max-width: 600px;
   max-height: 600px;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: 224px auto minmax(0, 1fr) auto;
   justify-items: center;
   padding: 14px 30px 12px;
-  row-gap: 6px;
+  row-gap: 10px;
+}
+/* demo only: shrink the stage so the demo voice console fits below it */
+body.demo #stage {
+  width: min(100vw, calc(100vh - 96px));
+  height: min(100vw, calc(100vh - 96px));
 }
 #stage::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -46,7 +54,7 @@ body {
 }
 
 /* her: a sphere of light with orbiting trails. Expression is the light. */
-#orb-zone { display: grid; justify-items: center; row-gap: 0; margin-bottom: -4px; }
+#orb-zone { display: grid; place-items: center; }
 #orb-wrap { position: relative; width: 190px; height: 190px; }
 #orb {
   position: absolute; inset: 30px; border-radius: 50%;
@@ -98,8 +106,8 @@ body {
   box-shadow: 0 0 66px rgba(255, 222, 140, 0.75), 0 0 150px rgba(246, 196, 83, 0.32), inset 0 0 30px rgba(255, 250, 220, 0.6);
 }
 
-/* waveform while she speaks */
-#wave { display: flex; gap: 5px; align-items: center; height: 30px; }
+/* waveform while she speaks — its own row, never touching the orb */
+#wave { display: flex; gap: 5px; align-items: center; justify-content: center; height: 40px; }
 #wave[hidden] { display: none; }
 #wave i {
   width: 3px; border-radius: 2px; background: var(--gold-dim);
@@ -149,19 +157,23 @@ body {
 .g-bar i { display: block; height: 100%; border-radius: 99px;
   background: linear-gradient(90deg, var(--gold), var(--epic)); box-shadow: 0 0 12px rgba(246, 196, 83, 0.65); }
 
-/* footer: whisper XP, voice, moments */
+/* footer: whisper XP, moment dots — no chat input; glasses are voice */
 #foot { width: 100%; max-width: 460px; display: grid; gap: 7px; }
 #xp-label { font-size: 10.5px; letter-spacing: 0.24em; color: var(--ink-faint); text-transform: uppercase; text-align: center; display: block; }
 #xp-track { height: 2px; border-radius: 99px; background: rgba(246, 196, 83, 0.12); margin-top: 5px; overflow: hidden; }
 #xp-fill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); box-shadow: 0 0 10px rgba(246, 196, 83, 0.7); transition: width 1.2s ease; }
-#voice { display: flex; gap: 8px; }
-#voice input {
-  flex: 1; background: rgba(255, 248, 230, 0.03); border: 1px solid rgba(246, 196, 83, 0.22); border-radius: 99px;
-  color: var(--ink); padding: 8px 18px; font-size: 13.5px; outline: none; min-width: 0;
+
+/* demo-only voice console: outside the glasses UI, below the stage */
+#demo-console { display: flex; gap: 8px; align-items: center; }
+#demo-console[hidden] { display: none; }
+#demo-console span { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+#demo-console input {
+  width: min(400px, 70vw); background: rgba(255, 248, 230, 0.03); border: 1px solid rgba(246, 196, 83, 0.22); border-radius: 99px;
+  color: var(--ink); padding: 8px 18px; font-size: 13.5px; outline: none;
 }
-#voice input::placeholder { color: var(--ink-faint); }
-#voice input:focus { border-color: var(--line); box-shadow: 0 0 16px rgba(246, 196, 83, 0.2); }
-#voice button {
+#demo-console input::placeholder { color: var(--ink-faint); }
+#demo-console input:focus { border-color: var(--line); box-shadow: 0 0 16px rgba(246, 196, 83, 0.2); }
+#demo-console button {
   flex: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
   border: 1px solid var(--line); background: rgba(246, 196, 83, 0.07); color: var(--gold);
   font-size: 16px; line-height: 1; box-shadow: 0 0 14px rgba(246, 196, 83, 0.18);
@@ -211,7 +223,6 @@ body {
 /* bare voice: no card — her answer floats, like the concept */
 .g-voice { display: grid; gap: 10px; justify-items: center; text-align: center; max-width: 460px; }
 .g-voice .g-say { margin: 0; font-size: 15px; }
-#card.talking #wave { height: 44px; }
 /* nudge: amber edge, calm but insistent */
 .g-card.nudge { border-color: rgba(255, 176, 84, 0.6);
   box-shadow: 0 0 0 1px rgba(255, 176, 84, 0.1), 0 0 46px rgba(255, 176, 84, 0.18), inset 0 1px 0 rgba(255, 244, 214, 0.1); }
