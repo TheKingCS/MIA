@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Mote · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -268,18 +269,21 @@
   function doFeed(s,now){
     if(s.asleep)return;
     s.hunger=clamp(s.hunger+25);
+    if(window.ArcadeProgress)ArcadeProgress.award("pet","care",5);
     animate("bounce");floatText("+25");say(pick(ACTION_QUIPS.feed));
     happyFlash(s,now);save(s);paint(s,now);
   }
   function doPlay(s,now){
     if(s.asleep)return;
     s.fun=clamp(s.fun+25);s.energy=clamp(s.energy-10);
+    if(window.ArcadeProgress)ArcadeProgress.award("pet","care",5);
     animate("wiggle");floatText("+25");say(pick(ACTION_QUIPS.play));
     happyFlash(s,now);save(s);paint(s,now);
   }
   function doPet(s,now){
     if(s.asleep)return;
     s.fun=clamp(s.fun+10);
+    if(window.ArcadeProgress)ArcadeProgress.award("pet","care",5);
     animate("bounce");floatText("+10");say(pick(ACTION_QUIPS.pet));
     happyFlash(s,now);save(s);paint(s,now);
   }
