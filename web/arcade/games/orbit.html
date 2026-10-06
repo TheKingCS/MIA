@@ -108,14 +108,19 @@
       zone=document.getElementById("station-zone"),station=document.getElementById("station");
   // rolling tap log: effective per-second includes click points
   var tapLog=[];
+  // tap power is additive: owned tap upgrades stack (5 + 25 = 30)
+  function tapPower(){
+    var p=(s.ups.u_tap1?5:0)+(s.ups.u_tap2?25:0);
+    return p>0?p:(s.tapPow>1?s.tapPow:1);
+  }
   function effRate(){
     var now=Date.now();
     while(tapLog.length&&now-tapLog[0]>5000)tapLog.shift();
-    return rate()+(tapLog.length/5)*(s.tapPow||1);
+    return rate()+(tapLog.length/5)*tapPower();
   }
   // tap the station
   function tap(x,y){
-    var v=s.tapPow||1;
+    var v=tapPower();
     s.bank+=v;s.total+=v;s.taps++;
     tapLog.push(Date.now());
     var f=document.createElement("span");f.className="tap";f.textContent="+"+v;
@@ -180,8 +185,8 @@
     {id:"u_fusion",name:"Hot Fusion",       desc:"Fusion Cells ×2", cost:4000,  fx:function(){s.mult.fusion=2;}},
     {id:"u_ring",  name:"Ring Resonance",   desc:"Orbital Rings ×2",cost:30000, fx:function(){s.mult.ring=2;}},
     {id:"u_dyson", name:"Swarm Intelligence",desc:"Dyson Swarms ×2",cost:250000,fx:function(){s.mult.dyson=2;}},
-    {id:"u_tap1",  name:"Reinforced Tap",   desc:"Taps give +5",    cost:1200,  fx:function(){s.tapPow=5;}},
-    {id:"u_tap2",  name:"Quantum Tap",      desc:"Taps give +25",   cost:30000, fx:function(){s.tapPow=25;}},
+    {id:"u_tap1",  name:"Reinforced Tap",   desc:"Taps give +5 · stacks",    cost:1200,  fx:function(){}},
+    {id:"u_tap2",  name:"Quantum Tap",      desc:"Taps give +25 · stacks",   cost:30000, fx:function(){}},
   ];
   var upsEl=document.getElementById("ups"),upBtns={};
   UPS.forEach(function(u){
