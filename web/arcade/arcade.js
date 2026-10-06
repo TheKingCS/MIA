@@ -72,8 +72,20 @@
     {
       id: "drift", name: "Drift", art: "✨", glow: "rgba(246,196,83,0.6)",
       hook: "A one-tap dodger. Guide the light past everything.",
-      how: "Tap to pulse upward, dodge the gates. How long can you last?",
+      how: "Classic or Levels — tap to pulse upward, dodge the gates.",
       price: 1, path: "games/drift.html", live: true,
+    },
+    {
+      id: "stack", name: "Stack", art: "🗼", glow: "rgba(180,140,242,0.55)",
+      hook: "One tap, perfect timing, endless tower.",
+      how: "Tap to drop each block. Miss the edge and it slices off.",
+      price: 1, path: "games/stack.html", live: true,
+    },
+    {
+      id: "breakout", name: "Breakout", art: "🧱", glow: "rgba(95,214,200,0.55)",
+      hook: "The brick-breaker. Pure arcade nostalgia.",
+      how: "Slide the paddle, smash every brick. 3 lives per run.",
+      price: 1, path: "games/breakout.html", live: true,
     },
   ];
 
