@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Lens Arcade — tiny games for your face</title>
+  <link rel="stylesheet" href="arcade.css">
+</head>
+<body>
+  <!--
+    LENS ARCADE (working title) — Zac's game store for the Ray-Ban Display.
+    A web storefront + launcher: game tiles, per-game pages, $1 each or the
+    $10 Season 1 Pass. Games are 600x600 web apps under games/.
+    Payments are simulated in this build; real Stripe payment links plug into
+    the buy buttons (see arcade.js BUY FLOW).
+  -->
+  <header id="hero">
+    <p id="wordmark">Lens Arcade</p>
+    <p id="tagline">Tiny games for your face.</p>
+    <p id="sub">Built for the Ray-Ban Display. Glanceable, tap-to-play, bright on black.</p>
+  </header>
+
+  <section id="pass-banner" hidden>
+    <div>
+      <p class="pass-kicker">Season 1 Pass</p>
+      <p class="pass-title">$10 — every game, one price</p>
+      <p class="pass-sub">All Season 1 games, including every future drop. Twenty games planned.</p>
+    </div>
+    <button id="pass-buy" type="button">Get the pass</button>
+  </section>
+
+  <main id="grid" aria-label="Games"></main>
+
+  <footer>
+    <p>Demo storefront — checkout connects when we launch.</p>
+  </footer>
+
+  <div id="sheet" hidden>
+    <div id="sheet-card" role="dialog" aria-modal="true">
+      <button id="sheet-close" type="button" aria-label="Close">×</button>
+      <p id="sheet-kicker"></p>
+      <h2 id="sheet-title"></h2>
+      <p id="sheet-hook"></p>
+      <p id="sheet-how"></p>
+      <div id="sheet-actions"></div>
+    </div>
+  </div>
+
+  <script src="arcade.js"></script>
+</body>
+</html>
