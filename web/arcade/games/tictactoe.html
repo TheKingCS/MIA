@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Tic-Tac-Toe · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -205,6 +206,10 @@
     over = true;
     if(result === "X"){
       scores.you++;
+      if(window.ArcadeProgress){
+        if(difficulty === "hard") ArcadeProgress.award("tictactoe", "win-hard", 100);
+        else ArcadeProgress.award("tictactoe", "win", 50);
+      }
       var L = LINES[combo];
       strikeLine.setAttribute("x1",L[0]); strikeLine.setAttribute("y1",L[1]);
       strikeLine.setAttribute("x2",L[2]); strikeLine.setAttribute("y2",L[3]);
@@ -221,6 +226,7 @@
       hintEl.textContent = "tap the board to play again";
     }else{
       scores.draws++;
+      if(window.ArcadeProgress) ArcadeProgress.award("tictactoe", "draw", 15);
       setStatus("Draw", "draw");
       hintEl.textContent = "tap the board to play again";
     }
