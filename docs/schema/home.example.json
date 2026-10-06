@@ -9,13 +9,13 @@
       "detail": "10 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "5d69cc9ef6",
+      "record_id": "cecf48bd31",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "5d69cc9ef6"
+          "task_id": "cecf48bd31"
         }
       },
       "page": "garage.html"
@@ -26,13 +26,13 @@
       "detail": "$1,500.00",
       "time": "",
       "module_id": "budget",
-      "record_id": "58fe573fe6",
+      "record_id": "cb87599050",
       "icon": "💰",
       "action": {
         "kind": "income.receive",
         "label": "Mark received",
         "params": {
-          "source_id": "58fe573fe6"
+          "source_id": "cb87599050"
         }
       },
       "page": "finances.html"
@@ -124,52 +124,52 @@
   ],
   "wins": [
     {
-      "at": "2026-10-06T04:42:07",
+      "at": "2026-10-06T04:45:09",
       "type": "meal_logged",
       "summary": "Cooked Chili",
       "refs": [
-        "meal:89a5f498c8",
-        "recipe:20ae5603aa"
+        "meal:254384e065",
+        "recipe:5c63e2d9e2"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:42:07",
+      "at": "2026-10-06T04:45:09",
       "type": "workout_logged",
       "summary": "Worked out: Beginner full body, 30 min",
       "refs": [
-        "workout:ff0fde806a",
-        "workout_template:ca49d19431"
+        "workout:65d3d22add",
+        "workout_template:1a12eea395"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:42:06",
+      "at": "2026-10-06T04:45:08",
       "type": "mission_completed",
       "summary": "Completed the mission Plan the week",
       "refs": [
-        "mission:dbaa93da02",
+        "mission:fa848e0258",
         "skill:organization"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:42:06",
+      "at": "2026-10-06T04:45:08",
       "type": "skill_evidence",
       "summary": "10 XP in organization from Plan the week",
       "refs": [
         "skill:organization",
-        "mission:dbaa93da02"
+        "mission:fa848e0258"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T04:42:06",
+      "at": "2026-10-06T04:45:08",
       "type": "bill_paid",
       "summary": "Paid Electric: $120.00",
       "refs": [
-        "bill:f8c2772f43",
-        "expense:7201b1abae"
+        "bill:c7809cba1d",
+        "expense:f19d493880"
       ],
       "source": "manual"
     }

@@ -65,6 +65,13 @@
       "icon": "💰",
       "tagline": "Know where it goes.",
       "page": "finances.html"
+    },
+    {
+      "id": "module_browser",
+      "name": "Apps",
+      "icon": "🧩",
+      "tagline": "Everything MIA can do.",
+      "page": "apps.html"
     }
   ],
   "on_pc_only": [
@@ -91,6 +98,7 @@
     "Files",
     "Music",
     "MIA Assistant",
+    "Diagnostics",
     "Settings"
   ],
   "weather": {

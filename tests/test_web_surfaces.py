@@ -172,3 +172,18 @@ def test_show_and_hide_go_through_the_action_contract(world):
         world.actions.propose(world, "app.visibility", {"module_id": "module_browser", "visible": False})
     with pytest.raises(ActionError):
         world.actions.propose(world, "app.visibility", {"module_id": "nope"})
+
+
+def test_the_published_examples_match_the_app_list():
+    """The public preview renders docs/schema/*.example.json; when a web
+    screen is added, its examples must be regenerated (2026-10-06: the
+    preview's sidebar had no Apps link)."""
+    import json
+    from pathlib import Path
+
+    schema = Path(__file__).resolve().parent.parent / "docs" / "schema"
+    shell_ids = [a["id"] for a in json.loads((schema / "shell.example.json").read_text(encoding="utf-8"))["apps"]]
+    assert shell_ids == [a.module_id for a in APPS if a.page]
+    example = json.loads((schema / "apps.example.json").read_text(encoding="utf-8"))
+    assert {a["id"] for g in example["groups"] for a in g["apps"]} == {a.module_id for a in APPS}
+    assert {a["id"] for g in example["groups"] for a in g["apps"] if a["on_web"]} == {a.module_id for a in APPS if a.page}
