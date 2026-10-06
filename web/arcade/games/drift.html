@@ -12,19 +12,40 @@
   body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
     display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;}
   #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
-    display:grid;grid-template-rows:auto 1fr;justify-items:stretch;padding:16px 28px;row-gap:10px;}
+    display:grid;grid-template-rows:auto 1fr;justify-items:stretch;padding:16px 28px;row-gap:10px;position:relative;}
   header{display:flex;justify-content:space-between;align-items:center;}
   header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
   header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
   #game{width:100%;height:100%;min-height:0;display:block;border-radius:18px;
     border:1px solid rgba(246,196,83,.22);touch-action:none;cursor:pointer;
     box-shadow:0 0 30px rgba(246,196,83,.08);}
+  #modes{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:12px;
+    background:rgba(0,0,0,.78);z-index:5;text-align:center;padding:24px;border-radius:18px;}
+  #modes[hidden]{display:none;}
+  #modes h1{margin:0;font-size:44px;font-weight:800;color:#ffedb8;letter-spacing:.08em;
+    text-shadow:0 0 30px rgba(246,196,83,.6);}
+  #modes .sub{margin:0;font-size:13px;color:rgba(244,234,208,.55);line-height:1.6;max-width:300px;}
+  #modes .mrow{display:flex;gap:12px;}
+  .mbtn{cursor:pointer;border:1px solid rgba(246,196,83,.55);background:rgba(246,196,83,.08);color:#ffedb8;
+    border-radius:16px;padding:16px 26px;font-size:17px;font-weight:800;letter-spacing:.04em;}
+  .mbtn small{display:block;font-size:11.5px;font-weight:400;color:rgba(244,234,208,.55);margin-top:4px;letter-spacing:0;}
+  .mbtn:active{transform:scale(.95);}
+  #modes .best{margin:0;font-size:12.5px;color:rgba(244,234,208,.4);}
 </style>
 </head>
 <body>
 <div id="stage">
   <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
   <canvas id="game" role="button" tabindex="0" aria-label="Drift — tap to flap"></canvas>
+  <div id="modes">
+    <h1>DRIFT</h1>
+    <div class="mrow">
+      <button class="mbtn" id="m-classic" type="button">CLASSIC<small>endless · steady</small></button>
+      <button class="mbtn" id="m-levels" type="button">LEVELS<small>faster + tighter every 5 gates</small></button>
+    </div>
+    <p class="sub">Tap to pulse upward. Thread the gates.</p>
+    <p class="best" id="modes-best"></p>
+  </div>
 </div>
 <script>
 (function(){
@@ -39,9 +60,11 @@
   }
   window.addEventListener("resize",resize);
 
-  var BEST_KEY="laDriftBest";
+  var BEST_KEYS={classic:"laDriftBest",levels:"laDriftBestLevels"};
+  var mode="classic";
   var best=0;
-  try{best=parseInt(localStorage.getItem(BEST_KEY)||"0",10)||0;}catch(e){}
+  function loadBest(){try{best=parseInt(localStorage.getItem(BEST_KEYS[mode])||"0",10)||0;}catch(e){best=0;}}
+  loadBest();
 
   var REDUCED=false;
   try{REDUCED=window.matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
@@ -50,13 +73,17 @@
   var GRAV=1100, IMPULSE=-420, MAXFALL=560;
 
   var state="ready"; // ready | playing | paused | dead
-  var orb, obstacles, particles, stars, score, speed, last=0;
+  var orb, obstacles, particles, stars, score, speed, level, banner, last=0;
 
   function reset(){
     orb={x:W*0.28,y:H*0.45,vy:0,r:12*S};
-    obstacles=[];particles=[];score=0;speed=200;
+    obstacles=[];particles=[];score=0;speed=200;level=1;banner=null;
   }
-  function gapPx(){return Math.max(120,170-score*1.2)*S;}
+  function gapPx(){
+    var g=Math.max(120,170-score*1.2)*S;
+    if(mode==="levels")g*=Math.max(0.55,1-0.05*(level-1));
+    return g;
+  }
   function spawn(){
     var g=gapPx(),margin=24*S;
     var top=margin+Math.random()*(H-g-2*margin);
@@ -67,11 +94,15 @@
   function die(){
     state="dead";
     var isBest=false;
-    if(score>best){best=score;isBest=true;try{localStorage.setItem(BEST_KEY,String(best));}catch(e){}}
+    if(score>best){best=score;isBest=true;try{localStorage.setItem(BEST_KEYS[mode],String(best));}catch(e){}}
     if(window.ArcadeProgress){
       ArcadeProgress.award("drift","run",10);
       if(isBest)ArcadeProgress.award("drift","newbest",50);
     }
+  }
+  function onLevelUp(){
+    banner={text:"LEVEL "+level,until:performance.now()+1400};
+    if(window.ArcadeProgress)ArcadeProgress.award("drift","levelup",15*level);
   }
 
   function initStars(){
@@ -91,11 +122,18 @@
     orb.y+=orb.vy*dt;
     if(orb.y-orb.r<0||orb.y+orb.r>H){die();return;}
     // obstacles
-    speed=Math.min(430,200+score*4);
+    var lvlMult=mode==="levels"?(1+0.08*(level-1)):1;
+    speed=Math.min(430,200+score*4)*lvlMult;
     if(obstacles.length===0||obstacles[obstacles.length-1].x<W-320*S)spawn();
     for(var j=obstacles.length-1;j>=0;j--){
       var ob=obstacles[j];ob.x-=speed*S*dt;
-      if(!ob.scored&&ob.x+ob.w<orb.x){ob.scored=true;score++;}
+      if(!ob.scored&&ob.x+ob.w<orb.x){
+        ob.scored=true;score++;
+        if(mode==="levels"){
+          var nl=Math.floor(score/5)+1;
+          if(nl>level){level=nl;onLevelUp();}
+        }
+      }
       if(ob.x+ob.w<-60){obstacles.splice(j,1);continue;}
       if(orb.x+orb.r>ob.x&&orb.x-orb.r<ob.x+ob.w){
         if(orb.y-orb.r<ob.gapTop||orb.y+orb.r>ob.gapBot){die();return;}
@@ -156,9 +194,25 @@
       ctx.restore();
     }
     // overlays
-    if(state==="ready")overlay("DRIFT","tap to begin"+(best>0?" · best "+best:""));
-    else if(state==="dead")overlay(String(score),"best "+best+" · tap to drift again");
+    if(state==="dead")overlay(String(score),"best "+best+" · "+mode+" · tap to drift again");
     else if(state==="paused")overlay("paused","tap to resume");
+    // level-up banner
+    if(banner&&performance.now()<banner.until){
+      ctx.save();
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.shadowColor="rgba(246,196,83,.9)";ctx.shadowBlur=26;
+      ctx.fillStyle="#ffedb8";ctx.font="800 "+Math.round(46*S)+"px system-ui,sans-serif";
+      ctx.fillText(banner.text,W/2,H*0.32);
+      ctx.restore();
+    } else if(banner){banner=null;}
+    // mode tag while playing levels
+    if(state==="playing"&&mode==="levels"){
+      ctx.save();
+      ctx.fillStyle="rgba(244,234,208,.5)";ctx.font=Math.round(13*S)+"px system-ui,sans-serif";
+      ctx.textAlign="right";ctx.textBaseline="top";
+      ctx.fillText("LVL "+level,W-12*S,12*S);
+      ctx.restore();
+    }
   }
   function roundBar(x,y,w,h){
     if(h<=0)return;
@@ -189,9 +243,28 @@
 
   function onTap(e){if(e&&e.cancelable)e.preventDefault();
     if(state==="paused"){state="playing";last=performance.now();return;}
-    if(state==="ready"||state==="dead"){startRun();}
-    impulse();
+    if(state==="dead"){showModes();return;}
+    if(state==="playing")impulse();
   }
+  function showModes(){
+    state="ready";
+    loadBest();
+    var b1=0,b2=0;
+    try{
+      b1=parseInt(localStorage.getItem(BEST_KEYS.classic)||"0",10)||0;
+      b2=parseInt(localStorage.getItem(BEST_KEYS.levels)||"0",10)||0;
+    }catch(e){}
+    document.getElementById("modes-best").textContent=
+      "best — classic "+b1+" · levels "+b2;
+    document.getElementById("modes").hidden=false;
+  }
+  function chooseMode(m){
+    mode=m;loadBest();
+    document.getElementById("modes").hidden=true;
+    startRun();impulse();
+  }
+  document.getElementById("m-classic").addEventListener("click",function(){chooseMode("classic");});
+  document.getElementById("m-levels").addEventListener("click",function(){chooseMode("levels");});
   canvas.addEventListener("pointerdown",onTap);
   canvas.addEventListener("touchstart",function(e){e.preventDefault();},{passive:false});
   canvas.addEventListener("keydown",function(e){
