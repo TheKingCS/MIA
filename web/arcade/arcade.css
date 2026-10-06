@@ -78,6 +78,20 @@ body {
 footer { margin-top: 44px; }
 footer p { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.06em; }
 
+/* arcade profile: level, XP, streak, achievements */
+#profile { margin-top: 22px; width: 100%; max-width: 460px; margin-left: auto; margin-right: auto; }
+#profile[hidden] { display: none; }
+#profile-top { display: flex; justify-content: center; gap: 18px; font-size: 15px; font-weight: 700; color: var(--gold-hi); }
+#profile-streak, #profile-trophies { color: var(--ink-dim); font-weight: 600; }
+#profile-xpbar { height: 6px; border-radius: 99px; background: rgba(246, 196, 83, 0.14); margin-top: 10px; overflow: hidden; }
+#profile-xpfill { display: block; height: 100%; width: 0; border-radius: 99px;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold)); box-shadow: 0 0 10px rgba(246, 196, 83, 0.7);
+  transition: width 1s ease; }
+#profile-xptext { margin: 6px 0 0; font-size: 12px; color: var(--ink-faint); letter-spacing: 0.08em; }
+#profile-ach { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.ach-pill { font-size: 12px; color: var(--gold-hi); border: 1px solid var(--gold-dim); border-radius: 99px;
+  padding: 4px 12px; background: rgba(246, 196, 83, 0.07); }
+
 /* detail sheet */
 #sheet {
   position: fixed; inset: 0; display: grid; place-items: center; padding: 20px;
