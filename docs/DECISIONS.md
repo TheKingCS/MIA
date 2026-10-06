@@ -234,6 +234,34 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      waits on design. Muse owns the shell (top bar, sidebar, search,
      level and XP, the orb), the component system, and restyles each
      working screen to match the concepts, checking it against them.
+     **The concept set** is the ten pictures Zac gave Muse: Home,
+     Greenhouse, Garage, Kitchen, Workout, Real Estate, Missions, Skills,
+     one asset's page (a mower), and an overview. They stay out of this
+     public repo because they show real addresses and names (DEC-0002).
+     The pattern they share, which every module screen follows:
+     - **Every module page:**
+       - a photo header with the module's name, tagline and the weather;
+       - three tiles: Tracked, Needs Attention (overdue), Next Up;
+       - a red Needs Attention list;
+       - asset cards, each with its own tasks and due/overdue chips;
+       - Related Missions;
+       - tabs for the module's sections (Kitchen: Recipes, Pantry,
+         Grocery List, Meal Log, Suggestions; Workout: Exercises,
+         Templates, Log Session, History, Progress; Real Estate:
+         Properties, Maintenance, Missions).
+     - **An asset page:** Overview, Maintenance, Missions, Documents,
+       Parts and History tabs; quick stats; gauges; current tasks; asset
+       details; documents.
+     - **Home:** a greeting; Today's Focus as a checklist; a quote;
+       quick actions (Quick Add, Voice, Calendar, Journal, MIA
+       Assistant); a sidebar of modules with level and XP at the bottom.
+     - **Missions:** XP and streaks, plus MIA-assigned missions.
+     - **Skills:** overall level, achievements, the next honest step,
+       categories with tiers, and locked skills.
+     - **Kitchen:** recipes unlocked by missions.
+     Almost all of it is data MIA already has (maintenance, kitchen,
+     workout, real estate, missions, skills, documents). The web just
+     couldn't reach it.
   4. **Home matches the concept's desktop dashboard** (Today, Upcoming,
      Assets, XP and levels, quick actions, search), with the orb kept as
      MIA's presence. On the phone, the concept's mobile app. This
