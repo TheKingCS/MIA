@@ -65,15 +65,15 @@
     },
     {
       id: "sayit", name: "Say It", art: "🗣️", glow: "rgba(242,140,140,0.5)",
-      hook: "Voice trivia — the question appears, you just say the answer.",
-      how: "60-second blitz rounds. Built for the glasses' microphone.",
-      price: 1, path: null, live: false,
+      hook: "Voice trivia — 60-second blitz. Think it, tap it.",
+      how: "Question appears, tap the right answer. +100 each, no penalties.",
+      price: 1, path: "games/sayit.html", live: true,
     },
     {
       id: "drift", name: "Drift", art: "✨", glow: "rgba(246,196,83,0.6)",
       hook: "A one-tap dodger. Guide the light past everything.",
-      how: "Tap to pulse. Thirty-second runs, high-score chase.",
-      price: 1, path: null, live: false,
+      how: "Tap to pulse upward, dodge the gates. How long can you last?",
+      price: 1, path: "games/drift.html", live: true,
     },
   ];
 
