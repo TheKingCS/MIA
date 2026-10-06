@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Snake · Lens Arcade</title>
+<script src="../progress.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -111,6 +112,10 @@
   }
   function die(){
     dead=true; running=false;
+    if(window.ArcadeProgress){
+      ArcadeProgress.award("snake","played",10);
+      if(score>=best&&score>0)ArcadeProgress.award("snake","newbest",50);
+    }
     show("GAME OVER",
       "you ate <b style='color:#ffedb8'>"+score+"</b>"+
       (score>=best&&score>0?" — new best!":""));
