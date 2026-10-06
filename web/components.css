@@ -663,6 +663,31 @@ dialog.confirm .confirm-actions {
   border-color: rgba(192, 132, 252, 0.45);
   box-shadow: 0 0 14px rgba(192, 132, 252, 0.12);
 }
+.mod-finance .side a.nav[aria-current="page"] {
+  background: rgba(96, 165, 250, 0.13);
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow: 0 0 14px rgba(96, 165, 250, 0.12);
+}
+.mod-estate .side a.nav[aria-current="page"] {
+  background: rgba(192, 132, 252, 0.13);
+  border-color: rgba(192, 132, 252, 0.45);
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.12);
+}
+.mod-garage .side a.nav[aria-current="page"] {
+  background: rgba(251, 146, 60, 0.13);
+  border-color: rgba(251, 146, 60, 0.45);
+  box-shadow: 0 0 14px rgba(251, 146, 60, 0.12);
+}
+.mod-kitchen .side a.nav[aria-current="page"] {
+  background: rgba(251, 191, 36, 0.13);
+  border-color: rgba(251, 191, 36, 0.45);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.12);
+}
+.mod-workout .side a.nav[aria-current="page"] {
+  background: rgba(45, 212, 191, 0.13);
+  border-color: rgba(45, 212, 191, 0.45);
+  box-shadow: 0 0 14px rgba(45, 212, 191, 0.12);
+}
 
 /* ---------- circular icon badge (concept card headers) ---------- */
 .chip-ico {
@@ -695,3 +720,15 @@ dialog.confirm .confirm-actions {
   color: var(--text);
 }
 .stat .stat-value.hot { color: var(--mod); text-shadow: 0 0 14px var(--mod-glow); }
+
+/* ---------- module heroes: the wash follows the module neon ---------- */
+.mod-finance .hero,
+.mod-estate .hero,
+.mod-garage .hero,
+.mod-kitchen .hero,
+.mod-workout .hero {
+  background:
+    radial-gradient(120% 90% at 72% -10%, var(--mod-dim), transparent 55%),
+    radial-gradient(90% 70% at 12% 108%, var(--mod-glow), transparent 65%),
+    linear-gradient(180deg, #0c1210 0%, #070a09 68%, #050807 100%);
+}
