@@ -1,12 +1,25 @@
 /* Lens Arcade storefront logic.
-   BUY FLOW (demo): purchases are simulated and stored in localStorage.
-   For launch, point buyGame()/buyPass() at real Stripe Payment Links:
-   swap the simulatePurchase() calls for location.href = STRIPE_LINKS[id],
-   and fulfill on the Stripe success redirect (e.g. ?bought=pass). */
+   BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and
+   purchases go through Stripe. Leave a link empty and that product stays in
+   demo mode (simulated purchase, no charge).
+   After payment, Stripe redirects to ?bought=<product-id> which unlocks the
+   games on this device. NOTE (v1): the unlock trusts the return URL — fine
+   for launch at these prices; a webhook backend (phase 2) makes it airtight. */
 (function () {
   "use strict";
 
-  var STORE = "lensArcadeOwned.v1"; // { pass: bool, games: {id: true} }
+  var STRIPE_LINKS = {
+    // ---- bundles ----
+    pack5: "",       // Quick Hits — 5-pack ($3.99)
+    pack10: "",      // Arcade Classics — 10-pack ($6.99)
+    allaccess: "",   // All Access ($9.99)
+    // ---- single games ($0.99 each) ----
+    hangman: "", magic8ball: "", dice: "", coin: "", pet: "", snake: "",
+    reaction: "", orbit: "", sayit: "", drift: "", stack: "", breakout: "",
+    "2048": "", fruitslice: ""
+  };
+
+  var STORE = "lensArcadeOwned.v1"; // { pass: bool, bundles: {id:true}, games: {id:true} }
 
   var GAMES = [
     {
@@ -101,16 +114,49 @@
     },
   ];
 
+  var BUNDLES = [
+    {
+      id: "pack5", name: "Quick Hits", price: 3.99, tag: "best starter",
+      blurb: "Five tap-and-go favorites for the ride.",
+      games: ["hangman", "magic8ball", "dice", "coin", "reaction"],
+    },
+    {
+      id: "pack10", name: "Arcade Classics", price: 6.99, tag: "most popular",
+      blurb: "Ten games — the full nostalgia shelf.",
+      games: ["hangman", "magic8ball", "dice", "coin", "reaction",
+              "snake", "sayit", "drift", "stack", "breakout"],
+    },
+    {
+      id: "allaccess", name: "All Access", price: 9.99, tag: "best value",
+      blurb: "Every game, forever — including all future drops.",
+      games: "all",
+    },
+  ];
+
   function load() {
-    try { return JSON.parse(localStorage.getItem(STORE)) || { pass: false, games: {} }; }
-    catch (e) { return { pass: false, games: {} }; }
+    var d = { pass: false, bundles: {}, games: {} };
+    try { var s = JSON.parse(localStorage.getItem(STORE)) || {}; for (var k in d) if (s[k] !== undefined) d[k] = s[k]; }
+    catch (e) {}
+    return d;
   }
   function save(state) { localStorage.setItem(STORE, JSON.stringify(state)); }
   var owned = load();
+  function bundleOwnsGame(b, id) { return b.games === "all" || b.games.indexOf(id) !== -1; }
   function owns(id) {
     var g = GAMES.filter(function (x) { return x.id === id; })[0];
     if (g && g.price === 0) return true; // free games are always owned
-    return owned.pass || !!owned.games[id];
+    if (owned.pass) return true; // legacy Season 1 pass = everything
+    for (var i = 0; i < BUNDLES.length; i++) {
+      if (owned.bundles[BUNDLES[i].id] && bundleOwnsGame(BUNDLES[i], id)) return true;
+    }
+    return !!owned.games[id];
+  }
+  function ownsBundle(id) {
+    return owned.pass || !!owned.bundles[id] ||
+      (id !== "allaccess" && !!owned.bundles.allaccess);
+  }
+  function stripeLive() {
+    return Object.keys(STRIPE_LINKS).some(function (k) { return !!STRIPE_LINKS[k]; });
   }
 
   var grid = document.getElementById("grid");
@@ -121,7 +167,7 @@
     b.type = "button";
     var status = g.live
       ? (g.price === 0 ? '<span class="price owned">FREE</span>'
-        : owns(g.id) ? '<span class="price owned">PLAY</span>' : '<span class="price">$1</span>')
+        : owns(g.id) ? '<span class="price owned">PLAY</span>' : '<span class="price">$0.99</span>')
       : '<span class="badge">soon</span>';
     b.innerHTML =
       '<span class="art" style="--glow:' + g.glow + '">' + g.art + "</span>" +
@@ -134,14 +180,75 @@
 
   function render() {
     grid.replaceChildren.apply(grid, GAMES.map(tile));
-    document.getElementById("pass-banner").hidden = !!owned.pass;
+    renderBundles();
+    document.getElementById("store-note").textContent = stripeLive()
+      ? "Secure checkout by Stripe."
+      : "Demo storefront — checkout connects when we launch.";
+  }
+
+  /* ---- bundles ---- */
+  function renderBundles() {
+    var wrap = document.getElementById("bundle-grid");
+    wrap.innerHTML = "";
+    BUNDLES.forEach(function (b) {
+      var has = ownsBundle(b.id);
+      var card = document.createElement("div");
+      card.className = "bundle" + (b.id === "allaccess" ? " featured" : "") + (has ? " owned" : "");
+      var count = b.games === "all" ? GAMES.length + " games + future drops" : b.games.length + " games";
+      card.innerHTML =
+        '<p class="bundle-tag">' + b.tag + "</p>" +
+        '<p class="bundle-name">' + b.name + "</p>" +
+        '<p class="bundle-price">$' + b.price.toFixed(2) + "</p>" +
+        "<p class=\"bundle-blurb\">" + b.blurb + "</p>" +
+        '<p class="bundle-count">' + count + "</p>";
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn" + (b.id === "allaccess" ? " primary" : "");
+      if (has) { btn.textContent = "In your collection ✓"; btn.disabled = true; }
+      else {
+        btn.textContent = "Buy — $" + b.price.toFixed(2);
+        btn.addEventListener("click", function () { buyProduct("bundle", b.id, b.name); });
+      }
+      card.appendChild(btn);
+      if (!has && !STRIPE_LINKS[b.id]) {
+        var f = document.createElement("p"); f.className = "fine";
+        f.textContent = "Demo — no charge until Stripe is connected.";
+        card.appendChild(f);
+      }
+      wrap.appendChild(card);
+    });
+  }
+
+  function buyProduct(kind, id, label) {
+    var link = STRIPE_LINKS[id];
+    if (link) { location.href = link; return; } // real Stripe checkout
+    // demo mode: simulate the purchase locally
+    if (kind === "bundle") owned.bundles[id] = true;
+    else owned.games[id] = true;
+    save(owned); render();
+    if (kind === "game") openSheet(GAMES.filter(function (g) { return g.id === id; })[0]);
+  }
+
+  /* ---- Stripe success redirect: ?bought=<product-id> ---- */
+  function handleBoughtParam() {
+    var m = /[?&]bought=([^&]+)/.exec(location.search);
+    if (!m) return;
+    var id = decodeURIComponent(m[1]);
+    var isBundle = BUNDLES.some(function (b) { return b.id === id; });
+    var isGame = GAMES.some(function (g) { return g.id === id; });
+    if (isBundle) owned.bundles[id] = true;
+    else if (isGame) owned.games[id] = true;
+    if (isBundle || isGame) {
+      save(owned);
+      try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    }
   }
 
   /* ---- detail sheet ---- */
   var sheet = document.getElementById("sheet");
   function openSheet(g) {
     document.getElementById("sheet-kicker").textContent = g.live
-      ? (g.price === 0 ? "free forever" : owns(g.id) ? "in your collection" : "$1 — yours forever")
+      ? (g.price === 0 ? "free forever" : owns(g.id) ? "in your collection" : "$0.99 — yours forever")
       : "coming soon";
     document.getElementById("sheet-title").textContent = g.name;
     document.getElementById("sheet-hook").textContent = g.hook;
@@ -156,26 +263,21 @@
       if (note) { var f = document.createElement("p"); f.className = "fine"; f.textContent = note; actions.appendChild(f); }
     }
     if (!g.live) {
-      btn("Coming soon", "", function () {}, "Season 1 keeps growing — pass holders get it on drop day.");
+      btn("Coming soon", "", function () {}, "Season 1 keeps growing — All Access holders get it on drop day.");
     } else if (g.price === 0 || owns(g.id)) {
       btn("Play now", "primary", function () { location.href = g.path; });
     } else {
       btn("Play now", "primary", function () { location.href = g.path; }, "Demo: playing free while we build. Checkout connects at launch.");
-      btn("Buy — $1", "", function () { simulatePurchase(g.id, g.name); }, "Demo purchase — no charge. Real checkout plugs in here.");
+      if (STRIPE_LINKS[g.id]) btn("Buy — $0.99", "", function () { buyProduct("game", g.id, g.name); });
+      else btn("Buy — $0.99", "", function () { buyProduct("game", g.id, g.name); }, "Demo purchase — no charge. Real checkout plugs in here.");
     }
     sheet.hidden = false;
   }
   document.getElementById("sheet-close").addEventListener("click", function () { sheet.hidden = true; });
   sheet.addEventListener("click", function (e) { if (e.target === sheet) sheet.hidden = true; });
 
-  /* ---- purchases (simulated) ---- */
-  function simulatePurchase(id, label) {
-    owned.games[id] = true; save(owned); render();
-    openSheet(GAMES.filter(function (g) { return g.id === id; })[0]);
-  }
-  document.getElementById("pass-buy").addEventListener("click", function () {
-    owned.pass = true; save(owned); render();
-  });
+  /* ---- purchases ---- */
+  // (buyProduct + handleBoughtParam are defined above, near renderBundles)
 
   /* ---- arcade profile (universal progression) ---- */
   function renderProfile() {
@@ -204,6 +306,7 @@
     });
   }
 
+  handleBoughtParam();
   render();
   renderProfile();
 })();
