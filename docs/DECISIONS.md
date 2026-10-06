@@ -210,3 +210,47 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   and, later, tried on the glasses with nothing private exposed.
 - Timing (Q-0011): Zac has no glasses yet and MIA isn't installed on the
   PC, so the Funnel link waits; the Pages preview comes first.
+
+### DEC-0017: The web front end becomes all of MIA, function first, in the concept's look
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-06, at zac's request ("use the original program, all of MIA's functionality, the repo and the concept pictures to build a functional MIA tied to the back end that looks like the concepts") · Review: muse, chatgpt · Approval: zac
+- Decision:
+  1. **Parity is the goal.** Every Qt screen and everything it can do
+     gets a web screen that does the same, styled like the concept
+     pictures (`docs/vision_assets/user_os_concept.png` and Zac's
+     others). `docs/WEB_PARITY.md` lists every screen, tab and
+     operation (from the 55 screens in `docs/design_handoff/screens/`)
+     with three checkboxes: engine API, working web screen, matches the
+     concept. "Lacking" becomes a number we can see shrink.
+  2. **The engine exposes all of MIA, not a summary (claude).** Life
+     State stays the summary for Home, the phone and the glasses. Each
+     module also gets a full API: everything its Qt screen reads, and
+     every operation it can do (add, edit, delete, log, complete), as
+     action kinds through Propose → Approve → Execute → Record → Undo.
+     This replaces DEC-0013's "if it isn't in Life State, ask": the rule
+     becomes "if the Qt screen can do it, the API can".
+  3. **Function first, then the look.** Claude builds each module's
+     working web screen on Muse's tokens and components, so nothing
+     waits on design. Muse owns the shell (top bar, sidebar, search,
+     level and XP, the orb), the component system, and restyles each
+     working screen to match the concepts, checking it against them.
+  4. **Home matches the concept's desktop dashboard** (Today, Upcoming,
+     Assets, XP and levels, quick actions, search), with the orb kept as
+     MIA's presence. On the phone, the concept's mobile app. This
+     supersedes the "one due item, never a module list" Home (Q-0004)
+     for the desktop and phone; the glasses keep the one-card rule.
+  5. **The Qt app stays the working MIA on the PC** until the web
+     version reaches parity for a module; then that module's Qt screen
+     can retire. Nothing is lost on the way.
+  6. **Order:** the shell and Home dashboard; Money (bills, income,
+     expenses, debts, summary); Garage and Maintenance (assets, tasks,
+     the concept's inspection checklist); Missions, Skills and
+     Character; Calendar, Notes, Inbox, Talk; Kitchen, Workout, Real
+     estate; then the rest of the 38 modules.
+- Why: the web screens look thin because the contract given to them
+  was thin: one summary (`/api/state`) and five action kinds, with a
+  rule against showing anything else. That is an engine-side gap, not a
+  design one. Muse can't wire what the API doesn't expose.
+- Risk: it's a lot of screens. Parity per module keeps each step
+  shippable, and the Qt app covers anything not yet moved.
+- Related: DEC-0012, DEC-0013 (amended), DEC-0015, Q-0004, H-0013, H-0016
