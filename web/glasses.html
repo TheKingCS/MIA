@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <title>MIA · Glasses</title>
-  <link rel="stylesheet" href="glasses.css?v=6">
+  <link rel="stylesheet" href="glasses.css?v=7">
 </head>
 <body>
   <!--
@@ -23,18 +23,22 @@
         <div id="orb"></div>
         <i class="p p1"></i><i class="p p2"></i><i class="p p3"></i>
       </div>
-      <div id="wave" hidden aria-hidden="true"></div>
     </div>
+    <div id="wave" hidden aria-hidden="true"></div>
     <main id="card" aria-live="polite"></main>
     <footer id="foot">
       <div id="xp"><span id="xp-label"></span><div id="xp-track"><div id="xp-fill"></div></div></div>
-      <form id="voice"><input id="voice-input" autocomplete="off" aria-label="Talk to MIA"><button type="submit" aria-label="Send">→</button></form>
       <nav id="dots" aria-label="Moments"></nav>
     </footer>
     <div id="finder" hidden aria-hidden="true"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i></div>
     <p id="demo-tag" hidden>Demo · placeholder data</p>
     <div id="burst" hidden><p id="burst-title"></p><p id="burst-sub"></p><button id="burst-ok" type="button">continue</button></div>
   </div>
+  <form id="demo-console" hidden>
+    <span>demo voice</span>
+    <input id="voice-input" autocomplete="off" aria-label="Demo voice command">
+    <button type="submit" aria-label="Send">→</button>
+  </form>
   <script src="mia.js"></script>
   <script src="glasses.js"></script>
 </body>
