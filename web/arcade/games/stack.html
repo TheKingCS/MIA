@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Stack · Lens Arcade</title>
+<script src="../progress.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;}
+  #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
+    display:grid;grid-template-rows:auto 1fr;justify-items:stretch;padding:16px 28px;row-gap:10px;position:relative;}
+  header{display:flex;justify-content:space-between;align-items:center;}
+  header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
+  header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
+  #game{width:100%;height:100%;min-height:0;display:block;border-radius:18px;
+    border:1px solid rgba(246,196,83,.22);touch-action:none;cursor:pointer;
+    box-shadow:0 0 30px rgba(246,196,83,.08);}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
+  <canvas id="game" role="button" tabindex="0" aria-label="Stack — tap to drop the block"></canvas>
+</div>
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+  var W=0,H=0,S=1;
+  function resize(){
+    var r=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+    W=Math.max(50,r.width);H=Math.max(50,r.height);S=H/600;
+    canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener("resize",resize);
+
+  var BEST="laStackBest",best=0;
+  try{best=parseInt(localStorage.getItem(BEST)||"0",10)||0;}catch(e){}
+  var REDUCED=false;
+  try{REDUCED=window.matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
+
+  var BH=26; // block height px (at S=1)
+  var state="ready"; // ready | playing | dead
+  var blocks, moving, dir, speed, score, combo, camY, camTarget, debris, perfectFlash;
+
+  function colorFor(n){
+    var hue=(42+n*9)%360;
+    return "hsl("+hue+",85%,"+(52+ (n%2)*6)+"%)";
+  }
+  function reset(){
+    blocks=[{x:W/2-110*S,w:220*S,y:0}];
+    moving=null;dir=1;speed=180;score=0;combo=0;
+    camY=0;camTarget=0;debris=[];perfectFlash=0;
+  }
+  function spawnMoving(){
+    var top=blocks[blocks.length-1];
+    var w=top.w;
+    dir*=-1;
+    speed=Math.min(520,180+score*9);
+    moving={x:dir>0?-w:W+w,w:w,y:blocks.length};
+  }
+  function drop(){
+    var top=blocks[blocks.length-1],m=moving;
+    var left=Math.max(m.x,top.x),right=Math.min(m.x+m.w,top.x+top.w);
+    var overlap=right-left;
+    if(overlap<=0){die();return;} // missed entirely
+    var perfect=Math.abs(m.x-top.x)<8*S;
+    if(perfect){
+      combo++;
+      m.x=top.x;overlap=top.w;
+      perfectFlash=1;
+      if(combo%4===0){ // classic reward: grow back a little
+        var grow=14*S;
+        m.x-=grow/2;m.w+=grow;
+        overlap=m.w;
+      }
+      if(combo===8&&window.ArcadeProgress)ArcadeProgress.award("stack","perfect8",40);
+    }else{
+      combo=0;
+      // falling debris: the sliced-off piece
+      var dx=m.x<top.x?m.x:right;
+      debris.push({x:dx,w:m.w-overlap,y:m.y,vy:0,vx:(m.x<top.x?-1:1)*60*S,rot:0,vr:(Math.random()-0.5)*4});
+    }
+    blocks.push({x:perfect?top.x:left,w:overlap,y:m.y});
+    score++;
+    camTarget=Math.max(0,(blocks.length-6)*BH*S);
+    spawnMoving();
+  }
+  function die(){
+    state="dead";
+    var isBest=false;
+    if(score>best){best=score;isBest=true;try{localStorage.setItem(BEST,String(best));}catch(e){}}
+    if(window.ArcadeProgress){
+      ArcadeProgress.award("stack","played",10);
+      if(isBest)ArcadeProgress.award("stack","newbest",50);
+    }
+  }
+  function update(dt){
+    // camera ease
+    camY+=(camTarget-camY)*Math.min(1,dt*5);
+    if(perfectFlash>0)perfectFlash-=dt*2;
+    if(state!=="playing")return;
+    if(moving){
+      moving.x+=dir*speed*S*dt;
+      if(dir>0&&moving.x>W){moving.x=W;dir=-1;}
+      if(dir<0&&moving.x+moving.w<0){moving.x=-moving.w;dir=1;}
+    }
+    for(var i=debris.length-1;i>=0;i--){
+      var d=debris[i];
+      d.vy+=900*S*dt;d.y+=d.vy*dt;d.x+=d.vx*dt;d.rot+=d.vr*dt;
+      if(d.y*BH*S-camY>H+80)debris.splice(i,1);
+    }
+  }
+  function blockY(i){return H-70*S-i*BH*S+camY;}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // tower
+    for(var i=0;i<blocks.length;i++){
+      var b=blocks[i],y=blockY(i);
+      if(y<-BH*S||y>H+BH*S)continue;
+      ctx.save();
+      ctx.shadowColor=colorFor(i);ctx.shadowBlur=12*S;
+      ctx.fillStyle=colorFor(i);
+      roundRect(b.x,y,b.w,BH*S,5*S);ctx.fill();
+      ctx.restore();
+    }
+    // moving block
+    if(moving&&state==="playing"){
+      var my=blockY(moving.y);
+      ctx.save();
+      ctx.shadowColor=colorFor(blocks.length);ctx.shadowBlur=16*S;
+      ctx.fillStyle=colorFor(blocks.length);
+      roundRect(moving.x,my,moving.w,BH*S,5*S);ctx.fill();
+      ctx.restore();
+    }
+    // debris
+    for(var k=0;k<debris.length;k++){
+      var d=debris[k],dy=d.y*BH*S-camY;
+      ctx.save();
+      ctx.translate(d.x+d.w/2,dy+BH*S/2);ctx.rotate(d.rot);
+      ctx.globalAlpha=Math.max(0,1-d.y*0.02);
+      ctx.fillStyle="rgba(244,234,208,.5)";
+      roundRect(-d.w/2,-BH*S/2,d.w,BH*S,5*S);ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha=1;
+    // perfect flash
+    if(perfectFlash>0){
+      ctx.save();
+      ctx.globalAlpha=Math.max(0,perfectFlash)*0.8;
+      ctx.fillStyle="#ffedb8";ctx.font="800 "+Math.round(20*S)+"px system-ui,sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText(combo>1?"PERFECT ×"+combo:"PERFECT",W/2,H*0.3);
+      ctx.restore();
+    }
+    // score
+    if(state==="playing"){
+      ctx.save();
+      ctx.shadowColor="rgba(246,196,83,.6)";ctx.shadowBlur=14;
+      ctx.fillStyle="#ffedb8";ctx.font="800 "+Math.round(40*S)+"px system-ui,sans-serif";
+      ctx.textAlign="center";ctx.textBaseline="top";
+      ctx.fillText(String(score),W/2,12*S);
+      ctx.restore();
+    }
+    if(state==="ready")overlay("STACK","tap to drop the block");
+    else if(state==="dead")overlay(String(score),"best "+best+" · tap to stack again");
+  }
+  function roundRect(x,y,w,h,r){
+    if(w<=0||h<=0)return;
+    r=Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function overlay(big,small){
+    ctx.fillStyle="rgba(0,0,0,.55)";ctx.fillRect(0,0,W,H);
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.save();
+    ctx.shadowColor="rgba(246,196,83,.7)";ctx.shadowBlur=24;
+    ctx.fillStyle="#ffedb8";ctx.font="800 "+Math.round(52*S)+"px system-ui,sans-serif";
+    ctx.fillText(big,W/2,H/2-24*S);
+    ctx.restore();
+    ctx.fillStyle="rgba(244,234,208,.65)";ctx.font=Math.round(17*S)+"px system-ui,sans-serif";
+    ctx.fillText(small,W/2,H/2+26*S);
+  }
+  var last=0;
+  function loop(now){
+    var dt=Math.min((now-last)/1000||0,0.05);last=now;
+    update(dt);draw();
+    requestAnimationFrame(loop);
+  }
+  function onTap(e){if(e&&e.cancelable)e.preventDefault();
+    if(state==="ready"){reset();spawnMoving();state="playing";last=performance.now();}
+    else if(state==="dead"){reset();spawnMoving();state="playing";last=performance.now();}
+    else if(state==="playing"&&moving){drop();}
+  }
+  canvas.addEventListener("pointerdown",onTap);
+  canvas.addEventListener("touchstart",function(e){e.preventDefault();},{passive:false});
+  canvas.addEventListener("keydown",function(e){
+    if(e.key===" "||e.key==="Enter"){e.preventDefault();onTap();}
+  });
+  document.addEventListener("visibilitychange",function(){if(document.hidden)save();});
+  function save(){try{localStorage.setItem(BEST,String(best));}catch(e){}}
+
+  resize();reset();last=performance.now();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
