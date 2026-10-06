@@ -2,7 +2,9 @@
    Pure black: on a waveguide display dark pixels are transparent, so the
    whole UI reads as light floating in space. No photo backgrounds.
    v2: strict grid rows (nothing overlaps), a mystical orb with orbiting
-   light trails, hairline glowing cards like the concept pictures. */
+   light trails, hairline glowing cards like the concept pictures.
+   v3: every moment has its own visual identity — epic quest, bare voice,
+   amber nudge, AR viewfinder — like the concept set. */
 :root {
   --gold: #f6c453;
   --gold-hi: #ffedb8;
@@ -197,3 +199,29 @@ body {
   #orb, #orb-wrap.listening #orb, #orb-wrap .ring, #orb-wrap .p { animation: none; }
   #wave i { animation: none; height: 10px; }
 }
+
+/* ---------- v3: moment identities ---------- */
+/* epic quest: purple rarity, like the concept */
+.g-card.epic .g-kicker { color: var(--epic); text-shadow: 0 0 16px rgba(180, 140, 242, 0.5); }
+.g-card.epic .g-title { text-shadow: 0 0 24px rgba(180, 140, 242, 0.45); }
+.g-reward {
+  margin: 12px 0 0; font-size: 17px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--gold-hi); text-shadow: 0 0 18px rgba(246, 196, 83, 0.6);
+}
+/* bare voice: no card — her answer floats, like the concept */
+.g-voice { display: grid; gap: 10px; justify-items: center; text-align: center; max-width: 460px; }
+.g-voice .g-say { margin: 0; font-size: 15px; }
+#card.talking #wave { height: 44px; }
+/* nudge: amber edge, calm but insistent */
+.g-card.nudge { border-color: rgba(255, 176, 84, 0.6);
+  box-shadow: 0 0 0 1px rgba(255, 176, 84, 0.1), 0 0 46px rgba(255, 176, 84, 0.18), inset 0 1px 0 rgba(255, 244, 214, 0.1); }
+.g-card.nudge .g-kicker { color: #f5b268; text-shadow: 0 0 16px rgba(255, 176, 84, 0.5); }
+/* see: the AR viewfinder */
+#finder { position: absolute; inset: 44px; pointer-events: none; z-index: 2; }
+#finder[hidden] { display: none; }
+#finder .c { position: absolute; width: 36px; height: 36px; border: 0 solid var(--gold-dim); filter: drop-shadow(0 0 6px rgba(246, 196, 83, 0.7)); }
+#finder .tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 12px; }
+#finder .tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 12px; }
+#finder .bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 12px; }
+#finder .br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 12px; }
+.g-card.see { max-width: 380px; }
