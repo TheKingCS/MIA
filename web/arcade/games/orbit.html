@@ -43,6 +43,20 @@
   .buy.afford{background:#f6c453;color:#241a03;box-shadow:0 0 14px rgba(246,196,83,.45);}
   .buy:active{transform:scale(.95);}
   #foot{font-size:11.5px;color:rgba(244,234,208,.35);letter-spacing:.06em;text-align:center;line-height:1.7;flex:none;padding-bottom:4px;}
+  .seclabel{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.5);font-weight:700;flex:none;margin:6px 0 0;}
+  #ups{width:100%;display:grid;gap:8px;flex:none;}
+  .up{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;
+    border:1px solid rgba(95,214,200,.3);border-radius:14px;padding:9px 14px;background:rgba(95,214,200,.04);}
+  .up .nm{font-size:14.5px;font-weight:700;color:#d8fff9;}
+  .up .sub{font-size:12px;color:rgba(244,234,208,.5);grid-column:1;}
+  .up.owned{opacity:.45;}
+  .up.owned .buy{visibility:hidden;}
+  #comet{position:absolute;width:34px;height:34px;border-radius:50%;cursor:pointer;z-index:3;
+    background:radial-gradient(circle at 40% 35%, #e8fffb 0%, #5fd6c8 50%, #1d5a54 100%);
+    box-shadow:0 0 26px 6px rgba(95,214,200,.75);
+    animation:cometPulse 1s ease-in-out infinite;}
+  @keyframes cometPulse{50%{transform:scale(1.18);}}
+  @media (prefers-reduced-motion:reduce){#comet{animation:none;}}
   #welcome{font-size:13px;color:#5fd6c8;min-height:18px;text-align:center;}
 </style>
 </head>
@@ -56,6 +70,8 @@
   </div>
   <div id="station-zone"><div id="station" role="button" tabindex="0" aria-label="Tap to generate energy"></div></div>
   <div id="gens"></div>
+  <p class="seclabel">UPGRADES</p>
+  <div id="ups"></div>
   <p id="foot"></p>
 </div>
 <script>
@@ -68,11 +84,11 @@
     {id:"ring",  name:"Orbital Ring",rate:25,  base:1400},
     {id:"dyson", name:"Dyson Swarm", rate:120, base:12000}
   ];
-  var s={bank:0,total:0,taps:0,gens:{},last:Date.now()};
+  var s={bank:0,total:0,taps:0,gens:{},mult:{},tapPow:1,ups:{},comets:0,last:Date.now()};
   try{var raw=localStorage.getItem(STORE);if(raw){var p=JSON.parse(raw);for(var k in s)if(p[k]!==undefined)s[k]=p[k];}}catch(e){}
   function save(){s.last=Date.now();try{localStorage.setItem(STORE,JSON.stringify(s));}catch(e){}}
   function cost(d){var n=s.gens[d.id]||0;return Math.ceil(d.base*Math.pow(1.6,n));}
-  function rate(){var r=0;DEFS.forEach(function(d){r+=d.rate*(s.gens[d.id]||0);});return r;}
+  function rate(){var r=0;DEFS.forEach(function(d){r+=d.rate*(s.gens[d.id]||0)*(s.mult[d.id]||1);});return r;}
   function fmt(n){
     if(n>=1e6)return (n/1e6).toFixed(2)+"M";
     if(n>=1e3)return (n/1e3).toFixed(1)+"k";
@@ -92,8 +108,9 @@
       zone=document.getElementById("station-zone"),station=document.getElementById("station");
   // tap the station
   function tap(x,y){
-    s.bank+=1;s.total+=1;s.taps++;
-    var f=document.createElement("span");f.className="tap";f.textContent="+1";
+    var v=s.tapPow||1;
+    s.bank+=v;s.total+=v;s.taps++;
+    var f=document.createElement("span");f.className="tap";f.textContent="+"+v;
     var r=station.getBoundingClientRect(),zr=zone.getBoundingClientRect();
     f.style.left=((x!==undefined?x:r.left+r.width/2)-zr.left-8)+"px";
     f.style.top=((y!==undefined?y:r.top+r.height/2)-zr.top-14)+"px";
@@ -149,6 +166,56 @@
       if(window.ArcadeProgress)ArcadeProgress.award("orbit","10k",100);
     }
   }
+  // ---- upgrades shop (Cookie Clicker style) ----
+  var UPS=[
+    {id:"u_solar", name:"Twin Solar Cells", desc:"Solar Arrays ×2", cost:600,   fx:function(){s.mult.solar=2;}},
+    {id:"u_fusion",name:"Hot Fusion",       desc:"Fusion Cells ×2", cost:4000,  fx:function(){s.mult.fusion=2;}},
+    {id:"u_ring",  name:"Ring Resonance",   desc:"Orbital Rings ×2",cost:30000, fx:function(){s.mult.ring=2;}},
+    {id:"u_dyson", name:"Swarm Intelligence",desc:"Dyson Swarms ×2",cost:250000,fx:function(){s.mult.dyson=2;}},
+    {id:"u_tap1",  name:"Reinforced Tap",   desc:"Taps give +5",    cost:1200,  fx:function(){s.tapPow=5;}},
+    {id:"u_tap2",  name:"Quantum Tap",      desc:"Taps give +25",   cost:30000, fx:function(){s.tapPow=25;}},
+  ];
+  var upsEl=document.getElementById("ups"),upBtns={};
+  UPS.forEach(function(u){
+    var row=document.createElement("div");row.className="up";row.id="up-"+u.id;
+    row.innerHTML='<div class="nm">'+u.name+'</div><div class="sub">'+u.desc+'</div>';
+    var b=document.createElement("button");b.type="button";b.className="buy";
+    b.setAttribute("aria-label","Buy "+u.name);
+    b.onclick=function(){
+      if(s.ups[u.id]||s.bank<u.cost)return;
+      s.bank-=u.cost;s.ups[u.id]=true;u.fx();save();
+      if(window.ArcadeProgress)ArcadeProgress.award("orbit","upgrade",30);
+      paint();
+    };
+    row.appendChild(b);upsEl.appendChild(row);upBtns[u.id]=b;
+  });
+  // ---- comets (golden-cookie style bonus events) ----
+  var cometEl=null,cometTimer=null;
+  function scheduleComet(){
+    clearTimeout(cometTimer);
+    cometTimer=setTimeout(spawnComet,90000+Math.random()*90000); // every 1.5–3 min
+  }
+  function spawnComet(){
+    if(document.hidden||cometEl){scheduleComet();return;}
+    var zr=zone.getBoundingClientRect();
+    cometEl=document.createElement("div");cometEl.id="comet";
+    cometEl.setAttribute("role","button");cometEl.setAttribute("aria-label","Catch the comet");
+    cometEl.style.left=(20+Math.random()*Math.max(40,zr.width-80))+"px";
+    cometEl.style.top=(10+Math.random()*Math.max(30,zr.height-60))+"px";
+    cometEl.onclick=catchComet;
+    zone.appendChild(cometEl);
+    setTimeout(function(){ // it streaks away after 12s
+      if(cometEl){cometEl.remove();cometEl=null;scheduleComet();}
+    },12000);
+  }
+  function catchComet(){
+    if(!cometEl)return;
+    var bonus=Math.max(50,Math.floor(Math.max(s.bank*0.15,rate()*60)));
+    s.bank+=bonus;s.total+=bonus;s.comets++;
+    if(window.ArcadeProgress)ArcadeProgress.award("orbit","comet",20);
+    document.getElementById("welcome").textContent="☄️ Comet caught: +"+fmt(bonus)+" ⚡";
+    cometEl.remove();cometEl=null;save();paint();scheduleComet();
+  }
   function paint(){
     check10k();
     bankNum.textContent=fmt(s.bank);
@@ -159,14 +226,19 @@
       b.textContent="Buy "+fmt(c)+" ⚡";
       b.classList.toggle("afford",s.bank>=c);
     });
-    foot.innerHTML="Total earned: "+fmt(s.total)+" ⚡ · Station taps: "+s.taps;
+    UPS.forEach(function(u){
+      var owned=!!s.ups[u.id],b=upBtns[u.id];
+      b.parentElement.classList.toggle("owned",owned);
+      if(!owned){b.textContent="Buy "+fmt(u.cost)+" ⚡";b.classList.toggle("afford",s.bank>=u.cost);}
+    });
+    foot.innerHTML="Total earned: "+fmt(s.total)+" ⚡ · Station taps: "+s.taps+" · Comets: "+s.comets;
   }
   // tick
   setInterval(function(){var r=rate();if(r>0){s.bank+=r/10;s.total+=r/10;paint();}},100);
   setInterval(save,5000);
   window.addEventListener("beforeunload",save);
   document.addEventListener("visibilitychange",function(){if(document.hidden)save();});
-  paint();drawSats();
+  paint();drawSats();scheduleComet();
 })();
 </script>
 </body>
