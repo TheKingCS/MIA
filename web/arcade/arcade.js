@@ -28,6 +28,18 @@
       price: 1, path: "games/magic8ball.html", live: true,
     },
     {
+      id: "dice", name: "Dice Roller", art: "🎲", glow: "rgba(246,196,83,0.55)",
+      hook: "Every die you'll ever need, on your face.",
+      how: "Pick d4 through d100, roll up to six at once. Tabletop approved.",
+      price: 1, path: "games/dice.html", live: true,
+    },
+    {
+      id: "coin", name: "Coin Flip", art: "🪙", glow: "rgba(255,237,184,0.55)",
+      hook: "Settle it the old-fashioned way.",
+      how: "Tap the coin. Heads or tails, with streak tracking.",
+      price: 1, path: "games/coin.html", live: true,
+    },
+    {
       id: "orbit", name: "Orbit", art: "🛰️", glow: "rgba(95,214,200,0.5)",
       hook: "An idle space station that grows while you're not looking.",
       how: "Glance, tap to collect, spend on upgrades. The ultimate face-screen loop.",
