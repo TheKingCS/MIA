@@ -87,6 +87,18 @@
       how: "Slide the paddle, smash every brick. 3 lives per run.",
       price: 1, path: "games/breakout.html", live: true,
     },
+    {
+      id: "2048", name: "2048", art: "🔢", glow: "rgba(246,196,83,0.6)",
+      hook: "The swipe-number legend. Merge to 2048.",
+      how: "Swipe to slide tiles. Matching tiles merge — chase 2048.",
+      price: 1, path: "games/2048.html", live: true,
+    },
+    {
+      id: "fruitslice", name: "Fruit Slice", art: "🍉", glow: "rgba(255,120,90,0.55)",
+      hook: "Swipe to slice. Don't hit the bombs.",
+      how: "Fruits arc upward — slice them mid-air. 3 misses and you're out.",
+      price: 1, path: "games/fruitslice.html", live: true,
+    },
   ];
 
   function load() {
@@ -177,7 +189,7 @@
     document.getElementById("profile-xpfill").style.width = Math.round(p.progress * 100) + "%";
     var toNext = p.levelNext - p.xp;
     document.getElementById("profile-xptext").textContent =
-      p.xp + " XP · " + toNext + " to Level " + (p.level + 1) + " · " + p.gameCount + "/11 games played";
+      p.xp + " XP · " + toNext + " to Level " + (p.level + 1) + " · " + p.gameCount + "/" + GAMES.length + " games played";
     var achBox = document.getElementById("profile-ach");
     achBox.innerHTML = "";
     p.achievements.forEach(function (id) {
