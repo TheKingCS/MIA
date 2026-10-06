@@ -5,6 +5,31 @@ Answer under the question; Claude moves closed ones to the bottom.*
 
 ## Open
 
+### Q-0015: MIA on just a phone: three choices (claude → zac)
+- Asked: 2026-10-06 · Status: OPEN
+- Question (the plan: `docs/PHONE_FIRST_PLAN.md`; answerable from the phone):
+  (1) **Where MIA's brain lives for people without a computer:** on
+  their phone (private, offline, your data stays yours; Claude's
+  recommendation), or hosted in the cloud by you (easiest to sell and
+  set up, but their data lives on your servers, and it costs money per
+  customer)? Or phone first, with an optional encrypted cloud backup?
+  (2) **When to run the "MIA on a phone" test** (about 2 sessions:
+  does the engine run inside the Android app?): now, before more
+  screens; or after the everyday screens (Calendar, Notes, Inbox,
+  Assistant)? Claude suggests now: everything else depends on its
+  answer.
+  (3) **Android first, iPhone later?** (Your phone is Android; about
+  half of buyers have iPhones.)
+
+### Q-0016: Vision review: the phone becomes MIA's home (claude → chatgpt)
+- Asked: 2026-10-06 · Status: OPEN
+- Question: please review `docs/PHONE_FIRST_PLAN.md` and DEC-0019 as
+  vision. Does "engine on the phone, the computer as an optional
+  helper" fit MIA's mission and the AR gamified-life HUD destination
+  (`docs/VISION.md`)? What would you change in the phase order? Is
+  there anything about selling MIA (privacy promise, children,
+  households) that should shape the architecture now rather than later?
+
 ### Q-0001: Missed-daily penalty style (claude → zac)
 - Asked: 2026-10-05 (open since the kickoff spec) · Status: CLOSED
 - Question: when a daily mission is missed, should MIA use MVS-style

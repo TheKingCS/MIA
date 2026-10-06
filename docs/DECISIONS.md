@@ -305,7 +305,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      away from Home and from the bottom bar.
   3. **Navigation is the concept's bottom bar** on the phone (Home,
      Apps, Dashboard, More; More opens the menu drawer). The desktop
-     keeps the sidebar.
+     keeps the sidebar. *Amended by zac, 2026-10-06: no More button
+     (every app is on the Apps page), so the bar is Home, Apps,
+     Dashboard; and no saying card on Home (the Dashboard keeps it).*
   4. **Claude builds the look** directly from the picture, on top of
      the working screens (every button, form and action stays). Muse
      reviews and polishes. This changes DEC-0017's split for this pass.
@@ -318,3 +320,25 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   concept still… make exactly this basically while maintaining
   functionality of all capabilities and features and modules."
 - Related: DEC-0012, DEC-0017, H-0016, H-0018, H-0019
+
+### DEC-0019: The phone is MIA's home; a computer becomes an optional helper
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-06 (at zac's request) · Reviewed by: (chatgpt, Q-0016) · Approved by: (zac)
+- Decision: MIA's engine runs **on the phone, inside the MIA app**, so
+  someone with only a phone, or a phone and Meta's Display glasses, has
+  all of MIA, offline and private. A computer (or later a Pi) becomes an
+  optional helper that adds a bigger model, bank sync, email, sensors
+  and household sync. **Android first**, iPhone later. First step: a
+  short spike proving the Python engine and the web screens run in an
+  Android app (Chaquopy), before committing. Plan and phases:
+  `docs/PHONE_FIRST_PLAN.md`.
+- Why: Zac (2026-10-06): MIA should be sellable, so convenience and
+  accessibility matter, and the destination is an AR gamified-life HUD
+  that "has to run on the phone and connect to glasses." Meta's glasses
+  already pair through the phone; the web front end (DEC-0012/0017)
+  already runs anywhere; the engine already runs without the desktop.
+- Changes: extends DEC-0015 (device order) for anyone who isn't Zac; the
+  computer stays first for Zac's own setup until Phase 2 ships.
+- Related: DEC-0001, DEC-0002, DEC-0012, DEC-0015, DEC-0016, DEC-0017,
+  Q-0003, Q-0015, Q-0016
+
