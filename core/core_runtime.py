@@ -893,7 +893,10 @@ def _action_get_power_status(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_system_health(context: AppContext, arguments: dict) -> str:
-    return format_system_health(read_system_health())
+    try:
+        return format_system_health(read_system_health())
+    except RuntimeError as unavailable:  # a phone (DEC-0019)
+        return str(unavailable)
 
 
 def _action_recall_recent_activity(context: AppContext, arguments: dict) -> str:

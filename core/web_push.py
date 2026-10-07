@@ -54,10 +54,15 @@ import threading
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
-import requests
 from cryptography.hazmat.primitives import serialization
-from py_vapid import Vapid02, b64urlencode
-from pywebpush import WebPushException, webpush
+
+try:  # Web Push is how the computer reaches a phone; MIA on the phone itself doesn't need it (DEC-0019)
+    import requests
+    from py_vapid import Vapid02, b64urlencode
+    from pywebpush import WebPushException, webpush
+    AVAILABLE = True
+except ImportError:
+    AVAILABLE = False
 
 from core.logger import get_logger
 from core.push_subscription_manager import PushSubscription, PushSubscriptionManager
@@ -94,6 +99,8 @@ def get_or_create_vapid_keys() -> tuple[str, str]:
     "-----BEGIN..." header lines) fails to parse. This bit me once
     already in this feature's own manual end-to-end verification —
     not a hypothetical concern."""
+    if not AVAILABLE:
+        raise RuntimeError("Web Push isn't available on this device.")
     if _VAPID_KEYS_FILE.exists():
         try:
             raw = json.loads(_VAPID_KEYS_FILE.read_text(encoding="utf-8"))
@@ -139,6 +146,8 @@ def send_web_push(
     False on any failure (network error, or the push service reporting
     it undeliverable) — never raises. `subscriptions` is used to drop a
     subscription the push service reports as permanently gone."""
+    if not AVAILABLE:
+        return False
     private_key_der_b64, _ = get_or_create_vapid_keys()
     payload = json.dumps({"title": title, "message": message})
 
@@ -195,6 +204,8 @@ def register_notification_relay(context: "AppContext") -> None:
     subscription. See this module's docstring for why this isn't
     profile-scoped and why the actual send happens on a background
     thread rather than inline on the publishing thread."""
+    if not AVAILABLE:
+        return
 
     def _on_notification_created(notification: "Notification", profile_id: Optional[str] = None, **kwargs) -> None:
         threading.Thread(

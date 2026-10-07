@@ -74,7 +74,10 @@ import wave
 from pathlib import Path
 from typing import Optional, Protocol
 
-import numpy as np
+try:  # recording and playback here are the desktop's; a phone uses its own (DEC-0019)
+    import numpy as np
+except ImportError:
+    np = None
 
 from core.app_context import AppContext
 from core.logger import get_logger
@@ -131,6 +134,8 @@ def prepare_text_for_speech(text: str) -> str:
 
 
 try:
+    if np is None:
+        raise ImportError("numpy isn't installed")
     import sounddevice as _sd
     _SOUNDDEVICE_IMPORT_ERROR: Optional[Exception] = None
 except (ImportError, OSError) as exc:

@@ -26,7 +26,10 @@ from __future__ import annotations
 import wave
 from pathlib import Path
 
-import numpy as np
+try:  # the desktop's voice effect; a phone speaks with its own voice (DEC-0019)
+    import numpy as np
+except ImportError:
+    np = None
 
 # Conservative by design — see module docstring. Raise these only after
 # a human has actually listened and confirmed speech is still clearly
@@ -93,7 +96,7 @@ def apply_ai_voice_effect_to_wav_file(wav_path: Path) -> None:
         sample_width = wav_file.getsampwidth()
         frames = wav_file.readframes(wav_file.getnframes())
 
-    if channels != 1 or sample_width != 2:
+    if channels != 1 or sample_width != 2 or np is None:
         return
 
     samples = np.frombuffer(frames, dtype=np.int16)

@@ -25,7 +25,10 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-import psutil
+try:  # a phone doesn't report these to MIA (DEC-0019)
+    import psutil
+except ImportError:
+    psutil = None
 
 _BYTES_PER_GB = 1024 ** 3
 _BYTES_PER_MB = 1024 ** 2
@@ -58,6 +61,8 @@ def read_system_health(disk_path: str = "/") -> SystemHealthSnapshot:
     passing a blocking `interval` here and stalling the GUI thread on
     every refresh tick.
     """
+    if psutil is None:
+        raise RuntimeError("This device doesn't report its system health to MIA.")
     cpu_percent = psutil.cpu_percent(interval=None)
     vm = psutil.virtual_memory()
     disk = psutil.disk_usage(disk_path)
@@ -82,6 +87,8 @@ def read_uptime_seconds() -> float:
     rather than in gui/home_dashboard.py directly, same "all psutil
     calls live in core/system_health.py" convention that module's
     docstring already establishes."""
+    if psutil is None:
+        raise RuntimeError("This device doesn't report its uptime to MIA.")
     return time.time() - psutil.boot_time()
 
 

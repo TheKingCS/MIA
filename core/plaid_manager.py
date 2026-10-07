@@ -121,21 +121,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Optional
 
-import plaid
-from plaid.api import plaid_api
-from plaid.model.accounts_get_request import AccountsGetRequest
-from plaid.model.country_code import CountryCode
-from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
-from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
-from plaid.model.item_remove_request import ItemRemoveRequest
-from plaid.model.liabilities_get_request import LiabilitiesGetRequest
-from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
-from plaid.model.link_token_create_request import LinkTokenCreateRequest
-from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
-from plaid.model.link_token_get_request import LinkTokenGetRequest
-from plaid.model.products import Products
-from plaid.model.transactions_sync_request import TransactionsSyncRequest
-from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
+# Bank sync is optional: a phone runs MIA without plaid-python (DEC-0019).
+try:
+    import plaid
+    from plaid.api import plaid_api
+    from plaid.model.accounts_get_request import AccountsGetRequest
+    from plaid.model.country_code import CountryCode
+    from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
+    from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+    from plaid.model.item_remove_request import ItemRemoveRequest
+    from plaid.model.liabilities_get_request import LiabilitiesGetRequest
+    from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
+    from plaid.model.link_token_create_request import LinkTokenCreateRequest
+    from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+    from plaid.model.link_token_get_request import LinkTokenGetRequest
+    from plaid.model.products import Products
+    from plaid.model.transactions_sync_request import TransactionsSyncRequest
+    from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
+except ImportError:
+    plaid = None
 
 from core.app_context import AppContext
 from core.atomic_write import atomic_write_text
@@ -519,6 +523,8 @@ class PlaidManager:
 
     @staticmethod
     def _build_client(vault: PlaidVault) -> plaid_api.PlaidApi:
+        if plaid is None:
+            raise RuntimeError("Bank sync isn't available on this device yet.")
         host = plaid.Environment.Production if vault.environment == "production" else plaid.Environment.Sandbox
         configuration = plaid.Configuration(host=host, api_key={"clientId": vault.client_id, "secret": vault.secret})
         return plaid_api.PlaidApi(plaid.ApiClient(configuration))

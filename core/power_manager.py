@@ -34,7 +34,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Protocol
 
-import psutil
+try:  # a phone reports its battery through Android, not psutil (DEC-0019)
+    import psutil
+except ImportError:
+    psutil = None
 
 from core.app_context import AppContext
 from core.logger import get_logger
@@ -65,6 +68,8 @@ class PsutilBatteryBackend:
     """PowerBackend implementation using psutil's cross-platform OS battery reporting."""
 
     def read(self) -> PowerStatus:
+        if psutil is None:
+            raise PowerUnavailableError("This device doesn't report its battery to MIA yet.")
         battery = psutil.sensors_battery()
         if battery is None:
             raise PowerUnavailableError("No battery or UPS detected by the OS.")

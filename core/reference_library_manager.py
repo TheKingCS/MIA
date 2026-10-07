@@ -36,8 +36,11 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Optional
 
-from libzim.reader import Archive
-from libzim.search import Query, Searcher
+try:  # the offline library is optional: a phone runs MIA without libzim (DEC-0019)
+    from libzim.reader import Archive
+    from libzim.search import Query, Searcher
+except ImportError:
+    Archive = Query = Searcher = None
 
 from core.app_context import AppContext
 from core.logger import get_logger
@@ -221,6 +224,8 @@ class ReferenceLibraryManager:
                 passed=False, errors=[f"A pack named '{source_path.name}' is already installed."]
             )
 
+        if Archive is None:
+            return PackInstallResult(passed=False, errors=["The offline library isn't available on this device."])
         try:
             Archive(str(source_path))  # cheap open, just to validate before copying a possibly-huge file
         except Exception as exc:
@@ -269,6 +274,8 @@ class ReferenceLibraryManager:
         return True, f"Deleted '{pack.title}'."
 
     def _get_archive(self, pack_id: str, file_path: Path) -> Optional[Archive]:
+        if Archive is None:
+            return None
         if pack_id in self._archives:
             return self._archives[pack_id]
 

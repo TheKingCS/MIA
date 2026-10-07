@@ -218,7 +218,10 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.get("/api/vapid-public-key")
     def vapid_public_key() -> dict:
-        _, public_key_b64 = get_or_create_vapid_keys()
+        try:
+            _, public_key_b64 = get_or_create_vapid_keys()
+        except RuntimeError as unavailable:  # MIA on a phone (DEC-0019)
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(unavailable)) from None
         return {"public_key": public_key_b64}
 
     @app.post("/api/push/subscribe")
