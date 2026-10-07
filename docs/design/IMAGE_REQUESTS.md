@@ -41,9 +41,11 @@ background, so they can be added one at a time.*
 
 Optional, nice to have later: one per app on the Apps screen (`apps-<name>.jpg`, 800 × 800, square), for the tile backgrounds.
 
-**Status (2026-10-07):** `home.jpg` and `greenhouse.jpg` are in `web/img/`
-(from ChatGPT, converted to JPG, 1536 × 1024). ChatGPT is out of free
-image generation for the day, so **Muse is asked for the rest** (H-0024),
-same descriptions, same rules: no people's names, no addresses, nothing
-personal, landscape, at least 1536 × 1024.
+**Status (2026-10-07):** all 14 requested images are now in `web/img/`
+(1536 × 1024 JPG, each under 400 KB). `home.jpg` and `greenhouse.jpg` came
+from ChatGPT. Muse made `assistant.jpg`, `character.jpg` and `dashboard.jpg`
+(H-0024 response); the other nine (`garage`, `kitchen`, `workout`,
+`real-estate`, `finances`, `missions`, `skills`, `property`,
+`maintenance`) were already committed by the parallel run — nothing is
+pending and no further images are owed under H-0024.
 
