@@ -20,6 +20,7 @@ val bundleMia by tasks.registering(Zip::class) {
         include(
             "core/**/*.py", "server/**", "modules/__init__.py", "modules/module_base.py", "web/**",
             "config/default_config.json", "data/mission_pathways.json", "data/skill_definitions.json",
+            "data/model_bench_cases.json",
         )
         exclude("**/__pycache__/**")
     }
@@ -57,6 +58,10 @@ android {
         getByName("debug") { signingConfig = signingConfigs.getByName("mia") }
     }
 
+    // llama.cpp's server (build_llama_server.sh) is a program, not a
+    // library: unpacked onto the phone so MIA can start it.
+    packaging { jniLibs { useLegacyPackaging = true } }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -83,6 +88,7 @@ chaquopy {
             install("cryptography")
             install("astral")
             install("mutagen")
+            install("certifi") // HTTPS for downloading a model (core/local_model.py)
         }
     }
 }

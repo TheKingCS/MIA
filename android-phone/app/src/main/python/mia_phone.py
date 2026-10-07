@@ -14,9 +14,11 @@ import time
 _started = {}
 
 
-def start(root: str, port: int) -> str:
+def start(root: str, port: int, native_dir: str = "") -> str:
     """Builds MIA's engine and starts her server. Returns JSON: the session
-    token for the screen and how long each step took (milliseconds)."""
+    token for the screen and how long each step took (milliseconds).
+    `native_dir` is where Android put the app's native programs, among
+    them llama.cpp's server (libllama_server.so) for MIA's own model."""
     if _started:
         return json.dumps(_started)
     t0 = time.time()
@@ -27,6 +29,11 @@ def start(root: str, port: int) -> str:
     from core.event_bus import EventBus
 
     context = build_core_context(ConfigManager(), EventBus())
+    from core.local_model import LocalModels
+
+    binary = os.path.join(native_dir, "libllama_server.so") if native_dir else None
+    context.local_models = LocalModels(context, binary)
+    context.local_models.resume()  # Talk's model, if one was running
     t1 = time.time()
     # Who's signed in on this phone (they stay signed in until they log out).
     # Nobody yet: the screen asks them to make their account (/api/setup).

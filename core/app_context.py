@@ -200,6 +200,9 @@ class AppContext:
     # "Know when to speak" (core/communication_gate.py, Cognitive
     # Extension slice C): every unprompted message goes through here.
     communication: Optional["CommunicationGate"] = field(default=None, repr=False)
+    # The phone's own model (core/local_model.py, DEC-0019): only the phone
+    # app makes one; None everywhere else.
+    local_models: Optional["LocalModels"] = field(default=None, repr=False)
     # Finance #3 (core/business_use.py): business-use log for personal
     # equipment (the mower's lawn-care jobs) and the write-off worksheet.
     business_use: Optional["BusinessUseManager"] = field(default=None, repr=False)

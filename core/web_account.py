@@ -181,7 +181,8 @@ def settings_page(context) -> dict:
     if gate is not None and hasattr(gate, "paused"):
         breaks = [{"topic": p["topic"], "label": p["label"], "until": str(p["until"])[:10]} for p in gate.paused()]
     return {"groups": [{"title": title, "settings": items} for title, items in groups.items()],
-            "breaks": breaks, "child": child}
+            "breaks": breaks, "child": child,
+            "model_test": getattr(context, "local_models", None) is not None and not child}
 
 
 def find_interest(context, name: str) -> Optional[str]:

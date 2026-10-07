@@ -47,3 +47,37 @@ sleep 8
 adb exec-out screencap -p > "$OUT/screen.png"
 adb shell dumpsys meminfo com.mia.phone | grep -i "TOTAL PSS\|TOTAL:" | head -3 | tee -a "$OUT/timings.txt"
 ls -la "$APK" | awk '{print "apk_bytes " $5}' | tee -a "$OUT/timings.txt"
+
+# ---- MIA's own model (docs/PHONE_MODEL_TEST.md) ----------------------------
+api() { curl -s -H "Authorization: Bearer $token" -H "Content-Type: application/json" "$@"; }
+field() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1], {}, {'d': d}))" "$1"; }
+echo "model test available: $(api http://127.0.0.1:8765/api/model-test | field "d['available']")" | tee -a "$OUT/timings.txt"
+libdir=$(adb shell pm path com.mia.phone | tr -d '\r' | sed 's|package:||; s|base.apk||')lib/x86_64
+adb shell "$libdir/libllama_server.so --version" 2>&1 | tail -2 | tee -a "$OUT/timings.txt"
+if [ -n "${MODEL_FILE:-}" ] && [ -f "$MODEL_FILE" ]; then
+  # The model a phone would download, put where the app keeps it.
+  adb push "$MODEL_FILE" /data/local/tmp/model.gguf > /dev/null
+  adb shell run-as com.mia.phone mkdir -p files/mia/data/models
+  adb shell run-as com.mia.phone cp /data/local/tmp/model.gguf "files/mia/data/models/$(basename "$MODEL_FILE")"
+  adb shell rm /data/local/tmp/model.gguf
+  api -d "{\"model\":\"$MODEL_ID\"}" http://127.0.0.1:8765/api/model-test/start > /dev/null
+  state=""
+  for i in $(seq 1 150); do
+    state=$(api http://127.0.0.1:8765/api/model-test | field "d['server']['state']")
+    [ "$state" = ready ] || [ "$state" = error ] && break
+    sleep 2
+  done
+  api http://127.0.0.1:8765/api/model-test | field "d['server']" | tee -a "$OUT/timings.txt"
+  [ "$state" = ready ] || exit 1
+  api -d '{"count":5}' http://127.0.0.1:8765/api/model-test/run > /dev/null
+  for i in $(seq 1 240); do
+    done_=$(api http://127.0.0.1:8765/api/model-test | field "d['run'].get('finished')")
+    [ "$done_" = True ] && break
+    sleep 5
+  done
+  api http://127.0.0.1:8765/api/model-test | field "[m['results'] and {k: m['results'][k] for k in ('done','passed','median_seconds','read_per_second','write_per_second','load_seconds')} for m in d['models'] if m['id']=='$MODEL_ID'][0]" | tee -a "$OUT/timings.txt"
+  passed=$(api http://127.0.0.1:8765/api/model-test | field "[m['results']['done'] for m in d['models'] if m['id']=='$MODEL_ID' and m['results']][0]") || exit 1
+  [ "$passed" -ge 1 ] || exit 1
+  # Talk on the phone now answers from the phone's own model.
+  api -d '{"text":"Say hello in five words."}' http://127.0.0.1:8765/api/voice/text | head -c 400 | tee -a "$OUT/timings.txt"; echo
+fi

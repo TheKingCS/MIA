@@ -163,6 +163,8 @@
     skills: () => read("/api/skills", "skills"),
     character: () => read("/api/character", "character"),
     profile: () => read("/api/profile", "profile"),
+    modelTest: () => demo ? Promise.resolve({ available: false, models: [] }) : call("GET", "/api/model-test"),
+    modelStep: (step, body) => demo ? demoOnly() : call("POST", "/api/model-test/" + step, body || {}),
     settings: () => read("/api/settings", "settings"),
     // Not actions: a password never sits in a proposal (server/app.py).
     changePassword: (current, next) => demo ? demoOnly() : call("POST", "/api/account/password", { current: current, new: next }),

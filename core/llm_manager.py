@@ -5,7 +5,9 @@ core.llm_manager
 The Assistant's LLM backend core service — docs/ROADMAP.md milestone
 5.1. Defines a small backend-agnostic interface (`LLMBackend`) with one
 concrete implementation, `OllamaBackend`, talking to a local Ollama
-server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md).
+server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md),
+and a second, `OpenAIBackend` (2026-10-07), for llama.cpp's server on
+the phone (`llm.backend: "openai"`).
 
 Built on stdlib `urllib.request` rather than the `requests` package —
 this is a single local JSON endpoint, and requirements.txt stays light
@@ -223,6 +225,85 @@ class OllamaBackend:
             return False
 
 
+class OpenAIBackend:
+    """LLMBackend for an OpenAI-compatible chat server: llama.cpp's
+    `llama-server` (started with `--jinja` so tools work), which runs
+    MIA's model on the phone (DEC-0019, docs/PHONE_MODEL_TEST.md). The
+    tool list is the same shape Ollama takes. `last_timings` keeps the
+    server's own speed report from the latest reply (tokens and
+    milliseconds for reading the prompt and for writing the answer)."""
+
+    def __init__(self, base_url: str, model: str, temperature: float = _DEFAULT_TEMPERATURE) -> None:
+        self._base_url = base_url.rstrip("/")
+        self._model = model
+        self._temperature = temperature
+        self.last_timings: dict = {}
+
+    def _post(self, path: str, payload: dict, timeout: float) -> dict:
+        request = urllib.request.Request(
+            f"{self._base_url}{path}",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                body = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", "replace")[:300]
+            raise LLMUnavailableError(f"The model server at {self._base_url} said {exc.code}: {detail}") from exc
+        except (urllib.error.URLError, OSError) as exc:
+            raise LLMUnavailableError(f"Could not reach the model server at {self._base_url}: {exc}") from exc
+        except json.JSONDecodeError as exc:
+            raise LLMUnavailableError(f"The model server returned malformed JSON: {exc}") from exc
+        if "error" in body:
+            raise LLMUnavailableError(f"The model server returned an error: {body['error']}")
+        self.last_timings = body.get("timings") or {}
+        return body
+
+    def generate(self, prompt: str, timeout: float) -> str:
+        return self.chat([{"role": "user", "content": prompt}], [], timeout).content
+
+    def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
+        payload = {"model": self._model, "messages": messages, "temperature": self._temperature, "stream": False}
+        if tools:
+            payload["tools"] = tools
+        body = self._post("/v1/chat/completions", payload, timeout)
+        try:
+            message = body["choices"][0]["message"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMUnavailableError(f"The model server's reply had no message: {str(body)[:200]}") from exc
+        tool_calls = []
+        for call in message.get("tool_calls") or []:
+            function = call.get("function") or {}
+            arguments = function.get("arguments") or {}
+            if isinstance(arguments, str):
+                try:
+                    arguments = json.loads(arguments) if arguments.strip() else {}
+                except json.JSONDecodeError:
+                    arguments = {}
+            tool_calls.append(ToolCall(name=function.get("name", ""), arguments=arguments))
+        return ChatReply(content=message.get("content") or "", tool_calls=tool_calls)
+
+    def is_available(self, timeout: float) -> bool:
+        try:
+            with urllib.request.urlopen(f"{self._base_url}/health", timeout=timeout):
+                return True
+        except (urllib.error.URLError, OSError):
+            return False
+
+
+def make_backend(config) -> "LLMBackend":
+    """The backend `llm.backend` names: "ollama" (default) or "openai"
+    (llama.cpp's server on the phone)."""
+    base_url = config.get("llm.base_url", _DEFAULT_BASE_URL)
+    model = config.get("llm.model", _DEFAULT_MODEL)
+    temperature = float(config.get("llm.temperature", _DEFAULT_TEMPERATURE))
+    if config.get("llm.backend", "ollama") == "openai":
+        return OpenAIBackend(base_url, model, temperature)
+    return OllamaBackend(base_url, model, config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE), temperature)
+
+
 class LLMManager:
     """
     Core-level Assistant LLM service (`AppContext.llm`). Config-driven
@@ -234,13 +315,18 @@ class LLMManager:
 
     def __init__(self, context: AppContext) -> None:
         self.context = context
-        base_url = context.config.get("llm.base_url", _DEFAULT_BASE_URL)
-        model = context.config.get("llm.model", _DEFAULT_MODEL)
-        timeout = context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS)
-        keep_alive = context.config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE)
-        temperature = context.config.get("llm.temperature", _DEFAULT_TEMPERATURE)
-        self._timeout = float(timeout)
-        self._backend: LLMBackend = OllamaBackend(base_url, model, keep_alive, float(temperature))
+        self._timeout = float(context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS))
+        self._backend: LLMBackend = make_backend(context.config)
+
+    def use_backend(self, backend: "LLMBackend", timeout: Optional[float] = None) -> None:
+        """Switch models while running (the phone, once its model is up)."""
+        self._backend = backend
+        if timeout is not None:
+            self._timeout = float(timeout)
+
+    @property
+    def backend(self) -> "LLMBackend":
+        return self._backend
 
     def is_available(self) -> bool:
         """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises."""

@@ -24,6 +24,9 @@ data/*
 # skill_definitions.json above. data/pathway_progress.json (real
 # per-profile state) stays ignored.
 !data/mission_pathways.json
+# The model test's frozen golden set (tools/make_model_bench.py): placeholder
+# records only, regenerated from tests/live_model_check.py.
+!data/model_bench_cases.json
 logs/*
 !logs/.gitkeep
 

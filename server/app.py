@@ -123,6 +123,11 @@ class LoginRequest(BaseModel):
     password: str = ""
 
 
+class ModelStep(BaseModel):
+    model: str = ""
+    count: int = 0
+
+
 class PasswordChange(BaseModel):
     current: str
     new: str
@@ -719,6 +724,40 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             code = context.profiles.issue_recovery_code(profile_id)
         return {"recovery_code": code}
+
+    def _models(profile_id: str):
+        from core.child_accounts import ASK_A_PARENT, is_child
+
+        models = getattr(context, "local_models", None)
+        if models is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "The model test runs in MIA's phone app.")
+        if is_child(view_for(context, profile_id)):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+        return models
+
+    @app.get("/api/model-test")
+    def model_test(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The phone's model test (core/local_model.py, docs/PHONE_MODEL_TEST.md)."""
+        return _models(profile_id).status()
+
+    @app.post("/api/model-test/{step}")
+    def model_test_step(step: str, body: ModelStep, profile_id: str = Depends(require_profile_id)) -> dict:
+        models = _models(profile_id)
+        steps = {
+            "download": lambda: models.download(body.model),
+            "delete": lambda: models.delete(body.model),
+            "start": lambda: models.start(body.model),
+            "stop": models.stop,
+            "run": lambda: models.run_test(body.count or 10),
+            "cancel": models.cancel_test,
+        }
+        if step not in steps:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No such step.")
+        try:
+            steps[step]()
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+        return models.status()
 
     @app.get("/api/character")
     def web_character(profile_id: str = Depends(require_profile_id)) -> dict:

@@ -38,7 +38,7 @@ class MainActivity : Activity() {
                 val t1 = SystemClock.elapsedRealtime()
                 if (!Python.isStarted()) Python.start(AndroidPlatform(this))
                 val t2 = SystemClock.elapsedRealtime()
-                val result = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT).toString())
+                val result = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT, applicationInfo.nativeLibraryDir).toString())
                 val t3 = SystemClock.elapsedRealtime()
                 Log.i(TAG, "ready unpack_ms=${t1 - t0} python_ms=${t2 - t1} engine_ms=${result.optInt("engine_ms")} " +
                     "server_ms=${result.optInt("server_ms")} total_ms=${t3 - t0} python=${result.optString("python")}")

@@ -837,24 +837,10 @@ def _seed_fixtures(context: AppContext) -> None:
 
 
 def _arguments_match(arguments: dict, expected: dict) -> tuple[bool, str]:
-    """2026-09-27: did the model pass the user's actual words/numbers?
-    Strings match case-insensitively as substrings either way ("mower" vs
-    "Riding Mower"); numbers must be equal. Only listed keys are checked."""
-    for key, want in expected.items():
-        got = arguments.get(key)
-        if isinstance(want, (int, float)):
-            try:
-                if abs(float(str(got).replace(",", "").replace("$", "")) - float(want)) > 1e-6:
-                    return False, f"argument {key}={got!r}, expected {want!r}"
-            except (TypeError, ValueError):
-                return False, f"argument {key}={got!r}, expected {want!r}"
-        else:
-            got_text = " ".join(got) if isinstance(got, list) else str(got or "")
-            if want.lower() not in got_text.lower() and got_text.lower() not in want.lower():
-                return False, f"argument {key}={got!r}, expected something like {want!r}"
-            if not got_text:
-                return False, f"argument {key} missing"
-    return True, f"called with {arguments}"
+    """Shared with the phone's model test (core/model_bench.py)."""
+    from core.model_bench import arguments_match
+
+    return arguments_match(arguments, expected)
 
 
 def main() -> int:

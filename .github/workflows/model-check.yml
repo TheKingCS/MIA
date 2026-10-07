@@ -1,0 +1,77 @@
+# Which small model does MIA's job best? (DEC-0019, docs/PHONE_MODEL_TEST.md)
+# Runs each model the phone offers through MIA's golden set
+# (core/model_bench.py) with llama.cpp on GitHub's computer. How often a
+# model picks the right tool doesn't depend on the device it runs on; how
+# fast it does does, so speed comes from the phone's own Model test screen.
+name: Model check
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "core/model_bench.py"
+      - "core/llm_manager.py"
+      - "core/local_model.py"
+      - "data/model_bench_cases.json"
+      - ".github/workflows/model-check.yml"
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: "How many cases per model (213 = all)"
+        default: "80"
+
+concurrency:
+  group: model-check
+  cancel-in-progress: true
+
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [qwen2.5-1.5b, qwen2.5-3b, llama3.2-3b]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Cache llama.cpp's server
+        id: llama
+        uses: actions/cache@v4
+        with:
+          path: llama-bin
+          key: llama-server-linux-${{ hashFiles('android-phone/build_llama_server.sh') }}
+
+      - name: Build llama.cpp's server
+        if: steps.llama.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install -y ninja-build > /dev/null
+          TAG=$(grep -o '^TAG=b[0-9]*' android-phone/build_llama_server.sh | cut -d= -f2)
+          git clone -q --depth 1 --branch "$TAG" https://github.com/ggml-org/llama.cpp llama-src
+          cmake -S llama-src -B llama-src/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF \
+            -DGGML_OPENMP=OFF -DLLAMA_CURL=OFF -DLLAMA_OPENSSL=OFF -DBUILD_SHARED_LIBS=OFF \
+            -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
+          cmake --build llama-src/build --target llama-server -j "$(nproc)"
+          mkdir -p llama-bin && cp llama-src/build/bin/llama-server llama-bin/
+
+      - name: Cache the model
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: model-${{ matrix.model }}-q4km
+
+      - name: Run MIA's golden set
+        env:
+          MODEL: ${{ matrix.model }}
+          CASES: ${{ github.event.inputs.cases || '80' }}
+        run: python tools/model_check.py "$MODEL" "$CASES" llama-bin/llama-server models | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-check-${{ matrix.model }}
+          path: model-check/
