@@ -43,8 +43,8 @@ class MainActivity : Activity() {
                 Log.i(TAG, "ready unpack_ms=${t1 - t0} python_ms=${t2 - t1} engine_ms=${result.optInt("engine_ms")} " +
                     "server_ms=${result.optInt("server_ms")} total_ms=${t3 - t0} python=${result.optString("python")}")
                 // Spike only: the CI check reads it to call the API. Local to this phone.
-                Log.d(TAG, "token=${result.getString("token")}")
-                runOnUiThread { show(result.getString("token")) }
+                Log.d(TAG, "token=${result.optString("token")}")
+                runOnUiThread { show(result.optString("token")) }
             } catch (e: Throwable) {
                 Log.e(TAG, "failed", e)
                 runOnUiThread { status.text = "MIA couldn't start on this phone:\n\n${e.message}" }
@@ -58,7 +58,9 @@ class MainActivity : Activity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = WebViewClient()
-            loadUrl("http://127.0.0.1:$PORT/web/index.html#token=$token")
+            // Signed in: straight to Home. Not yet: the screen asks to make an
+            // account (first start) or to sign in (after logging out).
+            loadUrl("http://127.0.0.1:$PORT/web/index.html" + if (token.isNotEmpty()) "#token=$token" else "")
         }
         web = view
         setContentView(view)

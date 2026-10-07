@@ -26,6 +26,14 @@ fi
 echo "$ready" | tee "$OUT/timings.txt"
 token=$(adb logcat -d -s MIA_SPIKE:D | grep -o "token=[A-Za-z0-9_-]*" | tail -1 | cut -d= -f2)
 adb forward tcp:8765 tcp:8765
+if [ -z "$token" ]; then
+  # First start: no account yet, so make one the way a person would (onboarding).
+  setup=$(curl -s -H "Content-Type: application/json" \
+    -d '{"name":"Robin","email":"robin@example.com","password":"phone-test","country":"US","interests":[]}' \
+    http://127.0.0.1:8765/api/setup)
+  echo "setup: $(echo "$setup" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('name'), bool(d.get('recovery_code')))")" | tee -a "$OUT/timings.txt"
+  token=$(echo "$setup" | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])") || exit 1
+fi
 for path in /web/index.html /api/shell /api/dashboard /api/missions /api/skills /api/money; do
   code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" "http://127.0.0.1:8765$path")
   echo "$code $path" | tee -a "$OUT/timings.txt"

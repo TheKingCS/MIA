@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-05 (Phase 2 foundation), by claude.*
+session. Last updated: 2026-10-07 (phone onboarding), by claude.*
 
 ## Phase
 
@@ -21,6 +21,7 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 |---|---|
 | Desktop app (PySide6, 37 apps) | REAL, in daily development |
 | Phone web app (Talk, Today, Money) and Android app | REAL |
+| **MIA on the phone, no computer (DEC-0019)** | REAL test build: engine and `web/` inside an Android app (`android-phone/`, `docs/PHONE_SPIKE.md`); starts in under 8 s on Zac's phone. First start makes your account (2026-10-07). No Talk on the phone yet |
 | Assistant (local model, ~185 tools, voice) | REAL |
 | Life events (history), links, Life State v2 (now with assets, kitchen, workout), `/api/state`, schema | REAL / DERIVED, built 2026-10-05 |
 | Web front end (`web/`, served at `/web/`; desktop "Home (preview)") | REAL foundation: engine client, tokens, a working Home scaffold. Muse's real Home next |

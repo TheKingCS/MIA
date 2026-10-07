@@ -112,6 +112,27 @@
     return data;
   }
 
+  // The phone's first start: does this device still need its first
+  // account? Then make it, signed in (POST /api/setup; the phone app only).
+  async function setupStatus() {
+    if (demo) return { needed: false };
+    try {
+      const response = await fetch("/api/setup");
+      return response.ok ? await response.json() : { needed: false };
+    } catch (e) { return { needed: false }; }
+  }
+  async function setup(details) {
+    const response = await fetch("/api/setup", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(details),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new MiaError(response.status, data.detail || "Couldn't make your account.");
+    token = data.token;
+    try { sessionStorage.setItem("mia.token", token); } catch (e) { /* this tab only */ }
+    window.MIA.signedIn = true;
+    return data;
+  }
+
   // The account menu's "Log out": ends the session here and forgets it.
   async function signOut() {
     if (token && !demo) {
@@ -126,6 +147,8 @@
     demo,
     signIn,
     signOut,
+    setupStatus,
+    setup,
     signedIn: Boolean(token) || demo,
     MiaError,
     state: () => read("/api/state", "life_state"),

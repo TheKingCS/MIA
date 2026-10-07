@@ -68,7 +68,7 @@ The emulator is slower than a recent phone, so a real phone should do better.
 
 ## What this test does not cover yet (Phase 2)
 
-- **Onboarding.** The test app makes a person called "You".
+- ~~**Onboarding.**~~ Done 2026-10-07: the first start asks for your name, email, password, country and what MIA should help with, shows a recovery code once, and keeps you signed in until you log out (`core/first_account.py`, `/api/setup`, only on the phone). The test build's "You" is taken over, so nothing tried is lost.
 - **Talk.** There's no model on the phone yet; Talk will say it can't reach a model.
 - **Phone-native features:** notifications, Android speech, battery.
 - **Background work.** Android stops idle apps; MIA's daily checks move to Android's scheduler.

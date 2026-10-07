@@ -558,3 +558,18 @@ body::before {
   .app-tile { border-color: rgba(var(--tile-rgb), 0.9); }
   .mission-card.ready { border-color: rgba(74, 222, 128, 0.95); }
 }
+
+/* ---------------------------------------------------------------- make your account (first start) */
+.setup-card { max-width: 460px; margin: 24px auto; padding: 22px 18px; display: grid; gap: 4px; position: relative; z-index: 2; }
+.setup-head { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+.setup-head h1 { margin: 0; font-size: 26px; }
+.setup-head p { margin: 2px 0 0; }
+.setup-card .form-row input, .setup-card select { width: 100%; box-sizing: border-box; }
+.setup-interests { border: 1px solid rgba(var(--mod-rgb), 0.3); border-radius: 12px; padding: 10px; margin: 6px 0 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.setup-interests legend { color: var(--text-dim); font-size: var(--text-sm); padding: 0 6px; }
+.setup-chip { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(var(--mod-rgb), 0.35); cursor: pointer; font-size: var(--text-sm); }
+.setup-chip input { accent-color: rgb(var(--mod-rgb)); }
+.setup-chip:has(input:checked) { background: rgba(var(--mod-rgb), 0.18); border-color: rgba(var(--mod-rgb), 0.8); }
+.setup-go { min-height: 48px; margin-top: 6px; }
+.setup-code { font: 700 22px/1.4 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.08em; text-align: center; padding: 14px;
+  border-radius: 12px; border: 1px dashed rgba(var(--mod-rgb), 0.7); background: rgba(var(--mod-rgb), 0.08); user-select: all; }

@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-05 (late)*
+*Last updated: 2026-10-07*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -42,7 +42,12 @@ the hub, and the Meta AI app.
       `https://github.com/TheKingCS/MIA/releases/tag/phone-spike` on your
       Android, install **MIA-Phone-Test.apk** (it sits beside the companion
       app), open it, and tell Claude how long it took to start and how it
-      feels. It's a test: a person called "You", no Talk yet.
+      feels. Done: under 8 seconds (2026-10-07).
+- [ ] **Make your account on the phone (2026-10-07):** install the newest
+      **MIA-Phone-Test.apk** from the same page over the old one. It asks
+      for your name, email, password, country and what MIA should help
+      with, then shows a **recovery code once: write it down**. Your "You"
+      becomes you, and you stay signed in until you log out.
 - [x] DEC-0014 and DEC-0016 approved; Q-0011 answered (Android, no
       glasses yet, MIA not on the PC yet); Q-0012 parked (2026-10-05).
 - [ ] **The screens' photos (DEC-0018):** ask ChatGPT for the images in

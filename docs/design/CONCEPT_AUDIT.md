@@ -42,13 +42,13 @@ The build list at the end orders the gaps.*
 
 ## Not in the pictures, but needed (from Zac, 2026-10-07)
 
-- **Onboarding on the phone:** create your account (name, email, password) on first start instead of "You" (DEC-0019, Phase 2).
+- ✅ **Onboarding on the phone:** create your account (name, email, password, country, interests) on first start instead of "You" (done 2026-10-07).
 - **Profile page:** your name, email, password, household, photo.
 - **Settings page** on the web: the PC app's Settings (theme, notifications, privacy, phone access, apps).
 
 ## Build list (in order)
 
-1. **Onboarding, Profile and Settings.** Without these, the phone app can't belong to anyone. This is Phase 2's first step.
+1. **Onboarding (✅ 2026-10-07), Profile and Settings.** Without these, the phone app can't belong to anyone. This is Phase 2's first step.
 2. **Photos of things:** one photo field and upload, shared by assets, recipes and properties. It lifts Garage, Greenhouse, Kitchen and Real Estate at once.
 3. **Skills like the concept:** area cards with tier, level and XP first; All; achievements x/y; the capability bar.
 4. **Missions like the concept:** All, an MIA-assigned filter, streaks on rows.

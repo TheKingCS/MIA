@@ -296,6 +296,52 @@
     };
   }
 
+  // ---------------------------------------------------------------- first start: make your account
+  // The phone's first start (DEC-0019 Phase 2, 2026-10-07): name, email,
+  // password, country and what MIA should help with; then the recovery
+  // code, shown once. The engine checks everything (core/first_account.py).
+  function setupForm(info, then) {
+    const fields = {};
+    const input = (name, attrs) => (fields[name] = el("input", Object.assign({ id: "setup-" + name, name }, attrs)));
+    const country = el("select", { id: "setup-country", "aria-label": "Country" },
+      info.countries.map((c) => el("option", { value: c.code, selected: c.code === "US" ? true : null }, c.name)));
+    const picks = info.interests.map((name) => el("label", { class: "setup-chip" },
+      el("input", { type: "checkbox", value: name }), el("span", {}, name)));
+    const card = el("form", { class: "setup-card glass", id: "setup", "aria-label": "Make your account" },
+      el("div", { class: "setup-head" }, el("span", { class: "home-badge", "aria-hidden": "true" }, "✦"),
+        el("div", {}, el("h1", {}, "Welcome to MIA"), el("p", { class: "dim" }, "Let's make your account. It lives on this phone."))),
+      el("label", { class: "form-row", for: "setup-name" }, el("span", {}, "What should MIA call you?"),
+        input("name", { autocomplete: "given-name", required: true })),
+      el("label", { class: "form-row", for: "setup-email" }, el("span", {}, "Email (you sign in with it)"),
+        input("email", { type: "email", autocomplete: "email", required: true })),
+      el("label", { class: "form-row", for: "setup-password" }, el("span", {}, "Password (at least " + info.min_password + " characters)"),
+        input("password", { type: "password", autocomplete: "new-password", required: true, minlength: String(info.min_password) })),
+      el("label", { class: "form-row", for: "setup-again" }, el("span", {}, "Password again"),
+        input("again", { type: "password", autocomplete: "new-password", required: true })),
+      el("label", { class: "form-row", for: "setup-country" }, el("span", {}, "Country (for money and help numbers)"), country),
+      picks.length ? el("fieldset", { class: "setup-interests" }, el("legend", {}, "What do you want MIA to help with? (optional)"), picks) : null,
+      el("button", { class: "btn btn-green setup-go", type: "submit" }, "Create my account"));
+    document.body.prepend(card);
+    fields.name.focus();
+    card.onsubmit = async (e) => {
+      e.preventDefault();
+      if (fields.password.value !== fields.again.value) return say("The two passwords don't match.");
+      try {
+        const done = await MIA.setup({
+          name: fields.name.value.trim(), email: fields.email.value.trim(), password: fields.password.value,
+          country: country.value, interests: picks.map((p) => p.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
+        });
+        card.replaceChildren(
+          el("div", { class: "setup-head" }, el("span", { class: "home-badge", "aria-hidden": "true" }, "✦"),
+            el("div", {}, el("h1", {}, "Hi, " + done.name + "!"), el("p", { class: "dim" }, "One more thing before we start."))),
+          el("h2", {}, "Your recovery code"),
+          el("p", { class: "setup-code" }, done.recovery_code || ""),
+          el("p", {}, "Write it down somewhere safe. If you ever forget your password, it's the way back in. MIA shows it only now."),
+          el("button", { class: "btn btn-green setup-go", type: "button", onclick: () => { card.remove(); then(); } }, "I've saved it. Let's go"));
+      } catch (err) { say(err.message); }
+    };
+  }
+
   async function start(renderPage, options) {
     render = renderPage;
     const go = async () => {
@@ -312,8 +358,10 @@
       }
       if (MIA.demo) say("Demo: placeholder data. Actions and Talk need MIA running.");
     };
-    if (!MIA.signedIn) signInForm(go);
-    else go();
+    if (MIA.signedIn) return go();
+    const info = await MIA.setupStatus();
+    if (info.needed) setupForm(info, go);
+    else signInForm(go);
   }
 
   /** The frame alone (sidebar + MIA) for a page that runs its own render and sign-in. */

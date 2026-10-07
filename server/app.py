@@ -123,6 +123,14 @@ class LoginRequest(BaseModel):
     password: str = ""
 
 
+class SetupRequest(BaseModel):
+    name: str = ""
+    email: str = ""
+    password: str = ""
+    country: str = "US"
+    interests: list[str] = []
+
+
 class PushKeys(BaseModel):
     p256dh: str
     auth: str
@@ -171,6 +179,11 @@ def create_app(context: AppContext) -> FastAPI:
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
+    # The phone app (android-phone/mia_phone.py) switches these on: making
+    # the device's first account, and staying signed in between starts.
+    # Never on a computer's server, which other devices can reach.
+    app.state.allow_setup = False
+    app.state.remember_sign_in = False
     # token -> when that phone last used MIA (Settings shows "phone last connected").
     app.state.last_seen: dict[str, float] = {}
 
@@ -197,13 +210,52 @@ def create_app(context: AppContext) -> FastAPI:
         app.state.last_seen[credentials.credentials] = time.time()
         return profile_id
 
+    def _remember(profile_id: Optional[str]) -> None:
+        """The phone stays signed in between starts until the person logs out."""
+        if app.state.remember_sign_in:
+            context.config.set("phone.signed_in_profile_id", profile_id)
+            context.config.save()
+
     @app.post("/api/logout")
     def logout(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
         """Ends this session on this device (the web's account menu, 2026-10-07)."""
         if credentials is not None:
-            app.state.sessions.pop(credentials.credentials, None)
+            profile_id = app.state.sessions.pop(credentials.credentials, None)
             app.state.last_seen.pop(credentials.credentials, None)
+            if profile_id and context.config.get("phone.signed_in_profile_id") == profile_id:
+                _remember(None)
         return {"signed_out": True}
+
+    @app.get("/api/setup")
+    def setup_status() -> dict:
+        """Whether this device still needs its first account (the phone app only)."""
+        from core.first_account import setup_page
+
+        if not app.state.allow_setup:
+            return {"needed": False}
+        with app.state.turn_lock:
+            return setup_page(context)
+
+    @app.post("/api/setup")
+    def setup(body: SetupRequest) -> dict:
+        """Makes the device's first account and signs it in (DEC-0019, the phone)."""
+        from core.first_account import create_first_account
+        from core.profile_manager import AccountError
+
+        if not app.state.allow_setup:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Accounts are made in MIA on this device.")
+        with app.state.turn_lock:
+            try:
+                profile, code = create_first_account(context, body.name, body.email, body.password, body.country,
+                                                     body.interests)
+            except AccountError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        token = secrets.token_urlsafe(32)
+        app.state.sessions[token] = profile.profile_id
+        app.state.last_seen[token] = time.time()
+        _remember(profile.profile_id)
+        log.info("First account made on this device: '%s'.", profile.profile_id)
+        return {"token": token, "profile_id": profile.profile_id, "name": profile.name, "recovery_code": code}
 
     @app.post("/api/login")
     def login(body: LoginRequest) -> dict:
@@ -221,6 +273,7 @@ def create_app(context: AppContext) -> FastAPI:
         token = secrets.token_urlsafe(32)
         app.state.sessions[token] = profile.profile_id
         app.state.last_seen[token] = time.time()
+        _remember(profile.profile_id)
         log.info("Mobile login for profile '%s'.", profile.profile_id)
         return {"token": token, "profile_id": profile.profile_id, "name": profile.name}
 

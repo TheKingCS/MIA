@@ -390,3 +390,68 @@ def test_voice_turn_rejects_bad_and_oversized_audio(voice_client):
 
 def test_voice_text_rejects_empty(voice_client):
     assert voice_client.post("/api/voice/text", json={"text": "   "}).status_code == 400
+
+
+# ----------------------------------------------------------------------
+# The phone's first account (DEC-0019, 2026-10-07)
+# ----------------------------------------------------------------------
+
+@pytest.fixture
+def fresh(context):
+    """A device like the phone test build: one placeholder person, no password."""
+    context.profiles.set_password(_profile_id(context), None)
+    return context
+
+
+def _phone(context):
+    app = server_app_module.create_app(context)
+    app.state.allow_setup = True
+    app.state.remember_sign_in = True
+    return TestClient(app)
+
+
+_ZAC_LIKE = {"name": "Robin", "email": "robin@example.com", "password": "secret1", "country": "US",
+             "interests": ["Fitness", "Not a category"]}
+
+
+def test_setup_is_never_offered_by_a_computers_server(client, fresh):
+    assert client.get("/api/setup").json() == {"needed": False}
+    assert client.post("/api/setup", json=_ZAC_LIKE).status_code == 403
+    assert not any(p.has_password for p in fresh.profiles.list_profiles())
+
+
+def test_setup_takes_over_the_placeholder_and_signs_in(fresh):
+    phone = _phone(fresh)
+    info = phone.get("/api/setup").json()
+    assert info["needed"] and info["min_password"] == 6 and any(c["code"] == "US" for c in info["countries"])
+    placeholder = _profile_id(fresh)
+    res = phone.post("/api/setup", json=_ZAC_LIKE)
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["profile_id"] == placeholder and body["name"] == "Robin" and body["recovery_code"]
+    assert len(fresh.profiles.list_profiles()) == 1
+    me = fresh.profiles.get_profile(placeholder)
+    assert me.email == "robin@example.com" and fresh.profiles.verify_password(placeholder, "secret1")
+    assert fresh.profiles.check_recovery_code(placeholder, body["recovery_code"])
+    assert fresh.config.get("phone.signed_in_profile_id") == placeholder
+    auth = {"Authorization": f"Bearer {body['token']}"}
+    assert phone.get("/api/today", headers=auth).status_code == 200
+    # Only once: after that, people sign in.
+    assert phone.get("/api/setup").json()["needed"] is False
+    again = phone.post("/api/setup", json={**_ZAC_LIKE, "email": "other@example.com"})
+    assert again.status_code == 400 and "Sign in" in again.json()["detail"]
+    # Logging out forgets the remembered sign-in.
+    phone.post("/api/logout", headers=auth)
+    assert fresh.config.get("phone.signed_in_profile_id") is None
+
+
+@pytest.mark.parametrize("change, words", [
+    ({"name": "  "}, "call you"),
+    ({"email": "not-an-email"}, "email"),
+    ({"password": "123"}, "at least 6"),
+    ({"country": "ZZ"}, "country"),
+])
+def test_setup_refuses_plainly_and_saves_nothing(fresh, change, words):
+    res = _phone(fresh).post("/api/setup", json={**_ZAC_LIKE, **change})
+    assert res.status_code == 400 and words in res.json()["detail"]
+    assert not any(p.has_password for p in fresh.profiles.list_profiles())
