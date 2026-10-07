@@ -38,6 +38,11 @@ the hub, and the Meta AI app.
       whole team is.
 - [x] Q-0015 answered and DEC-0019 approved (2026-10-07): MIA on the
       phone, the spike now, Android first, iPhone soon after.
+- [ ] **Try MIA on your phone, no computer:** open
+      `https://github.com/TheKingCS/MIA/releases/tag/phone-spike` on your
+      Android, install **MIA-Phone-Test.apk** (it sits beside the companion
+      app), open it, and tell Claude how long it took to start and how it
+      feels. It's a test: a person called "You", no Talk yet.
 - [x] DEC-0014 and DEC-0016 approved; Q-0011 answered (Android, no
       glasses yet, MIA not on the PC yet); Q-0012 parked (2026-10-05).
 - [ ] **The screens' photos (DEC-0018):** ask ChatGPT for the images in
@@ -224,11 +229,12 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
-**Next (2026-10-07, DEC-0019 approved): the "MIA on a phone" spike**
-(`docs/PHONE_FIRST_PLAN.md`, Phase 1): the engine and `web/` running
-inside the Android app (Chaquopy), one slice end to end, measured (size,
-start time, battery, packages that don't run). Keep the iPhone path open
-(Zac moves to iPhone later). Web parity continues after it.
+**The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`).** Next is
+Zac trying the test build on his phone (start time, how it feels), then
+Phase 2 (`docs/PHONE_FIRST_PLAN.md`): onboarding, Android notifications,
+speech and battery, background checks on Android's scheduler, backup, a
+small on-phone model for Talk, faster starts. Keep the iPhone path open.
+Web parity continues alongside.
 
 **Now (2026-10-06, DEC-0017, approved): the web becomes all of MIA.**
 Track it in `docs/WEB_PARITY.md`. Done: the shared frame (`web/shell.js`)

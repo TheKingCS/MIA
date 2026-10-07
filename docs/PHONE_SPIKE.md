@@ -37,9 +37,32 @@ After that, on the phone-like Python:
 - **Install:** it installs *beside* the companion app (`com.mia.phone`), from the **phone-spike** release on GitHub.
 - **CI** (`.github/workflows/android-phone.yml`) builds the APK, starts it on an Android emulator (`ci_smoke.sh`), checks MIA comes up and answers, runs an action, takes a screenshot, and notes memory and APK size.
 
-## Results on Android
+## Results on Android (2026-10-07, CI run 37591623526: **it works**)
 
-*(filled in from the CI run below)*
+MIA started inside the app on an Android 14 emulator with no computer anywhere. Her screens and API answered from the phone (`/web/index.html`, `/api/shell`, `/api/dashboard`, `/api/missions`, `/api/skills` and `/api/money`, all 200), and an action ("Add the mission Hello from the phone") ran on the phone.
+
+| Measure | Result | Note |
+|---|---|---|
+| APK size | **45.7 MB** | Debug build carrying phone (arm64) and emulator (x86_64) code; a phone-only release build will be smaller |
+| First start | **9.2 s** | Unpacking MIA's files 2.8 s (first start and after an update only), Python 1.1 s, engine 3.8 s, server 1.3 s |
+| Later starts | about 6 s (expected) | no unpacking, and Python's compiled files are cached beside the code |
+| Memory | **130 MB** (PSS) | with the WebView showing the screens |
+| Python | 3.13.0 | the version with official Android and iOS support |
+
+The emulator is slower than a recent phone, so a real phone should do better. Zac's phone will tell.
+
+**Two packages needed a choice:**
+- **cryptography:** Chaquopy has Android builds (42.0.8, with cffi). It works.
+- **pydantic-core** (Rust, inside FastAPI 2.x): no Android build. The phone uses FastAPI 0.99 with pydantic 1, which is pure Python. MIA's server works on both.
+
+**Try it:** on an Android phone, open `https://github.com/TheKingCS/MIA/releases/tag/phone-spike` and install **MIA-Phone-Test.apk**. It installs beside the companion app and starts MIA with nobody else involved: no computer, no Tailscale.
+
+**Verdict: Phase 1 passes.** The engine and screens run on the phone, unchanged, with acceptable size, speed and memory. Phase 2 (`PHONE_FIRST_PLAN.md`) can start: onboarding, phone-native notifications, speech and battery, background checks on Android's scheduler, backup, and a small on-phone model for Talk.
+
+**To make starts faster before Phase 2 ships:**
+- ship Python's compiled files in the bundle;
+- show Home from the last state while the engine warms up;
+- build only the phone's arm64 code into release builds.
 
 ## What this test does not cover yet (Phase 2)
 

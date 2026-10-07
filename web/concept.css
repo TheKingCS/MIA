@@ -492,5 +492,5 @@ body[data-app] .hero {
 
 /* long screen names fit a phone's hero */
 @media (max-width: 560px) {
-  body[data-app] .hero h1 { font-size: clamp(26px, 9vw, 40px); overflow-wrap: anywhere; }
+  body[data-app] .hero h1 { font-size: clamp(24px, 8vw, 40px); }
 }
