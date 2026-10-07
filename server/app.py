@@ -123,6 +123,15 @@ class LoginRequest(BaseModel):
     password: str = ""
 
 
+class PasswordChange(BaseModel):
+    current: str
+    new: str
+
+
+class PasswordCheck(BaseModel):
+    password: str
+
+
 class SetupRequest(BaseModel):
     name: str = ""
     email: str = ""
@@ -673,6 +682,43 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import skills_page
 
         return _screen(profile_id, "skills", skills_page)
+
+    @app.get("/api/profile")
+    def web_profile(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_account import profile_page
+
+        with app.state.turn_lock:
+            return profile_page(view_for(context, profile_id))
+
+    @app.get("/api/settings")
+    def web_settings(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_account import settings_page
+
+        with app.state.turn_lock:
+            return settings_page(view_for(context, profile_id))
+
+    @app.post("/api/account/password")
+    def change_password(body: PasswordChange, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Not an action: a password never sits in a proposal or the undo log."""
+        from core.first_account import MIN_PASSWORD
+
+        if not context.profiles.verify_password(profile_id, body.current):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Your current password isn't right.")
+        if len(body.new or "") < MIN_PASSWORD:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Pick a password of at least {MIN_PASSWORD} characters.")
+        with app.state.turn_lock:
+            context.profiles.set_password(profile_id, body.new)
+        log.info("Password changed from the web for profile '%s'.", profile_id)
+        return {"changed": True}
+
+    @app.post("/api/account/recovery-code")
+    def new_recovery_code(body: PasswordCheck, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A new recovery code (the old one stops working), shown once."""
+        if not context.profiles.verify_password(profile_id, body.password):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        with app.state.turn_lock:
+            code = context.profiles.issue_recovery_code(profile_id)
+        return {"recovery_code": code}
 
     @app.get("/api/character")
     def web_character(profile_id: str = Depends(require_profile_id)) -> dict:

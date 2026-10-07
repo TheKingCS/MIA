@@ -129,12 +129,15 @@ def test_a_child_can_only_take_child_actions(world):
     assert world.actions.propose(world, "task.done", {"task_id": todo.task_id}).status == "proposed"
     # Kitchen, Workout, Missions, Skills and Character are children's apps too
     # (CHILD_APPS), so their kinds are child-safe, except deleting a recipe or a
-    # mission; nothing about money or property is.
+    # mission; nothing about money or property is. A child's own profile and
+    # settings are theirs too (money settings and email refuse, see
+    # core/account_actions.py).
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
     kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "workout_template.",
                            "mission.", "objective.", "pathway.", "character.")
     assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility",
-                                                                                 "app.favorite"}
+                                                                                 "app.favorite", "profile.edit",
+                                                                                 "setting.set", "communication.resume"}
     assert "recipe.delete" not in child_ok and "meal.log" in child_ok and "workout.log" in child_ok
     assert "mission.delete" not in child_ok and "mission.complete" in child_ok
 

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Profile — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="profile" class="mod-profile">
+  <!--
+    Profile (claude, 2026-10-07, Zac: the gear's Profile): name, email, country,
+    what MIA helps with, household, password and recovery code, from
+    MIA.profile() (core/web_account.py). Changes are actions
+    (profile.edit); the password and recovery code have their own calls.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">👤</span> <span id="hero-name">Profile</span></h1>
+        <p class="tagline" id="hero-tagline">Who you are on this MIA.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

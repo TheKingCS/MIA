@@ -17,6 +17,7 @@
  *   MIA.money(strategy)         -> the Money screen: bills, income, expenses, debts, budgets, trends
  *   MIA.kitchen() / MIA.workout() / MIA.realEstate() -> those screens (core/web_screens.py)
  *   MIA.missions() / MIA.skills() / MIA.character() -> those screens (core/web_progress.py)
+ *   MIA.profile() / MIA.settings() -> the gear's screens (core/web_account.py)
  *   MIA.equipment(scope)        -> Garage / Property / Greenhouse / Maintenance
  *   MIA.asset(id)               -> one asset's page (tasks, stats, missions, documents, costs, history)
  *   MIA.download(path) / MIA.upload(path, file) -> files (an asset's documents)
@@ -161,6 +162,11 @@
     missions: () => read("/api/missions", "missions"),
     skills: () => read("/api/skills", "skills"),
     character: () => read("/api/character", "character"),
+    profile: () => read("/api/profile", "profile"),
+    settings: () => read("/api/settings", "settings"),
+    // Not actions: a password never sits in a proposal (server/app.py).
+    changePassword: (current, next) => demo ? demoOnly() : call("POST", "/api/account/password", { current: current, new: next }),
+    newRecoveryCode: (password) => demo ? demoOnly() : call("POST", "/api/account/recovery-code", { password: password }),
     equipment: (scope) => read("/api/equipment?scope=" + encodeURIComponent(scope || "maintenance"), "equipment_" + (scope || "maintenance")),
     asset: (id) => read("/api/assets/" + encodeURIComponent(id), "asset"),
     // A stored file (an asset's document) as a Blob, with this tab's sign-in.

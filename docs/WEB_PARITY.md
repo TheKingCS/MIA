@@ -72,5 +72,5 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Music: Library | Music library | `music__01_library` | |  | |
 | Music: Playlists | Playlists | `music__02_playlists` | |  | |
 | Modules | Turn apps on and off, install | `module_browser__01_modules` | ✅ `/api/apps`, `app.visibility` | ✅ every app by life area, what MIA can do in each (201 tools), open or ask MIA, show/hide per person with undo (not yet: device-wide enable/disable, install, rescan) | |
-| Settings | Theme, profile, household, options | `settings` | |  | |
+| Settings | Theme, profile, household, options | `settings` | ✅ `/api/profile`, `/api/settings`, `profile.edit`, `setting.set`, `communication.resume`, `/api/account/password`, `/api/account/recovery-code` | 🟡 Profile (name, email, country, interests, household, password, new recovery code) and Settings (messages per day, journal reflection, support and safety, currency, private money, message breaks), all undoable (2026-10-07). Not yet: theme, voice, phone access, backup, updates, joining a household | |
 | Diagnostics | System health | `diagnostics` | |  | |

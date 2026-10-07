@@ -84,6 +84,8 @@ def context(tmp_path, monkeypatch):
     monkeypatch.setattr(web_push_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(web_push_module, "_VAPID_KEYS_FILE", data_dir / "vapid_keys.json")
 
+    import core.life_events
+    monkeypatch.setattr(core.life_events, "_DATA_DIR", data_dir)  # undo records history
     ctx = build_core_context(ConfigManager(), EventBus())
     ctx.push_subscriptions = PushSubscriptionManager(ctx)
     ctx.profiles.create_profile("Alice", password="hunter2")
@@ -455,3 +457,77 @@ def test_setup_refuses_plainly_and_saves_nothing(fresh, change, words):
     res = _phone(fresh).post("/api/setup", json={**_ZAC_LIKE, **change})
     assert res.status_code == 400 and words in res.json()["detail"]
     assert not any(p.has_password for p in fresh.profiles.list_profiles())
+
+
+# ----------------------------------------------------------------------
+# Profile and Settings (the gear's screens, 2026-10-07)
+# ----------------------------------------------------------------------
+
+def _signed_in(client, context) -> dict:
+    token = client.post("/api/login", json={"profile_id": _profile_id(context), "password": "hunter2"}).json()["token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _do(client, auth, kind, params):
+    proposal = client.post("/api/actions/propose", json={"kind": kind, "params": params}, headers=auth)
+    if proposal.status_code != 200:
+        return proposal
+    return client.post(f"/api/actions/{proposal.json()['proposal_id']}/approve", headers=auth)
+
+
+def test_profile_page_and_editing_it_is_an_undoable_action(client, context):
+    auth = _signed_in(client, context)
+    page = client.get("/api/profile", headers=auth).json()
+    assert page["name"] == "Alice" and page["signed_in"] and page["me"]["level"] >= 1
+    area = page["interest_options"][0]
+    proposal = client.post("/api/actions/propose", headers=auth, json={"kind": "profile.edit", "params": {
+        "name": "Ally", "email": "ally@example.com", "country": "GB", "interests": [area]}}).json()
+    assert "Ally" in proposal["summary"] and "United Kingdom" in proposal["summary"]
+    done = client.post(f"/api/actions/{proposal['proposal_id']}/approve", headers=auth).json()
+    assert done["status"] == "executed"
+    page = client.get("/api/profile", headers=auth).json()
+    assert (page["name"], page["email"], page["country"], page["interests"]) == ("Ally", "ally@example.com", "GB", [area])
+    assert client.post(f"/api/actions/{done['proposal_id']}/undo", headers=auth).status_code == 200
+    assert client.get("/api/profile", headers=auth).json()["name"] == "Alice"
+
+
+def test_profile_edit_refuses_a_taken_email_and_unknown_areas(client, context):
+    context.profiles.create_profile("Bo", password="pw1234", make_active=False, email="bo@example.com")
+    auth = _signed_in(client, context)
+    taken = _do(client, auth, "profile.edit", {"email": "BO@example.com"})
+    assert taken.status_code == 409 and "already signs in" in taken.json()["detail"]
+    unknown = _do(client, auth, "profile.edit", {"interests": ["Juggling"]})
+    assert unknown.status_code == 409 and "Juggling" in unknown.json()["detail"]
+    assert _do(client, auth, "profile.edit", {"name": "Alice"}).json()["detail"] == "Nothing to change."
+
+
+def test_settings_page_and_changing_a_setting(client, context):
+    auth = _signed_in(client, context)
+    page = client.get("/api/settings", headers=auth).json()
+    budget = next(s for g in page["groups"] for s in g["settings"] if s["key"] == "communication.daily_budget")
+    assert budget["value"] == 5 and budget["kind"] == "number"
+    assert _do(client, auth, "setting.set", {"key": "communication.daily_budget", "value": "3"}).json()["status"] == "executed"
+    page = client.get("/api/settings", headers=auth).json()
+    assert next(s for g in page["groups"] for s in g["settings"] if s["key"] == "communication.daily_budget")["value"] == 3
+    too_many = _do(client, auth, "setting.set", {"key": "communication.daily_budget", "value": "50"})
+    assert too_many.status_code == 409 and "1 to 20" in too_many.json()["detail"]
+    assert _do(client, auth, "setting.set", {"key": "system.active_profile_id", "value": "x"}).status_code == 409
+    assert _do(client, auth, "setting.set", {"key": "journal.weekly_reflection", "value": True}).json()["status"] == "executed"
+
+
+def test_changing_the_password_needs_the_current_one(client, context):
+    auth = _signed_in(client, context)
+    wrong = client.post("/api/account/password", headers=auth, json={"current": "nope", "new": "longenough"})
+    assert wrong.status_code == 400
+    short = client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "abc"})
+    assert short.status_code == 400 and "at least" in short.json()["detail"]
+    assert client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "longenough"}).json() == {"changed": True}
+    assert client.post("/api/login", json={"profile_id": "Alice", "password": "longenough"}).status_code == 200
+    assert client.post("/api/account/password", json={"current": "x", "new": "yyyyyy"}).status_code == 401
+
+
+def test_a_new_recovery_code_needs_the_password(client, context):
+    auth = _signed_in(client, context)
+    assert client.post("/api/account/recovery-code", headers=auth, json={"password": "nope"}).status_code == 400
+    code = client.post("/api/account/recovery-code", headers=auth, json={"password": "hunter2"}).json()["recovery_code"]
+    assert context.profiles.check_recovery_code(_profile_id(context), code)
