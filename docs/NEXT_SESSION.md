@@ -229,12 +229,21 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
-**The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`).** Next is
-Zac trying the test build on his phone (start time, how it feels), then
-Phase 2 (`docs/PHONE_FIRST_PLAN.md`): onboarding, Android notifications,
-speech and battery, background checks on Android's scheduler, backup, a
-small on-phone model for Talk, faster starts. Keep the iPhone path open.
-Web parity continues alongside.
+**The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`)**, and Zac
+has it on his phone (first start under 8 s). His feedback is fixed:
+account menu, no Apps tile, every card the phone's width, Garage spacing.
+
+**Next, in order (`docs/design/CONCEPT_AUDIT.md`'s build list):**
+1. Onboarding (create your account on first start), Profile and Settings
+   pages. This is Phase 2's first step.
+2. Photos of things (assets, recipes, properties).
+3. Skills and Missions like the concept.
+4. The Real Estate detail panel.
+5. Strip icons.
+6. Weather (needs Zac's OK).
+7. The net-worth trend.
+
+Then the rest of Phase 2 (`docs/PHONE_FIRST_PLAN.md`): Android notifications, speech and battery, background checks, backup, an on-phone model for Talk, faster starts. Keep the iPhone path open.
 
 **Now (2026-10-06, DEC-0017, approved): the web becomes all of MIA.**
 Track it in `docs/WEB_PARITY.md`. Done: the shared frame (`web/shell.js`)
