@@ -81,6 +81,12 @@ def server_args(binary: str, model_path: str, port: int = PORT, threads: int = 4
             "-c", str(context), "-np", "1", "-t", str(threads), "--no-webui"]
 
 
+def threads_for(cores: int) -> int:
+    """Pure logic. Phones with 8 cores have 4 fast ones: use those (the
+    slow ones hold the fast ones back). Smaller devices use every core."""
+    return 4 if cores >= 8 else max(1, cores)
+
+
 class LocalModels:
     """`context.local_models` on the phone."""
 
@@ -210,7 +216,7 @@ class LocalModels:
         started = time.monotonic()
         self.folder.mkdir(parents=True, exist_ok=True)
         log_file = open(self.folder / "server.log", "wb")
-        threads = max(1, min(4, (os.cpu_count() or 4) // 2))
+        threads = threads_for(os.cpu_count() or 4)
         try:
             self._process = subprocess.Popen(server_args(self.binary, str(self.path(model)), port=self.port, threads=threads),
                                              stdout=log_file, stderr=subprocess.STDOUT)

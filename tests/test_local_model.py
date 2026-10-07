@@ -168,3 +168,8 @@ def test_mia_starts_the_same_model_again_and_stop_forgets_it(phone):
     assert again.status()["server"]["state"] == "stopped" and phone.context.config.get("phone.model_id") is None
     phone.delete("tiny")
     assert not (phone.folder / "tiny.gguf").exists()
+
+
+def test_threads_use_a_phones_fast_cores():
+    assert local_model.threads_for(8) == 4 and local_model.threads_for(12) == 4
+    assert local_model.threads_for(4) == 4 and local_model.threads_for(2) == 2 and local_model.threads_for(1) == 1

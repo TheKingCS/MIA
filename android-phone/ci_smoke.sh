@@ -69,15 +69,19 @@ if [ -n "${MODEL_FILE:-}" ] && [ -f "$MODEL_FILE" ]; then
   done
   api http://127.0.0.1:8765/api/model-test | field "d['server']" | tee -a "$OUT/timings.txt"
   [ "$state" = ready ] || exit 1
-  api -d '{"count":5}' http://127.0.0.1:8765/api/model-test/run > /dev/null
-  for i in $(seq 1 240); do
+  # The emulator has few, slow cores: two cases show the whole chain works.
+  # Speed is the real phone's to measure.
+  api -d '{"count":2}' http://127.0.0.1:8765/api/model-test/run > /dev/null
+  for i in $(seq 1 360); do
     done_=$(api http://127.0.0.1:8765/api/model-test | field "d['run'].get('finished')")
     [ "$done_" = True ] && break
     sleep 5
   done
+  api http://127.0.0.1:8765/api/model-test | field "d['run']" | tee -a "$OUT/timings.txt"
+  adb shell run-as com.mia.phone tail -c 1500 files/mia/data/models/server.log > "$OUT/llama-server.log" 2>&1 || true
   api http://127.0.0.1:8765/api/model-test | field "[m['results'] and {k: m['results'][k] for k in ('done','passed','median_seconds','read_per_second','write_per_second','load_seconds')} for m in d['models'] if m['id']=='$MODEL_ID'][0]" | tee -a "$OUT/timings.txt"
   passed=$(api http://127.0.0.1:8765/api/model-test | field "[m['results']['done'] for m in d['models'] if m['id']=='$MODEL_ID' and m['results']][0]") || exit 1
   [ "$passed" -ge 1 ] || exit 1
   # Talk on the phone now answers from the phone's own model.
-  api -d '{"text":"Say hello in five words."}' http://127.0.0.1:8765/api/voice/text | head -c 400 | tee -a "$OUT/timings.txt"; echo
+  api --max-time 900 -d '{"text":"Say hello in five words."}' http://127.0.0.1:8765/api/voice/text | head -c 400 | tee -a "$OUT/timings.txt"; echo
 fi
