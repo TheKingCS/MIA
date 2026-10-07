@@ -21,7 +21,7 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 |---|---|
 | Desktop app (PySide6, 37 apps) | REAL, in daily development |
 | Phone web app (Talk, Today, Money) and Android app | REAL |
-| **MIA on the phone, no computer (DEC-0019)** | REAL test build: engine and `web/` inside an Android app (`android-phone/`, `docs/PHONE_SPIKE.md`); starts in under 8 s on Zac's phone. First start makes your account (2026-10-07). No Talk on the phone yet |
+| **MIA on the phone, no computer (DEC-0019)** | REAL test build: engine and `web/` inside an Android app (`android-phone/`, `docs/PHONE_SPIKE.md`); starts in under 8 s on Zac's phone. First start makes your account; Profile and Settings; **MIA's own model on the phone** (llama.cpp; Model test screen; 3B models pick the right tool 95-96% of the time, 1.5B 81%; `docs/PHONE_MODEL_TEST.md`). Speed on Zac's phone next |
 | Assistant (local model, ~185 tools, voice) | REAL |
 | Life events (history), links, Life State v2 (now with assets, kitchen, workout), `/api/state`, schema | REAL / DERIVED, built 2026-10-05 |
 | Web front end (`web/`, served at `/web/`; desktop "Home (preview)") | REAL foundation: engine client, tokens, a working Home scaffold. Muse's real Home next |

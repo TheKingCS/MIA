@@ -43,6 +43,12 @@ the hub, and the Meta AI app.
       Android, install **MIA-Phone-Test.apk** (it sits beside the companion
       app), open it, and tell Claude how long it took to start and how it
       feels. Done: under 8 seconds (2026-10-07).
+- [ ] **Test MIA's own AI model on your phone (2026-10-07):** install the
+      newest MIA-Phone-Test.apk, then gear → Settings → **Model test**.
+      Download **Qwen 2.5 · 1.5B** on Wi-Fi, tap **Start**, then **Quick
+      test**, keep MIA open, and send Claude a screenshot of the results.
+      If you have time, do the same with **Qwen 2.5 · 3B**.
+      (`docs/PHONE_MODEL_TEST.md`)
 - [ ] **Make your account on the phone (2026-10-07):** install the newest
       **MIA-Phone-Test.apk** from the same page over the old one. It asks
       for your name, email, password, country and what MIA should help

@@ -60,4 +60,30 @@ All 4-bit (Q4_K_M), the usual size/quality trade for phones.
 
 ## Results
 
-*(Filled in from CI's model check and Zac's phone.)*
+### Accuracy (CI "Model check", 2026-10-07, 80 of the 213 cases each)
+
+| Model | Right tool | Typical case on GitHub's 4-core computer | Reading | Writing |
+|---|---|---|---|---|
+| Qwen 2.5 · 1.5B | **65 of 80 (81%)** | 9 s | 101 tokens/s | 31 tokens/s |
+| Qwen 2.5 · 3B | **76 of 80 (95%)** | 25 s | 31 tokens/s | 13 tokens/s |
+| Llama 3.2 · 3B (the PC's model) | **77 of 80 (96%)** | 32 s | 28 tokens/s | 11 tokens/s |
+
+- **Both 3B models are about as good as MIA on a computer.** Their few
+  misses are near-misses (a similar tool: "add grocery item" for "add
+  the chili's ingredients", "adjust quantity" for "remove from inventory").
+- **The 1.5B mostly misses one way:** asked a question ("What trips do I
+  have?", "When is my next alarm?"), it answers in words instead of
+  calling the lookup tool. 11 of its 15 misses are that. MIA can fix that
+  in code: when the only tools offered are lookups, look it up first and
+  let the model phrase the answer (MIA's "facts from code" rule).
+
+### On Android (CI emulator, 2026-10-07)
+
+The whole chain works with no computer: the app's own llama.cpp server
+loaded the 1.5B model in 5.6 s, the test ran, and **Talk answered from
+the phone's own model** ("Hello, world!"). The emulator has 2 slow cores
+(7.9 tokens/s reading), so its speed says nothing about a real phone.
+
+### On Zac's Galaxy A54
+
+*(Waiting on Zac's Quick test screenshots.)*
