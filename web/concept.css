@@ -525,3 +525,36 @@ body[data-app] .hero {
 }
 .skill-head > div { min-width: 0; }
 .skill-head p { overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------- smooth scrolling on phones (Zac, 2026-10-07) */
+/* A "fixed" page background makes a phone repaint the whole screen on every
+   scroll frame. The same gradient now lives on its own fixed layer, which the
+   phone moves without repainting. Live blur behind the bottom bar and the
+   weather chip is gone too (the bar is nearly opaque anyway). */
+html, body { background-attachment: scroll; }
+body { background: #050a07; }
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(var(--mod-rgb), 0.10), transparent 60%),
+    linear-gradient(180deg, #07100b 0%, #050a07 40%, #040805 100%);
+  transform: translateZ(0);
+}
+.bottom-bar, .weather-chip { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.bottom-bar { background: rgba(6, 11, 8, 0.98) !important; transform: translateZ(0); }
+
+/* Phones: the soft outer glow on every card was the main cost of scrolling
+   (each blurred shadow is repainted as the page moves). The glow comes from
+   the borders instead (free to draw), a little brighter to make up for it;
+   only the photo header keeps a real soft glow. Desktop keeps them all. */
+@media (max-width: 860px) {
+  .layout-main *:not(.hero):not(.hero *) { box-shadow: none !important; }
+  .glass, .row, .figure, .stat-tile, .asset-card, .mission-card, .skill-card, .recipe-card, .property-card {
+    border-color: rgba(var(--mod-rgb), 0.38);
+  }
+  .strip .cell.ok { border-color: rgba(74, 222, 128, 0.7); }
+  .strip .cell.bad { border-color: rgba(248, 113, 113, 0.8); }
+  .strip .cell.soon { border-color: rgba(96, 165, 250, 0.7); }
+  .app-tile { border-color: rgba(var(--tile-rgb), 0.9); }
+  .mission-card.ready { border-color: rgba(74, 222, 128, 0.95); }
+}
