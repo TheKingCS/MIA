@@ -84,6 +84,25 @@ loaded the 1.5B model in 5.6 s, the test ran, and **Talk answered from
 the phone's own model** ("Hello, world!"). The emulator has 2 slow cores
 (7.9 tokens/s reading), so its speed says nothing about a real phone.
 
-### On Zac's Galaxy A54
+### On Zac's Galaxy A54 (2026-10-07, first build)
 
-*(Waiting on Zac's Quick test screenshots.)*
+| Model | Right tool | Typical answer | Reading | Writing | Loading |
+|---|---|---|---|---|---|
+| Qwen 2.5 · 1.5B | 8 of 10 | 62.5 s | 37.6 tokens/s | **3.3 tokens/s** | 8.3 s |
+
+Trying a 3B model then closed MIA twice. What that showed, and what changed:
+
+- **Writing was 4 to 6 times slower than the chip can do.** The A54 has 4
+  fast and 4 slow cores; unpinned, llama.cpp's threads landed on slow ones
+  and every word waited for them. Now pinned to the fast cores
+  (`fast_cores()`, read from the phone's own CPU speeds).
+- **Reading is most of the time** (about 2,000 tokens at 37.6 a second is
+  53 s). Next: send less (shorter tool descriptions, fewer tools) and keep
+  what repeats cached between turns.
+- **The crashes were most likely memory.** A 3B model takes 2.5 to 3.5 GB.
+  Now the conversation memory is kept at 8 bits (half the size), the
+  screen shows free memory and warns before starting a model that may not
+  fit, and a model that closed MIA while loading is never loaded again by
+  itself (it used to be, every start). The screen also says why Android
+  last closed MIA, read from Android itself, since a phone-only person
+  can't see crash logs.

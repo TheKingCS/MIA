@@ -14,11 +14,12 @@ import time
 _started = {}
 
 
-def start(root: str, port: int, native_dir: str = "") -> str:
+def start(root: str, port: int, native_dir: str = "", last_exit: str = "") -> str:
     """Builds MIA's engine and starts her server. Returns JSON: the session
     token for the screen and how long each step took (milliseconds).
     `native_dir` is where Android put the app's native programs, among
-    them llama.cpp's server (libllama_server.so) for MIA's own model."""
+    them llama.cpp's server (libllama_server.so) for MIA's own model.
+    `last_exit`: why Android last closed MIA (JSON), shown on the Model test."""
     if _started:
         return json.dumps(_started)
     t0 = time.time()
@@ -33,6 +34,10 @@ def start(root: str, port: int, native_dir: str = "") -> str:
 
     binary = os.path.join(native_dir, "libllama_server.so") if native_dir else None
     context.local_models = LocalModels(context, binary)
+    try:
+        context.local_models.last_exit = json.loads(last_exit) if last_exit else {}
+    except ValueError:
+        pass
     context.local_models.resume()  # Talk's model, if one was running
     t1 = time.time()
     # Who's signed in on this phone (they stay signed in until they log out).

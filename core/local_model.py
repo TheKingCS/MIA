@@ -72,19 +72,81 @@ MODELS_BY_ID = {m.model_id: m for m in MODELS}
 QUICK, FULL = 10, 40  # cases in a quick and a full test run on the phone
 
 
-def server_args(binary: str, model_path: str, port: int = PORT, threads: int = 4, context: int = 8192) -> list[str]:
+def server_args(binary: str, model_path: str, port: int = PORT, threads: int = 4, context: int = 8192,
+                cores: Optional[list] = None) -> list[str]:
     """Pure logic. How the phone starts llama.cpp's server: on 127.0.0.1
     only, chat templates on (`--jinja`, needed for tools), one slot with
-    the whole context (MIA's longest request is about 7,000 tokens), and
-    four threads (a phone's big cores; the small ones slow it down)."""
-    return [binary, "-m", model_path, "--host", "127.0.0.1", "--port", str(port), "--jinja",
-            "-c", str(context), "-np", "1", "-t", str(threads), "--no-webui"]
+    the whole context (MIA's longest request is about 7,000 tokens).
+    `cores`: the phone's fast cores, which every thread is pinned to; a
+    thread on a slow core makes every word wait for it (Zac's A54 wrote 3
+    tokens a second unpinned, 2026-10-07). The memory for the conversation
+    so far is kept at 8 bits instead of 16 (flash attention on), half the
+    size, so a 3B model fits beside everything else on a 6 GB phone."""
+    args = [binary, "-m", model_path, "--host", "127.0.0.1", "--port", str(port), "--jinja",
+            "-c", str(context), "-np", "1", "-t", str(threads), "-tb", str(threads), "--no-webui",
+            "-fa", "on", "-ctk", "q8_0", "-ctv", "q8_0"]
+    if cores:
+        mask = hex(sum(1 << c for c in cores))
+        args += ["-C", mask, "-Cb", mask, "--cpu-strict", "1"]
+    return args
 
 
 def threads_for(cores: int) -> int:
     """Pure logic. Phones with 8 cores have 4 fast ones: use those (the
     slow ones hold the fast ones back). Smaller devices use every core."""
     return 4 if cores >= 8 else max(1, cores)
+
+
+def fast_cores(cpu_dir: Path = Path("/sys/devices/system/cpu")) -> list[int]:
+    """The cores faster than the phone's slowest group (Linux reports each
+    core's top speed). Empty when they're all the same, or it can't tell."""
+    speeds = {}
+    for core in cpu_dir.glob("cpu[0-9]*"):
+        try:
+            speeds[int(core.name[3:])] = int((core / "cpufreq" / "cpuinfo_max_freq").read_text().strip())
+        except (OSError, ValueError):
+            continue
+    if len(set(speeds.values())) < 2:
+        return []
+    slowest = min(speeds.values())
+    return sorted(c for c, speed in speeds.items() if speed > slowest)
+
+
+def free_memory_mb(meminfo: Path = Path("/proc/meminfo")) -> Optional[int]:
+    """What the system says it could hand out now (MemAvailable)."""
+    try:
+        for line in meminfo.read_text().splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) // 1024
+    except (OSError, ValueError, IndexError):
+        pass
+    return None
+
+
+def needed_memory_mb(file_mb: int) -> int:
+    """Pure logic. About what a running model takes: its file, plus the
+    conversation memory and working space (measured: a 1.5B needs about
+    1.6 GB, a 3B about 2.9 GB)."""
+    return round(file_mb * 1.15 + 350)
+
+
+EXIT_REASONS = {  # Android's ApplicationExitInfo reasons, in words
+    1: "MIA closed itself", 2: "Android stopped MIA", 3: "Android closed MIA to free memory",
+    4: "MIA crashed", 5: "MIA crashed (in native code)", 6: "MIA stopped responding", 9: "MIA used too much",
+    10: "you closed MIA", 11: "you force-stopped MIA", 13: "MIA closed", 16: "MIA was updated",
+}
+
+
+def describe_exit(info: dict) -> str:
+    """Pure logic. Why Android last closed MIA, in a sentence; "" when it
+    was ordinary (closed by you, or an update)."""
+    reason = info.get("reason")
+    if not reason or reason in (10, 11, 16):
+        return ""
+    words = EXIT_REASONS.get(reason, "MIA closed")
+    where = " while you were using it" if info.get("importance", 1000) <= 200 else " in the background"
+    memory = f" (it was using {round(info['pss_kb'] / 1024)} MB)" if info.get("pss_kb") else ""
+    return words + where + memory + "."
 
 
 class LocalModels:
@@ -101,6 +163,8 @@ class LocalModels:
         self._process: Optional[subprocess.Popen] = None
         self._run: dict = {}  # the test run in progress
         self._stop_run = False
+        self.last_exit: dict = {}  # why Android last closed MIA (the phone app tells us)
+        self.note = ""  # something to tell the person at the top of the screen
 
     # ------------------------------------------------------------------ what's here
 
@@ -130,8 +194,11 @@ class LocalModels:
             })
         if run:
             run.pop("results", None)
+        for item, m in zip(models, MODELS):
+            item["needs_mb"] = needed_memory_mb(m.size_mb)
         return {"available": self.available(), "models": models, "download": download, "server": server,
-                "run": run, "quick": QUICK, "full": FULL}
+                "run": run, "quick": QUICK, "full": FULL, "free_mb": free_memory_mb(), "fast_cores": fast_cores(),
+                "last_exit": describe_exit(self.last_exit), "note": self.note}
 
     # ------------------------------------------------------------------ download
 
@@ -216,17 +283,22 @@ class LocalModels:
         started = time.monotonic()
         self.folder.mkdir(parents=True, exist_ok=True)
         log_file = open(self.folder / "server.log", "wb")
-        threads = threads_for(os.cpu_count() or 4)
+        cores = fast_cores()
+        threads = min(4, len(cores)) if cores else threads_for(os.cpu_count() or 4)
+        self._loading_marker().write_text(model.model_id)  # cleared once it's up, or it failed
         try:
-            self._process = subprocess.Popen(server_args(self.binary, str(self.path(model)), port=self.port, threads=threads),
-                                             stdout=log_file, stderr=subprocess.STDOUT)
+            self._process = subprocess.Popen(
+                server_args(self.binary, str(self.path(model)), port=self.port, threads=threads, cores=cores[:threads]),
+                stdout=log_file, stderr=subprocess.STDOUT)
         except OSError as problem:
+            self._loading_marker().unlink(missing_ok=True)
             with self._lock:
                 self._server = {"state": "error", "model_id": model.model_id, "error": f"It didn't start: {problem}"}
             return
         backend = OpenAIBackend(f"http://127.0.0.1:{self.port}", model.model_id)
         while time.monotonic() - started < 300:
             if self._process.poll() is not None:
+                self._loading_marker().unlink(missing_ok=True)
                 tail = (self.folder / "server.log").read_text(errors="replace")[-400:]
                 with self._lock:
                     self._server = {"state": "error", "model_id": model.model_id, "error": f"It stopped: {tail}"}
@@ -235,16 +307,19 @@ class LocalModels:
                 break
             time.sleep(0.5)
         else:
+            self._loading_marker().unlink(missing_ok=True)
             self.stop()
             with self._lock:
                 self._server = {"state": "error", "model_id": model.model_id, "error": "It took too long to load."}
             return
+        self._loading_marker().unlink(missing_ok=True)
         llm = getattr(self.context, "llm", None)
         if llm is not None:
             llm.use_backend(backend, timeout=300)  # Talk uses the phone's model now
         with self._lock:
             self._server = {"state": "ready", "model_id": model.model_id, "error": "",
-                            "load_seconds": round(time.monotonic() - started, 1), "threads": threads}
+                            "load_seconds": round(time.monotonic() - started, 1), "threads": threads,
+                            "cores": cores[:threads]}
         log.info("The phone's model is up: %s.", model.model_id)
 
     def _remember(self, model_id: Optional[str]) -> None:
@@ -254,8 +329,23 @@ class LocalModels:
             config.set("phone.model_id", model_id)
             config.save()
 
+    def _loading_marker(self) -> Path:
+        return self.folder / "loading"
+
     def resume(self) -> None:
-        """At start-up: bring back the model that was running."""
+        """At start-up: bring back the model that was running, unless
+        loading a model is what closed MIA last time (never a loop of
+        crashes: the person decides whether to try again)."""
+        marker = self._loading_marker()
+        if marker.exists():
+            model = MODELS_BY_ID.get(marker.read_text().strip())
+            marker.unlink(missing_ok=True)
+            self._remember(None)
+            name = model.name if model else "a model"
+            self.note = (f"MIA closed while loading {name} last time, so it didn't load again by itself. "
+                         "It probably needs more free memory than the phone had; try the smaller model, "
+                         "or close other apps first.")
+            return
         model = MODELS_BY_ID.get(self.context.config.get("phone.model_id") or "")
         if model is not None and self.path(model).exists() and self.available():
             self.start(model.model_id)

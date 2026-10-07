@@ -76,7 +76,10 @@
       state = el("p", {}, server.state === "starting" ? "Loading into memory…" : server.state === "ready"
         ? "Running (loaded in " + server.load_seconds + " s). Talk uses this model now." : server.error);
     }
-    return section(m.name, el("p", { class: "dim" }, m.about), state,
+    const tight = m.downloaded && !running && page.free_mb && m.needs_mb > page.free_mb;
+    const warning = tight ? el("p", { class: "model-warning" }, "⚠ Needs about " + gb(m.needs_mb) + " of memory; " +
+      gb(page.free_mb) + " is free right now. Close other apps first, or Android may close MIA.") : null;
+    return section(m.name, el("p", { class: "dim" }, m.about), state, warning,
       el("div", { class: "acct-actions" }, buttons), el("h3", {}, "Last test"), results(m.results));
   }
 
@@ -99,12 +102,20 @@
         el("button", { type: "button", class: "btn btn-ghost", onclick: () => step("run", { count: page.full }) }, "Full test (" + page.full + ")")));
   }
 
+  function phone() {
+    const notes = [page.note, page.last_exit ? "Last time: " + page.last_exit : ""].filter(Boolean);
+    return section("This phone",
+      notes.map((n) => el("p", { class: "model-warning" }, n)),
+      fact("Free memory now", page.free_mb != null ? gb(page.free_mb) : "—"),
+      fact("Fast cores the model uses", page.fast_cores && page.fast_cores.length ? String(Math.min(4, page.fast_cores.length)) : "all"));
+  }
+
   function draw() {
     if (!page.available) {
       $("panel").replaceChildren(el("p", { class: "empty" }, el("strong", {}, "The model test runs in MIA's phone app."), ""));
       return;
     }
-    $("panel").replaceChildren(runner(), ...page.models.map(model));
+    $("panel").replaceChildren(phone(), runner(), ...page.models.map(model));
     clearTimeout(timer);
     keepAwake(busy());
     if (busy()) timer = setTimeout(async () => { try { page = await MIA.modelTest(); draw(); } catch (e) { say(e.message); } }, 2000);

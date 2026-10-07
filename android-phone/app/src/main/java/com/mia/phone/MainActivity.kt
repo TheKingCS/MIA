@@ -2,6 +2,8 @@ package com.mia.phone
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityManager
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -38,7 +40,7 @@ class MainActivity : Activity() {
                 val t1 = SystemClock.elapsedRealtime()
                 if (!Python.isStarted()) Python.start(AndroidPlatform(this))
                 val t2 = SystemClock.elapsedRealtime()
-                val result = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT, applicationInfo.nativeLibraryDir).toString())
+                val result = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT, applicationInfo.nativeLibraryDir, lastExit()).toString())
                 val t3 = SystemClock.elapsedRealtime()
                 Log.i(TAG, "ready unpack_ms=${t1 - t0} python_ms=${t2 - t1} engine_ms=${result.optInt("engine_ms")} " +
                     "server_ms=${result.optInt("server_ms")} total_ms=${t3 - t0} python=${result.optString("python")}")
@@ -50,6 +52,21 @@ class MainActivity : Activity() {
                 runOnUiThread { status.text = "MIA couldn't start on this phone:\n\n${e.message}" }
             }
         }.start()
+    }
+
+    /** Why Android last closed MIA (Android 11+), so the phone can say so:
+     *  a person with only a phone has no other way to see a crash. */
+    private fun lastExit(): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return ""
+        return try {
+            val info = getSystemService(ActivityManager::class.java)
+                .getHistoricalProcessExitReasons(packageName, 0, 1).firstOrNull() ?: return ""
+            JSONObject().put("reason", info.reason).put("importance", info.importance)
+                .put("pss_kb", info.pss).put("when", info.timestamp)
+                .put("description", info.description ?: "").toString()
+        } catch (e: Exception) {
+            ""
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")

@@ -173,3 +173,57 @@ def test_mia_starts_the_same_model_again_and_stop_forgets_it(phone):
 def test_threads_use_a_phones_fast_cores():
     assert local_model.threads_for(8) == 4 and local_model.threads_for(12) == 4
     assert local_model.threads_for(4) == 4 and local_model.threads_for(2) == 2 and local_model.threads_for(1) == 1
+
+
+def test_pinned_to_the_fast_cores_with_a_smaller_cache():
+    args = local_model.server_args("/bin/llama", "/m.gguf", threads=4, cores=[4, 5, 6, 7])
+    assert args[args.index("-C") + 1] == "0xf0" and args[args.index("-Cb") + 1] == "0xf0"
+    assert args[args.index("--cpu-strict") + 1] == "1" and args[args.index("-tb") + 1] == "4"
+    assert args[args.index("-ctk") + 1] == "q8_0" and args[args.index("-fa") + 1] == "on"
+    assert "-C" not in local_model.server_args("/bin/llama", "/m.gguf", cores=[])
+
+
+def _cpus(tmp_path, speeds):
+    for n, speed in enumerate(speeds):
+        folder = tmp_path / f"cpu{n}" / "cpufreq"
+        folder.mkdir(parents=True)
+        (folder / "cpuinfo_max_freq").write_text(f"{speed}\n")
+    (tmp_path / "cpufreq").mkdir()  # not a core
+    return tmp_path
+
+
+def test_fast_cores_are_the_ones_above_the_slowest_group(tmp_path):
+    a54 = _cpus(tmp_path / "a54", [2002000] * 4 + [2400000] * 4)  # 4 small, 4 big (Exynos 1380)
+    assert local_model.fast_cores(a54) == [4, 5, 6, 7]
+    flagship = _cpus(tmp_path / "s", [2000000] * 3 + [2800000] * 4 + [3300000])  # small, big, prime
+    assert local_model.fast_cores(flagship) == [3, 4, 5, 6, 7]
+    assert local_model.fast_cores(_cpus(tmp_path / "even", [2400000] * 4)) == []
+    assert local_model.fast_cores(tmp_path / "nothing") == []
+
+
+def test_free_memory_and_what_a_model_needs(tmp_path):
+    meminfo = tmp_path / "meminfo"
+    meminfo.write_text("MemTotal:  5743000 kB\nMemFree:  300000 kB\nMemAvailable:  2097152 kB\n")
+    assert local_model.free_memory_mb(meminfo) == 2048
+    assert local_model.free_memory_mb(tmp_path / "missing") is None
+    assert 1500 < local_model.needed_memory_mb(1120) < 1800 and 2600 < local_model.needed_memory_mb(2100) < 3000
+
+
+def test_why_android_closed_mia_in_words():
+    assert local_model.describe_exit({"reason": 3, "importance": 100, "pss_kb": 3_145_728}) == \
+        "Android closed MIA to free memory while you were using it (it was using 3072 MB)."
+    assert local_model.describe_exit({"reason": 5, "importance": 400}) == "MIA crashed (in native code) in the background."
+    assert local_model.describe_exit({"reason": 10}) == "" and local_model.describe_exit({}) == ""
+
+
+def test_a_model_that_closed_mia_while_loading_is_not_loaded_again(phone):
+    phone.download("tiny")
+    assert _wait(lambda: phone.status()["download"].get("finished"))
+    phone.context.config.set("phone.model_id", "tiny")
+    phone._loading_marker().write_text("tiny")  # MIA died while this was loading
+    phone.resume()
+    status = phone.status()
+    assert status["server"]["state"] == "stopped" and "closed while loading Tiny" in status["note"]
+    assert phone.context.config.get("phone.model_id") is None and not phone._loading_marker().exists()
+    phone.resume()  # and the time after that, nothing is remembered: still nothing loads
+    assert phone.status()["server"]["state"] == "stopped"
