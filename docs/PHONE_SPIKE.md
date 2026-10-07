@@ -49,7 +49,9 @@ MIA started inside the app on an Android 14 emulator with no computer anywhere. 
 | Memory | **130 MB** (PSS) | with the WebView showing the screens |
 | Python | 3.13.0 | the version with official Android and iOS support |
 
-The emulator is slower than a recent phone, so a real phone should do better. Zac's phone will tell.
+The emulator is slower than a recent phone, so a real phone should do better.
+
+**On Zac's own Android phone (2026-10-07):** it installed from the release page with nothing else on the phone (no MIA, no computer, no Tailscale), and **the first start took under 8 seconds**.
 
 **Two packages needed a choice:**
 - **cryptography:** Chaquopy has Android builds (42.0.8, with cffi). It works.
