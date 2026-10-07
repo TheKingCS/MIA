@@ -735,6 +735,7 @@ def create_app(context: AppContext) -> FastAPI:
     # Mounted before "/" so the phone app keeps the root.
     if _WEB_DIR.is_dir():
         app.mount("/web", StaticFiles(directory=_WEB_DIR, html=True), name="web")
-    app.mount("/schema", StaticFiles(directory=_SCHEMA_DIR), name="schema")
+    if _SCHEMA_DIR.is_dir():  # the preview's examples; MIA on a phone ships without them (DEC-0019)
+        app.mount("/schema", StaticFiles(directory=_SCHEMA_DIR), name="schema")
     app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
     return app

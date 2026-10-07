@@ -1,0 +1,85 @@
+# MIA on the phone (DEC-0019, the Phase 1 spike): builds android-phone/
+# (MIA's own engine and screens inside an Android app, no computer),
+# starts it on an Android emulator and checks she comes up and answers,
+# then publishes the APK as the "phone-spike" release. Separate from the
+# companion app (android/, the "android-latest" release).
+name: MIA on the phone (spike)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "android-phone/**"
+      - ".github/workflows/android-phone.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write # to publish the release
+
+concurrency:
+  group: android-phone
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Chaquopy builds with a desktop Python of the same version.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Build the APK
+        working-directory: android-phone
+        run: gradle --no-daemon assembleDebug
+
+      - name: Size
+        run: ls -la android-phone/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Enable the emulator's hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Start MIA on an Android emulator and check her
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash android-phone/ci_smoke.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phone-spike-report
+          path: |
+            spike-report/
+            android-phone/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish as the phone-spike release
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android-phone/app/build/outputs/apk/debug/app-debug.apk MIA-Phone-Test.apk
+          gh release delete phone-spike --yes --cleanup-tag || true
+          gh release create phone-spike MIA-Phone-Test.apk \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "MIA on the phone: test build ${GITHUB_RUN_NUMBER}" \
+            --notes "MIA running entirely on the phone, no computer (DEC-0019 spike). Installs beside the companion app. Built from ${GITHUB_SHA::7}."
