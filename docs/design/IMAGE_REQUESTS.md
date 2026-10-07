@@ -49,3 +49,6 @@ from ChatGPT. Muse made `assistant.jpg`, `character.jpg` and `dashboard.jpg`
 `maintenance`) were already committed by the parallel run — nothing is
 pending and no further images are owed under H-0024.
 
+**Keep (zac, 2026-10-07):** Home and Greenhouse stay ChatGPT's pictures
+(`home.jpg`, `greenhouse.jpg`). Zac prefers them; don't replace them.
+
