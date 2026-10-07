@@ -112,6 +112,14 @@ def test_login_succeeds_with_correct_password(client, context):
     assert body["token"]
 
 
+def test_logout_ends_that_session(client, context):
+    token = client.post("/api/login", json={"profile_id": _profile_id(context), "password": "hunter2"}).json()["token"]
+    auth = {"Authorization": f"Bearer {token}"}
+    assert client.get("/api/today", headers=auth).status_code != 401
+    assert client.post("/api/logout", headers=auth).json() == {"signed_out": True}
+    assert client.get("/api/today", headers=auth).status_code == 401
+
+
 def test_login_succeeds_with_profile_name_case_insensitive(client, context):
     res = client.post("/api/login", json={"profile_id": "aLiCe", "password": "hunter2"})
     assert res.status_code == 200

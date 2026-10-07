@@ -35,5 +35,16 @@
       el("span", { class: "xpbar" }, el("span", { class: "xpbar-track" }, el("span", { class: "xpbar-fill", style: "width:" + pct + "%" }))));
   }
 
+  // The gear: Profile, Settings, Log out (Zac, 2026-10-07).
+  const gear = $("gear"), menu = $("account-dropdown");
+  const openMenu = (open) => { menu.hidden = !open; gear.setAttribute("aria-expanded", String(open)); };
+  gear.addEventListener("click", (e) => { e.stopPropagation(); openMenu(menu.hidden); });
+  document.addEventListener("click", (e) => { if (!menu.hidden && !menu.contains(e.target)) openMenu(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") openMenu(false); });
+  $("logout").addEventListener("click", async () => {
+    await MIA.signOut();
+    location.replace("index.html");  // no #token: back to sign-in
+  });
+
   MIAShell.start(render);
 })();

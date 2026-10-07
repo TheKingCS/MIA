@@ -9,7 +9,14 @@ on:
   push:
     branches: [master]
     paths:
+      # The app carries MIA's engine and screens, so it rebuilds when they change.
       - "android-phone/**"
+      - "core/**"
+      - "server/**"
+      - "web/**"
+      - "modules/__init__.py"
+      - "modules/module_base.py"
+      - "config/default_config.json"
       - ".github/workflows/android-phone.yml"
   workflow_dispatch:
 

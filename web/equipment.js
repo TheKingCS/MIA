@@ -66,7 +66,7 @@
         el("h3", {}, "⚠ Needs attention"),
         el("div", { class: "rows" }, page.attention.map((r) => taskRow(r, true)))));
     }
-    kids.push(el("section", { class: "money-section" },
+    kids.push(el("section", { class: "glass money-section" },
       el("div", { class: "sect" }, el("h2", {}, "Assets"), btn("Add", "btn-amber", addAsset)),
       page.assets.length ? el("div", { class: "asset-grid" }, page.assets.map(assetCard))
         : el("p", { class: "empty" }, el("strong", {}, "Nothing here yet."), "Add something, or tell MIA: “I bought a new lawn mower”.")));

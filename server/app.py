@@ -197,6 +197,14 @@ def create_app(context: AppContext) -> FastAPI:
         app.state.last_seen[credentials.credentials] = time.time()
         return profile_id
 
+    @app.post("/api/logout")
+    def logout(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
+        """Ends this session on this device (the web's account menu, 2026-10-07)."""
+        if credentials is not None:
+            app.state.sessions.pop(credentials.credentials, None)
+            app.state.last_seen.pop(credentials.credentials, None)
+        return {"signed_out": True}
+
     @app.post("/api/login")
     def login(body: LoginRequest) -> dict:
         # Accepts the person's email (accounts, 2026-10-01), or for

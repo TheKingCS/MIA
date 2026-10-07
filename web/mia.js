@@ -112,9 +112,20 @@
     return data;
   }
 
+  // The account menu's "Log out": ends the session here and forgets it.
+  async function signOut() {
+    if (token && !demo) {
+      await fetch("/api/logout", { method: "POST", headers: { Authorization: "Bearer " + token } }).catch(() => {});
+    }
+    token = null;
+    try { sessionStorage.removeItem("mia.token"); } catch (e) { /* this tab only */ }
+    window.MIA.signedIn = false;
+  }
+
   window.MIA = {
     demo,
     signIn,
+    signOut,
     signedIn: Boolean(token) || demo,
     MiaError,
     state: () => read("/api/state", "life_state"),

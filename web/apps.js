@@ -8,7 +8,7 @@
   const $ = (id) => document.getElementById(id);
   let data = null;
   let filter = "all"; // all | web | ask
-  let mode = "tiles"; // tiles (the concept's grid) | manage (every app in detail, show/hide)
+  let mode = location.hash === "#manage" ? "manage" : "tiles"; // tiles (the concept's grid) | manage (every app in detail, show/hide)
   let view = location.hash === "#favorites" ? "favorites" : "all"; // the grid: every app, or only your favorites
   // The concept's tile colors (presentation only).
   const COLORS = { web_home: "74,222,128", dashboard: "74,222,128", greenhouse: "74,222,128", garage: "251,146,60",
@@ -80,7 +80,8 @@
       onclick: () => { view = id; history.replaceState(null, "", id === "favorites" ? "#favorites" : location.pathname); draw(); },
     }, label)));
     if (mode === "tiles") {
-      const all = data.groups.flatMap((g) => g.apps);
+      // The grid doesn't list Apps itself (you're on it).
+      const all = data.groups.flatMap((g) => g.apps).filter((a) => a.id !== "module_browser");
       let apps;
       if (view === "favorites") {
         // In the order you starred them.

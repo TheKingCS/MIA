@@ -203,7 +203,7 @@ body[data-app] .hero {
   .bottom-bar .ico { font-size: 20px; line-height: 1.1; filter: grayscale(0.4); }
   .bottom-bar [aria-current="page"] { color: rgb(var(--mod-rgb)); }
   .bottom-bar [aria-current="page"] .ico { filter: none; text-shadow: 0 0 12px rgba(var(--mod-rgb), 0.8); }
-  .hero { min-height: 190px; margin-left: -4px; margin-right: -4px; }
+  .hero { min-height: 190px; }
   .mia-orb-button { display: none; }
   #mia-status { bottom: calc(92px + env(safe-area-inset-bottom)); }
   .strip { grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -223,7 +223,21 @@ body[data-app] .hero {
   background: radial-gradient(circle at 50% 40%, rgba(74, 222, 128, 0.35), rgba(5, 10, 7, 0.9) 70%);
   border: 1.5px solid rgba(74, 222, 128, 0.75); box-shadow: 0 0 18px rgba(74, 222, 128, 0.45);
 }
-.home-gear { font-size: 24px; color: var(--text-dim); text-decoration: none; padding: 6px; }
+.home-gear { font-size: 24px; color: var(--text-dim); text-decoration: none; padding: 6px; background: none; border: none; cursor: pointer; }
+.account-menu { position: relative; }
+.account-dropdown {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 45; min-width: 190px; display: grid; padding: 6px;
+  border-radius: 14px; background: rgba(8, 14, 11, 0.97); border: 1px solid rgba(var(--mod-rgb), 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(var(--mod-rgb), 0.15);
+}
+.account-dropdown[hidden] { display: none; }
+.account-dropdown a, .account-dropdown button {
+  display: flex; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 10px; color: var(--text);
+  text-decoration: none; background: none; border: none; font: var(--text-md) var(--font); text-align: left; cursor: pointer;
+}
+.account-dropdown a:hover, .account-dropdown button:hover, .account-dropdown a:focus-visible, .account-dropdown button:focus-visible {
+  background: rgba(var(--mod-rgb), 0.14); outline: none;
+}
 .home-hero { min-height: 230px; position: relative; }
 .home-hero h1 { font-size: clamp(26px, 6vw, 40px); }
 .home-hero .weather-chip { display: block; }
@@ -494,3 +508,20 @@ body[data-app] .hero {
 @media (max-width: 560px) {
   body[data-app] .hero h1 { font-size: clamp(24px, 8vw, 40px); }
 }
+
+/* ---------------------------------------------------------------- every card the phone's width (Zac, 2026-10-07) */
+/* Nothing on a page may be wider than the screen: grid columns and flex
+   items can shrink below their content, long words and chips wrap. */
+.layout-main > *, .layout-main section, .layout-main article { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.skills-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+.two-up { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.sect { flex-wrap: wrap; gap: 8px; }
+.sect .chip { white-space: normal; }
+.skill-card h3, .mission-title h3, .asset-head h3 { overflow-wrap: anywhere; }
+@media (max-width: 860px) {
+  .skills-layout, .two-up { grid-template-columns: minmax(0, 1fr); }
+  .skill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mission-grid, .asset-grid, .recipe-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.skill-head > div { min-width: 0; }
+.skill-head p { overflow-wrap: anywhere; }

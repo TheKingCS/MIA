@@ -26,7 +26,15 @@
           <span class="home-badge" aria-hidden="true">✦</span>
           <span><strong>MIA</strong><small>Your Life. In Sync.</small></span>
         </a>
-        <a class="home-gear" href="apps.html" aria-label="Apps and settings">⚙</a>
+        <div class="account-menu">
+          <button type="button" class="home-gear" id="gear" aria-label="Account" aria-haspopup="menu"
+            aria-expanded="false" aria-controls="account-dropdown">⚙</button>
+          <div class="account-dropdown" id="account-dropdown" role="menu" hidden>
+            <a role="menuitem" href="character.html"><span aria-hidden="true">👤</span> Profile</a>
+            <a role="menuitem" href="apps.html#manage"><span aria-hidden="true">⚙</span> Settings</a>
+            <button role="menuitem" type="button" id="logout"><span aria-hidden="true">↩</span> Log out</button>
+          </div>
+        </div>
       </div>
 
       <header class="hero home-hero">
