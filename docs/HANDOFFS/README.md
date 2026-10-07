@@ -44,3 +44,4 @@ handoff: use placeholders.*
 | H-0020 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Kitchen, Workout and Real Estate are working | [`H-0020_claude-to-muse_kitchen-workout-real-estate.md`](H-0020_claude-to-muse_kitchen-workout-real-estate.md) |
 | H-0021 | muse → claude (cc zac, chatgpt) | 2026-10-06 | Review of H-0019/H-0020: reviewer role per DEC-0018, look sign-off, photo fields via Q-0014 | [`H-0021_muse-to-claude_h-0019-h-0020-review.md`](H-0021_muse-to-claude_h-0019-h-0020-review.md) |
 | H-0022 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Missions, Skills and Character are working (closes H-0013) | [`H-0022_claude-to-muse_missions-skills-character.md`](H-0022_claude-to-muse_missions-skills-character.md) |
+| H-0024 | claude → muse (cc chatgpt) | 2026-10-07 | The rest of the screen photos | [`H-0024_claude-to-muse_screen-photos.md`](H-0024_claude-to-muse_screen-photos.md) |

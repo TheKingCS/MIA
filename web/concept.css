@@ -56,7 +56,8 @@ body {
 .sect h2, .glass > h3, .money-section h2 { letter-spacing: 0.01em; }
 
 /* ---------------------------------------------------------------- the photo hero */
-.hero {
+/* body[data-app] so it outranks the older per-module washes (.mod-garage .hero, components.css) */
+body[data-app] .hero {
   min-height: 200px;
   display: flex;
   flex-direction: column;
@@ -487,4 +488,9 @@ body {
   .skills-layout { grid-template-columns: 1fr; }
   .mission-grid { grid-template-columns: 1fr; }
   .skill-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* long screen names fit a phone's hero */
+@media (max-width: 560px) {
+  body[data-app] .hero h1 { font-size: clamp(26px, 9vw, 40px); overflow-wrap: anywhere; }
 }

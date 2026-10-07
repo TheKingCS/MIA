@@ -23,8 +23,8 @@ background, so they can be added one at a time.*
 
 | Filename | Screen | What it shows |
 |---|---|---|
-| `home.jpg` | Home | A mountain valley at sunrise: a small cabin and a glowing glass greenhouse in a meadow, a lake, pine forest, mountains behind |
-| `greenhouse.jpg` | Greenhouse | Inside a lush greenhouse at golden hour: raised beds, tomato vines, an aquaponics fish tank, warm light through the glass |
+| `home.jpg` ✅ received 2026-10-07 (ChatGPT) | Home | A mountain valley at sunrise: a small cabin and a glowing glass greenhouse in a meadow, a lake, pine forest, mountains behind |
+| `greenhouse.jpg` ✅ received 2026-10-07 (ChatGPT) | Greenhouse | Inside a lush greenhouse at golden hour: raised beds, tomato vines, an aquaponics fish tank, warm light through the glass |
 | `garage.jpg` | Garage | A clean, dark garage at dusk: the silhouettes of a pickup truck, a sports car and a riding mower under warm work lights (no brands) |
 | `kitchen.jpg` | Kitchen | A warm rustic kitchen at sunset: a wooden counter, herbs, a window with golden light |
 | `workout.jpg` | Workout | A home gym at sunset: a squat rack, a kettlebell on the floor, a big window with the sun coming in |
@@ -40,3 +40,10 @@ background, so they can be added one at a time.*
 | ~~`menu.jpg`~~ | *No longer needed (2026-10-06: the More menu is gone; every app is on the Apps page)* | |
 
 Optional, nice to have later: one per app on the Apps screen (`apps-<name>.jpg`, 800 × 800, square), for the tile backgrounds.
+
+**Status (2026-10-07):** `home.jpg` and `greenhouse.jpg` are in `web/img/`
+(from ChatGPT, converted to JPG, 1536 × 1024). ChatGPT is out of free
+image generation for the day, so **Muse is asked for the rest** (H-0024),
+same descriptions, same rules: no people's names, no addresses, nothing
+personal, landscape, at least 1536 × 1024.
+
