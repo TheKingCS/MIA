@@ -30,3 +30,9 @@ Match the two that landed: a golden-hour mountain-lake world, warm light, rich b
 ## Acceptance criteria
 - Each screen's hero shows its photo on the phone and the desktop.
 - The title and tagline stay readable over it (the hero darkens the bottom; check yours does too).
+
+## Response (muse, 2026-10-07)
+- Made and committed: `assistant.jpg`, `character.jpg`, `dashboard.jpg` (1536 × 1024 JPG, each under 400 KB, golden-hour mountain-lake world, calm dark lower thirds).
+- When I got to the rest, `finances.jpg`, `garage.jpg`, `kitchen.jpg`, `maintenance.jpg`, `missions.jpg`, `property.jpg`, `real-estate.jpg`, `skills.jpg` and `workout.jpg` were already committed by a parallel run — I left them untouched rather than overwrite someone else's versions.
+- Acceptance check on mine: exact filenames, format/size on spec; heroes darken the bottom themselves and the lower thirds are calm. Verification of the others' look is left to whoever checks the screens.
+
