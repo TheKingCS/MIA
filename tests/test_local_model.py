@@ -66,6 +66,11 @@ HTTPServer(("127.0.0.1", port), H).serve_forever()
 '''
 
 
+# Starting the stand-in server runs a script as a program, which only works
+# where the real one runs: Linux and Android. (Windows has no llama-server.)
+needs_posix = pytest.mark.skipif(sys.platform == "win32", reason="llama-server runs on the phone (Linux/Android)")
+
+
 def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -135,6 +140,7 @@ def test_download_carries_on_after_a_break(phone):
         phone.download("nope")
 
 
+@needs_posix
 def test_start_points_talk_at_the_phones_model_and_the_test_runs(phone):
     with pytest.raises(ValueError, match="Download"):
         phone.start("tiny")
@@ -154,6 +160,7 @@ def test_start_points_talk_at_the_phones_model_and_the_test_runs(phone):
     assert json.loads((phone.folder / "test_tiny.json").read_text())["total"] == 3
 
 
+@needs_posix
 def test_mia_starts_the_same_model_again_and_stop_forgets_it(phone):
     phone.download("tiny")
     assert _wait(lambda: phone.status()["download"].get("finished"))
