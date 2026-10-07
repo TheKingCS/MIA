@@ -74,7 +74,11 @@ chaquopy {
         pip {
             // Everything MIA's engine and server need on a phone
             // (tests/test_phone_ready.py checks nothing desktop-only sneaks in).
-            install("fastapi")
+            // pydantic 2's core is Rust with no Android build yet; pydantic 1
+            // is pure Python, and FastAPI before 0.100 runs on it. MIA's
+            // server works on both (the desktop keeps the newest).
+            install("fastapi<0.100")
+            install("pydantic<2")
             install("uvicorn")
             install("cryptography")
             install("astral")
