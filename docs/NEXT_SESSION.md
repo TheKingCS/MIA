@@ -36,9 +36,8 @@ the hub, and the Meta AI app.
 
 - [ ] **Read `docs/CURRENT_STATE.md`** in the GitHub app: where the
       whole team is.
-- [ ] **Answer Q-0015** (`docs/QUESTIONS.md`): MIA on just a phone. Three
-      quick choices, the plan is `docs/PHONE_FIRST_PLAN.md`; then approve
-      or change DEC-0019. You can also just tell Claude in chat.
+- [x] Q-0015 answered and DEC-0019 approved (2026-10-07): MIA on the
+      phone, the spike now, Android first, iPhone soon after.
 - [x] DEC-0014 and DEC-0016 approved; Q-0011 answered (Android, no
       glasses yet, MIA not on the PC yet); Q-0012 parked (2026-10-05).
 - [ ] **The screens' photos (DEC-0018):** ask ChatGPT for the images in
@@ -225,9 +224,11 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
-**Waiting on Zac (2026-10-06): Q-0015** (MIA on just a phone: local or
-cloud, when to run the phone spike, Android first) and DEC-0019
-(`docs/PHONE_FIRST_PLAN.md`). If he says "spike now", that comes next.
+**Next (2026-10-07, DEC-0019 approved): the "MIA on a phone" spike**
+(`docs/PHONE_FIRST_PLAN.md`, Phase 1): the engine and `web/` running
+inside the Android app (Chaquopy), one slice end to end, measured (size,
+start time, battery, packages that don't run). Keep the iPhone path open
+(Zac moves to iPhone later). Web parity continues after it.
 
 **Now (2026-10-06, DEC-0017, approved): the web becomes all of MIA.**
 Track it in `docs/WEB_PARITY.md`. Done: the shared frame (`web/shell.js`)

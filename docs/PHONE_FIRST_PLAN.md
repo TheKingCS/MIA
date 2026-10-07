@@ -1,8 +1,9 @@
 # MIA on just a phone (and glasses): the plan
 
-*Proposed by Claude, 2026-10-06, at Zac's request. Not approved yet: the
-choices are in DEC-0019 and Q-0015 for Zac, and Q-0016 asks ChatGPT for
-a vision review. Nothing here changes what's being built this week.*
+*Proposed by Claude, 2026-10-06, at Zac's request. **Approved by Zac
+2026-10-07 (DEC-0019, Q-0015): engine on the phone, the spike now,
+Android first, and iPhone soon after, because he's switching to one.**
+Q-0016 still asks ChatGPT for a vision review.*
 
 ## The goal
 
@@ -88,7 +89,7 @@ What the toolkit allows on the Display (cards, input, pushing a card) still need
 
 MIA's history log (`core/life_events.py`, append-only) is the natural basis for sync.
 
-**Phase 5: iPhone.** Meta's glasses work with iPhones too, and about half of buyers have one. Python runs on iOS (BeeWare), but it's harder and App Store review is stricter. Android first; iPhone once Phase 2 is solid.
+**Phase 5: iPhone (moved up, 2026-10-07).** Zac is switching to an iPhone, Meta's glasses work with iPhones too, and about half of buyers have one. Python runs on iOS (officially supported since CPython 3.13, PEP 730; BeeWare packages it), but App Store review is stricter. It comes right after phone-only Android works (Phase 2), before the household helper if Zac moves first. The Android work keeps it open throughout: the engine stays plain Python with no Android-only parts, and the phone shell stays thin.
 
 **Phase 6: ready to sell.** None of this blocks building, but each item is real before a store listing:
 - Play Store (and later App Store) listing and onboarding with no Tailscale;
@@ -113,8 +114,8 @@ On today's Display glasses, that means cards, voice and notifications, driven by
 - **Two engines in one household need sync.** That's the hardest software problem here, which is why it's Phase 4 and not Phase 2.
 - **The desktop Qt app** becomes a helper app over time. Web parity is how it retires without losing features.
 
-## Decisions this needs
+## Decisions
 
-- **DEC-0019 (proposed):** the phone is MIA's home; the computer becomes an optional helper; Android first.
-- **Q-0015 (Zac):** local-first or cloud, the spike's timing, and Android first.
-- **Q-0016 (ChatGPT):** vision review of this plan.
+- **DEC-0019 (approved, 2026-10-07):** the phone is MIA's home; the computer becomes an optional helper; Android first, iPhone soon after.
+- **Q-0015 (answered):** on the phone, not the cloud; the spike now; Android first (Zac moves to iPhone later).
+- **Q-0016 (ChatGPT, open):** vision review of this plan.

@@ -6,7 +6,13 @@ Answer under the question; Claude moves closed ones to the bottom.*
 ## Open
 
 ### Q-0015: MIA on just a phone: three choices (claude → zac)
-- Asked: 2026-10-06 · Status: OPEN
+- Asked: 2026-10-06 · Status: ANSWERED
+- Answer (zac, 2026-10-07, in chat with claude; he'd first sent it to
+  muse by mistake): go with Claude's recommendations. (1) MIA's engine
+  on the person's phone (private, offline), not a cloud MIA.
+  (2) Run the "MIA on a phone" test now. (3) Android first: his phone is
+  Android today, **but he's switching to an iPhone later**, so the
+  iPhone path can't be an afterthought (see DEC-0019).
 - Question (the plan: `docs/PHONE_FIRST_PLAN.md`; answerable from the phone):
   (1) **Where MIA's brain lives for people without a computer:** on
   their phone (private, offline, your data stays yours; Claude's

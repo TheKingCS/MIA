@@ -322,8 +322,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0012, DEC-0017, H-0016, H-0018, H-0019
 
 ### DEC-0019: The phone is MIA's home; a computer becomes an optional helper
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-06 (at zac's request) · Reviewed by: (chatgpt, Q-0016) · Approved by: (zac)
+- Status: APPROVED
+- Proposed by: claude, 2026-10-06 (at zac's request) · Reviewed by: (chatgpt, Q-0016, still welcome) · Approved by: zac, 2026-10-07 (Q-0015: "go with your recommendations")
 - Decision: MIA's engine runs **on the phone, inside the MIA app**, so
   someone with only a phone, or a phone and Meta's Display glasses, has
   all of MIA, offline and private. A computer (or later a Pi) becomes an
@@ -339,6 +339,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   already runs anywhere; the engine already runs without the desktop.
 - Changes: extends DEC-0015 (device order) for anyone who isn't Zac; the
   computer stays first for Zac's own setup until Phase 2 ships.
+- iPhone (zac, 2026-10-07): he's on Android now and moving to an iPhone
+  later, so every choice in the Android work must keep the iPhone path
+  open (the engine stays plain Python; CPython supports iOS officially
+  since 3.13, PEP 730; the phone shell stays thin), and iPhone follows
+  right after phone-only Android works (plan Phase 5 moves up).
 - Related: DEC-0001, DEC-0002, DEC-0012, DEC-0015, DEC-0016, DEC-0017,
   Q-0003, Q-0015, Q-0016
 
