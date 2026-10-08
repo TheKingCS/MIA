@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Yacht · Lens Arcade</title>
+<script src="../progress.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:#000;color:#f4ead0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;}
+  #stage{width:min(100vw,100vh);height:min(100vw,100vh);max-width:600px;max-height:600px;
+    display:grid;grid-template-rows:auto auto auto 1fr auto;justify-items:center;padding:14px 24px;row-gap:8px;}
+  header{width:100%;display:flex;justify-content:space-between;align-items:center;}
+  header .wm{font-size:11px;letter-spacing:.3em;color:rgba(246,196,83,.55);font-weight:700;}
+  header a{font-size:13px;color:rgba(244,234,208,.5);text-decoration:none;}
+  h1{font-size:22px;letter-spacing:.12em;color:#ffedb8;text-shadow:0 0 18px rgba(246,196,83,.5);}
+  .sub{font-size:13px;color:rgba(244,234,208,.55);text-align:center;line-height:1.5;}
+  /* player strip */
+  #strip{width:100%;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  .pchip{border:1px solid rgba(246,196,83,.25);border-radius:12px;padding:6px 12px;font-size:12px;
+    color:rgba(244,234,208,.6);background:rgba(255,248,230,.03);text-align:center;min-width:86px;}
+  .pchip b{display:block;font-size:16px;color:#ffedb8;}
+  .pchip.active{border-color:#f6c453;background:rgba(246,196,83,.12);box-shadow:0 0 14px rgba(246,196,83,.35);color:#ffedb8;}
+  /* dice */
+  #dicezone{display:flex;gap:10px;justify-content:center;align-items:center;}
+  .die{width:58px;height:58px;border-radius:14px;display:grid;place-items:center;font-size:38px;line-height:1;
+    background:linear-gradient(145deg,#1c1a12,#0c0b08);border:1px solid rgba(246,196,83,.5);
+    box-shadow:0 0 14px rgba(246,196,83,.18), inset 0 1px 0 rgba(255,244,214,.12);cursor:pointer;color:#ffedb8;}
+  .die.held{border-color:#f6c453;box-shadow:0 0 0 2px #f6c453,0 0 20px rgba(246,196,83,.55);transform:translateY(-4px);}
+  .die.rolling{animation:tumble .45s ease;}
+  @keyframes tumble{0%{transform:rotate(0) scale(1);}50%{transform:rotate(180deg) scale(1.15);}100%{transform:rotate(360deg) scale(1);}}
+  #rollsleft{font-size:12px;letter-spacing:.2em;color:rgba(244,234,208,.5);}
+  #rollbtn{cursor:pointer;border:none;border-radius:99px;padding:13px 58px;font-size:18px;font-weight:800;
+    background:#f6c453;color:#241a03;box-shadow:0 0 26px rgba(246,196,83,.5);}
+  #rollbtn:active{transform:scale(.96);}
+  #rollbtn:disabled{opacity:.35;box-shadow:none;cursor:default;}
+  /* scorecard */
+  #card{width:100%;overflow-y:auto;border:1px solid rgba(246,196,83,.2);border-radius:14px;
+    background:rgba(255,248,230,.02);scrollbar-width:thin;min-height:0;}
+  .catrow{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:7px 14px;font-size:14px;color:#f4ead0;background:none;border:none;border-bottom:1px solid rgba(246,196,83,.08);
+    cursor:pointer;text-align:left;}
+  .catrow:last-child{border-bottom:none;}
+  .catrow .pot{font-weight:800;color:#f6c453;min-width:40px;text-align:right;}
+  .catrow .pot.zero{color:rgba(244,234,208,.35);}
+  .catrow.filled{cursor:default;color:rgba(244,234,208,.45);}
+  .catrow.filled .pot{color:rgba(244,234,208,.6);}
+  .catrow:not(.filled):not(:disabled):active{background:rgba(246,196,83,.1);}
+  .catrow:disabled{cursor:default;}
+  .catrow.confirm{background:rgba(242,140,140,.14);}
+  .catrow.confirm .pot{color:#f28c8c;}
+  .seclabel{padding:8px 14px 2px;font-size:10px;letter-spacing:.3em;color:rgba(246,196,83,.5);font-weight:700;}
+  #totals{width:100%;display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px;
+    color:rgba(244,234,208,.6);padding:2px 4px;flex-wrap:wrap;}
+  #totals b{color:#ffedb8;font-size:15px;}
+  #hint{font-size:12px;color:rgba(244,234,208,.4);min-height:16px;text-align:center;letter-spacing:.04em;}
+  /* setup */
+  .stepper{display:flex;align-items:center;gap:18px;margin:6px 0;}
+  .stepper button{width:52px;height:52px;border-radius:50%;border:1px solid rgba(246,196,83,.5);
+    background:rgba(255,248,230,.05);color:#ffedb8;font-size:24px;font-weight:800;cursor:pointer;}
+  .stepper span{font-size:40px;font-weight:800;color:#ffedb8;min-width:60px;text-align:center;}
+  .names{display:grid;gap:8px;width:100%;max-width:320px;}
+  .names input{background:rgba(255,248,230,.05);border:1px solid rgba(246,196,83,.35);border-radius:10px;
+    color:#ffedb8;font-size:16px;padding:10px 14px;width:100%;outline:none;}
+  .names input:focus{border-color:#f6c453;}
+  .bigbtn{cursor:pointer;border:none;border-radius:99px;padding:15px 66px;font-size:19px;font-weight:800;
+    background:#f6c453;color:#241a03;box-shadow:0 0 30px rgba(246,196,83,.5);}
+  .bigbtn:active{transform:scale(.96);}
+  /* pass screen + game over */
+  .center{display:grid;justify-items:center;gap:14px;text-align:center;}
+  .passname{font-size:34px;font-weight:800;color:#ffedb8;text-shadow:0 0 24px rgba(246,196,83,.6);}
+  .standrow{width:100%;max-width:340px;display:flex;justify-content:space-between;align-items:center;
+    padding:10px 18px;border:1px solid rgba(246,196,83,.25);border-radius:12px;font-size:16px;}
+  .standrow.winner{border-color:#f6c453;background:rgba(246,196,83,.12);box-shadow:0 0 18px rgba(246,196,83,.4);}
+  .standrow b{color:#ffedb8;font-size:20px;}
+  [hidden]{display:none !important;}
+  @media (prefers-reduced-motion:reduce){.die.rolling{animation:none;}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header><span class="wm">LENS ARCADE</span><a href="../index.html">‹ arcade</a></header>
+
+  <!-- SETUP -->
+  <div id="screen-setup" class="center" style="grid-row:2/6;">
+    <h1>⚀ YACHT</h1>
+    <p class="sub">Five dice. Thirteen categories.<br>Pass-and-play for up to 4 players.</p>
+    <div class="stepper" aria-label="Number of players">
+      <button id="pminus" type="button" aria-label="Fewer players">−</button>
+      <span id="pcount">2</span>
+      <button id="pplus" type="button" aria-label="More players">+</button>
+    </div>
+    <div class="sub" style="letter-spacing:.25em;font-size:11px;">PLAYERS</div>
+    <div class="names" id="names"></div>
+    <button class="bigbtn" id="startbtn" type="button">START</button>
+  </div>
+
+  <!-- PASS THE GLASSES -->
+  <div id="screen-pass" class="center" style="grid-row:2/6;" hidden>
+    <p class="sub">pass the glasses to</p>
+    <p class="passname" id="passname"></p>
+    <p class="sub" id="passinfo"></p>
+    <button class="bigbtn" id="passgo" type="button">START TURN</button>
+  </div>
+
+  <!-- PLAY -->
+  <div id="strip" hidden></div>
+  <div id="dicezone" hidden></div>
+  <div id="card" hidden></div>
+  <div id="playctl" style="display:grid;justify-items:center;gap:6px;" hidden>
+    <div id="rollsleft"></div>
+    <button id="rollbtn" type="button">ROLL</button>
+    <div id="totals"></div>
+    <div id="hint"></div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="screen-over" class="center" style="grid-row:2/6;" hidden>
+    <h1 id="wintitle">🏆</h1>
+    <p class="sub" id="winsub"></p>
+    <div id="standings" class="center" style="width:100%;"></div>
+    <button class="bigbtn" id="againbtn" type="button">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var FACES=["⚀","⚁","⚂","⚃","⚄","⚅"];
+  var CATS=[
+    {id:"ones",  name:"Ones",  sec:"upper", face:1},
+    {id:"twos",  name:"Twos",  sec:"upper", face:2},
+    {id:"threes",name:"Threes",sec:"upper", face:3},
+    {id:"fours", name:"Fours", sec:"upper", face:4},
+    {id:"fives", name:"Fives", sec:"upper", face:5},
+    {id:"sixes", name:"Sixes", sec:"upper", face:6},
+    {id:"tok",   name:"3 of a Kind",   sec:"lower"},
+    {id:"fok",   name:"4 of a Kind",   sec:"lower"},
+    {id:"fh",    name:"Full House",    sec:"lower"},
+    {id:"ss",    name:"Small Straight",sec:"lower"},
+    {id:"ls",    name:"Large Straight",sec:"lower"},
+    {id:"yacht", name:"Yacht",         sec:"lower"},
+    {id:"chance",name:"Chance",        sec:"lower"}
+  ];
+  function $(id){return document.getElementById(id);}
+  function award(ev,xp){ if(window.ArcadeProgress) ArcadeProgress.award("yacht",ev,xp); }
+
+  /* ---------- scoring ---------- */
+  function sum(a){return a.reduce(function(s,v){return s+v;},0);}
+  function counts(d){var c=[0,0,0,0,0,0,0];d.forEach(function(v){c[v]++;});return c;}
+  function potential(id,d){
+    var c=counts(d), s=sum(d), i, run, best;
+    switch(id){
+      case "ones": case "twos": case "threes": case "fours": case "fives": case "sixes":
+        var f=CATS.filter(function(x){return x.id===id;})[0].face;
+        return c[f]*f;
+      case "tok":   for(i=1;i<=6;i++) if(c[i]>=3) return s; return 0;
+      case "fok":   for(i=1;i<=6;i++) if(c[i]>=4) return s; return 0;
+      case "fh": {
+        var nz=c.slice(1).filter(function(n){return n>0;}).sort();
+        return (nz.length===2&&nz[0]===2&&nz[1]===3)?25:0;
+      }
+      case "ss":
+        best=0;run=0;
+        for(i=1;i<=6;i++){if(c[i]>0){run++;best=Math.max(best,run);}else run=0;}
+        return best>=4?30:0;
+      case "ls": {
+        var srt=d.slice().sort().join(",");
+        return (srt==="1,2,3,4,5"||srt==="2,3,4,5,6")?40:0;
+      }
+      case "yacht": for(i=1;i<=6;i++) if(c[i]===5) return 50; return 0;
+      case "chance": return s;
+    }
+    return 0;
+  }
+  function totals(p){
+    var upper=0, lower=0;
+    CATS.forEach(function(cat){
+      var v=p.card[cat.id];
+      if(v==null) return;
+      if(cat.sec==="upper") upper+=v; else lower+=v;
+    });
+    var bonus=upper>=63?35:0;
+    return {upper:upper, bonus:bonus, lower:lower, yb:p.yb*100, grand:upper+bonus+lower+p.yb*100};
+  }
+
+  /* ---------- state ---------- */
+  var S=null; // {players, pi, dice, held, rollsLeft, rolled, pendingZero, turnsPlayed, totalTurns}
+  function newPlayer(name){return {name:name, card:{}, yb:0};}
+  CATS.forEach(function(){/* card keys added lazily */});
+
+  function show(id){["screen-setup","screen-pass","screen-over"].forEach(function(s){$(s).hidden=s!==id;});
+    var play=id==="play";
+    ["strip","dicezone","card","playctl"].forEach(function(s){$(s).hidden=!play;});}
+
+  function newTurn(){
+    S.dice=[1,1,1,1,1]; S.held=[false,false,false,false,false];
+    S.rollsLeft=3; S.rolled=false; S.pendingZero=null;
+  }
+
+  /* ---------- render ---------- */
+  function renderStrip(){
+    var el=$("strip"); el.innerHTML="";
+    S.players.forEach(function(p,i){
+      var d=document.createElement("div");
+      d.className="pchip"+(i===S.pi?" active":"");
+      var nm=document.createElement("span"); nm.textContent=p.name;
+      var b=document.createElement("b"); b.textContent=totals(p).grand;
+      d.appendChild(nm); d.appendChild(b); el.appendChild(d);
+    });
+  }
+  function renderDice(){
+    var el=$("dicezone"); el.innerHTML="";
+    S.dice.forEach(function(v,i){
+      var b=document.createElement("button");
+      b.type="button"; b.className="die"+(S.held[i]?" held":"");
+      b.textContent=FACES[v-1];
+      b.setAttribute("aria-label","Die "+(i+1)+": "+v+(S.held[i]?", held":""));
+      b.onclick=function(){toggleHold(i);};
+      el.appendChild(b);
+    });
+    var dots=""; for(var r=0;r<3;r++) dots+=r<S.rollsLeft?"●":"○";
+    $("rollsleft").textContent="ROLLS  "+dots;
+    $("rollbtn").disabled=S.rollsLeft<=0;
+  }
+  function renderCard(){
+    var el=$("card"); el.innerHTML="";
+    var p=S.players[S.pi], sec=null;
+    CATS.forEach(function(cat){
+      if(cat.sec!==sec){sec=cat.sec;
+        var lab=document.createElement("div"); lab.className="seclabel";
+        lab.textContent=sec==="upper"?"UPPER SECTION — BONUS +35 AT 63":"LOWER SECTION";
+        el.appendChild(lab);}
+      var filled=p.card[cat.id]!=null;
+      var btn=document.createElement("button");
+      btn.type="button";
+      btn.className="catrow"+(filled?" filled":"")+(S.pendingZero===cat.id?" confirm":"");
+      var nm=document.createElement("span"); nm.textContent=cat.name;
+      var pot=document.createElement("span"); pot.className="pot";
+      if(filled){pot.textContent=p.card[cat.id];}
+      else if(S.rolled){
+        var v=potential(cat.id,S.dice);
+        pot.textContent=v; if(v===0) pot.classList.add("zero");
+      } else pot.textContent="–";
+      btn.appendChild(nm); btn.appendChild(pot);
+      if(!filled&&S.rolled){
+        (function(id){btn.onclick=function(){scoreCat(id);};})(cat.id);
+      } else btn.disabled=true;
+      el.appendChild(btn);
+    });
+    var t=totals(p);
+    $("totals").innerHTML="Upper <b>"+t.upper+"</b> · Bonus <b>"+(t.bonus||(t.upper+"/63"))+"</b> · Lower <b>"+t.lower+"</b>"+(t.yb?" · Yacht×2 <b>+"+t.yb+"</b>":"")+" · Total <b>"+t.grand+"</b>";
+  }
+  function renderAll(){renderStrip();renderDice();renderCard();}
+
+  /* ---------- actions ---------- */
+  function toggleHold(i){
+    if(!S.rolled) return;
+    S.held[i]=!S.held[i];
+    renderDice();
+  }
+  function doRoll(){
+    if(S.rollsLeft<=0) return;
+    S.rollsLeft--; S.rolled=true; S.pendingZero=null;
+    var el=$("dicezone").children;
+    for(var i=0;i<5;i++){
+      if(!S.held[i]) S.dice[i]=1+Math.floor(Math.random()*6);
+    }
+    for(i=0;i<el.length;i++){el[i].classList.add("rolling");el[i].textContent="⚄";}
+    $("hint").textContent="";
+    setTimeout(function(){
+      renderDice(); renderCard();
+      if(S.rollsLeft===0) $("hint").textContent="No rolls left — tap a category to score.";
+      else $("hint").textContent="Tap dice to hold them, then roll again.";
+    },460);
+  }
+  function scoreCat(id){
+    var p=S.players[S.pi];
+    if(p.card[id]!=null||!S.rolled) return;
+    var v=potential(id,S.dice);
+    if(v===0&&S.pendingZero!==id){
+      S.pendingZero=id; renderCard();
+      $("hint").textContent="Scores 0 — tap again to confirm.";
+      return;
+    }
+    p.card[id]=v;
+    if(id==="yacht"&&v===50){
+      award("yacht",20);
+      $("hint").textContent="⚀ YACHT! +50";
+    }
+    // second+ yahtzee while the box is full: +100 bonus (simplified joker rule)
+    var c=counts(S.dice), isY=false, i;
+    for(i=1;i<=6;i++) if(c[i]===5) isY=true;
+    if(isY&&id!=="yacht"&&p.card.yacht===50){p.yb++;award("yacht",20);}
+    award("turn",2);
+    S.turnsPlayed++;
+    setTimeout(advance, v===50&&id==="yacht"?900:250);
+    renderAll();
+  }
+  function advance(){
+    if(S.turnsPlayed>=S.totalTurns){gameOver();return;}
+    var next=(S.pi+1)%S.players.length;
+    S.pi=next; newTurn();
+    if(S.players.length>1){
+      var p=S.players[next];
+      $("passname").textContent=p.name;
+      var done=Object.keys(p.card).length;
+      $("passinfo").textContent="Turn "+(done+1)+" of 13 · "+totals(p).grand+" pts so far";
+      show("screen-pass");
+    } else { show("play"); renderAll(); }
+  }
+  function gameOver(){
+    show("screen-over");
+    var order=S.players.slice().sort(function(a,b){return totals(b).grand-totals(a).grand;});
+    var w=order[0];
+    $("wintitle").textContent="🏆 "+w.name+" wins!";
+    $("winsub").textContent=S.players.length>1?"Final standings":"Final score";
+    var box=$("standings"); box.innerHTML="";
+    order.forEach(function(p,i){
+      var r=document.createElement("div");
+      r.className="standrow"+(i===0&&S.players.length>1?" winner":"");
+      var nm=document.createElement("span"); nm.textContent=(S.players.length>1?(i+1)+". ":"")+p.name;
+      var b=document.createElement("b"); b.textContent=totals(p).grand;
+      r.appendChild(nm); r.appendChild(b); box.appendChild(r);
+    });
+    award("complete",20);
+  }
+
+  /* ---------- setup ---------- */
+  var nPlayers=2;
+  var defNames=["Player 1","Player 2","Player 3","Player 4"];
+  function renderNames(){
+    $("pcount").textContent=nPlayers;
+    var box=$("names"); box.innerHTML="";
+    for(var i=0;i<nPlayers;i++){
+      (function(i){
+        var inp=document.createElement("input");
+        inp.type="text"; inp.maxLength=12; inp.value=defNames[i];
+        inp.setAttribute("aria-label","Player "+(i+1)+" name");
+        inp.onchange=function(){defNames[i]=inp.value.trim()||("Player "+(i+1));};
+        box.appendChild(inp);
+      })(i);
+    }
+  }
+  $("pminus").onclick=function(){if(nPlayers>1){nPlayers--;renderNames();};};
+  $("pplus").onclick=function(){if(nPlayers<4){nPlayers++;renderNames();};};
+  $("startbtn").onclick=function(){
+    var players=[];
+    for(var i=0;i<nPlayers;i++) players.push(newPlayer(defNames[i]||("Player "+(i+1))));
+    S={players:players, pi:0, turnsPlayed:0, totalTurns:nPlayers*13};
+    newTurn();
+    award("played",10);
+    if(nPlayers>1){
+      $("passname").textContent=players[0].name;
+      $("passinfo").textContent="Turn 1 of 13 · first roll";
+      show("screen-pass");
+    } else { show("play"); renderAll(); }
+  };
+  $("passgo").onclick=function(){show("play");renderAll();};
+  $("rollbtn").onclick=doRoll;
+  $("againbtn").onclick=function(){show("screen-setup");renderNames();};
+
+  renderNames();
+  show("screen-setup");
+})();
+</script>
+</body>
+</html>
