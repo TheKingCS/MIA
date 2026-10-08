@@ -16,7 +16,7 @@
     // ---- single games ($0.99 each) ----
     hangman: "", magic8ball: "", dice: "", coin: "", pet: "", snake: "",
     reaction: "", orbit: "", sayit: "", drift: "", stack: "", breakout: "",
-    "2048": "", fruitslice: ""
+    "2048": "", fruitslice: "", yacht: ""
   };
 
   var STORE = "lensArcadeOwned.v1"; // { pass: bool, bundles: {id:true}, games: {id:true} }
@@ -111,6 +111,12 @@
       hook: "Swipe to slice. Don't hit the bombs.",
       how: "Fruits arc upward — slice them mid-air. 3 misses and you're out.",
       price: 1, path: "games/fruitslice.html", live: true,
+    },
+    {
+      id: "yacht", name: "Yacht", art: "⚀", glow: "rgba(246,196,83,0.6)",
+      hook: "Five dice, thirteen categories — pass-and-play for up to 4.",
+      how: "Roll up to 3 times per turn, tap dice to hold them, fill every category. Highest total wins.",
+      price: 1, path: "games/yacht.html", live: true,
     },
   ];
 
