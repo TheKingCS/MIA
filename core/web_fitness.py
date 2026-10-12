@@ -166,7 +166,8 @@ def progress(context, today: Optional[date] = None, weeks: int = 4) -> dict:
     sentence = f"{period}: " + ", ".join(parts) + "." if parts else \
         "Nothing logged yet. Log a weigh-in, a workout or a meal and this fills in."
     if weight.get("on_track_for"):
-        sentence = sentence[:-1] + f", on track for your goal by {date.fromisoformat(weight['on_track_for']).strftime('%B %-d')}."
+        when = date.fromisoformat(weight["on_track_for"])
+        sentence = sentence[:-1] + f", on track for your goal by {when.strftime('%B')} {when.day}."  # %-d isn't on Windows
     return {"weeks": round(span / 7, 1), "since": start.isoformat(), "planned_workouts": planned_sessions, "workouts": trained,
             "planned_meals": planned_meals, "meals_eaten": eaten_meals, "average_kcal": average_kcal,
             "average_protein_g": average_protein, "weekly_weight_change": rate, "sentence": sentence,
