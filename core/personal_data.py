@@ -96,6 +96,7 @@ from core.trip_manager import TripManager
 from core.user_memory_manager import UserMemoryManager
 from core.waypoint_manager import WaypointManager
 from core.workout_manager import WorkoutManager
+from core.fitness_manager import FitnessManager
 
 log = get_logger(__name__)
 
@@ -122,6 +123,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("communication", CommunicationGate),
     ("online_reminders", OnlineReminders),
     ("workout", WorkoutManager),
+    ("fitness", FitnessManager),
     ("classroom", ClassroomManager),
     ("notifications", NotificationManager),
     ("email_drafts", EmailDrafts),

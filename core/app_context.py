@@ -105,6 +105,7 @@ if TYPE_CHECKING:
     from core.volume_manager import VolumeManager
     from core.waypoint_manager import WaypointManager
     from core.workout_manager import WorkoutManager
+    from core.fitness_manager import FitnessManager
     from core.workshop_machine import WorkshopMachineRegistry
 
 
@@ -249,6 +250,8 @@ class AppContext:
     music: Optional["MusicManager"] = field(default=None, repr=False)
     kitchen: Optional["KitchenManager"] = field(default=None, repr=False)
     workout: Optional["WorkoutManager"] = field(default=None, repr=False)
+    # A person's fitness plan, weigh-ins, food and skill practice (DEC-0020).
+    fitness: Optional["FitnessManager"] = field(default=None, repr=False)
     relationships: Optional["RelationshipsManager"] = field(default=None, repr=False)
     # Classroom (2026-09-11) — the user's own self-education content
     # model (Subjects -> Courses -> Lessons). v1 is deliberately just
