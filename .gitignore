@@ -27,6 +27,8 @@ data/*
 # The model test's frozen golden set (tools/make_model_bench.py): placeholder
 # records only, regenerated from tests/live_model_check.py.
 !data/model_bench_cases.json
+# MIA's built-in food table (DEC-0020, tools/make_food_table.py): public USDA data.
+!data/foods.tsv
 logs/*
 !logs/.gitkeep
 

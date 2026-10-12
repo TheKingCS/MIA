@@ -1,0 +1,48 @@
+# MIA's built-in food table (DEC-0020): downloads the USDA's FoodData
+# Central "SR Legacy" foods (public domain) and commits data/foods.tsv,
+# which core/food_table.py reads to work out nutrition from a recipe's
+# ingredients, offline. Run by hand, or when the builder changes.
+name: Food table
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "tools/make_food_table.py"
+      - ".github/workflows/food-table.yml"
+
+permissions:
+  contents: write # to commit the table
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Download the USDA's SR Legacy foods
+        run: |
+          mkdir -p fdc
+          for name in FoodData_Central_sr_legacy_food_csv_2018-04 FoodData_Central_sr_legacy_food_csv_2019-04-02; do
+            if curl -fsSL -o fdc.zip "https://fdc.nal.usda.gov/fdc-datasets/$name.zip"; then break; fi
+          done
+          unzip -q fdc.zip -d fdc
+          find fdc -name "*.csv" | head -20
+
+      - name: Build data/foods.tsv
+        run: python -m tools.make_food_table fdc data/foods.tsv
+
+      - name: Commit it if it changed
+        run: |
+          git config user.name "MIA food table"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/foods.tsv
+          if git diff --cached --quiet; then echo "No change."; exit 0; fi
+          git commit -m "Food table: USDA FoodData Central SR Legacy (built by the Food table workflow)"
+          git push

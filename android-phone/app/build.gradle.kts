@@ -20,7 +20,7 @@ val bundleMia by tasks.registering(Zip::class) {
         include(
             "core/**/*.py", "server/**", "modules/__init__.py", "modules/module_base.py", "web/**",
             "config/default_config.json", "data/mission_pathways.json", "data/skill_definitions.json",
-            "data/model_bench_cases.json",
+            "data/model_bench_cases.json", "data/foods.tsv",
         )
         exclude("**/__pycache__/**")
     }

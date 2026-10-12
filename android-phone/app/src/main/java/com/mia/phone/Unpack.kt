@@ -14,6 +14,7 @@ object Unpack {
     private val CODE = listOf("core", "server", "modules", "web")
     private val SHIPPED = listOf(
         "config/default_config.json", "data/mission_pathways.json", "data/skill_definitions.json", "data/model_bench_cases.json",
+        "data/foods.tsv",
     )
 
     fun ensure(context: Context): File {
