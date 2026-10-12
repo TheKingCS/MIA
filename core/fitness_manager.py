@@ -146,7 +146,11 @@ class FitnessManager:
                       "skill_sessions": list(raw.get("skill_sessions") or []),
                       "training_done": list(raw.get("training_done") or []),
                       "training_steps": dict(raw.get("training_steps") or {}),  # date -> [step indexes done]
-                      "habits": dict(raw.get("habits") or {})}  # date (or week's Monday) -> ["lunch", "prep", ...]
+                      "habits": dict(raw.get("habits") or {}),
+                      # date -> meal -> {recipe_id, servings, prep_id}: what's planned (core/meal_plan.py)
+                      "meal_plan": dict(raw.get("meal_plan") or {}),
+                      # [{id, date, recipe_id, servings, covers: ["2026-10-13:lunch", ...]}]
+                      "prep": list(raw.get("prep") or [])}  # date (or week's Monday) -> ["lunch", "prep", ...]
 
     def _save(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -341,6 +345,58 @@ class FitnessManager:
 
     def training_days_done(self, since: str) -> list[dict]:
         return [t for t in self._data["training_done"] if t["date"] >= since]
+
+    # ------------------------------------------------------------------ meal plan (core/meal_plan.py has the logic)
+
+    def planned(self, day: str) -> dict:
+        return dict(self._data["meal_plan"].get(day, {}))
+
+    def plan_meal(self, day: str, meal: str, recipe_id: Optional[str], servings: float = 1.0, prep_id: str = "") -> None:
+        """Sets (or, with no recipe, clears) one meal of one day."""
+        meal = meal if meal in MEALS else "snack"
+        slots = self._data["meal_plan"].setdefault(day, {})
+        if recipe_id:
+            slots[meal] = {"recipe_id": recipe_id, "servings": servings, "prep_id": prep_id}
+        else:
+            slots.pop(meal, None)
+        if not slots:
+            self._data["meal_plan"].pop(day, None)
+        self._save()
+
+    def prep_sessions(self, since: str = "", until: str = "9999") -> list[dict]:
+        return [p for p in self._data["prep"] if since <= p["date"] <= until]
+
+    def add_prep(self, day: str, recipe_id: str, servings: float, covers: list[str]) -> dict:
+        session = {"id": uuid.uuid4().hex[:8], "date": day, "recipe_id": recipe_id, "servings": servings,
+                   "covers": list(covers), "done": False}
+        self._data["prep"].append(session)
+        for slot in covers:
+            covered_day, meal = slot.split(":")
+            slots = self._data["meal_plan"].setdefault(covered_day, {})
+            slots[meal] = {"recipe_id": recipe_id, "servings": 1.0, "prep_id": session["id"]}
+        self._save()
+        self._record("prep_planned", f"Planned meal prep for {day}", {"date": day, "covers": len(covers)})
+        return session
+
+    def finish_prep(self, prep_id: str) -> dict:
+        session = next((p for p in self._data["prep"] if p["id"] == prep_id), None)
+        if session is None:
+            raise ValueError("There's no prep session like that.")
+        session["done"] = True
+        self._save()
+        self._record("prep_done", "Meal prep done", {"prep": prep_id})
+        return dict(session)
+
+    def delete_prep(self, prep_id: str) -> None:
+        self._data["prep"] = [p for p in self._data["prep"] if p["id"] != prep_id]
+        for slots in self._data["meal_plan"].values():
+            for meal in [m for m, v in slots.items() if v.get("prep_id") == prep_id]:
+                slots.pop(meal)
+        self._save()
+
+    def eaten_planned(self, day: str) -> set:
+        """The planned meals of a day already logged as eaten."""
+        return {f["meal"] for f in self.food_on(day) if f.get("planned_id") == f"{day}:{f['meal']}"}
 
     # ------------------------------------------------------------------ milestones
 

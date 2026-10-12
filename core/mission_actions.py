@@ -209,6 +209,8 @@ def _describe_tick(context, params) -> str:
     from core.fitness_missions import is_fitness
 
     if is_fitness(mission):  # made from the fitness plan: a tap logs it (core/fitness_missions.py)
+        if ":meal_plan:" in mission.occurrence_key:
+            raise ActionError("This one counts itself: mark each meal on Today's meals as you eat it.")
         if objective.progress >= objective.target:
             raise ActionError(f"“{objective.description}” is already done.")
         return f"Done: {objective.description}"

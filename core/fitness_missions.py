@@ -12,7 +12,9 @@ mission path (Missions screen, XP, skills, complete, undo).
 | <Skill> practice | daily, per skill with daily minutes | each practice item |
 | Protein | daily, with a protein target | the grams |
 | Packed lunch | daily, with packed_lunch on | taken to work |
-| Meal prep | weekly, with a prep day | the prep session |
+| Today's meals | days with planned meals | each planned meal, eaten |
+| Meal prep | weekly, with a prep day or sessions | each prep session |
+| This week's meal plan | weeks with planned meals | the planned meals eaten |
 | Workouts this week | weekly, with workouts_per_week | days trained |
 
 **The logs are the truth.** Each objective's progress is recomputed from
@@ -51,10 +53,12 @@ def _rep_text(exercise: dict) -> str:
     return f"{exercise.get('name', 'Exercise')}" + (f" {sets}×{amount}" if sets and amount else f" {amount}" if amount else "")
 
 
-def specs(fit, today: date) -> list[dict]:
+def specs(fit, today: date, name_of=lambda recipe_id: "a meal") -> list[dict]:
     """Pure logic over the plan. The missions today and this week should
     have: [{kind, key, name, icon, summary, objectives: [(text, target)],
-    xp, skills: [(skill_id, xp)], cadence}]."""
+    xp, skills: [(skill_id, xp)], cadence}]. `name_of` names a recipe."""
+    from core.fitness_manager import MEALS
+
     plan = fit.plan
     day, week = today.isoformat(), monday(today).isoformat()
     out = []
@@ -85,12 +89,31 @@ def specs(fit, today: date) -> list[dict]:
         out.append({"kind": "lunch", "key": f"{PREFIX}lunch:{day}", "cadence": DAILY,
                     "name": "Packed lunch", "icon": "\U0001F96A", "summary": "Lunch packed and taken to work.",
                     "objectives": [("Take a packed lunch", 1)], "xp": 10, "skills": [("nutrition", 5)]})
+    planned_today = sorted(fit.planned(day).items(), key=lambda m: MEALS.index(m[0]))
+    if planned_today:
+        out.append({"kind": "meals", "key": f"{PREFIX}meals:{day}", "cadence": DAILY,
+                    "name": "Today's meals", "icon": "\U0001F37D",
+                    "summary": "The meals you planned for today.",
+                    "objectives": [(f"{meal.capitalize()}: {name_of(slot['recipe_id'])}", 1) for meal, slot in planned_today],
+                    "xp": 15, "skills": [("nutrition", 10), ("cooking", 5)]})
+    sunday = (monday(today) + timedelta(days=6)).isoformat()
+    sessions = fit.prep_sessions(week, sunday)
     prep_day = plan["meals"].get("prep_day")
-    if prep_day:
+    if sessions or prep_day:
         out.append({"kind": "prep", "key": f"{PREFIX}prep:{week}", "cadence": WEEKLY,
-                    "name": f"Meal prep ({prep_day})", "icon": "\U0001F372",
-                    "summary": "This week's meal-prep session.", "objectives": [("Do the meal prep", 1)],
+                    "name": f"Meal prep ({prep_day})" if prep_day else "Meal prep", "icon": "\U0001F372",
+                    "summary": "This week's meal-prep session.",
+                    "objectives": [(f"Cook {name_of(p['recipe_id'])} × {p['servings']:g}", 1) for p in sessions]
+                    or [("Do the meal prep", 1)],
                     "xp": 40, "skills": [("cooking", 20), ("nutrition", 10)]})
+    week_days = [(monday(today) + timedelta(days=i)).isoformat() for i in range(7)]
+    planned_week = sum(len(fit.planned(d)) for d in week_days)
+    if planned_week:
+        out.append({"kind": "meal_plan", "key": f"{PREFIX}meal_plan:{week}", "cadence": WEEKLY,
+                    "name": "This week's meal plan", "icon": "\U0001F4C5",
+                    "summary": "Every meal you planned this week, eaten.",
+                    "objectives": [(f"Eat the {planned_week} planned meals", float(planned_week))],
+                    "xp": 50, "skills": [("nutrition", 20), ("cooking", 10)]})
     per_week = plan["targets"].get("workouts_per_week")
     if per_week:
         out.append({"kind": "week_workouts", "key": f"{PREFIX}week_workouts:{week}", "cadence": WEEKLY,
@@ -121,7 +144,19 @@ def progress(fit, kind: str, key: str, objectives: list, today: date) -> list[fl
     if kind == "lunch":
         return [1.0 if fit.has_habit("lunch", day) else 0.0]
     if kind == "prep":
-        return [1.0 if fit.has_habit("prep", day) else 0.0]
+        sessions = fit.prep_sessions(day, (date.fromisoformat(day) + timedelta(days=6)).isoformat())
+        if sessions and len(sessions) == len(objectives):
+            return [1.0 if p["done"] or fit.has_habit("prep", day) else 0.0 for p in sessions]
+        return [1.0 if fit.has_habit("prep", day) else 0.0 for _ in objectives]
+    if kind == "meals":
+        from core.fitness_manager import MEALS
+
+        planned = sorted(fit.planned(day), key=MEALS.index)
+        eaten = fit.eaten_planned(day)
+        return [1.0 if meal in eaten else 0.0 for meal in planned][:len(objectives)]
+    if kind == "meal_plan":
+        days = [(date.fromisoformat(day) + timedelta(days=i)).isoformat() for i in range(7)]
+        return [float(min(objectives[0].target, sum(len(fit.eaten_planned(d)) for d in days)))]
     if kind == "week_workouts":
         return [float(min(objectives[0].target, len(fit.training_days_done(day))))]
     return [o.progress for o in objectives]
@@ -149,7 +184,13 @@ def ensure(context, today: Optional[date] = None) -> list:
         return []
     today = today or date.today()
     pid = person_id(context)
-    wanted = specs(fit, today)
+    kitchen = getattr(context, "kitchen", None)
+
+    def name_of(recipe_id: str) -> str:
+        recipe = kitchen.get_recipe(recipe_id) if kitchen is not None else None
+        return recipe.name if recipe is not None else "a meal"
+
+    wanted = specs(fit, today, name_of)
     keys = {s["key"] for s in wanted}
     existing = {m.occurrence_key: m for m in _mine(context, pid)}
     for old_key, mission in existing.items():
@@ -162,6 +203,14 @@ def ensure(context, today: Optional[date] = None) -> list:
                                    [], {"kind": _kind(mission)})
     for spec in wanted:
         if spec["key"] in existing:
+            mission = existing[spec["key"]]
+            texts = [o.description for o in mission.objectives]
+            if mission.status == "active" and texts != [t for t, _ in spec["objectives"]]:
+                # The plan changed today: the mission follows it (progress comes from the logs anyway).
+                for index in range(len(mission.objectives) - 1, -1, -1):
+                    missions.delete_objective(mission.mission_id, index)
+                for text, target in spec["objectives"]:
+                    missions.add_objective(mission.mission_id, text, "tally", float(target))
             continue
         mission = missions.add_mission(
             name=spec["name"], icon=spec["icon"], summary=spec["summary"], assigned_by="mia",
@@ -205,6 +254,18 @@ def tick(context, mission, index: int, today: Optional[date] = None) -> str:
         fit.log_skill(kind.split(":", 1)[1].title(), objective.description, on=stamp,
                       minutes=None if not objective.description.endswith("minutes") else float(objective.description.split()[0]))
         said = f"Logged {objective.description}."
+    elif kind == "meals":
+        from core.fitness_actions import _food
+        from core.fitness_manager import MEALS
+
+        meal = sorted(fit.planned(stamp), key=MEALS.index)[index]
+        slot = fit.planned(stamp)[meal]
+        said = _food(context, {"meal": meal, "recipe_id": slot["recipe_id"], "servings": slot.get("servings", 1),
+                               "date": stamp, "planned_id": f"{stamp}:{meal}"})
+    elif kind == "prep" and fit.prep_sessions(stamp, (date.fromisoformat(stamp) + timedelta(days=6)).isoformat()):
+        session = fit.prep_sessions(stamp, (date.fromisoformat(stamp) + timedelta(days=6)).isoformat())[index]
+        fit.finish_prep(session["id"])
+        said = f"Done: {objective.description}."
     elif kind in ("protein", "lunch", "prep"):
         fit.mark_habit(kind, stamp)
         said = {"protein": "Protein target hit.", "lunch": "Packed lunch: done.", "prep": "Meal prep: done."}[kind]

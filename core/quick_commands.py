@@ -40,6 +40,7 @@ MEAL_DONE = re.compile(rf"\b{MEAL}(?:'s)?\s*(?:is\s+|was\s+)?(?:{DONE}|eaten)\b|
 PREP = re.compile(rf"\b(?:meal ?prep|prepping|prep)(?:'s)?\s*(?:is\s+|was\s+)?{DONE}\b|\b{FINISHED}\s+(?:the\s+|my\s+)?"
                   rf"(?:meal ?prep|prep)\b|\bweek'?s meal plans?\s*(?:is\s+|are\s+)?{DONE}\b")
 HOLD = re.compile(r"\b(\d{1,4}(?:\.\d)?)\s*(?:s|sec|secs|seconds)\b")
+TODAY_KEY = "today"  # replaced with today's date by handle()
 SKILL_WORDS = ("handstand", "l-sit", "l sit", "crow", "plank", "muscle-up", "muscle up", "hollow hold", "dead hang",
                "frog pose", "planche", "front lever", "back lever")
 
@@ -53,7 +54,8 @@ def _number(word: str) -> int:
     return int(word) if word.isdigit() else NUMBER_WORDS[word]
 
 
-def parse(text: str, plan: Optional[dict] = None, today_training: Optional[dict] = None) -> Optional[tuple[str, dict]]:
+def parse(text: str, plan: Optional[dict] = None, today_training: Optional[dict] = None,
+          planned: Optional[dict] = None) -> Optional[tuple[str, dict]]:
     """Pure logic. What a short sentence asks for, or None (let the model
     have it). Long messages and questions are never commands."""
     said = _clean(text)
@@ -91,6 +93,10 @@ def parse(text: str, plan: Optional[dict] = None, today_training: Optional[dict]
     if match:
         meal = next(g for g in match.groups() if g)
         meal = "dinner" if meal == "supper" else meal
+        slot = (planned or {}).get(meal)
+        if slot:  # the meal planned for today: its recipe and nutrition
+            return ("fitness.food", {"meal": meal, "recipe_id": slot["recipe_id"], "servings": slot.get("servings", 1),
+                                     "planned_id": f"{TODAY_KEY}:{meal}"})
         packed = bool(((plan or {}).get("meals") or {}).get("packed_lunch"))
         if meal == "lunch" and packed:
             return ("fitness.habit", {"habit": "lunch"})
@@ -117,7 +123,13 @@ def handle(context, text: str) -> Optional[str]:
             training = fit.today_training()
         except Exception:
             training = None
-    found = parse(text, plan, training)
+    from datetime import date
+
+    today = date.today().isoformat()
+    planned = fit.planned(today) if fit is not None else {}
+    found = parse(text, plan, training, planned)
+    if found is not None and found[1].get("planned_id", "").startswith(TODAY_KEY):
+        found[1]["planned_id"] = found[1]["planned_id"].replace(TODAY_KEY, today, 1)
     if found is None:
         return None
     kind, params = found

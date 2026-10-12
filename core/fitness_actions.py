@@ -20,6 +20,11 @@ truth.
 | fitness.habit | a yes for the day: packed lunch, meal prep, protein hit |
 | fitness.plan | changes the plan (targets, rotation, skills, meals) |
 | fitness.milestone | a milestone reached |
+| meal.plan | one day's meal: a recipe and servings (or cleared) |
+| meal.prep | a prep session: cook a recipe ahead for the meals it covers |
+| meal.prep_done | a prep session cooked |
+| meal.suggest | fill the week's empty lunches and dinners from your recipes |
+| meal.shop | the week's shopping list onto the Kitchen's grocery list |
 """
 
 from __future__ import annotations
@@ -134,6 +139,8 @@ def _food(context, params) -> str:
                  source="recipe" if recipe_id else "quick", planned_id=str(params.get("planned_id") or ""))
     if recipe_id and getattr(context, "kitchen", None) is not None:
         context.kitchen.log_meal(recipe_id, day)  # the Kitchen's own "times made"
+    if meal == "lunch" and params.get("planned_id") and fit.plan["meals"].get("packed_lunch"):
+        fit.mark_habit("lunch", day)  # the planned lunch, eaten: it was packed
     _after(context)
     totals = fit.day_totals(day)
     protein, target = totals["totals"]["protein_g"], totals["targets"]["protein_g"]
@@ -289,6 +296,132 @@ def _milestone(context, params) -> str:
     return f"🏆 {milestone['name']}! That's a big one."
 
 
+# ------------------------------------------------------------------ meal plans (core/meal_plan.py)
+
+
+def _meal_slot(context, params) -> tuple[str, str, str, float]:
+    from core.fitness_manager import MEALS
+
+    day = _day(params)
+    meal = str(params.get("meal") or "").lower()
+    if meal not in MEALS:
+        raise ActionError("Meals are breakfast, lunch, dinner or snack.")
+    recipe_id = str(params.get("recipe_id") or "")
+    if recipe_id and (getattr(context, "kitchen", None) is None or context.kitchen.get_recipe(recipe_id) is None):
+        raise ActionError("There's no recipe like that.")
+    return day, meal, recipe_id, _number(params.get("servings") or 1, "Servings")
+
+
+def _describe_plan_meal(context, params) -> str:
+    day, meal, recipe_id, servings = _meal_slot(context, params)
+    if not recipe_id:
+        return f"Clear {meal} on {day}"
+    return f"Plan {meal} on {day}: {context.kitchen.get_recipe(recipe_id).name}" + (f" × {servings:g}" if servings != 1 else "")
+
+
+def _plan_meal(context, params) -> str:
+    from core.fitness_missions import ensure
+
+    day, meal, recipe_id, servings = _meal_slot(context, params)
+    _fit(context).plan_meal(day, meal, recipe_id or None, servings)
+    ensure(context)
+    return "Planned." if recipe_id else "Cleared."
+
+
+def _covers(params) -> list[str]:
+    raw = params.get("covers") or []
+    covers = raw if isinstance(raw, list) else [c.strip() for c in str(raw).split(",") if c.strip()]
+    from core.fitness_manager import MEALS
+
+    for slot in covers:
+        day, _, meal = slot.partition(":")
+        try:
+            date.fromisoformat(day)
+        except ValueError:
+            raise ActionError(f"“{slot}” isn't a day and meal like 2026-10-13:lunch.") from None
+        if meal not in MEALS:
+            raise ActionError(f"“{slot}” isn't a day and meal like 2026-10-13:lunch.")
+    return covers
+
+
+def _describe_prep(context, params) -> str:
+    recipe_id = str(params.get("recipe_id") or "")
+    recipe = context.kitchen.get_recipe(recipe_id) if getattr(context, "kitchen", None) is not None else None
+    if recipe is None:
+        raise ActionError("There's no recipe like that.")
+    servings = _number(params.get("servings") or recipe.servings, "Servings")
+    covers = _covers(params)
+    return f"Prep on {_day(params)}: {recipe.name} × {servings:g}" + (f", covering {len(covers)} meals" if covers else "")
+
+
+def _prep(context, params) -> str:
+    from core.fitness_missions import ensure
+
+    recipe = context.kitchen.get_recipe(str(params["recipe_id"]))
+    _fit(context).add_prep(_day(params), recipe.recipe_id, _number(params.get("servings") or recipe.servings, "Servings"),
+                           _covers(params))
+    ensure(context)
+    return "Meal prep planned."
+
+
+def _describe_prep_done(context, params) -> str:
+    session = next((p for p in _fit(context).prep_sessions() if p["id"] == params.get("prep_id")), None)
+    if session is None:
+        raise ActionError("There's no prep session like that.")
+    return "Mark this meal prep done"
+
+
+def _prep_done(context, params) -> str:
+    _fit(context).finish_prep(str(params["prep_id"]))
+    _after(context)
+    return "Meal prep: done."
+
+
+def _suggestions(context, params) -> list[dict]:
+    from core.meal_plan import suggest_week
+
+    picks = suggest_week(context, date.fromisoformat(_day(params)))
+    if not picks:
+        raise ActionError("There are no empty lunches or dinners this week, or no recipes to fill them.")
+    return picks
+
+
+def _describe_suggest(context, params) -> str:
+    picks = _suggestions(context, params)
+    names = sorted({p["name"] for p in picks})
+    return f"Fill {len(picks)} meals this week from your recipes: " + ", ".join(names)
+
+
+def _suggest(context, params) -> str:
+    from core.fitness_missions import ensure
+
+    fit = _fit(context)
+    for pick in _suggestions(context, params):
+        fit.plan_meal(pick["date"], pick["meal"], pick["recipe_id"], pick["servings"])
+    ensure(context)
+    return "Your week is planned."
+
+
+def _describe_shop(context, params) -> str:
+    from core.meal_plan import shopping_list
+
+    items = shopping_list(context, date.fromisoformat(_day(params)))["items"]
+    if not items:
+        raise ActionError("The week's plan needs nothing the house doesn't already have.")
+    flagged = [i["name"] for i in items if i["allergy"]]
+    warning = f" ⚠ {', '.join(flagged)} matches an allergy." if flagged else ""
+    return f"Add {len(items)} things to the grocery list for this week's meals.{warning}"
+
+
+def _shop(context, params) -> str:
+    from core.meal_plan import shopping_list
+
+    items = shopping_list(context, date.fromisoformat(_day(params)))["items"]
+    for item in items:
+        context.kitchen.add_grocery_item(item["name"], item["quantity"], item["unit"])
+    return f"Added {len(items)} things to the grocery list."
+
+
 FITNESS_ACTIONS: dict[str, ActionType] = {a.kind: a for a in (
     ActionType("fitness.weigh_in", "Log weight", {"weight": "the number", "unit": "lb or kg (optional)", "date": "optional"},
                _describe_weigh_in, _weigh_in),  # not for children: body weight isn't a kid's number to track
@@ -305,6 +438,15 @@ FITNESS_ACTIONS: dict[str, ActionType] = {a.kind: a for a in (
                _describe_skill, _skill, True),
     ActionType("fitness.habit", "Done", {"habit": "/".join(HABITS), "date": "optional"}, _describe_habit, _habit, True),
     ActionType("fitness.plan", "Save plan", {"changes": "the parts of the plan to change"}, _describe_plan, _plan, True),
+    ActionType("meal.plan", "Plan", {"date": "the day", "meal": "breakfast/lunch/dinner/snack",
+                                     "recipe_id": "the recipe (none clears it)", "servings": "default 1"},
+               _describe_plan_meal, _plan_meal, True),
+    ActionType("meal.prep", "Plan prep", {"date": "the prep day", "recipe_id": "what to cook", "servings": "how many",
+                                          "covers": "the meals it feeds: 2026-10-13:lunch, ..."},
+               _describe_prep, _prep, True),
+    ActionType("meal.prep_done", "Prep done", {"prep_id": "the prep session"}, _describe_prep_done, _prep_done, True),
+    ActionType("meal.suggest", "Plan my week", {"date": "any day of the week"}, _describe_suggest, _suggest, True),
+    ActionType("meal.shop", "Add to grocery list", {"date": "any day of the week"}, _describe_shop, _shop),
     ActionType("fitness.milestone", "Reached it", {"milestone_id": "the milestone"}, _describe_milestone, _milestone, True),
 )}
 ACTION_TYPES.update(FITNESS_ACTIONS)
