@@ -759,6 +759,23 @@ class MissionManager:
             self._notify_all_objectives_completed(mission)
         return mission
 
+    def set_objective_progress(self, mission_id: str, progress: list) -> Mission:
+        """Sets each tally objective's progress at once (missions made from
+        a person's logs, core/fitness_missions.py: the logs are the truth).
+        Quiet: no "objective complete" notices, the person just did it."""
+        mission = self.get_mission(mission_id)
+        if mission is None:
+            raise ValueError(f"No mission with id '{mission_id}'.")
+        changed = False
+        for objective, value in zip(mission.objectives, progress):
+            if objective.metric_type == "tally" and value is not None and objective.progress != float(value):
+                objective.progress = float(value)
+                changed = True
+        if changed:
+            self._bump_updated_at(mission)
+            self._save()
+        return mission
+
     def _all_objectives_complete(self, mission: Mission) -> bool:
         """
         Uses is_objective_complete() (not a bare progress>=target check

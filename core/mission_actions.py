@@ -206,6 +206,12 @@ def _describe_tick(context, params) -> str:
         raise ActionError(f"{mission.name} is {mission.status}.")
     if objective.metric_type != "tally":
         raise ActionError("That one counts itself (from its task or trip).")
+    from core.fitness_missions import is_fitness
+
+    if is_fitness(mission):  # made from the fitness plan: a tap logs it (core/fitness_missions.py)
+        if objective.progress >= objective.target:
+            raise ActionError(f"“{objective.description}” is already done.")
+        return f"Done: {objective.description}"
     amount = parse(_TICK, params.get("amount"))
     if not amount:
         raise ActionError("How many has to be more than nothing.")
@@ -215,6 +221,10 @@ def _describe_tick(context, params) -> str:
 
 def _tick(context, params) -> str:
     mission, index, objective = _objective(context, params)
+    from core.fitness_missions import is_fitness, tick
+
+    if is_fitness(mission):
+        return tick(context, mission, index)
     amount = parse(_TICK, params.get("amount"))
     if objective.progress + amount < 0:
         amount = -objective.progress

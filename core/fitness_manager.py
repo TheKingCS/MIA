@@ -144,7 +144,9 @@ class FitnessManager:
                       "weigh_ins": list(raw.get("weigh_ins") or []),
                       "food": list(raw.get("food") or []),
                       "skill_sessions": list(raw.get("skill_sessions") or []),
-                      "training_done": list(raw.get("training_done") or [])}
+                      "training_done": list(raw.get("training_done") or []),
+                      "training_steps": dict(raw.get("training_steps") or {}),  # date -> [step indexes done]
+                      "habits": dict(raw.get("habits") or {})}  # date (or week's Monday) -> ["lunch", "prep", ...]
 
     def _save(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -298,6 +300,44 @@ class FitnessManager:
         self._save()
         self._record("training_done", f"Finished {todays.get('name') or 'training'}", {"date": day})
         return {**todays, "done": True}
+
+    def complete_step(self, index: int, today: Optional[date] = None) -> Optional[dict]:
+        """One step (exercise) of today's training; the last one finishes the day."""
+        day = (today or date.today()).isoformat()
+        todays = self.today_training(today)
+        if todays is None:
+            return None
+        steps = todays.get("exercises") or []
+        if steps and not 0 <= index < len(steps):
+            raise ValueError(f"Today's training has {len(steps)} steps.")
+        done = sorted(set(self._data["training_steps"].get(day, [])) | {index})
+        self._data["training_steps"][day] = done
+        self._save()
+        name = (steps[index].get("name") if steps else todays.get("name")) or f"step {index + 1}"
+        self._record("training_step", f"Done: {name}", {"date": day, "step": index})
+        if not steps or len(done) >= len(steps):
+            return self.complete_training(today)
+        return {**todays, "steps_done": done}
+
+    def steps_done(self, day: Optional[str] = None) -> list[int]:
+        day = day or date.today().isoformat()
+        if any(t["date"] == day for t in self._data["training_done"]):
+            todays = self.today_training(date.fromisoformat(day))
+            return list(range(len((todays or {}).get("exercises") or []))) or [0]
+        return list(self._data["training_steps"].get(day, []))
+
+    def mark_habit(self, name: str, day: Optional[str] = None, done: bool = True) -> None:
+        """A yes/no for a day (or a week, keyed by its Monday): "lunch", "prep", "protein"."""
+        day = day or date.today().isoformat()
+        have = set(self._data["habits"].get(day, []))
+        have = have | {name} if done else have - {name}
+        self._data["habits"][day] = sorted(have)
+        self._save()
+        if done:
+            self._record("habit", f"Done: {name}", {"habit": name, "date": day})
+
+    def has_habit(self, name: str, day: Optional[str] = None) -> bool:
+        return name in self._data["habits"].get(day or date.today().isoformat(), [])
 
     def training_days_done(self, since: str) -> list[dict]:
         return [t for t in self._data["training_done"] if t["date"] >= since]

@@ -66,6 +66,9 @@ def build_world(tmp_path, monkeypatch) -> AppContext:
     context.real_estate = RealEstateManager(context, data_dir=home)
     context.kitchen = KitchenManager(context, data_dir=home)
     context.workout = WorkoutManager(context, data_dir=mine)
+    from core.fitness_manager import FitnessManager
+
+    context.fitness = FitnessManager(context, data_dir=mine)
     context.intents = IntentManager(context, data_dir=mine)
     context.life_events = LifeEventLog(context, data_dir=home)
     context.personal_life_events = PersonalLifeEventLog(context, data_dir=mine)

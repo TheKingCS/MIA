@@ -50,6 +50,12 @@ def add_message(conversation: Conversation, role: str, content: str) -> None:
     )
 
 
+def _personal(conversation) -> bool:
+    from core.conversation_modes import PERSONAL_MODES
+
+    return getattr(conversation, "mode", None) in PERSONAL_MODES or bool(getattr(conversation, "journal", False))
+
+
 def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: str) -> AssistantTurn:
     # Mode switches and the safety floor first (core/talk_it_out.py),
     # before the message is stored, so it's stored with the privacy its
@@ -61,6 +67,16 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
         add_message(conversation, "assistant", prepared.fixed_reply)
         after_fixed_reply(context, conversation)
         return AssistantTurn(replies=[prepared.fixed_reply])
+    # Plain-word commands ("workout complete", "I weigh 182", "undo that"),
+    # done by MIA's own code at once, no model (core/quick_commands.py).
+    # Never in a private journal or talk-it-out mode.
+    if not _personal(conversation):
+        from core.quick_commands import handle
+
+        quick = handle(context, prompt)
+        if quick is not None:
+            add_message(conversation, "assistant", quick)
+            return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [quick])
     notices = []
     if prepared.notice:
         add_message(conversation, "assistant", prepared.notice)
