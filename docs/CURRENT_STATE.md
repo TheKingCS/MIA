@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-07 (phone onboarding), by claude.*
+session. Last updated: 2026-10-12 (fitness + nutrition engine), by claude.*
 
 ## Phase
 
@@ -21,6 +21,7 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 |---|---|
 | Desktop app (PySide6, 37 apps) | REAL, in daily development |
 | Phone web app (Talk, Today, Money) and Android app | REAL |
+| **Fitness + nutrition (DEC-0020)** | REAL engine, 2026-10-12: plan, weigh-ins and trend, food with nutrition (built-in USDA table), meal plans, prep, shopping list, missions from the plan, plain-word commands without a model, "Is it working?". Screens: Muse next (H-0027) |
 | **MIA on the phone, no computer (DEC-0019)** | REAL test build: engine and `web/` inside an Android app (`android-phone/`, `docs/PHONE_SPIKE.md`); starts in under 8 s on Zac's phone. First start makes your account; Profile and Settings; **MIA's own model on the phone** (llama.cpp; Model test screen; 3B models pick the right tool 95-96% of the time, 1.5B 81%; `docs/PHONE_MODEL_TEST.md`). Speed on Zac's phone next |
 | Assistant (local model, ~185 tools, voice) | REAL |
 | Life events (history), links, Life State v2 (now with assets, kitchen, workout), `/api/state`, schema | REAL / DERIVED, built 2026-10-05 |

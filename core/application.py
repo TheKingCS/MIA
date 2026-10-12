@@ -962,6 +962,10 @@ class MIAApplication:
                 for template in self.context.recurring_missions.all_templates():
                     if template.active:
                         self.context.recurring_missions.ensure_current_missions(template, now.date())
+            # The fitness plan's missions (DEC-0020), for whoever's signed in.
+            from core.fitness_missions import ensure as ensure_fitness_missions
+
+            ensure_fitness_missions(self.context, now.date())
             config.set("system.last_recurring_mission_check_date", today_iso)
             config.save()
 

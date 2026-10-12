@@ -531,3 +531,27 @@ def test_a_new_recovery_code_needs_the_password(client, context):
     assert client.post("/api/account/recovery-code", headers=auth, json={"password": "nope"}).status_code == 400
     code = client.post("/api/account/recovery-code", headers=auth, json={"password": "hunter2"}).json()["recovery_code"]
     assert context.profiles.check_recovery_code(_profile_id(context), code)
+
+
+# ----------------------------------------------------------------------
+# Fitness (DEC-0020): the screens' data and saying it in plain words
+# ----------------------------------------------------------------------
+
+def test_fitness_endpoints_and_a_plain_word_log(client, context):
+    auth = _signed_in(client, context)
+    plan = {"targets": {"protein_g": 160}, "training": {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                                                        "rotation": [{"name": "Push", "exercises": [{"name": "Dips"}]}]}}
+    proposal = client.post("/api/actions/propose", headers=auth, json={"kind": "fitness.plan", "params": {"changes": plan}}).json()
+    assert client.post(f"/api/actions/{proposal['proposal_id']}/approve", headers=auth).json()["status"] == "executed"
+    page = client.get("/api/fitness", headers=auth).json()
+    assert page["available"] and page["today"]["training"]["name"] == "Push"
+    assert {m["kind"] for m in page["missions"]} == {"training", "protein"}
+    assert "Nothing logged yet" in page["progress"]["sentence"]
+    reply = client.post("/api/voice/text", headers=auth, json={"text": "workout complete"}).json()
+    assert reply["reply_text"].startswith("Push done") and "undo that" in reply["reply_text"]
+    page = client.get("/api/fitness", headers=auth).json()
+    assert page["today"]["training"]["done"] is True
+    assert next(m for m in page["missions"] if m["kind"] == "training")["status"] == "completed"
+    week = client.get("/api/fitness/week", headers=auth).json()
+    assert week["available"] and len(week["days"]) == 7
+    assert client.get("/api/fitness/week?day=nope", headers=auth).status_code == 400

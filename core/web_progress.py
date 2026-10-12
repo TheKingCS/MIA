@@ -69,6 +69,9 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     from core.mission_actions import ABANDON_LABELS, RECORDS, form_spec, is_mine
 
     today = today or date.today()
+    from core.fitness_missions import ensure as ensure_fitness_missions
+
+    ensure_fitness_missions(context, today)  # today's from the fitness plan (DEC-0020), made once
     missions = getattr(context, "missions", None)
     profile = _profile(context)
     pid = profile.profile_id if profile is not None else None

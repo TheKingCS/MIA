@@ -52,7 +52,7 @@ import tempfile
 from urllib.parse import unquote
 import threading
 import wave
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -758,6 +758,26 @@ def create_app(context: AppContext) -> FastAPI:
         except ValueError as problem:
             raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
         return models.status()
+
+    @app.get("/api/fitness")
+    def web_fitness(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Today, the weight line, missions and "is it working?" (core/web_fitness.py, DEC-0020)."""
+        from core.web_fitness import fitness_page
+
+        with app.state.turn_lock:
+            return fitness_page(view_for(context, profile_id))
+
+    @app.get("/api/fitness/week")
+    def web_fitness_week(day: Optional[str] = None, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The meal-plan week: meals, prep, shopping list, a suggestion."""
+        from core.web_fitness import week_page
+
+        try:
+            when = date.fromisoformat(day) if day else None
+        except ValueError:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Dates look like 2026-10-12.") from None
+        with app.state.turn_lock:
+            return week_page(view_for(context, profile_id), when)
 
     @app.get("/api/character")
     def web_character(profile_id: str = Depends(require_profile_id)) -> dict:

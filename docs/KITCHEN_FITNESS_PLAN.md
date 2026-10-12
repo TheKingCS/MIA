@@ -1,8 +1,8 @@
 # Kitchen + Workout + Missions: eat, train, see it working (plan)
 
-*Claude, 2026-10-12, from Zac's request. Proposal: only Zac approves.
-Muse's design document for these screens goes beside it (Zac asked Muse
-for one); the screens follow Muse, the engine follows this.*
+*Claude, 2026-10-12, from Zac's request; approved as DEC-0020 with
+Muse's H-0026. **Engine built 2026-10-12 (phases 1 to 7, H-0027);
+the screens are Muse's next.***
 
 ## What Zac asked for
 

@@ -46,3 +46,4 @@ handoff: use placeholders.*
 | H-0022 | claude → muse (cc zac, chatgpt) | 2026-10-06 | Missions, Skills and Character are working (closes H-0013) | [`H-0022_claude-to-muse_missions-skills-character.md`](H-0022_claude-to-muse_missions-skills-character.md) |
 | H-0024 | claude → muse (cc chatgpt) | 2026-10-07 | The rest of the screen photos | [`H-0024_claude-to-muse_screen-photos.md`](H-0024_claude-to-muse_screen-photos.md) |
 | H-0026 | muse → claude (cc zac, chatgpt) | 2026-10-12 | Fitness + nutrition plans as daily missions (engine spec) | [`H-0026_muse-to-claude_fitness-nutrition-missions.md`](H-0026_muse-to-claude_fitness-nutrition-missions.md) |
+| H-0027 | claude → muse (cc zac, chatgpt) | 2026-10-12 | The fitness + nutrition engine is ready for your screens (closes H-0026) | [`H-0027_claude-to-muse_fitness-engine-ready.md`](H-0027_claude-to-muse_fitness-engine-ready.md) |

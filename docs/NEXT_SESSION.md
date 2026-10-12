@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-07*
+*Last updated: 2026-10-12*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -43,6 +43,11 @@ the hub, and the Meta AI app.
       Android, install **MIA-Phone-Test.apk** (it sits beside the companion
       app), open it, and tell Claude how long it took to start and how it
       feels. Done: under 8 seconds (2026-10-07).
+- [ ] **Fitness and meals (2026-10-12, DEC-0020):** the engine is built
+      (H-0027); Muse builds the screens. Once a phone build has them:
+      set your plan (targets, rotation, handstand practice, prep day), log
+      a weigh-in, and try saying "step one of today's workout complete",
+      "today's lunch complete", "I weigh 182".
 - [ ] **Test MIA's own AI model on your phone (2026-10-07):** install the
       newest MIA-Phone-Test.apk, then gear → Settings → **Model test**.
       Download **Qwen 2.5 · 1.5B** on Wi-Fi, tap **Start**, then **Quick
