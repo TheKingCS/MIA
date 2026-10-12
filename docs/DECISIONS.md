@@ -347,3 +347,22 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0001, DEC-0002, DEC-0012, DEC-0015, DEC-0016, DEC-0017,
   Q-0003, Q-0015, Q-0016
 
+
+### DEC-0020: Eat, train and see it working: Kitchen + Workout + Missions, with a built-in food table
+- Status: APPROVED
+- Proposed by: claude, 2026-10-12 (at zac's request), with muse (H-0026) · Approved by: zac, 2026-10-12 ("Lets go with your recommendations")
+- Decision: build `docs/KITCHEN_FITNESS_PLAN.md` with Muse's H-0026 spec:
+  a per-person fitness plan (targets, training rotation, skill tree with
+  timed holds, milestones, meals), weigh-ins and their trend, nutrition
+  per day, meal plans and prep with a shopping list from the plan, and
+  missions generated from the plan (training, skill, protein, lunch,
+  prep) on the existing mission path (complete, +1, undo; streaks pause,
+  never shame, DEC-0014). Completions can be said in plain words and are
+  handled by MIA's code, no model needed. **Nutrition facts come from a
+  food table built into MIA** (USDA FoodData Central, public domain),
+  computed from a recipe's ingredients, offline; typed values win.
+- Why: Zac wants meal plans, prep, workouts and nutrition tied to his
+  goals, completed as daily and weekly missions, and to see whether it's
+  working. Values stay on the device (DEC-0002); the repo holds the
+  schema, the logic and the public food table.
+- Related: DEC-0002, DEC-0014, DEC-0017, DEC-0019, H-0022, H-0026
