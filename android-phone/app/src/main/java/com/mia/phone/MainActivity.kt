@@ -35,15 +35,23 @@ class MainActivity : Activity() {
         setContentView(status)
         Thread {
             try {
-                val t0 = SystemClock.elapsedRealtime()
-                val root = Unpack.ensure(this)
-                val t1 = SystemClock.elapsedRealtime()
-                if (!Python.isStarted()) Python.start(AndroidPlatform(this))
-                val t2 = SystemClock.elapsedRealtime()
-                val result = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT, applicationInfo.nativeLibraryDir, lastExit()).toString())
-                val t3 = SystemClock.elapsedRealtime()
-                Log.i(TAG, "ready unpack_ms=${t1 - t0} python_ms=${t2 - t1} engine_ms=${result.optInt("engine_ms")} " +
-                    "server_ms=${result.optInt("server_ms")} total_ms=${t3 - t0} python=${result.optString("python")}")
+                // Once per app process: Android can recreate this screen while MIA
+                // is still starting (rotating the phone, the system); the second
+                // start waits for the first instead of starting Python twice.
+                val result = synchronized(START_LOCK) {
+                    started ?: run {
+                        val t0 = SystemClock.elapsedRealtime()
+                        val root = Unpack.ensure(applicationContext)
+                        val t1 = SystemClock.elapsedRealtime()
+                        if (!Python.isStarted()) Python.start(AndroidPlatform(applicationContext))
+                        val t2 = SystemClock.elapsedRealtime()
+                        val answer = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT, applicationInfo.nativeLibraryDir, lastExit()).toString())
+                        val t3 = SystemClock.elapsedRealtime()
+                        Log.i(TAG, "ready unpack_ms=${t1 - t0} python_ms=${t2 - t1} engine_ms=${answer.optInt("engine_ms")} " +
+                            "server_ms=${answer.optInt("server_ms")} total_ms=${t3 - t0} python=${answer.optString("python")}")
+                        answer.also { started = it }
+                    }
+                }
                 // Spike only: the CI check reads it to call the API. Local to this phone.
                 Log.d(TAG, "token=${result.optString("token")}")
                 runOnUiThread { show(result.optString("token")) }
@@ -92,5 +100,7 @@ class MainActivity : Activity() {
     companion object {
         const val TAG = "MIA_SPIKE"
         const val PORT = 8765
+        private val START_LOCK = Any()
+        @Volatile private var started: JSONObject? = null
     }
 }

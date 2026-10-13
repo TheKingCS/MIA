@@ -12,6 +12,7 @@ import threading
 import time
 
 _started = {}
+_lock = threading.Lock()
 
 
 def start(root: str, port: int, native_dir: str = "", last_exit: str = "") -> str:
@@ -20,8 +21,13 @@ def start(root: str, port: int, native_dir: str = "", last_exit: str = "") -> st
     `native_dir` is where Android put the app's native programs, among
     them llama.cpp's server (libllama_server.so) for MIA's own model.
     `last_exit`: why Android last closed MIA (JSON), shown on the Model test."""
-    if _started:
+    with _lock:  # one engine per app, however many times the screen asks
+        if not _started:
+            _start(root, port, native_dir, last_exit)
         return json.dumps(_started)
+
+
+def _start(root: str, port: int, native_dir: str, last_exit: str) -> None:
     t0 = time.time()
     sys.path.insert(0, root)
     os.chdir(root)
@@ -69,4 +75,3 @@ def start(root: str, port: int, native_dir: str = "", last_exit: str = "") -> st
     t2 = time.time()
     _started.update(token=token, engine_ms=round((t1 - t0) * 1000), server_ms=round((t2 - t1) * 1000),
                     python=sys.version.split()[0], profile=me.name if me is not None else "")
-    return json.dumps(_started)
