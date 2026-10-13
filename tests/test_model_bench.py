@@ -134,3 +134,32 @@ def test_run_reports_accuracy_and_speed(fake):
     assert (summary["total"], summary["done"], summary["passed"]) == (2, 2, 1) and seen == [1, 2]
     assert summary["read_per_second"] == 50.0 and summary["write_per_second"] == 10.0
     assert summary["results"][1]["detail"] == "expected no tool call, got ['get_today']"
+
+
+def test_questions_answered_in_code_are_never_wrong():
+    """Every golden question MIA answers without the model (direct lookups)
+    gets the tool the golden set expects; small talk never triggers one."""
+    bench = model_bench.load_cases()
+    direct = [c for c in bench["cases"] if c.get("direct")]
+    assert len(direct) >= 10
+    assert [c["description"] for c in direct if c["direct"] != c["expected"] or c["arguments"]] == []
+
+
+def test_direct_answers_are_scored_without_the_model():
+    class NoModel:
+        def chat(self, *a, **k):
+            raise AssertionError("the model was asked")
+
+    bench = {"destructive": [], "cases": [{"description": "a", "prompt": "When is my next alarm?", "expected": "list_alarms",
+                                            "arguments": None, "messages": [], "tools": [], "direct": "list_alarms"}]}
+    summary = model_bench.run(NoModel(), bench)
+    assert summary["passed"] == 1 and summary["in_code"] == 1 and summary["results"][0]["seconds"] == 0
+
+
+def test_the_lookups_subject_must_be_in_the_question():
+    from core.assistant_actions import _names_its_subject, looks_like_question
+
+    assert _names_its_subject("list_alarms", "When is my next alarm?")
+    assert not _names_its_subject("list_inventory", "What user profiles do I have set up?")
+    assert not _names_its_subject("get_system_health", "Is everything ok with you today?")
+    assert looks_like_question("what bills do I have") and not looks_like_question("Add milk to the list")

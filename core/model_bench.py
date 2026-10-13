@@ -93,6 +93,18 @@ def run(backend, bench: dict, count: Optional[int] = None, timeout: float = 300.
             break
         started = time.monotonic()
         error = ""
+        if case.get("direct"):  # MIA answers this one in code, no model (core/assistant_actions.direct_lookup)
+            ok, detail = score(case, [case["direct"]], {}, destructive)
+            results.append({"description": case["description"], "prompt": case["prompt"], "ok": ok,
+                            "detail": f"answered by MIA's code: {detail}", "called": [case["direct"]], "answer": "",
+                            "error": "", "seconds": 0.0, "prompt_tokens": None, "prompt_ms": None,
+                            "answer_tokens": None, "answer_ms": None, "direct": True})
+            summary["done"] = len(results)
+            summary["passed"] = sum(1 for r in results if r["ok"])
+            summary.update(speed(results))
+            if progress is not None:
+                progress(summary)
+            continue
         try:
             reply = backend.chat(case["messages"], case["tools"], timeout)
             if not reply.tool_calls and _looks_like_malformed_tool_call(reply.content):
@@ -116,7 +128,12 @@ def run(backend, bench: dict, count: Optional[int] = None, timeout: float = 300.
         if progress is not None:
             progress(summary)
     summary.update(speed(results))
+    summary["in_code"] = in_code(results)
     return summary
+
+
+def in_code(results: list) -> int:
+    return sum(1 for r in results if r.get("direct"))
 
 
 def speed(results: list) -> dict:

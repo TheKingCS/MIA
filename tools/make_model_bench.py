@@ -37,7 +37,14 @@ def build() -> dict:
     for description, prompt, expected, *expected_args in live.GOLDEN_CASES:
         conversation = context.conversations.start_new_active_conversation()
         messages, tools = build_chat_request(context, conversation, prompt)
-        cases.append({"description": description, "prompt": prompt, "expected": expected,
+        from core.assistant_turn import _direct_lookup  # noqa: F401  (the same rule Talk uses)
+        from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
+
+        direct = None
+        if not looks_like_how_to_question(prompt) and not looks_like_teaching_request(prompt):
+            hit = context.assistant_actions.direct_lookup(prompt, context)
+            direct = hit.name if hit is not None else None
+        cases.append({"description": description, "prompt": prompt, "expected": expected, "direct": direct,
                       "arguments": expected_args[0] if expected_args else None,
                       "messages": messages, "tools": tools})
     return {"about": "MIA's golden set for the model test (tools/make_model_bench.py). Placeholder data only.",

@@ -40,6 +40,7 @@
     if (!r) return el("p", { class: "dim" }, "Not tested yet.");
     return el("div", {},
       fact("Picked the right tool", r.passed + " of " + r.done + " (" + pct(r.passed, r.done) + ")"),
+      r.in_code ? fact("Answered by MIA's code (no model, instant)", r.in_code + " of " + r.done) : "",
       fact("Typical answer took", r.median_seconds != null ? r.median_seconds + " s" : "—"),
       fact("Reading speed", r.read_per_second != null ? r.read_per_second + " tokens/s" : "—"),
       fact("Writing speed", r.write_per_second != null ? r.write_per_second + " tokens/s" : "—"),
@@ -80,7 +81,7 @@
         ? "Running (loaded in " + server.load_seconds + " s). Talk uses this model now." : server.error);
     }
     const tight = m.downloaded && !running && page.free_mb && m.needs_mb > page.free_mb;
-    const warning = tight ? el("p", { class: "model-warning" }, "⚠ Needs about " + gb(m.needs_mb) + " of memory; " +
+    const warning = tight ? el("p", { class: "model-warning" }, "⚠ Needs about " + gb(m.needs_mb) + " of working memory (RAM); " +
       gb(page.free_mb) + " is free right now. Close other apps first, or Android may close MIA.") : null;
     return section(m.name, el("p", { class: "dim" }, m.about), state, warning,
       el("div", { class: "acct-actions" }, buttons), el("h3", {}, "Last test"), results(m.results));
@@ -109,7 +110,8 @@
     const notes = [page.note, page.last_exit ? "Last time: " + page.last_exit : ""].filter(Boolean);
     return section("This phone",
       notes.map((n) => el("p", { class: "model-warning" }, n)),
-      fact("Free memory now", page.free_mb != null ? gb(page.free_mb) : "—"),
+      fact("Free working memory (RAM) now", page.free_mb != null ? gb(page.free_mb) : "—"),
+      el("p", { class: "dim" }, "Not storage space: this is the memory apps run in. Android frees more by closing apps you're not using when a model needs it."),
       fact("Fast cores the model uses", page.fast_cores && page.fast_cores.length ? String(Math.min(4, page.fast_cores.length)) : "all"));
   }
 

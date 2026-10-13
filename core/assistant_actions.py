@@ -260,6 +260,29 @@ class AssistantActionRegistry:
         return [action for action in self._actions.values()
                 if action.domain in matched_domains and tool_allowed(context, action.domain)]
 
+    def direct_lookup(self, prompt: str, context: Optional["AppContext"] = None) -> Optional[AssistantAction]:
+        """The one lookup a question clearly asks for, to run without the
+        model (2026-10-13: instant on the phone, and the small model's
+        commonest miss was answering such questions from memory). Only
+        when the message is a question, exactly one read-only action's own
+        trigger phrase matches, it needs no arguments, and nothing that
+        changes records matches too; otherwise None and the model decides."""
+        from core.child_accounts import tool_allowed
+
+        lowered = f" {prompt.lower().strip()} "
+        if not looks_like_question(prompt):
+            return None
+        matched = [a for a in self._actions.values() if any(p in lowered for p in a.trigger_phrases)
+                   and tool_allowed(context, a.domain)]
+        if not matched or any(changes_records(a.name) for a in matched):
+            return None
+        # No details at all (a search word, a date, a filter needs the model to
+        # pick it out), and never the journals: their answers stay out of the
+        # chat history, which only the model's path handles.
+        lookups = [a for a in matched if not ((a.parameters or {}).get("properties"))
+                   and "journal" not in a.name and "journal" not in a.domain and _names_its_subject(a.name, prompt)]
+        return lookups[0] if len(lookups) == 1 and len(matched) == 1 else None
+
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:
         """
         Run the named action's handler, or a clear message if the name
@@ -299,3 +322,26 @@ class AssistantActionRegistry:
         # the change came from the phone, on the server's thread.
         records_changed(context, name)
         return result
+
+
+_QUESTION_STARTS = ("what", "when", "which", "who", "where", "how many", "how much", "how's", "how is", "do i", "did i",
+                    "have i", "am i", "is there", "are there", "any ", "show me", "list ")
+
+
+def _singular(word: str) -> str:
+    return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
+
+
+def _names_its_subject(action_name: str, prompt: str) -> bool:
+    """Pure logic. The question says what the lookup is about: "alarm" for
+    list_alarms, "bill" for list_bills (a generic phrase like "do I have"
+    alone never decides)."""
+    said = {_singular(w) for w in re.findall(r"[a-z]+", prompt.lower())}
+    subject = [_singular(w) for w in action_name.split("_")[1:] if len(w) > 2 and w not in ("my", "the", "all")]
+    return bool(subject) and any(w in said for w in subject)
+
+
+def looks_like_question(prompt: str) -> bool:
+    """Pure logic. A question asking for something MIA knows (not a request to change it)."""
+    said = prompt.strip().lower()
+    return said.endswith("?") or said.startswith(_QUESTION_STARTS)

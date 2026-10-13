@@ -4,6 +4,7 @@
   {
    "arguments": null,
    "description": "out-of-scope info question",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -21,6 +22,7 @@
   {
    "arguments": null,
    "description": "module description question",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -38,6 +40,7 @@
   {
    "arguments": null,
    "description": "open module",
+   "direct": null,
    "expected": "open_module",
    "messages": [
     {
@@ -249,6 +252,7 @@
   {
    "arguments": null,
    "description": "add alarm",
+   "direct": null,
    "expected": "add_alarm",
    "messages": [
     {
@@ -322,6 +326,7 @@
   {
    "arguments": null,
    "description": "list alarms",
+   "direct": "list_alarms",
    "expected": "list_alarms",
    "messages": [
     {
@@ -395,6 +400,7 @@
   {
    "arguments": null,
    "description": "delete alarm, name-before-noun phrasing",
+   "direct": null,
    "expected": "delete_alarm",
    "messages": [
     {
@@ -468,6 +474,7 @@
   {
    "arguments": null,
    "description": "add note",
+   "direct": null,
    "expected": "add_note",
    "messages": [
     {
@@ -545,6 +552,7 @@
   {
    "arguments": null,
    "description": "list notes",
+   "direct": null,
    "expected": "list_notes",
    "messages": [
     {
@@ -622,6 +630,7 @@
   {
    "arguments": null,
    "description": "delete note",
+   "direct": null,
    "expected": "delete_note",
    "messages": [
     {
@@ -699,6 +708,7 @@
   {
    "arguments": null,
    "description": "inventory quantity question",
+   "direct": null,
    "expected": "list_inventory",
    "messages": [
     {
@@ -899,6 +909,7 @@
   {
    "arguments": null,
    "description": "delete inventory item",
+   "direct": null,
    "expected": "delete_inventory_item",
    "messages": [
     {
@@ -1099,6 +1110,7 @@
   {
    "arguments": null,
    "description": "adjust inventory quantity down",
+   "direct": null,
    "expected": "adjust_inventory_quantity",
    "messages": [
     {
@@ -1299,6 +1311,7 @@
   {
    "arguments": null,
    "description": "list waypoints",
+   "direct": null,
    "expected": "list_waypoints",
    "messages": [
     {
@@ -1429,6 +1442,7 @@
   {
    "arguments": null,
    "description": "waypoint distance, 'from' phrasing",
+   "direct": null,
    "expected": "waypoint_distance",
    "messages": [
     {
@@ -1559,6 +1573,7 @@
   {
    "arguments": null,
    "description": "delete waypoint",
+   "direct": null,
    "expected": "delete_waypoint",
    "messages": [
     {
@@ -1689,6 +1704,7 @@
   {
    "arguments": null,
    "description": "system health",
+   "direct": "get_system_health",
    "expected": "get_system_health",
    "messages": [
     {
@@ -1900,6 +1916,7 @@
   {
    "arguments": null,
    "description": "recall recent activity",
+   "direct": null,
    "expected": "recall_recent_activity",
    "messages": [
     {
@@ -2111,6 +2128,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'alarming' is not 'alarm '",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -2128,6 +2146,7 @@
   {
    "arguments": null,
    "description": "known accepted trade-off: 'used to' collides with 'i used'",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -2229,6 +2248,7 @@
   {
    "arguments": null,
    "description": "add waypoint",
+   "direct": null,
    "expected": "add_waypoint",
    "messages": [
     {
@@ -2359,6 +2379,7 @@
   {
    "arguments": null,
    "description": "add expedition",
+   "direct": null,
    "expected": "add_expedition",
    "messages": [
     {
@@ -2619,6 +2640,7 @@
   {
    "arguments": null,
    "description": "list expeditions",
+   "direct": "list_expeditions",
    "expected": "list_expeditions",
    "messages": [
     {
@@ -2879,6 +2901,7 @@
   {
    "arguments": null,
    "description": "add trip",
+   "direct": null,
    "expected": "add_trip",
    "messages": [
     {
@@ -3139,6 +3162,7 @@
   {
    "arguments": null,
    "description": "list trips",
+   "direct": null,
    "expected": "list_trips",
    "messages": [
     {
@@ -3482,6 +3506,7 @@
   {
    "arguments": null,
    "description": "add gear item",
+   "direct": null,
    "expected": "add_gear_item",
    "messages": [
     {
@@ -3742,6 +3767,7 @@
   {
    "arguments": null,
    "description": "add trip log entry, not a generic note",
+   "direct": null,
    "expected": "add_trip_log_entry",
    "messages": [
     {
@@ -4002,6 +4028,7 @@
   {
    "arguments": null,
    "description": "generic note still resolves to add_note, not trip log",
+   "direct": null,
    "expected": "add_note",
    "messages": [
     {
@@ -4079,6 +4106,7 @@
   {
    "arguments": null,
    "description": "delete an expedition",
+   "direct": null,
    "expected": "delete_expedition",
    "messages": [
     {
@@ -4339,6 +4367,7 @@
   {
    "arguments": null,
    "description": "delete a trip",
+   "direct": null,
    "expected": "delete_trip",
    "messages": [
     {
@@ -4599,6 +4628,7 @@
   {
    "arguments": null,
    "description": "mark gear packed",
+   "direct": null,
    "expected": "toggle_gear_packed",
    "messages": [
     {
@@ -4859,6 +4889,7 @@
   {
    "arguments": null,
    "description": "get trip summary",
+   "direct": null,
    "expected": "get_trip_summary",
    "messages": [
     {
@@ -5119,6 +5150,7 @@
   {
    "arguments": null,
    "description": "sunrise/sunset for a waypoint",
+   "direct": null,
    "expected": "get_sun_moon_info",
    "messages": [
     {
@@ -5249,6 +5281,7 @@
   {
    "arguments": null,
    "description": "moon phase for a waypoint",
+   "direct": null,
    "expected": "get_sun_moon_info",
    "messages": [
     {
@@ -5379,6 +5412,7 @@
   {
    "arguments": null,
    "description": "convert units",
+   "direct": null,
    "expected": "convert_units",
    "messages": [
     {
@@ -5457,6 +5491,7 @@
   {
    "arguments": null,
    "description": "convert units, temperature",
+   "direct": null,
    "expected": "convert_units",
    "messages": [
     {
@@ -5535,6 +5570,7 @@
   {
    "arguments": null,
    "description": "ohms law",
+   "direct": null,
    "expected": "calculate_ohms_law",
    "messages": [
     {
@@ -5712,6 +5748,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'packed' unrelated to gear",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -5729,6 +5766,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'convert' unrelated to units",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -5746,6 +5784,7 @@
   {
    "arguments": null,
    "description": "get device profile",
+   "direct": "get_device_profile",
    "expected": "get_device_profile",
    "messages": [
     {
@@ -5957,6 +5996,7 @@
   {
    "arguments": null,
    "description": "set theme",
+   "direct": null,
    "expected": "set_theme",
    "messages": [
     {
@@ -6168,6 +6208,7 @@
   {
    "arguments": null,
    "description": "collision risk: theme change phrased with 'switch to' must not hallucinate open_module",
+   "direct": null,
    "expected": "set_theme",
    "messages": [
     {
@@ -6379,6 +6420,7 @@
   {
    "arguments": null,
    "description": "set birthday",
+   "direct": null,
    "expected": "set_birthday",
    "messages": [
     {
@@ -6785,6 +6827,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'trip'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -6802,6 +6845,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'log' unrelated to a trip",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -6819,6 +6863,7 @@
   {
    "arguments": null,
    "description": "add calendar event",
+   "direct": null,
    "expected": "add_calendar_event",
    "messages": [
     {
@@ -6904,6 +6949,7 @@
   {
    "arguments": null,
    "description": "list calendar events",
+   "direct": "list_calendar_events",
    "expected": "list_calendar_events",
    "messages": [
     {
@@ -6989,6 +7035,7 @@
   {
    "arguments": null,
    "description": "delete calendar event",
+   "direct": null,
    "expected": "delete_calendar_event",
    "messages": [
     {
@@ -7074,6 +7121,7 @@
   {
    "arguments": null,
    "description": "get power status",
+   "direct": null,
    "expected": "get_power_status",
    "messages": [
     {
@@ -7297,6 +7345,7 @@
   {
    "arguments": null,
    "description": "add component",
+   "direct": null,
    "expected": "add_component",
    "messages": [
     {
@@ -7414,6 +7463,7 @@
   {
    "arguments": null,
    "description": "list components",
+   "direct": null,
    "expected": "list_components",
    "messages": [
     {
@@ -7614,6 +7664,7 @@
   {
    "arguments": null,
    "description": "delete component",
+   "direct": null,
    "expected": "delete_component",
    "messages": [
     {
@@ -7731,6 +7782,7 @@
   {
    "arguments": null,
    "description": "list connected devices",
+   "direct": "list_connected_devices",
    "expected": "list_connected_devices",
    "messages": [
     {
@@ -7778,6 +7830,7 @@
   {
    "arguments": null,
    "description": "list scripts",
+   "direct": null,
    "expected": "list_scripts",
    "messages": [
     {
@@ -7825,6 +7878,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'eventful' is not 'event '",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -7842,6 +7896,7 @@
   {
    "arguments": null,
    "description": "list profiles",
+   "direct": null,
    "expected": "list_profiles",
    "messages": [
     {
@@ -8136,6 +8191,7 @@
   {
    "arguments": null,
    "description": "collision risk: 'profile' is overloaded (user profiles vs. device_profile edition)",
+   "direct": null,
    "expected": "list_profiles",
    "messages": [
     {
@@ -8347,6 +8403,7 @@
   {
    "arguments": null,
    "description": "identify hash",
+   "direct": null,
    "expected": "identify_hash",
    "messages": [
     {
@@ -8441,6 +8498,7 @@
   {
    "arguments": null,
    "description": "check password strength",
+   "direct": null,
    "expected": "check_password_strength",
    "messages": [
     {
@@ -8535,6 +8593,7 @@
   {
    "arguments": null,
    "description": "calculate subnet",
+   "direct": null,
    "expected": "calculate_subnet",
    "messages": [
     {
@@ -8629,6 +8688,7 @@
   {
    "arguments": null,
    "description": "scan ports",
+   "direct": null,
    "expected": "scan_ports",
    "messages": [
     {
@@ -8916,6 +8976,7 @@
   {
    "arguments": null,
    "description": "collision risk: scan_ports vs. list_connected_devices (both device/network-ish)",
+   "direct": null,
    "expected": "scan_ports",
    "messages": [
     {
@@ -9203,6 +9264,7 @@
   {
    "arguments": null,
    "description": "add project",
+   "direct": null,
    "expected": "add_project",
    "messages": [
     {
@@ -9366,6 +9428,7 @@
   {
    "arguments": null,
    "description": "list projects",
+   "direct": null,
    "expected": "list_projects",
    "messages": [
     {
@@ -9612,6 +9675,7 @@
   {
    "arguments": null,
    "description": "add task, not a generic note",
+   "direct": null,
    "expected": "add_task",
    "messages": [
     {
@@ -9928,6 +9992,7 @@
   {
    "arguments": null,
    "description": "list tasks",
+   "direct": null,
    "expected": "list_tasks",
    "messages": [
     {
@@ -10174,6 +10239,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'project'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -10191,6 +10257,7 @@
   {
    "arguments": null,
    "description": "delete project",
+   "direct": null,
    "expected": "delete_project",
    "messages": [
     {
@@ -10507,6 +10574,7 @@
   {
    "arguments": null,
    "description": "delete task",
+   "direct": null,
    "expected": "delete_task",
    "messages": [
     {
@@ -10670,6 +10738,7 @@
   {
    "arguments": null,
    "description": "mark task done",
+   "direct": null,
    "expected": "mark_task_done",
    "messages": [
     {
@@ -10833,6 +10902,7 @@
   {
    "arguments": null,
    "description": "recall expedition by name",
+   "direct": null,
    "expected": "recall_expedition",
    "messages": [
     {
@@ -11093,6 +11163,7 @@
   {
    "arguments": null,
    "description": "recall most recent expedition",
+   "direct": null,
    "expected": "recall_expedition",
    "messages": [
     {
@@ -11621,6 +11692,7 @@
   {
    "arguments": null,
    "description": "collision risk: recall_expedition (one, detailed) vs. list_expeditions (bare list)",
+   "direct": null,
    "expected": "recall_expedition",
    "messages": [
     {
@@ -11881,6 +11953,7 @@
   {
    "arguments": null,
    "description": "add mission",
+   "direct": null,
    "expected": "add_mission",
    "messages": [
     {
@@ -12032,6 +12105,7 @@
   {
    "arguments": null,
    "description": "list missions",
+   "direct": null,
    "expected": "list_missions",
    "messages": [
     {
@@ -12266,6 +12340,7 @@
   {
    "arguments": null,
    "description": "current mission phrasing — 2026-07-18 real gap, trigger phrases didn't cover this",
+   "direct": "list_missions",
    "expected": "list_missions",
    "messages": [
     {
@@ -12417,6 +12492,7 @@
   {
    "arguments": null,
    "description": "add objective",
+   "direct": null,
    "expected": "add_objective",
    "messages": [
     {
@@ -12568,6 +12644,7 @@
   {
    "arguments": null,
    "description": "log mission progress",
+   "direct": null,
    "expected": "log_mission_progress",
    "messages": [
     {
@@ -12719,6 +12796,7 @@
   {
    "arguments": null,
    "description": "delete mission",
+   "direct": null,
    "expected": "delete_mission",
    "messages": [
     {
@@ -12870,6 +12948,7 @@
   {
    "arguments": null,
    "description": "complete mission",
+   "direct": null,
    "expected": "complete_mission",
    "messages": [
     {
@@ -13021,6 +13100,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'mission'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -13038,6 +13118,7 @@
   {
    "arguments": null,
    "description": "calendar: 'anything on my calendar today'",
+   "direct": null,
    "expected": "list_calendar_events",
    "messages": [
     {
@@ -13206,6 +13287,7 @@
   {
    "arguments": null,
    "description": "calendar: 'what's going on this week'",
+   "direct": null,
    "expected": "list_calendar_events",
    "messages": [
     {
@@ -13374,6 +13456,7 @@
   {
    "arguments": null,
    "description": "components: 'what parts do I have'",
+   "direct": null,
    "expected": "list_components",
    "messages": [
     {
@@ -13574,6 +13657,7 @@
   {
    "arguments": null,
    "description": "tasks: 'what am I working on'",
+   "direct": null,
    "expected": "list_tasks",
    "messages": [
     {
@@ -13737,6 +13821,7 @@
   {
    "arguments": null,
    "description": "tasks: 'what do I need to do'",
+   "direct": null,
    "expected": "list_tasks",
    "messages": [
     {
@@ -13900,6 +13985,7 @@
   {
    "arguments": null,
    "description": "alarms: 'when is my next alarm'",
+   "direct": "list_alarms",
    "expected": "list_alarms",
    "messages": [
     {
@@ -13973,6 +14059,7 @@
   {
    "arguments": null,
    "description": "power: 'am I plugged in'",
+   "direct": null,
    "expected": "get_power_status",
    "messages": [
     {
@@ -14003,6 +14090,7 @@
   {
    "arguments": null,
    "description": "power: 'power percentage' real gap — user report, no trigger phrase matched at all",
+   "direct": "get_power_status",
    "expected": "get_power_status",
    "messages": [
     {
@@ -14033,6 +14121,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'power' unrelated to battery",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -14050,6 +14139,7 @@
   {
    "arguments": null,
    "description": "expeditions: 'how many expeditions have I done'",
+   "direct": "list_expeditions",
    "expected": "list_expeditions",
    "messages": [
     {
@@ -14310,6 +14400,7 @@
   {
    "arguments": null,
    "description": "waypoints: 'what locations have I saved'",
+   "direct": null,
    "expected": "list_waypoints",
    "messages": [
     {
@@ -14440,6 +14531,7 @@
   {
    "arguments": null,
    "description": "notes: 'anything I wrote down'",
+   "direct": null,
    "expected": "list_notes",
    "messages": [
     {
@@ -14517,6 +14609,7 @@
   {
    "arguments": null,
    "description": "system health: 'is everything ok'",
+   "direct": null,
    "expected": "get_system_health",
    "messages": [
     {
@@ -14728,6 +14821,7 @@
   {
    "arguments": null,
    "description": "false-positive: 'everything ok' as small talk, not a system check",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -14939,6 +15033,7 @@
   {
    "arguments": null,
    "description": "false-positive: 'plugged in' unrelated to power",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -14969,6 +15064,7 @@
   {
    "arguments": null,
    "description": "false-positive: 'working on' unrelated to tasks/projects",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -14986,6 +15082,7 @@
   {
    "arguments": null,
    "description": "collision check: notes list vs add, both share 'wrote/write down' phrasing",
+   "direct": null,
    "expected": "list_notes",
    "messages": [
     {
@@ -15063,6 +15160,7 @@
   {
    "arguments": null,
    "description": "add material",
+   "direct": null,
    "expected": "add_material",
    "messages": [
     {
@@ -15192,6 +15290,7 @@
   {
    "arguments": null,
    "description": "list materials",
+   "direct": null,
    "expected": "list_materials",
    "messages": [
     {
@@ -15404,6 +15503,7 @@
   {
    "arguments": null,
    "description": "add product",
+   "direct": null,
    "expected": "add_product",
    "messages": [
     {
@@ -15490,6 +15590,7 @@
   {
    "arguments": null,
    "description": "list products",
+   "direct": null,
    "expected": "list_products",
    "messages": [
     {
@@ -15659,6 +15760,7 @@
   {
    "arguments": null,
    "description": "add job",
+   "direct": null,
    "expected": "add_job",
    "messages": [
     {
@@ -15770,6 +15872,7 @@
   {
    "arguments": null,
    "description": "list jobs",
+   "direct": null,
    "expected": "list_jobs",
    "messages": [
     {
@@ -15964,6 +16067,7 @@
   {
    "arguments": null,
    "description": "consume material on a job",
+   "direct": null,
    "expected": "consume_material",
    "messages": [
     {
@@ -16254,6 +16358,7 @@
   {
    "arguments": null,
    "description": "produce product on a job",
+   "direct": null,
    "expected": "produce_product",
    "messages": [
     {
@@ -16433,6 +16538,7 @@
   {
    "arguments": null,
    "description": "record a sale",
+   "direct": null,
    "expected": "record_sale",
    "messages": [
     {
@@ -16560,6 +16666,7 @@
   {
    "arguments": null,
    "description": "ledger summary",
+   "direct": null,
    "expected": "get_ledger_summary",
    "messages": [
     {
@@ -16619,6 +16726,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'job'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -16636,6 +16744,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'material'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -16653,6 +16762,7 @@
   {
    "arguments": null,
    "description": "list trail maps",
+   "direct": null,
    "expected": "list_trail_maps",
    "messages": [
     {
@@ -16823,6 +16933,7 @@
   {
    "arguments": null,
    "description": "add trail map from url",
+   "direct": null,
    "expected": "add_trail_map_from_url",
    "messages": [
     {
@@ -16910,6 +17021,7 @@
   {
    "arguments": null,
    "description": "delete a trail map",
+   "direct": null,
    "expected": "delete_trail_map",
    "messages": [
     {
@@ -16997,6 +17109,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'map'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -17014,6 +17127,7 @@
   {
    "arguments": null,
    "description": "add maintenance asset",
+   "direct": null,
    "expected": "add_maintenance_asset",
    "messages": [
     {
@@ -17300,6 +17414,7 @@
   {
    "arguments": null,
    "description": "list maintenance assets",
+   "direct": "list_maintenance_assets",
    "expected": "list_maintenance_assets",
    "messages": [
     {
@@ -17586,6 +17701,7 @@
   {
    "arguments": null,
    "description": "delete maintenance asset",
+   "direct": null,
    "expected": "delete_maintenance_asset",
    "messages": [
     {
@@ -17872,6 +17988,7 @@
   {
    "arguments": null,
    "description": "add maintenance task, collision risk vs. add_alarm's bare 'remind me'",
+   "direct": null,
    "expected": "add_maintenance_task",
    "messages": [
     {
@@ -18213,6 +18330,7 @@
   {
    "arguments": null,
    "description": "list maintenance tasks, due question",
+   "direct": null,
    "expected": "list_maintenance_tasks",
    "messages": [
     {
@@ -18499,6 +18617,7 @@
   {
    "arguments": null,
    "description": "list maintenance tasks, overdue question",
+   "direct": null,
    "expected": "list_maintenance_tasks",
    "messages": [
     {
@@ -19036,6 +19155,7 @@
   {
    "arguments": null,
    "description": "complete maintenance task",
+   "direct": null,
    "expected": "complete_maintenance_task",
    "messages": [
     {
@@ -19322,6 +19442,7 @@
   {
    "arguments": null,
    "description": "log a meter reading",
+   "direct": null,
    "expected": "log_maintenance_reading",
    "messages": [
     {
@@ -19737,6 +19858,7 @@
   {
    "arguments": null,
    "description": "formerly a known gap (bare 'Log <value> <unit>' never gated open); closed 2026-09-27 by matching the user's own record names ('Truck') and maintenance vocabulary",
+   "direct": null,
    "expected": "log_maintenance_reading",
    "messages": [
     {
@@ -20089,6 +20211,7 @@
   {
    "arguments": null,
    "description": "delete maintenance task",
+   "direct": null,
    "expected": "delete_maintenance_task",
    "messages": [
     {
@@ -20375,6 +20498,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of the word 'service' unrelated to maintenance",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -20392,6 +20516,7 @@
   {
    "arguments": null,
    "description": "collision risk: 'what tasks' must still resolve to Project Manager's list_tasks, not maintenance",
+   "direct": null,
    "expected": "list_tasks",
    "messages": [
     {
@@ -20638,6 +20763,7 @@
   {
    "arguments": null,
    "description": "log a lab reading",
+   "direct": null,
    "expected": "log_lab_reading",
    "messages": [
     {
@@ -20987,6 +21113,7 @@
   {
    "arguments": null,
    "description": "collision risk: 'log a reading' shared with log_maintenance_reading — must pick the Lab one for a series, not a task",
+   "direct": null,
    "expected": "log_lab_reading",
    "messages": [
     {
@@ -21336,6 +21463,7 @@
   {
    "arguments": null,
    "description": "collision risk: same shared phrasing, but for a real tracked Maintenance task — must pick log_maintenance_reading",
+   "direct": null,
    "expected": "log_maintenance_reading",
    "messages": [
     {
@@ -21751,6 +21879,7 @@
   {
    "arguments": null,
    "description": "list lab series",
+   "direct": "list_lab_series",
    "expected": "list_lab_series",
    "messages": [
     {
@@ -21832,6 +21961,7 @@
   {
    "arguments": null,
    "description": "list lab readings for one series",
+   "direct": null,
    "expected": "list_lab_readings",
    "messages": [
     {
@@ -21913,6 +22043,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of 'reading' unrelated to Data Logger",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -21930,6 +22061,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'series' unrelated to Data Logger (TV series)",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -21947,6 +22079,7 @@
   {
    "arguments": null,
    "description": "add a bill",
+   "direct": null,
    "expected": "add_bill",
    "messages": [
     {
@@ -22216,6 +22349,7 @@
   {
    "arguments": null,
    "description": "collision risk: recurring bill vs. recurring maintenance task — must pick add_bill for a dollar amount",
+   "direct": null,
    "expected": "add_bill",
    "messages": [
     {
@@ -22678,6 +22812,7 @@
   {
    "arguments": null,
    "description": "collision risk: same shared 'recurring thing due' shape, but for real asset upkeep — must pick add_maintenance_task",
+   "direct": null,
    "expected": "add_maintenance_task",
    "messages": [
     {
@@ -23019,6 +23154,7 @@
   {
    "arguments": null,
    "description": "list bills",
+   "direct": null,
    "expected": "list_bills",
    "messages": [
     {
@@ -23371,6 +23507,7 @@
   {
    "arguments": null,
    "description": "bill overdue question",
+   "direct": null,
    "expected": "list_bills",
    "messages": [
     {
@@ -23908,6 +24045,7 @@
   {
    "arguments": null,
    "description": "mark a bill paid",
+   "direct": null,
    "expected": "mark_bill_paid",
    "messages": [
     {
@@ -24177,6 +24315,7 @@
   {
    "arguments": null,
    "description": "record income",
+   "direct": null,
    "expected": "add_income",
    "messages": [
     {
@@ -24446,6 +24585,7 @@
   {
    "arguments": null,
    "description": "record rental income",
+   "direct": null,
    "expected": "add_income",
    "messages": [
     {
@@ -24715,6 +24855,7 @@
   {
    "arguments": null,
    "description": "record an expense",
+   "direct": null,
    "expected": "add_expense",
    "messages": [
     {
@@ -24984,6 +25125,7 @@
   {
    "arguments": null,
    "description": "budget summary",
+   "direct": null,
    "expected": "get_budget_summary",
    "messages": [
     {
@@ -25253,6 +25395,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of 'bill' unrelated to Budget",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -25522,6 +25665,7 @@
   {
    "arguments": null,
    "description": "collision risk: recurring EXPECTED income vs. add_bill (an obligation) — must pick add_income_source",
+   "direct": null,
    "expected": "add_income_source",
    "messages": [
     {
@@ -25791,6 +25935,7 @@
   {
    "arguments": null,
    "description": "collision risk: recurring expected income vs. a one-off add_income — must pick add_income_source",
+   "direct": null,
    "expected": "add_income_source",
    "messages": [
     {
@@ -26328,6 +26473,7 @@
   {
    "arguments": null,
    "description": "collision risk: income ALREADY received right now vs. add_income_source — must pick add_income",
+   "direct": null,
    "expected": "add_income",
    "messages": [
     {
@@ -26597,6 +26743,7 @@
   {
    "arguments": null,
    "description": "mark income source received",
+   "direct": null,
    "expected": "mark_income_received",
    "messages": [
     {
@@ -26866,6 +27013,7 @@
   {
    "arguments": null,
    "description": "financial check-in",
+   "direct": null,
    "expected": "get_financial_checkin",
    "messages": [
     {
@@ -27135,6 +27283,7 @@
   {
    "arguments": null,
    "description": "financial check-in phrasing 2",
+   "direct": null,
    "expected": "get_financial_checkin",
    "messages": [
     {
@@ -27404,6 +27553,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: 'paycheck' mentioned without any add/track/received intent",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -27421,6 +27571,7 @@
   {
    "arguments": null,
    "description": "add a property",
+   "direct": null,
    "expected": "add_property",
    "messages": [
     {
@@ -27529,6 +27680,7 @@
   {
    "arguments": null,
    "description": "list properties",
+   "direct": null,
    "expected": "list_properties",
    "messages": [
     {
@@ -27720,6 +27872,7 @@
   {
    "arguments": null,
    "description": "known accepted trade-off: 'rental income' + a named property still sometimes resolves to plain add_income instead of record_rental_income (see that action's own registration comment — three description phrasings tried, none fully fixed this direction, non-destructive either way)",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -27989,6 +28142,7 @@
   {
    "arguments": null,
    "description": "collision risk: same shared 'rental income' phrasing, but no specific property named — must pick plain add_income",
+   "direct": null,
    "expected": "add_income",
    "messages": [
     {
@@ -28258,6 +28412,7 @@
   {
    "arguments": null,
    "description": "property summary",
+   "direct": null,
    "expected": "get_property_summary",
    "messages": [
     {
@@ -28366,6 +28521,7 @@
   {
    "arguments": null,
    "description": "false-positive sanity: ordinary use of 'property' unrelated to Real Estate",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -28383,6 +28539,7 @@
   {
    "arguments": null,
    "description": "teaching request must not call a tool",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -28400,6 +28557,7 @@
   {
    "arguments": null,
    "description": "collision risk: an explicit 'teach me how to X' must not execute X, even though its own trigger keyword ('add a mission') is present",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -28420,6 +28578,7 @@
     "value": 120
    },
    "description": "reading on an asset by nickname",
+   "direct": null,
    "expected": "log_maintenance_reading",
    "messages": [
     {
@@ -28708,6 +28867,7 @@
     "asset_name": "mower"
    },
    "description": "completion in casual words",
+   "direct": null,
    "expected": "complete_maintenance_task",
    "messages": [
     {
@@ -28996,6 +29156,7 @@
     "asset_name": "tomato"
    },
    "description": "completion for a plant",
+   "direct": null,
    "expected": "complete_maintenance_task",
    "messages": [
     {
@@ -29285,6 +29446,7 @@
     "manufacturer": "John Deere"
    },
    "description": "asset details",
+   "direct": null,
    "expected": "update_maintenance_asset",
    "messages": [
     {
@@ -29573,6 +29735,7 @@
     "asset_name": "mower"
    },
    "description": "what MIA knows about an asset",
+   "direct": null,
    "expected": "get_maintenance_asset",
    "messages": [
     {
@@ -29861,6 +30024,7 @@
     "asset_name": "pepper"
    },
    "description": "observation note on a plant",
+   "direct": null,
    "expected": "add_asset_note",
    "messages": [
     {
@@ -30149,6 +30313,7 @@
     "name": "lettuce"
    },
    "description": "new greenhouse plant",
+   "direct": null,
    "expected": "add_maintenance_asset",
    "messages": [
     {
@@ -30437,6 +30602,7 @@
     "interval_days": 3
    },
    "description": "plant care schedule",
+   "direct": null,
    "expected": "add_maintenance_task",
    "messages": [
     {
@@ -30778,6 +30944,7 @@
   {
    "arguments": null,
    "description": "greenhouse status",
+   "direct": null,
    "expected": "list_maintenance_tasks",
    "messages": [
     {
@@ -31318,6 +31485,7 @@
     "interest_rate": 27.49
    },
    "description": "new debt with rate",
+   "direct": null,
    "expected": "add_debt",
    "messages": [
     {
@@ -31479,6 +31647,7 @@
     "debt_name": "chase"
    },
    "description": "debt payment",
+   "direct": null,
    "expected": "record_debt_payment",
    "messages": [
     {
@@ -31637,6 +31806,7 @@
   {
    "arguments": null,
    "description": "payoff advice",
+   "direct": null,
    "expected": "get_debt_payoff_plan",
    "messages": [
     {
@@ -31795,6 +31965,7 @@
   {
    "arguments": null,
    "description": "total debt",
+   "direct": null,
    "expected": "list_debts",
    "messages": [
     {
@@ -31955,6 +32126,7 @@
     "monthly_amount": 600
    },
    "description": "budget target",
+   "direct": null,
    "expected": "set_budget_target",
    "messages": [
     {
@@ -32226,6 +32398,7 @@
     "name": "salsa"
    },
    "description": "new recipe",
+   "direct": null,
    "expected": "add_recipe",
    "messages": [
     {
@@ -32338,6 +32511,7 @@
   {
    "arguments": null,
    "description": "what to cook",
+   "direct": null,
    "expected": "suggest_recipes",
    "messages": [
     {
@@ -32452,6 +32626,7 @@
     "recipe_name": "chili"
    },
    "description": "meal log by nickname",
+   "direct": null,
    "expected": "log_meal",
    "messages": [
     {
@@ -32566,6 +32741,7 @@
     "items": "coffee"
    },
    "description": "grocery add, multiple items",
+   "direct": null,
    "expected": "add_grocery_item",
    "messages": [
     {
@@ -32732,6 +32908,7 @@
     "items": "eggs"
    },
    "description": "grocery check-off",
+   "direct": null,
    "expected": "check_off_grocery_item",
    "messages": [
     {
@@ -33052,6 +33229,7 @@
     "quantity": 0
    },
    "description": "pantry out of",
+   "direct": null,
    "expected": "update_pantry_item",
    "messages": [
     {
@@ -33216,6 +33394,7 @@
   {
    "arguments": null,
    "description": "recipe shopping",
+   "direct": null,
    "expected": "add_recipe_ingredients_to_grocery_list",
    "messages": [
     {
@@ -33476,6 +33655,7 @@
     "delta": -2
    },
    "description": "parts used",
+   "direct": null,
    "expected": "adjust_component_quantity",
    "messages": [
     {
@@ -33679,6 +33859,7 @@
     "name": "plywood"
    },
    "description": "materials bought",
+   "direct": null,
    "expected": "adjust_material_quantity",
    "messages": [
     {
@@ -33963,6 +34144,7 @@
     "unit_cost": 42
    },
    "description": "material price",
+   "direct": null,
    "expected": "update_material",
    "messages": [
     {
@@ -34094,6 +34276,7 @@
     "delta": 5
    },
    "description": "products made",
+   "direct": null,
    "expected": "adjust_product_stock",
    "messages": [
     {
@@ -34180,6 +34363,7 @@
   {
    "arguments": null,
    "description": "how-to must not execute",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -34197,6 +34381,7 @@
   {
    "arguments": null,
    "description": "how-to must not execute (record name present)",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -34214,6 +34399,7 @@
   {
    "arguments": null,
    "description": "passing mention of an asset: no write",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -34500,6 +34686,7 @@
   {
    "arguments": null,
    "description": "passing mention of an asset: no write",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -34788,6 +34975,7 @@
     "exercises": "squat"
    },
    "description": "log a workout",
+   "direct": null,
    "expected": "log_workout",
    "messages": [
     {
@@ -34873,6 +35061,7 @@
     "exercise": "squat"
    },
    "description": "personal record",
+   "direct": null,
    "expected": "get_personal_record",
    "messages": [
     {
@@ -34959,6 +35148,7 @@
     "name": "sarah"
    },
    "description": "remember a gift idea",
+   "direct": null,
    "expected": "update_person",
    "messages": [
     {
@@ -35172,6 +35362,7 @@
   {
    "arguments": null,
    "description": "someone's birthday",
+   "direct": null,
    "expected": "safe",
    "messages": [
     {
@@ -35578,6 +35769,7 @@
   {
    "arguments": null,
    "description": "upcoming birthdays",
+   "direct": null,
    "expected": "list_upcoming_birthdays",
    "messages": [
     {
@@ -35794,6 +35986,7 @@
     "name": "biscuit"
    },
    "description": "pet vet visit",
+   "direct": null,
    "expected": "update_pet",
    "messages": [
     {
@@ -36009,6 +36202,7 @@
     "routine": "laundry"
    },
    "description": "household routine",
+   "direct": null,
    "expected": "log_household_routine",
    "messages": [
     {
@@ -36089,6 +36283,7 @@
   {
    "arguments": null,
    "description": "chores status",
+   "direct": null,
    "expected": "list_household_routines",
    "messages": [
     {
@@ -36171,6 +36366,7 @@
     "lesson": "circuit breaker"
    },
    "description": "finish a lesson",
+   "direct": null,
    "expected": "complete_lesson",
    "messages": [
     {
@@ -36315,6 +36511,7 @@
   {
    "arguments": null,
    "description": "learning progress",
+   "direct": null,
    "expected": "get_learning_progress",
    "messages": [
     {
@@ -36459,6 +36656,7 @@
   {
    "arguments": null,
    "description": "small talk: 'of course'",
+   "direct": null,
    "expected": null,
    "messages": [
     {
@@ -36479,6 +36677,7 @@
     "build": "greenhouse"
    },
    "description": "build cost: lumber",
+   "direct": null,
    "expected": "log_build_expense",
    "messages": [
     {
@@ -37283,6 +37482,7 @@
     "tool": "chainsaw"
    },
    "description": "tool purchase",
+   "direct": null,
    "expected": "record_tool_purchase",
    "messages": [
     {
@@ -37454,6 +37654,7 @@
   {
    "arguments": null,
    "description": "tool cost question",
+   "direct": null,
    "expected": "get_tool_costs",
    "messages": [
     {
@@ -37627,6 +37828,7 @@
     "hours": 2
    },
    "description": "business use: log a job",
+   "direct": null,
    "expected": "log_business_use",
    "messages": [
     {
@@ -37979,6 +38181,7 @@
   {
    "arguments": null,
    "description": "business use: write-off question",
+   "direct": null,
    "expected": "get_business_use",
    "messages": [
     {
@@ -38331,6 +38534,7 @@
   {
    "arguments": null,
    "description": "speaking up: what was held back",
+   "direct": null,
    "expected": "get_held_back_messages",
    "messages": [
     {
@@ -38434,6 +38638,7 @@
     "count": 3
    },
    "description": "speaking up: set the limit",
+   "direct": null,
    "expected": "set_message_limit",
    "messages": [
     {
@@ -38535,6 +38740,7 @@
   {
    "arguments": null,
    "description": "textbooks: list",
+   "direct": null,
    "expected": "list_textbooks",
    "messages": [
     {
@@ -38690,6 +38896,7 @@
     "query": "gfci"
    },
    "description": "textbooks: lookup",
+   "direct": null,
    "expected": "search_textbook",
    "messages": [
     {
@@ -38760,6 +38967,7 @@
   {
    "arguments": null,
    "description": "inbox: what's waiting",
+   "direct": "list_inbox",
    "expected": "list_inbox",
    "messages": [
     {
@@ -38838,6 +39046,7 @@
     "for": "greenhouse"
    },
    "description": "inbox: file with a correction",
+   "direct": null,
    "expected": "file_inbox_item",
    "messages": [
     {
@@ -39182,6 +39391,7 @@
   {
    "arguments": null,
    "description": "offline: remind me later",
+   "direct": null,
    "expected": "remind_when_online",
    "messages": [
     {
@@ -39448,6 +39658,7 @@
   {
    "arguments": null,
    "description": "business tags: what's waiting",
+   "direct": "list_untagged_charges",
    "expected": "list_untagged_charges",
    "messages": [
     {
@@ -39504,6 +39715,7 @@
     "business": "lawn"
    },
    "description": "business tags: sort one",
+   "direct": null,
    "expected": "tag_charge",
    "messages": [
     {
@@ -39624,6 +39836,7 @@
   {
    "arguments": null,
    "description": "small talk: a dog",
+   "direct": null,
    "expected": null,
    "messages": [
     {

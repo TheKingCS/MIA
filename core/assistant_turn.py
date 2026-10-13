@@ -50,6 +50,20 @@ def add_message(conversation: Conversation, role: str, content: str) -> None:
     )
 
 
+def _direct_lookup(context, prompt: str) -> Optional[str]:
+    """A question that clearly asks for one lookup ("When is my next
+    alarm?") is answered by running it, no model (2026-10-13,
+    core/assistant_actions.direct_lookup). How-to and teach-me questions
+    still go to the help docs."""
+    from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
+
+    registry = getattr(context, "assistant_actions", None)
+    if registry is None or looks_like_how_to_question(prompt) or looks_like_teaching_request(prompt):
+        return None
+    action = registry.direct_lookup(prompt, context)
+    return registry.execute(context, action.name, {}) if action is not None else None
+
+
 def _personal(conversation) -> bool:
     from core.conversation_modes import PERSONAL_MODES
 
@@ -74,6 +88,8 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
         from core.quick_commands import handle
 
         quick = handle(context, prompt)
+        if quick is None:
+            quick = _direct_lookup(context, prompt)
         if quick is not None:
             add_message(conversation, "assistant", quick)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [quick])

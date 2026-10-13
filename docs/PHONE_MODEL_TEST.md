@@ -106,3 +106,17 @@ Trying a 3B model then closed MIA twice. What that showed, and what changed:
   itself (it used to be, every start). The screen also says why Android
   last closed MIA, read from Android itself, since a phone-only person
   can't see crash logs.
+
+### On Zac's Galaxy A54 (2026-10-13, build 20: fast cores pinned, smaller requests)
+
+| Model | Right tool | Typical answer | Reading | Writing | Loading |
+|---|---|---|---|---|---|
+| Qwen 2.5 · 1.5B | 7 of 10 | **28.0 s** (was 62.5) | 35.9 tokens/s | **9 tokens/s** (was 3.3) | 7.3 s |
+
+Zac's call (2026-10-13): **the phone uses Qwen 2.5 · 1.5B**; a 3B was too
+slow and failed every case it reached. Reading is the chip's own speed;
+the time saved came from sending half as much (the general tools no longer
+ride along). CI's check of the smaller requests: 1.5B 60 of 80 (75%, was
+81%). Next: questions that clearly match one lookup are answered by MIA's
+code directly, no model (instant, and the 1.5B's most common miss).
+
