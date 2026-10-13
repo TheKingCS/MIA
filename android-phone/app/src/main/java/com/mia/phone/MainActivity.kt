@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
@@ -83,6 +84,9 @@ class MainActivity : Activity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = WebViewClient()
+            // Without this, the web view silently answers "no" to any
+            // confirm/alert dialog a screen asks (the Model test's Delete did).
+            webChromeClient = WebChromeClient()
             // Signed in: straight to Home. Not yet: the screen asks to make an
             // account (first start) or to sign in (after logging out).
             loadUrl("http://127.0.0.1:$PORT/web/index.html" + if (token.isNotEmpty()) "#token=$token" else "")

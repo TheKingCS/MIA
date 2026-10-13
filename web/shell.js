@@ -370,7 +370,7 @@
     if (talkHere) mountTalk();
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, talk: toggleTalk };
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, confirm: confirmBox, talk: toggleTalk };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

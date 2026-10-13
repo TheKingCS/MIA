@@ -62,8 +62,11 @@
     if (m.downloaded && !running) buttons.push(el("button", { type: "button", class: "btn btn-green", onclick: () => step("start", { model: m.id }) }, "Start"));
     if (running) buttons.push(el("button", { type: "button", class: "btn btn-ghost", onclick: () => step("stop") }, "Stop"));
     if ((m.downloaded || m.partial_mb) && !downloading) {
-      buttons.push(el("button", { type: "button", class: "btn btn-ghost", onclick: () => {
-        if (confirm("Delete " + m.name + " from this phone?")) step("delete", { model: m.id });
+      buttons.push(el("button", { type: "button", class: "btn btn-ghost", onclick: async () => {
+        // MIA's own dialog: the phone app's web view doesn't show the browser's confirm().
+        if (await MIAShell.confirm("Delete " + m.name + " from this phone? It frees about " + gb(m.size_mb) + ".")) {
+          step("delete", { model: m.id });
+        }
       } }, "Delete"));
     }
     let state = null;

@@ -153,16 +153,16 @@ def test_matching_actions_returns_empty_when_nothing_matches():
     assert registry.matching_actions("What can you tell me about Honda Civics?") == []
 
 
-def test_matching_actions_attaches_only_matched_domain_plus_always_on():
+def test_matching_actions_attaches_only_the_matched_domain():
     registry = AssistantActionRegistry()
     _register_domain_fixture(registry)
 
     matched = {a.name for a in registry.matching_actions("Set an alarm for 7am")}
-    # Both alarm-domain actions (list_alarms' own trigger didn't match,
-    # but it shares add_alarm's domain) plus the always-on system
-    # domain — never the unrelated security-domain calculate_subnet.
-    assert matched == {"add_alarm", "list_alarms", "open_module", "get_system_health"}
-    assert "calculate_subnet" not in matched
+    # Both alarm-domain actions (list_alarms' own trigger didn't match, but
+    # it shares add_alarm's domain); not the general system tools (2026-10-13:
+    # they were two-thirds of what the phone's small model had to read) and
+    # never the unrelated security-domain calculate_subnet.
+    assert matched == {"add_alarm", "list_alarms"}
 
 
 def test_matching_actions_never_includes_an_unrelated_domain():
@@ -175,13 +175,13 @@ def test_matching_actions_never_includes_an_unrelated_domain():
     assert "calculate_subnet" in matched
 
 
-def test_matching_actions_always_includes_the_system_domain_when_any_domain_matches():
+def test_the_system_tools_come_together_when_the_words_point_at_one():
     registry = AssistantActionRegistry()
     _register_domain_fixture(registry)
 
-    matched = {a.name for a in registry.matching_actions("List my alarms")}
-    assert "open_module" in matched
-    assert "get_system_health" in matched
+    assert "open_module" not in {a.name for a in registry.matching_actions("List my alarms")}
+    matched = {a.name for a in registry.matching_actions("Switch to the alarms app")}
+    assert {"open_module", "get_system_health"} <= matched  # the whole system group, as one
 
 
 def test_matching_actions_unions_multiple_matched_domains():

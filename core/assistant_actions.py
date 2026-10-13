@@ -247,8 +247,14 @@ class AssistantActionRegistry:
         if not matched_domains:
             return []
 
-        matched_domains.add(_ALWAYS_ON_DOMAIN)
-        # A child is never offered grown-up tools (core/child_accounts.py).
+        # 2026-10-13 (the phone's model, docs/PHONE_MODEL_TEST.md): the
+        # general "system" tools used to ride along on every request: 13
+        # tools, two-thirds of what a small model has to read, needed by
+        # 11 of 187 golden cases. They come only when the words point at
+        # one of them (its own trigger phrases or keywords matched the
+        # "system" domain above), and then all together, so the old
+        # collision pairs (open_module/set_theme, ...) still travel as one.
+        # A child is never offered grown-up tools (core/child_accounts.py). is never offered grown-up tools (core/child_accounts.py).
         from core.child_accounts import tool_allowed
 
         return [action for action in self._actions.values()

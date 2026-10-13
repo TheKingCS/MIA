@@ -619,6 +619,12 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     # log_maintenance_reading comment in core/application.py). The user's
     # own asset names (entity matching below) cover "the mower", "the
     # tomatoes", etc.
+    # The general "system" tools (accounts, theme, birthday, health) come only
+    # when the words point at them (core/assistant_actions.py, 2026-10-13).
+    registry.register_domain_keywords("system", (
+        "profile", "profiles", "account", "accounts", "theme", "dark mode", "light mode", "birthday",
+        "battery", "system health", "wifi", "wi-fi", "internet", "connectivity", "offline",
+    ))
     registry.register_domain_keywords("maintenance", (
         "maintenance", "oil change", "changed the oil", "mileage", "odometer", "miles on", "hours on",
         "engine hours", "serviced", "tune-up", "greenhouse", "watered", "fertilized", "pruned",
