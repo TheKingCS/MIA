@@ -114,3 +114,31 @@ def test_a_can_is_about_a_cup_and_a_half():
     beans = food_table.Food("3", "Beans, black, canned", "Legumes", {"kcal": 91.0}, {"cup": 172.0})
     assert food_table.grams(beans, 2, "can") == 2 * 1.5 * 172
     assert food_table.grams(food_table.Food("4", "Tomatoes", "Veg", {}, {}), 1, "cans") == food_table.CAN_G
+
+
+@pytest.mark.skipif(not food_table.available(), reason="no food table")
+def test_rotel_vinegar_and_seasonings_to_taste():
+    """Zac, 2026-10-14: no nutrition for Rotel or Red Wine Vinegar."""
+    from core.kitchen_actions import parse_ingredients
+
+    for name in ("Rotel", "Ro-Tel", "diced tomatoes and green chiles"):
+        assert food_table.find(name).name == "Tomatoes, red, ripe, canned, with green chilies", name
+    assert "jalapeno" in food_table.find("jalapeños").name.lower()
+    assert food_table.find("green chiles").name.startswith("Peppers, hot chili")
+    assert food_table.find("chili flakes").name == "Spices, pepper, red or cayenne"
+    assert food_table.find("salt and pepper to taste").name == "Salt, table"
+    lines = parse_ingredients("1 (10 oz) can Rotel\nRed Wine Vinegar\n1 splash red wine vinegar\nsalt and pepper to taste\nolive oil")
+    assert lines[0] == {"name": "Rotel", "quantity": 10.0, "unit": "oz", "notes": ""}
+    result = food_table.recipe_nutrition(lines, 4)
+    assert result["to_taste"] == ["Red Wine Vinegar", "red wine vinegar", "salt and pepper to taste"]
+    assert result["no_amount"] == ["olive oil"] and result["not_found"] == [] and not result["complete"]
+    assert food_table.recipe_nutrition(lines[:4], 4)["complete"]
+
+
+@pytest.mark.skipif(not food_table.available(), reason="no food table")
+def test_a_can_size_saved_in_the_name_still_counts():
+    from core.kitchen_manager import ingredient_key
+
+    result = food_table.recipe_nutrition([{"name": "(10 oz) can Rotel", "quantity": 1, "unit": ""}], 1)
+    assert result["complete"] and result["matched"][0]["grams"] == 284
+    assert ingredient_key("(10 oz) can Rotel") == ingredient_key("Rotel")

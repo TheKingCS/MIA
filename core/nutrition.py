@@ -33,7 +33,8 @@ def recipe_facts(recipe) -> dict:
     has_typed = any(v is not None for v in typed.values())
     has_computed = usable and computed["complete"] and any(typed.get(n) is None for n in TYPED)
     source = "mixed" if has_typed and has_computed else "typed" if has_typed else "computed" if has_computed else "unknown"
-    return {**facts, "source": source, "missing": computed["missing"], "matched": computed["matched"]}
+    return {**facts, "source": source, "missing": computed["missing"], "matched": computed["matched"],
+            "not_found": computed["not_found"], "no_amount": computed["no_amount"], "to_taste": computed["to_taste"]}
 
 
 def scaled(facts: dict, servings: float) -> dict:

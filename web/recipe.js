@@ -114,7 +114,10 @@
       ["Fiber", n.fiber_g, " g"], ["Sugar", n.sugar_g, " g"], ["Sodium", n.sodium_mg, " mg"]];
     return section("Nutrition, per serving", null,
       el("div", {}, rows.map(([label, v, unit]) => el("div", { class: "acct-fact" }, el("span", { class: "dim" }, label), el("strong", {}, num(v, unit))))),
-      el("p", { class: "dim" }, where + (n.not_found.length ? " Not in the food table: " + n.not_found.join(", ") + " (type the numbers into the recipe to fill the gaps)." : "")));
+      el("p", { class: "dim" }, where),
+      n.no_amount.length ? el("p", { class: "dim" }, "Add an amount for " + n.no_amount.join(", ") + " (like “1 tbsp”) and MIA can count it.") : null,
+      n.not_found.length ? el("p", { class: "dim" }, "Not in MIA's food table: " + n.not_found.join(", ") + ". Try a plainer name, or type the numbers into the recipe.") : null,
+      n.to_taste.length ? el("p", { class: "dim" }, "Counted as a dash (next to nothing): " + n.to_taste.join(", ") + ".") : null);
   }
 
   function ingredientList() {

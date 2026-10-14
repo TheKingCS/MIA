@@ -303,15 +303,19 @@ def days_until_expiration(item: PantryItem, today: date) -> Optional[int]:
     return (expiration - today).days
 
 
-_PREP_WORDS = {"fresh", "chopped", "diced", "minced", "sliced", "large", "small", "medium", "boneless", "skinless"}
+_PREP_WORDS = {"fresh", "chopped", "diced", "minced", "sliced", "large", "small", "medium", "boneless", "skinless",
+               "can", "jar", "package", "bag", "box", "bottle", "drained", "rinsed"}
 
 
 def ingredient_key(name: str) -> str:
     """Pure logic. A name for matching ingredients to the pantry and the
     grocery list: lowercase, singular, without how it's cut or its size
     ("Diced Onions" and "onion" match; 2026-10-14, Zac's add-to-list)."""
+    import re
+
     from core.food_table import words_of
 
+    name = re.sub(r"\([^)]*\)", " ", name or "")  # "(10 oz) can Rotel" is Rotel
     return " ".join(w for w in words_of(name) if w not in _PREP_WORDS)
 
 

@@ -62,8 +62,22 @@ GROCERY = Record("grocery", "grocery item", "item_id", "get_grocery_item", "add_
 # ------------------------------------------------------------------ ingredients, one per line
 
 _INGREDIENTS = Field("ingredients", "Ingredients (one per line, e.g. \"2 cups rice\")", "textarea")
-_UNITS = r"cups?|c|tbsp|tablespoons?|tsp|teaspoons?|g|grams?|kg|lbs?|pounds?|oz|ounces?|ml|l|liters?|cans?|cloves?|pcs?|pieces?|slices?|scoops?|pinch(?:es)?|bunch(?:es)?"
+_UNITS = r"cups?|c|tbsp|tablespoons?|tsp|teaspoons?|g|grams?|kg|lbs?|pounds?|oz|ounces?|ml|l|liters?|cans?|cloves?|pcs?|pieces?|slices?|scoops?|pinch(?:es)?|dash(?:es)?|splash(?:es)?|bunch(?:es)?"
 _LINE = re.compile(rf"^\s*(\d+\s+\d+/\d+|\d+(?:\.\d+)?(?:/\d+)?)?\s*({_UNITS})?\.?\s+(.+?)\s*$", re.IGNORECASE)
+
+
+_SIZED = re.compile(r"^\s*(\d+(?:\.\d+)?(?:/\d+)?)?\s*\(\s*(\d+(?:\.\d+)?)\s*-?\s*(oz|ounces?|g|grams?|lbs?|ml)\.?\s*\)\s*"
+                    r"(?:cans?|jars?|packages?|pkgs?|bags?|boxes?|bottles?|cartons?|containers?)?\.?\s+(.+?)\s*$", re.IGNORECASE)
+
+
+def _amount(raw: Optional[str]) -> float:
+    try:
+        if raw and "/" in raw:
+            top, bottom = raw.split("/")
+            return float(top) / float(bottom)
+        return float(raw) if raw else 0.0
+    except (ValueError, ZeroDivisionError):
+        return 0.0
 
 
 def parse_ingredients(text: str) -> list[dict]:
@@ -72,6 +86,12 @@ def parse_ingredients(text: str) -> list[dict]:
     for line in (text or "").splitlines():
         line = line.strip(" -•\t")
         if not line:
+            continue
+        sized = _SIZED.match(line)  # "1 (10 oz) can Rotel": one can of 10 oz is 10 oz
+        if sized:
+            count = _amount(sized.group(1)) or 1.0
+            found.append({"name": sized.group(4).strip(), "quantity": round(count * float(sized.group(2)), 3),
+                          "unit": sized.group(3).lower(), "notes": ""})
             continue
         match = _LINE.match(" " + line) if line[0].isdigit() else None
         quantity, unit, name = 0.0, "", line

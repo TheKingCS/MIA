@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import csv
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -155,6 +156,27 @@ COMMON = {  # what a home cook means -> the words its USDA entry has ("!word": n
  "tomato sauce": "tomato product canned sauce",
  "crushed tomato": "tomato crushed canned",
  "tomato paste": "tomato product canned paste",
+ "chili": "pepper hot chili green raw",  # as an ingredient: the pepper (the dish is "chili con carne")
+ "chile": "pepper hot chili green raw",
+ "green chile": "pepper hot chili green raw",
+ "green chili": "pepper hot chili green raw",
+ "red chile": "pepper hot chili red raw",
+ "red chili": "pepper hot chili red raw",
+ "chili pepper": "pepper hot chili red raw",
+ "chile pepper": "pepper hot chili red raw",
+ "jalapeno": "pepper jalapeno raw",
+ "chili flake": "spice pepper red cayenne",
+ "red chili flake": "spice pepper red cayenne",
+ "red pepper flake": "spice pepper red cayenne",
+ "crushed red pepper": "spice pepper red cayenne",
+ "cayenne": "spice pepper red cayenne",
+ "rotel": "tomato canned green chili",  # the canned tomatoes with green chiles most US recipes name
+ "ro tel": "tomato canned green chili",
+ "tomato green chile": "tomato canned green chili",
+ "tomato green chili": "tomato canned green chili",
+ "tomato with green chile": "tomato canned green chili",
+ "tomato with green chili": "tomato canned green chili",
+ "salt pepper": "salt table",  # "salt and pepper to taste": the salt; neither adds calories
  "chicken broth": "soup stock chicken home prepared",
  "chicken stock": "soup stock chicken home prepared",
  "salt": "salt table",
@@ -196,7 +218,12 @@ _cache: Optional[list[Food]] = None
 _common: dict = {}
 
 
+_SINGULAR = {"chilies": "chili", "chillies": "chili", "chilis": "chili", "chiles": "chile", "cookies": "cookie", "pies": "pie"}
+
+
 def _singular(word: str) -> str:
+    if word in _SINGULAR:
+        return _SINGULAR[word]
     if len(word) > 3 and word.endswith("ies"):
         return word[:-3] + "y"
     if len(word) > 3 and word.endswith("oes"):
@@ -207,8 +234,9 @@ def _singular(word: str) -> str:
 
 
 def words_of(text: str) -> list[str]:
-    """Pure logic. Lowercase singular words."""
-    return [_singular(w) for w in re.findall(r"[a-z]+", text.lower())]
+    """Pure logic. Lowercase singular words, accents dropped ("jalapeños" is "jalapeno")."""
+    plain = unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode()
+    return [_singular(w) for w in re.findall(r"[a-z]+", plain)]
 
 
 def load(path: Optional[Path] = None) -> list[Food]:
@@ -327,6 +355,8 @@ def grams(food: Food, quantity: float, unit: str) -> Optional[float]:
         quantity = 1.0
     if unit in _GRAMS:
         return quantity * _GRAMS[unit]
+    if unit in ("dash", "pinch") and unit not in food.portions:
+        return quantity * {"dash": 0.6, "pinch": 0.3}[unit]  # 1/8 and 1/16 teaspoon
     if unit == "scoop" and "scoop" not in food.portions:
         return quantity * SCOOP_G
     if unit == "can" and not any(name.split()[0] == "can" for name in food.portions):
@@ -359,19 +389,38 @@ def recipe_nutrition(ingredients: list, servings: int, foods: Optional[list[Food
     what didn't. `complete` is False when anything couldn't be counted."""
     foods = load() if foods is None else foods
     total = {n: 0.0 for n in NUTRIENTS}
-    matched, missing = [], []
+    matched, missing, not_found, no_amount, to_taste = [], [], [], [], []
     for ingredient in ingredients or []:
         name = str(ingredient.get("name", "")).strip()
         if not name:
             continue
         food = by_id(ingredient["fdc_id"], foods) if ingredient.get("fdc_id") else find(name, foods)
-        weight = grams(food, float(ingredient.get("quantity") or 0), ingredient.get("unit", "")) if food else None
+        quantity, unit = float(ingredient.get("quantity") or 0), str(ingredient.get("unit") or "").strip()
+        sized = _SIZED_NAME.match(name) if not unit else None
+        if sized:  # saved before "1 (10 oz) can Rotel" was read as 10 oz: the size is still in the name
+            quantity, unit, name = (quantity or 1) * float(sized.group(1)), sized.group(2).lower(), sized.group(3).strip()
+        weight = grams(food, quantity, unit) if food else None
+        if food is not None and _seasoning(food) and (weight is None or (not quantity and not unit)):
+            to_taste.append(name)  # "red wine vinegar", "salt to taste": a dash, next to nothing (2026-10-14)
+            matched.append({"name": name, "food": food.name, "fdc_id": food.fdc_id, "grams": 0})
+            continue
         if food is None or weight is None:
             missing.append(name)
+            (no_amount if food is not None else not_found).append(name)
             continue
         for n, v in nutrients(food, weight).items():
             total[n] += v
         matched.append({"name": name, "food": food.name, "fdc_id": food.fdc_id, "grams": round(weight)})
     servings = max(1, int(servings or 1))
     per_serving = {n: round(v / servings, 1) for n, v in total.items()}
-    return {"per_serving": per_serving, "matched": matched, "missing": missing, "complete": not missing and bool(matched)}
+    return {"per_serving": per_serving, "matched": matched, "missing": missing, "not_found": not_found, "no_amount": no_amount,
+            "to_taste": to_taste, "complete": not missing and bool(matched)}
+
+
+_SIZED_NAME = re.compile(r"^\(\s*(\d+(?:\.\d+)?)\s*-?\s*(oz|ounces?|g|grams?|lbs?|ml)\.?\s*\)\s*"
+                         r"(?:cans?|jars?|packages?|pkgs?|bags?|boxes?|bottles?|cartons?|containers?)?\.?\s+(.+)$", re.IGNORECASE)
+
+
+def _seasoning(food: Food) -> bool:
+    """Pure logic. Spices, herbs, vinegar, salt, water: with no amount it's a dash."""
+    return food.category == "Spices and Herbs" or food.per_100g.get("kcal") == 0
