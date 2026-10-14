@@ -82,10 +82,9 @@ def week_plan(context, day: date) -> dict:
 
 
 def _key(name: str) -> str:
-    from core.food_table import words_of
+    from core.kitchen_manager import ingredient_key
 
-    return " ".join(w for w in words_of(name) if w not in ("fresh", "chopped", "diced", "minced", "sliced", "large",
-                                                           "small", "medium", "boneless", "skinless"))
+    return ingredient_key(name)
 
 
 def _allergic(name: str, allergies: list) -> bool:

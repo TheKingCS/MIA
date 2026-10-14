@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-12*
+*Last updated: 2026-10-14*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -43,11 +43,17 @@ the hub, and the Meta AI app.
       Android, install **MIA-Phone-Test.apk** (it sits beside the companion
       app), open it, and tell Claude how long it took to start and how it
       feels. Done: under 8 seconds (2026-10-07).
-- [ ] **Fitness and meals (2026-10-12, DEC-0020):** the engine is built
-      (H-0027); Muse builds the screens. Once a phone build has them:
-      set your plan (targets, rotation, handstand practice, prep day), log
-      a weigh-in, and try saying "step one of today's workout complete",
-      "today's lunch complete", "I weigh 182".
+- [ ] **Fitness and meals (2026-10-14, DEC-0020/0021): the screens are
+      in the phone build.** Workout → Today → **🎯 My plan**: set your
+      goals, training days, what each training day is ("Dips 3x8", one a
+      line), handstand practice, prep day, allergies. Kitchen → **Week
+      Plan**: tap "+ add" on a day (or "Fill empty meals"), open a meal to
+      see its recipe, try **Schedule meal** and **Add to grocery list**.
+      Then log a weigh-in (Workout → Progress) and say "step one of
+      today's workout complete", "today's lunch complete", "I weigh 182".
+- [ ] **Run the 1.5B Quick test again on build 21 or newer** (Model test,
+      tap Start first) and send the screenshot: some questions are now
+      answered by MIA's code instantly.
 - [ ] **Test MIA's own AI model on your phone (2026-10-07):** install the
       newest MIA-Phone-Test.apk, then gear → Settings → **Model test**.
       Download **Qwen 2.5 · 1.5B** on Wi-Fi, tap **Start**, then **Quick
@@ -249,6 +255,12 @@ every step below in order, from a blank machine, with Windows notes.
 **The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`)**, and Zac
 has it on his phone (first start under 8 s). His feedback is fixed:
 account menu, no Apps tile, every card the phone's width, Garage spacing.
+
+**Fitness screens built (2026-10-14, DEC-0021, H-0029).** Next for
+them: Muse's look review; recipe photos; a reps field on the practice
+timer if Muse wants it; the 1.5B's remaining misses (questions with no
+unique trigger: "What bills do I have?" reaches inventory through "do I
+have"; debts, chores, the budget summary; completion phrasing).
 
 **Next, in order (`docs/design/CONCEPT_AUDIT.md`'s build list):**
 1. Onboarding (create your account on first start), Profile and Settings

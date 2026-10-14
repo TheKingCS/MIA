@@ -303,8 +303,20 @@ def days_until_expiration(item: PantryItem, today: date) -> Optional[int]:
     return (expiration - today).days
 
 
+_PREP_WORDS = {"fresh", "chopped", "diced", "minced", "sliced", "large", "small", "medium", "boneless", "skinless"}
+
+
+def ingredient_key(name: str) -> str:
+    """Pure logic. A name for matching ingredients to the pantry and the
+    grocery list: lowercase, singular, without how it's cut or its size
+    ("Diced Onions" and "onion" match; 2026-10-14, Zac's add-to-list)."""
+    from core.food_table import words_of
+
+    return " ".join(w for w in words_of(name) if w not in _PREP_WORDS)
+
+
 def recipe_missing_ingredients(recipe: Recipe, pantry_items: list[PantryItem]) -> list[str]:
-    """Pure logic — testable without Qt. Case-insensitive name match
+    """Pure logic — testable without Qt. Name match (ingredient_key)
     against the pantry; when a matching pantry item's unit equals the
     ingredient's unit (case-insensitive), also requires enough
     quantity — otherwise this falls back to presence-only (comparing
@@ -313,14 +325,14 @@ def recipe_missing_ingredients(recipe: Recipe, pantry_items: list[PantryItem]) -
     recipe order; an empty list means fully makeable."""
     pantry_by_name: dict[str, list[PantryItem]] = {}
     for item in pantry_items:
-        pantry_by_name.setdefault(item.name.strip().lower(), []).append(item)
+        pantry_by_name.setdefault(ingredient_key(item.name), []).append(item)
 
     missing = []
     for ingredient in recipe.ingredients:
         name = str(ingredient.get("name", "")).strip()
         if not name:
             continue
-        matches = pantry_by_name.get(name.lower())
+        matches = pantry_by_name.get(ingredient_key(name))
         if not matches:
             missing.append(name)
             continue
@@ -634,20 +646,21 @@ class KitchenManager:
         recipe = self.get_recipe(recipe_id)
         if recipe is None:
             raise ValueError(f"No recipe with id '{recipe_id}'.")
-        missing_names = {n.lower() for n in recipe_missing_ingredients(recipe, self._pantry)}
-        existing_names = {g.name.strip().lower() for g in self._grocery_list}
+        missing_names = {ingredient_key(n) for n in recipe_missing_ingredients(recipe, self._pantry)}
+        existing_names = {ingredient_key(g.name) for g in self._grocery_list}
 
         added = []
         for ingredient in recipe.ingredients:
             name = str(ingredient.get("name", "")).strip()
-            if name.lower() not in missing_names or name.lower() in existing_names:
+            key = ingredient_key(name)
+            if key not in missing_names or key in existing_names:
                 continue
             item = self.add_grocery_item(
                 name=name, quantity=ingredient.get("quantity") or 0.0,
                 unit=ingredient.get("unit", ""), source_recipe_id=recipe_id,
             )
             added.append(item)
-            existing_names.add(name.lower())
+            existing_names.add(key)
         return added
 
     # ------------------------------------------------------------------

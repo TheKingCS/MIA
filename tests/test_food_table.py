@@ -96,3 +96,15 @@ def test_the_real_table_knows_the_common_ingredients():
         {"name": "broccoli", "quantity": 4, "unit": "cups"}, {"name": "olive oil", "quantity": 2, "unit": "tbsp"},
     ], 6)
     assert prep["complete"] and 400 < prep["per_serving"]["kcal"] < 520 and 38 < prep["per_serving"]["protein_g"] < 45
+
+
+def test_a_scoop_and_never_a_cup_for_one_of_something():
+    """2026-10-14: "1 scoop whey protein" was read as a cup of whey (96 g protein in a bowl of oats)."""
+    from core.kitchen_actions import parse_ingredients
+
+    whey = food_table.Food("1", "Beverages, Protein powder whey based", "Beverages", {"protein_g": 78.0}, {"cup": 97.0})
+    banana = food_table.Food("2", "Bananas, raw", "Fruits", {"kcal": 89.0}, {"cup": 225.0, "medium": 118.0})
+    assert food_table.grams(whey, 1, "scoop") == food_table.SCOOP_G
+    assert food_table.grams(whey, 1, "") is None  # "1 whey protein": unknown, not a guess
+    assert food_table.grams(banana, 2, "") == 236
+    assert parse_ingredients("1 scoop whey protein")[0]["unit"] == "scoop"

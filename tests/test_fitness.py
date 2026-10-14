@@ -128,3 +128,17 @@ def test_recipe_facts_never_undercount():
                                           {"name": "dragon fruit", "quantity": 1, "unit": ""}])
     facts = nutrition.recipe_facts(recipe)
     assert facts["kcal"] is None and facts["source"] == "unknown" and facts["missing"] == ["dragon fruit"]
+
+
+def test_plan_lines_typed_on_a_phone():
+    from core.fitness_manager import exercise_text, parse_exercise, parse_skill_step, skill_step_text
+
+    assert parse_exercise("Dips 3x8") == {"name": "Dips", "sets": 3, "reps": 8}
+    assert parse_exercise("  L-sit 3 × 20s ") == {"name": "L-sit", "sets": 3, "hold_seconds": 20}
+    assert parse_exercise("Plank 60 sec") == {"name": "Plank", "sets": 1, "hold_seconds": 60}
+    assert parse_exercise("Farmer carry") == {"name": "Farmer carry"} and parse_exercise(" ") is None
+    for line in ("Dips 3x8", "L-sit 3x20s", "Plank 60s", "Farmer carry"):
+        assert exercise_text(parse_exercise(line)) == line
+    assert parse_skill_step("Wall hold 60s") == {"name": "Wall hold", "target_seconds": 60}
+    assert parse_skill_step("Tuck 10 reps") == {"name": "Tuck", "target_reps": 10}
+    assert skill_step_text(parse_skill_step("Tuck 10 reps")) == "Tuck 10 reps"

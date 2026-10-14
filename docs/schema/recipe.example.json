@@ -1,0 +1,351 @@
+{
+ "available": true,
+ "as_of": "2026-10-14",
+ "id": "cc273563c4",
+ "name": "Turkey chili",
+ "category": "Lunch",
+ "servings": 6,
+ "prep_minutes": 15,
+ "cook_minutes": 60,
+ "source": "",
+ "notes": "",
+ "steps": [
+  "Brown the turkey with the onion.",
+  "Add beans, tomatoes and chili powder.",
+  "Simmer 45 minutes.",
+  "Portion into six containers."
+ ],
+ "ingredients": [
+  {
+   "name": "ground turkey",
+   "quantity": 2.0,
+   "unit": "lb",
+   "status": "on_list"
+  },
+  {
+   "name": "black beans",
+   "quantity": 2.0,
+   "unit": "can",
+   "status": "on_list"
+  },
+  {
+   "name": "diced tomatoes",
+   "quantity": 1.0,
+   "unit": "can",
+   "status": "on_list"
+  },
+  {
+   "name": "onion",
+   "quantity": 1.0,
+   "unit": "",
+   "status": "have"
+  },
+  {
+   "name": "chili powder",
+   "quantity": 2.0,
+   "unit": "tbsp",
+   "status": "on_list"
+  }
+ ],
+ "to_buy": [],
+ "nutrition": {
+  "kcal": 315.1,
+  "protein_g": 35.3,
+  "carbs_g": 17.1,
+  "fat_g": 12.3,
+  "fiber_g": 7.0,
+  "sugar_g": 1.7,
+  "sodium_mg": 276.3,
+  "source": "computed",
+  "not_found": []
+ },
+ "locked": false,
+ "unlocked_by_mission": null,
+ "favorite": false,
+ "rating": null,
+ "times_made": 1,
+ "last_made": "2026-10-14",
+ "can_schedule": true,
+ "scheduled": [
+  {
+   "date": "2026-10-14",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": true
+  },
+  {
+   "date": "2026-10-15",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": false
+  },
+  {
+   "date": "2026-10-16",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": false
+  },
+  {
+   "date": "2026-10-17",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": false
+  },
+  {
+   "date": "2026-10-18",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": false
+  },
+  {
+   "date": "2026-10-19",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": false
+  },
+  {
+   "date": "2026-10-20",
+   "meal": "lunch",
+   "servings": 1.0,
+   "eaten": false
+  }
+ ],
+ "meals": [
+  "breakfast",
+  "lunch",
+  "dinner",
+  "snack"
+ ],
+ "default_meal": "lunch",
+ "values": {
+  "name": "Turkey chili",
+  "category": "Lunch",
+  "servings": 6,
+  "prep_time_minutes": 15,
+  "cook_time_minutes": 60,
+  "calories_per_serving": null,
+  "instructions": "Brown the turkey with the onion.\nAdd beans, tomatoes and chili powder.\nSimmer 45 minutes.\nPortion into six containers.",
+  "source": "",
+  "notes": ""
+ },
+ "ingredients_text": "2 lb ground turkey\n2 can black beans\n1 can diced tomatoes\n1 onion\n2 tbsp chili powder",
+ "forms": {
+  "recipe": {
+   "noun": "recipe",
+   "id_param": "recipe_id",
+   "fields": [
+    {
+     "name": "name",
+     "label": "Name",
+     "type": "text",
+     "required": true,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "category",
+     "label": "Meal",
+     "type": "choice",
+     "required": false,
+     "options": [
+      "Breakfast",
+      "Lunch",
+      "Dinner",
+      "Dessert",
+      "Snack",
+      "Side",
+      "Drink",
+      "Other"
+     ],
+     "default": "Dinner"
+    },
+    {
+     "name": "servings",
+     "label": "Servings",
+     "type": "int",
+     "required": false,
+     "options": [],
+     "default": 4
+    },
+    {
+     "name": "prep_time_minutes",
+     "label": "Prep (minutes)",
+     "type": "int",
+     "required": false,
+     "options": [],
+     "default": 0
+    },
+    {
+     "name": "cook_time_minutes",
+     "label": "Cook (minutes)",
+     "type": "int",
+     "required": false,
+     "options": [],
+     "default": 0
+    },
+    {
+     "name": "calories_per_serving",
+     "label": "Calories per serving",
+     "type": "amount",
+     "required": false,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "instructions",
+     "label": "Steps",
+     "type": "textarea",
+     "required": false,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "source",
+     "label": "From",
+     "type": "text",
+     "required": false,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "notes",
+     "label": "Notes",
+     "type": "textarea",
+     "required": false,
+     "options": [],
+     "default": null
+    }
+   ]
+  },
+  "pantry": {
+   "noun": "pantry item",
+   "id_param": "item_id",
+   "fields": [
+    {
+     "name": "name",
+     "label": "Name",
+     "type": "text",
+     "required": true,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "quantity",
+     "label": "How much",
+     "type": "amount",
+     "required": false,
+     "options": [],
+     "default": 0.0
+    },
+    {
+     "name": "unit",
+     "label": "Unit",
+     "type": "text",
+     "required": false,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "category",
+     "label": "Shelf",
+     "type": "choice",
+     "required": false,
+     "options": [
+      "Produce",
+      "Dairy",
+      "Meat",
+      "Frozen",
+      "Pantry/Dry Goods",
+      "Spices",
+      "Condiments",
+      "Beverages",
+      "Other"
+     ],
+     "default": "Pantry/Dry Goods"
+    },
+    {
+     "name": "expiration_date",
+     "label": "Use by",
+     "type": "date",
+     "required": false,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "notes",
+     "label": "Notes",
+     "type": "textarea",
+     "required": false,
+     "options": [],
+     "default": null
+    }
+   ]
+  },
+  "grocery": {
+   "noun": "grocery item",
+   "id_param": "item_id",
+   "fields": [
+    {
+     "name": "name",
+     "label": "Item",
+     "type": "text",
+     "required": true,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "quantity",
+     "label": "How much",
+     "type": "amount",
+     "required": false,
+     "options": [],
+     "default": 0.0
+    },
+    {
+     "name": "unit",
+     "label": "Unit",
+     "type": "text",
+     "required": false,
+     "options": [],
+     "default": null
+    }
+   ]
+  },
+  "ingredients": {
+   "noun": "ingredients",
+   "id_param": "recipe_id",
+   "fields": [
+    {
+     "name": "ingredients",
+     "label": "Ingredients (one per line, e.g. \"2 cups rice\")",
+     "type": "textarea",
+     "required": false,
+     "options": [],
+     "default": null
+    }
+   ]
+  },
+  "meal": {
+   "noun": "meal",
+   "id_param": "recipe_id",
+   "fields": [
+    {
+     "name": "date",
+     "label": "Date",
+     "type": "date",
+     "required": false,
+     "options": [],
+     "default": null
+    },
+    {
+     "name": "notes",
+     "label": "Notes",
+     "type": "textarea",
+     "required": false,
+     "options": [],
+     "default": null
+    }
+   ]
+  }
+ }
+}

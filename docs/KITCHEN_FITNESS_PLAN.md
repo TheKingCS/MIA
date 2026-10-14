@@ -2,7 +2,8 @@
 
 *Claude, 2026-10-12, from Zac's request; approved as DEC-0020 with
 Muse's H-0026. **Engine built 2026-10-12 (phases 1 to 7, H-0027);
-the screens are Muse's next.***
+screens built 2026-10-14 from Muse's H-0028 (DEC-0021, H-0029), with a
+page for each recipe (Schedule meal, Add to grocery list).***
 
 ## What Zac asked for
 

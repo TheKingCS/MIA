@@ -92,3 +92,92 @@ def test_the_week_page(world):
     assert week["week_of"] == MON.isoformat() and week["planned"] == 1
     assert week["shopping"]["items"][0]["name"] == "ground beef" and week["shopping"]["items"][0]["quantity"] == 0.25
     assert {r["name"] for r in week["recipes"]} == {"Chili"}
+
+
+# ------------------------------------------------------------------ one recipe, opened (Zac, 2026-10-14)
+
+
+def test_recipe_steps_are_numbered_however_they_were_typed():
+    from core.web_screens import recipe_steps
+
+    assert recipe_steps("Brown the beef.\nAdd beans.\n\nSimmer 1 hour.") == ["Brown the beef.", "Add beans.", "Simmer 1 hour."]
+    assert recipe_steps("1. Brown the beef. 2. Add 2 cans of beans. 3) Simmer.") == ["Brown the beef.", "Add 2 cans of beans.", "Simmer."]
+    assert recipe_steps("Step 1: Mix\nStep 2: Bake") == ["Mix", "Bake"]
+    assert recipe_steps("") == []
+
+
+def test_the_recipe_page_says_what_the_house_has(world):
+    from core.web_screens import recipe_page
+
+    recipe = world.kitchen.add_recipe("Chili", category="Dinner", servings=4, instructions="Brown it.\nSimmer.", protein_g=30)
+    for name, qty, unit in (("Ground Beef", 1, "lb"), ("Diced Onions", 1, ""), ("black beans", 2, "can"), ("cumin", 1, "tsp")):
+        world.kitchen.add_ingredient(recipe.recipe_id, name, qty, unit)
+    world.kitchen.add_pantry_item("onion", 3)  # plural, and "diced", still match
+    world.kitchen.add_grocery_item("Black Bean")
+    world.fitness.plan_meal(MON.isoformat(), "dinner", recipe.recipe_id, 2)
+    page = recipe_page(world, recipe.recipe_id, MON)
+    assert {i["name"]: i["status"] for i in page["ingredients"]} == {
+        "Ground Beef": "to_buy", "Diced Onions": "have", "black beans": "on_list", "cumin": "to_buy"}
+    assert page["to_buy"] == ["Ground Beef", "cumin"]
+    assert page["steps"] == ["Brown it.", "Simmer."] and page["nutrition"]["protein_g"] == 30
+    assert page["scheduled"] == [{"date": MON.isoformat(), "meal": "dinner", "servings": 2, "eaten": False}]
+    assert page["default_meal"] == "dinner" and page["can_schedule"]
+    assert recipe_page(world, "nope")["available"] is False
+
+
+def test_add_to_grocery_list_adds_exactly_what_the_page_says(world):
+    from core.web_screens import recipe_page
+
+    recipe = world.kitchen.add_recipe("Eggs", servings=1)
+    for name in ("eggs", "Chopped Chives", "butter"):
+        world.kitchen.add_ingredient(recipe.recipe_id, name, 1, "")
+    world.kitchen.add_pantry_item("egg", 6)
+    world.kitchen.add_grocery_item("chive")
+    to_buy = recipe_page(world, recipe.recipe_id, MON)["to_buy"]
+    proposal = world.actions.propose(world, "grocery.from_recipe", {"recipe_id": recipe.recipe_id})
+    assert proposal.summary.endswith(": butter") and to_buy == ["butter"]
+    world.actions.approve(world, proposal.proposal_id)
+    assert sorted(g.name for g in world.kitchen.all_grocery_items()) == ["butter", "chive"]
+
+
+def test_scheduling_a_meal_says_what_it_replaces(world):
+    chili = world.kitchen.add_recipe("Chili")
+    stew = world.kitchen.add_recipe("Stew")
+    world.fitness.plan_meal(MON.isoformat(), "dinner", chili.recipe_id)
+    proposal = world.actions.propose(world, "meal.plan", {"date": MON.isoformat(), "meal": "dinner", "recipe_id": stew.recipe_id})
+    assert proposal.summary == "Plan dinner on Mon Oct 12: Stew (instead of Chili)"
+
+
+def test_my_plan_saves_what_was_typed(world):
+    proposal = world.actions.propose(world, "fitness.plan", {"changes": {
+        "targets": {"protein_g": "170", "calories": "", "target_weight": "172.5", "weigh_in_days": "mon, Thursday"},
+        "training": {"days": "Mon, Wed, Fri", "rotation": [{"name": "Pull", "exercises": "Pull-ups 5x5\nHang 30s"}, {"name": " "}]},
+        "skill_tree": [{"skill": "L-sit", "daily_minutes": "10", "practice": "Tuck, one leg", "steps": "Tuck 20s\nFull 10s"}],
+        "meals": {"packed_lunch": "true", "preferences": {"allergies": "peanuts, shellfish"}}}})
+    assert proposal.summary == "Update your plan: meals, skills, targets, training"
+    world.actions.approve(world, proposal.proposal_id)
+    plan = world.fitness.plan
+    assert plan["targets"]["protein_g"] == 170 and plan["targets"]["calories"] is None
+    assert plan["targets"]["target_weight"] == 172.5 and plan["targets"]["weigh_in_days"] == ["Mon", "Thu"]
+    assert plan["training"]["rotation"] == [{"name": "Pull", "exercises": [{"name": "Pull-ups", "sets": 5, "reps": 5},
+                                                                           {"name": "Hang", "sets": 1, "hold_seconds": 30}]}]
+    assert plan["skill_tree"][0]["steps"][0] == {"name": "Tuck", "target_seconds": 20} and plan["skill_tree"][0]["daily_minutes"] == 10
+    assert plan["meals"]["packed_lunch"] is True and plan["meals"]["preferences"]["allergies"] == ["peanuts", "shellfish"]
+    assert fitness_page(world, MON)["plan_text"]["rotation"] == [{"name": "Pull", "exercises": "Pull-ups 5x5\nHang 30s"}]
+    with pytest.raises(Exception, match="Days are"):
+        world.actions.propose(world, "fitness.plan", {"changes": {"training": {"days": "Funday"}}})
+
+
+def test_removing_food_weigh_ins_and_prep(world):
+    chili = world.kitchen.add_recipe("Chili")
+    world.fitness.plan_meal(MON.isoformat(), "lunch", chili.recipe_id)
+    session = world.fitness.add_prep(MON.isoformat(), chili.recipe_id, 4, [f"{MON.isoformat()}:lunch"])
+    entry = world.fitness.log_food("snack", "Shake", {"protein_g": 40}, on=MON.isoformat())
+    weight = world.fitness.log_weight(180, on=MON.isoformat(), unit="lb")
+    for kind, params in (("meal.prep_delete", {"prep_id": session["id"]}), ("fitness.food_delete", {"entry_id": entry["id"]}),
+                         ("fitness.weigh_in_delete", {"entry_id": weight["id"]})):
+        proposal = world.actions.propose(world, kind, params)
+        world.actions.approve(world, proposal.proposal_id)
+    assert world.fitness.prep_sessions() == [] and world.fitness.planned(MON.isoformat()) == {}
+    assert world.fitness.food_on(MON.isoformat()) == [] and world.fitness.weigh_ins() == []
+    assert weight_series(world.fitness, MON) == []

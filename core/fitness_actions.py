@@ -23,6 +23,9 @@ truth.
 | meal.plan | one day's meal: a recipe and servings (or cleared) |
 | meal.prep | a prep session: cook a recipe ahead for the meals it covers |
 | meal.prep_done | a prep session cooked |
+| meal.prep_delete | a prep session removed, with the meals it covered |
+| fitness.food_delete | something logged as eaten, removed |
+| fitness.weigh_in_delete | a weigh-in removed |
 | meal.suggest | fill the week's empty lunches and dinners from your recipes |
 | meal.shop | the week's shopping list onto the Kitchen's grocery list |
 """
@@ -126,7 +129,7 @@ def _food_entry(context, params) -> tuple[str, str, dict, str, float]:
 def _describe_food(context, params) -> str:
     meal, name, nutrients, _, servings = _food_entry(context, params)
     amount = f"{servings:g} × " if servings != 1 else ""
-    facts = ", ".join(f"{nutrients[k]:g} {'kcal' if k == 'kcal' else 'g protein'}" for k in ("kcal", "protein_g")
+    facts = ", ".join(f"{round(nutrients[k]):g} {'kcal' if k == 'kcal' else 'g protein'}" for k in ("kcal", "protein_g")
                       if nutrients.get(k) is not None)
     return f"Log {meal}: {amount}{name}" + (f" ({facts})" if facts else "")
 
@@ -261,18 +264,133 @@ def _habit(context, params) -> str:
 # ------------------------------------------------------------------ plan
 
 
-def _describe_plan(context, params) -> str:
-    changes = params.get("changes")
+def _words(value) -> list[str]:
+    """A list, or "a, b, c" typed on a phone, as a clean list."""
+    items = value if isinstance(value, list) else str(value or "").replace("\n", ",").split(",")
+    return [str(i).strip() for i in items if str(i).strip()]
+
+
+def _lines(value) -> list[str]:
+    return value if isinstance(value, list) else [l for l in str(value or "").splitlines() if l.strip()]
+
+
+def _optional_number(value, what: str, whole: bool = False):
+    if value in (None, ""):
+        return None
+    number = _number(value, what)
+    return int(round(number)) if whole else number
+
+
+def _clean_plan(context, changes) -> dict:
+    """The plan's parts as typed on a screen, checked and shaped like the
+    plan (H-0026): numbers as numbers, "Mon, Wed" as a list, exercises
+    from lines like "Dips 3x8" (core/fitness_manager.parse_exercise)."""
+    from core.fitness_manager import WEEKDAYS, parse_exercise, parse_skill_step
+
     if not isinstance(changes, dict) or not changes:
         raise ActionError("Nothing to change.")
     unknown = set(changes) - {"targets", "training", "skill_tree", "milestones", "meals", "units"}
     if unknown:
         raise ActionError(f"Plans don't have {', '.join(sorted(unknown))}.")
-    return "Update your plan: " + ", ".join(sorted(changes))
+    out = dict(changes)
+
+    def days(value):
+        picked = [d[:3].capitalize() for d in _words(value)]
+        wrong = [d for d in picked if d not in WEEKDAYS]
+        if wrong:
+            raise ActionError(f"Days are Mon, Tue, Wed, Thu, Fri, Sat, Sun (not {', '.join(wrong)}).")
+        return [d for d in WEEKDAYS if d in picked]
+
+    if isinstance(changes.get("targets"), dict):
+        t = dict(changes["targets"])
+        for key, what, whole in (("protein_g", "Protein", True), ("calories", "Calories", True),
+                                 ("target_weight", "Goal weight", False), ("workouts_per_week", "Workouts a week", True)):
+            if key in t:
+                t[key] = _optional_number(t[key], what, whole)
+        if t.get("target_weight") is not None and _is_child(context):
+            raise ActionError("Goal weights aren't part of a child's plan.")
+        if "target_date" in t:
+            t["target_date"] = str(t["target_date"] or "").strip() or None
+            if t["target_date"]:
+                try:
+                    date.fromisoformat(t["target_date"])
+                except ValueError:
+                    raise ActionError("Dates look like 2027-03-01.") from None
+        if "weigh_in_days" in t:
+            t["weigh_in_days"] = days(t["weigh_in_days"])
+        out["targets"] = t
+    if isinstance(changes.get("training"), dict):
+        tr = dict(changes["training"])
+        if "days" in tr:
+            tr["days"] = days(tr["days"])
+        if "rotation" in tr:
+            rotation = []
+            for entry in tr["rotation"] or []:
+                name = str(entry.get("name") or "").strip()
+                if not name:
+                    continue
+                exercises = entry.get("exercises")
+                if not isinstance(exercises, list) or any(isinstance(e, str) for e in exercises):
+                    exercises = [e for e in (parse_exercise(l) for l in _lines(exercises)) if e]
+                rotation.append({**entry, "name": name, "exercises": exercises})
+            tr["rotation"] = rotation
+        out["training"] = tr
+    if "skill_tree" in changes:
+        skills = []
+        for entry in changes["skill_tree"] or []:
+            name = str(entry.get("skill") or "").strip()
+            if not name:
+                continue
+            steps = entry.get("steps")
+            if not isinstance(steps, list) or any(isinstance(x, str) for x in steps):
+                steps = [x for x in (parse_skill_step(l) for l in _lines(steps)) if x]
+            skills.append({**entry, "skill": name, "steps": steps, "practice": _words(entry.get("practice")),
+                           "daily_minutes": _optional_number(entry.get("daily_minutes"), "Minutes a day", True)})
+        out["skill_tree"] = skills
+    if isinstance(changes.get("meals"), dict):
+        m = dict(changes["meals"])
+        if "packed_lunch" in m:
+            m["packed_lunch"] = str(m["packed_lunch"]).lower() in ("true", "1", "yes", "on")
+        if "prep_day" in m:
+            m["prep_day"] = (days(m["prep_day"]) or [""])[0]
+        if "lunch_rotation" in m:
+            m["lunch_rotation"] = _words(m["lunch_rotation"])
+        if isinstance(m.get("preferences"), dict):
+            prefs = dict(m["preferences"])
+            for key in ("dislikes", "allergies"):
+                if key in prefs:
+                    prefs[key] = _words(prefs[key])
+            m["preferences"] = prefs
+        out["meals"] = m
+    if "milestones" in changes:
+        out["milestones"] = [{**x, "name": str(x.get("name") or "").strip()} for x in changes["milestones"] or []
+                             if str(x.get("name") or "").strip()]
+    if "units" in changes:
+        if changes["units"] not in ("lb", "kg"):
+            raise ActionError("Units are lb or kg.")
+    return out
+
+
+def _is_child(context) -> bool:
+    from core.child_accounts import is_child
+
+    try:
+        return bool(is_child(context))
+    except Exception:
+        return False
+
+
+PLAN_PARTS = {"targets": "targets", "training": "training", "skill_tree": "skills", "milestones": "milestones",
+              "meals": "meals", "units": "units"}
+
+
+def _describe_plan(context, params) -> str:
+    changes = _clean_plan(context, params.get("changes"))
+    return "Update your plan: " + ", ".join(PLAN_PARTS[k] for k in sorted(changes))
 
 
 def _plan(context, params) -> str:
-    _fit(context).update_plan(params["changes"])
+    _fit(context).update_plan(_clean_plan(context, params["changes"]))
     from core.fitness_missions import ensure
 
     ensure(context)
@@ -312,11 +430,28 @@ def _meal_slot(context, params) -> tuple[str, str, str, float]:
     return day, meal, recipe_id, _number(params.get("servings") or 1, "Servings")
 
 
+def _on_day(day: str) -> str:
+    """ "today", or "on Fri Oct 16"."""
+    said = _say_day(day)
+    return said if said == "today" else f"on {said}"
+
+
+def _say_day(day: str) -> str:
+    d = date.fromisoformat(day)
+    return "today" if d == date.today() else f"{d:%a} {d:%b} {d.day}"  # %-d isn't on Windows
+
+
 def _describe_plan_meal(context, params) -> str:
     day, meal, recipe_id, servings = _meal_slot(context, params)
     if not recipe_id:
-        return f"Clear {meal} on {day}"
-    return f"Plan {meal} on {day}: {context.kitchen.get_recipe(recipe_id).name}" + (f" × {servings:g}" if servings != 1 else "")
+        return f"Clear {meal} {_on_day(day)}"
+    now = _fit(context).planned(day).get(meal)
+    replacing = ""
+    if now and now["recipe_id"] != recipe_id:
+        old = context.kitchen.get_recipe(now["recipe_id"])
+        replacing = f" (instead of {old.name})" if old is not None else ""
+    return (f"Plan {meal} {_on_day(day)}: {context.kitchen.get_recipe(recipe_id).name}"
+            + (f" × {servings:g}" if servings != 1 else "") + replacing)
 
 
 def _plan_meal(context, params) -> str:
@@ -351,7 +486,7 @@ def _describe_prep(context, params) -> str:
         raise ActionError("There's no recipe like that.")
     servings = _number(params.get("servings") or recipe.servings, "Servings")
     covers = _covers(params)
-    return f"Prep on {_day(params)}: {recipe.name} × {servings:g}" + (f", covering {len(covers)} meals" if covers else "")
+    return f"Prep {_on_day(_day(params))}: {recipe.name} × {servings:g}" + (f", covering {len(covers)} meals" if covers else "")
 
 
 def _prep(context, params) -> str:
@@ -375,6 +510,59 @@ def _prep_done(context, params) -> str:
     _fit(context).finish_prep(str(params["prep_id"]))
     _after(context)
     return "Meal prep: done."
+
+
+def _prep_session(context, params) -> dict:
+    session = next((p for p in _fit(context).prep_sessions() if p["id"] == params.get("prep_id")), None)
+    if session is None:
+        raise ActionError("There's no prep session like that.")
+    return session
+
+
+def _describe_prep_delete(context, params) -> str:
+    session = _prep_session(context, params)
+    recipe = context.kitchen.get_recipe(session["recipe_id"]) if getattr(context, "kitchen", None) is not None else None
+    covered = f" and the {len(session['covers'])} meals it covers" if session["covers"] else ""
+    return f"Remove the prep session {_on_day(session['date'])}" + (f" ({recipe.name})" if recipe else "") + covered
+
+
+def _prep_delete(context, params) -> str:
+    from core.fitness_missions import ensure
+
+    _fit(context).delete_prep(_prep_session(context, params)["id"])
+    ensure(context)
+    return "Prep session removed."
+
+
+def _entry(entries: list, entry_id, what: str) -> dict:
+    entry = next((e for e in entries if e["id"] == entry_id), None)
+    if entry is None:
+        raise ActionError(f"There's no {what} like that.")
+    return entry
+
+
+def _describe_food_delete(context, params) -> str:
+    entry = _entry(_fit(context)._data["food"], params.get("entry_id"), "food entry")
+    return f"Remove {entry['name']} ({entry['meal']}, {_say_day(entry['date'])}) from what you ate"
+
+
+def _food_delete(context, params) -> str:
+    fit = _fit(context)
+    fit.delete_food(_entry(fit._data["food"], params.get("entry_id"), "food entry")["id"])
+    _after(context)
+    return "Removed."
+
+
+def _describe_weigh_in_delete(context, params) -> str:
+    entry = _entry(_fit(context).weigh_ins(), params.get("entry_id"), "weigh-in")
+    return f"Remove the weigh-in of {entry['weight']:g} {entry['unit']} {_on_day(entry['date'])}"
+
+
+def _weigh_in_delete(context, params) -> str:
+    fit = _fit(context)
+    fit.delete_weight(_entry(fit.weigh_ins(), params.get("entry_id"), "weigh-in")["id"])
+    _after(context)
+    return "Removed."
 
 
 def _suggestions(context, params) -> list[dict]:
@@ -445,6 +633,10 @@ FITNESS_ACTIONS: dict[str, ActionType] = {a.kind: a for a in (
                                           "covers": "the meals it feeds: 2026-10-13:lunch, ..."},
                _describe_prep, _prep, True),
     ActionType("meal.prep_done", "Prep done", {"prep_id": "the prep session"}, _describe_prep_done, _prep_done, True),
+    ActionType("meal.prep_delete", "Remove", {"prep_id": "the prep session"}, _describe_prep_delete, _prep_delete, True),
+    ActionType("fitness.food_delete", "Remove", {"entry_id": "the food entry"}, _describe_food_delete, _food_delete, True),
+    ActionType("fitness.weigh_in_delete", "Remove", {"entry_id": "the weigh-in"}, _describe_weigh_in_delete,
+               _weigh_in_delete),
     ActionType("meal.suggest", "Plan my week", {"date": "any day of the week"}, _describe_suggest, _suggest, True),
     ActionType("meal.shop", "Add to grocery list", {"date": "any day of the week"}, _describe_shop, _shop),
     ActionType("fitness.milestone", "Reached it", {"milestone_id": "the milestone"}, _describe_milestone, _milestone, True),

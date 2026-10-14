@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>My plan — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="workout" class="mod-workout">
+  <!--
+    My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen with
+    two doors (Kitchen and Workout): goals, the training week, skills,
+    meals and preferences, milestones. Data: MIA.fitness() (plan and
+    plan_text, core/web_fitness.py); every save is one fitness.plan action
+    (core/fitness_actions.py checks and shapes what was typed).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <a class="back-link" id="back" href="workout.html">← Workout</a>
+      <header class="hero">
+        <h1><span aria-hidden="true">🎯</span> <span id="hero-name">My plan</span></h1>
+        <p class="tagline" id="hero-tagline">What you're working toward. Kitchen, Workout and your missions follow it.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="plan.js"></script>
+</body>
+</html>

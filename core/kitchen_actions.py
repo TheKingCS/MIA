@@ -61,7 +61,7 @@ GROCERY = Record("grocery", "grocery item", "item_id", "get_grocery_item", "add_
 # ------------------------------------------------------------------ ingredients, one per line
 
 _INGREDIENTS = Field("ingredients", "Ingredients (one per line, e.g. \"2 cups rice\")", "textarea")
-_UNITS = r"cups?|c|tbsp|tablespoons?|tsp|teaspoons?|g|grams?|kg|lbs?|pounds?|oz|ounces?|ml|l|liters?|cans?|cloves?|pcs?|pieces?|slices?|pinch(?:es)?|bunch(?:es)?"
+_UNITS = r"cups?|c|tbsp|tablespoons?|tsp|teaspoons?|g|grams?|kg|lbs?|pounds?|oz|ounces?|ml|l|liters?|cans?|cloves?|pcs?|pieces?|slices?|scoops?|pinch(?:es)?|bunch(?:es)?"
 _LINE = re.compile(rf"^\s*(\d+\s+\d+/\d+|\d+(?:\.\d+)?(?:/\d+)?)?\s*({_UNITS})?\.?\s+(.+?)\s*$", re.IGNORECASE)
 
 
@@ -157,8 +157,10 @@ def _describe_missing(context, params) -> str:
     missing = recipe_missing_ingredients(recipe, context.kitchen.all_pantry_items())
     if not missing:
         raise ActionError(f"You have everything for {recipe.name}.")
-    listed = {g.name.strip().lower() for g in context.kitchen.all_grocery_items()}
-    to_add = [n for n in missing if n.strip().lower() not in listed]
+    from core.kitchen_manager import ingredient_key
+
+    listed = {ingredient_key(g.name) for g in context.kitchen.all_grocery_items()}
+    to_add = [n for n in missing if ingredient_key(n) not in listed]
     if not to_add:
         raise ActionError(f"What {recipe.name} needs is already on the grocery list.")
     return f"Add what's missing for {recipe.name} to the grocery list: " + ", ".join(to_add)

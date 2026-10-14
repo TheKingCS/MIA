@@ -1,0 +1,464 @@
+{
+ "available": true,
+ "week_of": "2026-10-12",
+ "days": [
+  {
+   "date": "2026-10-12",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    }
+   ],
+   "totals": {
+    "kcal": 1979.3,
+    "protein_g": 174.9,
+    "carbs_g": 196.6,
+    "fat_g": 55.7,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    }
+   ],
+   "totals": {
+    "kcal": 1979.3,
+    "protein_g": 174.9,
+    "carbs_g": 196.6,
+    "fat_g": 55.7,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  },
+  {
+   "date": "2026-10-14",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": true,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": true,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    },
+    {
+     "meal": "snack",
+     "recipe_id": "43b3273b24",
+     "name": "Greek yogurt bowl",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 247.6,
+     "protein_g": 25.1,
+     "carbs_g": 36.7,
+     "fat_g": 1.2
+    }
+   ],
+   "totals": {
+    "kcal": 2226.9,
+    "protein_g": 200.0,
+    "carbs_g": 233.3,
+    "fat_g": 56.9,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  },
+  {
+   "date": "2026-10-15",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "bc843ec2",
+     "eaten": false,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    }
+   ],
+   "totals": {
+    "kcal": 1979.3,
+    "protein_g": 174.9,
+    "carbs_g": 196.6,
+    "fat_g": 55.7,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "bc843ec2",
+     "eaten": false,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    }
+   ],
+   "totals": {
+    "kcal": 1979.3,
+    "protein_g": 174.9,
+    "carbs_g": 196.6,
+    "fat_g": 55.7,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "bc843ec2",
+     "eaten": false,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    }
+   ],
+   "totals": {
+    "kcal": 1979.3,
+    "protein_g": 174.9,
+    "carbs_g": 196.6,
+    "fat_g": 55.7,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "bc843ec2",
+     "eaten": false,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    }
+   ],
+   "totals": {
+    "kcal": 1979.3,
+    "protein_g": 174.9,
+    "carbs_g": 196.6,
+    "fat_g": 55.7,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  }
+ ],
+ "prep": [
+  {
+   "id": "bc843ec2",
+   "date": "2026-10-14",
+   "recipe_id": "cc273563c4",
+   "servings": 4.0,
+   "covers": [
+    "2026-10-15:lunch",
+    "2026-10-16:lunch",
+    "2026-10-17:lunch",
+    "2026-10-18:lunch"
+   ],
+   "done": false,
+   "name": "Turkey chili"
+  }
+ ],
+ "planned": 22,
+ "eaten": 2,
+ "shopping": {
+  "items": [],
+  "in_pantry": [
+   "onion"
+  ],
+  "on_list": [
+   "banana",
+   "black beans",
+   "blueberries",
+   "broccoli",
+   "chili powder",
+   "diced tomatoes",
+   "greek yogurt",
+   "ground turkey",
+   "honey",
+   "milk",
+   "oats",
+   "olive oil",
+   "rice",
+   "salmon",
+   "scoop whey protein"
+  ]
+ },
+ "suggestion": [],
+ "recipes": [
+  {
+   "recipe_id": "43b3273b24",
+   "name": "Greek yogurt bowl",
+   "category": "Snack",
+   "servings": 1
+  },
+  {
+   "recipe_id": "2ae39f2da4",
+   "name": "Protein oats",
+   "category": "Breakfast",
+   "servings": 1
+  },
+  {
+   "recipe_id": "714cbb7d5b",
+   "name": "Salmon and rice",
+   "category": "Dinner",
+   "servings": 2
+  },
+  {
+   "recipe_id": "cc273563c4",
+   "name": "Turkey chili",
+   "category": "Lunch",
+   "servings": 6
+  }
+ ]
+}

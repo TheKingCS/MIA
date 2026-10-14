@@ -51,12 +51,13 @@ def weight_series(fit, today: date, days: int = 90) -> list[dict]:
     from core.fitness_manager import convert
 
     units = fit.plan["units"]
-    points = [(date.fromisoformat(w["date"]), convert(w["weight"], w.get("unit", units), units))
+    points = [(date.fromisoformat(w["date"]), convert(w["weight"], w.get("unit", units), units), w["id"])
               for w in fit.weigh_ins() if today - timedelta(days=days) < date.fromisoformat(w["date"]) <= today]
     out = []
-    for day, weight in points:
-        window = [w for d, w in points if day - timedelta(days=7) < d <= day]
-        out.append({"date": day.isoformat(), "weight": round(weight, 1), "average": round(sum(window) / len(window), 1)})
+    for day, weight, entry_id in points:
+        window = [w for d, w, _ in points if day - timedelta(days=7) < d <= day]
+        out.append({"id": entry_id, "date": day.isoformat(), "weight": round(weight, 1),
+                    "average": round(sum(window) / len(window), 1)})
     return out
 
 
@@ -90,9 +91,23 @@ def fitness_page(context, today: Optional[date] = None) -> dict:
         "milestones": plan.get("milestones") or [],
         "progress": progress(context, today),
     }
+    page["plan_text"] = plan_text(plan)
     if not child:
         page["weight"] = {**fit.weight_trend(today), "series": weight_series(fit, today)}
     return page
+
+
+def plan_text(plan: dict) -> dict:
+    """The plan's lists as the lines My plan's editor shows (and
+    fitness.plan reads back: core/fitness_manager.parse_exercise)."""
+    from core.fitness_manager import exercise_text, skill_step_text
+
+    return {"rotation": [{"name": d.get("name", ""), "exercises": "\n".join(exercise_text(e) for e in d.get("exercises") or [])}
+                         for d in plan["training"].get("rotation") or []],
+            "skills": [{"skill": k.get("skill", ""), "daily_minutes": k.get("daily_minutes"),
+                        "practice": ", ".join(k.get("practice") or []),
+                        "steps": "\n".join(skill_step_text(x) for x in k.get("steps") or [])}
+                       for k in plan.get("skill_tree") or []]}
 
 
 def week_page(context, day: Optional[date] = None) -> dict:

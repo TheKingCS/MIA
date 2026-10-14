@@ -58,7 +58,7 @@ def test_prep_covers_the_weeks_lunches(world):
     covers = [f"{(MON + timedelta(days=i)).isoformat()}:lunch" for i in range(5)]
     proposal, done = act(world, "meal.prep", date=(MON - timedelta(days=1)).isoformat(),
                          recipe_id=world.chili.recipe_id, servings="6", covers=",".join(covers))
-    assert proposal.summary == "Prep on 2026-10-11: Venison Chili × 6, covering 5 meals" and done.status == "executed"
+    assert proposal.summary == "Prep on Sun Oct 11: Venison Chili × 6, covering 5 meals" and done.status == "executed"
     week = mp.week_plan(world, MON)
     assert [d["meals"][0]["name"] for d in week["days"][:5]] == ["Venison Chili"] * 5
     # Prep on Sunday the 11th belongs to the week of the 5th; this week's plan shows its covered lunches.

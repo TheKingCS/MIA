@@ -33,6 +33,7 @@ plainly.
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -67,6 +68,59 @@ def _merge(base: dict, extra: dict) -> dict:
     for key, value in (extra or {}).items():
         out[key] = _merge(out[key], value) if isinstance(value, dict) and isinstance(out.get(key), dict) else value
     return out
+
+
+# ------------------------------------------------------------------ the plan as text (typed on a phone)
+
+_SETS = re.compile(r"^(?P<name>.*?)\s+(?P<sets>\d+)\s*[x×]\s*(?P<n>\d+)\s*(?P<s>s|sec|secs|seconds)?$", re.IGNORECASE)
+_HOLD = re.compile(r"^(?P<name>.*?)\s+(?P<n>\d+)\s*(?P<s>s|sec|secs|seconds)$", re.IGNORECASE)
+
+
+def parse_exercise(line: str) -> Optional[dict]:
+    """Pure logic. "Dips 3x8" → 3 sets of 8; "L-sit 3x20s" → 3 holds of
+    20 s; "Plank 60s" → one 60 s hold; anything else is just the name."""
+    text = " ".join(str(line or "").split()).strip(" -•*")
+    if not text:
+        return None
+    m = _SETS.match(text)
+    if m and m["name"]:
+        return {"name": m["name"], "sets": int(m["sets"]), **({"hold_seconds": int(m["n"])} if m["s"] else {"reps": int(m["n"])})}
+    m = _HOLD.match(text)
+    if m and m["name"]:
+        return {"name": m["name"], "sets": 1, "hold_seconds": int(m["n"])}
+    return {"name": text}
+
+
+def exercise_text(e: dict) -> str:
+    """Pure logic. The other way: an exercise as one typed line."""
+    name, sets = e.get("name", ""), e.get("sets")
+    if e.get("hold_seconds"):
+        return f"{name} {sets}x{e['hold_seconds']}s" if sets and sets != 1 else f"{name} {e['hold_seconds']}s"
+    if sets and e.get("reps"):
+        return f"{name} {sets}x{e['reps']}"
+    return name
+
+
+def parse_skill_step(line: str) -> Optional[dict]:
+    """Pure logic. "Wall hold 60s" → a step with a 60 s target; "Tuck 10 reps" → 10 reps."""
+    text = " ".join(str(line or "").split()).strip(" -•*")
+    if not text:
+        return None
+    m = _HOLD.match(text)
+    if m and m["name"]:
+        return {"name": m["name"], "target_seconds": int(m["n"])}
+    m = re.match(r"^(?P<name>.*?)\s+(?P<n>\d+)\s*reps?$", text, re.IGNORECASE)
+    if m and m["name"]:
+        return {"name": m["name"], "target_reps": int(m["n"])}
+    return {"name": text}
+
+
+def skill_step_text(step: dict) -> str:
+    if step.get("target_seconds"):
+        return f"{step.get('name', '')} {step['target_seconds']}s"
+    if step.get("target_reps"):
+        return f"{step.get('name', '')} {step['target_reps']} reps"
+    return step.get("name", "")
 
 
 def convert(weight: float, unit: str, to: str) -> float:

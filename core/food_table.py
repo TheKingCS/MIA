@@ -46,6 +46,8 @@ _MILLILITRES = {"ml": 1, "millilitre": 1, "milliliter": 1, "l": 1000, "litre": 1
                 "cup": 240, "tbsp": 15, "tablespoon": 15, "tsp": 5, "teaspoon": 5, "fl oz": 29.6, "pint": 473,
                 "quart": 946, "gallon": 3785}
 _UNIT_WORDS = {"tbs": "tbsp", "tbl": "tbsp", "t": "tsp", "c": "cup", "lbs": "lb", "#": "lb", "ozs": "oz"}
+_VOLUMES = {"cup", "cups", "tbsp", "tsp", "tablespoon", "teaspoon", "fl", "oz", "ml", "liter", "quart", "pint", "gallon"}
+SCOOP_G = 30  # a protein-powder scoop as nutrition labels give it (most are 25 to 35 g)
 _PIECES = ("", "each", "piece", "whole", "large", "medium", "small", "clove", "slice", "can", "breast", "fillet")
 
 # Words that describe how something is cut or bought, not what it is.
@@ -324,6 +326,8 @@ def grams(food: Food, quantity: float, unit: str) -> Optional[float]:
         quantity = 1.0
     if unit in _GRAMS:
         return quantity * _GRAMS[unit]
+    if unit == "scoop" and "scoop" not in food.portions:
+        return quantity * SCOOP_G
     for name, weight in food.portions.items():  # the food's own measures win
         if unit and (name == unit or name.split()[0] == unit):
             return quantity * weight
@@ -334,8 +338,9 @@ def grams(food: Food, quantity: float, unit: str) -> Optional[float]:
             for name, weight in food.portions.items():
                 if wanted and wanted in name.split():
                     return quantity * weight
-        if food.portions:
-            return quantity * next(iter(food.portions.values()))
+        whole = [w for name, w in food.portions.items() if name.split()[0] not in _VOLUMES]
+        if whole:  # a food's one-piece measure; never a cup of it for "1 whey protein" (2026-10-14)
+            return quantity * whole[0]
     return None
 
 

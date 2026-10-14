@@ -4,7 +4,8 @@ core.web_screens
 
 Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018):
 everything the PC app's screens show, assembled here so `web/` holds no
-logic. Served as `/api/kitchen`, `/api/workout` and `/api/real-estate`;
+logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`),
+`/api/workout` and `/api/real-estate`;
 changes are the action kinds in core/kitchen_actions.py,
 core/workout_actions.py and core/estate_actions.py.
 
@@ -98,6 +99,92 @@ def kitchen_page(context, today: Optional[date] = None) -> dict:
     page["counts"] = {"recipes": len(recipes), "pantry": len(items), "expiring": sum(i["expiring"] for i in items),
                       "grocery": sum(not g["checked"] for g in page["grocery"])}
     return page
+
+
+def recipe_steps(instructions: str) -> list[str]:
+    """Pure logic. A recipe's instructions as numbered steps: one a line,
+    or split at "1." / "2)" numbers when written as one paragraph; the
+    numbers themselves are dropped (the screen numbers them)."""
+    import re
+
+    text = (instructions or "").strip()
+    if not text:
+        return []
+    lines = [l for l in text.splitlines() if l.strip()]
+    if len(lines) == 1:
+        lines = re.split(r"\s+(?=(?:step\s*)?\d+[.):]\s)", text, flags=re.IGNORECASE)
+    return [re.sub(r"^\s*(?:step\s*)?\d+[.):]\s*|^\s*[-*•]\s*", "", l, flags=re.IGNORECASE).strip() for l in lines
+            if l.strip()]
+
+
+def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
+    """One recipe, opened from a meal card (Zac, 2026-10-14): what it is,
+    its nutrition per serving, each ingredient with whether the house has
+    it (in the pantry, already on the grocery list, or to buy), the steps,
+    and when it's planned next. "Schedule meal" is meal.plan; "Add to
+    grocery list" is grocery.from_recipe, adding exactly `to_buy`."""
+    from core.fitness_manager import MEALS
+    from core.kitchen_actions import RECORDS, form_spec
+    from core.kitchen_manager import ingredient_key, recipe_missing_ingredients
+    from core.nutrition import recipe_facts
+    from core.person_settings import person_id
+
+    today = today or date.today()
+    kitchen = getattr(context, "kitchen", None)
+    recipe = kitchen.get_recipe(recipe_id) if kitchen is not None else None
+    if recipe is None:
+        return {"available": False}
+    pid = person_id(context)
+    missing = {ingredient_key(n) for n in recipe_missing_ingredients(recipe, kitchen.all_pantry_items())}
+    listed = {ingredient_key(g.name) for g in kitchen.all_grocery_items()}
+    ingredients = []
+    for ingredient in recipe.ingredients:
+        name = str(ingredient.get("name", "")).strip()
+        if not name:
+            continue
+        key = ingredient_key(name)
+        status = "have" if key not in missing else "on_list" if key in listed else "to_buy"
+        ingredients.append({"name": name, "quantity": ingredient.get("quantity") or None,
+                            "unit": ingredient.get("unit", ""), "status": status})
+    facts = recipe_facts(recipe)
+    unlocker = None
+    if recipe.locked and getattr(context, "missions", None) is not None:
+        unlocker = next((m.name for m in context.missions.all_missions()
+                         if m.status != "completed" and recipe.recipe_id in m.recipe_unlocks), None)
+    scheduled = []
+    fit = getattr(context, "fitness", None)
+    if fit is not None:
+        for offset in range(14):
+            day = (today + timedelta(days=offset)).isoformat()
+            for meal, slot in fit.planned(day).items():
+                if slot.get("recipe_id") == recipe.recipe_id:
+                    scheduled.append({"date": day, "meal": meal, "servings": slot.get("servings", 1),
+                                      "eaten": meal in fit.eaten_planned(day)})
+        scheduled.sort(key=lambda x: (x["date"], MEALS.index(x["meal"])))
+    category = (recipe.category or "").lower()
+    stats = kitchen.get_recipe_user_stats(pid, recipe.recipe_id) if pid else None
+    return {
+        "available": True, "as_of": today.isoformat(), "id": recipe.recipe_id, "name": recipe.name,
+        "category": recipe.category, "servings": recipe.servings, "prep_minutes": recipe.prep_time_minutes or 0,
+        "cook_minutes": recipe.cook_time_minutes or 0, "source": recipe.source, "notes": recipe.notes,
+        "steps": recipe_steps(recipe.instructions), "ingredients": ingredients,
+        "to_buy": [i["name"] for i in ingredients if i["status"] == "to_buy"],
+        "nutrition": {**{k: facts.get(k) for k in ("kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "sodium_mg")},
+                      "source": facts["source"], "not_found": facts["missing"]},
+        "locked": recipe.locked, "unlocked_by_mission": unlocker,
+        "favorite": pid is not None and recipe.recipe_id in set(kitchen.favorite_recipe_ids(pid)),
+        "rating": getattr(stats, "rating", None), "times_made": kitchen.times_made(recipe.recipe_id),
+        "last_made": kitchen.last_made_date(recipe.recipe_id),
+        "can_schedule": fit is not None and not recipe.locked, "scheduled": scheduled,
+        "meals": list(MEALS), "default_meal": category if category in MEALS else "dinner",
+        "values": _values(RECORDS["recipe"], recipe), "ingredients_text": _ingredients_text(recipe), "forms": form_spec(),
+    }
+
+
+def _ingredients_text(recipe) -> str:
+    from core.kitchen_actions import ingredients_text
+
+    return ingredients_text(recipe.ingredients)
 
 
 # ------------------------------------------------------------------ Workout

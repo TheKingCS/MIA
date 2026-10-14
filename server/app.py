@@ -663,6 +663,16 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "kitchen", kitchen_page)
 
+    @app.get("/api/kitchen/recipe/{recipe_id}")
+    def web_recipe(recipe_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One recipe, opened from its card (core/web_screens.recipe_page)."""
+        from core.web_screens import recipe_page
+
+        page = _screen(profile_id, "kitchen", lambda view: recipe_page(view, recipe_id))
+        if not page["available"]:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no recipe like that.")
+        return page
+
     @app.get("/api/workout")
     def web_workout(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_screens import workout_page

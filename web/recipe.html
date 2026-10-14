@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Recipe — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="kitchen" class="mod-kitchen">
+  <!--
+    One recipe (claude, 2026-10-14, Zac's idea): opened from any meal or
+    recipe card. The recipe, its nutrition, what the house has, the steps,
+    and two buttons: Schedule meal (meal.plan) and Add to grocery list
+    (grocery.from_recipe: only what isn't in the pantry or already on the
+    list). Data: MIA.recipe(id) (core/web_screens.recipe_page).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <a class="back-link" id="back" href="kitchen.html">← Kitchen</a>
+      <header class="hero">
+        <h1><span aria-hidden="true">🍳</span> <span id="hero-name">Recipe</span></h1>
+        <p class="tagline" id="hero-tagline"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="shell.js"></script>
+  <script src="recipe.js"></script>
+</body>
+</html>

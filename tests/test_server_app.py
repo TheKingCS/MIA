@@ -50,9 +50,9 @@ def context(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     # 2026-09-28: Core also loads what "remind me why" reads.
-    import core.budget_manager, core.intent_manager, core.project_manager, core.real_estate_manager, core.why_graph
-    for _module in (core.budget_manager, core.intent_manager, core.project_manager, core.real_estate_manager,
-                    core.why_graph):
+    import core.budget_manager, core.intent_manager, core.kitchen_manager, core.project_manager, core.real_estate_manager, core.why_graph
+    for _module in (core.budget_manager, core.intent_manager, core.kitchen_manager, core.project_manager,
+                    core.real_estate_manager, core.why_graph):
         _original = _module._DATA_DIR
         for _attr, _value in list(vars(_module).items()):
             if isinstance(_value, Path) and (_value == _original or _original in _value.parents):
@@ -555,3 +555,14 @@ def test_fitness_endpoints_and_a_plain_word_log(client, context):
     week = client.get("/api/fitness/week", headers=auth).json()
     assert week["available"] and len(week["days"]) == 7
     assert client.get("/api/fitness/week?day=nope", headers=auth).status_code == 400
+
+
+def test_one_recipe_opens_on_its_own_page(client, context):
+    """Zac, 2026-10-14: a meal card opens the recipe, with Schedule meal and Add to grocery list."""
+    auth = _signed_in(client, context)
+    recipe = context.kitchen.add_recipe("Chili", instructions="Brown it.\nSimmer.")
+    context.kitchen.add_ingredient(recipe.recipe_id, "ground beef", 1, "lb")
+    page = client.get(f"/api/kitchen/recipe/{recipe.recipe_id}", headers=auth).json()
+    assert page["name"] == "Chili" and page["steps"] == ["Brown it.", "Simmer."] and page["to_buy"] == ["ground beef"]
+    assert client.get("/api/kitchen/recipe/nope", headers=auth).status_code == 404
+    assert client.get(f"/api/kitchen/recipe/{recipe.recipe_id}").status_code == 401

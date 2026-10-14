@@ -366,3 +366,22 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   working. Values stay on the device (DEC-0002); the repo holds the
   schema, the logic and the public food table.
 - Related: DEC-0002, DEC-0014, DEC-0017, DEC-0019, H-0022, H-0026
+
+
+### DEC-0021: The fitness screens: one My plan, plain words log at once, a page for each recipe
+- Status: APPROVED
+- Proposed by: claude and muse (H-0028), 2026-10-12; the recipe page by zac, 2026-10-14 · Approved by: zac, 2026-10-14 ("Go with your recommendations")
+- Decision: (1) **One "My plan" screen** (`web/plan.html`) with two doors,
+  Kitchen and Workout, instead of a plan editor in each. (2) **Plain-word
+  completions log at once** ("lunch done", "workout complete"), and MIA
+  says what it logged with "undo that"; no confirm card first (this
+  overrides H-0028's confirm-sheet pattern for spoken and typed commands;
+  buttons on screens still propose and confirm, as everywhere). (3) **Each
+  meal and recipe card opens the recipe's own page** (`web/recipe.html`):
+  the recipe, its nutrition, what the house has, the steps, and two
+  buttons: **Schedule meal** (a day and a meal) and **Add to grocery
+  list**, which adds only what isn't in the pantry or already on the list.
+- Why: one place for the plan means it can't disagree with itself; saying
+  "done" should be instant, and undo keeps it safe (the logs are the
+  truth, DEC-0020); the recipe is where the cooking and the shopping meet.
+- Related: DEC-0014, DEC-0018, DEC-0020, H-0028, H-0029

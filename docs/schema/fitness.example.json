@@ -1,0 +1,973 @@
+{
+ "available": true,
+ "as_of": "2026-10-14",
+ "child": false,
+ "plan": {
+  "targets": {
+   "protein_g": 170,
+   "calories": 2300,
+   "calorie_approach": "",
+   "weigh_in_days": [
+    "Mon",
+    "Thu"
+   ],
+   "target_weight": 175.0,
+   "target_date": "2027-02-11",
+   "workouts_per_week": 3
+  },
+  "training": {
+   "days": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+   ],
+   "rotation": [
+    {
+     "name": "Push",
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 4,
+       "reps": 8
+      },
+      {
+       "name": "Pike push-ups",
+       "sets": 3,
+       "reps": 10
+      },
+      {
+       "name": "L-sit",
+       "sets": 3,
+       "hold_seconds": 25
+      },
+      {
+       "name": "Plank",
+       "sets": 1,
+       "hold_seconds": 60
+      }
+     ]
+    },
+    {
+     "name": "Pull",
+     "exercises": [
+      {
+       "name": "Pull-ups",
+       "sets": 5,
+       "reps": 5
+      },
+      {
+       "name": "Rows",
+       "sets": 3,
+       "reps": 12
+      },
+      {
+       "name": "Dead hang",
+       "sets": 1,
+       "hold_seconds": 45
+      }
+     ]
+    }
+   ]
+  },
+  "skill_tree": [
+   {
+    "skill": "Handstand",
+    "daily_minutes": 12,
+    "practice": [
+     "Wall walks",
+     "Kick-ups"
+    ],
+    "steps": [
+     {
+      "name": "Wall hold",
+      "target_seconds": 60
+     },
+     {
+      "name": "Freestanding",
+      "target_seconds": 10
+     }
+    ]
+   }
+  ],
+  "milestones": [
+   {
+    "name": "60 s wall handstand",
+    "id": "6ec0ba1a",
+    "done_on": null
+   },
+   {
+    "name": "10 strict pull-ups",
+    "id": "cef0d424",
+    "done_on": null
+   }
+  ],
+  "meals": {
+   "packed_lunch": true,
+   "lunch_rotation": [
+    "cc273563c4"
+   ],
+   "prep_day": "Sun",
+   "preferences": {
+    "dislikes": [],
+    "allergies": [
+     "peanuts"
+    ],
+    "diet": ""
+   }
+  },
+  "units": "lb"
+ },
+ "today": {
+  "training": {
+   "name": "Push",
+   "exercises": [
+    {
+     "name": "Dips",
+     "sets": 4,
+     "reps": 8
+    },
+    {
+     "name": "Pike push-ups",
+     "sets": 3,
+     "reps": 10
+    },
+    {
+     "name": "L-sit",
+     "sets": 3,
+     "hold_seconds": 25
+    },
+    {
+     "name": "Plank",
+     "sets": 1,
+     "hold_seconds": 60
+    }
+   ],
+   "index": 0,
+   "done": false,
+   "steps": [
+    {
+     "index": 0,
+     "name": "Dips",
+     "sets": 4,
+     "reps": 8,
+     "hold_seconds": null,
+     "done": true
+    },
+    {
+     "index": 1,
+     "name": "Pike push-ups",
+     "sets": 3,
+     "reps": 10,
+     "hold_seconds": null,
+     "done": true
+    },
+    {
+     "index": 2,
+     "name": "L-sit",
+     "sets": 3,
+     "reps": null,
+     "hold_seconds": 25,
+     "done": false
+    },
+    {
+     "index": 3,
+     "name": "Plank",
+     "sets": 1,
+     "reps": null,
+     "hold_seconds": 60,
+     "done": false
+    }
+   ]
+  },
+  "rest_day": false,
+  "skills": [
+   {
+    "skill": "Handstand",
+    "daily_minutes": 12,
+    "practice": [
+     "Wall walks",
+     "Kick-ups"
+    ],
+    "minutes_today": 0,
+    "steps": [
+     {
+      "name": "Wall hold",
+      "target_seconds": 60,
+      "best_seconds": 40.0
+     },
+     {
+      "name": "Freestanding",
+      "target_seconds": 10,
+      "best_seconds": null
+     }
+    ],
+    "best_seconds": 40.0
+   }
+  ],
+  "food": {
+   "date": "2026-10-14",
+   "entries": [
+    {
+     "id": "5d1272f1cc",
+     "date": "2026-10-14",
+     "meal": "breakfast",
+     "name": "Protein oats",
+     "recipe_id": "2ae39f2da4",
+     "servings": 1.0,
+     "source": "recipe",
+     "planned_id": "2026-10-14:breakfast",
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1,
+     "fiber_g": 14.3,
+     "sugar_g": 27.6,
+     "sodium_mg": 272.0
+    },
+    {
+     "id": "16324be83f",
+     "date": "2026-10-14",
+     "meal": "snack",
+     "name": "Shake",
+     "recipe_id": "",
+     "servings": 1.0,
+     "source": "quick",
+     "planned_id": "",
+     "kcal": null,
+     "protein_g": 40.0,
+     "carbs_g": null,
+     "fat_g": null,
+     "fiber_g": null,
+     "sugar_g": null,
+     "sodium_mg": null
+    },
+    {
+     "id": "cf6da7efba",
+     "date": "2026-10-14",
+     "meal": "lunch",
+     "name": "Turkey chili",
+     "recipe_id": "cc273563c4",
+     "servings": 1.0,
+     "source": "recipe",
+     "planned_id": "2026-10-14:lunch",
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3,
+     "fiber_g": 7.0,
+     "sugar_g": 1.7,
+     "sodium_mg": 276.3
+    }
+   ],
+   "totals": {
+    "kcal": 1190.6,
+    "protein_g": 171.1,
+    "carbs_g": 116.6,
+    "fat_g": 24.4,
+    "fiber_g": 21.3,
+    "sugar_g": 29.3,
+    "sodium_mg": 548.3
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   },
+   "meals_logged": [
+    "breakfast",
+    "lunch",
+    "snack"
+   ]
+  },
+  "meals": {
+   "date": "2026-10-14",
+   "meals": [
+    {
+     "meal": "breakfast",
+     "recipe_id": "2ae39f2da4",
+     "name": "Protein oats",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": true,
+     "kcal": 875.5,
+     "protein_g": 95.8,
+     "carbs_g": 99.5,
+     "fat_g": 12.1
+    },
+    {
+     "meal": "lunch",
+     "recipe_id": "cc273563c4",
+     "name": "Turkey chili",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": true,
+     "kcal": 315.1,
+     "protein_g": 35.3,
+     "carbs_g": 17.1,
+     "fat_g": 12.3
+    },
+    {
+     "meal": "dinner",
+     "recipe_id": "714cbb7d5b",
+     "name": "Salmon and rice",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 788.7,
+     "protein_g": 43.8,
+     "carbs_g": 80.0,
+     "fat_g": 31.3
+    },
+    {
+     "meal": "snack",
+     "recipe_id": "43b3273b24",
+     "name": "Greek yogurt bowl",
+     "servings": 1.0,
+     "prep_id": "",
+     "eaten": false,
+     "kcal": 247.6,
+     "protein_g": 25.1,
+     "carbs_g": 36.7,
+     "fat_g": 1.2
+    }
+   ],
+   "totals": {
+    "kcal": 2226.9,
+    "protein_g": 200.0,
+    "carbs_g": 233.3,
+    "fat_g": 56.9,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   "targets": {
+    "kcal": 2300,
+    "protein_g": 170
+   }
+  }
+ },
+ "missions": [
+  {
+   "mission_id": "23617592fc",
+   "kind": "training",
+   "name": "Training: Push",
+   "icon": "\ud83d\udcaa",
+   "cadence": "daily",
+   "status": "active",
+   "xp": 30,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Dips 4\u00d78",
+     "progress": 1.0,
+     "target": 1.0,
+     "done": true
+    },
+    {
+     "index": 1,
+     "text": "Pike push-ups 3\u00d710",
+     "progress": 1.0,
+     "target": 1.0,
+     "done": true
+    },
+    {
+     "index": 2,
+     "text": "L-sit 3\u00d725 s",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    },
+    {
+     "index": 3,
+     "text": "Plank 1\u00d760 s",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    }
+   ],
+   "done": 2,
+   "total": 4
+  },
+  {
+   "mission_id": "a2c306e44e",
+   "kind": "skill:handstand",
+   "name": "Handstand practice",
+   "icon": "\ud83e\udd38",
+   "cadence": "daily",
+   "status": "active",
+   "xp": 15,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Wall walks",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    },
+    {
+     "index": 1,
+     "text": "Kick-ups",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    }
+   ],
+   "done": 0,
+   "total": 2
+  },
+  {
+   "mission_id": "9025e55f23",
+   "kind": "protein",
+   "name": "Protein: 170 g",
+   "icon": "\ud83c\udf57",
+   "cadence": "daily",
+   "status": "completed",
+   "xp": 10,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Eat 170 g of protein",
+     "progress": 170.0,
+     "target": 170.0,
+     "done": true
+    }
+   ],
+   "done": 1,
+   "total": 1
+  },
+  {
+   "mission_id": "10425bede8",
+   "kind": "lunch",
+   "name": "Packed lunch",
+   "icon": "\ud83e\udd6a",
+   "cadence": "daily",
+   "status": "completed",
+   "xp": 10,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Take a packed lunch",
+     "progress": 1.0,
+     "target": 1.0,
+     "done": true
+    }
+   ],
+   "done": 1,
+   "total": 1
+  },
+  {
+   "mission_id": "4df2326e21",
+   "kind": "prep",
+   "name": "Meal prep (Sun)",
+   "icon": "\ud83c\udf72",
+   "cadence": "weekly",
+   "status": "active",
+   "xp": 40,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Cook Turkey chili \u00d7 4",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    }
+   ],
+   "done": 0,
+   "total": 1
+  },
+  {
+   "mission_id": "13792d4c15",
+   "kind": "week_workouts",
+   "name": "Workouts this week: 3",
+   "icon": "\ud83c\udfcb",
+   "cadence": "weekly",
+   "status": "active",
+   "xp": 50,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Train 3 days",
+     "progress": 0.0,
+     "target": 3.0,
+     "done": false
+    }
+   ],
+   "done": 0,
+   "total": 1
+  },
+  {
+   "mission_id": "1c08ba3668",
+   "kind": "meal_plan",
+   "name": "This week's meal plan",
+   "icon": "\ud83d\udcc5",
+   "cadence": "weekly",
+   "status": "active",
+   "xp": 50,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Eat the 22 planned meals",
+     "progress": 2.0,
+     "target": 22.0,
+     "done": false
+    }
+   ],
+   "done": 0,
+   "total": 1
+  },
+  {
+   "mission_id": "5e7cf17e60",
+   "kind": "meals",
+   "name": "Today's meals",
+   "icon": "\ud83c\udf7d",
+   "cadence": "daily",
+   "status": "active",
+   "xp": 15,
+   "objectives": [
+    {
+     "index": 0,
+     "text": "Breakfast: Protein oats",
+     "progress": 1.0,
+     "target": 1.0,
+     "done": true
+    },
+    {
+     "index": 1,
+     "text": "Lunch: Turkey chili",
+     "progress": 1.0,
+     "target": 1.0,
+     "done": true
+    },
+    {
+     "index": 2,
+     "text": "Dinner: Salmon and rice",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    },
+    {
+     "index": 3,
+     "text": "Snack: Greek yogurt bowl",
+     "progress": 0.0,
+     "target": 1.0,
+     "done": false
+    }
+   ],
+   "done": 2,
+   "total": 4
+  }
+ ],
+ "milestones": [
+  {
+   "name": "60 s wall handstand",
+   "id": "6ec0ba1a",
+   "done_on": null
+  },
+  {
+   "name": "10 strict pull-ups",
+   "id": "cef0d424",
+   "done_on": null
+  }
+ ],
+ "progress": {
+  "weeks": 4.0,
+  "since": "2026-09-17",
+  "planned_workouts": 24,
+  "workouts": 0,
+  "planned_meals": 18,
+  "meals_eaten": 2,
+  "average_kcal": 2163,
+  "average_protein_g": 152,
+  "weekly_weight_change": -1.05,
+  "sentence": "4 weeks: 0 of 24 workouts, 2 of 18 planned meals, 2,163 kcal a day (goal 2,300), 152 g protein (goal 170), weight down 1.05 lb a week, on track for your goal by November 20.",
+  "days": [
+   {
+    "date": "2026-09-17",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-18",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-19",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-20",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-21",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-22",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-23",
+    "kcal": null,
+    "protein_g": null,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-24",
+    "kcal": 2060.0,
+    "protein_g": 160.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-25",
+    "kcal": 2097.0,
+    "protein_g": 167.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-26",
+    "kcal": 2134.0,
+    "protein_g": 174.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-27",
+    "kcal": 2171.0,
+    "protein_g": 121.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-28",
+    "kcal": 2208.0,
+    "protein_g": 128.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-29",
+    "kcal": 2245.0,
+    "protein_g": 135.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-09-30",
+    "kcal": 2282.0,
+    "protein_g": 142.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-01",
+    "kcal": 2319.0,
+    "protein_g": 149.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-02",
+    "kcal": 2356.0,
+    "protein_g": 156.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-03",
+    "kcal": 2393.0,
+    "protein_g": 163.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-04",
+    "kcal": 2030.0,
+    "protein_g": 170.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-05",
+    "kcal": 2067.0,
+    "protein_g": 177.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-06",
+    "kcal": 2104.0,
+    "protein_g": 124.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-07",
+    "kcal": 2141.0,
+    "protein_g": 131.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-08",
+    "kcal": 2178.0,
+    "protein_g": 138.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-09",
+    "kcal": 2215.0,
+    "protein_g": 145.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-10",
+    "kcal": 2252.0,
+    "protein_g": 152.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-11",
+    "kcal": 2289.0,
+    "protein_g": 159.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-12",
+    "kcal": 2326.0,
+    "protein_g": 166.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-13",
+    "kcal": 2363.0,
+    "protein_g": 173.0,
+    "carbs_g": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "sugar_g": null,
+    "sodium_mg": null
+   },
+   {
+    "date": "2026-10-14",
+    "kcal": 1190.6,
+    "protein_g": 171.1,
+    "carbs_g": 116.6,
+    "fat_g": 24.4,
+    "fiber_g": 21.3,
+    "sugar_g": 29.3,
+    "sodium_mg": 548.3
+   }
+  ]
+ },
+ "plan_text": {
+  "rotation": [
+   {
+    "name": "Push",
+    "exercises": "Dips 4x8\nPike push-ups 3x10\nL-sit 3x25s\nPlank 60s"
+   },
+   {
+    "name": "Pull",
+    "exercises": "Pull-ups 5x5\nRows 3x12\nDead hang 45s"
+   }
+  ],
+  "skills": [
+   {
+    "skill": "Handstand",
+    "daily_minutes": 12,
+    "practice": "Wall walks, Kick-ups",
+    "steps": "Wall hold 60s\nFreestanding 10s"
+   }
+  ]
+ },
+ "weight": {
+  "latest": 180.6,
+  "latest_on": "2026-10-13",
+  "average_7d": 180.9,
+  "weekly_change": -1.05,
+  "since_start": -5.2,
+  "count": 12,
+  "units": "lb",
+  "target": 175.0,
+  "on_track_for": "2026-11-20",
+  "series": [
+   {
+    "id": "0d57c7284f",
+    "date": "2026-09-10",
+    "weight": 185.8,
+    "average": 185.8
+   },
+   {
+    "id": "421a16aa10",
+    "date": "2026-09-13",
+    "weight": 185.1,
+    "average": 185.4
+   },
+   {
+    "id": "f603e6bec4",
+    "date": "2026-09-16",
+    "weight": 184.8,
+    "average": 185.2
+   },
+   {
+    "id": "69f5782034",
+    "date": "2026-09-19",
+    "weight": 184.2,
+    "average": 184.7
+   },
+   {
+    "id": "ed7cf4f77e",
+    "date": "2026-09-22",
+    "weight": 183.9,
+    "average": 184.3
+   },
+   {
+    "id": "43ae74cbf3",
+    "date": "2026-09-25",
+    "weight": 183.3,
+    "average": 183.8
+   },
+   {
+    "id": "2713089cfb",
+    "date": "2026-09-28",
+    "weight": 183.0,
+    "average": 183.4
+   },
+   {
+    "id": "11f6467667",
+    "date": "2026-10-01",
+    "weight": 182.4,
+    "average": 182.9
+   },
+   {
+    "id": "8efb0675f6",
+    "date": "2026-10-04",
+    "weight": 182.1,
+    "average": 182.5
+   },
+   {
+    "id": "783513282f",
+    "date": "2026-10-07",
+    "weight": 181.5,
+    "average": 182.0
+   },
+   {
+    "id": "993111d5ca",
+    "date": "2026-10-10",
+    "weight": 181.2,
+    "average": 181.6
+   },
+   {
+    "id": "5ff079d8f4",
+    "date": "2026-10-13",
+    "weight": 180.6,
+    "average": 181.1
+   }
+  ]
+ }
+}
