@@ -134,13 +134,14 @@ def test_a_child_can_only_take_child_actions(world):
     # core/account_actions.py).
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
     kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "workout_template.",
-                           "mission.", "objective.", "pathway.", "character.", "fitness.")
+                           "mission.", "objective.", "pathway.", "character.", "fitness.", "plan.")
     assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
                                                                                  "setting.set", "communication.resume"}
     assert "recipe.delete" not in child_ok and "meal.log" in child_ok and "workout.log" in child_ok
     assert "mission.delete" not in child_ok and "mission.complete" in child_ok
     assert "fitness.weigh_in" not in child_ok and "fitness.training_done" in child_ok
+    assert "plan.import" in child_ok  # their own plan; a goal weight is refused for a child (core/fitness_actions.py)
 
 
 def test_mia_proposed_actions_are_recorded_as_hers(world):

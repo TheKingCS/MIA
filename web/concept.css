@@ -737,3 +737,6 @@ a.recipe-link:hover h3, a.recipe-link:hover { text-decoration: underline; }
 .stat-tiles strong { color: #fff; }
 .recipe-stats { display: flex; gap: 10px; align-items: center; margin: 0; font-size: var(--text-sm); }
 .card-stars { color: var(--win); letter-spacing: 1px; }
+.paste-box { width: 100%; min-height: 220px; font: inherit; font-size: var(--text-sm); line-height: 1.45; padding: 10px 12px;
+  border-radius: 12px; border: 1px solid var(--glass-line-strong); background: rgba(0, 0, 0, 0.25); color: var(--text); margin: 8px 0; }
+.paste-example { white-space: pre-wrap; font-size: 12px; color: var(--text-dim); margin: 6px 0 0; }

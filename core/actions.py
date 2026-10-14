@@ -312,6 +312,7 @@ import core.estate_actions  # noqa: E402,F401
 import core.mission_actions  # noqa: E402,F401  (Missions, Skills, Character)
 import core.account_actions  # noqa: E402,F401  (Profile, Settings)
 import core.fitness_actions  # noqa: E402,F401  (fitness plan, weigh-ins, food, training)
+import core.plan_import  # noqa: E402,F401  (a whole plan and its recipes, pasted as text)
 
 
 # ------------------------------------------------------------------ the five steps

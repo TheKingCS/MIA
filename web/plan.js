@@ -34,6 +34,29 @@
     $("back").textContent = "← " + (app === "kitchen" ? "Kitchen" : "Workout");
   }
 
+  // ------------------------------------------------------------ paste a whole plan (core/plan_import.py)
+  let pasted = "";  // survives a live refresh
+  let pasteOpen = false;
+  const EXAMPLE = "GOALS\nProtein: 170 g\nCalories: 2300\nGoal weight: 175 lb by 2027-03-01\nWorkouts a week: 3\n\n" +
+    "TRAINING\nDays: Mon, Wed, Fri\nDay: Push\nDips 3x8\nL-sit 3x20s\n\nSKILL: Handstand (12 min a day)\nDrills: Wall walks\nWall hold 60s\n\n" +
+    "MILESTONES\n60 s wall handstand\n\nMEALS\nPacked lunch: yes\nPrep day: Sun\nAllergies: none\n\n" +
+    "RECIPE: Turkey chili\nServings: 6\nIngredients:\n2 lb ground turkey\nSteps:\nBrown the turkey.";
+  function paste() {
+    if (!pasteOpen) {
+      return section("Paste a plan", btn("Paste", "btn-amber", () => { pasteOpen = true; draw(); $("paste-box").focus(); }),
+        el("p", { class: "dim" }, "Have your plan written out somewhere, like a chat with Muse? Paste the whole thing: goals, training, skills, meals and recipes in one go. MIA shows what it will set before anything changes, and one undo takes it back."));
+    }
+    const box = el("textarea", { id: "paste-box", class: "paste-box", rows: "10", placeholder: EXAMPLE,
+      "aria-label": "Your plan as text", oninput: (e) => { pasted = e.target.value; } });
+    box.value = pasted;
+    return section("Paste a plan", null,
+      el("p", { class: "dim" }, "Headings MIA reads: GOALS, TRAINING (Days:, then Day: Push and its exercises), SKILL: name, MILESTONES, MEALS, RECIPE: name (with Ingredients: and Steps:). Anything else is listed back to you, not lost."),
+      box,
+      buttons(btn("Read it", "btn-green", async () => { if (await act({ kind: "plan.import", params: { text: pasted } })) { pasted = ""; pasteOpen = false; draw(); } }),
+        btn("Cancel", "btn-ghost", () => { pasteOpen = false; draw(); })),
+      el("details", {}, el("summary", {}, "See an example"), el("pre", { class: "paste-example" }, EXAMPLE)));
+  }
+
   // ------------------------------------------------------------ goals
   async function editGoals() {
     const t = fit.plan.targets;
@@ -183,7 +206,7 @@
   }
 
   function draw() {
-    $("panel").replaceChildren(el("div", { class: "two-up" }, el("div", { class: "stack" }, goals(), meals(), milestones()),
+    $("panel").replaceChildren(paste(), el("div", { class: "two-up" }, el("div", { class: "stack" }, goals(), meals(), milestones()),
       el("div", { class: "stack" }, training(), skills())));
   }
 

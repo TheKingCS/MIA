@@ -51,6 +51,10 @@ the hub, and the Meta AI app.
       see its recipe, try **Schedule meal** and **Add to grocery list**.
       Then log a weigh-in (Workout → Progress) and say "step one of
       today's workout complete", "today's lunch complete", "I weigh 182".
+- [ ] **Your plan from Muse (H-0030):** ask Muse for your plan "in MIA's
+      paste format" (she has `docs/PLAN_TEXT_FORMAT.md`), copy it, then
+      Workout → 🎯 My plan → **Paste a plan** → paste → **Read it** → check
+      what it says → Yes. Undo takes it all back.
 - [ ] **Run the 1.5B Quick test again on build 21 or newer** (Model test,
       tap Start first) and send the screenshot: some questions are now
       answered by MIA's code instantly.
