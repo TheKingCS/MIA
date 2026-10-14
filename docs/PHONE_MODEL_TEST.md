@@ -120,3 +120,14 @@ ride along). CI's check of the smaller requests: 1.5B 60 of 80 (75%, was
 81%). Next: questions that clearly match one lookup are answered by MIA's
 code directly, no model (instant, and the 1.5B's most common miss).
 
+
+### Build 21 (2026-10-14: direct lookups)
+
+Questions that clearly ask for one lookup ("When is my next alarm?") are
+now answered by MIA's code with no model: instant, and never the wrong
+tool (`core/assistant_actions.direct_lookup`). CI's check: **1.5B back to
+65 of 80 (81%)**, typical case 6.83 s on GitHub's computer (was 8.0 s),
+reading 59.3 tokens/s, writing 26.8 tokens/s. What it still misses:
+questions with no unique trigger phrase ("What bills do I have?" reaches
+inventory through "do I have"; debts, chores, the budget summary) and
+completion phrasing ("I renewed the tags"). Waiting on Zac's A54 run.
