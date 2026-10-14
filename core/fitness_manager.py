@@ -294,6 +294,10 @@ class FitnessManager:
         self._data["food"] = [f for f in self._data["food"] if f["id"] != entry_id]
         self._save()
 
+    def food_for_recipe(self, recipe_id: str) -> list[dict]:
+        """Every time this person logged eating a recipe."""
+        return [f for f in self._data["food"] if f.get("recipe_id") == recipe_id]
+
     def food_on(self, day: str) -> list[dict]:
         return [f for f in self._data["food"] if f["date"] == day]
 

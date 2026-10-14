@@ -140,8 +140,10 @@ def _food(context, params) -> str:
     day = _day(params)
     fit.log_food(meal, name, nutrients, on=day, recipe_id=recipe_id, servings=servings,
                  source="recipe" if recipe_id else "quick", planned_id=str(params.get("planned_id") or ""))
-    if recipe_id and getattr(context, "kitchen", None) is not None:
-        context.kitchen.log_meal(recipe_id, day)  # the Kitchen's own "times made"
+    slot = fit.planned(day).get(meal) if params.get("planned_id") else None
+    prepped = bool(slot and slot.get("prep_id") and slot.get("recipe_id") == recipe_id)
+    if recipe_id and not prepped and getattr(context, "kitchen", None) is not None:
+        context.kitchen.log_meal(recipe_id, day)  # the Kitchen's own "times made" (a prepped meal counted when cooked)
     if meal == "lunch" and params.get("planned_id") and fit.plan["meals"].get("packed_lunch"):
         fit.mark_habit("lunch", day)  # the planned lunch, eaten: it was packed
     _after(context)
@@ -507,7 +509,10 @@ def _describe_prep_done(context, params) -> str:
 
 
 def _prep_done(context, params) -> str:
-    _fit(context).finish_prep(str(params["prep_id"]))
+    session = _fit(context).finish_prep(str(params["prep_id"]))
+    if getattr(context, "kitchen", None) is not None and context.kitchen.get_recipe(session["recipe_id"]) is not None:
+        context.kitchen.log_meal(session["recipe_id"], date.today().isoformat(),
+                                 notes=f"Meal prep, {session['servings']:g} servings")  # made once, eaten over the week
     _after(context)
     return "Meal prep: done."
 

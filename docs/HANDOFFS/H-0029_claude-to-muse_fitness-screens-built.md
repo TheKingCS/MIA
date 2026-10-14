@@ -29,6 +29,12 @@ cooking, and when it's planned next. "Add to grocery list" adds only
 what isn't in the pantry or already on the list; matching now ignores
 plurals and words like "diced" ("Diced Onions" finds "onion").
 
+Later the same day Zac added **ratings and stats** to the recipe page:
+five tappable stars under the chips (gold when set), and a Stats card
+(your rating, times made, last made, made in the last 30 days, first
+made, how often you've eaten it, the household's rating). Recipe cards
+show the stars and "made N×". Yours to style too.
+
 ## Zac's two calls (DEC-0021)
 
 - One My plan screen: yes.

@@ -181,3 +181,29 @@ def test_removing_food_weigh_ins_and_prep(world):
     assert world.fitness.prep_sessions() == [] and world.fitness.planned(MON.isoformat()) == {}
     assert world.fitness.food_on(MON.isoformat()) == [] and world.fitness.weigh_ins() == []
     assert weight_series(world.fitness, MON) == []
+
+
+def test_rating_and_cooking_stats_on_the_recipe_page(world):
+    """Zac, 2026-10-14: 5-star ratings and how many times you've made it."""
+    from core.web_screens import recipe_page
+
+    chili = world.kitchen.add_recipe("Chili", servings=6)
+    proposal = world.actions.propose(world, "recipe.rate", {"recipe_id": chili.recipe_id, "rating": "4"})
+    assert proposal.summary == "Rate Chili ★★★★☆"
+    world.actions.approve(world, proposal.proposal_id)
+    world.kitchen.set_recipe_rating("someone-else", chili.recipe_id, 5)
+    with pytest.raises(Exception, match="1 to 5"):
+        world.actions.propose(world, "recipe.rate", {"recipe_id": chili.recipe_id, "rating": "7"})
+    world.kitchen.log_meal(chili.recipe_id, (MON - timedelta(days=40)).isoformat())
+    # Meal prep: cooked once, eaten twice; counts as made once.
+    session = world.fitness.add_prep(MON.isoformat(), chili.recipe_id, 6, [f"{MON.isoformat()}:lunch", f"{MON.isoformat()}:dinner"])
+    world.actions.approve(world, world.actions.propose(world, "meal.prep_done", {"prep_id": session["id"]}).proposal_id)
+    for meal in ("lunch", "dinner"):
+        world.actions.approve(world, world.actions.propose(world, "fitness.food", {
+            "meal": meal, "recipe_id": chili.recipe_id, "date": MON.isoformat(), "planned_id": f"{MON.isoformat()}:{meal}"}).proposal_id)
+    stats = recipe_page(world, chili.recipe_id, date.today())["stats"]
+    assert stats["rating"] == 4 and stats["others_rated"] == 1 and stats["others_average"] == 5
+    assert stats["times_made"] == 2 and stats["made_last_30_days"] == 1 and stats["times_eaten"] == 2
+    assert stats["first_made"] == (MON - timedelta(days=40)).isoformat()
+    world.actions.approve(world, world.actions.propose(world, "recipe.rate", {"recipe_id": chili.recipe_id, "rating": "0"}).proposal_id)
+    assert recipe_page(world, chili.recipe_id)["stats"]["rating"] is None

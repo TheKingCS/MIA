@@ -48,6 +48,7 @@ _MILLILITRES = {"ml": 1, "millilitre": 1, "milliliter": 1, "l": 1000, "litre": 1
 _UNIT_WORDS = {"tbs": "tbsp", "tbl": "tbsp", "t": "tsp", "c": "cup", "lbs": "lb", "#": "lb", "ozs": "oz"}
 _VOLUMES = {"cup", "cups", "tbsp", "tsp", "tablespoon", "teaspoon", "fl", "oz", "ml", "liter", "quart", "pint", "gallon"}
 SCOOP_G = 30  # a protein-powder scoop as nutrition labels give it (most are 25 to 35 g)
+CAN_CUPS, CAN_G = 1.5, 425  # a standard 15 oz can: about 1.5 cups drained, 425 g in all
 _PIECES = ("", "each", "piece", "whole", "large", "medium", "small", "clove", "slice", "can", "breast", "fillet")
 
 # Words that describe how something is cut or bought, not what it is.
@@ -328,6 +329,9 @@ def grams(food: Food, quantity: float, unit: str) -> Optional[float]:
         return quantity * _GRAMS[unit]
     if unit == "scoop" and "scoop" not in food.portions:
         return quantity * SCOOP_G
+    if unit == "can" and not any(name.split()[0] == "can" for name in food.portions):
+        cup = food.portions.get("cup")  # a standard 15 oz can is about 1.5 cups drained
+        return quantity * (CAN_CUPS * cup if cup else CAN_G)
     for name, weight in food.portions.items():  # the food's own measures win
         if unit and (name == unit or name.split()[0] == unit):
             return quantity * weight

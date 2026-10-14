@@ -108,3 +108,9 @@ def test_a_scoop_and_never_a_cup_for_one_of_something():
     assert food_table.grams(whey, 1, "") is None  # "1 whey protein": unknown, not a guess
     assert food_table.grams(banana, 2, "") == 236
     assert parse_ingredients("1 scoop whey protein")[0]["unit"] == "scoop"
+
+
+def test_a_can_is_about_a_cup_and_a_half():
+    beans = food_table.Food("3", "Beans, black, canned", "Legumes", {"kcal": 91.0}, {"cup": 172.0})
+    assert food_table.grams(beans, 2, "can") == 2 * 1.5 * 172
+    assert food_table.grams(food_table.Food("4", "Tomatoes", "Veg", {}, {}), 1, "cans") == food_table.CAN_G

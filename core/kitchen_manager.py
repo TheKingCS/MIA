@@ -777,6 +777,11 @@ class KitchenManager:
         self._save_recipe_user_stats()
         return stats
 
+    def recipe_ratings(self, recipe_id: str) -> dict:
+        """Each person's rating of a recipe: {profile_id: stars} (only real ratings)."""
+        return {s.profile_id: s.rating for s in self._recipe_user_stats
+                if s.recipe_id == recipe_id and s.rating is not None}
+
     def set_recipe_favorite(self, profile_id: str, recipe_id: str, favorite: bool) -> RecipeUserStats:
         stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
         stats.favorite = favorite

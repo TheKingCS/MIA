@@ -56,6 +56,8 @@
     return el("article", { class: "glass recipe-card" + (r.locked ? " locked" : "") },
       el("div", { class: "asset-head" }, recipeLink(r.id, el("h3", {}, (r.favorite ? "★ " : "") + r.name)), status),
       el("p", { class: "dim" }, meta(r) || "No details yet"),
+      r.rating || r.times_made ? el("p", { class: "recipe-stats" }, r.rating ? el("span", { class: "card-stars", "aria-label": r.rating + " of 5 stars" }, "★".repeat(Math.round(r.rating)) + "☆".repeat(5 - Math.round(r.rating))) : null,
+        r.times_made ? el("span", { class: "dim" }, "made " + r.times_made + "×") : null) : null,
       r.locked && r.unlocked_by_mission ? el("p", { class: "locked-note" }, "Unlock: " + r.unlocked_by_mission) : null,
       r.ingredients.length ? el("p", { class: "recipe-line" }, r.ingredients.slice(0, 5).join(", ") + (r.ingredients.length > 5 ? "…" : "")) : null,
       buttons(recipeLink(r.id, "View recipe", "btn btn-ghost"), r.locked ? null : btn("Log meal", "btn-green", () => logMeal(r))));

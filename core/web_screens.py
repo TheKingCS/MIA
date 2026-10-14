@@ -163,6 +163,9 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
         scheduled.sort(key=lambda x: (x["date"], MEALS.index(x["meal"])))
     category = (recipe.category or "").lower()
     stats = kitchen.get_recipe_user_stats(pid, recipe.recipe_id) if pid else None
+    made = sorted(m.date for m in kitchen.all_meal_log_entries() if m.recipe_id == recipe.recipe_id and m.date)
+    others = [v for who, v in kitchen.recipe_ratings(recipe.recipe_id).items() if who != pid]
+    eaten = fit.food_for_recipe(recipe.recipe_id) if fit is not None else []
     return {
         "available": True, "as_of": today.isoformat(), "id": recipe.recipe_id, "name": recipe.name,
         "category": recipe.category, "servings": recipe.servings, "prep_minutes": recipe.prep_time_minutes or 0,
@@ -175,6 +178,12 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
         "favorite": pid is not None and recipe.recipe_id in set(kitchen.favorite_recipe_ids(pid)),
         "rating": getattr(stats, "rating", None), "times_made": kitchen.times_made(recipe.recipe_id),
         "last_made": kitchen.last_made_date(recipe.recipe_id),
+        "stats": {  # the household's cooking and this person's own rating and eating (Zac, 2026-10-14)
+            "rating": getattr(stats, "rating", None), "can_rate": bool(pid),
+            "others_rated": len(others), "others_average": round(sum(others) / len(others), 1) if others else None,
+            "times_made": len(made), "first_made": made[0] if made else None, "last_made": made[-1] if made else None,
+            "made_last_30_days": sum(1 for d in made if d > (today - timedelta(days=30)).isoformat()),
+            "times_eaten": len(eaten), "servings_eaten": round(sum(float(f.get("servings") or 1) for f in eaten), 1)},
         "can_schedule": fit is not None and not recipe.locked, "scheduled": scheduled,
         "meals": list(MEALS), "default_meal": category if category in MEALS else "dinner",
         "values": _values(RECORDS["recipe"], recipe), "ingredients_text": _ingredients_text(recipe), "forms": form_spec(),

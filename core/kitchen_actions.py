@@ -15,6 +15,7 @@ are child-safe, except deleting a recipe.
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 from core.record_actions import (Field, Record, add_describe, add_execute, delete_describe, delete_execute, field_dict,
@@ -217,7 +218,7 @@ def _who(context) -> str:
 
     pid = person_id(context)
     if not pid:
-        raise ActionError("Favorites belong to a person; sign in first.")
+        raise ActionError("Favorites and ratings belong to a person; sign in first.")
     return pid
 
 
@@ -232,6 +233,30 @@ def _favorite(context, params) -> str:
     on = params.get("favorite", True) not in (False, "false", 0, "0")
     context.kitchen.set_recipe_favorite(_who(context), recipe.recipe_id, on)
     return f"{recipe.name} is {'a favorite' if on else 'no longer a favorite'}."
+
+
+def _stars(params) -> Optional[int]:
+    raw = params.get("rating")
+    if raw in (None, "", 0, "0"):
+        return None  # clears the rating
+    try:
+        stars = int(float(str(raw)))
+    except ValueError:
+        raise ActionError("A rating is 1 to 5 stars.") from None
+    if not 1 <= stars <= 5:
+        raise ActionError("A rating is 1 to 5 stars.")
+    return stars
+
+
+def _describe_rate(context, params) -> str:
+    recipe, stars = _recipe(context, params), _stars(params)
+    return f"Clear your rating of {recipe.name}" if stars is None else f"Rate {recipe.name} {'★' * stars}{'☆' * (5 - stars)}"
+
+
+def _rate(context, params) -> str:
+    recipe, stars = _recipe(context, params), _stars(params)
+    context.kitchen.set_recipe_rating(_who(context), recipe.recipe_id, stars)
+    return f"Rating cleared for {recipe.name}." if stars is None else f"{recipe.name}: {stars} star{'s' if stars != 1 else ''}."
 
 
 # ------------------------------------------------------------------ the kinds
@@ -255,6 +280,8 @@ def _kinds() -> list[ActionType]:
         ActionType("meal.log", "Log meal", {"recipe_id": "the recipe", "date": "optional", "notes": "optional"},
                    _describe_meal, _log_meal, True),
         ActionType("meal.delete", "Remove", {"entry_id": "the meal"}, _describe_meal_delete, _meal_delete, True),
+        ActionType("recipe.rate", "Rate", {"recipe_id": "the recipe", "rating": "1 to 5 stars (0 clears it)"},
+                   _describe_rate, _rate, True),
         ActionType("recipe.favorite", "Favorite", {"recipe_id": "the recipe", "favorite": "true or false"},
                    _describe_favorite, _favorite, True),
     ]

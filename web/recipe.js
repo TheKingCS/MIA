@@ -61,11 +61,11 @@
     const n = page.nutrition;
     const minutes = page.prep_minutes + page.cook_minutes;
     const chips = [page.category, minutes ? minutes + " min" : null,
-      page.servings ? page.servings + " serving" + (page.servings === 1 ? "" : "s") : null,
-      page.times_made ? "made " + page.times_made + "×" : null].filter(Boolean);
+      page.servings ? page.servings + " serving" + (page.servings === 1 ? "" : "s") : null].filter(Boolean);
     const buyCount = page.to_buy.length;
     return el("section", { class: "glass money-section recipe-top" },
-      el("div", { class: "chip-row" }, chips.map((c) => el("span", { class: "chip" }, c)), page.favorite ? el("span", { class: "chip chip-ok" }, "★ Favorite") : null),
+      el("div", { class: "chip-row" }, chips.map((c) => el("span", { class: "chip" }, c)), page.favorite ? el("span", { class: "chip chip-ok" }, "♥ Favorite") : null),
+      stars(),
       page.locked ? el("p", { class: "locked-note" }, "🔒 Locked" + (page.unlocked_by_mission ? ": finish “" + page.unlocked_by_mission + "” to unlock it." : ".")) : null,
       el("div", { class: "recipe-macros" },
         [["kcal", "Calories", ""], ["protein_g", "Protein", " g"], ["carbs_g", "Carbs", " g"], ["fat_g", "Fat", " g"]].map(([k, label, unit]) =>
@@ -74,6 +74,36 @@
         page.can_schedule ? btn("📅 Schedule meal", "btn-green", schedule) : null,
         buyCount ? btn("🛒 Add to grocery list (" + buyCount + ")", "btn-amber", toList)
           : el("span", { class: "chip chip-ok" }, page.ingredients.length ? "✓ You have everything (or it's on the list)" : "No ingredients yet")));
+  }
+
+  // ------------------------------------------------------------ rating and stats (Zac, 2026-10-14)
+  const rate = (n) => act({ kind: "recipe.rate", params: { recipe_id: page.id, rating: n === Math.round(page.stats.rating || 0) ? 0 : n } });
+  function stars() {
+    const st = page.stats, mine = Math.round(st.rating || 0);
+    if (!st.can_rate) return null;
+    return el("div", { class: "stars-row" },
+      el("div", { class: "stars", role: "group", "aria-label": mine ? "Your rating: " + mine + " of 5 stars" : "Rate this recipe" },
+        [1, 2, 3, 4, 5].map((n) => el("button", { type: "button", class: "star" + (n <= mine ? " on" : ""),
+          "aria-label": n + " star" + (n === 1 ? "" : "s") + (n === mine ? " (tap again to clear)" : ""), "aria-pressed": String(n === mine),
+          onclick: () => rate(n) }, n <= mine ? "★" : "☆"))),
+      el("span", { class: "dim" }, mine ? "Your rating" : "Tap to rate"));
+  }
+  function stats() {
+    const st = page.stats;
+    const tile = (big, small) => el("div", { class: "glass nw-tile" }, el("small", {}, small), el("strong", {}, big));
+    return section("Stats", null,
+      el("div", { class: "nw-tiles fact-tiles stat-tiles" },
+        tile(st.rating ? "★".repeat(Math.round(st.rating)) : "—", "Your rating"),
+        tile(st.times_made ? st.times_made + "×" : "Not yet", "Times made"),
+        tile(st.last_made ? dayName(st.last_made) : "—", "Last made"),
+        tile(String(st.made_last_30_days), "Made in the last 30 days")),
+      el("div", {},
+        st.first_made ? el("div", { class: "acct-fact" }, el("span", { class: "dim" }, "First made"), el("strong", {}, dayName(st.first_made))) : null,
+        st.times_eaten ? el("div", { class: "acct-fact" }, el("span", { class: "dim" }, "You've eaten it"),
+          el("strong", {}, st.times_eaten + "× (" + st.servings_eaten + " serving" + (st.servings_eaten === 1 ? "" : "s") + ")")) : null,
+        st.others_rated ? el("div", { class: "acct-fact" }, el("span", { class: "dim" }, "Your household"),
+          el("strong", {}, st.others_average + " ★ from " + st.others_rated + " other" + (st.others_rated === 1 ? "" : "s"))) : null),
+      st.times_made ? null : el("p", { class: "dim" }, "Press “I made this” after cooking it (meal prep counts once, when it's cooked)."));
   }
 
   function nutrition() {
@@ -124,7 +154,7 @@
   function more() {
     return el("div", { class: "row-buttons recipe-more" },
       page.locked ? null : btn("I made this", "btn-ghost", logMeal),
-      btn(page.favorite ? "Unfavorite" : "★ Favorite", "btn-ghost", () => act({ kind: "recipe.favorite", params: { recipe_id: page.id, favorite: !page.favorite } })),
+      btn(page.favorite ? "Unfavorite" : "♥ Favorite", "btn-ghost", () => act({ kind: "recipe.favorite", params: { recipe_id: page.id, favorite: !page.favorite } })),
       btn("Edit recipe", "btn-ghost", edit),
       btn("Delete", "btn-ghost", remove));
   }
@@ -134,7 +164,7 @@
     $("hero-name").textContent = page.name;
     $("hero-tagline").textContent = page.notes || page.source || "";
     $("panel").replaceChildren(top(), el("div", { class: "two-up" }, el("div", { class: "stack" }, ingredientList(), nutrition()),
-      el("div", { class: "stack" }, steps(), planned())), more());
+      el("div", { class: "stack" }, steps(), stats(), planned())), more());
   }
 
   const from = query.get("from");

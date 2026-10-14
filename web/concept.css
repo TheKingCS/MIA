@@ -725,3 +725,15 @@ a.recipe-link:hover h3, a.recipe-link:hover { text-decoration: underline; }
 .plan-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 8px; }
 .plan-list { margin: 0; padding-left: 20px; line-height: 1.6; }
 .day-picks { margin: 8px 0; }
+
+/* ---------------------------------------------------------------- Ratings (2026-10-14) */
+.stars-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stars { display: flex; gap: 2px; }
+.star { width: 44px; height: 44px; border: 0; background: none; cursor: pointer; font-size: 30px; line-height: 1;
+  color: var(--text-faint); padding: 0; }
+.star.on { color: var(--win); text-shadow: 0 0 10px var(--win-glow); }
+.star:hover, .star:focus-visible { color: var(--win); }
+.stat-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stat-tiles strong { color: #fff; }
+.recipe-stats { display: flex; gap: 10px; align-items: center; margin: 0; font-size: var(--text-sm); }
+.card-stars { color: var(--win); letter-spacing: 1px; }
