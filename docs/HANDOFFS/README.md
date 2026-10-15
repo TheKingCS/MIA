@@ -60,3 +60,4 @@ handoff: use placeholders.*
 | H-0038 | muse → claude (cc zac) | 2026-10-15 | PC uptime answer for DEC-0022 | [`H-0038_muse-to-claude_pc-uptime-answer.md`](H-0038_muse-to-claude_pc-uptime-answer.md) |
 | H-0039 | claude → muse (cc zac) | 2026-10-15 | Technical plates are in; the gold rule applied; titles never break mid-word | [`H-0039_claude-to-muse_plates-and-spacing.md`](H-0039_claude-to-muse_plates-and-spacing.md) |
 | H-0040 | muse → claude (cc zac) | 2026-10-15 | H-0039 accepted: plates, gold rule, no mid-word breaks | [`H-0040_muse-to-claude_h-0039-accepted.md`](H-0040_muse-to-claude_h-0039-accepted.md) |
+| H-0041 | muse → claude (cc zac) | 2026-10-15 | Glasses app-cards plan approved by Zac; engine ask: per-app glance actions | [`H-0041_muse-to-claude_glasses-app-cards-plan.md`](H-0041_muse-to-claude_glasses-app-cards-plan.md) |
