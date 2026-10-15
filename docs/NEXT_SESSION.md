@@ -55,8 +55,11 @@ the hub, and the Meta AI app.
       9800X3D, Radeon RX 7900 XTX 24 GB; on once the Ethernet cable
       arrives. (RAM still unknown; it doesn't change the plan.)
 - [ ] **When the PC is set up:** install MIA on it (the Windows
-      installer from the Windows CI run) and Ollama for Windows, which
-      runs on the 7900 XTX. Claude will say which model to pull.
+      installer from the Windows CI run), Ollama for Windows (it runs on
+      the 7900 XTX; Claude will say which model to pull), and
+      **Tailscale** on the PC and your phone, signed in with the same
+      account (free; this is what lets the phone reach the PC from work).
+      Leave the PC on (sleep off) for MIA to reach it.
 - [ ] **Look at MIA's new look (DEC-0023)** in the newest phone build and
       say what to change.
 - [ ] **Your plan from Muse (H-0030):** ask Muse for your plan "in MIA's
@@ -277,7 +280,7 @@ stays off unless switched on. **Zac's PC: Radeon RX 7900 XTX, 24 GB
 (AMD: Ollama's ROCm support on Windows, or llama.cpp's Vulkan build).**
 Plan: measure Qwen 2.5 14B (~9 GB, fast) and 32B (~19 GB, fits the card)
 on the golden set in CI (accuracy only; CI has no GPU), pick one, then
-build: the phone finds the PC (same Wi-Fi first, Tailscale later),
+build: the phone finds the PC at home (same Wi-Fi) **and from anywhere through Tailscale from the start** (Zac, 2026-10-15: from work Wi-Fi too),
 Talk uses it with the phone's 1.5B as fallback, and the shell shows the
 level (PHONE / HOME PC / ONLINE, Muse's H-0035 §5). Then presence-page
 frame and the dashboard saying card as a readout (H-0035 §3).

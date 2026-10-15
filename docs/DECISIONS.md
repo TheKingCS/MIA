@@ -405,6 +405,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   then sync (the hardest piece; it's Phase 4 of docs/PHONE_FIRST_PLAN.md
   moved up). **Waiting on:** Zac's PC specs (graphics card, memory, is it
   on most of the day), which decide the model size.
+- Amended (zac, 2026-10-15): **reachable from anywhere, from the start.**
+  From work Wi-Fi (or mobile data) the phone reaches the home PC the
+  way you'd remote into a Pi, through Tailscale (MIA's existing private
+  link: `core/phone_server.py`, `docs/PHONE_VOICE_SETUP.md`), not the
+  public internet; same Wi-Fi is just the faster path. Nothing is opened
+  to the internet; the PC still needs a password to sign in.
 - Related: DEC-0001, DEC-0002, DEC-0015, DEC-0019, docs/PHONE_FIRST_PLAN.md
 
 
