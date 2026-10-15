@@ -21,7 +21,7 @@
   let page = null;
   let fit = null;  // MIA.fitness() (null where fitness isn't set up)
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : null;
-  const timer = { skill: null, started: 0, elapsed: 0, running: false, tick: null };  // survives a live refresh
+  const timer = { skill: null, step: "", started: 0, elapsed: 0, running: false, tick: null };  // survives a live refresh
   let byTemplate = false;
   let draft = {};  // what's typed in the log form survives a live refresh
 
@@ -174,18 +174,44 @@
     const best = step ? step.best_seconds : sk.best_seconds;
     const done = await act({ kind: "fitness.skill", params });
     if (!done) return;
-    timer.skill = null; timer.elapsed = 0; draw();
+    timer.skill = null; timer.elapsed = 0; timer.step = ""; draw();
     if (mode === "hold" && (best == null || seconds > best)) {
       celebrate("New best: " + plural(seconds, "second"), (stepName || sk.skill) + (best != null ? " · was " + best + " s" : " · your first hold"));
     }
   }
 
+  // Reps (Muse, H-0031/H-0033): a step with a rep target is logged as a count, with or without the timer.
+  async function logReps(sk, stepName) {
+    const repSteps = sk.steps.filter((x) => x.target_reps);
+    const v = await form("Log reps: " + sk.skill, [
+      { name: "step", label: "Step", type: "choice", options: repSteps.length ? repSteps.map((x) => x.name) : [""], default: stepName || (repSteps[0] || {}).name },
+      { name: "reps", label: "Reps", type: "int", required: true }]);
+    if (!v) return;
+    const step = sk.steps.find((x) => x.name === v.step);
+    const best = step ? step.best_reps : null;
+    const done = await act({ kind: "fitness.skill", params: { skill: sk.skill, step: v.step, reps: v.reps } });
+    if (!done) return;
+    if (timer.skill === sk.skill) { timer.skill = null; timer.elapsed = 0; timer.step = ""; draw(); }
+    const n = Number(v.reps);
+    if (n && (best == null || n > best)) celebrate("New best: " + plural(n, "rep"), (v.step || sk.skill) + (best != null ? " · was " + best : " · your first count"));
+  }
+
   function skillCard(sk) {
     const mine = timer.skill === sk.skill;
     const shown = mine ? secs(timer.elapsed + (timer.running ? Date.now() - timer.started : 0)) : 0;
-    const pick = el("select", { "aria-label": "Which step" }, el("option", { value: "" }, "General practice"),
-      sk.steps.map((x) => el("option", { value: x.name }, x.name + (x.best_seconds ? " (best " + x.best_seconds + " s)" : ""))));
+    const hasReps = sk.steps.some((x) => x.target_reps);
+    const best = (x) => x.target_reps ? (x.best_reps ? " (best " + x.best_reps + ")" : "") : (x.best_seconds ? " (best " + x.best_seconds + " s)" : "");
+    const pick = el("select", { "aria-label": "Which step", onchange: () => { timer.step = pick.value; draw(); } },
+      el("option", { value: "" }, "General practice"),
+      sk.steps.map((x) => el("option", { value: x.name, selected: timer.step === x.name ? true : null }, x.name + best(x))));
+    const chosen = sk.steps.find((x) => x.name === (mine ? timer.step : ""));
     const minutesPct = sk.daily_minutes ? Math.min(100, Math.round((100 * sk.minutes_today) / sk.daily_minutes)) : 0;
+    // After stopping: the modes that fit the chosen step (a rep step logs a count; otherwise a hold or practice time).
+    const modes = chosen && chosen.target_reps
+      ? [btn("Log reps", "btn-green", () => logReps(sk, chosen.name)),
+         btn("Log " + plural(Math.max(1, Math.round(shown / 60)), "min") + " practice", "btn-ghost", () => logPractice(sk, "minutes", pick.value))]
+      : [btn("Log a " + shown + " s hold", "btn-green", () => logPractice(sk, "hold", pick.value)),
+         btn("Log " + plural(Math.max(1, Math.round(shown / 60)), "min") + " practice", "btn-ghost", () => logPractice(sk, "minutes", pick.value))];
     return el("article", { class: "glass practice-card" },
       el("div", { class: "asset-head" }, el("h3", {}, sk.skill),
         sk.best_seconds ? el("span", { class: "chip chip-ok" }, "Best hold " + sk.best_seconds + " s") : null),
@@ -195,11 +221,9 @@
       el("div", { class: "timer-readout", id: mine ? "timer-readout" : null, "aria-live": "off" }, clock(shown)),
       el("div", { class: "row-buttons" },
         btn(mine && timer.running ? "Stop" : mine && shown ? "Keep going" : "Start", mine && timer.running ? "btn-amber" : "btn-green", () => startStop(sk.skill)),
-        mine && !timer.running && shown ? btn("Clear", "btn-ghost", () => { timer.skill = null; timer.elapsed = 0; draw(); }) : null),
-      mine && !timer.running && shown ? el("div", { class: "timer-log" }, pick,
-        el("div", { class: "row-buttons" },
-          btn("Log a " + shown + " s hold", "btn-green", () => logPractice(sk, "hold", pick.value)),
-          btn("Log " + plural(Math.max(1, Math.round(shown / 60)), "min") + " practice", "btn-ghost", () => logPractice(sk, "minutes", pick.value)))) : null);
+        mine && !timer.running && shown ? btn("Clear", "btn-ghost", () => { timer.skill = null; timer.elapsed = 0; timer.step = ""; draw(); }) : null,
+        hasReps && !(mine && (timer.running || shown)) ? btn("Log reps", "btn-ghost", () => logReps(sk)) : null),
+      mine && !timer.running && shown ? el("div", { class: "timer-log" }, pick, el("div", { class: "row-buttons" }, modes)) : null);
   }
 
   function trainingCard() {

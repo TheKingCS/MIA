@@ -222,8 +222,16 @@ def _step(context, params) -> str:
 
 def _describe_skill(context, params) -> str:
     skill = str(params.get("skill") or "").strip() or "Skill"
-    seconds = params.get("seconds")
-    what = f"{_number(seconds, 'Seconds'):g} s" if seconds not in (None, "") else "practice"
+    seconds, reps, minutes = params.get("seconds"), params.get("reps"), params.get("minutes")
+    if seconds not in (None, ""):
+        what = f"{_number(seconds, 'Seconds'):g} s"
+    elif reps not in (None, ""):
+        count = int(_number(reps, "Reps"))
+        what = f"{count} rep{'s' if count != 1 else ''}"
+    elif minutes not in (None, ""):
+        what = f"{_number(minutes, 'Minutes'):g} min"
+    else:
+        what = "practice"
     return f"Log {skill}: {params.get('step') or ''} {what}".replace("  ", " ")
 
 
@@ -234,11 +242,15 @@ def _skill(context, params) -> str:
         raise ActionError("Which skill?")
     seconds = _number(params["seconds"], "Seconds") if params.get("seconds") not in (None, "") else None
     minutes = _number(params["minutes"], "Minutes") if params.get("minutes") not in (None, "") else None
+    reps = int(_number(params["reps"], "Reps")) if params.get("reps") not in (None, "") else None
     best_before = fit.best_hold(skill, params.get("step") or "")
-    fit.log_skill(skill, str(params.get("step") or ""), seconds=seconds, minutes=minutes, on=_day(params))
+    best_reps = fit.best_reps(skill, params.get("step") or "")
+    fit.log_skill(skill, str(params.get("step") or ""), seconds=seconds, reps=reps, minutes=minutes, on=_day(params))
     _after(context)
     if seconds and (best_before is None or seconds > best_before):
         return f"{skill}: {seconds:g} s. That's your best hold yet."
+    if reps and (best_reps is None or reps > best_reps):
+        return f"{skill}: {reps} reps. That's your most yet."
     return f"{skill} logged."
 
 
@@ -627,7 +639,7 @@ FITNESS_ACTIONS: dict[str, ActionType] = {a.kind: a for a in (
     ActionType("fitness.training_done", "Training done", {}, _describe_training, _training, True),
     ActionType("fitness.step", "Step done", {"step": "its number (1 first) or name"}, _describe_step, _step, True),
     ActionType("fitness.skill", "Log practice", {"skill": "e.g. Handstand", "step": "optional", "seconds": "a hold",
-                                                 "minutes": "practice time", "date": "optional"},
+                                                 "reps": "a count", "minutes": "practice time", "date": "optional"},
                _describe_skill, _skill, True),
     ActionType("fitness.habit", "Done", {"habit": "/".join(HABITS), "date": "optional"}, _describe_habit, _habit, True),
     ActionType("fitness.plan", "Save plan", {"changes": "the parts of the plan to change"}, _describe_plan, _plan, True),

@@ -190,12 +190,24 @@
     ];
   }
 
+  // Phones (Muse, H-0031): today open, the other days one line each until tapped.
+  const opened = new Set();
+  const narrow = () => window.matchMedia("(max-width: 720px)").matches;
+
   function dayCard(d) {
     const isToday = d.date === fit.as_of;
     const t = d.totals, want = d.targets;
+    const closed = narrow() && !isToday && !opened.has(d.date);
+    const toggle = () => { opened.has(d.date) ? opened.delete(d.date) : opened.add(d.date); draw(); };
+    const summary = g(t.kcal) + (want.kcal ? "/" + want.kcal.toLocaleString() : "") + " kcal · " + g(t.protein_g) + (want.protein_g ? "/" + want.protein_g : "") + " g";
+    const head = el("div", { class: "week-day-head" }, el("h3", {}, isToday ? "Today" : day(d.date)),
+      el("span", { class: "dim" }, (closed ? plural(d.meals.length, "meal") + " · " : "") + summary));
+    if (closed) {
+      return el("article", { class: "glass week-day collapsed" },
+        el("button", { type: "button", class: "week-day-toggle", "aria-expanded": "false", onclick: toggle }, head));
+    }
     return el("article", { class: "glass week-day" + (isToday ? " is-today" : "") },
-      el("div", { class: "week-day-head" }, el("h3", {}, isToday ? "Today" : day(d.date)),
-        el("span", { class: "dim" }, g(t.kcal) + (want.kcal ? "/" + want.kcal.toLocaleString() : "") + " kcal · " + g(t.protein_g) + (want.protein_g ? "/" + want.protein_g : "") + " g")),
+      narrow() && !isToday ? el("button", { type: "button", class: "week-day-toggle", "aria-expanded": "true", onclick: toggle }, head) : head,
       MEALS.map((meal) => {
         const m = d.meals.find((x) => x.meal === meal);
         return el("div", { class: "week-slot" + (m ? "" : " empty") + (m && m.eaten ? " eaten" : "") },

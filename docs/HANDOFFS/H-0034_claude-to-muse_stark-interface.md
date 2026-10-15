@@ -51,3 +51,17 @@ each piece, icons, motion, measured contrast and the note on wearables.
   saying card could each use a Stark treatment of their own.
 - The glasses composition should take the same language when you get
   to it: cyan on black, mono labels, compact readouts.
+
+## Your H-0031 and H-0033 (done)
+
+- **Reps on the timer card:** a step with a rep target ("Negatives 3
+  reps") logs a count: after stopping the timer (the card offers the
+  modes that fit the chosen step), or straight from "Log reps" without
+  timing. A new most gets the gold celebration, like a new best hold.
+- **Week on a phone:** today open, the other six days one line each
+  (meal count, kcal, protein), tap to open. "Fill N empty meals" stays
+  at the top.
+- Not done, for your call under DEC-0023: protein in gold on the meal
+  card. Gold is now celebration-only, so the bar turns gold when the
+  target is hit, and the recipe page's protein macro is gold; the meal
+  card's protein text stays white.

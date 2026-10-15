@@ -1092,3 +1092,12 @@ dialog.confirm::backdrop { background: rgba(var(--rgb-bg), 0.72); }
 .chat-mic svg { width: 22px; height: 22px; }
 .chat-mic:hover { background: rgba(var(--rgb-accent), 0.2); }
 .chat-mic.listening { background: var(--bad); border-color: var(--bad); color: #fff; }
+/* Week planner on a phone: collapsed days are one tappable line (Muse, H-0031) */
+.week-day-toggle { all: unset; display: block; width: 100%; cursor: pointer; }
+.week-day-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.week-day.collapsed { padding-top: 12px; padding-bottom: 12px; }
+.week-day.collapsed .week-day-head h3 { font-size: var(--text-md); }
+.week-day-toggle .week-day-head::after { content: "+"; font-family: var(--font-mono); color: var(--accent); margin-left: 6px; }
+.week-day-toggle[aria-expanded="true"] .week-day-head::after { content: "−"; }
+.week-day-toggle .week-day-head { flex-wrap: nowrap; }
+.week-day-toggle .week-day-head .dim { margin-left: auto; text-align: right; }

@@ -334,6 +334,10 @@ class FitnessManager:
         holds = [s["seconds"] for s in self.skill_sessions(skill) if s.get("seconds") and (not step or s["step"] == step)]
         return max(holds) if holds else None
 
+    def best_reps(self, skill: str, step: str = "") -> Optional[int]:
+        counts = [s["reps"] for s in self.skill_sessions(skill) if s.get("reps") and (not step or s["step"] == step)]
+        return max(counts) if counts else None
+
     def practice_minutes(self, skill: str, day: Optional[str] = None) -> float:
         day = day or date.today().isoformat()
         return sum(s.get("minutes") or 0 for s in self.skill_sessions(skill) if s["date"] == day)

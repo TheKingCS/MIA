@@ -207,3 +207,16 @@ def test_rating_and_cooking_stats_on_the_recipe_page(world):
     assert stats["first_made"] == (MON - timedelta(days=40)).isoformat()
     world.actions.approve(world, world.actions.propose(world, "recipe.rate", {"recipe_id": chili.recipe_id, "rating": "0"}).proposal_id)
     assert recipe_page(world, chili.recipe_id)["stats"]["rating"] is None
+
+
+def test_reps_on_the_practice_card(world):
+    """Muse, H-0031/H-0033: a step with a rep target logs a count, and a new most is called out."""
+    world.fitness.update_plan({"skill_tree": [{"skill": "Muscle-up", "steps": [{"name": "Negatives", "target_reps": 3}]}]})
+    proposal = world.actions.propose(world, "fitness.skill", {"skill": "Muscle-up", "step": "Negatives", "reps": "3"})
+    assert proposal.summary == "Log Muscle-up: Negatives 3 reps"
+    done = world.actions.approve(world, proposal.proposal_id)
+    assert done.result == "Muscle-up: 3 reps. That's your most yet."
+    step = fitness_page(world, date.today())["today"]["skills"][0]["steps"][0]
+    assert step["best_reps"] == 3 and step["target_reps"] == 3
+    again = world.actions.approve(world, world.actions.propose(world, "fitness.skill", {"skill": "Muscle-up", "step": "Negatives", "reps": "2"}).proposal_id)
+    assert again.result == "Muscle-up logged."

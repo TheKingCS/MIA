@@ -79,7 +79,8 @@ def fitness_page(context, today: Optional[date] = None) -> dict:
     skills = []
     for skill in plan.get("skill_tree") or []:
         name = skill.get("skill", "")
-        steps = [{**step, "best_seconds": fit.best_hold(name, step.get("name", ""))} for step in skill.get("steps") or []]
+        steps = [{**step, "best_seconds": fit.best_hold(name, step.get("name", "")),
+                  "best_reps": fit.best_reps(name, step.get("name", ""))} for step in skill.get("steps") or []]
         skills.append({"skill": name, "daily_minutes": skill.get("daily_minutes"), "practice": skill.get("practice") or [],
                        "minutes_today": fit.practice_minutes(name, today.isoformat()), "steps": steps,
                        "best_seconds": fit.best_hold(name)})
