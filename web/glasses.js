@@ -1,9 +1,15 @@
 /* MIA on Display glasses — one card at a time (muse, 2026-10-06, DEC-0016).
-   Moments: glance (her + one focus), quest, voice, nudge, levelup.
-   Data: MIA.dashboard() and MIA.shell(); voice goes through MIA.talk().
-   In the demo (public preview) it reads the placeholder examples, says so,
-   and voice answers from a tiny local script. Nothing here invents facts:
-   every line on a card comes from the engine or is labeled demo. */
+   Moments: glance (her + one focus), apps, quest, voice, nudge, levelup.
+   Apps (H-0041, Phase 1): swipe through the first app cards (Kitchen,
+   Workout, Missions, Money), select one for its detail. The action menu
+   arrives with the engine's per-app glance actions (Phase 2); the detail
+   card shows the app's real description and example command until then.
+   Look: the Stark engineering language (DEC-0023) — cyan on black, mono
+   labels. Data: MIA.dashboard() and MIA.shell(); voice goes through
+   MIA.talk(); apps come from MIA.apps(). In the demo (public preview)
+   it reads the placeholder examples, says so, and voice answers from a
+   tiny local script. Nothing here invents facts: every line on a card
+   comes from the engine or is labeled demo. */
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
@@ -11,7 +17,8 @@
   const demo = MIA.demo;
   $("demo-tag").hidden = !demo;
 
-  let dash = null, shell = null, moment = "glance", questDone = false;
+  let dash = null, shell = null, appsData = null, moment = "glance", questDone = false;
+  let appIndex = 0, appDetail = false;
 
   function el(tag, cls, html) {
     const n = document.createElement(tag);
@@ -121,6 +128,69 @@
     $("voice-input").placeholder = 'say "what am I looking at"';
   }
 
+  // ------------------------------------------------------------ apps (H-0041, Phase 1)
+  const FIRST_APPS = ["kitchen", "workout", "missions", "budget"];
+  function firstApps() {
+    const all = (appsData && appsData.groups ? appsData.groups : []).flatMap((g) => g.apps || []);
+    const shown = all.filter((a) => a.shown !== false);
+    const picked = FIRST_APPS.map((id) => shown.find((a) => a.id === id)).filter(Boolean);
+    return picked.length ? picked : shown.slice(0, 4);
+  }
+  function apps() {
+    setOrb("idle"); showFinder(false);
+    const list = firstApps();
+    const box = el("div", "g-card");
+    if (!list.length) {
+      box.append(
+        el("p", "g-kicker", "Apps"),
+        el("p", "g-title", "Apps aren't available yet"),
+        el("p", "g-sub", "MIA couldn't load the app list."));
+      card.replaceChildren(box);
+      $("voice-input").placeholder = 'say "what\'s next"';
+      return;
+    }
+    appIndex = Math.max(0, Math.min(appIndex, list.length - 1));
+    const app = list[appIndex];
+    const letter = (app.name || "?").trim().charAt(0).toUpperCase();
+    const ask = app.ask || ("open " + (app.name || ""));
+    if (appDetail) {
+      box.append(
+        el("p", "g-kicker", "Apps · " + esc(app.name || "")),
+        el("div", "g-app-badge", esc(letter)),
+        el("p", "g-title", esc(app.name || "")),
+        el("p", "g-sub", esc(app.description || app.tagline || "")),
+        el("p", "g-say", 'say <b>"' + esc(ask) + '"</b>'),
+        el("p", "g-say", "select to go back"));
+    } else {
+      box.append(
+        el("p", "g-kicker", "Apps"),
+        el("div", "g-app-badge", esc(letter)),
+        el("p", "g-title", esc(app.name || "")),
+        el("p", "g-sub", esc(app.tagline || "")),
+        el("p", "g-say", 'say <b>"' + esc(ask) + '"</b>'),
+        el("p", "g-app-pos", (appIndex + 1) + " of " + list.length),
+        el("p", "g-say", "swipe for more · select for details"));
+    }
+    card.replaceChildren(box);
+    $("voice-input").placeholder = 'say "open kitchen"';
+  }
+  function appNext(dir) {
+    const list = firstApps();
+    if (!list.length) return;
+    if (appDetail) appDetail = false;
+    appIndex = (appIndex + dir + list.length) % list.length;
+    apps();
+  }
+  function appSelect() {
+    if (!firstApps().length) return;
+    appDetail = !appDetail;
+    apps();
+  }
+  function appBack() {
+    if (appDetail) { appDetail = false; apps(); return; }
+    go("glance");
+  }
+
   function levelup(xpText, sub) {
     setOrb("happy");
     $("burst-title").textContent = "LEVEL UP";
@@ -131,6 +201,7 @@
 
   const MOMENTS = [
     ["glance", "Now", glance],
+    ["apps", "Apps", apps],
     ["quest", "Quest", quest],
     ["voice", "Talk", voice],
     ["nudge", "Needs you", nudge],
@@ -147,6 +218,7 @@
   }
   function go(id) {
     moment = id;
+    if (id === "apps") appDetail = false;
     const m = MOMENTS.find(([k]) => k === id);
     if (m) m[2]();
     drawDots();
@@ -163,6 +235,18 @@
       return;
     }
     if (/remind/.test(t)) { reply("I'll remind you. Anything else?"); return; }
+    const openMatch = t.match(/\bopen\s+(kitchen|workout|missions|money|budget|apps?)\b/);
+    if (openMatch) {
+      const want = openMatch[1].replace("money", "budget").replace(/^apps?$/, "");
+      const list = firstApps();
+      if (want) {
+        const idx = list.findIndex((a) => a.id === want);
+        if (idx >= 0) appIndex = idx;
+      }
+      go("apps");
+      return;
+    }
+    if (/\bback\b/.test(t)) { appBack(); return; }
     if (/next|today|priority/.test(t)) {
       const lines = items.map((f) => "<li>" + esc(f.title) + "</li>").join("");
       reply("Your top priority today:<ul class='g-lines'>" + lines + "</ul>", null, true);
@@ -193,6 +277,27 @@
     } catch (err) { reply(err.message); }
   });
 
+  // ------------------------------------------------------------ swipe + keys (apps carousel)
+  let touchX = null;
+  $("stage").addEventListener("touchstart", (e) => {
+    if (e.changedTouches.length) touchX = e.changedTouches[0].clientX;
+  }, { passive: true });
+  $("stage").addEventListener("touchend", (e) => {
+    if (touchX == null || !e.changedTouches.length) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (moment !== "apps" || Math.abs(dx) < 40) return;
+    appNext(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  $("card").addEventListener("click", () => { if (moment === "apps") appSelect(); });
+  document.addEventListener("keydown", (e) => {
+    if (moment !== "apps") return;
+    if (e.key === "ArrowRight") appNext(1);
+    else if (e.key === "ArrowLeft") appNext(-1);
+    else if (e.key === "Enter") appSelect();
+    else if (e.key === "Escape") appBack();
+  });
+
   function showFinder(on) { $("finder").hidden = !on; }
 
   // ------------------------------------------------------------ boot
@@ -209,6 +314,7 @@
     }
     try { dash = await MIA.dashboard(); } catch (e) { dash = null; }
     try { shell = await MIA.shell(); } catch (e) { shell = null; }
+    try { appsData = await MIA.apps(); } catch (e) { appsData = null; }
     paintXp();
     go("glance");
   })();
