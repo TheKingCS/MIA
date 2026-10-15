@@ -135,9 +135,6 @@
   --mod-glow: rgba(var(--rgb-accent), 0.24);
   --mod-dim: rgba(var(--rgb-accent), 0.10);
 
-  /* Header plates: the screen's photo, monochrome, tinted with this */
-  --hero-tint: #062635;
-
   /* Presence */
   --orb-size: 208px;
 }
@@ -158,7 +155,6 @@
   --rgb-panel-3: 18, 18, 18;
   --rgb-line: 255, 255, 255;
   --rgb-accent: 0, 229, 255;
-  --hero-tint: #000;
   --bg: #000;
   --bg-soft: #000;
   --surface: #000;

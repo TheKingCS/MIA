@@ -51,9 +51,12 @@ the hub, and the Meta AI app.
       see its recipe, try **Schedule meal** and **Add to grocery list**.
       Then log a weigh-in (Workout → Progress) and say "step one of
       today's workout complete", "today's lunch complete", "I weigh 182".
-- [ ] **Your PC's specs (DEC-0022):** graphics card (NVIDIA/AMD and its
-      memory), RAM, and whether it's on most of the day. That decides the
-      model size for "supercharged" MIA.
+- [x] Your PC's specs (DEC-0022, via Muse H-0037/H-0038): Ryzen 7
+      9800X3D, Radeon RX 7900 XTX 24 GB; on once the Ethernet cable
+      arrives. (RAM still unknown; it doesn't change the plan.)
+- [ ] **When the PC is set up:** install MIA on it (the Windows
+      installer from the Windows CI run) and Ollama for Windows, which
+      runs on the 7900 XTX. Claude will say which model to pull.
 - [ ] **Look at MIA's new look (DEC-0023)** in the newest phone build and
       say what to change.
 - [ ] **Your plan from Muse (H-0030):** ask Muse for your plan "in MIA's
@@ -270,7 +273,14 @@ When the phone can reach Zac's PC (same Wi-Fi, or Tailscale), Talk uses
 the PC's bigger model and falls back to the phone's 1.5B mid-
 conversation; MIA shows which level she's on. Then heavy jobs on the PC
 (voice, OCR, textbooks, email, bank sync), then two-way sync. Cloud AI
-stays off unless switched on. Waiting on Zac's PC specs for the model.
+stays off unless switched on. **Zac's PC: Radeon RX 7900 XTX, 24 GB
+(AMD: Ollama's ROCm support on Windows, or llama.cpp's Vulkan build).**
+Plan: measure Qwen 2.5 14B (~9 GB, fast) and 32B (~19 GB, fits the card)
+on the golden set in CI (accuracy only; CI has no GPU), pick one, then
+build: the phone finds the PC (same Wi-Fi first, Tailscale later),
+Talk uses it with the phone's 1.5B as fallback, and the shell shows the
+level (PHONE / HOME PC / ONLINE, Muse's H-0035 §5). Then presence-page
+frame and the dashboard saying card as a readout (H-0035 §3).
 
 **The Stark interface (DEC-0023, 2026-10-15)** is built; Muse reviews
 (H-0034). Follow-ups: workshop-style header images, more line icons,

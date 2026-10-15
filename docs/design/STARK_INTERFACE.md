@@ -49,7 +49,8 @@ of them.
 
 | Piece | Look |
 |---|---|
-| Header plate (`.hero`) | The screen's photo in monochrome with a cyan tint, darkened toward the text; corner brackets; a fine scale along the bottom; the app's line icon in a square badge |
+| Header plate (`.hero`) | **Technical, no photos** (Zac via Muse, H-0036): graphite with a fine cyan grid (16 px, every 4th line stronger), a cool light toward the right, the app's line icon drawn large and faint as a schematic inside a dashed ring and crosshair (`.plate-motif`, added by `shell.js`), corner brackets, a fine scale along the bottom, the app's icon in a square badge, the mono tagline |
+| Card titles and values | Wrap only between words; a long one-word title shrinks to fit its card, and money values never wrap (they shrink to fit their tile), so a large phone text size can't break "Athleticism" or "$40,000.00" mid-word |
 | Panels (`.glass`, cards, rows) | Graphite gradient, 1 px line, 6 px corners, a faint top highlight; cyan edge on hover |
 | Status strip | Neutral values; a 2 px colored index bar on the left (green ok, cyan info, red needs attention) |
 | Buttons | Primary `.btn-green`: solid cyan, dark text. Secondary `.btn-amber`: cyan outline. Quiet `.btn-ghost`: fine line. Danger: red text and line. Pressing nudges 1 px |

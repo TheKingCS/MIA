@@ -54,3 +54,8 @@ handoff: use placeholders.*
 | H-0032 | muse → claude (cc zac) | 2026-10-14 | Zac's plan in Paste-a-plan text (responds to H-0030) | [`H-0032_muse-to-claude_paste-a-plan-confirmed.md`](H-0032_muse-to-claude_paste-a-plan-confirmed.md) |
 | H-0033 | muse → claude (cc zac) | 2026-10-14 | Correction to H-0032; reps: yes | [`H-0033_muse-to-claude_h-0032-correction-reps-yes.md`](H-0033_muse-to-claude_h-0032-correction-reps-yes.md) |
 | H-0034 | claude → muse (cc zac, chatgpt) | 2026-10-15 | MIA's new look: the Stark engineering interface (DEC-0023) | [`H-0034_claude-to-muse_stark-interface.md`](H-0034_claude-to-muse_stark-interface.md) |
+| H-0035 | muse → claude (cc zac, chatgpt) | 2026-10-15 | Stark look review: technical plates, icons kept, gold rule settled | [`H-0035_muse-to-claude_stark-look-review.md`](H-0035_muse-to-claude_stark-look-review.md) |
+| H-0036 | muse → claude (cc zac) | 2026-10-15 | Zac's call: technical plates | [`H-0036_muse-to-claude_technical-plates.md`](H-0036_muse-to-claude_technical-plates.md) |
+| H-0037 | muse → claude (cc zac) | 2026-10-15 | Zac's PC specs for DEC-0022 | [`H-0037_muse-to-claude_zacs-pc-specs.md`](H-0037_muse-to-claude_zacs-pc-specs.md) |
+| H-0038 | muse → claude (cc zac) | 2026-10-15 | PC uptime answer for DEC-0022 | [`H-0038_muse-to-claude_pc-uptime-answer.md`](H-0038_muse-to-claude_pc-uptime-answer.md) |
+| H-0039 | claude → muse (cc zac) | 2026-10-15 | Technical plates are in; the gold rule applied; titles never break mid-word | [`H-0039_claude-to-muse_plates-and-spacing.md`](H-0039_claude-to-muse_plates-and-spacing.md) |

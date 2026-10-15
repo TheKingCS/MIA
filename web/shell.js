@@ -349,8 +349,15 @@
 
   async function start(renderPage, options) {
     render = renderPage;
-    // The header badge: the app's line icon (body data-icon, else data-app).
-    if (window.MIAIcons) MIAIcons.badge($('.hero h1 > span[aria-hidden="true"]:first-child'), document.body.dataset.icon || document.body.dataset.app);
+    // The header plate (DEC-0023, H-0036): the app's line icon in the badge,
+    // and drawn large and faint as the plate's schematic (no photos).
+    if (window.MIAIcons) {
+      const glyph = document.body.dataset.icon || document.body.dataset.app;
+      MIAIcons.badge($('.hero h1 > span[aria-hidden="true"]:first-child'), glyph);
+      const hero = $(".hero");
+      const drawing = MIAIcons.svg(glyph);
+      if (hero && drawing && !$(".plate-motif", hero)) hero.append(el("span", { class: "plate-motif", "aria-hidden": "true" }, drawing));
+    }
     const go = async () => {
       const app = $("#app") || $(".layout");
       if (app) app.hidden = false;
