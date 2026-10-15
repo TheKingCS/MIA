@@ -22,20 +22,21 @@
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main chat-main">
       <header class="chat-head">
-        <a class="home-badge" href="presence.html" aria-label="MIA's presence">✦</a>
+        <a class="home-badge" href="presence.html" aria-label="MIA's presence"><span class="brand-reactor" aria-hidden="true"></span></a>
         <div><h1>MIA Assistant</h1><p class="dim">Always here. Always with you.</p></div>
       </header>
       <div class="chat-log" id="log" aria-live="polite"></div>
       <div class="chat-chips" id="chips"></div>
       <form class="chat-form" id="form">
         <input id="input" placeholder="Type a message…" autocomplete="off" aria-label="Message MIA">
-        <button type="button" class="chat-mic" id="mic" aria-label="Talk">🎙</button>
+        <button type="button" class="chat-mic" id="mic" aria-label="Talk"></button>
         <button type="submit" class="btn btn-green">Send</button>
       </form>
       <p class="dim chat-note" id="note" hidden></p>
     </main>
   </div>
   <script src="mia.js"></script>
+  <script src="icons.js"></script>
   <script src="shell.js"></script>
   <script src="assistant.js"></script>
 </body>

@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-14*
+*Last updated: 2026-10-15*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -51,6 +51,11 @@ the hub, and the Meta AI app.
       see its recipe, try **Schedule meal** and **Add to grocery list**.
       Then log a weigh-in (Workout → Progress) and say "step one of
       today's workout complete", "today's lunch complete", "I weigh 182".
+- [ ] **Your PC's specs (DEC-0022):** graphics card (NVIDIA/AMD and its
+      memory), RAM, and whether it's on most of the day. That decides the
+      model size for "supercharged" MIA.
+- [ ] **Look at MIA's new look (DEC-0023)** in the newest phone build and
+      say what to change.
 - [ ] **Your plan from Muse (H-0030):** ask Muse for your plan "in MIA's
       paste format" (she has `docs/PLAN_TEXT_FORMAT.md`), copy it, then
       Workout → 🎯 My plan → **Paste a plan** → paste → **Read it** → check
@@ -259,6 +264,17 @@ every step below in order, from a blank machine, with Windows notes.
 **The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`)**, and Zac
 has it on his phone (first start under 8 s). His feedback is fixed:
 account menu, no Apps tile, every card the phone's width, Garage spacing.
+
+**Next build (DEC-0022, approved 2026-10-15): supercharged online.**
+When the phone can reach Zac's PC (same Wi-Fi, or Tailscale), Talk uses
+the PC's bigger model and falls back to the phone's 1.5B mid-
+conversation; MIA shows which level she's on. Then heavy jobs on the PC
+(voice, OCR, textbooks, email, bank sync), then two-way sync. Cloud AI
+stays off unless switched on. Waiting on Zac's PC specs for the model.
+
+**The Stark interface (DEC-0023, 2026-10-15)** is built; Muse reviews
+(H-0034). Follow-ups: workshop-style header images, more line icons,
+the presence page and character art in the new language.
 
 **Fitness screens built (2026-10-14, DEC-0021, H-0029).** Next for
 them: Muse's look review; recipe photos; a reps field on the practice

@@ -71,8 +71,8 @@
         [["kcal", "Calories", ""], ["protein_g", "Protein", " g"], ["carbs_g", "Carbs", " g"], ["fat_g", "Fat", " g"]].map(([k, label, unit]) =>
           el("div", { class: "macro" + (k === "protein_g" ? " macro-protein" : "") }, el("strong", {}, num(n[k], unit)), el("small", {}, label)))),
       el("div", { class: "recipe-cta" },
-        page.can_schedule ? btn("📅 Schedule meal", "btn-green", schedule) : null,
-        buyCount ? btn("🛒 Add to grocery list (" + buyCount + ")", "btn-amber", toList)
+        page.can_schedule ? btn("Schedule meal", "btn-green", schedule) : null,
+        buyCount ? btn("Add to grocery list (" + buyCount + ")", "btn-amber", toList)
           : el("span", { class: "chip chip-ok" }, page.ingredients.length ? "✓ You have everything (or it's on the list)" : "No ingredients yet")));
   }
 

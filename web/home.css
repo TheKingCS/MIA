@@ -17,9 +17,7 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(1200px 700px at 50% -10%, rgba(63, 214, 181, 0.08), transparent 60%),
-    radial-gradient(900px 600px at 50% 115%, rgba(251, 191, 36, 0.06), transparent 60%),
-    radial-gradient(700px 500px at 8% 40%, rgba(22, 101, 52, 0.10), transparent 65%),
+    radial-gradient(1200px 700px at 50% -10%, rgba(var(--rgb-accent), 0.08), transparent 60%),
     var(--bg);
   color: var(--text);
   font: var(--text-md)/1.55 var(--font);
@@ -54,10 +52,10 @@ body {
   position: relative;
   background:
     radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.14), transparent 42%),
-    radial-gradient(circle at 50% 50%, var(--accent) 0%, var(--accent-deep) 34%, rgba(20, 32, 26, 0.9) 72%, var(--surface-solid) 100%);
+    radial-gradient(circle at 50% 50%, var(--accent) 0%, var(--accent-deep) 34%, rgba(var(--rgb-panel-2), 0.9) 72%, var(--surface-solid) 100%);
   box-shadow:
     0 0 70px var(--accent-glow),
-    0 0 160px rgba(63, 214, 181, 0.12),
+    0 0 160px rgba(var(--rgb-accent), 0.12),
     inset 0 0 46px rgba(0, 0, 0, 0.55);
   animation: breathe 6s ease-in-out infinite;
 }
@@ -87,10 +85,10 @@ body {
 [data-mood="celebrate"] .orb {
   background:
     radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.22), transparent 44%),
-    radial-gradient(circle at 50% 50%, #ffe9a8 0%, var(--win) 32%, var(--win-deep) 62%, rgba(30, 24, 10, 0.92) 82%, var(--surface-solid) 100%);
+    radial-gradient(circle at 50% 50%, #fff3cf 0%, var(--win) 32%, var(--win-deep) 62%, rgba(var(--rgb-panel-2), 0.92) 82%, var(--surface-solid) 100%);
   box-shadow:
     0 0 90px var(--win-glow),
-    0 0 200px rgba(246, 196, 83, 0.18),
+    0 0 200px rgba(var(--rgb-win), 0.18),
     inset 0 0 46px rgba(0, 0, 0, 0.5);
   animation: celebrate 1.8s ease-in-out infinite;
 }
@@ -103,10 +101,10 @@ body {
 [data-mood="needs-you"] .orb {
   background:
     radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.12), transparent 42%),
-    radial-gradient(circle at 50% 50%, var(--attention) 0%, #b35c22 38%, rgba(28, 20, 12, 0.92) 74%, var(--surface-solid) 100%);
+    radial-gradient(circle at 50% 50%, var(--attention) 0%, var(--soon-deep) 38%, rgba(var(--rgb-panel-2), 0.92) 74%, var(--surface-solid) 100%);
   box-shadow:
     0 0 70px var(--attention-glow),
-    0 0 150px rgba(255, 162, 107, 0.12),
+    0 0 150px rgba(var(--rgb-amber), 0.12),
     inset 0 0 46px rgba(0, 0, 0, 0.55);
   animation-duration: 4s;
 }
@@ -173,16 +171,16 @@ button {
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
-button:hover { background: rgba(44, 56, 47, 0.9); }
+button:hover { background: rgba(var(--rgb-panel-3), 0.9); }
 button:active { transform: scale(0.98); }
 button.primary {
-  background: linear-gradient(180deg, var(--xp), var(--soon-deep));
-  border-color: transparent;
-  color: #241a06;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #02121a;
   font-weight: 650;
-  box-shadow: 0 4px 22px var(--xp-glow);
+  box-shadow: 0 0 18px var(--accent-glow);
 }
-button.primary:hover { filter: brightness(1.07); box-shadow: 0 4px 28px var(--xp-glow); }
+button.primary:hover { background: var(--accent-soft); border-color: var(--accent-soft); box-shadow: 0 0 24px var(--accent-glow); }
 button.ghost { background: transparent; }
 button:focus-visible, input:focus-visible {
   outline: 3px solid var(--accent);
@@ -206,7 +204,7 @@ button:focus-visible, input:focus-visible {
   text-decoration: none;
   cursor: pointer;
 }
-.home-actions a.ghost:hover { background: rgba(44, 56, 47, 0.9); }
+.home-actions a.ghost:hover { background: rgba(var(--rgb-panel-3), 0.9); }
 
 .briefing-sheet {
   position: fixed;
@@ -271,7 +269,7 @@ button:focus-visible, input:focus-visible {
   width: min(680px, 100%);
   padding: 0 var(--gap) var(--gap);
   z-index: 20;
-  background: linear-gradient(180deg, transparent, rgba(7, 11, 8, 0.92) 38%);
+  background: linear-gradient(180deg, transparent, rgba(var(--rgb-panel), 0.92) 38%);
 }
 .talk-thread {
   display: grid;
@@ -297,8 +295,8 @@ button:focus-visible, input:focus-visible {
 }
 .bubble.mia {
   justify-self: start;
-  background: rgba(63, 214, 181, 0.1);
-  border: 1px solid rgba(63, 214, 181, 0.3);
+  background: rgba(var(--rgb-accent), 0.1);
+  border: 1px solid rgba(var(--rgb-accent), 0.3);
   border-bottom-left-radius: 4px;
 }
 .bubble.mia.thinking { color: var(--text-faint); font-style: italic; }
@@ -347,7 +345,7 @@ dialog {
   padding: calc(var(--gap) * 1.25);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
 }
-dialog::backdrop { background: rgba(3, 5, 4, 0.7); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+dialog::backdrop { background: rgba(var(--rgb-bg), 0.7); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 dialog p { margin: 0 0 var(--gap); font-size: var(--text-lg); }
 dialog menu { display: flex; gap: 10px; justify-content: flex-end; padding: 0; margin: 0; }
 

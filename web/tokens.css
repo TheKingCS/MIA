@@ -1,167 +1,164 @@
 /*
- * tokens.css — MIA's design tokens (owner: Muse).
+ * tokens.css — MIA's design tokens and theme (owner: Muse; the Stark
+ * engineering look, DEC-0023, claude 2026-10-15: see the :root block).
  *
- * Dark Field: the concept art's direction — dark green/amber glassy HUD,
- * MVS x Borderlands — with restraint. Home is her presence, not a
- * dashboard, so the tokens serve one job: make the orb feel alive and
- * everything else get out of the way.
+ * The look (DEC-0023): an inventor's own operating system. Near-black
+ * and graphite layered panels, one electric-cyan accent for what's
+ * active, cool white text, amber only for attention, muted green for
+ * healthy/done, red only for real errors. Precise panels, fine lines,
+ * small technical labels, tabular numbers, restrained motion.
  *
  * One file every surface uses (DEC-0012: one component system,
  * surface-specific compositions). Offline: system fonts only, no web
  * fonts, no CDNs. --scale follows the person's text size;
  * [data-contrast="high"] is the high-contrast look.
  *
- * Concept system (2026-10-05): the module screens share this material —
- * deep green-black, glassy cards, amber for XP and primary actions,
- * green = healthy/tracked, red = needs attention (calm, never
- * game-ified for emergencies), Borderlands rarity on
+ * Earned gold stays celebration-only; Borderlands rarity colors stay on
  * missions/achievements/unlockables ONLY. Additive: every existing
- * token keeps its meaning.
+ * token keeps its meaning (the old names point at the new values).
  */
 :root {
-  /* Field */
-  --bg: #070b08;
-  --bg-soft: #0b100c;
-  --surface: rgba(22, 30, 24, 0.62);
-  --surface-solid: #131a14;
-  --surface-raised: rgba(32, 42, 34, 0.82);
-  --line: rgba(140, 180, 150, 0.16);
-  --line-strong: rgba(140, 180, 150, 0.34);
+  /* ------------------------------------------------------------------
+     DEC-0023 (2026-10-15): the Stark-inspired engineering interface.
+     This block is MIA's theme: change a value here and every screen
+     follows. Colors also come as "r, g, b" triplets (--rgb-*) so a
+     faint line or a glow is rgba(var(--rgb-accent), 0.3), never a new
+     hard-coded color.
+     ------------------------------------------------------------------ */
 
-  /* Glass (concept material) */
-  --glass: rgba(16, 24, 19, 0.66);
-  --glass-strong: rgba(22, 32, 26, 0.88);
-  --glass-line: rgba(150, 195, 165, 0.20);
-  --glass-line-strong: rgba(150, 195, 165, 0.38);
+  /* Field: near-black, then graphite layers (depth without borders) */
+  --rgb-bg: 5, 7, 10;
+  --rgb-panel: 12, 16, 22;
+  --rgb-panel-2: 17, 23, 31;
+  --rgb-panel-3: 24, 31, 41;
+  --bg: #05070a;
+  --bg-soft: #080b10;
+  --surface: rgba(var(--rgb-panel), 0.82);
+  --surface-solid: #0c1016;
+  --surface-raised: rgba(var(--rgb-panel-2), 0.92);
+  --rgb-line: 150, 182, 212;
+  --line: rgba(var(--rgb-line), 0.12);
+  --line-strong: rgba(var(--rgb-line), 0.24);
 
-  /* Ink */
-  --text: #edf3ec;
-  --text-dim: #a4b4a7;
-  --text-faint: #6d7f71;
+  /* Panels (the old "glass" names keep working) */
+  --glass: rgba(var(--rgb-panel), 0.88);
+  --glass-strong: rgba(var(--rgb-panel-2), 0.96);
+  --glass-line: rgba(var(--rgb-line), 0.14);
+  --glass-line-strong: rgba(var(--rgb-line), 0.28);
 
-  /* MIA teal — her voice, the default state */
-  --accent: #3fd6b5;
-  --accent-deep: #1d8f78;
-  --accent-glow: rgba(63, 214, 181, 0.32);
+  /* Ink: cool white, pale blue-gray */
+  --text: #e6eef6;
+  --text-dim: #9fb0c1;
+  --text-faint: #8193a6;
 
-  /* Earned gold — celebration only (DEC-0014: loud about progression) */
+  /* Electric cyan: active, selected, MIA's voice, progress */
+  --rgb-accent: 53, 212, 255;
+  --accent: #35d4ff;
+  --accent-soft: #a6ecff;
+  --accent-deep: #0b86ad;
+  --accent-glow: rgba(var(--rgb-accent), 0.28);
+
+  /* Earned gold: celebration only (DEC-0014: loud about progression) */
+  --rgb-win: 246, 196, 83;
   --win: #f6c453;
   --win-deep: #a87e1c;
-  --win-glow: rgba(246, 196, 83, 0.45);
+  --win-glow: rgba(var(--rgb-win), 0.42);
 
-  /* Calm amber — the one thing that needs you */
-  --attention: #ffa26b;
-  --attention-glow: rgba(255, 162, 107, 0.32);
+  /* Amber: attention and warnings, sparingly */
+  --rgb-amber: 242, 179, 61;
+  --attention: #f2b33d;
+  --attention-glow: rgba(var(--rgb-amber), 0.30);
 
-  /* Status (concept): green = healthy/tracked, red = needs attention
-     (calm, factual — never game-ified), amber = next up */
-  --ok: #4ade80;
-  --ok-deep: #166534;
-  --ok-bg: rgba(74, 222, 128, 0.10);
-  --bad: #f87171;
-  --bad-deep: #7f1d1d;
-  --bad-bg: rgba(248, 113, 113, 0.10);
-  --soon: #fbbf24;
-  --soon-deep: #b45309;
-  --soon-bg: rgba(251, 191, 36, 0.10);
+  /* Status: muted green = healthy/done, amber = soon, red = real errors */
+  --rgb-ok: 79, 196, 140;
+  --rgb-bad: 239, 83, 80;
+  --ok: #4fc48c;
+  --ok-deep: #17583c;
+  --ok-bg: rgba(var(--rgb-ok), 0.10);
+  --bad: #ef5350;
+  --bad-deep: #7a1d1c;
+  --bad-bg: rgba(var(--rgb-bad), 0.10);
+  --soon: #f2b33d;
+  --soon-deep: #9a6512;
+  --soon-bg: rgba(var(--rgb-amber), 0.10);
 
-  /* XP + primary actions: amber/gold */
-  --xp: #fbbf24;
-  --xp-glow: rgba(251, 191, 36, 0.35);
+  /* XP is measurable progress: cyan, like every other meter */
+  --xp: var(--accent);
+  --xp-glow: var(--accent-glow);
 
-  /* Rarity (Borderlands logic): missions, achievements, unlockables
-     ONLY — never emergencies, never bills (design addendum §5) */
-  --rarity-common: #9aa5a1;
-  --rarity-uncommon: #4ade80;
-  --rarity-rare: #60a5fa;
-  --rarity-epic: #c084fc;
-  --rarity-legendary: #fb923c;
+  /* Rarity (missions, achievements, unlockables ONLY; game tiers) */
+  --rarity-common: #8d9aa6;
+  --rarity-uncommon: #4fc48c;
+  --rarity-rare: #4aa3ff;
+  --rarity-epic: #b18cff;
+  --rarity-legendary: #f2a33d;
 
-  /* Shape and space */
-  --radius: 16px;
-  --radius-sm: 10px;
+  /* Shape and space: precise panels, small radii */
+  --radius: 6px;
+  --radius-sm: 4px;
+  --radius-pill: 999px;
   --gap: 16px;
   --scale: 1;
   --touch: 44px;
 
-  /* Type — system stacks only (offline) */
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  /* Type: system stacks only (offline). Labels are small, spaced
+     capitals in the mono face; values use tabular figures. */
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   --text-xs: calc(12px * var(--scale));
   --text-sm: calc(13.5px * var(--scale));
   --text-md: calc(16px * var(--scale));
-  --text-lg: calc(21px * var(--scale));
-  --text-xl: calc(30px * var(--scale));
-  --text-2xl: calc(40px * var(--scale));
+  --text-lg: calc(20px * var(--scale));
+  --text-xl: calc(28px * var(--scale));
+  --text-2xl: calc(38px * var(--scale));
+  --label-size: calc(11px * var(--scale));
+  --label-track: 0.12em;
 
-  /* Module identities — the concept art's neon-per-module language
-     (design lock-in 2026-10-02: teal workout, amber recipes, blue
-     finances, purple real estate). Each module gets a neon, a border
-     line, a glow, and a faint wash. Pages opt in with one body class
-     (.mod-missions, .mod-skills, ...) which repoints --mod/--mod-line/
-     --mod-glow/--mod-dim; components consume only those four. */
-  --mod-workout: #2dd4bf;
-  --mod-kitchen: #fbbf24;
-  --mod-finance: #60a5fa;
-  --mod-estate: #c084fc;
-  --mod-missions: #fbbf24;
-  --mod-skills: #c084fc;
+  /* Motion: brief, purposeful */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
 
-  /* Active module context (default: MIA teal, her voice) */
+  /* Modules: one accent for every app (DEC-0023); the names stay so
+     older rules keep working. */
+  --mod-workout: var(--accent);
+  --mod-kitchen: var(--accent);
+  --mod-finance: var(--accent);
+  --mod-estate: var(--accent);
+  --mod-missions: var(--accent);
+  --mod-skills: var(--accent);
+
+  /* Active context (every page: cyan) */
   --mod: var(--accent);
-  --mod-line: rgba(63, 214, 181, 0.5);
-  --mod-glow: var(--accent-glow);
-  --mod-dim: rgba(63, 214, 181, 0.12);
+  --mod-rgb: var(--rgb-accent);
+  --mod-line: rgba(var(--rgb-accent), 0.45);
+  --mod-glow: rgba(var(--rgb-accent), 0.24);
+  --mod-dim: rgba(var(--rgb-accent), 0.10);
+
+  /* Header plates: the screen's photo, monochrome, tinted with this */
+  --hero-tint: #062635;
 
   /* Presence */
   --orb-size: 208px;
 }
 
-/* Module contexts: one class on <body> repoints the neon. */
-.mod-missions {
-  --mod: var(--mod-missions);
-  --mod-line: rgba(251, 191, 36, 0.5);
-  --mod-glow: rgba(251, 191, 36, 0.35);
-  --mod-dim: rgba(251, 191, 36, 0.10);
-}
-.mod-skills {
-  --mod: var(--mod-skills);
-  --mod-line: rgba(192, 132, 252, 0.5);
-  --mod-glow: rgba(192, 132, 252, 0.35);
-  --mod-dim: rgba(192, 132, 252, 0.10);
-}
-.mod-workout {
-  --mod: var(--mod-workout);
-  --mod-line: rgba(45, 212, 191, 0.5);
-  --mod-glow: rgba(45, 212, 191, 0.35);
-  --mod-dim: rgba(45, 212, 191, 0.10);
-}
-.mod-kitchen {
-  --mod: var(--mod-kitchen);
-  --mod-line: rgba(251, 191, 36, 0.5);
-  --mod-glow: rgba(251, 191, 36, 0.35);
-  --mod-dim: rgba(251, 191, 36, 0.10);
-}
-.mod-finance {
-  --mod: var(--mod-finance);
-  --mod-line: rgba(96, 165, 250, 0.5);
-  --mod-glow: rgba(96, 165, 250, 0.35);
-  --mod-dim: rgba(96, 165, 250, 0.10);
-}
-.mod-estate {
-  --mod: var(--mod-estate);
-  --mod-line: rgba(192, 132, 252, 0.5);
-  --mod-glow: rgba(192, 132, 252, 0.35);
-  --mod-dim: rgba(192, 132, 252, 0.10);
-}
-.mod-garage {
-  --mod: #fb923c;
-  --mod-line: rgba(251, 146, 60, 0.5);
-  --mod-glow: rgba(251, 146, 60, 0.35);
-  --mod-dim: rgba(251, 146, 60, 0.10);
+/* Module contexts: kept for older markup; every module is cyan now (DEC-0023). */
+.mod-missions, .mod-skills, .mod-workout, .mod-kitchen, .mod-finance, .mod-estate, .mod-garage {
+  --mod: var(--accent);
+  --mod-line: rgba(var(--rgb-accent), 0.45);
+  --mod-glow: rgba(var(--rgb-accent), 0.24);
+  --mod-dim: rgba(var(--rgb-accent), 0.10);
 }
 
 [data-contrast="high"] {
+  /* pure black, white text, full-strength cyan (and the triplets the panels are built from) */
+  --rgb-bg: 0, 0, 0;
+  --rgb-panel: 0, 0, 0;
+  --rgb-panel-2: 10, 10, 10;
+  --rgb-panel-3: 18, 18, 18;
+  --rgb-line: 255, 255, 255;
+  --rgb-accent: 0, 229, 255;
+  --hero-tint: #000;
   --bg: #000;
   --bg-soft: #000;
   --surface: #000;
@@ -176,7 +173,8 @@
   --text: #ffffff;
   --text-dim: #ffffff;
   --text-faint: #e8e8e8;
-  --accent: #ffd400;
+  --accent: #00e5ff;
+  --accent-soft: #b8f7ff;
   --accent-glow: transparent;
   --win: #ffd400;
   --win-glow: transparent;
@@ -188,9 +186,9 @@
   --bad-bg: transparent;
   --soon: #ffd400;
   --soon-bg: transparent;
-  --xp: #ffd400;
+  --xp: #00e5ff;
   --xp-glow: transparent;
-  --mod: #ffd400;
+  --mod: #00e5ff;
   --mod-line: #ffffff;
   --mod-glow: transparent;
   --mod-dim: transparent;

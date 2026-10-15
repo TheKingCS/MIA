@@ -180,10 +180,15 @@
       el("span", { class: "xpbar" }, el("span", { class: "xpbar-track" }, el("span", { class: "xpbar-fill", style: "width:" + pct + "%" }))));
   }
 
+  /** The app's line icon (web/icons.js, DEC-0023), or its emoji where there's none. */
+  function icon(id, fallback) {
+    return (window.MIAIcons && MIAIcons.svg(id)) || fallback || "";
+  }
+
   function appLinks(shell, cls) {
     const here = document.body.dataset.app || "web_home";
     return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, a.icon), el("span", { class: "label" }, a.name)));
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)));
   }
 
   function more(shell) {
@@ -203,7 +208,7 @@
         layout.prepend(side);
       }
       side.replaceChildren(
-        el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark", "aria-hidden": "true" }, "🌿"),
+        el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark brand-reactor", "aria-hidden": "true" }),
           el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
         ...appLinks(shell, "nav"),
         el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
@@ -215,12 +220,12 @@
       document.body.append(bar);
     }
     const here = document.body.dataset.app || "web_home";
-    const tab = (href, id, icon, label) => el("a", { href, "aria-current": here === id ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon), label);
+    const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
     bar.replaceChildren(
-      tab("index.html", "web_home", "🏠", "Home"),
-      tab("apps.html", "module_browser", "▦", "Apps"),
-      tab("dashboard.html", "dashboard", "📊", "Dashboard"));
+      tab("index.html", "web_home", "home", "🏠", "Home"),
+      tab("apps.html", "module_browser", "apps", "▦", "Apps"),
+      tab("dashboard.html", "dashboard", "dashboard", "📊", "Dashboard"));
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
@@ -344,6 +349,8 @@
 
   async function start(renderPage, options) {
     render = renderPage;
+    // The header badge: the app's line icon (body data-icon, else data-app).
+    if (window.MIAIcons) MIAIcons.badge($('.hero h1 > span[aria-hidden="true"]:first-child'), document.body.dataset.icon || document.body.dataset.app);
     const go = async () => {
       const app = $("#app") || $(".layout");
       if (app) app.hidden = false;

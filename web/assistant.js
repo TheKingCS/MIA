@@ -12,7 +12,7 @@
   const SUGGESTIONS = ["What should I focus on today?", "What's due this week?", "How are my finances?", "What did I get done?"];
 
   function bubble(who, text) {
-    const b = el("div", { class: "chat-bubble " + who }, who === "mia" ? el("span", { class: "chat-who", "aria-hidden": "true" }, "✦") : null,
+    const b = el("div", { class: "chat-bubble " + who }, who === "mia" ? el("span", { class: "chat-who", "aria-hidden": "true" }, el("span", { class: "brand-reactor" })) : null,
       el("p", {}, text));
     $("log").append(b);
     b.scrollIntoView({ block: "end", behavior: "smooth" });
@@ -99,6 +99,7 @@
 
   // ------------------------------------------------------------ start
   $("form").addEventListener("submit", (e) => { e.preventDefault(); const t = $("input").value; $("input").value = ""; send(t); });
+  if (window.MIAIcons) MIAIcons.badge($("mic"), "mic"); else $("mic").textContent = "🎙";  // the line icon (DEC-0023)
   $("mic").addEventListener("click", toggleMic);
   $("chips").replaceChildren(...SUGGESTIONS.map((s) => el("button", { type: "button", class: "chip-button", onclick: () => send(s) }, s)));
 

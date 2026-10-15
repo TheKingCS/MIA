@@ -7,6 +7,7 @@
   const { el, act } = MIAShell;
   const $ = (id) => document.getElementById(id);
   const SHOWN = ["voice", "calendar", "journal", "assistant"];
+  if (window.MIAIcons) MIAIcons.badge($("gear"), "settings");  // the line icon (DEC-0023)
 
   function focusRow(item) {
     return el("li", { class: item.when },
@@ -26,7 +27,7 @@
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
     $("quick").replaceChildren(...home.quick_actions.filter((q) => SHOWN.includes(q.id)).map((q) =>
-      el("a", { class: "glass quick-tile", href: q.href }, el("span", { class: "ico", "aria-hidden": "true" }, q.icon), q.label)));
+      el("a", { class: "glass quick-tile", href: q.href }, el("span", { class: "ico", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(q.id)) || q.icon), q.label)));
     const p = shell.person;
     const pct = p.xp_for_level ? Math.round((100 * p.xp_into_level) / p.xp_for_level) : 0;
     $("level").replaceChildren(

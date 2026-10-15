@@ -159,6 +159,7 @@
     $("back").href = page.scope + ".html";
     $("back").textContent = "← " + page.scope_name;
     $("hero-icon").textContent = ICONS[page.category] || "🔧";
+    if (window.MIAIcons) MIAIcons.badge($("hero-icon"), document.body.dataset.app);  // the line icon (DEC-0023)
     $("hero-name").textContent = page.name;
     $("hero-sub").textContent = [page.category, page.details.filter((d) => d.label === "Make" || d.label === "Model").map((d) => d.value).join(" ")]
       .filter(Boolean).join(" · ");

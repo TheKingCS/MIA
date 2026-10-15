@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-14 (fitness screens, recipe page), by claude.*
+session. Last updated: 2026-10-15 (the Stark interface; capable offline, supercharged online), by claude.*
 
 ## Phase
 
@@ -65,6 +65,7 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-15 · claude · **MIA's new look: the Stark engineering interface (DEC-0023, Zac's brief).** All 22 web pages, phone and desktop: near-black and graphite layers, one electric-cyan accent (every app), amber only for attention, muted green for healthy, red for real errors, gold for celebration; precise 6/4 px panels, fine lines, technical mono labels, tabular figures, header plates (monochrome photo, corner brackets, a scale), meters with a scale, a line-icon set (`web/icons.js`) instead of emoji in the frame, the arc-reactor brand mark and a cyan orb, restrained motion (reduced motion respected). `web/tokens.css` is the theme; hard-coded colors are gone from the stylesheets. Contrast measured (AA throughout); keyboard focus ring; high contrast is black, white and full cyan. No function, data or route changed; the glasses page is untouched. Guide: `docs/design/STARK_INTERFACE.md`; H-0034 asks Muse to review. Also **DEC-0022 approved**: capable offline, supercharged online (phone only → home computer → internet; cloud AI off unless switched on); the PC's bigger model for Talk comes first, waiting on Zac's PC specs.
 - 2026-10-14 · claude · Zac asked Claude and Muse to fill MIA with his workouts, goals, meals and nutrition. **"Paste a plan"** on My plan (`core/plan_import.py`, action `plan.import`): a whole plan and its recipes as plain text (GOALS, TRAINING with `Day:` blocks, `SKILL:`, MILESTONES, MEALS, `RECIPE:`), shown before it's applied and undone in one step; lines it can't place are listed back. Format and a placeholder example: `docs/PLAN_TEXT_FORMAT.md`. **H-0030 asks Muse to write Zac's plan in that format in her chat with him** (never the repo, DEC-0002); he pastes it on his phone.
 - 2026-10-14 · claude · Zac: **no nutrition for Rotel or Red Wine Vinegar.** Rotel (and "diced tomatoes and green chiles") now find canned tomatoes with green chilies; "1 (10 oz) can Rotel" reads as 10 oz, including recipes saved before; a seasoning with no amount (vinegar, salt and pepper, spices "to taste") counts as a dash instead of making the whole recipe unknown; the recipe page says why a number is missing (not in the food table, or add an amount). Also: chiles, jalapeños (accents), chili flakes and cayenne.
 - 2026-10-14 · claude · Zac: **5-star ratings and cooking stats on each recipe page.** Tap the stars to rate (each person's own; tap again to clear; new action `recipe.rate`); a Stats card with times made, last and first made, the last 30 days, how often you've eaten it and the household's rating; stars and "made N×" on recipe cards. Meal prep now counts as made once, when it's cooked, not each time a portion is eaten. A can in a recipe counts as about 1.5 cups (drained).

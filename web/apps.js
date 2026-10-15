@@ -10,10 +10,6 @@
   let filter = "all"; // all | web | ask
   let mode = location.hash === "#manage" ? "manage" : "tiles"; // tiles (the concept's grid) | manage (every app in detail, show/hide)
   let view = location.hash === "#favorites" ? "favorites" : "all"; // the grid: every app, or only your favorites
-  // The concept's tile colors (presentation only).
-  const COLORS = { web_home: "74,222,128", dashboard: "74,222,128", greenhouse: "74,222,128", garage: "251,146,60",
-    kitchen: "248,113,113", workout: "96,165,250", real_estate: "45,212,191", budget: "167,139,250", missions: "251,191,36",
-    skills: "192,132,252", maintenance: "251,146,60", property: "45,212,191", assistant: "74,222,128" };
   const askHref = (app) => "assistant.html?draft=" + encodeURIComponent(app.ask || ("About " + app.name + ": "));
 
   const star = (app) => el("button", {
@@ -24,9 +20,9 @@
 
   function tile(app) {
     return el("a", { class: "app-tile", href: app.on_web ? app.page : askHref(app), "data-id": app.id,
-      style: "--tile-rgb:" + (COLORS[app.id] || "120,160,140") },
+      style: "--tile-rgb:" + (app.on_web ? "var(--rgb-accent)" : "var(--rgb-line)") },  // one accent (DEC-0023); PC-only apps dimmer
     star(app),
-    el("span", { class: "tile-icon", "aria-hidden": "true" }, app.icon),
+    el("span", { class: "tile-icon", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(app.id)) || app.icon),
     el("span", { class: "tile-name" }, app.name),
     el("span", { class: "tile-tag" }, app.on_web ? app.tagline : "Ask MIA"));
   }
@@ -48,7 +44,7 @@
       : null;
     return el("article", { class: "glass app-card" + (app.shown ? "" : " is-hidden"), "data-id": app.id },
       el("div", { class: "app-head" },
-        el("span", { class: "app-icon", "aria-hidden": "true" }, app.icon),
+        el("span", { class: "app-icon", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(app.id)) || app.icon),
         el("div", {}, el("h3", {}, app.name), el("p", { class: "app-tag" }, app.tagline))),
       el("p", { class: "app-desc" }, app.description),
       el("div", { class: "app-chips" },
@@ -127,5 +123,6 @@
   $("find").addEventListener("input", () => data && draw());
   $("search-button").addEventListener("click", () => { $("tools").hidden = !$("tools").hidden; if (!$("tools").hidden) $("find").focus(); });
   $("mode").addEventListener("click", () => { mode = mode === "tiles" ? "manage" : "tiles"; $("tools").hidden = mode === "tiles" && !$("find").value; draw(); });
+  if (window.MIAIcons) MIAIcons.badge($("search-button"), "observations");  // the magnifier line icon (DEC-0023)
   MIAShell.start(render);
 })();

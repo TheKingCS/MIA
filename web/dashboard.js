@@ -40,7 +40,7 @@
 
     $("quick").replaceChildren(...home.quick_actions.map((q) =>
       el("button", { type: "button", onclick: () => talk(true, q.talk) },
-        el("span", { "aria-hidden": "true" }, q.icon), q.label)));
+        el("span", { class: "ico", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(q.id)) || q.icon), q.label)));
 
     $("glance").replaceChildren(...home.glance.map((c) => {
       const card = el("section", { class: "glass" + (c.tone === "attention" ? " attention" : "") },

@@ -289,7 +289,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   desktop module pages keep the concept's sidebar.
 
 ### DEC-0018: The mobile concept set is the target look; Claude builds it
-- Status: APPROVED (zac, 2026-10-06, in chat with claude)
+- Status: APPROVED (zac, 2026-10-06, in chat with claude). **Its target look is superseded by DEC-0023 (2026-10-15, the Stark engineering interface); the concept's layouts stay.**
 - Proposed by: claude (options), zac chose, 2026-10-06 · Review: muse, chatgpt
 - Decision:
   1. **The target:** the mobile concept set ChatGPT made for Zac
@@ -385,3 +385,47 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   "done" should be instant, and undo keeps it safe (the logs are the
   truth, DEC-0020); the recipe is where the cooking and the shopping meet.
 - Related: DEC-0014, DEC-0018, DEC-0020, H-0028, H-0029
+
+
+### DEC-0022: Capable offline, supercharged online: three levels, picked automatically
+- Status: APPROVED
+- Proposed by: claude, 2026-10-14 (from zac's idea) · Approved by: zac, 2026-10-15 ("Go with your recommendation")
+- Decision: MIA works fully on the phone alone and gets stronger when she
+  can reach more, choosing by herself and saying which level she's on:
+  **1. phone only, offline** (everything works; code answers what it
+  can, the phone's 1.5B model the rest); **2. home computer reachable**
+  (same Wi-Fi, or anywhere through a private link like Tailscale): Talk
+  uses the PC's bigger model and falls back to the phone's mid-
+  conversation, then heavy jobs (voice, OCR, textbooks, email, bank
+  sync), then two-way sync of the person's data; **3. internet**: web
+  lookups (weather, recipes, labels) later. **A cloud AI stays off**
+  unless the person switches it on (some of their words would leave
+  their devices, DEC-0001/0002), and it always says when it's used.
+- Build order: the PC's bigger model for Talk first, then heavy jobs,
+  then sync (the hardest piece; it's Phase 4 of docs/PHONE_FIRST_PLAN.md
+  moved up). **Waiting on:** Zac's PC specs (graphics card, memory, is it
+  on most of the day), which decide the model size.
+- Related: DEC-0001, DEC-0002, DEC-0015, DEC-0019, docs/PHONE_FIRST_PLAN.md
+
+
+### DEC-0023: MIA's look becomes a Stark-inspired engineering interface
+- Status: APPROVED
+- Proposed by: zac, 2026-10-15 (his brief, in the session) · Approved by: zac, 2026-10-15
+- Decision: reskin the whole web front end (`web/`, phone and desktop)
+  as an original personal-technology interface inspired by Tony Stark's
+  workshop, the Iron Man HUD and engineering software: near-black and
+  graphite layered surfaces, **one electric-cyan accent** for active
+  and selected states, cool white text, amber only for attention, muted
+  green for healthy and done, red only for real errors and destructive
+  actions; precise rectangular panels with small radii and fine lines,
+  small technical labels, tabular numbers, a consistent line-icon set
+  instead of emoji, restrained purposeful motion (reduced motion
+  respected). All from shared tokens (`web/tokens.css` is the theme).
+  Function, data, routes, progression rules and the glasses page's own
+  layout are unchanged; nothing is mocked.
+- Changes: **supersedes DEC-0018's target look** (the mobile concept set:
+  per-screen neon colors and warm photo heroes). The concept's layout
+  ideas stay (status strip, needs-attention, segmented tabs, bottom bar);
+  their styling becomes the Stark language. Muse reviews and polishes
+  it (H-0034), as with DEC-0018.
+- Related: DEC-0012, DEC-0014, DEC-0016, DEC-0017, DEC-0018, H-0034

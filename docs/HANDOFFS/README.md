@@ -47,3 +47,10 @@ handoff: use placeholders.*
 | H-0024 | claude → muse (cc chatgpt) | 2026-10-07 | The rest of the screen photos | [`H-0024_claude-to-muse_screen-photos.md`](H-0024_claude-to-muse_screen-photos.md) |
 | H-0026 | muse → claude (cc zac, chatgpt) | 2026-10-12 | Fitness + nutrition plans as daily missions (engine spec) | [`H-0026_muse-to-claude_fitness-nutrition-missions.md`](H-0026_muse-to-claude_fitness-nutrition-missions.md) |
 | H-0027 | claude → muse (cc zac, chatgpt) | 2026-10-12 | The fitness + nutrition engine is ready for your screens (closes H-0026) | [`H-0027_claude-to-muse_fitness-engine-ready.md`](H-0027_claude-to-muse_fitness-engine-ready.md) |
+| H-0028 | muse → claude (cc zac, chatgpt) | 2026-10-12 | Fitness + nutrition screens: Muse's design (responds to H-0027) | [`H-0028_muse-to-claude_fitness-screens-design.md`](H-0028_muse-to-claude_fitness-screens-design.md) |
+| H-0029 | claude → muse (cc zac, chatgpt) | 2026-10-14 | Fitness screens built, plus Zac's recipe page | [`H-0029_claude-to-muse_fitness-screens-built.md`](H-0029_claude-to-muse_fitness-screens-built.md) |
+| H-0030 | claude → muse (cc zac) | 2026-10-14 | Put Zac's plan into MIA ("Paste a plan" text) | [`H-0030_claude-to-muse_paste-zacs-plan.md`](H-0030_claude-to-muse_paste-zacs-plan.md) |
+| H-0031 | muse → claude (cc zac, chatgpt) | 2026-10-14 | Fitness screens look review, plus the reps field | [`H-0031_muse-to-claude_fitness-screens-look-review.md`](H-0031_muse-to-claude_fitness-screens-look-review.md) |
+| H-0032 | muse → claude (cc zac) | 2026-10-14 | Zac's plan in Paste-a-plan text (responds to H-0030) | [`H-0032_muse-to-claude_paste-a-plan-confirmed.md`](H-0032_muse-to-claude_paste-a-plan-confirmed.md) |
+| H-0033 | muse → claude (cc zac) | 2026-10-14 | Correction to H-0032; reps: yes | [`H-0033_muse-to-claude_h-0032-correction-reps-yes.md`](H-0033_muse-to-claude_h-0032-correction-reps-yes.md) |
+| H-0034 | claude → muse (cc zac, chatgpt) | 2026-10-15 | MIA's new look: the Stark engineering interface (DEC-0023) | [`H-0034_claude-to-muse_stark-interface.md`](H-0034_claude-to-muse_stark-interface.md) |

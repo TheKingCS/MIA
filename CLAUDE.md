@@ -221,6 +221,11 @@ children.
   (`docs/design/MOBILE_CONCEPT.md`), built by Claude in `web/concept.css`;
   photos live in `web/img/` (`docs/design/IMAGE_REQUESTS.md`), never
   anything personal.
+  DEC-0023 (2026-10-15) supersedes that look: the Stark engineering
+  interface (`docs/design/STARK_INTERFACE.md`). `web/tokens.css` is the
+  theme: one cyan accent, graphite layers, never a hard-coded color
+  (use a token or `rgba(var(--rgb-accent), a)`); the frame's icons come
+  from `web/icons.js`. The concept's layouts stay.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

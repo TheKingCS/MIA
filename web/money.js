@@ -58,7 +58,7 @@
     const plan = (s.monthly_plan) || null;
     const nw = s.net_worth || {};
     const tile = (icon, label, value, cls) => el("div", { class: "glass nw-tile " + (cls || "") },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon), el("small", {}, label), el("strong", {}, value));
+      el("span", { class: "ico", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(icon)) || ""), el("small", {}, label), el("strong", {}, value));
     const kids = [];
     // The concept's Finances: net worth first, then four tiles, then upcoming bills.
     kids.push(el("section", { class: "glass glow money-section nw-card" },
@@ -66,10 +66,10 @@
       el("span", { class: "nw-value" }, nw.total != null ? fmt(nw.total) : "—"),
       nw.total == null ? el("p", { class: "dim" }, "Add property values or connect a bank to see it.") : null));
     kids.push(el("div", { class: "nw-tiles" },
-      tile("💵", "Monthly income", plan ? fmt(plan.expected_income) : fmt(s.month.income), "good"),
-      tile("🧾", "Monthly bills", plan ? fmt(plan.bills) : fmt(s.month.expenses)),
-      tile("🔻", "Total debt", fmt(page.debts.total), page.debts.total ? "bad" : ""),
-      tile("🏦", plan && plan.gap >= 0 ? "Left over each month" : "Short each month", plan ? fmt(Math.abs(plan.gap)) : "—",
+      tile("income", "Monthly income", plan ? fmt(plan.expected_income) : fmt(s.month.income), "good"),
+      tile("bills", "Monthly bills", plan ? fmt(plan.bills) : fmt(s.month.expenses)),
+      tile("debt", "Total debt", fmt(page.debts.total), page.debts.total ? "bad" : ""),
+      tile("vault", plan && plan.gap >= 0 ? "Left over each month" : "Short each month", plan ? fmt(Math.abs(plan.gap)) : "—",
         plan && plan.gap < 0 ? "bad" : "good")));
     kids.push(
       el("section", { class: "glass money-section" },

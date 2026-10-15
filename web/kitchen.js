@@ -104,7 +104,7 @@
   const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
   const g = (v) => v == null ? "—" : Math.round(v).toLocaleString();  // unknown is "—", never 0
   const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
-  const planLink = () => el("a", { class: "btn btn-ghost", href: "plan.html?from=" + encodeURIComponent("kitchen.html#" + tab) }, "🎯 My plan");
+  const planLink = () => el("a", { class: "btn btn-ghost", href: "plan.html?from=" + encodeURIComponent("kitchen.html#" + tab) }, "My plan");
   const isoDay = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const shift = (iso, days) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + days); return isoDay(d); };
   const recipeList = () => (week ? week.recipes : page.recipes.filter((r) => !r.locked)).map((r) => ({ id: r.recipe_id || r.id, name: r.name }));
@@ -113,7 +113,7 @@
   async function planSlot(dayIso, meal, current) {
     const suggested = week && week.suggestion.find((x) => x.date === dayIso && x.meal === meal);
     const list = recipeList();
-    const picks = suggested ? [{ id: suggested.recipe_id, name: "✨ Suggested: " + suggested.name }].concat(list.filter((r) => r.id !== suggested.recipe_id)) : list;
+    const picks = suggested ? [{ id: suggested.recipe_id, name: "Suggested: " + suggested.name }].concat(list.filter((r) => r.id !== suggested.recipe_id)) : list;
     if (!picks.length) { MIAShell.say("Add a recipe first (Recipes tab)."); return; }
     const v = await form(cap(meal) + ", " + day(dayIso), [
       { name: "recipe_id", label: "Recipe", type: "pick", options: ["recipes"], required: true },
@@ -226,7 +226,7 @@
     return [
       section("Week of " + day(first), buttons(
         btn("‹", "btn-ghost", () => go(shift(first, -7))), btn("This week", "btn-ghost", () => go(fit.as_of)), btn("›", "btn-ghost", () => go(shift(first, 7))),
-        week.suggestion.length ? btn("✨ Fill " + plural(week.suggestion.length, "empty meal"), "btn-amber", () => act({ kind: "meal.suggest", params: { date: first } })) : null,
+        week.suggestion.length ? btn("Fill " + plural(week.suggestion.length, "empty meal"), "btn-amber", () => act({ kind: "meal.suggest", params: { date: first } })) : null,
         planLink()),
         el("p", { class: "dim" }, week.planned ? week.eaten + " of " + plural(week.planned, "planned meal") + " eaten." : "Nothing planned yet. Tap “+ add” on a day, or let MIA fill the week from your recipes.")),
       el("div", { class: "week-grid" }, week.days.map(dayCard)),
@@ -238,7 +238,7 @@
             buttons(x.done ? el("span", { class: "chip chip-ok" }, "✓ Cooked") : btn("Done", "btn-green", () => act({ kind: "meal.prep_done", params: { prep_id: x.id } })),
               btn("Remove", "btn-ghost", () => act({ kind: "meal.prep_delete", params: { prep_id: x.id } }))))))
             : el("p", { class: "dim" }, "Cook ahead: plan a prep session and it covers that recipe's meals for the rest of the week.")),
-        section("Shopping for this week", shop.items.length ? buttons(btn("🛒 Add " + plural(shop.items.length, "item") + " to the list", "btn-amber",
+        section("Shopping for this week", shop.items.length ? buttons(btn("Add " + plural(shop.items.length, "item") + " to the list", "btn-amber",
           () => act({ kind: "meal.shop", params: { date: first } }))) : null,
           shop.items.length ? el("div", { class: "rows" }, shop.items.map((i) => el("div", { class: "row money-row" + (i.have_some ? " dimmed" : "") },
             el("div", {}, el("div", { class: "row-title" }, i.name), el("div", { class: "row-sub" }, [qty(i), "for " + i.recipes.join(", "), i.have_some ? "you have some" : null].filter(Boolean).join(" · "))),

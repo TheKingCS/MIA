@@ -138,7 +138,7 @@
     for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v); return n; };
   const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
   const g = (v, unit) => v == null ? "—" : (Math.round(v * 10) / 10).toLocaleString() + (unit || "");
-  const planLink = () => el("a", { class: "btn btn-ghost", href: "plan.html?from=" + encodeURIComponent("workout.html#" + tab) }, "🎯 My plan");
+  const planLink = () => el("a", { class: "btn btn-ghost", href: "plan.html?from=" + encodeURIComponent("workout.html#" + tab) }, "My plan");
   const secs = (ms) => Math.floor(ms / 1000);
   const clock = (sec) => Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
 

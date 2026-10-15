@@ -99,6 +99,7 @@
 
   function draw() {
     $("hero-icon").textContent = page.icon;
+    if (window.MIAIcons) MIAIcons.badge($("hero-icon"), document.body.dataset.app);  // the line icon (DEC-0023)
     $("hero-name").textContent = page.name;
     $("hero-tagline").textContent = page.tagline;
     $("strip").replaceChildren(
