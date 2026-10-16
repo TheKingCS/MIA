@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
@@ -83,6 +84,10 @@ class MainActivity : Activity() {
         val view = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            // Every screen comes from MIA on this phone, so never show a saved
+            // copy: after an update the web view kept showing the old screens.
+            settings.cacheMode = WebSettings.LOAD_NO_CACHE
+            clearCache(true)
             webViewClient = WebViewClient()
             // Without this, the web view silently answers "no" to any
             // confirm/alert dialog a screen asks (the Model test's Delete did).

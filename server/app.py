@@ -77,6 +77,18 @@ from core.web_push import get_or_create_vapid_keys, send_web_push
 
 log = get_logger(__name__)
 
+
+class _Fresh(StaticFiles):
+    """Static files a browser must re-check every time (ETag, so an unchanged
+    file costs a 304). Without it the phone's web view kept showing the
+    screens of an older app version after an update (Zac, 2026-10-16)."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 # Phase 2 (DEC-0012): MIA's one web front end (Muse's), and the published
 # schemas it builds against.
@@ -975,8 +987,8 @@ def create_app(context: AppContext) -> FastAPI:
     # The web front end (web/, DEC-0012) and the schemas it's built on.
     # Mounted before "/" so the phone app keeps the root.
     if _WEB_DIR.is_dir():
-        app.mount("/web", StaticFiles(directory=_WEB_DIR, html=True), name="web")
+        app.mount("/web", _Fresh(directory=_WEB_DIR, html=True), name="web")
     if _SCHEMA_DIR.is_dir():  # the preview's examples; MIA on a phone ships without them (DEC-0019)
         app.mount("/schema", StaticFiles(directory=_SCHEMA_DIR), name="schema")
-    app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
+    app.mount("/", _Fresh(directory=_STATIC_DIR, html=True), name="static")
     return app

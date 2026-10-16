@@ -65,6 +65,7 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-16 · claude · **Fixed: the phone app kept showing old screens after an update.** Its web view reused saved copies of the web files (the server never said to re-check), so test build 48 still showed the old Dashboard, lowercase headers and the cut-off chat bar. MIA's server now marks every web file "no-cache" (an unchanged file is a quick 304), and the phone app never uses saved copies and clears them on start.
 - 2026-10-16 · claude · **Dashboard trimmed to Today's Focus, Upcoming and At A Glance (Zac).** The quick buttons (Quick Add, Voice, MIA Assistant, Calendar, Journal), the quote and Recent Wins are gone; Apps reaches all of it.
 - 2026-10-16 · claude · **Skills as stacked rows (Zac: "more like At A Glance").** Each skill is a full-width card, icon beside its name, one under another, so long names fit.
 - 2026-10-16 · claude · **Workout Templates removed everywhere (Zac: "No user has used them yet"), and Missions tidied.** Log Session is freeform on the web and desktop; a starter workout becomes a training day in your plan's rotation. Lifts is now **Personal Bests**: Skill Bests (all-time best hold or reps per skill step, kept when the plan changes) plus lift PRs. Missions: the tabs read just Active / Daily / Completed (no counts), **Set Aside is gone** (no Give Up button or tab; Delete removes a mission), and **Add Mission** and **Ask MIA For One** are two buttons below the list on Active only.
