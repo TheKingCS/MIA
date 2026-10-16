@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <title>MIA · Glasses</title>
-  <link rel="stylesheet" href="glasses.css?v=11">
+  <link rel="stylesheet" href="glasses.css?v=12">
 </head>
 <body>
   <!--
@@ -28,9 +28,12 @@
     </section>
     <section id="screen" hidden aria-live="polite"></section>
     <p id="demo-tag" hidden>Demo · placeholder data</p>
+    <!-- for a touchscreen: tap an edge to move (the glasses use the Band's scroll) -->
+    <button id="prev" class="edge" type="button" aria-label="Previous">‹</button>
+    <button id="next" class="edge" type="button" aria-label="Next">›</button>
   </div>
   <script src="mia.js"></script>
   <script src="icons.js"></script>
-  <script src="glasses.js?v=5"></script>
+  <script src="glasses.js?v=6"></script>
 </body>
 </html>

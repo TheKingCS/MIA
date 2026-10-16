@@ -34,9 +34,12 @@
 
   // ------------------------------------------------------------ fit the 600x600 stage to the screen
   function fit() {
-    document.documentElement.style.setProperty("--fit", String(Math.min(innerWidth, innerHeight) / 600));
+    const v = window.visualViewport;
+    const w = v ? v.width * v.scale : innerWidth, h = v ? v.height * v.scale : innerHeight;
+    document.documentElement.style.setProperty("--fit", String(Math.min(w, h) / 600));
   }
   addEventListener("resize", fit);
+  if (window.visualViewport) visualViewport.addEventListener("resize", fit);
   fit();
 
   // ------------------------------------------------------------ state
@@ -107,7 +110,10 @@
     clearTimeout(captionTimer);
     if (demo) {
       orbState("listening");
-      setTimeout(() => { orbState("thinking"); setTimeout(() => answer("This is the demo: talking to her needs MIA running."), 900); }, 2600);
+      demoTimer = setTimeout(() => {
+        orbState("thinking");
+        demoTimer = setTimeout(() => answer("This is the demo: talking to her needs MIA running."), 900);
+      }, 2600);
       return;
     }
     if (!navigator.mediaDevices || !window.MediaRecorder) { answer("This screen can't use a microphone. \"Hey MIA\" comes with the phone companion."); return; }
@@ -117,8 +123,10 @@
     chunks = [];
     recorder = new MediaRecorder(stream);
     recorder.ondataavailable = (e) => chunks.push(e.data);
+    cancelled = false;
     recorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
+      if (cancelled) { cancelled = false; return; }
       orbState("thinking");
       try {
         const turn = await MIA.voice(await toWav(new Blob(chunks)));
@@ -133,6 +141,13 @@
     recorder.start();
     orbState("listening");
     setTimeout(() => { if (recorder && recorder.state === "recording") recorder.stop(); }, 8000);
+  }
+  // Move away while she listens: stop without sending anything.
+  let cancelled = false, demoTimer = null;
+  function stopListening() {
+    clearTimeout(demoTimer); clearTimeout(captionTimer);
+    if (recorder && recorder.state === "recording") { cancelled = true; recorder.stop(); }
+    orbState("idle");
   }
   window.MIAGlasses = { listen };
 
@@ -162,7 +177,7 @@
       li.append(el("span", "t", esc(it.text)));
       if (it.detail) li.append(el("span", "d", esc(it.detail)));
       if (it.verb) li.append(el("span", "v", esc(it.verb)));
-      li.addEventListener("click", (e) => { e.stopPropagation(); row = i; select(); });
+      li.dataset.row = String(i);
       ul.append(li);
     });
     const more = el("p", "more", (start > 0 ? "▲ " + start + " above" : "") + (start > 0 && start + 5 < n ? " · " : "") +
@@ -273,7 +288,7 @@
   function move(dir) {
     if (busy) return;
     if (view === "home") {
-      if (voiceState === "listening" || voiceState === "thinking") return;
+      if (voiceState === "listening" || voiceState === "thinking") stopListening();
       const list = cards();
       if (!list.length) return;
       appIndex = dir > 0 ? 0 : list.length - 1;
@@ -402,21 +417,30 @@
     else if (k === "Enter" || k === " ") { e.preventDefault(); select(); }
     else if (k === "Escape" || k === "Backspace") { e.preventDefault(); back(); }
   });
-  let tx = null, ty = null, swiped = false;
-  addEventListener("touchstart", (e) => {
-    if (e.changedTouches.length) { tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY; swiped = false; }
-  }, { passive: true });
-  addEventListener("touchend", (e) => {
-    if (tx == null || !e.changedTouches.length) return;
-    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
-    tx = ty = null;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 40) return;  // a tap: the click below selects
-    swiped = true;
-    if (Math.abs(dx) >= Math.abs(dy)) move(dx < 0 ? 1 : -1);
-    else if (dy > 0) back();
-    else move(1);
-  }, { passive: true });
-  document.addEventListener("click", () => { if (swiped) { swiped = false; return; } select(); });
+  // Touch and mouse: each gesture is either a tap (select; a tapped row is
+  // chosen first; an edge arrow moves) or a swipe (left/right/up move,
+  // down goes back). Decided on release, so no tap is ever lost.
+  let px = null, py = null;
+  addEventListener("pointerdown", (e) => { px = e.clientX; py = e.clientY; });
+  addEventListener("pointerup", (e) => {
+    if (px == null) return;
+    const dx = e.clientX - px, dy = e.clientY - py;
+    px = py = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) >= 40) {
+      if (Math.abs(dx) >= Math.abs(dy)) move(dx < 0 ? 1 : -1);
+      else if (dy > 0) back();
+      else move(1);
+      return;
+    }
+    const target = e.target instanceof Element ? e.target : null;
+    if (target && target.closest("#prev")) { move(-1); return; }
+    if (target && target.closest("#next")) { move(1); return; }
+    const li = target && target.closest("li[data-row]");
+    if (li) row = Number(li.dataset.row);
+    select();
+  });
+  addEventListener("pointercancel", () => { px = py = null; });
+  addEventListener("dblclick", (e) => e.preventDefault());
 
   // ------------------------------------------------------------ boot: her orb
   (async () => {

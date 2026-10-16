@@ -55,3 +55,14 @@ Engine: `mission_focus()`, the `pick` and `progress` panels, `?mission=`
 on `/api/glasses` and `/api/glasses/{app}/{item}` (core/glasses.py).
 
 Yours to polish within those constraints (no scroll, two moves, orb alone).
+
+## Follow-up (same day): Zac had to zoom out, and the orb screen was hard to leave
+
+- The page can't zoom any more (`user-scalable=no`, `touch-action: none`);
+  quick taps on the orb had been zooming it in. `--fit` reads the
+  visual viewport.
+- Taps and swipes are decided once per gesture (pointer events). Before,
+  the tap after a swipe was swallowed.
+- Faint ‹ › arrows at the stage's edges (tap to move) for touchscreens;
+  the glasses use the Band's scroll. Moving while she listens cancels the
+  listening instead of locking navigation.

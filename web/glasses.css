@@ -19,7 +19,7 @@
   --fit: 1;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
+html, body { height: 100%; margin: 0; touch-action: none; overscroll-behavior: none; }
 body {
   background: #000; color: var(--ink); overflow: hidden;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -179,3 +179,14 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #orb, #orb-wrap .ring, #orb-wrap .p, .saturn .s::before { animation: none !important; }
 }
+
+/* edge arrows for a touchscreen: faint, out of the way, big to tap */
+.edge {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 64px; height: 200px;
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font-size: 54px; line-height: 1; color: rgba(53, 212, 255, 0.28);
+}
+.edge:active { color: var(--accent); }
+#prev { left: 0; }
+#next { right: 0; }
+.edge:focus { outline: none; }
