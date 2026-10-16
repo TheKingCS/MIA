@@ -107,6 +107,8 @@
   const g = (v) => v == null ? "—" : Math.round(v).toLocaleString();  // unknown is "—", never 0
   const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
   const planLink = () => el("a", { class: "btn btn-ghost", href: "plan.html?from=" + encodeURIComponent("kitchen.html#" + tab) }, "My plan");
+  // Import plan: My plan with "Paste a plan" already open (plan.js reads ?import=1).
+  const importLink = () => el("a", { class: "btn btn-amber", href: "plan.html?from=" + encodeURIComponent("kitchen.html#" + tab) + "&import=1" }, "Import plan");
   const isoDay = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const shift = (iso, days) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + days); return isoDay(d); };
   const recipeList = () => (week ? week.recipes : page.recipes.filter((r) => !r.locked)).map((r) => ({ id: r.recipe_id || r.id, name: r.name }));
@@ -169,7 +171,7 @@
     const missions = fit.missions.filter((m) => ["meals", "lunch", "protein", "prep", "meal_plan"].includes(m.kind));
     const extra = food.entries.filter((e) => !(e.planned_id && planned.has(e.meal)));
     return [
-      section("Today", buttons(planLink()),
+      section("Today", buttons(planLink(), importLink()),
         proteinBar(food.totals, food.targets),
         el("p", { class: "dim" }, g(food.totals.kcal) + " kcal eaten" + (food.targets.kcal ? " of " + food.targets.kcal.toLocaleString() : "") +
           " · " + g(plan.totals.kcal) + " kcal planned")),
