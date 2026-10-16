@@ -37,3 +37,8 @@ the chat. The bottom bar is Home and Apps.
   `mod-expeditions`, `mod-music`, `mod-files` are on `<body>` if you want
   per-app imagery.
 - Checked at 412 px: no page scrolls sideways.
+
+## Added: the reward screen on the glasses (Zac's concept image, 2026-10-16)
+
+Approving a mission or objective from the glasses now shows `.reward` (HUD frame with corner brackets, glowing headline, ☆, a big count-up `+N XP`, a `.r-bar` status bar, `.r-sub` line) when the engine says it earned something (`proposal.reward`). It's cyan to match Zac's image; your note says gold is celebration-only, so it's yours to decide whether the star or the number should go gold.
+

@@ -76,6 +76,13 @@
     },
     "undoable": {
       "type": "boolean"
+    },
+    "reward": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "What finishing it earned, for a surface to celebrate (core/actions.reward_for): headline (Objective Complete, Mission Complete, XP Earned), name, mission, xp, credits, level, level_up, level_percent, done, total, ready. Null when it earned nothing to celebrate."
     }
   }
 }

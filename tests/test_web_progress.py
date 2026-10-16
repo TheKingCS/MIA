@@ -178,3 +178,30 @@ def test_the_endpoints(world):
         response = client.get(path)
         assert response.status_code == 200, (path, response.text)
         assert response.json()["me"]["name"] == "Robin"
+
+
+def test_finishing_something_says_what_it_earned(world):
+    """Zac, 2026-10-16: the glasses show "Objective Complete +30 XP"; the
+    approved proposal carries the reward (core/actions.reward_for)."""
+    from core.actions import reward_for
+
+    run(world, "mission.add", name="Fix the fence", reward_xp="30", reward_credits="5")
+    mission = world.missions.all_missions()[-1]
+    run(world, "objective.add", mission_id=mission.mission_id, description="Buy posts", target="1")
+    run(world, "objective.add", mission_id=mission.mission_id, description="Set posts", target="2")
+    _, done = run(world, "objective.tick", mission_id=mission.mission_id, index="1")
+    assert done.reward is None  # 1 of 2 posts: nothing finished yet
+    _, done = run(world, "objective.tick", mission_id=mission.mission_id, index="0")
+    assert done.reward["headline"] == "Objective Complete" and done.reward["name"] == "Buy posts"
+    assert (done.reward["done"], done.reward["total"], done.reward["ready"]) == (1, 2, False)
+    _, done = run(world, "objective.tick", mission_id=mission.mission_id, index="1")
+    assert done.reward["ready"] and done.as_dict()["reward"]["headline"] == "Objective Complete"
+    _, done = run(world, "mission.complete", mission_id=mission.mission_id)
+    r = done.reward
+    assert (r["headline"], r["name"], r["xp"], r["credits"]) == ("Mission Complete", "Fix the fence", 30, 5)
+    assert 0 <= r["level_percent"] <= 100
+    # Pure logic: a level reached, and nothing to celebrate.
+    up = reward_for({"xp": 90}, {"xp": 120}, "mission.complete")
+    assert (up["xp"], up["level"], up["level_up"], up["level_percent"]) == (30, 2, True, 10)
+    assert not reward_for({"xp": 100}, {"xp": 130}, "mission.complete")["level_up"]
+    assert reward_for({"xp": 5}, {"xp": 5}, "grocery.check") is None

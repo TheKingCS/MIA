@@ -75,6 +75,9 @@ class Proposal:
     created_at: str = ""
     decided_at: Optional[str] = None
     result: str = ""
+    # What finishing it earned, for a surface to celebrate (the glasses'
+    # "Objective Complete +30 XP", Zac 2026-10-16): see reward_for().
+    reward: Optional[dict] = None
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
@@ -387,6 +390,7 @@ class ActionCenter:
             raise ActionError(f"That was already {proposal.status}.")
         action = ACTION_TYPES[proposal.kind]
         source = "assistant" if proposal.proposed_by == "mia" else "manual"
+        before = _moment(context, proposal)
         try:
             with recording(f"action_{proposal.kind}", proposal.profile_id) as change, \
                     life_events.acting(source, proposal.profile_id), crediting(context, proposal.profile_id):
@@ -403,6 +407,10 @@ class ActionCenter:
                 undo.add(change)
                 proposal._change = change
             publish(context, "records.changed", action=f"action_{proposal.kind}")
+            try:
+                proposal.reward = reward_for(before, _moment(context, proposal), proposal.kind)
+            except Exception:  # a celebration never breaks the change itself
+                log.exception("Couldn't work out the reward for %s.", proposal.kind)
         proposal.decided_at = datetime.now().isoformat(timespec="seconds")
         return proposal
 
@@ -428,6 +436,62 @@ class ActionCenter:
         proposal.status, proposal._change = UNDONE, None
         proposal.decided_at = datetime.now().isoformat(timespec="seconds")
         return proposal
+
+
+def _moment(context, proposal) -> dict:
+    """The person's XP and credits, and the mission or objective the
+    action is about: read just before and just after it runs."""
+    out: dict = {}
+    profiles = getattr(context, "profiles", None)
+    try:
+        person = (profiles.get_profile(proposal.profile_id) if proposal.profile_id else None) or profiles.get_active_profile()
+    except Exception:
+        person = None
+    if person is not None:
+        out["xp"], out["credits"] = int(person.total_xp or 0), int(person.total_credits or 0)
+    missions = getattr(context, "missions", None)
+    mission_id = str(proposal.params.get("mission_id") or "")
+    mission = missions.get_mission(mission_id) if missions is not None and mission_id else None
+    if mission is not None:
+        out["mission"], out["status"] = mission.name, mission.status
+        try:
+            out["done"], out["total"] = missions.group_objective_progress(mission_id)
+        except Exception:
+            pass
+        if proposal.kind == "objective.tick":
+            try:
+                index = int(proposal.params.get("index"))
+                out["objective"] = mission.objectives[index].description
+                out["objective_done"] = bool(missions.is_objective_complete(mission_id, index))
+            except (TypeError, ValueError, IndexError, AttributeError):
+                pass
+    return out
+
+
+def reward_for(before: dict, after: dict, kind: str) -> Optional[dict]:
+    """Pure logic. What a change earned: XP and credits gained, a level
+    reached, an objective or a mission finished. None when it earned
+    nothing worth celebrating (a +1 that didn't finish anything)."""
+    from core.leveling import compute_level_progress
+
+    xp = max(0, after.get("xp", 0) - before.get("xp", 0))
+    credits = max(0, after.get("credits", 0) - before.get("credits", 0))
+    objective_done = kind == "objective.tick" and after.get("objective_done") and not before.get("objective_done")
+    mission_done = after.get("status") == "completed" and before.get("status") != "completed"
+    if not (xp or credits or objective_done or mission_done):
+        return None
+    level_before = compute_level_progress(before.get("xp", 0))[0]
+    level, into, needed = compute_level_progress(after.get("xp", 0))
+    headline = ("Mission Complete" if mission_done else "Objective Complete" if objective_done else "XP Earned")
+    name = after.get("mission") if mission_done else after.get("objective") or after.get("mission") or ""
+    return {
+        "headline": headline, "name": name, "mission": after.get("mission", ""),
+        "xp": xp, "credits": credits, "level": level, "level_up": level > level_before,
+        "level_percent": round(100 * into / needed) if needed else 100,
+        "done": after.get("done"), "total": after.get("total"),
+        # Every objective finished, the mission waiting to be claimed.
+        "ready": bool(objective_done and after.get("total") and after.get("done") == after.get("total") and not mission_done),
+    }
 
 
 def suggested(kind: str, **params) -> dict:

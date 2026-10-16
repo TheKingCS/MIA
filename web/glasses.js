@@ -48,10 +48,11 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: just don't remember */ } },
   };
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
-  let view = "home";         // home | cards | menu | panel | confirm | result
+  let view = "home";         // home | cards | menu | panel | confirm | result | reward
   let showingAll = false;    // browsing the apps that aren't pinned
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false;
+  let reward = null, rewardTimer = null;
   let mission = store.get("mia.glasses.mission") || "";
 
   async function load() {
@@ -322,8 +323,44 @@
       const body = el("div", "body");
       body.append(el("p", "say small", esc(resultText)));
       parts.push(kicker(a ? a.name : "MIA"), body, hint("continue"));
+    } else if (view === "reward") {
+      parts.push(rewardScreen(reward), hint("continue"));
     }
     screen.replaceChildren(...parts);
+  }
+
+  // The reward (Zac's concept, 2026-10-16): "Objective Complete ☆ +30 XP
+  // ✓ Quest Complete" in a HUD frame. From the engine's proposal.reward
+  // (core/actions.reward_for); the XP counts up, then select continues.
+  function rewardScreen(r) {
+    const box = el("div", "reward" + (r.level_up ? " level-up" : ""));
+    ["tl", "tr", "bl", "br"].forEach((c) => box.append(el("i", "rc " + c)));
+    box.append(el("p", "r-head", esc(r.headline)), el("p", "r-star", "☆"));
+    const big = r.xp ? "+" + r.xp + " XP" : r.credits ? "+" + r.credits + " Credits" : "✓";
+    const amount = el("p", "r-xp", esc(big));
+    box.append(amount);
+    if (r.xp) {  // count up
+      const start = performance.now(), total = r.xp;
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / 900);
+        amount.textContent = "+" + Math.round(total * (1 - Math.pow(1 - t, 3))) + " XP";
+        if (t < 1 && view === "reward") requestAnimationFrame(step);
+      };
+      amount.textContent = "+0 XP";
+      requestAnimationFrame(step);
+    }
+    const label = r.headline === "Mission Complete" ? "Quest Complete" : r.ready ? "All Objectives Done · Claim It"
+      : r.total ? r.done + " / " + r.total + " Objectives" : r.headline;
+    const pct = r.headline === "Mission Complete" || r.ready ? 100 : r.total ? Math.round(100 * r.done / r.total) : 100;
+    const bar = el("div", "r-bar");
+    const fill = el("span", "r-fill");
+    fill.style.width = pct + "%";
+    bar.append(fill, el("span", "r-label", "✓ " + esc(label)));
+    box.append(bar);
+    const sub = [r.name && r.name !== r.headline ? r.name : null, r.credits && r.xp ? "+" + r.credits + " credits" : null,
+      r.level_up ? "Level " + r.level + "!" : null].filter(Boolean).join(" · ");
+    if (sub) box.append(el("p", "r-sub", esc(sub)));
+    return box;
   }
 
   function missionCard(m) {
@@ -443,11 +480,17 @@
       try {
         const done = await MIA.approve(proposal.proposal_id);
         resultText = done.result || done.summary || "Done.";
+        if (done.status === "executed" && done.reward) {
+          reward = done.reward; proposal = null; show("reward");
+          clearTimeout(rewardTimer);
+          rewardTimer = setTimeout(() => { if (view === "reward") leaveResult(); }, 6000);
+          return;
+        }
       } catch (err) { resultText = err.message; }
       proposal = null; show("result");
       return;
     }
-    if (view === "result") { await leaveResult(); }
+    if (view === "result" || view === "reward") { clearTimeout(rewardTimer); await leaveResult(); }
   }
 
   async function propose(action, then) {
@@ -485,7 +528,7 @@
     if (busy) return;
     if (view === "home") { if (voiceState === "answered") orbState("idle"); return; }
     if (view === "confirm") { cancel(); return; }
-    if (view === "result") { leaveResult(); return; }
+    if (view === "result" || view === "reward") { clearTimeout(rewardTimer); leaveResult(); return; }
     if (view === "recipe") { show("panel"); return; }
     if (view === "panel") { row = menuIndex; panel = null; show("menu"); return; }
     if (view === "menu") { row = 0; show("cards"); return; }

@@ -218,3 +218,54 @@ body {
 .r-step { margin: 14px 0 0; font-size: 30px; line-height: 1.4; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow: hidden; }
 .r-step.long { font-size: 23px; -webkit-line-clamp: 11; }
+
+/* ---------------------------------------------------------------- the reward (Zac's concept, 2026-10-16)
+   "Objective Complete ☆ +30 XP ✓ Quest Complete": a HUD frame, cyan glow,
+   the XP counting up. Pops in once; nothing else moves. */
+.reward {
+  position: relative; flex: 1; min-height: 0; margin: 6px 2px 22px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  border: 1px solid var(--accent-faint); border-radius: 18px;
+  background:
+    linear-gradient(rgba(53, 212, 255, 0.05) 1px, transparent 1px) 0 0 / 100% 28px,
+    linear-gradient(90deg, rgba(53, 212, 255, 0.05) 1px, transparent 1px) 0 0 / 28px 100%,
+    radial-gradient(circle at 50% 50%, rgba(53, 212, 255, 0.14), transparent 70%);
+  box-shadow: 0 0 40px rgba(53, 212, 255, 0.15), inset 0 0 40px rgba(53, 212, 255, 0.08);
+  animation: reward-in 520ms cubic-bezier(.2, .9, .3, 1.25) both;
+}
+.reward .rc { position: absolute; width: 34px; height: 34px; border: 3px solid var(--accent); filter: drop-shadow(0 0 6px var(--accent)); }
+.reward .rc.tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 18px; }
+.reward .rc.tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: 18px; }
+.reward .rc.bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: 18px; }
+.reward .rc.br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 18px; }
+.r-head {
+  margin: 0; font-size: 40px; font-weight: 700; color: var(--accent-soft); text-align: center; line-height: 1.1;
+  text-shadow: 0 0 14px var(--accent), 0 0 32px rgba(53, 212, 255, 0.5);
+}
+.r-star { margin: -4px 0 -6px; font-size: 26px; color: var(--accent-soft); text-shadow: 0 0 10px var(--accent); }
+.r-xp {
+  margin: 0; font-size: 96px; font-weight: 800; letter-spacing: 0.01em; color: #eaffff; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px var(--accent), 0 0 46px rgba(53, 212, 255, 0.7);
+}
+.r-bar {
+  position: relative; width: 80%; height: 46px; margin-top: 6px; border-radius: 10px; overflow: hidden;
+  border: 2px solid var(--accent); background: rgba(53, 212, 255, 0.08);
+  box-shadow: 0 0 16px rgba(53, 212, 255, 0.4);
+}
+.r-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: linear-gradient(90deg, rgba(53, 212, 255, 0.25), rgba(53, 212, 255, 0.55));
+  animation: reward-fill 1100ms 250ms ease-out both;
+}
+.r-label {
+  position: relative; display: flex; align-items: center; height: 100%; padding: 0 16px;
+  font-family: var(--font-mono); font-size: 19px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #eaffff; text-shadow: 0 0 8px var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.r-sub { margin: 4px 0 0; font-size: 20px; color: var(--ink-dim); text-align: center; max-width: 90%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reward.level-up .r-sub { color: var(--accent-soft); }
+@keyframes reward-in { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: none; } }
+@keyframes reward-fill { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
+@media (prefers-reduced-motion: reduce) { .reward, .r-fill { animation: none; } }
