@@ -1,289 +1,181 @@
-/* MIA on Display glasses — Stark engineering language (muse, DEC-0023, H-0041).
-   Pure black: on a waveguide display dark pixels are transparent, so the
-   whole UI reads as light floating in space. No photo backgrounds.
-   Cyan accent (active, selected, MIA's voice, progress); gold stays
-   celebration-only (level-up burst). One card at a time, 600x600.
-   v4: Stark tokens, cyan arc-reactor orb, app cards (badge + position). */
+/* MIA on Display glasses — Stark engineering language (muse, DEC-0023, H-0041;
+   layout per Zac, 2026-10-16). One fixed 600x600 composition, scaled to the
+   screen (glasses.js sets --fit), so nothing ever scrolls or gets cut off.
+   Pure black: on a waveguide display dark pixels are see-through.
+   Cyan accent (active, selected, MIA's voice); amber = needs you; gold stays
+   celebration-only. Type is large: it has to read on a glance. */
 :root {
   --accent: #35d4ff;
   --accent-soft: #a6ecff;
-  --accent-dim: rgba(53, 212, 255, 0.55);
-  --accent-faint: rgba(53, 212, 255, 0.22);
+  --accent-dim: rgba(53, 212, 255, 0.6);
+  --accent-faint: rgba(53, 212, 255, 0.2);
   --ink: #e6eef6;
-  --ink-dim: rgba(230, 238, 246, 0.62);
-  --ink-faint: rgba(230, 238, 246, 0.38);
-  --card: rgba(230, 238, 246, 0.04);
+  --ink-dim: rgba(230, 238, 246, 0.72);
+  --ink-faint: rgba(230, 238, 246, 0.5);
   --line: rgba(53, 212, 255, 0.45);
-  --epic: #b18cff;
-  --win: #f6c453;
-  --win-hi: #ffedb8;
-  --win-dim: rgba(246, 196, 83, 0.55);
-  --win-faint: rgba(246, 196, 83, 0.22);
   --attention: #f2b33d;
+  --ok: #7ee0a8;
   --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --fit: 1;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { height: 100%; margin: 0; }
 body {
-  margin: 0;
-  background: #000;
-  color: var(--ink);
+  background: #000; color: var(--ink); overflow: hidden;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  overflow: hidden;
+  -webkit-tap-highlight-color: transparent; user-select: none;
 }
 #stage {
-  position: relative;
-  width: min(100vw, 100vh);
-  height: min(100vw, 100vh);
-  max-width: 600px;
-  max-height: 600px;
-  display: grid;
-  grid-template-rows: 224px auto minmax(0, 1fr) auto;
-  justify-items: center;
-  padding: 14px 30px 12px;
-  row-gap: 10px;
-}
-/* demo only: shrink the stage so the demo voice console fits below it */
-body.demo #stage {
-  width: min(100vw, calc(100vh - 96px));
-  height: min(100vw, calc(100vh - 96px));
+  position: absolute; left: 50%; top: 50%; width: 600px; height: 600px;
+  transform: translate(-50%, -50%) scale(var(--fit));
+  overflow: hidden;
 }
 #stage::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(circle at 50% 26%, rgba(53, 212, 255, 0.07), transparent 42%);
+  background: radial-gradient(circle at 50% 45%, rgba(53, 212, 255, 0.07), transparent 46%);
 }
+#demo-tag {
+  position: absolute; top: 10px; right: 14px; margin: 0; z-index: 3;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em; color: var(--ink-faint); text-transform: uppercase;
+}
+[hidden] { display: none !important; }
 
-/* her: a sphere of light with orbiting trails. Expression is the light. */
-#orb-zone { display: grid; place-items: center; }
-#orb-wrap { position: relative; width: 190px; height: 190px; }
+/* ---------------- home: her orb, alone ---------------- */
+#home { position: absolute; inset: 0; display: grid; place-items: center; }
+#orb-wrap { position: relative; width: 300px; height: 300px; transition: transform 0.4s ease; }
 #orb {
-  position: absolute; inset: 30px; border-radius: 50%;
+  position: absolute; inset: 60px; border-radius: 50%;
   background: radial-gradient(circle at 38% 30%, #ffffff 0%, #a6ecff 16%, var(--accent) 46%, #0b86ad 80%, #010507 100%);
   box-shadow: 0 0 60px rgba(53, 212, 255, 0.7), 0 0 150px rgba(53, 212, 255, 0.3),
               inset 0 0 26px rgba(220, 248, 255, 0.65), inset -8px -12px 30px rgba(4, 30, 44, 0.5);
   animation: breathe 5s ease-in-out infinite;
 }
-@keyframes breathe {
-  50% { transform: scale(1.05); box-shadow: 0 0 74px rgba(53, 212, 255, 0.8), 0 0 160px rgba(53, 212, 255, 0.32), inset 0 0 32px rgba(220, 248, 255, 0.75), inset -8px -12px 30px rgba(4, 30, 44, 0.5); }
-}
+@keyframes breathe { 50% { transform: scale(1.05); } }
 #orb-wrap .ring {
-  position: absolute; border-radius: 50%; pointer-events: none;
-  border: 3px solid transparent;
-  filter: drop-shadow(0 0 8px rgba(53, 212, 255, 0.95));
+  position: absolute; border-radius: 50%; pointer-events: none; border: 3px solid transparent;
+  filter: drop-shadow(0 0 8px rgba(53, 212, 255, 0.95)); transition: opacity 0.5s ease;
 }
-#orb-wrap .ring.r1 {
-  inset: 0; opacity: 1;
-  border-top-color: rgba(223, 246, 255, 1);
-  border-right-color: rgba(220, 248, 255, 0.35);
-  border-bottom-color: rgba(220, 248, 255, 0.08);
-  animation: spin 14s linear infinite;
-}
-#orb-wrap .ring.r2 {
-  inset: -12px; opacity: 0.85;
-  border-bottom-color: rgba(53, 212, 255, 0.9);
-  border-left-color: rgba(53, 212, 255, 0.3);
-  border-top-color: rgba(53, 212, 255, 0.08);
-  animation: spin 24s linear infinite reverse;
-}
+#orb-wrap .ring.r1 { inset: 30px; border-top-color: #dff6ff; border-right-color: rgba(220, 248, 255, 0.35);
+  border-bottom-color: rgba(220, 248, 255, 0.08); animation: spin 14s linear infinite; }
+#orb-wrap .ring.r2 { inset: 16px; opacity: 0.85; border-bottom-color: rgba(53, 212, 255, 0.9);
+  border-left-color: rgba(53, 212, 255, 0.3); border-top-color: rgba(53, 212, 255, 0.08); animation: spin 24s linear infinite reverse; }
 @keyframes spin { to { transform: rotate(360deg); } }
-#orb-wrap .p {
-  position: absolute; width: 4px; height: 4px; border-radius: 50%;
-  background: var(--accent-soft); box-shadow: 0 0 10px 2px rgba(53, 212, 255, 0.8);
-  animation: drift 7s ease-in-out infinite;
-}
-#orb-wrap .p1 { top: 18%; left: 8%; }
-#orb-wrap .p2 { top: 64%; left: 88%; animation-delay: -2.4s; }
-#orb-wrap .p3 { top: 82%; left: 20%; animation-delay: -4.8s; width: 3px; height: 3px; }
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0); opacity: 0.5; }
-  50% { transform: translate(6px, -12px); opacity: 1; }
-}
-#orb-wrap.listening #orb { animation: listen 1.1s ease-in-out infinite; }
-@keyframes listen {
-  50% { transform: scale(1.09); box-shadow: 0 0 78px rgba(53, 212, 255, 0.8), 0 0 160px rgba(53, 212, 255, 0.32), inset 0 0 32px rgba(220, 248, 255, 0.65); }
-}
-#orb-wrap.happy #orb {
-  box-shadow: 0 0 66px rgba(166, 236, 255, 0.75), 0 0 150px rgba(53, 212, 255, 0.32), inset 0 0 30px rgba(220, 248, 255, 0.6);
-}
+#orb-wrap .p { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-soft);
+  box-shadow: 0 0 10px 2px rgba(53, 212, 255, 0.8); animation: drift 7s ease-in-out infinite; }
+#orb-wrap .p1 { top: 22%; left: 14%; }
+#orb-wrap .p2 { top: 62%; left: 84%; animation-delay: -2.4s; }
+#orb-wrap .p3 { top: 80%; left: 26%; animation-delay: -4.8s; }
+@keyframes drift { 0%, 100% { transform: translate(0, 0); opacity: 0.5; } 50% { transform: translate(6px, -12px); opacity: 1; } }
 
-/* waveform while she speaks — its own row, never touching the orb */
-#wave { display: flex; gap: 5px; align-items: center; justify-content: center; height: 40px; }
-#wave[hidden] { display: none; }
-#wave i {
-  width: 3px; border-radius: 2px; background: var(--accent-dim);
-  animation: wav 0.9s ease-in-out infinite;
+/* listening: rings like Saturn's. A fixed tilted band around her; light
+   travels round it; the far half passes behind her, the near half in front. */
+.saturn { position: absolute; inset: 0; pointer-events: none; opacity: 0; transform: scale(0.85);
+  transition: opacity 0.45s ease, transform 0.45s ease; filter: drop-shadow(0 0 10px rgba(53, 212, 255, 0.7)); }
+.saturn.back { z-index: 0; }
+#orb { z-index: 1; }
+.saturn.front { z-index: 2; }
+.saturn .s { position: absolute; left: 50%; top: 50%; border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-16deg) scaleY(0.26); }
+.saturn.front .s { clip-path: inset(50% 0 0 0); }
+.saturn .s::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(53, 212, 255, 0.18), #dff6ff 22%, rgba(53, 212, 255, 0.25) 45%,
+              var(--accent) 72%, rgba(53, 212, 255, 0.18));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: orbit 4s linear infinite; animation-play-state: paused;
 }
-#wave i:nth-child(odd) { animation-duration: 0.7s; }
-#wave i:nth-child(3n) { animation-duration: 1.2s; }
-@keyframes wav { 0%, 100% { height: 6px; } 50% { height: 28px; } }
+.saturn .s1 { width: 300px; height: 300px; } .saturn .s1::before { padding: 7px; }
+.saturn .s2 { width: 370px; height: 370px; } .saturn .s2::before { padding: 22px; opacity: 0.85; animation-duration: 6s; }
+.saturn .s3 { width: 430px; height: 430px; } .saturn .s3::before { padding: 3px; opacity: 0.6; animation-duration: 9s; }
+#home.listening .saturn, #home.thinking .saturn { opacity: 1; transform: scale(1); }
+#home.listening .saturn .s::before { animation-play-state: running; }
+#home.thinking .saturn .s::before { animation-play-state: running; animation-duration: 1.1s; }
+@keyframes orbit { to { transform: rotate(360deg); } }
+#home.listening .ring, #home.thinking .ring { opacity: 0.25; }
+#home.listening #orb { animation: listen 1.1s ease-in-out infinite; }
+@keyframes listen { 50% { transform: scale(1.08); box-shadow: 0 0 90px rgba(53, 212, 255, 0.85), 0 0 170px rgba(53, 212, 255, 0.35),
+  inset 0 0 32px rgba(220, 248, 255, 0.7); } }
+#home.speaking #orb { animation: speak 0.6s ease-in-out infinite; }
+@keyframes speak { 50% { transform: scale(1.03); } }
+/* her answer: shows under her for a moment, then the orb is alone again */
+#home.answered #orb-wrap { transform: translateY(-80px) scale(0.8); }
+#caption {
+  position: absolute; left: 50px; right: 50px; bottom: 56px; margin: 0; text-align: center;
+  font-size: 26px; line-height: 1.35; color: var(--ink); opacity: 0; transition: opacity 0.4s ease;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+#home.answered #caption { opacity: 1; }
 
-/* the one card — fine cyan line, precise corners, like the Stark panels */
-#card { width: 100%; min-height: 0; overflow: hidden; display: grid; place-items: center; }
-.g-card {
-  width: 100%; max-width: 460px; max-height: 100%; overflow: hidden;
-  background: linear-gradient(180deg, rgba(53, 212, 255, 0.05), transparent 40%), var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 18px 24px;
-  box-shadow: 0 0 0 1px rgba(53, 212, 255, 0.07), 0 0 44px rgba(53, 212, 255, 0.13),
-              inset 0 1px 0 rgba(230, 238, 246, 0.1);
-  backdrop-filter: blur(6px);
-  text-align: center;
+/* ---------------- every other screen ---------------- */
+#screen { position: absolute; inset: 0; padding: 40px 48px 34px; display: flex; flex-direction: column; }
+.k {  /* the mono kicker at the top: where you are */
+  margin: 0; font-family: var(--font-mono); font-size: 16px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--accent-dim); display: flex; justify-content: space-between; gap: 12px;
 }
-.g-card.epic {
-  border-color: rgba(177, 140, 255, 0.6);
-  box-shadow: 0 0 0 1px rgba(177, 140, 255, 0.1), 0 0 46px rgba(177, 140, 255, 0.24), inset 0 1px 0 rgba(230, 238, 246, 0.1);
+.k .pos { letter-spacing: 0.12em; color: var(--ink-faint); }
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+.hint {  /* what move and select do here */
+  margin: 0; text-align: center; font-family: var(--font-mono); font-size: 15px; letter-spacing: 0.12em;
+  color: var(--ink-faint); text-transform: uppercase;
 }
-.g-kicker {
-  margin: 0 0 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase;
-  color: var(--accent-dim); font-weight: 600;
-}
-.g-title {
-  margin: 0 0 6px; font-size: 25px; font-weight: 650; letter-spacing: 0.01em;
-  color: var(--ink); text-shadow: 0 0 24px rgba(53, 212, 255, 0.4);
-}
-.g-sub { margin: 0; font-size: 15px; color: var(--ink-dim); line-height: 1.55; font-weight: 400; }
-.g-lines { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 15px; color: var(--ink); }
-.g-say { margin: 14px 0 0; font-size: 12.5px; color: var(--ink-faint); letter-spacing: 0.05em; }
-.g-say b { color: var(--accent-dim); font-weight: 600; }
-.g-check { display: flex; align-items: center; gap: 10px; text-align: left; font-size: 14.5px; color: var(--ink-dim); }
-.g-check.done { color: var(--ink); }
-.g-check .box {
-  flex: none; width: 20px; height: 20px; border-radius: 4px;
-  border: 1px solid var(--accent-dim); display: grid; place-items: center; font-size: 13px; color: var(--accent-soft);
-  box-shadow: inset 0 0 8px rgba(53, 212, 255, 0.15);
-}
-.g-bar { height: 6px; border-radius: 99px; background: rgba(53, 212, 255, 0.13); margin-top: 14px; overflow: hidden; }
-.g-bar i { display: block; height: 100%; border-radius: 99px;
-  background: linear-gradient(90deg, var(--accent), var(--epic)); box-shadow: 0 0 12px rgba(53, 212, 255, 0.65); }
+.hint b { color: var(--accent); font-weight: 600; }
 
-/* app cards (H-0041): a mono letter badge, position readout */
-.g-app-badge {
-  width: 44px; height: 44px; margin: 2px auto 10px;
-  border: 1px solid var(--line); border-radius: 4px;
-  display: grid; place-items: center;
-  font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--accent-soft);
-}
-.g-app-pos {
-  margin: 10px 0 0; font-family: var(--font-mono); font-size: 11px;
-  letter-spacing: 0.12em; color: var(--ink-faint); text-transform: uppercase;
-}
+/* an app card */
+.card { text-align: center; display: grid; justify-items: center; gap: 14px; }
+.badge { width: 128px; height: 128px; border: 1.5px solid var(--line); border-radius: 10px; display: grid; place-items: center;
+  box-shadow: 0 0 40px rgba(53, 212, 255, 0.18), inset 0 0 22px rgba(53, 212, 255, 0.12);
+  font-family: var(--font-mono); font-size: 60px; font-weight: 700; color: var(--accent-soft); }
+.badge svg { width: 74px; height: 74px; color: var(--accent-soft); }
+.name { margin: 4px 0 0; font-size: 54px; font-weight: 650; line-height: 1.05; text-shadow: 0 0 26px rgba(53, 212, 255, 0.4); }
+.status { margin: 0; font-size: 25px; line-height: 1.3; color: var(--ink-dim); max-width: 500px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.status.attn { color: var(--attention); }
 
-/* footer: whisper XP, moment dots — no chat input; glasses are voice */
-#foot { width: 100%; max-width: 460px; display: grid; gap: 7px; }
-#xp-label { font-size: 10.5px; letter-spacing: 0.24em; color: var(--ink-faint); text-transform: uppercase; text-align: center; display: block; }
-#xp-track { height: 2px; border-radius: 99px; background: rgba(53, 212, 255, 0.12); margin-top: 5px; overflow: hidden; }
-#xp-fill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); box-shadow: 0 0 10px rgba(53, 212, 255, 0.7); transition: width 1.2s ease; }
+/* the Missions card: the mission you're on and its objectives */
+.mission { display: grid; gap: 14px; }
+.m-name { margin: 0; font-size: 36px; font-weight: 650; line-height: 1.15;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.m-objs { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.m-objs li { display: flex; align-items: center; gap: 14px; font-size: 24px; color: var(--ink-dim); }
+.m-objs li span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-objs li em { font-style: normal; font-family: var(--font-mono); font-size: 18px; color: var(--ink-faint); }
+.m-objs li.done { color: var(--ink); }
+.m-objs .box { flex: none; width: 28px; height: 28px; border: 1.5px solid var(--accent-dim); border-radius: 5px;
+  display: grid; place-items: center; font-size: 19px; color: var(--accent-soft); }
+.m-bar { height: 8px; border-radius: 99px; background: rgba(53, 212, 255, 0.14); overflow: hidden; }
+.m-bar i { display: block; height: 100%; background: var(--accent); box-shadow: 0 0 12px rgba(53, 212, 255, 0.6); }
+.m-more { margin: 0; font-size: 18px; color: var(--ink-faint); }
+.m-button { justify-self: center; margin-top: 6px; padding: 12px 30px; border: 1.5px solid var(--accent); border-radius: 6px;
+  font-size: 22px; color: var(--ink); background: rgba(53, 212, 255, 0.1); box-shadow: 0 0 22px rgba(53, 212, 255, 0.25); }
 
-/* demo-only voice console: outside the glasses UI, below the stage */
-#demo-console { display: flex; gap: 8px; align-items: center; }
-#demo-console[hidden] { display: none; }
-#demo-console span { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
-#demo-console input {
-  width: min(400px, 70vw); background: rgba(230, 238, 246, 0.03); border: 1px solid rgba(53, 212, 255, 0.22); border-radius: 99px;
-  color: var(--ink); padding: 8px 18px; font-size: 13.5px; outline: none;
+/* lists: menus, panels, the mission list (a window of five; the selection moves it) */
+.title { margin: 14px 0 6px; font-size: 32px; font-weight: 650; line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rows { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.rows li {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 14px; align-items: center;
+  height: 66px; padding: 0 18px; border: 1.5px solid rgba(53, 212, 255, 0.14); border-radius: 6px;
 }
-#demo-console input::placeholder { color: var(--ink-faint); }
-#demo-console input:focus { border-color: var(--line); box-shadow: 0 0 16px rgba(53, 212, 255, 0.2); }
-#demo-console button {
-  flex: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-  border: 1px solid var(--line); background: rgba(53, 212, 255, 0.07); color: var(--accent);
-  font-size: 16px; line-height: 1; box-shadow: 0 0 14px rgba(53, 212, 255, 0.18);
-}
-#dots { display: flex; gap: 10px; justify-content: center; padding-top: 1px; }
-#dots button {
-  width: 7px; height: 7px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
-  background: rgba(53, 212, 255, 0.22);
-}
-#dots button[aria-current="true"] { background: var(--accent); box-shadow: 0 0 10px rgba(53, 212, 255, 0.8); }
+.rows li .t { font-size: 25px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-dim); }
+.rows li .d { grid-column: 1; font-size: 17px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -6px; }
+.rows li .v { grid-column: 2; grid-row: 1 / span 2; font-family: var(--font-mono); font-size: 15px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent-dim); }
+.rows li.sel { border-color: var(--accent); background: rgba(53, 212, 255, 0.1);
+  box-shadow: inset 4px 0 0 var(--accent), 0 0 22px rgba(53, 212, 255, 0.2); }
+.rows li.sel .t { color: var(--ink); }
+.rows li.sel .v { color: var(--accent); }
+.rows li.back .t { color: var(--ink-faint); font-family: var(--font-mono); font-size: 19px; letter-spacing: 0.2em; text-transform: uppercase; }
+.rows li.back.sel .t { color: var(--ink); }
+.rows li.t-attention .d, .rows li.t-bad .d { color: var(--attention); }
+.rows li.t-ok .d { color: var(--ok); }
+.more { margin: 6px 0 0; text-align: center; font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.14em; color: var(--ink-faint); min-height: 18px; }
+.empty { margin: 0; font-size: 26px; color: var(--ink-dim); text-align: center; line-height: 1.35; }
 
-#demo-tag {
-  position: absolute; top: 8px; right: 12px; margin: 0;
-  font-size: 10px; letter-spacing: 0.18em; color: var(--ink-faint); text-transform: uppercase;
-}
+/* confirm and result */
+.say { margin: 0; font-size: 32px; line-height: 1.35; text-align: center; }
+.say.small { font-size: 26px; color: var(--ink-dim); }
 
-/* level-up burst: the one thing she's allowed to shout about — gold stays celebration-only */
-#burst {
-  position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 8px;
-  background: radial-gradient(circle at 50% 42%, rgba(246, 196, 83, 0.2), transparent 60%), rgba(0, 0, 0, 0.78);
-  text-align: center; z-index: 5; padding: 30px;
-}
-#burst[hidden] { display: none; }
-#burst-title {
-  margin: 0; font-size: 42px; font-weight: 750; letter-spacing: 0.08em; color: var(--win-hi);
-  text-shadow: 0 0 34px rgba(246, 196, 83, 0.8), 0 0 90px rgba(246, 196, 83, 0.45);
-}
-#burst-sub { margin: 0; font-size: 15px; color: var(--ink); letter-spacing: 0.04em; }
-#burst-ok {
-  margin-top: 14px; cursor: pointer; border-radius: 99px; padding: 10px 30px;
-  border: 1px solid var(--win-dim); background: rgba(246, 196, 83, 0.1); color: var(--win-hi);
-  font-size: 13.5px; letter-spacing: 0.1em; box-shadow: 0 0 20px rgba(246, 196, 83, 0.25);
-}
 @media (prefers-reduced-motion: reduce) {
-  #orb, #orb-wrap.listening #orb, #orb-wrap .ring, #orb-wrap .p { animation: none; }
-  #wave i { animation: none; height: 10px; }
+  #orb, #orb-wrap .ring, #orb-wrap .p, .saturn .s::before { animation: none !important; }
 }
-
-/* ---------- v3: moment identities ---------- */
-/* epic quest: purple rarity, like the concept */
-.g-card.epic .g-kicker { color: var(--epic); text-shadow: 0 0 16px rgba(177, 140, 255, 0.5); }
-.g-card.epic .g-title { text-shadow: 0 0 24px rgba(177, 140, 255, 0.45); }
-.g-reward {
-  margin: 12px 0 0; font-size: 17px; font-weight: 700; letter-spacing: 0.06em;
-  color: var(--win-hi); text-shadow: 0 0 18px rgba(246, 196, 83, 0.6);
-}
-/* bare voice: no card — her answer floats, like the concept */
-.g-voice { display: grid; gap: 10px; justify-items: center; text-align: center; max-width: 460px; }
-.g-voice .g-say { margin: 0; font-size: 15px; }
-/* nudge: amber edge, calm but insistent */
-.g-card.nudge { border-color: rgba(242, 179, 61, 0.6);
-  box-shadow: 0 0 0 1px rgba(242, 179, 61, 0.1), 0 0 46px rgba(242, 179, 61, 0.18), inset 0 1px 0 rgba(230, 238, 246, 0.1); }
-.g-card.nudge .g-kicker { color: var(--attention); text-shadow: 0 0 16px rgba(242, 179, 61, 0.5); }
-/* see: the AR viewfinder */
-#finder { position: absolute; inset: 44px; pointer-events: none; z-index: 2; }
-#finder[hidden] { display: none; }
-#finder .c { position: absolute; width: 36px; height: 36px; border: 0 solid var(--accent-dim); filter: drop-shadow(0 0 6px rgba(53, 212, 255, 0.7)); }
-#finder .tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 12px; }
-#finder .tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 12px; }
-#finder .bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 12px; }
-#finder .br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 12px; }
-.g-card.see { max-width: 380px; }
-
-/* ---------- v5: quick action menus (claude, Zac 2026-10-16; Muse owns the look) ---------- */
-/* inside an app the orb steps back to a small mark at the top, so the menu and its lines have the room */
-#stage.compact { grid-template-rows: 70px auto minmax(0, 1fr) auto; }
-#stage.compact #orb-wrap { transform: scale(0.34); margin: -60px; }
-.g-attn { color: var(--attention); }
-.g-menu, .g-rows { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; text-align: left; }
-.g-menu li {
-  padding: 10px 14px; border: 1px solid rgba(53, 212, 255, 0.16); border-radius: 4px;
-  font-size: 17px; color: var(--ink-dim); cursor: pointer; display: flex; justify-content: space-between; gap: 10px;
-}
-.g-menu li.sel, .g-rows li.sel {
-  color: var(--ink); border-color: var(--accent);
-  background: rgba(53, 212, 255, 0.08); box-shadow: inset 3px 0 0 var(--accent), 0 0 18px rgba(53, 212, 255, 0.18);
-}
-.g-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); align-self: center; }
-.g-rows li {
-  display: grid; grid-template-columns: 1fr auto; column-gap: 10px; align-items: baseline;
-  padding: 7px 12px; border: 1px solid transparent; border-radius: 4px; font-size: 15px;
-}
-.g-rows li.can { cursor: pointer; border-color: rgba(53, 212, 255, 0.14); }
-.g-row-text { color: var(--ink); overflow-wrap: break-word; }
-.g-row-detail { grid-column: 1; font-size: 12.5px; color: var(--ink-dim); }
-.g-row-act {
-  grid-column: 2; grid-row: 1 / span 2; align-self: center;
-  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-dim);
-}
-.g-rows li.sel .g-row-act { color: var(--accent); }
-.g-rows li.t-attention .g-row-detail, .g-rows li.t-bad .g-row-detail { color: var(--attention); }
-.g-rows li.t-ok .g-row-detail { color: var(--accent-soft); }
-.g-confirm { font-size: 18px; color: var(--ink); }
-.g-app-badge svg { width: 26px; height: 26px; color: var(--accent-soft); }
-.g-menu li.g-pin { color: var(--ink-faint); border-style: dashed; font-size: 15px; }
-.g-menu li.g-pin.sel { color: var(--ink); }

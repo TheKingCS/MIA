@@ -72,8 +72,8 @@ def _line(text: str, detail: str = "", tone: str = "", action: Optional[dict] = 
     return out
 
 
-def _panel(title: str, lines: list[dict], empty: str, more: int = 0) -> dict:
-    return {"title": title, "lines": lines[:MAX_LINES], "more": max(0, more + len(lines) - MAX_LINES),
+def _panel(title: str, lines: list[dict], empty: str, more: int = 0, limit: int = MAX_LINES) -> dict:
+    return {"title": title, "lines": lines[:limit], "more": max(0, more + len(lines) - limit),
             "empty": empty}
 
 
@@ -260,7 +260,7 @@ def _mission_line(m: dict) -> dict:
                      {"kind": "mission.complete", "label": "Claim", "params": {"mission_id": m["id"]}})
     objectives = [o for o in m.get("objectives") or [] if not o.get("done")]
     action = None
-    if len(objectives) == 1 and (objectives[0].get("target") or 1) == 1:
+    if len(objectives) == 1 and (objectives[0].get("target") or 1) == 1 and not objectives[0].get("counts_itself"):
         action = {"kind": "objective.tick", "label": "Done",
                   "params": {"mission_id": m["id"], "index": objectives[0].get("index", 0), "amount": 1}}
     return _line(m.get("name") or "", progress, "", action)
@@ -286,11 +286,63 @@ def _missions_claim(context, today):
     return _panel("Ready to claim", [_mission_line(m) for m in ready], "Nothing to claim yet. Keep going.")
 
 
-def _missions_active(context, today):
+def _active_missions(page: dict) -> list[dict]:
+    """Every active mission: the long-running ones first, then today's."""
+    return [m for m in (page.get("active") or []) + (page.get("daily") or []) if m.get("status") == "active"]
+
+
+def mission_focus(context, today: date, mission_id: Optional[str] = None) -> Optional[dict]:
+    """The mission the Missions card shows (Zac, 2026-10-16): the one the
+    person selected on the glasses, else their first active mission."""
+    missions = _active_missions(_missions(context, today))
+    if not missions:
+        return None
+    m = next((x for x in missions if x.get("id") == mission_id), None) or missions[0]
+    return {"id": m["id"], "name": m.get("name") or "", "icon": m.get("icon") or "", "ready": bool(m.get("ready")),
+            "done": m.get("done", 0), "total": m.get("total", 0), "reward_xp": m.get("reward_xp") or 0,
+            "objectives": [{"text": o.get("description") or o.get("text") or "", "done": bool(o.get("done")),
+                            "progress": o.get("progress"), "target": o.get("target")}
+                           for o in m.get("objectives") or []]}
+
+
+def _missions_progress(context, today, mission_id: Optional[str] = None):
+    """The selected mission's objectives, each one done or +1 from the glasses."""
     page = _missions(context, today)
-    active = [m for m in page.get("active") or [] if not m.get("ready")]
-    return _panel("Active missions", [_line(m.get("name") or "", f"{m.get('percent', 0)}%") for m in active],
-                  "No active missions.")
+    missions = _active_missions(page)
+    m = next((x for x in missions if x.get("id") == mission_id), None) or (missions[0] if missions else None)
+    if m is None:
+        return _panel("Log progress", [], "No active missions.")
+    lines = []
+    if m.get("ready"):
+        lines.append(_line("Claim the reward", f"{m.get('reward_xp') or 0} XP", "ok",
+                           {"kind": "mission.complete", "label": "Claim", "params": {"mission_id": m["id"]}}))
+    for o in m.get("objectives") or []:
+        target = o.get("target") or 1
+        if o.get("done"):
+            lines.append(_line(o.get("description") or o.get("text") or "", "done", "ok"))
+            continue
+        tally = target != 1
+        if o.get("counts_itself"):  # a trip or task objective: it counts itself, nothing to tick
+            lines.append(_line(o.get("description") or "", f"{(o.get('progress') or 0):g} of {target:g}"))
+            continue
+        lines.append(_line(o.get("description") or o.get("text") or "", f"{(o.get('progress') or 0):g} of {target:g}" if tally else "", "",
+                           {"kind": "objective.tick", "label": "+1" if tally else "Done",
+                            "params": {"mission_id": m["id"], "index": o.get("index", 0), "amount": 1}}))
+    return _panel(m.get("name") or "Log progress", lines, "Nothing left to do on this one.")
+
+
+def _missions_pick(context, today, mission_id: Optional[str] = None):
+    """Every active mission, to pick which one the Missions card shows."""
+    missions = _active_missions(_missions(context, today))
+    current = (mission_focus(context, today, mission_id) or {}).get("id")
+    lines = []
+    for m in missions:
+        line = _line(m.get("name") or "", ("showing · " if m["id"] == current else "") +
+                     (f"ready · {m.get('reward_xp') or 0} XP" if m.get("ready") else f"{m.get('done', 0)} of {m.get('total', 0)}"),
+                     "ok" if m["id"] == current else "")
+        line["pick"] = {"mission": m["id"], "label": "Show"}
+        lines.append(line)
+    return _panel("Select mission", lines, "No active missions.", limit=40)
 
 
 def _skills_focus(context, today):
@@ -505,8 +557,8 @@ Panel = Callable[[object, date], dict]
 PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "dashboard": (("next", "What's next", _today_next), ("coming", "Coming up", _today_coming),
                   ("wins", "Recent wins", _today_wins)),
-    "missions": (("today", "Today's missions", _missions_today), ("claim", "Ready to claim", _missions_claim),
-                 ("active", "Active missions", _missions_active)),
+    "missions": (("pick", "Select mission", _missions_pick), ("progress", "Log progress", _missions_progress),
+                 ("today", "Today's missions", _missions_today), ("claim", "Ready to claim", _missions_claim)),
     "kitchen": (("meals", "Today's meals", _kitchen_meals), ("grocery", "Grocery list", _kitchen_grocery),
                 ("use_soon", "Use soon", _kitchen_use_soon), ("make", "What can I make", _kitchen_make)),
     "workout": (("training", "Today's training", _workout_training), ("practice", "Skill practice", _workout_practice),
@@ -601,7 +653,7 @@ def menu_for(app, pinned: Optional[bool] = None) -> list[dict]:
     return items
 
 
-def glasses_apps(context, today: Optional[date] = None) -> dict:
+def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str] = None) -> dict:
     """The person's glasses cards: their pinned apps (favorites), then the
     rest behind "All apps". Each card has a status line and its menu."""
     from core.focus_presets import favorite_apps
@@ -630,6 +682,7 @@ def glasses_apps(context, today: Optional[date] = None) -> dict:
             "tagline": app.tagline, "status": g.get("line") or "", "tone": g.get("tone") or "calm",
             "ask": app.ask, "pinned": app.module_id in pinned_ids,
             "menu": menu_for(app, app.module_id in pinned_ids),
+            **({"mission": mission_focus(context, today, mission_id)} if app.module_id == "missions" else {}),
         }
 
     pinned = [card(by_id[i]) for i in pinned_ids]
@@ -640,13 +693,16 @@ def glasses_apps(context, today: Optional[date] = None) -> dict:
             "kinds": sorted(GLASSES_KINDS)}
 
 
-def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = None) -> Optional[dict]:
-    """One menu item's readout, or None for an app or item the person doesn't have."""
+def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = None,
+                  mission_id: Optional[str] = None) -> Optional[dict]:
+    """One menu item's readout, or None for an app or item the person doesn't have.
+    `mission_id`: the mission the glasses' Missions card is showing."""
     today = today or date.today()
     if app_id not in {a.module_id for a in _visible_apps(context)}:
         return None
     for item, label, build in PANELS.get(app_id, ()):
         if item == item_id:
-            panel = build(context, today)
+            panel = build(context, today, mission_id) if build in (_missions_progress, _missions_pick) \
+                else build(context, today)
             return {"app": app_id, "item": item_id, "label": label, **panel}
     return None

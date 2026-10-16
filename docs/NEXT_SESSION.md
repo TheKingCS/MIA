@@ -93,13 +93,12 @@ the hub, and the Meta AI app.
       Source: **GitHub Actions**. Then Actions → "Pages preview" → Run
       workflow (or wait for the next push). The preview is at
       https://thekingcs.github.io/MIA/ (placeholder data only).
-- [ ] **Try the glasses menus (2026-10-16, H-0042):** on your phone open
+- [ ] **Try the glasses (2026-10-16, H-0046):** on your phone open
       https://thekingcs.github.io/MIA/web/glasses.html (placeholder data).
-      Swipe left on her orb for the app cards (the demo pins five; the
-      last card, "All apps", has the rest), tap a card for its menu, tap
-      an item; swipe down to go back. On your own MIA, the apps you star
-      are your glasses pins (DEC-0024); "Pin to glasses" is in each menu. Tell Claude or Muse which menus you'd
-      change, and which apps should come first.
+      Tap her orb to see her listen (Saturn rings); swipe left for your
+      pinned apps; tap to select; every list ends with Back. Missions
+      shows the active mission; tap, then Select mission to pick another.
+      Tell Claude or Muse what to change.
 - [ ] *(When the glasses arrive)* **In the Meta Wearables Developer Center:** check that Web Apps
       (and the Device Access Toolkit) are enabled for your account.
 - [ ] **In the Meta AI app:** turn on Developer Mode (Settings › App

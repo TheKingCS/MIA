@@ -5,42 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <title>MIA · Glasses</title>
-  <link rel="stylesheet" href="glasses.css?v=9">
+  <link rel="stylesheet" href="glasses.css?v=11">
 </head>
 <body>
   <!--
-    MIA on Display glasses (muse, 2026-10-06, DEC-0016): the glasses Web App.
-    One card at a time on a 600x600 stage, pure black so it floats on a
-    waveguide display, gold airy like the concept. Same engine as every
-    other surface: MIA.dashboard() for the glance, MIA.shell() for level/XP,
-    MIA.talk() for voice. On the public preview (?demo) it reads the
-    published placeholder examples, and says so.
+    MIA on Display glasses (DEC-0016; Muse's composition, H-0041; Zac's
+    layout, 2026-10-16). One fixed 600x600 composition, scaled to fit any
+    screen, never scrolled. Pure black: on the glasses it's see-through.
+    Two moves do everything: move (next / previous) and select; every
+    list ends with a Back row. Home is her orb alone; select it to talk.
   -->
   <div id="stage">
-    <div id="orb-zone">
+    <section id="home" aria-label="MIA">
       <div id="orb-wrap" aria-hidden="true">
+        <div class="saturn back"><i class="s s1"></i><i class="s s2"></i><i class="s s3"></i></div>
         <span class="ring r1"></span><span class="ring r2"></span>
         <div id="orb"></div>
+        <div class="saturn front"><i class="s s1"></i><i class="s s2"></i><i class="s s3"></i></div>
         <i class="p p1"></i><i class="p p2"></i><i class="p p3"></i>
       </div>
-    </div>
-    <div id="wave" hidden aria-hidden="true"></div>
-    <main id="card" aria-live="polite"></main>
-    <footer id="foot">
-      <div id="xp"><span id="xp-label"></span><div id="xp-track"><div id="xp-fill"></div></div></div>
-      <nav id="dots" aria-label="Moments"></nav>
-    </footer>
-    <div id="finder" hidden aria-hidden="true"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i></div>
+      <p id="caption" aria-live="polite"></p>
+    </section>
+    <section id="screen" hidden aria-live="polite"></section>
     <p id="demo-tag" hidden>Demo · placeholder data</p>
-    <div id="burst" hidden><p id="burst-title"></p><p id="burst-sub"></p><button id="burst-ok" type="button">continue</button></div>
   </div>
-  <form id="demo-console" hidden>
-    <span>demo voice</span>
-    <input id="voice-input" autocomplete="off" aria-label="Demo voice command">
-    <button type="submit" aria-label="Send">→</button>
-  </form>
   <script src="mia.js"></script>
   <script src="icons.js"></script>
-  <script src="glasses.js?v=4"></script>
+  <script src="glasses.js?v=5"></script>
 </body>
 </html>

@@ -451,4 +451,5 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   `core/glasses.py`); money and the inbox stay read-only there.
 - Changes: H-0044's "most used first" ordering is settled by Zac's own
   words in chat: **favorites, in the order starred**, no usage tracking.
-- Related: DEC-0016, DEC-0023, H-0041, H-0042, H-0043, H-0044, H-0045
+- Amended (zac, 2026-10-16): **layout.** Home is the orb alone (idle animation; Saturn-like rings while listening), no chat bar or text anywhere on it; every screen fits one fixed 600×600 composition with no scrolling; navigation is two moves, move and select (every list ends with Back); the Missions card shows the active mission, its objectives and a Select mission button (H-0046).
+- Related: DEC-0016, DEC-0023, H-0041, H-0042, H-0043, H-0044, H-0045, H-0046

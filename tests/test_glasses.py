@@ -190,3 +190,33 @@ def test_the_published_examples_match():
         for item in card["menu"]:
             if item["type"] == "panel":
                 assert f"{card['id']}/{item['id']}" in panels
+
+
+def test_the_missions_card_shows_a_mission_you_pick(world):
+    """Zac, 2026-10-16: the Missions card shows the active mission and its
+    objectives; "Select mission" lists them all to pick the one shown."""
+    first = world.missions.add_mission("Organize the garage")
+    world.missions.add_objective(first.mission_id, "Sort the tools", "tally", 1)
+    world.missions.add_objective(first.mission_id, "Hang the bikes", "tally", 2)
+    second = world.missions.add_mission("Run a 5K")
+    world.missions.add_objective(second.mission_id, "Run three times", "tally", 3)
+
+    card = next(a for a in glasses_apps(world, TODAY)["apps"] if a["id"] == "missions")
+    assert card["menu"][0]["label"] == "Select mission"
+    shown = card["mission"]
+    assert shown["name"] in ("Organize the garage", "Run a 5K") and shown["objectives"][0]["text"]
+
+    pick = glasses_panel(world, "missions", "pick", TODAY)
+    names = [line["text"] for line in pick["lines"]]
+    assert {"Organize the garage", "Run a 5K"} <= set(names)
+    assert all(line["pick"]["mission"] for line in pick["lines"]) and not any("action" in line for line in pick["lines"])
+
+    card = next(a for a in glasses_apps(world, TODAY, mission_id=first.mission_id)["apps"] if a["id"] == "missions")
+    assert [o["text"] for o in card["mission"]["objectives"]] == ["Sort the tools", "Hang the bikes"]
+
+    progress = glasses_panel(world, "missions", "progress", TODAY, mission_id=first.mission_id)
+    sort, hang = progress["lines"]
+    assert (sort["action"]["label"], hang["action"]["label"], hang["detail"]) == ("Done", "+1", "0 of 2")
+    world.actions.approve(world, world.actions.propose(world, "objective.tick", sort["action"]["params"]).proposal_id)
+    card = next(a for a in glasses_apps(world, TODAY, mission_id=first.mission_id)["apps"] if a["id"] == "missions")
+    assert card["mission"]["objectives"][0]["done"] and not card["mission"]["objectives"][1]["done"]

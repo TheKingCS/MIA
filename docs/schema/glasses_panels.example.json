@@ -104,6 +104,183 @@
     "more": 0,
     "empty": "No wins logged yet today."
   },
+  "missions/pick": {
+    "app": "missions",
+    "item": "pick",
+    "label": "Select mission",
+    "title": "Select mission",
+    "lines": [
+      {
+        "text": "Organize the garage",
+        "detail": "showing · ready · 60 XP",
+        "tone": "ok",
+        "pick": {
+          "mission": "b79fca2284",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Run a 5K",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "4acc65bc47",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Cook 3 healthy meals",
+        "detail": "0 of 0",
+        "tone": "",
+        "pick": {
+          "mission": "9933ef55e7",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Prepare the garden for spring",
+        "detail": "1 of 3",
+        "tone": "",
+        "pick": {
+          "mission": "a64a011e42",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Handstand practice",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "2e3df76861",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Meal prep (Sun)",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "06166ead3d",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Packed lunch",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "e108a1b7a5",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Protein: 170 g",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "6061f311a5",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "This week's meal plan",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "697a8a6cd4",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Today's meals",
+        "detail": "1 of 2",
+        "tone": "",
+        "pick": {
+          "mission": "417c0b5493",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Training: Push",
+        "detail": "0 of 3",
+        "tone": "",
+        "pick": {
+          "mission": "d140af145e",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Workouts this week: 3",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "9dee6446bc",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Build a Birdhouse",
+        "detail": "0 of 0",
+        "tone": "",
+        "pick": {
+          "mission": "93f2c4939f",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Daily push-ups — Oct 15",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "593272dd15",
+          "label": "Show"
+        }
+      },
+      {
+        "text": "Daily push-ups — Perfect Week 1",
+        "detail": "0 of 1",
+        "tone": "",
+        "pick": {
+          "mission": "0abf867f02",
+          "label": "Show"
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "No active missions."
+  },
+  "missions/progress": {
+    "app": "missions",
+    "item": "progress",
+    "label": "Log progress",
+    "title": "Organize the garage",
+    "lines": [
+      {
+        "text": "Claim the reward",
+        "detail": "60 XP",
+        "tone": "ok",
+        "action": {
+          "kind": "mission.complete",
+          "label": "Claim",
+          "params": {
+            "mission_id": "b79fca2284"
+          }
+        }
+      },
+      {
+        "text": "Sort the tools",
+        "detail": "done",
+        "tone": "ok"
+      },
+      {
+        "text": "Hang the bikes",
+        "detail": "done",
+        "tone": "ok"
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing left to do on this one."
+  },
   "missions/today": {
     "app": "missions",
     "item": "today",
@@ -187,41 +364,6 @@
     ],
     "more": 0,
     "empty": "Nothing to claim yet. Keep going."
-  },
-  "missions/active": {
-    "app": "missions",
-    "item": "active",
-    "label": "Active missions",
-    "title": "Active missions",
-    "lines": [
-      {
-        "text": "Run a 5K",
-        "detail": "0%",
-        "tone": ""
-      },
-      {
-        "text": "Cook 3 healthy meals",
-        "detail": "0%",
-        "tone": ""
-      },
-      {
-        "text": "Prepare the garden for spring",
-        "detail": "33%",
-        "tone": ""
-      },
-      {
-        "text": "Handstand practice",
-        "detail": "0%",
-        "tone": ""
-      },
-      {
-        "text": "Meal prep (Sun)",
-        "detail": "0%",
-        "tone": ""
-      }
-    ],
-    "more": 7,
-    "empty": "No active missions."
   },
   "kitchen/meals": {
     "app": "kitchen",

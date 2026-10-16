@@ -570,18 +570,19 @@ def create_app(context: AppContext) -> FastAPI:
     # app's quick action menu (core/glasses.py). Actions still go through
     # /api/actions; a panel line only carries the glasses-safe kinds.
     @app.get("/api/glasses")
-    def glasses_cards(profile_id: str = Depends(require_profile_id)) -> dict:
+    def glasses_cards(mission: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
         from core.glasses import glasses_apps
 
         with app.state.turn_lock:
-            return glasses_apps(view_for(context, profile_id))
+            return glasses_apps(view_for(context, profile_id), mission_id=mission or None)
 
     @app.get("/api/glasses/{app_id}/{item_id}")
-    def glasses_item(app_id: str, item_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+    def glasses_item(app_id: str, item_id: str, mission: str = "",
+                     profile_id: str = Depends(require_profile_id)) -> dict:
         from core.glasses import glasses_panel
 
         with app.state.turn_lock:
-            panel = glasses_panel(view_for(context, profile_id), app_id, item_id)
+            panel = glasses_panel(view_for(context, profile_id), app_id, item_id, mission_id=mission or None)
         if panel is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No such menu item.")
         return panel

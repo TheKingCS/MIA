@@ -143,6 +143,16 @@
       "pinned": true,
       "menu": [
         {
+          "id": "pick",
+          "label": "Select mission",
+          "type": "panel"
+        },
+        {
+          "id": "progress",
+          "label": "Log progress",
+          "type": "panel"
+        },
+        {
           "id": "today",
           "label": "Today's missions",
           "type": "panel"
@@ -150,11 +160,6 @@
         {
           "id": "claim",
           "label": "Ready to claim",
-          "type": "panel"
-        },
-        {
-          "id": "active",
-          "label": "Active missions",
           "type": "panel"
         },
         {
@@ -170,7 +175,30 @@
             }
           }
         }
-      ]
+      ],
+      "mission": {
+        "id": "b79fca2284",
+        "name": "Organize the garage",
+        "icon": "🧰",
+        "ready": true,
+        "done": 2,
+        "total": 2,
+        "reward_xp": 60,
+        "objectives": [
+          {
+            "text": "Sort the tools",
+            "done": true,
+            "progress": 1.0,
+            "target": 1.0
+          },
+          {
+            "text": "Hang the bikes",
+            "done": true,
+            "progress": 1.0,
+            "target": 1.0
+          }
+        ]
+      }
     },
     {
       "id": "garage",

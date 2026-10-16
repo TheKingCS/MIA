@@ -159,10 +159,12 @@
     apps: () => read("/api/apps", "apps"),
     // The glasses' app cards and one menu item's panel (core/glasses.py).
     // In the demo every panel comes from one example file, keyed "app/item".
-    glasses: () => read("/api/glasses", "glasses"),
-    glassesPanel: (app, item) => demo
+    // `mission`: the mission the glasses' Missions card shows (optional).
+    glasses: (mission) => read("/api/glasses" + (mission ? "?mission=" + encodeURIComponent(mission) : ""), "glasses"),
+    glassesPanel: (app, item, mission) => demo
       ? read("", "glasses_panels").then((all) => all[app + "/" + item] || Promise.reject(new MiaError(404, "No such menu item.")))
-      : call("GET", "/api/glasses/" + encodeURIComponent(app) + "/" + encodeURIComponent(item)),
+      : call("GET", "/api/glasses/" + encodeURIComponent(app) + "/" + encodeURIComponent(item) +
+             (mission ? "?mission=" + encodeURIComponent(mission) : "")),
     kitchen: () => read("/api/kitchen", "kitchen"),
     recipe: (id) => read("/api/kitchen/recipe/" + encodeURIComponent(id), "recipe"),
     fitness: () => read("/api/fitness", "fitness"),
