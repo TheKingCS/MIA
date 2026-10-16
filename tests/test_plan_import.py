@@ -218,3 +218,18 @@ def test_a_plan_pasted_as_one_line():
     found = parse("GOALS Protein: 150 g Calories: 2400 TRAINING Days: Mon, Tue")
     assert found["plan"]["targets"] == {"protein_g": "150", "calories": "2400"}
     assert found["plan"]["training"]["days"] == "Mon, Tue"
+
+
+def test_rotation_names_match_recipes_in_any_plural_and_become_lunches(world):
+    """A rotation's "Fish + potato" is the pasted "Fish + potatoes" (one
+    recipe, not two), and a rotation recipe with no Category is a lunch."""
+    text = ("MEALS\nLunch rotation: Fish + potato, Berry bowls\n\n"
+            "RECIPE: Fish + potatoes\nServings: 2\nIngredients:\n1 lb cod\nSteps:\nBake it.\n\n"
+            "RECIPE: Supper soup\nServings: 4\nIngredients:\n4 cups broth\nSteps:\nSimmer.")
+    world.actions.approve(world, world.actions.propose(world, "plan.import", {"text": text}).proposal_id)
+    recipes = {r.name: r for r in world.kitchen.all_recipes()}
+    assert sorted(recipes) == ["Berry bowls", "Fish + potatoes", "Supper soup"]
+    assert (recipes["Fish + potatoes"].category, recipes["Berry bowls"].category, recipes["Supper soup"].category) == \
+        ("Lunch", "Lunch", "Dinner")
+    assert world.fitness.plan["meals"]["lunch_rotation"] == [recipes["Fish + potatoes"].recipe_id,
+                                                             recipes["Berry bowls"].recipe_id]

@@ -295,8 +295,17 @@ def parse(text: str) -> dict:
 
 def _name_key(name: str) -> str:
     """Pure logic. A recipe name to compare: case, punctuation and a plural s don't matter."""
+    def one(w: str) -> str:  # potatoes -> potato, berries -> berry, dishes -> dish, bowls -> bowl
+        if len(w) <= 3 or not w.endswith("s") or w.endswith("ss"):
+            return w
+        if w.endswith("ies"):
+            return w[:-3] + "y"
+        if w.endswith(("oes", "ches", "shes", "xes", "sses")):
+            return w[:-2]
+        return w[:-1]
+
     words = re.sub(r"[^a-z0-9 ]+", " ", (name or "").lower()).split()
-    return " ".join(w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w for w in words)
+    return " ".join(one(w) for w in words)
 
 
 def _read(context, params) -> dict:
@@ -316,6 +325,11 @@ def _read(context, params) -> dict:
         match = by_key.get(_name_key(n))
         (rotation if match else missing).append(match or n)
     found["lunch_rotation"] = rotation
+    # A recipe in the lunch rotation with no Category of its own is a lunch.
+    in_rotation = {_name_key(n) for n in rotation}
+    for r in found["recipes"]:
+        if not r.get("category") and _name_key(r["name"]) in in_rotation:
+            r["category"] = "Lunch"
     # A lunch the plan names without writing out its recipe gets one, by name
     # (Zac, 2026-10-16: "make it so that adding the plan would add the Recipes
     # too"), so the rotation works; its ingredients and steps come later.
