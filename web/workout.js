@@ -139,6 +139,8 @@
   const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
   const g = (v, unit) => v == null ? "—" : (Math.round(v * 10) / 10).toLocaleString() + (unit || "");
   const planLink = () => el("a", { class: "btn btn-ghost", href: "plan.html?from=" + encodeURIComponent("workout.html#" + tab) }, "My plan");
+  // Import plan: My plan with "Paste a plan" already open (plan.js reads ?import=1).
+  const importLink = () => el("a", { class: "btn btn-amber", href: "plan.html?from=" + encodeURIComponent("workout.html#" + tab) + "&import=1" }, "Import plan");
   const secs = (ms) => Math.floor(ms / 1000);
   const clock = (sec) => Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
 
@@ -229,13 +231,13 @@
   function trainingCard() {
     const t = fit.today;
     if (!t.training) {
-      return section(t.rest_day ? "Rest day" : "Today's training", buttons(planLink()), el("p", { class: "rest-note" }, t.rest_day
+      return section(t.rest_day ? "Rest day" : "Today's training", buttons(planLink(), importLink()), el("p", { class: "rest-note" }, t.rest_day
         ? "Rest day. Recovery counts: it's part of the plan, not a miss."
         : "No training plan yet. Set your training days and what each one is in My plan, and today's workout shows up here as steps."));
     }
     const steps = t.training.steps, done = steps.filter((x) => x.done).length;
     const all = done === steps.length && steps.length;
-    return section("Today: " + t.training.name, buttons(planLink()),
+    return section("Today: " + t.training.name, buttons(planLink(), importLink()),
       el("p", { class: "dim" }, steps.length ? done + " of " + plural(steps.length, "step") + " done" : "No steps in this day yet."),
       el("ol", { class: "train-steps" }, steps.map((x, i) => el("li", { class: x.done ? "done" : "" },
         el("button", { type: "button", class: "step-tick", "aria-pressed": String(x.done), disabled: x.done ? true : null,
