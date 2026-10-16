@@ -107,10 +107,10 @@ def _module_descriptions():
 
 
 def test_every_module_is_on_the_apps_page_with_its_own_description():
-    from core.web_surfaces import APPS_BY_ID, GROUPS
+    from core.web_surfaces import APPS_BY_ID, GROUPS, WEB_ONLY
 
     modules = _module_descriptions()
-    assert set(modules) == set(APPS_BY_ID)
+    assert set(modules) == set(APPS_BY_ID) - WEB_ONLY and not set(modules) & WEB_ONLY
     for module_id, description in modules.items():
         assert APPS_BY_ID[module_id].description == description, module_id
         assert APPS_BY_ID[module_id].group in GROUPS

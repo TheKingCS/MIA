@@ -57,13 +57,18 @@ def test_the_cards_are_the_persons_apps_with_menus(world):
     data = glasses_apps(world, TODAY)
     ids = [a["id"] for a in data["apps"]]
     assert not data["pinned"] and data["others"] == [] and data["hint"]
-    assert ids[:5] == ["dashboard", "missions", "kitchen", "workout", "budget"]
+    # Missions right after the orb; Today's due items live in Missions now (Zac, 2026-10-16)
+    assert ids[0] == "missions" and "dashboard" not in ids
+    assert [i for i in ids if i in ("kitchen", "workout", "budget")] == ["kitchen", "workout", "budget"]
     assert not set(ids) & NOT_ON_GLASSES and len(ids) == len(set(ids))
     for card in data["apps"]:
         menu = [m for m in card["menu"] if m["type"] != "action"]
         assert 1 <= len(menu) <= 4, card["id"]
         assert len({m["id"] for m in card["menu"]}) == len(card["menu"])
         assert all(m["type"] == "panel" or m["say"] for m in menu)
+        if card["id"] == "missions":  # always there, never pinned or unpinned
+            assert all(m["id"] != "pin" for m in card["menu"])
+            continue
         pin = card["menu"][-1]
         assert pin["id"] == "pin" and pin["action"] == {"kind": "app.favorite", "label": "Pin",
                                                          "params": {"module_id": card["id"], "favorite": True}}
@@ -84,16 +89,16 @@ def test_favorites_are_pinned_for_the_glasses(world):
     set_app_favorite(world, "garage", True)
     set_app_favorite(world, "settings", True)  # not a glasses app: ignored
     data = glasses_apps(world, TODAY)
-    assert data["pinned"] and [a["id"] for a in data["apps"]] == ["kitchen", "garage"]
-    assert "kitchen" not in [a["id"] for a in data["others"]] and data["others"][0]["id"] == "dashboard"
-    kitchen = data["apps"][0]
-    assert kitchen["pinned"] and kitchen["menu"][-1]["label"] == "Unpin from glasses"
+    assert data["pinned"] and [a["id"] for a in data["apps"]] == ["missions", "kitchen", "garage"]
+    assert "kitchen" not in [a["id"] for a in data["others"]] and data["others"][0]["id"] not in ("missions", "dashboard")
+    kitchen = data["apps"][1]
+    assert kitchen["pinned"] and kitchen["menu"][-1]["label"] == "Unpin From Glasses"
     assert kitchen["menu"][-1]["action"]["params"] == {"module_id": "kitchen", "favorite": False}
 
     # unpinning from the glasses is the favorite star, proposed then approved
     p = world.actions.propose(world, "app.favorite", kitchen["menu"][-1]["action"]["params"])
     world.actions.approve(world, p.proposal_id)
-    assert [a["id"] for a in glasses_apps(world, TODAY)["apps"]] == ["garage"]
+    assert [a["id"] for a in glasses_apps(world, TODAY)["apps"]] == ["missions", "garage"]
 
 
 def test_household_people_and_inbox_panels(world, tmp_path):
@@ -140,14 +145,14 @@ def test_every_panel_builds_and_carries_only_glasses_safe_actions(world):
 
 
 def test_a_change_from_the_glasses_is_proposed_then_approved(world):
-    panel = glasses_panel(world, "maintenance", "attention", TODAY)
+    panel = glasses_panel(world, "maintenance", "past_due", TODAY)
     line = next(line for line in panel["lines"] if line["text"].startswith("Check oil"))
     proposal = world.actions.propose(world, line["action"]["kind"], line["action"]["params"])
     assert "Check oil" in proposal.summary and world.maintenance.get_task(world.task.task_id).last_completed != \
         TODAY.isoformat()
     world.actions.approve(world, proposal.proposal_id)
     assert world.maintenance.get_task(world.task.task_id).last_completed == TODAY.isoformat()
-    after = glasses_panel(world, "maintenance", "attention", TODAY)
+    after = glasses_panel(world, "maintenance", "past_due", TODAY)
     assert not any(line["text"].startswith("Check oil") for line in after["lines"])
 
     grocery = glasses_panel(world, "kitchen", "grocery", TODAY)
@@ -175,7 +180,7 @@ def test_the_endpoints(world):
     token = client.post("/api/login", json={"profile_id": world.me.profile_id, "password": "pw"}).json()["token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
     cards = client.get("/api/glasses")
-    assert cards.status_code == 200 and cards.json()["apps"][0]["id"] == "dashboard"
+    assert cards.status_code == 200 and cards.json()["apps"][0]["id"] == "missions"
     assert client.get("/api/glasses/kitchen/grocery").json()["lines"][0]["text"] == "Eggs"
     assert client.get("/api/glasses/kitchen/nope").status_code == 404
     assert client.get("/api/glasses/settings/anything").status_code == 404
@@ -202,14 +207,19 @@ def test_the_missions_card_shows_a_mission_you_pick(world):
     world.missions.add_objective(second.mission_id, "Run three times", "tally", 3)
 
     card = next(a for a in glasses_apps(world, TODAY)["apps"] if a["id"] == "missions")
-    assert card["menu"][0]["label"] == "Select mission"
+    assert card["menu"][0]["label"] == "Select Mission"
     shown = card["mission"]
     assert shown["name"] in ("Organize the garage", "Run a 5K") and shown["objectives"][0]["text"]
 
     pick = glasses_panel(world, "missions", "pick", TODAY)
-    names = [line["text"] for line in pick["lines"]]
-    assert {"Organize the garage", "Run a 5K"} <= set(names)
-    assert all(line["pick"]["mission"] for line in pick["lines"]) and not any("action" in line for line in pick["lines"])
+    missions = [line for line in pick["lines"] if "pick" in line]
+    assert {"Organize the garage", "Run a 5K"} <= {line["text"] for line in missions}
+    assert not any("action" in line for line in missions)
+    # Today's due items are here too, sortable (Zac, 2026-10-16)
+    due = [line for line in pick["lines"] if "pick" not in line]
+    assert {"past_due"} == {line["bucket"] for line in due if line["text"].startswith(("Electric", "Check oil"))}
+    assert [f["label"] for f in pick["filters"]] == ["All", "Past Due", "Due Today", "Due Soon"]
+    assert pick["filters"][1]["count"] >= 2 and pick["lines"][0]["bucket"] == "past_due"
 
     card = next(a for a in glasses_apps(world, TODAY, mission_id=first.mission_id)["apps"] if a["id"] == "missions")
     assert [o["text"] for o in card["mission"]["objectives"]] == ["Sort the tools", "Hang the bikes"]
@@ -220,3 +230,15 @@ def test_the_missions_card_shows_a_mission_you_pick(world):
     world.actions.approve(world, world.actions.propose(world, "objective.tick", sort["action"]["params"]).proposal_id)
     card = next(a for a in glasses_apps(world, TODAY, mission_id=first.mission_id)["apps"] if a["id"] == "missions")
     assert card["mission"]["objectives"][0]["done"] and not card["mission"]["objectives"][1]["done"]
+
+
+def test_an_exercise_done_from_the_glasses(world):
+    """fitness.step counts from 1; the glasses' first exercise is step 1."""
+    world.fitness.update_plan({"training": {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                                            "rotation": [{"name": "Push", "exercises": [{"name": "Dips", "sets": 3, "reps": 8}]}]}})
+    panel = glasses_panel(world, "workout", "training", TODAY)
+    dips = panel["lines"][0]
+    assert dips["text"] == "Dips" and dips["action"]["params"] == {"step": 1}
+    p = world.actions.propose(world, "fitness.step", dips["action"]["params"])
+    world.actions.approve(world, p.proposal_id)
+    assert glasses_panel(world, "workout", "training", TODAY)["lines"][0]["tone"] == "ok"

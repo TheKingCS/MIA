@@ -190,3 +190,31 @@ body {
 #prev { left: 0; }
 #next { right: 0; }
 .edge:focus { outline: none; }
+
+/* Title Case (Zac): buttons, menu rows and headers capitalize every word */
+.rows li.cap .t, .name, .title, .m-name, .r-name, .m-button { text-transform: capitalize; }
+/* Back is navigation, not an action (Muse, H-0047): dim, with a chevron */
+.rows li.back { border-color: transparent; }
+.rows li.back .t { font-family: var(--font-mono); font-size: 19px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+/* one status line, never two (Muse, H-0047) */
+.status { -webkit-line-clamp: 1; white-space: nowrap; text-overflow: ellipsis; display: block; }
+/* her answer: two lines, then it fades */
+#caption { -webkit-line-clamp: 2; }
+/* the near half of the Saturn band dims a little, so her face stays clear */
+.saturn.front { opacity: 0; }
+#home.listening .saturn.front, #home.thinking .saturn.front { opacity: 0.6; }
+
+/* recipes: a picture each, swiped through; then ingredients and steps */
+.recipe-card { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.recipe-card .photo { width: 400px; height: 250px; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--line);
+  display: grid; place-items: center; background: rgba(53, 212, 255, 0.05); box-shadow: 0 0 30px rgba(53, 212, 255, 0.15); }
+.recipe-card .photo img { width: 100%; height: 100%; object-fit: cover; }
+.recipe-card .photo svg { width: 90px; height: 90px; color: var(--accent-dim); }
+.r-name { margin: 0; font-size: 40px; font-weight: 650; line-height: 1.1; max-width: 500px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.r-list li { font-size: 26px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 22px; position: relative; }
+.r-list li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.r-step { margin: 14px 0 0; font-size: 30px; line-height: 1.4; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow: hidden; }
+.r-step.long { font-size: 23px; -webkit-line-clamp: 11; }

@@ -51,11 +51,11 @@ GLASSES_KINDS = frozenset({
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
 # Apps manager, Settings and Files are for a bigger screen.
-NOT_ON_GLASSES = frozenset({"web_home", "assistant", "module_browser", "settings", "files"})
+NOT_ON_GLASSES = frozenset({"web_home", "assistant", "module_browser", "settings", "files", "dashboard"})
 
 # The glasses' order: Today, then the apps used most on the move, then
 # the rest of MIA in its usual order.
-FIRST = ("dashboard", "missions", "kitchen", "workout", "budget", "garage", "maintenance", "greenhouse",
+FIRST = ("missions", "calendar", "kitchen", "workout", "budget", "garage", "maintenance", "greenhouse",
          "property", "real_estate", "skills", "character")
 
 # Short names for a 600 px card, where the app's own name is long.
@@ -78,36 +78,6 @@ def _panel(title: str, lines: list[dict], empty: str, more: int = 0, limit: int 
 
 
 # ---------------------------------------------------------------- panels
-
-
-def _today_next(context, today):
-    from core.web_surfaces import dashboard
-
-    d = dashboard(context)
-    lines = []
-    for f in d.get("focus") or []:
-        action = f.get("action")
-        if action and action.get("kind") == "maintenance.done" and _asks_meter(context, (action.get("params") or {})):
-            action = None
-        lines.append(_line(f.get("title") or "", f.get("detail") or "",
-                           "attention" if f.get("when") == "overdue" else "", action))
-    return _panel("What's next", lines, "Nothing needs you. Enjoy it.")
-
-
-def _today_coming(context, today):
-    from core.web_surfaces import dashboard
-
-    d = dashboard(context)
-    return _panel("Coming up", [_line(u.get("title") or "", u.get("detail") or "") for u in d.get("upcoming") or []],
-                  "Nothing coming up.")
-
-
-def _today_wins(context, today):
-    from core.web_surfaces import dashboard
-
-    d = dashboard(context)
-    wins = [w for w in d.get("wins") or [] if w.get("type") != "mission_missed"]
-    return _panel("Recent wins", [_line(w.get("summary") or "") for w in wins], "No wins logged yet today.")
 
 
 def _asks_meter(context, params: dict) -> bool:
@@ -144,7 +114,7 @@ def _kitchen_meals(context, today):
     totals, targets = food.get("totals") or {}, food.get("targets") or {}
     if targets.get("protein_g"):
         lines.append(_line(f"Protein {round(totals.get('protein_g') or 0)} of {targets['protein_g']} g"))
-    return _panel("Today's meals", lines, "No meals planned today. Plan them in Kitchen → Week.")
+    return _panel("Today's Meal Plan", lines, "No meals planned today. Plan them in Kitchen → Week.")
 
 
 def _kitchen_grocery(context, today):
@@ -158,30 +128,44 @@ def _kitchen_grocery(context, today):
         lines.append(_line(g.get("name") or "", " · ".join(x for x in (amount, g.get("for_recipe") or "") if x), "",
                            {"kind": "grocery.check", "label": "Got it",
                             "params": {"item_id": g["id"], "checked": True}}))
-    return _panel("Grocery list", lines, "The grocery list is empty.")
+    return _panel("Grocery List", lines, "The grocery list is empty.", limit=60)
 
 
-def _kitchen_use_soon(context, today):
+def _kitchen_recipes(context, today):
+    """Every recipe, to swipe through on the glasses: its picture, and its
+    ingredients and steps once selected."""
+    from core.web_screens import kitchen_page, recipe_steps
+
+    recipes = [r for r in kitchen_page(context, today).get("recipes") or [] if not r.get("locked")]
+    recipes.sort(key=lambda r: (not r.get("favorite"), -(r.get("times_made") or 0), (r.get("name") or "").lower()))
+    lines = []
+    for r in recipes:
+        bits = [r.get("category") or "", f"{r['minutes']} min" if r.get("minutes") else "",
+                f"{r['servings']:g} servings" if r.get("servings") else ""]
+        line = _line(r.get("name") or "", " · ".join(b for b in bits if b))
+        line["recipe"] = {
+            "id": r["id"], "name": r.get("name") or "", "photo": r.get("photo") or "",
+            "ingredients": [i for i in (r.get("ingredients_text") or "").splitlines() if i.strip()],
+            "steps": recipe_steps(r.get("instructions") or ""), "rating": r.get("rating"),
+        }
+        lines.append(line)
+    return _panel("Recipes", lines, "No recipes yet. Add them on your phone.", limit=60)
+
+
+def _kitchen_pantry(context, today):
     from core.web_screens import kitchen_page
 
-    items = sorted((p for p in kitchen_page(context, today).get("pantry") or [] if p.get("expiring")),
-                   key=lambda p: p.get("expires_in") if p.get("expires_in") is not None else 99)
+    items = kitchen_page(context, today).get("pantry") or []
+    items = sorted(items, key=lambda p: (p.get("expires_in") is None, p.get("expires_in") or 0, (p.get("name") or "").lower()))
     lines = []
     for p in items:
+        qty = p.get("quantity")
+        amount = f"{qty:g} {p.get('unit') or ''}".strip() if qty else ""
         days = p.get("expires_in")
-        when = "expired" if days is not None and days < 0 else "today" if days == 0 else f"in {days}d"
-        lines.append(_line(p.get("name") or "", f"expires {when}" if days is not None else "",
-                           "attention" if days is not None and days <= 0 else ""))
-    return _panel("Use soon", lines, "Nothing in the pantry is about to expire.")
-
-
-def _kitchen_make(context, today):
-    from core.web_screens import kitchen_page
-
-    page = kitchen_page(context, today)
-    makeable = [r for r in page.get("recipes") or [] if r.get("makeable") and not r.get("locked")]
-    lines = [_line(r.get("name") or "", f"{r['minutes']} min" if r.get("minutes") else "") for r in makeable]
-    return _panel("You can make", lines, "Nothing has everything in the pantry. Check the grocery list.")
+        when = "" if days is None else "expired" if days < 0 else "expires today" if days == 0 else f"expires in {days}d"
+        lines.append(_line(p.get("name") or "", " · ".join(b for b in (amount, when) if b),
+                           "attention" if days is not None and days <= 2 else ""))
+    return _panel("My Pantry", lines, "The pantry is empty.", limit=60)
 
 
 def _workout_training(context, today):
@@ -196,7 +180,7 @@ def _workout_training(context, today):
         lines.append(_line(s.get("name") or "", amount + (" · done" if s.get("done") else ""),
                            "ok" if s.get("done") else "",
                            None if s.get("done") else {"kind": "fitness.step", "label": "Done",
-                                                       "params": {"step": s["index"]}}))
+                                                       "params": {"step": s["index"] + 1}}))
     if not training.get("done"):
         lines.append(_line("Finish today's training", training.get("name") or "", "",
                            {"kind": "fitness.training_done", "label": "Training done", "params": {}}))
@@ -247,6 +231,26 @@ def _workout_milestones(context, today):
     return _panel("Milestones", lines, "No milestones in your plan yet.")
 
 
+# Past Due / Due Today / Due Soon (Zac, 2026-10-16): the one way the
+# glasses sort everything with a date, in Missions, equipment and the calendar.
+BUCKETS = (("past_due", "Past Due"), ("due_today", "Due Today"), ("due_soon", "Due Soon"))
+
+
+def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
+    """Pure logic. Which bucket a thing due in `days` falls in."""
+    if urgency == "overdue" or (days is not None and days < 0):
+        return "past_due"
+    if days == 0:
+        return "due_today"
+    if urgency == "due_soon" or days is not None:
+        return "due_soon"
+    return None
+
+
+def _bucketed(lines: list[dict], bucket: Optional[str]) -> list[dict]:
+    return [line for line in lines if bucket is None or line.get("bucket") == bucket]
+
+
 def _missions(context, today):
     from core.web_progress import missions_page
 
@@ -264,20 +268,6 @@ def _mission_line(m: dict) -> dict:
         action = {"kind": "objective.tick", "label": "Done",
                   "params": {"mission_id": m["id"], "index": objectives[0].get("index", 0), "amount": 1}}
     return _line(m.get("name") or "", progress, "", action)
-
-
-def _missions_today(context, today):
-    page = _missions(context, today)
-    # Daily missions, and the ones the person's fitness plan makes for today.
-    try:
-        plan_daily = {m["mission_id"] for m in _fitness(context, today).get("missions") or []
-                      if m.get("cadence") == "daily"}
-    except Exception:
-        log.exception("Glasses: the plan's missions failed")
-        plan_daily = set()
-    daily = [m for m in (page.get("daily") or []) + (page.get("active") or [])
-             if m.get("status") == "active" and (m.get("daily") or m.get("id") in plan_daily)]
-    return _panel("Today's missions", [_mission_line(m) for m in daily], "No daily missions today.")
 
 
 def _missions_claim(context, today):
@@ -332,17 +322,49 @@ def _missions_progress(context, today, mission_id: Optional[str] = None):
 
 
 def _missions_pick(context, today, mission_id: Optional[str] = None):
-    """Every active mission, to pick which one the Missions card shows."""
-    missions = _active_missions(_missions(context, today))
+    """Every active mission (pick one for the Missions card) and everything
+    that's due (Today's old list: maintenance, bills, chores...), each in
+    its bucket so the glasses can sort by Past Due / Due Today / Due Soon."""
+    from core.today import today_items
+
+    page = _missions(context, today)
+    missions = _active_missions(page)
     current = (mission_focus(context, today, mission_id) or {}).get("id")
+    plan_daily = set()
+    try:
+        plan_daily = {m["mission_id"] for m in _fitness(context, today).get("missions") or []
+                      if m.get("cadence") == "daily"}
+    except Exception:
+        log.debug("Glasses: no fitness plan missions", exc_info=True)
     lines = []
+    when_bucket = {"overdue": "past_due", "today": "due_today", "waiting": "due_today", "soon": "due_soon"}
+    try:
+        due = [i.as_dict() for i in today_items(context, today)]
+    except Exception:
+        log.exception("Glasses: the due list failed")
+        due = []
+    for d in due:
+        action = d.get("action")
+        if action and action.get("kind") == "maintenance.done" and _asks_meter(context, action.get("params") or {}):
+            action = None
+        line = _line(d.get("title") or "", d.get("detail") or "",
+                     "attention" if d.get("when") == "overdue" else "", action)
+        line["bucket"] = when_bucket.get(d.get("when"))
+        lines.append(line)
     for m in missions:
+        daily = m.get("daily") or m.get("id") in plan_daily
         line = _line(m.get("name") or "", ("showing · " if m["id"] == current else "") +
                      (f"ready · {m.get('reward_xp') or 0} XP" if m.get("ready") else f"{m.get('done', 0)} of {m.get('total', 0)}"),
                      "ok" if m["id"] == current else "")
         line["pick"] = {"mission": m["id"], "label": "Show"}
+        line["bucket"] = "due_today" if daily and not m.get("ready") else None
         lines.append(line)
-    return _panel("Select mission", lines, "No active missions.", limit=40)
+    order = {"past_due": 0, "due_today": 1, "due_soon": 2, None: 3}
+    lines.sort(key=lambda line: order[line.get("bucket")])
+    panel = _panel("Select Mission", lines, "No active missions and nothing due.", limit=60)
+    panel["filters"] = [{"id": None, "label": "All", "count": len(lines)}] + [
+        {"id": b, "label": label, "count": sum(1 for line in lines if line.get("bucket") == b)} for b, label in BUCKETS]
+    return panel
 
 
 def _skills_focus(context, today):
@@ -441,28 +463,52 @@ def _money_debts(context, today):
     return _panel("Debts", lines, "No debts. 🎉" if not debts.get("total") else "")
 
 
+def _task_lines(context, rows: list[dict], with_asset: bool = True) -> list[dict]:
+    lines = []
+    for t in rows:
+        action = t.get("action")
+        if action and action.get("asks_meter"):
+            action = None
+        line = _line(f"{t.get('title')}: {t.get('asset')}" if with_asset else t.get("title") or "", t.get("text") or "",
+                     "attention" if t.get("urgency") == "overdue" else "", action)
+        line["bucket"] = bucket_of(t.get("days"), t.get("urgency") or "")
+        lines.append(line)
+    return lines
+
+
+def _equipment_rows(context, scope: str, today) -> tuple[list[dict], list[dict]]:
+    from core.web_equipment import equipment_page
+
+    page = equipment_page(context, scope, today)
+    seen, rows = set(), []
+    for t in (page.get("attention") or []) + (page.get("next_up") or []):
+        if t["id"] not in seen:
+            seen.add(t["id"])
+            rows.append(t)
+    return page.get("assets") or [], rows
+
+
 def _equipment(scope: str):
-    def attention(context, today):
-        from core.web_equipment import equipment_page
-
-        page = equipment_page(context, scope, today)
+    def assets(context, today):
+        found, rows = _equipment_rows(context, scope, today)
         lines = []
-        for t in page.get("attention") or []:
-            action = t.get("action")
-            if action and action.get("asks_meter"):
-                action = None
-            lines.append(_line(f"{t.get('title')}: {t.get('asset')}", t.get("text") or "",
-                               "attention" if t.get("urgency") == "overdue" else "", action))
-        return _panel("Needs attention", lines, "Everything's cared for.")
+        for a in found:
+            late = sum(1 for r in rows if r["asset_id"] == a["id"] and bucket_of(r.get("days"), r.get("urgency") or "") == "past_due")
+            nxt = next((r for r in rows if r["asset_id"] == a["id"]), None)
+            bits = [f"{late} past due" if late else "", f"next: {nxt['title']} ({nxt['text']})" if nxt else ""]
+            lines.append(_line(a.get("name") or "", " · ".join(b for b in bits if b) or (a.get("make_model") or ""),
+                               "attention" if late else ""))
+        return _panel("Assets", lines, "Nothing tracked here yet.", limit=60)
 
-    def next_up(context, today):
-        from core.web_equipment import equipment_page
+    def in_bucket(bucket: str, label: str, empty: str):
+        def build(context, today):
+            _found, rows = _equipment_rows(context, scope, today)
+            return _panel(label, _bucketed(_task_lines(context, rows), bucket), empty, limit=60)
+        return build
 
-        page = equipment_page(context, scope, today)
-        return _panel("Next up", [_line(f"{t.get('title')}: {t.get('asset')}", t.get("text") or "")
-                                  for t in page.get("next_up") or []], "Nothing due in the next month.")
-
-    return attention, next_up
+    return (assets, in_bucket("past_due", "Past Due", "Nothing past due. Everything's cared for."),
+            in_bucket("due_today", "Due Today", "Nothing due today."),
+            in_bucket("due_soon", "Due Soon", "Nothing due in the next month."))
 
 
 def _rentals(context, today):
@@ -480,17 +526,57 @@ def _rentals(context, today):
     return _panel("Properties", lines, "No properties yet.")
 
 
-def _rental_upkeep(context, today):
+def _rental_tasks(context, today) -> list[dict]:
     from core.web_screens import estate_page
 
-    lines = []
+    rows = []
     for p in estate_page(context, today).get("properties") or []:
         for t in p.get("tasks") or []:
-            if t.get("needs_attention"):
-                action = t.get("action")
-                lines.append(_line(f"{t.get('title')}: {p.get('name')}", t.get("text") or "", "attention",
-                                   None if not action or action.get("asks_meter") else action))
-    return _panel("Upkeep", lines, "Every property is cared for.")
+            rows.append({**t, "asset": p.get("name")})
+    return _task_lines(context, rows)
+
+
+def _rental_bucket(bucket: str, label: str, empty: str):
+    def build(context, today):
+        return _panel(label, _bucketed(_rental_tasks(context, today), bucket), empty, limit=60)
+    return build
+
+
+def _calendar(bucket: str, label: str, empty: str):
+    """The Calendar on the glasses: Past Due, Due Today, Due Soon (core/calendar_view.py)."""
+    def build(context, today):
+        from core.calendar_view import calendar_page, day_label
+
+        page = calendar_page(context, today)
+        if bucket == "soon":
+            found = [(d, i) for group in page["soon"] for i in group["items"] for d in (date.fromisoformat(group["date"]),)]
+        else:
+            found = [(date.fromisoformat(i["date"]), i) for i in page[bucket]]
+        lines = []
+        for day, i in found:
+            when = [day_label(day, today) if bucket != "today" else "", i.get("time") or "", i.get("kind_label") or ""]
+            action = i.get("action")
+            if action and action.get("kind") == "maintenance.done" and _asks_meter(context, action.get("params") or {}):
+                action = None
+            lines.append(_line(i["title"], " · ".join(w for w in when if w),
+                               "attention" if bucket == "past_due" else "", action))
+        return _panel(label, lines, empty, limit=60)
+    return build
+
+
+def calendar_status(context, today: date) -> dict:
+    from core.calendar_view import calendar_page
+
+    try:
+        page = calendar_page(context, today)
+    except Exception:
+        log.exception("Glasses: the calendar line failed")
+        return {}
+    late, now = len(page["past_due"]), len(page["today"])
+    nxt = page["soon"][0] if page["soon"] else None
+    bits = [f"{now} today" if now else "Nothing today", f"{late} past due" if late else "",
+            f"next: {nxt['items'][0]['title']} ({nxt['label']})" if nxt and not now else ""]
+    return {"line": " · ".join(b for b in bits if b), "tone": "attention" if late else "calm"}
 
 
 def _household_chores(context, today):
@@ -551,30 +637,39 @@ def _inbox_waiting(context, today):
 
 _GARAGE, _MAINT, _GREEN, _PROP = (_equipment(s) for s in ("garage", "maintenance", "greenhouse", "property"))
 
+
+def _equipment_menu(builders) -> tuple:
+    return tuple(zip(("assets", "past_due", "due_today", "due_soon"),
+                     ("Assets", "Past Due", "Due Today", "Due Soon"), builders))
+
 Panel = Callable[[object, date], dict]
 
 # Each app's quick action menu: (item id, label, panel builder).
 PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
-    "dashboard": (("next", "What's next", _today_next), ("coming", "Coming up", _today_coming),
-                  ("wins", "Recent wins", _today_wins)),
-    "missions": (("pick", "Select mission", _missions_pick), ("progress", "Log progress", _missions_progress),
-                 ("today", "Today's missions", _missions_today), ("claim", "Ready to claim", _missions_claim)),
-    "kitchen": (("meals", "Today's meals", _kitchen_meals), ("grocery", "Grocery list", _kitchen_grocery),
-                ("use_soon", "Use soon", _kitchen_use_soon), ("make", "What can I make", _kitchen_make)),
-    "workout": (("training", "Today's training", _workout_training), ("practice", "Skill practice", _workout_practice),
+    "missions": (("pick", "Select Mission", _missions_pick), ("progress", "Log Progress", _missions_progress),
+                 ("claim", "Ready To Claim", _missions_claim)),
+    "kitchen": (("recipes", "Recipes", _kitchen_recipes), ("meals", "Today's Meal Plan", _kitchen_meals),
+                ("pantry", "My Pantry", _kitchen_pantry), ("grocery", "Grocery List", _kitchen_grocery)),
+    "workout": (("training", "Today's Training", _workout_training), ("practice", "Skill Practice", _workout_practice),
                 ("weight", "Weight", _workout_weight), ("milestones", "Milestones", _workout_milestones)),
-    "budget": (("month", "This month", _money_month), ("due", "What's due", _money_due),
+    "budget": (("month", "This Month", _money_month), ("due", "What's Due", _money_due),
                ("debts", "Debts", _money_debts)),
-    "garage": (("attention", "Needs attention", _GARAGE[0]), ("next", "Next up", _GARAGE[1])),
-    "maintenance": (("attention", "Needs attention", _MAINT[0]), ("next", "Next up", _MAINT[1])),
-    "greenhouse": (("attention", "Needs attention", _GREEN[0]), ("next", "Next up", _GREEN[1])),
-    "property": (("attention", "Needs attention", _PROP[0]), ("next", "Next up", _PROP[1])),
-    "real_estate": (("properties", "Properties", _rentals), ("upkeep", "Upkeep", _rental_upkeep)),
-    "skills": (("focus", "Focus", _skills_focus), ("week", "This week", _skills_week)),
-    "character": (("story", "Your story", _character_stats), ("top", "Top skills", _character_top)),
-    "household": (("chores", "Chores due", _household_chores),),
-    "relationships": (("birthdays", "Next birthdays", _people_birthdays),),
-    "inbox": (("waiting", "Waiting to file", _inbox_waiting),),
+    "garage": _equipment_menu(_GARAGE),
+    "maintenance": _equipment_menu(_MAINT),
+    "greenhouse": _equipment_menu(_GREEN),
+    "property": _equipment_menu(_PROP),
+    "real_estate": (("properties", "Properties", _rentals),
+                    ("past_due", "Past Due", _rental_bucket("past_due", "Past Due", "Nothing past due.")),
+                    ("due_today", "Due Today", _rental_bucket("due_today", "Due Today", "Nothing due today.")),
+                    ("due_soon", "Due Soon", _rental_bucket("due_soon", "Due Soon", "Nothing due soon."))),
+    "calendar": (("past_due", "Past Due", _calendar("past_due", "Past Due", "Nothing past due. You're caught up.")),
+                 ("today", "Due Today", _calendar("today", "Due Today", "Nothing on today.")),
+                 ("soon", "Due Soon", _calendar("soon", "Due Soon", "Nothing in the next two weeks."))),
+    "skills": (("focus", "Focus", _skills_focus), ("week", "This Week", _skills_week)),
+    "character": (("story", "Your Story", _character_stats), ("top", "Top Skills", _character_top)),
+    "household": (("chores", "Chores Due", _household_chores),),
+    "relationships": (("birthdays", "Next Birthdays", _people_birthdays),),
+    "inbox": (("waiting", "Waiting To File", _inbox_waiting),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with
@@ -586,7 +681,6 @@ ASKS: dict[str, tuple[str, ...]] = {
     "workshop": ("What jobs are open?", "Which parts are running low?"),
     "power": ("How's the battery?", "How much power did I use today?"),
     "observations": ("What have you noticed lately?",),
-    "relationships": ("Who haven't I talked to in a while?",),
     "notes": ("What were my last notes?",),
     "classroom": ("What should I study next?",),
     "inbox": ("Any emails I should answer?",),
@@ -647,7 +741,7 @@ def menu_for(app, pinned: Optional[bool] = None) -> list[dict]:
               for i, say in enumerate(ASKS.get(app.module_id, ()))]
     items = items[:4]
     if pinned is not None:
-        items.append({"id": "pin", "label": "Unpin from glasses" if pinned else "Pin to glasses", "type": "action",
+        items.append({"id": "pin", "label": "Unpin From Glasses" if pinned else "Pin To Glasses", "type": "action",
                       "action": {"kind": "app.favorite", "label": "Unpin" if pinned else "Pin",
                                  "params": {"module_id": app.module_id, "favorite": not pinned}}})
     return items
@@ -671,17 +765,22 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
     except Exception:  # a headless context without settings
         favorites = []
     by_id = {a.module_id: a for a in apps}
-    pinned_ids = [f for f in dict.fromkeys(favorites) if f in by_id]
+    # Missions always comes right after the orb (Zac, 2026-10-16), then the pins.
+    pinned_ids = [f for f in dict.fromkeys(favorites) if f in by_id and f != "missions"]
+    if pinned_ids and "missions" in by_id:
+        pinned_ids.insert(0, "missions")
 
     def card(app) -> dict:
         g = glance.get(app.module_id) or {}
         if app.module_id in EQUIPMENT_SCOPES:
             g = _equipment_status(context, app.module_id, today)
+        elif app.module_id == "calendar":
+            g = calendar_status(context, today)
         return {
             "id": app.module_id, "name": SHORT_NAMES.get(app.module_id, app.name), "full_name": app.name,
             "tagline": app.tagline, "status": g.get("line") or "", "tone": g.get("tone") or "calm",
             "ask": app.ask, "pinned": app.module_id in pinned_ids,
-            "menu": menu_for(app, app.module_id in pinned_ids),
+            "menu": menu_for(app, None if app.module_id == "missions" else app.module_id in pinned_ids),
             **({"mission": mission_focus(context, today, mission_id)} if app.module_id == "missions" else {}),
         }
 

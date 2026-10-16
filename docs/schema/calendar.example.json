@@ -1,0 +1,1620 @@
+{
+  "as_of": "2026-10-16",
+  "month": {
+    "key": "2026-10",
+    "label": "October 2026",
+    "prev": "2026-09",
+    "next": "2026-11",
+    "weekdays": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ],
+    "days": [
+      {
+        "date": "2026-09-28",
+        "day": 28,
+        "in_month": false,
+        "today": false,
+        "count": 0,
+        "kinds": []
+      },
+      {
+        "date": "2026-09-29",
+        "day": 29,
+        "in_month": false,
+        "today": false,
+        "count": 0,
+        "kinds": []
+      },
+      {
+        "date": "2026-09-30",
+        "day": 30,
+        "in_month": false,
+        "today": false,
+        "count": 0,
+        "kinds": []
+      },
+      {
+        "date": "2026-10-01",
+        "day": 1,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-02",
+        "day": 2,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "upkeep"
+        ],
+        "late": true
+      },
+      {
+        "date": "2026-10-03",
+        "day": 3,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-04",
+        "day": 4,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-05",
+        "day": 5,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "upkeep"
+        ],
+        "late": true
+      },
+      {
+        "date": "2026-10-06",
+        "day": 6,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-07",
+        "day": 7,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "upkeep"
+        ],
+        "late": true
+      },
+      {
+        "date": "2026-10-08",
+        "day": 8,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-09",
+        "day": 9,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-10",
+        "day": 10,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "upkeep"
+        ],
+        "late": true
+      },
+      {
+        "date": "2026-10-11",
+        "day": 11,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-12",
+        "day": 12,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-13",
+        "day": 13,
+        "in_month": true,
+        "today": false,
+        "count": 0,
+        "kinds": [],
+        "late": false
+      },
+      {
+        "date": "2026-10-14",
+        "day": 14,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "upkeep"
+        ],
+        "late": true
+      },
+      {
+        "date": "2026-10-15",
+        "day": 15,
+        "in_month": true,
+        "today": false,
+        "count": 2,
+        "kinds": [
+          "event",
+          "income"
+        ],
+        "late": true
+      },
+      {
+        "date": "2026-10-16",
+        "day": 16,
+        "in_month": true,
+        "today": true,
+        "count": 4,
+        "kinds": [
+          "event",
+          "meal",
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-17",
+        "day": 17,
+        "in_month": true,
+        "today": false,
+        "count": 3,
+        "kinds": [
+          "meal",
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-18",
+        "day": 18,
+        "in_month": true,
+        "today": false,
+        "count": 3,
+        "kinds": [
+          "meal",
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-19",
+        "day": 19,
+        "in_month": true,
+        "today": false,
+        "count": 5,
+        "kinds": [
+          "event",
+          "meal",
+          "training",
+          "upkeep"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-20",
+        "day": 20,
+        "in_month": true,
+        "today": false,
+        "count": 5,
+        "kinds": [
+          "bill",
+          "meal",
+          "training",
+          "upkeep"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-21",
+        "day": 21,
+        "in_month": true,
+        "today": false,
+        "count": 3,
+        "kinds": [
+          "meal",
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-22",
+        "day": 22,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-23",
+        "day": 23,
+        "in_month": true,
+        "today": false,
+        "count": 2,
+        "kinds": [
+          "event",
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-24",
+        "day": 24,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-25",
+        "day": 25,
+        "in_month": true,
+        "today": false,
+        "count": 2,
+        "kinds": [
+          "training",
+          "upkeep"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-26",
+        "day": 26,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-27",
+        "day": 27,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-28",
+        "day": 28,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-29",
+        "day": 29,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-30",
+        "day": 30,
+        "in_month": true,
+        "today": false,
+        "count": 2,
+        "kinds": [
+          "event",
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-10-31",
+        "day": 31,
+        "in_month": true,
+        "today": false,
+        "count": 1,
+        "kinds": [
+          "training"
+        ],
+        "late": false
+      },
+      {
+        "date": "2026-11-01",
+        "day": 1,
+        "in_month": false,
+        "today": false,
+        "count": 0,
+        "kinds": []
+      }
+    ],
+    "by_date": {
+      "2026-10-02": [
+        {
+          "date": "2026-10-02",
+          "time": "",
+          "title": "Check oil: Mower",
+          "detail": "past due",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "6cbf096c22"
+            }
+          }
+        }
+      ],
+      "2026-10-05": [
+        {
+          "date": "2026-10-05",
+          "time": "",
+          "title": "Sharpen blades: Mower",
+          "detail": "past due",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "7a4464beaf"
+            }
+          }
+        }
+      ],
+      "2026-10-07": [
+        {
+          "date": "2026-10-07",
+          "time": "",
+          "title": "Tire rotation: Pickup truck",
+          "detail": "past due",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "68e719deaa"
+            }
+          }
+        }
+      ],
+      "2026-10-10": [
+        {
+          "date": "2026-10-10",
+          "time": "",
+          "title": "HVAC filter: Maple House",
+          "detail": "past due",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "58cb39bfd5"
+            }
+          }
+        }
+      ],
+      "2026-10-14": [
+        {
+          "date": "2026-10-14",
+          "time": "",
+          "title": "Water: Raised bed",
+          "detail": "past due",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "cd4ef5ed1b"
+            }
+          }
+        }
+      ],
+      "2026-10-15": [
+        {
+          "date": "2026-10-15",
+          "time": "",
+          "title": "Daily push-ups: 30 today",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "c07403dd3b",
+          "repeats": ""
+        },
+        {
+          "date": "2026-10-15",
+          "time": "",
+          "title": "Pay $1,500.00",
+          "detail": "expected, not marked received",
+          "kind": "income",
+          "kind_label": "Pay",
+          "app": "budget",
+          "due": true,
+          "action": {
+            "kind": "income.receive",
+            "label": "Mark Received",
+            "params": {
+              "source_id": "cfa28fb8d1"
+            }
+          }
+        }
+      ],
+      "2026-10-16": [
+        {
+          "date": "2026-10-16",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-16",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-16",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        },
+        {
+          "date": "2026-10-16",
+          "time": "",
+          "title": "Trash day",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "03332a99b7",
+          "repeats": "weekly"
+        }
+      ],
+      "2026-10-17": [
+        {
+          "date": "2026-10-17",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-17",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-17",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-18": [
+        {
+          "date": "2026-10-18",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-18",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-18",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-19": [
+        {
+          "date": "2026-10-19",
+          "time": "09:30",
+          "title": "Dentist",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "aefb8b1301",
+          "repeats": ""
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Test run: Generator",
+          "detail": "",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "d4364f8f41"
+            }
+          }
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-20": [
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Insurance $340.00",
+          "detail": "",
+          "kind": "bill",
+          "kind_label": "Bill",
+          "app": "budget",
+          "due": true,
+          "action": {
+            "kind": "bill.pay",
+            "label": "Mark Paid",
+            "params": {
+              "bill_id": "9975fbab57"
+            }
+          }
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Oil change: Truck",
+          "detail": "",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "101ce96064"
+            }
+          }
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-21": [
+        {
+          "date": "2026-10-21",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-21",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-21",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-22": [
+        {
+          "date": "2026-10-22",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-23": [
+        {
+          "date": "2026-10-23",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        },
+        {
+          "date": "2026-10-23",
+          "time": "",
+          "title": "Trash day",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "03332a99b7",
+          "repeats": "weekly"
+        }
+      ],
+      "2026-10-24": [
+        {
+          "date": "2026-10-24",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-25": [
+        {
+          "date": "2026-10-25",
+          "time": "",
+          "title": "Brake check: Pickup truck",
+          "detail": "",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "495a698f89"
+            }
+          }
+        },
+        {
+          "date": "2026-10-25",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-26": [
+        {
+          "date": "2026-10-26",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-27": [
+        {
+          "date": "2026-10-27",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-28": [
+        {
+          "date": "2026-10-28",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-29": [
+        {
+          "date": "2026-10-29",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ],
+      "2026-10-30": [
+        {
+          "date": "2026-10-30",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        },
+        {
+          "date": "2026-10-30",
+          "time": "",
+          "title": "Trash day",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "03332a99b7",
+          "repeats": "weekly"
+        }
+      ],
+      "2026-10-31": [
+        {
+          "date": "2026-10-31",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    }
+  },
+  "past_due": [
+    {
+      "date": "2026-10-02",
+      "time": "",
+      "title": "Check oil: Mower",
+      "detail": "past due",
+      "kind": "upkeep",
+      "kind_label": "Upkeep",
+      "app": "maintenance",
+      "due": true,
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "6cbf096c22"
+        }
+      }
+    },
+    {
+      "date": "2026-10-05",
+      "time": "",
+      "title": "Sharpen blades: Mower",
+      "detail": "past due",
+      "kind": "upkeep",
+      "kind_label": "Upkeep",
+      "app": "maintenance",
+      "due": true,
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "7a4464beaf"
+        }
+      }
+    },
+    {
+      "date": "2026-10-07",
+      "time": "",
+      "title": "Tire rotation: Pickup truck",
+      "detail": "past due",
+      "kind": "upkeep",
+      "kind_label": "Upkeep",
+      "app": "maintenance",
+      "due": true,
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "68e719deaa"
+        }
+      }
+    },
+    {
+      "date": "2026-10-10",
+      "time": "",
+      "title": "HVAC filter: Maple House",
+      "detail": "past due",
+      "kind": "upkeep",
+      "kind_label": "Upkeep",
+      "app": "maintenance",
+      "due": true,
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "58cb39bfd5"
+        }
+      }
+    },
+    {
+      "date": "2026-10-14",
+      "time": "",
+      "title": "Water: Raised bed",
+      "detail": "past due",
+      "kind": "upkeep",
+      "kind_label": "Upkeep",
+      "app": "maintenance",
+      "due": true,
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "cd4ef5ed1b"
+        }
+      }
+    },
+    {
+      "date": "2026-10-15",
+      "time": "",
+      "title": "Pay $1,500.00",
+      "detail": "expected, not marked received",
+      "kind": "income",
+      "kind_label": "Pay",
+      "app": "budget",
+      "due": true,
+      "action": {
+        "kind": "income.receive",
+        "label": "Mark Received",
+        "params": {
+          "source_id": "cfa28fb8d1"
+        }
+      }
+    }
+  ],
+  "today": [
+    {
+      "date": "2026-10-16",
+      "time": "",
+      "title": "Breakfast: Protein oats",
+      "detail": "",
+      "kind": "meal",
+      "kind_label": "Meal",
+      "app": "kitchen",
+      "due": false
+    },
+    {
+      "date": "2026-10-16",
+      "time": "",
+      "title": "Lunch: Turkey chili",
+      "detail": "",
+      "kind": "meal",
+      "kind_label": "Meal",
+      "app": "kitchen",
+      "due": false
+    },
+    {
+      "date": "2026-10-16",
+      "time": "",
+      "title": "Training day",
+      "detail": "",
+      "kind": "training",
+      "kind_label": "Training",
+      "app": "workout",
+      "due": false
+    },
+    {
+      "date": "2026-10-16",
+      "time": "",
+      "title": "Trash day",
+      "detail": "",
+      "kind": "event",
+      "kind_label": "Event",
+      "app": "calendar",
+      "due": false,
+      "event_id": "03332a99b7",
+      "repeats": "weekly"
+    }
+  ],
+  "soon": [
+    {
+      "date": "2026-10-17",
+      "label": "Tomorrow",
+      "items": [
+        {
+          "date": "2026-10-17",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-17",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-17",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-18",
+      "label": "Sun, Oct 18",
+      "items": [
+        {
+          "date": "2026-10-18",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-18",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-18",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-19",
+      "label": "Mon, Oct 19",
+      "items": [
+        {
+          "date": "2026-10-19",
+          "time": "09:30",
+          "title": "Dentist",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "aefb8b1301",
+          "repeats": ""
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Test run: Generator",
+          "detail": "",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "d4364f8f41"
+            }
+          }
+        },
+        {
+          "date": "2026-10-19",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-20",
+      "label": "Tue, Oct 20",
+      "items": [
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Insurance $340.00",
+          "detail": "",
+          "kind": "bill",
+          "kind_label": "Bill",
+          "app": "budget",
+          "due": true,
+          "action": {
+            "kind": "bill.pay",
+            "label": "Mark Paid",
+            "params": {
+              "bill_id": "9975fbab57"
+            }
+          }
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Oil change: Truck",
+          "detail": "",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "101ce96064"
+            }
+          }
+        },
+        {
+          "date": "2026-10-20",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "label": "Wed, Oct 21",
+      "items": [
+        {
+          "date": "2026-10-21",
+          "time": "",
+          "title": "Breakfast: Protein oats",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-21",
+          "time": "",
+          "title": "Lunch: Turkey chili",
+          "detail": "",
+          "kind": "meal",
+          "kind_label": "Meal",
+          "app": "kitchen",
+          "due": false
+        },
+        {
+          "date": "2026-10-21",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "label": "Thu, Oct 22",
+      "items": [
+        {
+          "date": "2026-10-22",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "label": "Fri, Oct 23",
+      "items": [
+        {
+          "date": "2026-10-23",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        },
+        {
+          "date": "2026-10-23",
+          "time": "",
+          "title": "Trash day",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "03332a99b7",
+          "repeats": "weekly"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-24",
+      "label": "Sat, Oct 24",
+      "items": [
+        {
+          "date": "2026-10-24",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "label": "Sun, Oct 25",
+      "items": [
+        {
+          "date": "2026-10-25",
+          "time": "",
+          "title": "Brake check: Pickup truck",
+          "detail": "",
+          "kind": "upkeep",
+          "kind_label": "Upkeep",
+          "app": "maintenance",
+          "due": true,
+          "action": {
+            "kind": "maintenance.done",
+            "label": "Done",
+            "params": {
+              "task_id": "495a698f89"
+            }
+          }
+        },
+        {
+          "date": "2026-10-25",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "label": "Mon, Oct 26",
+      "items": [
+        {
+          "date": "2026-10-26",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
+      "label": "Tue, Oct 27",
+      "items": [
+        {
+          "date": "2026-10-27",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "label": "Wed, Oct 28",
+      "items": [
+        {
+          "date": "2026-10-28",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-29",
+      "label": "Thu, Oct 29",
+      "items": [
+        {
+          "date": "2026-10-29",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        }
+      ]
+    },
+    {
+      "date": "2026-10-30",
+      "label": "Fri, Oct 30",
+      "items": [
+        {
+          "date": "2026-10-30",
+          "time": "",
+          "title": "Training day",
+          "detail": "",
+          "kind": "training",
+          "kind_label": "Training",
+          "app": "workout",
+          "due": false
+        },
+        {
+          "date": "2026-10-30",
+          "time": "",
+          "title": "Trash day",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "03332a99b7",
+          "repeats": "weekly"
+        }
+      ]
+    }
+  ],
+  "kinds": [
+    {
+      "kind": "event",
+      "label": "Event",
+      "app": "calendar"
+    },
+    {
+      "kind": "upkeep",
+      "label": "Upkeep",
+      "app": "maintenance"
+    },
+    {
+      "kind": "bill",
+      "label": "Bill",
+      "app": "budget"
+    },
+    {
+      "kind": "income",
+      "label": "Pay",
+      "app": "budget"
+    },
+    {
+      "kind": "meal",
+      "label": "Meal",
+      "app": "kitchen"
+    },
+    {
+      "kind": "prep",
+      "label": "Meal Prep",
+      "app": "kitchen"
+    },
+    {
+      "kind": "training",
+      "label": "Training",
+      "app": "workout"
+    },
+    {
+      "kind": "birthday",
+      "label": "Birthday",
+      "app": "relationships"
+    }
+  ],
+  "forms": {
+    "event": {
+      "noun": "event",
+      "id_param": "event_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "What",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": true,
+          "options": [],
+          "default": "2026-10-16"
+        },
+        {
+          "name": "time",
+          "label": "Time",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "recurrence",
+          "label": "Repeats",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "",
+            "weekly",
+            "biweekly",
+            "monthly",
+            "yearly"
+          ],
+          "default": ""
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

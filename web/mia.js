@@ -14,6 +14,7 @@
  *   MIA.shell()                 -> the sidebar: the person's apps, level and XP (core/web_surfaces.py)
  *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
+ *   MIA.calendar(month)         -> everything with a date: Past Due, Today, Due Soon, a month (core/calendar_view.py)
  *   MIA.glasses() / glassesPanel(app, item) -> the glasses' app cards and a quick action's panel
  *   MIA.money(strategy)         -> the Money screen: bills, income, expenses, debts, budgets, trends
  *   MIA.kitchen() / MIA.workout() / MIA.realEstate() -> those screens (core/web_screens.py)
@@ -157,6 +158,7 @@
     shell: () => read("/api/shell", "shell"),
     dashboard: () => read("/api/dashboard", "dashboard"),
     apps: () => read("/api/apps", "apps"),
+    calendar: (month) => read("/api/calendar" + (month ? "?month=" + encodeURIComponent(month) : ""), "calendar"),
     // The glasses' app cards and one menu item's panel (core/glasses.py).
     // In the demo every panel comes from one example file, keyed "app/item".
     // `mission`: the mission the glasses' Missions card shows (optional).

@@ -3,136 +3,6 @@
   "pinned": true,
   "apps": [
     {
-      "id": "dashboard",
-      "name": "Today",
-      "full_name": "Dashboard",
-      "tagline": "Your life. In sync.",
-      "status": "",
-      "tone": "calm",
-      "ask": "What's on today?",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "next",
-          "label": "What's next",
-          "type": "panel"
-        },
-        {
-          "id": "coming",
-          "label": "Coming up",
-          "type": "panel"
-        },
-        {
-          "id": "wins",
-          "label": "Recent wins",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin from glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "dashboard",
-              "favorite": false
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "kitchen",
-      "name": "Kitchen",
-      "full_name": "Kitchen",
-      "tagline": "Good food. Good mood.",
-      "status": "9 recipes · 4 on the grocery list · chicken expires in 0d",
-      "tone": "attention",
-      "ask": "What can I make with what's in the pantry?",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "meals",
-          "label": "Today's meals",
-          "type": "panel"
-        },
-        {
-          "id": "grocery",
-          "label": "Grocery list",
-          "type": "panel"
-        },
-        {
-          "id": "use_soon",
-          "label": "Use soon",
-          "type": "panel"
-        },
-        {
-          "id": "make",
-          "label": "What can I make",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin from glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "kitchen",
-              "favorite": false
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "workout",
-      "name": "Workout",
-      "full_name": "Workout",
-      "tagline": "Stronger body. Clearer mind.",
-      "status": "4 sessions this week · last: Beginner full body (2026-10-15)",
-      "tone": "calm",
-      "ask": "Log a 30 minute workout.",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "training",
-          "label": "Today's training",
-          "type": "panel"
-        },
-        {
-          "id": "practice",
-          "label": "Skill practice",
-          "type": "panel"
-        },
-        {
-          "id": "weight",
-          "label": "Weight",
-          "type": "panel"
-        },
-        {
-          "id": "milestones",
-          "label": "Milestones",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin from glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "workout",
-              "favorite": false
-            }
-          }
-        }
-      ]
-    },
-    {
       "id": "missions",
       "name": "Missions",
       "full_name": "Missions",
@@ -144,36 +14,18 @@
       "menu": [
         {
           "id": "pick",
-          "label": "Select mission",
+          "label": "Select Mission",
           "type": "panel"
         },
         {
           "id": "progress",
-          "label": "Log progress",
-          "type": "panel"
-        },
-        {
-          "id": "today",
-          "label": "Today's missions",
+          "label": "Log Progress",
           "type": "panel"
         },
         {
           "id": "claim",
-          "label": "Ready to claim",
+          "label": "Ready To Claim",
           "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin from glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "missions",
-              "favorite": false
-            }
-          }
         }
       ],
       "mission": {
@@ -201,6 +53,96 @@
       }
     },
     {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "full_name": "Kitchen",
+      "tagline": "Good food. Good mood.",
+      "status": "9 recipes · 4 on the grocery list · chicken expires in 0d",
+      "tone": "attention",
+      "ask": "What can I make with what's in the pantry?",
+      "pinned": true,
+      "menu": [
+        {
+          "id": "recipes",
+          "label": "Recipes",
+          "type": "panel"
+        },
+        {
+          "id": "meals",
+          "label": "Today's Meal Plan",
+          "type": "panel"
+        },
+        {
+          "id": "pantry",
+          "label": "My Pantry",
+          "type": "panel"
+        },
+        {
+          "id": "grocery",
+          "label": "Grocery List",
+          "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Unpin From Glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "kitchen",
+              "favorite": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "workout",
+      "name": "Workout",
+      "full_name": "Workout",
+      "tagline": "Stronger body. Clearer mind.",
+      "status": "4 sessions this week · last: Beginner full body (2026-10-15)",
+      "tone": "calm",
+      "ask": "Log a 30 minute workout.",
+      "pinned": true,
+      "menu": [
+        {
+          "id": "training",
+          "label": "Today's Training",
+          "type": "panel"
+        },
+        {
+          "id": "practice",
+          "label": "Skill Practice",
+          "type": "panel"
+        },
+        {
+          "id": "weight",
+          "label": "Weight",
+          "type": "panel"
+        },
+        {
+          "id": "milestones",
+          "label": "Milestones",
+          "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Unpin From Glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "workout",
+              "favorite": false
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "garage",
       "name": "Garage",
       "full_name": "Garage",
@@ -211,18 +153,28 @@
       "pinned": true,
       "menu": [
         {
-          "id": "attention",
-          "label": "Needs attention",
+          "id": "assets",
+          "label": "Assets",
           "type": "panel"
         },
         {
-          "id": "next",
-          "label": "Next up",
+          "id": "past_due",
+          "label": "Past Due",
+          "type": "panel"
+        },
+        {
+          "id": "due_today",
+          "label": "Due Today",
+          "type": "panel"
+        },
+        {
+          "id": "due_soon",
+          "label": "Due Soon",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Unpin from glasses",
+          "label": "Unpin From Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -238,6 +190,46 @@
   ],
   "others": [
     {
+      "id": "calendar",
+      "name": "Calendar",
+      "full_name": "Calendar",
+      "tagline": "Everything with a date.",
+      "status": "4 today · 6 past due",
+      "tone": "attention",
+      "ask": "What's on my calendar this week?",
+      "pinned": false,
+      "menu": [
+        {
+          "id": "past_due",
+          "label": "Past Due",
+          "type": "panel"
+        },
+        {
+          "id": "today",
+          "label": "Due Today",
+          "type": "panel"
+        },
+        {
+          "id": "soon",
+          "label": "Due Soon",
+          "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin To Glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "calendar",
+              "favorite": true
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "budget",
       "name": "Money",
       "full_name": "Money",
@@ -249,12 +241,12 @@
       "menu": [
         {
           "id": "month",
-          "label": "This month",
+          "label": "This Month",
           "type": "panel"
         },
         {
           "id": "due",
-          "label": "What's due",
+          "label": "What's Due",
           "type": "panel"
         },
         {
@@ -264,7 +256,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -288,18 +280,28 @@
       "pinned": false,
       "menu": [
         {
-          "id": "attention",
-          "label": "Needs attention",
+          "id": "assets",
+          "label": "Assets",
           "type": "panel"
         },
         {
-          "id": "next",
-          "label": "Next up",
+          "id": "past_due",
+          "label": "Past Due",
+          "type": "panel"
+        },
+        {
+          "id": "due_today",
+          "label": "Due Today",
+          "type": "panel"
+        },
+        {
+          "id": "due_soon",
+          "label": "Due Soon",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -323,18 +325,28 @@
       "pinned": false,
       "menu": [
         {
-          "id": "attention",
-          "label": "Needs attention",
+          "id": "assets",
+          "label": "Assets",
           "type": "panel"
         },
         {
-          "id": "next",
-          "label": "Next up",
+          "id": "past_due",
+          "label": "Past Due",
+          "type": "panel"
+        },
+        {
+          "id": "due_today",
+          "label": "Due Today",
+          "type": "panel"
+        },
+        {
+          "id": "due_soon",
+          "label": "Due Soon",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -358,18 +370,28 @@
       "pinned": false,
       "menu": [
         {
-          "id": "attention",
-          "label": "Needs attention",
+          "id": "assets",
+          "label": "Assets",
           "type": "panel"
         },
         {
-          "id": "next",
-          "label": "Next up",
+          "id": "past_due",
+          "label": "Past Due",
+          "type": "panel"
+        },
+        {
+          "id": "due_today",
+          "label": "Due Today",
+          "type": "panel"
+        },
+        {
+          "id": "due_soon",
+          "label": "Due Soon",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -398,13 +420,23 @@
           "type": "panel"
         },
         {
-          "id": "upkeep",
-          "label": "Upkeep",
+          "id": "past_due",
+          "label": "Past Due",
+          "type": "panel"
+        },
+        {
+          "id": "due_today",
+          "label": "Due Today",
+          "type": "panel"
+        },
+        {
+          "id": "due_soon",
+          "label": "Due Soon",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -434,12 +466,12 @@
         },
         {
           "id": "week",
-          "label": "This week",
+          "label": "This Week",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -464,17 +496,17 @@
       "menu": [
         {
           "id": "story",
-          "label": "Your story",
+          "label": "Your Story",
           "type": "panel"
         },
         {
           "id": "top",
-          "label": "Top skills",
+          "label": "Top Skills",
           "type": "panel"
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -499,7 +531,7 @@
       "menu": [
         {
           "id": "chores",
-          "label": "Chores due",
+          "label": "Chores Due",
           "type": "panel"
         },
         {
@@ -510,7 +542,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -547,7 +579,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -584,7 +616,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -615,7 +647,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -640,18 +672,12 @@
       "menu": [
         {
           "id": "birthdays",
-          "label": "Next birthdays",
+          "label": "Next Birthdays",
           "type": "panel"
         },
         {
-          "id": "ask0",
-          "label": "Who haven't I talked to in a while",
-          "type": "ask",
-          "say": "Who haven't I talked to in a while?"
-        },
-        {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -682,7 +708,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -713,7 +739,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -738,7 +764,7 @@
       "menu": [
         {
           "id": "waiting",
-          "label": "Waiting to file",
+          "label": "Waiting To File",
           "type": "panel"
         },
         {
@@ -749,7 +775,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -786,7 +812,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -817,7 +843,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -848,7 +874,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -885,7 +911,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -916,7 +942,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -947,7 +973,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -978,7 +1004,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",
@@ -1009,7 +1035,7 @@
         },
         {
           "id": "pin",
-          "label": "Pin to glasses",
+          "label": "Pin To Glasses",
           "type": "action",
           "action": {
             "kind": "app.favorite",

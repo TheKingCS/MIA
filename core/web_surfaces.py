@@ -59,7 +59,10 @@ APPS: tuple[App, ...] = (
         "MIA herself: her presence, today's one thing, and a chat with her.", LIFE, (), "How are you, MIA?"),
     App("dashboard", "Dashboard", "📊", "Your life. In sync.", "dashboard.html",
         "Recent activity, active missions, memories, and upcoming items at a glance.", LIFE,
-        ("today", "calendar", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
+        ("today", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
+    App("calendar", "Calendar", "📅", "Everything with a date.", "calendar.html",
+        "Your events, plus upkeep, bills, meals, training and birthdays, by day.", LIFE,
+        ("calendar",), "What's on my calendar this week?"),
     App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", "greenhouse.html",
         "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance",),
         "What needs doing in the greenhouse?"),
@@ -144,6 +147,8 @@ APPS: tuple[App, ...] = (
         "Make the text bigger."),
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
+# Apps that exist only as web screens (no PySide6 module of their own).
+WEB_ONLY = frozenset({"calendar"})
 
 # Never personal: general encouragement, one a day (STATIC).
 SAYINGS = (
@@ -162,7 +167,7 @@ QUICK_ACTIONS = (
     {"id": "quick_add", "label": "Quick Add", "icon": "➕", "talk": "Add ", "href": "assistant.html?draft=Add%20"},
     {"id": "voice", "label": "Voice", "icon": "🎙", "talk": "", "href": "assistant.html?voice=1"},
     {"id": "calendar", "label": "Calendar", "icon": "📅", "talk": "What's on my calendar this week?",
-     "href": "assistant.html?ask=What%27s%20on%20my%20calendar%20this%20week%3F"},
+     "href": "calendar.html"},
     {"id": "journal", "label": "Journal", "icon": "📓", "talk": "I want to journal.",
      "href": "assistant.html?draft=I%20want%20to%20journal."},
     {"id": "assistant", "label": "MIA Assistant", "icon": "🗨", "talk": "", "href": "assistant.html"},

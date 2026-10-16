@@ -39,7 +39,7 @@
     $("wins-empty").hidden = home.wins.length > 0;
 
     $("quick").replaceChildren(...home.quick_actions.map((q) =>
-      el("button", { type: "button", onclick: () => talk(true, q.talk) },
+      el("button", { type: "button", onclick: () => q.href && !q.href.startsWith("assistant.html") ? (location.href = q.href) : talk(true, q.talk) },
         el("span", { class: "ico", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(q.id)) || q.icon), q.label)));
 
     $("glance").replaceChildren(...home.glance.map((c) => {

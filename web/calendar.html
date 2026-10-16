@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Calendar — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="calendar" class="mod-calendar">
+  <!--
+    Calendar (claude, 2026-10-16, Zac: "filled, in the app and on the
+    glasses"): everything in MIA with a date, from MIA.calendar()
+    (core/calendar_view.py): your events, upkeep, bills and pay, planned
+    meals and prep, training days and birthdays. Sorted Past Due / Due
+    Today / Due Soon, and a month. Your own events are actions
+    (event.add, event.delete); the rest change where they live.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">📅</span> <span id="hero-name">Calendar</span></h1>
+        <p class="tagline" id="hero-tagline">Everything with a date.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="shell.js"></script>
+  <script src="calendar.js"></script>
+</body>
+</html>

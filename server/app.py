@@ -566,6 +566,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return apps_page(view_for(context, profile_id))
 
+    # The Calendar (Zac, 2026-10-16): everything with a date, by day
+    # (core/calendar_view.py). ?month=YYYY-MM picks the month grid.
+    @app.get("/api/calendar")
+    def web_calendar(month: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.calendar_view import calendar_page
+
+        return _screen(profile_id, "calendar", lambda view: calendar_page(view, month=month or None))
+
     # The glasses (Zac 2026-10-16, H-0041 Phase 2): app cards and each
     # app's quick action menu (core/glasses.py). Actions still go through
     # /api/actions; a panel line only carries the glasses-safe kinds.

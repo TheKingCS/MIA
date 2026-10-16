@@ -1,21 +1,21 @@
 {
   "greeting": "Good afternoon, Robin",
   "subtitle": "Another day to build the life you want.",
-  "date": "Tue, Oct 6, 2026",
+  "date": "Fri, Oct 16, 2026",
   "focus": [
     {
       "when": "overdue",
       "title": "Sharpen blades: Mower",
-      "detail": "10 days late",
+      "detail": "11 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "8fe541f12b",
+      "record_id": "7a4464beaf",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "8fe541f12b"
+          "task_id": "7a4464beaf"
         }
       },
       "page": "maintenance.html"
@@ -23,16 +23,16 @@
     {
       "when": "overdue",
       "title": "HVAC filter: Maple House",
-      "detail": "5 days late",
+      "detail": "6 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "69869ef27b",
+      "record_id": "58cb39bfd5",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "69869ef27b"
+          "task_id": "58cb39bfd5"
         }
       },
       "page": "maintenance.html"
@@ -40,16 +40,16 @@
     {
       "when": "overdue",
       "title": "Check oil: Mower",
-      "detail": "13 days late",
+      "detail": "14 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "055371f062",
+      "record_id": "6cbf096c22",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "055371f062"
+          "task_id": "6cbf096c22"
         }
       },
       "page": "maintenance.html"
@@ -57,16 +57,16 @@
     {
       "when": "overdue",
       "title": "Tire rotation: Pickup truck",
-      "detail": "8 days late",
+      "detail": "9 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "886642885c",
+      "record_id": "68e719deaa",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "886642885c"
+          "task_id": "68e719deaa"
         }
       },
       "page": "maintenance.html"
@@ -74,52 +74,35 @@
     {
       "when": "overdue",
       "title": "Water: Raised bed",
-      "detail": "1 day late",
+      "detail": "2 days late",
       "time": "",
       "module_id": "maintenance",
-      "record_id": "58c802b04b",
+      "record_id": "cd4ef5ed1b",
       "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "58c802b04b"
+          "task_id": "cd4ef5ed1b"
         }
       },
       "page": "maintenance.html"
     },
     {
       "when": "today",
-      "title": "Daily push-ups: 30 today",
+      "title": "Trash day",
       "detail": "",
       "time": "",
       "module_id": "calendar",
-      "record_id": "395acee3d8",
+      "record_id": "03332a99b7",
       "icon": "📅",
       "action": null,
-      "page": null
-    },
-    {
-      "when": "today",
-      "title": "Payday: Pay",
-      "detail": "$1,500.00",
-      "time": "",
-      "module_id": "budget",
-      "record_id": "4d4e8da331",
-      "icon": "💰",
-      "action": {
-        "kind": "income.receive",
-        "label": "Mark received",
-        "params": {
-          "source_id": "4d4e8da331"
-        }
-      },
-      "page": "money.html"
+      "page": "calendar.html"
     },
     {
       "when": "today",
       "title": "Use up soon",
-      "detail": "chicken",
+      "detail": "chicken, Milk",
       "time": "",
       "module_id": "kitchen",
       "record_id": null,
@@ -128,8 +111,26 @@
       "page": "kitchen.html"
     }
   ],
-  "upcoming": [],
-  "saying": "Do the next right thing.",
+  "upcoming": [
+    {
+      "when": "soon",
+      "title": "Test run: Generator",
+      "detail": "due in 3 days",
+      "time": "",
+      "module_id": "maintenance",
+      "record_id": "d4364f8f41",
+      "icon": "🔧",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "d4364f8f41"
+        }
+      },
+      "page": "maintenance.html"
+    }
+  ],
+  "saying": "A little done is more than a lot planned.",
   "quick_actions": [
     {
       "id": "quick_add",
@@ -150,7 +151,7 @@
       "label": "Calendar",
       "icon": "📅",
       "talk": "What's on my calendar this week?",
-      "href": "assistant.html?ask=What%27s%20on%20my%20calendar%20this%20week%3F"
+      "href": "calendar.html"
     },
     {
       "id": "journal",
@@ -172,7 +173,7 @@
       "app": "budget",
       "icon": "💰",
       "title": "Money",
-      "line": "Insurance $340.00 in 5d · $2,290.00 left each month after bills",
+      "line": "Insurance $340.00 in 4d · $2,290.00 left each month after bills",
       "tone": "calm",
       "page": "money.html"
     },
@@ -196,7 +197,7 @@
       "app": "kitchen",
       "icon": "🍳",
       "title": "Kitchen",
-      "line": "5 recipes · 4 on the grocery list · chicken expires in 1d",
+      "line": "9 recipes · 4 on the grocery list · chicken expires in 0d",
       "tone": "attention",
       "page": "kitchen.html"
     },
@@ -204,7 +205,7 @@
       "app": "workout",
       "icon": "🏋",
       "title": "Workout",
-      "line": "5 sessions this week · last: Beginner full body (2026-10-06)",
+      "line": "4 sessions this week · last: Beginner full body (2026-10-15)",
       "tone": "calm",
       "page": "workout.html"
     },
@@ -212,59 +213,48 @@
       "app": "missions",
       "icon": "🏆",
       "title": "Missions",
-      "line": "7 active",
+      "line": "15 active",
       "tone": "calm",
       "page": "missions.html"
     }
   ],
   "wins": [
     {
-      "at": "2026-10-06T15:18:45",
-      "type": "maintenance_done",
-      "summary": "Oil & filter: Mower",
+      "at": "2026-10-16T07:03:45",
+      "type": "food_logged",
+      "summary": "Ate Protein oats (breakfast), 43.5 g protein",
+      "refs": [],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-16T07:03:45",
+      "type": "meal_logged",
+      "summary": "Cooked Protein oats",
       "refs": [
-        "maintenance_task:88be20c93b",
-        "asset:e5f4bff5be"
+        "meal:17aa71b166",
+        "recipe:102996cb96"
       ],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T15:18:34",
-      "type": "mission_completed",
-      "summary": "Completed the mission Read 3 books",
-      "refs": [
-        "mission:2c6c89cd66",
-        "skill:learning"
-      ],
+      "at": "2026-10-16T06:58:05",
+      "type": "mission_missed",
+      "summary": "Today's meals passed. Nothing lost; it's there again next time.",
+      "refs": [],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T15:18:34",
-      "type": "skill_evidence",
-      "summary": "30 XP in learning from Read 3 books",
-      "refs": [
-        "skill:learning",
-        "mission:2c6c89cd66"
-      ],
+      "at": "2026-10-16T06:58:05",
+      "type": "mission_missed",
+      "summary": "Packed lunch passed. Nothing lost; it's there again next time.",
+      "refs": [],
       "source": "manual"
     },
     {
-      "at": "2026-10-06T15:18:34",
-      "type": "property_expense",
-      "summary": "Maintenance for Maple House: $85.00",
-      "refs": [
-        "property:ac6f646035",
-        "expense:8e3ec9d652"
-      ],
-      "source": "manual"
-    },
-    {
-      "at": "2026-10-06T15:18:34",
-      "type": "workout_logged",
-      "summary": "Worked out: a session, 15 min",
-      "refs": [
-        "workout:b9643b3889"
-      ],
+      "at": "2026-10-16T06:58:05",
+      "type": "mission_missed",
+      "summary": "Protein: 170 g passed. Nothing lost; it's there again next time.",
+      "refs": [],
       "source": "manual"
     }
   ],

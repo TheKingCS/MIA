@@ -1131,3 +1131,34 @@ dialog.confirm::backdrop { background: rgba(var(--rgb-bg), 0.72); }
 .figure { container-type: inline-size; }
 .figure-n { white-space: nowrap; font-size: min(var(--text-lg), calc((100cqi - 24px) / 6.2)); }
 .strip .cell .n { white-space: nowrap; }
+
+/* Title Case (Zac, 2026-10-16): Buttons, Tabs And Headers Capitalize
+   Every Word. Small mono labels keep their spaced capitals. */
+button, .btn, a.btn, .ptabs button, .chip-button, .seg button,
+h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
+  text-transform: capitalize;
+}
+
+/* Calendar (claude, 2026-10-16) */
+.cal-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 12px; align-items: center; }
+.cal-row .row-buttons { grid-column: 2 / -1; }
+.cal-row.overdue { border-left: 3px solid var(--bad); }
+.cal-ico svg { width: 22px; height: 22px; color: var(--accent); }
+.cal-main { min-width: 0; }
+.cal-kind { font-size: var(--text-xs, 11px); white-space: nowrap; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+.cal-wd { text-align: center; font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint); padding: 4px 0; }
+.cal-day { min-height: 52px; padding: 6px 4px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+  background: rgba(var(--rgb-panel-2), 0.6); color: var(--text); display: grid; justify-items: center; align-content: start; gap: 4px; cursor: pointer; }
+.cal-day.out { opacity: 0.35; }
+.cal-day.today { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.cal-day.picked { background: rgba(var(--rgb-accent), 0.14); }
+.cal-day.late .n { color: var(--bad); }
+.cal-day .n { font-variant-numeric: tabular-nums; font-size: var(--text-sm); }
+.cal-day .dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+.cal-day .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.cal-day .dot.k-bill, .cal-day .dot.k-income { background: var(--ok); }
+.cal-day .dot.k-upkeep { background: var(--attention, var(--soon)); }
+.cal-day .dot.k-birthday { background: var(--text-dim); }
+.cal-day .dot.k-meal, .cal-day .dot.k-prep { background: rgba(var(--rgb-accent), 0.55); }

@@ -1,14 +1,14 @@
 {
   "person": {
-    "profile_id": "a1b2c3d4",
+    "profile_id": "69c4bde1",
     "name": "Robin",
     "child": false,
     "level": 2,
-    "total_xp": 175,
-    "xp_into_level": 75,
+    "total_xp": 200,
+    "xp_into_level": 100,
     "xp_for_level": 200
   },
-  "date": "Tue, Oct 6, 2026",
+  "date": "Fri, Oct 16, 2026",
   "apps": [
     {
       "id": "web_home",
@@ -23,6 +23,13 @@
       "icon": "📊",
       "tagline": "Your life. In sync.",
       "page": "dashboard.html"
+    },
+    {
+      "id": "calendar",
+      "name": "Calendar",
+      "icon": "📅",
+      "tagline": "Everything with a date.",
+      "page": "calendar.html"
     },
     {
       "id": "greenhouse",

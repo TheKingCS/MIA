@@ -58,8 +58,8 @@
     try { data = await MIA.glasses(mission); } catch (e) { data = data || { apps: [], others: [] }; }
   }
 
-  const ALL = { id: "__all", name: "All apps" };
-  const BACK_CARD = { id: "__back", name: "Back", status: "to your pinned apps" };
+  const ALL = { id: "__all", name: "All Apps" };
+  const BACK_CARD = { id: "__back", name: "Back", status: "To your pinned apps" };
   function cards() {
     const d = data || {};
     if (showingAll) return (d.others || []).concat([BACK_CARD]);
@@ -173,8 +173,8 @@
     const ul = el("ul", "rows");
     items.slice(start, start + 5).forEach((it, k) => {
       const i = start + k;
-      const li = el("li", [i === sel ? "sel" : "", it.back ? "back" : "", it.tone ? "t-" + it.tone : ""].join(" ").trim());
-      li.append(el("span", "t", esc(it.text)));
+      const li = el("li", [i === sel ? "sel" : "", it.back ? "back" : "", it.cap ? "cap" : "", it.tone ? "t-" + it.tone : ""].join(" ").trim());
+      li.append(el("span", "t", esc(it.back ? "‹ " + it.text : it.text)));
       if (it.detail) li.append(el("span", "d", esc(it.detail)));
       if (it.verb) li.append(el("span", "v", esc(it.verb)));
       li.dataset.row = String(i);
@@ -184,17 +184,49 @@
       (start + 5 < n ? "▼ " + (n - start - 5) + " more" : ""));
     return [ul, more];
   }
-  const BACK_ROW = { text: "Back", back: true };
+  const BACK_ROW = { text: "Back", back: true, kind: "back" };
 
   function menuRows(a) {
-    return (a.menu || []).map((m) => ({ text: m.label, verb: m.type === "ask" ? "ask" : m.type === "action" ? "" : "›" }))
+    return (a.menu || []).map((m) => ({ text: (m.type === "action" ? "★ " : "") + m.label, cap: true,
+      verb: m.type === "ask" ? "ask" : m.type === "action" ? "" : "›" }))
       .concat([BACK_ROW]);
   }
+  // Sorting a list by Past Due / Due Today / Due Soon (Zac, 2026-10-16):
+  // its first row; select cycles the sort, the rows follow.
+  let sortIndex = 0;
+  function sorts() { return (panel && panel.filters) || null; }
   function panelRows() {
-    return ((panel && panel.lines) || []).map((l) => ({
-      text: l.text, detail: l.detail, tone: l.tone,
-      verb: l.action ? l.action.label : l.pick ? l.pick.label : "",
-    })).concat([BACK_ROW]);
+    if (!panel) return [BACK_ROW];
+    const rows = [];
+    const f = sorts();
+    const want = f ? f[sortIndex % f.length].id : null;
+    if (f) {
+      const cur = f[sortIndex % f.length];
+      rows.push({ kind: "sort", text: "Sort: " + cur.label + " (" + cur.count + ")", verb: "Sort", cap: true });
+    }
+    panel.lines.forEach((l) => {
+      if (want && l.bucket !== want) return;
+      rows.push({ kind: "line", line: l, text: l.text, detail: l.detail, tone: l.tone,
+        verb: l.action ? l.action.label : l.pick ? l.pick.label : l.recipe ? "Open" : "" });
+    });
+    return rows.concat([BACK_ROW]);
+  }
+  function isCarousel() { return !!(panel && panel.lines.length && panel.lines[0].recipe); }
+
+  // A recipe on the glasses: its picture first, then its ingredients
+  // (six to a page) and its steps (one to a page). Move pages; select goes back.
+  let recipe = null, page = 0;
+  function recipePages(r) {
+    const pages = [{ kind: "cover" }];
+    for (let i = 0; i < r.ingredients.length; i += 6) pages.push({ kind: "ingredients", items: r.ingredients.slice(i, i + 6), at: i });
+    r.steps.forEach((step, i) => pages.push({ kind: "step", text: step, n: i + 1 }));
+    return pages;
+  }
+  function recipePhoto(r, cls) {
+    const box = el("div", cls);
+    if (r.photo) { const img = el("img"); img.src = r.photo; img.alt = ""; box.append(img); }
+    else { const icon = window.MIAIcons && MIAIcons.svg("kitchen"); if (icon) box.append(icon); }
+    return box;
   }
 
   function show(v) {
@@ -212,10 +244,10 @@
       if (!a) {
         parts.push(kicker("Apps"), el("div", "body", '<p class="empty">MIA couldn\'t load your apps.</p>'), hint("back"));
       } else if (a.id === "missions" && a.mission !== undefined) {
-        parts.push(kicker(a.name, (appIndex + 1) + " / " + list.length), missionCard(a.mission), hint("select mission · log progress"));
+        parts.push(kicker(a.name, (appIndex + 1) + " / " + list.length), missionCard(a.mission), hint("select mission"));
       } else {
         const d = data || {};
-        const where = showingAll ? "All apps" : d.pinned ? "Pinned" : "Apps";
+        const where = showingAll ? "All Apps" : d.pinned ? "Pinned" : "Apps";
         const body = el("div", "body");
         const card = el("div", "card");
         card.append(badge(a), el("p", "name", esc(a.name)));
@@ -230,24 +262,57 @@
       const body = el("div", "body");
       body.append(...rowsOf(rows, row));
       parts.push(kicker(a.name), body, hint(rows[row] && rows[row].back ? "go back" : "choose"));
+    } else if (view === "panel" && isCarousel()) {
+      const item = (a.menu || [])[menuIndexOf()] || {};
+      const rows = panelRows(), r = rows[row];
+      const body = el("div", "body");
+      if (r.back) body.append(el("div", "card", '<p class="name">Back</p><p class="status">to the Kitchen menu</p>'));
+      else {
+        const rec = r.line.recipe;
+        const card = el("div", "recipe-card");
+        card.append(recipePhoto(rec, "photo"), el("p", "r-name", esc(rec.name)));
+        if (r.detail) card.append(el("p", "status", esc(r.detail)));
+        body.append(card);
+      }
+      parts.push(kicker(a.name + " · " + (item.label || ""), (row + 1) + " / " + rows.length), body,
+        hint(r.back ? "go back" : "open recipe"));
+    } else if (view === "recipe") {
+      const pages = recipePages(recipe), pg = pages[page];
+      const body = el("div", "body");
+      if (pg.kind === "cover") {
+        const card = el("div", "recipe-card");
+        card.append(recipePhoto(recipe, "photo"), el("p", "r-name", esc(recipe.name)));
+        card.append(el("p", "status", esc(recipe.ingredients.length + " ingredients · " + recipe.steps.length + " steps")));
+        body.append(card);
+      } else if (pg.kind === "ingredients") {
+        body.append(el("p", "title", "Ingredients"));
+        const ul = el("ul", "r-list");
+        pg.items.forEach((t) => ul.append(el("li", "", esc(t))));
+        body.append(ul);
+      } else {
+        body.append(el("p", "title", "Step " + pg.n + " Of " + recipe.steps.length), el("p", "r-step" + (pg.text.length > 180 ? " long" : ""), esc(pg.text)));
+      }
+      parts.push(kicker(recipe.name, (page + 1) + " / " + pages.length), body, hint("back to recipes"));
     } else if (view === "panel") {
       const item = (a.menu || [])[menuIndexOf()] || {};
       const body = el("div", "body");
+      const rows = panelRows();
       if (!panel) body.append(el("p", "empty", "…"));
       else {
         if (panel.title && panel.title !== item.label) body.append(el("p", "title", esc(panel.title)));
         if (!panel.lines.length) body.append(el("p", "empty", esc(panel.empty || "Nothing here.")));
-        body.append(...rowsOf(panelRows(), row));
+        else if (rows.length === (sorts() ? 2 : 1)) body.append(el("p", "empty", "Nothing here."));
+        body.append(...rowsOf(rows, row));
         if (panel.more) body.append(el("p", "more", "+ " + panel.more + " more on your phone"));
       }
-      const r = panel ? panelRows()[row] : null;
-      const line = panel && panel.lines[row];
+      const r = rows[row] || BACK_ROW;
+      const line = r.line;
       parts.push(kicker(a.name + " · " + (item.label || "")), body,
-        hint(r && r.back ? "go back" : line && (line.action || line.pick) ? (line.action || line.pick).label : "—"));
+        hint(r.back ? "go back" : r.kind === "sort" ? "change sort" : line && (line.action || line.pick) ? (line.action || line.pick).label : "—"));
     } else if (view === "confirm") {
       const body = el("div", "body");
       body.append(el("p", "say", esc(proposal ? proposal.summary : "")));
-      body.append(...rowsOf([{ text: "Approve", verb: "✓" }, { text: "Cancel", back: true }], row));
+      body.append(...rowsOf([{ text: "Approve", verb: "✓" }, { text: "Cancel", kind: "cancel" }], row));
       parts.push(kicker("Confirm"), body, hint(row === 0 ? "approve" : "cancel"));
     } else if (view === "result") {
       const body = el("div", "body");
@@ -265,18 +330,19 @@
     } else {
       box.append(el("p", "m-name", esc((m.icon ? m.icon + " " : "") + m.name)));
       const objs = el("ul", "m-objs");
-      m.objectives.slice(0, 4).forEach((o) => {
+      const shown = m.objectives.length > 4 ? 3 : 4;
+      m.objectives.slice(0, shown).forEach((o) => {
         const li = el("li", o.done ? "done" : "");
         li.append(el("i", "box", o.done ? "✓" : ""), el("span", "", esc(o.text)));
         if (!o.done && o.target && o.target !== 1) li.append(el("em", "", (o.progress || 0) + "/" + o.target));
         objs.append(li);
       });
       box.append(objs);
-      if (m.objectives.length > 4) box.append(el("p", "m-more", "+ " + (m.objectives.length - 4) + " more objectives"));
+      if (m.objectives.length > shown) box.append(el("p", "m-more", "+ " + (m.objectives.length - shown) + " more objectives"));
       const pct = m.total ? Math.round(100 * m.done / m.total) : 0;
       box.append(el("div", "m-bar", '<i style="width:' + pct + '%"></i>'));
     }
-    box.append(el("div", "m-button", "Select mission"));
+    box.append(el("div", "m-button", "Select Mission"));
     body.append(box);
     return body;
   }
@@ -302,6 +368,10 @@
       appIndex = (next + n) % n;
       render();
       return;
+    }
+    if (view === "recipe") {
+      const n = recipePages(recipe).length;
+      page = Math.max(0, Math.min(n - 1, page + dir)); render(); return;
     }
     const count = view === "menu" ? menuRows(app()).length : view === "panel" ? (panel ? panelRows().length : 0)
       : view === "confirm" ? 2 : 0;
@@ -339,11 +409,14 @@
       await openPanel();
       return;
     }
+    if (view === "recipe") { row = Math.max(0, row); show("panel"); return; }
     if (view === "panel") {
       if (!panel) return;
       const rows = panelRows();
       if (rows[row].back) { row = menuIndex; panel = null; show("menu"); return; }
-      const line = panel.lines[row];
+      if (rows[row].kind === "sort") { sortIndex = (sortIndex + 1) % sorts().length; render(); return; }
+      const line = rows[row].line;
+      if (line.recipe) { recipe = line.recipe; page = 0; show("recipe"); return; }
       if (line.pick) {  // which mission the Missions card shows
         mission = line.pick.mission; store.set("mia.glasses.mission", mission);
         await load();
@@ -378,7 +451,7 @@
   }
   async function openPanel() {
     const a = app(), item = a && a.menu[menuIndex];
-    panel = null; row = 0; show("panel");
+    panel = null; row = 0; sortIndex = 0; show("panel");
     try { panel = await MIA.glassesPanel(a.id, item.id, mission); }
     catch (err) { panel = { lines: [], empty: err.message, more: 0 }; }
     row = 0;
@@ -403,6 +476,7 @@
     if (view === "home") { if (voiceState === "answered") orbState("idle"); return; }
     if (view === "confirm") { cancel(); return; }
     if (view === "result") { leaveResult(); return; }
+    if (view === "recipe") { show("panel"); return; }
     if (view === "panel") { row = menuIndex; panel = null; show("menu"); return; }
     if (view === "menu") { row = 0; show("cards"); return; }
     if (showingAll) { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
