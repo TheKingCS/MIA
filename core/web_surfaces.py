@@ -153,7 +153,9 @@ WEB_ONLY = frozenset({"calendar"})
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because
 # Garage and Greenhouse open Maintenance to add and edit things.
-RETIRED = frozenset({"maintenance", "property"})
+# Zac, 2026-10-16: the Dashboard said what Home says; Home took its Upcoming
+# list and the Dashboard went (its /api/dashboard data still feeds Home).
+RETIRED = frozenset({"maintenance", "property", "dashboard"})
 
 # Never personal: general encouragement, one a day (STATIC).
 SAYINGS = (

@@ -11,8 +11,8 @@ def test_web_files_must_be_rechecked_and_unchanged_ones_are_cheap():
     app = FastAPI()
     app.mount("/web", _Fresh(directory="web", html=True))
     client = TestClient(app)
-    first = client.get("/web/dashboard.js")
+    first = client.get("/web/welcome.js")
     assert first.status_code == 200
     assert first.headers["cache-control"] == "no-cache"
-    again = client.get("/web/dashboard.js", headers={"if-none-match": first.headers["etag"]})
+    again = client.get("/web/welcome.js", headers={"if-none-match": first.headers["etag"]})
     assert again.status_code == 304

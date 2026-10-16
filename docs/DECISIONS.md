@@ -481,3 +481,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Aside should not be a thing in the missions app"): no Give Up button and
   no tab; Delete removes a mission. Missions tabs show their names only.
 - Related: DEC-0014, DEC-0017
+
+### DEC-0027: Home replaces the Dashboard
+- Status: APPROVED
+- Proposed by: zac, 2026-10-16 · Approved by: zac, 2026-10-16
+- Decision: "we can delete the dashboard section all together because they
+  have all the same info basically." Home shows the greeting, Today's Focus,
+  Upcoming and the level card, with no quick buttons and no date; Apps
+  reaches everything else. Selecting MIA on Home opens the chat with her.
+  The Dashboard app is retired everywhere (`RETIRED` in core/web_surfaces.py);
+  its data endpoint keeps feeding Home.
+- Related: DEC-0017, DEC-0025

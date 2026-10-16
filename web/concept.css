@@ -157,7 +157,7 @@ body[data-app] .hero {
     bottom: calc(8px + env(safe-area-inset-bottom));
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     padding: 6px;
     border-radius: var(--radius);
     background: rgba(var(--rgb-panel), 0.94);
@@ -221,6 +221,8 @@ body[data-app] .hero {
 .home-hero .weather-chip { display: block; }
 .home-row { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 12px 0; }
 .home-focus h2 { margin: 0 0 8px; font-size: var(--text-lg); }
+.home-upcoming { margin-top: var(--gap); }
+.home-upcoming h2 { margin: 0 0 8px; font-size: var(--text-lg); }
 .home-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
 .quick-tile {
   display: grid; justify-items: center; gap: 6px; padding: 14px 4px; color: var(--text); text-decoration: none;

@@ -18,56 +18,6 @@
           "favorite": false
         },
         {
-          "id": "dashboard",
-          "name": "Dashboard",
-          "icon": "📊",
-          "tagline": "Your life. In sync.",
-          "description": "Recent activity, active missions, memories, and upcoming items at a glance.",
-          "page": "dashboard.html",
-          "on_web": true,
-          "shown": true,
-          "can_hide": false,
-          "ask": "What's on today?",
-          "tools": [
-            {
-              "name": "add_alarm",
-              "does": "Add alarm",
-              "detail": "Create a new alarm in MIA"
-            },
-            {
-              "name": "delete_alarm",
-              "does": "Delete alarm",
-              "detail": "Delete an existing alarm in MIA by its label."
-            },
-            {
-              "name": "list_alarms",
-              "does": "See alarms",
-              "detail": "List the user's current alarms in MIA"
-            },
-            {
-              "name": "link_my_reason",
-              "does": "Link my reason",
-              "detail": "Save one of the user's reasons: something they do (goal) serves a bigger goal (serves)."
-            },
-            {
-              "name": "mark_goal_achieved",
-              "does": "Mark goal achieved",
-              "detail": "Mark one of the user's goals achieved (e.g."
-            },
-            {
-              "name": "show_my_why",
-              "does": "See my why",
-              "detail": "Read back the user's chain of reasons with the facts behind each one."
-            },
-            {
-              "name": "unlink_my_reason",
-              "does": "Unlink my reason",
-              "detail": "Remove the link from one of the user's goals to the bigger goal it served."
-            }
-          ],
-          "favorite": true
-        },
-        {
           "id": "calendar",
           "name": "Calendar",
           "icon": "📅",
@@ -671,7 +621,6 @@
     }
   ],
   "favorites": [
-    "dashboard",
     "kitchen",
     "workout",
     "missions",

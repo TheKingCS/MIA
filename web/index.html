@@ -13,16 +13,16 @@
 <body data-app="web_home">
   <!--
     Home (DEC-0018, the mobile concept's Home; claude): MIA's greeting, the
-    day's focus as a checklist (ticking proposes the item's action), quick
-    actions into MIA Assistant, level and XP (Zac, 2026-10-06: no saying
-    card here; the Dashboard keeps it). Data:
-    MIA.dashboard() + the frame's MIA.shell(). MIA's face: presence.html.
+    day's focus as a checklist (ticking proposes the item's action), what's
+    upcoming, level and XP. Zac, 2026-10-16: no quick buttons (Apps reaches
+    everything), Upcoming moved here and the Dashboard went; MIA's badge
+    opens the chat with her. Data: MIA.dashboard() + the frame's MIA.shell().
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main home-main">
       <div class="home-top">
-        <a class="home-brand" href="presence.html" aria-label="MIA">
+        <a class="home-brand" href="assistant.html" aria-label="Talk to MIA">
           <span class="home-badge" aria-hidden="true"><span class="brand-reactor"></span></span>
           <span><strong>MIA</strong><small>Your Life. In Sync.</small></span>
         </a>
@@ -38,7 +38,6 @@
       </div>
 
       <header class="hero home-hero">
-        <span class="weather-chip" id="date-chip"></span>
         <h1 id="greeting">Good morning</h1>
         <p class="tagline" id="subtitle"></p>
       </header>
@@ -51,7 +50,11 @@
         </section>
       </div>
 
-      <nav class="home-quick" id="quick" aria-label="Quick actions"></nav>
+      <section class="glass home-upcoming" aria-labelledby="up-h">
+        <h2 id="up-h">Upcoming</h2>
+        <ul class="focus-list" id="upcoming"></ul>
+        <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
+      </section>
 
       <a class="glass home-level" id="level" href="skills.html"></a>
     </main>

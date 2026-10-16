@@ -93,7 +93,7 @@ def test_each_person_has_their_own_apps_screen(people):
     sam_menu = [m.module_id for m in focus_presets.menu_modules(sam_view, _modules())]
     zac_menu = [m.module_id for m in focus_presets.menu_modules(context, _modules())]
     assert sam_menu[1] == "classroom" and "lab" not in sam_menu
-    assert zac_menu == _APPS
+    assert zac_menu == [a for a in _APPS if a != "dashboard"]  # retired: Home has it (2026-10-16)
     assert focus_presets.set_app_visible(sam_view, "lab", True)
     assert "lab" in [m.module_id for m in focus_presets.menu_modules(sam_view, _modules())]
     assert not focus_presets.set_app_visible(sam_view, "settings", False)

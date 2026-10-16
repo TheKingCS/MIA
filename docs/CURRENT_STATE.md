@@ -65,6 +65,7 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-16 · claude · **Home is the one start screen; the Dashboard is gone (Zac).** Home shows the greeting, Today's Focus, Upcoming and your level; no quick buttons, no date. MIA's badge on Home opens the chat with her (not the Briefing/Home/Chat presence screen). The bottom bar is Home and Apps; `dashboard` is in `RETIRED` (hidden on web, glasses and desktop menus) and dashboard.html redirects to Home. `/api/dashboard` stays: it feeds Home.
 - 2026-10-16 · claude · **Fixed: the phone app kept showing old screens after an update.** Its web view reused saved copies of the web files (the server never said to re-check), so test build 48 still showed the old Dashboard, lowercase headers and the cut-off chat bar. MIA's server now marks every web file "no-cache" (an unchanged file is a quick 304), and the phone app never uses saved copies and clears them on start.
 - 2026-10-16 · claude · **Dashboard trimmed to Today's Focus, Upcoming and At A Glance (Zac).** The quick buttons (Quick Add, Voice, MIA Assistant, Calendar, Journal), the quote and Recent Wins are gone; Apps reaches all of it.
 - 2026-10-16 · claude · **Skills as stacked rows (Zac: "more like At A Glance").** Each skill is a full-width card, icon beside its name, one under another, so long names fit.

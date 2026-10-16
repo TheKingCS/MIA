@@ -18,13 +18,6 @@
       "page": "index.html"
     },
     {
-      "id": "dashboard",
-      "name": "Dashboard",
-      "icon": "📊",
-      "tagline": "Your life. In sync.",
-      "page": "dashboard.html"
-    },
-    {
       "id": "calendar",
       "name": "Calendar",
       "icon": "📅",

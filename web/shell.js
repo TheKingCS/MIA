@@ -224,8 +224,7 @@
       el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
     bar.replaceChildren(
       tab("index.html", "web_home", "home", "🏠", "Home"),
-      tab("apps.html", "module_browser", "apps", "▦", "Apps"),
-      tab("dashboard.html", "dashboard", "dashboard", "📊", "Dashboard"));
+      tab("apps.html", "module_browser", "apps", "▦", "Apps"));
   }
 
   // ---------------------------------------------------------------- MIA, everywhere

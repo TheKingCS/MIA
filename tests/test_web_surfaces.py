@@ -44,7 +44,7 @@ def test_the_shell_is_the_persons_own(world):
     data = shell(world, TODAY)
     assert data["person"]["name"] == "Robin" and data["person"]["level"] == 1
     ids = [a["id"] for a in data["apps"]]
-    assert ids[:2] == ["web_home", "dashboard"] and "budget" in ids and "real_estate" in ids
+    assert ids[0] == "web_home" and "dashboard" not in ids and "budget" in ids and "real_estate" in ids
     assert all(a["page"] for a in data["apps"])
     assert "Workshop" in data["on_pc_only"]
 
@@ -58,7 +58,7 @@ def test_a_child_sees_only_child_apps(world):
     ids = {a["id"] for a in data["apps"]}
     assert data["person"]["child"]
     assert not ids & {"budget", "real_estate", "garage"}
-    assert {"web_home", "dashboard", "missions", "kitchen"} <= ids
+    assert {"web_home", "missions", "kitchen"} <= ids
     page = dashboard(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
     assert page["child"] and not any(c["app"] == "budget" for c in page["glance"])
 
