@@ -35,8 +35,9 @@
   }
 
   // ------------------------------------------------------------ paste a whole plan (core/plan_import.py)
+  // ?import=1 (from Workout / Kitchen's "Import plan" door) opens this section on load.
   let pasted = "";  // survives a live refresh
-  let pasteOpen = false;
+  let pasteOpen = new URLSearchParams(location.search).get("import") === "1";
   const EXAMPLE = "GOALS\nProtein: 170 g\nCalories: 2300\nGoal weight: 175 lb by 2027-03-01\nWorkouts a week: 3\n\n" +
     "TRAINING\nDays: Mon, Wed, Fri\nDay: Push\nDips 3x8\nL-sit 3x20s\n\nSKILL: Handstand (12 min a day)\nDrills: Wall walks\nWall hold 60s\n\n" +
     "MILESTONES\n60 s wall handstand\n\nMEALS\nPacked lunch: yes\nPrep day: Sun\nAllergies: none\n\n" +
@@ -219,5 +220,6 @@
     fit = f;
     recipes = k && k.available ? k.recipes.filter((r) => !r.locked).map((r) => ({ id: r.id, name: r.name })) : [];
     draw();
+    if (pasteOpen) { const box = $("paste-box"); if (box) box.focus(); }
   });
 })();
