@@ -452,4 +452,5 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Changes: H-0044's "most used first" ordering is settled by Zac's own
   words in chat: **favorites, in the order starred**, no usage tracking.
 - Amended (zac, 2026-10-16): **layout.** Home is the orb alone (idle animation; Saturn-like rings while listening), no chat bar or text anywhere on it; every screen fits one fixed 600×600 composition with no scrolling; navigation is two moves, move and select (every list ends with Back); the Missions card shows the active mission, its objectives and a Select mission button (H-0046).
-- Related: DEC-0016, DEC-0023, H-0041, H-0042, H-0043, H-0044, H-0045, H-0046
+- Amended (zac, 2026-10-16): **Missions right after the orb** (before pins); the Today card leaves the glasses and its due items move into Missions → Select Mission, sortable **Past Due / Due Today / Due Soon**, the format for every app with dated things (equipment, Rentals, the Calendar). A Calendar app filled from everything with a date, in the app and on the glasses. Kitchen on the glasses: Recipes (with photos), Today's Meal Plan, My Pantry, Grocery List. **Title Case** for buttons and headers everywhere (H-0048).
+- Related: DEC-0016, DEC-0023, H-0041, H-0042, H-0043, H-0044, H-0045, H-0046, H-0048

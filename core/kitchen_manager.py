@@ -39,6 +39,7 @@ tracking and Real Estate's own manually-updated current_value.
 from __future__ import annotations
 
 import json
+import shutil
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -110,9 +111,13 @@ class Recipe:
     # unlocked before this field existed.
     unlocked_by_profile_id: Optional[str] = None
     unlocked_at: Optional[str] = None
+    # Its picture (Zac, 2026-10-16): a file name in the kitchen's
+    # recipe_photos/ folder, "" for none. Shown on recipe cards and the glasses.
+    photo: str = ""
 
     def to_dict(self) -> dict:
         return {
+            "photo": self.photo,
             "recipe_id": self.recipe_id, "name": self.name, "category": self.category,
             "servings": self.servings, "prep_time_minutes": self.prep_time_minutes,
             "cook_time_minutes": self.cook_time_minutes, "instructions": self.instructions,
@@ -146,6 +151,7 @@ class Recipe:
             locked=bool(data.get("locked", False)),
             unlocked_by_profile_id=data.get("unlocked_by_profile_id"),
             unlocked_at=data.get("unlocked_at"),
+            photo=data.get("photo", "") or "",
         )
 
 
@@ -785,6 +791,39 @@ class KitchenManager:
         """Each person's rating of a recipe: {profile_id: stars} (only real ratings)."""
         return {s.profile_id: s.rating for s in self._recipe_user_stats
                 if s.recipe_id == recipe_id and s.rating is not None}
+
+    # ------------------------------------------------------------------
+    # Recipe photos (Zac, 2026-10-16)
+    # ------------------------------------------------------------------
+
+    PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp")
+
+    def recipe_photo_path(self, recipe_id: str) -> Optional[Path]:
+        recipe = self.get_recipe(recipe_id)
+        if recipe is None or not recipe.photo:
+            return None
+        path = self.data_dir / "recipe_photos" / Path(recipe.photo).name
+        return path if path.is_file() else None
+
+    def set_recipe_photo(self, recipe_id: str, source: Path) -> str:
+        """Copies a picture in as the recipe's photo (replacing any earlier one)."""
+        recipe = self.get_recipe(recipe_id)
+        if recipe is None:
+            raise ValueError(f"No recipe with id '{recipe_id}'.")
+        ext = Path(source).suffix.lower()
+        if ext not in self.PHOTO_TYPES:
+            raise ValueError("A recipe photo has to be a JPG, PNG or WebP picture.")
+        folder = self.data_dir / "recipe_photos"
+        folder.mkdir(parents=True, exist_ok=True)
+        old = self.recipe_photo_path(recipe_id)
+        name = f"{recipe.recipe_id}{ext}"
+        shutil.copyfile(source, folder / name)
+        if old is not None and old.name != name:
+            old.unlink(missing_ok=True)
+        recipe.photo = name
+        self._save_recipes()
+        log.info("Recipe photo set for '%s'", recipe.name)
+        return name
 
     def set_recipe_favorite(self, profile_id: str, recipe_id: str, favorite: bool) -> RecipeUserStats:
         stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)

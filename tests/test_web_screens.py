@@ -201,3 +201,34 @@ def test_the_endpoints_and_a_child(world):
     assert client.get("/api/kitchen").status_code == 200 and client.get("/api/workout").status_code == 200
     assert client.get("/api/real-estate").status_code == 403
     assert not any(ACTION_TYPES[k].child_ok for k in ACTION_TYPES if k.startswith("property."))
+
+
+def test_a_recipe_photo(world, tmp_path):
+    """Zac, 2026-10-16: a picture of each recipe, on its page, its card and the glasses."""
+    from fastapi.testclient import TestClient
+
+    import server.app as server_app
+    from core.glasses import glasses_panel
+
+    recipe = world.kitchen.add_recipe("Toast")
+    assert kitchen_page(world)["recipes"][0]["photo"] == ""
+    world.profiles.set_password(world.me.profile_id, "pw")
+    world.voice = world.llm = world.push_subscriptions = None
+    client = TestClient(server_app.create_app(world))
+    token = client.post("/api/login", json={"profile_id": world.me.profile_id, "password": "pw"}).json()["token"]
+    client.headers.update({"Authorization": f"Bearer {token}"})
+    path = f"/api/kitchen/recipe/{recipe.recipe_id}/photo"
+    assert client.get(path).status_code == 404
+    assert client.post(path, content=b"text", headers={"X-Filename": "notes.txt"}).status_code == 400
+    jpeg = b"\xff\xd8\xff\xe0" + b"0" * 64
+    assert client.post(path, content=jpeg, headers={"X-Filename": "toast.jpg"}).status_code == 200
+    got = client.get(path)
+    assert got.status_code == 200 and got.content == jpeg
+    url = kitchen_page(world)["recipes"][0]["photo"]
+    assert url.startswith(path + "?v=")
+    card = glasses_panel(world, "kitchen", "recipes")["lines"][0]
+    assert card["recipe"]["photo"] == url
+    # a new picture replaces the old one
+    assert client.post(path, content=b"\x89PNG" + b"1" * 32, headers={"X-Filename": "toast.png"}).status_code == 200
+    assert world.kitchen.recipe_photo_path(recipe.recipe_id).suffix == ".png"
+    assert len(list((world.kitchen.data_dir / "recipe_photos").iterdir())) == 1

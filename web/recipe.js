@@ -57,6 +57,24 @@
   }
 
   // ------------------------------------------------------------ pieces
+  // The recipe's photo (Zac, 2026-10-16): shown here, on recipe cards and
+  // on the glasses. Add Photo opens the camera or the gallery on a phone.
+  function photo() {
+    const box = el("div", { class: "recipe-photo" + (page.photo ? "" : " empty") });
+    if (page.photo) MIA.image(page.photo).then((url) => { if (url) box.replaceChildren(el("img", { src: url, alt: page.name })); });
+    else box.append(el("span", { class: "dim" }, "No photo yet"));
+    const input = el("input", { type: "file", accept: "image/*", hidden: true, onchange: async () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      try {
+        await MIA.upload("/api/kitchen/recipe/" + encodeURIComponent(page.id) + "/photo", file);
+        page = await MIA.recipe(page.id); draw();
+      } catch (e) { MIAShell.say ? MIAShell.say(e.message) : alert(e.message); }
+    } });
+    return el("div", { class: "recipe-photo-wrap" }, box, input,
+      btn(page.photo ? "Change Photo" : "Add Photo", "btn-ghost", () => input.click()));
+  }
+
   function top() {
     const n = page.nutrition;
     const minutes = page.prep_minutes + page.cook_minutes;
@@ -64,6 +82,7 @@
       page.servings ? page.servings + " serving" + (page.servings === 1 ? "" : "s") : null].filter(Boolean);
     const buyCount = page.to_buy.length;
     return el("section", { class: "glass money-section recipe-top" },
+      photo(),
       el("div", { class: "chip-row" }, chips.map((c) => el("span", { class: "chip" }, c)), page.favorite ? el("span", { class: "chip chip-ok" }, "♥ Favorite") : null),
       stars(),
       page.locked ? el("p", { class: "locked-note" }, "🔒 Locked" + (page.unlocked_by_mission ? ": finish “" + page.unlocked_by_mission + "” to unlock it." : ".")) : null,

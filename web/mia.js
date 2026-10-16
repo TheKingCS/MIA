@@ -77,6 +77,8 @@
     return call("GET", path);
   }
 
+  const images = {};
+
   function demoOnly() { return Promise.reject(new MiaError(400, "Actions are off in the demo.")); }
 
   function onChange(callback) {
@@ -192,6 +194,13 @@
       const response = await fetch(path, { headers: { Authorization: "Bearer " + token } });
       if (!response.ok) throw new MiaError(response.status, (await response.json().catch(() => ({}))).detail || response.statusText);
       return response.blob();
+    },
+    // A stored picture (a recipe's photo) as an object URL for an <img>,
+    // fetched with this tab's sign-in; null when there isn't one (or in the demo).
+    image: (path) => {
+      if (!path) return Promise.resolve(null);
+      images[path] = images[path] || MIA.download(path).then((blob) => URL.createObjectURL(blob)).catch(() => null);
+      return images[path];
     },
     // Send a file (raw body + X-Filename), e.g. a manual onto an asset.
     upload: (path, file) => demo ? demoOnly() : (async () => {

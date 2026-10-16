@@ -702,6 +702,42 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no recipe like that.")
         return page
 
+    # A recipe's photo (Zac, 2026-10-16): shown on recipe cards and the
+    # glasses; sent from the phone as a raw body, like an asset's document.
+    @app.get("/api/kitchen/recipe/{recipe_id}/photo")
+    def recipe_photo(recipe_id: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        view = view_for(context, profile_id)
+        kitchen = getattr(view, "kitchen", None)
+        path = kitchen.recipe_photo_path(recipe_id) if kitchen is not None else None
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No photo for that recipe.")
+        return FileResponse(path, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.post("/api/kitchen/recipe/{recipe_id}/photo")
+    async def recipe_photo_upload(recipe_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        view = view_for(context, profile_id)
+        kitchen = getattr(view, "kitchen", None)
+        recipe = kitchen.get_recipe(recipe_id) if kitchen is not None else None
+        if recipe is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No such recipe.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No picture received.")
+        if len(data) > 10 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That picture is over 10 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "photo.jpg"))).name.strip() or "photo.jpg"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            try:
+                with app.state.turn_lock:
+                    kitchen.set_recipe_photo(recipe_id, source)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"{recipe.name} has a photo now."}
+
     @app.get("/api/workout")
     def web_workout(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_screens import workout_page

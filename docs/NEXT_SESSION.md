@@ -93,12 +93,13 @@ the hub, and the Meta AI app.
       Source: **GitHub Actions**. Then Actions → "Pages preview" → Run
       workflow (or wait for the next push). The preview is at
       https://thekingcs.github.io/MIA/ (placeholder data only).
-- [ ] **Try the glasses (2026-10-16, H-0046):** on your phone open
-      https://thekingcs.github.io/MIA/web/glasses.html (placeholder data).
-      Tap her orb to see her listen (Saturn rings); swipe left for your
-      pinned apps; tap to select; every list ends with Back. Missions
-      shows the active mission; tap, then Select mission to pick another.
-      Tell Claude or Muse what to change.
+- [ ] **Try the new round (2026-10-16, H-0048)** in the phone app once it
+      updates (or https://thekingcs.github.io/MIA/web/calendar.html and
+      .../glasses.html with placeholder data): the **Calendar** (Home →
+      Calendar), a **photo** on a recipe (open it → Add Photo), and on the
+      glasses Missions → Select Mission → Sort, Kitchen → Recipes, Garage
+      → Past Due. Star the apps you want pinned on the glasses (Calendar
+      too, if you want it in your pins).
 - [ ] *(When the glasses arrive)* **In the Meta Wearables Developer Center:** check that Web Apps
       (and the Device Access Toolkit) are enabled for your account.
 - [ ] **In the Meta AI app:** turn on Developer Mode (Settings › App

@@ -224,8 +224,11 @@
   }
   function recipePhoto(r, cls) {
     const box = el("div", cls);
-    if (r.photo) { const img = el("img"); img.src = r.photo; img.alt = ""; box.append(img); }
-    else { const icon = window.MIAIcons && MIAIcons.svg("kitchen"); if (icon) box.append(icon); }
+    const icon = window.MIAIcons && MIAIcons.svg("kitchen");
+    if (icon) box.append(icon);
+    if (r.photo) MIA.image(r.photo).then((url) => {
+      if (url) { const img = el("img"); img.src = url; img.alt = ""; box.replaceChildren(img); }
+    });
     return box;
   }
 

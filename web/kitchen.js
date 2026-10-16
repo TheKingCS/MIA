@@ -53,7 +53,9 @@
     const status = r.locked ? el("span", { class: "chip" }, "🔒 Locked")
       : r.makeable ? el("span", { class: "chip chip-ok" }, "You can make this")
       : r.missing.length ? el("span", { class: "chip chip-soon" }, r.missing.length + " missing") : null;
-    return el("article", { class: "glass recipe-card" + (r.locked ? " locked" : "") },
+    const pic = r.photo ? el("div", { class: "recipe-thumb" }) : null;
+    if (pic) MIA.image(r.photo).then((url) => { if (url) pic.append(el("img", { src: url, alt: "" })); });
+    return el("article", { class: "glass recipe-card" + (r.locked ? " locked" : "") }, pic,
       el("div", { class: "asset-head" }, recipeLink(r.id, el("h3", {}, (r.favorite ? "★ " : "") + r.name)), status),
       el("p", { class: "dim" }, meta(r) || "No details yet"),
       r.rating || r.times_made ? el("p", { class: "recipe-stats" }, r.rating ? el("span", { class: "card-stars", "aria-label": r.rating + " of 5 stars" }, "★".repeat(Math.round(r.rating)) + "☆".repeat(5 - Math.round(r.rating))) : null,

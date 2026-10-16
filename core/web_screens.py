@@ -73,6 +73,7 @@ def kitchen_page(context, today: Optional[date] = None) -> dict:
             "missing": missing, "makeable": not missing and bool(r.ingredients),
             "times_made": kitchen.times_made(r.recipe_id), "last_made": kitchen.last_made_date(r.recipe_id),
             "favorite": r.recipe_id in favorites, "rating": getattr(stats, "rating", None),
+            "photo": recipe_photo_url(kitchen, r),
             "values": _values(RECORDS["recipe"], r),
         })
     page["recipes"] = sorted(recipes, key=lambda x: (x["locked"], not x["favorite"], x["name"].lower()))
@@ -188,7 +189,15 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
         "can_schedule": fit is not None and not recipe.locked, "scheduled": scheduled,
         "meals": list(MEALS), "default_meal": category if category in MEALS else "dinner",
         "values": _values(RECORDS["recipe"], recipe), "ingredients_text": _ingredients_text(recipe), "forms": form_spec(),
+        "photo": recipe_photo_url(kitchen, recipe),
     }
+
+
+def recipe_photo_url(kitchen, recipe) -> str:
+    """Where a screen fetches the recipe's photo ("" for none); the version
+    changes when the photo does, so a new picture is never shown stale."""
+    path = kitchen.recipe_photo_path(recipe.recipe_id) if kitchen is not None else None
+    return f"/api/kitchen/recipe/{recipe.recipe_id}/photo?v={int(path.stat().st_mtime)}" if path else ""
 
 
 def _ingredients_text(recipe) -> str:
