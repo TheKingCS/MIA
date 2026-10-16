@@ -92,6 +92,40 @@ def _minutes(text: str) -> Optional[str]:
     return _number(text)
 
 
+# Labels that start a new line when a chat app hands over the whole plan
+# as one long line (Zac, 2026-10-16: pasting "did nothing").
+_STARTERS = ("GOALS", "TRAINING", "MILESTONES", "MEALS", "SKILL:", "RECIPE:", "Day:", "Training day:",
+             "Protein:", "Calories:", "Goal weight:", "Workouts a week:", "Weigh-in days:", "Days:", "Drills:",
+             "Minutes a day:", "Packed lunch:", "Prep day:", "Diet:", "Allergies:", "Don't eat:", "Lunch rotation:",
+             "Category:", "Servings:", "Prep:", "Cook:", "Ingredients:", "Steps:", "Source:", "Notes:")
+
+
+def normalize(text: str) -> str:
+    """Pure logic. Text copied out of a chat app, made plain: no bold or
+    italic markers, no code fences or quote marks, ordinary spaces, and (when
+    it arrived as one long line) a line for each heading and label."""
+    text = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"[\u00a0\u2007\u202f\u2009\u200a\u2002\u2003]", " ", text)
+    text = re.sub(r"[\u200b\u200c\u200d\ufe0f]", "", text)  # zero-width marks and emoji variation selectors
+    if text.count("\n") < 3 and len(text) > 40:
+        starters = "|".join(re.escape(s) for s in _STARTERS)
+        text = re.sub(rf"\s+(?=(?:{starters})(?:\s|$))", "\n", text)
+    lines = []
+    for line in text.split("\n"):
+        if re.match(r"^\s*(```|~~~)", line):
+            continue  # a code fence around the plan
+        line = re.sub(r"^\s*>+\s?", "", line)  # a quoted block
+        line = line.replace("**", "").replace("__", "")
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def _clean_line(raw: str) -> str:
+    """One line without heading marks, emphasis or a leading emoji ("### 🎯 GOALS" -> "GOALS")."""
+    line = re.sub(r"^#+\s*", "", raw.strip().strip("*").strip())
+    return re.sub(r"^[^\w\-•*\[(]+(?=\w)", "", line).strip()
+
+
 def parse(text: str) -> dict:
     """Pure logic. The text as {plan: changes for fitness.plan, recipes:
     [...], lunch_rotation: [recipe names], problems: [lines not understood]}."""
@@ -101,13 +135,13 @@ def parse(text: str) -> dict:
     problems: list[str] = []
     section, day, skill, recipe, part = "", None, None, None, ""
     gap, listed = False, False  # a blank line before this one; the recipe's steps were a numbered/bulleted list
-    for raw in (text or "").splitlines():
-        line = re.sub(r"^#+\s*", "", raw.strip().strip("*").strip())
+    for raw in normalize(text).splitlines():
+        line = _clean_line(raw)
         if not line or set(line) <= set("-=_#*"):
             gap = True
             continue
         bulleted = bool(_BULLET.match(line))
-        line = _item(line)
+        line = _clean_line(_item(line))
         if not line:
             continue
         if section == "recipe" and part == "steps" and gap and listed and not bulleted and not _HEADING.match(line):
@@ -132,7 +166,9 @@ def parse(text: str) -> dict:
                 continue
             if word in ("day", "training day") and rest:
                 section = "training"
-                day = {"name": rest.lstrip(": "), "exercises": []}
+                # "Day: Push", "Day 1: Push", "Day 1 — Push"
+                day = {"name": re.sub(r"^\s*\d+\s*[:.)—–-]?\s*", "", rest.lstrip(": ")).strip() or rest.lstrip(": "),
+                       "exercises": []}
                 plan.setdefault("training", {}).setdefault("rotation", []).append(day)
                 continue
             if word in ("skill", "skills") and rest:
@@ -257,6 +293,12 @@ def parse(text: str) -> dict:
 # ------------------------------------------------------------------ the action
 
 
+def _name_key(name: str) -> str:
+    """Pure logic. A recipe name to compare: case, punctuation and a plural s don't matter."""
+    words = re.sub(r"[^a-z0-9 ]+", " ", (name or "").lower()).split()
+    return " ".join(w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w for w in words)
+
+
 def _read(context, params) -> dict:
     if getattr(context, "fitness", None) is None:
         raise ActionError("Plans aren't set up on this MIA.")
@@ -266,12 +308,19 @@ def _read(context, params) -> dict:
                           "SKILL: Handstand, MILESTONES, MEALS or RECIPE: Turkey chili.")
     if found["recipes"] and getattr(context, "kitchen", None) is None:
         raise ActionError("Recipes need the Kitchen, which isn't set up on this MIA.")
-    known = {r.name.strip().lower() for r in context.kitchen.all_recipes()} if getattr(context, "kitchen", None) else set()
-    pasted = {r["name"].strip().lower() for r in found["recipes"]}
-    missing = [n for n in found["lunch_rotation"] if n.strip().lower() not in known | pasted]
-    if missing:
-        raise ActionError("The lunch rotation names recipes MIA doesn't have: " + ", ".join(missing)
-                          + ". Add them as RECIPE: sections in the same text.")
+    names = [r.name for r in context.kitchen.all_recipes()] if getattr(context, "kitchen", None) else []
+    names += [r["name"] for r in found["recipes"]]
+    by_key = {_name_key(n): n for n in names}
+    rotation, missing = [], []
+    for n in found["lunch_rotation"]:
+        match = by_key.get(_name_key(n))
+        (rotation if match else missing).append(match or n)
+    found["lunch_rotation"] = rotation
+    if missing:  # say so in the summary; never refuse the whole plan over a name
+        note = "Lunch rotation: MIA has no recipe named " + ", ".join(missing) + " (add it as a RECIPE: section)"
+        if not any(found["plan"].values()) and not found["recipes"] and not rotation:
+            raise ActionError(note + ".")  # that was all the text had
+        found["problems"].append(note)
     from core.fitness_actions import _clean_plan
 
     if found["plan"]:

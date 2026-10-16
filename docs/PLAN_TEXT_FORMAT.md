@@ -25,6 +25,9 @@ own phone; it goes from the chat straight into MIA on their device.
   reached stays reached.
 - Anything MIA can't place (a greeting, a tip) is listed back to the
   person in the confirmation, never silently dropped and never saved.
+- Copied straight from a chat is fine (2026-10-16): bold, emoji in headings, code fences, `Day 1: Push`,
+  `Mon/Wed/Fri`, `4×6`, `3 sets of 8` and `3x10 each leg` all read. A lunch rotation name that doesn't
+  match a recipe is listed back, never a reason to refuse the plan.
 - Daily numbers, not formulas: `Protein: 170 g`, not `1 g per lb`
   (MIA flags that line and asks for a number).
 

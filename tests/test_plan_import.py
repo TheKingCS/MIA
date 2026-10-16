@@ -134,7 +134,7 @@ def test_new_recipes_are_added_and_bad_text_is_refused(world):
     assert [r.name for r in world.kitchen.all_recipes()] == ["Protein oats"]
     with pytest.raises(ActionError, match="couldn't find a plan"):
         world.actions.propose(world, "plan.import", {"text": "hello there"})
-    with pytest.raises(ActionError, match="doesn't have: Mystery stew"):
+    with pytest.raises(ActionError, match="no recipe named Mystery stew"):
         world.actions.propose(world, "plan.import", {"text": "MEALS\nLunch rotation: Mystery stew"})
     with pytest.raises(ActionError, match="Days are"):
         world.actions.propose(world, "plan.import", {"text": "TRAINING\nDays: Funday"})
@@ -162,3 +162,54 @@ def test_a_childs_pasted_plan_has_no_goal_weight(world):
         world.actions.propose(world, "plan.import", {"text": "GOALS\nGoal weight: 90 lb"})
     world.actions.approve(world, world.actions.propose(world, "plan.import", {"text": "SKILL: Cartwheel\nOne-handed 5 reps"}).proposal_id)
     assert world.fitness.plan["skill_tree"][0]["skill"] == "Cartwheel"
+
+
+def test_a_plan_copied_out_of_a_chat_app(world):
+    """Zac, 2026-10-16: pasting a plan "did nothing". Text copied from a chat
+    comes with bold, emoji headings, code fences, "Day 1:" and "Mon/Tue";
+    a lunch name a letter off (a plural) is matched, and one MIA doesn't
+    know is a note in the summary, never a refusal of the whole plan."""
+    from core.plan_import import normalize, parse
+
+    text = """```
+### 🎯 **GOALS**
+**Protein:** 150 g
+**Weigh-in days:** Mon/Thu
+
+### 🏋️ TRAINING
+**Days:** Mon, Tue, Thu, Fri
+**Day 1: Pull**
+• Pull-ups 4×6
+• Rows — 3 x 10
+- Squats 3 sets of 8
+
+**MEALS**
+Lunch rotation: Egg bowls, Mystery stew
+
+**RECIPE: Egg bowl**
+Servings: 4
+Ingredients:
+- 8 eggs
+Steps:
+1. Cook it.
+```"""
+    found = parse(text)
+    assert found["plan"]["targets"]["protein_g"] == "150" and found["plan"]["training"]["rotation"][0]["name"] == "Pull"
+    assert [r["name"] for r in found["recipes"]] == ["Egg bowl"] and not found["problems"]
+    assert "**" not in normalize(text) and "```" not in normalize(text)
+    p = world.actions.propose(world, "plan.import", {"text": text})
+    assert "Mystery stew" in p.summary
+    world.actions.approve(world, p.proposal_id)
+    plan = world.fitness.plan
+    assert plan["training"]["days"] == ["Mon", "Tue", "Thu", "Fri"] and plan["targets"]["weigh_in_days"] == ["Mon", "Thu"]
+    assert [e["name"] for e in plan["training"]["rotation"][0]["exercises"]] == ["Pull-ups", "Rows", "Squats"]
+    egg = next(r for r in world.kitchen.all_recipes() if r.name == "Egg bowl")
+    assert plan["meals"]["lunch_rotation"] == [egg.recipe_id]
+
+
+def test_a_plan_pasted_as_one_line():
+    from core.plan_import import parse
+
+    found = parse("GOALS Protein: 150 g Calories: 2400 TRAINING Days: Mon, Tue")
+    assert found["plan"]["targets"] == {"protein_g": "150", "calories": "2400"}
+    assert found["plan"]["training"]["days"] == "Mon, Tue"

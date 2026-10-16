@@ -32,6 +32,8 @@ truth.
 
 from __future__ import annotations
 
+import re
+
 from datetime import date
 from typing import Optional
 
@@ -280,7 +282,7 @@ def _habit(context, params) -> str:
 
 def _words(value) -> list[str]:
     """A list, or "a, b, c" typed on a phone, as a clean list."""
-    items = value if isinstance(value, list) else str(value or "").replace("\n", ",").split(",")
+    items = value if isinstance(value, list) else re.split(r"[,\n/;]", str(value or ""))
     return [str(i).strip() for i in items if str(i).strip()]
 
 

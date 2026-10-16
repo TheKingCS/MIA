@@ -37,11 +37,36 @@
   // ------------------------------------------------------------ paste a whole plan (core/plan_import.py)
   // ?import=1 (from Workout / Kitchen's "Import plan" door) opens this section on load.
   let pasted = "";  // survives a live refresh
+  let pasteNote = "", reading = false;  // what went wrong, shown under the box; MIA is reading it
   let pasteOpen = new URLSearchParams(location.search).get("import") === "1";
   const EXAMPLE = "GOALS\nProtein: 170 g\nCalories: 2300\nGoal weight: 175 lb by 2027-03-01\nWorkouts a week: 3\n\n" +
     "TRAINING\nDays: Mon, Wed, Fri\nDay: Push\nDips 3x8\nL-sit 3x20s\n\nSKILL: Handstand (12 min a day)\nDrills: Wall walks\nWall hold 60s\n\n" +
     "MILESTONES\n60 s wall handstand\n\nMEALS\nPacked lunch: yes\nPrep day: Sun\nAllergies: none\n\n" +
     "RECIPE: Turkey chili\nServings: 6\nIngredients:\n2 lb ground turkey\nSteps:\nBrown the turkey.";
+  // Read It (Zac, 2026-10-16: it "did nothing"): read the box itself (a
+  // phone's paste doesn't always announce itself), say "Reading…" while MIA
+  // works, and show a problem here under the box, not in a passing bar.
+  async function readPlan() {
+    if (reading) return;
+    const box = $("paste-box");
+    pasted = box ? box.value : pasted;
+    if (!pasted.trim()) { pasteNote = "Paste your plan into the box first."; draw(); return; }
+    reading = true; pasteNote = ""; draw();
+    let proposal;
+    try { proposal = await MIA.propose("plan.import", { text: pasted }); }
+    catch (e) { reading = false; pasteNote = e.message; draw(); return; }
+    reading = false; draw();
+    if (!(await MIAShell.confirm(proposal.summary))) { MIA.reject(proposal.proposal_id).catch(() => {}); return; }
+    try {
+      const done = await MIA.approve(proposal.proposal_id);
+      pasted = ""; pasteOpen = false; pasteNote = "";
+      MIAShell.say(done.result || "Done.", done.undoable ? async () => {
+        try { await MIA.undo(done.proposal_id); MIAShell.say("Undone."); MIAShell.refresh(); } catch (e) { MIAShell.say(e.message); }
+      } : null);
+      MIAShell.refresh();
+    } catch (e) { pasteNote = e.message; draw(); }
+  }
+
   function paste() {
     if (!pasteOpen) {
       return section("Paste a plan", btn("Paste", "btn-amber", () => { pasteOpen = true; draw(); $("paste-box").focus(); }),
@@ -53,8 +78,9 @@
     return section("Paste a plan", null,
       el("p", { class: "dim" }, "Headings MIA reads: GOALS, TRAINING (Days:, then Day: Push and its exercises), SKILL: name, MILESTONES, MEALS, RECIPE: name (with Ingredients: and Steps:). Anything else is listed back to you, not lost."),
       box,
-      buttons(btn("Read it", "btn-green", async () => { if (await act({ kind: "plan.import", params: { text: pasted } })) { pasted = ""; pasteOpen = false; draw(); } }),
-        btn("Cancel", "btn-ghost", () => { pasteOpen = false; draw(); })),
+      pasteNote ? el("p", { class: "paste-note", role: "alert" }, pasteNote) : null,
+      buttons(btn(reading ? "Reading…" : "Read It", "btn-green", readPlan),
+        btn("Cancel", "btn-ghost", () => { pasteOpen = false; pasteNote = ""; draw(); })),
       el("details", {}, el("summary", {}, "See an example"), el("pre", { class: "paste-example" }, EXAMPLE)));
   }
 

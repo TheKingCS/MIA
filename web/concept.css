@@ -1190,3 +1190,7 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .talk-form input { min-width: 0; }
 .talk-form > button, .talk-form .btn { flex: none; }
 @media (max-width: 600px) { .talk-form { gap: 6px; } .talk-form input { padding: 0 12px; } }
+
+/* Paste a plan: a problem shows under the box (Zac, 2026-10-16) */
+.paste-note { margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-amber), 0.55);
+  background: rgba(var(--rgb-amber), 0.08); color: var(--text); font-size: var(--text-sm); white-space: pre-wrap; }

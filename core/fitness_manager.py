@@ -72,8 +72,15 @@ def _merge(base: dict, extra: dict) -> dict:
 
 # ------------------------------------------------------------------ the plan as text (typed on a phone)
 
-_SETS = re.compile(r"^(?P<name>.*?)\s+(?P<sets>\d+)\s*[x×]\s*(?P<n>\d+)\s*(?P<s>s|sec|secs|seconds)?$", re.IGNORECASE)
-_HOLD = re.compile(r"^(?P<name>.*?)\s+(?P<n>\d+)\s*(?P<s>s|sec|secs|seconds)$", re.IGNORECASE)
+_SETS = re.compile(r"^(?P<name>.*?)\s+(?P<sets>\d+)\s*(?:[x×]|sets?\s+of)\s*(?P<n>\d+)\s*(?P<s>s|sec|secs|seconds)?"
+                   r"(?:\s*(?:reps?))?(?P<side>\s+(?:each|per)\s+\w+)?$", re.IGNORECASE)
+_HOLD = re.compile(r"^(?P<name>.*?)\s+(?P<n>\d+)\s*(?P<s>s|sec|secs|seconds)(?P<side>\s+(?:each|per)\s+\w+)?$", re.IGNORECASE)
+
+
+def _exercise_name(m) -> str:
+    """The name before the numbers, without a trailing dash or colon; "each leg" kept with it."""
+    name = m["name"].rstrip(" -—–:·")
+    return f"{name} ({m['side'].strip()})" if m["side"] else name
 
 
 def parse_exercise(line: str) -> Optional[dict]:
@@ -83,11 +90,12 @@ def parse_exercise(line: str) -> Optional[dict]:
     if not text:
         return None
     m = _SETS.match(text)
-    if m and m["name"]:
-        return {"name": m["name"], "sets": int(m["sets"]), **({"hold_seconds": int(m["n"])} if m["s"] else {"reps": int(m["n"])})}
+    if m and m["name"].rstrip(" -—–:·"):
+        return {"name": _exercise_name(m), "sets": int(m["sets"]),
+                **({"hold_seconds": int(m["n"])} if m["s"] else {"reps": int(m["n"])})}
     m = _HOLD.match(text)
-    if m and m["name"]:
-        return {"name": m["name"], "sets": 1, "hold_seconds": int(m["n"])}
+    if m and m["name"].rstrip(" -—–:·"):
+        return {"name": _exercise_name(m), "sets": 1, "hold_seconds": int(m["n"])}
     return {"name": text}
 
 
