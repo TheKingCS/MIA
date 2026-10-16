@@ -8,9 +8,12 @@ the person flips through app cards; selecting one opens its quick action
 menu. Assembled here, in code, so `web/glasses.js` holds no logic
 (DEC-0013), from the same page assemblers every other screen uses.
 
-- `glasses_apps(context)`: the person's apps as glasses cards, in the
-  glasses' order (child-safe, respecting apps they've tucked away), each
-  with a one-line status and its menu. Served as `/api/glasses`.
+- `glasses_apps(context)`: the person's apps as glasses cards (child-safe,
+  respecting apps they've tucked away), each with a one-line status and
+  its menu. **Pinned for the glasses = the person's favorite apps** (Zac,
+  2026-10-16), in the order they starred them: those are the cards; the
+  rest wait behind an "All apps" card. With no favorites, every app shows
+  in the glasses' order. Served as `/api/glasses`.
 - `glasses_panel(context, app_id, item_id)`: what one menu item shows: a
   title and a few lines, each line optionally carrying the action it
   proposes. Served as `/api/glasses/{app_id}/{item_id}`.
@@ -31,7 +34,7 @@ readout only.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Callable, Optional
 
 from core.logger import get_logger
@@ -43,7 +46,7 @@ log = get_logger(__name__)
 GLASSES_KINDS = frozenset({
     "fitness.food", "fitness.step", "fitness.training_done", "fitness.skill", "fitness.milestone",
     "mission.complete", "objective.tick", "maintenance.done", "grocery.check",
-    "task.done", "meal.prep_done", "routine.log",
+    "task.done", "meal.prep_done", "routine.log", "app.favorite",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -438,6 +441,62 @@ def _rental_upkeep(context, today):
     return _panel("Upkeep", lines, "Every property is cared for.")
 
 
+def _household_chores(context, today):
+    store = getattr(context, "recurring_missions", None)
+    if store is None:
+        return _panel("Chores", [], "Chores aren't available here.")
+    lines = []
+    for t in store.all_templates():
+        if t.category != "Household" or not t.active:
+            continue
+        mission, _ = store.ensure_current_missions(t, today)
+        objective = mission.objectives[0] if mission and mission.objectives else None
+        if objective is None:
+            continue
+        done = objective.progress >= objective.target
+        period = "today" if t.recurrence == "daily" else "this week"
+        lines.append(_line(t.name, "done " + period if done else f"{objective.progress:g} of {objective.target:g} {period}",
+                           "ok" if done else "",
+                           None if done else {"kind": "routine.log", "label": "Done",
+                                              "params": {"template_id": t.template_id}}))
+    lines.sort(key=lambda line: "action" not in line)
+    return _panel("Chores", lines, "No household routines yet. Ask MIA to set one up.")
+
+
+def _people_birthdays(context, today):
+    from core.relationships_manager import days_until_birthday
+
+    store = getattr(context, "relationships", None)
+    if store is None:
+        return _panel("Birthdays", [], "People & Pets isn't available here.")
+    found = []
+    for who in list(store.all_people()) + list(store.all_pets()):
+        days = days_until_birthday(getattr(who, "birthday", ""), today)
+        if days is not None:
+            found.append((days, who.name))
+    found.sort()
+    lines = []
+    for days, name in found:
+        when = today + timedelta(days=days)
+        text = "today" if days == 0 else "tomorrow" if days == 1 else f"in {days} days"
+        lines.append(_line(name, f"birthday {text} · {when:%b} {when.day}", "attention" if days <= 7 else ""))
+    return _panel("Birthdays", lines, "No birthdays saved yet.")
+
+
+def _inbox_waiting(context, today):
+    store = getattr(context, "inbox", None)
+    if store is None:
+        return _panel("Waiting", [], "The inbox isn't available here.")
+    lines = []
+    for item in reversed(store.pending()):
+        title = item.subject or item.vendor or (item.files[0] if item.files else "") or "A document"
+        kind = (item.doc_type or "").replace("_", " ")
+        bits = [b for b in (kind if kind != "other" else "", "reading…" if item.reading else "",
+                            (item.received_at or "")[:10]) if b]
+        lines.append(_line(title, " · ".join(bits)))
+    return _panel("Waiting to file", lines, "Nothing waiting. All filed.")
+
+
 _GARAGE, _MAINT, _GREEN, _PROP = (_equipment(s) for s in ("garage", "maintenance", "greenhouse", "property"))
 
 Panel = Callable[[object, date], dict]
@@ -461,20 +520,24 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "real_estate": (("properties", "Properties", _rentals), ("upkeep", "Upkeep", _rental_upkeep)),
     "skills": (("focus", "Focus", _skills_focus), ("week", "This week", _skills_week)),
     "character": (("story", "Your story", _character_stats), ("top", "Top skills", _character_top)),
+    "household": (("chores", "Chores due", _household_chores),),
+    "relationships": (("birthdays", "Next birthdays", _people_birthdays),),
+    "inbox": (("waiting", "Waiting to file", _inbox_waiting),),
 }
 
-# Apps without a glasses readout yet: their menu asks MIA a question,
-# as if said aloud (she answers with her tools). Questions only, never an
-# example command: selecting one must not make a note or start a trip.
+# Questions an app's menu hands MIA, as if said aloud (she answers with
+# her tools), after its panels; for apps without a panel yet, the whole
+# menu. Questions only, never an example command: selecting one must not
+# make a note or start a trip.
 ASKS: dict[str, tuple[str, ...]] = {
-    "household": ("What chores are due?", "What did I get done this week?"),
+    "household": ("What did I get done this week?",),
     "workshop": ("What jobs are open?", "Which parts are running low?"),
     "power": ("How's the battery?", "How much power did I use today?"),
     "observations": ("What have you noticed lately?",),
-    "relationships": ("When is the next birthday?", "Who haven't I talked to in a while?"),
+    "relationships": ("Who haven't I talked to in a while?",),
     "notes": ("What were my last notes?",),
     "classroom": ("What should I study next?",),
-    "inbox": ("What's waiting in my inbox?", "Any emails I should answer?"),
+    "inbox": ("Any emails I should answer?",),
     "expeditions": ("What's my next trip?", "What gear am I missing for it?"),
     "memories": ("What was my last trip like?",),
     "maps": ("Which trail maps do I have?",),
@@ -523,17 +586,25 @@ def _visible_apps(context) -> list:
     return out
 
 
-def menu_for(app) -> list[dict]:
-    """Pure logic. An app's quick action menu, at most four items."""
-    if app.module_id in PANELS:
-        return [{"id": item, "label": label, "type": "panel"} for item, label, _ in PANELS[app.module_id]][:4]
-    asks = ASKS.get(app.module_id, ())
-    return [{"id": f"ask{i}", "label": say.rstrip("?.!"), "type": "ask", "say": say}
-            for i, say in enumerate(asks[:3])]
+def menu_for(app, pinned: Optional[bool] = None) -> list[dict]:
+    """Pure logic. An app's quick action menu: its panels, then questions
+    for MIA, at most four; then pin or unpin it for the glasses (its
+    favorite star) when `pinned` is known."""
+    items = [{"id": item, "label": label, "type": "panel"} for item, label, _ in PANELS.get(app.module_id, ())]
+    items += [{"id": f"ask{i}", "label": say.rstrip("?.!"), "type": "ask", "say": say}
+              for i, say in enumerate(ASKS.get(app.module_id, ()))]
+    items = items[:4]
+    if pinned is not None:
+        items.append({"id": "pin", "label": "Unpin from glasses" if pinned else "Pin to glasses", "type": "action",
+                      "action": {"kind": "app.favorite", "label": "Unpin" if pinned else "Pin",
+                                 "params": {"module_id": app.module_id, "favorite": not pinned}}})
+    return items
 
 
 def glasses_apps(context, today: Optional[date] = None) -> dict:
-    """The person's glasses app cards, each with a status line and its menu."""
+    """The person's glasses cards: their pinned apps (favorites), then the
+    rest behind "All apps". Each card has a status line and its menu."""
+    from core.focus_presets import favorite_apps
     from core.web_surfaces import dashboard
 
     today = today or date.today()
@@ -542,17 +613,31 @@ def glasses_apps(context, today: Optional[date] = None) -> dict:
     except Exception:
         log.exception("Glasses: the at-a-glance lines failed")
         glance = {}
-    cards = []
-    for app in _visible_apps(context):
+    apps = _visible_apps(context)
+    try:
+        favorites = favorite_apps(context)
+    except Exception:  # a headless context without settings
+        favorites = []
+    by_id = {a.module_id: a for a in apps}
+    pinned_ids = [f for f in dict.fromkeys(favorites) if f in by_id]
+
+    def card(app) -> dict:
         g = glance.get(app.module_id) or {}
         if app.module_id in EQUIPMENT_SCOPES:
             g = _equipment_status(context, app.module_id, today)
-        cards.append({
+        return {
             "id": app.module_id, "name": SHORT_NAMES.get(app.module_id, app.name), "full_name": app.name,
             "tagline": app.tagline, "status": g.get("line") or "", "tone": g.get("tone") or "calm",
-            "ask": app.ask, "menu": menu_for(app),
-        })
-    return {"as_of": today.isoformat(), "apps": cards, "kinds": sorted(GLASSES_KINDS)}
+            "ask": app.ask, "pinned": app.module_id in pinned_ids,
+            "menu": menu_for(app, app.module_id in pinned_ids),
+        }
+
+    pinned = [card(by_id[i]) for i in pinned_ids]
+    others = [card(a) for a in apps if a.module_id not in pinned_ids]
+    return {"as_of": today.isoformat(), "pinned": bool(pinned),
+            "apps": pinned or others, "others": others if pinned else [],
+            "hint": "" if pinned else "Star your favorite apps to pin them here.",
+            "kinds": sorted(GLASSES_KINDS)}
 
 
 def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = None) -> Optional[dict]:

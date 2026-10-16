@@ -95,8 +95,10 @@ the hub, and the Meta AI app.
       https://thekingcs.github.io/MIA/ (placeholder data only).
 - [ ] **Try the glasses menus (2026-10-16, H-0042):** on your phone open
       https://thekingcs.github.io/MIA/web/glasses.html (placeholder data).
-      Swipe left on her orb for the app cards, tap a card for its menu,
-      tap an item; swipe down to go back. Tell Claude or Muse which menus you'd
+      Swipe left on her orb for the app cards (the demo pins five; the
+      last card, "All apps", has the rest), tap a card for its menu, tap
+      an item; swipe down to go back. On your own MIA, the apps you star
+      are your glasses pins (DEC-0024); "Pin to glasses" is in each menu. Tell Claude or Muse which menus you'd
       change, and which apps should come first.
 - [ ] *(When the glasses arrive)* **In the Meta Wearables Developer Center:** check that Web Apps
       (and the Device Access Toolkit) are enabled for your account.
@@ -291,9 +293,9 @@ level (PHONE / HOME PC / ONLINE, Muse's H-0035 §5). Then presence-page
 frame and the dashboard saying card as a readout (H-0035 §3).
 
 **Glasses quick action menus (2026-10-16, H-0042)** work in the preview
-for every app (`core/glasses.py`). Waiting on Muse's look pass and her
-two answers (card order; which ask-only apps get real panels next:
-likely Household chores, People birthdays, Inbox). Then: app icons on the cards, Phase 3 voice ("open
+for every app (`core/glasses.py`); pins are the person's favorites
+(DEC-0024); Household, People and Inbox panels and line icons are in
+(H-0045). Then: Muse's look pass on the cards, Phase 3 voice ("open
 Kitchen", "log lunch" through the Android companion), Phase 4 on-device
 test when the Display arrives (~Nov 16: Funnel URL, revocable
 glasses-only link limited to `/api/glasses` and `GLASSES_KINDS`).

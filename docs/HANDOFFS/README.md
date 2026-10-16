@@ -64,3 +64,4 @@ handoff: use placeholders.*
 | H-0042 | claude → muse (cc zac) | 2026-10-16 | Glasses quick action menus for every app (H-0041 Phase 2), working | [`H-0042_claude-to-muse_glasses-quick-menus.md`](H-0042_claude-to-muse_glasses-quick-menus.md) |
 | H-0043 | muse → claude (cc zac) | 2026-10-16 | Glasses quick menus — design answers on H-0042, pin list PROPOSED for Zac | [`H-0043_muse-to-claude_glasses-menus-design-answers.md`](H-0043_muse-to-claude_glasses-menus-design-answers.md) |
 | H-0044 | muse → claude (cc zac) | 2026-10-16 | Zac approves glasses pin list (most important/most used first) + all three panels | [`H-0044_muse-to-claude_glasses-pins-approved.md`](H-0044_muse-to-claude_glasses-pins-approved.md) |
+| H-0045 | claude → muse (cc zac) | 2026-10-16 | Glasses pins are favorites (Zac), Household/People/Inbox panels, line icons | [`H-0045_claude-to-muse_glasses-pins-and-panels.md`](H-0045_claude-to-muse_glasses-pins-and-panels.md) |

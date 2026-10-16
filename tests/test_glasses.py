@@ -44,10 +44,10 @@ def _every_panel(context):
 def test_the_tables_name_real_apps_and_real_kinds():
     for app_id in set(FIRST) | set(PANELS) | set(ASKS) | set(NOT_ON_GLASSES):
         assert app_id in APPS_BY_ID, app_id
-    assert not (set(PANELS) & set(ASKS)) and not (set(PANELS) | set(ASKS)) & NOT_ON_GLASSES
+    assert not (set(PANELS) | set(ASKS)) & NOT_ON_GLASSES
     assert GLASSES_KINDS <= set(ACTION_TYPES)
     # nothing that deletes, moves money, or changes a record's details
-    assert not any(k.endswith(("delete", ".edit", ".add")) or k.startswith(("bill.", "income", "debt.", "expense."))
+    assert not any(k.endswith(("delete", ".edit", ".add")) or k.startswith(("bill.", "income", "debt.", "expense.", "inbox"))
                    for k in GLASSES_KINDS)
     # an ask is a question, never an example command that would change something
     assert all(say.endswith("?") for asks in ASKS.values() for say in asks)
@@ -56,18 +56,70 @@ def test_the_tables_name_real_apps_and_real_kinds():
 def test_the_cards_are_the_persons_apps_with_menus(world):
     data = glasses_apps(world, TODAY)
     ids = [a["id"] for a in data["apps"]]
+    assert not data["pinned"] and data["others"] == [] and data["hint"]
     assert ids[:5] == ["dashboard", "missions", "kitchen", "workout", "budget"]
     assert not set(ids) & NOT_ON_GLASSES and len(ids) == len(set(ids))
     for card in data["apps"]:
-        assert 1 <= len(card["menu"]) <= 4, card["id"]
+        menu = [m for m in card["menu"] if m["type"] != "action"]
+        assert 1 <= len(menu) <= 4, card["id"]
         assert len({m["id"] for m in card["menu"]}) == len(card["menu"])
-        assert all(m["type"] in ("panel", "ask") and (m["type"] == "panel" or m["say"]) for m in card["menu"])
+        assert all(m["type"] == "panel" or m["say"] for m in menu)
+        pin = card["menu"][-1]
+        assert pin["id"] == "pin" and pin["action"] == {"kind": "app.favorite", "label": "Pin",
+                                                         "params": {"module_id": card["id"], "favorite": True}}
     garage = next(a for a in data["apps"] if a["id"] == "garage")
     assert "1 needs attention" in garage["status"] and garage["tone"] == "attention"
 
     set_app_visible(world, "kitchen", False)
     assert "kitchen" not in [a["id"] for a in glasses_apps(world, TODAY)["apps"]]
     assert glasses_panel(world, "kitchen", "grocery", TODAY) is None
+
+
+def test_favorites_are_pinned_for_the_glasses(world):
+    """Zac, 2026-10-16: the apps a person favorites are pinned for the
+    glasses, in the order they starred them; the rest wait behind All apps."""
+    from core.focus_presets import set_app_favorite
+
+    set_app_favorite(world, "kitchen", True)
+    set_app_favorite(world, "garage", True)
+    set_app_favorite(world, "settings", True)  # not a glasses app: ignored
+    data = glasses_apps(world, TODAY)
+    assert data["pinned"] and [a["id"] for a in data["apps"]] == ["kitchen", "garage"]
+    assert "kitchen" not in [a["id"] for a in data["others"]] and data["others"][0]["id"] == "dashboard"
+    kitchen = data["apps"][0]
+    assert kitchen["pinned"] and kitchen["menu"][-1]["label"] == "Unpin from glasses"
+    assert kitchen["menu"][-1]["action"]["params"] == {"module_id": "kitchen", "favorite": False}
+
+    # unpinning from the glasses is the favorite star, proposed then approved
+    p = world.actions.propose(world, "app.favorite", kitchen["menu"][-1]["action"]["params"])
+    world.actions.approve(world, p.proposal_id)
+    assert [a["id"] for a in glasses_apps(world, TODAY)["apps"]] == ["garage"]
+
+
+def test_household_people_and_inbox_panels(world, tmp_path):
+    from core.inbox_manager import InboxManager
+    from core.relationships_manager import RelationshipsManager
+
+    world.relationships = RelationshipsManager(world, data_dir=tmp_path / "rel")
+    soon = TODAY + timedelta(days=3)
+    world.relationships.add_person("Sam", birthday=f"1990-{soon:%m-%d}")
+    panel = glasses_panel(world, "relationships", "birthdays", TODAY)
+    assert panel["lines"][0]["text"] == "Sam" and "in 3 days" in panel["lines"][0]["detail"]
+    assert "action" not in panel["lines"][0]
+
+    world.recurring_missions.add_template(name="Dishes", objective_description_template="Do the dishes",
+                                          base_target=1, target_increment_per_week=0, daily_reward_xp=5,
+                                          weekly_bonus_reward_xp=0, start_date=TODAY.isoformat(),
+                                          category="Household")
+    chores = glasses_panel(world, "household", "chores", TODAY)
+    dishes = chores["lines"][0]
+    assert dishes["text"] == "Dishes" and dishes["action"]["kind"] == "routine.log"
+    world.actions.approve(world, world.actions.propose(world, "routine.log", dishes["action"]["params"]).proposal_id)
+    after = glasses_panel(world, "household", "chores", TODAY)["lines"][0]
+    assert after["tone"] == "ok" and "action" not in after
+
+    world.inbox = InboxManager(world, data_dir=tmp_path / "inbox")
+    assert glasses_panel(world, "inbox", "waiting", TODAY)["empty"].startswith("Nothing waiting")
 
 
 def test_every_panel_builds_and_carries_only_glasses_safe_actions(world):

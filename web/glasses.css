@@ -284,3 +284,6 @@ body.demo #stage {
 .g-rows li.t-attention .g-row-detail, .g-rows li.t-bad .g-row-detail { color: var(--attention); }
 .g-rows li.t-ok .g-row-detail { color: var(--accent-soft); }
 .g-confirm { font-size: 18px; color: var(--ink); }
+.g-app-badge svg { width: 26px; height: 26px; color: var(--accent-soft); }
+.g-menu li.g-pin { color: var(--ink-faint); border-style: dashed; font-size: 15px; }
+.g-menu li.g-pin.sel { color: var(--ink); }

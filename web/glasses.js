@@ -137,7 +137,27 @@
   let level = "cards", menuIndex = 0, lineIndex = 0, panel = null, proposal = null, resultText = "", busy = false;
   let after = "menu";  // where back goes from a result: the menu (an ask) or the refreshed panel (a change)
 
-  function cards() { return (glassesData && glassesData.apps) || []; }
+  // Pinned for the glasses = the person's favorite apps (Zac, 2026-10-16).
+  // With pins, the carousel is those plus an "All apps" card that opens the
+  // rest; without, it's every app. `showingAll` is that second carousel.
+  let showingAll = false;
+  const ALL_CARD = { id: "__all", name: "All apps", menu: [] };
+  function cards() {
+    const d = glassesData || {};
+    if (showingAll) return d.others || [];
+    const list = d.apps || [];
+    return d.pinned && (d.others || []).length ? list.concat([Object.assign({}, ALL_CARD, {
+      status: d.others.length + " more · select to browse" })]) : list;
+  }
+  function badge(app) {
+    const icon = window.MIAIcons && MIAIcons.svg(app.id === "__all" ? "apps" : app.id);
+    const b = el("div", "g-app-badge");
+    if (icon) b.append(icon); else b.textContent = (app.name || "?").trim().charAt(0).toUpperCase();
+    return b;
+  }
+  async function reload() {
+    try { glassesData = await MIA.glasses(); } catch (e) { /* keep what we have */ }
+  }
   function currentApp() { return cards()[appIndex] || null; }
   function actionable() { return panel ? panel.lines.map((l, i) => (l.action ? i : -1)).filter((i) => i >= 0) : []; }
   function compact(on) { $("stage").classList.toggle("compact", on); }
@@ -154,19 +174,22 @@
       card.replaceChildren(box);
       return;
     }
-    const letter = (app.name || "?").trim().charAt(0).toUpperCase();
     if (level === "cards") {
+      const d = glassesData || {};
+      const kicker = showingAll ? "All apps" : d.pinned ? "Pinned" : "Apps";
       box.append(
-        el("p", "g-kicker", "Apps"),
-        el("div", "g-app-badge", esc(letter)),
+        el("p", "g-kicker", kicker),
+        badge(app),
         el("p", "g-title", esc(app.name)),
         el("p", "g-sub" + (app.tone === "attention" ? " g-attn" : ""), esc(app.status || app.tagline || "")),
         el("p", "g-app-pos", (appIndex + 1) + " of " + list.length),
         el("p", "g-say", "swipe for more · select to open"));
+      if (!d.pinned && d.hint && !showingAll) box.append(el("p", "g-say", esc(d.hint)));
     } else if (level === "menu") {
       const ul = el("ul", "g-menu");
       app.menu.forEach((m, i) => {
-        const li = el("li", i === menuIndex ? "sel" : "", esc(m.label) + (m.type === "ask" ? '<span class="g-tag">ask</span>' : ""));
+        const li = el("li", (i === menuIndex ? "sel" : "") + (m.type === "action" ? " g-pin" : ""),
+          esc(m.label) + (m.type === "ask" ? '<span class="g-tag">ask</span>' : ""));
         li.onclick = (e) => { e.stopPropagation(); menuIndex = i; select(); };
         ul.append(li);
       });
@@ -208,6 +231,12 @@
   async function openPanel() {
     const app = currentApp(), item = app && app.menu[menuIndex];
     if (!item) return;
+    if (item.type === "action") {  // pin or unpin: straight to MIA's sentence
+      try { proposal = await MIA.propose(item.action.kind, item.action.params); level = "confirm"; after = "reload"; }
+      catch (err) { level = "result"; after = "menu"; resultText = err.message; }
+      apps();
+      return;
+    }
     if (item.type === "ask") {
       level = "result"; after = "menu"; resultText = "…"; apps(); setOrb("listening");
       try {
@@ -230,7 +259,8 @@
     if (!app) return;
     busy = true;
     try {
-      if (level === "cards") { level = "menu"; menuIndex = 0; apps(); }
+      if (level === "cards" && app.id === "__all") { showingAll = true; appIndex = 0; apps(); }
+      else if (level === "cards") { level = "menu"; menuIndex = 0; apps(); }
       else if (level === "menu") { await openPanel(); }
       else if (level === "panel") {
         const line = panel && panel.lines[actionable()[lineIndex]];
@@ -244,7 +274,7 @@
           resultText = done.result || done.summary || "Done.";
           setOrb("happy"); setTimeout(() => setOrb("idle"), 1600);
         } catch (err) { resultText = err.message; }
-        proposal = null; level = "result"; after = "panel"; apps();
+        proposal = null; level = "result"; if (after !== "reload") after = "panel"; apps();
       } else if (level === "result") { back(); }
     } finally { busy = false; }
   }
@@ -266,11 +296,25 @@
   function back() {
     if (level === "confirm") {
       if (proposal) MIA.reject(proposal.proposal_id).catch(() => {});
-      proposal = null; level = "panel"; apps(); return;
+      proposal = null;
+      if (after === "reload") { level = "menu"; apps(); return; }
+      level = "panel"; apps(); return;
+    }
+    if (level === "result" && after === "reload") {
+      // pins changed: re-read the cards and land on that app where it now is
+      const id = (currentApp() || {}).id;
+      reload().then(() => {
+        const d = glassesData || {};
+        showingAll = !!d.pinned && !(d.apps || []).some((a) => a.id === id);  // stay with the app: pinned row or All apps
+        const at = cards().findIndex((a) => a.id === id);
+        appIndex = at >= 0 ? at : 0; level = "cards"; panel = null; setOrb("idle"); apps();
+      });
+      return;
     }
     if (level === "result" && after === "panel") { setOrb("idle"); openPanel(); return; }
     if (level === "result" || level === "panel") { setOrb("idle"); panel = null; level = "menu"; apps(); return; }
     if (level === "menu") { level = "cards"; apps(); return; }
+    if (showingAll) { showingAll = false; appIndex = Math.max(0, cards().length - 1); apps(); return; }
     compact(false);
     go("glance");
   }
@@ -302,7 +346,7 @@
   }
   function go(id) {
     moment = id;
-    if (id === "apps") level = "cards"; else compact(false);
+    if (id === "apps") { level = "cards"; showingAll = false; } else compact(false);
     const m = MOMENTS.find(([k]) => k === id);
     if (m) m[2]();
     drawDots();
@@ -322,9 +366,12 @@
     const openMatch = t.match(/\bopen\s+(.+?)\s*$/);
     if (openMatch) {
       const want = openMatch[1].replace(/^the\s+/, "");
-      const idx = cards().findIndex((a) => [a.name, a.full_name, a.id].some((n) => (n || "").toLowerCase() === want));
-      if (idx >= 0) { appIndex = idx; go("apps"); level = "menu"; menuIndex = 0; apps(); return; }
-      if (/^apps?$/.test(want)) { go("apps"); return; }
+      const named = (a) => [a.name, a.full_name, a.id].some((n) => (n || "").toLowerCase() === want);
+      go("apps");
+      let idx = cards().findIndex(named);
+      if (idx < 0 && glassesData && glassesData.pinned) { showingAll = true; idx = cards().findIndex(named); if (idx < 0) showingAll = false; }
+      if (idx >= 0) { appIndex = idx; level = "menu"; menuIndex = 0; apps(); return; }
+      if (/^apps?$/.test(want)) { apps(); return; }
     }
     if (/\bback\b/.test(t)) { if (moment === "apps") back(); return; }
     if (/next|today|priority/.test(t)) {

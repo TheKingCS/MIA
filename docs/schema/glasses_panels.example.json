@@ -91,7 +91,12 @@
     "title": "Recent wins",
     "lines": [
       {
-        "text": "Handstand: Kick-ups, 6 reps",
+        "text": "Ate Protein oats (breakfast), 43.5 g protein",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "Cooked Protein oats",
         "detail": "",
         "tone": ""
       }
@@ -145,8 +150,17 @@
       },
       {
         "text": "Today's meals",
-        "detail": "0 of 2",
-        "tone": ""
+        "detail": "1 of 2",
+        "tone": "",
+        "action": {
+          "kind": "objective.tick",
+          "label": "Done",
+          "params": {
+            "mission_id": "417c0b5493",
+            "index": 1,
+            "amount": 1
+          }
+        }
       }
     ],
     "more": 1,
@@ -217,19 +231,8 @@
     "lines": [
       {
         "text": "Protein oats",
-        "detail": "Breakfast · 640 kcal · 44 g protein",
-        "tone": "",
-        "action": {
-          "kind": "fitness.food",
-          "label": "Ate it",
-          "params": {
-            "meal": "breakfast",
-            "recipe_id": "102996cb96",
-            "servings": 1.0,
-            "date": "2026-10-16",
-            "planned_id": "2026-10-16:breakfast"
-          }
-        }
+        "detail": "Breakfast · 640 kcal · 44 g protein · eaten",
+        "tone": "ok"
       },
       {
         "text": "Turkey chili",
@@ -248,7 +251,7 @@
         }
       },
       {
-        "text": "Protein 0 of 170 g",
+        "text": "Protein 44 of 170 g",
         "detail": "",
         "tone": ""
       }
@@ -869,8 +872,8 @@
     "title": "Focus",
     "lines": [
       {
-        "text": "Nutrition",
-        "detail": "5 XP to the next level",
+        "text": "Calisthenics",
+        "detail": "10 XP to the next level",
         "tone": "ok"
       },
       {
@@ -910,7 +913,7 @@
       },
       {
         "text": "Nutrition",
-        "detail": "+15 XP · level 1",
+        "detail": "+20 XP · level 2",
         "tone": ""
       }
     ],
@@ -925,7 +928,7 @@
     "lines": [
       {
         "text": "Level 2",
-        "detail": "195 XP",
+        "detail": "200 XP",
         "tone": ""
       },
       {
@@ -940,7 +943,7 @@
       },
       {
         "text": "Meals Cooked",
-        "detail": "3",
+        "detail": "4",
         "tone": ""
       }
     ],
@@ -969,17 +972,44 @@
         "tone": ""
       },
       {
-        "text": "Mobility",
+        "text": "Nutrition",
         "detail": "level 2",
         "tone": ""
       },
       {
-        "text": "Nutrition",
-        "detail": "level 1",
+        "text": "Mobility",
+        "detail": "level 2",
         "tone": ""
       }
     ],
     "more": 0,
     "empty": "No skills levelled yet."
+  },
+  "household/chores": {
+    "app": "household",
+    "item": "chores",
+    "label": "Chores due",
+    "title": "Chores",
+    "lines": [],
+    "more": 0,
+    "empty": "No household routines yet. Ask MIA to set one up."
+  },
+  "relationships/birthdays": {
+    "app": "relationships",
+    "item": "birthdays",
+    "label": "Next birthdays",
+    "title": "Birthdays",
+    "lines": [],
+    "more": 0,
+    "empty": "No birthdays saved yet."
+  },
+  "inbox/waiting": {
+    "app": "inbox",
+    "item": "waiting",
+    "label": "Waiting to file",
+    "title": "Waiting",
+    "lines": [],
+    "more": 0,
+    "empty": "The inbox isn't available here."
   }
 }

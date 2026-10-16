@@ -435,3 +435,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   their styling becomes the Stark language. Muse reviews and polishes
   it (H-0034), as with DEC-0018.
 - Related: DEC-0012, DEC-0014, DEC-0016, DEC-0017, DEC-0018, H-0034
+
+
+### DEC-0024: The glasses: favorites are the pinned cards, every app has a quick action menu
+- Status: APPROVED
+- Proposed by: zac, 2026-10-16 (in chat with claude); muse (H-0041, H-0043) · Approved by: zac, 2026-10-16 (H-0044, and in chat)
+- Decision: the glasses boot to MIA's orb; a swipe flips through app
+  cards; selecting one opens its quick action menu (H-0042). **The cards
+  are the apps the person favorites** (the same star as the Apps page),
+  in the order they starred them; every other app waits behind an "All
+  apps" card; with no favorites, every app shows. Each menu ends with
+  Pin to / Unpin from glasses, which sets that star. A change from the
+  glasses shows MIA's sentence and needs a second select (two-gesture
+  approve); only quick, non-destructive kinds (`GLASSES_KINDS` in
+  `core/glasses.py`); money and the inbox stay read-only there.
+- Changes: H-0044's "most used first" ordering is settled by Zac's own
+  words in chat: **favorites, in the order starred**, no usage tracking.
+- Related: DEC-0016, DEC-0023, H-0041, H-0042, H-0043, H-0044, H-0045

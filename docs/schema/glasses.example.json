@@ -1,5 +1,6 @@
 {
   "as_of": "2026-10-16",
+  "pinned": true,
   "apps": [
     {
       "id": "dashboard",
@@ -9,6 +10,7 @@
       "status": "",
       "tone": "calm",
       "ask": "What's on today?",
+      "pinned": true,
       "menu": [
         {
           "id": "next",
@@ -24,32 +26,19 @@
           "id": "wins",
           "label": "Recent wins",
           "type": "panel"
-        }
-      ]
-    },
-    {
-      "id": "missions",
-      "name": "Missions",
-      "full_name": "Missions",
-      "tagline": "Explore. Complete. Level up.",
-      "status": "15 active",
-      "tone": "calm",
-      "ask": "Add a mission to build a chicken coop.",
-      "menu": [
-        {
-          "id": "today",
-          "label": "Today's missions",
-          "type": "panel"
         },
         {
-          "id": "claim",
-          "label": "Ready to claim",
-          "type": "panel"
-        },
-        {
-          "id": "active",
-          "label": "Active missions",
-          "type": "panel"
+          "id": "pin",
+          "label": "Unpin from glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "dashboard",
+              "favorite": false
+            }
+          }
         }
       ]
     },
@@ -61,6 +50,7 @@
       "status": "9 recipes · 4 on the grocery list · chicken expires in 0d",
       "tone": "attention",
       "ask": "What can I make with what's in the pantry?",
+      "pinned": true,
       "menu": [
         {
           "id": "meals",
@@ -81,6 +71,19 @@
           "id": "make",
           "label": "What can I make",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Unpin from glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "kitchen",
+              "favorite": false
+            }
+          }
         }
       ]
     },
@@ -92,6 +95,7 @@
       "status": "4 sessions this week · last: Beginner full body (2026-10-15)",
       "tone": "calm",
       "ask": "Log a 30 minute workout.",
+      "pinned": true,
       "menu": [
         {
           "id": "training",
@@ -112,9 +116,99 @@
           "id": "milestones",
           "label": "Milestones",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Unpin from glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "workout",
+              "favorite": false
+            }
+          }
         }
       ]
     },
+    {
+      "id": "missions",
+      "name": "Missions",
+      "full_name": "Missions",
+      "tagline": "Explore. Complete. Level up.",
+      "status": "15 active",
+      "tone": "calm",
+      "ask": "Add a mission to build a chicken coop.",
+      "pinned": true,
+      "menu": [
+        {
+          "id": "today",
+          "label": "Today's missions",
+          "type": "panel"
+        },
+        {
+          "id": "claim",
+          "label": "Ready to claim",
+          "type": "panel"
+        },
+        {
+          "id": "active",
+          "label": "Active missions",
+          "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Unpin from glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "missions",
+              "favorite": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "garage",
+      "name": "Garage",
+      "full_name": "Garage",
+      "tagline": "Keep it running. Keep it ready.",
+      "status": "4 tracked · 3 need attention · next: Test run (Generator)",
+      "tone": "attention",
+      "ask": "What's overdue on my vehicles?",
+      "pinned": true,
+      "menu": [
+        {
+          "id": "attention",
+          "label": "Needs attention",
+          "type": "panel"
+        },
+        {
+          "id": "next",
+          "label": "Next up",
+          "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Unpin from glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Unpin",
+            "params": {
+              "module_id": "garage",
+              "favorite": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "others": [
     {
       "id": "budget",
       "name": "Money",
@@ -123,6 +217,7 @@
       "status": "Insurance $340.00 in 4d · $2,290.00 left each month after bills",
       "tone": "calm",
       "ask": "Which debt should I pay first?",
+      "pinned": false,
       "menu": [
         {
           "id": "month",
@@ -138,27 +233,19 @@
           "id": "debts",
           "label": "Debts",
           "type": "panel"
-        }
-      ]
-    },
-    {
-      "id": "garage",
-      "name": "Garage",
-      "full_name": "Garage",
-      "tagline": "Keep it running. Keep it ready.",
-      "status": "4 tracked · 3 need attention · next: Test run (Generator)",
-      "tone": "attention",
-      "ask": "What's overdue on my vehicles?",
-      "menu": [
-        {
-          "id": "attention",
-          "label": "Needs attention",
-          "type": "panel"
         },
         {
-          "id": "next",
-          "label": "Next up",
-          "type": "panel"
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "budget",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -170,6 +257,7 @@
       "status": "7 tracked · 5 need attention · next: Test run (Generator)",
       "tone": "attention",
       "ask": "I put 120 hours on the mower.",
+      "pinned": false,
       "menu": [
         {
           "id": "attention",
@@ -180,6 +268,19 @@
           "id": "next",
           "label": "Next up",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "maintenance",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -191,6 +292,7 @@
       "status": "1 tracked · 1 needs attention",
       "tone": "attention",
       "ask": "What needs doing in the greenhouse?",
+      "pinned": false,
       "menu": [
         {
           "id": "attention",
@@ -201,6 +303,19 @@
           "id": "next",
           "label": "Next up",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "greenhouse",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -212,6 +327,7 @@
       "status": "2 tracked · 1 needs attention · next: Clean gutters (Maple House)",
       "tone": "attention",
       "ask": "Do I have any furnace filters left?",
+      "pinned": false,
       "menu": [
         {
           "id": "attention",
@@ -222,6 +338,19 @@
           "id": "next",
           "label": "Next up",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "property",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -233,6 +362,7 @@
       "status": "3 properties · $232,000.00 equity",
       "tone": "calm",
       "ask": "How are my rentals doing this month?",
+      "pinned": false,
       "menu": [
         {
           "id": "properties",
@@ -243,6 +373,19 @@
           "id": "upkeep",
           "label": "Upkeep",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "real_estate",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -254,6 +397,7 @@
       "status": "",
       "tone": "calm",
       "ask": "Which skills am I growing?",
+      "pinned": false,
       "menu": [
         {
           "id": "focus",
@@ -264,6 +408,19 @@
           "id": "week",
           "label": "This week",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "skills",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -275,6 +432,7 @@
       "status": "",
       "tone": "calm",
       "ask": "What have I done this week?",
+      "pinned": false,
       "menu": [
         {
           "id": "story",
@@ -285,6 +443,19 @@
           "id": "top",
           "label": "Top skills",
           "type": "panel"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "character",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -296,18 +467,31 @@
       "status": "",
       "tone": "calm",
       "ask": "I did the dishes.",
+      "pinned": false,
       "menu": [
         {
-          "id": "ask0",
-          "label": "What chores are due",
-          "type": "ask",
-          "say": "What chores are due?"
+          "id": "chores",
+          "label": "Chores due",
+          "type": "panel"
         },
         {
-          "id": "ask1",
+          "id": "ask0",
           "label": "What did I get done this week",
           "type": "ask",
           "say": "What did I get done this week?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "household",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -319,6 +503,7 @@
       "status": "",
       "tone": "calm",
       "ask": "How much plywood do I have?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
@@ -331,6 +516,19 @@
           "label": "Which parts are running low",
           "type": "ask",
           "say": "Which parts are running low?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "workshop",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -342,6 +540,7 @@
       "status": "",
       "tone": "calm",
       "ask": "How's the battery?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
@@ -354,6 +553,19 @@
           "label": "How much power did I use today",
           "type": "ask",
           "say": "How much power did I use today?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "power",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -365,12 +577,26 @@
       "status": "",
       "tone": "calm",
       "ask": "What have you noticed lately?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What have you noticed lately",
           "type": "ask",
           "say": "What have you noticed lately?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "observations",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -382,18 +608,31 @@
       "status": "",
       "tone": "calm",
       "ask": "When is the next birthday?",
+      "pinned": false,
       "menu": [
         {
-          "id": "ask0",
-          "label": "When is the next birthday",
-          "type": "ask",
-          "say": "When is the next birthday?"
+          "id": "birthdays",
+          "label": "Next birthdays",
+          "type": "panel"
         },
         {
-          "id": "ask1",
+          "id": "ask0",
           "label": "Who haven't I talked to in a while",
           "type": "ask",
           "say": "Who haven't I talked to in a while?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "relationships",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -405,12 +644,26 @@
       "status": "",
       "tone": "calm",
       "ask": "Make a note: call the plumber Friday.",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What were my last notes",
           "type": "ask",
           "say": "What were my last notes?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "notes",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -422,12 +675,26 @@
       "status": "",
       "tone": "calm",
       "ask": "Quiz me on chapter 2.",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What should I study next",
           "type": "ask",
           "say": "What should I study next?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "classroom",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -439,18 +706,31 @@
       "status": "",
       "tone": "calm",
       "ask": "What's waiting in my inbox?",
+      "pinned": false,
       "menu": [
         {
-          "id": "ask0",
-          "label": "What's waiting in my inbox",
-          "type": "ask",
-          "say": "What's waiting in my inbox?"
+          "id": "waiting",
+          "label": "Waiting to file",
+          "type": "panel"
         },
         {
-          "id": "ask1",
+          "id": "ask0",
           "label": "Any emails I should answer",
           "type": "ask",
           "say": "Any emails I should answer?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "inbox",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -462,6 +742,7 @@
       "status": "",
       "tone": "calm",
       "ask": "Plan a weekend camping trip.",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
@@ -474,6 +755,19 @@
           "label": "What gear am I missing for it",
           "type": "ask",
           "say": "What gear am I missing for it?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "expeditions",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -485,12 +779,26 @@
       "status": "",
       "tone": "calm",
       "ask": "Show me my last trip.",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What was my last trip like",
           "type": "ask",
           "say": "What was my last trip like?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "memories",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -502,12 +810,26 @@
       "status": "",
       "tone": "calm",
       "ask": "Which trail maps do I have?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "Which trail maps do I have",
           "type": "ask",
           "say": "Which trail maps do I have?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "maps",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -519,6 +841,7 @@
       "status": "",
       "tone": "calm",
       "ask": "How far is camp from the trailhead?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
@@ -531,6 +854,19 @@
           "label": "When is sunset today",
           "type": "ask",
           "say": "When is sunset today?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "navigation",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -542,12 +878,26 @@
       "status": "",
       "tone": "calm",
       "ask": "Start a temperature experiment.",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What's my latest experiment reading",
           "type": "ask",
           "say": "What's my latest experiment reading?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "lab",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -559,12 +909,26 @@
       "status": "",
       "tone": "calm",
       "ask": "What devices are connected?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What devices are connected",
           "type": "ask",
           "say": "What devices are connected?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "field_kit",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -576,12 +940,26 @@
       "status": "",
       "tone": "calm",
       "ask": "Play something relaxing.",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "What's playing",
           "type": "ask",
           "say": "What's playing?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "music",
+              "favorite": true
+            }
+          }
         }
       ]
     },
@@ -593,17 +971,33 @@
       "status": "",
       "tone": "calm",
       "ask": "How is the computer doing?",
+      "pinned": false,
       "menu": [
         {
           "id": "ask0",
           "label": "How is the computer doing",
           "type": "ask",
           "say": "How is the computer doing?"
+        },
+        {
+          "id": "pin",
+          "label": "Pin to glasses",
+          "type": "action",
+          "action": {
+            "kind": "app.favorite",
+            "label": "Pin",
+            "params": {
+              "module_id": "diagnostics",
+              "favorite": true
+            }
+          }
         }
       ]
     }
   ],
+  "hint": "",
   "kinds": [
+    "app.favorite",
     "fitness.food",
     "fitness.milestone",
     "fitness.skill",
