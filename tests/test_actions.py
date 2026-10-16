@@ -135,7 +135,8 @@ def test_a_child_can_only_take_child_actions(world):
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
     kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.",
                            "mission.", "objective.", "pathway.", "character.", "fitness.", "plan.")
-    assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility",
+    # Children also keep their own Journal and Music playlists (2026-10-16).
+    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("journal.", "playlist."))} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
                                                                                  "setting.set", "communication.resume"}
     assert "recipe.delete" not in child_ok and "meal.log" in child_ok and "workout.log" in child_ok

@@ -1,0 +1,33 @@
+{
+  "available": true,
+  "tracks": [
+    {
+      "id": "a18aad8bd3",
+      "title": "Robin - Morning Tone",
+      "artist": "",
+      "album": "",
+      "genre": "",
+      "duration": "0:04",
+      "seconds": 4.0
+    }
+  ],
+  "playlists": [
+    {
+      "id": "424f086d66",
+      "name": "Mornings",
+      "track_ids": []
+    }
+  ],
+  "artists": [
+    {
+      "name": "Unknown artist",
+      "count": 1
+    }
+  ],
+  "library": {
+    "folder": "~/Music",
+    "found": false,
+    "count": 1,
+    "minutes": 0
+  }
+}

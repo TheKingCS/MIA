@@ -14,6 +14,9 @@
  *   MIA.shell()                 -> the sidebar: the person's apps, level and XP (core/web_surfaces.py)
  *   MIA.dashboard()             -> the Dashboard: greeting, Today's Focus, glance cards
  *   MIA.apps()                  -> every app, grouped, with what MIA can do in each
+ *   MIA.journal() / workshop() / expeditions() / music() / files(folder)
+ *                               -> those screens (core/web_more.py); a song plays from
+ *                                  /api/music/track/<id>/audio, a file opens from /api/files/file?path=
  *   MIA.calendar(month)         -> everything with a date: Past Due, Today, Due Soon, a month (core/calendar_view.py)
  *   MIA.glasses() / glassesPanel(app, item) -> the glasses' app cards and a quick action's panel
  *   MIA.money(strategy)         -> the Money screen: bills, income, expenses, debts, budgets, trends
@@ -211,6 +214,11 @@
       if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
       return data;
     })(),
+    journal: () => read("/api/journal", "journal"),
+    workshop: () => read("/api/workshop", "workshop"),
+    expeditions: () => read("/api/expeditions", "expeditions"),
+    music: () => read("/api/music", "music"),
+    files: (folder) => read("/api/files" + (folder ? "?path=" + encodeURIComponent(folder) : ""), "files"),
     money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),
     pending: () => call("GET", "/api/actions"),

@@ -1,0 +1,113 @@
+{
+  "available": true,
+  "as_of": "2026-10-16",
+  "entries": [
+    {
+      "id": "f4671389fe",
+      "title": "First frost",
+      "body": "Covered the tomatoes tonight. The greenhouse held at 4C.",
+      "preview": "Covered the tomatoes tonight. The greenhouse held at 4C.",
+      "tags": [
+        "garden",
+        "weather"
+      ],
+      "conditions": "",
+      "date": "2026-10-16",
+      "updated": "2026-10-16",
+      "trip": "",
+      "values": {
+        "title": "First frost",
+        "body": "Covered the tomatoes tonight. The greenhouse held at 4C.",
+        "tags": "garden, weather",
+        "conditions": ""
+      }
+    },
+    {
+      "id": "c99a68b8f8",
+      "title": "Shop ideas",
+      "body": "A rack for the clamps. Birdhouses for the market in spring.",
+      "preview": "A rack for the clamps. Birdhouses for the market in spring.",
+      "tags": [
+        "workshop",
+        "ideas"
+      ],
+      "conditions": "",
+      "date": "2026-10-16",
+      "updated": "2026-10-16",
+      "trip": "",
+      "values": {
+        "title": "Shop ideas",
+        "body": "A rack for the clamps. Birdhouses for the market in spring.",
+        "tags": "workshop, ideas",
+        "conditions": ""
+      }
+    }
+  ],
+  "tags": [
+    {
+      "tag": "garden",
+      "count": 1
+    },
+    {
+      "tag": "ideas",
+      "count": 1
+    },
+    {
+      "tag": "weather",
+      "count": 1
+    },
+    {
+      "tag": "workshop",
+      "count": 1
+    }
+  ],
+  "counts": {
+    "entries": 2,
+    "this_month": 2,
+    "tags": 4
+  },
+  "private": {
+    "set_up": false,
+    "count": 0
+  },
+  "forms": {
+    "journal": {
+      "noun": "entry",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "body",
+          "label": "Entry",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "tags",
+          "label": "Tags (comma separated)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "conditions",
+          "label": "Weather / conditions",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

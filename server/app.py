@@ -750,6 +750,79 @@ def create_app(context: AppContext) -> FastAPI:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {"message": f"{recipe.name} has a photo now."}
 
+    # Journal, Workshop, Expeditions, Music and Files (core/web_more.py,
+    # Zac, 2026-10-16: on the phone they only opened a chat).
+    @app.get("/api/journal")
+    def web_journal(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_more import journal_page
+
+        return _screen(profile_id, "notes", journal_page)
+
+    @app.get("/api/workshop")
+    def web_workshop(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_more import workshop_page
+
+        return _screen(profile_id, "workshop", workshop_page)
+
+    @app.get("/api/expeditions")
+    def web_expeditions(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_more import expeditions_page
+
+        return _screen(profile_id, "expeditions", expeditions_page)
+
+    @app.get("/api/music")
+    def web_music(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_more import music_page
+
+        return _screen(profile_id, "music", music_page)
+
+    @app.get("/api/music/track/{track_id}/audio")
+    def web_music_audio(track_id: str, profile_id: str = Depends(require_profile_id)):
+        """One song from the library, to play in the browser."""
+        from fastapi.responses import FileResponse
+
+        from core.web_more import track_path
+
+        path = _screen(profile_id, "music", lambda view: track_path(view, track_id))
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That song isn't in the library anymore.")
+        return FileResponse(path, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.get("/api/files")
+    def web_files(path: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_more import files_page
+
+        return _screen(profile_id, "files", lambda view: files_page(view, path))
+
+    @app.get("/api/files/file")
+    def web_file(path: str, profile_id: str = Depends(require_profile_id)):
+        """One of the person's own files (core/my_files.py: never outside their folder)."""
+        from fastapi.responses import FileResponse
+
+        from core.my_files import MyFiles
+
+        try:
+            found = _screen(profile_id, "files", lambda view: MyFiles.for_context(view).file(path))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+        return FileResponse(found, filename=found.name, headers={"Cache-Control": "private, no-cache"})
+
+    @app.post("/api/files/upload")
+    async def web_file_upload(request: Request, path: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.my_files import MAX_UPLOAD, MyFiles
+
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No file received.")
+        if len(data) > MAX_UPLOAD:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is over 50 MB.")
+        name = unquote(request.headers.get("x-filename", "file"))
+        try:
+            saved = _screen(profile_id, "files", lambda view: MyFiles.for_context(view).save(path, name, data))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"Saved {saved.rsplit('/', 1)[-1]}.", "path": saved}
+
     @app.get("/api/workout")
     def web_workout(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_screens import workout_page

@@ -46,7 +46,7 @@ def test_the_shell_is_the_persons_own(world):
     ids = [a["id"] for a in data["apps"]]
     assert ids[0] == "web_home" and "dashboard" not in ids and "budget" in ids and "real_estate" in ids
     assert all(a["page"] for a in data["apps"])
-    assert "Workshop" in data["on_pc_only"]
+    assert "Household" in data["on_pc_only"] and "Workshop" not in data["on_pc_only"]
 
     set_app_visible(world, "kitchen", False)
     assert "kitchen" not in [a["id"] for a in shell(world, TODAY)["apps"]]
@@ -139,7 +139,7 @@ def test_the_apps_page(world):
     apps = {a["id"]: a for g in page["groups"] for a in g["apps"]}
     assert apps["budget"]["on_web"] and apps["budget"]["tools"] == [
         {"name": "add_bill", "does": "Add bill", "detail": "Add a new bill."}]
-    assert not apps["workshop"]["on_web"] and apps["workshop"]["ask"]
+    assert not apps["household"]["on_web"] and apps["household"]["ask"] and apps["workshop"]["on_web"]
     assert not apps["module_browser"]["can_hide"] and apps["kitchen"]["can_hide"]
     assert page["counts"]["apps"] == len(apps)
 

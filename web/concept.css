@@ -1211,3 +1211,60 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .skill-head { display: flex; gap: 12px; align-items: center; }
 .skill-icon { width: 30px; text-align: center; font-size: 24px; flex: none; }
 .skill-head h3 { font-size: var(--text-md); }
+
+/* ---------------------------------------------------------------- Journal, Workshop, Expeditions, Music, Files (2026-10-16) */
+.journal-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: var(--gap); }
+.journal-actions .btn { flex: 1 1 160px; justify-content: center; }
+.journal-search { width: 100%; margin-bottom: 10px; }
+.tag-filter { margin-bottom: 10px; }
+.chip-button.on { color: var(--text); border-color: rgba(var(--rgb-accent), 0.9); background: rgba(var(--rgb-accent), 0.15); }
+.journal-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.journal-card { padding: 12px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+.journal-card:hover, .journal-card:focus-visible { border-color: rgba(var(--rgb-accent), 0.7); outline: none; }
+.journal-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.journal-head h3 { margin: 0; font-size: var(--text-md); overflow-wrap: break-word; min-width: 0; }
+.journal-head .dim { flex: none; font-size: var(--text-sm); }
+.journal-preview { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.journal-body { white-space: pre-wrap; line-height: 1.55; max-height: 55vh; overflow: auto; margin: 10px 0; }
+.journal-private { margin-top: var(--gap); }
+
+.trip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--gap); }
+.trip-card { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.trip-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.trip-head h3 { margin: 0; font-size: var(--text-md); }
+.trip-head p { margin: 2px 0 0; }
+.trip-card h4 { margin: 4px 0 0; font-size: var(--text-sm); color: var(--text-dim); }
+.gear-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.gear-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.gear-list li.done span { color: var(--text-dim); text-decoration: line-through; }
+.gear-list .tick { width: 26px; height: 26px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-accent), 0.5);
+  background: transparent; color: var(--text); cursor: pointer; }
+.gear-list .tick.on { background: rgba(var(--rgb-ok), 0.25); border-color: var(--ok); }
+.gear-add { display: flex; gap: 8px; }
+.gear-add input { flex: 1; min-width: 0; }
+
+.music-player { padding: 12px 14px; margin-bottom: var(--gap); display: flex; flex-direction: column; gap: 8px; }
+.music-now { display: flex; flex-direction: column; }
+.music-audio { width: 100%; }
+.music-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.music-play { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(var(--rgb-accent), 0.6);
+  background: transparent; color: var(--accent); cursor: pointer; font-size: 14px; }
+.music-row.playing .music-play { background: rgba(var(--rgb-accent), 0.2); }
+
+.file-crumbs { margin-bottom: 10px; overflow-wrap: anywhere; }
+.file-row { grid-template-columns: minmax(0, 1fr) auto; }
+.file-open { display: flex; gap: 12px; align-items: center; background: none; border: 0; color: inherit; text-align: left;
+  cursor: pointer; padding: 0; min-width: 0; font: inherit; }
+.file-open > span:last-child { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.file-ico { font-size: 24px; flex: none; }
+.file-view img, .file-view video { max-width: 100%; max-height: 60vh; display: block; margin: 8px auto; }
+.file-view iframe { width: 100%; height: 60vh; border: 0; background: var(--bg); }
+.file-view audio { width: 100%; }
+.file-text { white-space: pre-wrap; max-height: 55vh; overflow: auto; font-size: var(--text-sm); }
+@media (max-width: 560px) {
+  .music-row, .file-row { grid-template-columns: auto minmax(0, 1fr); }
+  .music-row > .row-buttons, .file-row > .row-buttons { grid-column: 1 / -1; }
+  .file-row { grid-template-columns: minmax(0, 1fr); }
+}
+.file-open, .music-play { text-transform: none; }
+.music-library { overflow-wrap: anywhere; }

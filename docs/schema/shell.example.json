@@ -81,11 +81,46 @@
       "page": "money.html"
     },
     {
+      "id": "workshop",
+      "name": "Workshop",
+      "icon": "🔩",
+      "tagline": "Parts, jobs and products.",
+      "page": "workshop.html"
+    },
+    {
       "id": "character",
       "name": "Character",
       "icon": "👤",
       "tagline": "Your story so far.",
       "page": "character.html"
+    },
+    {
+      "id": "notes",
+      "name": "Journal",
+      "icon": "📓",
+      "tagline": "Write it down.",
+      "page": "journal.html"
+    },
+    {
+      "id": "expeditions",
+      "name": "Expeditions",
+      "icon": "🏕",
+      "tagline": "Plan the trip.",
+      "page": "expeditions.html"
+    },
+    {
+      "id": "files",
+      "name": "Files",
+      "icon": "🗂",
+      "tagline": "Your files.",
+      "page": "files.html"
+    },
+    {
+      "id": "music",
+      "name": "Music",
+      "icon": "🎵",
+      "tagline": "Your music.",
+      "page": "music.html"
     },
     {
       "id": "assistant",
@@ -104,14 +139,11 @@
   ],
   "on_pc_only": [
     "Household",
-    "Workshop",
     "Power",
     "Observations",
     "People & Pets",
-    "Notes",
     "Classroom",
     "Inbox",
-    "Expeditions",
     "Memories",
     "Maps",
     "Navigation",
@@ -119,8 +151,6 @@
     "Toolbox",
     "The Lab",
     "Field Kit",
-    "Files",
-    "Music",
     "Diagnostics",
     "Settings"
   ],

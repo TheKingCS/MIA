@@ -1,0 +1,507 @@
+{
+  "available": true,
+  "as_of": "2026-10-16",
+  "parts": [
+    {
+      "id": "824720506c",
+      "name": "Hinge",
+      "detail": "Hardware · 2 in",
+      "quantity": 12,
+      "location": "Drawer 3",
+      "empty": false,
+      "values": {
+        "name": "Hinge",
+        "category": "Hardware",
+        "value": "2 in",
+        "package": "",
+        "quantity": 12,
+        "location": "Drawer 3",
+        "notes": ""
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "213ae765f6",
+      "name": "Plywood 3/4 in",
+      "unit": "sheet",
+      "on_hand": 0.0,
+      "reorder_at": 2.0,
+      "low": true,
+      "cost": "$54.00",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Plywood 3/4 in",
+        "unit": "sheet",
+        "quantity_on_hand": 0.0,
+        "reorder_threshold": 2.0,
+        "unit_cost": 54.0,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "ecd838651c",
+      "name": "Wood screws",
+      "unit": "box",
+      "on_hand": 6.0,
+      "reorder_at": 1.0,
+      "low": false,
+      "cost": "$9.00",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Wood screws",
+        "unit": "box",
+        "quantity_on_hand": 6.0,
+        "reorder_threshold": 1.0,
+        "unit_cost": 9.0,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    }
+  ],
+  "products": [
+    {
+      "id": "6da43d8fd6",
+      "name": "Cedar birdhouse",
+      "price": "$35.00",
+      "stock": 3.0,
+      "description": "",
+      "listings": [],
+      "values": {
+        "name": "Cedar birdhouse",
+        "base_price": 35.0,
+        "quantity_in_stock": 3.0,
+        "description": "",
+        "notes": ""
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "id": "c9e9d9bc1d",
+      "name": "Birdhouse batch",
+      "status": "In Progress",
+      "description": "",
+      "hours": 3.0,
+      "cost": "$108.00",
+      "used": [
+        "2 sheet Plywood 3/4 in"
+      ],
+      "made": [],
+      "values": {
+        "name": "Birdhouse batch",
+        "status": "In Progress",
+        "labor_hours": 3.0,
+        "description": "",
+        "notes": ""
+      }
+    }
+  ],
+  "money": [
+    {
+      "id": "f1a88b68ad",
+      "kind": "sale",
+      "amount": "$35.00",
+      "value": 35.0,
+      "what": "1 × Cedar birdhouse",
+      "date": "2026-10-16"
+    },
+    {
+      "id": "19ea5ecd66",
+      "kind": "cost",
+      "amount": "$14.50",
+      "value": -14.5,
+      "what": "Postage",
+      "category": "Shipping",
+      "date": "2026-10-16"
+    }
+  ],
+  "totals": {
+    "sales": "$35.00",
+    "costs": "$14.50",
+    "profit": "$20.50",
+    "profit_value": 20.5
+  },
+  "counts": {
+    "parts": 1,
+    "materials": 2,
+    "low": 1,
+    "products": 1,
+    "open_jobs": 1
+  },
+  "picks": {
+    "materials": [
+      {
+        "id": "213ae765f6",
+        "name": "Plywood 3/4 in"
+      },
+      {
+        "id": "ecd838651c",
+        "name": "Wood screws"
+      }
+    ],
+    "products": [
+      {
+        "id": "6da43d8fd6",
+        "name": "Cedar birdhouse"
+      }
+    ]
+  },
+  "forms": {
+    "component": {
+      "noun": "part",
+      "id_param": "component_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Kind",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "value",
+          "label": "Value",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "package",
+          "label": "Package",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "label": "How many",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "location",
+          "label": "Where it's kept",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "material": {
+      "noun": "material",
+      "id_param": "material_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "unit",
+          "label": "Unit (sheet, ft, kg...)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "quantity_on_hand",
+          "label": "On hand",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "reorder_threshold",
+          "label": "Reorder at",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "unit_cost",
+          "label": "Cost per unit",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "supplier",
+          "label": "Supplier",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "location",
+          "label": "Where it's kept",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "product": {
+      "noun": "product",
+      "id_param": "product_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "base_price",
+          "label": "Price",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "quantity_in_stock",
+          "label": "In stock",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "job": {
+      "noun": "job",
+      "id_param": "job_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Planned",
+            "In Progress",
+            "Complete",
+            "Cancelled"
+          ],
+          "default": "Planned"
+        },
+        {
+          "name": "labor_hours",
+          "label": "Hours worked",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0.0
+        },
+        {
+          "name": "description",
+          "label": "What it is",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "sale": {
+      "noun": "sale",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "description",
+          "label": "What sold",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "shop_expense": {
+      "noun": "shop cost",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Kind",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Materials",
+            "Tools",
+            "Shipping",
+            "Fees",
+            "Overhead",
+            "Other"
+          ],
+          "default": "Other"
+        },
+        {
+          "name": "description",
+          "label": "What for",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "product_sale": {
+      "noun": "sale",
+      "id_param": "product_id",
+      "fields": [
+        {
+          "name": "quantity",
+          "label": "How many",
+          "type": "amount",
+          "required": true,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "amount",
+          "label": "Total paid",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

@@ -314,6 +314,7 @@ import core.account_actions  # noqa: E402,F401  (Profile, Settings)
 import core.fitness_actions  # noqa: E402,F401  (fitness plan, weigh-ins, food, training)
 import core.plan_import  # noqa: E402,F401  (a whole plan and its recipes, pasted as text)
 import core.calendar_actions  # noqa: E402,F401  (your own calendar events)
+import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 
 
 # ------------------------------------------------------------------ the five steps

@@ -120,6 +120,23 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.alarms = AlarmManager(context)
     context.journal = JournalManager(context)
     context.inventory = InventoryManager(context)
+    # The Workshop (components, materials, products, jobs, the sales ledger)
+    # and the Music library, so their web screens work on the phone and in
+    # MIA Core too (2026-10-16). Same order as core/application.py: jobs
+    # reach into materials and products, the ledger into products.
+    from core.component_manager import ComponentManager
+    from core.job_manager import JobManager
+    from core.ledger_manager import LedgerManager
+    from core.material_manager import MaterialManager
+    from core.music_manager import MusicManager
+    from core.product_manager import ProductManager
+
+    context.components = ComponentManager(context)
+    context.materials = MaterialManager(context)
+    context.products = ProductManager(context)
+    context.jobs = JobManager(context)
+    context.ledger = LedgerManager(context)
+    context.music = MusicManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.connectivity = ConnectivityMonitor(context)

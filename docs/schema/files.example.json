@@ -1,0 +1,30 @@
+{
+  "available": true,
+  "path": "",
+  "crumbs": [
+    {
+      "name": "My Files",
+      "path": ""
+    }
+  ],
+  "folders": [
+    {
+      "name": "Receipts",
+      "path": "Receipts",
+      "count": 0,
+      "modified": "2026-10-16"
+    }
+  ],
+  "files": [
+    {
+      "name": "packing notes.txt",
+      "path": "packing notes.txt",
+      "kind": "text",
+      "size": 27,
+      "size_text": "27 bytes",
+      "modified": "2026-10-16"
+    }
+  ],
+  "used": 27,
+  "used_text": "27 bytes"
+}

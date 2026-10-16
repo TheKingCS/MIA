@@ -26,11 +26,11 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Budget: Trends | Spending and income over time | `budget__07_trends` | ✅ `/api/money` + money actions | ✅ last six months in and out | |
 | Budget: Bank sync | Plaid status, sync, linked accounts | `budget__08_bank_sync` | ✅ `/api/money` + money actions | status only (connect and sync need the vault passphrase: PC app) | |
 | Real Estate | Properties: value, equity, mortgage, rent, cash flow, depreciation, maintenance, sell | `real_estate` | ✅ `/api/real-estate` + property actions | ✅ property cards (status, where, rent, balance, equity, payment, cash flow, this month), add, edit, delete, record rent, add expense (both into Money), track upkeep (its Maintenance asset) with Done, related missions (not yet: depreciation, sell, photos) | |
-| Workshop: Components | Parts inventory: add, edit, use | `workshop__01_components` | |  | |
-| Workshop: Materials | Fabrication materials | `workshop__02_materials` | |  | |
-| Workshop: Jobs | Costed jobs | `workshop__03_jobs` | |  | |
-| Workshop: Products | Products | `workshop__04_products` | |  | |
-| Workshop: Ledger | Sales ledger | `workshop__05_ledger` | |  | |
+| Workshop: Components | Parts inventory: add, edit, use | `workshop__01_components` | ✅ `/api/workshop` + workshop actions | ✅ Parts tab: add, edit, delete, + / − | |
+| Workshop: Materials | Fabrication materials | `workshop__02_materials` | ✅ `/api/workshop` + workshop actions | ✅ Materials tab: low first, add, edit, delete, + / − | |
+| Workshop: Jobs | Costed jobs | `workshop__03_jobs` | ✅ `/api/workshop` + workshop actions | ✅ Jobs tab: status, used material, made product, hours, cost, add, edit, delete | |
+| Workshop: Products | Products | `workshop__04_products` | ✅ `/api/workshop` + workshop actions | ✅ Products tab: stock, Sell (logs the sale), + / −, add, edit, delete (not yet: listings) | |
+| Workshop: Ledger | Sales ledger | `workshop__05_ledger` | ✅ `/api/workshop` + workshop actions | ✅ Money tab: sales, costs, profit, add sale/cost, delete | |
 | Garage | Vehicles and equipment: tracked, overdue, next up, asset cards with tasks | `garage` | ✅ `/api/equipment?scope=garage` + equipment actions | ✅ tracked / needs attention / next up, asset cards with tasks, Done (with meter value), add asset | |
 | Asset page | One asset: overview, maintenance, missions, documents, parts, history, meter hours | `(concept: the mower page)` | ✅ `/api/assets/{id}` + document upload/download | ✅ quick stats + log readings, needs attention, Overview / Maintenance (add, edit, delete, done, log) / Missions / Documents (upload, open, remove) / Costs / History; Parts PLANNED (not tracked per asset yet) | |
 | Property | House, appliances, tools | `property` | ✅ `/api/equipment?scope=property` | ✅ same as Garage, for appliances, the property and tools | |
@@ -52,9 +52,9 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | My plan | Goals, training week and rotation, skills, meals and preferences, milestones (DEC-0021) | `(none: new)` | ✅ `/api/fitness` + `fitness.plan` | ✅ paste a whole plan as text (`docs/PLAN_TEXT_FORMAT.md`), goals, training days and each training day's exercises (typed like “Dips 3x8”), reorder, skills with steps, meals (packed lunch, prep day, diet, dislikes, allergies, lunch rotation), milestones | |
 | People | People: birthdays, gift ideas, notes | `relationships__01_people` | |  | |
 | Pets | Pets: vet history | `relationships__02_pets` | |  | |
-| Notes | Dated, tagged notes and journal | `notes` | |  | |
+| Notes | Dated, tagged notes and journal | `notes` | ✅ `/api/journal` + journal actions | ✅ Journal: entries, search, tags, write, read, edit, delete; Talk It Out (private entries stay encrypted) | |
 | Classroom | Subjects, courses, lessons, textbooks and study | `classroom` | |  | |
-| Expeditions | Trips: routes, gear, weather, distance | `expeditions` | |  | |
+| Expeditions | Trips: routes, gear, weather, distance | `expeditions` | ✅ `/api/expeditions` + expedition actions | ✅ now / coming up / past, trips, start / finish, packing list (not yet: route, splits, weather, photos) | |
 | Memories | Trip recaps, stats, photos | `memories` | |  | |
 | Maps: Waypoints | Waypoints | `maps__01_waypoints` | |  | |
 | Maps: Basemap | Offline basemap | `maps__02_basemap` | |  | |
@@ -69,9 +69,9 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Field Kit: Devices | Connected devices | `field_kit__01_devices` | |  | |
 | Field Kit: Scripts | Scripts | `field_kit__02_scripts` | |  | |
 | Field Kit: Security | Security | `field_kit__03_security` | |  | |
-| Files | File browser | `files` | |  | |
-| Music: Library | Music library | `music__01_library` | |  | |
-| Music: Playlists | Playlists | `music__02_playlists` | |  | |
+| Files | File browser | `files` | ✅ `/api/files` + file actions | ✅ the person's own MIA files folder: upload, open, folders, rename, delete (the whole disk stays on the PC app) | |
+| Music: Library | Music library | `music__01_library` | ✅ `/api/music` + playlist actions | ✅ songs (search), playlists, artists; plays in the browser; Scan Library | |
+| Music: Playlists | Playlists | `music__02_playlists` | ✅ `/api/music` + playlist actions | ✅ new, open, play, rename, delete, add/remove songs | |
 | Modules | Turn apps on and off, install | `module_browser__01_modules` | ✅ `/api/apps`, `app.visibility` | ✅ every app by life area, what MIA can do in each (201 tools), open or ask MIA, show/hide per person with undo (not yet: device-wide enable/disable, install, rescan) | |
 | Settings | Theme, profile, household, options | `settings` | ✅ `/api/profile`, `/api/settings`, `profile.edit`, `setting.set`, `communication.resume`, `/api/account/password`, `/api/account/recovery-code` | 🟡 Profile (name, email, country, interests, household, password, new recovery code) and Settings (messages per day, journal reflection, support and safety, currency, private money, message breaks), all undoable (2026-10-07). Not yet: theme, voice, phone access, backup, updates, joining a household | |
 | Diagnostics | System health | `diagnostics` | |  | |
