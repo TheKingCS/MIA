@@ -316,11 +316,13 @@ def _read(context, params) -> dict:
         match = by_key.get(_name_key(n))
         (rotation if match else missing).append(match or n)
     found["lunch_rotation"] = rotation
-    if missing:  # say so in the summary; never refuse the whole plan over a name
-        note = "Lunch rotation: MIA has no recipe named " + ", ".join(missing) + " (add it as a RECIPE: section)"
-        if not any(found["plan"].values()) and not found["recipes"] and not rotation:
-            raise ActionError(note + ".")  # that was all the text had
-        found["problems"].append(note)
+    # A lunch the plan names without writing out its recipe gets one, by name
+    # (Zac, 2026-10-16: "make it so that adding the plan would add the Recipes
+    # too"), so the rotation works; its ingredients and steps come later.
+    for n in missing:
+        found["recipes"].append({"name": n.strip(), "category": "Lunch", "ingredients": [], "steps": [], "name_only": True})
+        rotation.append(n.strip())
+    found["lunch_rotation"] = rotation
     from core.fitness_actions import _clean_plan
 
     if found["plan"]:
@@ -351,11 +353,14 @@ def _describe(context, params) -> str:
     if plan.get("meals") or found["lunch_rotation"]:
         parts.append("meals")
     if found["recipes"]:
-        known = {r.name.strip().lower() for r in context.kitchen.all_recipes()}
-        new = [r["name"] for r in found["recipes"] if r["name"].strip().lower() not in known]
-        updated = [r["name"] for r in found["recipes"] if r["name"].strip().lower() in known]
+        known = {_name_key(r.name) for r in context.kitchen.all_recipes()}
+        new = [r["name"] for r in found["recipes"] if _name_key(r["name"]) not in known]
+        updated = [r["name"] for r in found["recipes"] if _name_key(r["name"]) in known and not r.get("name_only")]
+        bare = [r["name"] for r in found["recipes"] if r.get("name_only") and _name_key(r["name"]) not in known]
         if new:
-            parts.append(f"add {len(new)} recipe{'s' if len(new) != 1 else ''} ({', '.join(new)})")
+            parts.append(f"add {len(new)} recipe{'s' if len(new) != 1 else ''} ({', '.join(new)})"
+                         + (f"; {', '.join(bare)} by name only, add {'their' if len(bare) > 1 else 'its'} "
+                            "ingredients on the recipe page" if bare else ""))
         if updated:
             parts.append(f"update {', '.join(updated)}")
     summary = "Set from the pasted plan: " + "; ".join(parts) + "."
@@ -373,8 +378,11 @@ def _apply(context, params) -> str:
 
     found = _read(context, params)
     kitchen = getattr(context, "kitchen", None)
-    ids = {r.name.strip().lower(): r.recipe_id for r in kitchen.all_recipes()} if kitchen is not None else {}
+    # Recipes match by name ignoring case, punctuation and a plural s: "Egg bowls" updates "Egg bowl".
+    ids = {_name_key(r.name): r.recipe_id for r in kitchen.all_recipes()} if kitchen is not None else {}
     for r in found["recipes"]:
+        if r.get("name_only") and _name_key(r["name"]) in ids:
+            continue  # it exists already (another recipe in this text, or the Kitchen)
         fields = {k: r[k] for k in ("category", "source", "notes") if r.get(k)}
         for k in ("servings", "prep_time_minutes", "cook_time_minutes"):
             if r.get(k):
@@ -384,25 +392,25 @@ def _apply(context, params) -> str:
                 fields[k] = float(r[k])
         if r["steps"]:
             fields["instructions"] = "\n".join(r["steps"])
-        existing = ids.get(r["name"].strip().lower())
+        existing = ids.get(_name_key(r["name"]))
         if existing is None:
             existing = kitchen.add_recipe(r["name"].strip(), **{k: v for k, v in fields.items()
                                                                  if k not in ("ingredients",)}).recipe_id
-            ids[r["name"].strip().lower()] = existing
+            ids[_name_key(r["name"])] = existing
         elif fields:
             kitchen.update_recipe(existing, **fields)
         if r["ingredients"]:
             kitchen.update_recipe(existing, ingredients=parse_ingredients("\n".join(r["ingredients"])))
     plan = dict(found["plan"])
     if found["lunch_rotation"]:
-        plan.setdefault("meals", {})["lunch_rotation"] = [ids[n.strip().lower()] for n in found["lunch_rotation"]]
+        plan.setdefault("meals", {})["lunch_rotation"] = list(dict.fromkeys(ids[_name_key(n)] for n in found["lunch_rotation"]))
     if plan.get("milestones"):  # keep the ones already reached
         before = {m.get("name", "").strip().lower(): m for m in context.fitness.plan.get("milestones") or []}
         plan["milestones"] = [{**before.get(m["name"].strip().lower(), {}), **m} for m in plan["milestones"]]
     if plan:
         context.fitness.update_plan(_clean_plan(context, plan))
     ensure(context)
-    recipes = len(found["recipes"])
+    recipes = len({_name_key(r["name"]) for r in found["recipes"]})
     return "Your plan is in." + (f" {recipes} recipe{'s' if recipes != 1 else ''} in the Kitchen." if recipes else "") \
         + " Say “undo that” to take it all back."
 

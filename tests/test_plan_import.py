@@ -134,8 +134,8 @@ def test_new_recipes_are_added_and_bad_text_is_refused(world):
     assert [r.name for r in world.kitchen.all_recipes()] == ["Protein oats"]
     with pytest.raises(ActionError, match="couldn't find a plan"):
         world.actions.propose(world, "plan.import", {"text": "hello there"})
-    with pytest.raises(ActionError, match="no recipe named Mystery stew"):
-        world.actions.propose(world, "plan.import", {"text": "MEALS\nLunch rotation: Mystery stew"})
+    lone = world.actions.propose(world, "plan.import", {"text": "MEALS\nLunch rotation: Mystery stew"})
+    assert "Mystery stew by name only" in lone.summary  # a lunch with no recipe yet gets one
     with pytest.raises(ActionError, match="Days are"):
         world.actions.propose(world, "plan.import", {"text": "TRAINING\nDays: Funday"})
 
@@ -198,13 +198,18 @@ Steps:
     assert [r["name"] for r in found["recipes"]] == ["Egg bowl"] and not found["problems"]
     assert "**" not in normalize(text) and "```" not in normalize(text)
     p = world.actions.propose(world, "plan.import", {"text": text})
-    assert "Mystery stew" in p.summary
+    assert "Mystery stew by name only" in p.summary and "add 2 recipes (Egg bowl, Mystery stew)" in p.summary
     world.actions.approve(world, p.proposal_id)
     plan = world.fitness.plan
     assert plan["training"]["days"] == ["Mon", "Tue", "Thu", "Fri"] and plan["targets"]["weigh_in_days"] == ["Mon", "Thu"]
     assert [e["name"] for e in plan["training"]["rotation"][0]["exercises"]] == ["Pull-ups", "Rows", "Squats"]
     egg = next(r for r in world.kitchen.all_recipes() if r.name == "Egg bowl")
-    assert plan["meals"]["lunch_rotation"] == [egg.recipe_id]
+    stew = next(r for r in world.kitchen.all_recipes() if r.name == "Mystery stew")
+    assert stew.category == "Lunch" and not stew.ingredients
+    assert plan["meals"]["lunch_rotation"] == [egg.recipe_id, stew.recipe_id]
+    # pasting it again updates, never duplicates ("Egg bowls" is "Egg bowl")
+    world.actions.approve(world, world.actions.propose(world, "plan.import", {"text": text}).proposal_id)
+    assert sorted(r.name for r in world.kitchen.all_recipes()) == ["Egg bowl", "Mystery stew"]
 
 
 def test_a_plan_pasted_as_one_line():
