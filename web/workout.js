@@ -10,14 +10,14 @@
  * steps to tick, the practice timer with its "new best" moment, rest days
  * that count) and Progress ("is it working?": the sentence, the numbers,
  * the weight line) from MIA.fitness() (core/web_fitness.py). The old
- * Progress tab (personal records) is "Lifts". My plan is plan.html.
+ * Personal records are "Personal Bests" (Zac, 2026-10-16). My plan is plan.html.
  */
 (function () {
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
   const TABS = [["today", "Today"], ["progress", "Progress"], ["log", "Log Session"], ["exercises", "Exercises"],
-    ["templates", "Templates"], ["history", "History"], ["lifts", "Lifts"]];
+    ["templates", "Templates"], ["history", "History"], ["lifts", "Personal Bests"]];
   let page = null;
   let fit = null;  // MIA.fitness() (null where fitness isn't set up)
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : null;
@@ -389,12 +389,12 @@
         : el("p", { class: "dim" }, "A template is a routine you repeat, like “Upper body”."))],
     history: () => [section("History", null, page.sessions.length ? el("div", { class: "rows" }, page.sessions.map(sessionRow))
       : el("p", { class: "dim" }, "No sessions yet."))],
-    lifts: () => [section("Personal records", null, page.exercises.some((e) => e.pr)
+    lifts: () => [section("Personal Bests", null, page.exercises.some((e) => e.pr)
       ? el("div", { class: "asset-grid" }, page.exercises.filter((e) => e.pr).map((e) => el("article", { class: "glass asset-card" },
-        el("div", { class: "asset-head" }, el("h3", {}, e.name), el("span", { class: "chip chip-ok" }, "PR")),
+        el("div", { class: "asset-head" }, el("h3", {}, e.name), el("span", { class: "chip chip-ok" }, "Best")),
         el("p", {}, (e.pr.weight ? e.pr.weight + " × " : "") + e.pr.reps + " reps", el("span", { class: "dim" }, " · " + day(e.pr.date))),
         spark(e.progress))))
-      : el("p", { class: "dim" }, "Log a few sessions and your personal records and progress show up here."))],
+      : el("p", { class: "dim" }, "Log a few sessions and your personal bests and progress show up here."))],
   };
 
   function draw() {
