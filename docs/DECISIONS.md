@@ -454,3 +454,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Amended (zac, 2026-10-16): **layout.** Home is the orb alone (idle animation; Saturn-like rings while listening), no chat bar or text anywhere on it; every screen fits one fixed 600×600 composition with no scrolling; navigation is two moves, move and select (every list ends with Back); the Missions card shows the active mission, its objectives and a Select mission button (H-0046).
 - Amended (zac, 2026-10-16): **Missions right after the orb** (before pins); the Today card leaves the glasses and its due items move into Missions → Select Mission, sortable **Past Due / Due Today / Due Soon**, the format for every app with dated things (equipment, Rentals, the Calendar). A Calendar app filled from everything with a date, in the app and on the glasses. Kitchen on the glasses: Recipes (with photos), Today's Meal Plan, My Pantry, Grocery List. **Title Case** for buttons and headers everywhere (H-0048).
 - Related: DEC-0016, DEC-0023, H-0041, H-0042, H-0043, H-0044, H-0045, H-0046, H-0048
+
+### DEC-0025: Three apps for things you own: Garage, Real Estate, Greenhouse
+- Status: APPROVED
+- Proposed by: claude, 2026-10-16 (Zac asked whether Property and Maintenance were redundant) · Approved by: zac, 2026-10-16 ("Perfect lets cut those out")
+- Decision: **Maintenance** and **Property** are no longer apps. **Garage**
+  holds vehicles, power equipment, tools and anything else; **Real Estate**
+  holds every building you own (your home included) with its money side,
+  plus the house and its appliances and their upkeep (Home & Appliances,
+  Past Due, Due Today, Due Soon); **Greenhouse** holds plants. All upkeep
+  still shows in the Calendar and in Missions → Select Mission. No data
+  changes: assets and tasks are where they were and show under their new app
+  (`core/web_equipment.py` SCOPES). On the desktop the Maintenance module
+  stays loaded (Garage and Greenhouse open it to add and edit things) but is
+  listed nowhere (`core/web_surfaces.py` RETIRED); the old web pages redirect.
+- Related: DEC-0017, DEC-0024, H-0049

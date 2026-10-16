@@ -67,7 +67,7 @@ APPS: tuple[App, ...] = (
         "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance",),
         "What needs doing in the greenhouse?"),
     App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html",
-        "At-a-glance status for vehicles and motorized equipment.", HOME, ("maintenance",),
+        "At-a-glance status for vehicles and motorized equipment.", HOME, ("maintenance", "ownership"),
         "What's overdue on my vehicles?"),
     App("kitchen", "Kitchen", "🍳", "Good food. Good mood.", "kitchen.html",
         "Recipes, pantry, grocery list, and meal tracking.", HOME, ("kitchen", "groceries"),
@@ -78,7 +78,7 @@ APPS: tuple[App, ...] = (
     App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html",
         "Exercises, templates, guided sessions, and progress.", LIFE, ("workout",), "Log a 30 minute workout."),
     App("real_estate", "Real Estate", "🏘", "Cash flow. Equity. Freedom.", "real-estate.html",
-        "Property values, equity, rental income, and linked maintenance.", MONEY, ("real_estate",),
+        "Property values, equity, rental income, and linked maintenance.", MONEY, ("real_estate", "inventory"),
         "How are my rentals doing this month?"),
     App("missions", "Missions", "🏆", "Explore. Complete. Level up.", "missions.html",
         "Gamified goals and objectives, tied to a trip or general.", LIFE, ("missions",),
@@ -90,9 +90,9 @@ APPS: tuple[App, ...] = (
         ("budget", "debts", "homestead_costs", "business_use", "business_tags"), "Which debt should I pay first?"),
     App("maintenance", "Maintenance", "🔧", "Everything you own, cared for.", "maintenance.html",
         "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.", HOME,
-        ("maintenance", "ownership"), "I put 120 hours on the mower."),
+        (), "I put 120 hours on the mower."),
     App("property", "Property", "🏠", "The house, the appliances, the tools.", "property.html",
-        "At-a-glance status for the house, appliances, and tools.", HOME, ("inventory",),
+        "At-a-glance status for the house, appliances, and tools.", HOME, (),
         "Do I have any furnace filters left?"),
     App("workshop", "Workshop", "🔩", "Parts, jobs and products.", None,
         "Component inventory, fabrication materials/jobs/products, and a sales ledger.", MONEY,
@@ -149,6 +149,11 @@ APPS: tuple[App, ...] = (
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
 WEB_ONLY = frozenset({"calendar"})
+# Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
+# and tools; Real Estate holds buildings and appliances; the Calendar shows all
+# upkeep. Shown nowhere; the desktop keeps their modules loaded only because
+# Garage and Greenhouse open Maintenance to add and edit things.
+RETIRED = frozenset({"maintenance", "property"})
 
 # Never personal: general encouragement, one a day (STATIC).
 SAYINGS = (
@@ -179,6 +184,8 @@ def _visible(context, app: App) -> bool:
 
     if app.module_id == "web_home":
         return True
+    if app.module_id in RETIRED:
+        return False
     try:
         if not app_allowed(context, app.module_id):
             return False
@@ -315,7 +322,7 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
     state = assemble_life_state_v2(context, today)
     due = (state.get("due") or {}).get("items") or []
     page_of = {a.module_id: a.page for a in APPS}
-    page_of.update({"maintenance": "maintenance.html"})
+    page_of.update({"maintenance": "calendar.html"})
 
     def item(d):
         return {**d, "page": page_of.get(d.get("module_id"))}
@@ -388,7 +395,7 @@ def apps_page(context) -> dict:
     for group in GROUPS:
         apps = []
         for app in APPS:
-            if app.group != group or not app_allowed(context, app.module_id):
+            if app.group != group or app.module_id in RETIRED or not app_allowed(context, app.module_id):
                 continue
             apps.append({
                 "id": app.module_id, "name": app.name, "icon": app.icon, "tagline": app.tagline,

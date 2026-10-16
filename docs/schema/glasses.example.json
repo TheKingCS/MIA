@@ -194,7 +194,7 @@
       "name": "Calendar",
       "full_name": "Calendar",
       "tagline": "Everything with a date.",
-      "status": "4 today · 6 past due",
+      "status": "5 today · 6 past due",
       "tone": "attention",
       "ask": "What's on my calendar this week?",
       "pinned": false,
@@ -270,18 +270,23 @@
       ]
     },
     {
-      "id": "maintenance",
-      "name": "Maintenance",
-      "full_name": "Maintenance",
-      "tagline": "Everything you own, cared for.",
-      "status": "7 tracked · 5 need attention · next: Test run (Generator)",
-      "tone": "attention",
-      "ask": "I put 120 hours on the mower.",
+      "id": "real_estate",
+      "name": "Rentals",
+      "full_name": "Real Estate",
+      "tagline": "Cash flow. Equity. Freedom.",
+      "status": "3 properties · $232,000.00 equity",
+      "tone": "calm",
+      "ask": "How are my rentals doing this month?",
       "pinned": false,
       "menu": [
         {
+          "id": "properties",
+          "label": "Properties",
+          "type": "panel"
+        },
+        {
           "id": "assets",
-          "label": "Assets",
+          "label": "Home & Appliances",
           "type": "panel"
         },
         {
@@ -307,7 +312,7 @@
             "kind": "app.favorite",
             "label": "Pin",
             "params": {
-              "module_id": "maintenance",
+              "module_id": "real_estate",
               "favorite": true
             }
           }
@@ -353,96 +358,6 @@
             "label": "Pin",
             "params": {
               "module_id": "greenhouse",
-              "favorite": true
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "property",
-      "name": "Property",
-      "full_name": "Property",
-      "tagline": "The house, the appliances, the tools.",
-      "status": "2 tracked · 1 needs attention · next: Clean gutters (Maple House)",
-      "tone": "attention",
-      "ask": "Do I have any furnace filters left?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "assets",
-          "label": "Assets",
-          "type": "panel"
-        },
-        {
-          "id": "past_due",
-          "label": "Past Due",
-          "type": "panel"
-        },
-        {
-          "id": "due_today",
-          "label": "Due Today",
-          "type": "panel"
-        },
-        {
-          "id": "due_soon",
-          "label": "Due Soon",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "property",
-              "favorite": true
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "real_estate",
-      "name": "Rentals",
-      "full_name": "Real Estate",
-      "tagline": "Cash flow. Equity. Freedom.",
-      "status": "3 properties · $232,000.00 equity",
-      "tone": "calm",
-      "ask": "How are my rentals doing this month?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "properties",
-          "label": "Properties",
-          "type": "panel"
-        },
-        {
-          "id": "past_due",
-          "label": "Past Due",
-          "type": "panel"
-        },
-        {
-          "id": "due_today",
-          "label": "Due Today",
-          "type": "panel"
-        },
-        {
-          "id": "due_soon",
-          "label": "Due Soon",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "real_estate",
               "favorite": true
             }
           }

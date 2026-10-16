@@ -175,8 +175,12 @@ def current(context) -> tuple[Optional[str], list[str], list[str]]:
 def menu_modules(context, modules: list) -> list:
     from core.child_accounts import app_allowed
 
+    from core.web_surfaces import RETIRED
+
     _focus, featured, hidden = current(context)
-    return [m for m in arrange(modules, featured, hidden) if app_allowed(context, m.module_id)]
+    # Retired apps (folded into Garage, Real Estate and the Calendar) stay loaded, never listed.
+    return [m for m in arrange(modules, featured, hidden)
+            if app_allowed(context, m.module_id) and m.module_id not in RETIRED]
 
 
 def hidden_modules(context, modules: list) -> list:

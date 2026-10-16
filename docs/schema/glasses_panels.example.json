@@ -71,6 +71,12 @@
         "bucket": "past_due"
       },
       {
+        "text": "Haircut",
+        "detail": "",
+        "tone": "",
+        "bucket": "due_today"
+      },
+      {
         "text": "Trash day",
         "detail": "",
         "tone": "",
@@ -252,7 +258,7 @@
       {
         "id": null,
         "label": "All",
-        "count": 23
+        "count": 24
       },
       {
         "id": "past_due",
@@ -262,7 +268,7 @@
       {
         "id": "due_today",
         "label": "Due Today",
-        "count": 8
+        "count": 9
       },
       {
         "id": "due_soon",
@@ -338,7 +344,7 @@
         "recipe": {
           "id": "1152ba8d1e",
           "name": "Chicken stir fry",
-          "photo": "",
+          "photo": "/api/kitchen/recipe/1152ba8d1e/photo?v=1792155071",
           "ingredients": [
             "1 lb chicken",
             "2 cups rice",
@@ -681,7 +687,7 @@
           "kind": "fitness.step",
           "label": "Done",
           "params": {
-            "step": 0
+            "step": 1
           }
         }
       },
@@ -693,7 +699,7 @@
           "kind": "fitness.step",
           "label": "Done",
           "params": {
-            "step": 1
+            "step": 2
           }
         }
       },
@@ -705,7 +711,7 @@
           "kind": "fitness.step",
           "label": "Done",
           "params": {
-            "step": 2
+            "step": 3
           }
         }
       },
@@ -1012,210 +1018,6 @@
     "more": 0,
     "empty": "Nothing due in the next month."
   },
-  "maintenance/assets": {
-    "app": "maintenance",
-    "item": "assets",
-    "label": "Assets",
-    "title": "Assets",
-    "lines": [
-      {
-        "text": "Mower",
-        "detail": "2 past due · next: Check oil (overdue 14d)",
-        "tone": "attention"
-      },
-      {
-        "text": "Maple House",
-        "detail": "1 past due · next: HVAC filter (overdue 6d)",
-        "tone": "attention"
-      },
-      {
-        "text": "Pickup truck",
-        "detail": "1 past due · next: Tire rotation (overdue 9d)",
-        "tone": "attention"
-      },
-      {
-        "text": "Raised bed",
-        "detail": "1 past due · next: Water (overdue 2d)",
-        "tone": "attention"
-      },
-      {
-        "text": "Furnace",
-        "detail": "next: Replace filter (due in 29d)",
-        "tone": ""
-      },
-      {
-        "text": "Generator",
-        "detail": "next: Test run (due in 3d)",
-        "tone": ""
-      },
-      {
-        "text": "Truck",
-        "detail": "next: Oil change (due in 4d)",
-        "tone": ""
-      }
-    ],
-    "more": 0,
-    "empty": "Nothing tracked here yet."
-  },
-  "maintenance/past_due": {
-    "app": "maintenance",
-    "item": "past_due",
-    "label": "Past Due",
-    "title": "Past Due",
-    "lines": [
-      {
-        "text": "Check oil: Mower",
-        "detail": "overdue 14d",
-        "tone": "attention",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "6cbf096c22"
-          }
-        },
-        "bucket": "past_due"
-      },
-      {
-        "text": "Sharpen blades: Mower",
-        "detail": "overdue 11d",
-        "tone": "attention",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "7a4464beaf"
-          }
-        },
-        "bucket": "past_due"
-      },
-      {
-        "text": "Tire rotation: Pickup truck",
-        "detail": "overdue 9d",
-        "tone": "attention",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "68e719deaa"
-          }
-        },
-        "bucket": "past_due"
-      },
-      {
-        "text": "HVAC filter: Maple House",
-        "detail": "overdue 6d",
-        "tone": "attention",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "58cb39bfd5"
-          }
-        },
-        "bucket": "past_due"
-      },
-      {
-        "text": "Water: Raised bed",
-        "detail": "overdue 2d",
-        "tone": "attention",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "cd4ef5ed1b"
-          }
-        },
-        "bucket": "past_due"
-      }
-    ],
-    "more": 0,
-    "empty": "Nothing past due. Everything's cared for."
-  },
-  "maintenance/due_today": {
-    "app": "maintenance",
-    "item": "due_today",
-    "label": "Due Today",
-    "title": "Due Today",
-    "lines": [],
-    "more": 0,
-    "empty": "Nothing due today."
-  },
-  "maintenance/due_soon": {
-    "app": "maintenance",
-    "item": "due_soon",
-    "label": "Due Soon",
-    "title": "Due Soon",
-    "lines": [
-      {
-        "text": "Test run: Generator",
-        "detail": "due in 3d",
-        "tone": "",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "d4364f8f41"
-          }
-        },
-        "bucket": "due_soon"
-      },
-      {
-        "text": "Oil change: Truck",
-        "detail": "due in 4d",
-        "tone": "",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "101ce96064"
-          }
-        },
-        "bucket": "due_soon"
-      },
-      {
-        "text": "Brake check: Pickup truck",
-        "detail": "due in 9d",
-        "tone": "",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "495a698f89"
-          }
-        },
-        "bucket": "due_soon"
-      },
-      {
-        "text": "Clean gutters: Maple House",
-        "detail": "due in 29d",
-        "tone": "",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "e9e5f5f7cb"
-          }
-        },
-        "bucket": "due_soon"
-      },
-      {
-        "text": "Replace filter: Furnace",
-        "detail": "due in 29d",
-        "tone": "",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "96e2e226b0"
-          }
-        },
-        "bucket": "due_soon"
-      }
-    ],
-    "more": 0,
-    "empty": "Nothing due in the next month."
-  },
   "greenhouse/assets": {
     "app": "greenhouse",
     "item": "assets",
@@ -1272,10 +1074,35 @@
     "more": 0,
     "empty": "Nothing due in the next month."
   },
-  "property/assets": {
-    "app": "property",
+  "real_estate/properties": {
+    "app": "real_estate",
+    "item": "properties",
+    "label": "Properties",
+    "title": "Properties",
+    "lines": [
+      {
+        "text": "Maple House",
+        "detail": "Rented · $639.30/mo cash flow",
+        "tone": "attention"
+      },
+      {
+        "text": "Oak Duplex",
+        "detail": "For Rent",
+        "tone": ""
+      },
+      {
+        "text": "Vacant lot",
+        "detail": "",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No properties yet."
+  },
+  "real_estate/assets": {
+    "app": "real_estate",
     "item": "assets",
-    "label": "Assets",
+    "label": "Home & Appliances",
     "title": "Assets",
     "lines": [
       {
@@ -1292,8 +1119,8 @@
     "more": 0,
     "empty": "Nothing tracked here yet."
   },
-  "property/past_due": {
-    "app": "property",
+  "real_estate/past_due": {
+    "app": "real_estate",
     "item": "past_due",
     "label": "Past Due",
     "title": "Past Due",
@@ -1315,8 +1142,8 @@
     "more": 0,
     "empty": "Nothing past due. Everything's cared for."
   },
-  "property/due_today": {
-    "app": "property",
+  "real_estate/due_today": {
+    "app": "real_estate",
     "item": "due_today",
     "label": "Due Today",
     "title": "Due Today",
@@ -1324,8 +1151,8 @@
     "more": 0,
     "empty": "Nothing due today."
   },
-  "property/due_soon": {
-    "app": "property",
+  "real_estate/due_soon": {
+    "app": "real_estate",
     "item": "due_soon",
     "label": "Due Soon",
     "title": "Due Soon",
@@ -1359,86 +1186,6 @@
     ],
     "more": 0,
     "empty": "Nothing due in the next month."
-  },
-  "real_estate/properties": {
-    "app": "real_estate",
-    "item": "properties",
-    "label": "Properties",
-    "title": "Properties",
-    "lines": [
-      {
-        "text": "Maple House",
-        "detail": "Rented · $639.30/mo cash flow",
-        "tone": "attention"
-      },
-      {
-        "text": "Oak Duplex",
-        "detail": "For Rent",
-        "tone": ""
-      },
-      {
-        "text": "Vacant lot",
-        "detail": "",
-        "tone": ""
-      }
-    ],
-    "more": 0,
-    "empty": "No properties yet."
-  },
-  "real_estate/past_due": {
-    "app": "real_estate",
-    "item": "past_due",
-    "label": "Past Due",
-    "title": "Past Due",
-    "lines": [
-      {
-        "text": "HVAC filter: Maple House",
-        "detail": "overdue 6d",
-        "tone": "attention",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "58cb39bfd5"
-          }
-        },
-        "bucket": "past_due"
-      }
-    ],
-    "more": 0,
-    "empty": "Nothing past due."
-  },
-  "real_estate/due_today": {
-    "app": "real_estate",
-    "item": "due_today",
-    "label": "Due Today",
-    "title": "Due Today",
-    "lines": [],
-    "more": 0,
-    "empty": "Nothing due today."
-  },
-  "real_estate/due_soon": {
-    "app": "real_estate",
-    "item": "due_soon",
-    "label": "Due Soon",
-    "title": "Due Soon",
-    "lines": [
-      {
-        "text": "Clean gutters: Maple House",
-        "detail": "due in 29d",
-        "tone": "",
-        "action": {
-          "kind": "maintenance.done",
-          "label": "Done",
-          "params": {
-            "task_id": "e9e5f5f7cb"
-          }
-        },
-        "bucket": "due_soon"
-      }
-    ],
-    "more": 0,
-    "empty": "Nothing due soon."
   },
   "calendar/past_due": {
     "app": "calendar",
@@ -1521,6 +1268,11 @@
     "label": "Due Today",
     "title": "Due Today",
     "lines": [
+      {
+        "text": "Haircut",
+        "detail": "15:00 · Event",
+        "tone": ""
+      },
       {
         "text": "Breakfast: Protein oats",
         "detail": "Meal",

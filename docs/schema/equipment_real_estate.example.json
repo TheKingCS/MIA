@@ -1,13 +1,12 @@
 {
-  "scope": "property",
-  "name": "Property",
-  "icon": "🏠",
-  "tagline": "The house, the appliances, the tools.",
+  "scope": "real_estate",
+  "name": "Real Estate",
+  "icon": "🏘",
+  "tagline": "Every building you own, and what's in it.",
   "default_category": "Appliance",
   "categories": [
-    "Appliance",
     "Property",
-    "Tool"
+    "Appliance"
   ],
   "forms": {
     "asset": {
@@ -279,11 +278,11 @@
       ]
     }
   },
-  "as_of": "2026-10-06",
+  "as_of": "2026-10-16",
   "available": true,
   "assets": [
     {
-      "id": "2bcc9f674a",
+      "id": "aa6ccf7ef6",
       "name": "Maple House",
       "category": "Property",
       "make_model": "",
@@ -291,25 +290,25 @@
       "overdue": 1,
       "tasks": [
         {
-          "id": "69869ef27b",
+          "id": "58cb39bfd5",
           "title": "HVAC filter",
-          "asset_id": "2bcc9f674a",
+          "asset_id": "aa6ccf7ef6",
           "asset": "Maple House",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-07-03",
+          "last_completed": "2026-07-12",
           "interval_days": 90,
           "meter_interval": null,
           "urgency": "overdue",
-          "text": "overdue 5d",
-          "days": -5,
+          "text": "overdue 6d",
+          "days": -6,
           "needs_attention": true,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "2bcc9f674a",
+            "asset_id": "aa6ccf7ef6",
             "title": "HVAC filter",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -318,38 +317,39 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-07-03",
+            "last_completed": "2026-07-12",
             "notes": ""
           },
+          "bucket": "past_due",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "69869ef27b"
+              "task_id": "58cb39bfd5"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "444df10f48",
+          "id": "e9e5f5f7cb",
           "title": "Clean gutters",
-          "asset_id": "2bcc9f674a",
+          "asset_id": "aa6ccf7ef6",
           "asset": "Maple House",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-05-09",
+          "last_completed": "2026-05-18",
           "interval_days": 180,
           "meter_interval": null,
           "urgency": "on_track",
-          "text": "due in 30d",
-          "days": 30,
+          "text": "due in 29d",
+          "days": 29,
           "needs_attention": false,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "2bcc9f674a",
+            "asset_id": "aa6ccf7ef6",
             "title": "Clean gutters",
             "trigger_type": "calendar",
             "interval_days": 180,
@@ -358,14 +358,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-05-09",
+            "last_completed": "2026-05-18",
             "notes": ""
           },
+          "bucket": "due_soon",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "444df10f48"
+              "task_id": "e9e5f5f7cb"
             },
             "asks_meter": false
           }
@@ -374,10 +375,10 @@
       "task_count": 2,
       "quick_stats": [],
       "warranty_until": null,
-      "scope": "property"
+      "scope": "real_estate"
     },
     {
-      "id": "b3f65dc0d2",
+      "id": "a0df037886",
       "name": "Furnace",
       "category": "Appliance",
       "make_model": "Make",
@@ -385,25 +386,25 @@
       "overdue": 0,
       "tasks": [
         {
-          "id": "dba429638e",
+          "id": "96e2e226b0",
           "title": "Replace filter",
-          "asset_id": "b3f65dc0d2",
+          "asset_id": "a0df037886",
           "asset": "Furnace",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-08-07",
+          "last_completed": "2026-08-16",
           "interval_days": 90,
           "meter_interval": null,
           "urgency": "on_track",
-          "text": "due in 30d",
-          "days": 30,
+          "text": "due in 29d",
+          "days": 29,
           "needs_attention": false,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "b3f65dc0d2",
+            "asset_id": "a0df037886",
             "title": "Replace filter",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -412,14 +413,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-08-07",
+            "last_completed": "2026-08-16",
             "notes": ""
           },
+          "bucket": "due_soon",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "dba429638e"
+              "task_id": "96e2e226b0"
             },
             "asks_meter": false
           }
@@ -427,31 +429,31 @@
       ],
       "task_count": 1,
       "quick_stats": [],
-      "warranty_until": "2027-04-24",
-      "scope": "property"
+      "warranty_until": "2027-05-03",
+      "scope": "real_estate"
     }
   ],
   "attention": [
     {
-      "id": "69869ef27b",
+      "id": "58cb39bfd5",
       "title": "HVAC filter",
-      "asset_id": "2bcc9f674a",
+      "asset_id": "aa6ccf7ef6",
       "asset": "Maple House",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-07-03",
+      "last_completed": "2026-07-12",
       "interval_days": 90,
       "meter_interval": null,
       "urgency": "overdue",
-      "text": "overdue 5d",
-      "days": -5,
+      "text": "overdue 6d",
+      "days": -6,
       "needs_attention": true,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "2bcc9f674a",
+        "asset_id": "aa6ccf7ef6",
         "title": "HVAC filter",
         "trigger_type": "calendar",
         "interval_days": 90,
@@ -460,14 +462,15 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-07-03",
+        "last_completed": "2026-07-12",
         "notes": ""
       },
+      "bucket": "past_due",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "69869ef27b"
+          "task_id": "58cb39bfd5"
         },
         "asks_meter": false
       }
@@ -475,25 +478,25 @@
   ],
   "next_up": [
     {
-      "id": "444df10f48",
+      "id": "e9e5f5f7cb",
       "title": "Clean gutters",
-      "asset_id": "2bcc9f674a",
+      "asset_id": "aa6ccf7ef6",
       "asset": "Maple House",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-05-09",
+      "last_completed": "2026-05-18",
       "interval_days": 180,
       "meter_interval": null,
       "urgency": "on_track",
-      "text": "due in 30d",
-      "days": 30,
+      "text": "due in 29d",
+      "days": 29,
       "needs_attention": false,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "2bcc9f674a",
+        "asset_id": "aa6ccf7ef6",
         "title": "Clean gutters",
         "trigger_type": "calendar",
         "interval_days": 180,
@@ -502,38 +505,39 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-05-09",
+        "last_completed": "2026-05-18",
         "notes": ""
       },
+      "bucket": "due_soon",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "444df10f48"
+          "task_id": "e9e5f5f7cb"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "dba429638e",
+      "id": "96e2e226b0",
       "title": "Replace filter",
-      "asset_id": "b3f65dc0d2",
+      "asset_id": "a0df037886",
       "asset": "Furnace",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-08-07",
+      "last_completed": "2026-08-16",
       "interval_days": 90,
       "meter_interval": null,
       "urgency": "on_track",
-      "text": "due in 30d",
-      "days": 30,
+      "text": "due in 29d",
+      "days": 29,
       "needs_attention": false,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "b3f65dc0d2",
+        "asset_id": "a0df037886",
         "title": "Replace filter",
         "trigger_type": "calendar",
         "interval_days": 90,
@@ -542,14 +546,15 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-08-07",
+        "last_completed": "2026-08-16",
         "notes": ""
       },
+      "bucket": "due_soon",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "dba429638e"
+          "task_id": "96e2e226b0"
         },
         "asks_meter": false
       }
@@ -557,32 +562,157 @@
   ],
   "all_assets": [
     {
-      "id": "b3f65dc0d2",
+      "id": "a0df037886",
       "name": "Furnace"
     },
     {
-      "id": "bd96ef42c9",
+      "id": "8c260faa4f",
       "name": "Generator"
     },
     {
-      "id": "2bcc9f674a",
+      "id": "aa6ccf7ef6",
       "name": "Maple House"
     },
     {
-      "id": "e5f4bff5be",
+      "id": "31ee84683a",
       "name": "Mower"
     },
     {
-      "id": "f2a88f650c",
+      "id": "d7ea2a25b1",
       "name": "Pickup truck"
     },
     {
-      "id": "f2fc8a1e59",
+      "id": "9f4ce672f7",
       "name": "Raised bed"
     },
     {
-      "id": "d7e10280ec",
+      "id": "6fd206ec1b",
       "name": "Truck"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "58cb39bfd5",
+      "title": "HVAC filter",
+      "asset_id": "aa6ccf7ef6",
+      "asset": "Maple House",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-07-12",
+      "interval_days": 90,
+      "meter_interval": null,
+      "urgency": "overdue",
+      "text": "overdue 6d",
+      "days": -6,
+      "needs_attention": true,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "aa6ccf7ef6",
+        "title": "HVAC filter",
+        "trigger_type": "calendar",
+        "interval_days": 90,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-07-12",
+        "notes": ""
+      },
+      "bucket": "past_due",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "58cb39bfd5"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "e9e5f5f7cb",
+      "title": "Clean gutters",
+      "asset_id": "aa6ccf7ef6",
+      "asset": "Maple House",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-05-18",
+      "interval_days": 180,
+      "meter_interval": null,
+      "urgency": "on_track",
+      "text": "due in 29d",
+      "days": 29,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "aa6ccf7ef6",
+        "title": "Clean gutters",
+        "trigger_type": "calendar",
+        "interval_days": 180,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-05-18",
+        "notes": ""
+      },
+      "bucket": "due_soon",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "e9e5f5f7cb"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "96e2e226b0",
+      "title": "Replace filter",
+      "asset_id": "a0df037886",
+      "asset": "Furnace",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-08-16",
+      "interval_days": 90,
+      "meter_interval": null,
+      "urgency": "on_track",
+      "text": "due in 29d",
+      "days": 29,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "a0df037886",
+        "title": "Replace filter",
+        "trigger_type": "calendar",
+        "interval_days": 90,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-08-16",
+        "notes": ""
+      },
+      "bucket": "due_soon",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "96e2e226b0"
+        },
+        "asks_meter": false
+      }
     }
   ]
 }

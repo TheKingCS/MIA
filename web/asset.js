@@ -52,7 +52,7 @@
   }
   async function deleteAsset() {
     const result = await act({ kind: "asset.delete", params: { asset_id: page.id } });
-    if (result) location.href = page.scope + ".html";
+    if (result) location.href = page.scope_page || "garage.html";
   }
   async function openDocument(name) {
     try {
@@ -156,7 +156,7 @@
   function draw() {
     document.body.dataset.app = page.scope;
     document.title = page.name + " — MIA";
-    $("back").href = page.scope + ".html";
+    $("back").href = page.scope_page || "garage.html";
     $("back").textContent = "← " + page.scope_name;
     $("hero-icon").textContent = ICONS[page.category] || "🔧";
     if (window.MIAIcons) MIAIcons.badge($("hero-icon"), document.body.dataset.app);  // the line icon (DEC-0023)

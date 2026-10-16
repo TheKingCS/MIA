@@ -272,7 +272,6 @@
       section("Recipes", buttons(btn("Add recipe", "btn-amber", () => add("recipe", "Add a recipe"))),
         page.recipes.length ? el("div", { class: "asset-grid recipe-grid" }, page.recipes.map(recipeCard))
           : el("p", { class: "empty" }, el("strong", {}, "No recipes yet."), "Add one, or tell MIA: “save my chili recipe”.")),
-      el("div", { class: "two-up" }, pantryCard(), groceryCard()),
     ],
     pantry: () => [pantryCard()],
     grocery: () => [groceryCard()],

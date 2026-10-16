@@ -208,8 +208,11 @@ def test_the_published_examples_match_the_app_list():
     from pathlib import Path
 
     schema = Path(__file__).resolve().parent.parent / "docs" / "schema"
+    from core.web_surfaces import RETIRED
+
+    live = [a for a in APPS if a.module_id not in RETIRED]  # Maintenance and Property folded in (Zac, 2026-10-16)
     shell_ids = [a["id"] for a in json.loads((schema / "shell.example.json").read_text(encoding="utf-8"))["apps"]]
-    assert shell_ids == [a.module_id for a in APPS if a.page]
+    assert shell_ids == [a.module_id for a in live if a.page]
     example = json.loads((schema / "apps.example.json").read_text(encoding="utf-8"))
-    assert {a["id"] for g in example["groups"] for a in g["apps"]} == {a.module_id for a in APPS}
-    assert {a["id"] for g in example["groups"] for a in g["apps"] if a["on_web"]} == {a.module_id for a in APPS if a.page}
+    assert {a["id"] for g in example["groups"] for a in g["apps"]} == {a.module_id for a in live}
+    assert {a["id"] for g in example["groups"] for a in g["apps"] if a["on_web"]} == {a.module_id for a in live if a.page}

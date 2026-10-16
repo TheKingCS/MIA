@@ -277,11 +277,11 @@
       ]
     }
   },
-  "as_of": "2026-10-06",
+  "as_of": "2026-10-16",
   "available": true,
   "assets": [
     {
-      "id": "f2fc8a1e59",
+      "id": "9f4ce672f7",
       "name": "Raised bed",
       "category": "Garden/Plant",
       "make_model": "",
@@ -289,25 +289,25 @@
       "overdue": 1,
       "tasks": [
         {
-          "id": "58c802b04b",
+          "id": "cd4ef5ed1b",
           "title": "Water",
-          "asset_id": "f2fc8a1e59",
+          "asset_id": "9f4ce672f7",
           "asset": "Raised bed",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-10-03",
+          "last_completed": "2026-10-12",
           "interval_days": 2,
           "meter_interval": null,
           "urgency": "overdue",
-          "text": "overdue 1d",
-          "days": -1,
+          "text": "overdue 2d",
+          "days": -2,
           "needs_attention": true,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "f2fc8a1e59",
+            "asset_id": "9f4ce672f7",
             "title": "Water",
             "trigger_type": "calendar",
             "interval_days": 2,
@@ -316,14 +316,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-10-03",
+            "last_completed": "2026-10-12",
             "notes": ""
           },
+          "bucket": "past_due",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "58c802b04b"
+              "task_id": "cd4ef5ed1b"
             },
             "asks_meter": false
           }
@@ -337,25 +338,25 @@
   ],
   "attention": [
     {
-      "id": "58c802b04b",
+      "id": "cd4ef5ed1b",
       "title": "Water",
-      "asset_id": "f2fc8a1e59",
+      "asset_id": "9f4ce672f7",
       "asset": "Raised bed",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-10-03",
+      "last_completed": "2026-10-12",
       "interval_days": 2,
       "meter_interval": null,
       "urgency": "overdue",
-      "text": "overdue 1d",
-      "days": -1,
+      "text": "overdue 2d",
+      "days": -2,
       "needs_attention": true,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "f2fc8a1e59",
+        "asset_id": "9f4ce672f7",
         "title": "Water",
         "trigger_type": "calendar",
         "interval_days": 2,
@@ -364,14 +365,15 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-10-03",
+        "last_completed": "2026-10-12",
         "notes": ""
       },
+      "bucket": "past_due",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "58c802b04b"
+          "task_id": "cd4ef5ed1b"
         },
         "asks_meter": false
       }
@@ -380,32 +382,75 @@
   "next_up": [],
   "all_assets": [
     {
-      "id": "b3f65dc0d2",
+      "id": "a0df037886",
       "name": "Furnace"
     },
     {
-      "id": "bd96ef42c9",
+      "id": "8c260faa4f",
       "name": "Generator"
     },
     {
-      "id": "2bcc9f674a",
+      "id": "aa6ccf7ef6",
       "name": "Maple House"
     },
     {
-      "id": "e5f4bff5be",
+      "id": "31ee84683a",
       "name": "Mower"
     },
     {
-      "id": "f2a88f650c",
+      "id": "d7ea2a25b1",
       "name": "Pickup truck"
     },
     {
-      "id": "f2fc8a1e59",
+      "id": "9f4ce672f7",
       "name": "Raised bed"
     },
     {
-      "id": "d7e10280ec",
+      "id": "6fd206ec1b",
       "name": "Truck"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "cd4ef5ed1b",
+      "title": "Water",
+      "asset_id": "9f4ce672f7",
+      "asset": "Raised bed",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-10-12",
+      "interval_days": 2,
+      "meter_interval": null,
+      "urgency": "overdue",
+      "text": "overdue 2d",
+      "days": -2,
+      "needs_attention": true,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "9f4ce672f7",
+        "title": "Water",
+        "trigger_type": "calendar",
+        "interval_days": 2,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-10-12",
+        "notes": ""
+      },
+      "bucket": "past_due",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "cd4ef5ed1b"
+        },
+        "asks_meter": false
+      }
     }
   ]
 }

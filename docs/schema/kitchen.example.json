@@ -219,10 +219,10 @@
       ]
     }
   },
-  "as_of": "2026-10-06",
+  "as_of": "2026-10-16",
   "recipes": [
     {
-      "id": "14b8d8d3d2",
+      "id": "1152ba8d1e",
       "name": "Chicken stir fry",
       "category": "Dinner",
       "servings": 2,
@@ -249,6 +249,7 @@
       "last_made": null,
       "favorite": true,
       "rating": null,
+      "photo": "/api/kitchen/recipe/1152ba8d1e/photo?v=1792155071",
       "values": {
         "name": "Chicken stir fry",
         "category": "Dinner",
@@ -262,7 +263,7 @@
       }
     },
     {
-      "id": "377063ac0c",
+      "id": "6afd447f48",
       "name": "Chili",
       "category": "Dinner",
       "servings": 4,
@@ -278,9 +279,10 @@
       "missing": [],
       "makeable": false,
       "times_made": 1,
-      "last_made": "2026-10-06",
+      "last_made": "2026-10-15",
       "favorite": false,
       "rating": null,
+      "photo": "",
       "values": {
         "name": "Chili",
         "category": "Dinner",
@@ -294,7 +296,47 @@
       }
     },
     {
-      "id": "f469d354dd",
+      "id": "54834b6a48",
+      "name": "Greek yogurt bowl",
+      "category": "Snack",
+      "servings": 1,
+      "minutes": 3,
+      "calories": null,
+      "ingredients": [
+        "greek yogurt",
+        "blueberries",
+        "honey"
+      ],
+      "ingredients_text": "1 cup greek yogurt\n0.5 cup blueberries\n1 tbsp honey",
+      "instructions": "Top the yogurt and eat.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "greek yogurt",
+        "blueberries"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": false,
+      "rating": null,
+      "photo": "",
+      "values": {
+        "name": "Greek yogurt bowl",
+        "category": "Snack",
+        "servings": 1,
+        "prep_time_minutes": 3,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "Top the yogurt and eat.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "eaa51af6c9",
       "name": "Overnight oats",
       "category": "Breakfast",
       "servings": 1,
@@ -314,9 +356,10 @@
       "missing": [],
       "makeable": true,
       "times_made": 1,
-      "last_made": "2026-10-05",
+      "last_made": "2026-10-14",
       "favorite": false,
       "rating": null,
+      "photo": "",
       "values": {
         "name": "Overnight oats",
         "category": "Breakfast",
@@ -330,7 +373,7 @@
       }
     },
     {
-      "id": "d0ad0c7fe2",
+      "id": "0cb23d9230",
       "name": "Pasta primavera",
       "category": "Dinner",
       "servings": 4,
@@ -359,6 +402,7 @@
       "last_made": null,
       "favorite": false,
       "rating": null,
+      "photo": "",
       "values": {
         "name": "Pasta primavera",
         "category": "Dinner",
@@ -372,7 +416,134 @@
       }
     },
     {
-      "id": "a39c5562be",
+      "id": "102996cb96",
+      "name": "Protein oats",
+      "category": "Breakfast",
+      "servings": 1,
+      "minutes": 5,
+      "calories": null,
+      "ingredients": [
+        "oats",
+        "milk",
+        "whey protein",
+        "banana"
+      ],
+      "ingredients_text": "1 cup oats\n1 cup milk\n1 scoop whey protein\n1 banana",
+      "instructions": "Mix everything.\nRest overnight in the fridge.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "whey protein",
+        "banana"
+      ],
+      "makeable": false,
+      "times_made": 2,
+      "last_made": "2026-10-16",
+      "favorite": false,
+      "rating": null,
+      "photo": "",
+      "values": {
+        "name": "Protein oats",
+        "category": "Breakfast",
+        "servings": 1,
+        "prep_time_minutes": 5,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "Mix everything.\nRest overnight in the fridge.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "1f382a1a19",
+      "name": "Salmon and rice",
+      "category": "Dinner",
+      "servings": 2,
+      "minutes": 30,
+      "calories": null,
+      "ingredients": [
+        "salmon",
+        "rice",
+        "broccoli",
+        "olive oil"
+      ],
+      "ingredients_text": "12 oz salmon\n1 cup rice\n2 cup broccoli\n1 tbsp olive oil",
+      "instructions": "1. Cook the rice. 2. Roast the salmon and broccoli at 400°F for 15 minutes. 3. Serve.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "salmon",
+        "broccoli",
+        "olive oil"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": false,
+      "rating": null,
+      "photo": "",
+      "values": {
+        "name": "Salmon and rice",
+        "category": "Dinner",
+        "servings": 2,
+        "prep_time_minutes": 10,
+        "cook_time_minutes": 20,
+        "calories_per_serving": null,
+        "instructions": "1. Cook the rice. 2. Roast the salmon and broccoli at 400°F for 15 minutes. 3. Serve.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "d5aa268edc",
+      "name": "Turkey chili",
+      "category": "Lunch",
+      "servings": 6,
+      "minutes": 75,
+      "calories": null,
+      "ingredients": [
+        "ground turkey",
+        "black beans",
+        "diced tomatoes",
+        "onion",
+        "chili powder"
+      ],
+      "ingredients_text": "2 lb ground turkey\n2 can black beans\n1 can diced tomatoes\n1 onion\n2 tbsp chili powder",
+      "instructions": "Brown the turkey with the onion.\nAdd beans, tomatoes and chili powder.\nSimmer 45 minutes.\nPortion into six containers.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "ground turkey",
+        "black beans",
+        "diced tomatoes",
+        "chili powder"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": false,
+      "rating": null,
+      "photo": "",
+      "values": {
+        "name": "Turkey chili",
+        "category": "Lunch",
+        "servings": 6,
+        "prep_time_minutes": 15,
+        "cook_time_minutes": 60,
+        "calories_per_serving": null,
+        "instructions": "Brown the turkey with the onion.\nAdd beans, tomatoes and chili powder.\nSimmer 45 minutes.\nPortion into six containers.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "8202d12e15",
       "name": "Homemade ramen",
       "category": "Dinner",
       "servings": 2,
@@ -391,6 +562,7 @@
       "last_made": null,
       "favorite": false,
       "rating": null,
+      "photo": "",
       "values": {
         "name": "Homemade ramen",
         "category": "Dinner",
@@ -406,58 +578,58 @@
   ],
   "pantry": [
     {
-      "id": "c43849ffd5",
+      "id": "9d53fcc99c",
       "name": "Milk",
       "quantity": 1,
       "unit": "gal",
       "category": "Dairy",
-      "expires_in": 2,
+      "expires_in": 1,
       "expiring": true,
       "values": {
         "name": "Milk",
         "quantity": 1,
         "unit": "gal",
         "category": "Dairy",
-        "expiration_date": "2026-10-08",
+        "expiration_date": "2026-10-17",
         "notes": ""
       }
     },
     {
-      "id": "26e5b9b1a8",
+      "id": "8252e7c0ba",
+      "name": "milk",
+      "quantity": 1.0,
+      "unit": "gal",
+      "category": "Dairy",
+      "expires_in": 3,
+      "expiring": true,
+      "values": {
+        "name": "milk",
+        "quantity": 1.0,
+        "unit": "gal",
+        "category": "Dairy",
+        "expiration_date": "2026-10-19",
+        "notes": ""
+      }
+    },
+    {
+      "id": "43a1d8d909",
       "name": "chicken",
       "quantity": 1.0,
       "unit": "lb",
       "category": "Meat",
-      "expires_in": 1,
+      "expires_in": 0,
       "expiring": true,
       "values": {
         "name": "chicken",
         "quantity": 1.0,
         "unit": "lb",
         "category": "Meat",
-        "expiration_date": "2026-10-07",
+        "expiration_date": "2026-10-16",
         "notes": ""
       }
     },
     {
-      "id": "e61f24822a",
-      "name": "milk",
-      "quantity": 1.0,
-      "unit": "gal",
-      "category": "Dairy",
-      "expires_in": 4,
-      "expiring": false,
-      "values": {
-        "name": "milk",
-        "quantity": 1.0,
-        "unit": "gal",
-        "category": "Dairy",
-        "expiration_date": "2026-10-10",
-        "notes": ""
-      }
-    },
-    {
-      "id": "54bb3d9f1e",
+      "id": "94f1913758",
       "name": "honey",
       "quantity": 1.0,
       "unit": "jar",
@@ -474,7 +646,41 @@
       }
     },
     {
-      "id": "893b60eeed",
+      "id": "7c6ee7ffaf",
+      "name": "honey",
+      "quantity": 1.0,
+      "unit": "jar",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "honey",
+        "quantity": 1.0,
+        "unit": "jar",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "e4db7abf8b",
+      "name": "milk",
+      "quantity": 1.0,
+      "unit": "gal",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "milk",
+        "quantity": 1.0,
+        "unit": "gal",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "8e94208064",
       "name": "oats",
       "quantity": 2.0,
       "unit": "lb",
@@ -491,7 +697,41 @@
       }
     },
     {
-      "id": "1b10e17276",
+      "id": "f5cb1194dc",
+      "name": "oats",
+      "quantity": 3.0,
+      "unit": "lb",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "oats",
+        "quantity": 3.0,
+        "unit": "lb",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "08ca9bf64c",
+      "name": "onions",
+      "quantity": 3.0,
+      "unit": "",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "onions",
+        "quantity": 3.0,
+        "unit": "",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "7e902ea32c",
       "name": "Rice",
       "quantity": 5,
       "unit": "lb",
@@ -508,7 +748,24 @@
       }
     },
     {
-      "id": "a1dd36222e",
+      "id": "227b503db1",
+      "name": "rice",
+      "quantity": 5.0,
+      "unit": "lb",
+      "category": "Pantry/Dry Goods",
+      "expires_in": null,
+      "expiring": false,
+      "values": {
+        "name": "rice",
+        "quantity": 5.0,
+        "unit": "lb",
+        "category": "Pantry/Dry Goods",
+        "expiration_date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "7e3fb5a4a2",
       "name": "rice",
       "quantity": 5.0,
       "unit": "lb",
@@ -527,7 +784,7 @@
   ],
   "grocery": [
     {
-      "id": "3d177f6dd3",
+      "id": "02f38ad8ea",
       "name": "Eggs",
       "quantity": 12,
       "unit": "",
@@ -535,7 +792,7 @@
       "for_recipe": null
     },
     {
-      "id": "5d7ee26eb5",
+      "id": "608de2192b",
       "name": "broccoli",
       "quantity": 0.0,
       "unit": "",
@@ -543,7 +800,7 @@
       "for_recipe": "Chicken stir fry"
     },
     {
-      "id": "ad8175d3b3",
+      "id": "a5c36df039",
       "name": "soy sauce",
       "quantity": 0.0,
       "unit": "",
@@ -551,7 +808,7 @@
       "for_recipe": "Chicken stir fry"
     },
     {
-      "id": "53888cfc17",
+      "id": "a6333c5b50",
       "name": "Eggs",
       "quantity": 12.0,
       "unit": "",
@@ -561,23 +818,37 @@
   ],
   "meals": [
     {
-      "id": "ec40183646",
-      "date": "2026-10-06",
-      "recipe": "Chili",
-      "recipe_id": "377063ac0c",
+      "id": "17aa71b166",
+      "date": "2026-10-16",
+      "recipe": "Protein oats",
+      "recipe_id": "102996cb96",
       "notes": ""
     },
     {
-      "id": "60d71de6d5",
-      "date": "2026-10-05",
+      "id": "273c0df561",
+      "date": "2026-10-15",
+      "recipe": "Chili",
+      "recipe_id": "6afd447f48",
+      "notes": ""
+    },
+    {
+      "id": "220ab5ef13",
+      "date": "2026-10-15",
+      "recipe": "Protein oats",
+      "recipe_id": "102996cb96",
+      "notes": ""
+    },
+    {
+      "id": "3e44e3a2bc",
+      "date": "2026-10-14",
       "recipe": "Overnight oats",
-      "recipe_id": "f469d354dd",
+      "recipe_id": "eaa51af6c9",
       "notes": ""
     }
   ],
   "suggestions": [
     {
-      "id": "f469d354dd",
+      "id": "eaa51af6c9",
       "name": "Overnight oats",
       "category": "Breakfast",
       "servings": 1,
@@ -597,9 +868,10 @@
       "missing": [],
       "makeable": true,
       "times_made": 1,
-      "last_made": "2026-10-05",
+      "last_made": "2026-10-14",
       "favorite": false,
       "rating": null,
+      "photo": "",
       "values": {
         "name": "Overnight oats",
         "category": "Breakfast",
@@ -613,7 +885,7 @@
       }
     },
     {
-      "id": "14b8d8d3d2",
+      "id": "1152ba8d1e",
       "name": "Chicken stir fry",
       "category": "Dinner",
       "servings": 2,
@@ -640,6 +912,7 @@
       "last_made": null,
       "favorite": true,
       "rating": null,
+      "photo": "/api/kitchen/recipe/1152ba8d1e/photo?v=1792155071",
       "values": {
         "name": "Chicken stir fry",
         "category": "Dinner",
@@ -651,12 +924,93 @@
         "source": "",
         "notes": ""
       }
+    },
+    {
+      "id": "54834b6a48",
+      "name": "Greek yogurt bowl",
+      "category": "Snack",
+      "servings": 1,
+      "minutes": 3,
+      "calories": null,
+      "ingredients": [
+        "greek yogurt",
+        "blueberries",
+        "honey"
+      ],
+      "ingredients_text": "1 cup greek yogurt\n0.5 cup blueberries\n1 tbsp honey",
+      "instructions": "Top the yogurt and eat.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "greek yogurt",
+        "blueberries"
+      ],
+      "makeable": false,
+      "times_made": 0,
+      "last_made": null,
+      "favorite": false,
+      "rating": null,
+      "photo": "",
+      "values": {
+        "name": "Greek yogurt bowl",
+        "category": "Snack",
+        "servings": 1,
+        "prep_time_minutes": 3,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "Top the yogurt and eat.",
+        "source": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "102996cb96",
+      "name": "Protein oats",
+      "category": "Breakfast",
+      "servings": 1,
+      "minutes": 5,
+      "calories": null,
+      "ingredients": [
+        "oats",
+        "milk",
+        "whey protein",
+        "banana"
+      ],
+      "ingredients_text": "1 cup oats\n1 cup milk\n1 scoop whey protein\n1 banana",
+      "instructions": "Mix everything.\nRest overnight in the fridge.",
+      "source": "",
+      "notes": "",
+      "locked": false,
+      "unlocked_by_mission": null,
+      "missing": [
+        "whey protein",
+        "banana"
+      ],
+      "makeable": false,
+      "times_made": 2,
+      "last_made": "2026-10-16",
+      "favorite": false,
+      "rating": null,
+      "photo": "",
+      "values": {
+        "name": "Protein oats",
+        "category": "Breakfast",
+        "servings": 1,
+        "prep_time_minutes": 5,
+        "cook_time_minutes": 0,
+        "calories_per_serving": null,
+        "instructions": "Mix everything.\nRest overnight in the fridge.",
+        "source": "",
+        "notes": ""
+      }
     }
   ],
   "counts": {
-    "recipes": 5,
-    "pantry": 7,
-    "expiring": 2,
+    "recipes": 9,
+    "pantry": 12,
+    "expiring": 3,
     "grocery": 4
   }
 }

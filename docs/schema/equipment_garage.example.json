@@ -6,7 +6,9 @@
   "default_category": "Vehicle",
   "categories": [
     "Vehicle",
-    "Power Equipment"
+    "Power Equipment",
+    "Tool",
+    "Other"
   ],
   "forms": {
     "asset": {
@@ -278,11 +280,11 @@
       ]
     }
   },
-  "as_of": "2026-10-06",
+  "as_of": "2026-10-16",
   "available": true,
   "assets": [
     {
-      "id": "e5f4bff5be",
+      "id": "31ee84683a",
       "name": "Mower",
       "category": "Power Equipment",
       "make_model": "Make Z-100",
@@ -290,25 +292,25 @@
       "overdue": 2,
       "tasks": [
         {
-          "id": "055371f062",
+          "id": "6cbf096c22",
           "title": "Check oil",
-          "asset_id": "e5f4bff5be",
+          "asset_id": "31ee84683a",
           "asset": "Mower",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-08-24",
+          "last_completed": "2026-09-02",
           "interval_days": 30,
           "meter_interval": null,
           "urgency": "overdue",
-          "text": "overdue 13d",
-          "days": -13,
+          "text": "overdue 14d",
+          "days": -14,
           "needs_attention": true,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "e5f4bff5be",
+            "asset_id": "31ee84683a",
             "title": "Check oil",
             "trigger_type": "calendar",
             "interval_days": 30,
@@ -317,38 +319,39 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-08-24",
+            "last_completed": "2026-09-02",
             "notes": ""
           },
+          "bucket": "past_due",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "055371f062"
+              "task_id": "6cbf096c22"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "8fe541f12b",
+          "id": "7a4464beaf",
           "title": "Sharpen blades",
-          "asset_id": "e5f4bff5be",
+          "asset_id": "31ee84683a",
           "asset": "Mower",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-07-28",
+          "last_completed": "2026-08-06",
           "interval_days": 60,
           "meter_interval": null,
           "urgency": "overdue",
-          "text": "overdue 10d",
-          "days": -10,
+          "text": "overdue 11d",
+          "days": -11,
           "needs_attention": true,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "e5f4bff5be",
+            "asset_id": "31ee84683a",
             "title": "Sharpen blades",
             "trigger_type": "calendar",
             "interval_days": 60,
@@ -357,27 +360,28 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-07-28",
+            "last_completed": "2026-08-06",
             "notes": ""
           },
+          "bucket": "past_due",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "8fe541f12b"
+              "task_id": "7a4464beaf"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "88be20c93b",
+          "id": "deed2f7833",
           "title": "Oil & filter",
-          "asset_id": "e5f4bff5be",
+          "asset_id": "31ee84683a",
           "asset": "Mower",
           "trigger": "runtime",
           "unit": "engine hours",
           "priority": "normal",
-          "last_completed": "2026-10-06",
+          "last_completed": "2026-10-15",
           "interval_days": null,
           "meter_interval": 50.0,
           "urgency": "on_track",
@@ -388,7 +392,7 @@
           "latest": 12.8,
           "predicted": null,
           "values": {
-            "asset_id": "e5f4bff5be",
+            "asset_id": "31ee84683a",
             "title": "Oil & filter",
             "trigger_type": "runtime",
             "interval_days": null,
@@ -397,14 +401,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-10-06",
+            "last_completed": "2026-10-15",
             "notes": ""
           },
+          "bucket": null,
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "88be20c93b"
+              "task_id": "deed2f7833"
             },
             "asks_meter": true
           }
@@ -421,7 +426,7 @@
       "scope": "garage"
     },
     {
-      "id": "f2a88f650c",
+      "id": "d7ea2a25b1",
       "name": "Pickup truck",
       "category": "Vehicle",
       "make_model": "Make Model T",
@@ -429,25 +434,25 @@
       "overdue": 1,
       "tasks": [
         {
-          "id": "886642885c",
+          "id": "68e719deaa",
           "title": "Tire rotation",
-          "asset_id": "f2a88f650c",
+          "asset_id": "d7ea2a25b1",
           "asset": "Pickup truck",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-06-30",
+          "last_completed": "2026-07-09",
           "interval_days": 90,
           "meter_interval": null,
           "urgency": "overdue",
-          "text": "overdue 8d",
-          "days": -8,
+          "text": "overdue 9d",
+          "days": -9,
           "needs_attention": true,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "f2a88f650c",
+            "asset_id": "d7ea2a25b1",
             "title": "Tire rotation",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -456,38 +461,39 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-06-30",
+            "last_completed": "2026-07-09",
             "notes": ""
           },
+          "bucket": "past_due",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "886642885c"
+              "task_id": "68e719deaa"
             },
             "asks_meter": false
           }
         },
         {
-          "id": "ea22fcf0a0",
+          "id": "495a698f89",
           "title": "Brake check",
-          "asset_id": "f2a88f650c",
+          "asset_id": "d7ea2a25b1",
           "asset": "Pickup truck",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-04-19",
+          "last_completed": "2026-04-28",
           "interval_days": 180,
           "meter_interval": null,
           "urgency": "on_track",
-          "text": "due in 10d",
-          "days": 10,
+          "text": "due in 9d",
+          "days": 9,
           "needs_attention": false,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "f2a88f650c",
+            "asset_id": "d7ea2a25b1",
             "title": "Brake check",
             "trigger_type": "calendar",
             "interval_days": 180,
@@ -496,14 +502,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-04-19",
+            "last_completed": "2026-04-28",
             "notes": ""
           },
+          "bucket": "due_soon",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "ea22fcf0a0"
+              "task_id": "495a698f89"
             },
             "asks_meter": false
           }
@@ -515,7 +522,7 @@
       "scope": "garage"
     },
     {
-      "id": "bd96ef42c9",
+      "id": "8c260faa4f",
       "name": "Generator",
       "category": "Power Equipment",
       "make_model": "Make G5000",
@@ -523,25 +530,25 @@
       "overdue": 0,
       "tasks": [
         {
-          "id": "d3bb962410",
+          "id": "d4364f8f41",
           "title": "Test run",
-          "asset_id": "bd96ef42c9",
+          "asset_id": "8c260faa4f",
           "asset": "Generator",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-09-10",
+          "last_completed": "2026-09-19",
           "interval_days": 30,
           "meter_interval": null,
-          "urgency": "on_track",
-          "text": "due in 4d",
-          "days": 4,
+          "urgency": "due_soon",
+          "text": "due in 3d",
+          "days": 3,
           "needs_attention": false,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "bd96ef42c9",
+            "asset_id": "8c260faa4f",
             "title": "Test run",
             "trigger_type": "calendar",
             "interval_days": 30,
@@ -550,14 +557,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-09-10",
+            "last_completed": "2026-09-19",
             "notes": ""
           },
+          "bucket": "due_soon",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "d3bb962410"
+              "task_id": "d4364f8f41"
             },
             "asks_meter": false
           }
@@ -569,7 +577,7 @@
       "scope": "garage"
     },
     {
-      "id": "d7e10280ec",
+      "id": "6fd206ec1b",
       "name": "Truck",
       "category": "Vehicle",
       "make_model": "",
@@ -577,25 +585,25 @@
       "overdue": 0,
       "tasks": [
         {
-          "id": "0aea2e7054",
+          "id": "101ce96064",
           "title": "Oil change",
-          "asset_id": "d7e10280ec",
+          "asset_id": "6fd206ec1b",
           "asset": "Truck",
           "trigger": "calendar",
           "unit": "",
           "priority": "normal",
-          "last_completed": "2026-07-13",
+          "last_completed": "2026-07-22",
           "interval_days": 90,
           "meter_interval": null,
           "urgency": "on_track",
-          "text": "due in 5d",
-          "days": 5,
+          "text": "due in 4d",
+          "days": 4,
           "needs_attention": false,
           "quick_stat": false,
           "latest": null,
           "predicted": null,
           "values": {
-            "asset_id": "d7e10280ec",
+            "asset_id": "6fd206ec1b",
             "title": "Oil change",
             "trigger_type": "calendar",
             "interval_days": 90,
@@ -604,14 +612,15 @@
             "threshold_value": null,
             "threshold_direction": "below",
             "priority": "normal",
-            "last_completed": "2026-07-13",
+            "last_completed": "2026-07-22",
             "notes": ""
           },
+          "bucket": "due_soon",
           "action": {
             "kind": "maintenance.done",
             "label": "Done",
             "params": {
-              "task_id": "0aea2e7054"
+              "task_id": "101ce96064"
             },
             "asks_meter": false
           }
@@ -625,25 +634,25 @@
   ],
   "attention": [
     {
-      "id": "055371f062",
+      "id": "6cbf096c22",
       "title": "Check oil",
-      "asset_id": "e5f4bff5be",
+      "asset_id": "31ee84683a",
       "asset": "Mower",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-08-24",
+      "last_completed": "2026-09-02",
       "interval_days": 30,
       "meter_interval": null,
       "urgency": "overdue",
-      "text": "overdue 13d",
-      "days": -13,
+      "text": "overdue 14d",
+      "days": -14,
       "needs_attention": true,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "e5f4bff5be",
+        "asset_id": "31ee84683a",
         "title": "Check oil",
         "trigger_type": "calendar",
         "interval_days": 30,
@@ -652,38 +661,39 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-08-24",
+        "last_completed": "2026-09-02",
         "notes": ""
       },
+      "bucket": "past_due",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "055371f062"
+          "task_id": "6cbf096c22"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "8fe541f12b",
+      "id": "7a4464beaf",
       "title": "Sharpen blades",
-      "asset_id": "e5f4bff5be",
+      "asset_id": "31ee84683a",
       "asset": "Mower",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-07-28",
+      "last_completed": "2026-08-06",
       "interval_days": 60,
       "meter_interval": null,
       "urgency": "overdue",
-      "text": "overdue 10d",
-      "days": -10,
+      "text": "overdue 11d",
+      "days": -11,
       "needs_attention": true,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "e5f4bff5be",
+        "asset_id": "31ee84683a",
         "title": "Sharpen blades",
         "trigger_type": "calendar",
         "interval_days": 60,
@@ -692,38 +702,39 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-07-28",
+        "last_completed": "2026-08-06",
         "notes": ""
       },
+      "bucket": "past_due",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "8fe541f12b"
+          "task_id": "7a4464beaf"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "886642885c",
+      "id": "68e719deaa",
       "title": "Tire rotation",
-      "asset_id": "f2a88f650c",
+      "asset_id": "d7ea2a25b1",
       "asset": "Pickup truck",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-06-30",
+      "last_completed": "2026-07-09",
       "interval_days": 90,
       "meter_interval": null,
       "urgency": "overdue",
-      "text": "overdue 8d",
-      "days": -8,
+      "text": "overdue 9d",
+      "days": -9,
       "needs_attention": true,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "f2a88f650c",
+        "asset_id": "d7ea2a25b1",
         "title": "Tire rotation",
         "trigger_type": "calendar",
         "interval_days": 90,
@@ -732,14 +743,15 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-06-30",
+        "last_completed": "2026-07-09",
         "notes": ""
       },
+      "bucket": "past_due",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "886642885c"
+          "task_id": "68e719deaa"
         },
         "asks_meter": false
       }
@@ -747,15 +759,56 @@
   ],
   "next_up": [
     {
-      "id": "d3bb962410",
+      "id": "d4364f8f41",
       "title": "Test run",
-      "asset_id": "bd96ef42c9",
+      "asset_id": "8c260faa4f",
       "asset": "Generator",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-09-10",
+      "last_completed": "2026-09-19",
       "interval_days": 30,
+      "meter_interval": null,
+      "urgency": "due_soon",
+      "text": "due in 3d",
+      "days": 3,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "8c260faa4f",
+        "title": "Test run",
+        "trigger_type": "calendar",
+        "interval_days": 30,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-09-19",
+        "notes": ""
+      },
+      "bucket": "due_soon",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "d4364f8f41"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "101ce96064",
+      "title": "Oil change",
+      "asset_id": "6fd206ec1b",
+      "asset": "Truck",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-07-22",
+      "interval_days": 90,
       "meter_interval": null,
       "urgency": "on_track",
       "text": "due in 4d",
@@ -765,47 +818,7 @@
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "bd96ef42c9",
-        "title": "Test run",
-        "trigger_type": "calendar",
-        "interval_days": 30,
-        "meter_unit": "",
-        "meter_interval": null,
-        "threshold_value": null,
-        "threshold_direction": "below",
-        "priority": "normal",
-        "last_completed": "2026-09-10",
-        "notes": ""
-      },
-      "action": {
-        "kind": "maintenance.done",
-        "label": "Done",
-        "params": {
-          "task_id": "d3bb962410"
-        },
-        "asks_meter": false
-      }
-    },
-    {
-      "id": "0aea2e7054",
-      "title": "Oil change",
-      "asset_id": "d7e10280ec",
-      "asset": "Truck",
-      "trigger": "calendar",
-      "unit": "",
-      "priority": "normal",
-      "last_completed": "2026-07-13",
-      "interval_days": 90,
-      "meter_interval": null,
-      "urgency": "on_track",
-      "text": "due in 5d",
-      "days": 5,
-      "needs_attention": false,
-      "quick_stat": false,
-      "latest": null,
-      "predicted": null,
-      "values": {
-        "asset_id": "d7e10280ec",
+        "asset_id": "6fd206ec1b",
         "title": "Oil change",
         "trigger_type": "calendar",
         "interval_days": 90,
@@ -814,38 +827,39 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-07-13",
+        "last_completed": "2026-07-22",
         "notes": ""
       },
+      "bucket": "due_soon",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "0aea2e7054"
+          "task_id": "101ce96064"
         },
         "asks_meter": false
       }
     },
     {
-      "id": "ea22fcf0a0",
+      "id": "495a698f89",
       "title": "Brake check",
-      "asset_id": "f2a88f650c",
+      "asset_id": "d7ea2a25b1",
       "asset": "Pickup truck",
       "trigger": "calendar",
       "unit": "",
       "priority": "normal",
-      "last_completed": "2026-04-19",
+      "last_completed": "2026-04-28",
       "interval_days": 180,
       "meter_interval": null,
       "urgency": "on_track",
-      "text": "due in 10d",
-      "days": 10,
+      "text": "due in 9d",
+      "days": 9,
       "needs_attention": false,
       "quick_stat": false,
       "latest": null,
       "predicted": null,
       "values": {
-        "asset_id": "f2a88f650c",
+        "asset_id": "d7ea2a25b1",
         "title": "Brake check",
         "trigger_type": "calendar",
         "interval_days": 180,
@@ -854,14 +868,15 @@
         "threshold_value": null,
         "threshold_direction": "below",
         "priority": "normal",
-        "last_completed": "2026-04-19",
+        "last_completed": "2026-04-28",
         "notes": ""
       },
+      "bucket": "due_soon",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
         "params": {
-          "task_id": "ea22fcf0a0"
+          "task_id": "495a698f89"
         },
         "asks_meter": false
       }
@@ -869,32 +884,321 @@
   ],
   "all_assets": [
     {
-      "id": "b3f65dc0d2",
+      "id": "a0df037886",
       "name": "Furnace"
     },
     {
-      "id": "bd96ef42c9",
+      "id": "8c260faa4f",
       "name": "Generator"
     },
     {
-      "id": "2bcc9f674a",
+      "id": "aa6ccf7ef6",
       "name": "Maple House"
     },
     {
-      "id": "e5f4bff5be",
+      "id": "31ee84683a",
       "name": "Mower"
     },
     {
-      "id": "f2a88f650c",
+      "id": "d7ea2a25b1",
       "name": "Pickup truck"
     },
     {
-      "id": "f2fc8a1e59",
+      "id": "9f4ce672f7",
       "name": "Raised bed"
     },
     {
-      "id": "d7e10280ec",
+      "id": "6fd206ec1b",
       "name": "Truck"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "6cbf096c22",
+      "title": "Check oil",
+      "asset_id": "31ee84683a",
+      "asset": "Mower",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-09-02",
+      "interval_days": 30,
+      "meter_interval": null,
+      "urgency": "overdue",
+      "text": "overdue 14d",
+      "days": -14,
+      "needs_attention": true,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "31ee84683a",
+        "title": "Check oil",
+        "trigger_type": "calendar",
+        "interval_days": 30,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-09-02",
+        "notes": ""
+      },
+      "bucket": "past_due",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "6cbf096c22"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "7a4464beaf",
+      "title": "Sharpen blades",
+      "asset_id": "31ee84683a",
+      "asset": "Mower",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-08-06",
+      "interval_days": 60,
+      "meter_interval": null,
+      "urgency": "overdue",
+      "text": "overdue 11d",
+      "days": -11,
+      "needs_attention": true,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "31ee84683a",
+        "title": "Sharpen blades",
+        "trigger_type": "calendar",
+        "interval_days": 60,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-08-06",
+        "notes": ""
+      },
+      "bucket": "past_due",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "7a4464beaf"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "68e719deaa",
+      "title": "Tire rotation",
+      "asset_id": "d7ea2a25b1",
+      "asset": "Pickup truck",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-07-09",
+      "interval_days": 90,
+      "meter_interval": null,
+      "urgency": "overdue",
+      "text": "overdue 9d",
+      "days": -9,
+      "needs_attention": true,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "d7ea2a25b1",
+        "title": "Tire rotation",
+        "trigger_type": "calendar",
+        "interval_days": 90,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-07-09",
+        "notes": ""
+      },
+      "bucket": "past_due",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "68e719deaa"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "d4364f8f41",
+      "title": "Test run",
+      "asset_id": "8c260faa4f",
+      "asset": "Generator",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-09-19",
+      "interval_days": 30,
+      "meter_interval": null,
+      "urgency": "due_soon",
+      "text": "due in 3d",
+      "days": 3,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "8c260faa4f",
+        "title": "Test run",
+        "trigger_type": "calendar",
+        "interval_days": 30,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-09-19",
+        "notes": ""
+      },
+      "bucket": "due_soon",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "d4364f8f41"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "101ce96064",
+      "title": "Oil change",
+      "asset_id": "6fd206ec1b",
+      "asset": "Truck",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-07-22",
+      "interval_days": 90,
+      "meter_interval": null,
+      "urgency": "on_track",
+      "text": "due in 4d",
+      "days": 4,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "6fd206ec1b",
+        "title": "Oil change",
+        "trigger_type": "calendar",
+        "interval_days": 90,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-07-22",
+        "notes": ""
+      },
+      "bucket": "due_soon",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "101ce96064"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "495a698f89",
+      "title": "Brake check",
+      "asset_id": "d7ea2a25b1",
+      "asset": "Pickup truck",
+      "trigger": "calendar",
+      "unit": "",
+      "priority": "normal",
+      "last_completed": "2026-04-28",
+      "interval_days": 180,
+      "meter_interval": null,
+      "urgency": "on_track",
+      "text": "due in 9d",
+      "days": 9,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": null,
+      "predicted": null,
+      "values": {
+        "asset_id": "d7ea2a25b1",
+        "title": "Brake check",
+        "trigger_type": "calendar",
+        "interval_days": 180,
+        "meter_unit": "",
+        "meter_interval": null,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-04-28",
+        "notes": ""
+      },
+      "bucket": "due_soon",
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "495a698f89"
+        },
+        "asks_meter": false
+      }
+    },
+    {
+      "id": "deed2f7833",
+      "title": "Oil & filter",
+      "asset_id": "31ee84683a",
+      "asset": "Mower",
+      "trigger": "runtime",
+      "unit": "engine hours",
+      "priority": "normal",
+      "last_completed": "2026-10-15",
+      "interval_days": null,
+      "meter_interval": 50.0,
+      "urgency": "on_track",
+      "text": "12.8/50 engine hours",
+      "days": null,
+      "needs_attention": false,
+      "quick_stat": false,
+      "latest": 12.8,
+      "predicted": null,
+      "values": {
+        "asset_id": "31ee84683a",
+        "title": "Oil & filter",
+        "trigger_type": "runtime",
+        "interval_days": null,
+        "meter_unit": "engine hours",
+        "meter_interval": 50.0,
+        "threshold_value": null,
+        "threshold_direction": "below",
+        "priority": "normal",
+        "last_completed": "2026-10-15",
+        "notes": ""
+      },
+      "bucket": null,
+      "action": {
+        "kind": "maintenance.done",
+        "label": "Done",
+        "params": {
+          "task_id": "deed2f7833"
+        },
+        "asks_meter": true
+      }
     }
   ]
 }

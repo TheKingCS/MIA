@@ -51,12 +51,13 @@ GLASSES_KINDS = frozenset({
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
 # Apps manager, Settings and Files are for a bigger screen.
-NOT_ON_GLASSES = frozenset({"web_home", "assistant", "module_browser", "settings", "files", "dashboard"})
+NOT_ON_GLASSES = frozenset({"web_home", "assistant", "module_browser", "settings", "files", "dashboard",
+                            "maintenance", "property"})
 
 # The glasses' order: Today, then the apps used most on the move, then
 # the rest of MIA in its usual order.
-FIRST = ("missions", "calendar", "kitchen", "workout", "budget", "garage", "maintenance", "greenhouse",
-         "property", "real_estate", "skills", "character")
+FIRST = ("missions", "calendar", "kitchen", "workout", "budget", "garage", "real_estate", "greenhouse",
+         "skills", "character")
 
 # Short names for a 600 px card, where the app's own name is long.
 SHORT_NAMES = {"dashboard": "Today", "relationships": "People", "real_estate": "Rentals"}
@@ -237,14 +238,9 @@ BUCKETS = (("past_due", "Past Due"), ("due_today", "Due Today"), ("due_soon", "D
 
 
 def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
-    """Pure logic. Which bucket a thing due in `days` falls in."""
-    if urgency == "overdue" or (days is not None and days < 0):
-        return "past_due"
-    if days == 0:
-        return "due_today"
-    if urgency == "due_soon" or days is not None:
-        return "due_soon"
-    return None
+    from core.web_equipment import bucket_of as shared
+
+    return shared(days, urgency)
 
 
 def _bucketed(lines: list[dict], bucket: Optional[str]) -> list[dict]:
@@ -526,22 +522,6 @@ def _rentals(context, today):
     return _panel("Properties", lines, "No properties yet.")
 
 
-def _rental_tasks(context, today) -> list[dict]:
-    from core.web_screens import estate_page
-
-    rows = []
-    for p in estate_page(context, today).get("properties") or []:
-        for t in p.get("tasks") or []:
-            rows.append({**t, "asset": p.get("name")})
-    return _task_lines(context, rows)
-
-
-def _rental_bucket(bucket: str, label: str, empty: str):
-    def build(context, today):
-        return _panel(label, _bucketed(_rental_tasks(context, today), bucket), empty, limit=60)
-    return build
-
-
 def _calendar(bucket: str, label: str, empty: str):
     """The Calendar on the glasses: Past Due, Due Today, Due Soon (core/calendar_view.py)."""
     def build(context, today):
@@ -635,7 +615,7 @@ def _inbox_waiting(context, today):
     return _panel("Waiting to file", lines, "Nothing waiting. All filed.")
 
 
-_GARAGE, _MAINT, _GREEN, _PROP = (_equipment(s) for s in ("garage", "maintenance", "greenhouse", "property"))
+_GARAGE, _GREEN, _HOME = (_equipment(s) for s in ("garage", "greenhouse", "real_estate"))
 
 
 def _equipment_menu(builders) -> tuple:
@@ -655,13 +635,12 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "budget": (("month", "This Month", _money_month), ("due", "What's Due", _money_due),
                ("debts", "Debts", _money_debts)),
     "garage": _equipment_menu(_GARAGE),
-    "maintenance": _equipment_menu(_MAINT),
     "greenhouse": _equipment_menu(_GREEN),
-    "property": _equipment_menu(_PROP),
-    "real_estate": (("properties", "Properties", _rentals),
-                    ("past_due", "Past Due", _rental_bucket("past_due", "Past Due", "Nothing past due.")),
-                    ("due_today", "Due Today", _rental_bucket("due_today", "Due Today", "Nothing due today.")),
-                    ("due_soon", "Due Soon", _rental_bucket("due_soon", "Due Soon", "Nothing due soon."))),
+    # Every building you own and its appliances (Zac, 2026-10-16): the money
+    # side, then the house and appliances, then their upkeep by bucket.
+    "real_estate": (("properties", "Properties", _rentals), ("assets", "Home & Appliances", _HOME[0]),
+                    ("past_due", "Past Due", _HOME[1]), ("due_today", "Due Today", _HOME[2]),
+                    ("due_soon", "Due Soon", _HOME[3])),
     "calendar": (("past_due", "Past Due", _calendar("past_due", "Past Due", "Nothing past due. You're caught up.")),
                  ("today", "Due Today", _calendar("today", "Due Today", "Nothing on today.")),
                  ("soon", "Due Soon", _calendar("soon", "Due Soon", "Nothing in the next two weeks."))),
@@ -695,7 +674,7 @@ ASKS: dict[str, tuple[str, ...]] = {
 }
 
 
-EQUIPMENT_SCOPES = ("garage", "maintenance", "greenhouse", "property")
+EQUIPMENT_SCOPES = ("garage", "greenhouse")
 
 
 def _equipment_status(context, scope: str, today: date) -> dict:
@@ -734,12 +713,12 @@ def _visible_apps(context) -> list:
 
 def menu_for(app, pinned: Optional[bool] = None) -> list[dict]:
     """Pure logic. An app's quick action menu: its panels, then questions
-    for MIA, at most four; then pin or unpin it for the glasses (its
+    for MIA, at most five; then pin or unpin it for the glasses (its
     favorite star) when `pinned` is known."""
     items = [{"id": item, "label": label, "type": "panel"} for item, label, _ in PANELS.get(app.module_id, ())]
     items += [{"id": f"ask{i}", "label": say.rstrip("?.!"), "type": "ask", "say": say}
               for i, say in enumerate(ASKS.get(app.module_id, ()))]
-    items = items[:4]
+    items = items[:5]
     if pinned is not None:
         items.append({"id": "pin", "label": "Unpin From Glasses" if pinned else "Pin To Glasses", "type": "action",
                       "action": {"kind": "app.favorite", "label": "Unpin" if pinned else "Pin",

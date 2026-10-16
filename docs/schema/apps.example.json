@@ -282,7 +282,28 @@
           "shown": true,
           "can_hide": true,
           "ask": "How are my rentals doing this month?",
-          "tools": [],
+          "tools": [
+            {
+              "name": "add_inventory_item",
+              "does": "Add inventory item",
+              "detail": "Add a new item to MIA's general Inventory tool."
+            },
+            {
+              "name": "adjust_inventory_quantity",
+              "does": "Adjust inventory quantity",
+              "detail": "Change the quantity of an existing inventory item by an amount (positive to add more, negative to use/remove some), e.g."
+            },
+            {
+              "name": "delete_inventory_item",
+              "does": "Delete inventory item",
+              "detail": "Remove an item entirely from MIA's Inventory tool by name."
+            },
+            {
+              "name": "list_inventory",
+              "does": "See inventory",
+              "detail": "List or search MIA's Inventory tool, including quantities."
+            }
+          ],
           "favorite": false
         },
         {
@@ -386,55 +407,6 @@
           "can_hide": true,
           "ask": "I did the dishes.",
           "tools": [],
-          "favorite": false
-        },
-        {
-          "id": "maintenance",
-          "name": "Maintenance",
-          "icon": "🔧",
-          "tagline": "Everything you own, cared for.",
-          "description": "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.",
-          "page": "maintenance.html",
-          "on_web": true,
-          "shown": true,
-          "can_hide": true,
-          "ask": "I put 120 hours on the mower.",
-          "tools": [],
-          "favorite": false
-        },
-        {
-          "id": "property",
-          "name": "Property",
-          "icon": "🏠",
-          "tagline": "The house, the appliances, the tools.",
-          "description": "At-a-glance status for the house, appliances, and tools.",
-          "page": "property.html",
-          "on_web": true,
-          "shown": true,
-          "can_hide": true,
-          "ask": "Do I have any furnace filters left?",
-          "tools": [
-            {
-              "name": "add_inventory_item",
-              "does": "Add inventory item",
-              "detail": "Add a new item to MIA's general Inventory tool."
-            },
-            {
-              "name": "adjust_inventory_quantity",
-              "does": "Adjust inventory quantity",
-              "detail": "Change the quantity of an existing inventory item by an amount (positive to add more, negative to use/remove some), e.g."
-            },
-            {
-              "name": "delete_inventory_item",
-              "does": "Delete inventory item",
-              "detail": "Remove an item entirely from MIA's Inventory tool by name."
-            },
-            {
-              "name": "list_inventory",
-              "does": "See inventory",
-              "detail": "List or search MIA's Inventory tool, including quantities."
-            }
-          ],
           "favorite": false
         },
         {
@@ -706,8 +678,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 36,
-    "on_web": 16,
+    "apps": 34,
+    "on_web": 14,
     "tools": 32
   }
 }

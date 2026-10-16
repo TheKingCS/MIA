@@ -32,15 +32,23 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 SCOPES: dict[str, dict] = {
+    # Zac, 2026-10-16: three apps, one job each. Garage holds vehicles,
+    # power equipment, tools and anything else; Real Estate holds every
+    # building you own and its appliances; Greenhouse holds plants.
+    # "maintenance" stays as the everything view the Calendar reads; it no
+    # longer has an app of its own (nor does "property").
     "garage": {"name": "Garage", "icon": "🚗", "tagline": "Keep it running. Keep it ready.",
-               "categories": ("Vehicle", "Power Equipment"), "default_category": "Vehicle"},
-    "property": {"name": "Property", "icon": "🏠", "tagline": "The house, the appliances, the tools.",
-                 "categories": ("Appliance", "Property", "Tool"), "default_category": "Appliance"},
+               "categories": ("Vehicle", "Power Equipment", "Tool", "Other"), "default_category": "Vehicle"},
+    "real_estate": {"name": "Real Estate", "icon": "🏘", "tagline": "Every building you own, and what's in it.",
+                    "categories": ("Property", "Appliance"), "default_category": "Appliance"},
     "greenhouse": {"name": "Greenhouse", "icon": "🌱", "tagline": "Grow food. Grow freedom.",
                    "categories": ("Garden/Plant",), "default_category": "Garden/Plant"},
     "maintenance": {"name": "Maintenance", "icon": "🔧", "tagline": "Everything you own, cared for.",
                     "categories": None, "default_category": "Other"},
 }
+# Where an asset's own page goes back to (its app's screen).
+SCOPE_PAGES = {"garage": "garage.html", "real_estate": "real-estate.html", "greenhouse": "greenhouse.html",
+               "maintenance": "garage.html"}
 NEXT_UP_DAYS = 30
 CALENDAR_DAYS = 60
 
@@ -50,7 +58,7 @@ def scope_of(category: str) -> str:
     for key, scope in SCOPES.items():
         if scope["categories"] and category in scope["categories"]:
             return key
-    return "maintenance"
+    return "garage"
 
 
 def _readings(context, task) -> list:
@@ -109,6 +117,18 @@ def task_status(task, readings: list, today: date) -> dict:
             "latest": latest, "predicted": predicted[1] if predicted else None}
 
 
+def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
+    """Pure logic. Past Due / Due Today / Due Soon (Zac, 2026-10-16): the one
+    way MIA sorts everything with a date. None: not due on any day yet."""
+    if urgency == "overdue" or (days is not None and days < 0):
+        return "past_due"
+    if days == 0:
+        return "due_today"
+    if urgency == "due_soon" or days is not None:
+        return "due_soon"
+    return None
+
+
 def _task_row(context, task, asset, today: date) -> dict:
     from core.equipment_actions import RECORDS
 
@@ -120,6 +140,7 @@ def _task_row(context, task, asset, today: date) -> dict:
             "asset": asset.name if asset is not None else None, "trigger": task.trigger_type, "unit": task.meter_unit,
             "priority": task.priority, "last_completed": task.last_completed, "interval_days": task.interval_days,
             "meter_interval": task.meter_interval, **status, "values": values,
+            "bucket": bucket_of(status.get("days"), status.get("urgency") or "") if not status["quick_stat"] else None,
             "action": None if status["quick_stat"] else
             {"kind": "maintenance.done", "label": "Done", "params": {"task_id": task.task_id},
              "asks_meter": task.is_meter_task}}
@@ -170,8 +191,9 @@ def equipment_page(context, scope: str = "maintenance", today: Optional[date] = 
                               and (r["urgency"] == "due_soon" or (r["days"] is not None and r["days"] <= NEXT_UP_DAYS))),
                              key=_order)
     page["all_assets"] = [{"id": a.asset_id, "name": a.name} for a in maintenance.all_assets()]
+    # Every task, each in its bucket: Past Due / Due Today / Due Soon (Zac, 2026-10-16).
+    page["tasks"] = sorted((r for r in rows if not r["quick_stat"]), key=_order)
     if scope == "maintenance":
-        page["tasks"] = sorted((r for r in rows if not r["quick_stat"]), key=_order)
         calendar = []
         for task in maintenance.all_tasks():
             if task.asset_id not in by_id:
@@ -196,7 +218,8 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
     rows = sorted((_task_row(context, t, asset, today) for t in maintenance.tasks_for_asset(asset_id)), key=_order)
     data = asdict(asset)
     page = {"id": asset.asset_id, "name": asset.name, "category": asset.category, "scope": scope_of(asset.category),
-            "scope_name": SCOPES[scope_of(asset.category)]["name"], "owner": _owner(context, asset),
+            "scope_name": SCOPES[scope_of(asset.category)]["name"], "scope_page": SCOPE_PAGES[scope_of(asset.category)],
+            "owner": _owner(context, asset),
             "details": [{"label": label, "value": value} for label, value in (
                 ("Make", asset.manufacturer), ("Model", asset.model), ("Serial number", asset.serial_number),
                 ("Bought on", asset.purchase_date), ("Warranty until", asset.warranty_until),

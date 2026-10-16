@@ -63,7 +63,7 @@ def test_the_cards_are_the_persons_apps_with_menus(world):
     assert not set(ids) & NOT_ON_GLASSES and len(ids) == len(set(ids))
     for card in data["apps"]:
         menu = [m for m in card["menu"] if m["type"] != "action"]
-        assert 1 <= len(menu) <= 4, card["id"]
+        assert 1 <= len(menu) <= 5, card["id"]
         assert len({m["id"] for m in card["menu"]}) == len(card["menu"])
         assert all(m["type"] == "panel" or m["say"] for m in menu)
         if card["id"] == "missions":  # always there, never pinned or unpinned
@@ -145,14 +145,14 @@ def test_every_panel_builds_and_carries_only_glasses_safe_actions(world):
 
 
 def test_a_change_from_the_glasses_is_proposed_then_approved(world):
-    panel = glasses_panel(world, "maintenance", "past_due", TODAY)
+    panel = glasses_panel(world, "garage", "past_due", TODAY)
     line = next(line for line in panel["lines"] if line["text"].startswith("Check oil"))
     proposal = world.actions.propose(world, line["action"]["kind"], line["action"]["params"])
     assert "Check oil" in proposal.summary and world.maintenance.get_task(world.task.task_id).last_completed != \
         TODAY.isoformat()
     world.actions.approve(world, proposal.proposal_id)
     assert world.maintenance.get_task(world.task.task_id).last_completed == TODAY.isoformat()
-    after = glasses_panel(world, "maintenance", "past_due", TODAY)
+    after = glasses_panel(world, "garage", "past_due", TODAY)
     assert not any(line["text"].startswith("Check oil") for line in after["lines"])
 
     grocery = glasses_panel(world, "kitchen", "grocery", TODAY)
@@ -242,3 +242,35 @@ def test_an_exercise_done_from_the_glasses(world):
     p = world.actions.propose(world, "fitness.step", dips["action"]["params"])
     world.actions.approve(world, p.proposal_id)
     assert glasses_panel(world, "workout", "training", TODAY)["lines"][0]["tone"] == "ok"
+
+
+def test_maintenance_and_property_are_folded_in(world):
+    """Zac, 2026-10-16: Garage holds vehicles, equipment and tools; Real Estate
+    holds buildings and appliances; Maintenance and Property are gone."""
+    from core.focus_presets import menu_modules
+    from core.web_equipment import equipment_page, scope_of
+    from core.web_surfaces import RETIRED, apps_page, shell
+
+    assert (scope_of("Tool"), scope_of("Other"), scope_of("Appliance"), scope_of("Property")) == \
+        ("garage", "garage", "real_estate", "real_estate")
+    furnace = world.maintenance.add_asset("Furnace", category="Appliance")
+    world.maintenance.add_task(furnace.asset_id, "Replace filter", interval_days=90,
+                               last_completed=(TODAY - timedelta(days=90)).isoformat())
+    home = equipment_page(world, "real_estate", TODAY)
+    assert [a["name"] for a in home["assets"]] == ["Furnace"]
+    assert [t["bucket"] for t in home["tasks"]] == ["due_today"]
+    assert "Furnace" not in [a["name"] for a in equipment_page(world, "garage", TODAY)["assets"]]
+
+    ids = {a["id"] for a in shell(world, TODAY)["apps"]} | {a["id"] for g in apps_page(world)["groups"] for a in g["apps"]}
+    assert not ids & RETIRED
+    assert not {a["id"] for a in glasses_apps(world, TODAY)["apps"]} & RETIRED
+    estate = [m["label"] for m in next(a for a in glasses_apps(world, TODAY)["apps"] if a["id"] == "real_estate")["menu"]]
+    assert estate[:5] == ["Properties", "Home & Appliances", "Past Due", "Due Today", "Due Soon"]
+    filters = glasses_panel(world, "real_estate", "due_today", TODAY)["lines"]
+    assert [line["text"] for line in filters] == ["Replace filter: Furnace"]
+
+    class M:
+        def __init__(self, module_id):
+            self.module_id = module_id
+    listed = [m.module_id for m in menu_modules(world, [M("garage"), M("maintenance"), M("property"), M("real_estate")])]
+    assert listed == ["garage", "real_estate"]

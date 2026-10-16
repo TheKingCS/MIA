@@ -44,9 +44,10 @@ def run(world, kind, **params):
     return proposal, world.actions.approve(world, proposal.proposal_id)
 
 
-def test_scopes_follow_the_pc_modules():
-    assert [scope_of(c) for c in ("Vehicle", "Power Equipment", "Appliance", "Tool", "Garden/Plant", "Other")] == [
-        "garage", "garage", "property", "property", "greenhouse", "maintenance"]
+def test_scopes_follow_the_apps():
+    # Zac, 2026-10-16: tools and anything else in Garage, buildings and appliances in Real Estate.
+    assert [scope_of(c) for c in ("Vehicle", "Power Equipment", "Appliance", "Tool", "Garden/Plant", "Other", "Property")] == [
+        "garage", "garage", "real_estate", "garage", "greenhouse", "garage", "real_estate"]
 
 
 def test_task_status_speaks_the_pc_apps_words(world):
@@ -66,7 +67,7 @@ def test_the_garage_page(world):
     assert [r["title"] for r in page["attention"]] == ["Check oil"]
     assert page["attention"][0]["action"]["kind"] == "maintenance.done"
     assert [r["title"] for r in page["next_up"]] == ["Sharpen blades"]
-    assert [a["name"] for a in equipment_page(world, "property", TODAY)["assets"]] == ["Fridge"]
+    assert [a["name"] for a in equipment_page(world, "real_estate", TODAY)["assets"]] == ["Fridge"]
     assert [a["name"] for a in equipment_page(world, "greenhouse", TODAY)["assets"]] == ["Tomatoes"]
     everything = equipment_page(world, "maintenance", TODAY)
     assert len(everything["assets"]) == 3 and [t["title"] for t in everything["tasks"]][:1] == ["Check oil"]

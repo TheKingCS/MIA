@@ -1,6 +1,7 @@
 /*
- * equipment.js — Garage, Property, Greenhouse and Maintenance (claude,
- * 2026-10-06, DEC-0017). The page's <body data-scope> picks the screen;
+ * equipment.js — Garage and Greenhouse (claude, 2026-10-06, DEC-0017;
+ * Maintenance and Property folded in, Zac 2026-10-16). The page's
+ * <body data-scope> picks the screen; tabs Assets, Past Due, Due Today, Due Soon;
  * everything comes from MIA.equipment(scope). Tasks are marked done, assets
  * and tasks added, edited and deleted, all as equipment actions. Each asset
  * opens its own page (asset.html).
@@ -9,7 +10,7 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const scope = document.body.dataset.scope || "maintenance";
+  const scope = document.body.dataset.scope || "garage";
   let page = null;
   let tab = location.hash.slice(1) || "assets";
 
@@ -78,25 +79,6 @@
     return kids;
   }
 
-  function tasksView() {
-    return [el("section", { class: "glass money-section" },
-      el("div", { class: "sect" }, el("h2", {}, "Every task"), btn("Add task", "btn-amber", addTask)),
-      page.tasks.length ? el("div", { class: "rows" }, page.tasks.map((r) => taskRow(r, true))) : el("p", { class: "dim" }, "No tasks yet."))];
-  }
-
-  function calendarView() {
-    const days = {};
-    page.calendar.forEach((c) => { (days[c.date] = days[c.date] || []).push(c); });
-    const label = (iso) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-    return [el("section", { class: "glass money-section" },
-      el("div", { class: "sect" }, el("h2", {}, "The next two months")),
-      Object.keys(days).length ? el("div", { class: "rows" }, Object.entries(days).map(([d, items]) =>
-        el("div", { class: "row money-row" + (items.some((i) => i.overdue) ? " overdue" : "") },
-          el("div", {}, el("div", { class: "row-title" }, label(d)),
-            el("div", { class: "row-sub" }, items.map((i) => i.title + " (" + i.asset + ")").join(" · "))))))
-        : el("p", { class: "dim" }, "Nothing scheduled in the next two months."))];
-  }
-
   function draw() {
     $("hero-icon").textContent = page.icon;
     if (window.MIAIcons) MIAIcons.badge($("hero-icon"), document.body.dataset.app);  // the line icon (DEC-0023)
@@ -106,13 +88,24 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.assets.length), el("span", { class: "t" }, "Tracked")),
       el("div", { class: "cell " + (page.attention.length ? "bad" : "ok") }, el("span", { class: "n" }, page.attention.length), el("span", { class: "t" }, "Needs attention")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, page.next_up.length), el("span", { class: "t" }, "Next up")));
+    // Past Due / Due Today / Due Soon (Zac, 2026-10-16), from every task's bucket.
+    const BUCKETS = [["past_due", "Past Due", "Nothing past due. Everything's cared for."],
+      ["due_today", "Due Today", "Nothing due today."], ["due_soon", "Due Soon", "Nothing coming due."]];
     const views = { assets: assetsView };
-    if (scope === "maintenance") {
-      Object.assign(views, { tasks: tasksView, calendar: calendarView });
-      $("tabs").hidden = false;
-      $("tabs").replaceChildren(...[["assets", "Assets"], ["tasks", "Tasks"], ["calendar", "Calendar"]].map(([id, l]) =>
-        el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
-    }
+    BUCKETS.forEach(([id, label, empty]) => {
+      views[id] = () => {
+        const rows = page.tasks.filter((r) => r.bucket === id);
+        return [el("section", { class: "glass money-section" },
+          el("div", { class: "sect" }, el("h2", {}, label), btn("Add Task", "btn-amber", addTask)),
+          rows.length ? el("div", { class: "rows" }, rows.map((r) => taskRow(r, true))) : el("p", { class: "dim" }, empty))];
+      };
+    });
+    $("tabs").hidden = false;
+    $("tabs").replaceChildren(...[["assets", "Assets"], ...BUCKETS.map(([id, l]) => [id, l])].map(([id, l]) => {
+      const n = id === "assets" ? page.assets.length : page.tasks.filter((r) => r.bucket === id).length;
+      return el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
+        onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l + (n ? " " + n : ""));
+    }));
     if (!views[tab]) tab = "assets";
     $("panel").replaceChildren(...views[tab]());
   }

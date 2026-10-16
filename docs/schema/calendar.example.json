@@ -192,7 +192,7 @@
         "day": 16,
         "in_month": true,
         "today": true,
-        "count": 4,
+        "count": 5,
         "kinds": [
           "event",
           "meal",
@@ -514,6 +514,18 @@
         }
       ],
       "2026-10-16": [
+        {
+          "date": "2026-10-16",
+          "time": "15:00",
+          "title": "Haircut",
+          "detail": "",
+          "kind": "event",
+          "kind_label": "Event",
+          "app": "calendar",
+          "due": false,
+          "event_id": "fc01b54f3c",
+          "repeats": ""
+        },
         {
           "date": "2026-10-16",
           "time": "",
@@ -1048,6 +1060,18 @@
     }
   ],
   "today": [
+    {
+      "date": "2026-10-16",
+      "time": "15:00",
+      "title": "Haircut",
+      "detail": "",
+      "kind": "event",
+      "kind_label": "Event",
+      "app": "calendar",
+      "due": false,
+      "event_id": "fc01b54f3c",
+      "repeats": ""
+    },
     {
       "date": "2026-10-16",
       "time": "",

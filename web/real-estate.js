@@ -3,6 +3,9 @@
  * Renders MIA.realEstate() (core/web_screens.py): each property with its
  * status, where it is, rent, what's owed, equity and cash flow, its upkeep
  * (its own Maintenance asset, opened on asset.html) and related missions.
+ * Since Zac folded Property and Maintenance in (2026-10-16): the house and
+ * its appliances (MIA.equipment("real_estate")) and their upkeep, sorted
+ * Past Due / Due Today / Due Soon.
  * Rent and expenses are recorded into Money. Every change is a property
  * action (core/estate_actions.py) or a maintenance one. Formatting only here.
  */
@@ -10,8 +13,9 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["properties", "Properties"], ["maintenance", "Maintenance"], ["missions", "Missions"]];
-  let page = null;
+  const TABS = [["properties", "Properties"], ["home", "Home & Appliances"], ["past_due", "Past Due"],
+    ["due_today", "Due Today"], ["due_soon", "Due Soon"], ["missions", "Missions"]];
+  let page = null, home = null;  // home: the buildings and appliances, as the equipment screens show them
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "properties";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
@@ -50,6 +54,25 @@
           el("a", { class: "btn btn-ghost", href: "asset.html?id=" + encodeURIComponent(row.asset_id) }, "Open"))));
   }
 
+  // The house and its appliances (Zac, 2026-10-16: Property folded into Real Estate).
+  async function addAppliance() {
+    const v = await form("Add To Real Estate", home.forms.asset.fields, { category: home.default_category });
+    if (v) act({ kind: "asset.add", params: v });
+  }
+  function applianceCard(a) {
+    return el("a", { class: "glass asset-card" + (a.overdue ? " attention" : ""), href: "asset.html?id=" + encodeURIComponent(a.id) },
+      el("div", { class: "asset-head" }, el("h3", {}, a.name), el("span", { class: "chip" }, a.category)),
+      a.make_model ? el("p", { class: "dim" }, a.make_model) : null,
+      el("ul", { class: "asset-tasks" }, a.tasks.length ? a.tasks.map((t) =>
+        el("li", { class: t.needs_attention ? "overdue" : "" }, el("span", {}, t.title), el("span", { class: "when" }, t.text)))
+        : el("li", { class: "dim" }, "No tasks yet")));
+  }
+  function bucket(id, label, empty) {
+    const rows = ((home && home.tasks) || []).filter((r) => r.bucket === id);
+    return [section(label, null, rows.length ? el("div", { class: "rows" }, rows.map((r) => taskRow(r, { name: r.asset })))
+      : el("p", { class: "dim" }, empty))];
+  }
+
   function figure(label, value, cls) {
     return el("div", { class: "prop-fig" + (cls ? " " + cls : "") }, el("small", {}, label), el("strong", {}, value));
   }
@@ -80,19 +103,12 @@
     properties: () => [section("Properties", buttons(btn("Add property", "btn-amber", add)),
       page.properties.length ? el("div", { class: "asset-grid" }, page.properties.map(card))
         : el("p", { class: "empty" }, el("strong", {}, "No properties yet."), "Add one to see its rent, equity and upkeep in one place."))],
-    maintenance: () => {
-      const rows = [];
-      page.properties.forEach((p) => p.tasks.forEach((t) => rows.push([t, p])));
-      rows.sort((a, b) => (b[0].needs_attention - a[0].needs_attention) || ((a[0].days ?? 1e4) - (b[0].days ?? 1e4)));
-      const untracked = page.properties.filter((p) => !p.asset_id);
-      return [section("Upkeep", null,
-        rows.length ? el("div", { class: "rows" }, rows.map(([t, p]) => taskRow(t, p)))
-          : el("p", { class: "dim" }, "No upkeep tasks yet. Track a property's upkeep, then add its tasks (filters, gutters, inspections)."),
-        untracked.length ? el("div", { class: "rows untracked" }, untracked.map((p) => el("div", { class: "row money-row" },
-          el("div", {}, el("div", { class: "row-title" }, p.name), el("div", { class: "row-sub" }, "Upkeep not tracked yet")),
-          buttons(btn("Track upkeep", "btn-amber", () => act({ kind: "property.track_upkeep", params: { property_id: p.id } }))))))
-          : null)];
-    },
+    home: () => [section("Home & Appliances", buttons(btn("Add Appliance", "btn-amber", addAppliance)),
+      home && home.assets.length ? el("div", { class: "asset-grid" }, home.assets.map(applianceCard))
+        : el("p", { class: "empty" }, el("strong", {}, "Nothing here yet."), "Add your furnace, water heater, fridge… and MIA keeps their upkeep."))],
+    past_due: () => bucket("past_due", "Past Due", "Nothing past due. Every property is cared for."),
+    due_today: () => bucket("due_today", "Due Today", "Nothing due today."),
+    due_soon: () => bucket("due_soon", "Due Soon", "Nothing coming due."),
     missions: () => {
       const rows = [];
       page.properties.forEach((p) => p.missions.forEach((m) => rows.push([m, p])));
@@ -112,12 +128,13 @@
       el("div", { class: "cell " + (t.attention ? "bad" : "ok") }, el("span", { class: "n" }, t.attention), el("span", { class: "t" }, "Needs attention")));
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) =>
-      el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
+      el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } },
+        l + (["past_due", "due_today", "due_soon"].includes(id) && home ? ((n) => n ? " " + n : "")(home.tasks.filter((r) => r.bucket === id).length) : ""))));
     $("panel").replaceChildren(...views[tab]());
   }
 
   MIAShell.start(async () => {
-    page = await MIA.realEstate();
+    [page, home] = await Promise.all([MIA.realEstate(), MIA.equipment("real_estate").catch(() => null)]);
     if (!page.available) {
       $("panel").replaceChildren(el("p", { class: "empty" }, el("strong", {}, "Real Estate isn't set up on this MIA."), ""));
       return;
