@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-15 (the Stark interface; capable offline, supercharged online), by claude.*
+session. Last updated: 2026-10-16 (glasses quick action menus), by claude.*
 
 ## Phase
 
@@ -28,7 +28,7 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 | Web front end (`web/`, served at `/web/`; desktop "Home (preview)") | REAL foundation: engine client, tokens, a working Home scaffold. Muse's real Home next |
 | Action API (`/api/actions`) and live updates (`/api/live`) | REAL, built 2026-10-05 |
 | Muse's desktop design artifact | Design surface, SIMULATED. Superseded by `web/` for real screens |
-| Meta Display glasses | PLANNED, priority 3 (DEC-0015). Platform researched (H-0008); waiting on DEC-0016 and Q-0011 |
+| Meta Display glasses | Web App (DEC-0016) REAL in the preview (`web/glasses.html`): boots to her orb, swipe through the app cards, select one for its quick action menu (H-0041/H-0042, `core/glasses.py`); a change is approved with a second select. Zac's Display arrives around Nov 16; on-device test (Funnel, revocable link) after |
 | Raspberry Pi devices | Supported but parked: priority 4 (DEC-0015) |
 | MIA's reasoning over Life State ("opportunities") | PLANNED (Phase 2) |
 | Collaboration hub (these files) | REAL, started 2026-10-05 (DEC-0010) |
@@ -65,6 +65,7 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-10-16 · claude · **Glasses quick action menus for every app (Zac; Muse's H-0041 Phase 2, H-0042).** The glasses boot to her orb; a swipe flips through the person's app cards (28, each with a live status line); select opens the app's 2–4 item menu; an item shows a short panel (Kitchen: today's meals with ATE IT, the grocery list with GOT IT; Workout: today's training, skill practice, weight, milestones; Missions; Money as readouts only; equipment upkeep with DONE; Rentals, Skills, Character; the other apps ask MIA a question). A change shows MIA's sentence and a second select approves it; back cancels. Only quick, non-destructive kinds (`GLASSES_KINDS`), never money or deletes. `/api/glasses`, `/api/glasses/{app}/{item}`; placeholder examples for the demo. Muse polishes the look. Also: phone test build 28 (spacing fix, technical plates); DEC-0022 amended: the home PC reachable from anywhere through Tailscale from the start.
 - 2026-10-15 · claude · **Technical header plates (Zac via Muse, H-0036):** no photos; graphite, a fine cyan grid, each app's line icon as a faint schematic, brackets and scale. The recipe page's protein value is white (gold is celebration only, H-0035). **Zac: skill names broke mid-word on his phone** (larger text, two cards side by side): skill cards now stack, titles wrap only between words and shrink to fit when one word is too long, money values never wrap. Checked on 17 pages at normal and 1.3× text. Zac's PC (H-0037/H-0038): RX 7900 XTX 24 GB, online once its Ethernet cable arrives; the DEC-0022 plan is in NEXT_SESSION.
 - 2026-10-15 · claude · Muse's H-0031/H-0033 asks: **reps on the practice timer card** (a step with a rep target logs a count, with or without the timer; `fitness.skill` takes `reps`; a new most gets the gold celebration) and **the Week planner on a phone shows today open and the other days as one line each** until tapped. Handoff index brought up to date (H-0028 to H-0034); Claude's reskin note is H-0034 (Muse's look review took H-0031).
 - 2026-10-15 · claude · **MIA's new look: the Stark engineering interface (DEC-0023, Zac's brief).** All 22 web pages, phone and desktop: near-black and graphite layers, one electric-cyan accent (every app), amber only for attention, muted green for healthy, red for real errors, gold for celebration; precise 6/4 px panels, fine lines, technical mono labels, tabular figures, header plates (monochrome photo, corner brackets, a scale), meters with a scale, a line-icon set (`web/icons.js`) instead of emoji in the frame, the arc-reactor brand mark and a cyan orb, restrained motion (reduced motion respected). `web/tokens.css` is the theme; hard-coded colors are gone from the stylesheets. Contrast measured (AA throughout); keyboard focus ring; high contrast is black, white and full cyan. No function, data or route changed; the glasses page is untouched. Guide: `docs/design/STARK_INTERFACE.md`; H-0034 asks Muse to review. Also **DEC-0022 approved**: capable offline, supercharged online (phone only → home computer → internet; cloud AI off unless switched on); the PC's bigger model for Talk comes first, waiting on Zac's PC specs.

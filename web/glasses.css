@@ -253,3 +253,34 @@ body.demo #stage {
 #finder .bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 12px; }
 #finder .br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 12px; }
 .g-card.see { max-width: 380px; }
+
+/* ---------- v5: quick action menus (claude, Zac 2026-10-16; Muse owns the look) ---------- */
+/* inside an app the orb steps back to a small mark at the top, so the menu and its lines have the room */
+#stage.compact { grid-template-rows: 70px auto minmax(0, 1fr) auto; }
+#stage.compact #orb-wrap { transform: scale(0.34); margin: -60px; }
+.g-attn { color: var(--attention); }
+.g-menu, .g-rows { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; text-align: left; }
+.g-menu li {
+  padding: 10px 14px; border: 1px solid rgba(53, 212, 255, 0.16); border-radius: 4px;
+  font-size: 17px; color: var(--ink-dim); cursor: pointer; display: flex; justify-content: space-between; gap: 10px;
+}
+.g-menu li.sel, .g-rows li.sel {
+  color: var(--ink); border-color: var(--accent);
+  background: rgba(53, 212, 255, 0.08); box-shadow: inset 3px 0 0 var(--accent), 0 0 18px rgba(53, 212, 255, 0.18);
+}
+.g-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); align-self: center; }
+.g-rows li {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 10px; align-items: baseline;
+  padding: 7px 12px; border: 1px solid transparent; border-radius: 4px; font-size: 15px;
+}
+.g-rows li.can { cursor: pointer; border-color: rgba(53, 212, 255, 0.14); }
+.g-row-text { color: var(--ink); overflow-wrap: break-word; }
+.g-row-detail { grid-column: 1; font-size: 12.5px; color: var(--ink-dim); }
+.g-row-act {
+  grid-column: 2; grid-row: 1 / span 2; align-self: center;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-dim);
+}
+.g-rows li.sel .g-row-act { color: var(--accent); }
+.g-rows li.t-attention .g-row-detail, .g-rows li.t-bad .g-row-detail { color: var(--attention); }
+.g-rows li.t-ok .g-row-detail { color: var(--accent-soft); }
+.g-confirm { font-size: 18px; color: var(--ink); }

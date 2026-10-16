@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-15*
+*Last updated: 2026-10-16*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -93,6 +93,11 @@ the hub, and the Meta AI app.
       Source: **GitHub Actions**. Then Actions → "Pages preview" → Run
       workflow (or wait for the next push). The preview is at
       https://thekingcs.github.io/MIA/ (placeholder data only).
+- [ ] **Try the glasses menus (2026-10-16, H-0042):** on your phone open
+      https://thekingcs.github.io/MIA/web/glasses.html (placeholder data).
+      Swipe left on her orb for the app cards, tap a card for its menu,
+      tap an item; swipe down to go back. Tell Claude or Muse which menus you'd
+      change, and which apps should come first.
 - [ ] *(When the glasses arrive)* **In the Meta Wearables Developer Center:** check that Web Apps
       (and the Device Access Toolkit) are enabled for your account.
 - [ ] **In the Meta AI app:** turn on Developer Mode (Settings › App
@@ -284,6 +289,14 @@ build: the phone finds the PC at home (same Wi-Fi) **and from anywhere through T
 Talk uses it with the phone's 1.5B as fallback, and the shell shows the
 level (PHONE / HOME PC / ONLINE, Muse's H-0035 §5). Then presence-page
 frame and the dashboard saying card as a readout (H-0035 §3).
+
+**Glasses quick action menus (2026-10-16, H-0042)** work in the preview
+for every app (`core/glasses.py`). Waiting on Muse's look pass and her
+two answers (card order; which ask-only apps get real panels next:
+likely Household chores, People birthdays, Inbox). Then: app icons on the cards, Phase 3 voice ("open
+Kitchen", "log lunch" through the Android companion), Phase 4 on-device
+test when the Display arrives (~Nov 16: Funnel URL, revocable
+glasses-only link limited to `/api/glasses` and `GLASSES_KINDS`).
 
 **The Stark interface (DEC-0023, 2026-10-15)** is built; Muse reviews
 (H-0034). Follow-ups: workshop-style header images, more line icons,

@@ -1,0 +1,620 @@
+{
+  "as_of": "2026-10-16",
+  "apps": [
+    {
+      "id": "dashboard",
+      "name": "Today",
+      "full_name": "Dashboard",
+      "tagline": "Your life. In sync.",
+      "status": "",
+      "tone": "calm",
+      "ask": "What's on today?",
+      "menu": [
+        {
+          "id": "next",
+          "label": "What's next",
+          "type": "panel"
+        },
+        {
+          "id": "coming",
+          "label": "Coming up",
+          "type": "panel"
+        },
+        {
+          "id": "wins",
+          "label": "Recent wins",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "missions",
+      "name": "Missions",
+      "full_name": "Missions",
+      "tagline": "Explore. Complete. Level up.",
+      "status": "15 active",
+      "tone": "calm",
+      "ask": "Add a mission to build a chicken coop.",
+      "menu": [
+        {
+          "id": "today",
+          "label": "Today's missions",
+          "type": "panel"
+        },
+        {
+          "id": "claim",
+          "label": "Ready to claim",
+          "type": "panel"
+        },
+        {
+          "id": "active",
+          "label": "Active missions",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "full_name": "Kitchen",
+      "tagline": "Good food. Good mood.",
+      "status": "9 recipes · 4 on the grocery list · chicken expires in 0d",
+      "tone": "attention",
+      "ask": "What can I make with what's in the pantry?",
+      "menu": [
+        {
+          "id": "meals",
+          "label": "Today's meals",
+          "type": "panel"
+        },
+        {
+          "id": "grocery",
+          "label": "Grocery list",
+          "type": "panel"
+        },
+        {
+          "id": "use_soon",
+          "label": "Use soon",
+          "type": "panel"
+        },
+        {
+          "id": "make",
+          "label": "What can I make",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "workout",
+      "name": "Workout",
+      "full_name": "Workout",
+      "tagline": "Stronger body. Clearer mind.",
+      "status": "4 sessions this week · last: Beginner full body (2026-10-15)",
+      "tone": "calm",
+      "ask": "Log a 30 minute workout.",
+      "menu": [
+        {
+          "id": "training",
+          "label": "Today's training",
+          "type": "panel"
+        },
+        {
+          "id": "practice",
+          "label": "Skill practice",
+          "type": "panel"
+        },
+        {
+          "id": "weight",
+          "label": "Weight",
+          "type": "panel"
+        },
+        {
+          "id": "milestones",
+          "label": "Milestones",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "budget",
+      "name": "Money",
+      "full_name": "Money",
+      "tagline": "Know where it goes.",
+      "status": "Insurance $340.00 in 4d · $2,290.00 left each month after bills",
+      "tone": "calm",
+      "ask": "Which debt should I pay first?",
+      "menu": [
+        {
+          "id": "month",
+          "label": "This month",
+          "type": "panel"
+        },
+        {
+          "id": "due",
+          "label": "What's due",
+          "type": "panel"
+        },
+        {
+          "id": "debts",
+          "label": "Debts",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "garage",
+      "name": "Garage",
+      "full_name": "Garage",
+      "tagline": "Keep it running. Keep it ready.",
+      "status": "4 tracked · 3 need attention · next: Test run (Generator)",
+      "tone": "attention",
+      "ask": "What's overdue on my vehicles?",
+      "menu": [
+        {
+          "id": "attention",
+          "label": "Needs attention",
+          "type": "panel"
+        },
+        {
+          "id": "next",
+          "label": "Next up",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "name": "Maintenance",
+      "full_name": "Maintenance",
+      "tagline": "Everything you own, cared for.",
+      "status": "7 tracked · 5 need attention · next: Test run (Generator)",
+      "tone": "attention",
+      "ask": "I put 120 hours on the mower.",
+      "menu": [
+        {
+          "id": "attention",
+          "label": "Needs attention",
+          "type": "panel"
+        },
+        {
+          "id": "next",
+          "label": "Next up",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "greenhouse",
+      "name": "Greenhouse",
+      "full_name": "Greenhouse",
+      "tagline": "Grow food. Grow freedom.",
+      "status": "1 tracked · 1 needs attention",
+      "tone": "attention",
+      "ask": "What needs doing in the greenhouse?",
+      "menu": [
+        {
+          "id": "attention",
+          "label": "Needs attention",
+          "type": "panel"
+        },
+        {
+          "id": "next",
+          "label": "Next up",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "property",
+      "name": "Property",
+      "full_name": "Property",
+      "tagline": "The house, the appliances, the tools.",
+      "status": "2 tracked · 1 needs attention · next: Clean gutters (Maple House)",
+      "tone": "attention",
+      "ask": "Do I have any furnace filters left?",
+      "menu": [
+        {
+          "id": "attention",
+          "label": "Needs attention",
+          "type": "panel"
+        },
+        {
+          "id": "next",
+          "label": "Next up",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "real_estate",
+      "name": "Rentals",
+      "full_name": "Real Estate",
+      "tagline": "Cash flow. Equity. Freedom.",
+      "status": "3 properties · $232,000.00 equity",
+      "tone": "calm",
+      "ask": "How are my rentals doing this month?",
+      "menu": [
+        {
+          "id": "properties",
+          "label": "Properties",
+          "type": "panel"
+        },
+        {
+          "id": "upkeep",
+          "label": "Upkeep",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "skills",
+      "name": "Skills",
+      "full_name": "Skills",
+      "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Which skills am I growing?",
+      "menu": [
+        {
+          "id": "focus",
+          "label": "Focus",
+          "type": "panel"
+        },
+        {
+          "id": "week",
+          "label": "This week",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "character",
+      "name": "Character",
+      "full_name": "Character",
+      "tagline": "Your story so far.",
+      "status": "",
+      "tone": "calm",
+      "ask": "What have I done this week?",
+      "menu": [
+        {
+          "id": "story",
+          "label": "Your story",
+          "type": "panel"
+        },
+        {
+          "id": "top",
+          "label": "Top skills",
+          "type": "panel"
+        }
+      ]
+    },
+    {
+      "id": "household",
+      "name": "Household",
+      "full_name": "Household",
+      "tagline": "A home that runs itself.",
+      "status": "",
+      "tone": "calm",
+      "ask": "I did the dishes.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What chores are due",
+          "type": "ask",
+          "say": "What chores are due?"
+        },
+        {
+          "id": "ask1",
+          "label": "What did I get done this week",
+          "type": "ask",
+          "say": "What did I get done this week?"
+        }
+      ]
+    },
+    {
+      "id": "workshop",
+      "name": "Workshop",
+      "full_name": "Workshop",
+      "tagline": "Parts, jobs and products.",
+      "status": "",
+      "tone": "calm",
+      "ask": "How much plywood do I have?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What jobs are open",
+          "type": "ask",
+          "say": "What jobs are open?"
+        },
+        {
+          "id": "ask1",
+          "label": "Which parts are running low",
+          "type": "ask",
+          "say": "Which parts are running low?"
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "name": "Power",
+      "full_name": "Power",
+      "tagline": "Energy, tracked.",
+      "status": "",
+      "tone": "calm",
+      "ask": "How's the battery?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "How's the battery",
+          "type": "ask",
+          "say": "How's the battery?"
+        },
+        {
+          "id": "ask1",
+          "label": "How much power did I use today",
+          "type": "ask",
+          "say": "How much power did I use today?"
+        }
+      ]
+    },
+    {
+      "id": "observations",
+      "name": "Observations",
+      "full_name": "Observations",
+      "tagline": "What MIA noticed.",
+      "status": "",
+      "tone": "calm",
+      "ask": "What have you noticed lately?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What have you noticed lately",
+          "type": "ask",
+          "say": "What have you noticed lately?"
+        }
+      ]
+    },
+    {
+      "id": "relationships",
+      "name": "People",
+      "full_name": "People & Pets",
+      "tagline": "The ones who matter.",
+      "status": "",
+      "tone": "calm",
+      "ask": "When is the next birthday?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "When is the next birthday",
+          "type": "ask",
+          "say": "When is the next birthday?"
+        },
+        {
+          "id": "ask1",
+          "label": "Who haven't I talked to in a while",
+          "type": "ask",
+          "say": "Who haven't I talked to in a while?"
+        }
+      ]
+    },
+    {
+      "id": "notes",
+      "name": "Notes",
+      "full_name": "Notes",
+      "tagline": "Write it down.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Make a note: call the plumber Friday.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What were my last notes",
+          "type": "ask",
+          "say": "What were my last notes?"
+        }
+      ]
+    },
+    {
+      "id": "classroom",
+      "name": "Classroom",
+      "full_name": "Classroom",
+      "tagline": "Keep learning.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Quiz me on chapter 2.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What should I study next",
+          "type": "ask",
+          "say": "What should I study next?"
+        }
+      ]
+    },
+    {
+      "id": "inbox",
+      "name": "Inbox",
+      "full_name": "Inbox",
+      "tagline": "Paperwork, handled.",
+      "status": "",
+      "tone": "calm",
+      "ask": "What's waiting in my inbox?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What's waiting in my inbox",
+          "type": "ask",
+          "say": "What's waiting in my inbox?"
+        },
+        {
+          "id": "ask1",
+          "label": "Any emails I should answer",
+          "type": "ask",
+          "say": "Any emails I should answer?"
+        }
+      ]
+    },
+    {
+      "id": "expeditions",
+      "name": "Expeditions",
+      "full_name": "Expeditions",
+      "tagline": "Plan the trip.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Plan a weekend camping trip.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What's my next trip",
+          "type": "ask",
+          "say": "What's my next trip?"
+        },
+        {
+          "id": "ask1",
+          "label": "What gear am I missing for it",
+          "type": "ask",
+          "say": "What gear am I missing for it?"
+        }
+      ]
+    },
+    {
+      "id": "memories",
+      "name": "Memories",
+      "full_name": "Memories",
+      "tagline": "Remember the trip.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Show me my last trip.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What was my last trip like",
+          "type": "ask",
+          "say": "What was my last trip like?"
+        }
+      ]
+    },
+    {
+      "id": "maps",
+      "name": "Maps",
+      "full_name": "Maps",
+      "tagline": "Know the ground.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Which trail maps do I have?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "Which trail maps do I have",
+          "type": "ask",
+          "say": "Which trail maps do I have?"
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "name": "Navigation",
+      "full_name": "Navigation",
+      "tagline": "Find the way.",
+      "status": "",
+      "tone": "calm",
+      "ask": "How far is camp from the trailhead?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "How far is my nearest waypoint",
+          "type": "ask",
+          "say": "How far is my nearest waypoint?"
+        },
+        {
+          "id": "ask1",
+          "label": "When is sunset today",
+          "type": "ask",
+          "say": "When is sunset today?"
+        }
+      ]
+    },
+    {
+      "id": "lab",
+      "name": "The Lab",
+      "full_name": "The Lab",
+      "tagline": "Experiments and sensors.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Start a temperature experiment.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What's my latest experiment reading",
+          "type": "ask",
+          "say": "What's my latest experiment reading?"
+        }
+      ]
+    },
+    {
+      "id": "field_kit",
+      "name": "Field Kit",
+      "full_name": "Field Kit",
+      "tagline": "Devices and scripts.",
+      "status": "",
+      "tone": "calm",
+      "ask": "What devices are connected?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What devices are connected",
+          "type": "ask",
+          "say": "What devices are connected?"
+        }
+      ]
+    },
+    {
+      "id": "music",
+      "name": "Music",
+      "full_name": "Music",
+      "tagline": "Your music.",
+      "status": "",
+      "tone": "calm",
+      "ask": "Play something relaxing.",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "What's playing",
+          "type": "ask",
+          "say": "What's playing?"
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "name": "Diagnostics",
+      "full_name": "Diagnostics",
+      "tagline": "How MIA is doing.",
+      "status": "",
+      "tone": "calm",
+      "ask": "How is the computer doing?",
+      "menu": [
+        {
+          "id": "ask0",
+          "label": "How is the computer doing",
+          "type": "ask",
+          "say": "How is the computer doing?"
+        }
+      ]
+    }
+  ],
+  "kinds": [
+    "fitness.food",
+    "fitness.milestone",
+    "fitness.skill",
+    "fitness.step",
+    "fitness.training_done",
+    "grocery.check",
+    "maintenance.done",
+    "meal.prep_done",
+    "mission.complete",
+    "objective.tick",
+    "routine.log",
+    "task.done"
+  ]
+}

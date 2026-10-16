@@ -1,12 +1,12 @@
 /* MIA on Display glasses — one card at a time (muse, 2026-10-06, DEC-0016).
    Moments: glance (her + one focus), apps, quest, voice, nudge, levelup.
-   Apps (H-0041, Phase 1): swipe through the first app cards (Kitchen,
-   Workout, Missions, Money), select one for its detail. The action menu
-   arrives with the engine's per-app glance actions (Phase 2); the detail
-   card shows the app's real description and example command until then.
+   Apps (H-0041; Zac 2026-10-16): she boots to her orb; swipe to flip
+   through the person's app cards, select one for its quick action menu
+   (core/glasses.py), select an item for its panel, and approve a change
+   with a second select.
    Look: the Stark engineering language (DEC-0023) — cyan on black, mono
    labels. Data: MIA.dashboard() and MIA.shell(); voice goes through
-   MIA.talk(); apps come from MIA.apps(). In the demo (public preview)
+   MIA.talk(); apps come from MIA.glasses(). In the demo (public preview)
    it reads the placeholder examples, says so, and voice answers from a
    tiny local script. Nothing here invents facts: every line on a card
    comes from the engine or is labeled demo. */
@@ -17,8 +17,8 @@
   const demo = MIA.demo;
   $("demo-tag").hidden = !demo;
 
-  let dash = null, shell = null, appsData = null, moment = "glance", questDone = false;
-  let appIndex = 0, appDetail = false;
+  let dash = null, shell = null, glassesData = null, moment = "glance", questDone = false;
+  let appIndex = 0;
 
   function el(tag, cls, html) {
     const n = document.createElement(tag);
@@ -128,66 +128,150 @@
     $("voice-input").placeholder = 'say "what am I looking at"';
   }
 
-  // ------------------------------------------------------------ apps (H-0041, Phase 1)
-  const FIRST_APPS = ["kitchen", "workout", "missions", "budget"];
-  function firstApps() {
-    const all = (appsData && appsData.groups ? appsData.groups : []).flatMap((g) => g.apps || []);
-    const shown = all.filter((a) => a.shown !== false);
-    const picked = FIRST_APPS.map((id) => shown.find((a) => a.id === id)).filter(Boolean);
-    return picked.length ? picked : shown.slice(0, 4);
-  }
+  // ------------------------------------------------------------ apps (H-0041; menus: Zac 2026-10-16)
+  // Cards -> an app's quick action menu -> a panel (a short readout, some
+  // lines of which can be acted on) -> confirm -> done. Every level is
+  // engine data (core/glasses.py, MIA.glasses / MIA.glassesPanel); a
+  // change is proposed, shown as MIA's own sentence, and approved with a
+  // second select (two-gesture approve, H-0008/H-0012). Back undoes a step.
+  let level = "cards", menuIndex = 0, lineIndex = 0, panel = null, proposal = null, resultText = "", busy = false;
+  let after = "menu";  // where back goes from a result: the menu (an ask) or the refreshed panel (a change)
+
+  function cards() { return (glassesData && glassesData.apps) || []; }
+  function currentApp() { return cards()[appIndex] || null; }
+  function actionable() { return panel ? panel.lines.map((l, i) => (l.action ? i : -1)).filter((i) => i >= 0) : []; }
+  function compact(on) { $("stage").classList.toggle("compact", on); }
+
   function apps() {
     setOrb("idle"); showFinder(false);
-    const list = firstApps();
+    const list = cards();
+    const app = currentApp();
+    compact(level !== "cards");
     const box = el("div", "g-card");
-    if (!list.length) {
-      box.append(
-        el("p", "g-kicker", "Apps"),
-        el("p", "g-title", "Apps aren't available yet"),
-        el("p", "g-sub", "MIA couldn't load the app list."));
+    if (!list.length || !app) {
+      box.append(el("p", "g-kicker", "Apps"), el("p", "g-title", "Apps aren't available yet"),
+        el("p", "g-sub", "MIA couldn't load your apps."));
       card.replaceChildren(box);
-      $("voice-input").placeholder = 'say "what\'s next"';
       return;
     }
-    appIndex = Math.max(0, Math.min(appIndex, list.length - 1));
-    const app = list[appIndex];
     const letter = (app.name || "?").trim().charAt(0).toUpperCase();
-    const ask = app.ask || ("open " + (app.name || ""));
-    if (appDetail) {
-      box.append(
-        el("p", "g-kicker", "Apps · " + esc(app.name || "")),
-        el("div", "g-app-badge", esc(letter)),
-        el("p", "g-title", esc(app.name || "")),
-        el("p", "g-sub", esc(app.description || app.tagline || "")),
-        el("p", "g-say", 'say <b>"' + esc(ask) + '"</b>'),
-        el("p", "g-say", "select to go back"));
-    } else {
+    if (level === "cards") {
       box.append(
         el("p", "g-kicker", "Apps"),
         el("div", "g-app-badge", esc(letter)),
-        el("p", "g-title", esc(app.name || "")),
-        el("p", "g-sub", esc(app.tagline || "")),
-        el("p", "g-say", 'say <b>"' + esc(ask) + '"</b>'),
+        el("p", "g-title", esc(app.name)),
+        el("p", "g-sub" + (app.tone === "attention" ? " g-attn" : ""), esc(app.status || app.tagline || "")),
         el("p", "g-app-pos", (appIndex + 1) + " of " + list.length),
-        el("p", "g-say", "swipe for more · select for details"));
+        el("p", "g-say", "swipe for more · select to open"));
+    } else if (level === "menu") {
+      const ul = el("ul", "g-menu");
+      app.menu.forEach((m, i) => {
+        const li = el("li", i === menuIndex ? "sel" : "", esc(m.label) + (m.type === "ask" ? '<span class="g-tag">ask</span>' : ""));
+        li.onclick = (e) => { e.stopPropagation(); menuIndex = i; select(); };
+        ul.append(li);
+      });
+      box.append(el("p", "g-kicker", esc(app.name)), ul, el("p", "g-say", "swipe to choose · select · back"));
+    } else if (level === "panel") {
+      const item = app.menu[menuIndex] || {};
+      box.append(el("p", "g-kicker", esc(app.name) + " · " + esc(item.label || "")));
+      if (!panel) {
+        box.append(el("p", "g-sub", "Loading…"));
+      } else if (!panel.lines.length) {
+        box.append(el("p", "g-sub", esc(panel.empty || "Nothing here.")));
+      } else {
+        const ul = el("ul", "g-rows");
+        const sel = actionable()[lineIndex];
+        panel.lines.forEach((l, i) => {
+          const li = el("li", [l.tone ? "t-" + l.tone : "", l.action ? "can" : "", i === sel ? "sel" : ""].join(" ").trim());
+          li.append(el("span", "g-row-text", esc(l.text)));
+          if (l.detail) li.append(el("span", "g-row-detail", esc(l.detail)));
+          if (l.action) li.append(el("span", "g-row-act", esc(l.action.label)));
+          if (l.action) li.onclick = (e) => { e.stopPropagation(); lineIndex = actionable().indexOf(i); select(); };
+          ul.append(li);
+        });
+        box.append(ul);
+        if (panel.more) box.append(el("p", "g-app-pos", "+ " + panel.more + " more on your phone"));
+      }
+      box.append(el("p", "g-say", actionable().length ? "swipe to choose · select to do it · back" : "back to the menu"));
+    } else if (level === "confirm") {
+      box.append(el("p", "g-kicker", "Confirm"),
+        el("p", "g-sub g-confirm", esc(proposal ? proposal.summary : "")),
+        el("p", "g-say", "select again to approve · back to cancel"));
+    } else {
+      box.append(el("p", "g-kicker", esc(app.name)), el("div", "g-sub", ""),
+        el("p", "g-say", "back to the menu"));
+      box.querySelector("div.g-sub").textContent = resultText;
     }
     card.replaceChildren(box);
-    $("voice-input").placeholder = 'say "open kitchen"';
   }
-  function appNext(dir) {
-    const list = firstApps();
-    if (!list.length) return;
-    if (appDetail) appDetail = false;
-    appIndex = (appIndex + dir + list.length) % list.length;
-    apps();
+
+  async function openPanel() {
+    const app = currentApp(), item = app && app.menu[menuIndex];
+    if (!item) return;
+    if (item.type === "ask") {
+      level = "result"; after = "menu"; resultText = "…"; apps(); setOrb("listening");
+      try {
+        const turn = await MIA.talk(item.say);
+        resultText = turn.reply_text || "Done.";
+        setOrb("speaking"); setTimeout(() => setOrb("idle"), 1400);
+      } catch (err) { resultText = err.message; setOrb("idle"); }
+      if (level === "result") apps();
+      return;
+    }
+    level = "panel"; panel = null; lineIndex = 0; apps();
+    try { panel = await MIA.glassesPanel(app.id, item.id); }
+    catch (err) { panel = { lines: [], empty: err.message, more: 0 }; }
+    if (level === "panel") apps();
   }
-  function appSelect() {
-    if (!firstApps().length) return;
-    appDetail = !appDetail;
-    apps();
+
+  async function select() {
+    if (busy) return;
+    const app = currentApp();
+    if (!app) return;
+    busy = true;
+    try {
+      if (level === "cards") { level = "menu"; menuIndex = 0; apps(); }
+      else if (level === "menu") { await openPanel(); }
+      else if (level === "panel") {
+        const line = panel && panel.lines[actionable()[lineIndex]];
+        if (!line) return;
+        try { proposal = await MIA.propose(line.action.kind, line.action.params); level = "confirm"; }
+        catch (err) { level = "result"; after = "panel"; resultText = err.message; }
+        apps();
+      } else if (level === "confirm") {
+        try {
+          const done = await MIA.approve(proposal.proposal_id);
+          resultText = done.result || done.summary || "Done.";
+          setOrb("happy"); setTimeout(() => setOrb("idle"), 1600);
+        } catch (err) { resultText = err.message; }
+        proposal = null; level = "result"; after = "panel"; apps();
+      } else if (level === "result") { back(); }
+    } finally { busy = false; }
   }
-  function appBack() {
-    if (appDetail) { appDetail = false; apps(); return; }
+
+  function move(dir) {
+    const app = currentApp();
+    if (level === "cards") {
+      const n = cards().length;
+      if (n) { appIndex = (appIndex + dir + n) % n; apps(); }
+    } else if (level === "menu" && app) {
+      const n = app.menu.length;
+      if (n) { menuIndex = (menuIndex + dir + n) % n; apps(); }
+    } else if (level === "panel") {
+      const n = actionable().length;
+      if (n) { lineIndex = (lineIndex + dir + n) % n; apps(); }
+    }
+  }
+
+  function back() {
+    if (level === "confirm") {
+      if (proposal) MIA.reject(proposal.proposal_id).catch(() => {});
+      proposal = null; level = "panel"; apps(); return;
+    }
+    if (level === "result" && after === "panel") { setOrb("idle"); openPanel(); return; }
+    if (level === "result" || level === "panel") { setOrb("idle"); panel = null; level = "menu"; apps(); return; }
+    if (level === "menu") { level = "cards"; apps(); return; }
+    compact(false);
     go("glance");
   }
 
@@ -218,7 +302,7 @@
   }
   function go(id) {
     moment = id;
-    if (id === "apps") appDetail = false;
+    if (id === "apps") level = "cards"; else compact(false);
     const m = MOMENTS.find(([k]) => k === id);
     if (m) m[2]();
     drawDots();
@@ -235,18 +319,14 @@
       return;
     }
     if (/remind/.test(t)) { reply("I'll remind you. Anything else?"); return; }
-    const openMatch = t.match(/\bopen\s+(kitchen|workout|missions|money|budget|apps?)\b/);
+    const openMatch = t.match(/\bopen\s+(.+?)\s*$/);
     if (openMatch) {
-      const want = openMatch[1].replace("money", "budget").replace(/^apps?$/, "");
-      const list = firstApps();
-      if (want) {
-        const idx = list.findIndex((a) => a.id === want);
-        if (idx >= 0) appIndex = idx;
-      }
-      go("apps");
-      return;
+      const want = openMatch[1].replace(/^the\s+/, "");
+      const idx = cards().findIndex((a) => [a.name, a.full_name, a.id].some((n) => (n || "").toLowerCase() === want));
+      if (idx >= 0) { appIndex = idx; go("apps"); level = "menu"; menuIndex = 0; apps(); return; }
+      if (/^apps?$/.test(want)) { go("apps"); return; }
     }
-    if (/\bback\b/.test(t)) { appBack(); return; }
+    if (/\bback\b/.test(t)) { if (moment === "apps") back(); return; }
     if (/next|today|priority/.test(t)) {
       const lines = items.map((f) => "<li>" + esc(f.title) + "</li>").join("");
       reply("Your top priority today:<ul class='g-lines'>" + lines + "</ul>", null, true);
@@ -277,25 +357,34 @@
     } catch (err) { reply(err.message); }
   });
 
-  // ------------------------------------------------------------ swipe + keys (apps carousel)
-  let touchX = null;
+  // ------------------------------------------------------------ swipe + keys
+  // From her glance, a swipe opens the app cards; in the apps, swipe moves
+  // (cards, menu items, the lines you can act on), select goes in, back
+  // comes out. Arrow keys and Enter/Escape in the preview; the Neural
+  // Band's scroll and pinch on the glasses.
+  // On a touchscreen a swipe down is back.
+  let touchX = null, touchY = null;
   $("stage").addEventListener("touchstart", (e) => {
-    if (e.changedTouches.length) touchX = e.changedTouches[0].clientX;
+    if (e.changedTouches.length) { touchX = e.changedTouches[0].clientX; touchY = e.changedTouches[0].clientY; }
   }, { passive: true });
   $("stage").addEventListener("touchend", (e) => {
     if (touchX == null || !e.changedTouches.length) return;
-    const dx = e.changedTouches[0].clientX - touchX;
-    touchX = null;
-    if (moment !== "apps" || Math.abs(dx) < 40) return;
-    appNext(dx < 0 ? 1 : -1);
+    const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+    touchX = touchY = null;
+    if (dy > 50 && Math.abs(dy) > Math.abs(dx)) { if (moment === "apps") back(); return; }
+    if (Math.abs(dx) < 40) return;
+    if (moment === "glance") { go("apps"); return; }
+    if (moment === "apps") move(dx < 0 ? 1 : -1);
   }, { passive: true });
-  $("card").addEventListener("click", () => { if (moment === "apps") appSelect(); });
+  $("card").addEventListener("click", () => { if (moment === "apps") select(); });
   document.addEventListener("keydown", (e) => {
+    if (e.target && e.target.id === "voice-input") return;
+    if (moment === "glance" && (e.key === "ArrowRight" || e.key === "Enter")) { e.preventDefault(); go("apps"); return; }
     if (moment !== "apps") return;
-    if (e.key === "ArrowRight") appNext(1);
-    else if (e.key === "ArrowLeft") appNext(-1);
-    else if (e.key === "Enter") appSelect();
-    else if (e.key === "Escape") appBack();
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); move(1); }
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+    else if (e.key === "Enter") { e.preventDefault(); select(); }
+    else if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); back(); }
   });
 
   function showFinder(on) { $("finder").hidden = !on; }
@@ -314,7 +403,7 @@
     }
     try { dash = await MIA.dashboard(); } catch (e) { dash = null; }
     try { shell = await MIA.shell(); } catch (e) { shell = null; }
-    try { appsData = await MIA.apps(); } catch (e) { appsData = null; }
+    try { glassesData = await MIA.glasses(); } catch (e) { glassesData = null; }
     paintXp();
     go("glance");
   })();

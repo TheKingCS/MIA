@@ -1,0 +1,985 @@
+{
+  "dashboard/next": {
+    "app": "dashboard",
+    "item": "next",
+    "label": "What's next",
+    "title": "What's next",
+    "lines": [
+      {
+        "text": "Sharpen blades: Mower",
+        "detail": "11 days late",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "7a4464beaf"
+          }
+        }
+      },
+      {
+        "text": "HVAC filter: Maple House",
+        "detail": "6 days late",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "58cb39bfd5"
+          }
+        }
+      },
+      {
+        "text": "Check oil: Mower",
+        "detail": "14 days late",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "6cbf096c22"
+          }
+        }
+      },
+      {
+        "text": "Tire rotation: Pickup truck",
+        "detail": "9 days late",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "68e719deaa"
+          }
+        }
+      },
+      {
+        "text": "Water: Raised bed",
+        "detail": "2 days late",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "cd4ef5ed1b"
+          }
+        }
+      }
+    ],
+    "more": 1,
+    "empty": "Nothing needs you. Enjoy it."
+  },
+  "dashboard/coming": {
+    "app": "dashboard",
+    "item": "coming",
+    "label": "Coming up",
+    "title": "Coming up",
+    "lines": [
+      {
+        "text": "Test run: Generator",
+        "detail": "due in 3 days",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing coming up."
+  },
+  "dashboard/wins": {
+    "app": "dashboard",
+    "item": "wins",
+    "label": "Recent wins",
+    "title": "Recent wins",
+    "lines": [
+      {
+        "text": "Handstand: Kick-ups, 6 reps",
+        "detail": "",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No wins logged yet today."
+  },
+  "missions/today": {
+    "app": "missions",
+    "item": "today",
+    "label": "Today's missions",
+    "title": "Today's missions",
+    "lines": [
+      {
+        "text": "Daily push-ups — Oct 15",
+        "detail": "0 of 1",
+        "tone": ""
+      },
+      {
+        "text": "Handstand practice",
+        "detail": "0 of 1",
+        "tone": "",
+        "action": {
+          "kind": "objective.tick",
+          "label": "Done",
+          "params": {
+            "mission_id": "2e3df76861",
+            "index": 0,
+            "amount": 1
+          }
+        }
+      },
+      {
+        "text": "Packed lunch",
+        "detail": "0 of 1",
+        "tone": "",
+        "action": {
+          "kind": "objective.tick",
+          "label": "Done",
+          "params": {
+            "mission_id": "e108a1b7a5",
+            "index": 0,
+            "amount": 1
+          }
+        }
+      },
+      {
+        "text": "Protein: 170 g",
+        "detail": "0 of 1",
+        "tone": ""
+      },
+      {
+        "text": "Today's meals",
+        "detail": "0 of 2",
+        "tone": ""
+      }
+    ],
+    "more": 1,
+    "empty": "No daily missions today."
+  },
+  "missions/claim": {
+    "app": "missions",
+    "item": "claim",
+    "label": "Ready to claim",
+    "title": "Ready to claim",
+    "lines": [
+      {
+        "text": "Organize the garage",
+        "detail": "ready · 60 XP",
+        "tone": "ok",
+        "action": {
+          "kind": "mission.complete",
+          "label": "Claim",
+          "params": {
+            "mission_id": "b79fca2284"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing to claim yet. Keep going."
+  },
+  "missions/active": {
+    "app": "missions",
+    "item": "active",
+    "label": "Active missions",
+    "title": "Active missions",
+    "lines": [
+      {
+        "text": "Run a 5K",
+        "detail": "0%",
+        "tone": ""
+      },
+      {
+        "text": "Cook 3 healthy meals",
+        "detail": "0%",
+        "tone": ""
+      },
+      {
+        "text": "Prepare the garden for spring",
+        "detail": "33%",
+        "tone": ""
+      },
+      {
+        "text": "Handstand practice",
+        "detail": "0%",
+        "tone": ""
+      },
+      {
+        "text": "Meal prep (Sun)",
+        "detail": "0%",
+        "tone": ""
+      }
+    ],
+    "more": 7,
+    "empty": "No active missions."
+  },
+  "kitchen/meals": {
+    "app": "kitchen",
+    "item": "meals",
+    "label": "Today's meals",
+    "title": "Today's meals",
+    "lines": [
+      {
+        "text": "Protein oats",
+        "detail": "Breakfast · 640 kcal · 44 g protein",
+        "tone": "",
+        "action": {
+          "kind": "fitness.food",
+          "label": "Ate it",
+          "params": {
+            "meal": "breakfast",
+            "recipe_id": "102996cb96",
+            "servings": 1.0,
+            "date": "2026-10-16",
+            "planned_id": "2026-10-16:breakfast"
+          }
+        }
+      },
+      {
+        "text": "Turkey chili",
+        "detail": "Lunch · 356 kcal · 38 g protein",
+        "tone": "",
+        "action": {
+          "kind": "fitness.food",
+          "label": "Ate it",
+          "params": {
+            "meal": "lunch",
+            "recipe_id": "d5aa268edc",
+            "servings": 1.0,
+            "date": "2026-10-16",
+            "planned_id": "2026-10-16:lunch"
+          }
+        }
+      },
+      {
+        "text": "Protein 0 of 170 g",
+        "detail": "",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No meals planned today. Plan them in Kitchen → Week."
+  },
+  "kitchen/grocery": {
+    "app": "kitchen",
+    "item": "grocery",
+    "label": "Grocery list",
+    "title": "Grocery list",
+    "lines": [
+      {
+        "text": "Eggs",
+        "detail": "12",
+        "tone": "",
+        "action": {
+          "kind": "grocery.check",
+          "label": "Got it",
+          "params": {
+            "item_id": "02f38ad8ea",
+            "checked": true
+          }
+        }
+      },
+      {
+        "text": "broccoli",
+        "detail": "Chicken stir fry",
+        "tone": "",
+        "action": {
+          "kind": "grocery.check",
+          "label": "Got it",
+          "params": {
+            "item_id": "608de2192b",
+            "checked": true
+          }
+        }
+      },
+      {
+        "text": "soy sauce",
+        "detail": "Chicken stir fry",
+        "tone": "",
+        "action": {
+          "kind": "grocery.check",
+          "label": "Got it",
+          "params": {
+            "item_id": "a5c36df039",
+            "checked": true
+          }
+        }
+      },
+      {
+        "text": "Eggs",
+        "detail": "12",
+        "tone": "",
+        "action": {
+          "kind": "grocery.check",
+          "label": "Got it",
+          "params": {
+            "item_id": "a6333c5b50",
+            "checked": true
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "The grocery list is empty."
+  },
+  "kitchen/use_soon": {
+    "app": "kitchen",
+    "item": "use_soon",
+    "label": "Use soon",
+    "title": "Use soon",
+    "lines": [
+      {
+        "text": "chicken",
+        "detail": "expires today",
+        "tone": "attention"
+      },
+      {
+        "text": "Milk",
+        "detail": "expires in 1d",
+        "tone": ""
+      },
+      {
+        "text": "milk",
+        "detail": "expires in 3d",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing in the pantry is about to expire."
+  },
+  "kitchen/make": {
+    "app": "kitchen",
+    "item": "make",
+    "label": "What can I make",
+    "title": "You can make",
+    "lines": [
+      {
+        "text": "Overnight oats",
+        "detail": "5 min",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing has everything in the pantry. Check the grocery list."
+  },
+  "workout/training": {
+    "app": "workout",
+    "item": "training",
+    "label": "Today's training",
+    "title": "Training: Push",
+    "lines": [
+      {
+        "text": "Dips",
+        "detail": "3×8",
+        "tone": "",
+        "action": {
+          "kind": "fitness.step",
+          "label": "Done",
+          "params": {
+            "step": 0
+          }
+        }
+      },
+      {
+        "text": "Pike push-ups",
+        "detail": "3×10",
+        "tone": "",
+        "action": {
+          "kind": "fitness.step",
+          "label": "Done",
+          "params": {
+            "step": 1
+          }
+        }
+      },
+      {
+        "text": "L-sit",
+        "detail": "3×20 s",
+        "tone": "",
+        "action": {
+          "kind": "fitness.step",
+          "label": "Done",
+          "params": {
+            "step": 2
+          }
+        }
+      },
+      {
+        "text": "Finish today's training",
+        "detail": "Push",
+        "tone": "",
+        "action": {
+          "kind": "fitness.training_done",
+          "label": "Training done",
+          "params": {}
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing planned today."
+  },
+  "workout/practice": {
+    "app": "workout",
+    "item": "practice",
+    "label": "Skill practice",
+    "title": "Skill practice",
+    "lines": [
+      {
+        "text": "Handstand",
+        "detail": "Wall hold 38/60 s · Kick-ups 6/10 reps",
+        "tone": "",
+        "action": {
+          "kind": "fitness.skill",
+          "label": "Practiced 12 min",
+          "params": {
+            "skill": "Handstand",
+            "minutes": 12
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "No skills in your plan yet. Add them in My plan."
+  },
+  "workout/weight": {
+    "app": "workout",
+    "item": "weight",
+    "label": "Weight",
+    "title": "Weight",
+    "lines": [
+      {
+        "text": "180.6 lb",
+        "detail": "on 2026-10-14",
+        "tone": ""
+      },
+      {
+        "text": "-1.1 lb a week",
+        "detail": "7-day trend",
+        "tone": ""
+      },
+      {
+        "text": "Goal 175 lb",
+        "detail": "on track for 2026-11-22",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No weigh-ins yet."
+  },
+  "workout/milestones": {
+    "app": "workout",
+    "item": "milestones",
+    "label": "Milestones",
+    "title": "Milestones",
+    "lines": [
+      {
+        "text": "60 s wall handstand",
+        "detail": "",
+        "tone": "",
+        "action": {
+          "kind": "fitness.milestone",
+          "label": "Reached it",
+          "params": {
+            "milestone_id": "16bb80e0"
+          }
+        }
+      },
+      {
+        "text": "10 strict pull-ups",
+        "detail": "",
+        "tone": "",
+        "action": {
+          "kind": "fitness.milestone",
+          "label": "Reached it",
+          "params": {
+            "milestone_id": "105bef10"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "No milestones in your plan yet."
+  },
+  "budget/month": {
+    "app": "budget",
+    "item": "month",
+    "label": "This month",
+    "title": "This month",
+    "lines": [
+      {
+        "text": "In $1,450.00",
+        "detail": "October 2026",
+        "tone": "ok"
+      },
+      {
+        "text": "Out $205.00",
+        "detail": "",
+        "tone": "bad"
+      },
+      {
+        "text": "Net $1,245.00",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "$2,290.00 a month",
+        "detail": "left after bills and minimums",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": ""
+  },
+  "budget/due": {
+    "app": "budget",
+    "item": "due",
+    "label": "What's due",
+    "title": "What's due",
+    "lines": [
+      {
+        "text": "Insurance $340.00",
+        "detail": "in 4 days",
+        "tone": ""
+      },
+      {
+        "text": "Pay $1,500.00",
+        "detail": "expected 1 day late",
+        "tone": "ok"
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing due in the next two weeks."
+  },
+  "budget/debts": {
+    "app": "budget",
+    "item": "debts",
+    "label": "Debts",
+    "title": "Debts",
+    "lines": [
+      {
+        "text": "$40,000.00 owed",
+        "detail": "$500.00 minimums",
+        "tone": ""
+      },
+      {
+        "text": "Land loan",
+        "detail": "$40,000.00",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": ""
+  },
+  "garage/attention": {
+    "app": "garage",
+    "item": "attention",
+    "label": "Needs attention",
+    "title": "Needs attention",
+    "lines": [
+      {
+        "text": "Check oil: Mower",
+        "detail": "overdue 14d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "6cbf096c22"
+          }
+        }
+      },
+      {
+        "text": "Sharpen blades: Mower",
+        "detail": "overdue 11d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "7a4464beaf"
+          }
+        }
+      },
+      {
+        "text": "Tire rotation: Pickup truck",
+        "detail": "overdue 9d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "68e719deaa"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Everything's cared for."
+  },
+  "garage/next": {
+    "app": "garage",
+    "item": "next",
+    "label": "Next up",
+    "title": "Next up",
+    "lines": [
+      {
+        "text": "Test run: Generator",
+        "detail": "due in 3d",
+        "tone": ""
+      },
+      {
+        "text": "Oil change: Truck",
+        "detail": "due in 4d",
+        "tone": ""
+      },
+      {
+        "text": "Brake check: Pickup truck",
+        "detail": "due in 9d",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing due in the next month."
+  },
+  "maintenance/attention": {
+    "app": "maintenance",
+    "item": "attention",
+    "label": "Needs attention",
+    "title": "Needs attention",
+    "lines": [
+      {
+        "text": "Check oil: Mower",
+        "detail": "overdue 14d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "6cbf096c22"
+          }
+        }
+      },
+      {
+        "text": "Sharpen blades: Mower",
+        "detail": "overdue 11d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "7a4464beaf"
+          }
+        }
+      },
+      {
+        "text": "Tire rotation: Pickup truck",
+        "detail": "overdue 9d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "68e719deaa"
+          }
+        }
+      },
+      {
+        "text": "HVAC filter: Maple House",
+        "detail": "overdue 6d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "58cb39bfd5"
+          }
+        }
+      },
+      {
+        "text": "Water: Raised bed",
+        "detail": "overdue 2d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "cd4ef5ed1b"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Everything's cared for."
+  },
+  "maintenance/next": {
+    "app": "maintenance",
+    "item": "next",
+    "label": "Next up",
+    "title": "Next up",
+    "lines": [
+      {
+        "text": "Test run: Generator",
+        "detail": "due in 3d",
+        "tone": ""
+      },
+      {
+        "text": "Oil change: Truck",
+        "detail": "due in 4d",
+        "tone": ""
+      },
+      {
+        "text": "Brake check: Pickup truck",
+        "detail": "due in 9d",
+        "tone": ""
+      },
+      {
+        "text": "Clean gutters: Maple House",
+        "detail": "due in 29d",
+        "tone": ""
+      },
+      {
+        "text": "Replace filter: Furnace",
+        "detail": "due in 29d",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing due in the next month."
+  },
+  "greenhouse/attention": {
+    "app": "greenhouse",
+    "item": "attention",
+    "label": "Needs attention",
+    "title": "Needs attention",
+    "lines": [
+      {
+        "text": "Water: Raised bed",
+        "detail": "overdue 2d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "cd4ef5ed1b"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Everything's cared for."
+  },
+  "greenhouse/next": {
+    "app": "greenhouse",
+    "item": "next",
+    "label": "Next up",
+    "title": "Next up",
+    "lines": [],
+    "more": 0,
+    "empty": "Nothing due in the next month."
+  },
+  "property/attention": {
+    "app": "property",
+    "item": "attention",
+    "label": "Needs attention",
+    "title": "Needs attention",
+    "lines": [
+      {
+        "text": "HVAC filter: Maple House",
+        "detail": "overdue 6d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "58cb39bfd5"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Everything's cared for."
+  },
+  "property/next": {
+    "app": "property",
+    "item": "next",
+    "label": "Next up",
+    "title": "Next up",
+    "lines": [
+      {
+        "text": "Clean gutters: Maple House",
+        "detail": "due in 29d",
+        "tone": ""
+      },
+      {
+        "text": "Replace filter: Furnace",
+        "detail": "due in 29d",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing due in the next month."
+  },
+  "real_estate/properties": {
+    "app": "real_estate",
+    "item": "properties",
+    "label": "Properties",
+    "title": "Properties",
+    "lines": [
+      {
+        "text": "Maple House",
+        "detail": "Rented · $639.30/mo cash flow",
+        "tone": "attention"
+      },
+      {
+        "text": "Oak Duplex",
+        "detail": "For Rent",
+        "tone": ""
+      },
+      {
+        "text": "Vacant lot",
+        "detail": "",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No properties yet."
+  },
+  "real_estate/upkeep": {
+    "app": "real_estate",
+    "item": "upkeep",
+    "label": "Upkeep",
+    "title": "Upkeep",
+    "lines": [
+      {
+        "text": "HVAC filter: Maple House",
+        "detail": "overdue 6d",
+        "tone": "attention",
+        "action": {
+          "kind": "maintenance.done",
+          "label": "Done",
+          "params": {
+            "task_id": "58cb39bfd5"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "Every property is cared for."
+  },
+  "skills/focus": {
+    "app": "skills",
+    "item": "focus",
+    "label": "Focus",
+    "title": "Focus",
+    "lines": [
+      {
+        "text": "Nutrition",
+        "detail": "5 XP to the next level",
+        "tone": "ok"
+      },
+      {
+        "text": "9 skills growing",
+        "detail": "of 95",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Pick a focus skill in Skills."
+  },
+  "skills/week": {
+    "app": "skills",
+    "item": "week",
+    "label": "This week",
+    "title": "This week",
+    "lines": [
+      {
+        "text": "Strength",
+        "detail": "+140 XP · level 4",
+        "tone": ""
+      },
+      {
+        "text": "Cooking",
+        "detail": "+45 XP · level 2",
+        "tone": ""
+      },
+      {
+        "text": "Learning",
+        "detail": "+30 XP · level 2",
+        "tone": ""
+      },
+      {
+        "text": "Mobility",
+        "detail": "+20 XP · level 2",
+        "tone": ""
+      },
+      {
+        "text": "Nutrition",
+        "detail": "+15 XP · level 1",
+        "tone": ""
+      }
+    ],
+    "more": 4,
+    "empty": "No skill XP yet this week."
+  },
+  "character/story": {
+    "app": "character",
+    "item": "story",
+    "label": "Your story",
+    "title": "Your story",
+    "lines": [
+      {
+        "text": "Level 2",
+        "detail": "195 XP",
+        "tone": ""
+      },
+      {
+        "text": "Workout Hours Logged",
+        "detail": "3.2 hrs",
+        "tone": ""
+      },
+      {
+        "text": "Missions Completed",
+        "detail": "3",
+        "tone": ""
+      },
+      {
+        "text": "Meals Cooked",
+        "detail": "3",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": ""
+  },
+  "character/top": {
+    "app": "character",
+    "item": "top",
+    "label": "Top skills",
+    "title": "Top skills",
+    "lines": [
+      {
+        "text": "Strength",
+        "detail": "level 4",
+        "tone": ""
+      },
+      {
+        "text": "Cooking",
+        "detail": "level 2",
+        "tone": ""
+      },
+      {
+        "text": "Learning",
+        "detail": "level 2",
+        "tone": ""
+      },
+      {
+        "text": "Mobility",
+        "detail": "level 2",
+        "tone": ""
+      },
+      {
+        "text": "Nutrition",
+        "detail": "level 1",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No skills levelled yet."
+  }
+}
