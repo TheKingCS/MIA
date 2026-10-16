@@ -28,6 +28,8 @@
         <p class="tagline" id="subtitle"></p>
       </header>
 
+      <!-- Zac, 2026-10-16: just Today's Focus, Upcoming and At A Glance;
+           everything else is reached through Apps. -->
       <div class="home-grid">
         <section class="glass glow" aria-labelledby="focus-h">
           <div class="sect"><h2 id="focus-h">Today's Focus</h2><span class="more" id="focus-count"></span></div>
@@ -35,27 +37,14 @@
           <div class="empty" id="focus-empty" hidden><strong>Nothing needs you today.</strong>
             <p>Enjoy it. MIA will say when something comes up.</p></div>
         </section>
-        <section class="glass saying" aria-label="Today's thought">
-          <p id="saying"></p>
-        </section>
-      </div>
-
-      <nav class="quick" id="quick" aria-label="Quick actions"></nav>
-
-      <div class="home-grid">
         <section class="glass" aria-labelledby="up-h">
           <div class="sect"><h2 id="up-h">Upcoming</h2></div>
           <ul class="focus-list" id="upcoming"></ul>
           <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
         </section>
-        <section class="glass" aria-labelledby="wins-h">
-          <div class="sect"><h2 id="wins-h">Recent wins</h2></div>
-          <ul class="wins" id="wins"></ul>
-          <p class="dim" id="wins-empty" hidden>Your wins will show up here.</p>
-        </section>
       </div>
 
-      <div class="sect"><h2>At a glance</h2></div>
+      <div class="sect"><h2>At A Glance</h2></div>
       <div class="glance" id="glance"></div>
     </main>
   </div>

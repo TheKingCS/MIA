@@ -2,10 +2,12 @@
  * dashboard.js — the Dashboard (claude, 2026-10-06, DEC-0017). Renders MIA.dashboard();
  * every number and sentence is the engine's. Ticking a focus item runs its
  * action through MIAShell.act (propose → confirm → approve → undo).
+ * Zac, 2026-10-16: only Today's Focus, Upcoming and At A Glance (no quick
+ * buttons, quote or recent wins; Apps reaches everything).
  */
 (function () {
   "use strict";
-  const { el, act, talk } = MIAShell;
+  const { el, act } = MIAShell;
   const $ = (id) => document.getElementById(id);
 
   function focusRow(item) {
@@ -26,7 +28,6 @@
     $("greeting").textContent = home.greeting;
     $("subtitle").textContent = home.subtitle;
     $("date").textContent = home.date;
-    $("saying").textContent = "“" + home.saying + "”";
 
     $("focus").replaceChildren(...home.focus.map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
@@ -34,13 +35,6 @@
 
     $("upcoming").replaceChildren(...home.upcoming.map(focusRow));
     $("upcoming-empty").hidden = home.upcoming.length > 0;
-
-    $("wins").replaceChildren(...home.wins.map((w) => el("li", {}, w.summary)));
-    $("wins-empty").hidden = home.wins.length > 0;
-
-    $("quick").replaceChildren(...home.quick_actions.map((q) =>
-      el("button", { type: "button", onclick: () => q.href && !q.href.startsWith("assistant.html") ? (location.href = q.href) : talk(true, q.talk) },
-        el("span", { class: "ico", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(q.id)) || q.icon), q.label)));
 
     $("glance").replaceChildren(...home.glance.map((c) => {
       const card = el("section", { class: "glass" + (c.tone === "attention" ? " attention" : "") },
