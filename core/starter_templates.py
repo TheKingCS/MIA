@@ -59,7 +59,7 @@ class Upkeep:
 
 @dataclass(frozen=True)
 class Workout:
-    """A workout template: (exercise, category, sets, reps)."""
+    """A starter workout, added as a training day of the plan: (exercise, category, sets, reps)."""
     name: str
     exercises: tuple[tuple[str, str, int, int], ...]
 
@@ -250,16 +250,30 @@ def _add_upkeep(context, upkeep: Upkeep, today: date, result: StarterResult) -> 
 
 
 def _add_workout(context, workout: Workout, result: StarterResult) -> None:
+    """The exercises go in the library and (Zac, 2026-10-16: no more
+    workout templates) the workout becomes a training day in the person's
+    plan, on Mon, Wed and Fri if they haven't picked days yet."""
+    from core.fitness_manager import exercise_text
+
     store = context.workout
-    if any(_same(t.name, workout.name) for t in store.all_templates()):
+    for name, category, _sets, _reps in workout.exercises:
+        if not any(_same(e.name, name) for e in store.all_exercises()):
+            store.add_exercise(name, category)
+    fit = getattr(context, "fitness", None)
+    if fit is None:
+        result.added.append(workout.name)
+        return
+    training = fit.plan.get("training") or {}
+    if any(_same(d.get("name", ""), workout.name) for d in training.get("rotation") or []):
         result.already.append(workout.name)
         return
-    template = store.add_template(workout.name, notes="From a starter set.")
-    for name, category, sets, reps in workout.exercises:
-        exercise = next((e for e in store.all_exercises() if _same(e.name, name)), None)
-        if exercise is None:
-            exercise = store.add_exercise(name, category)
-        store.add_exercise_to_template(template.template_id, exercise.exercise_id, sets, reps)
+    day = {"name": workout.name, "exercises": [{"name": n, "sets": s, "reps": r} for n, _c, s, r in workout.exercises]}
+    from core.fitness_actions import _clean_plan
+
+    changes = {"training": {"days": training.get("days") or ["Mon", "Wed", "Fri"],
+                            "rotation": [{"name": d["name"], "exercises": [exercise_text(e) for e in d.get("exercises") or []]}
+                                         for d in (training.get("rotation") or []) + [day]]}}
+    fit.update_plan(_clean_plan(context, changes))
     result.added.append(workout.name)
 
 

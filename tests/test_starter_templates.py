@@ -101,12 +101,20 @@ def test_adding_again_adds_nothing_twice(ctx):
     assert (len(ctx.recurring_missions.all_templates()), len(ctx.maintenance.all_tasks())) == (before[0], before[1] + 1)
 
 
-def test_fitness_builds_a_workout_reusing_exercises(ctx):
+def test_fitness_builds_a_workout_reusing_exercises(ctx, tmp_path):
+    """No more workout templates (Zac, 2026-10-16): the starter workout's
+    exercises go in the library and it becomes a training day of the plan."""
+    from core.fitness_manager import FitnessManager
+
+    ctx.fitness = FitnessManager(ctx, data_dir=tmp_path / "fit")
     ctx.workout.add_exercise("Push-ups", "Chest")
     starter_templates.apply(ctx, "fitness", today=TODAY)
-    template = next(t for t in ctx.workout.all_templates() if t.name == "Beginner full body")
-    assert len(template.exercises) == 5
+    assert ctx.workout.all_templates() == []
+    day = next(d for d in ctx.fitness.plan["training"]["rotation"] if d["name"] == "Beginner full body")
+    assert len(day["exercises"]) == 5 and ctx.fitness.plan["training"]["days"] == ["Mon", "Wed", "Fri"]
     assert sum(1 for e in ctx.workout.all_exercises() if e.name == "Push-ups") == 1
+    again = starter_templates.apply(ctx, "fitness", today=TODAY)
+    assert "Beginner full body" in again.already
     move = next(t for t in ctx.recurring_missions.all_templates() if t.name == "Move")
     assert move.category == "Fitness"  # shows in the Workouts app
 

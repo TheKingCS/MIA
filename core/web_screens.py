@@ -234,11 +234,7 @@ def workout_page(context, today: Optional[date] = None) -> dict:
                           "progress": workout.weight_progression_for(e.exercise_id)[-8:],
                           "values": _values(RECORDS["exercise"], e)}
                          for e in sorted(exercises.values(), key=lambda e: e.name.lower())]
-    page["templates"] = [{"id": t.template_id, "name": t.name, "notes": t.notes,
-                          "exercises": [{"index": i, "name": getattr(exercises.get(x.get("exercise_id")), "name", "an exercise"),
-                                         "sets": x.get("target_sets"), "reps": x.get("target_reps"),
-                                         "weight": x.get("target_weight")} for i, x in enumerate(t.exercises)],
-                          "values": _values(RECORDS["workout_template"], t)} for t in workout.all_templates()]
+    # Workout templates are gone (Zac, 2026-10-16); a session logged with one long ago keeps its name in History.
     templates = {t.template_id: t.name for t in workout.all_templates()}
 
     def summary(session) -> str:

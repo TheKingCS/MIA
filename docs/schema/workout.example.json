@@ -49,28 +49,6 @@
         }
       ]
     },
-    "workout_template": {
-      "noun": "template",
-      "id_param": "template_id",
-      "fields": [
-        {
-          "name": "name",
-          "label": "Name",
-          "type": "text",
-          "required": true,
-          "options": [],
-          "default": null
-        },
-        {
-          "name": "notes",
-          "label": "Notes",
-          "type": "textarea",
-          "required": false,
-          "options": [],
-          "default": null
-        }
-      ]
-    },
     "log": {
       "noun": "session",
       "id_param": null,
@@ -134,92 +112,12 @@
           "default": null
         }
       ]
-    },
-    "log_template": {
-      "noun": "session",
-      "id_param": null,
-      "fields": [
-        {
-          "name": "template_id",
-          "label": "Template",
-          "type": "pick",
-          "required": false,
-          "options": [
-            "templates"
-          ],
-          "default": null
-        },
-        {
-          "name": "duration_minutes",
-          "label": "Minutes",
-          "type": "amount",
-          "required": false,
-          "options": [],
-          "default": 0.0
-        },
-        {
-          "name": "date",
-          "label": "Date",
-          "type": "date",
-          "required": false,
-          "options": [],
-          "default": null
-        },
-        {
-          "name": "notes",
-          "label": "Notes",
-          "type": "textarea",
-          "required": false,
-          "options": [],
-          "default": null
-        }
-      ]
-    },
-    "template_exercise": {
-      "noun": "exercise",
-      "id_param": "template_id",
-      "fields": [
-        {
-          "name": "exercise_id",
-          "label": "Exercise",
-          "type": "pick",
-          "required": false,
-          "options": [
-            "exercises"
-          ],
-          "default": null
-        },
-        {
-          "name": "target_sets",
-          "label": "Sets",
-          "type": "int",
-          "required": false,
-          "options": [],
-          "default": 3
-        },
-        {
-          "name": "target_reps",
-          "label": "Reps",
-          "type": "int",
-          "required": false,
-          "options": [],
-          "default": 10
-        },
-        {
-          "name": "target_weight",
-          "label": "Weight",
-          "type": "amount",
-          "required": false,
-          "options": [],
-          "default": 0.0
-        }
-      ]
     }
   },
-  "as_of": "2026-10-06",
+  "as_of": "2026-10-16",
   "exercises": [
     {
-      "id": "671dda0f81",
+      "id": "dfec18e900",
       "name": "Bench press",
       "category": "Chest",
       "equipment": "Barbell",
@@ -227,23 +125,23 @@
       "pr": {
         "weight": 125.0,
         "reps": 6,
-        "date": "2026-10-03"
+        "date": "2026-10-12"
       },
       "progress": [
         [
-          "2026-09-24",
+          "2026-10-03",
           95.0
         ],
         [
-          "2026-09-27",
+          "2026-10-06",
           105.0
         ],
         [
-          "2026-09-30",
+          "2026-10-09",
           115.0
         ],
         [
-          "2026-10-03",
+          "2026-10-12",
           125.0
         ]
       ],
@@ -255,7 +153,7 @@
       }
     },
     {
-      "id": "0cd4796390",
+      "id": "5d9c3143b7",
       "name": "Push-ups",
       "category": "Chest",
       "equipment": "Bodyweight",
@@ -263,11 +161,11 @@
       "pr": {
         "weight": 0.0,
         "reps": 22,
-        "date": "2026-10-06"
+        "date": "2026-10-15"
       },
       "progress": [
         [
-          "2026-10-06",
+          "2026-10-15",
           0.0
         ]
       ],
@@ -279,7 +177,7 @@
       }
     },
     {
-      "id": "00daaca23c",
+      "id": "923a6a07a6",
       "name": "Squats",
       "category": "Legs",
       "equipment": "Bodyweight",
@@ -287,11 +185,11 @@
       "pr": {
         "weight": 0.0,
         "reps": 15,
-        "date": "2026-10-05"
+        "date": "2026-10-14"
       },
       "progress": [
         [
-          "2026-10-05",
+          "2026-10-14",
           0.0
         ]
       ],
@@ -303,37 +201,10 @@
       }
     }
   ],
-  "templates": [
-    {
-      "id": "4fb85956a2",
-      "name": "Beginner full body",
-      "notes": "",
-      "exercises": [
-        {
-          "index": 0,
-          "name": "Squats",
-          "sets": 3,
-          "reps": 12,
-          "weight": 0.0
-        },
-        {
-          "index": 1,
-          "name": "Push-ups",
-          "sets": 3,
-          "reps": 10,
-          "weight": 0.0
-        }
-      ],
-      "values": {
-        "name": "Beginner full body",
-        "notes": ""
-      }
-    }
-  ],
   "sessions": [
     {
-      "id": "67f5ccaec3",
-      "date": "2026-10-06",
+      "id": "192aee8bbd",
+      "date": "2026-10-15",
       "template": null,
       "minutes": 10.0,
       "sets": 1,
@@ -341,8 +212,8 @@
       "notes": "Felt good"
     },
     {
-      "id": "8bf6c694bb",
-      "date": "2026-10-06",
+      "id": "b3d25ecd1c",
+      "date": "2026-10-15",
       "template": "Beginner full body",
       "minutes": 30,
       "sets": 0,
@@ -350,8 +221,8 @@
       "notes": ""
     },
     {
-      "id": "b9643b3889",
-      "date": "2026-10-05",
+      "id": "5e4b8717cb",
+      "date": "2026-10-14",
       "template": null,
       "minutes": 15.0,
       "sets": 3,
@@ -359,8 +230,8 @@
       "notes": ""
     },
     {
-      "id": "6683450ad2",
-      "date": "2026-10-03",
+      "id": "86a6577d3f",
+      "date": "2026-10-12",
       "template": null,
       "minutes": 35.0,
       "sets": 3,
@@ -368,8 +239,8 @@
       "notes": ""
     },
     {
-      "id": "0f131d9283",
-      "date": "2026-09-30",
+      "id": "5cdb375ca2",
+      "date": "2026-10-09",
       "template": null,
       "minutes": 35.0,
       "sets": 3,
@@ -377,8 +248,8 @@
       "notes": ""
     },
     {
-      "id": "2f01f2cd97",
-      "date": "2026-09-27",
+      "id": "24cf16eb60",
+      "date": "2026-10-06",
       "template": null,
       "minutes": 35.0,
       "sets": 3,
@@ -386,8 +257,8 @@
       "notes": ""
     },
     {
-      "id": "dfd7ebb5e6",
-      "date": "2026-09-24",
+      "id": "972e63df87",
+      "date": "2026-10-03",
       "template": null,
       "minutes": 35.0,
       "sets": 3,
@@ -396,8 +267,8 @@
     }
   ],
   "latest": {
-    "id": "67f5ccaec3",
-    "date": "2026-10-06",
+    "id": "192aee8bbd",
+    "date": "2026-10-15",
     "template": null,
     "minutes": 10.0,
     "sets": 1,
@@ -405,20 +276,10 @@
     "notes": "Felt good"
   },
   "stats": {
-    "this_week": 3,
-    "minutes_this_week": 55.0,
+    "this_week": 4,
+    "minutes_this_week": 90.0,
     "streak": 2,
     "total": 7
   },
-  "daily_missions": [
-    {
-      "id": "96f6c44e5d",
-      "name": "Daily push-ups — Oct 06",
-      "progress": 0,
-      "target": 30.0,
-      "done": false,
-      "streak": 0,
-      "template_id": "1ee6f9699b"
-    }
-  ]
+  "daily_missions": []
 }

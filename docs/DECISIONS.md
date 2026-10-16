@@ -469,3 +469,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   stays loaded (Garage and Greenhouse open it to add and edit things) but is
   listed nowhere (`core/web_surfaces.py` RETIRED); the old web pages redirect.
 - Related: DEC-0017, DEC-0024, H-0049
+
+### DEC-0026: No workout templates; no Set Aside for missions
+- Status: APPROVED
+- Proposed by: zac, 2026-10-16 · Approved by: zac, 2026-10-16
+- Decision: **Workout templates are removed** from the web and the desktop
+  ("you can remove templates from the desktop too. No user has used them
+  yet"); a session is logged freeform, the plan's training rotation is the
+  one way to say what a day's workout is, and Lifts is renamed **Personal
+  Bests** (skill bests plus lift PRs). **Missions have no Set Aside** ("Set
+  Aside should not be a thing in the missions app"): no Give Up button and
+  no tab; Delete removes a mission. Missions tabs show their names only.
+- Related: DEC-0014, DEC-0017

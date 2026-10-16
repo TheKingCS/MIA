@@ -1,21 +1,23 @@
 /*
  * missions.js — the Missions screen (claude, 2026-10-06, DEC-0017/0018, H-0013).
  * Renders MIA.missions() (core/web_progress.py): active missions (ready to
- * complete first), daily missions with streaks, completed and set-aside ones;
+ * complete first), daily missions with streaks, and completed ones;
  * each opens to its objectives (+1, add, remove), rewards and the skills it
- * teaches, with Complete, Give up for now, Pick back up, Edit and Delete.
+ * teaches, with Complete, Pick back up (a completed one), Edit and Delete.
+ * Zac, 2026-10-16: no Set Aside (no "give up for now"; Delete removes a
+ * mission), and the tabs say just their names, no counts. Add Mission and
+ * Ask MIA For One are two separate buttons below the list, on Active only.
  * Every change is a mission action (core/mission_actions.py). Formatting only.
  */
 (function () {
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["active", "Active"], ["daily", "Daily"], ["completed", "Completed"], ["set_aside", "Set aside"]];
+  const TABS = [["active", "Active"], ["daily", "Daily"], ["completed", "Completed"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "active";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
-  const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
   const DIFF = { EASY: "chip-ok", NORMAL: "", HARD: "chip-bad" };
   const section = (title, actions, ...body) =>
@@ -42,10 +44,6 @@
     const v = await form("Add an objective to " + m.name, page.forms.objective.fields, {});
     if (v) act({ kind: "objective.add", params: Object.assign({ mission_id: m.id }, v) });
   }
-  async function abandon(m) {
-    const v = await form("Give up on " + m.name + " for now?", page.forms.abandon.fields, {});
-    if (v) act({ kind: "mission.abandon", params: Object.assign({ mission_id: m.id }, v) });
-  }
   async function teaches(m) {
     const v = await form(m.name + " also teaches…", page.forms.skill_reward.fields, {}, { skills: page.skills });
     if (v) act({ kind: "mission.skill_reward", params: Object.assign({ mission_id: m.id }, v) });
@@ -65,7 +63,7 @@
       el("div", { class: "chip-row" }, el("span", { class: "chip " + (DIFF[m.difficulty] || "") }, m.difficulty.toLowerCase()),
         m.streak ? el("span", { class: "chip chip-soon" }, "🔥 " + m.streak + "-day streak") : null,
         m.party.length ? el("span", { class: "chip" }, "👥 " + m.party.join(", ")) : null,
-        m.status !== "active" ? el("span", { class: "chip" }, m.status === "abandoned" ? "set aside" + (m.abandon_reason ? ": " + m.abandon_reason.toLowerCase() : "") : m.status) : null),
+        m.status !== "active" ? el("span", { class: "chip" }, m.status) : null),
       el("h4", {}, "Objectives " + (m.total ? m.done + "/" + m.total : "")),
       m.objectives.length ? el("ul", { class: "objective-list" }, m.objectives.map((o) => el("li", { class: o.done ? "done" : "" },
         el("span", { class: "objective-check", "aria-hidden": "true" }, o.done ? "✓" : ""),
@@ -82,7 +80,7 @@
         active ? btn("Complete", "btn-green", then((x) => act({ kind: "mission.complete", params: { mission_id: x.id } }))) : null,
         active ? btn("Add objective", "btn-ghost", then(addObjective)) : null,
         btn("Teaches a skill", "btn-ghost", then(teaches)),
-        active ? btn("Give up for now", "btn-ghost", then(abandon)) : btn("Pick back up", "btn-amber", then((x) => act({ kind: "mission.reopen", params: { mission_id: x.id } }))),
+        active ? null : btn("Pick back up", "btn-amber", then((x) => act({ kind: "mission.reopen", params: { mission_id: x.id } }))),
         btn("Edit", "btn-ghost", then(edit)),
         btn("Delete", "btn-ghost", then((x) => act({ kind: "mission.delete", params: { mission_id: x.id } }))),
         btn("Close", "btn-ghost", close)),
@@ -111,14 +109,13 @@
       m.ready ? btn("Complete", "btn-green btn-small", (e) => { e.stopPropagation(); act({ kind: "mission.complete", params: { mission_id: m.id } }); })
         : m.status === "active" ? (() => { const next = m.objectives.find((o) => !o.done && !o.counts_itself);
           return next ? btn("+1 " + next.description, "btn-ghost btn-small", (e) => { e.stopPropagation(); tick(m, next); }) : null; })()
-          : el("span", { class: "dim" }, m.status === "completed" ? "Done " + day(m.updated) : "Set aside " + day(m.updated))));
+          : el("span", { class: "dim" }, "Done " + day(m.updated))));
   }
 
   const EMPTY = {
     active: "No active missions. Add one, or ask MIA for one.",
     daily: "No daily missions. Ask MIA: “give me a daily push-up mission”.",
     completed: "Nothing completed in the last two months yet.",
-    set_aside: "Nothing set aside.",
   };
 
   function draw() {
@@ -130,12 +127,13 @@
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) =>
       el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } },
-        l + (page[id].length ? " " + page[id].length : ""))));
+        l)));
     const list = page[tab];
-    $("panel").replaceChildren(section(TABS.find(([t]) => t === tab)[1] + " missions",
-      buttons(btn("Ask MIA for one", "btn-ghost", () => MIAShell.talk(true, "Give me a new mission based on what's going on in my life.")),
-        btn("Add mission", "btn-amber", add)),
-      list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, EMPTY[tab])));
+    $("panel").replaceChildren(section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
+      list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, EMPTY[tab]),
+      tab === "active" ? el("div", { class: "mission-add" },
+        btn("Add Mission", "btn-amber", add),
+        btn("Ask MIA For One", "btn-ghost", () => MIAShell.talk(true, "Give me a new mission based on what's going on in my life."))) : null));
     MIAShell.levelCard($("level"), page.me);
   }
 

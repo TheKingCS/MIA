@@ -2,7 +2,7 @@
 modules.workout.module
 =========================
 
-Workout: an exercise library, named workout templates, a live guided
+Workout: an exercise library, a live guided
 session (real elapsed time from a real stopwatch, not a guess), a
 session history, and per-exercise progress (personal records + a
 weight-over-time chart). All persistence/reporting logic lives in
@@ -10,7 +10,8 @@ core/workout_manager.py (self.context.workout) — this module is the
 Qt-facing wrapper around it, same split as every other data-backed
 module here.
 
-Five tabs (Exercises/Templates/Log Session/History/Progress) — a
+Four tabs (Exercises/Log Session/History/Progress; Templates removed
+2026-10-16, Zac: the plan's training days are the routines) — a
 plain button row + QStackedWidget (the "Nature" re-skin's own tab
 convention, ported from modules/garage/module.py; not QPushButton
 QTabWidget's own unstyled default chrome), same "every tab refreshes
@@ -72,10 +73,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.workout_manager import Exercise, WorkoutSession, WorkoutTemplate
+from core.workout_manager import Exercise, WorkoutSession
 from gui.add_edit_exercise_dialog import AddEditExerciseDialog
-from gui.add_edit_workout_template_dialog import AddEditWorkoutTemplateDialog
-from gui.add_template_exercise_dialog import AddTemplateExerciseDialog
 from gui.list_widget_helpers import add_empty_state_item, selected_item_data
 from gui.log_set_dialog import LogSetDialog
 from gui.widgets.photo_background_frame import PhotoBackgroundFrame
@@ -108,13 +107,6 @@ def format_exercise_row(exercise: Exercise) -> str:
     return f"{exercise.name}   [{exercise.category}]{equipment_part}"
 
 
-def format_template_row(template: WorkoutTemplate) -> str:
-    """Pure formatting logic — testable without Qt."""
-    count = len(template.exercises)
-    noun = "exercise" if count == 1 else "exercises"
-    return f"{template.name}   ({count} {noun})"
-
-
 def format_session_row(session: WorkoutSession, template_name: str) -> str:
     """Pure formatting logic — testable without Qt."""
     count = len(session.sets_logged)
@@ -125,16 +117,12 @@ def format_session_row(session: WorkoutSession, template_name: str) -> str:
 class WorkoutModule(ModuleBase):
     module_id = "workout"
     display_name = "Workout"
-    description = "Exercises, templates, guided sessions, and progress."
+    description = "Exercises, guided sessions, and progress."
     icon = "\U0001F3CB"  # weightlifter
 
     def __init__(self, context) -> None:
         super().__init__(context)
         self._exercise_list: Optional[QListWidget] = None
-
-        self._template_list: Optional[QListWidget] = None
-        self._template_exercises_list: Optional[QListWidget] = None
-        self._selected_template_id_for_detail: Optional[str] = None
 
         self._history_list: Optional[QListWidget] = None
         self._history_detail_list: Optional[QListWidget] = None
@@ -148,14 +136,12 @@ class WorkoutModule(ModuleBase):
         self._session_active = False
         self._session_start_monotonic: Optional[float] = None
         self._session_sets_logged: list[dict] = []
-        self._session_template_id: str = ""
         self._resting = False
         self._rest_start_monotonic: Optional[float] = None
         self._session_timer = QTimer()
         self._session_timer.setInterval(_DISPLAY_INTERVAL_MS)
         self._session_timer.timeout.connect(self._update_session_display)
 
-        self._session_template_combo: Optional[QComboBox] = None
         self._start_session_button: Optional[QPushButton] = None
         self._finish_session_button: Optional[QPushButton] = None
         self._session_elapsed_label: Optional[QLabel] = None
@@ -170,7 +156,6 @@ class WorkoutModule(ModuleBase):
         """Re-read every list (ModuleBase.refresh: records changed elsewhere, e.g. by voice)."""
         self._refresh_exercise_list()
         self._refresh_history_list()
-        self._refresh_template_list()
 
     def get_widget(self) -> QWidget:
         page = QWidget()
@@ -215,7 +200,6 @@ class WorkoutModule(ModuleBase):
         stack = QStackedWidget()
         tab_pages = {
             "Exercises": self._build_exercises_tab(),
-            "Templates": self._build_templates_tab(),
             "Log Session": self._build_log_session_tab(),
             "History": self._build_history_tab(),
             "Progress": self._build_progress_tab(),
@@ -253,8 +237,6 @@ class WorkoutModule(ModuleBase):
 
     def _on_tab_changed(self, index: int) -> None:
         self._refresh_exercise_list()
-        self._refresh_template_list()
-        self._refresh_session_template_combo()
         self._refresh_session_exercise_combo()
         self._refresh_history_list()
         self._refresh_progress_exercise_combo()
@@ -336,146 +318,6 @@ class WorkoutModule(ModuleBase):
         self._refresh_exercise_list()
 
     # ------------------------------------------------------------------
-    # Templates tab
-    # ------------------------------------------------------------------
-
-    def _build_templates_tab(self) -> QWidget:
-        tab = QWidget()
-        layout = QHBoxLayout(tab)
-
-        left = QVBoxLayout()
-        self._template_list = QListWidget()
-        self._template_list.currentItemChanged.connect(lambda *_: self._refresh_template_exercises_list())
-        left.addWidget(self._template_list, stretch=1)
-
-        left_button_row = QHBoxLayout()
-        add_button = QPushButton("Add Template")
-        add_button.clicked.connect(self._on_add_template)
-        left_button_row.addWidget(add_button)
-        edit_button = QPushButton("Edit Selected")
-        edit_button.clicked.connect(self._on_edit_template)
-        left_button_row.addWidget(edit_button)
-        delete_button = QPushButton("Delete Selected")
-        delete_button.clicked.connect(self._on_delete_template)
-        left_button_row.addWidget(delete_button)
-        left.addLayout(left_button_row)
-        layout.addLayout(left, stretch=1)
-
-        right = QVBoxLayout()
-        right.addWidget(QLabel("Exercises in this template:"))
-        self._template_exercises_list = QListWidget()
-        right.addWidget(self._template_exercises_list, stretch=1)
-
-        right_button_row = QHBoxLayout()
-        add_exercise_button = QPushButton("Add Exercise…")
-        add_exercise_button.clicked.connect(self._on_add_template_exercise)
-        right_button_row.addWidget(add_exercise_button)
-        remove_exercise_button = QPushButton("Remove Selected")
-        remove_exercise_button.clicked.connect(self._on_remove_template_exercise)
-        right_button_row.addWidget(remove_exercise_button)
-        right.addLayout(right_button_row)
-        layout.addLayout(right, stretch=1)
-
-        self._refresh_template_list()
-        return tab
-
-    def _refresh_template_list(self) -> None:
-        if self._template_list is None:
-            return
-        previously_selected_id = selected_item_data(self._template_list)
-        self._template_list.blockSignals(True)
-        self._template_list.clear()
-        templates = self.context.workout.all_templates()
-        for template in templates:
-            item = QListWidgetItem(format_template_row(template))
-            item.setData(Qt.ItemDataRole.UserRole, template.template_id)
-            self._template_list.addItem(item)
-            if template.template_id == previously_selected_id:
-                self._template_list.setCurrentItem(item)
-        if not templates:
-            add_empty_state_item(self._template_list, "No templates yet — click Add Template to get started.")
-        self._template_list.blockSignals(False)
-        self._refresh_template_exercises_list()
-
-    def _selected_template_id(self) -> Optional[str]:
-        return selected_item_data(self._template_list)
-
-    def _refresh_template_exercises_list(self) -> None:
-        if self._template_exercises_list is None:
-            return
-        self._template_exercises_list.clear()
-        template_id = self._selected_template_id()
-        if template_id is None:
-            add_empty_state_item(self._template_exercises_list, "Select a template to see its exercises.")
-            return
-        template = self.context.workout.get_template(template_id)
-        for entry in template.exercises:
-            exercise = self.context.workout.get_exercise(entry.get("exercise_id", ""))
-            name = exercise.name if exercise is not None else "(deleted exercise)"
-            self._template_exercises_list.addItem(
-                f"{name}   {entry.get('target_sets')}x{entry.get('target_reps')} @ {entry.get('target_weight'):g}"
-            )
-        if self._template_exercises_list.count() == 0:
-            add_empty_state_item(self._template_exercises_list, "No exercises added to this template yet.")
-
-    def _on_add_template(self) -> None:
-        dialog = AddEditWorkoutTemplateDialog()
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self.context.workout.add_template(name=dialog.entered_name, notes=dialog.entered_notes)
-        self._refresh_template_list()
-
-    def _on_edit_template(self) -> None:
-        template_id = self._selected_template_id()
-        if template_id is None:
-            QMessageBox.information(None, "No Template Selected", "Select a template to edit.")
-            return
-        template = self.context.workout.get_template(template_id)
-        dialog = AddEditWorkoutTemplateDialog(template=template)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self.context.workout.update_template(template_id, name=dialog.entered_name, notes=dialog.entered_notes)
-        self._refresh_template_list()
-
-    def _on_delete_template(self) -> None:
-        template_id = self._selected_template_id()
-        if template_id is None:
-            QMessageBox.information(None, "No Template Selected", "Select a template to delete.")
-            return
-        self.context.workout.delete_template(template_id)
-        self._refresh_template_list()
-
-    def _on_add_template_exercise(self) -> None:
-        template_id = self._selected_template_id()
-        if template_id is None:
-            QMessageBox.information(None, "No Template Selected", "Select a template first.")
-            return
-        exercises = self.context.workout.all_exercises()
-        if not exercises:
-            QMessageBox.information(None, "No Exercises Yet", "Add an exercise in the Exercises tab first.")
-            return
-        dialog = AddTemplateExerciseDialog(exercises=exercises)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self.context.workout.add_exercise_to_template(
-            template_id, exercise_id=dialog.entered_exercise_id, target_sets=dialog.entered_target_sets,
-            target_reps=dialog.entered_target_reps, target_weight=dialog.entered_target_weight,
-        )
-        self._refresh_template_list()
-
-    def _on_remove_template_exercise(self) -> None:
-        template_id = self._selected_template_id()
-        if template_id is None:
-            return
-        item = self._template_exercises_list.currentItem()
-        if item is None or not item.isSelected():
-            QMessageBox.information(None, "No Exercise Selected", "Select an exercise to remove from this template.")
-            return
-        index = self._template_exercises_list.row(item)
-        self.context.workout.remove_exercise_from_template(template_id, index)
-        self._refresh_template_list()
-
-    # ------------------------------------------------------------------
     # Log Session tab — a live, in-memory state machine
     # ------------------------------------------------------------------
 
@@ -499,9 +341,7 @@ class WorkoutModule(ModuleBase):
         layout.addWidget(session_title)
 
         start_row = QHBoxLayout()
-        start_row.addWidget(QLabel("Template:"))
-        self._session_template_combo = QComboBox()
-        start_row.addWidget(self._session_template_combo, stretch=1)
+        start_row.addStretch(1)
         self._start_session_button = QPushButton("Start Session")
         self._start_session_button.clicked.connect(self._on_start_session)
         start_row.addWidget(self._start_session_button)
@@ -558,7 +398,6 @@ class WorkoutModule(ModuleBase):
         side_column.addStretch(1)
         outer.addLayout(side_column, stretch=1)
 
-        self._refresh_session_template_combo()
         self._refresh_session_exercise_combo()
         return tab
 
@@ -655,33 +494,13 @@ class WorkoutModule(ModuleBase):
         layout.addStretch(1)
         return card
 
-    def _refresh_session_template_combo(self) -> None:
-        if self._session_template_combo is None or self._session_active:
-            return
-        current = self._session_template_combo.currentData() if self._session_template_combo.count() else None
-        self._session_template_combo.blockSignals(True)
-        self._session_template_combo.clear()
-        self._session_template_combo.addItem("Freeform (no template)", "")
-        for template in self.context.workout.all_templates():
-            self._session_template_combo.addItem(template.name, template.template_id)
-        idx = self._session_template_combo.findData(current)
-        self._session_template_combo.setCurrentIndex(idx if idx >= 0 else 0)
-        self._session_template_combo.blockSignals(False)
-
     def _refresh_session_exercise_combo(self) -> None:
         if self._session_exercise_combo is None:
             return
         current = self._session_exercise_combo.currentData() if self._session_exercise_combo.count() else None
         self._session_exercise_combo.blockSignals(True)
         self._session_exercise_combo.clear()
-        if self._session_active and self._session_template_id:
-            template = self.context.workout.get_template(self._session_template_id)
-            exercise_ids = [e.get("exercise_id") for e in (template.exercises if template else [])]
-            exercises = [self.context.workout.get_exercise(eid) for eid in exercise_ids]
-            exercises = [e for e in exercises if e is not None]
-        else:
-            exercises = self.context.workout.all_exercises()
-        for exercise in exercises:
+        for exercise in self.context.workout.all_exercises():
             self._session_exercise_combo.addItem(exercise.name, exercise.exercise_id)
         idx = self._session_exercise_combo.findData(current)
         self._session_exercise_combo.setCurrentIndex(idx if idx >= 0 else 0)
@@ -706,13 +525,11 @@ class WorkoutModule(ModuleBase):
             QMessageBox.information(None, "No Exercises Yet", "Add an exercise in the Exercises tab first.")
             return
         self._session_active = True
-        self._session_template_id = self._session_template_combo.currentData() or ""
         self._session_start_monotonic = time.monotonic()
         self._session_sets_logged = []
         self._session_timer.start()
 
         self._start_session_button.setEnabled(False)
-        self._session_template_combo.setEnabled(False)
         self._log_set_button.setEnabled(True)
         self._rest_button.setEnabled(True)
         self._finish_session_button.setEnabled(True)
@@ -761,7 +578,7 @@ class WorkoutModule(ModuleBase):
 
         self._session_timer.stop()
         self.context.workout.add_session(
-            template_id=self._session_template_id, date_str=date.today().isoformat(),
+            template_id="", date_str=date.today().isoformat(),
             duration_minutes=duration_minutes, calories_estimate=calories,
             sets_logged=self._session_sets_logged,
         )
@@ -769,20 +586,17 @@ class WorkoutModule(ModuleBase):
         self._session_active = False
         self._session_start_monotonic = None
         self._session_sets_logged = []
-        self._session_template_id = ""
         self._resting = False
         self._rest_start_monotonic = None
         self._session_calories_spin.setValue(0.0)
 
         self._start_session_button.setEnabled(True)
-        self._session_template_combo.setEnabled(True)
         self._log_set_button.setEnabled(False)
         self._rest_button.setEnabled(False)
         self._rest_button.setText("Start Resting")
         self._finish_session_button.setEnabled(False)
         self._session_elapsed_label.setText("Session: 00:00")
         self._rest_elapsed_label.setText("Rest: 00:00")
-        self._refresh_session_template_combo()
         self._refresh_session_exercise_combo()
         self._refresh_session_sets_list()
         QMessageBox.information(None, "Session Saved", "Workout session saved.")

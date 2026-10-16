@@ -91,6 +91,7 @@ def fitness_page(context, today: Optional[date] = None) -> dict:
         "missions": _missions(context, today),
         "milestones": plan.get("milestones") or [],
         "progress": progress(context, today),
+        "bests": skill_bests(fit, plan),
     }
     page["plan_text"] = plan_text(plan)
     if not child:
@@ -109,6 +110,34 @@ def plan_text(plan: dict) -> dict:
                         "practice": ", ".join(k.get("practice") or []),
                         "steps": "\n".join(skill_step_text(x) for x in k.get("steps") or [])}
                        for k in plan.get("skill_tree") or []]}
+
+
+def skill_bests(fit, plan: dict) -> list[dict]:
+    """Personal Bests for skills (Zac, 2026-10-16): the longest hold and the
+    most reps ever logged for each step, from every practice, not only the
+    steps in today's plan (a new plan never hides an old best). The plan's
+    target rides along where the step is still in it."""
+    targets = {}
+    for skill in plan.get("skill_tree") or []:
+        for step in skill.get("steps") or []:
+            targets[(skill.get("skill", "").lower(), step.get("name", "").lower())] = step
+    best: dict = {}
+    for s in fit.skill_sessions():
+        if not (s.get("seconds") or s.get("reps")):
+            continue
+        key = (s["skill"].lower(), (s.get("step") or "").lower())
+        row = best.setdefault(key, {"skill": s["skill"], "step": s.get("step") or s["skill"], "best_seconds": None,
+                                    "best_reps": None, "seconds_on": None, "reps_on": None})
+        if s.get("seconds") and (row["best_seconds"] is None or s["seconds"] > row["best_seconds"]):
+            row["best_seconds"], row["seconds_on"] = s["seconds"], s.get("date")
+        if s.get("reps") and (row["best_reps"] is None or s["reps"] > row["best_reps"]):
+            row["best_reps"], row["reps_on"] = s["reps"], s.get("date")
+    out = []
+    for key, row in best.items():
+        target = targets.get(key) or {}
+        out.append({**row, "target_seconds": target.get("target_seconds"), "target_reps": target.get("target_reps"),
+                    "in_plan": key in targets})
+    return sorted(out, key=lambda r: (not r["in_plan"], r["skill"].lower(), r["step"].lower()))
 
 
 def week_page(context, day: Optional[date] = None) -> dict:

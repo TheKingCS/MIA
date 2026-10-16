@@ -115,18 +115,9 @@ def test_the_workout(world):
     assert page["stats"]["this_week"] == 1 and page["stats"]["streak"] == 1
     assert page["exercises"][0]["pr"]["reps"] == 22
 
-    run(world, "workout_template.add", name="Upper body")
-    template = world.workout.all_templates()[0]
-    proposal, _ = run(world, "workout_template.exercise_add", template_id=template.template_id,
-                      exercise_id=pushups.exercise_id, target_sets="3", target_reps="15")
-    assert proposal.summary == "Add Push-ups to Upper body: 3 × 15"
-    proposal, _ = run(world, "workout.log", template_id=template.template_id, duration_minutes="25")
-    assert proposal.summary == "Log a workout: Upper body (3 sets), 25 min"
-    assert workout_page(world, TODAY)["stats"]["total"] == 2
-    _, removed = run(world, "workout_template.exercise_remove", template_id=template.template_id, index="0")
-    assert world.workout.get_template(template.template_id).exercises == []
-    world.actions.undo(world, removed.proposal_id)
-    assert len(world.workout.get_template(template.template_id).exercises) == 1
+    # Workout templates are gone (Zac, 2026-10-16): the plan's training days are the routines.
+    assert "templates" not in workout_page(world, TODAY)
+    assert not any(k.startswith("workout_template.") for k in ACTION_TYPES)
 
     with pytest.raises(ActionError, match="Pick an exercise"):
         world.actions.propose(world, "workout.log", {"reps": "5"})

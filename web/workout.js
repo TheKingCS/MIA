@@ -1,9 +1,10 @@
 /*
  * workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018).
  * Renders MIA.workout() (core/web_screens.py): log a session right on the
- * page (an exercise, reps, sets, weight, how long, notes; or a whole
- * template), the latest entry, today's daily mission and streak, exercises
- * with personal records, templates, history and progress. Every change is a
+ * page (an exercise, reps, sets, weight, how long, notes), the latest entry,
+ * today's daily mission and streak, exercises, history, progress and Personal
+ * Bests (lifts and skill bests). Templates are gone (Zac, 2026-10-16): the
+ * plan's training days are the routines you repeat. Every change is a
  * workout action (core/workout_actions.py). Formatting only here.
  *
  * 2026-10-14 (DEC-0020, Muse's H-0028): Today (the plan's training as
@@ -17,19 +18,17 @@
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
   const TABS = [["today", "Today"], ["progress", "Progress"], ["log", "Log Session"], ["exercises", "Exercises"],
-    ["templates", "Templates"], ["history", "History"], ["lifts", "Personal Bests"]];
+    ["history", "History"], ["lifts", "Personal Bests"]];
   let page = null;
   let fit = null;  // MIA.fitness() (null where fitness isn't set up)
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : null;
   const timer = { skill: null, step: "", started: 0, elapsed: 0, running: false, tick: null };  // survives a live refresh
-  let byTemplate = false;
   let draft = {};  // what's typed in the log form survives a live refresh
 
   const btn = (label, cls, onclick, type) => el("button", { type: type || "button", class: "btn " + cls, onclick }, label);
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) : "";
-  const lists = () => ({ exercises: page.exercises.map((e) => ({ id: e.id, name: e.name })),
-    templates: page.templates.map((t) => ({ id: t.id, name: t.name })) });
+  const lists = () => ({ exercises: page.exercises.map((e) => ({ id: e.id, name: e.name })) });
   const section = (title, actions, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
 
@@ -43,17 +42,13 @@
     if (v) act({ kind: key + ".edit", params: Object.assign({ [spec.id_param]: row.id }, v) });
   }
   const del = (key, row) => act({ kind: key + ".delete", params: { [page.forms[key].id_param]: row.id } });
-  async function addToTemplate(t) {
-    const v = await form("Add to " + t.name, page.forms.template_exercise.fields, {}, lists());
-    if (v) act({ kind: "workout_template.exercise_add", params: Object.assign({ template_id: t.id }, v) });
-  }
 
   // ------------------------------------------------------------ the inline log form (the concept's)
   function input(f) {
     const id = "log-" + f.name;
     let node;
     if (f.type === "pick") {
-      node = el("select", { id, name: f.name }, el("option", { value: "" }, f.options[0] === "exercises" ? "Pick an exercise" : "Pick a template"),
+      node = el("select", { id, name: f.name }, el("option", { value: "" }, "Pick an exercise"),
         lists()[f.options[0]].map((x) => el("option", { value: x.id }, x.name)));
     } else if (f.type === "textarea") {
       node = el("textarea", { id, name: f.name, rows: "2", placeholder: "How did it feel?" });
@@ -69,7 +64,7 @@
   }
 
   function logCard() {
-    const spec = byTemplate ? page.forms.log_template : page.forms.log;
+    const spec = page.forms.log;
     const formNode = el("form", { class: "log-form", onsubmit: async (e) => {
       e.preventDefault();
       const params = {};
@@ -78,11 +73,7 @@
       if (done) { draft = {}; formNode.reset(); }
     } }, spec.fields.map(input),
     el("div", { class: "row-buttons" }, btn("Save session", "btn-green", null, "submit")));
-    return section("Log session",
-      el("div", { class: "ptabs mini", role: "tablist", "aria-label": "Log by" },
-        [[false, "One exercise"], [true, "A template"]].map(([v, l]) => el("button", { type: "button", role: "tab",
-          "aria-selected": String(byTemplate === v), disabled: v && !page.templates.length ? true : null,
-          onclick: () => { byTemplate = v; draft = {}; draw(); } }, l))),
+    return section("Log session", null,
       page.exercises.length ? formNode
         : el("p", { class: "empty" }, el("strong", {}, "Add an exercise first."), btn("Add exercise", "btn-amber", () => add("exercise", "Add an exercise"))));
   }
@@ -374,27 +365,33 @@
             .filter(Boolean).join(" · "))),
         buttons(btn("Edit", "btn-ghost", () => edit("exercise", e)), btn("Delete", "btn-ghost", () => del("exercise", e))))))
         : el("p", { class: "dim" }, "No exercises yet."))],
-    templates: () => [section("Templates", buttons(btn("Add template", "btn-amber", () => add("workout_template", "Add a template"))),
-      page.templates.length ? el("div", { class: "asset-grid" }, page.templates.map((t) => el("article", { class: "glass asset-card template-card" },
-        el("div", { class: "asset-head" }, el("h3", {}, t.name)),
-        t.notes ? el("p", { class: "dim" }, t.notes) : null,
-        el("ul", { class: "asset-tasks" }, t.exercises.length ? t.exercises.map((x) => el("li", {},
-          el("span", {}, x.name + ": " + x.sets + " × " + x.reps + (x.weight ? " at " + x.weight : "")),
-          el("button", { type: "button", class: "btn btn-ghost btn-x", "aria-label": "Take " + x.name + " out",
-            onclick: () => act({ kind: "workout_template.exercise_remove", params: { template_id: t.id, index: x.index } }) }, "×")))
-          : el("li", { class: "dim" }, "No exercises yet")),
-        buttons(btn("Add exercise", "btn-ghost", () => addToTemplate(t)),
-          t.exercises.length ? btn("Log it", "btn-green", () => act({ kind: "workout.log", params: { template_id: t.id } })) : null,
-          btn("Edit", "btn-ghost", () => edit("workout_template", t)), btn("Delete", "btn-ghost", () => del("workout_template", t))))))
-        : el("p", { class: "dim" }, "A template is a routine you repeat, like “Upper body”."))],
     history: () => [section("History", null, page.sessions.length ? el("div", { class: "rows" }, page.sessions.map(sessionRow))
       : el("p", { class: "dim" }, "No sessions yet."))],
-    lifts: () => [section("Personal Bests", null, page.exercises.some((e) => e.pr)
-      ? el("div", { class: "asset-grid" }, page.exercises.filter((e) => e.pr).map((e) => el("article", { class: "glass asset-card" },
-        el("div", { class: "asset-head" }, el("h3", {}, e.name), el("span", { class: "chip chip-ok" }, "Best")),
-        el("p", {}, (e.pr.weight ? e.pr.weight + " × " : "") + e.pr.reps + " reps", el("span", { class: "dim" }, " · " + day(e.pr.date))),
-        spark(e.progress))))
-      : el("p", { class: "dim" }, "Log a few sessions and your personal bests and progress show up here."))],
+    lifts: () => {
+      // Skill bests (Zac, 2026-10-16): the longest hold and most reps for each step of each skill, against its target.
+      const steps = fit ? (fit.bests || []) : [];  // every step ever practiced (core/web_fitness.py skill_bests)
+      const skillCard = (st) => {
+        const best = st.best_seconds ? Math.round(st.best_seconds) + " s" : st.best_reps + " reps";
+        const on = st.best_seconds ? st.seconds_on : st.reps_on;
+        const target = st.target_seconds ? st.target_seconds + " s" : st.target_reps ? st.target_reps + " reps" : null;
+        const pct = st.target_seconds ? st.best_seconds / st.target_seconds : st.target_reps ? st.best_reps / st.target_reps : null;
+        return el("article", { class: "glass asset-card" },
+          el("div", { class: "asset-head" }, el("h3", {}, st.step), el("span", { class: "chip" }, st.skill)),
+          el("p", {}, el("strong", {}, best), target ? el("span", { class: "dim" }, " of " + target) : null,
+            on ? el("span", { class: "dim" }, " · " + day(on)) : null),
+          pct != null ? el("div", { class: "bar" }, el("div", { class: "bar-fill" + (pct >= 1 ? " done" : ""), style: "width:" + Math.min(100, Math.round(pct * 100)) + "%" })) : null);
+      };
+      const lifts = page.exercises.filter((e) => e.pr);
+      return [
+        section("Skill Bests", null, steps.length ? el("div", { class: "asset-grid" }, steps.map(skillCard))
+          : el("p", { class: "dim" }, "Use the practice timer on Today and your longest holds and most reps show up here.")),
+        section("Lifts", null, lifts.length ? el("div", { class: "asset-grid" }, lifts.map((e) => el("article", { class: "glass asset-card" },
+          el("div", { class: "asset-head" }, el("h3", {}, e.name), el("span", { class: "chip chip-ok" }, "Best")),
+          el("p", {}, (e.pr.weight ? e.pr.weight + " × " : "") + e.pr.reps + " reps", el("span", { class: "dim" }, " · " + day(e.pr.date))),
+          spark(e.progress))))
+          : el("p", { class: "dim" }, "Log a session with weight and reps and your best lifts show up here.")),
+      ];
+    },
   };
 
   function draw() {
@@ -417,7 +414,6 @@
       $("panel").replaceChildren(el("p", { class: "empty" }, el("strong", {}, "Workouts aren't set up on this MIA."), ""));
       return;
     }
-    if (byTemplate && !page.templates.length) byTemplate = false;
     draw();
   });
 })();

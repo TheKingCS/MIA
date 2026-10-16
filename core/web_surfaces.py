@@ -76,7 +76,7 @@ APPS: tuple[App, ...] = (
         "Daily and weekly household routines — laundry, dishes, chores.", HOME, ("household",),
         "I did the dishes."),
     App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html",
-        "Exercises, templates, guided sessions, and progress.", LIFE, ("workout",), "Log a 30 minute workout."),
+        "Exercises, guided sessions, and progress.", LIFE, ("workout",), "Log a 30 minute workout."),
     App("real_estate", "Real Estate", "🏘", "Cash flow. Equity. Freedom.", "real-estate.html",
         "Property values, equity, rental income, and linked maintenance.", MONEY, ("real_estate", "inventory"),
         "How are my rentals doing this month?"),

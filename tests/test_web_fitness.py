@@ -220,3 +220,21 @@ def test_reps_on_the_practice_card(world):
     assert step["best_reps"] == 3 and step["target_reps"] == 3
     again = world.actions.approve(world, world.actions.propose(world, "fitness.skill", {"skill": "Muscle-up", "step": "Negatives", "reps": "2"}).proposal_id)
     assert again.result == "Muscle-up logged."
+
+
+def test_skill_bests_survive_a_new_plan():
+    """Personal Bests (Zac, 2026-10-16) come from every practice logged, so a
+    new plan never hides an old best; the plan's target rides along."""
+    from core.web_fitness import skill_bests
+
+    class Fit:
+        def skill_sessions(self):
+            return [{"skill": "Handstand", "step": "Wall hold", "seconds": 38.0, "date": "2026-10-10"},
+                    {"skill": "Handstand", "step": "Wall hold", "seconds": 52.0, "date": "2026-10-14"},
+                    {"skill": "Handstand", "step": "Kick-ups", "reps": 6, "date": "2026-10-12"},
+                    {"skill": "L-sit", "step": "Tuck sit", "minutes": 5, "date": "2026-10-12"}]
+    plan = {"skill_tree": [{"skill": "Handstand", "steps": [{"name": "Wall hold", "target_seconds": 60}]}]}
+    rows = skill_bests(Fit(), plan)
+    assert [(r["step"], r["best_seconds"], r["best_reps"], r["target_seconds"], r["in_plan"]) for r in rows] == [
+        ("Wall hold", 52.0, None, 60, True), ("Kick-ups", None, 6, None, False)]
+    assert rows[0]["seconds_on"] == "2026-10-14"

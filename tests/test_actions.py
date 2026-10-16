@@ -133,7 +133,7 @@ def test_a_child_can_only_take_child_actions(world):
     # settings are theirs too (money settings and email refuse, see
     # core/account_actions.py).
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
-    kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "workout_template.",
+    kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.",
                            "mission.", "objective.", "pathway.", "character.", "fitness.", "plan.")
     assert {k for k in child_ok if not k.startswith(kitchen_and_workout)} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
