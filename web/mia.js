@@ -214,6 +214,7 @@
       if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
       return data;
     })(),
+    inbox: () => read("/api/inbox", "inbox"),
     journal: () => read("/api/journal", "journal"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),

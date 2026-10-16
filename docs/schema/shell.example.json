@@ -102,6 +102,13 @@
       "page": "journal.html"
     },
     {
+      "id": "inbox",
+      "name": "Inbox",
+      "icon": "📥",
+      "tagline": "Paperwork, handled.",
+      "page": "inbox.html"
+    },
+    {
       "id": "expeditions",
       "name": "Expeditions",
       "icon": "🏕",
@@ -143,7 +150,6 @@
     "Observations",
     "People & Pets",
     "Classroom",
-    "Inbox",
     "Memories",
     "Maps",
     "Navigation",

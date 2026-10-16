@@ -1,0 +1,152 @@
+{
+  "available": true,
+  "pending": [
+    {
+      "id": "f7e426f944",
+      "label": "Blade part number",
+      "type": "other",
+      "type_label": "Note",
+      "status": "pending",
+      "source": "A note",
+      "received": "2026-10-16 19:33",
+      "subject": "",
+      "sender": "",
+      "vendor": "",
+      "amount": "",
+      "amount_value": null,
+      "date": "",
+      "category": "",
+      "asset": null,
+      "project": null,
+      "files": [
+        {
+          "name": "Blade part number.txt",
+          "kind": "text"
+        }
+      ],
+      "excerpt": "Blade part number Deere M128485, two of them",
+      "note": "",
+      "reading": false,
+      "readable": true,
+      "schedule": [],
+      "details": [],
+      "lines": [],
+      "filed_note": "",
+      "needs_amount": false
+    }
+  ],
+  "done": [
+    {
+      "id": "c3c4a4eef7",
+      "label": "Lowe's receipt, $36.23",
+      "type": "receipt",
+      "type_label": "Receipt",
+      "status": "filed",
+      "source": "From your phone",
+      "received": "2026-10-16 19:33",
+      "subject": "",
+      "sender": "",
+      "vendor": "Lowe's",
+      "amount": "$36.23",
+      "amount_value": 36.23,
+      "date": "2026-09-28",
+      "category": "Building Materials",
+      "asset": {
+        "id": "a0df037886",
+        "name": "Furnace"
+      },
+      "project": null,
+      "files": [
+        {
+          "name": "lowes-receipt.txt",
+          "kind": "text"
+        }
+      ],
+      "excerpt": "LOWE'S HOME CENTERS Store 1234 09/28/2026 10:42 AM 2X4X8 PINE STUD 6 @ 3.98 23.88 DECK SCREWS 1LB 9.98 SUBTOTAL 33.86 SALES TAX 2.37 TOTAL 36.23 VISA ************1234 36.23 Thank you for shopping at Lowe's",
+      "note": "",
+      "reading": false,
+      "readable": true,
+      "schedule": [],
+      "details": [],
+      "lines": [
+        {
+          "text": "2X4X8 Pine Stud",
+          "amount": "$23.88"
+        },
+        {
+          "text": "Deck Screws 1Lb",
+          "amount": "$9.98"
+        }
+      ],
+      "filed_note": "Filed: logged $36.23 for the Furnace, put it on the Furnace's page, filled in its purchase price.",
+      "needs_amount": false
+    }
+  ],
+  "counts": {
+    "waiting": 1,
+    "reading": 0,
+    "filed": 1
+  },
+  "picks": {
+    "assets": [
+      {
+        "id": "a0df037886",
+        "name": "Furnace"
+      },
+      {
+        "id": "8c260faa4f",
+        "name": "Generator"
+      },
+      {
+        "id": "aa6ccf7ef6",
+        "name": "Maple House"
+      },
+      {
+        "id": "31ee84683a",
+        "name": "Mower"
+      },
+      {
+        "id": "d7ea2a25b1",
+        "name": "Pickup truck"
+      },
+      {
+        "id": "9f4ce672f7",
+        "name": "Raised bed"
+      },
+      {
+        "id": "6fd206ec1b",
+        "name": "Truck"
+      }
+    ],
+    "projects": [
+      {
+        "id": "a4999d5f15",
+        "name": "Greenhouse"
+      },
+      {
+        "id": "f9672c8ecd",
+        "name": "Solar"
+      }
+    ],
+    "categories": [
+      "Utilities",
+      "Mortgage/Rent",
+      "Insurance",
+      "Groceries",
+      "Maintenance",
+      "Transportation",
+      "Taxes",
+      "Medical",
+      "Personal Care",
+      "Shopping",
+      "Bank Fees",
+      "Entertainment",
+      "Travel",
+      "Debt Payment",
+      "Building Materials",
+      "Tools & Equipment",
+      "Other"
+    ]
+  },
+  "max_mb": 25
+}

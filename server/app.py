@@ -535,7 +535,7 @@ def create_app(context: AppContext) -> FastAPI:
             context.inbox.receive_file(filename, data, source="phone")
         except ValueError as exc:
             raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, str(exc)) from exc
-        return {"received": filename, "message": "Got it. It'll be in your inbox in a minute."}
+        return {"received": filename, "message": f"Sent {filename} to your inbox. MIA is reading it."}
 
     # Finance #4 (2026-09-28): read-only money summary for the phone
     # apps. Same numbers as the desktop (core/finance_summary.py); taken
@@ -822,6 +822,24 @@ def create_app(context: AppContext) -> FastAPI:
         except ValueError as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {"message": f"Saved {saved.rsplit('/', 1)[-1]}.", "path": saved}
+
+    # The Inbox screen (core/web_inbox.py): what's waiting, and each item's files.
+    @app.get("/api/inbox")
+    def web_inbox(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_inbox import inbox_page
+
+        return _screen(profile_id, "inbox", inbox_page)
+
+    @app.get("/api/inbox/item/{item_id}/file")
+    def web_inbox_file(item_id: str, name: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.web_inbox import item_file
+
+        path = _screen(profile_id, "inbox", lambda view: item_file(view, item_id, name))
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't in the inbox anymore.")
+        return FileResponse(path, filename=path.name, headers={"Cache-Control": "private, no-cache"})
 
     @app.get("/api/workout")
     def web_workout(profile_id: str = Depends(require_profile_id)) -> dict:

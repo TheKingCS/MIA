@@ -1268,3 +1268,21 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 }
 .file-open, .music-play { text-transform: none; }
 .music-library { overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------- Inbox (2026-10-16) */
+.inbox-send { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 8px; }
+.inbox-send .btn { justify-content: center; }
+.inbox-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.inbox-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.inbox-card.reading { border-style: dashed; }
+.inbox-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; }
+.inbox-head h3 { margin: 0; font-size: var(--text-md); overflow-wrap: anywhere; }
+.inbox-head p { margin: 2px 0 0; }
+.inbox-ico { font-size: 24px; line-height: 1; }
+.inbox-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; margin: 0; font-size: var(--text-sm); }
+.inbox-facts dt { color: var(--text-dim); }
+.inbox-facts dd { margin: 0; overflow-wrap: anywhere; }
+.inbox-excerpt { margin: 0; color: var(--text-dim); font-size: var(--text-sm); max-height: 4.8em; overflow: hidden; }
+.inbox-card .chip-button { text-transform: none; overflow-wrap: anywhere; }
+.tick-row { display: flex; gap: 10px; align-items: flex-start; padding: 4px 0; text-transform: none; }
+.tick-row input { margin-top: 3px; }

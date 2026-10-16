@@ -62,6 +62,9 @@ _DATA_DIR = _PROJECT_ROOT / "data"
 _ITEMS_FILE = _DATA_DIR / "inbox.json"
 _MIN_QUIET_SECONDS = 3.0  # a file still being copied in is left for the next scan
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+# A file MIA saved itself (receive_file(), the phone's Share): written whole
+# under a hidden name and renamed, so it's ready the moment it appears.
+_SENT = re.compile(r"^\d{8}-\d{6}(?:-[0-9a-f]{4})?\.(phone|email|folder|note)\.(.+)$")
 
 PENDING, FILED, DISMISSED = "pending", "filed", "dismissed"
 _DETAIL_WORDS = {"model": "model", "serial_number": "serial number", "manufacturer": "maker",
@@ -201,7 +204,7 @@ class InboxManager:
             for path in sorted(self.folder.iterdir()):
                 if not path.is_file() or path.name.startswith("."):
                     continue
-                if now - path.stat().st_mtime < _MIN_QUIET_SECONDS:
+                if now - path.stat().st_mtime < _MIN_QUIET_SECONDS and not _SENT.match(path.name):
                     continue
                 try:
                     item = self._ingest(path)
@@ -217,7 +220,7 @@ class InboxManager:
 
     def _ingest(self, path: Path) -> InboxItem:
         source, name = "folder", path.name
-        m = re.match(r"^\d{8}-\d{6}(?:-[0-9a-f]{4})?\.(phone|email|folder)\.(.+)$", path.name)
+        m = _SENT.match(path.name)
         if m:
             source, name = m.group(1), m.group(2)
         item = InboxItem(item_id=uuid.uuid4().hex[:10], received_at=datetime.now().isoformat(timespec="seconds"), source=source)

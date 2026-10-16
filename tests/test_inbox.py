@@ -154,15 +154,20 @@ def test_expense_category():
 
 
 def test_scan_takes_in_settled_files_and_leaves_fresh_ones(ctx):
+    ctx.inbox.folder.mkdir(parents=True, exist_ok=True)
+    (ctx.inbox.folder / "dropped.txt").write_text("hello")  # dropped by hand: maybe still copying
     ctx.inbox.receive_file("receipt.txt", RECEIPT_TEXT.encode(), source="phone")
-    assert ctx.inbox.scan() == []  # still "being copied"
-    [item] = ctx.inbox.scan(now=float("inf"))
+    # What MIA saved itself is written whole, so it's taken in at once (2026-10-16).
+    [item] = ctx.inbox.scan()
+    assert (ctx.inbox.folder / "dropped.txt").exists()
     assert item.source == "phone" and item.files == ["receipt.txt"]
     assert item.doc_type == RECEIPT and item.amount == 36.23 and item.vendor == "Lowe's"
     assert item.category == "Building Materials" and item.status == PENDING
     assert item.label == "Lowe's receipt, $36.23"
-    assert not any(p.is_file() for p in ctx.inbox.folder.iterdir())  # moved into the item's folder
+    # moved into the item's folder; the hand-dropped file waits for the next scan
+    assert [p.name for p in ctx.inbox.folder.iterdir() if p.is_file()] == ["dropped.txt"]
     assert (ctx.inbox.item_folder(item.item_id) / "receipt.txt").exists()
+    assert [i.files for i in ctx.inbox.scan(now=float("inf"))] == [["dropped.txt"]]
     # Persisted.
     assert InboxManager(ctx).get_item(item.item_id).amount == 36.23
 

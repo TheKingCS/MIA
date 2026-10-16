@@ -23,6 +23,8 @@ files: `core/my_files.py`. The phone's engine now also builds the Workshop
 and Music stores (`core/core_runtime.py`). Examples for the preview:
 `docs/schema/{journal,workshop,expeditions,music,files}.example.json`.
 
+**The Inbox** (`web/inbox.html`, same day): Send To MIA (Take A Photo, Upload A File, Write A Note), Waiting cards with MIA's reading, File It (a custom dialog with checkboxes: `.tick-row`), Dismiss, Filed And Dismissed. On the phone app MIA is in every app's Share menu. Classes: `.inbox-*`, `.tick-row`.
+
 **Home replaces the Dashboard** (DEC-0027): Home is greeting, Today's Focus,
 Upcoming and the level card; no quick buttons, no date; MIA's badge opens
 the chat. The bottom bar is Home and Apps.

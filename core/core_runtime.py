@@ -137,6 +137,11 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.jobs = JobManager(context)
     context.ledger = LedgerManager(context)
     context.music = MusicManager(context)
+    # The document inbox, so the phone can take in what's shared to MIA
+    # (its Inbox screen reads the folder; no mail checker here).
+    from core.inbox_manager import InboxManager
+
+    context.inbox = InboxManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
     context.connectivity = ConnectivityMonitor(context)

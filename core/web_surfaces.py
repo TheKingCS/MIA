@@ -110,7 +110,7 @@ APPS: tuple[App, ...] = (
         "Make a note: call the plumber Friday."),
     App("classroom", "Classroom", "🎓", "Keep learning.", None,
         "Your own subjects, courses, and lessons.", LIFE, ("classroom", "textbooks"), "Quiz me on chapter 2."),
-    App("inbox", "Inbox", "📥", "Paperwork, handled.", None,
+    App("inbox", "Inbox", "📥", "Paperwork, handled.", "inbox.html",
         "Receipts, manuals and documents MIA files for you.", MONEY, ("inbox", "email"),
         "What's waiting in my inbox?"),
     App("expeditions", "Expeditions", "🏕", "Plan the trip.", "expeditions.html",

@@ -61,7 +61,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Maps: Trail maps | Trail map PDFs | `maps__03_trail_maps` | |  | |
 | Navigation | Distance, bearing, sun and moon | `navigation` | |  | |
 | Assistant | Full chat with MIA, history, voice | `assistant` | |  | |
-| Inbox | Documents to file, email intake | `(none)` | |  | |
+| Inbox | Documents to file, email intake | `(none)` | ✅ `/api/inbox` + `inbox.file`, `inbox.dismiss`, `inbox.note`; `/api/inbox/upload` | ✅ send a photo, file or note; the phone's Share menu (phone app); waiting items with MIA's reading, File It (what it's for, total, category, maintenance steps, details), Dismiss, history (email setup stays on the PC) | |
 | Calendar | Events and alarms | `(inside Dashboard/Home)` | |  | |
 | Knowledge | Offline reference library | `knowledge` | |  | |
 | Toolbox | Calculators and conversions | `toolbox` | |  | |

@@ -3,6 +3,7 @@ package com.mia.phone
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -13,6 +14,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
+import android.widget.Toast
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import org.json.JSONObject
@@ -56,7 +58,9 @@ class MainActivity : Activity() {
                 }
                 // Spike only: the CI check reads it to call the API. Local to this phone.
                 Log.d(TAG, "token=${result.optString("token")}")
-                runOnUiThread { show(result.optString("token")) }
+                // Opened from another app's Share menu: into the inbox, then show it.
+                val shared = if (Share.isShare(intent)) saveShare(intent) else false
+                runOnUiThread { show(result.optString("token"), if (shared) "inbox.html" else "index.html") }
             } catch (e: Throwable) {
                 Log.e(TAG, "failed", e)
                 runOnUiThread { status.text = "MIA couldn't start on this phone:\n\n${e.message}" }
@@ -79,8 +83,40 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Shared again while MIA is already open (singleTask): same thing. */
+    override fun onNewIntent(newIntent: Intent) {
+        super.onNewIntent(newIntent)
+        setIntent(newIntent)
+        if (!Share.isShare(newIntent)) return
+        val token = started?.optString("token") ?: return  // still starting: onCreate's thread takes it
+        Thread {
+            if (saveShare(newIntent)) runOnUiThread { web?.loadUrl(page("inbox.html", token)) }
+        }.start()
+    }
+
+    /** Saves a share into MIA's inbox folder; says what happened. */
+    private fun saveShare(shared: Intent): Boolean {
+        val (saved, problems) = try {
+            Share.save(this, shared, java.io.File(Unpack.ensure(applicationContext), "inbox"))
+        } catch (e: Exception) {
+            Log.e(TAG, "share failed", e)
+            Pair(0, listOf(e.message ?: "couldn't save it"))
+        }
+        val message = when {
+            saved == 1 && problems.isEmpty() -> "Sent to MIA's inbox."
+            saved > 1 && problems.isEmpty() -> "Sent $saved files to MIA's inbox."
+            saved == 0 && problems.isEmpty() -> "There was nothing to send."
+            else -> "Couldn't send: ${problems.joinToString("; ")}"
+        }
+        runOnUiThread { Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
+        return saved > 0
+    }
+
+    private fun page(name: String, token: String) =
+        "http://127.0.0.1:$PORT/web/$name" + if (token.isNotEmpty()) "#token=$token" else ""
+
     @SuppressLint("SetJavaScriptEnabled")
-    private fun show(token: String) {
+    private fun show(token: String, start: String = "index.html") {
         val view = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
@@ -92,9 +128,10 @@ class MainActivity : Activity() {
             // Without this, the web view silently answers "no" to any
             // confirm/alert dialog a screen asks (the Model test's Delete did).
             webChromeClient = WebChromeClient()
-            // Signed in: straight to Home. Not yet: the screen asks to make an
-            // account (first start) or to sign in (after logging out).
-            loadUrl("http://127.0.0.1:$PORT/web/index.html" + if (token.isNotEmpty()) "#token=$token" else "")
+            // Signed in: straight to Home (or the Inbox, after a share). Not
+            // yet: the screen asks to make an account (first start) or to
+            // sign in (after logging out).
+            loadUrl(page(if (token.isNotEmpty()) start else "index.html", token))
         }
         web = view
         setContentView(view)
