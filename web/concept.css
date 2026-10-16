@@ -1196,3 +1196,16 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 /* Paste a plan: a problem shows under the box (Zac, 2026-10-16) */
 .paste-note { margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-amber), 0.55);
   background: rgba(var(--rgb-amber), 0.08); color: var(--text); font-size: var(--text-sm); white-space: pre-wrap; }
+
+/* ---------------------------------------------------------------- skills as rows (Zac, 2026-10-16) */
+/* "More like At A Glance": one full-width card per skill, stacked, the icon
+   beside the name, so long names have the whole width instead of a square. */
+.skill-grid, .skill-grid[class] { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.skill-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 6px; padding: 12px 14px; }
+.skill-card > .skill-head { grid-column: 1; }
+.skill-card > .bar, .skill-card > .locked-note { grid-column: 1 / -1; }
+.skill-card > .skill-xp { grid-column: 1; }
+.skill-card > .chip { grid-column: 2; grid-row: 1; justify-self: end; }
+.skill-head { display: flex; gap: 12px; align-items: center; }
+.skill-icon { width: 30px; text-align: center; font-size: 24px; flex: none; }
+.skill-head h3 { font-size: var(--text-md); }
