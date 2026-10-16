@@ -56,6 +56,7 @@
 
   async function load() {
     try { data = await MIA.glasses(mission); } catch (e) { data = data || { apps: [], others: [] }; }
+    if (!data || !Array.isArray(data.apps)) data = { apps: [], others: [] };
   }
 
   const ALL = { id: "__all", name: "All Apps" };
@@ -359,7 +360,13 @@
     if (view === "home") {
       if (voiceState === "listening" || voiceState === "thinking") stopListening();
       const list = cards();
-      if (!list.length) return;
+      if (!list.length) {  // the apps didn't load (a bad connection, a half-updated page): try again
+        load().then(() => {
+          if (cards().length) move(dir);
+          else answer("MIA couldn't load your apps. Check the connection and try again.", 5);
+        });
+        return;
+      }
       appIndex = dir > 0 ? 0 : list.length - 1;
       show("cards");
       return;
