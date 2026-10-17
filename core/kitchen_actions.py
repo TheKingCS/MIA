@@ -213,6 +213,56 @@ def _log_meal(context, params) -> str:
     return f"{recipe.name} is in the meal log."
 
 
+_BATCHES = Field("batches", "How many batches", "amount", default=1.0)
+_USE = Field("pantry", "Take it out of the pantry", "choice", options=("Yes", "No"), default="Yes")
+
+
+def _cook_args(context, params):
+    recipe = _recipe(context, params)
+    if recipe.locked:
+        raise ActionError(f"{recipe.name} is still locked.")
+    batches = parse(_BATCHES, params.get("batches")) or 1.0
+    if batches <= 0:
+        raise ActionError("Cook at least one batch.")
+    use = str(params.get("pantry") or "Yes").strip().lower() not in ("no", "false", "0")
+    return recipe, batches, use
+
+
+def _describe_cook(context, params) -> str:
+    """Kitchen recipes as blueprints (core/kitchen_blueprint.py): cooking
+    uses up the pantry, the way a Workshop build uses its materials."""
+    from core.kitchen_blueprint import plan
+
+    recipe, batches, use = _cook_args(context, params)
+    times = f" ×{batches:g}" if batches != 1 else ""
+    when = parse(_DATE, params.get("date"))
+    line = f"I made {recipe.name}{times}" + (f" on {when}" if when else " today")
+    if not use:
+        return line + " (the pantry stays as it is)"
+    p = plan(recipe, context.kitchen.all_pantry_items(), batches)
+    if p["said"]:
+        line += ": uses " + ", ".join(p["said"]) + " from the pantry"
+    if p["runs_out"]:
+        line += f"; {', '.join(p['runs_out'])} {'runs' if len(p['runs_out']) == 1 else 'run'} out (goes on the grocery list)"
+    return line
+
+
+def _cook(context, params) -> str:
+    from core.kitchen_blueprint import use_up
+
+    recipe, batches, use = _cook_args(context, params)
+    context.kitchen.log_meal(recipe.recipe_id, parse(_DATE, params.get("date")), parse(_NOTES, params.get("notes")))
+    if not use:
+        return f"{recipe.name} is in the meal log."
+    done = use_up(context.kitchen, recipe, batches)
+    bits = [f"{recipe.name} is in the meal log"]
+    if done["takes"]:
+        bits.append(f"the pantry is updated ({len(done['takes'])} item{'s' if len(done['takes']) != 1 else ''})")
+    if done["listed"]:
+        bits.append("on the grocery list: " + ", ".join(done["listed"]))
+    return "; ".join(bits) + "."
+
+
 def _meal(context, params):
     entry_id = str(params.get("entry_id", ""))
     entry = next((e for e in _need(context, "kitchen").all_meal_log_entries() if e.entry_id == entry_id), None)
@@ -299,6 +349,9 @@ def _kinds() -> list[ActionType]:
         ActionType("grocery.from_recipe", "Add what's missing", {"recipe_id": "the recipe"}, _describe_missing, _add_missing, True),
         ActionType("meal.log", "Log meal", {"recipe_id": "the recipe", "date": "optional", "notes": "optional"},
                    _describe_meal, _log_meal, True),
+        ActionType("meal.cook", "I Made This", {"recipe_id": "the recipe", "batches": "how many (1 if left out)",
+                                                "pantry": "Yes or No: take it out of the pantry", "date": "optional",
+                                                "notes": "optional"}, _describe_cook, _cook, True),
         ActionType("meal.delete", "Remove", {"entry_id": "the meal"}, _describe_meal_delete, _meal_delete, True),
         ActionType("recipe.rate", "Rate", {"recipe_id": "the recipe", "rating": "1 to 5 stars (0 clears it)"},
                    _describe_rate, _rate, True),
@@ -317,4 +370,6 @@ def form_spec() -> dict:
     forms["grocery"] = record_form(GROCERY)
     forms["ingredients"] = {"noun": "ingredients", "id_param": "recipe_id", "fields": [field_dict(_INGREDIENTS)]}
     forms["meal"] = {"noun": "meal", "id_param": "recipe_id", "fields": [field_dict(_DATE), field_dict(_NOTES)]}
+    forms["cook"] = {"noun": "meal", "id_param": "recipe_id",
+                     "fields": [field_dict(f) for f in (_BATCHES, _USE, _DATE, _NOTES)]}
     return forms

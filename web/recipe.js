@@ -40,8 +40,9 @@
     date: s.date, planned_id: s.date + ":" + s.meal } });
   const unschedule = (s) => act({ kind: "meal.plan", params: { date: s.date, meal: s.meal, recipe_id: "" } });
   async function logMeal() {
-    const v = await form("I made " + page.name, page.forms.meal.fields, {});
-    if (v) act({ kind: "meal.log", params: Object.assign({ recipe_id: page.id }, v) });
+    // Cooking uses up the pantry, like a Workshop build (core/kitchen_blueprint.py).
+    const v = await form("I made " + page.name, (page.forms.cook || page.forms.meal).fields, {});
+    if (v) act({ kind: page.forms.cook ? "meal.cook" : "meal.log", params: Object.assign({ recipe_id: page.id }, v) });
   }
   async function edit() {
     const v = await form("Edit recipe", page.forms.recipe.fields, page.values);
@@ -122,7 +123,7 @@
           el("strong", {}, st.times_eaten + "× (" + st.servings_eaten + " serving" + (st.servings_eaten === 1 ? "" : "s") + ")")) : null,
         st.others_rated ? el("div", { class: "acct-fact" }, el("span", { class: "dim" }, "Your household"),
           el("strong", {}, st.others_average + " ★ from " + st.others_rated + " other" + (st.others_rated === 1 ? "" : "s"))) : null),
-      st.times_made ? null : el("p", { class: "dim" }, "Press “I made this” after cooking it (meal prep counts once, when it's cooked)."));
+      st.times_made ? null : el("p", { class: "dim" }, "Press “I Made This” after cooking it: MIA takes what you used out of the pantry (meal prep counts once, when it's cooked)."));
   }
 
   function nutrition() {
@@ -144,7 +145,8 @@
     return section("Ingredients", btn("Edit", "btn-ghost", ingredients),
       page.ingredients.length ? el("div", { class: "rows" }, page.ingredients.map((i) =>
         el("div", { class: "row money-row ingredient-" + i.status },
-          el("div", {}, el("div", { class: "row-title" }, i.name), amount(i) ? el("div", { class: "row-sub" }, amount(i)) : null),
+          el("div", {}, el("div", { class: "row-title" }, i.name),
+            amount(i) || i.have ? el("div", { class: "row-sub" }, [amount(i), i.have ? "have " + i.have : null].filter(Boolean).join(" · ")) : null),
           el("span", { class: "chip " + label[i.status][1] }, label[i.status][0]))))
         : el("p", { class: "dim" }, "No ingredients yet. Add them, one per line, and MIA works out the nutrition and the shopping."));
   }
@@ -175,7 +177,7 @@
 
   function more() {
     return el("div", { class: "row-buttons recipe-more" },
-      page.locked ? null : btn("I made this", "btn-ghost", logMeal),
+      page.locked ? null : btn("I Made This", "btn-ghost", logMeal),
       btn(page.favorite ? "Unfavorite" : "♥ Favorite", "btn-ghost", () => act({ kind: "recipe.favorite", params: { recipe_id: page.id, favorite: !page.favorite } })),
       btn("Edit recipe", "btn-ghost", edit),
       btn("Delete", "btn-ghost", remove));

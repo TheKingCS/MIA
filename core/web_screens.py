@@ -138,6 +138,9 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
     pid = person_id(context)
     missing = {ingredient_key(n) for n in recipe_missing_ingredients(recipe, kitchen.all_pantry_items())}
     listed = {ingredient_key(g.name) for g in kitchen.all_grocery_items()}
+    from core.kitchen_blueprint import check
+
+    have_of = {r["name"]: r["have"] for r in check(recipe, kitchen.all_pantry_items())}
     ingredients = []
     for ingredient in recipe.ingredients:
         name = str(ingredient.get("name", "")).strip()
@@ -145,8 +148,10 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
             continue
         key = ingredient_key(name)
         status = "have" if key not in missing else "on_list" if key in listed else "to_buy"
+        have = have_of.get(name)
         ingredients.append({"name": name, "quantity": ingredient.get("quantity") or None,
-                            "unit": ingredient.get("unit", ""), "status": status})
+                            "unit": ingredient.get("unit", ""), "status": status,
+                            "have": f"{have:g} {ingredient.get('unit', '')}".strip() if have is not None else None})
     facts = recipe_facts(recipe)
     unlocker = None
     if recipe.locked and getattr(context, "missions", None) is not None:
