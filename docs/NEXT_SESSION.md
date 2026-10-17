@@ -280,7 +280,7 @@ buffs, the Chronicle) plus People & Pets on the web. Left: world map,
 questlines, crafting, party, sound, watch HUD, location quests, when
 Zac picks. **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
 one conversation everywhere, the voice guide. **Expansion audit**
-(`docs/EXPANSION_AUDIT.md`, DEC-0030 proposed): phase B crafting is
+(`docs/EXPANSION_AUDIT.md`, DEC-0030 approved): phase B crafting is
 built (Workshop → Recipes / Builds). DEC-0030 approved (2026-10-17). Next:
 DEC-0022 (the rest of phase A), then phase C (quotes from a recipe, customers and orders, a portfolio page),
 D (grow lab), E (memory vault, after DEC-0022's phone↔PC link). Receiving
