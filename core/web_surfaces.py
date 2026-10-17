@@ -343,7 +343,19 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
         "wins": ((state.get("recent_wins") or {}).get("latest") or [])[:5],
         "child": bool((state.get("person") or {}).get("child")),
         "buffs": _buffs(context, today),
+        "remember": _remember(context, today),
     }
+
+
+def _remember(context, today: date) -> list[dict]:
+    """MIA Remembers (DEC-0029): what you told her, as it's about to matter."""
+    from core.memory_callbacks import callbacks
+
+    try:
+        return callbacks(context, today)[:3]
+    except Exception:
+        log.exception("Home: memory callbacks failed")
+        return []
 
 
 def _buffs(context, today: date) -> list[dict]:

@@ -658,6 +658,7 @@ class MIAApplication:
             ("journal_reflection", self._check_journal_reflection),
             ("warranty", self._check_warranties),
             ("chronicle", self._check_chronicle),
+            ("memory_callback", self._check_memory_callbacks),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -680,7 +681,7 @@ class MIAApplication:
                 self.context.notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
 
     def _offer(self, topic: str, title: str, message: str, urgency: str, source: str = "system",
-               daily: bool = False) -> None:
+               daily: bool = False, fingerprint: str = "") -> None:
         """Queue something a daily check would like to say this tick.
 
         `daily=True` is for messages that are meant to repeat daily and
@@ -690,7 +691,7 @@ class MIAApplication:
         today_iso = getattr(self, "_offer_day", None) or datetime.now().date().isoformat()
         self._offers.append(Candidate(
             topic=topic, title=title, message=message, urgency=urgency, source=source,
-            fingerprint=f"{today_iso}|{message}" if daily else "",
+            fingerprint=fingerprint or (f"{today_iso}|{message}" if daily else ""),
             expires=f"{today_iso}T23:59:59" if daily else "",
         ))
 
@@ -788,6 +789,15 @@ class MIAApplication:
             self._offer(topic="journal_reflection", title=notice[0], message=notice[1], urgency=TIMELY, source="journal",
                         daily=True)
         person_settings.put(context, "system.last_journal_reflection_date", today_iso)
+
+    def _check_memory_callbacks(self, now: datetime, today_iso: str) -> None:
+        """Remembering at the right moment (DEC-0029): each callback once,
+        through the gate (its daily limit and no-repeat rules)."""
+        from core.memory_callbacks import as_message, callbacks
+
+        for item in callbacks(self.context, now.date()):
+            self._offer(topic="memory_callback", title=f"{item['icon']} {item['title']}", message=as_message(item),
+                        urgency=AMBIENT, source="system", fingerprint=item["key"])
 
     def _check_chronicle(self, now: datetime, today_iso: str) -> None:
         """Sundays: this week's chapter of the Chronicle is ready (DEC-0028)."""

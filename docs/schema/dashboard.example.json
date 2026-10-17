@@ -304,5 +304,27 @@
       "ends": "",
       "lasts": "while it holds"
     }
+  ],
+  "remember": [
+    {
+      "key": "event:demo:2026-10-18",
+      "icon": "📅",
+      "title": "Tomorrow: Dinner with Sam",
+      "lines": [
+        "You told me: your friend Sam is vegetarian."
+      ],
+      "page": "calendar.html",
+      "days": 1
+    },
+    {
+      "key": "birthday:demo:2026-10-24:7",
+      "icon": "🎂",
+      "title": "Casey's birthday is in 7 days (turning 30)",
+      "lines": [
+        "Gift ideas you noted: Trail running socks."
+      ],
+      "page": "people.html#birthdays",
+      "days": 7
+    }
   ]
 }

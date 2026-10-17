@@ -27,6 +27,12 @@
     const buffs = MIAShell.buffChips(home.buffs, true);
     $("buffs").replaceChildren(...(buffs ? [buffs] : []));
     $("buffs").hidden = !buffs;
+    // MIA Remembers (DEC-0029): what you told her, as it's about to matter.
+    const remember = home.remember || [];
+    $("remember").hidden = !remember.length;
+    $("remember-list").replaceChildren(...remember.map((r) => el("li", {},
+      el("a", { href: r.page }, el("span", { "aria-hidden": "true" }, r.icon + " "), r.title),
+      ...r.lines.map((line) => el("small", {}, line)))));
     $("upcoming").replaceChildren(...home.upcoming.map(focusRow));
     $("upcoming-empty").hidden = home.upcoming.length > 0;
     const p = shell.person;
