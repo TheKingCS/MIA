@@ -1,0 +1,202 @@
+{
+  "available": true,
+  "household": [
+    {
+      "id": "demo-robin",
+      "name": "Robin",
+      "me": true,
+      "level": 7,
+      "on_board": true
+    },
+    {
+      "id": "demo-sam",
+      "name": "Sam",
+      "me": false,
+      "level": 4,
+      "on_board": true
+    },
+    {
+      "id": "demo-alex",
+      "name": "Alex",
+      "me": false,
+      "level": 9,
+      "on_board": true
+    }
+  ],
+  "raids": [
+    {
+      "id": "demo-raid",
+      "name": "Spring-Cleaning Raid",
+      "icon": "🧹",
+      "summary": "Everyone takes a room. Meet in the middle.",
+      "status": "active",
+      "done": 3,
+      "total": 6,
+      "percent": 50,
+      "ready": false,
+      "crew": [
+        {
+          "name": "Robin",
+          "me": true,
+          "done": 2,
+          "total": 2
+        },
+        {
+          "name": "Sam",
+          "me": false,
+          "done": 1,
+          "total": 2
+        },
+        {
+          "name": "Alex",
+          "me": false,
+          "done": 0,
+          "total": 2
+        }
+      ],
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Kitchen deep clean",
+          "for": "Robin",
+          "mine": true,
+          "done": true
+        },
+        {
+          "index": 1,
+          "description": "Bathroom deep clean",
+          "for": "Sam",
+          "mine": false,
+          "done": true
+        },
+        {
+          "index": 2,
+          "description": "Living room reset",
+          "for": "Alex",
+          "mine": false,
+          "done": false
+        },
+        {
+          "index": 3,
+          "description": "Windows and mirrors",
+          "for": "Robin",
+          "mine": true,
+          "done": true
+        },
+        {
+          "index": 4,
+          "description": "Clear out a closet",
+          "for": "Sam",
+          "mine": false,
+          "done": false
+        },
+        {
+          "index": 5,
+          "description": "Take the donations out",
+          "for": "Alex",
+          "mine": false,
+          "done": false
+        }
+      ],
+      "reward": "+100 XP each"
+    }
+  ],
+  "starters": [
+    {
+      "id": "yard_day",
+      "name": "Yard Day Raid",
+      "icon": "🌿",
+      "summary": "Many hands make the yard look great.",
+      "objectives": [
+        "Mow",
+        "Weed the beds",
+        "Trim the edges",
+        "Rake or blow the leaves",
+        "Haul the yard waste"
+      ]
+    },
+    {
+      "id": "garage",
+      "name": "Garage Raid",
+      "icon": "🔧",
+      "summary": "Take back the garage together.",
+      "objectives": [
+        "Pull everything out",
+        "Sort keep / donate / toss",
+        "Sweep the floor",
+        "Put it back where it belongs"
+      ]
+    },
+    {
+      "id": "kitchen_reset",
+      "name": "Kitchen Reset Raid",
+      "icon": "🍽️",
+      "summary": "A fresh kitchen in one push.",
+      "objectives": [
+        "Clean out the fridge",
+        "Wipe the cupboards",
+        "Sort the pantry",
+        "Scrub the stove",
+        "Take out the trash and recycling"
+      ]
+    },
+    {
+      "id": "game_night",
+      "name": "Game Night Prep",
+      "icon": "🎲",
+      "summary": "Set up a night in, together.",
+      "objectives": [
+        "Pick the games",
+        "Make the snacks",
+        "Set up the table",
+        "Invite someone"
+      ]
+    }
+  ],
+  "leaderboard": {
+    "on": true,
+    "week": [
+      "2026-10-12",
+      "2026-10-18"
+    ],
+    "rows": [
+      {
+        "name": "Alex",
+        "me": false,
+        "wins": 9,
+        "level": 9,
+        "medal": "🥇"
+      },
+      {
+        "name": "Robin",
+        "me": true,
+        "wins": 7,
+        "level": 7,
+        "medal": "🥈"
+      },
+      {
+        "name": "Sam",
+        "me": false,
+        "wins": 4,
+        "level": 4,
+        "medal": "🥉"
+      }
+    ]
+  },
+  "picks": {
+    "people": [
+      {
+        "id": "demo-robin",
+        "name": "Robin"
+      },
+      {
+        "id": "demo-sam",
+        "name": "Sam"
+      },
+      {
+        "id": "demo-alex",
+        "name": "Alex"
+      }
+    ]
+  }
+}

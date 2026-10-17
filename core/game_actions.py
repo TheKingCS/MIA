@@ -230,6 +230,85 @@ def _checkin(context, params) -> str:
     return f"New ground! {new} map {'tile' if new == 1 else 'tiles'} cleared, +{xp} XP."
 
 
+def _crew(context, params) -> list:
+    """The people joining a raid: ids from the household (me if none)."""
+    from core.party import members
+    from core.person_settings import person_id
+
+    household = {p.profile_id: p for p in members(context)}
+    raw = params.get("people")
+    ids = raw if isinstance(raw, list) else [x.strip() for x in str(raw or "").split(",") if x.strip()]
+    if not ids or ids == ["everyone"]:
+        ids = list(household) if raw == "everyone" else [person_id(context)]
+    crew = [household[i] for i in ids if i in household]
+    if not crew:
+        raise ActionError("Pick who's in the raid (people in your household).")
+    return crew
+
+
+def _raid_starter(params):
+    from core.party import RAID_BY_ID
+
+    raid = RAID_BY_ID.get(str(params.get("raid_id") or ""))
+    if raid is None:
+        raise ActionError("That raid isn't one MIA knows.")
+    return raid
+
+
+def _own_raid(params) -> list:
+    if not str(params.get("name") or "").strip():
+        raise ActionError("Give the raid a name.")
+    objectives = [o.strip(" -•*") for o in str(params.get("objectives") or "").splitlines() if o.strip(" -•*")]
+    if len(objectives) < 2:
+        raise ActionError("A raid needs at least two jobs, one per line.")
+    return objectives
+
+
+def _describe_raid(context, params, own: bool) -> str:
+    from core.party import share_out
+
+    _need(context, "missions")
+    crew = _crew(context, params)
+    if own:
+        name, objectives = str(params.get("name")).strip(), _own_raid(params)
+    else:
+        raid = _raid_starter(params)
+        name, objectives = f"{raid.icon} {raid.name}", list(raid.objectives)
+    shared = share_out(objectives, [p.name for p in crew])
+    return f"Start {name} with {', '.join(p.name for p in crew)}: " + "; ".join(f"{who}: {o}" for o, who in shared)
+
+
+def _raid(context, params, own: bool) -> str:
+    from core.party import start_raid
+
+    crew = _crew(context, params)
+    if own:
+        start_raid(context, str(params.get("name")).strip(), str(params.get("icon") or "").strip() or "⚔️", "",
+                   _own_raid(params), [p.profile_id for p in crew])
+        name = str(params.get("name")).strip()
+    else:
+        raid = _raid_starter(params)
+        start_raid(context, raid.name, raid.icon, raid.summary, list(raid.objectives), [p.profile_id for p in crew])
+        name = raid.name
+    return f"{name} is on. Everyone has their jobs; the reward is shared when it's done."
+
+
+def _board(params) -> bool:
+    return str(params.get("on")).strip().lower() in ("true", "1", "yes", "on")
+
+
+def _describe_board(context, params) -> str:
+    return ("Put yourself on the household leaderboard (your wins this week, never money)" if _board(params)
+            else "Take yourself off the household leaderboard")
+
+
+def _set_board(context, params) -> str:
+    from core import person_settings
+
+    person_settings.put(context, "party.leaderboard", _board(params))
+    return "You're on the leaderboard." if _board(params) else "You're off the leaderboard."
+
+
 def _register() -> None:
     from dataclasses import replace
 
@@ -244,6 +323,12 @@ def _register() -> None:
         ActionType("quest.add", "Make A Questline", {"name": "", "icon": "an emoji",
                                                      "chapters": "one chapter per line: Title: objective; objective"},
                    _describe_quest_add, _quest_add, True),
+        ActionType("raid.start", "Start Raid", {"raid_id": "the raid", "people": "profile ids, comma-separated, or everyone"},
+                   lambda c, p: _describe_raid(c, p, False), lambda c, p: _raid(c, p, False), True),
+        ActionType("raid.add", "Make A Raid", {"name": "", "icon": "an emoji", "objectives": "one job per line",
+                                               "people": "profile ids, comma-separated, or everyone"},
+                   lambda c, p: _describe_raid(c, p, True), lambda c, p: _raid(c, p, True), True),
+        ActionType("party.leaderboard", "Leaderboard", {"on": "true or false"}, _describe_board, _set_board, True),
         ActionType("map.checkin", "I'm Here", {"lat": "latitude", "lon": "longitude", "label": "optional name"},
                    _describe_checkin, _checkin, True),
         ActionType("quest.remove", "Remove Questline", {"quest_id": "the questline"},

@@ -208,6 +208,8 @@
           el("p", { class: "dim" }, day(s.from) + " – " + day(s.to) + ". A questline you start stays yours after the season ends."))),
       section("Your Questlines", null, qs.active.length ? el("div", { class: "mission-grid" }, qs.active.map(questCard))
         : el("p", { class: "empty" }, "No questline going. Start one below: each chapter is a mission, and finishing it opens the next.")),
+      section("Play Together", el("a", { class: "btn btn-amber", href: "party.html" }, "Party"),
+        el("p", { class: "dim" }, "Household raids everyone works on together, and a friendly leaderboard you can join.")),
       section("MIA Has These For You", btn("Make Your Own", "btn-ghost", ownQuest),
         qs.offers.length ? el("div", { class: "mission-grid" }, qs.offers.map(offerCard))
           : el("p", { class: "empty" }, "You've started everything MIA has this season. Make your own any time.")),

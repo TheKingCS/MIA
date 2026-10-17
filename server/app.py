@@ -1218,6 +1218,12 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "character", character_page)
 
+    @app.get("/api/party")
+    def web_party(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.party import party_page
+
+        return _screen(profile_id, "missions", party_page)
+
     @app.get("/api/worldmap")
     def web_worldmap(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.world_map import world_page

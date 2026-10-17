@@ -43,6 +43,9 @@ PERSONAL_SETTINGS = (
     "budget.private",
     "display.text_size",
     "display.high_contrast",
+    "system.last_season_note",
+    "party.leaderboard",
+    "sound.on",
 )
 
 

@@ -1546,3 +1546,8 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .grow-mini { display: grid; gap: 6px; }
 .grow-mini p { margin: 0; }
 .draft-body { white-space: pre-wrap; font: inherit; margin: 0; padding: 10px; border: 1px solid var(--line); border-radius: 10px; max-height: 50vh; overflow: auto; }
+
+/* ---------------------------------------------------------------- party and guild (DEC-0028, 2026-10-17) */
+.party-crew { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+.raid-card .objective-list { margin: 0; }
+.row.me { border-color: rgba(var(--rgb-accent), 0.45); }
