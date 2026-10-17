@@ -136,6 +136,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.products = ProductManager(context)
     context.jobs = JobManager(context)
     context.ledger = LedgerManager(context)
+    from core.craft_recipes import CraftRecipeBook
+
+    context.craft_recipes = CraftRecipeBook(context)
     context.music = MusicManager(context)
     # The document inbox, so the phone can take in what's shared to MIA
     # (its Inbox screen reads the folder; no mail checker here).

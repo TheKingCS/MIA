@@ -106,12 +106,17 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
                  "listings": [{"platform": li.platform, "price": money(li.price), "status": li.status} for li in p.listings],
                  "values": {f: getattr(p, f) for f in ("name", "base_price", "quantity_in_stock", "description", "notes")}}
                 for p in sorted(stores["products"].all_products(), key=lambda p: p.name.lower())] if stores["products"] else []
+    from core.web_craft import craft_section
+
+    craft = craft_section(context)
     jobs = []
     if stores["jobs"]:
         material_names = {m["id"]: (m["name"], m["unit"]) for m in materials}
         product_names = {p["id"]: p["name"] for p in products}
         order = {"In Progress": 0, "Planned": 1, "Complete": 2, "Cancelled": 3}
         for j in sorted(stores["jobs"].all_jobs(), key=lambda j: (order.get(j.status, 9), j.name.lower())):
+            if j.recipe_id:  # a recipe build: shown in Builds (core/web_craft.py)
+                continue
             cost = stores["jobs"].total_cost(j.job_id)
             jobs.append({"id": j.job_id, "name": j.name, "status": j.status, "description": j.description,
                          "hours": j.labor_hours, "cost": money(cost) if cost else "",
@@ -138,11 +143,13 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         "parts": parts, "materials": materials, "products": products, "jobs": jobs,
         "money": money_rows[:60], "totals": totals,
         "counts": {"parts": len(parts), "materials": len(materials), "low": sum(1 for m in materials if m["low"]),
-                   "products": len(products), "open_jobs": sum(1 for j in jobs if j["status"] in ("Planned", "In Progress"))},
+                   "products": len(products), "open_jobs": sum(1 for j in jobs if j["status"] in ("Planned", "In Progress"))
+                   + sum(1 for b in craft["builds"] if not b["finished"]), "recipes": len(craft["recipes"])},
         "picks": {"materials": [{"id": m["id"], "name": m["name"]} for m in materials],
                   "products": [{"id": p["id"], "name": p["name"]} for p in products]},
-        "forms": {k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
-                                                             "shop_expense", "product_sale")},
+        "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
+                                                                "shop_expense", "product_sale")}, **craft["forms"]},
+        "recipes": craft["recipes"], "builds": craft["builds"],
     }
 
 

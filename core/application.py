@@ -313,6 +313,9 @@ class MIAApplication:
         # self.context.products), so it's constructed after products
         # already is, same ordering precedent as above.
         self.context.ledger = LedgerManager(self.context)
+        from core.craft_recipes import CraftRecipeBook
+
+        self.context.craft_recipes = CraftRecipeBook(self.context)  # crafting recipes (DEC-0030)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the

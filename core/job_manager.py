@@ -75,15 +75,23 @@ _LABOR_RATE_CONFIG_KEY = "workshop.labor_rate_per_hour"
 class MaterialConsumptionEntry:
     material_id: str
     quantity_used: float
+    # 2026-10-17 (crafting recipes): the material's cost when it was used,
+    # so a build's cost stays what it really was after prices change.
+    # None on older entries: job_material_cost() uses today's price then.
+    unit_cost: Optional[float] = None
 
     def to_dict(self) -> dict:
-        return {"material_id": self.material_id, "quantity_used": self.quantity_used}
+        out = {"material_id": self.material_id, "quantity_used": self.quantity_used}
+        if self.unit_cost is not None:
+            out["unit_cost"] = self.unit_cost
+        return out
 
     @staticmethod
     def from_dict(data: dict) -> "MaterialConsumptionEntry":
         return MaterialConsumptionEntry(
             material_id=data.get("material_id", ""),
             quantity_used=data.get("quantity_used", 0.0),
+            unit_cost=data.get("unit_cost"),
         )
 
 
@@ -120,6 +128,11 @@ class Job:
     notes: str = ""
     created_at: str = ""
     updated_at: str = ""
+    # 2026-10-17 (crafting recipes, core/craft_recipes.py): the recipe a
+    # build follows, how many it makes, and the steps checked off.
+    recipe_id: str = ""
+    times: int = 1
+    steps_done: list[int] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -133,6 +146,9 @@ class Job:
             "notes": self.notes,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "recipe_id": self.recipe_id,
+            "times": self.times,
+            "steps_done": list(self.steps_done),
         }
 
     @staticmethod
@@ -152,6 +168,9 @@ class Job:
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
+            recipe_id=data.get("recipe_id", ""),
+            times=int(data.get("times", 1) or 1),
+            steps_done=[int(i) for i in data.get("steps_done", [])],
         )
 
 
@@ -164,6 +183,9 @@ def job_material_cost(job: Job, materials_by_id: dict[str, Material]) -> float:
     material behind it was later removed from inventory."""
     total = 0.0
     for entry in job.material_consumption:
+        if entry.unit_cost is not None:
+            total += entry.quantity_used * entry.unit_cost
+            continue
         material = materials_by_id.get(entry.material_id)
         if material is not None:
             total += entry.quantity_used * material.unit_cost
@@ -278,7 +300,10 @@ class JobManager:
             raise ValueError(f"No job with id '{job_id}'.")
         quantity_used = max(0.0, quantity_used)
 
-        job.material_consumption.append(MaterialConsumptionEntry(material_id=material_id, quantity_used=quantity_used))
+        material = self.context.materials.get_material(material_id) if self.context.materials is not None else None
+        job.material_consumption.append(MaterialConsumptionEntry(
+            material_id=material_id, quantity_used=quantity_used,
+            unit_cost=material.unit_cost if material is not None else None))
         job.updated_at = datetime.now().isoformat(timespec="seconds")
         self._save()
 

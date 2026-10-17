@@ -88,13 +88,13 @@ foreground service and the person's permission for each folder.
 | Jobs consume materials, produce products, labor hours | ✅ | `core/job_manager.py` (`consume_material`, `produce_product`, cost functions, `workshop.labor_rate_per_hour`) |
 | Products, listings, sales, profit | ✅ | `core/product_manager.py` (listings per platform), `core/ledger_manager.py` (`record_sale` takes stock out, `net_profit`) |
 | Receipt line items | ✅ | Inbox reads receipts into line items (`inbox_classify.receipt_items`), stored on Budget expenses |
-| **Recipe** (reusable BOM, dimensions, cut list, tools, hardware, steps, time, cost) | ⬜ | Nothing. Kitchen recipes are food-only. **Highest-value missing piece** |
-| Check inventory → shopping list for what's missing | ⬜ | The kitchen has the same idea for food (pantry → grocery list). The workshop doesn't |
-| Receive purchases into inventory after confirming | 🟡 | `material.edit` can change quantities. Missing: "Receive" from a shopping list or a receipt |
-| Track a build: consumption, progress, labor, expenses, finished goods | 🟡 | A job has consumption and labor. Missing: start a job from a recipe, steps checked off, ledger expenses linked to it (the field exists) |
-| Refine the recipe from actual costs | ⬜ | Needs recipe → job history |
-| Portfolio entry, before/after photos | ⬜ | The media plumbing exists (expedition media pattern) |
-| Profitability per build | 🟡 | `job_total_cost` + sales by `job_id` exist. Missing: one "this build made / lost X" figure |
+| **Recipe** (reusable BOM, dimensions, cut list, tools, hardware, steps, time, cost) | ✅ 2026-10-17 | `core/craft_recipes.py` (household store), Workshop → Recipes |
+| Check inventory → shopping list for what's missing | ✅ 2026-10-17 | `check()`: have / need / short per line, the shopping list with estimated cost, Copy List |
+| Receive purchases into inventory after confirming | ✅ 2026-10-17 | **Bought It** (`craft.receive`): quantities and what you paid, average cost, one workshop expense, undoable. From a scanned receipt: later |
+| Track a build: consumption, progress, labor, expenses, finished goods | ✅ 2026-10-17 | `craft.start` / `craft.step` / `craft.finish` / `craft.cost`: a Job with the recipe, steps ticked, materials used at their cost then, hours, product made |
+| Refine the recipe from actual costs | 🟡 2026-10-17 | The recipe shows how it's gone (built, sold, average cost and profit, per hour) beside its estimate; editing stays the person's |
+| Portfolio entry, before/after photos | 🟡 2026-10-17 | Before / progress / after photos on every build (`core/build_media.py`). A portfolio page: phase C |
+| Profitability per build | ✅ 2026-10-17 | `build_result()`: sold − materials used − costs tagged to the build, per hour, after paying yourself when a labor rate is set |
 
 ## 5. Greenhouse, aquaponics and food production
 

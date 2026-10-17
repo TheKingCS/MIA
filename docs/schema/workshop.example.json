@@ -132,7 +132,8 @@
     "materials": 2,
     "low": 1,
     "products": 1,
-    "open_jobs": 1
+    "open_jobs": 1,
+    "recipes": 1
   },
   "picks": {
     "materials": [
@@ -502,6 +503,343 @@
           "default": null
         }
       ]
+    },
+    "craft_recipe": {
+      "noun": "recipe",
+      "id_param": "recipe_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "category",
+          "label": "Kind (bench, planter, shelf…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "dimensions",
+          "label": "Dimensions",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "materials",
+          "label": "Materials, one per line (e.g. 4 board 2x4 8ft @ 3.98)",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "cut_list",
+          "label": "Cut list",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "tools",
+          "label": "Tools",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "steps",
+          "label": "Steps, one per line",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "est_hours",
+          "label": "About how many hours",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "price",
+          "label": "Sells for (0 if it's not for sale)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
     }
-  }
+  },
+  "recipes": [
+    {
+      "id": "63f4e559ee",
+      "name": "Farmhouse Bench",
+      "category": "bench",
+      "description": "",
+      "dimensions": "48 x 14 x 18 in",
+      "cut_list": "4 legs 17 1/4\n2 aprons 41\n2 stretchers 11",
+      "tools": "",
+      "steps": [
+        "Cut all pieces",
+        "Drill pocket holes",
+        "Assemble frame",
+        "Attach top",
+        "Sand and stain"
+      ],
+      "notes": "",
+      "est_hours": 6.0,
+      "price": 180.0,
+      "price_text": "$180.00",
+      "rows": [
+        {
+          "index": 0,
+          "name": "2x4 8ft",
+          "unit": "board",
+          "need": 6.0,
+          "have": 0.0,
+          "short": 6.0,
+          "unit_cost": 3.98,
+          "material_id": "55aa93ddaf",
+          "status": "missing",
+          "unit_cost_text": "$3.98",
+          "line_text": "6 board 2x4 8ft"
+        },
+        {
+          "index": 1,
+          "name": "Plywood 3/4",
+          "unit": "sheet",
+          "need": 1.0,
+          "have": 0.0,
+          "short": 1.0,
+          "unit_cost": 54.98,
+          "material_id": "f21aefe0d3",
+          "status": "missing",
+          "unit_cost_text": "$54.98",
+          "line_text": "1 sheet Plywood 3/4"
+        },
+        {
+          "index": 2,
+          "name": "Pocket screws",
+          "unit": "pcs",
+          "need": 24.0,
+          "have": 0.0,
+          "short": 24.0,
+          "unit_cost": 0.25,
+          "material_id": "22ce01a49f",
+          "status": "missing",
+          "unit_cost_text": "$0.25",
+          "line_text": "24 pcs Pocket screws"
+        }
+      ],
+      "ready": false,
+      "short": 3,
+      "unpriced": 0,
+      "est_cost_text": "$84.86",
+      "shopping_text": "$84.86",
+      "shopping": [
+        {
+          "index": 0,
+          "name": "2x4 8ft",
+          "unit": "board",
+          "need": 6.0,
+          "have": 0.0,
+          "short": 6.0,
+          "unit_cost": 3.98,
+          "material_id": "55aa93ddaf",
+          "status": "missing",
+          "unit_cost_text": "$3.98",
+          "line_text": "6 board 2x4 8ft"
+        },
+        {
+          "index": 1,
+          "name": "Plywood 3/4",
+          "unit": "sheet",
+          "need": 1.0,
+          "have": 0.0,
+          "short": 1.0,
+          "unit_cost": 54.98,
+          "material_id": "f21aefe0d3",
+          "status": "missing",
+          "unit_cost_text": "$54.98",
+          "line_text": "1 sheet Plywood 3/4"
+        },
+        {
+          "index": 2,
+          "name": "Pocket screws",
+          "unit": "pcs",
+          "need": 24.0,
+          "have": 0.0,
+          "short": 24.0,
+          "unit_cost": 0.25,
+          "material_id": "22ce01a49f",
+          "status": "missing",
+          "unit_cost_text": "$0.25",
+          "line_text": "24 pcs Pocket screws"
+        }
+      ],
+      "shopping_list": "6 board 2x4 8ft (~$23.88)\n1 sheet Plywood 3/4 (~$54.98)\n24 pcs Pocket screws (~$6.00)",
+      "receive_fields": [
+        {
+          "name": "q_0",
+          "label": "2x4 8ft: how many board",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 6.0
+        },
+        {
+          "name": "c_0",
+          "label": "2x4 8ft: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 23.88
+        },
+        {
+          "name": "q_1",
+          "label": "Plywood 3/4: how many sheet",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 1.0
+        },
+        {
+          "name": "c_1",
+          "label": "Plywood 3/4: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 54.98
+        },
+        {
+          "name": "q_2",
+          "label": "Pocket screws: how many pcs",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 24.0
+        },
+        {
+          "name": "c_2",
+          "label": "Pocket screws: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 6.0
+        }
+      ],
+      "est_profit_text": "$95.14",
+      "est_profit": 95.14,
+      "built": 1,
+      "sold": 1,
+      "actual": {
+        "cost": "$84.86",
+        "profit": "$90.14",
+        "hours": 6.5,
+        "per_hour": "$13.87/h"
+      },
+      "values": {
+        "name": "Farmhouse Bench",
+        "category": "bench",
+        "description": "",
+        "dimensions": "48 x 14 x 18 in",
+        "materials": "6 board 2x4 8ft @ 3.98\n1 sheet Plywood 3/4 @ 54.98\n24 pcs Pocket screws @ 0.25",
+        "cut_list": "4 legs 17 1/4\n2 aprons 41\n2 stretchers 11",
+        "tools": "",
+        "steps": "Cut all pieces\nDrill pocket holes\nAssemble frame\nAttach top\nSand and stain",
+        "est_hours": 6.0,
+        "price": 180.0,
+        "notes": ""
+      }
+    }
+  ],
+  "builds": [
+    {
+      "id": "655b021c83",
+      "name": "Farmhouse Bench",
+      "recipe_id": "63f4e559ee",
+      "recipe": "Farmhouse Bench",
+      "times": 1,
+      "status": "Complete",
+      "finished": true,
+      "started": "2026-10-17",
+      "steps": [
+        {
+          "index": 0,
+          "text": "Cut all pieces",
+          "done": true
+        },
+        {
+          "index": 1,
+          "text": "Drill pocket holes",
+          "done": false
+        },
+        {
+          "index": 2,
+          "text": "Assemble frame",
+          "done": false
+        },
+        {
+          "index": 3,
+          "text": "Attach top",
+          "done": false
+        },
+        {
+          "index": 4,
+          "text": "Sand and stain",
+          "done": false
+        }
+      ],
+      "steps_done": 1,
+      "hours": 6.5,
+      "photos": [],
+      "result": {
+        "sold": 175.0,
+        "materials": 84.86,
+        "other": 0,
+        "cost": 84.86,
+        "profit": 90.14,
+        "hours": 6.5,
+        "per_hour": 13.87,
+        "is_sold": true,
+        "sold_text": "$175.00",
+        "cost_text": "$84.86",
+        "materials_text": "$84.86",
+        "other_text": "$0.00",
+        "profit_text": "$90.14",
+        "per_hour_text": "$13.87/h",
+        "after_labor_text": ""
+      },
+      "in_stock": false
+    }
+  ]
 }

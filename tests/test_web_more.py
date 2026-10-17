@@ -105,7 +105,7 @@ def test_the_workshop(world):
     do(world, "job.add", name="Birdhouse batch", status="In Progress")
     page = workshop_page(world, TODAY)
     material, product, job = page["materials"][0], page["products"][0], page["jobs"][0]
-    assert page["counts"] == {"parts": 1, "materials": 1, "low": 0, "products": 1, "open_jobs": 1}
+    assert page["counts"] == {"parts": 1, "materials": 1, "low": 0, "products": 1, "open_jobs": 1, "recipes": 0}
     said, _ = do(world, "job.use", job_id=job["id"], material_id=material["id"], quantity="3")
     assert "used 3 sheet of Plywood" in said and "4 → 1" in said
     do(world, "job.make", job_id=job["id"], product_id=product["id"], quantity="5")

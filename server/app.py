@@ -811,6 +811,36 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {"message": f"Added {path.stem} to your library."}
 
+    @app.get("/api/workshop/builds/{job_id}/media")
+    def web_build_media(job_id: str, name: str, profile_id: str = Depends(require_profile_id)):
+        """One photo or video of a workshop build (core/build_media.py)."""
+        from fastapi.responses import FileResponse
+
+        from core.build_media import path_of
+
+        try:
+            path = _screen(profile_id, "workshop", lambda view: path_of(view, job_id, name))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+        if not path.is_file():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That isn't there anymore.")
+        return FileResponse(path, filename=path.name, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.post("/api/workshop/builds/{job_id}/media")
+    async def web_build_upload(job_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.build_media import MAX_BYTES, save
+
+        data = await request.body()
+        if len(data) > MAX_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is over 200 MB.")
+        name = unquote(request.headers.get("x-filename", "file"))
+        tag = request.headers.get("x-tag", "")
+        try:
+            saved = _screen(profile_id, "workshop", lambda view: save(view, job_id, name, data, tag))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"Added {saved}."}
+
     @app.get("/api/expeditions/{expedition_id}/media")
     def web_expedition_media(expedition_id: str, ref: str, profile_id: str = Depends(require_profile_id)):
         """One photo, video or file on an expedition (core/expedition_media.py)."""

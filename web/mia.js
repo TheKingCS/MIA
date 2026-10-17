@@ -206,10 +206,10 @@
       return images[path];
     },
     // Send a file (raw body + X-Filename), e.g. a manual onto an asset.
-    upload: (path, file) => demo ? demoOnly() : (async () => {
+    upload: (path, file, headers) => demo ? demoOnly() : (async () => {
       if (!token) throw new MiaError(401, "Not signed in.");
       const response = await fetch(path, { method: "POST", body: file,
-        headers: { Authorization: "Bearer " + token, "X-Filename": encodeURIComponent(file.name) } });
+        headers: Object.assign({ Authorization: "Bearer " + token, "X-Filename": encodeURIComponent(file.name) }, headers || {}) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
       return data;

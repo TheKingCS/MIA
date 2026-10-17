@@ -320,6 +320,7 @@ import core.calendar_actions  # noqa: E402,F401  (your own calendar events)
 import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a note)
 import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0028)
+import core.craft_actions  # noqa: E402,F401  (crafting recipes and builds, DEC-0030)
 
 
 # ------------------------------------------------------------------ the five steps
