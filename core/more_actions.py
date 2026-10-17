@@ -88,6 +88,26 @@ RECORDS: dict[str, Record] = {r.key: r for r in (
            )),
 )}
 
+# People & Pets (2026-10-17): the people and animals in your life.
+RECORDS["person"] = Record("person", "person", "person_id", "get_person", "add_person", "update_person", "delete_person",
+                           store="relationships", fields=(
+                               Field("name", "Name", "text", True),
+                               Field("relationship", "Who they are (sister, friend…)", "text", say="who"),
+                               Field("birthday", "Birthday", "date"),
+                               Field("email", "Email", "text"),
+                               Field("favorite_things", "Favorite things", "textarea", say="favorites"),
+                               Field("gift_ideas", "Gift ideas", "textarea", say="gift ideas"),
+                               Field("notes", "Notes and memories", "textarea", say="notes"),
+                           ))
+RECORDS["pet"] = Record("pet", "pet", "pet_id", "get_pet", "add_pet", "update_pet", "delete_pet",
+                        store="relationships", fields=(
+                            Field("name", "Name", "text", True),
+                            Field("species", "What they are (dog, cat…)", "text", say="species"),
+                            Field("birthday", "Birthday or adoption day", "date", say="birthday"),
+                            Field("medical_notes", "Vet and medical notes", "textarea", say="medical notes"),
+                            Field("notes", "Notes", "textarea"),
+                        ))
+
 # A trip belongs to an expedition (chosen on the page).
 TRIP = Record("trip", "trip", "trip_id", "get_trip", "add_trip", "update_trip", "delete_trip", store="trips", fields=(
     Field("name", "Name", "text", True),
@@ -622,6 +642,22 @@ def _song_delete(context, params) -> str:
     return f"Deleted {track.title}."
 
 
+# ------------------------------------------------------------------ people: caught up
+
+
+def _caught_describe(context, params) -> str:
+    person = get(context, RECORDS["person"], params)
+    return f"Caught up with {person.name} today"
+
+
+def _caught(context, params) -> str:
+    from datetime import date as _date
+
+    person = get(context, RECORDS["person"], params)
+    context.relationships.update_person(person.person_id, last_contact=_date.today().isoformat())
+    return f"Noted: you caught up with {person.name}."
+
+
 def _say(text: str):
     return lambda context, params: text
 
@@ -675,6 +711,7 @@ def _register() -> None:
         ActionType("playlist.remove_track", "Remove", {"playlist_id": "the playlist", "track_id": "the song"},
                    lambda c, p: f"Take {_track(c, p).title} off {_playlist(c, p).name}", _playlist_remove_track),
         ActionType("music.scan", "Scan Library", {}, _say("Look for new music in the music folder"), _scan),
+        ActionType("person.caught_up", "Caught Up", {"person_id": "the person"}, _caught_describe, _caught),
         ActionType("track.delete", "Delete", {"track_id": "an uploaded song"}, _song_describe, _song_delete),
         ActionType("expedition.media_delete", "Delete", {"expedition_id": "the expedition", "ref": "the photo or file"},
                    _media_describe, _media_delete),
@@ -686,7 +723,7 @@ def _register() -> None:
     from dataclasses import replace
 
     for kind in kinds:
-        if kind.kind.split(".")[0] in ("journal", "playlist"):
+        if kind.kind.split(".")[0] in ("journal", "playlist", "person", "pet"):
             kind = replace(kind, child_ok=True)
         ACTION_TYPES[kind.kind] = kind
 

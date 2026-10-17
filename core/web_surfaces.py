@@ -105,7 +105,7 @@ APPS: tuple[App, ...] = (
         "Real rewards you set, bought with the credits you earn (DEC-0028).", LIFE, (), "What can I buy with my credits?"),
     App("observations", "Observations", "🔍", "What MIA noticed.", None,
         "What MIA has noticed across your maintenance and missions.", LIFE, (), "What have you noticed lately?"),
-    App("relationships", "People & Pets", "👥", "The ones who matter.", None,
+    App("relationships", "People & Pets", "👥", "The ones who matter.", "people.html",
         "Relationship profiles and pet profiles.", LIFE, ("relationships",), "When is the next birthday?"),
     App("notes", "Journal", "📓", "Write it down.", "journal.html",
         "Dated, searchable, taggable journal entries.", LIFE, ("notes", "journal", "private_journal"),

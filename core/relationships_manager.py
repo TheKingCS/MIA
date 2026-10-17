@@ -58,13 +58,14 @@ class Person:
     notes: str = ""          # "shared memories" — freeform
     created_at: str = ""
     email: str = ""          # 2026-10-01: so MIA can address email drafts by name
+    last_contact: str = ""   # 2026-10-17: ISO date you last caught up (People & Pets, Charisma)
 
     def to_dict(self) -> dict:
         return {
             "person_id": self.person_id, "name": self.name, "relationship": self.relationship,
             "birthday": self.birthday, "favorite_things": self.favorite_things,
             "gift_ideas": self.gift_ideas, "notes": self.notes, "created_at": self.created_at,
-            "email": self.email,
+            "email": self.email, "last_contact": self.last_contact,
         }
 
     @staticmethod
@@ -79,6 +80,7 @@ class Person:
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
             email=data.get("email", ""),
+            last_contact=data.get("last_contact", ""),
         )
 
 

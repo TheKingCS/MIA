@@ -17,7 +17,7 @@ only means less of the recent bonus, never a loss (DEC-0014).
 | Stamina | endurance, mobility, hiking, kayaking, camping | workout minutes, trips |
 | Vitality | recovery, nutrition | meals eaten from your recipes; a watch adds sleep, resting heart rate, HRV |
 | Wisdom | the Mind skills | journal entries |
-| Charisma | communication, leadership, hospitality, teamwork, teaching | the people you keep in MIA |
+| Charisma | communication, leadership, hospitality, teamwork, teaching | people you caught up with, the people you keep in MIA |
 | Craft | Maker, Construction, cooking, Creative skills | workshop jobs finished, meals cooked |
 
 `watch` lists what a smart watch will add to each stat when one is
@@ -91,6 +91,8 @@ def _recent(context, today: date) -> dict[str, list[tuple[str, float, float]]]:
     n_entries = _count(lambda: sum(1 for e in journal.all_entries() if (e.created_at or "")[:10] >= since)) if journal is not None else 0.0
     people = getattr(context, "relationships", None)
     n_people = _count(lambda: len(people.all_people())) if people is not None else 0.0
+    n_caught = _count(lambda: sum(1 for p in people.all_people() if (getattr(p, "last_contact", "") or "") >= since)) \
+        if people is not None else 0.0
     jobs = getattr(context, "jobs", None)
     n_jobs = _count(lambda: sum(1 for j in jobs.all_jobs() if j.status == "Complete" and (j.updated_at or "")[:10] >= since)) \
         if jobs is not None else 0.0
@@ -99,7 +101,7 @@ def _recent(context, today: date) -> dict[str, list[tuple[str, float, float]]]:
         "stamina": [("minutes trained", minutes, minutes / 120), ("trips finished", n_trips, n_trips * 2)],
         "vitality": [("meals eaten from your recipes", n_meals, n_meals / 6)],
         "wisdom": [("journal entries", n_entries, n_entries / 2)],
-        "charisma": [("people you keep in MIA", n_people, n_people / 2)],
+        "charisma": [("people you caught up with", n_caught, n_caught * 1.5), ("people you keep in MIA", n_people, n_people / 3)],
         "craft": [("workshop jobs finished", n_jobs, n_jobs * 2), ("meals cooked", n_meals, n_meals / 8)],
     }
 

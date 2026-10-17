@@ -168,8 +168,8 @@
           "icon": "👥",
           "tagline": "The ones who matter.",
           "description": "Relationship profiles and pet profiles.",
-          "page": null,
-          "on_web": false,
+          "page": "people.html",
+          "on_web": true,
           "shown": true,
           "can_hide": true,
           "ask": "When is the next birthday?",
@@ -642,7 +642,7 @@
   ],
   "counts": {
     "apps": 34,
-    "on_web": 14,
+    "on_web": 15,
     "tools": 32
   }
 }

@@ -764,6 +764,12 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "workshop", workshop_page)
 
+    @app.get("/api/people")
+    def web_people(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_more import people_page
+
+        return _screen(profile_id, "relationships", people_page)
+
     @app.get("/api/expeditions")
     def web_expeditions(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_more import expeditions_page

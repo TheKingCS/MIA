@@ -1370,3 +1370,15 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .attr-recent { background: rgb(var(--rgb-ok)); box-shadow: 0 0 8px rgba(var(--rgb-ok), 0.6); }
 .attr-from { margin: 0; font-size: var(--text-xs); color: var(--text-dim); }
 .attr-watch { margin: 0; font-size: var(--text-xs); color: var(--text-dim); font-style: italic; }
+
+/* ---------------------------------------------------------------- People & Pets (2026-10-17) */
+.pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.pp-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.pp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; margin-bottom: 4px; }
+.pp-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700;
+  border: 1px solid rgba(var(--rgb-accent), 0.6); color: rgb(var(--rgb-accent)); background: rgba(var(--rgb-accent), 0.1); }
+.pp-title h3 { margin: 0; font-size: var(--text-md); overflow-wrap: break-word; }
+.pp-title p { margin: 2px 0 0; font-size: var(--text-sm); }
+.pp-field { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; font-size: var(--text-sm); overflow-wrap: anywhere; }
+.pp-label { color: var(--text-dim); }
+.pp-contact { margin: 4px 0 0; font-size: var(--text-sm); }

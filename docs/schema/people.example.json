@@ -1,0 +1,215 @@
+{
+  "available": true,
+  "as_of": "2026-10-17",
+  "people": [
+    {
+      "id": "fa83869edb",
+      "name": "Jordan",
+      "relationship": "Sister",
+      "email": "",
+      "birthday": "1994-10-26",
+      "favorites": "Climbing, iced coffee",
+      "gifts": "New chalk bag",
+      "notes": "Moved into a new place in September",
+      "last_contact": "2026-10-13",
+      "days_since": 4,
+      "birthday_in": 9,
+      "turning": 32,
+      "values": {
+        "name": "Jordan",
+        "relationship": "Sister",
+        "birthday": "1994-10-26",
+        "email": "",
+        "favorite_things": "Climbing, iced coffee",
+        "gift_ideas": "New chalk bag",
+        "notes": "Moved into a new place in September"
+      }
+    },
+    {
+      "id": "90d24bc40a",
+      "name": "Sam",
+      "relationship": "Best friend",
+      "email": "",
+      "birthday": "1992-11-27",
+      "favorites": "Board games",
+      "gifts": "",
+      "notes": "",
+      "last_contact": "",
+      "days_since": null,
+      "birthday_in": 41,
+      "turning": 34,
+      "values": {
+        "name": "Sam",
+        "relationship": "Best friend",
+        "birthday": "1992-11-27",
+        "email": "",
+        "favorite_things": "Board games",
+        "gift_ideas": "",
+        "notes": ""
+      }
+    }
+  ],
+  "pets": [
+    {
+      "id": "f0991600a6",
+      "name": "Biscuit",
+      "species": "Dog",
+      "birthday": "2021-11-09",
+      "medical": "Rabies shot due in spring",
+      "notes": "",
+      "birthday_in": 23,
+      "turning": 5,
+      "values": {
+        "name": "Biscuit",
+        "species": "Dog",
+        "birthday": "2021-11-09",
+        "medical_notes": "Rabies shot due in spring",
+        "notes": ""
+      }
+    }
+  ],
+  "upcoming": [
+    {
+      "kind": "person",
+      "id": "fa83869edb",
+      "name": "Jordan",
+      "date": "2026-10-26",
+      "in": 9,
+      "turning": 32,
+      "gifts": "New chalk bag"
+    },
+    {
+      "kind": "pet",
+      "id": "f0991600a6",
+      "name": "Biscuit",
+      "date": "2026-11-09",
+      "in": 23,
+      "turning": 5,
+      "gifts": ""
+    },
+    {
+      "kind": "person",
+      "id": "90d24bc40a",
+      "name": "Sam",
+      "date": "2026-11-27",
+      "in": 41,
+      "turning": 34,
+      "gifts": ""
+    }
+  ],
+  "counts": {
+    "people": 2,
+    "pets": 1,
+    "birthdays": 3
+  },
+  "forms": {
+    "person": {
+      "noun": "person",
+      "id_param": "person_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "relationship",
+          "label": "Who they are (sister, friend…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "birthday",
+          "label": "Birthday",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "favorite_things",
+          "label": "Favorite things",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "gift_ideas",
+          "label": "Gift ideas",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes and memories",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "pet": {
+      "noun": "pet",
+      "id_param": "pet_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "species",
+          "label": "What they are (dog, cat…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "birthday",
+          "label": "Birthday or adoption day",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "medical_notes",
+          "label": "Vet and medical notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

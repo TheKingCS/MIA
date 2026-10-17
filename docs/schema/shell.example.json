@@ -102,6 +102,13 @@
       "page": "shop.html"
     },
     {
+      "id": "relationships",
+      "name": "People & Pets",
+      "icon": "👥",
+      "tagline": "The ones who matter.",
+      "page": "people.html"
+    },
+    {
       "id": "notes",
       "name": "Journal",
       "icon": "📓",
@@ -155,7 +162,6 @@
     "Household",
     "Power",
     "Observations",
-    "People & Pets",
     "Classroom",
     "Memories",
     "Maps",

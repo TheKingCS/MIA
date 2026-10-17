@@ -269,3 +269,65 @@ def files_page(context, folder: str = "") -> dict:
     except ValueError:
         listing = files.listing("")
     return {"available": True, **listing}
+
+
+# ------------------------------------------------------------------ people & pets
+
+
+def next_birthday(raw: str, today: date):
+    """Pure logic. (the next birthday, days until it, age turning or None)."""
+    try:
+        born = date.fromisoformat(raw)
+    except (TypeError, ValueError):
+        return None
+    for year in (today.year, today.year + 1):
+        try:
+            day = date(year, born.month, born.day)
+        except ValueError:  # Feb 29 outside a leap year: Mar 1
+            day = date(year, 3, 1)
+        if day >= today:
+            age = year - born.year
+            return day, (day - today).days, age if 0 < age < 130 else None
+    return None
+
+
+def people_page(context, today: Optional[date] = None) -> dict:
+    from core.more_actions import forms
+
+    today = today or date.today()
+    store = getattr(context, "relationships", None)
+    if store is None:
+        return {"available": False}
+    people, pets, upcoming = [], [], []
+    for p in sorted(store.all_people(), key=lambda p: p.name.lower()):
+        nb = next_birthday(p.birthday, today)
+        since = None
+        if p.last_contact:
+            try:
+                since = (today - date.fromisoformat(p.last_contact)).days
+            except ValueError:
+                since = None
+        card = {"id": p.person_id, "name": p.name, "relationship": p.relationship, "email": p.email,
+                "birthday": p.birthday, "favorites": p.favorite_things, "gifts": p.gift_ideas, "notes": p.notes,
+                "last_contact": p.last_contact, "days_since": since,
+                "birthday_in": nb[1] if nb else None, "turning": nb[2] if nb else None,
+                "values": {f: getattr(p, f) for f in ("name", "relationship", "birthday", "email", "favorite_things",
+                                                       "gift_ideas", "notes")}}
+        people.append(card)
+        if nb and nb[1] <= 60:
+            upcoming.append({"kind": "person", "id": p.person_id, "name": p.name, "date": nb[0].isoformat(),
+                             "in": nb[1], "turning": nb[2], "gifts": p.gift_ideas})
+    for a in sorted(store.all_pets(), key=lambda a: a.name.lower()):
+        nb = next_birthday(a.birthday, today)
+        pets.append({"id": a.pet_id, "name": a.name, "species": a.species, "birthday": a.birthday,
+                     "medical": a.medical_notes, "notes": a.notes, "birthday_in": nb[1] if nb else None,
+                     "turning": nb[2] if nb else None,
+                     "values": {f: getattr(a, f) for f in ("name", "species", "birthday", "medical_notes", "notes")}})
+        if nb and nb[1] <= 60:
+            upcoming.append({"kind": "pet", "id": a.pet_id, "name": a.name, "date": nb[0].isoformat(),
+                             "in": nb[1], "turning": nb[2], "gifts": ""})
+    upcoming.sort(key=lambda u: u["in"])
+    f = forms()
+    return {"available": True, "as_of": today.isoformat(), "people": people, "pets": pets, "upcoming": upcoming,
+            "counts": {"people": len(people), "pets": len(pets), "birthdays": len(upcoming)},
+            "forms": {"person": f["person"], "pet": f["pet"]}}

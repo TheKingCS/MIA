@@ -46,6 +46,8 @@ def world(tmp_path, monkeypatch):
     context.config.set("trips.photo_root_path", str(tmp_path / "photos"))
     context.expeditions = ExpeditionManager(context, data_dir=shop)
     context.trips = TripManager(context, data_dir=shop)
+    from core.relationships_manager import RelationshipsManager
+    context.relationships = RelationshipsManager(context, data_dir=tmp_path / "rel")
     monkeypatch.setattr(music_module, "_DATA_DIR", tmp_path / "music_data")
     monkeypatch.setattr(music_module, "_TRACKS_FILE", tmp_path / "music_data" / "t.json")
     monkeypatch.setattr(music_module, "_PLAYLISTS_FILE", tmp_path / "music_data" / "p.json")
@@ -280,3 +282,24 @@ def test_uploads_through_the_server(world, tmp_path):
     got = client.get(f"/api/expeditions/{exp_id}/media", params={"ref": "e/dock.jpg"})
     assert got.status_code == 200 and got.content == b"jpg"
     assert client.get(f"/api/expeditions/{exp_id}/media", params={"ref": "e/../../config.json"}).status_code == 404
+
+
+def test_people_and_pets(world):
+    """2026-10-17: People & Pets on the web, with birthdays and catching up."""
+    from datetime import date as _d
+
+    from core.web_more import next_birthday, people_page
+
+    assert next_birthday("1990-01-10", _d(2026, 1, 5)) == (_d(2026, 1, 10), 5, 36)
+    assert next_birthday("2000-02-29", _d(2026, 2, 1))[0] == _d(2026, 3, 1)
+    assert next_birthday("", _d(2026, 1, 1)) is None
+    soon = (TODAY + timedelta(days=3)).replace(year=1990).isoformat()
+    do(world, "person.add", name="Robin's sister", relationship="Sister", birthday=soon, gift_ideas="Climbing chalk")
+    do(world, "pet.add", name="Biscuit", species="Dog")
+    page = people_page(world, TODAY)
+    p = page["people"][0]
+    assert (p["birthday_in"], p["days_since"], page["counts"]) == (3, None, {"people": 1, "pets": 1, "birthdays": 1})
+    assert page["upcoming"][0]["gifts"] == "Climbing chalk"
+    said, _ = do(world, "person.caught_up", person_id=p["id"])
+    assert said == "Caught up with Robin's sister today"
+    assert people_page(world, TODAY)["people"][0]["days_since"] == 0

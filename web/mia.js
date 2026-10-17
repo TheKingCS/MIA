@@ -217,6 +217,7 @@
     inbox: () => read("/api/inbox", "inbox"),
     shop: () => read("/api/shop", "shop"),
     journal: () => read("/api/journal", "journal"),
+    people: () => read("/api/people", "people"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),
     music: () => read("/api/music", "music"),

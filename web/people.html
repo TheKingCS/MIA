@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>People &amp; Pets — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="relationships" class="mod-relationships">
+  <!--
+    People & Pets (claude, 2026-10-17; Zac: the last everyday app that only
+    opened a chat). MIA.people() (core/web_more.py): birthdays coming up,
+    the people in your life (gift ideas, favorites, when you last caught
+    up) and your pets. person.* / pet.* / person.caught_up are actions.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">👥</span> <span id="hero-name">People &amp; Pets</span></h1>
+        <p class="tagline" id="hero-tagline">The ones who matter.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="shell.js"></script>
+  <script src="people.js"></script>
+</body>
+</html>
