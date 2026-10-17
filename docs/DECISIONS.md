@@ -524,8 +524,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0014, DEC-0022
 
 ### DEC-0030: Expansion phases (homestead businesses, memory vault, contextual AI)
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-17, from ChatGPT's "MIA Expansion Audit" handoff (`docs/EXPANSION_AUDIT.md`)
+- Status: APPROVED
+- Proposed by: claude, 2026-10-17, from ChatGPT's "MIA Expansion Audit" handoff (`docs/EXPANSION_AUDIT.md`) · Approved by: zac, 2026-10-17 ("Lets also sign off on that 6 phase dev plan")
 - Decision: phases in order: A. contextual AI (DEC-0029, then DEC-0022);
   B. crafting recipes end to end on the existing workshop stores
   (recipe → inventory check → shopping list → receive → build → photos →
@@ -536,3 +536,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   delete); F. glasses camera via the Device Access Toolkit. A and B start
   now (A approved, B is the handoff's suggested first demonstration).
 - Related: DEC-0022, DEC-0028, DEC-0029
+
+### DEC-0031: Show-off mode runs on your own MIA, private things hidden
+- Status: APPROVED
+- Proposed by: zac, 2026-10-17 ("MIA show off for my friends") · Approved by: zac, 2026-10-17 ("We will build it for my real profile")
+- Decision: "show off for my friends" starts a scripted, narrated tour of
+  MIA's abilities on the person's **real** profile. For the tour, money,
+  the journal, memories, health and people's details are hidden on every
+  screen it opens (and anything Talk would say about them). Next / Back /
+  Stop at every step; never an LLM-written script. Notes:
+  `docs/future/SHOW_OFF_MODE.md`.
+- Related: DEC-0014, DEC-0029

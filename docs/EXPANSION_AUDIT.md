@@ -5,7 +5,7 @@ Audit". It asks to check MIA's code against nine areas before building
 anything. Zac passed it on together with his approval of the Project
 ALICE picks (DEC-0029). This audit maps each request to what exists,
 classifies it, and proposes a phased plan that reuses existing code.
-The phase order is a proposal (DEC-0030, waiting for Zac).*
+Zac approved the phases on 2026-10-17 (DEC-0030).*
 
 **Status words:** ✅ **Built** (works today) · 🟡 **Partial** (the
 pieces exist, but they aren't joined up or some are missing) ·
@@ -144,7 +144,7 @@ loses money says so plainly, without guilt).
 | Joint business milestones | 🟡 | Missions can be shared. No business milestones yet |
 | Celebrate without competing | ✅ | Leaderboards are not built. GAME_LAYER idea 10 says opt-in only |
 
-## 9. Proposed phases (DEC-0030, for Zac)
+## 9. Phases (DEC-0030, approved 2026-10-17)
 
 **A. Contextual AI (approved, DEC-0029), now:** ALICE pick 1 "What I
 Used" (memories ranked by relevance and shown) → pick 3 memory callbacks

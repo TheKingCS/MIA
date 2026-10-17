@@ -36,6 +36,8 @@ memories, health or people's details. Two ways:
   reads), or a seeded throwaway engine like the screenshot tools.
 - Voice: the phone's voice output; the glasses view for the finale.
 
-## Open question for Zac
+## Decided (DEC-0031)
 
-Demo world or your own data with private things hidden?
+Zac, 2026-10-17: "We will build it for my real profile." Option 2: real
+data, with money, the journal, memories, health and people's details
+hidden for the whole tour.

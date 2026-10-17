@@ -281,8 +281,8 @@ questlines, crafting, party, sound, watch HUD, location quests, when
 Zac picks. **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
 one conversation everywhere, the voice guide. **Expansion audit**
 (`docs/EXPANSION_AUDIT.md`, DEC-0030 proposed): phase B crafting is
-built (Workshop → Recipes / Builds). Next, once Zac decides DEC-0030:
-phase C (quotes from a recipe, customers and orders, a portfolio page),
+built (Workshop → Recipes / Builds). DEC-0030 approved (2026-10-17). Next:
+DEC-0022 (the rest of phase A), then phase C (quotes from a recipe, customers and orders, a portfolio page),
 D (grow lab), E (memory vault, after DEC-0022's phone↔PC link). Receiving
 from a scanned receipt into a recipe's materials is a small follow-up.
 
@@ -478,7 +478,7 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
-- **Show-off mode** (Zac, 2026-10-17): "MIA, show off for my friends" starts a narrated, step-by-step demo of her abilities. Notes and the open question (demo world vs. own data with private things hidden): `docs/future/SHOW_OFF_MODE.md`.
+- **Show-off mode** (Zac, 2026-10-17): "MIA, show off for my friends" starts a narrated, step-by-step demo of her abilities. Decided: on the real profile with private things hidden (DEC-0031). Notes: `docs/future/SHOW_OFF_MODE.md`.
 
 ## 4. Known loose ends
 
