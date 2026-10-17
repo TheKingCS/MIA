@@ -1287,3 +1287,21 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .inbox-card .chip-button { text-transform: none; overflow-wrap: anywhere; }
 .tick-row { display: flex; gap: 10px; align-items: flex-start; padding: 4px 0; text-transform: none; }
 .tick-row input { margin-top: 3px; }
+
+/* ---------------------------------------------------------------- expedition photos and files (2026-10-16) */
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.media-tile {
+  position: relative; aspect-ratio: 1; padding: 0; overflow: hidden; cursor: pointer;
+  border: 1px solid rgba(var(--rgb-accent), 0.3); border-radius: var(--radius); background: rgba(var(--rgb-panel), 0.9);
+  color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  text-transform: none; font: inherit;
+}
+.media-tile:hover, .media-tile:focus-visible { border-color: rgba(var(--rgb-accent), 0.8); outline: none; }
+.media-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-ico { font-size: 28px; line-height: 1; }
+.media-tile.kind-video .media-ico { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 18px; border: 2px solid var(--accent); color: var(--accent); }
+.media-name { font-size: var(--text-xs); color: var(--text-dim); padding: 0 6px; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-cover { width: calc(100% + 28px); margin: -14px -14px 4px; height: 140px; object-fit: cover; display: block;
+  border-radius: var(--radius) var(--radius) 0 0; }

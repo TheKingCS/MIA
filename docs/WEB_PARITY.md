@@ -54,7 +54,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Pets | Pets: vet history | `relationships__02_pets` | |  | |
 | Notes | Dated, tagged notes and journal | `notes` | ✅ `/api/journal` + journal actions | ✅ Journal: entries, search, tags, write, read, edit, delete; Talk It Out (private entries stay encrypted) | |
 | Classroom | Subjects, courses, lessons, textbooks and study | `classroom` | |  | |
-| Expeditions | Trips: routes, gear, weather, distance | `expeditions` | ✅ `/api/expeditions` + expedition actions | ✅ now / coming up / past, trips, start / finish, packing list (not yet: route, splits, weather, photos) | |
+| Expeditions | Trips: routes, gear, weather, distance | `expeditions` | ✅ `/api/expeditions` + expedition actions | ✅ now / coming up / past, trips, start / finish, packing list, photos, videos and files (not yet: route, splits, weather) | |
 | Memories | Trip recaps, stats, photos | `memories` | |  | |
 | Maps: Waypoints | Waypoints | `maps__01_waypoints` | |  | |
 | Maps: Basemap | Offline basemap | `maps__02_basemap` | |  | |
@@ -70,7 +70,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Field Kit: Scripts | Scripts | `field_kit__02_scripts` | |  | |
 | Field Kit: Security | Security | `field_kit__03_security` | |  | |
 | Files | File browser | `files` | ✅ `/api/files` + file actions | ✅ the person's own MIA files folder: upload, open, folders, rename, delete (the whole disk stays on the PC app) | |
-| Music: Library | Music library | `music__01_library` | ✅ `/api/music` + playlist actions | ✅ songs (search), playlists, artists; plays in the browser; Scan Library | |
+| Music: Library | Music library | `music__01_library` | ✅ `/api/music` + playlist actions | ✅ songs (search), playlists, artists; plays in the browser; Upload Songs from the device; Scan Library | |
 | Music: Playlists | Playlists | `music__02_playlists` | ✅ `/api/music` + playlist actions | ✅ new, open, play, rename, delete, add/remove songs | |
 | Modules | Turn apps on and off, install | `module_browser__01_modules` | ✅ `/api/apps`, `app.visibility` | ✅ every app by life area, what MIA can do in each (201 tools), open or ask MIA, show/hide per person with undo (not yet: device-wide enable/disable, install, rescan) | |
 | Settings | Theme, profile, household, options | `settings` | ✅ `/api/profile`, `/api/settings`, `profile.edit`, `setting.set`, `communication.resume`, `/api/account/password`, `/api/account/recovery-code` | 🟡 Profile (name, email, country, interests, household, password, new recovery code) and Settings (messages per day, journal reflection, support and safety, currency, private money, message breaks), all undoable (2026-10-07). Not yet: theme, voice, phone access, backup, updates, joining a household | |

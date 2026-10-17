@@ -59,6 +59,25 @@
       {}, { playlists: page.playlists.map((p) => ({ id: p.id, name: p.name })) });
     if (v) act({ kind: "playlist.add_track", params: { playlist_id: v.playlist_id, track_id: t.id } });
   }
+  // Songs from this phone or computer (Zac, 2026-10-16: "upload mp3 files from my device's files").
+  function uploadSongs() {
+    const input = el("input", { type: "file", multiple: true, hidden: true, accept: "audio/*,.mp3,.m4a,.flac,.ogg,.opus,.wav" });
+    input.addEventListener("change", async () => {
+      const files = [...input.files];
+      for (const [i, file] of files.entries()) {
+        try {
+          say((files.length > 1 ? "Uploading " + (i + 1) + " of " + files.length + "… " : "Uploading… ") + file.name);
+          say((await MIA.upload("/api/music/upload", file)).message);
+        } catch (e) { say("Couldn't add " + file.name + ": " + e.message); }
+      }
+      input.remove();
+      page = await MIA.music();
+      draw();
+    });
+    document.body.append(input);
+    input.click();
+  }
+
   async function newPlaylist() {
     const v = await form("New Playlist", [{ name: "name", label: "Name", type: "text", required: true, options: [], default: null }], {});
     if (v) act({ kind: "playlist.add", params: v });
@@ -86,8 +105,10 @@
       const ids = page.tracks.filter((t) => q.every((w) => (t.title + " " + t.artist + " " + t.album + " " + t.genre).toLowerCase().includes(w))).map((t) => t.id);
       const search = el("input", { type: "search", class: "journal-search", placeholder: "Search songs, artists, albums…", value: query, "aria-label": "Search music",
         oninput: (ev) => { query = ev.target.value; const pos = ev.target.selectionStart; draw(); const box = document.querySelector(".journal-search"); box.focus(); box.setSelectionRange(pos, pos); } });
-      return section("Songs", ids.length ? btn("Play All", "btn-green", () => play(ids)) : null, search,
-        songRows(ids, (t) => buttons(btn("+ Playlist", "btn-ghost btn-small", () => toPlaylist(t)))));
+      return section("Songs", buttons(ids.length ? btn("Play All", "btn-green", () => play(ids)) : null,
+          btn("Upload Songs", "btn-amber", uploadSongs)), search,
+        songRows(ids, (t) => buttons(btn("+ Playlist", "btn-ghost btn-small", () => toPlaylist(t)),
+          byId(t.id).uploaded ? btn("Delete", "btn-ghost btn-small", () => act({ kind: "track.delete", params: { track_id: t.id } })) : null)));
     },
     playlists: () => {
       const p = openList && page.playlists.find((x) => x.id === openList);
@@ -123,9 +144,10 @@
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
-    const empty = !lib.count ? section("Your Music Library", btn("Scan Library", "btn-amber", () => act({ kind: "music.scan", params: {} })),
-      el("p", { class: "music-library" }, lib.found ? "MIA looks for music in " + lib.folder + ". Put songs there, then Scan Library."
-        : "No music library yet. On the PC, set MIA's music folder in Settings, then Scan Library."),
+    const empty = !lib.count ? section("Your Music Library", buttons(btn("Upload Songs", "btn-amber", uploadSongs),
+        btn("Scan Library", "btn-ghost", () => act({ kind: "music.scan", params: {} }))),
+      el("p", { class: "music-library" }, "Upload songs (mp3, m4a, flac…) from this device's files" +
+        (lib.found ? ", or put them in MIA's music folder and Scan Library." : ". On the PC you can also point MIA at your music folder in Settings.")),
       !lib.found && lib.folder ? el("p", { class: "dim music-library" }, "Looking in: " + lib.folder) : null) : null;
     $("panel").replaceChildren(...[empty, ...[].concat(lib.count ? VIEWS[tab]() : []),
       lib.count ? el("p", { class: "dim music-library" }, "Library: " + lib.folder + " · ", el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); act({ kind: "music.scan", params: {} }); } }, "Scan For New Music")) : null].filter(Boolean));

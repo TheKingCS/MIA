@@ -8,7 +8,8 @@
       "album": "",
       "genre": "",
       "duration": "0:04",
-      "seconds": 4.0
+      "seconds": 4.0,
+      "uploaded": false
     }
   ],
   "playlists": [

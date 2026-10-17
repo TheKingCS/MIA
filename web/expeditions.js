@@ -37,6 +37,73 @@
     if (v) act({ kind: "trip.edit", params: Object.assign({ trip_id: t.id }, v) });
   }
 
+  // ------------------------------------------------------------ photos, videos and files (Zac, 2026-10-16)
+  const mediaUrl = (x, m) => "/api/expeditions/" + encodeURIComponent(x.id) + "/media?ref=" + encodeURIComponent(m.ref);
+  const ICON = { image: "🖼", video: "🎬", pdf: "📄", audio: "🎵", text: "📝", file: "📦" };
+
+  function upload(x) {
+    const input = el("input", { type: "file", multiple: true, hidden: true, accept: "image/*,video/*,*/*" });
+    input.addEventListener("change", async () => {
+      for (const file of input.files) {
+        if (file.size > 200 * 1024 * 1024) { MIAShell.say(file.name + " is over 200 MB."); continue; }
+        try {
+          MIAShell.say("Adding " + file.name + "…");
+          MIAShell.say((await MIA.upload("/api/expeditions/" + encodeURIComponent(x.id) + "/media", file)).message);
+        } catch (e) { MIAShell.say("Couldn't add " + file.name + ": " + e.message); }
+      }
+      input.remove();
+      page = await MIA.expeditions();
+      draw();
+    });
+    document.body.append(input);
+    input.click();
+  }
+
+  async function view(x, m) {
+    let url;
+    try { url = URL.createObjectURL(await MIA.download(mediaUrl(x, m))); }
+    catch (e) { MIAShell.say("Couldn't open " + m.name + "."); return; }
+    const dialog = el("dialog", { class: "confirm form-dialog file-view", "aria-label": m.name });
+    const close = () => { dialog.close(); dialog.remove(); URL.revokeObjectURL(url); };
+    const body = m.kind === "image" ? el("img", { src: url, alt: m.name })
+      : m.kind === "video" ? el("video", { src: url, controls: true, playsinline: true, autoplay: true })
+        : m.kind === "audio" ? el("audio", { src: url, controls: true, autoplay: true })
+          : m.kind === "pdf" ? el("iframe", { src: url, title: m.name })
+            : el("p", { class: "dim" }, "Download it to open it.");
+    dialog.append(el("h3", {}, m.name), el("p", { class: "dim" }, [m.trip ? "Trip: " + m.trip : null, m.size_text, day(m.added)].filter(Boolean).join(" · ")), body,
+      el("div", { class: "confirm-actions" },
+        el("a", { class: "btn btn-ghost", href: url, download: m.name }, "Download"),
+        btn("Delete", "btn-ghost", () => { close(); act({ kind: "expedition.media_delete", params: { expedition_id: x.id, ref: m.ref } }); }),
+        btn("Close", "btn-ghost", close)));
+    dialog.oncancel = (ev) => { ev.preventDefault(); close(); };
+    document.body.append(dialog);
+    dialog.showModal();
+  }
+
+  function tile(x, m) {
+    const t = el("button", { type: "button", class: "media-tile kind-" + m.kind, "aria-label": "Open " + m.name, onclick: () => view(x, m) });
+    if (m.kind === "image") {
+      const img = el("img", { alt: "", loading: "lazy" });
+      MIA.image(mediaUrl(x, m)).then((src) => { if (src) img.src = src; });
+      t.append(img);
+    } else {
+      t.append(el("span", { class: "media-ico", "aria-hidden": "true" }, m.kind === "video" ? "▶" : ICON[m.kind] || ICON.file),
+        el("span", { class: "media-name" }, m.name));
+    }
+    return t;
+  }
+
+  function gallery(x) {
+    const counts = { image: 0, video: 0, other: 0 };
+    x.media.forEach((m) => { counts[m.kind === "image" || m.kind === "video" ? m.kind : "other"]++; });
+    const said = [counts.image ? counts.image + (counts.image === 1 ? " photo" : " photos") : null,
+      counts.video ? counts.video + (counts.video === 1 ? " video" : " videos") : null,
+      counts.other ? counts.other + (counts.other === 1 ? " file" : " files") : null].filter(Boolean).join(" · ");
+    return section("Photos & Files", btn("Add", "btn-amber", () => upload(x)),
+      x.media.length ? [el("p", { class: "dim" }, said), el("div", { class: "media-grid" }, x.media.map((m) => tile(x, m)))]
+        : el("p", { class: "empty" }, "Nothing yet. Add photos, videos, maps, tickets or anything else for this trip."));
+  }
+
   function trip(t) {
     const [label, cls] = STATUS[t.status] || [t.status, ""];
     const input = el("input", { type: "text", placeholder: "Add to the packing list…", "aria-label": "Add to the packing list for " + t.name });
@@ -72,13 +139,18 @@
   function card(x) {
     const go = () => { open = x.id; history.replaceState(null, "", "#" + encodeURIComponent(x.id)); draw(); window.scrollTo(0, 0); };
     const when = x.when === "now" ? "Happening Now" : x.days_away != null ? (x.days_away === 0 ? "Today" : x.days_away === 1 ? "Tomorrow" : "In " + x.days_away + " days") : x.when === "past" ? "Done" : "";
+    const coverPhoto = x.media.find((m) => m.kind === "image");
+    const cover = coverPhoto ? el("img", { class: "exp-cover", alt: "" }) : null;
+    if (cover) MIA.image(mediaUrl(x, coverPhoto)).then((src) => { if (src) cover.src = src; });
     return el("article", { class: "glass mission-card" + (x.when === "now" ? " ready" : "") + (x.when === "past" ? " finished" : ""),
       tabindex: "0", role: "button", "aria-label": "Open " + x.name, onclick: go,
       onkeydown: (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } } },
+    cover,
     el("div", { class: "mission-top" },
       el("span", { class: "mission-icon", "aria-hidden": "true" }, "🏕"),
       el("div", { class: "mission-title" }, el("h3", {}, x.name),
-        el("p", { class: "dim" }, [x.location, span(x.start, x.end), x.trips.length + (x.trips.length === 1 ? " trip" : " trips")].filter(Boolean).join(" · "))),
+        el("p", { class: "dim" }, [x.location, span(x.start, x.end), x.trips.length + (x.trips.length === 1 ? " trip" : " trips"),
+          x.media.length ? "📷 " + x.media.length : null].filter(Boolean).join(" · "))),
       when ? el("div", { class: "mission-chips" }, el("span", { class: "chip " + (x.when === "now" ? "chip-soon" : "") }, when)) : null));
   }
 
@@ -89,6 +161,7 @@
           btn("Delete", "btn-ghost", () => act({ kind: "expedition.delete", params: { expedition_id: x.id } }))),
         el("p", { class: "dim" }, [x.location, span(x.start, x.end)].filter(Boolean).join(" · ")),
         x.notes ? el("p", {}, x.notes) : null),
+      gallery(x),
       x.trips.length ? el("div", { class: "trip-grid" }, x.trips.map(trip))
         : el("p", { class: "empty" }, "No trips yet. Add one: a hike, a paddle, a night of camping."),
     ];

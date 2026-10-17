@@ -776,6 +776,63 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "music", music_page)
 
+    @app.post("/api/music/upload")
+    async def web_music_upload(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A song from the phone or computer into the music library (core/music_manager.save_upload)."""
+        import time as _time
+
+        from core.music_manager import MAX_UPLOAD_BYTES
+
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No song received.")
+        if len(data) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That song is over 200 MB.")
+        name = unquote(request.headers.get("x-filename", "song.mp3"))
+
+        def save(view):
+            music = getattr(view, "music", None)
+            if music is None:
+                raise ValueError("Music isn't set up on this MIA.")
+            path = music.save_upload(name, data)
+            music.scan_library(as_of=_time.time() + 60)  # written whole: take it in now
+            return path
+
+        try:
+            path = _screen(profile_id, "music", save)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"Added {path.stem} to your library."}
+
+    @app.get("/api/expeditions/{expedition_id}/media")
+    def web_expedition_media(expedition_id: str, ref: str, profile_id: str = Depends(require_profile_id)):
+        """One photo, video or file on an expedition (core/expedition_media.py)."""
+        from fastapi.responses import FileResponse
+
+        from core.expedition_media import path_of
+
+        try:
+            path = _screen(profile_id, "expeditions", lambda view: path_of(view, expedition_id, ref))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+        if not path.is_file():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That isn't there anymore.")
+        return FileResponse(path, filename=path.name, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.post("/api/expeditions/{expedition_id}/media")
+    async def web_expedition_upload(expedition_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.expedition_media import MAX_BYTES, save
+
+        data = await request.body()
+        if len(data) > MAX_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is over 200 MB.")
+        name = unquote(request.headers.get("x-filename", "file"))
+        try:
+            saved = _screen(profile_id, "expeditions", lambda view: save(view, expedition_id, name, data))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"Added {saved}."}
+
     @app.get("/api/music/track/{track_id}/audio")
     def web_music_audio(track_id: str, profile_id: str = Depends(require_profile_id)):
         """One song from the library, to play in the browser."""

@@ -177,7 +177,14 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
         end = e.end_date or e.start_date
         when = ("now" if (e.start_date and e.start_date <= iso <= (end or e.start_date)) or any(t.status == "active" for t in its)
                 else "past" if end and end < iso else "upcoming")
-        cards.append({"id": e.expedition_id, "name": e.name, "location": e.location, "start": e.start_date,
+        from core.expedition_media import media
+
+        try:
+            gallery = media(context, e.expedition_id)
+        except Exception:
+            log.exception("Expeditions: media for %s", e.expedition_id)
+            gallery = []
+        cards.append({"id": e.expedition_id, "name": e.name, "media": gallery, "location": e.location, "start": e.start_date,
                       "end": e.end_date, "notes": e.notes, "when": when,
                       "days_away": (date.fromisoformat(e.start_date) - today).days if e.start_date and when == "upcoming" else None,
                       "trips": [trip_card(t) for t in its],
@@ -213,7 +220,8 @@ def music_page(context) -> dict:
     if music is None:
         return {"available": False}
     tracks = [{"id": t.track_id, "title": t.title or "Untitled", "artist": t.artist or "", "album": t.album or "",
-               "genre": t.genre or "", "duration": duration_text(t.duration_seconds), "seconds": t.duration_seconds or 0}
+               "genre": t.genre or "", "duration": duration_text(t.duration_seconds), "seconds": t.duration_seconds or 0,
+               "uploaded": music.uploaded(t)}
               for t in sorted(music.all_tracks(), key=lambda t: ((t.artist or "~").lower(), (t.album or "").lower(),
                                                                 t.track_number or 0, (t.title or "").lower()))]
     known = {t["id"] for t in tracks}

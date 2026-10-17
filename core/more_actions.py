@@ -583,6 +583,45 @@ def _delete(context, params) -> str:
     return "Deleted."
 
 
+# ------------------------------------------------------------------ expedition photos and files, uploaded songs
+
+
+def _media_describe(context, params) -> str:
+    from core.expedition_media import path_of
+
+    try:
+        path = path_of(context, str(params.get("expedition_id") or ""), str(params.get("ref") or ""))
+    except ValueError as problem:
+        raise ActionError(str(problem)) from None
+    return f"Delete {path.name} from this expedition. This can't be undone."
+
+
+def _media_delete(context, params) -> str:
+    from core.expedition_media import delete
+
+    try:
+        return f"Deleted {delete(context, str(params.get('expedition_id') or ''), str(params.get('ref') or ''))}."
+    except ValueError as problem:
+        raise ActionError(str(problem)) from None
+
+
+def _song_describe(context, params) -> str:
+    track = _track(context, params)
+    if not context.music.uploaded(track):
+        raise ActionError(f"{track.title} is from your music folder; MIA only deletes songs you uploaded to her.")
+    return f"Delete {track.title} from your library. This can't be undone."
+
+
+def _song_delete(context, params) -> str:
+    from pathlib import Path
+
+    _song_describe(context, params)
+    track = _track(context, params)
+    Path(track.file_path).unlink(missing_ok=True)
+    context.music.delete_track(track.track_id)
+    return f"Deleted {track.title}."
+
+
 def _say(text: str):
     return lambda context, params: text
 
@@ -636,6 +675,9 @@ def _register() -> None:
         ActionType("playlist.remove_track", "Remove", {"playlist_id": "the playlist", "track_id": "the song"},
                    lambda c, p: f"Take {_track(c, p).title} off {_playlist(c, p).name}", _playlist_remove_track),
         ActionType("music.scan", "Scan Library", {}, _say("Look for new music in the music folder"), _scan),
+        ActionType("track.delete", "Delete", {"track_id": "an uploaded song"}, _song_describe, _song_delete),
+        ActionType("expedition.media_delete", "Delete", {"expedition_id": "the expedition", "ref": "the photo or file"},
+                   _media_describe, _media_delete),
         ActionType("myfile.folder", "New Folder", {"path": "where", "name": "its name"}, _folder_describe, _folder),
         ActionType("myfile.rename", "Rename", {"path": "the file", "name": "new name"}, _rename_describe, _rename),
         ActionType("myfile.delete", "Delete", {"path": "the file or folder"}, _delete_describe, _delete),

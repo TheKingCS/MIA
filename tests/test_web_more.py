@@ -43,6 +43,7 @@ def world(tmp_path, monkeypatch):
     context.products = ProductManager(context, data_dir=shop)
     context.jobs = JobManager(context, data_dir=shop)
     context.ledger = LedgerManager(context, data_dir=shop)
+    context.config.set("trips.photo_root_path", str(tmp_path / "photos"))
     context.expeditions = ExpeditionManager(context, data_dir=shop)
     context.trips = TripManager(context, data_dir=shop)
     monkeypatch.setattr(music_module, "_DATA_DIR", tmp_path / "music_data")
@@ -202,3 +203,80 @@ def test_the_screens_are_served(world, tmp_path):
     world.music.scan_library()
     track = world.music.all_tracks()[0]
     assert client.get(f"/api/music/track/{track.track_id}/audio").content.startswith(b"ID3")
+
+
+def test_expedition_photos_videos_and_files(world, tmp_path):
+    """Zac, 2026-10-16: "after planning a trip you should be able to attach
+    pictures and videos and files to it" (core/expedition_media.py)."""
+    from core.expedition_media import folder, media, path_of, save
+
+    do(world, "expedition.add", name="Lake weekend")
+    exp = expeditions_page(world, TODAY)["expeditions"][0]
+    assert exp["media"] == []
+    assert save(world, exp["id"], "dock.jpg", b"jpg") == "dock.jpg"
+    assert save(world, exp["id"], "dock.jpg", b"jpg2") == "dock (2).jpg"
+    save(world, exp["id"], "paddle.mp4", b"mp4")
+    save(world, exp["id"], "permit.pdf", b"%PDF")
+    do(world, "trip.add", expedition_id=exp["id"], name="Paddle")
+    trip = world.trips.all_trips()[0]
+    (tmp_path / "sunset.png").write_bytes(b"png")
+    world.trips.add_photo(trip.trip_id, tmp_path / "sunset.png")  # a photo added on the desktop
+    items = {m["name"]: m for m in expeditions_page(world, TODAY)["expeditions"][0]["media"]}
+    assert set(items) == {"dock.jpg", "dock (2).jpg", "paddle.mp4", "permit.pdf", "sunset.png"}
+    assert (items["paddle.mp4"]["kind"], items["permit.pdf"]["kind"], items["sunset.png"]["trip"]) == ("video", "pdf", "Paddle")
+    assert path_of(world, exp["id"], items["sunset.png"]["ref"]).read_bytes() == b"png"
+    for bad in ("e/../../secret", "t/" + trip.trip_id + "/../x", "x/dock.jpg", "e/"):
+        with pytest.raises(ValueError):
+            path_of(world, exp["id"], bad)
+    said, _ = do(world, "expedition.media_delete", expedition_id=exp["id"], ref=items["sunset.png"]["ref"])
+    assert said == "Delete sunset.png from this expedition. This can't be undone."
+    assert world.trips.get_trip(trip.trip_id).photo_filenames == []
+    do(world, "expedition.media_delete", expedition_id=exp["id"], ref="e/dock (2).jpg")
+    assert len(media(world, exp["id"])) == 3 and folder(world, exp["id"]).is_dir()
+    with pytest.raises(ActionError):
+        world.actions.propose(world, "expedition.media_delete", {"expedition_id": exp["id"], "ref": "e/../../x"})
+
+
+def test_uploading_songs(world, tmp_path):
+    """Zac, 2026-10-16: "make Music where I can upload mp3 files"."""
+    path = world.music.save_upload("Robin - Road Song.mp3", b"ID3" + b"\0" * 100)
+    assert path.parent.name == "Uploads" and path.parent.parent == tmp_path / "Music"
+    world.music.scan_library(as_of=time.time() + 60)
+    page = music_page(world)
+    song = next(t for t in page["tracks"] if t["title"] == "Robin - Road Song")
+    assert song["uploaded"] and not next(t for t in page["tracks"] if t["title"] != "Robin - Road Song")["uploaded"]
+    with pytest.raises(ValueError):
+        world.music.save_upload("notes.txt", b"x")
+    said, _ = do(world, "track.delete", track_id=song["id"])
+    assert said == "Delete Robin - Road Song from your library. This can't be undone." and not path.exists()
+    other = music_page(world)["tracks"][0]
+    with pytest.raises(ActionError):  # a song from the music folder itself is never deleted
+        world.actions.propose(world, "track.delete", {"track_id": other["id"]})
+
+
+def test_a_chosen_music_folder_that_is_missing_is_never_made(world, tmp_path):
+    world.config.set("music.library_root_path", str(tmp_path / "unplugged"))
+    with pytest.raises(ValueError):
+        world.music.save_upload("a.mp3", b"ID3")
+    assert not (tmp_path / "unplugged").exists()
+
+
+def test_uploads_through_the_server(world, tmp_path):
+    from fastapi.testclient import TestClient
+
+    from server.app import create_app
+
+    app = create_app(world)
+    app.state.sessions["t"] = world.profiles.list_profiles()[0].profile_id
+    client = TestClient(app, headers={"Authorization": "Bearer t"})
+    up = client.post("/api/music/upload", content=b"ID3" + b"\0" * 50, headers={"X-Filename": "Wake%20Up.mp3"})
+    assert up.status_code == 200 and up.json()["message"] == "Added Wake Up to your library."
+    assert any(t["title"] == "Wake Up" for t in client.get("/api/music").json()["tracks"])
+    assert client.post("/api/music/upload", content=b"x", headers={"X-Filename": "a.exe"}).status_code == 400
+    do(world, "expedition.add", name="Lake weekend")
+    exp_id = world.expeditions.all_expeditions()[0].expedition_id
+    up = client.post(f"/api/expeditions/{exp_id}/media", content=b"jpg", headers={"X-Filename": "dock.jpg"})
+    assert up.status_code == 200
+    got = client.get(f"/api/expeditions/{exp_id}/media", params={"ref": "e/dock.jpg"})
+    assert got.status_code == 200 and got.content == b"jpg"
+    assert client.get(f"/api/expeditions/{exp_id}/media", params={"ref": "e/../../config.json"}).status_code == 404

@@ -81,6 +81,7 @@ _TRACKS_FILE = _DATA_DIR / "music_tracks.json"
 _PLAYLISTS_FILE = _DATA_DIR / "music_playlists.json"
 
 _AUDIO_EXTENSIONS = {".mp3", ".flac", ".ogg", ".m4a", ".opus", ".wav"}
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024
 _MIN_QUIET_SECONDS = 5.0  # same "file might still be mid-copy" guard as ReferenceLibraryManager
 
 # mutagen's easy=True interface remaps ID3/Vorbis/MP4 tags to friendly
@@ -303,7 +304,7 @@ class MusicManager:
     # Library scan
     # ------------------------------------------------------------------
 
-    def scan_library(self) -> ScanResult:
+    def scan_library(self, as_of: Optional[float] = None) -> ScanResult:
         """Walks root_path for audio files, indexing new ones, skipping
         tag re-reads for files whose (size, mtime) haven't changed
         since the last scan, and pruning files no longer present.
@@ -312,7 +313,8 @@ class MusicManager:
         root) and never mutates the index at all if root_path doesn't
         currently exist — a temporarily-unmounted drive must never
         look like "the whole library vanished"; the caller sees
-        ScanResult(root_missing=True) instead."""
+        ScanResult(root_missing=True) instead. `as_of` (a later time) takes in
+        files MIA just wrote whole, like an upload, without the wait."""
         root = self._resolve_root_path()
         if not root.exists():
             log.warning("Music library root '%s' doesn't exist — scan skipped.", root)
@@ -332,7 +334,7 @@ class MusicManager:
                 stat = path.stat()
             except OSError:
                 continue
-            if time.time() - stat.st_mtime < _MIN_QUIET_SECONDS:
+            if (as_of or time.time()) - stat.st_mtime < _MIN_QUIET_SECONDS:
                 continue  # still mid-copy, likely — pick it up on a later scan
 
             existing = existing_by_path.get(file_path)
@@ -399,6 +401,39 @@ class MusicManager:
             t for t in self.all_tracks()
             if needle in t.title.lower() or needle in t.artist.lower() or needle in t.album.lower()
         ]
+
+    def save_upload(self, filename: str, data: bytes) -> Path:
+        """A song sent from a phone or computer (Zac, 2026-10-16: "upload mp3
+        files from my device's files"), saved into the library folder, then
+        found by the next scan_library(). The default folder is created if
+        needed; a folder the person chose that isn't there (an unplugged
+        drive) is never created, same as scan_library()."""
+        name = Path(str(filename or "")).name.strip()
+        if Path(name).suffix.lower() not in _AUDIO_EXTENSIONS:
+            raise ValueError("That isn't a song MIA can play (mp3, m4a, flac, ogg, opus or wav).")
+        if len(data) > MAX_UPLOAD_BYTES:
+            raise ValueError("That song is over 200 MB.")
+        root = self._resolve_root_path()
+        if self.context.config.get("music.library_root_path", "") and not root.exists():
+            raise ValueError(f"MIA's music folder ({root}) isn't there. Plug in the drive or change it in Settings.")
+        folder = root / "Uploads"
+        folder.mkdir(parents=True, exist_ok=True)
+        safe = "".join(ch if ch.isalnum() or ch in " .-_()&'," else "_" for ch in name).strip() or "song.mp3"
+        target, n = folder / safe, 2
+        while target.exists():
+            target = folder / f"{Path(safe).stem} ({n}){Path(safe).suffix}"
+            n += 1
+        partial = folder / f".{target.name}.part"
+        partial.write_bytes(data)
+        partial.replace(target)
+        return target
+
+    def uploaded(self, track: "Track") -> bool:
+        """A song that was uploaded into MIA (its own copy, safe to delete)."""
+        try:
+            return Path(track.file_path).resolve().parent == (self._resolve_root_path() / "Uploads").resolve()
+        except OSError:
+            return False
 
     def delete_track(self, track_id: str) -> None:
         """Index-only removal — never touches the real file on disk.

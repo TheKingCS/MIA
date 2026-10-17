@@ -434,6 +434,11 @@ class TripManager:
         self._save()
         return trip
 
+    @property
+    def photo_root(self) -> Path:
+        """Where trip photos (and expedition media, core/expedition_media.py) live."""
+        return self._photo_root
+
     def photo_path(self, trip_id: str, filename: str) -> Path:
         """Full on-disk path for a trip's stored photo — for the UI to load as a thumbnail/preview."""
         return self._photo_root / trip_id / filename
