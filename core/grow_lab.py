@@ -9,6 +9,11 @@ water, compare what works, learn from the results.
 - **Batches**: a crop (and variety) planted somewhere (a tank, a bed),
   when, how many, what it cost; then harvests (how much) or losses (why).
   From those: days to first harvest, yield per plant, how many were lost.
+- **Each tank or bed is a Greenhouse asset** (Zac, 2026-10-17: "Each grow
+  bed or tank could be an individual asset and then all the different
+  variables like water, yields, etc be stored under each asset"). A
+  batch, a reading and a range belong to a *place*: the asset's id (or,
+  for places named before that, the name typed).
 - **Systems and readings**: each place has measurements (pH, ammonia,
   nitrite, nitrate, dissolved oxygen, water and air temperature, anything
   else). Readings live in the shared Data Logger (core/data_logger_manager.py,
@@ -65,7 +70,8 @@ class Batch:
     batch_id: str
     crop: str
     variety: str = ""
-    system: str = ""  # where: "Tank A", "Bed 2", "Greenhouse"
+    system: str = ""  # where, as typed before places were assets ("Tank A")
+    asset_id: str = ""  # where: the Greenhouse asset (a tank, a bed)
     method: str = ""  # aquaponics, soil, hydroponic…
     planted: str = ""  # ISO date
     count: int = 0  # plants or seeds
@@ -203,13 +209,14 @@ class GrowLab:
             raise ValueError("What's planted?")
         b = Batch(batch_id=uuid.uuid4().hex[:10], crop=crop.strip(), planted=date.today().isoformat(), created_at=_now())
         self._apply(b, fields)
+        self._place(b)
         b.planted = b.planted or date.today().isoformat()
-        if b.system:
-            self.add_system(b.system)
         self.batches.append(b)
         self._save()
+        where = self.place_name(b.asset_id or b.system)
         self._record("batch_planted", f"Planted {b.count or ''} {b.crop}{' (' + b.variety + ')' if b.variety else ''}"
-                     .replace("  ", " ") + (f" in {b.system}" if b.system else ""), [f"batch:{b.batch_id}"])
+                     .replace("  ", " ") + (f" in {where}" if where else ""),
+                     [f"batch:{b.batch_id}"] + ([f"asset:{b.asset_id}"] if b.asset_id else []))
         return b
 
     def update_batch(self, batch_id: str, **fields) -> Batch:
@@ -217,10 +224,28 @@ class GrowLab:
         if b is None:
             raise ValueError("That batch isn't there anymore.")
         self._apply(b, fields)
-        if b.system:
-            self.add_system(b.system)
+        self._place(b)
         self._save()
         return b
+
+    def asset(self, place: str):
+        maintenance = getattr(self.context, "maintenance", None)
+        return maintenance.get_asset(place) if maintenance is not None and place else None
+
+    def place_name(self, place: str) -> str:
+        """An asset's name, or the name typed for an older place."""
+        asset = self.asset(place)
+        return asset.name if asset is not None else (place or "")
+
+    def _place(self, b: "Batch") -> None:
+        """Where a batch is: an asset when the place is one (its id), else a
+        typed name kept as before."""
+        if b.asset_id and self.asset(b.asset_id) is None:
+            b.system, b.asset_id = b.asset_id, ""
+        if b.asset_id:
+            b.system = ""
+        elif b.system:
+            self.add_system(b.system)
 
     def delete_batch(self, batch_id: str) -> None:
         self.batches = [b for b in self.batches if b.batch_id != batch_id]

@@ -1503,3 +1503,5 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .grow-spark polyline { fill: none; stroke: rgb(var(--rgb-accent)); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .grow-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .grow-readings .btn { text-transform: none; }  /* a range reads as typed: 6.8 to 7.2 */
+.grow-mini { display: grid; gap: 6px; }
+.grow-mini p { margin: 0; }

@@ -44,16 +44,23 @@
       f("all", "All of it?", "choice", { options: ["no", "yes"], default: "no" })], {});
     if (v) act({ kind: "batch.lost", params: Object.assign({ batch_id: b.id }, v) });
   }
-  async function reading(system) {
-    const v = await form("Log A Reading", [f("system", "Where", "text", { required: true, default: system || (page.systems[0] || {}).name || "" }),
-      measureChoice(), f("value", "The reading", "number", { required: true }), f("note", "Notes", "text")], {});
+  // Where: a tank or bed (each is a Greenhouse asset, Zac 2026-10-17).
+  const placePick = (place) => f("place", "Where", "pick", { required: true, options: ["places"], default: place || null });
+  async function reading(place) {
+    if (!page.picks.places.length) { MIAShell.say("Add your tanks and beds under Assets first."); return; }
+    const v = await form("Log A Reading", [placePick(place || page.picks.places[0].id),
+      measureChoice(), f("value", "The reading", "number", { required: true }), f("note", "Notes", "text")], {}, page.picks);
     if (v) act({ kind: "grow.reading", params: v });
   }
-  async function range(system, row) {
-    const v = await form("Your Range: " + label(row ? row.measure : "ph"), [f("system", "Where", "text", { required: true, default: system }),
+  async function range(place, row) {
+    const v = await form("Your Range: " + label(row ? row.measure : "ph"), [placePick(place),
       Object.assign(measureChoice(), { default: row ? row.measure : "ph" }),
-      f("low", "Low end", "number", { default: row ? row.low : null }), f("high", "High end", "number", { default: row ? row.high : null })], {});
+      f("low", "Low end", "number", { default: row ? row.low : null }), f("high", "High end", "number", { default: row ? row.high : null })], {}, page.picks);
     if (v) act({ kind: "grow.range", params: v });
+  }
+  async function plantHere(place) {
+    const v = await form("Plant A Batch", page.forms.batch.fields, { asset_id: place }, page.picks);
+    if (v) act({ kind: "batch.add", params: v });
   }
 
   function batchCard(b) {
@@ -92,12 +99,12 @@
   function systemCard(s) {
     return el("article", { class: "glass craft-card" },
       el("div", { class: "craft-head static" }, el("div", {}, el("h3", {}, s.name), el("p", { class: "dim" }, s.growing === 1 ? "1 batch growing" : s.growing + " batches growing")),
-        btn("Log Reading", "btn-amber btn-small", () => reading(s.name))),
+        btn("Log Reading", "btn-amber btn-small", () => reading(s.id))),
       s.readings.length ? el("ul", { class: "craft-needs grow-readings" }, s.readings.map((r) => el("li", { class: r.side ? "missing" : "" },
         el("span", {}, r.label + ": ", el("strong", {}, r.value == null ? "—" : r.value + (r.unit ? " " + r.unit : "")),
           r.side ? " " : "", r.side ? chip(r.side === "high" ? "High" : "Low", "chip-bad") : null),
         spark(r.trend),
-        el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => range(s.name, r) },
+        el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => range(s.id, r) },
           (r.low != null ? r.low : "–") + " to " + (r.high != null ? r.high : "–") + (r.mine ? "" : " (starter)")))))
         : el("p", { class: "dim" }, "No readings yet."));
   }
@@ -115,9 +122,9 @@
         el("span", {}, a.system + ": " + a.label + " " + a.value + (a.unit ? " " + a.unit : "") + " is " + a.side),
         el("span", { class: "dim" }, "range " + (a.low != null ? a.low : "–") + " to " + (a.high != null ? a.high : "–") + (a.mine ? "" : " (starter)"))))),
         el("p", { class: "dim" }, "MIA only flags readings. You decide what to do with the fish, the plants and the equipment.")) : null,
-      section("Tanks, Beds And Rooms", btn("Log Reading", "btn-amber", () => reading("")),
+      section("Tanks And Beds", btn("Log Reading", "btn-amber", () => reading("")),
         page.systems.length ? el("div", { class: "craft-grid" }, page.systems.map(systemCard))
-          : el("p", { class: "empty" }, "Log a reading for a tank or bed and it shows here. Starter ranges are common starting points: set your own.")),
+          : el("p", { class: "empty" }, "Add each tank and bed under Assets, then log its readings. Starter ranges are common starting points: set your own.")),
     ].filter(Boolean),
     experiments: () => section("Experiments", btn("New Experiment", "btn-amber", () => add("experiment", "New Experiment")),
       page.experiments.length ? el("div", { class: "craft-grid" }, page.experiments.map((e) => el("article", { class: "glass craft-card" },
@@ -156,10 +163,34 @@
   }
 
   // Inside the Greenhouse (equipment.js draws the frame, tabs and strip).
-  if (document.body.dataset.scope === "greenhouse") {
+  if (document.body.dataset.scope === "greenhouse" || document.body.dataset.grow === "embed") {
     window.MIAGrow = {
       load: async () => { page = await MIA.grow(); return page; },
       views: VIEWS,
+      // On a Greenhouse asset card: what's growing there and its latest readings.
+      summary: (id) => {
+        const s = page && page.places[id];
+        if (!s || (!s.growing && !s.readings.length && !s.yield.length)) return null;
+        const shown = s.readings.filter((r) => r.value != null).slice(0, 4);
+        return el("div", { class: "grow-mini" },
+          el("p", { class: "dim" }, [s.growing ? s.growing + " growing" : null, s.yield.length ? s.yield.map((y) => y.amount + " " + y.unit).join(", ") + " harvested" : null].filter(Boolean).join(" · ")),
+          shown.length ? el("div", { class: "chip-row" }, shown.map((r) => chip(r.label + " " + r.value + (r.unit ? " " + r.unit : ""), r.side ? "chip-bad" : ""))) : null);
+      },
+      // On the asset's own page: everything grown and measured there.
+      place: (id) => {
+        const s = page && page.places[id];
+        if (!s) return [el("p", { class: "dim" }, "Nothing growing or measured here yet.")];
+        const here = page.batches.filter((b) => b.place === id);
+        const now = here.filter((b) => b.status === "Growing"), done = here.filter((b) => b.status !== "Growing");
+        return [
+          section("Growing Here", btn("Plant Here", "btn-amber", () => plantHere(id)),
+            now.length ? el("div", { class: "craft-grid" }, now.map(batchCard)) : el("p", { class: "dim" }, "Nothing growing here right now.")),
+          el("div", { class: "craft-grid" }, (() => { const c = systemCard(s); c.querySelector("h3").textContent = "Water"; return c; })()),
+          s.yield.length || done.length ? section("Harvested Here", null,
+            s.yield.length ? el("div", { class: "chip-row" }, s.yield.map((y) => chip(y.amount + " " + y.unit, "chip-ok"))) : null,
+            done.length ? el("div", { class: "craft-grid" }, done.map(batchCard)) : null) : null,
+        ].filter(Boolean);
+      },
     };
     return;
   }

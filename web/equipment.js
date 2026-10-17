@@ -5,9 +5,10 @@
  * everything comes from MIA.equipment(scope). Tasks are marked done, assets
  * and tasks added, edited and deleted, all as equipment actions. Each asset
  * opens its own page (asset.html). The Greenhouse also grows things
- * (Zac, 2026-10-17): its tabs are Growing, Water, Equipment (assets and
- * what's due together), Experiments and Harvests, the growing ones from
- * grow.js (window.MIAGrow).
+ * (Zac, 2026-10-17): each tank or bed is an asset, its card shows what's
+ * growing there and its latest readings; tabs Assets (with what's due),
+ * Growing, Water, Experiments and Harvests, the growing ones from grow.js
+ * (window.MIAGrow).
  */
 (function () {
   "use strict";
@@ -17,7 +18,7 @@
   let page = null;
   const grow = scope === "greenhouse" ? window.MIAGrow : null;
   let growPage = null;
-  let tab = location.hash.slice(1) || (grow ? "growing" : "assets");
+  let tab = location.hash.slice(1) || "assets";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const chip = (row) => el("span", { class: "when " + (row.urgency === "overdue" || row.needs_attention ? "overdue" : row.urgency === "due_soon" ? "today" : "") }, row.text);
@@ -59,6 +60,7 @@
         el("span", { class: "chip" }, a.category)),
       a.make_model ? el("p", { class: "dim" }, a.make_model) : null,
       MIAShell.conditionBar(a.condition),
+      grow && growPage ? grow.summary(a.id) : null,
       el("ul", { class: "asset-tasks" }, a.tasks.length ? a.tasks.map((t) =>
         el("li", { class: t.needs_attention ? "overdue" : "" }, el("span", {}, t.title), chip(t)))
         : el("li", { class: "dim" }, "No tasks yet")),
@@ -76,7 +78,8 @@
     kids.push(el("section", { class: "glass money-section" },
       el("div", { class: "sect" }, el("h2", {}, "Assets"), btn("Add", "btn-amber", addAsset)),
       page.assets.length ? el("div", { class: "asset-grid" }, page.assets.map(assetCard))
-        : el("p", { class: "empty" }, el("strong", {}, "Nothing here yet."), "Add something, or tell MIA: “I bought a new lawn mower”.")));
+        : el("p", { class: "empty" }, el("strong", {}, "Nothing here yet."), grow ? "Add each grow bed and tank: its plants, water and harvests are kept under it."
+          : "Add something, or tell MIA: “I bought a new lawn mower”.")));
     if (page.next_up.length) {
       kids.push(el("section", { class: "glass money-section" },
         el("div", { class: "sect" }, el("h2", {}, "Next up")),
@@ -124,12 +127,12 @@
       el("div", { class: "cell " + (c.alerts ? "bad" : "ok") }, el("span", { class: "n" }, c.alerts), el("span", { class: "t" }, "Out Of Range")),
       el("div", { class: "cell " + (page.attention.length ? "bad" : "ok") }, el("span", { class: "n" }, page.attention.length), el("span", { class: "t" }, "Needs Attention")));
     const all = {
+      assets: () => assetsView().concat(...BUCKETS.filter(([id]) => id !== "past_due" && page.tasks.some((r) => r.bucket === id)).map(([id]) => views[id]())),
       growing: grow.views.growing, water: grow.views.water,
-      equipment: () => assetsView().concat(...BUCKETS.filter(([id]) => id !== "past_due" && page.tasks.some((r) => r.bucket === id)).map(([id]) => views[id]())),
       experiments: grow.views.experiments, harvests: grow.views.harvests,
     };
-    const TABS = [["growing", "Growing"], ["water", "Water"], ["equipment", "Equipment"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
-    if (!all[tab]) tab = "growing";
+    const TABS = [["assets", "Assets"], ["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
+    if (!all[tab]) tab = "assets";
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));

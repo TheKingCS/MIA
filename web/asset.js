@@ -11,10 +11,10 @@
   const id = new URLSearchParams(location.search).get("id") || "";
   const ICONS = { "Vehicle": "🚗", "Power Equipment": "🚜", "Appliance": "🔌", "Property": "🏠", "Garden/Plant": "🌱",
     "Tool": "🔨", "Other": "🔧" };
-  const TABS = [["overview", "Overview"], ["maintenance", "Maintenance"], ["missions", "Missions"],
+  let TABS = [["overview", "Overview"], ["maintenance", "Maintenance"], ["missions", "Missions"],
     ["documents", "Documents"], ["costs", "Costs"], ["history", "History"], ["parts", "Parts"]];
   let page = null;
-  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "overview";
+  let tab = location.hash.slice(1) || "";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const chip = (row) => el("span", { class: "when " + (row.needs_attention ? "overdue" : row.urgency === "due_soon" ? "today" : "") }, row.text);
@@ -116,6 +116,8 @@
 
   // ------------------------------------------------------------ tabs
   const VIEWS = {
+    // A greenhouse tank or bed (Zac, 2026-10-17): what grows here, its water, its harvests (grow.js).
+    growing: () => window.MIAGrow.place(page.id),
     overview: () => [el("div", { class: "asset-overview" },
       el("div", { class: "span-all" }, card("Current tasks", page.tasks.length
         ? el("div", { class: "rows" }, page.tasks.slice(0, 4).map((r) => taskRow(r, true))) : el("p", { class: "dim" }, "No tasks yet."))),
@@ -159,7 +161,11 @@
     $("back").href = page.scope_page || "garage.html";
     $("back").textContent = "← " + page.scope_name;
     $("hero-icon").textContent = ICONS[page.category] || "🔧";
-    if (window.MIAIcons) MIAIcons.badge($("hero-icon"), document.body.dataset.app);  // the line icon (DEC-0023)
+    if (window.MIAIcons) {
+      MIAIcons.badge($("hero-icon"), document.body.dataset.app);  // the line icon (DEC-0023)
+      const motif = document.querySelector(".plate-motif"), drawing = MIAIcons.svg(page.scope);
+      if (motif && drawing) motif.replaceChildren(drawing);  // the plate's art is this asset's area, not the Garage's
+    }
     $("hero-name").textContent = page.name;
     $("hero-sub").textContent = [page.category, page.details.filter((d) => d.label === "Make" || d.label === "Model").map((d) => d.value).join(" ")]
       .filter(Boolean).join(" · ");
@@ -167,7 +173,8 @@
     $("stats").replaceChildren(...page.quick_stats.map((s) => el("div", { class: "glass stat-tile" },
       el("span", { class: "stat-t" }, s.title), el("span", { class: "stat-n" }, s.text),
       btn("Log", "btn-ghost", () => s.task_id ? logTask(s.task_id, s.title) : logMeter(s.meter)))),
-      el("button", { type: "button", class: "glass stat-tile stat-add", onclick: () => logMeter("") }, "+ Log a reading"));
+      ...(page.scope === "greenhouse" ? []  // its water readings live in Growing (grow.js)
+        : [el("button", { type: "button", class: "glass stat-tile stat-add", onclick: () => logMeter("") }, "+ Log a reading")]));
     $("attention").replaceChildren(...[page.condition ? el("section", { class: "glass gear-panel" }, MIAShell.conditionBar(page.condition, true),
       el("p", { class: "dim" }, page.condition.percent >= 100 ? "Everything's fresh." : "Doing its upkeep fills the bar back up.")) : null].filter(Boolean),
     ...(page.attention.length ? [el("section", { class: "attention-panel" },
@@ -178,7 +185,14 @@
   }
 
   MIAShell.start(async () => {
-    try { page = await MIA.asset(id); }
+    try {
+      page = await MIA.asset(id);
+      if (page.scope === "greenhouse" && window.MIAGrow) {
+        await window.MIAGrow.load();
+        if (TABS[0][0] !== "growing") TABS = [["growing", "Growing"], ...TABS];
+      }
+      if (!TABS.some(([t]) => t === tab)) tab = TABS[0][0];
+    }
     catch (e) {
       $("hero-name").textContent = e.status === 404 ? "This isn't here anymore" : "Couldn't open it";
       $("panel").replaceChildren(el("p", { class: "dim" }, e.message));

@@ -40,16 +40,19 @@ def test_growing_measuring_and_comparing(lab):
     from core.web_grow import grow_page
 
     w = lab
-    do(w, "batch.add", crop="Lettuce", variety="Butterhead", system="Tank A", method="aquaponics", count=12, cost=4)
-    do(w, "batch.add", crop="Lettuce", variety="Romaine", system="Tank A", count=12)
+    tank = w.maintenance.add_asset("Tank A", category="Garden/Plant").asset_id  # each tank is a Greenhouse asset (Zac)
+    do(w, "batch.add", crop="Lettuce", variety="Butterhead", asset_id=tank, method="aquaponics", count=12, cost=4)
+    do(w, "batch.add", crop="Lettuce", variety="Romaine", asset_id=tank, count=12)
     butter, romaine = w.grow_lab.batches
-    assert butter.planted == date.today().isoformat() and w.grow_lab.systems == ["Tank A"]
-    p = do(w, "grow.reading", system="Tank A", measure="ph", value=7.6)
+    assert butter.planted == date.today().isoformat() and butter.asset_id == tank and w.grow_lab.systems == []
+    p = do(w, "grow.reading", place=tank, measure="ph", value=7.6)
     assert p.summary == "Tank A: pH 7.6 (that's high: your range is 6.8 to 7.2)"  # the starter range, until they set theirs
-    do(w, "grow.range", system="Tank A", measure="ph", low=6.5, high=7.8)
-    assert w.actions.propose(w, "grow.reading", {"system": "Tank A", "measure": "ph", "value": 7.6}).summary == "Tank A: pH 7.6"
+    do(w, "grow.range", place=tank, measure="ph", low=6.5, high=7.8)
+    assert w.actions.propose(w, "grow.reading", {"place": tank, "measure": "ph", "value": 7.6}).summary == "Tank A: pH 7.6"
     with pytest.raises(ActionError):
-        w.actions.propose(w, "grow.range", {"system": "Tank A", "measure": "ph", "low": 8, "high": 7})
+        w.actions.propose(w, "grow.range", {"place": tank, "measure": "ph", "low": 8, "high": 7})
+    with pytest.raises(ActionError):
+        w.actions.propose(w, "grow.reading", {"place": "no-such-tank", "measure": "ph", "value": 7})
 
     do(w, "batch.harvest", batch_id=butter.batch_id, amount=3, unit="heads")
     do(w, "batch.lost", batch_id=romaine.batch_id, how_many=3, why="root rot")
@@ -60,9 +63,10 @@ def test_growing_measuring_and_comparing(lab):
     do(w, "experiment.conclude", experiment_id=e.experiment_id, conclusion="Butterhead, by a mile")
 
     page = grow_page(w)
-    tank = page["systems"][0]
-    assert tank["name"] == "Tank A" and tank["growing"] == 2
-    ph = next(r for r in tank["readings"] if r["measure"] == "ph")
+    here = page["places"][tank]  # everything about the tank, under the tank
+    assert (here["name"], here["asset"], here["growing"]) == ("Tank A", True, 2)
+    assert here["yield"] == [{"amount": 3.0, "unit": "heads"}] and len(here["batches"]) == 2
+    ph = next(r for r in here["readings"] if r["measure"] == "ph")
     assert (ph["value"], ph["side"], ph["mine"]) == (7.6, "", True) and page["alerts"] == []
     exp = page["experiments"][0]
     assert exp["status"] == "Concluded" and [b["variety"] for b in exp["batches"]] == ["Butterhead", "Romaine"]
@@ -77,10 +81,22 @@ def test_alerts_and_undo(lab):
     from core.web_grow import grow_page
 
     w = lab
-    do(w, "grow.reading", system="Tank B", measure="ammonia", value=2.0)
+    do(w, "grow.reading", system="Tank B", measure="ammonia", value=2.0)  # a place typed by name still works
     alerts = grow_page(w)["alerts"]
-    assert alerts == [{"system": "Tank B", "label": "Ammonia", "value": 2.0, "unit": "ppm", "side": "high",
+    assert alerts == [{"place": "Tank B", "system": "Tank B", "label": "Ammonia", "value": 2.0, "unit": "ppm", "side": "high",
                        "low": 0.0, "high": 1.0, "mine": False}]
     p = do(w, "batch.add", crop="Basil")
     w.actions.undo(w, p.proposal_id)
     assert w.grow_lab.batches == []
+
+
+def test_a_tank_typed_by_name_joins_its_asset(lab):
+    from core.web_grow import grow_page
+
+    w = lab
+    do(w, "grow.reading", system="Tank C", measure="ph", value=7.0)  # before Tank C was an asset
+    do(w, "batch.add", crop="Kale", asset_id="Tank C")  # a typed name stays a typed place
+    tank = w.maintenance.add_asset("Tank C", category="Garden/Plant").asset_id
+    here = grow_page(w)["places"][tank]
+    assert here["growing"] == 1 and next(r for r in here["readings"] if r["measure"] == "ph")["value"] == 7.0
+    assert "Tank C" not in grow_page(w)["places"]  # one place, not two

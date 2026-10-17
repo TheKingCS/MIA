@@ -6,6 +6,7 @@
       "id": "fa1be4a7ea",
       "crop": "Lettuce",
       "variety": "Butterhead",
+      "place": "847ee0c6b5",
       "system": "Tank A",
       "method": "aquaponics",
       "planted": "2026-09-09",
@@ -37,7 +38,7 @@
       "values": {
         "crop": "Lettuce",
         "variety": "Butterhead",
-        "system": "Tank A",
+        "asset_id": "847ee0c6b5",
         "method": "aquaponics",
         "planted": "2026-09-09",
         "count": 12,
@@ -49,6 +50,7 @@
       "id": "cb30b9aa4e",
       "crop": "Lettuce",
       "variety": "Romaine",
+      "place": "847ee0c6b5",
       "system": "Tank A",
       "method": "aquaponics",
       "planted": "2026-09-09",
@@ -71,7 +73,7 @@
       "values": {
         "crop": "Lettuce",
         "variety": "Romaine",
-        "system": "Tank A",
+        "asset_id": "847ee0c6b5",
         "method": "aquaponics",
         "planted": "2026-09-09",
         "count": 12,
@@ -83,6 +85,7 @@
       "id": "e305c41151",
       "crop": "Basil",
       "variety": "",
+      "place": "7b388cf4c9",
       "system": "Bed 2",
       "method": "soil",
       "planted": "2026-09-27",
@@ -105,7 +108,7 @@
       "values": {
         "crop": "Basil",
         "variety": "",
-        "system": "Bed 2",
+        "asset_id": "7b388cf4c9",
         "method": "soil",
         "planted": "2026-09-27",
         "count": 8,
@@ -116,7 +119,31 @@
   ],
   "systems": [
     {
+      "id": "7b388cf4c9",
+      "name": "Bed 2",
+      "asset": true,
+      "readings": [],
+      "growing": 1,
+      "batches": [
+        "e305c41151"
+      ],
+      "out_of_range": 0,
+      "yield": []
+    },
+    {
+      "id": "9f4ce672f7",
+      "name": "Raised bed",
+      "asset": true,
+      "readings": [],
+      "growing": 0,
+      "batches": [],
+      "out_of_range": 0,
+      "yield": []
+    },
+    {
+      "id": "847ee0c6b5",
       "name": "Tank A",
+      "asset": true,
       "readings": [
         {
           "measure": "ph",
@@ -125,7 +152,7 @@
           "low": 6.8,
           "high": 7.2,
           "mine": false,
-          "value": 7.4,
+          "value": 7.6,
           "when": "2026-10-17",
           "side": "high",
           "trend": [
@@ -133,7 +160,8 @@
             7.1,
             7.2,
             7.3,
-            7.4
+            7.4,
+            7.6
           ]
         },
         {
@@ -153,19 +181,104 @@
           ]
         }
       ],
-      "growing": 2
-    },
-    {
-      "name": "Bed 2",
-      "readings": [],
-      "growing": 1
+      "growing": 2,
+      "batches": [
+        "fa1be4a7ea",
+        "cb30b9aa4e"
+      ],
+      "out_of_range": 1,
+      "yield": [
+        {
+          "amount": 6.0,
+          "unit": "heads"
+        }
+      ]
     }
   ],
+  "places": {
+    "7b388cf4c9": {
+      "id": "7b388cf4c9",
+      "name": "Bed 2",
+      "asset": true,
+      "readings": [],
+      "growing": 1,
+      "batches": [
+        "e305c41151"
+      ],
+      "out_of_range": 0,
+      "yield": []
+    },
+    "9f4ce672f7": {
+      "id": "9f4ce672f7",
+      "name": "Raised bed",
+      "asset": true,
+      "readings": [],
+      "growing": 0,
+      "batches": [],
+      "out_of_range": 0,
+      "yield": []
+    },
+    "847ee0c6b5": {
+      "id": "847ee0c6b5",
+      "name": "Tank A",
+      "asset": true,
+      "readings": [
+        {
+          "measure": "ph",
+          "label": "pH",
+          "unit": "",
+          "low": 6.8,
+          "high": 7.2,
+          "mine": false,
+          "value": 7.6,
+          "when": "2026-10-17",
+          "side": "high",
+          "trend": [
+            7.0,
+            7.1,
+            7.2,
+            7.3,
+            7.4,
+            7.6
+          ]
+        },
+        {
+          "measure": "ammonia",
+          "label": "Ammonia",
+          "unit": "ppm",
+          "low": 0.0,
+          "high": 1.0,
+          "mine": false,
+          "value": 0.5,
+          "when": "2026-10-17",
+          "side": "",
+          "trend": [
+            0.25,
+            0.25,
+            0.5
+          ]
+        }
+      ],
+      "growing": 2,
+      "batches": [
+        "fa1be4a7ea",
+        "cb30b9aa4e"
+      ],
+      "out_of_range": 1,
+      "yield": [
+        {
+          "amount": 6.0,
+          "unit": "heads"
+        }
+      ]
+    }
+  },
   "alerts": [
     {
+      "place": "847ee0c6b5",
       "system": "Tank A",
       "label": "pH",
-      "value": 7.4,
+      "value": 7.6,
       "unit": "",
       "side": "high",
       "low": 6.8,
@@ -184,6 +297,7 @@
           "id": "fa1be4a7ea",
           "crop": "Lettuce",
           "variety": "Butterhead",
+          "place": "847ee0c6b5",
           "system": "Tank A",
           "method": "aquaponics",
           "planted": "2026-09-09",
@@ -215,7 +329,7 @@
           "values": {
             "crop": "Lettuce",
             "variety": "Butterhead",
-            "system": "Tank A",
+            "asset_id": "847ee0c6b5",
             "method": "aquaponics",
             "planted": "2026-09-09",
             "count": 12,
@@ -227,6 +341,7 @@
           "id": "cb30b9aa4e",
           "crop": "Lettuce",
           "variety": "Romaine",
+          "place": "847ee0c6b5",
           "system": "Tank A",
           "method": "aquaponics",
           "planted": "2026-09-09",
@@ -249,7 +364,7 @@
           "values": {
             "crop": "Lettuce",
             "variety": "Romaine",
-            "system": "Tank A",
+            "asset_id": "847ee0c6b5",
             "method": "aquaponics",
             "planted": "2026-09-09",
             "count": 12,
@@ -321,9 +436,24 @@
   "counts": {
     "growing": 3,
     "alerts": 1,
-    "experiments": 1
+    "experiments": 1,
+    "places": 3
   },
   "picks": {
+    "places": [
+      {
+        "id": "7b388cf4c9",
+        "name": "Bed 2"
+      },
+      {
+        "id": "9f4ce672f7",
+        "name": "Raised bed"
+      },
+      {
+        "id": "847ee0c6b5",
+        "name": "Tank A"
+      }
+    ],
     "batches": [
       {
         "id": "fa1be4a7ea",
@@ -361,11 +491,13 @@
           "default": null
         },
         {
-          "name": "system",
-          "label": "Where (tank, bed, greenhouse…)",
-          "type": "text",
+          "name": "asset_id",
+          "label": "Where (a tank or bed: add it under Assets)",
+          "type": "pick",
           "required": false,
-          "options": [],
+          "options": [
+            "places"
+          ],
           "default": null
         },
         {

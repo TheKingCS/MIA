@@ -22,7 +22,7 @@ from core.record_actions import Field, Record, record_kinds
 BATCH = Record("batch", "batch", "batch_id", "get_batch", "add_batch", "update_batch", "delete_batch",
                store="grow_lab", fields=(
                    Field("crop", "What's planted", "text", True), Field("variety", "Variety", "text"),
-                   Field("system", "Where (tank, bed, greenhouse…)", "text", say="where"),
+                   Field("asset_id", "Where (a tank or bed: add it under Assets)", "pick", options=("places",), say="where"),
                    Field("method", "How (aquaponics, soil…)", "text", say="method"),
                    Field("planted", "Planted on", "date"), Field("count", "How many plants or seeds", "int", say="count"),
                    Field("cost", "What it cost (seeds, starts)", "money", say="cost"),
@@ -109,10 +109,21 @@ def _measure(params):
 
 
 def _system(context, params) -> str:
+    """The place: a Greenhouse asset's id (`place` or `asset_id`), or a
+    name typed for an older place (`system`)."""
+    place = str(params.get("place") or params.get("asset_id") or "").strip()
+    if place:
+        if _lab(context).asset(place) is None and place.lower() not in (s.lower() for s in _lab(context).systems):
+            raise ActionError("That tank or bed isn't there anymore.")
+        return place
     system = " ".join(str(params.get("system") or "").split())
     if not system:
         raise ActionError("Which tank, bed or room?")
     return system
+
+
+def _where(context, place: str) -> str:
+    return _lab(context).place_name(place)
 
 
 def _reading_describe(context, params) -> str:
@@ -124,7 +135,7 @@ def _reading_describe(context, params) -> str:
     low, high, _mine = _lab(context).range_for(system, measure)
     side = check_range(value, low, high)
     warn = f" (that's {side}: your range is {low if low is not None else '–'} to {high if high is not None else '–'})" if side else ""
-    return f"{system}: {label} {value:g}{(' ' + unit) if unit else ''}{warn}"
+    return f"{_where(context, system)}: {label} {value:g}{(' ' + unit) if unit else ''}{warn}"
 
 
 def _reading(context, params) -> str:
@@ -132,10 +143,11 @@ def _reading(context, params) -> str:
 
     system, measure = _system(context, params), _measure(params)
     value = _num(params, "value", "The reading", allow_negative=True)
-    _lab(context).add_system(system)
+    if _lab(context).asset(system) is None:
+        _lab(context).add_system(system)
     _need(context, "data_logger").add_reading(series_id(system, measure), value, MEASURES[measure][1],
                                               str(params.get("note") or ""))
-    return f"{MEASURES[measure][0]} logged for {system}."
+    return f"{MEASURES[measure][0]} logged for {_where(context, system)}."
 
 
 def _range_describe(context, params) -> str:
@@ -148,7 +160,7 @@ def _range_describe(context, params) -> str:
         raise ActionError("Set a low end, a high end, or both.")
     if low is not None and high is not None and low > high:
         raise ActionError("The low end has to be below the high end.")
-    return f"{system}: keep {MEASURES[measure][0]} between {low if low is not None else 'anything'} and " \
+    return f"{_where(context, system)}: keep {MEASURES[measure][0]} between {low if low is not None else 'anything'} and " \
         f"{high if high is not None else 'anything'}"
 
 
@@ -198,9 +210,9 @@ def _register() -> None:
                                                 "note": "notes", "done": "the last of it"}, _harvest_describe, _harvest),
         ActionType("batch.lost", "Lost Some", {"batch_id": "the batch", "how_many": "how many", "why": "why", "all": "all of it"},
                    _lost_describe, _lost),
-        ActionType("grow.reading", "Log Reading", {"system": "where", "measure": "what", "value": "the reading", "note": "notes"},
+        ActionType("grow.reading", "Log Reading", {"place": "the tank or bed", "measure": "what", "value": "the reading", "note": "notes"},
                    _reading_describe, _reading),
-        ActionType("grow.range", "Set Range", {"system": "where", "measure": "what", "low": "low end", "high": "high end"},
+        ActionType("grow.range", "Set Range", {"place": "the tank or bed", "measure": "what", "low": "low end", "high": "high end"},
                    _range_describe, _range),
         ActionType("grow.system", "Add Place", {"system": "a tank, bed or room"},
                    lambda c, p: f"Add {_system(c, p)} to the grow lab", lambda c, p: f"{_lab(c).add_system(_system(c, p))} added."),
