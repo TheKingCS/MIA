@@ -131,7 +131,7 @@
   }
   function bossCard(b) {
     const m = b.kind === "mission" ? [].concat(page.active, page.daily, page.completed).find((x) => x.id === b.id) : null;
-    return el("article", { class: "glass boss-card" + (b.defeated ? " defeated" : "") + " phase-" + b.phase.toLowerCase().replace(/\s+/g, "-") },
+    return el("article", { class: "glass boss-card kind-" + b.kind + (b.defeated ? " defeated" : "") + " phase-" + b.phase.toLowerCase().replace(/\s+/g, "-") },
       el("div", { class: "boss-head" },
         el("span", { class: "boss-icon", "aria-hidden": "true" }, b.defeated ? "🏆" : b.icon),
         el("div", { class: "boss-title" }, el("h3", {}, b.name), el("p", { class: "boss-kind" }, b.kind === "debt" ? "Debt Boss" : "Mission Boss")),

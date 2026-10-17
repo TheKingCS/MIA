@@ -64,7 +64,7 @@
 
   // ------------------------------------------------------------ crafting recipes (DEC-0030)
   const mediaUrl = (b, m) => "/api/workshop/builds/" + encodeURIComponent(b.id) + "/media?name=" + encodeURIComponent(m.name);
-  const TAG = { before: "Before", during: "During", after: "After" };
+  const TAG = { before: "Before", during: "Progress", after: "After" };
 
   async function startBuild(r) {
     const v = await form("Build " + r.name, [{ name: "times", label: "How many", type: "int", required: true, options: [], default: 1 }], {});
@@ -131,7 +131,7 @@
         MIA.image(mediaUrl(b, m)).then((src) => { if (src) img.src = src; });
         t.append(img);
       } else t.append(el("span", { class: "media-ico", "aria-hidden": "true" }, "▶"));
-      if (TAG[m.tag]) t.append(el("span", { class: "craft-tag" }, TAG[m.tag]));
+      if (TAG[m.tag]) t.append(el("span", { class: "craft-tag tag-" + m.tag }, TAG[m.tag]));
       return t;
     });
     return el("div", { class: "craft-photos" },

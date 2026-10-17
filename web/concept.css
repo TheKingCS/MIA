@@ -1339,6 +1339,7 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 
 /* ---------------------------------------------------------------- boss battles (DEC-0028, 2026-10-17) */
 .boss-card { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-color: rgba(var(--rgb-bad), 0.45); }
+.boss-card.kind-mission { border-color: rgba(var(--rgb-win), 0.5); }  /* a goal isn't danger: gold, not red (Muse, H-0053) */
 .boss-card.defeated { border-color: rgba(var(--rgb-ok), 0.5); opacity: 0.85; }
 .boss-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
 .boss-icon { font-size: 30px; line-height: 1; }
@@ -1455,3 +1456,7 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .remember-list small { color: var(--text-dim); }
 .talk-level { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
   color: var(--text-dim); }
+/* Build photo stages read at a glance (Muse, H-0053): before dim, progress accent, after green. */
+.craft-tag.tag-before { color: var(--text-dim); }
+.craft-tag.tag-during { color: rgb(var(--rgb-accent)); }
+.craft-tag.tag-after { color: rgb(var(--rgb-ok)); }
