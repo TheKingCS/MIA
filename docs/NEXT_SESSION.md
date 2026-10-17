@@ -478,6 +478,7 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
+- **Show-off mode** (Zac, 2026-10-17): "MIA, show off for my friends" starts a narrated, step-by-step demo of her abilities. Notes and the open question (demo world vs. own data with private things hidden): `docs/future/SHOW_OFF_MODE.md`.
 
 ## 4. Known loose ends
 
