@@ -101,6 +101,7 @@ if TYPE_CHECKING:
     from core.online_watch import OnlineReminders
     from core.reward_shop import RewardShop
     from core.craft_recipes import CraftRecipeBook
+    from core.business_book import BusinessBook
     from core.boss_battles import BossBook
     from core.personal_data import PersonalData
     from core.phone_server import PhoneServer
@@ -233,6 +234,7 @@ class AppContext:
     reward_shop: Optional["RewardShop"] = field(default=None, repr=False)  # DEC-0028
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
     craft_recipes: Optional["CraftRecipeBook"] = field(default=None, repr=False)  # DEC-0030 crafting recipes
+    business: Optional["BusinessBook"] = field(default=None, repr=False)  # DEC-0030 quotes, customers, orders
     # Each person's own stores (core/personal_data.py): conversations,
     # memories, journal, notes, reasons, message log, online reminders.
     personal_data: Optional["PersonalData"] = field(default=None, repr=False)

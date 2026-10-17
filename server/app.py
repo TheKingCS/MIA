@@ -883,6 +883,12 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "workshop", workshop_page)
 
+    @app.get("/api/business")
+    def web_business(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_business import business_page
+
+        return _screen(profile_id, "business", business_page)
+
     @app.get("/api/people")
     def web_people(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_more import people_page

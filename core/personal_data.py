@@ -84,6 +84,7 @@ from core.notification_manager import NotificationManager
 from core.online_watch import OnlineReminders
 from core.reward_shop import RewardShop
 from core.craft_recipes import CraftRecipeBook
+from core.business_book import BusinessBook
 from core.boss_battles import BossBook
 from core.plaid_manager import PlaidManager
 from core.private_journal import PrivateJournalManager
@@ -148,6 +149,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("jobs", JobManager),
     ("ledger", LedgerManager),
     ("craft_recipes", CraftRecipeBook),
+    ("business", BusinessBook),
     ("waypoints", WaypointManager),
     ("scripts", ScriptLibraryManager),
     ("expeditions", ExpeditionManager),

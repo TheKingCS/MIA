@@ -1,0 +1,377 @@
+{
+  "available": true,
+  "as_of": "2026-10-17",
+  "orders": [
+    {
+      "id": "ebc3a1c897",
+      "title": "Porch bench",
+      "customer": "Jordan",
+      "status": "Building",
+      "quantity": 1,
+      "recipe": "Farmhouse Bench",
+      "has_recipe": true,
+      "price": "$306.00",
+      "paid": "$100.00",
+      "left": "$206.00",
+      "left_value": 206.0,
+      "due": "2026-11-15",
+      "overdue": false,
+      "build": {
+        "id": "3d9c248bc9",
+        "steps": "0/5",
+        "finished": false,
+        "profit": "$100.00"
+      },
+      "open": true,
+      "notes": "",
+      "values": {
+        "title": "Porch bench",
+        "customer_id": "fc215300ae",
+        "recipe_id": "63f4e559ee",
+        "quantity": 1,
+        "price": 306.0,
+        "due_date": "2026-11-15",
+        "notes": ""
+      }
+    }
+  ],
+  "quotes": [
+    {
+      "id": "72e05f523c",
+      "title": "Two planter boxes",
+      "customer": "Sam",
+      "status": "Draft",
+      "quantity": 1,
+      "recipe": "",
+      "price": "$140.00",
+      "suggested": "",
+      "custom_price": true,
+      "parts": [],
+      "valid_until": "",
+      "open": true,
+      "notes": "Cedar, 24 x 12 in",
+      "values": {
+        "title": "Two planter boxes",
+        "customer_id": "c76a289279",
+        "recipe_id": "",
+        "quantity": 1,
+        "labor_rate": 0.0,
+        "margin": 20.0,
+        "extras": 0.0,
+        "price": 140.0,
+        "valid_until": "",
+        "notes": "Cedar, 24 x 12 in"
+      }
+    },
+    {
+      "id": "e0da60942f",
+      "title": "Porch bench",
+      "customer": "Jordan",
+      "status": "Accepted",
+      "quantity": 1,
+      "recipe": "Farmhouse Bench",
+      "price": "$306.00",
+      "suggested": "$306.00",
+      "custom_price": false,
+      "parts": [
+        [
+          "Materials",
+          "$84.86"
+        ],
+        [
+          "Labor 6 h × $25.00",
+          "$150.00"
+        ],
+        [
+          "Extras",
+          "$20.00"
+        ],
+        [
+          "Margin 20%",
+          ""
+        ]
+      ],
+      "valid_until": "",
+      "open": false,
+      "notes": "",
+      "values": {
+        "title": "Porch bench",
+        "customer_id": "fc215300ae",
+        "recipe_id": "63f4e559ee",
+        "quantity": 1,
+        "labor_rate": 25.0,
+        "margin": 20.0,
+        "extras": 20.0,
+        "price": 0.0,
+        "valid_until": "",
+        "notes": ""
+      }
+    }
+  ],
+  "customers": [
+    {
+      "id": "fc215300ae",
+      "name": "Jordan",
+      "phone": "555-0100",
+      "email": "",
+      "notes": "Found us at the roadside stand",
+      "orders": 1,
+      "open_orders": 1,
+      "spent": "$100.00",
+      "values": {
+        "name": "Jordan",
+        "phone": "555-0100",
+        "email": "",
+        "notes": "Found us at the roadside stand"
+      }
+    },
+    {
+      "id": "c76a289279",
+      "name": "Sam",
+      "phone": "",
+      "email": "sam@example.com",
+      "notes": "",
+      "orders": 0,
+      "open_orders": 0,
+      "spent": "",
+      "values": {
+        "name": "Sam",
+        "phone": "",
+        "email": "sam@example.com",
+        "notes": ""
+      }
+    }
+  ],
+  "portfolio": [
+    {
+      "id": "655b021c83",
+      "name": "Farmhouse Bench",
+      "featured": true,
+      "dimensions": "48 x 14 x 18 in",
+      "description": "",
+      "sold": "$175.00",
+      "photos": [],
+      "finished": "2026-10-17"
+    }
+  ],
+  "counts": {
+    "open_orders": 1,
+    "open_quotes": 1,
+    "customers": 2,
+    "owed": "$206.00"
+  },
+  "picks": {
+    "customers": [
+      {
+        "id": "fc215300ae",
+        "name": "Jordan"
+      },
+      {
+        "id": "c76a289279",
+        "name": "Sam"
+      }
+    ],
+    "recipes": [
+      {
+        "id": "63f4e559ee",
+        "name": "Farmhouse Bench"
+      }
+    ]
+  },
+  "forms": {
+    "customer": {
+      "noun": "customer",
+      "id_param": "customer_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "phone",
+          "label": "Phone",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes (what they like, how they found you)",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "quote": {
+      "noun": "quote",
+      "id_param": "quote_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "What it's for",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "customer_id",
+          "label": "Customer",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "customers"
+          ],
+          "default": null
+        },
+        {
+          "name": "recipe_id",
+          "label": "From a recipe",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "recipes"
+          ],
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "label": "How many",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "labor_rate",
+          "label": "Your labor rate per hour",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "margin",
+          "label": "Margin (%)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 20
+        },
+        {
+          "name": "extras",
+          "label": "Extras (delivery, hardware…)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "price",
+          "label": "Price (blank: the suggested price)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "valid_until",
+          "label": "Good until",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "order": {
+      "noun": "order",
+      "id_param": "order_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "What it is",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "customer_id",
+          "label": "Customer",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "customers"
+          ],
+          "default": null
+        },
+        {
+          "name": "recipe_id",
+          "label": "From a recipe",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "recipes"
+          ],
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "label": "How many",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "price",
+          "label": "Agreed price",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "due_date",
+          "label": "Due",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

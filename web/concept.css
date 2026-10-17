@@ -1460,3 +1460,5 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .craft-tag.tag-before { color: var(--text-dim); }
 .craft-tag.tag-during { color: rgb(var(--rgb-accent)); }
 .craft-tag.tag-after { color: rgb(var(--rgb-ok)); }
+.craft-card.overdue { border-color: rgba(var(--rgb-bad), 0.5); }
+.craft-card.featured { border-color: rgba(var(--rgb-win), 0.5); }

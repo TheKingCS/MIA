@@ -299,6 +299,20 @@
           "favorite": false
         },
         {
+          "id": "business",
+          "name": "Orders & Quotes",
+          "icon": "🧾",
+          "tagline": "Customers, quotes and orders.",
+          "description": "Quotes from your recipes, customers, orders and payments, and a portfolio of what you've built (DEC-0030).",
+          "page": "business.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What do customers still owe me?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "inbox",
           "name": "Inbox",
           "icon": "📥",
@@ -641,8 +655,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 34,
-    "on_web": 15,
+    "apps": 35,
+    "on_web": 16,
     "tools": 32
   }
 }

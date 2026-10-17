@@ -88,6 +88,13 @@
       "page": "workshop.html"
     },
     {
+      "id": "business",
+      "name": "Orders & Quotes",
+      "icon": "🧾",
+      "tagline": "Customers, quotes and orders.",
+      "page": "business.html"
+    },
+    {
       "id": "character",
       "name": "Character",
       "icon": "👤",
