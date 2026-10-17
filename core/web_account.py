@@ -67,6 +67,11 @@ SETTINGS: tuple[Setting, ...] = (
             child_ok=False),
     Setting("budget.private", "Money", "Keep my money private", "toggle", False,
             "Your budget and bank accounts are kept apart from the household's.", child_ok=False),
+    # Sound (DEC-0028 #11): chimes and fanfares on wins (web/sound.js), MIA's voice lines.
+    Setting("sound.on", "Sound", "Sounds when you win", "toggle", True,
+            "A chime for an objective, a fanfare for a level. Never for anything you didn't do."),
+    Setting("sound.voice", "Sound", "MIA says a line when you win", "toggle", False,
+            "Spoken out loud by this device's voice."),
 )
 SETTINGS_BY_KEY = {s.key: s for s in SETTINGS}
 

@@ -58,6 +58,10 @@
   async function load() {
     try { data = await MIA.glasses(mission); } catch (e) { data = data || { apps: [], others: [] }; }
     if (!data || !Array.isArray(data.apps)) data = { apps: [], others: [] };
+    if (window.MIASound && !load.sound) {  // the person's sound settings, once
+      load.sound = true;
+      MIA.shell().then((s) => MIASound.configure(s.sound)).catch(() => {});
+    }
   }
 
   const ALL = { id: "__all", name: "All Apps" };
@@ -482,6 +486,7 @@
         resultText = done.result || done.summary || "Done.";
         if (done.status === "executed" && done.reward) {
           reward = done.reward; proposal = null; show("reward");
+          if (window.MIASound) MIASound.celebrate(reward);  // a quest-complete chime on the glasses (DEC-0028 #11)
           clearTimeout(rewardTimer);
           rewardTimer = setTimeout(() => { if (view === "reward") leaveResult(); }, 6000);
           return;

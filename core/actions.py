@@ -495,7 +495,29 @@ def reward_for(before: dict, after: dict, kind: str) -> Optional[dict]:
         "done": after.get("done"), "total": after.get("total"),
         # Every objective finished, the mission waiting to be claimed.
         "ready": bool(objective_done and after.get("total") and after.get("done") == after.get("total") and not mission_done),
+        "say": voice_line(headline, level if level > level_before else None, name),
     }
+
+
+# MIA's lines for a win (web/sound.js speaks one when the person turned
+# voice lines on). Warm and short, never guilt (docs/design/MIA_VOICE.md).
+VOICE_LINES = {
+    "Level": ("Level {level}! Look at you.", "Level {level}. You earned that one.", "Level {level}! Onward."),
+    "Mission Complete": ("{name}: done. Nicely handled.", "That's {name} finished. Good work.", "{name}, complete. On to the next."),
+    "Objective Complete": ("One down.", "Nice. That's one more.", "Checked off."),
+    "XP Earned": ("Good stuff.", "That counts.", "Nice one."),
+}
+
+
+def voice_line(headline: str, level: Optional[int] = None, name: str = "") -> str:
+    """Pure logic. One of MIA's lines, picked steadily from the name (so
+    the same win says the same thing)."""
+    key = "Level" if level else headline
+    lines = VOICE_LINES.get(key, VOICE_LINES["XP Earned"])
+    if "{name}" in lines[0] and not name:
+        lines = VOICE_LINES["XP Earned"]
+    pick = lines[sum(map(ord, name or key)) % len(lines)]
+    return pick.format(level=level, name=name)
 
 
 def suggested(kind: str, **params) -> dict:

@@ -247,7 +247,16 @@ def shell(context, today: Optional[date] = None) -> dict:
                  for a in apps if a.page],
         "on_pc_only": [a.name for a in apps if not a.page],
         "weather": {"status": "PLANNED", "text": None},
+        "sound": _sound(context),
     }
+
+
+def _sound(context) -> dict:
+    """The person's sound settings (web/sound.js plays them)."""
+    from core import person_settings
+
+    return {"on": bool(person_settings.get(context, "sound.on", True)),
+            "voice": bool(person_settings.get(context, "sound.voice", False))}
 
 
 def plural(n: int, word: str, many: str = "") -> str:

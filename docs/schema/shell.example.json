@@ -183,5 +183,9 @@
   "weather": {
     "status": "PLANNED",
     "text": null
+  },
+  "sound": {
+    "on": true,
+    "voice": false
   }
 }

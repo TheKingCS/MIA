@@ -46,6 +46,7 @@ PERSONAL_SETTINGS = (
     "system.last_season_note",
     "party.leaderboard",
     "sound.on",
+    "sound.voice",
 )
 
 

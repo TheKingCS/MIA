@@ -82,6 +82,7 @@
         return null;
       }
       const done = await MIA.approve(proposal.proposal_id);
+      if (window.MIASound && done.status === "executed") MIASound.celebrate(done.reward);  // DEC-0028 #11
       say(done.result || "Done.", done.undoable ? async () => {
         try { await MIA.undo(done.proposal_id); say("Undone."); refresh(); } catch (e) { say(e.message); }
       } : null);
@@ -199,6 +200,7 @@
   }
 
   function renderNav(shell) {
+    if (window.MIASound) MIASound.configure(shell.sound);
     const layout = $(".layout");
     document.body.classList.toggle("has-side", Boolean(layout));
     if (layout) {
