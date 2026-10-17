@@ -57,5 +57,10 @@ character stats. Then the rest as Zac picks them.
 | 4 | Real character stats | ✅ built: Character → Attributes, `core/character_stats.py` |
 | 5 | Buffs | ✅ built: `core/buffs.py`; Character (Buffs + gold on Attributes; off Home, Zac 2026-10-17), glasses Character → Buffs. Each lifts one attribute +1 while it lasts |
 | 8 | The Chronicle | ✅ built: `core/chronicle.py`, `web/chronicle.html` (Character → The Chronicle), glasses Character → This Week's Story, a Sunday note through the gate |
-| 9 | Crafting | 🟡 workshop crafting built (DEC-0030 B): recipes, inventory check, shopping list, Bought It, builds, profit. Kitchen recipes as blueprints: not yet |
-| 6–7, 10–13 | World map, questlines, party, sound, watch HUD, location quests | waiting for Zac to pick the next one |
+| 6 | World map, fog of war | ✅ built (DEC-0032): `core/world_map.py`, `web/worldmap.html` (Expeditions → World Map). Arrivals, finished trips, photo GPS and I'm Here (`map.checkin`) clear ~2 km tiles; "?" pins for unreached waypoints; achievements; +5 XP per new tile |
+| 7 | Questlines and seasons | ✅ built (DEC-0032): `core/questlines.py`, Missions → Quests. Chapters are missions; finishing one opens the next with MIA's line; seasonal starters by hemisphere; your own; a once-a-season note through the gate |
+| 9 | Crafting | ✅ workshop crafting (DEC-0030 B) and kitchen blueprints (DEC-0032): `core/kitchen_blueprint.py`, "I Made This" (`meal.cook`) takes what the batches used out of the pantry; what runs out goes on the grocery list |
+| 10 | Party and guild | ✅ built (DEC-0032): `core/party.py`, `web/party.html` (Missions → Quests → Party). Household raids share jobs out and the reward; opt-in weekly leaderboard counts wins, never money |
+| 11 | Sound | ✅ built (DEC-0032): `web/sound.js` (Web Audio, no files): chime, quest complete, level-up fanfare; MIA's voice lines (`core/actions.voice_line`); Settings → Sound; the glasses play them too |
+| 13 | Location quests | ✅ built (DEC-0032): `core/places.py`, `web/places.html`, `web/places-watch.js`. Checked on the device while MIA is open, after you switch it on; arriving asks first, then opens the workout / grocery list (on the glasses, the list itself) |
+| 12 | Watch health HUD | waiting for the watch |

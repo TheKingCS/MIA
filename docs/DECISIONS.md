@@ -547,3 +547,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Stop at every step; never an LLM-written script. Notes:
   `docs/future/SHOW_OFF_MODE.md`.
 - Related: DEC-0014, DEC-0029
+
+### DEC-0032: The rest of the game layer: questlines, kitchen blueprints, world map, party, sound, location quests
+- Status: APPROVED
+- Proposed by: claude, 2026-10-17 ("What's next?" list) · Approved by: zac, 2026-10-17 ("Lets start and 1 and build 1-6")
+- Decision: build DEC-0028's ideas 6, 7, 9 (kitchen half), 10, 11 and 13.
+  How Claude built them (Zac can change any of these):
+  questlines are chains of missions with no countdowns, and a started one
+  stays yours after its season; the world map clears ~2 km tiles from
+  places you really reached (trip arrivals, finished trips, photo GPS,
+  "I'm Here"), never from planned ones; the leaderboard is opt-in per
+  person and counts wins only (never money, never misses); sounds are on
+  by default and MIA's spoken lines are off by default; location is
+  only checked on the device, only while MIA is open, only after the
+  person switches it on, and arriving asks before doing anything.
+  Notes: `docs/GAME_LAYER.md`.
+- Related: DEC-0014, DEC-0028

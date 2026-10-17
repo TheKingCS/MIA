@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-16 (glasses quick action menus), by claude.*
+session. Last updated: 2026-10-17 (the rest of the game layer, DEC-0032), by claude.*
 
 ## Phase
 
@@ -64,6 +64,8 @@ every push). Anything that needs the PC waits.
 - The glasses client: on Q-0003 (platform and access).
 
 ## Recent changes (newest first)
+
+- 2026-10-17 · claude · **The rest of the game layer (DEC-0032, Zac: "build 1-6").** (1) **Questlines and seasons**, Missions → **Quests**: a questline is chapters, each one a real mission; finishing a chapter opens the next with MIA's line for it ("Chapter 2: Seal It Up. Keep the warm in."). Seasonal starters follow the date and your hemisphere (Fall: Ready For Winter, Harvest Home when there's something growing...), any-time ones (Learn Something New, Closer To People), or write your own (one chapter per line). No countdowns; a started one stays yours. Once a season MIA offers them through the gate. `core/questlines.py`. (2) **Kitchen recipes as blueprints**: a recipe's ingredients show what you have ("have 2 lb"), and **I Made This** asks how many batches and takes what they used out of the pantry; what runs out goes on the grocery list. `core/kitchen_blueprint.py`, `meal.cook`. (3) **World Map with fog of war** (Expeditions → World Map): places you really reached (trip arrivals, finished trips, photos with GPS, **I'm Here**) clear ~2 km tiles; unreached waypoints are "?" pins in the fog; achievements (First Steps → World Walker, Day Tripper → Globetrotter); +5 XP per new tile. `core/world_map.py`. (4) **Party** (Missions → Quests → Party): household **raids** share the jobs out round the table and everyone gets the reward; an opt-in **leaderboard** counts this week's wins (never money). `core/party.py`. (5) **Sound**: a chime for an objective, an arpeggio for a mission, a fanfare for a level (made in the browser, no files), on the glasses too; MIA's spoken line is off unless you turn it on (Settings → Sound). `web/sound.js`. (6) **Location quests** (Settings → My Places): add the gym or the store; with noticing on, MIA checks where you are on the device while she's open, asks when you arrive, then opens your workout or grocery list (on the glasses, the list itself). The phone app now asks Android for location. `core/places.py`, `web/places-watch.js`.
 
 - 2026-10-17 · claude · **Three follow-ups while the PC gets ready.** (1) **From A Receipt** on a recipe's shopping list: pick a scanned receipt and MIA matches its lines to the recipe's materials (store names understood: "2X4X8 STUD" → 2x4 8ft, "PLYWD" → plywood; numbers alone never match), Bought It opens filled in to check, and the money isn't recorded twice (it's already in the Budget). `core/receipt_match.py`. (2) **Email Quote**: MIA drafts the quote email to the customer (what, size, price, good until; never your margin or labor rate) and shows the draft with Send / Copy / Mail App / Discard; it's only sent when you press Send. `quote.email`, `MIAShell.showDraft`. (3) **Greenhouse alerts**: on the desktop, a tank or bed reading outside its range becomes a note through the communication gate (once per reading, daily limit), only ever a warning. `core/grow_lab.alert_note`.
 - 2026-10-17 · claude · **Buffs only on Character (Zac).** Home no longer shows the buff chips; they live in Character → Buffs (and on the attribute bars and the glasses).

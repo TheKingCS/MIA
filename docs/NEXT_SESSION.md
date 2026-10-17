@@ -31,6 +31,8 @@ of the Android app.
 
 - **Tomorrow, the new computer as MIA's brain:** follow `docs/HOME_COMPUTER_SETUP.md` (Ollama + qwen2.5:14b, Phone Access, Tailscale serve), then on the phone Settings → Home Computer → Link. Tell Claude what the link says; Claude then compares 14B and 32B on the golden set.
 
+- [ ] **Try the new game layer on the phone (DEC-0032):** Missions → **Quests** (start Ready For Winter; finish chapter 1 and watch chapter 2 open), the **Party** link there (start a raid; Join the leaderboard), Expeditions → **World Map** (press I'm Here; the phone asks for location once), Settings → **My Places** (Add Where I Am at the gym or store, Turn On, and next time you arrive MIA asks), a recipe → **I Made This** (the pantry goes down), and listen for the chime when you finish an objective (Settings → Sound to turn MIA's spoken lines on).
+
 ### From your phone, now (you're phone-only for the moment)
 
 Everything here works from a phone: the GitHub app (or github.com) for
@@ -276,11 +278,13 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
-**Game layer (DEC-0028, `docs/GAME_LAYER.md`), 2026-10-17:** built 1–5
-and 8 (Reward Shop, gear condition bars, boss battles, real stats,
-buffs, the Chronicle) plus People & Pets on the web. Left: world map,
-questlines, crafting, party, sound, watch HUD, location quests, when
-Zac picks. **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
+**Game layer (DEC-0028, `docs/GAME_LAYER.md`), 2026-10-17:** all built
+except the watch HUD (waits for the watch): Reward Shop, gear bars,
+bosses, stats, buffs, the Chronicle, and (DEC-0032) questlines, kitchen
+blueprints, world map, party, sound, location quests. Possible next
+steps there: more seasonal starters, a basemap under the world map
+(offline tiles), location quests in the background (needs native
+Android geofencing; today it's only while MIA is open). **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
 one conversation everywhere, the voice guide. **Expansion audit**
 (`docs/EXPANSION_AUDIT.md`, DEC-0030 approved): phase B crafting is
 built (Workshop → Recipes / Builds). DEC-0030 approved (2026-10-17). Built since: the phone side of DEC-0022 (`docs/HOME_COMPUTER_SETUP.md`), phase C Orders & Quotes, phase D Grow Lab, and show-off mode (DEC-0031). Next:
