@@ -124,8 +124,9 @@
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
     const empty = !lib.count ? section("Your Music Library", btn("Scan Library", "btn-amber", () => act({ kind: "music.scan", params: {} })),
-      el("p", {}, lib.found ? "MIA looks for music in " + lib.folder + ". Put songs there, then Scan Library."
-        : "MIA's music folder isn't there yet (" + (lib.folder || "not set") + "). Set it in Settings on the PC, then Scan Library.")) : null;
+      el("p", { class: "music-library" }, lib.found ? "MIA looks for music in " + lib.folder + ". Put songs there, then Scan Library."
+        : "No music library yet. On the PC, set MIA's music folder in Settings, then Scan Library."),
+      !lib.found && lib.folder ? el("p", { class: "dim music-library" }, "Looking in: " + lib.folder) : null) : null;
     $("panel").replaceChildren(...[empty, ...[].concat(lib.count ? VIEWS[tab]() : []),
       lib.count ? el("p", { class: "dim music-library" }, "Library: " + lib.folder + " · ", el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); act({ kind: "music.scan", params: {} }); } }, "Scan For New Music")) : null].filter(Boolean));
   }

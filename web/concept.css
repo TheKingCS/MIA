@@ -1267,7 +1267,8 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   .file-row { grid-template-columns: minmax(0, 1fr); }
 }
 .file-open, .music-play { text-transform: none; }
-.music-library { overflow-wrap: anywhere; }
+.music-library { overflow-wrap: anywhere; min-width: 0; }
+.money-section { min-width: 0; }
 
 /* ---------------------------------------------------------------- Inbox (2026-10-16) */
 .inbox-send { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 8px; }
