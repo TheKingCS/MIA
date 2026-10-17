@@ -196,3 +196,24 @@ def test_timing_and_title_wording():
     assert describe_timings(turn_timings(None, 2.0, 0.5)) == "thought 2.0s · spoke 0.5s"
     assert phone_title("  what's   on my schedule  ") == "\U0001F4F1 what's on my schedule"
     assert phone_title("x" * 60).endswith("…") and len(phone_title("x" * 60)) == 43
+
+
+def test_one_conversation_everywhere(phone):
+    """DEC-0029 (ALICE pick 2): the person at the desktop continues the same
+    conversation from the phone and the glasses, and can start a fresh one."""
+    ctx = phone.context
+    alice = ctx.profiles.list_profiles()[0].profile_id
+    ctx.profiles.set_active_profile(alice)
+    ctx.personal_data.activate(alice)  # what signing in at the desktop does
+    assert ctx.conversations is phone.conversations
+    started = ctx.conversations.get_or_create_active_conversation()
+    ctx.conversations.add_message(started.conversation_id, "user", "Let's plan the garden")
+    phone.client.post("/api/voice/text", json={"text": "Where were we?"})
+    assert [m.content for m in started.messages][:2] == ["Let's plan the garden", "Where were we?"]
+    thread = phone.client.get("/api/talk/thread").json()
+    assert thread["conversation_id"] == started.conversation_id
+    assert [m["content"] for m in thread["messages"]][:2] == ["Let's plan the garden", "Where were we?"]
+    phone.client.post("/api/voice/reset")
+    phone.client.post("/api/voice/text", json={"text": "Something new"})
+    assert ctx.conversations.get_active_conversation_id() != started.conversation_id
+    assert phone.client.get("/api/talk/thread").json()["messages"][0]["content"] == "Something new"

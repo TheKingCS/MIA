@@ -26,14 +26,14 @@ pieces exist, but they aren't joined up or some are missing) ·
 
 | Capability | Status | What exists / what's missing |
 |---|---|---|
-| **Persistent memory** | 🟡 | `core/user_memory_manager.py` keeps memories. `core/assistant_chat.py` puts the **20 most recent** into every turn, whether they're relevant or not, and the person never sees which. Fix: ALICE pick 1, "What I Used" |
+| **Persistent memory** | ✅ 2026-10-17 (was 🟡) | `core/user_memory_manager.py` keeps memories. `core/assistant_chat.py` puts the **20 most recent** into every turn, whether they're relevant or not, and the person never sees which. Fix: ALICE pick 1, "What I Used" |
 | **Context-aware conversation** | 🟡 | Life State, Today, `why_graph`, and a domain-scoped tool set per turn (`core/assistant_actions.py`). Missing: picking memories by relevance, and the current screen/item as context |
-| **Proactive help** | ✅ engine, 🟡 content | The communication gate (`core/communication_gate.py`) rate-limits and merges notes, learns from what you ignore, and gives a reason for each. Missing: memory callbacks (ALICE pick 3) |
+| **Proactive help** | ✅ 2026-10-17: MIA Remembers (`core/memory_callbacks.py`) | The communication gate (`core/communication_gate.py`) rate-limits and merges notes, learns from what you ignore, and gives a reason for each. Missing: memory callbacks (ALICE pick 3) |
 | **Situational help** (cooking, woodworking, repairs, equipment) | 🟡 | Recipe steps and the practice timer; asset pages with upkeep; textbook tutor; the glasses' quick menus. Missing: build steps for workshop recipes (§4), "what am I looking at" |
 | **Visual context** | 🟡 / ⛔ | OCR for photos and receipts (`core/ocr.py`), Share to MIA from the phone (`Share.kt`), the inbox reading photos. No vision model is used yet. **Glasses:** see below |
 | **Model routing** (PC for hard work, phone for fast and offline) | 📐 approved | DEC-0022 "supercharged online" is next in the queue. Backends are already swappable (`core/llm_manager.py`: Ollama, llama.cpp). Facts and actions stay deterministic in code, so a model upgrade rewrites nothing |
-| **One conversation across devices** | 🟡 | Phone conversations show in the desktop History (built). Missing: one running thread that the glasses continue (ALICE pick 2) |
-| **One personality** | 🟡 | There's a companion personality from the 2026-07 aesthetic pass and the gate's wording rules. No single guide yet (ALICE pick 7) |
+| **One conversation across devices** | ✅ 2026-10-17 (was 🟡): the phone, the web and the glasses continue the desktop's active conversation; Talk opens on the thread | Phone conversations show in the desktop History (built). Missing: one running thread that the glasses continue (ALICE pick 2) |
+| **One personality** | ✅ 2026-10-17 (was 🟡): `docs/design/MIA_VOICE.md`, `core/personality.py` | There's a companion personality from the 2026-07 aesthetic pass and the gate's wording rules. No single guide yet (ALICE pick 7) |
 
 **What the Meta Ray-Ban Display allows (researched 2026-10-17; the
 official pages block this cloud computer, so confirm on hardware):**

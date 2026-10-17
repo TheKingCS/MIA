@@ -341,6 +341,7 @@ def create_app(context: AppContext) -> FastAPI:
     # ------------------------------------------------------------------
 
     app.state.voice_conversations: dict[str, Conversation] = {}
+    app.state.fresh_talk: set[str] = set()  # "New chat" asked for: the next turn starts one
     app.state.turn_lock = threading.Lock()
 
     def conversation_for(profile_id: str, view=None) -> Conversation:
@@ -352,6 +353,22 @@ def create_app(context: AppContext) -> FastAPI:
         conversations = app.state.voice_conversations
         current = conversations.get(profile_id)
         manager = getattr(view if view is not None else context, "conversations", None)
+        # One MIA everywhere (DEC-0029, ALICE pick 2): the person signed in at
+        # the desktop talks in the desktop's own active conversation from the
+        # phone and the glasses too, so a chat started at the desk continues
+        # in the truck. A fresh one after a reset or hours of quiet.
+        desk = context.profiles.get_active_profile() if getattr(context, "profiles", None) is not None else None
+        if manager is not None and manager is getattr(context, "conversations", None) and desk is not None \
+                and desk.profile_id == profile_id:
+            if profile_id in app.state.fresh_talk:
+                app.state.fresh_talk.discard(profile_id)
+                active = manager.start_new_active_conversation()
+            else:
+                active = manager.get_or_create_active_conversation()
+                if active.messages and _idle_too_long(active):
+                    active = manager.start_new_active_conversation()
+            conversations[profile_id] = active
+            return active
         if manager is None:
             if current is None:
                 current = conversations[profile_id] = Conversation(conversation_id=f"phone-{profile_id}")
@@ -1180,7 +1197,20 @@ def create_app(context: AppContext) -> FastAPI:
     @app.post("/api/voice/reset")
     def voice_reset(profile_id: str = Depends(require_profile_id)) -> dict:
         app.state.voice_conversations.pop(profile_id, None)
+        app.state.fresh_talk.add(profile_id)
         return {"reset": True}
+
+    @app.get("/api/talk/thread")
+    def talk_thread(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The conversation Talk continues (DEC-0029): its recent messages,
+        so the phone, the web and the glasses show the same thread. Off-
+        the-record messages are never kept, so never shown."""
+        with app.state.turn_lock:
+            view = view_for(context, profile_id)
+            conversation = conversation_for(profile_id, view)
+            messages = [{"role": m.role, "content": m.content} for m in conversation.messages
+                        if not getattr(m, "privacy", "")][-20:]
+            return {"conversation_id": conversation.conversation_id, "title": conversation.title, "messages": messages}
 
     # The web front end (web/, DEC-0012) and the schemas it's built on.
     # Mounted before "/" so the phone app keeps the root.

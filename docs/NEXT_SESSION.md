@@ -278,8 +278,13 @@ every step below in order, from a blank machine, with Windows notes.
 and 8 (Reward Shop, gear condition bars, boss battles, real stats,
 buffs, the Chronicle) plus People & Pets on the web. Left: world map,
 questlines, crafting, party, sound, watch HUD, location quests, when
-Zac picks. **Project ALICE review** (`docs/future/PROJECT_ALICE_REVIEW.md`)
-waits on Zac's picks (Q-0017).
+Zac picks. **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
+one conversation everywhere, the voice guide. **Expansion audit**
+(`docs/EXPANSION_AUDIT.md`, DEC-0030 proposed): phase B crafting is
+built (Workshop → Recipes / Builds). Next, once Zac decides DEC-0030:
+phase C (quotes from a recipe, customers and orders, a portfolio page),
+D (grow lab), E (memory vault, after DEC-0022's phone↔PC link). Receiving
+from a scanned receipt into a recipe's materials is a small follow-up.
 
 **The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`)**, and Zac
 has it on his phone (first start under 8 s). His feedback is fixed:

@@ -234,7 +234,11 @@
     const input = el("input", { id: "talk-input", placeholder: "Talk to MIA…", autocomplete: "off", "aria-label": "Message MIA" });
     const panel = el("aside", { class: "talk-panel glass glow", id: "talk-panel", hidden: true, "aria-label": "Talk to MIA" },
       el("div", { class: "talk-head" }, el("span", { class: "mia-line" }, el("span", { class: "mia-dot" }), "MIA"),
-        el("button", { type: "button", class: "btn btn-ghost", onclick: () => toggleTalk(false) }, "Close")),
+        el("span", { class: "row-buttons" },
+          el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+            try { await MIA.newChat(); log.replaceChildren(el("p", { class: "dim talk-note" }, "New chat. What's on your mind?")); } catch (e) { say(e.message); }
+          } }, "New Chat"),
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => toggleTalk(false) }, "Close"))),
       log,
       el("form", { class: "talk-form", onsubmit: async (e) => {
         e.preventDefault();
@@ -287,6 +291,16 @@
     if (!panel) return;
     const show = open == null ? panel.hidden : open;
     panel.hidden = !show;
+    if (show && !panel.dataset.loaded) {
+      // The same conversation as the desktop, the phone and the glasses (DEC-0029).
+      panel.dataset.loaded = "1";
+      MIA.thread().then((t) => {
+        const log = $("#talk-log");
+        if (!t.messages.length || log.children.length) return;
+        log.append(...t.messages.map((m) => el("p", { class: "bubble " + (m.role === "user" ? "me" : "mia") }, m.content)));
+        log.scrollTop = log.scrollHeight;
+      }).catch(() => {});
+    }
     if (show) {
       const input = $("#talk-input");
       if (prefill != null) input.value = prefill;
