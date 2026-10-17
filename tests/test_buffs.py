@@ -50,14 +50,16 @@ def test_buffs_come_from_real_things_and_run_out(tmp_path, monkeypatch):
     assert later <= {"prepared"}
 
 
-def test_home_and_glasses_show_buffs(tmp_path, monkeypatch):
+def test_character_and_glasses_show_buffs_not_home(tmp_path, monkeypatch):
     from datetime import datetime
 
     from core.glasses import _character_buffs
+    from core.web_progress import character_page
     from core.web_surfaces import dashboard
 
     world = build_world(tmp_path, monkeypatch)
     world.fitness.log_food("lunch", "Chicken bowl")
-    assert [b["key"] for b in dashboard(world, datetime.now())["buffs"]] == ["well_fed"]
+    assert [b["key"] for b in character_page(world, date.today())["buffs"]] == ["well_fed"]
+    assert "buffs" not in dashboard(world, datetime.now())  # Zac, 2026-10-17: only on Character
     panel = _character_buffs(world, date.today())
     assert panel["lines"][0]["text"] == "🍲 Well Fed" and "+1 Vitality" in panel["lines"][0]["detail"]

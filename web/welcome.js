@@ -24,9 +24,6 @@
     $("subtitle").textContent = home.subtitle;
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
-    const buffs = MIAShell.buffChips(home.buffs, true);
-    $("buffs").replaceChildren(...(buffs ? [buffs] : []));
-    $("buffs").hidden = !buffs;
     // MIA Remembers (DEC-0029): what you told her, as it's about to matter.
     const remember = home.remember || [];
     $("remember").hidden = !remember.length;
