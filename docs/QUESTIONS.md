@@ -6,7 +6,9 @@ Answer under the question; Claude moves closed ones to the bottom.*
 ## Open
 
 ### Q-0017: Which Project ALICE ideas should MIA take? (claude → zac)
-- Asked: 2026-10-17 · Status: OPEN
+- Asked: 2026-10-17 · Status: ANSWERED
+- Answer (zac, 2026-10-17): "I want to take your recommended features
+  from Alice." Logged as DEC-0029.
 - Question (the review: `docs/future/PROJECT_ALICE_REVIEW.md`): ALICE is
   a companion with one memory across desktop and AR glasses. MIA already
   has the real data, actions and glasses screens; ALICE is better at

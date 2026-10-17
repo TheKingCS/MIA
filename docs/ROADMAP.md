@@ -85,6 +85,14 @@ section," not just an ambient widget.)
 - **Smart home:** local-only — a local Home Assistant instance or
   direct Zigbee/Z-Wave hub, never a cloud-account-dependent ecosystem
 
+## Now (2026-10-17): the expansion plan
+
+`docs/EXPANSION_AUDIT.md` checks the homestead-business, memory-vault and
+contextual-AI ideas against the code, gives each a status, and proposes
+phases A–F (DEC-0030). A (contextual AI: DEC-0029, then DEC-0022) and B
+(workshop crafting recipes, end to end) are being built now. The game
+layer's status lives in `docs/GAME_LAYER.md`.
+
 ## Phase plan
 
 Each phase builds infrastructure the next phase depends on. A short

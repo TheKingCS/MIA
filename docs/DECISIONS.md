@@ -507,3 +507,32 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   devices, no slot-machine patterns.
 - Related: DEC-0014, DEC-0022, DEC-0024
 
+
+### DEC-0029: Take Claude's Project ALICE picks
+- Status: APPROVED
+- Proposed by: claude, 2026-10-17 (`docs/future/PROJECT_ALICE_REVIEW.md`, Q-0017) · Approved by: zac, 2026-10-17 ("I want to take your recommended features from Alice")
+- Decision: build, in order: (1) **What I Used**: MIA picks memories by
+  relevance and shows the ones she used under each answer, each one
+  fixable or forgettable; (3) **remembering at the right moment**
+  through the communication gate; (2) **one conversation everywhere**
+  (desktop, phone, glasses); (7) **one personality guide** for every
+  word MIA writes. Using the PC's model from the phone stays DEC-0022.
+  Vision ("what am I looking at") and hands-free glasses voice wait on
+  the glasses (`docs/EXPANSION_AUDIT.md` §2: the glasses' web apps have no
+  camera; photo capture goes through Meta's Device Access Toolkit in the
+  phone app, explicit capture only).
+- Related: DEC-0014, DEC-0022
+
+### DEC-0030: Expansion phases (homestead businesses, memory vault, contextual AI)
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-17, from ChatGPT's "MIA Expansion Audit" handoff (`docs/EXPANSION_AUDIT.md`)
+- Decision: phases in order: A. contextual AI (DEC-0029, then DEC-0022);
+  B. crafting recipes end to end on the existing workshop stores
+  (recipe → inventory check → shopping list → receive → build → photos →
+  actual profit); C. quotes, customers and orders, portfolio; D. grow lab
+  (crop batches, greenhouse readings with your own safe ranges, warn
+  only, experiments); E. memory vault on the PC after the phone↔PC link
+  (verify before ever offering to remove from the phone, never auto-
+  delete); F. glasses camera via the Device Access Toolkit. A and B start
+  now (A approved, B is the handoff's suggested first demonstration).
+- Related: DEC-0022, DEC-0028, DEC-0029
