@@ -32,6 +32,7 @@ REASONS: dict[str, tuple[str, str]] = {
     "connectivity": ("internet changes", "the internet went down or came back"),
     "warranty": ("warranty reminders", "a warranty on something you own is ending soon"),
     "memory_callback": ("things MIA remembers", "something you told me was about to matter (a birthday, a plan, a note on your gear)"),
+    "grow_alert": ("greenhouse readings", "a tank or bed reading was outside the range set for it"),
     "chronicle": ("the Chronicle", "on Sundays, your week's chapter of the Chronicle is ready"),
     "journal_reflection": ("the weekly reflection", "you turned on the weekly journal reflection"),
 }

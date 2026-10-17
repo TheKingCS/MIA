@@ -1505,3 +1505,4 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .grow-readings .btn { text-transform: none; }  /* a range reads as typed: 6.8 to 7.2 */
 .grow-mini { display: grid; gap: 6px; }
 .grow-mini p { margin: 0; }
+.draft-body { white-space: pre-wrap; font: inherit; margin: 0; padding: 10px; border: 1px solid var(--line); border-radius: 10px; max-height: 50vh; overflow: auto; }

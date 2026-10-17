@@ -219,6 +219,12 @@
     journal: () => read("/api/journal", "journal"),
     people: () => read("/api/people", "people"),
     business: () => read("/api/business", "business"),
+    // Email drafts (core/email_drafts.py): MIA only drafts; an email goes only when Send is pressed.
+    emailDrafts: () => demo ? Promise.resolve({ drafts: [], can_send: false }) : call("GET", "/api/email/drafts"),
+    sendDraft: (id) => demo ? demoOnly() : call("POST", "/api/email/drafts/" + encodeURIComponent(id) + "/send"),
+    discardDraft: (id) => demo ? demoOnly() : call("POST", "/api/email/drafts/" + encodeURIComponent(id) + "/discard"),
+    receiptMatch: (recipeId, receipt) => demo ? demoOnly()
+      : call("GET", "/api/workshop/receipt_match?recipe_id=" + encodeURIComponent(recipeId) + "&receipt=" + encodeURIComponent(receipt)),
     showoff: () => read("/api/showoff", "showoff"),
     grow: () => read("/api/grow", "grow"),
     chronicle: () => read("/api/chronicle", "chronicle"),

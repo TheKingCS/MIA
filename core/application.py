@@ -665,6 +665,7 @@ class MIAApplication:
             ("warranty", self._check_warranties),
             ("chronicle", self._check_chronicle),
             ("memory_callback", self._check_memory_callbacks),
+            ("grow_alert", self._check_grow_alerts),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -795,6 +796,19 @@ class MIAApplication:
             self._offer(topic="journal_reflection", title=notice[0], message=notice[1], urgency=TIMELY, source="journal",
                         daily=True)
         person_settings.put(context, "system.last_journal_reflection_date", today_iso)
+
+    def _check_grow_alerts(self, now: datetime, today_iso: str) -> None:
+        """A greenhouse reading outside its range (core/grow_lab.py): a note
+        through the gate, once per reading. Only ever a warning."""
+        if getattr(self.context, "grow_lab", None) is None:
+            return
+        from core.grow_lab import alert_note
+        from core.web_grow import grow_page
+
+        for alert in grow_page(self.context, now.date())["alerts"]:
+            title, message, fingerprint = alert_note(alert)
+            self._offer(topic="grow_alert", title=title, message=message, urgency=TIMELY, source="greenhouse",
+                        fingerprint=fingerprint)
 
     def _check_memory_callbacks(self, now: datetime, today_iso: str) -> None:
         """Remembering at the right moment (DEC-0029): each callback once,

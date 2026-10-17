@@ -78,7 +78,7 @@ def grow_page(context, today: Optional[date] = None) -> dict:
                          "side": side, "trend": [r.value for r in readings[-12:]]})
             if side:
                 alerts.append({"place": key, "system": name, "label": label, "value": last.value, "unit": unit,
-                               "side": side, "low": low, "high": high, "mine": mine})
+                               "side": side, "low": low, "high": high, "mine": mine, "when": last.timestamp[:10]})
         here = [b for b in batches if b["place"] == key]
         yields: dict[str, float] = {}
         for b in here:

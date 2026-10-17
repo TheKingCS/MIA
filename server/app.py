@@ -898,6 +898,21 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "web_home", tour)
 
+    @app.get("/api/workshop/receipt_match")
+    def web_receipt_match(recipe_id: str, receipt: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Bought It filled from a scanned receipt (core/receipt_match.py)."""
+        from core.receipt_match import find, prefill
+
+        def build(view):
+            book = getattr(view, "craft_recipes", None)
+            recipe = book.get_recipe(recipe_id) if book is not None else None
+            found = find(view, receipt)
+            if recipe is None or found is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "That recipe or receipt isn't there anymore.")
+            return prefill(recipe, found["items"])
+
+        return _screen(profile_id, "workshop", build)
+
     @app.get("/api/business")
     def web_business(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_business import business_page

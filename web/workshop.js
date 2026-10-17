@@ -74,6 +74,22 @@
     const v = await form("Bought For " + r.name, r.receive_fields, {});
     if (v) act({ kind: "craft.receive", params: Object.assign({ recipe_id: r.id }, v) });
   }
+  // Bought It filled from a scanned receipt (core/receipt_match.py): pick the
+  // receipt, MIA matches its lines to the recipe, you check and confirm.
+  async function fromReceipt(r) {
+    if (!(page.receipts || []).length) { MIAShell.say("No scanned receipts yet: share a receipt photo to MIA and file it, then try again."); return; }
+    const pick = await form("Which Receipt?", [{ name: "receipt", label: "Receipt", type: "pick", required: true, options: ["receipts"], default: page.receipts[0].id }], {}, { receipts: page.receipts });
+    if (!pick) return;
+    let m;
+    try { m = await MIA.receiptMatch(r.id, pick.receipt); } catch (e) { MIAShell.say(e.message); return; }
+    if (!m.matched.length) { MIAShell.say("Nothing on that receipt matches this recipe's materials."); return; }
+    const fields = r.rows.flatMap((row) => [
+      { name: "q_" + row.index, label: row.name + ": how many" + (row.unit ? " " + row.unit : ""), type: "amount", required: false, options: [], default: m.values["q_" + row.index] ?? null },
+      { name: "c_" + row.index, label: row.name + ": what you paid (total)", type: "money", required: false, options: [], default: m.values["c_" + row.index] ?? null }]);
+    if (m.unmatched.length) MIAShell.say("Not matched: " + m.unmatched.slice(0, 4).join(", ") + (m.unmatched.length > 4 ? "…" : ""));
+    const v = await form("Bought From The Receipt", fields, {});
+    if (v) act({ kind: "craft.receive", params: Object.assign({ recipe_id: r.id, receipt: pick.receipt }, v) });
+  }
   async function copyList(r) {
     try { await navigator.clipboard.writeText(r.name + " shopping list\n" + r.shopping_list); MIAShell.say("Shopping list copied."); }
     catch (e) { MIAShell.say("Couldn't copy it here; select the list and copy it."); }
@@ -161,7 +177,8 @@
       r.shopping.length ? el("div", { class: "craft-shop" },
         el("h4", {}, "Shopping List" + (r.shopping_text ? " · about " + r.shopping_text : "")),
         el("pre", { class: "craft-list" }, r.shopping_list),
-        buttons(btn("Copy List", "btn-ghost btn-small", () => copyList(r)), btn("Bought It", "btn-green btn-small", () => bought(r)))) : null,
+        buttons(btn("Copy List", "btn-ghost btn-small", () => copyList(r)), btn("Bought It", "btn-green btn-small", () => bought(r)),
+          btn("From A Receipt", "btn-ghost btn-small", () => fromReceipt(r)))) : null,
       r.cut_list ? [el("h4", {}, "Cut List"), el("pre", { class: "craft-list" }, r.cut_list)] : null,
       r.tools ? [el("h4", {}, "Tools"), el("p", { class: "dim" }, r.tools)] : null,
       r.steps.length ? [el("h4", {}, "Steps"), el("ol", { class: "craft-steps" }, r.steps.map((s) => el("li", {}, s)))] : null,

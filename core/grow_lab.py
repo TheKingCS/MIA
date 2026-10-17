@@ -108,6 +108,20 @@ def check_range(value: float, low: Optional[float], high: Optional[float]) -> st
     return ""
 
 
+def alert_note(alert: dict) -> tuple[str, str, str]:
+    """Pure logic. A greenhouse reading outside its range, as a note through
+    the communication gate: (title, message, fingerprint). The same reading
+    on the same day is one note, however often the check runs. It only
+    tells: what to do about fish, plants or pumps is the person's call."""
+    unit = f" {alert['unit']}" if alert.get("unit") else ""
+    low = alert["low"] if alert.get("low") is not None else "–"
+    high = alert["high"] if alert.get("high") is not None else "–"
+    whose = "your range" if alert.get("mine") else "the starter range (set your own in the Greenhouse)"
+    title = f"🌱 {alert['system']}: {alert['label']} is {alert['side']}"
+    message = f"{alert['system']}: {alert['label']} read {alert['value']:g}{unit}, outside {whose} of {low} to {high}."
+    return title, message, f"{alert['place']}|{alert['label']}|{alert['value']:g}|{alert.get('when', '')}"
+
+
 def batch_figures(b: Batch, today: date) -> dict:
     """Pure logic. Days growing, days to first harvest, total yield (by unit),
     yield per plant, and how many survived."""

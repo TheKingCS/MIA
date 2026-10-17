@@ -35,7 +35,7 @@ def craft_section(context) -> dict:
     materials = getattr(context, "materials", None)
     ledger = getattr(context, "ledger", None)
     if book is None:
-        return {"recipes": [], "builds": [], "forms": {}}
+        return {"recipes": [], "builds": [], "forms": {}, "receipts": []}
     stock = materials.all_materials() if materials is not None else []
     sales = ledger.all_revenue() if ledger is not None else []
     expenses = ledger.all_expenses() if ledger is not None else []
@@ -102,8 +102,11 @@ def craft_section(context) -> dict:
                        if sold and avg("hours", sold) else ""},
             "values": {f.name: getattr(recipe, f.name) for f in CRAFT_RECIPE.fields},
         })
+    from core.receipt_match import receipts
+
     return {"recipes": recipes, "builds": builds, "forms": {"craft_recipe": record_form(CRAFT_RECIPE)},
-            "labor_rate": labor_rate}
+            "labor_rate": labor_rate,
+            "receipts": [{"id": r["id"], "name": r["name"]} for r in receipts(context)]}
 
 
 def find_build(context, job_id: str) -> Optional[dict]:

@@ -149,7 +149,7 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
                   "products": [{"id": p["id"], "name": p["name"]} for p in products]},
         "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
                                                                 "shop_expense", "product_sale")}, **craft["forms"]},
-        "recipes": craft["recipes"], "builds": craft["builds"],
+        "recipes": craft["recipes"], "builds": craft["builds"], "receipts": craft["receipts"],
     }
 
 

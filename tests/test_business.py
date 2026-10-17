@@ -97,3 +97,28 @@ def test_undo_and_child_safety(shop):
     assert "business" not in CHILD_APPS
     assert not any(k.startswith(("customer.", "quote.", "order.", "portfolio.")) and v.child_ok
                    for k, v in __import__("core.actions", fromlist=["ACTION_TYPES"]).ACTION_TYPES.items())
+
+
+def test_quote_email_is_a_draft_without_the_inside_numbers(shop, tmp_path):
+    from core.business_actions import quote_email
+    from core.email_drafts import EmailDrafts
+
+    w = shop
+    w.email_drafts = EmailDrafts(w, data_dir=tmp_path / "drafts")
+    do(w, "craft_recipe.add", name="Farmhouse bench", est_hours=6, dimensions="48 x 14 x 18 in",
+       materials="6 board 2x4 8ft @ 4\n1 sheet Plywood @ 61")
+    recipe = w.craft_recipes.all_recipes()[0]
+    do(w, "customer.add", name="Jordan Lee", email="jordan@example.com")
+    do(w, "quote.add", title="Porch bench", customer_id=w.business.customers[0].customer_id, recipe_id=recipe.recipe_id,
+       labor_rate=25, margin=20, extras=20, valid_until="2026-11-30")
+    q = w.business.quotes[0]
+    to, subject, body = quote_email(w, q)
+    assert to == ["jordan@example.com"] and subject == "Your quote: Porch bench"
+    assert body.startswith("Hi Jordan,") and "- Size: 48 x 14 x 18 in" in body and "- Price: $306.00" in body
+    assert "Good until November 30" in body
+    for inside in ("25", "20%", "margin", "labor", "Labor"):
+        assert inside not in body.replace("$306.00", ""), inside  # the customer never sees how it was priced
+    p = do(w, "quote.email", quote_id=q.quote_id)
+    assert p.summary.endswith("You press Send") and "jordan@example.com" in p.summary
+    [draft] = w.email_drafts.open_drafts()
+    assert draft.subject == "Your quote: Porch bench" and draft.status == "draft"  # drafted, never sent

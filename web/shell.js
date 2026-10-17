@@ -434,6 +434,29 @@
       el("span", { class: "gc-value" }, c.percent + "% · " + c.label));
   }
 
+  // An email draft (core/email_drafts.py): MIA never sends by herself. Send
+  // goes only when pressed (from your own address, once it's set up on the
+  // computer); Copy and Mail App always work.
+  async function showDraft(d, canSend) {
+    const dialog = el("dialog", { class: "confirm form-dialog draft-view", "aria-label": d.subject || "Email draft" });
+    const close = () => { dialog.close(); dialog.remove(); };
+    const run = async (fn, okText) => { try { await fn(); say(okText); close(); } catch (e) { say(e.message); } };
+    dialog.append(el("h3", {}, d.subject || "Email"),
+      el("p", { class: "dim" }, d.to && d.to.length ? "To: " + d.to.join(", ") : "No address yet: add one in your mail app."),
+      el("pre", { class: "draft-body" }, d.body),
+      el("div", { class: "confirm-actions" },
+        canSend && d.to && d.to.length ? el("button", { type: "button", class: "btn btn-green", onclick: () => run(() => MIA.sendDraft(d.draft_id), "Sent.") }, "Send") : null,
+        el("button", { type: "button", class: "btn btn-ghost", onclick: async () => {
+          try { await navigator.clipboard.writeText(d.text || d.body); say("Copied."); } catch (e) { say("Couldn't copy here."); }
+        } }, "Copy"),
+        el("a", { class: "btn btn-ghost", href: d.mailto }, "Mail App"),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: () => run(() => MIA.discardDraft(d.draft_id), "Discarded.") }, "Discard"),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: close }, "Close")));
+    dialog.oncancel = (ev) => { ev.preventDefault(); close(); };
+    document.body.append(dialog);
+    dialog.showModal();
+  }
+
   // Buffs (DEC-0028): the good effects you've earned (core/buffs.py), never
   // debuffs. Tapping one says what earned it and how long it lasts.
   function buffChips(list, compact) {
@@ -445,7 +468,7 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, confirm: confirmBox, talk: toggleTalk };
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

@@ -82,7 +82,7 @@ def test_alerts_and_undo(lab):
 
     w = lab
     do(w, "grow.reading", system="Tank B", measure="ammonia", value=2.0)  # a place typed by name still works
-    alerts = grow_page(w)["alerts"]
+    alerts = [{k: v for k, v in a.items() if k != "when"} for a in grow_page(w)["alerts"]]
     assert alerts == [{"place": "Tank B", "system": "Tank B", "label": "Ammonia", "value": 2.0, "unit": "ppm", "side": "high",
                        "low": 0.0, "high": 1.0, "mine": False}]
     p = do(w, "batch.add", crop="Basil")
@@ -100,3 +100,21 @@ def test_a_tank_typed_by_name_joins_its_asset(lab):
     here = grow_page(w)["places"][tank]
     assert here["growing"] == 1 and next(r for r in here["readings"] if r["measure"] == "ph")["value"] == 7.0
     assert "Tank C" not in grow_page(w)["places"]  # one place, not two
+
+
+def test_an_out_of_range_reading_becomes_one_note(lab):
+    from core.grow_lab import alert_note
+    from core.web_grow import grow_page
+
+    w = lab
+    tank = w.maintenance.add_asset("Tank A", category="Garden/Plant").asset_id
+    do(w, "grow.reading", place=tank, measure="ammonia", value=2.0)
+    [alert] = grow_page(w)["alerts"]
+    title, message, fingerprint = alert_note(alert)
+    assert title == "🌱 Tank A: Ammonia is high"
+    assert message == "Tank A: Ammonia read 2 ppm, outside the starter range (set your own in the Greenhouse) of 0.0 to 1.0."
+    assert alert_note(grow_page(w)["alerts"][0])[2] == fingerprint  # the same reading is the same note
+    from core.communication_gate import Candidate
+
+    a, b = (Candidate(topic="grow_alert", title=title, message=message, fingerprint=fingerprint) for _ in range(2))
+    assert a.key() == b.key()  # the gate drops the repeat

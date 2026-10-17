@@ -41,6 +41,15 @@
     if (v) act({ kind: "quote.accept", params: { quote_id: q.id, due_date: v.due_date } });
   }
   const status = (o, s) => act({ kind: "order.status", params: { order_id: o.id, status: s } });
+  // MIA drafts the quote email; you check it and press Send (never sent by itself).
+  async function emailQuote(q) {
+    if (!(await act({ kind: "quote.email", params: { quote_id: q.id } }))) return;
+    try {
+      const all = await MIA.emailDrafts();
+      const d = all.drafts.find((x) => x.subject === "Your quote: " + q.title) || all.drafts[0];
+      if (d) MIAShell.showDraft(d, all.can_send);
+    } catch (e) { MIAShell.say(e.message); }
+  }
 
   function orderCard(o) {
     return el("article", { class: "glass craft-card" + (o.overdue ? " overdue" : "") },
@@ -75,7 +84,8 @@
         q.custom_price && q.suggested ? el("div", { class: "craft-tile" }, el("span", { class: "dim" }, "Suggested"), el("strong", {}, q.suggested)) : null),
       q.parts.length ? el("ul", { class: "craft-needs" }, q.parts.map(([label, value]) => el("li", {}, el("span", {}, label), el("span", { class: "dim" }, value)))) : null,
       q.notes ? el("p", { class: "dim" }, q.notes) : null,
-      buttons(q.open && q.status === "Draft" ? btn("Sent", "btn-ghost btn-small", () => act({ kind: "quote.send", params: { quote_id: q.id } })) : null,
+      buttons(q.open ? btn("Email Quote", "btn-amber btn-small", () => emailQuote(q)) : null,
+        q.open && q.status === "Draft" ? btn("Sent", "btn-ghost btn-small", () => act({ kind: "quote.send", params: { quote_id: q.id } })) : null,
         q.open ? btn("Accepted", "btn-green btn-small", () => accept(q)) : null,
         q.open ? btn("Declined", "btn-ghost btn-small", () => act({ kind: "quote.decline", params: { quote_id: q.id } })) : null,
         q.open ? btn("Edit", "btn-ghost btn-small", () => edit("quote", q, q.title)) : null,

@@ -97,13 +97,22 @@ def _bought(context, params) -> list[tuple]:
     return out
 
 
+def _from_budget(params) -> bool:
+    """Bought It filled from a receipt the inbox filed into the Budget:
+    that money is already recorded there (core/receipt_match.py)."""
+    return str(params.get("receipt") or "").startswith("expense:")
+
+
 def _receive_describe(context, params) -> str:
     recipe = _recipe(context, params)
     bought = _bought(context, params)
     total = sum(p for _l, _q, p in bought)
     things = ", ".join(f"{_qty(q)} {(line.unit + ' ') if line.unit else ''}{line.name}" + (f" ({_money(p)})" if p else "")
                        for line, q, p in bought)
-    tail = f"; record {_money(total)} as a workshop expense" if total and getattr(context, "ledger", None) is not None else ""
+    if _from_budget(params):
+        tail = " (already in your Budget from the receipt)"  # never counted twice
+    else:
+        tail = f"; record {_money(total)} as a workshop expense" if total and getattr(context, "ledger", None) is not None else ""
     return f"Receive for {recipe.name}: {things}{tail}"
 
 
@@ -126,7 +135,7 @@ def _receive(context, params) -> str:
             materials.adjust_quantity(found.material_id, q)
     total = round(sum(p for _l, _q, p in bought), 2)
     ledger = getattr(context, "ledger", None)
-    if total and ledger is not None:
+    if total and ledger is not None and not _from_budget(params):
         ledger.add_expense(total, "Materials", f"Materials for {recipe.name}")
     return f"Received {len(bought)} {'thing' if len(bought) == 1 else 'things'} into Materials" + \
         (f" ({_money(total)})." if total else ".")
@@ -317,7 +326,8 @@ def receive_form(rows: list[dict]) -> list[dict]:
 
 def _register() -> None:
     kinds = list(record_kinds(CRAFT_RECIPE)) + [
-        ActionType("craft.receive", "Bought It", {"recipe_id": "the recipe", "q_<line>": "how many", "c_<line>": "what you paid"},
+        ActionType("craft.receive", "Bought It", {"recipe_id": "the recipe", "q_<line>": "how many", "c_<line>": "what you paid",
+                                                   "receipt": "the receipt it came from (optional)"},
                    _receive_describe, _receive),
         ActionType("craft.start", "Start Build", {"recipe_id": "the recipe", "times": "how many"}, _start_describe, _start),
         ActionType("craft.step", "Done", {"job_id": "the build", "index": "the step"}, _step_describe, _step),

@@ -243,6 +243,56 @@ def _status(context, params) -> str:
     return f"{o.title}: {status.lower()}."
 
 
+def quote_email(context, quote) -> tuple[list[str], str, str]:
+    """The email for a quote, from the person (they press Send): who it's
+    to, the subject and the body. Only what the customer needs: what, how
+    many, the size, the price, how long it's good for. Never the margin or
+    the labor rate (core/craft_recipes.py keeps those)."""
+    book = _book(context)
+    customer = book.get_customer(quote.customer_id) if quote.customer_id else None
+    f = quote_figures(context, quote)
+    recipes = getattr(context, "craft_recipes", None)
+    recipe = recipes.get_recipe(quote.recipe_id) if recipes is not None and quote.recipe_id else None
+    profiles = getattr(context, "profiles", None)
+    me = profiles.get_active_profile() if profiles is not None else None
+    first = (customer.name.split(" ")[0] if customer is not None and customer.name else "")
+    lines = [f"Hi {first}," if first else "Hi,", "", f"Thanks for asking about {quote.title}. Here's your quote:", ""]
+    lines.append(f"- {quote.title}" + (f" ({quote.quantity} ×)" if quote.quantity > 1 else ""))
+    if recipe is not None and recipe.dimensions:
+        lines.append(f"- Size: {recipe.dimensions}")
+    if recipe is not None and recipe.description:
+        lines.append(f"- {recipe.description}")
+    lines.append(f"- Price: {_money(f['price'])}" + (" total" if quote.quantity > 1 else ""))
+    if quote.valid_until:
+        from datetime import date
+
+        try:
+            lines.append(f"- Good until {date.fromisoformat(quote.valid_until):%B} {date.fromisoformat(quote.valid_until).day}")
+        except ValueError:
+            pass
+    if quote.notes:
+        lines += ["", quote.notes]
+    lines += ["", "Let me know if you'd like to go ahead, or if you have any questions.", "", getattr(me, "name", "") or ""]
+    to = [customer.email] if customer is not None and customer.email else []
+    return to, f"Your quote: {quote.title}", "\n".join(lines).rstrip() + "\n"
+
+
+def _email_describe(context, params) -> str:
+    q = _quote(context, params)
+    if getattr(context, "email_drafts", None) is None:
+        raise ActionError("Email drafts aren't available here.")
+    to, _s, _b = quote_email(context, q)
+    who = f" to {to[0]}" if to else " (add the customer's email, or put it in when you send)"
+    return f"Draft the quote email for {q.title}{who}. You press Send"
+
+
+def _email(context, params) -> str:
+    q = _quote(context, params)
+    to, subject, body = quote_email(context, q)
+    context.email_drafts.create(to, subject, body)
+    return "Drafted. Check it, then Send, Copy or open it in your mail app."
+
+
 def _feature_describe(context, params) -> str:
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
     if job is None:
@@ -268,6 +318,7 @@ def _register() -> None:
     kinds += [
         ActionType("quote.send", "Sent", {"quote_id": "the quote"}, *send),
         ActionType("quote.decline", "Declined", {"quote_id": "the quote"}, *decline),
+        ActionType("quote.email", "Email Quote", {"quote_id": "the quote"}, _email_describe, _email),
         ActionType("quote.accept", "Accepted", {"quote_id": "the quote", "due_date": "when it's due"}, _accept_describe, _accept),
         ActionType("order.pay", "Payment", {"order_id": "the order", "amount": "what they paid"}, _pay_describe, _pay),
         ActionType("order.build", "Start Build", {"order_id": "the order"}, _build_describe, _build),
