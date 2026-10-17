@@ -13,11 +13,12 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["active", "Active"], ["daily", "Daily"], ["completed", "Completed"]];
+  const TABS = [["active", "Active"], ["daily", "Daily"], ["bosses", "Bosses"], ["completed", "Completed"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "active";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
+  const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
   const DIFF = { EASY: "chip-ok", NORMAL: "", HARD: "chip-bad" };
   const section = (title, actions, ...body) =>
@@ -118,6 +119,44 @@
     completed: "Nothing completed in the last two months yet.",
   };
 
+  // ------------------------------------------------------------ boss battles (DEC-0028)
+  async function attack(b) {
+    const v = await form("Attack " + b.name, page.forms.debt_payment.fields, { amount: b.hit_value || "" });
+    if (v) act({ kind: "debt.pay", params: { debt_id: b.id, amount: v.amount } });
+  }
+  async function pickBoss() {
+    const v = await form("Make A Mission A Boss Fight", [{ name: "mission_id", label: "Mission", type: "pick", required: true,
+      options: ["missions"], default: null }], {}, { missions: page.bosses.missions_to_pick });
+    if (v) act({ kind: "boss.add", params: { mission_id: v.mission_id } });
+  }
+  function bossCard(b) {
+    const m = b.kind === "mission" ? [].concat(page.active, page.daily, page.completed).find((x) => x.id === b.id) : null;
+    return el("article", { class: "glass boss-card" + (b.defeated ? " defeated" : "") + " phase-" + b.phase.toLowerCase().replace(/\s+/g, "-") },
+      el("div", { class: "boss-head" },
+        el("span", { class: "boss-icon", "aria-hidden": "true" }, b.defeated ? "🏆" : b.icon),
+        el("div", { class: "boss-title" }, el("h3", {}, b.name), el("p", { class: "boss-kind" }, b.kind === "debt" ? "Debt Boss" : "Mission Boss")),
+        el("span", { class: "chip boss-phase" }, b.phase)),
+      el("div", { class: "boss-hp", role: "meter", "aria-valuenow": String(b.percent), "aria-valuemin": "0", "aria-valuemax": "100",
+        "aria-label": b.name + " HP " + b.percent + "%" },
+        el("span", { class: "boss-hp-fill", style: "width:" + b.percent + "%" }),
+        el("span", { class: "boss-hp-text" }, "HP " + b.hp + " / " + b.max_hp)),
+      el("p", { class: "dim boss-lines" }, [b.defeated ? "Defeated " + day(b.defeated_on) : "Damage dealt: " + b.damage,
+        b.heal && !b.defeated ? "heals " + b.heal + "/month (interest)" : null,
+        b.hits_left && !b.defeated ? "~" + b.hits_left + " monthly hits of " + b.hit + " to go" : null,
+        b.reward ? "Reward " + b.reward : null].filter(Boolean).join(" · ")),
+      b.defeated ? null : buttons(
+        b.kind === "debt" ? btn("⚔ Attack", "btn-amber", () => attack(b)) : null,
+        m ? btn("Open", "btn-ghost", () => sheet(m)) : null,
+        b.kind === "mission" ? btn("Not A Boss", "btn-ghost btn-small", () => act({ kind: "boss.remove", params: { mission_id: b.id } })) : null));
+  }
+  function bossesView() {
+    const bs = page.bosses;
+    return [section("Boss Battles", bs.missions_to_pick.length ? btn("Make A Mission A Boss", "btn-amber", pickBoss) : null,
+        bs.active.length ? el("div", { class: "mission-grid" }, bs.active.map(bossCard))
+          : el("p", { class: "empty" }, "No bosses right now. Every debt is a boss on its own, and any big mission can become one.")),
+      bs.defeated.length ? section("Hall Of Fame", null, el("div", { class: "mission-grid" }, bs.defeated.map(bossCard))) : null].filter(Boolean);
+  }
+
   function draw() {
     const c = page.counts;
     $("strip").replaceChildren(
@@ -128,6 +167,7 @@
     $("tabs").replaceChildren(...TABS.map(([id, l]) =>
       el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } },
         l)));
+    if (tab === "bosses") { $("panel").replaceChildren(...bossesView()); MIAShell.levelCard($("level"), page.me); return; }
     const list = page[tab];
     $("panel").replaceChildren(section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
       list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, EMPTY[tab]),

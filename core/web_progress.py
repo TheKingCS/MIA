@@ -137,6 +137,15 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     page["set_aside"] = sorted((c for c in cards if c["status"] == "abandoned"), key=lambda c: c["updated"], reverse=True)
     page["counts"] = {"active": len(page["active"]) + len(page["daily"]), "ready": sum(c["ready"] for c in active),
                       "completed": sum(1 for m in mine if m.status == "completed")}
+    try:  # boss battles (DEC-0028): debts and the missions made into bosses
+        from core.boss_battles import bosses
+
+        page["bosses"] = bosses(context, today)
+    except Exception:
+        log.exception("Missions: bosses failed")
+        page["bosses"] = {"active": [], "defeated": [], "missions_to_pick": []}
+    page["forms"]["debt_payment"] = {"noun": "payment", "id_param": "debt_id", "fields": [
+        {"name": "amount", "label": "How much you paid", "type": "money", "required": True, "options": [], "default": None}]}
     return page
 
 

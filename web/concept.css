@@ -1336,3 +1336,22 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .gear-condition.big .gc-bar { height: 14px; }
 .gear-panel { padding: 12px 14px; margin-bottom: var(--gap); }
 .gear-panel p { margin: 6px 0 0; }
+
+/* ---------------------------------------------------------------- boss battles (DEC-0028, 2026-10-17) */
+.boss-card { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-color: rgba(var(--rgb-bad), 0.45); }
+.boss-card.defeated { border-color: rgba(var(--rgb-ok), 0.5); opacity: 0.85; }
+.boss-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.boss-icon { font-size: 30px; line-height: 1; }
+.boss-title h3 { margin: 0; font-size: var(--text-md); overflow-wrap: break-word; }
+.boss-kind { margin: 2px 0 0; font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgb(var(--rgb-bad)); }
+.boss-card.defeated .boss-kind { color: rgb(var(--rgb-ok)); }
+.boss-hp { position: relative; height: 26px; border-radius: 6px; overflow: hidden;
+  border: 1px solid rgba(var(--rgb-bad), 0.6); background: rgba(var(--rgb-bad), 0.08); }
+.boss-hp-fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, rgba(var(--rgb-bad), 0.55), rgba(var(--rgb-bad), 0.9));
+  box-shadow: 0 0 14px rgba(var(--rgb-bad), 0.5); transition: width 700ms ease; }
+.boss-hp-text { position: relative; display: flex; align-items: center; height: 100%; padding: 0 10px;
+  font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.boss-card.defeated .boss-hp { border-color: rgba(var(--rgb-ok), 0.5); background: rgba(var(--rgb-ok), 0.08); }
+.boss-lines { margin: 0; font-size: var(--text-sm); }

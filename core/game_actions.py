@@ -7,6 +7,8 @@ contract in core/actions.py.
 
 - Reward Shop: `shop_reward.add/edit/delete` (the rewards you set) and
   `shop.buy` (spend credits on one). Undo gives the credits back.
+- Boss battles: `boss.add` makes a mission a boss fight, `boss.remove`
+  turns it back into a plain mission (debts are bosses on their own).
 
 A person's own credits and shop: these are child-safe.
 """
@@ -87,12 +89,42 @@ def _priced(describe):
     return checked
 
 
+def _boss_mission(context, params, want: bool):
+    mission = _need(context, "missions").get_mission(str(params.get("mission_id") or ""))
+    if mission is None:
+        raise ActionError("That mission isn't there anymore.")
+    book = _need(context, "boss_book")
+    if want and mission.mission_id in book.missions:
+        raise ActionError(f"{mission.name} is already a boss fight.")
+    if not want and mission.mission_id not in book.missions:
+        raise ActionError(f"{mission.name} isn't a boss fight.")
+    if want and not mission.objectives:
+        raise ActionError("Give it objectives first: they're the boss's HP.")
+    return mission
+
+
+def _boss_add(context, params) -> str:
+    mission = _boss_mission(context, params, True)
+    context.boss_book.add_mission(mission.mission_id)
+    return f"{mission.name} is a boss fight. Every objective is a hit."
+
+
+def _boss_remove(context, params) -> str:
+    mission = _boss_mission(context, params, False)
+    context.boss_book.remove_mission(mission.mission_id)
+    return f"{mission.name} is a plain mission again."
+
+
 def _register() -> None:
     from dataclasses import replace
 
     kinds = [replace(k, describe=_priced(k.describe)) if k.kind != "shop_reward.delete" else k
              for k in record_kinds(SHOP_REWARD, child_ok=True)] + [
         ActionType("shop.buy", "Buy", {"reward_id": "the reward"}, _describe_buy, _buy, True),
+        ActionType("boss.add", "Make It A Boss Fight", {"mission_id": "the mission"},
+                   lambda c, p: f"Make {_boss_mission(c, p, True).name} a boss fight (its objectives are its HP)", _boss_add, True),
+        ActionType("boss.remove", "Not A Boss", {"mission_id": "the mission"},
+                   lambda c, p: f"Make {_boss_mission(c, p, False).name} a plain mission again", _boss_remove, True),
     ]
     for kind in kinds:
         ACTION_TYPES[kind.kind] = kind

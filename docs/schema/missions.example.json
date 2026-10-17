@@ -131,6 +131,20 @@
           "default": null
         }
       ]
+    },
+    "debt_payment": {
+      "noun": "payment",
+      "id_param": "debt_id",
+      "fields": [
+        {
+          "name": "amount",
+          "label": "How much you paid",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
     }
   },
   "as_of": "2026-10-06",
@@ -1064,5 +1078,36 @@
     "active": 7,
     "ready": 1,
     "completed": 2
+  },
+  "bosses": {
+    "active": [
+      {
+        "key": "debt:demo",
+        "kind": "debt",
+        "id": "demo",
+        "name": "Land loan",
+        "icon": "💳",
+        "hp": "$35,000.00",
+        "max_hp": "$40,000.00",
+        "percent": 87.5,
+        "phase": "Full Strength",
+        "damage": "$5,000.00",
+        "heal": "$218.75",
+        "hit": "$500.00",
+        "hits_left": 93,
+        "defeated": false,
+        "defeated_on": "",
+        "hit_value": 500.0,
+        "action": {
+          "kind": "debt.pay",
+          "label": "Attack",
+          "params": {
+            "debt_id": "demo"
+          }
+        }
+      }
+    ],
+    "defeated": [],
+    "missions_to_pick": []
   }
 }
