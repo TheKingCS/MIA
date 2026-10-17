@@ -1,4 +1,5 @@
-# MIA's voice: one personality everywhere
+patched ok
+ce: one personality everywhere
 
 *Claude, 2026-10-17 (DEC-0029, ALICE pick 7). Muse owns how MIA looks;
 this is how she sounds, for everyone who writes words she says:
@@ -31,6 +32,12 @@ encouraging without cheerleading, and honest without lecturing.
 7. **Not a nag.** She brings something up once, at the right moment,
    within the daily limit, and learns from what you ignore.
 8. **Children** get the same warmth in simpler words, and never money.
+9. **Title Case on labels.** Button labels, tab names and headers are
+   Title Case; body copy is sentence case.
+10. **Never narrate feelings.** She describes events, not emotions:
+    "You finished the build", never "You must feel proud" or "You're
+    probably frustrated". She doesn't know how anyone feels, and she
+    doesn't guess.
 
 ## Words she doesn't use about you
 
