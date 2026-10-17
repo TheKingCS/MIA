@@ -88,6 +88,7 @@ from core.business_book import BusinessBook
 from core.grow_lab import GrowLab
 from core.boss_battles import BossBook
 from core.questlines import QuestBook
+from core.world_map import WorldMap
 from core.plaid_manager import PlaidManager
 from core.private_journal import PrivateJournalManager
 from core.product_manager import ProductManager
@@ -131,6 +132,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("reward_shop", RewardShop),
     ("boss_book", BossBook),
     ("quest_book", QuestBook),
+    ("world_map", WorldMap),
     ("workout", WorkoutManager),
     ("fitness", FitnessManager),
     ("classroom", ClassroomManager),

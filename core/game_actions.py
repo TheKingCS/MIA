@@ -183,6 +183,53 @@ def _quest_remove(context, params) -> str:
     return f"{quest.name} is off your questlines. Its missions stay, and what you earned stays earned."
 
 
+def _where(params) -> tuple[float, float]:
+    try:
+        lat, lon = float(params.get("lat")), float(params.get("lon"))
+    except (TypeError, ValueError):
+        raise ActionError("MIA couldn't tell where you are. Let the app use your location and try again.") from None
+    if not (-85 <= lat <= 85 and -180 <= lon <= 180):
+        raise ActionError("That isn't a place on the map.")
+    return lat, lon
+
+
+def _new_tiles(context, lat, lon) -> int:
+    from core.world_map import around, tile_of
+
+    book = _need(context, "world_map")
+    x, y = tile_of(lat, lon)
+    from core.world_map import explored, points
+
+    known = set(explored(points(context))) | set(book.first_seen)
+    return sum(1 for tx, ty in around(x, y) if f"{tx},{ty}" not in known)
+
+
+def _describe_checkin(context, params) -> str:
+    lat, lon = _where(params)
+    new = _new_tiles(context, lat, lon)
+    label = str(params.get("label") or "").strip()
+    return ("Clear the map around here" + (f" ({label})" if label else "")
+            + (f": {new} new {'tile' if new == 1 else 'tiles'}" if new else ": you've been here before"))
+
+
+def _checkin(context, params) -> str:
+    from core import life_events
+    from core.gamification import grant_xp
+    from core.world_map import XP_CAP, XP_PER_TILE
+
+    lat, lon = _where(params)
+    new = _new_tiles(context, lat, lon)
+    label = str(params.get("label") or "").strip()
+    context.world_map.check_in(lat, lon, label)
+    if not new:
+        return "Checked in. You've explored here before."
+    xp = min(XP_CAP, new * XP_PER_TILE)
+    grant_xp(context, xp, "🗺️ New ground!", f"{new} new map {'tile' if new == 1 else 'tiles'} cleared.")
+    life_events.record(context.world_map, "explored", f"Explored new ground{' at ' + label if label else ''}",
+                       [], {"tiles": new})
+    return f"New ground! {new} map {'tile' if new == 1 else 'tiles'} cleared, +{xp} XP."
+
+
 def _register() -> None:
     from dataclasses import replace
 
@@ -197,6 +244,8 @@ def _register() -> None:
         ActionType("quest.add", "Make A Questline", {"name": "", "icon": "an emoji",
                                                      "chapters": "one chapter per line: Title: objective; objective"},
                    _describe_quest_add, _quest_add, True),
+        ActionType("map.checkin", "I'm Here", {"lat": "latitude", "lon": "longitude", "label": "optional name"},
+                   _describe_checkin, _checkin, True),
         ActionType("quest.remove", "Remove Questline", {"quest_id": "the questline"},
                    lambda c, p: f"Take {_quest(c, p).name} off your questlines (its missions stay)", _quest_remove, True),
     ]

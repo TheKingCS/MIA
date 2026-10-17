@@ -178,7 +178,8 @@
     const group = (title, list) => list.length ? section(title, null, el("div", { class: "mission-grid" }, list.map(card))) : null;
     const by = (w) => page.expeditions.filter((e) => e.when === w);
     $("panel").replaceChildren(...[
-      el("div", { class: "journal-actions" }, btn("Plan An Expedition", "btn-amber", addExpedition)),
+      el("div", { class: "journal-actions" }, btn("Plan An Expedition", "btn-amber", addExpedition),
+        el("a", { class: "btn btn-ghost", href: "worldmap.html" }, "World Map")),
       group("Happening Now", by("now")), group("Coming Up", by("upcoming")), group("Past", by("past")),
       page.expeditions.length ? null : el("p", { class: "empty" }, "No expeditions yet. Plan one: a weekend at the lake, a long hike."),
     ].filter(Boolean));

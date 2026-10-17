@@ -1,0 +1,298 @@
+{
+  "available": true,
+  "zoom": 14,
+  "as_of": "2026-10-17",
+  "tiles": [
+    [
+      2647,
+      5778
+    ],
+    [
+      2647,
+      5779
+    ],
+    [
+      2647,
+      5780
+    ],
+    [
+      2648,
+      5778
+    ],
+    [
+      2648,
+      5779
+    ],
+    [
+      2648,
+      5780
+    ],
+    [
+      2649,
+      5778
+    ],
+    [
+      2649,
+      5779
+    ],
+    [
+      2649,
+      5780
+    ],
+    [
+      2650,
+      5775
+    ],
+    [
+      2650,
+      5776
+    ],
+    [
+      2650,
+      5777
+    ],
+    [
+      2651,
+      5775
+    ],
+    [
+      2651,
+      5776
+    ],
+    [
+      2651,
+      5777
+    ],
+    [
+      2652,
+      5775
+    ],
+    [
+      2652,
+      5776
+    ],
+    [
+      2652,
+      5777
+    ],
+    [
+      2653,
+      5773
+    ],
+    [
+      2653,
+      5774
+    ],
+    [
+      2654,
+      5771
+    ],
+    [
+      2654,
+      5772
+    ],
+    [
+      2654,
+      5773
+    ],
+    [
+      2655,
+      5769
+    ],
+    [
+      2655,
+      5770
+    ],
+    [
+      2655,
+      5771
+    ],
+    [
+      2655,
+      5772
+    ],
+    [
+      2655,
+      5773
+    ],
+    [
+      2656,
+      5769
+    ],
+    [
+      2656,
+      5770
+    ],
+    [
+      2656,
+      5771
+    ],
+    [
+      2656,
+      5772
+    ],
+    [
+      2656,
+      5773
+    ],
+    [
+      2657,
+      5769
+    ],
+    [
+      2657,
+      5770
+    ],
+    [
+      2657,
+      5771
+    ]
+  ],
+  "pins": [
+    {
+      "lat": 46.75,
+      "lon": -121.8,
+      "kind": "checkin",
+      "label": "Lake overlook",
+      "day": "2026-10-04"
+    },
+    {
+      "lat": 46.786,
+      "lon": -121.735,
+      "kind": "arrival",
+      "label": "Trailhead",
+      "day": "2026-09-14"
+    },
+    {
+      "lat": 46.85,
+      "lon": -121.66,
+      "kind": "arrival",
+      "label": "Ridge camp",
+      "day": "2026-09-14"
+    },
+    {
+      "lat": 46.88,
+      "lon": -121.62,
+      "kind": "checkin",
+      "label": "Waterfall",
+      "day": "2026-10-12"
+    },
+    {
+      "lat": 46.92,
+      "lon": -121.55,
+      "kind": "unknown",
+      "label": "Hidden Lake"
+    },
+    {
+      "lat": 46.7,
+      "lon": -121.62,
+      "kind": "unknown",
+      "label": "Fire lookout"
+    }
+  ],
+  "stats": {
+    "tiles": 36,
+    "km2": 100.8,
+    "regions": 1,
+    "places": 2,
+    "photos": 0,
+    "to_discover": 2
+  },
+  "ranks": [
+    {
+      "name": "First Steps",
+      "icon": "👣",
+      "earned": true,
+      "need": 1,
+      "have": 1,
+      "what": "Clear 1 map tile"
+    },
+    {
+      "name": "Wanderer",
+      "icon": "🥾",
+      "earned": true,
+      "need": 10,
+      "have": 10,
+      "what": "Clear 10 map tiles"
+    },
+    {
+      "name": "Explorer",
+      "icon": "🧭",
+      "earned": true,
+      "need": 25,
+      "have": 25,
+      "what": "Clear 25 map tiles"
+    },
+    {
+      "name": "Pathfinder",
+      "icon": "🗺️",
+      "earned": false,
+      "need": 50,
+      "have": 36,
+      "what": "Clear 50 map tiles"
+    },
+    {
+      "name": "Ranger",
+      "icon": "🏔️",
+      "earned": false,
+      "need": 100,
+      "have": 36,
+      "what": "Clear 100 map tiles"
+    },
+    {
+      "name": "Cartographer",
+      "icon": "📐",
+      "earned": false,
+      "need": 250,
+      "have": 36,
+      "what": "Clear 250 map tiles"
+    },
+    {
+      "name": "World Walker",
+      "icon": "🌍",
+      "earned": false,
+      "need": 500,
+      "have": 36,
+      "what": "Clear 500 map tiles"
+    },
+    {
+      "name": "Day Tripper",
+      "icon": "🚗",
+      "earned": false,
+      "need": 2,
+      "have": 1,
+      "what": "Explore 2 different regions"
+    },
+    {
+      "name": "Far And Wide",
+      "icon": "✈️",
+      "earned": false,
+      "need": 5,
+      "have": 1,
+      "what": "Explore 5 different regions"
+    },
+    {
+      "name": "Globetrotter",
+      "icon": "🌐",
+      "earned": false,
+      "need": 10,
+      "have": 1,
+      "what": "Explore 10 different regions"
+    }
+  ],
+  "discoveries": [
+    {
+      "day": "2026-10-12",
+      "tiles": 7
+    },
+    {
+      "day": "2026-10-04",
+      "tiles": 9
+    },
+    {
+      "day": "2026-09-14",
+      "tiles": 20
+    }
+  ],
+  "can_check_in": true
+}

@@ -56,7 +56,7 @@ THREADS = (
      lambda n: f"You caught up with {_n(n, 'person', 'people')}."),
     ("journal", (), "The Thoughtful Week", "You made time to think.",
      lambda n: f"You wrote {_n(n, 'journal entry', 'journal entries')}."),
-    ("trips", (), "The Week Of Adventure", "Adventure called, and you answered.",
+    ("trips", ("explored",), "The Week Of Adventure", "Adventure called, and you answered.",
      lambda n: f"You finished {_n(n, 'expedition')}."),
 )
 TYPE_THREAD = {t: key for key, types, *_ in THREADS for t in types}

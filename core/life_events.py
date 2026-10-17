@@ -79,6 +79,7 @@ TYPES = {
     "batch_planted": "batches planted",
     "harvest": "harvests",
     "questline_finished": "questlines finished",
+    "explored": "new ground explored",
     "safety_escalation": "safety alerts",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
