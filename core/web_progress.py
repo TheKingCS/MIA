@@ -295,6 +295,13 @@ def character_page(context, today: Optional[date] = None) -> dict:
         page["emblems"] = rewards.prestige_rewards_for_profile(pid)
     else:
         page.update(stats=[], collection=[], rarity=[], emblems=[])
+    try:  # real character stats (DEC-0028)
+        from core.character_stats import character_stats
+
+        page["attributes"] = character_stats(context, pid, today)
+    except Exception:
+        log.exception("Character: stats failed")
+        page["attributes"] = []
     skills = getattr(context, "skills", None)
     if skills is not None:
         from core.skill_leveling import compute_skill_level_progress

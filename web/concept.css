@@ -1355,3 +1355,18 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .boss-card.defeated .boss-hp { border-color: rgba(var(--rgb-ok), 0.5); background: rgba(var(--rgb-ok), 0.08); }
 .boss-lines { margin: 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- character attributes (DEC-0028, 2026-10-17) */
+.attr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.attr { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.attr-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.attr-ico { font-size: 22px; line-height: 1; }
+.attr-name { font-family: var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; font-size: var(--text-sm); }
+.attr-value { font-family: var(--font-mono); font-size: 28px; line-height: 1; color: rgb(var(--rgb-accent));
+  text-shadow: 0 0 12px rgba(var(--rgb-accent), 0.5); }
+.attr-bar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: rgba(var(--rgb-accent), 0.1);
+  border: 1px solid rgba(var(--rgb-accent), 0.25); }
+.attr-train { background: rgb(var(--rgb-accent)); }
+.attr-recent { background: rgb(var(--rgb-ok)); box-shadow: 0 0 8px rgba(var(--rgb-ok), 0.6); }
+.attr-from { margin: 0; font-size: var(--text-xs); color: var(--text-dim); }
+.attr-watch { margin: 0; font-size: var(--text-xs); color: var(--text-dim); font-style: italic; }

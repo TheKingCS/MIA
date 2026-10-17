@@ -46,3 +46,13 @@ Player One* is less about new apps and more about the feel:
 
 1. Reward Shop → 2. Gear condition bars → 3. Boss battles → 4. Real
 character stats. Then the rest as Zac picks them.
+
+## Status
+
+| # | Idea | Status (2026-10-17) |
+|---|---|---|
+| 1 | Reward Shop | ✅ built: `web/shop.html`, `core/reward_shop.py`, `shop_reward.*`, `shop.buy` |
+| 2 | Gear condition bars | ✅ built: `core/web_equipment.condition`, cards, asset pages, glasses |
+| 3 | Boss battles | ✅ built: Missions → Bosses, `core/boss_battles.py`, `boss.add/remove` |
+| 4 | Real character stats | ✅ built: Character → Attributes, `core/character_stats.py` |
+| 5–13 | Buffs, world map, questlines, Chronicle, crafting, party, sound, watch HUD, location quests | waiting for Zac to pick the next one |
