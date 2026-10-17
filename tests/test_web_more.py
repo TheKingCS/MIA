@@ -47,7 +47,7 @@ def world(tmp_path, monkeypatch):
     context.expeditions = ExpeditionManager(context, data_dir=shop)
     context.trips = TripManager(context, data_dir=shop)
     from core.relationships_manager import RelationshipsManager
-    context.relationships = RelationshipsManager(context, data_dir=tmp_path / "rel")
+    context.relationships = RelationshipsManager(context, data_dir=context.my_dir)
     monkeypatch.setattr(music_module, "_DATA_DIR", tmp_path / "music_data")
     monkeypatch.setattr(music_module, "_TRACKS_FILE", tmp_path / "music_data" / "t.json")
     monkeypatch.setattr(music_module, "_PLAYLISTS_FILE", tmp_path / "music_data" / "p.json")
@@ -303,3 +303,6 @@ def test_people_and_pets(world):
     said, _ = do(world, "person.caught_up", person_id=p["id"])
     assert said == "Caught up with Robin's sister today"
     assert people_page(world, TODAY)["people"][0]["days_since"] == 0
+    from core.chronicle import chronicle_page
+
+    assert "You caught up with 1 person." in chronicle_page(world)["this_week"]["story"]

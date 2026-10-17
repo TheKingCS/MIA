@@ -300,10 +300,15 @@ def character_page(context, today: Optional[date] = None) -> dict:
         from core.character_stats import character_stats
 
         page["buffs"] = buffs(context, today)
+        from core.chronicle import chronicle_page
+
+        week = chronicle_page(context, today)["this_week"]
+        page["chronicle"] = {k: week[k] for k in ("title", "dates", "name", "so_far")} | {"story": week["story"][:2]}
         page["attributes"] = character_stats(context, pid, today, page["buffs"])
     except Exception:
         log.exception("Character: stats failed")
         page.setdefault("buffs", [])
+        page.setdefault("chronicle", None)
         page["attributes"] = []
     skills = getattr(context, "skills", None)
     if skills is not None:

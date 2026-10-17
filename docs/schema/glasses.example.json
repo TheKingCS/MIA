@@ -420,6 +420,11 @@
           "type": "panel"
         },
         {
+          "id": "chronicle",
+          "label": "This Week's Story",
+          "type": "panel"
+        },
+        {
           "id": "top",
           "label": "Top Skills",
           "type": "panel"

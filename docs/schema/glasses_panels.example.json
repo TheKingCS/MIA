@@ -1588,6 +1588,41 @@
     "more": 0,
     "empty": "No buffs right now."
   },
+  "character/chronicle": {
+    "app": "character",
+    "item": "chronicle",
+    "label": "This Week's Story",
+    "title": "Week 42: The Training Week So Far",
+    "lines": [
+      {
+        "text": "This was a week of sweat.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "You trained 10 times.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "You cooked 4 times.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "You finished 3 missions.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "You logged what you ate on 3 days.",
+        "detail": "",
+        "tone": ""
+      }
+    ],
+    "more": 5,
+    "empty": ""
+  },
   "character/top": {
     "app": "character",
     "item": "top",

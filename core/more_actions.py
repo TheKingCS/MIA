@@ -653,8 +653,12 @@ def _caught_describe(context, params) -> str:
 def _caught(context, params) -> str:
     from datetime import date as _date
 
+    from core import life_events
+
     person = get(context, RECORDS["person"], params)
     context.relationships.update_person(person.person_id, last_contact=_date.today().isoformat())
+    life_events.record(context.relationships, "caught_up", f"Caught up with {person.name}",
+                       [f"person:{person.person_id}"], {"name": person.name})
     return f"Noted: you caught up with {person.name}."
 
 

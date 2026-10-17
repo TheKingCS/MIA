@@ -56,4 +56,5 @@ character stats. Then the rest as Zac picks them.
 | 3 | Boss battles | ✅ built: Missions → Bosses, `core/boss_battles.py`, `boss.add/remove` |
 | 4 | Real character stats | ✅ built: Character → Attributes, `core/character_stats.py` |
 | 5 | Buffs | ✅ built: `core/buffs.py`; Home, Character (Buffs + gold on Attributes), glasses Character → Buffs. Each lifts one attribute +1 while it lasts |
+| 8 | The Chronicle | ✅ built: `core/chronicle.py`, `web/chronicle.html` (Character → The Chronicle), glasses Character → This Week's Story, a Sunday note through the gate |
 | 6–7, 9–13 | World map, questlines, crafting, party, sound, watch HUD, location quests | waiting for Zac to pick the next one |

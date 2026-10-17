@@ -654,6 +654,7 @@ class MIAApplication:
             ("walkthrough_suggestion", self._check_walkthrough_suggestion),
             ("journal_reflection", self._check_journal_reflection),
             ("warranty", self._check_warranties),
+            ("chronicle", self._check_chronicle),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -784,6 +785,21 @@ class MIAApplication:
             self._offer(topic="journal_reflection", title=notice[0], message=notice[1], urgency=TIMELY, source="journal",
                         daily=True)
         person_settings.put(context, "system.last_journal_reflection_date", today_iso)
+
+    def _check_chronicle(self, now: datetime, today_iso: str) -> None:
+        """Sundays: this week's chapter of the Chronicle is ready (DEC-0028)."""
+        if now.weekday() != 6:
+            return
+        from core.chronicle import chronicle_page
+
+        config = self.context.config
+        week = chronicle_page(self.context, now.date())["this_week"]
+        if config.get("system.last_chronicle_week") == week["id"] or not week["total"]:
+            return
+        self._offer(topic="chronicle", title=f"\U0001F4DC {week['title']}: {week['name']}",
+                    message=" ".join(week["story"][:2]) + " Your Chronicle is ready.", urgency=AMBIENT, source="system")
+        config.set("system.last_chronicle_week", week["id"])
+        config.save()
 
     def _check_budget_nudge(self, now: datetime, today_iso: str) -> None:
         config = self.context.config

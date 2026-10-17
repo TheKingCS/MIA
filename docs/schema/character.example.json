@@ -155,5 +155,15 @@
       "ends": "",
       "lasts": "while it holds"
     }
-  ]
+  ],
+  "chronicle": {
+    "title": "Week 42",
+    "dates": "Oct 12–18",
+    "name": "The Training Week So Far",
+    "so_far": true,
+    "story": [
+      "This was a week of sweat.",
+      "You trained 10 times."
+    ]
+  }
 }

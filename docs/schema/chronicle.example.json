@@ -1,0 +1,140 @@
+{
+  "available": true,
+  "as_of": "2026-10-17",
+  "this_week": {
+    "id": "2026-W42",
+    "kind": "week",
+    "title": "Week 42",
+    "dates": "Oct 12–18",
+    "start": "2026-10-12",
+    "end": "2026-10-18",
+    "ready": false,
+    "so_far": true,
+    "name": "The Training Week So Far",
+    "story": [
+      "This was a week of sweat.",
+      "You trained 10 times.",
+      "You cooked 4 times.",
+      "You finished 3 missions.",
+      "You logged what you ate on 3 days.",
+      "You practised your skills twice.",
+      "You wrote 2 journal entries.",
+      "You kept your gear in shape with 1 upkeep job.",
+      "You made 1 payment on bills and debts.",
+      "8 parts of your life moved forward."
+    ],
+    "highlights": [
+      "Worked out: a session, 40 min",
+      "Cooked Protein oats",
+      "Handstand: Kick-ups, 6 reps",
+      "Completed the mission Handstand practice",
+      "Oil & filter: Mower",
+      "Handstand: Wall hold, 38 s"
+    ],
+    "tally": [
+      {
+        "key": "training",
+        "count": 10
+      },
+      {
+        "key": "kitchen",
+        "count": 4
+      },
+      {
+        "key": "quests",
+        "count": 3
+      },
+      {
+        "key": "eating",
+        "count": 3
+      },
+      {
+        "key": "practice",
+        "count": 2
+      },
+      {
+        "key": "journal",
+        "count": 2
+      },
+      {
+        "key": "upkeep",
+        "count": 1
+      },
+      {
+        "key": "money",
+        "count": 1
+      }
+    ],
+    "total": 26
+  },
+  "weeks": [],
+  "years": [
+    {
+      "id": "2026",
+      "kind": "year",
+      "title": "2026 So Far",
+      "dates": "Jan 1 – Oct 17",
+      "start": "2026-01-01",
+      "end": "2026-12-31",
+      "ready": false,
+      "so_far": true,
+      "name": "The Training Year",
+      "story": [
+        "This was a week of sweat.",
+        "You trained 10 times.",
+        "You cooked 4 times.",
+        "You finished 3 missions.",
+        "You logged what you ate on 3 days.",
+        "You practised your skills twice.",
+        "You wrote 2 journal entries.",
+        "You kept your gear in shape with 1 upkeep job.",
+        "You made 1 payment on bills and debts.",
+        "8 parts of your life moved forward.",
+        "Your biggest week was Week 42 (Oct 12–18), with 26 things done; your busiest month, October."
+      ],
+      "highlights": [
+        "Worked out: a session, 40 min",
+        "Cooked Protein oats",
+        "Handstand: Kick-ups, 6 reps",
+        "Completed the mission Handstand practice",
+        "Oil & filter: Mower",
+        "Handstand: Wall hold, 38 s"
+      ],
+      "tally": [
+        {
+          "key": "training",
+          "count": 10
+        },
+        {
+          "key": "kitchen",
+          "count": 4
+        },
+        {
+          "key": "quests",
+          "count": 3
+        },
+        {
+          "key": "eating",
+          "count": 3
+        },
+        {
+          "key": "practice",
+          "count": 2
+        },
+        {
+          "key": "journal",
+          "count": 2
+        },
+        {
+          "key": "upkeep",
+          "count": 1
+        },
+        {
+          "key": "money",
+          "count": 1
+        }
+      ],
+      "total": 26
+    }
+  ]
+}

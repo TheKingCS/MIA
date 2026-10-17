@@ -1033,6 +1033,12 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "character", character_page)
 
+    @app.get("/api/chronicle")
+    def web_chronicle(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.chronicle import chronicle_page
+
+        return _screen(profile_id, "character", chronicle_page)
+
     @app.get("/api/dashboard")
     def web_dashboard(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_surfaces import dashboard

@@ -52,6 +52,10 @@
       el("div", { class: "glass character-portrait" + (me.prestige_color ? " prestige-" + me.prestige_color : "") },
         el("span", { class: "character-avatar", "aria-hidden": "true" }, "🧙"),
         el("div", {}, el("strong", {}, "Level " + me.level), el("small", { class: "dim" }, "Character art is coming later."))),
+      page.chronicle ? sectionWith("The Chronicle", el("a", { class: "btn btn-ghost", href: "chronicle.html" }, "Read It"),
+        el("div", { class: "chron-teaser" }, el("span", { class: "chron-title" }, page.chronicle.title + " · " + page.chronicle.dates +
+          (page.chronicle.so_far ? " · so far" : "")), el("h3", {}, page.chronicle.name),
+          ...page.chronicle.story.map((line) => el("p", { class: "dim" }, line)))) : "",
       section("Buffs", (page.buffs || []).length ? MIAShell.buffChips(page.buffs)
         : el("p", { class: "dim" }, "No buffs right now. Work out, cook, write, catch up with someone: good days earn them.")),
       attrs ? section("Attributes", el("p", { class: "dim" }, "Blue is training (your skills), which never goes down. Green is what you've done in the last 30 days. Gold is a buff."), attrs) : "",

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>The Chronicle — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="character" class="mod-character">
+  <!--
+    The Chronicle (claude, 2026-10-17, DEC-0028): the story of each week
+    and each year, from what really happened. MIA.chronicle()
+    (core/chronicle.py). Read only.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">📜</span> <span id="hero-name">The Chronicle</span></h1>
+        <p class="tagline" id="hero-tagline">Your life, told as a story.</p>
+      </header>
+            <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="shell.js"></script>
+  <script src="chronicle.js"></script>
+</body>
+</html>

@@ -74,6 +74,7 @@ TYPES = {
     "starter_added": "starter sets added",
     "undone": "changes undone",
     "mission_missed": "missed days (no points lost)",
+    "caught_up": "people caught up with",
     "safety_escalation": "safety alerts",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").

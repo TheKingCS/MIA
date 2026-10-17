@@ -1398,3 +1398,15 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .buff-row.compact .buff-left { display: none; }
 .attr-buff { background: rgb(var(--rgb-win)); box-shadow: 0 0 8px rgba(var(--rgb-win), 0.6); }
 .attr-buffs { margin: 0; font-size: var(--text-xs); color: rgb(var(--rgb-win)); }
+
+/* The Chronicle (DEC-0028, claude 2026-10-17): each week told as a chapter. */
+.chron { display: grid; gap: 10px; margin-bottom: 12px; }
+.chron-head { display: grid; gap: 4px; }
+.chron-title, .chron-label { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-dim); }
+.chron h2 { margin: 0; font-size: var(--text-lg); color: rgb(var(--rgb-win)); }
+.chron.open { border-color: rgba(var(--rgb-win), 0.45); box-shadow: 0 0 14px rgba(var(--rgb-win), 0.12); }
+.chron-story p { margin: 0 0 6px; line-height: 1.5; }
+.chron-story p:first-child { font-style: italic; }
+.chron-high ul { margin: 6px 0 0; padding-left: 18px; color: var(--text-dim); font-size: var(--text-sm); }
+.chron-teaser h3 { margin: 0 0 4px; color: rgb(var(--rgb-win)); }

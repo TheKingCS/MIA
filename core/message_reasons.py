@@ -31,6 +31,7 @@ REASONS: dict[str, tuple[str, str]] = {
     "inbox": ("the document inbox", "new documents arrived in your inbox"),
     "connectivity": ("internet changes", "the internet went down or came back"),
     "warranty": ("warranty reminders", "a warranty on something you own is ending soon"),
+    "chronicle": ("the Chronicle", "on Sundays, your week's chapter of the Chronicle is ready"),
     "journal_reflection": ("the weekly reflection", "you turned on the weekly journal reflection"),
 }
 

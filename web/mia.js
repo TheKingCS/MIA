@@ -218,6 +218,7 @@
     shop: () => read("/api/shop", "shop"),
     journal: () => read("/api/journal", "journal"),
     people: () => read("/api/people", "people"),
+    chronicle: () => read("/api/chronicle", "chronicle"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),
     music: () => read("/api/music", "music"),
