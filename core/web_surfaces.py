@@ -248,7 +248,19 @@ def shell(context, today: Optional[date] = None) -> dict:
         "on_pc_only": [a.name for a in apps if not a.page],
         "weather": {"status": "PLANNED", "text": None},
         "sound": _sound(context),
+        "places": _places(context),
     }
+
+
+def _places(context) -> list:
+    """Location quests the phone watches for (core/places.py), only when switched on."""
+    try:
+        from core.places import watched
+
+        return watched(context)
+    except Exception:
+        log.exception("Shell: places failed")
+        return []
 
 
 def _sound(context) -> dict:

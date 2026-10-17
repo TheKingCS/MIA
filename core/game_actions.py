@@ -309,6 +309,55 @@ def _set_board(context, params) -> str:
     return "You're on the leaderboard." if _board(params) else "You're off the leaderboard."
 
 
+def _place(context, params):
+    place = _need(context, "places").get(str(params.get("place_id") or ""))
+    if place is None:
+        raise ActionError("That place isn't in your places anymore.")
+    return place
+
+
+def _place_fields(context, params) -> dict:
+    from core.places import ARRIVALS, DEFAULT_RADIUS_M
+
+    _need(context, "places")
+    name = str(params.get("name") or "").strip()
+    if not name:
+        raise ActionError("Give the place a name, like Gym or Grocery Store.")
+    lat, lon = _where(params)
+    try:
+        radius = int(float(params.get("radius") or DEFAULT_RADIUS_M))
+    except (TypeError, ValueError):
+        radius = DEFAULT_RADIUS_M
+    if not 30 <= radius <= 2000:
+        raise ActionError("How close counts as there: between 30 and 2,000 meters.")
+    on_arrive = str(params.get("on_arrive") or "Just Remind Me")
+    if on_arrive not in ARRIVALS:
+        raise ActionError("Pick what happens when you get there.")
+    return {"name": name, "lat": lat, "lon": lon, "radius_m": radius, "on_arrive": on_arrive,
+            "note": str(params.get("note") or "").strip()}
+
+
+def _describe_place_add(context, params) -> str:
+    f = _place_fields(context, params)
+    return f"Add the place {f['name']} (within {f['radius_m']} m): when you get there, {f['on_arrive'].lower()}"
+
+
+def _place_add(context, params) -> str:
+    f = _place_fields(context, params)
+    context.places.add(f["name"], f["lat"], f["lon"], f["radius_m"], f["on_arrive"], f["note"])
+    return f"{f['name']} is one of your places."
+
+
+def _place_arrive(context, params) -> str:
+    from core.places import arrival
+
+    place = context.places.arrived(_place(context, params).place_id)
+    book = getattr(context, "world_map", None)
+    if book is not None:  # being there clears the fog too
+        book.check_in(place.lat, place.lon, place.name)
+    return arrival(place)["say"]
+
+
 def _register() -> None:
     from dataclasses import replace
 
@@ -329,6 +378,14 @@ def _register() -> None:
                                                "people": "profile ids, comma-separated, or everyone"},
                    lambda c, p: _describe_raid(c, p, True), lambda c, p: _raid(c, p, True), True),
         ActionType("party.leaderboard", "Leaderboard", {"on": "true or false"}, _describe_board, _set_board, True),
+        ActionType("place.add", "Add Place", {"name": "", "lat": "latitude", "lon": "longitude",
+                                              "radius": "meters (150 if left out)", "on_arrive": "what happens there",
+                                              "note": "optional reminder"}, _describe_place_add, _place_add, True),
+        ActionType("place.delete", "Remove", {"place_id": "the place"},
+                   lambda c, p: f"Remove {_place(c, p).name} from your places",
+                   lambda c, p: (c.places.delete(_place(c, p).place_id), "Removed.")[1], True),
+        ActionType("place.arrive", "I'm Here", {"place_id": "the place"},
+                   lambda c, p: f"You're at {_place(c, p).name}", _place_arrive, True),
         ActionType("map.checkin", "I'm Here", {"lat": "latitude", "lon": "longitude", "label": "optional name"},
                    _describe_checkin, _checkin, True),
         ActionType("quest.remove", "Remove Questline", {"quest_id": "the questline"},

@@ -60,7 +60,7 @@
     if (!data || !Array.isArray(data.apps)) data = { apps: [], others: [] };
     if (window.MIASound && !load.sound) {  // the person's sound settings, once
       load.sound = true;
-      MIA.shell().then((s) => MIASound.configure(s.sound)).catch(() => {});
+      MIA.shell().then((s) => { MIASound.configure(s.sound); if (window.MIAPlaces) MIAPlaces.configure(s.places); }).catch(() => {});
     }
   }
 
@@ -514,6 +514,18 @@
     catch (err) { panel = { lines: [], empty: err.message, more: 0 }; }
     row = 0;
     if (view === "panel") render();
+  }
+  // Location quests (DEC-0028 #13): arriving at the store opens the grocery
+  // list right here on the glasses; anything else is MIA's line.
+  if (window.MIAPlaces) {
+    MIAPlaces.onArrive = async (place) => {
+      await load();
+      const list = cards();
+      const at = list.findIndex((c) => c.id === "kitchen");
+      const item = at >= 0 && (place.open || "").indexOf("#grocery") >= 0 ? (list[at].menu || []).findIndex((m) => m.id === "grocery") : -1;
+      if (item >= 0) { appIndex = at; menuIndex = item; await openPanel(); return; }
+      resultText = place.say; after = "menu"; show("result");
+    };
   }
   async function leaveResult() {
     if (after === "panel") { await load(); await openPanel(); return; }

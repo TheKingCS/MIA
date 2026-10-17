@@ -47,6 +47,7 @@ PERSONAL_SETTINGS = (
     "party.leaderboard",
     "sound.on",
     "sound.voice",
+    "places.watch",
 )
 
 

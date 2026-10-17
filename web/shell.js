@@ -201,6 +201,7 @@
 
   function renderNav(shell) {
     if (window.MIASound) MIASound.configure(shell.sound);
+    if (window.MIAPlaces) MIAPlaces.configure(shell.places);  // location quests, checked on this device
     const layout = $(".layout");
     document.body.classList.toggle("has-side", Boolean(layout));
     if (layout) {

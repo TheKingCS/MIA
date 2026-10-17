@@ -3,12 +3,15 @@ package com.mia.phone
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
+import android.webkit.GeolocationPermissions
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -26,6 +29,9 @@ import org.json.JSONObject
  */
 class MainActivity : Activity() {
     private var web: WebView? = null
+    // A screen asked where the phone is (World Map's I'm Here, location
+    // quests, DEC-0028): answered once Android's own permission is.
+    private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,11 +129,25 @@ class MainActivity : Activity() {
             // Every screen comes from MIA on this phone, so never show a saved
             // copy: after an update the web view kept showing the old screens.
             settings.cacheMode = WebSettings.LOAD_NO_CACHE
+            settings.setGeolocationEnabled(true)
             clearCache(true)
             webViewClient = WebViewClient()
             // Without this, the web view silently answers "no" to any
             // confirm/alert dialog a screen asks (the Model test's Delete did).
-            webChromeClient = WebChromeClient()
+            // It also answers a screen asking where the phone is: yes only for
+            // MIA's own pages, and only once Android's location permission is given.
+            webChromeClient = object : WebChromeClient() {
+                override fun onGeolocationPermissionsShowPrompt(origin: String, callback: GeolocationPermissions.Callback) {
+                    if (!origin.startsWith("http://127.0.0.1:$PORT")) { callback.invoke(origin, false, false); return }
+                    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        callback.invoke(origin, true, false)
+                    } else {
+                        geoAsk = origin to callback
+                        requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION), GEO_REQUEST)
+                    }
+                }
+            }
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
@@ -135,6 +155,14 @@ class MainActivity : Activity() {
         }
         web = view
         setContentView(view)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != GEO_REQUEST) return
+        val ask = geoAsk ?: return
+        geoAsk = null
+        ask.second.invoke(ask.first, grantResults.any { it == PackageManager.PERMISSION_GRANTED }, false)
     }
 
     @Deprecated("Activity.onBackPressed is fine for this spike")
@@ -146,6 +174,7 @@ class MainActivity : Activity() {
     companion object {
         const val TAG = "MIA_SPIKE"
         const val PORT = 8765
+        const val GEO_REQUEST = 41
         private val START_LOCK = Any()
         @Volatile private var started: JSONObject? = null
     }

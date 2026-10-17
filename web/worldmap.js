@@ -108,7 +108,8 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, s.tiles), el("span", { class: "t" }, "Tiles Cleared")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, s.km2.toLocaleString()), el("span", { class: "t" }, "km² Explored")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, s.regions), el("span", { class: "t" }, "Regions")));
-    const here = page.can_check_in ? el("button", { type: "button", class: "btn btn-amber", onclick: hereNow }, "I'm Here") : null;
+    const here = page.can_check_in ? el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-amber", onclick: hereNow }, "I'm Here"),
+      el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places")) : null;
     const parts = [];
     if (!page.tiles.length && !page.pins.length) {
       parts.push(el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, "All Fog So Far"), here),

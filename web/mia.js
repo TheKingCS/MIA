@@ -230,6 +230,7 @@
     chronicle: () => read("/api/chronicle", "chronicle"),
     worldmap: () => read("/api/worldmap", "worldmap"),
     party: () => read("/api/party", "party"),
+    places: () => read("/api/places", "places"),
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),
     homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),

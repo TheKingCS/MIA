@@ -1,0 +1,48 @@
+{
+  "available": true,
+  "watching": true,
+  "places": [
+    {
+      "id": "demo-gym",
+      "name": "Gym",
+      "lat": 0,
+      "lon": 0,
+      "radius": 150,
+      "on_arrive": "Start My Workout",
+      "note": "",
+      "last_arrived": "2026-10-16",
+      "arrivals": 12
+    },
+    {
+      "id": "demo-store",
+      "name": "Grocery Store",
+      "lat": 0,
+      "lon": 0,
+      "radius": 200,
+      "on_arrive": "Show My Grocery List",
+      "note": "",
+      "last_arrived": "2026-10-14",
+      "arrivals": 5
+    },
+    {
+      "id": "demo-library",
+      "name": "Library",
+      "lat": 0,
+      "lon": 0,
+      "radius": 120,
+      "on_arrive": "Just Remind Me",
+      "note": "Return the books",
+      "last_arrived": "",
+      "arrivals": 0
+    }
+  ],
+  "arrivals": [
+    "Start My Workout",
+    "Show My Grocery List",
+    "Show My Missions",
+    "Open The Greenhouse",
+    "Open The Workshop",
+    "Just Remind Me"
+  ],
+  "default_radius": 150
+}

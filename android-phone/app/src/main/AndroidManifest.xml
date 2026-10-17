@@ -3,6 +3,10 @@
 
     <!-- Needed even for MIA's own server on 127.0.0.1 inside the app. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Where the phone is, only when a screen asks and you allow it (World Map's
+         I'm Here, location quests: DEC-0028). Checked on the phone, never sent off it. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- allowBackup=false: MIA's data stays on this phone (export comes later).
          The network security config allows plain http to 127.0.0.1 only:

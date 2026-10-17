@@ -72,6 +72,9 @@ SETTINGS: tuple[Setting, ...] = (
             "A chime for an objective, a fanfare for a level. Never for anything you didn't do."),
     Setting("sound.voice", "Sound", "MIA says a line when you win", "toggle", False,
             "Spoken out loud by this device's voice."),
+    # Location quests (DEC-0028 #13, core/places.py): checked on this device only, while MIA is open.
+    Setting("places.watch", "Location quests", "Notice when I arrive at my places", "toggle", False,
+            "While MIA is open, this device checks where you are against your places. Where you are never leaves it."),
 )
 SETTINGS_BY_KEY = {s.key: s for s in SETTINGS}
 
