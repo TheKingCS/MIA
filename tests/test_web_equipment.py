@@ -187,3 +187,15 @@ def test_the_endpoints_and_a_child(world, tmp_path):
     assert client.get("/api/equipment?scope=garage").status_code == 403
     assert client.get(f"/api/assets/{world.mower.asset_id}").status_code == 403
     assert client.get("/api/equipment?scope=greenhouse").status_code == 200
+
+
+def test_gear_condition_bars():
+    """DEC-0028: an asset's condition is the average life left in its upkeep."""
+    from core.web_equipment import condition
+
+    assert condition([]) is None and condition([{"life": None}]) is None
+    full = condition([{"life": 1.0}, {"life": 0.9}])
+    assert (full["percent"], full["label"], full["tone"]) == (95, "Mint", "ok")
+    assert condition([{"life": 0.6}, {"life": 0.5}])["label"] == "Good"
+    assert condition([{"life": 0.3}])["label"] == "Worn"
+    assert condition([{"life": 0.0}, {"life": 0.1}])["tone"] == "bad"

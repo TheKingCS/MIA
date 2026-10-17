@@ -53,6 +53,7 @@
         el("h3", {}, a.name),
         el("span", { class: "chip" }, a.category)),
       a.make_model ? el("p", { class: "dim" }, a.make_model) : null,
+      MIAShell.conditionBar(a.condition),
       el("ul", { class: "asset-tasks" }, a.tasks.length ? a.tasks.map((t) =>
         el("li", { class: t.needs_attention ? "overdue" : "" }, el("span", {}, t.title), chip(t)))
         : el("li", { class: "dim" }, "No tasks yet")),

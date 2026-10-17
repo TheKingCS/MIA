@@ -491,7 +491,9 @@ def _equipment(scope: str):
         for a in found:
             late = sum(1 for r in rows if r["asset_id"] == a["id"] and bucket_of(r.get("days"), r.get("urgency") or "") == "past_due")
             nxt = next((r for r in rows if r["asset_id"] == a["id"]), None)
-            bits = [f"{late} past due" if late else "", f"next: {nxt['title']} ({nxt['text']})" if nxt else ""]
+            c = a.get("condition")  # gear condition (DEC-0028)
+            bits = [f"{c['percent']}% {c['label']}" if c else "", f"{late} past due" if late else "",
+                    f"next: {nxt['title']} ({nxt['text']})" if nxt else ""]
             lines.append(_line(a.get("name") or "", " · ".join(b for b in bits if b) or (a.get("make_model") or ""),
                                "attention" if late else ""))
         return _panel("Assets", lines, "Nothing tracked here yet.", limit=60)

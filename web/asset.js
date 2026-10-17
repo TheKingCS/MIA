@@ -168,7 +168,9 @@
       el("span", { class: "stat-t" }, s.title), el("span", { class: "stat-n" }, s.text),
       btn("Log", "btn-ghost", () => s.task_id ? logTask(s.task_id, s.title) : logMeter(s.meter)))),
       el("button", { type: "button", class: "glass stat-tile stat-add", onclick: () => logMeter("") }, "+ Log a reading"));
-    $("attention").replaceChildren(...(page.attention.length ? [el("section", { class: "attention-panel" },
+    $("attention").replaceChildren(...[page.condition ? el("section", { class: "glass gear-panel" }, MIAShell.conditionBar(page.condition, true),
+      el("p", { class: "dim" }, page.condition.percent >= 100 ? "Everything's fresh." : "Doing its upkeep fills the bar back up.")) : null].filter(Boolean),
+    ...(page.attention.length ? [el("section", { class: "attention-panel" },
       el("h3", {}, "⚠ Needs attention"), el("div", { class: "rows" }, page.attention.map(taskRow)))] : []));
     $("tabs").replaceChildren(...TABS.map(([t, label]) => el("button", { type: "button", role: "tab", "aria-selected": String(t === tab),
       onclick: () => { tab = t; history.replaceState(null, "", location.search + "#" + t); draw(); } }, label)));

@@ -383,7 +383,19 @@
     if (talkHere) mountTalk();
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, confirm: confirmBox, talk: toggleTalk };
+  // Gear condition (DEC-0028): an asset's upkeep as a health bar, from the
+  // engine's `condition` (core/web_equipment.condition). Nothing when it
+  // has no recurring upkeep yet.
+  function conditionBar(c, big) {
+    if (!c) return null;
+    return el("div", { class: "gear-condition tone-" + c.tone + (big ? " big" : ""), role: "meter", "aria-valuenow": String(c.percent),
+      "aria-valuemin": "0", "aria-valuemax": "100", "aria-label": "Condition " + c.percent + "%, " + c.label },
+      el("span", { class: "gc-label" }, "Condition"),
+      el("span", { class: "gc-bar" }, el("span", { class: "gc-fill", style: "width:" + c.percent + "%" })),
+      el("span", { class: "gc-value" }, c.percent + "% · " + c.label));
+  }
+
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, confirm: confirmBox, talk: toggleTalk };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

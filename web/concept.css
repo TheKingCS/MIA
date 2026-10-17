@@ -1320,3 +1320,19 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .shop-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
 .shop-progress .bar { height: 8px; margin: 0; }
 .shop-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------- gear condition (DEC-0028, 2026-10-17) */
+.gear-condition { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center;
+  font-size: var(--text-xs); margin: 4px 0; }
+.gc-label { font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.gc-bar { height: 8px; border-radius: 99px; background: rgba(var(--rgb-accent), 0.12); overflow: hidden;
+  border: 1px solid rgba(var(--rgb-accent), 0.25); }
+.gc-fill { display: block; height: 100%; border-radius: inherit; background: rgb(var(--rgb-ok)); box-shadow: 0 0 8px rgba(var(--rgb-ok), 0.6);
+  transition: width 600ms ease; }
+.gear-condition.tone-soon .gc-fill { background: var(--soon); box-shadow: 0 0 8px var(--soon); }
+.gear-condition.tone-bad .gc-fill { background: rgb(var(--rgb-bad)); box-shadow: 0 0 8px rgba(var(--rgb-bad), 0.5); }
+.gc-value { font-family: var(--font-mono); color: var(--text); white-space: nowrap; }
+.gear-condition.big { font-size: var(--text-sm); }
+.gear-condition.big .gc-bar { height: 14px; }
+.gear-panel { padding: 12px 14px; margin-bottom: var(--gap); }
+.gear-panel p { margin: 6px 0 0; }

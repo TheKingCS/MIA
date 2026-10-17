@@ -113,8 +113,39 @@ def task_status(task, readings: list, today: date) -> dict:
             text = ("due — " if due else ("" if quick else "ok — ")) + f"{latest:g}{unit}"
             attention = due
     predicted = predicted_due_date(task, readings, today) if task.is_meter_task else None
+    # Life left until it's due (the gear condition bar, DEC-0028): 1 just
+    # done, 0 due or overdue, None when it can't be said (never done, one
+    # time, a plain reading).
+    life = None
+    if quick:
+        life = None
+    elif task.trigger_type == "calendar":
+        if days is not None and task.interval_days:
+            life = days / task.interval_days
+    elif task.is_meter_task:
+        if task.meter_interval and task.last_completed_meter_value is not None and readings:
+            life = ((task.meter_interval or 0.0) - (meter_used_since_last(task, readings) or 0.0)) / task.meter_interval
+    elif latest is not None:
+        life = 0.0 if attention else 1.0
+    if life is not None:
+        life = round(min(1.0, max(0.0, life)), 3)
     return {"urgency": urgency, "text": text, "days": days, "needs_attention": bool(attention), "quick_stat": quick,
-            "latest": latest, "predicted": predicted[1] if predicted else None}
+            "latest": latest, "predicted": predicted[1] if predicted else None, "life": life}
+
+
+CONDITION = ((80, "Mint", "ok"), (50, "Good", "ok"), (25, "Worn", "soon"), (1, "Needs Care", "bad"), (0, "Needs Care", "bad"))
+
+
+def condition(rows: list) -> Optional[dict]:
+    """Pure logic. An asset's condition, the game layer's gear bar (DEC-0028):
+    the average life left across its upkeep, so doing a task refills it.
+    None when nothing it has can say (no recurring upkeep yet)."""
+    lives = [r["life"] for r in rows if r.get("life") is not None]
+    if not lives:
+        return None
+    percent = round(100 * sum(lives) / len(lives))
+    label, tone = next((lab, t) for floor, lab, t in CONDITION if percent >= floor)
+    return {"percent": percent, "label": label, "tone": tone, "tracked": len(lives)}
 
 
 def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
@@ -164,7 +195,7 @@ def _asset_card(context, asset, rows: list, today: date) -> dict:
             "overdue": sum(r["needs_attention"] for r in rows), "tasks": current[:3], "task_count": len(current),
             "quick_stats": [{"title": r["title"], "text": r["text"]} for r in rows if r["quick_stat"]],
             "warranty_until": asset.warranty_until or None,
-            "scope": scope_of(asset.category)}
+            "scope": scope_of(asset.category), "condition": condition(rows)}
 
 
 def equipment_page(context, scope: str = "maintenance", today: Optional[date] = None) -> dict:
@@ -226,7 +257,7 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
                 ("Owner", _owner(context, asset))) if value],
             "notes": asset.notes, "values": {f.name: data.get(f.name) for f in RECORDS["asset"].fields},
             "tasks": [r for r in rows if not r["quick_stat"]],
-            "attention": [r for r in rows if r["needs_attention"]],
+            "attention": [r for r in rows if r["needs_attention"]], "condition": condition(rows),
             "forms": form_spec(), "as_of": today.isoformat()}
 
     stats = [{"title": r["title"], "text": r["text"], "task_id": r["id"]} for r in rows if r["quick_stat"]]
