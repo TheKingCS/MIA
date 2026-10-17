@@ -135,6 +135,20 @@
           "favorite": false
         },
         {
+          "id": "reward_shop",
+          "name": "Reward Shop",
+          "icon": "🎁",
+          "tagline": "Spend what you earn.",
+          "description": "Real rewards you set, bought with the credits you earn (DEC-0028).",
+          "page": "shop.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What can I buy with my credits?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "observations",
           "name": "Observations",
           "icon": "🔍",

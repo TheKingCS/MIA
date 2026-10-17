@@ -95,6 +95,13 @@
       "page": "character.html"
     },
     {
+      "id": "reward_shop",
+      "name": "Reward Shop",
+      "icon": "🎁",
+      "tagline": "Spend what you earn.",
+      "page": "shop.html"
+    },
+    {
       "id": "notes",
       "name": "Journal",
       "icon": "📓",

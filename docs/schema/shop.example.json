@@ -1,0 +1,157 @@
+{
+  "available": true,
+  "credits": {
+    "earned": 1250,
+    "spent": 400,
+    "left": 850
+  },
+  "rewards": [
+    {
+      "id": "8184d26151",
+      "name": "Favorite takeout",
+      "icon": "🍕",
+      "cost": 400,
+      "note": "",
+      "repeatable": true,
+      "bought": 0,
+      "available": true,
+      "affordable": true,
+      "to_go": 0,
+      "percent": 100,
+      "values": {
+        "name": "Favorite takeout",
+        "cost": 400,
+        "icon": "🍕",
+        "buy": "Again And Again",
+        "note": ""
+      }
+    },
+    {
+      "id": "7e6e9c97c0",
+      "name": "Movie night",
+      "icon": "🍿",
+      "cost": 500,
+      "note": "",
+      "repeatable": true,
+      "bought": 0,
+      "available": true,
+      "affordable": true,
+      "to_go": 0,
+      "percent": 100,
+      "values": {
+        "name": "Movie night",
+        "cost": 500,
+        "icon": "🍿",
+        "buy": "Again And Again",
+        "note": ""
+      }
+    },
+    {
+      "id": "de5b0b2850",
+      "name": "A new tool or piece of gear",
+      "icon": "🛠",
+      "cost": 3000,
+      "note": "",
+      "repeatable": true,
+      "bought": 0,
+      "available": true,
+      "affordable": false,
+      "to_go": 2150,
+      "percent": 28,
+      "values": {
+        "name": "A new tool or piece of gear",
+        "cost": 3000,
+        "icon": "🛠",
+        "buy": "Again And Again",
+        "note": ""
+      }
+    }
+  ],
+  "bought": [
+    {
+      "id": "demo",
+      "name": "Favorite takeout",
+      "icon": "🍕",
+      "cost": 400,
+      "when": "2026-10-12"
+    }
+  ],
+  "ideas": [
+    {
+      "icon": "🎮",
+      "name": "Guilt-free gaming night",
+      "cost": 500
+    },
+    {
+      "icon": "🛌",
+      "name": "A slow morning, no plans",
+      "cost": 300
+    },
+    {
+      "icon": "☕",
+      "name": "A fancy coffee",
+      "cost": 150
+    },
+    {
+      "icon": "🎟",
+      "name": "A day trip",
+      "cost": 2000
+    }
+  ],
+  "counts": {
+    "rewards": 3,
+    "ready": 2,
+    "bought": 0
+  },
+  "forms": {
+    "shop_reward": {
+      "noun": "reward",
+      "id_param": "reward_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Reward",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "cost",
+          "label": "Cost (credits)",
+          "type": "int",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "icon",
+          "label": "Icon (an emoji)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": "🎁"
+        },
+        {
+          "name": "buy",
+          "label": "Can you buy it",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Again And Again",
+            "Just Once"
+          ],
+          "default": "Again And Again"
+        },
+        {
+          "name": "note",
+          "label": "Note",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

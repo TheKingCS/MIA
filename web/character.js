@@ -23,7 +23,7 @@
       (page.member_since ? " · since " + day(page.member_since) : "");
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, me.total_xp.toLocaleString()), el("span", { class: "t" }, "Lifetime XP")),
-      el("div", { class: "cell soon" }, el("span", { class: "n" }, me.credits.toLocaleString()), el("span", { class: "t" }, "Credits")),
+      el("a", { class: "cell soon", href: "shop.html", title: "Spend them in the Reward Shop" }, el("span", { class: "n" }, me.credits.toLocaleString()), el("span", { class: "t" }, "Credits · Shop ›")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.missions_completed || 0), el("span", { class: "t" }, "Missions done")));
     const stats = page.stats.length ? el("div", { class: "stat-grid" }, page.stats.map((s) => el("div", { class: "glass stat-tile" },
       el("span", { class: "ico", "aria-hidden": "true" }, s.icon),

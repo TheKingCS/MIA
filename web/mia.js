@@ -215,6 +215,7 @@
       return data;
     })(),
     inbox: () => read("/api/inbox", "inbox"),
+    shop: () => read("/api/shop", "shop"),
     journal: () => read("/api/journal", "journal"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),

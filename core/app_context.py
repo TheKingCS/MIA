@@ -99,6 +99,7 @@ if TYPE_CHECKING:
     from core.inbox_mail import MailChecker
     from core.ocr import OcrQueue
     from core.online_watch import OnlineReminders
+    from core.reward_shop import RewardShop
     from core.personal_data import PersonalData
     from core.phone_server import PhoneServer
     from core.voice_manager import VoiceManager
@@ -227,6 +228,7 @@ class AppContext:
     main_thread_call: Optional[Callable[[Callable[[], None]], None]] = field(default=None, repr=False)
     # "Remind me when I'm back online" (core/online_watch.py).
     online_reminders: Optional["OnlineReminders"] = field(default=None, repr=False)
+    reward_shop: Optional["RewardShop"] = field(default=None, repr=False)  # DEC-0028
     # Each person's own stores (core/personal_data.py): conversations,
     # memories, journal, notes, reasons, message log, online reminders.
     personal_data: Optional["PersonalData"] = field(default=None, repr=False)

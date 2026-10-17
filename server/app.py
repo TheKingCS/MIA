@@ -898,6 +898,13 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't in the inbox anymore.")
         return FileResponse(path, filename=path.name, headers={"Cache-Control": "private, no-cache"})
 
+    # The game layer (DEC-0028, core/game_layer.py).
+    @app.get("/api/shop")
+    def web_shop(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.game_layer import shop_page
+
+        return _screen(profile_id, "reward_shop", shop_page)
+
     @app.get("/api/workout")
     def web_workout(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_screens import workout_page

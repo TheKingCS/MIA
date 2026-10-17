@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Reward Shop — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="reward_shop" class="mod-reward_shop">
+  <!--
+    Reward Shop (claude, 2026-10-17, DEC-0028): spend the credits you earn
+    on real rewards you set yourself. MIA.shop() (core/game_layer.py);
+    shop_reward.* and shop.buy are actions (core/game_actions.py), and
+    undo gives the credits back.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">🎁</span> <span id="hero-name">Reward Shop</span></h1>
+        <p class="tagline" id="hero-tagline">Spend what you earn.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="shell.js"></script>
+  <script src="shop.js"></script>
+</body>
+</html>

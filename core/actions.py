@@ -319,6 +319,7 @@ import core.plan_import  # noqa: E402,F401  (a whole plan and its recipes, paste
 import core.calendar_actions  # noqa: E402,F401  (your own calendar events)
 import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a note)
+import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0028)
 
 
 # ------------------------------------------------------------------ the five steps

@@ -82,6 +82,7 @@ from core.maintenance_manager import MaintenanceManager
 from core.material_manager import MaterialManager
 from core.notification_manager import NotificationManager
 from core.online_watch import OnlineReminders
+from core.reward_shop import RewardShop
 from core.plaid_manager import PlaidManager
 from core.private_journal import PrivateJournalManager
 from core.product_manager import ProductManager
@@ -122,6 +123,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("private_journal", PrivateJournalManager),
     ("communication", CommunicationGate),
     ("online_reminders", OnlineReminders),
+    ("reward_shop", RewardShop),
     ("workout", WorkoutManager),
     ("fitness", FitnessManager),
     ("classroom", ClassroomManager),

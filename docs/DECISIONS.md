@@ -492,3 +492,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   The Dashboard app is retired everywhere (`RETIRED` in core/web_surfaces.py);
   its data endpoint keeps feeding Home.
 - Related: DEC-0017, DEC-0025
+
+### DEC-0028: The game layer, built in order
+- Status: APPROVED
+- Proposed by: claude, 2026-10-17 (Zac asked what would make MIA feel like living in a video game) · Approved by: zac, 2026-10-17 ("I love all of your ideas so lets take note of them and work on them in your recommended order")
+- Decision: the ideas in `docs/GAME_LAYER.md` are the game layer's plan.
+  Build order: **1. Reward Shop** (spend credits on rewards you set),
+  **2. Gear condition bars** (assets as equipment), **3. Boss battles**
+  (big goals with an HP bar, starting with debts), **4. Real character
+  stats** (from real data, ready for a smart watch); then buffs, the world
+  map, questlines and seasons, the Chronicle, crafting, party/guild,
+  sound, the watch health HUD and location quests as Zac picks them.
+  Guardrails: never punishing (DEC-0014), health data stays on your own
+  devices, no slot-machine patterns.
+- Related: DEC-0014, DEC-0022, DEC-0024
+

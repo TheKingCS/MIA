@@ -1305,3 +1305,18 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .exp-cover { width: calc(100% + 28px); margin: -14px -14px 4px; height: 140px; object-fit: cover; display: block;
   border-radius: var(--radius) var(--radius) 0 0; }
+
+/* ---------------------------------------------------------------- Reward Shop (DEC-0028, 2026-10-17) */
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.shop-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.shop-card.ready { border-color: rgba(var(--rgb-ok), 0.7); box-shadow: 0 0 18px rgba(var(--rgb-ok), 0.15); }
+.shop-card.claimed { opacity: 0.6; }
+.shop-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.shop-icon { font-size: 30px; line-height: 1; }
+.shop-title h3 { margin: 0; font-size: var(--text-md); overflow-wrap: break-word; }
+.shop-title p { margin: 2px 0 0; font-size: var(--text-sm); }
+.shop-cost { font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 700; color: rgb(var(--rgb-accent)); white-space: nowrap; }
+.shop-cost small { font-size: var(--text-xs); color: var(--text-dim); }
+.shop-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.shop-progress .bar { height: 8px; margin: 0; }
+.shop-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
