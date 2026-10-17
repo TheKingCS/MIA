@@ -666,6 +666,7 @@ class MIAApplication:
             ("chronicle", self._check_chronicle),
             ("memory_callback", self._check_memory_callbacks),
             ("grow_alert", self._check_grow_alerts),
+            ("season", self._check_season),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -809,6 +810,22 @@ class MIAApplication:
             title, message, fingerprint = alert_note(alert)
             self._offer(topic="grow_alert", title=title, message=message, urgency=TIMELY, source="greenhouse",
                         fingerprint=fingerprint)
+
+    def _check_season(self, now: datetime, today_iso: str) -> None:
+        """MIA as quest-giver (core/questlines.py): once a season, the
+        season's questlines, through the gate (it drops a repeat)."""
+        if getattr(self.context, "quest_book", None) is None:
+            return
+        from core import person_settings
+        from core.questlines import season_note
+
+        note = season_note(self.context, now.date())
+        if note is None or person_settings.get(self.context, "system.last_season_note") == note[2]:
+            return
+        title, message, fingerprint = note
+        self._offer(topic="season", title=title, message=message, urgency=AMBIENT, source="system",
+                    fingerprint=fingerprint)
+        person_settings.put(self.context, "system.last_season_note", fingerprint)
 
     def _check_memory_callbacks(self, now: datetime, today_iso: str) -> None:
         """Remembering at the right moment (DEC-0029): each callback once,

@@ -78,6 +78,7 @@ TYPES = {
     "build_finished": "builds finished",
     "batch_planted": "batches planted",
     "harvest": "harvests",
+    "questline_finished": "questlines finished",
     "safety_escalation": "safety alerts",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
@@ -87,7 +88,8 @@ MONEY_TYPES = frozenset({"bill_paid", "income_received", "expense_added", "incom
                          "rent_received", "property_expense", "imported"})
 # What counts as getting something done ("what did I get done?").
 WINS = ("bill_paid", "debt_payment", "mission_completed", "workout_logged", "maintenance_done", "task_done",
-        "project_completed", "rent_received", "income_received", "meal_logged", "build_finished", "harvest")
+        "project_completed", "rent_received", "income_received", "meal_logged", "build_finished", "harvest",
+        "questline_finished")
 
 _lock = threading.Lock()
 _local = threading.local()

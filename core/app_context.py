@@ -104,6 +104,7 @@ if TYPE_CHECKING:
     from core.business_book import BusinessBook
     from core.grow_lab import GrowLab
     from core.boss_battles import BossBook
+    from core.questlines import QuestBook
     from core.personal_data import PersonalData
     from core.phone_server import PhoneServer
     from core.voice_manager import VoiceManager
@@ -234,6 +235,7 @@ class AppContext:
     online_reminders: Optional["OnlineReminders"] = field(default=None, repr=False)
     reward_shop: Optional["RewardShop"] = field(default=None, repr=False)  # DEC-0028
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
+    quest_book: Optional["QuestBook"] = field(default=None, repr=False)  # DEC-0028 questlines
     craft_recipes: Optional["CraftRecipeBook"] = field(default=None, repr=False)  # DEC-0030 crafting recipes
     business: Optional["BusinessBook"] = field(default=None, repr=False)  # DEC-0030 quotes, customers, orders
     grow_lab: Optional["GrowLab"] = field(default=None, repr=False)  # DEC-0030 the grow lab

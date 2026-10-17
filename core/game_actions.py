@@ -9,6 +9,8 @@ contract in core/actions.py.
   `shop.buy` (spend credits on one). Undo gives the credits back.
 - Boss battles: `boss.add` makes a mission a boss fight, `boss.remove`
   turns it back into a plain mission (debts are bosses on their own).
+- Questlines (core/questlines.py): `quest.start` a seasonal or any-time
+  starter, `quest.add` your own (one chapter per line), `quest.remove`.
 
 A person's own credits and shop: these are child-safe.
 """
@@ -115,6 +117,72 @@ def _boss_remove(context, params) -> str:
     return f"{mission.name} is a plain mission again."
 
 
+def _quest(context, params):
+    quest = _need(context, "quest_book").get(str(params.get("quest_id") or ""))
+    if quest is None:
+        raise ActionError("That questline isn't there anymore.")
+    return quest
+
+
+def _starter(params):
+    from core.questlines import STARTER_BY_ID
+
+    starter = STARTER_BY_ID.get(str(params.get("starter_id") or ""))
+    if starter is None:
+        raise ActionError("That questline isn't one MIA knows.")
+    return starter
+
+
+def _describe_quest_start(context, params) -> str:
+    _need(context, "quest_book")
+    _need(context, "missions")
+    starter = _starter(params)
+    return f"Start the questline {starter.icon} {starter.name}: " + " → ".join(t for t, _s, _o in starter.chapters)
+
+
+def _quest_start(context, params) -> str:
+    from core.questlines import start
+
+    starter = _starter(params)
+    quest = start(context, starter.starter_id)
+    first = quest.chapters[0]
+    return f"{quest.icon} {quest.name} begins. Chapter 1: {first.title}. {first.story}".strip()
+
+
+def _own_chapters(params) -> list:
+    from core.questlines import parse_chapters
+
+    name = str(params.get("name") or "").strip()
+    if not name:
+        raise ActionError("Give the questline a name.")
+    chapters = parse_chapters(params.get("chapters"))
+    if len(chapters) < 2:
+        raise ActionError("A questline needs at least two chapters, one per line.")
+    return chapters
+
+
+def _describe_quest_add(context, params) -> str:
+    _need(context, "quest_book")
+    chapters = _own_chapters(params)
+    return f"Start your own questline {str(params.get('name')).strip()}: " + " → ".join(c["title"] for c in chapters)
+
+
+def _quest_add(context, params) -> str:
+    from core.questlines import open_chapter
+
+    chapters = _own_chapters(params)
+    quest = context.quest_book.add(str(params.get("name")).strip(), chapters,
+                                   icon=str(params.get("icon") or "").strip() or "🗺️")
+    open_chapter(context, quest)
+    return f"{quest.icon} {quest.name} begins. Chapter 1: {quest.chapters[0].title}."
+
+
+def _quest_remove(context, params) -> str:
+    quest = _quest(context, params)
+    context.quest_book.remove(quest.quest_id)
+    return f"{quest.name} is off your questlines. Its missions stay, and what you earned stays earned."
+
+
 def _register() -> None:
     from dataclasses import replace
 
@@ -125,6 +193,12 @@ def _register() -> None:
                    lambda c, p: f"Make {_boss_mission(c, p, True).name} a boss fight (its objectives are its HP)", _boss_add, True),
         ActionType("boss.remove", "Not A Boss", {"mission_id": "the mission"},
                    lambda c, p: f"Make {_boss_mission(c, p, False).name} a plain mission again", _boss_remove, True),
+        ActionType("quest.start", "Start Questline", {"starter_id": "the questline"}, _describe_quest_start, _quest_start, True),
+        ActionType("quest.add", "Make A Questline", {"name": "", "icon": "an emoji",
+                                                     "chapters": "one chapter per line: Title: objective; objective"},
+                   _describe_quest_add, _quest_add, True),
+        ActionType("quest.remove", "Remove Questline", {"quest_id": "the questline"},
+                   lambda c, p: f"Take {_quest(c, p).name} off your questlines (its missions stay)", _quest_remove, True),
     ]
     for kind in kinds:
         ACTION_TYPES[kind.kind] = kind

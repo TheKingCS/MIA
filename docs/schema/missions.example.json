@@ -145,6 +145,36 @@
           "default": null
         }
       ]
+    },
+    "quest": {
+      "noun": "questline",
+      "id_param": "quest_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Questline",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "icon",
+          "label": "Icon (an emoji)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": "🗺️"
+        },
+        {
+          "name": "chapters",
+          "label": "Chapters, one per line (Title: objective; objective)",
+          "type": "textarea",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
     }
   },
   "as_of": "2026-10-06",
@@ -924,6 +954,65 @@
         "reward_xp": 20,
         "reward_credits": 0
       }
+    },
+    {
+      "id": "demo-quest-ch2",
+      "name": "Ready For Winter: Seal It Up",
+      "icon": "🏠",
+      "summary": "Keep the warm in.",
+      "area": "Fall 2026",
+      "difficulty": "EASY",
+      "type": "QUEST · CH. 2 OF 3",
+      "status": "active",
+      "from_mia": true,
+      "abandon_reason": null,
+      "reward_xp": 75,
+      "reward_credits": 0,
+      "skill_rewards": [],
+      "rewards_given": false,
+      "objectives": [
+        {
+          "index": 0,
+          "description": "Seal drafty doors or windows",
+          "progress": 1.0,
+          "target": 1.0,
+          "done": true,
+          "counts_itself": false,
+          "for": null
+        },
+        {
+          "index": 1,
+          "description": "Clean the gutters",
+          "progress": 0.0,
+          "target": 1.0,
+          "done": false,
+          "counts_itself": false,
+          "for": null
+        }
+      ],
+      "done": 1,
+      "total": 2,
+      "percent": 50,
+      "ready": false,
+      "daily": false,
+      "weekly": false,
+      "streak": null,
+      "party": [],
+      "my_part": null,
+      "pathway": null,
+      "asset": null,
+      "task": null,
+      "unlocks_recipes": [],
+      "updated": "2026-10-06",
+      "values": {
+        "name": "Ready For Winter: Seal It Up",
+        "icon": "🏠",
+        "summary": "Keep the warm in.",
+        "difficulty": "EASY",
+        "region": "Fall 2026",
+        "reward_xp": 75,
+        "reward_credits": 0
+      }
     }
   ],
   "completed": [
@@ -1075,7 +1164,7 @@
     }
   ],
   "counts": {
-    "active": 7,
+    "active": 8,
     "ready": 1,
     "completed": 2
   },
@@ -1109,5 +1198,112 @@
     ],
     "defeated": [],
     "missions_to_pick": []
+  },
+  "quests": {
+    "available": true,
+    "season": {
+      "name": "Fall",
+      "icon": "🍂",
+      "id": "Fall 2026",
+      "from": "2026-09-01",
+      "to": "2026-11-30"
+    },
+    "active": [
+      {
+        "id": "demo-quest",
+        "name": "Ready For Winter",
+        "icon": "🏠",
+        "summary": "Get the house and the car ready before the cold sets in.",
+        "season": "Fall 2026",
+        "chapters": [
+          {
+            "index": 0,
+            "title": "Check The House",
+            "story": "Cold's coming. Let's make sure the house is ready.",
+            "state": "done",
+            "mission_id": "demo-quest-ch1",
+            "done": 3,
+            "total": 3,
+            "done_on": "2026-10-12",
+            "objectives": [
+              "Test the heating",
+              "Change the furnace filter",
+              "Test the smoke and CO alarms"
+            ]
+          },
+          {
+            "index": 1,
+            "title": "Seal It Up",
+            "story": "Keep the warm in.",
+            "state": "current",
+            "mission_id": "demo-quest-ch2",
+            "done": 1,
+            "total": 2,
+            "done_on": "",
+            "objectives": [
+              "Seal drafty doors or windows",
+              "Clean the gutters"
+            ]
+          },
+          {
+            "index": 2,
+            "title": "Winter Kit",
+            "story": "",
+            "state": "locked",
+            "mission_id": null,
+            "done": 0,
+            "total": 1,
+            "done_on": "",
+            "objectives": []
+          }
+        ],
+        "current": 1,
+        "count": 3,
+        "percent": 33,
+        "finished": false,
+        "finished_on": "",
+        "started_on": "2026-10-05",
+        "reward": "+100 credits at the end"
+      }
+    ],
+    "finished": [],
+    "offers": [
+      {
+        "id": "harvest_home",
+        "name": "Harvest Home",
+        "icon": "🧺",
+        "summary": "Bring the garden in and get it ready for next year.",
+        "seasonal": true,
+        "chapters": [
+          "Bring It In",
+          "Put It Up",
+          "Put The Beds To Bed"
+        ]
+      },
+      {
+        "id": "new_skill",
+        "name": "Learn Something New",
+        "icon": "🎓",
+        "summary": "Pick up a skill from scratch and stick with it.",
+        "seasonal": false,
+        "chapters": [
+          "Pick It",
+          "Practice",
+          "Show It"
+        ]
+      },
+      {
+        "id": "closer_to_people",
+        "name": "Closer To People",
+        "icon": "🤝",
+        "summary": "Make time for the people who matter.",
+        "seasonal": false,
+        "chapters": [
+          "Reach Out",
+          "Get Together",
+          "Do Something Kind"
+        ]
+      }
+    ]
   }
 }

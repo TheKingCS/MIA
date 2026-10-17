@@ -126,7 +126,10 @@ def _describe_complete(context, params) -> str:
 def _complete(context, params) -> str:
     mission = _mission(context, params, active=True)
     context.missions.update_mission(mission.mission_id, status="completed")
-    return f"{mission.name} is complete. Well done."
+    from core.questlines import advance
+
+    story = advance(context)  # a questline chapter: the next one opens (core/questlines.py)
+    return f"{mission.name} is complete. Well done." + "".join(" " + line for line in story)
 
 
 def _reason(params) -> str:

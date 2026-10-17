@@ -32,7 +32,7 @@ WEEKS_SHOWN = 8
 # (key, event types, chapter name, the lead sentence when it's the week's
 # biggest thread, how to say the count)
 THREADS = (
-    ("quests", ("mission_completed",), "The Questing Week", "Quests were the story.",
+    ("quests", ("mission_completed", "questline_finished"), "The Questing Week", "Quests were the story.",
      lambda n: f"You finished {_n(n, 'mission')}."),
     ("training", ("workout_logged", "training_done"), "The Training Week", "This was a week of sweat.",
      lambda n: f"You trained {_times(n)}."),

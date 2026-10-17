@@ -144,6 +144,18 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     except Exception:
         log.exception("Missions: bosses failed")
         page["bosses"] = {"active": [], "defeated": [], "missions_to_pick": []}
+    try:  # questlines and seasons (DEC-0028): Missions → Quests
+        from core.questlines import quests_section
+
+        page["quests"] = quests_section(context, today)
+    except Exception:
+        log.exception("Missions: questlines failed")
+        page["quests"] = {"available": False, "season": None, "active": [], "finished": [], "offers": []}
+    page["forms"]["quest"] = {"noun": "questline", "id_param": "quest_id", "fields": [
+        {"name": "name", "label": "Questline", "type": "text", "required": True, "options": [], "default": None},
+        {"name": "icon", "label": "Icon (an emoji)", "type": "text", "required": False, "options": [], "default": "🗺️"},
+        {"name": "chapters", "label": "Chapters, one per line (Title: objective; objective)", "type": "textarea",
+         "required": True, "options": [], "default": None}]}
     page["forms"]["debt_payment"] = {"noun": "payment", "id_param": "debt_id", "fields": [
         {"name": "amount", "label": "How much you paid", "type": "money", "required": True, "options": [], "default": None}]}
     return page

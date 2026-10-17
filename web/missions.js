@@ -8,12 +8,14 @@
  * mission), and the tabs say just their names, no counts. Add Mission and
  * Ask MIA For One are two separate buttons below the list, on Active only.
  * Every change is a mission action (core/mission_actions.py). Formatting only.
+ * Quests (2026-10-17, DEC-0028): the season, questlines as a path of
+ * chapters (core/questlines.py), MIA's starters, and your own.
  */
 (function () {
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["active", "Active"], ["daily", "Daily"], ["bosses", "Bosses"], ["completed", "Completed"]];
+  const TABS = [["active", "Active"], ["quests", "Quests"], ["daily", "Daily"], ["bosses", "Bosses"], ["completed", "Completed"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "active";
 
@@ -157,6 +159,62 @@
       bs.defeated.length ? section("Hall Of Fame", null, el("div", { class: "mission-grid" }, bs.defeated.map(bossCard))) : null].filter(Boolean);
   }
 
+  // ------------------------------------------------------------ questlines and seasons (DEC-0028)
+  const allMissions = () => [].concat(page.active, page.daily, page.completed);
+  async function ownQuest() {
+    const v = await form("Make Your Own Questline", page.forms.quest.fields, {});
+    if (v) act({ kind: "quest.add", params: v });
+  }
+  function questCard(q) {
+    return el("article", { class: "glass quest-card" + (q.finished ? " finished" : "") },
+      el("div", { class: "quest-head" },
+        el("span", { class: "quest-icon", "aria-hidden": "true" }, q.finished ? "🏆" : q.icon),
+        el("div", { class: "quest-title" }, el("h3", {}, q.name),
+          el("p", { class: "quest-kind" }, [q.season || "Questline", q.finished ? "Complete" : "Chapter " + (q.current + 1) + " of " + q.count].join(" · "))),
+        el("span", { class: "chip " + (q.finished ? "chip-ok" : "chip-soon") }, q.percent + "%")),
+      q.summary ? el("p", { class: "dim quest-summary" }, q.summary) : null,
+      el("ol", { class: "quest-path" }, q.chapters.map((c) => {
+        const m = c.mission_id ? allMissions().find((x) => x.id === c.mission_id) : null;
+        return el("li", { class: "quest-step " + c.state },
+          el("span", { class: "quest-node", "aria-hidden": "true" }, c.state === "done" ? "✓" : String(c.index + 1)),
+          el("div", { class: "quest-step-body" },
+            el("strong", {}, c.title),
+            c.state === "current" && c.story ? el("p", { class: "quest-story" }, "“" + c.story + "”") : null,
+            c.state === "current" ? el("p", { class: "dim" }, c.done + "/" + c.total + " objectives") : null,
+            c.state === "locked" ? el("p", { class: "dim" }, "Unlocks after chapter " + c.index) : null,
+            c.state === "current" && m ? btn("Open Chapter", "btn-amber btn-small", () => sheet(m)) : null));
+      })),
+      el("p", { class: "dim boss-lines" }, q.finished ? "Finished " + day(q.finished_on) : q.reward),
+      q.finished ? null : buttons(btn("Remove", "btn-ghost btn-small", () => act({ kind: "quest.remove", params: { quest_id: q.id } }))));
+  }
+  function offerCard(o) {
+    return el("article", { class: "glass quest-card offer" },
+      el("div", { class: "quest-head" },
+        el("span", { class: "quest-icon", "aria-hidden": "true" }, o.icon),
+        el("div", { class: "quest-title" }, el("h3", {}, o.name),
+          el("p", { class: "quest-kind" }, (o.seasonal ? page.quests.season.name + " Questline" : "Any Time") + " · " + o.chapters.length + " chapters"))),
+      el("p", { class: "dim quest-summary" }, o.summary),
+      el("p", { class: "quest-chapters" }, o.chapters.join(" → ")),
+      buttons(btn("Start Questline", "btn-amber btn-small", () => act({ kind: "quest.start", params: { starter_id: o.id } }))));
+  }
+  function questsView() {
+    const qs = page.quests;
+    if (!qs.available) return [section("Questlines", null, el("p", { class: "empty" }, "Questlines aren't set up on this MIA."))];
+    const s = qs.season;
+    return [
+      el("section", { class: "glass season-banner" },
+        el("span", { class: "season-icon", "aria-hidden": "true" }, s.icon),
+        el("div", {}, el("p", { class: "quest-kind" }, "This Season"), el("h2", {}, s.name),
+          el("p", { class: "dim" }, day(s.from) + " – " + day(s.to) + ". A questline you start stays yours after the season ends."))),
+      section("Your Questlines", null, qs.active.length ? el("div", { class: "mission-grid" }, qs.active.map(questCard))
+        : el("p", { class: "empty" }, "No questline going. Start one below: each chapter is a mission, and finishing it opens the next.")),
+      section("MIA Has These For You", btn("Make Your Own", "btn-ghost", ownQuest),
+        qs.offers.length ? el("div", { class: "mission-grid" }, qs.offers.map(offerCard))
+          : el("p", { class: "empty" }, "You've started everything MIA has this season. Make your own any time.")),
+      qs.finished.length ? section("Finished Questlines", null, el("div", { class: "mission-grid" }, qs.finished.map(questCard))) : null,
+    ].filter(Boolean);
+  }
+
   function draw() {
     const c = page.counts;
     $("strip").replaceChildren(
@@ -168,6 +226,7 @@
       el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } },
         l)));
     if (tab === "bosses") { $("panel").replaceChildren(...bossesView()); MIAShell.levelCard($("level"), page.me); return; }
+    if (tab === "quests") { $("panel").replaceChildren(...questsView()); MIAShell.levelCard($("level"), page.me); return; }
     const list = page[tab];
     $("panel").replaceChildren(section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
       list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, EMPTY[tab]),
