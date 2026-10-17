@@ -20,6 +20,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
 WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 
@@ -182,7 +186,19 @@ def settings_page(context) -> dict:
         breaks = [{"topic": p["topic"], "label": p["label"], "until": str(p["until"])[:10]} for p in gate.paused()]
     return {"groups": [{"title": title, "settings": items} for title, items in groups.items()],
             "breaks": breaks, "child": child,
-            "model_test": getattr(context, "local_models", None) is not None and not child}
+            "model_test": getattr(context, "local_models", None) is not None and not child,
+            # DEC-0022: the home computer's bigger model, on the phone (core/home_link.py).
+            "home_link": _home_link(context) if getattr(context, "local_models", None) is not None and not child else None}
+
+
+def _home_link(context) -> dict:
+    from core.home_link import status
+
+    try:
+        return status(context)
+    except Exception:
+        log.exception("Settings: home link status failed")
+        return {"linked": False, "url": "", "who": "", "reachable": False, "model": "", "level": ""}
 
 
 def find_interest(context, name: str) -> Optional[str]:

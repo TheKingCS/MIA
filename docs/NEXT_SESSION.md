@@ -29,6 +29,8 @@ of the Android app.
 
 ## 1. Your hands-on steps
 
+- **Tomorrow, the new computer as MIA's brain:** follow `docs/HOME_COMPUTER_SETUP.md` (Ollama + qwen2.5:14b, Phone Access, Tailscale serve), then on the phone Settings → Home Computer → Link. Tell Claude what the link says; Claude then compares 14B and 32B on the golden set.
+
 ### From your phone, now (you're phone-only for the moment)
 
 Everything here works from a phone: the GitHub app (or github.com) for

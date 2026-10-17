@@ -317,6 +317,12 @@ class LLMManager:
         self.context = context
         self._timeout = float(context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS))
         self._backend: LLMBackend = make_backend(context.config)
+        # DEC-0022 level 2 (core/home_link.py): the home computer's model,
+        # tried first when linked and reachable; the backend above answers
+        # when it isn't. `level` says which one answered last.
+        self.home = None
+        self.home_reach = None
+        self.level = ""
 
     def use_backend(self, backend: "LLMBackend", timeout: Optional[float] = None) -> None:
         """Switch models while running (the phone, once its model is up)."""
@@ -324,18 +330,50 @@ class LLMManager:
         if timeout is not None:
             self._timeout = float(timeout)
 
+    def use_home(self, backend) -> None:
+        """Link (or unlink, with None) the home computer's model (core/home_link.py)."""
+        from core.home_link import Reach
+
+        self.home = backend
+        self.home_reach = Reach(backend) if backend is not None else None
+
+    def _local_level(self) -> str:
+        from core.home_link import PHONE, THIS_COMPUTER
+
+        return PHONE if self.home is not None or isinstance(self._backend, OpenAIBackend) else THIS_COMPUTER
+
+    def _ask(self, call):
+        """Run `call(backend)` on the home computer when it's there, else
+        here; a home computer that stops answering mid-conversation hands
+        the turn to this device's model."""
+        from core.home_link import HOME_PC
+
+        if self.home is not None and self.home_reach.up():
+            try:
+                result = call(self.home)
+                self.level = HOME_PC
+                return result
+            except LLMUnavailableError as exc:
+                log.info("Home computer didn't answer (%s); using this device's model.", exc)
+                self.home_reach.down()
+        result = call(self._backend)
+        self.level = self._local_level()
+        return result
+
     @property
     def backend(self) -> "LLMBackend":
         return self._backend
 
     def is_available(self) -> bool:
         """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises."""
+        if self.home is not None and self.home_reach.up():
+            return True
         return self._backend.is_available(timeout=self._timeout)
 
     def generate(self, prompt: str) -> Optional[str]:
         """Return the model's reply, or None (logged) if the backend can't be reached."""
         try:
-            return self._backend.generate(prompt, timeout=self._timeout)
+            return self._ask(lambda backend: backend.generate(prompt, timeout=self._timeout))
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
             return None
@@ -348,7 +386,7 @@ class LLMManager:
         retry without tools.
         """
         try:
-            reply = self._backend.chat(messages, tools, timeout=self._timeout)
+            reply = self._ask(lambda backend: backend.chat(messages, tools, timeout=self._timeout))
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
             return None
@@ -356,7 +394,7 @@ class LLMManager:
         if not reply.tool_calls and _looks_like_malformed_tool_call(reply.content):
             log.info("Model emitted a malformed tool-call-shaped response; retrying without tools.")
             try:
-                reply = self._backend.chat(messages, tools=[], timeout=self._timeout)
+                reply = self._ask(lambda backend: backend.chat(messages, tools=[], timeout=self._timeout))
             except LLMUnavailableError as exc:
                 log.warning("Assistant unavailable on retry: %s", exc)
                 return None

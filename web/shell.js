@@ -124,7 +124,7 @@
           input.value = value;
         } else {
           const numeric = ["money", "rate", "int", "amount", "number"].includes(f.type);
-          const type = f.type === "date" ? "date" : numeric ? "number" : "text";
+          const type = f.type === "date" ? "date" : f.type === "password" ? "password" : numeric ? "number" : "text";
           input = el("input", { id, type, step: f.type === "int" ? "1" : numeric ? "any" : null,
             min: numeric && f.type !== "number" ? "0" : null,
             inputmode: type === "number" ? "decimal" : null, required: f.required || null });
@@ -254,6 +254,8 @@
           thinking.textContent = turn.reply_text || "Done.";
           const used = usedList(turn.used);
           if (used) thinking.after(used);
+          // Which brain answered (DEC-0022): the home computer's model or this device's.
+          if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
           refresh();
         } catch (err) {
           thinking.textContent = err.message;

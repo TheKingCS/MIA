@@ -147,6 +147,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.inbox = InboxManager(context)
     context.reference_library = ReferenceLibraryManager(context)
     context.llm = LLMManager(context)
+    from core.home_link import link
+
+    link(context)  # the home computer's model, when this phone is linked to it (DEC-0022)
     context.connectivity = ConnectivityMonitor(context)
     context.connectivity.refresh_async()
     context.voice = VoiceManager(context)

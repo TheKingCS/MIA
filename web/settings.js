@@ -54,10 +54,34 @@
           "Bring it back")))));
   }
 
+  // The home computer's bigger model (DEC-0022, core/home_link.py).
+  function homeLink(h) {
+    const status = h.linked
+      ? el("p", {}, (h.reachable ? "🟢 Linked and reachable" : "⚪ Linked, not reachable right now") + " · " + h.url +
+        (h.model ? " · " + h.model : "") + (h.who ? " · as " + h.who : ""))
+      : el("p", { class: "dim" }, "Link this phone to MIA on your computer and Talk uses the computer's bigger model whenever it can reach it (same Wi-Fi, or Tailscale), and this phone's model when it can't. Your data stays on your devices.");
+    const connect = async () => {
+      const v = await MIAShell.form("Link The Home Computer", [
+        { name: "url", label: "The computer's address (e.g. 192.168.1.20:8765 or its Tailscale name)", type: "text", required: true, options: [], default: h.url || null },
+        { name: "who", label: "Your name or email on MIA there", type: "text", required: true, options: [], default: h.who || null },
+        { name: "password", label: "Your password there", type: "password", required: true, options: [], default: null }], {});
+      if (!v) return;
+      try { MIAShell.say((await MIA.homeConnect(v.url, v.who, v.password)).message); page = await MIA.settings(); draw(); }
+      catch (e) { MIAShell.say(e.message); }
+    };
+    const disconnect = async () => {
+      try { MIAShell.say((await MIA.homeDisconnect()).message); page = await MIA.settings(); draw(); } catch (e) { MIAShell.say(e.message); }
+    };
+    return section("Home Computer", status, el("div", { class: "acct-actions" },
+      el("button", { type: "button", class: "btn btn-amber", onclick: connect }, h.linked ? "Link Again" : "Link"),
+      h.linked ? el("button", { type: "button", class: "btn btn-ghost", onclick: disconnect }, "Unlink") : ""));
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => section(g.title, ...g.settings.map(setting))),
       breaks(),
+      page.home_link ? homeLink(page.home_link) : "",
       page.model_test ? section("MIA's model on this phone",
         el("p", { class: "dim" }, "Download a small AI model, run it on this phone, and see how fast and how right it is. Talk uses it once it's running."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "model-test.html" }, "Model test"))) : "",

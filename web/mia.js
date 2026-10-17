@@ -221,6 +221,8 @@
     chronicle: () => read("/api/chronicle", "chronicle"),
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),
+    homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),
+    homeDisconnect: () => demo ? demoOnly() : call("POST", "/api/home_pc/disconnect"),
     newChat: () => demo ? Promise.resolve({ reset: true }) : call("POST", "/api/voice/reset"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),

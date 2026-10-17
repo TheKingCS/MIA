@@ -1453,3 +1453,5 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .remember-list li { display: grid; gap: 3px; }
 .remember-list a { color: var(--text); font-weight: 600; text-decoration: none; }
 .remember-list small { color: var(--text-dim); }
+.talk-level { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  color: var(--text-dim); }

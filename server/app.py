@@ -130,6 +130,17 @@ class ProposeRequest(BaseModel):
     params: dict = {}
 
 
+class HomeLinkRequest(BaseModel):
+    url: str
+    who: str
+    password: str
+
+
+class ModelChatRequest(BaseModel):
+    messages: list[dict]
+    tools: list[dict] = []
+
+
 class LoginRequest(BaseModel):
     profile_id: str
     password: str = ""
@@ -232,9 +243,20 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token.")
         profile_id = app.state.sessions.get(credentials.credentials)
         if profile_id is None:
+            profile_id = _linked_device(credentials.credentials)
+        if profile_id is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
         app.state.last_seen[credentials.credentials] = time.time()
         return profile_id
+
+    def _linked_device(key: str) -> Optional[str]:
+        """A phone linked to this computer (DEC-0022, core/home_link.py)
+        signs in with its device key, kept here only as a hash, so the
+        link outlives a restart until the phone disconnects."""
+        import hashlib
+
+        found = (context.config.get("home_link.devices", {}) or {}).get(hashlib.sha256(key.encode()).hexdigest())
+        return found.get("profile_id") if isinstance(found, dict) else None
 
     def _remember(profile_id: Optional[str]) -> None:
         """The phone stays signed in between starts until the person logs out."""
@@ -302,6 +324,84 @@ def create_app(context: AppContext) -> FastAPI:
         _remember(profile.profile_id)
         log.info("Mobile login for profile '%s'.", profile.profile_id)
         return {"token": token, "profile_id": profile.profile_id, "name": profile.name}
+
+    # ---------------------------------------------------------------- the home computer's model (DEC-0022)
+
+    @app.post("/api/model/link")
+    def model_link(body: LoginRequest) -> dict:
+        """A phone links to MIA on this computer: the person's own sign-in
+        (never a new account), and a device key back for Talk to use."""
+        import hashlib
+
+        profile = context.profiles.find_for_sign_in(body.profile_id)
+        if profile is None or not profile.has_password or \
+                not context.profiles.verify_password(profile.profile_id, body.password):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
+        key = secrets.token_urlsafe(32)
+        devices = dict(context.config.get("home_link.devices", {}) or {})
+        devices[hashlib.sha256(key.encode()).hexdigest()] = {
+            "profile_id": profile.profile_id, "linked": datetime.now().isoformat(timespec="seconds")}
+        context.config.set("home_link.devices", devices)
+        context.config.save()
+        log.info("A phone linked to this computer for '%s'.", profile.profile_id)
+        return {"key": key, "profile_id": profile.profile_id, "name": profile.name}
+
+    @app.post("/api/model/unlink")
+    def model_unlink(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
+        import hashlib
+
+        if credentials is not None:
+            devices = dict(context.config.get("home_link.devices", {}) or {})
+            if devices.pop(hashlib.sha256(credentials.credentials.encode()).hexdigest(), None) is not None:
+                context.config.set("home_link.devices", devices)
+                context.config.save()
+        return {"unlinked": True}
+
+    @app.post("/api/home_pc/connect")
+    def home_pc_connect(body: HomeLinkRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """This phone links to MIA on the home computer (core/home_link.py)."""
+        from core.child_accounts import is_child
+        from core.home_link import HomeLinkError, connect
+
+        if is_child(view_for(context, profile_id)):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Ask a parent to link the home computer.")
+        try:
+            done = connect(context, body.url, body.who, body.password)
+        except HomeLinkError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        model = f" Talk will use {done['model']} there." if done["model"] else ""
+        return {"message": f"Linked to MIA at {done['url']}.{model}" + ("" if done["available"] else
+                " Its model isn't running right now; the phone's model answers until it is."), **done}
+
+    @app.post("/api/home_pc/disconnect")
+    def home_pc_disconnect(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.home_link import disconnect
+
+        disconnect(context)
+        return {"message": "Unlinked. Talk uses this phone's model."}
+
+    @app.get("/api/model/info")
+    def model_info(profile_id: str = Depends(require_profile_id)) -> dict:
+        llm = context.llm
+        backend = getattr(llm, "backend", None)
+        return {"available": bool(llm is not None and llm.is_available()),
+                "model": getattr(backend, "_model", "") or ""}
+
+    @app.post("/api/model/chat")
+    def model_chat(body: ModelChatRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One model call for a linked phone: its messages and tools in, the
+        reply out. The phone's own MIA did everything else (facts, actions)."""
+        from core.llm_manager import LLMUnavailableError
+
+        llm = context.llm
+        if llm is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "There's no model on this computer.")
+        try:
+            reply = llm.backend.chat(body.messages, body.tools, timeout=llm._timeout)
+        except LLMUnavailableError as problem:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(problem)) from None
+        return {"content": reply.content, "tool_calls": [{"name": c.name, "arguments": c.arguments} for c in reply.tool_calls],
+                "model": getattr(llm.backend, "_model", "") or ""}
 
     @app.get("/api/vapid-public-key")
     def vapid_public_key() -> dict:
@@ -446,6 +546,7 @@ def create_app(context: AppContext) -> FastAPI:
             "timings": timings,
             "draft": new_draft,
             "used": turn.used,
+            "level": getattr(context.llm, "level", "") if context.llm is not None and turn.llm_available else "",
         }
 
     def transcribe_bytes(audio: bytes) -> Optional[str]:
