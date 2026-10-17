@@ -183,6 +183,49 @@ def related_memories(target: "UserMemory", all_memories: list["UserMemory"], lim
     return [other for _, other in scored[:limit]]
 
 
+# What I Used (DEC-0029, ALICE pick 1, 2026-10-17): a turn gets the
+# memories that matter to what was asked, not simply the newest ones.
+# The same word-overlap signal as related_memories(), against the
+# person's message: the question words people ask with are dropped, a
+# plural matches its singular, and a capitalized word in the memory (a
+# name, a place) counts double, since people rarely capitalize when they
+# type a question.
+_QUESTION_STOPWORDS = _RELATED_MEMORY_STOPWORDS | {
+    "what", "whats", "when", "where", "who", "why", "how", "which", "do", "does", "did", "can", "could",
+    "would", "should", "will", "i", "im", "me", "my", "mine", "you", "your", "it", "its", "this", "that",
+    "there", "these", "those", "we", "our", "us", "they", "them", "their", "he", "she", "him", "her", "his",
+    "hers", "not", "no", "yes", "so", "but", "if", "then", "just", "get", "got", "know", "tell", "please",
+    "mia", "hey", "hi", "hello", "thanks", "thank", "s", "t", "up", "out", "from", "by", "any", "some",
+}
+
+
+def _stem(word: str) -> str:
+    return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
+
+
+def _question_words(text: str) -> set[str]:
+    return {_stem(w.lower()) for w in _WORD_RE.findall(text)} - _QUESTION_STOPWORDS
+
+
+def memory_relevance(prompt: str, memory: "UserMemory") -> int:
+    """Pure logic. How much a memory has to do with what was asked."""
+    asked = _question_words(prompt)
+    if not asked:
+        return 0
+    words = _question_words(memory.text)
+    names = {_stem(w) for w in _related_memory_proper_nouns(memory.text)} - _QUESTION_STOPWORDS
+    return len(asked & words) + len(asked & names)
+
+
+def relevant_memories(prompt: str, memories: list["UserMemory"], limit: int = 8) -> list["UserMemory"]:
+    """Pure logic. The memories that match what was asked, best first
+    (newest first on a tie); empty when nothing matches."""
+    scored = [(memory_relevance(prompt, m), m.created_at, m) for m in memories]
+    scored = [t for t in scored if t[0] > 0]
+    scored.sort(key=lambda t: (t[0], t[1]), reverse=True)
+    return [m for _s, _c, m in scored[:limit]]
+
+
 # ------------------------------------------------------------------
 # Memory Palace: graph/tree visualization (2026-09-14)
 # ------------------------------------------------------------------
@@ -338,6 +381,19 @@ class UserMemoryManager:
         self._memories.append(memory)
         self._save()
         log.info("User memory added: '%s'", text)
+        return memory
+
+    def get_memory(self, memory_id: str) -> Optional[UserMemory]:
+        return next((m for m in self._memories if m.memory_id == memory_id), None)
+
+    def update_memory(self, memory_id: str, text: str) -> UserMemory:
+        memory = self.get_memory(memory_id)
+        if memory is None:
+            raise ValueError(f"No memory with id '{memory_id}'.")
+        if not text.strip():
+            raise ValueError("A memory needs some words.")
+        memory.text = text.strip()
+        self._save()
         return memory
 
     def delete_memory(self, memory_id: str) -> None:

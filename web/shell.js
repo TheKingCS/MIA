@@ -248,6 +248,8 @@
         try {
           const turn = await MIA.talk(text);
           thinking.textContent = turn.reply_text || "Done.";
+          const used = usedList(turn.used);
+          if (used) thinking.after(used);
           refresh();
         } catch (err) {
           thinking.textContent = err.message;
@@ -258,6 +260,26 @@
     const orb = el("button", { type: "button", id: "mia-orb", class: "mia-orb-button", "aria-label": "Talk to MIA",
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);
+  }
+
+  // What I Used (DEC-0029): the memories MIA's answer was given, under the
+  // reply; each can be fixed or forgotten (memory.fix / memory.forget).
+  function usedList(used) {
+    if (!used || !used.length) return null;
+    return el("details", { class: "talk-used" },
+      el("summary", {}, "What I used (" + used.length + ")"),
+      el("ul", {}, used.map((m) => {
+        const li = el("li", {}, el("span", { class: "talk-used-text" }, m.text),
+          el("span", { class: "row-buttons" },
+            el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+              const v = await form("Fix What MIA Remembers", [{ name: "text", label: "Remember this instead", type: "textarea", required: true }], { text: m.text });
+              if (v && await act({ kind: "memory.fix", params: { memory_id: m.id, text: v.text } })) li.querySelector(".talk-used-text").textContent = v.text;
+            } }, "Fix"),
+            el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+              if (await act({ kind: "memory.forget", params: { memory_id: m.id } })) li.classList.add("forgotten");
+            } }, "Forget")));
+        return li;
+      })));
   }
 
   function toggleTalk(open, prefill) {

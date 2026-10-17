@@ -428,6 +428,7 @@ def create_app(context: AppContext) -> FastAPI:
             "audio_wav_base64": audio,
             "timings": timings,
             "draft": new_draft,
+            "used": turn.used,
         }
 
     def transcribe_bytes(audio: bytes) -> Optional[str]:

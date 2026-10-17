@@ -37,6 +37,9 @@ class AssistantTurn:
     replies: list[str] = field(default_factory=list)  # each thing MIA should say, in order
     followup: Optional[Followup] = None  # background job for run_followup(), if any
     llm_available: bool = True
+    # What I Used (DEC-0029): the memories this turn's answer was given,
+    # so a surface can show them under the reply, each fixable or forgettable.
+    used: list[dict] = field(default_factory=list)
 
 
 def add_message(conversation: Conversation, role: str, content: str) -> None:
@@ -101,6 +104,7 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     if context.llm is None:
         return AssistantTurn(replies=notices, llm_available=False)
     messages, tools = build_chat_request(context, conversation, prompt)
+    used = memories_used(context, prompt, messages)
     reply = context.llm.chat_with_tools(messages, tools)
     if reply is None:
         return AssistantTurn(replies=notices, llm_available=False)
@@ -115,11 +119,22 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
             confirmation = context.assistant_actions.execute(context, tool_call.name, tool_call.arguments)
             add_message(conversation, "assistant", confirmation)
             replies.append(confirmation)
-        return AssistantTurn(replies=replies)
+        return AssistantTurn(replies=replies, used=used)
 
     content = with_offer(conversation, reply.content)
     add_message(conversation, "assistant", content)
-    return AssistantTurn(replies=notices + [content], followup=plan_followup(context, conversation, prompt))
+    return AssistantTurn(replies=notices + [content], followup=plan_followup(context, conversation, prompt), used=used)
+
+
+def memories_used(context, prompt: str, messages: list[dict]) -> list[dict]:
+    """The memories the model was actually given this turn: the turn's
+    memories that made it into the system message (an action request's
+    lean prompt carries none)."""
+    from core.assistant_chat import turn_memories
+
+    system = messages[0]["content"] if messages and messages[0].get("role") == "system" else ""
+    return [{"id": m.memory_id, "text": m.text, "category": m.category}
+            for m in turn_memories(context, prompt) if m.text and m.text in system]
 
 
 def run_followup(context: AppContext, conversation: Conversation, followup: Optional[Followup]) -> None:

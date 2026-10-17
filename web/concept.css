@@ -1410,3 +1410,11 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .chron-story p:first-child { font-style: italic; }
 .chron-high ul { margin: 6px 0 0; padding-left: 18px; color: var(--text-dim); font-size: var(--text-sm); }
 .chron-teaser h3 { margin: 0 0 4px; color: rgb(var(--rgb-win)); }
+
+/* What I Used (DEC-0029, claude 2026-10-17): the memories behind an answer. */
+.talk-used { margin: -4px 0 8px; font-size: var(--text-xs); color: var(--text-dim); }
+.talk-used summary { cursor: pointer; font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.talk-used ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.talk-used li { display: grid; gap: 4px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; }
+.talk-used li.forgotten { opacity: 0.45; text-decoration: line-through; }
+.talk-used li.forgotten .row-buttons { display: none; }

@@ -332,6 +332,11 @@ _TEACHING_INSTRUCTION = (
 _MAX_HISTORY_MESSAGES = 12  # 6 exchanges — bounds prompt growth/latency on CPU-only Pi-class hardware
 
 _MAX_INJECTED_MEMORIES = 20  # most recent — bounds prompt growth as the memory store grows over months of use
+# What I Used (DEC-0029): with the person's message in hand, the turn gets
+# the memories that match it; with no match, a few recent ones, so MIA
+# still knows who she's talking to.
+_MAX_RELEVANT_MEMORIES = 8
+_RECENT_WHEN_NOTHING_MATCHES = 5
 
 # Deliberately built from ONLY the user's own message, not the
 # assistant's reply too — measured directly against the live model
@@ -387,7 +392,22 @@ def trim_history(messages: list["ConversationMessage"], max_messages: int = _MAX
     return messages[-max_messages:]
 
 
-def build_user_context_block(context) -> str:
+def turn_memories(context, prompt: str = "") -> list:
+    """The memories a turn uses: the ones that match `prompt` (best
+    first), or the few most recent when nothing matches. With no prompt,
+    the most recent (the older behavior, for callers without one)."""
+    from core.user_memory_manager import relevant_memories
+
+    store = getattr(context, "user_memories", None)
+    if store is None:
+        return []
+    memories = store.all_memories()
+    if not prompt:
+        return memories[:_MAX_INJECTED_MEMORIES]
+    return relevant_memories(prompt, memories, _MAX_RELEVANT_MEMORIES) or memories[:_RECENT_WHEN_NOTHING_MATCHES]
+
+
+def build_user_context_block(context, prompt: str = "") -> str:
     """
     Pure-ish (touches `context.profiles`/`context.user_memories`, no
     LLM call) — assembles "what MIA knows about this user so far"
@@ -419,9 +439,8 @@ def build_user_context_block(context) -> str:
         if birthday:
             facts.append(f"Birthday: {format_birthday(birthday)}")
 
-    if context.user_memories is not None:
-        for memory in context.user_memories.all_memories()[:_MAX_INJECTED_MEMORIES]:
-            facts.append(memory.text)
+    for memory in turn_memories(context, prompt):
+        facts.append(memory.text)
 
     lead = f"{child_note}\n" if child_note else ""
     if not facts:
@@ -439,7 +458,7 @@ def format_birthday(iso_date: str) -> str:
     return f"{parsed.strftime('%B')} {parsed.day}"
 
 
-def build_system_message(context, is_action_request: bool, is_teaching_request: bool = False) -> str:
+def build_system_message(context, is_action_request: bool, is_teaching_request: bool = False, prompt: str = "") -> str:
     """
     The system-role message for one chat turn — pulled out as its own
     function so `build_chat_request()` stays readable and this is
@@ -459,7 +478,7 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         return _IDENTITY_LINE
 
     closing_instruction = _TEACHING_INSTRUCTION if is_teaching_request else GROUNDING_INSTRUCTION
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context)]
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context, prompt)]
     # 2026-09-27: online/offline awareness. Info questions only — every
     # Assistant action runs offline, so the action path stays lean.
     connectivity = getattr(context, "connectivity", None)
@@ -517,7 +536,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         llm_prompt = context.device_help.build_grounded_prompt(prompt)
 
     history = trim_history(conversation.messages) if conversation is not None else []
-    messages = [{"role": "system", "content": build_system_message(context, is_action_request, is_teaching_request)}]
+    messages = [{"role": "system", "content": build_system_message(context, is_action_request, is_teaching_request, prompt)}]
     messages.extend({"role": m.role, "content": m.content} for m in history)
     messages.append({"role": "user", "content": llm_prompt})
 
@@ -541,7 +560,7 @@ def build_personal_system_message(context, mode: str, conversation=None, prompt:
     reference material" is the wrong instruction for someone venting."""
     from core.talk_it_out import journal_context_block  # local: talk_it_out imports this module
 
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + " " + AGENCY_LINE, build_user_context_block(context)]
+    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + " " + AGENCY_LINE, build_user_context_block(context, prompt)]
     journal_block = "" if is_study_mode(mode) else journal_context_block(context)
     if journal_block:
         parts.append(journal_block)

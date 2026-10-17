@@ -662,6 +662,33 @@ def _caught(context, params) -> str:
     return f"Noted: you caught up with {person.name}."
 
 
+def _memory(context, params):
+    store = getattr(context, "user_memories", None)
+    memory = store.get_memory(str(params.get("memory_id") or "")) if store is not None else None
+    if memory is None:
+        raise ActionError("That memory isn't there anymore.")
+    return memory
+
+
+def _memory_fix_describe(context, params) -> str:
+    text = str(params.get("text") or "").strip()
+    if not text:
+        raise ActionError("Say what MIA should remember instead.")
+    return f"Change what MIA remembers to: {text}"
+
+
+def _memory_fix(context, params) -> str:
+    memory = _memory(context, params)
+    context.user_memories.update_memory(memory.memory_id, str(params["text"]))
+    return "Fixed. I'll remember it that way."
+
+
+def _memory_forget(context, params) -> str:
+    memory = _memory(context, params)
+    context.user_memories.delete_memory(memory.memory_id)
+    return "Forgotten."
+
+
 def _say(text: str):
     return lambda context, params: text
 
@@ -716,6 +743,11 @@ def _register() -> None:
                    lambda c, p: f"Take {_track(c, p).title} off {_playlist(c, p).name}", _playlist_remove_track),
         ActionType("music.scan", "Scan Library", {}, _say("Look for new music in the music folder"), _scan),
         ActionType("person.caught_up", "Caught Up", {"person_id": "the person"}, _caught_describe, _caught),
+        # What I Used (DEC-0029): fix or forget a memory MIA used.
+        ActionType("memory.fix", "Fix", {"memory_id": "the memory", "text": "what to remember instead"},
+                   _memory_fix_describe, _memory_fix),
+        ActionType("memory.forget", "Forget", {"memory_id": "the memory"},
+                   lambda c, p: f"Forget: {_memory(c, p).text}", _memory_forget),
         ActionType("track.delete", "Delete", {"track_id": "an uploaded song"}, _song_describe, _song_delete),
         ActionType("expedition.media_delete", "Delete", {"expedition_id": "the expedition", "ref": "the photo or file"},
                    _media_describe, _media_delete),
@@ -727,7 +759,7 @@ def _register() -> None:
     from dataclasses import replace
 
     for kind in kinds:
-        if kind.kind.split(".")[0] in ("journal", "playlist", "person", "pet"):
+        if kind.kind.split(".")[0] in ("journal", "playlist", "person", "pet", "memory"):
             kind = replace(kind, child_ok=True)
         ACTION_TYPES[kind.kind] = kind
 
