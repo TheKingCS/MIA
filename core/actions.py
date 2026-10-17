@@ -322,6 +322,7 @@ import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a 
 import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0028)
 import core.craft_actions  # noqa: E402,F401  (crafting recipes and builds, DEC-0030)
 import core.business_actions  # noqa: E402,F401  (quotes, customers, orders, portfolio, DEC-0030)
+import core.grow_actions  # noqa: E402,F401  (the grow lab, DEC-0030)
 
 
 # ------------------------------------------------------------------ the five steps

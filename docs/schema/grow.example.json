@@ -1,0 +1,436 @@
+{
+  "available": true,
+  "as_of": "2026-10-17",
+  "batches": [
+    {
+      "id": "fa1be4a7ea",
+      "crop": "Lettuce",
+      "variety": "Butterhead",
+      "system": "Tank A",
+      "method": "aquaponics",
+      "planted": "2026-09-09",
+      "count": 12,
+      "status": "Growing",
+      "lost": 0,
+      "loss_note": "",
+      "cost": "",
+      "harvests": [
+        {
+          "date": "2026-10-17",
+          "amount": 6.0,
+          "unit": "heads",
+          "note": ""
+        }
+      ],
+      "figures": {
+        "days_growing": 38,
+        "days_to_harvest": 38,
+        "yield": {
+          "heads": 6.0
+        },
+        "main_yield": 6.0,
+        "main_unit": "heads",
+        "per_plant": 0.5,
+        "survival": 100
+      },
+      "notes": "",
+      "values": {
+        "crop": "Lettuce",
+        "variety": "Butterhead",
+        "system": "Tank A",
+        "method": "aquaponics",
+        "planted": "2026-09-09",
+        "count": 12,
+        "cost": 0.0,
+        "notes": ""
+      }
+    },
+    {
+      "id": "cb30b9aa4e",
+      "crop": "Lettuce",
+      "variety": "Romaine",
+      "system": "Tank A",
+      "method": "aquaponics",
+      "planted": "2026-09-09",
+      "count": 12,
+      "status": "Growing",
+      "lost": 2,
+      "loss_note": "root rot",
+      "cost": "",
+      "harvests": [],
+      "figures": {
+        "days_growing": 38,
+        "days_to_harvest": null,
+        "yield": {},
+        "main_yield": 0.0,
+        "main_unit": "",
+        "per_plant": null,
+        "survival": 83
+      },
+      "notes": "",
+      "values": {
+        "crop": "Lettuce",
+        "variety": "Romaine",
+        "system": "Tank A",
+        "method": "aquaponics",
+        "planted": "2026-09-09",
+        "count": 12,
+        "cost": 0.0,
+        "notes": ""
+      }
+    },
+    {
+      "id": "e305c41151",
+      "crop": "Basil",
+      "variety": "",
+      "system": "Bed 2",
+      "method": "soil",
+      "planted": "2026-09-27",
+      "count": 8,
+      "status": "Growing",
+      "lost": 0,
+      "loss_note": "",
+      "cost": "",
+      "harvests": [],
+      "figures": {
+        "days_growing": 20,
+        "days_to_harvest": null,
+        "yield": {},
+        "main_yield": 0.0,
+        "main_unit": "",
+        "per_plant": null,
+        "survival": 100
+      },
+      "notes": "",
+      "values": {
+        "crop": "Basil",
+        "variety": "",
+        "system": "Bed 2",
+        "method": "soil",
+        "planted": "2026-09-27",
+        "count": 8,
+        "cost": 0.0,
+        "notes": ""
+      }
+    }
+  ],
+  "systems": [
+    {
+      "name": "Tank A",
+      "readings": [
+        {
+          "measure": "ph",
+          "label": "pH",
+          "unit": "",
+          "low": 6.8,
+          "high": 7.2,
+          "mine": false,
+          "value": 7.4,
+          "when": "2026-10-17",
+          "side": "high",
+          "trend": [
+            7.0,
+            7.1,
+            7.2,
+            7.3,
+            7.4
+          ]
+        },
+        {
+          "measure": "ammonia",
+          "label": "Ammonia",
+          "unit": "ppm",
+          "low": 0.0,
+          "high": 1.0,
+          "mine": false,
+          "value": 0.5,
+          "when": "2026-10-17",
+          "side": "",
+          "trend": [
+            0.25,
+            0.25,
+            0.5
+          ]
+        }
+      ],
+      "growing": 2
+    },
+    {
+      "name": "Bed 2",
+      "readings": [],
+      "growing": 1
+    }
+  ],
+  "alerts": [
+    {
+      "system": "Tank A",
+      "label": "pH",
+      "value": 7.4,
+      "unit": "",
+      "side": "high",
+      "low": 6.8,
+      "high": 7.2,
+      "mine": false
+    }
+  ],
+  "experiments": [
+    {
+      "id": "07ba6152d0",
+      "question": "Which lettuce does best in Tank A?",
+      "status": "Running",
+      "conclusion": "",
+      "batches": [
+        {
+          "id": "fa1be4a7ea",
+          "crop": "Lettuce",
+          "variety": "Butterhead",
+          "system": "Tank A",
+          "method": "aquaponics",
+          "planted": "2026-09-09",
+          "count": 12,
+          "status": "Growing",
+          "lost": 0,
+          "loss_note": "",
+          "cost": "",
+          "harvests": [
+            {
+              "date": "2026-10-17",
+              "amount": 6.0,
+              "unit": "heads",
+              "note": ""
+            }
+          ],
+          "figures": {
+            "days_growing": 38,
+            "days_to_harvest": 38,
+            "yield": {
+              "heads": 6.0
+            },
+            "main_yield": 6.0,
+            "main_unit": "heads",
+            "per_plant": 0.5,
+            "survival": 100
+          },
+          "notes": "",
+          "values": {
+            "crop": "Lettuce",
+            "variety": "Butterhead",
+            "system": "Tank A",
+            "method": "aquaponics",
+            "planted": "2026-09-09",
+            "count": 12,
+            "cost": 0.0,
+            "notes": ""
+          }
+        },
+        {
+          "id": "cb30b9aa4e",
+          "crop": "Lettuce",
+          "variety": "Romaine",
+          "system": "Tank A",
+          "method": "aquaponics",
+          "planted": "2026-09-09",
+          "count": 12,
+          "status": "Growing",
+          "lost": 2,
+          "loss_note": "root rot",
+          "cost": "",
+          "harvests": [],
+          "figures": {
+            "days_growing": 38,
+            "days_to_harvest": null,
+            "yield": {},
+            "main_yield": 0.0,
+            "main_unit": "",
+            "per_plant": null,
+            "survival": 83
+          },
+          "notes": "",
+          "values": {
+            "crop": "Lettuce",
+            "variety": "Romaine",
+            "system": "Tank A",
+            "method": "aquaponics",
+            "planted": "2026-09-09",
+            "count": 12,
+            "cost": 0.0,
+            "notes": ""
+          }
+        }
+      ],
+      "values": {
+        "question": "Which lettuce does best in Tank A?",
+        "conclusion": ""
+      }
+    }
+  ],
+  "harvests": [
+    {
+      "crop": "Lettuce",
+      "unit": "heads",
+      "amount": 6.0
+    }
+  ],
+  "measures": [
+    {
+      "id": "ph",
+      "label": "pH",
+      "unit": ""
+    },
+    {
+      "id": "ammonia",
+      "label": "Ammonia",
+      "unit": "ppm"
+    },
+    {
+      "id": "nitrite",
+      "label": "Nitrite",
+      "unit": "ppm"
+    },
+    {
+      "id": "nitrate",
+      "label": "Nitrate",
+      "unit": "ppm"
+    },
+    {
+      "id": "oxygen",
+      "label": "Dissolved oxygen",
+      "unit": "mg/L"
+    },
+    {
+      "id": "water_temp",
+      "label": "Water temperature",
+      "unit": "°"
+    },
+    {
+      "id": "air_temp",
+      "label": "Air temperature",
+      "unit": "°"
+    },
+    {
+      "id": "humidity",
+      "label": "Humidity",
+      "unit": "%"
+    },
+    {
+      "id": "ec",
+      "label": "EC",
+      "unit": "mS/cm"
+    }
+  ],
+  "counts": {
+    "growing": 3,
+    "alerts": 1,
+    "experiments": 1
+  },
+  "picks": {
+    "batches": [
+      {
+        "id": "fa1be4a7ea",
+        "name": "Lettuce (Butterhead) · Tank A"
+      },
+      {
+        "id": "cb30b9aa4e",
+        "name": "Lettuce (Romaine) · Tank A"
+      },
+      {
+        "id": "e305c41151",
+        "name": "Basil · Bed 2"
+      }
+    ]
+  },
+  "forms": {
+    "batch": {
+      "noun": "batch",
+      "id_param": "batch_id",
+      "fields": [
+        {
+          "name": "crop",
+          "label": "What's planted",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "variety",
+          "label": "Variety",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "system",
+          "label": "Where (tank, bed, greenhouse…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "method",
+          "label": "How (aquaponics, soil…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "planted",
+          "label": "Planted on",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "count",
+          "label": "How many plants or seeds",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "cost",
+          "label": "What it cost (seeds, starts)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "experiment": {
+      "noun": "experiment",
+      "id_param": "experiment_id",
+      "fields": [
+        {
+          "name": "question",
+          "label": "The question (e.g. Which lettuce grows best in Tank A?)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "conclusion",
+          "label": "What you found",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

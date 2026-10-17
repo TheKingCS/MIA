@@ -33,6 +33,7 @@
     settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
     household: '<path d="M4 10h16l-1.6 9.5a1.5 1.5 0 0 1-1.5 1.2H7.1a1.5 1.5 0 0 1-1.5-1.2Z"/><path d="M8 10l3-6M16 10l-3-6M9 14v3M15 14v3M12 14v3"/>',
     workshop: '<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6Z"/>',
+    grow_lab: '<path d="M12 21v-9"/><path d="M12 12c0-4 3-7 8-7 0 5-3 8-8 7Z"/><path d="M12 14c0-3-2.5-5.5-7-5.5 0 4 2.5 6 7 5.5Z"/>',
     business: '<path d="M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5Z"/><path d="M9 7.5h6M9 11h6M9 14.5h4"/>',
     power: '<rect x="3" y="7.5" width="16" height="9" rx="1.5"/><path d="M21 10.5v3M7 10v4M10.5 10v4"/>',
     observations: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',

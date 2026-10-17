@@ -101,14 +101,14 @@ foreground service and the person's permission for each folder.
 | Capability | Status | What exists |
 |---|---|---|
 | Equipment (pumps, tanks, plumbing) with upkeep and condition | ✅ | Maintenance assets (Garden/Plant), Greenhouse screens, condition bars |
-| Measurements (pH, ammonia, temperature) | 🟡 | `core/data_logger_manager.py` (any series, manual entry, the Lab). No greenhouse screen or safe ranges yet |
+| Measurements (pH, ammonia, temperature) | ✅ 2026-10-17 | Grow Lab → Water: readings into the Data Logger (`grow:<place>:<measure>`), trends, ranges |
 | Sensors | ⛔ | No hardware yet. A sensor is just another `add_reading()` caller |
 | Seeds, feed, media, packaging inventory | 🟡 | Materials fits (any unit). Household Inventory too. No "grow supplies" view |
 | Planting, transplanting, harvest schedules | 🟡 | Recurring missions and maintenance tasks can schedule. There are no crop records |
-| Batches, harvests, yields, losses | ⬜ | New: a batch record (planted → harvested, yield, loss) |
-| Experiments (varieties, conditions, yields) | ⬜ | New: an experiment groups batches + readings + a conclusion. The Lab is the home for it |
+| Batches, harvests, yields, losses | ✅ 2026-10-17 | Grow Lab → Growing: batches, Harvest, Lost Some, days to harvest, yield per plant, survival (`core/grow_lab.py`) |
+| Experiments (varieties, conditions, yields) | ✅ 2026-10-17 | Grow Lab → Experiments: a question, batches side by side, a conclusion |
 | Costs, revenue | 🟡 | Budget entities + ledger + homestead costs (`core/homestead_costs.py`) |
-| Troubleshooting from readings | ⬜ | Range checks in code with the person's own limits. It warns and never controls equipment (human oversight for animals, water and controls) |
+| Troubleshooting from readings | ✅ 2026-10-17 (warnings) | Your own range per measure per tank (starter ranges labelled as such); out-of-range readings flagged, never any control |
 
 ## 6. Roadside stand and connected businesses
 

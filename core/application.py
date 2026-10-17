@@ -319,6 +319,9 @@ class MIAApplication:
         from core.business_book import BusinessBook
 
         self.context.business = BusinessBook(self.context)  # quotes, customers, orders (DEC-0030)
+        from core.grow_lab import GrowLab
+
+        self.context.grow_lab = GrowLab(self.context)  # the grow lab (DEC-0030)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the

@@ -884,6 +884,12 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "workshop", workshop_page)
 
+    @app.get("/api/grow")
+    def web_grow(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_grow import grow_page
+
+        return _screen(profile_id, "grow_lab", grow_page)
+
     @app.get("/api/showoff")
     def web_showoff(profile_id: str = Depends(require_profile_id)) -> dict:
         """Show-off mode's tour (DEC-0031): built from a filtered copy of the

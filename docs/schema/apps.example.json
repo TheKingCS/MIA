@@ -346,6 +346,20 @@
           "favorite": false
         },
         {
+          "id": "grow_lab",
+          "name": "Grow Lab",
+          "icon": "🌱",
+          "tagline": "Grow it like a scientist.",
+          "description": "Batches and harvests, water readings against your own ranges, and experiments that compare what works (DEC-0030).",
+          "page": "grow.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How's the water in the tank?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "garage",
           "name": "Garage",
           "icon": "🚗",
@@ -655,8 +669,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 35,
-    "on_web": 16,
+    "apps": 36,
+    "on_web": 17,
     "tools": 32
   }
 }

@@ -1496,3 +1496,10 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .tour-orb span { width: 34px; height: 34px; border-radius: 50%; background: rgb(var(--rgb-accent)); }
 @keyframes tour-pulse { 50% { transform: scale(1.06); box-shadow: 0 0 60px rgba(var(--rgb-accent), 0.6); } }
 @media (prefers-reduced-motion: reduce) { .tour-card, .tour-orb { animation: none; } }
+
+/* Grow Lab (DEC-0030, claude 2026-10-17). */
+.grow-readings li { display: grid; grid-template-columns: minmax(0, 1fr) 70px auto; align-items: center; gap: 8px; }
+.grow-spark { width: 70px; height: 22px; }
+.grow-spark polyline { fill: none; stroke: rgb(var(--rgb-accent)); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.grow-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.grow-readings .btn { text-transform: none; }  /* a range reads as typed: 6.8 to 7.2 */
