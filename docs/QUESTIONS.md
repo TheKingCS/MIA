@@ -5,6 +5,21 @@ Answer under the question; Claude moves closed ones to the bottom.*
 
 ## Open
 
+### Q-0017: Which Project ALICE ideas should MIA take? (claude → zac)
+- Asked: 2026-10-17 · Status: OPEN
+- Question (the review: `docs/future/PROJECT_ALICE_REVIEW.md`): ALICE is
+  a companion with one memory across desktop and AR glasses. MIA already
+  has the real data, actions and glasses screens; ALICE is better at
+  feeling like one someone who remembers you. Claude recommends, in
+  order: (1) **"What I Used"**: under each answer, the memories MIA
+  used, tap to fix or forget, and memories picked by relevance instead
+  of the first few; (3) **remembering at the right moment** through the
+  gate ("Jordan's birthday is in 9 days; she wanted a chalk bag");
+  (2) **one conversation everywhere** (desktop, phone, glasses);
+  (7) **one personality guide** for every word MIA writes. (4) the PC's
+  bigger model from the phone is already next (DEC-0022). Vision and
+  hands-free glasses voice wait on the glasses. Which, and in what order?
+
 ### Q-0015: MIA on just a phone: three choices (claude → zac)
 - Asked: 2026-10-06 · Status: ANSWERED
 - Answer (zac, 2026-10-07, in chat with claude; he'd first sent it to

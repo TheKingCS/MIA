@@ -274,6 +274,13 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**Game layer (DEC-0028, `docs/GAME_LAYER.md`), 2026-10-17:** built 1–5
+and 8 (Reward Shop, gear condition bars, boss battles, real stats,
+buffs, the Chronicle) plus People & Pets on the web. Left: world map,
+questlines, crafting, party, sound, watch HUD, location quests, when
+Zac picks. **Project ALICE review** (`docs/future/PROJECT_ALICE_REVIEW.md`)
+waits on Zac's picks (Q-0017).
+
 **The phone spike passed (2026-10-07, `docs/PHONE_SPIKE.md`)**, and Zac
 has it on his phone (first start under 8 s). His feedback is fixed:
 account menu, no Apps tile, every card the phone's width, Garage spacing.
