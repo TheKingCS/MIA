@@ -212,8 +212,11 @@ def _register() -> None:
         ActionType("experiment.conclude", "Conclude", {"experiment_id": "the experiment", "conclusion": "what you found"},
                    _conclude_describe, _conclude),
     ]
+    from dataclasses import replace
+
+    helping = {"batch.harvest", "batch.lost", "grow.reading"}  # a child can help in the garden (never money)
     for kind in kinds:
-        ACTION_TYPES[kind.kind] = kind
+        ACTION_TYPES[kind.kind] = replace(kind, child_ok=True) if kind.kind in helping else kind
 
 
 _register()

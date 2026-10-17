@@ -888,7 +888,7 @@ def create_app(context: AppContext) -> FastAPI:
     def web_grow(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_grow import grow_page
 
-        return _screen(profile_id, "grow_lab", grow_page)
+        return _screen(profile_id, "greenhouse", grow_page)  # the Greenhouse's growing tabs
 
     @app.get("/api/showoff")
     def web_showoff(profile_id: str = Depends(require_profile_id)) -> dict:

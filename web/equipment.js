@@ -4,7 +4,10 @@
  * <body data-scope> picks the screen; tabs Assets, Past Due, Due Today, Due Soon;
  * everything comes from MIA.equipment(scope). Tasks are marked done, assets
  * and tasks added, edited and deleted, all as equipment actions. Each asset
- * opens its own page (asset.html).
+ * opens its own page (asset.html). The Greenhouse also grows things
+ * (Zac, 2026-10-17): its tabs are Growing, Water, Equipment (assets and
+ * what's due together), Experiments and Harvests, the growing ones from
+ * grow.js (window.MIAGrow).
  */
 (function () {
   "use strict";
@@ -12,7 +15,9 @@
   const $ = (id) => document.getElementById(id);
   const scope = document.body.dataset.scope || "garage";
   let page = null;
-  let tab = location.hash.slice(1) || "assets";
+  const grow = scope === "greenhouse" ? window.MIAGrow : null;
+  let growPage = null;
+  let tab = location.hash.slice(1) || (grow ? "growing" : "assets");
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const chip = (row) => el("span", { class: "when " + (row.urgency === "overdue" || row.needs_attention ? "overdue" : row.urgency === "due_soon" ? "today" : "") }, row.text);
@@ -101,6 +106,7 @@
           rows.length ? el("div", { class: "rows" }, rows.map((r) => taskRow(r, true))) : el("p", { class: "dim" }, empty))];
       };
     });
+    if (grow && growPage) return drawGreenhouse(BUCKETS, views);
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...[["assets", "Assets"], ...BUCKETS.map(([id, l]) => [id, l])].map(([id, l]) => {
       const n = id === "assets" ? page.assets.length : page.tasks.filter((r) => r.bucket === id).length;
@@ -111,5 +117,30 @@
     $("panel").replaceChildren(...views[tab]());
   }
 
-  MIAShell.start(async () => { page = await MIA.equipment(scope); draw(); });
+  function drawGreenhouse(BUCKETS, views) {
+    const c = growPage.counts;
+    $("strip").replaceChildren(
+      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.growing), el("span", { class: "t" }, "Growing")),
+      el("div", { class: "cell " + (c.alerts ? "bad" : "ok") }, el("span", { class: "n" }, c.alerts), el("span", { class: "t" }, "Out Of Range")),
+      el("div", { class: "cell " + (page.attention.length ? "bad" : "ok") }, el("span", { class: "n" }, page.attention.length), el("span", { class: "t" }, "Needs Attention")));
+    const all = {
+      growing: grow.views.growing, water: grow.views.water,
+      equipment: () => assetsView().concat(...BUCKETS.filter(([id]) => id !== "past_due" && page.tasks.some((r) => r.bucket === id)).map(([id]) => views[id]())),
+      experiments: grow.views.experiments, harvests: grow.views.harvests,
+    };
+    const TABS = [["growing", "Growing"], ["water", "Water"], ["equipment", "Equipment"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
+    if (!all[tab]) tab = "growing";
+    $("tabs").hidden = false;
+    $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
+      onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
+    $("panel").replaceChildren(...[].concat(all[tab]()));
+  }
+
+  MIAShell.start(async () => {
+    page = await MIA.equipment(scope);
+    if (grow) {
+      try { growPage = await grow.load(); } catch (e) { growPage = null; }  // the equipment still shows
+    }
+    draw();
+  });
 })();

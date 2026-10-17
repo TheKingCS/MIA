@@ -1,6 +1,8 @@
 /*
  * grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders
- * MIA.grow() (core/web_grow.py) in tabs: Growing (batches: Harvest, Lost
+ * MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17:
+ * "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js
+ * shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing (batches: Harvest, Lost
  * Some, days to harvest, yield per plant), Water (each place's latest
  * readings against your ranges, a small trend, Log Reading, Set Range;
  * MIA only warns, people run the equipment), Experiments (batches side by
@@ -151,6 +153,15 @@
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
     $("panel").replaceChildren(...[].concat(VIEWS[tab]()));
+  }
+
+  // Inside the Greenhouse (equipment.js draws the frame, tabs and strip).
+  if (document.body.dataset.scope === "greenhouse") {
+    window.MIAGrow = {
+      load: async () => { page = await MIA.grow(); return page; },
+      views: VIEWS,
+    };
+    return;
   }
 
   MIAShell.start(async () => {

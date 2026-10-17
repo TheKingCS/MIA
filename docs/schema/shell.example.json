@@ -32,13 +32,6 @@
       "page": "greenhouse.html"
     },
     {
-      "id": "grow_lab",
-      "name": "Grow Lab",
-      "icon": "🌱",
-      "tagline": "Grow it like a scientist.",
-      "page": "grow.html"
-    },
-    {
       "id": "garage",
       "name": "Garage",
       "icon": "🚗",
