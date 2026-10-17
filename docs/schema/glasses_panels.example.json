@@ -1568,6 +1568,26 @@
     "more": 0,
     "empty": ""
   },
+  "character/buffs": {
+    "app": "character",
+    "item": "buffs",
+    "label": "Buffs",
+    "title": "Buffs",
+    "lines": [
+      {
+        "text": "🔥 Momentum",
+        "detail": "+1 Strength · 5 more days",
+        "tone": "ok"
+      },
+      {
+        "text": "🍲 Well Fed",
+        "detail": "+1 Vitality · ends today",
+        "tone": "ok"
+      }
+    ],
+    "more": 0,
+    "empty": "No buffs right now."
+  },
   "character/top": {
     "app": "character",
     "item": "top",

@@ -24,6 +24,9 @@
     $("subtitle").textContent = home.subtitle;
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
+    const buffs = MIAShell.buffChips(home.buffs, true);
+    $("buffs").replaceChildren(...(buffs ? [buffs] : []));
+    $("buffs").hidden = !buffs;
     $("upcoming").replaceChildren(...home.upcoming.map(focusRow));
     $("upcoming-empty").hidden = home.upcoming.length > 0;
     const p = shell.person;

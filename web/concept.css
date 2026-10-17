@@ -1382,3 +1382,19 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .pp-field { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; font-size: var(--text-sm); overflow-wrap: anywhere; }
 .pp-label { color: var(--text-dim); }
 .pp-contact { margin: 4px 0 0; font-size: var(--text-sm); }
+
+/* Buffs (DEC-0028, claude 2026-10-17): earned good effects, never debuffs. */
+.buff-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.buff { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; cursor: pointer;
+  font: inherit; color: var(--text); background: rgba(var(--rgb-win), 0.1); border: 1px solid rgba(var(--rgb-win), 0.45);
+  box-shadow: 0 0 10px rgba(var(--rgb-win), 0.18); }
+.buff:hover, .buff:focus-visible { background: rgba(var(--rgb-win), 0.18); }
+.buff-ico { font-size: 16px; line-height: 1; }
+.buff-name { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.12em; text-transform: uppercase; }
+.buff-left { color: var(--text-dim); font-size: var(--text-xs); }
+.home-buffs { margin: 0 0 12px; }
+.buff-row.compact { gap: 6px; }
+.buff-row.compact .buff { padding: 4px 10px; gap: 5px; }
+.buff-row.compact .buff-left { display: none; }
+.attr-buff { background: rgb(var(--rgb-win)); box-shadow: 0 0 8px rgba(var(--rgb-win), 0.6); }
+.attr-buffs { margin: 0; font-size: var(--text-xs); color: rgb(var(--rgb-win)); }

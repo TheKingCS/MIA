@@ -342,7 +342,18 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
         "glance": _glance(state),
         "wins": ((state.get("recent_wins") or {}).get("latest") or [])[:5],
         "child": bool((state.get("person") or {}).get("child")),
+        "buffs": _buffs(context, today),
     }
+
+
+def _buffs(context, today: date) -> list[dict]:
+    from core.buffs import buffs
+
+    try:
+        return buffs(context, today)
+    except Exception:
+        log.exception("Home: buffs failed")
+        return []
 
 
 def _first_sentence(text: str) -> str:

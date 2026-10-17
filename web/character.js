@@ -36,8 +36,10 @@
         el("div", { class: "attr-bar", role: "meter", "aria-valuenow": String(a.value), "aria-valuemin": "1", "aria-valuemax": String(a.max),
           "aria-label": a.name + " " + a.value + " of " + a.max },
           el("span", { class: "attr-train", style: "width:" + (100 * (1 + a.training) / a.max) + "%" }),
-          el("span", { class: "attr-recent", style: "width:" + (100 * a.recent / a.max) + "%" })),
+          el("span", { class: "attr-recent", style: "width:" + (100 * a.recent / a.max) + "%" }),
+          (a.buffs || []).length ? el("span", { class: "attr-buff", style: "width:" + (100 * a.buffs.length / a.max) + "%" }) : null),
         el("p", { class: "attr-from" }, a.from.length ? a.from.join(" · ") : a.about),
+        (a.buffs || []).length ? el("p", { class: "attr-buffs" }, a.buffs.join(" · ")) : null,
         a.watch.length ? el("p", { class: "attr-watch" }, "⌚ A watch adds: " + a.watch.join(", ")) : null))) : null;
     const collection = page.collection.length
       ? el("div", { class: "rows" }, page.collection.map((c) => el("div", { class: "row rarity " + RARITY[c.rarity] },
@@ -50,7 +52,9 @@
       el("div", { class: "glass character-portrait" + (me.prestige_color ? " prestige-" + me.prestige_color : "") },
         el("span", { class: "character-avatar", "aria-hidden": "true" }, "🧙"),
         el("div", {}, el("strong", {}, "Level " + me.level), el("small", { class: "dim" }, "Character art is coming later."))),
-      attrs ? section("Attributes", el("p", { class: "dim" }, "Blue is training (your skills), which never goes down. Green is what you've done in the last 30 days."), attrs) : "",
+      section("Buffs", (page.buffs || []).length ? MIAShell.buffChips(page.buffs)
+        : el("p", { class: "dim" }, "No buffs right now. Work out, cook, write, catch up with someone: good days earn them.")),
+      attrs ? section("Attributes", el("p", { class: "dim" }, "Blue is training (your skills), which never goes down. Green is what you've done in the last 30 days. Gold is a buff."), attrs) : "",
       section("Lifetime stats", stats),
       el("div", { class: "two-up" },
         sectionWith("Top skills", el("a", { class: "btn btn-ghost", href: "skills.html" }, "All skills"), page.top_skills && page.top_skills.length

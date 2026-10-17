@@ -399,6 +399,13 @@ def _character_stats(context, today):
     return _panel("Your story", lines, "")
 
 
+def _character_buffs(context, today):
+    from core.buffs import buffs
+
+    return _panel("Buffs", [_line(f"{b['icon']} {b['name']}", f"+{b['bonus']} {b['stat'].capitalize()} · {b['lasts']}", "ok")
+                            for b in buffs(context, today)], "No buffs right now.")
+
+
 def _character_top(context, today):
     from core.web_progress import character_page
 
@@ -647,7 +654,8 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
                  ("today", "Due Today", _calendar("today", "Due Today", "Nothing on today.")),
                  ("soon", "Due Soon", _calendar("soon", "Due Soon", "Nothing in the next two weeks."))),
     "skills": (("focus", "Focus", _skills_focus), ("week", "This Week", _skills_week)),
-    "character": (("story", "Your Story", _character_stats), ("top", "Top Skills", _character_top)),
+    "character": (("story", "Your Story", _character_stats), ("buffs", "Buffs", _character_buffs),
+                  ("top", "Top Skills", _character_top)),
     "household": (("chores", "Chores Due", _household_chores),),
     "relationships": (("birthdays", "Next Birthdays", _people_birthdays),),
     "inbox": (("waiting", "Waiting To File", _inbox_waiting),),

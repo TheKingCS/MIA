@@ -415,6 +415,11 @@
           "type": "panel"
         },
         {
+          "id": "buffs",
+          "label": "Buffs",
+          "type": "panel"
+        },
+        {
           "id": "top",
           "label": "Top Skills",
           "type": "panel"

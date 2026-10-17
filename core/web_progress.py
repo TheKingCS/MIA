@@ -296,11 +296,14 @@ def character_page(context, today: Optional[date] = None) -> dict:
     else:
         page.update(stats=[], collection=[], rarity=[], emblems=[])
     try:  # real character stats (DEC-0028)
+        from core.buffs import buffs
         from core.character_stats import character_stats
 
-        page["attributes"] = character_stats(context, pid, today)
+        page["buffs"] = buffs(context, today)
+        page["attributes"] = character_stats(context, pid, today, page["buffs"])
     except Exception:
         log.exception("Character: stats failed")
+        page.setdefault("buffs", [])
         page["attributes"] = []
     skills = getattr(context, "skills", None)
     if skills is not None:

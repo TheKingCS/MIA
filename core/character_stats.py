@@ -20,6 +20,9 @@ only means less of the recent bonus, never a loss (DEC-0014).
 | Charisma | communication, leadership, hospitality, teamwork, teaching | people you caught up with, the people you keep in MIA |
 | Craft | Maker, Construction, cooking, Creative skills | workshop jobs finished, meals cooked |
 
+An active buff (core/buffs.py) lifts its attribute by +1 while it lasts,
+still capped at 20.
+
 `watch` lists what a smart watch will add to each stat when one is
 connected (the plan in docs/GAME_LAYER.md); nothing is made up before then.
 """
@@ -106,8 +109,12 @@ def _recent(context, today: date) -> dict[str, list[tuple[str, float, float]]]:
     }
 
 
-def character_stats(context, profile_id: Optional[str], today: Optional[date] = None) -> list[dict]:
+def character_stats(context, profile_id: Optional[str], today: Optional[date] = None,
+                    active: Optional[list[dict]] = None) -> list[dict]:
+    from core.buffs import bonuses, buffs
+
     today = today or date.today()
+    lifted = bonuses(buffs(context, today) if active is None else active)
     levels = _skill_levels(context, profile_id)
     recent = _recent(context, today)
     out = []
@@ -115,10 +122,12 @@ def character_stats(context, profile_id: Optional[str], today: Optional[date] = 
         trained = [(s, levels[s]) for s in skills if levels.get(s, 1) > 1]
         training = sum(level - 1 for _s, level in trained)
         recent_points = sum(points for _w, _n, points in recent.get(key, []))
-        value = score(training, recent_points)
+        boosts = lifted.get(key, [])
+        value = min(20, score(training, recent_points) + sum(b["bonus"] for b in boosts))
         sources = [f"{s.replace('_', ' ').capitalize()} Lv {level}" for s, level in sorted(trained, key=lambda t: -t[1])[:3]]
         sources += [f"{n:g} {w}" for w, n, _p in recent.get(key, []) if n]
         out.append({"key": key, "name": name, "icon": icon, "value": value, "max": 20, "about": what,
                     "training": min(TRAINING_MAX, round(training)), "recent": min(RECENT_MAX, round(recent_points)),
-                    "from": sources, "watch": list(watch)})
+                    "from": sources, "watch": list(watch),
+                    "buffs": [f"{b['icon']} {b['name']} +{b['bonus']}" for b in boosts]})
     return out

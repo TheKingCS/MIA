@@ -395,7 +395,18 @@
       el("span", { class: "gc-value" }, c.percent + "% · " + c.label));
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, confirm: confirmBox, talk: toggleTalk };
+  // Buffs (DEC-0028): the good effects you've earned (core/buffs.py), never
+  // debuffs. Tapping one says what earned it and how long it lasts.
+  function buffChips(list, compact) {
+    if (!list || !list.length) return null;
+    return el("div", { class: "buff-row" + (compact ? " compact" : ""), role: "list", "aria-label": "Active buffs" }, list.map((b) =>
+      el("button", { type: "button", class: "buff", role: "listitem", title: b.why,
+        onclick: () => say(b.icon + " " + b.name + ": " + b.why + " +" + b.bonus + " " + b.stat.charAt(0).toUpperCase() + b.stat.slice(1) + ", " + b.lasts + ".") },
+        el("span", { class: "buff-ico", "aria-hidden": "true" }, b.icon), el("span", { class: "buff-name" }, b.name),
+        el("small", { class: "buff-left" }, b.lasts))));
+  }
+
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, confirm: confirmBox, talk: toggleTalk };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

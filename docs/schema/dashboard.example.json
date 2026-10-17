@@ -269,5 +269,40 @@
       "source": "manual"
     }
   ],
-  "child": false
+  "child": false,
+  "buffs": [
+    {
+      "key": "momentum",
+      "name": "Momentum",
+      "icon": "🔥",
+      "stat": "strength",
+      "bonus": 1,
+      "why": "Three workouts in a week.",
+      "earned": "2026-10-16",
+      "ends": "2026-10-22",
+      "lasts": "5 more days"
+    },
+    {
+      "key": "well_fed",
+      "name": "Well Fed",
+      "icon": "🍲",
+      "stat": "vitality",
+      "bonus": 1,
+      "why": "You logged what you ate today.",
+      "earned": "2026-10-17",
+      "ends": "2026-10-17",
+      "lasts": "ends today"
+    },
+    {
+      "key": "prepared",
+      "name": "Prepared",
+      "icon": "🛡",
+      "stat": "craft",
+      "bonus": 1,
+      "why": "All 4 pieces of your gear are in good condition.",
+      "earned": "2026-10-17",
+      "ends": "",
+      "lasts": "while it holds"
+    }
+  ]
 }
