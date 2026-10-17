@@ -1,0 +1,191 @@
+{
+  "steps": [
+    {
+      "key": "hello",
+      "title": "Hi, I'm MIA",
+      "say": "I'm a personal assistant that turns real life into a game. Everything you're about to see comes from things that really happened, and none of it ever leaves this house.",
+      "name": "Robin"
+    },
+    {
+      "key": "level",
+      "title": "Level 2",
+      "say": "Every real thing done earns experience: workouts, missions, builds, upkeep. That's level 2, 65% of the way to the next.",
+      "level": 2,
+      "percent": 65,
+      "total_xp": 230,
+      "top_skills": [
+        {
+          "name": "Strength",
+          "icon": "💪",
+          "level": 4
+        },
+        {
+          "name": "Cooking",
+          "icon": "🍳",
+          "level": 2
+        },
+        {
+          "name": "Learning",
+          "icon": "📚",
+          "level": 2
+        }
+      ]
+    },
+    {
+      "key": "stats",
+      "title": "Real Character Stats",
+      "say": "Six stats, like a character sheet, made from what's really done. Training only goes up; a quiet month never takes anything away.",
+      "stats": [
+        {
+          "name": "Strength",
+          "icon": "💪",
+          "value": 10,
+          "max": 20
+        },
+        {
+          "name": "Stamina",
+          "icon": "🫀",
+          "value": 5,
+          "max": 20
+        },
+        {
+          "name": "Vitality",
+          "icon": "🌿",
+          "value": 4,
+          "max": 20
+        },
+        {
+          "name": "Wisdom",
+          "icon": "📘",
+          "value": 5,
+          "max": 20
+        },
+        {
+          "name": "Charisma",
+          "icon": "🤝",
+          "value": 5,
+          "max": 20
+        },
+        {
+          "name": "Craft",
+          "icon": "🛠",
+          "value": 5,
+          "max": 20
+        }
+      ]
+    },
+    {
+      "key": "buffs",
+      "title": "Buffs",
+      "say": "Good streaks earn buffs, and each one lifts a stat. There are no debuffs, ever.",
+      "buffs": [
+        {
+          "name": "Maker's Pride",
+          "icon": "🛠",
+          "stat": "Craft"
+        },
+        {
+          "name": "Momentum",
+          "icon": "🔥",
+          "stat": "Strength"
+        },
+        {
+          "name": "On A Roll",
+          "icon": "⭐",
+          "stat": "Wisdom"
+        }
+      ]
+    },
+    {
+      "key": "missions",
+      "title": "Missions And Boss Fights",
+      "say": "Goals become missions with objectives, and the big ones become boss fights with an HP bar.",
+      "missions": [
+        {
+          "name": "Organize the garage",
+          "icon": "🧰",
+          "percent": 100
+        },
+        {
+          "name": "Prepare the garden for spring",
+          "icon": "🌱",
+          "percent": 67
+        },
+        {
+          "name": "Run a 5K",
+          "icon": "🏃",
+          "percent": 42
+        }
+      ],
+      "boss": null
+    },
+    {
+      "key": "gear",
+      "title": "Gear Like Equipment",
+      "say": "The mower, the truck, the house: each has a condition bar that wears down as upkeep comes due and fills back up when it's done.",
+      "gear": [
+        {
+          "name": "Furnace",
+          "percent": 31,
+          "label": "Worn",
+          "tone": "soon"
+        },
+        {
+          "name": "Mower",
+          "percent": 25,
+          "label": "Worn",
+          "tone": "soon"
+        },
+        {
+          "name": "Maple House",
+          "percent": 8,
+          "label": "Needs Care",
+          "tone": "bad"
+        },
+        {
+          "name": "Generator",
+          "percent": 7,
+          "label": "Needs Care",
+          "tone": "bad"
+        }
+      ]
+    },
+    {
+      "key": "crafting",
+      "title": "Crafting Recipes",
+      "say": "Things built in the workshop are saved like crafting recipes: what they need, the cuts, the steps. I check what's on the shelf and make the shopping list for what's missing.",
+      "recipe": {
+        "name": "Farmhouse Bench",
+        "materials": 3,
+        "steps": 5,
+        "ready": false
+      },
+      "recipes": 1,
+      "built": 1,
+      "photo": null
+    },
+    {
+      "key": "chronicle",
+      "title": "The Chronicle",
+      "say": "Every week I write the story of it, from what really happened.",
+      "name": "The Training Week",
+      "story": [
+        "This was a week of sweat.",
+        "You trained 10 times.",
+        "You cooked 4 times.",
+        "You finished 3 missions."
+      ]
+    },
+    {
+      "key": "glasses",
+      "title": "On The Glasses",
+      "say": "The same MIA shows up on smart glasses: missions, upkeep and recipes in the corner of your eye, and the XP when something's done."
+    },
+    {
+      "key": "finale",
+      "title": "Ask Me Anything Later",
+      "say": "That's the tour. Afterwards, try asking me what's next on a mission, how a build is going, or to start a recipe. Thanks for watching!"
+    }
+  ],
+  "count": 10
+}

@@ -40,6 +40,8 @@ class AssistantTurn:
     # What I Used (DEC-0029): the memories this turn's answer was given,
     # so a surface can show them under the reply, each fixable or forgettable.
     used: list[dict] = field(default_factory=list)
+    # A page for the surface to open (show-off mode's tour, DEC-0031).
+    open: str = ""
 
 
 def add_message(conversation: Conversation, role: str, content: str) -> None:
@@ -88,6 +90,11 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     # done by MIA's own code at once, no model (core/quick_commands.py).
     # Never in a private journal or talk-it-out mode.
     if not _personal(conversation):
+        from core.show_off import INTRO, wants_show_off
+
+        if wants_show_off(prompt):  # "show off for my friends" (DEC-0031)
+            add_message(conversation, "assistant", INTRO)
+            return AssistantTurn(replies=[INTRO], open="showoff.html")
         from core.quick_commands import handle
 
         quick = handle(context, prompt)

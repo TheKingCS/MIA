@@ -252,6 +252,7 @@
         try {
           const turn = await MIA.talk(text);
           thinking.textContent = turn.reply_text || "Done.";
+          if (turn.open) setTimeout(() => { location.href = turn.open; }, 900);  // e.g. show-off mode's tour
           const used = usedList(turn.used);
           if (used) thinking.after(used);
           // Which brain answered (DEC-0022): the home computer's model or this device's.

@@ -1,6 +1,7 @@
 # Show-off mode: "MIA, show off for my friends"
 
-*Zac, 2026-10-17: "I eventually want a command for 'MIA show off for my
+*Built 2026-10-17 (DEC-0031): say "show off for my friends", or Home's gear
+menu → Show Off. `core/show_off.py`, `web/showoff.html`. Zac, 2026-10-17: "I eventually want a command for 'MIA show off for my
 friends' and it walk through like a tutorial/demo mode to show off her
 abilities." Parked; Claude's notes for when it's built.*
 
@@ -41,3 +42,15 @@ memories, health or people's details. Two ways:
 Zac, 2026-10-17: "We will build it for my real profile." Option 2: real
 data, with money, the journal, memories, health and people's details
 hidden for the whole tour.
+
+## As built
+
+Cards (empty ones skipped): hello, level and top skills, the six stats,
+buffs (never Debt Slayer, Good Company, Well Fed or Clear Mind), missions
+and a mission boss (never a debt), gear condition, crafting (recipes,
+builds, a finished build's photo; never a price), the Reward Shop's
+credits, this week's Chronicle without money / journal / people / food
+lines, the glasses, and the finale. Back / Next / Stop, arrow keys,
+optional voice (the browser's own speech). No Talk on the tour page.
+`tests/test_show_off.py` seeds a debt, a journal entry, a memory, a
+person, a weight and a meal and checks none of them reach the tour.

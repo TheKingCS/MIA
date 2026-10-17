@@ -230,6 +230,7 @@
 
   async function talk(text) {
     const data = await MIA.talk(text); // the engine client (web/mia.js)
+    if (data.open) setTimeout(() => { location.href = data.open; }, 900);  // show-off mode (DEC-0031)
     return data.reply_text || arr(data.replies).join("\n") || "…";
   }
 

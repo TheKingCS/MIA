@@ -546,6 +546,7 @@ def create_app(context: AppContext) -> FastAPI:
             "timings": timings,
             "draft": new_draft,
             "used": turn.used,
+            "open": turn.open,
             "level": getattr(context.llm, "level", "") if context.llm is not None and turn.llm_available else "",
         }
 
@@ -882,6 +883,14 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_more import workshop_page
 
         return _screen(profile_id, "workshop", workshop_page)
+
+    @app.get("/api/showoff")
+    def web_showoff(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Show-off mode's tour (DEC-0031): built from a filtered copy of the
+        person's data, never money, the journal, memories, health or people."""
+        from core.show_off import tour
+
+        return _screen(profile_id, "web_home", tour)
 
     @app.get("/api/business")
     def web_business(profile_id: str = Depends(require_profile_id)) -> dict:

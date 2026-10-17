@@ -219,6 +219,7 @@
     journal: () => read("/api/journal", "journal"),
     people: () => read("/api/people", "people"),
     business: () => read("/api/business", "business"),
+    showoff: () => read("/api/showoff", "showoff"),
     chronicle: () => read("/api/chronicle", "chronicle"),
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),

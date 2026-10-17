@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Show Off — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="web_home" data-icon="assistant" class="mod-showoff">
+  <!--
+    Show-off mode (claude, 2026-10-17, DEC-0031): a narrated tour of what
+    MIA can do, on the real profile, for friends. MIA.showoff()
+    (core/show_off.py) is built from a filtered copy of the data: never
+    money, the journal, memories, health or people. No Talk here.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <div id="panel" class="tour" aria-live="polite"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="shell.js"></script>
+  <script src="showoff.js"></script>
+</body>
+</html>
