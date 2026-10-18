@@ -18,7 +18,14 @@
         el("h2", {}, c.name)),
       el("div", { class: "chron-story" }, c.story.map((line) => el("p", {}, line))),
       c.highlights.length ? el("div", { class: "chron-high" }, el("span", { class: "chron-label" }, "Highlights"),
-        el("ul", {}, c.highlights.map((h) => el("li", {}, h)))) : null);
+        el("ul", {}, c.highlights.map((h) => el("li", {}, h)))) : null,
+      // The memory vault's photos from these days (core/memory_vault.photos_between).
+      c.photos && c.photos.count ? el("a", { class: "chron-photos", href: "vault.html#photos" },
+        (() => {
+          const img = el("img", { alt: "", class: "vault-best" });
+          if (c.photos.cover) MIA.image("/api/vault/photo/" + c.photos.cover).then((src) => { if (src) img.src = src; });
+          return img;
+        })(), "📷 " + c.photos.count + (c.photos.count === 1 ? " photo" : " photos")) : null);
   }
 
   function draw() {

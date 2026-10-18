@@ -10,7 +10,7 @@ import json
 import pytest
 
 from core import sync
-from core.sync import _MISSING, digest, merge_game, merge_json, merge_lines
+from core.sync import _MISSING, digest, merge_file, merge_game, merge_json, merge_lines
 
 
 # ------------------------------------------------------------------ the merge rules
@@ -87,11 +87,35 @@ class PretendPC:
 
     def __init__(self):
         self.files = {"mine": {}, "home": {}}
+        self.blobs = {"mine": {}, "home": {}}
+        self.journal_key = ""
         self.game = {"total_xp": 0, "total_credits": 0, "prestige_tier": 0, "unlocked_reward_ids": []}
 
-    def __call__(self, context, path, payload=None, timeout=6.0, method="", raw=False):
+    def __call__(self, context, path, payload=None, timeout=6.0, method="", raw=False, body=None, headers=None,
+                 save_to=None):
+        import hashlib
+        from urllib.parse import parse_qs, urlsplit
+
+        sha = lambda d: hashlib.sha256(d).hexdigest()  # noqa: E731
         if path == "/api/sync/manifest":
-            return {**{s: {n: [digest(d), 1.0] for n, d in f.items()} for s, f in self.files.items()}, "game": self.game}
+            return {**{s: {n: [digest(d), 1.0] for n, d in f.items()} for s, f in self.files.items()}, "game": self.game,
+                    "files": {s: {r: [sha(d), 1.0, len(d)] for r, d in b.items()} for s, b in self.blobs.items()},
+                    "journal_key": self.journal_key}
+        if path.startswith("/api/sync/blob?"):
+            q = {k: v[0] for k, v in parse_qs(urlsplit(path).query, keep_blank_values=True).items()}
+            here = self.blobs[q["scope"]]
+            if method == "PUT":
+                data = body.read()
+                assert sha(data) == q["sha"]
+                assert (sha(here[q["path"]]) if q["path"] in here else "") == q["expect"], "pushed over a newer file"
+                here[q["path"]] = data
+                return {"ok": True}
+            if method == "DELETE":
+                assert sha(here[q["path"]]) == q["expect"]
+                del here[q["path"]]
+                return {"ok": True}
+            save_to.write_bytes(here[q["path"]])
+            return save_to
         if path.startswith("/api/sync/file?"):
             q = dict(part.split("=") for part in path.split("?")[1].split("&"))
             return self.files[q["scope"]][q["name"]]
@@ -195,3 +219,106 @@ def test_the_pcs_endpoints(tmp_path, monkeypatch):
     assert client.post("/api/sync/file", json={"scope": "home", "name": "security_logins.json", "expect": "",
                                                 "data": new}).status_code == 400
     assert client.get("/api/sync/status").json()["linked"] is False
+
+    # Photos and files: streamed, checked, never outside their folders.
+    import hashlib
+
+    monkeypatch.setattr(sync, "file_folders", lambda context, pid: {"home": {"recipe_photos": home / "recipe_photos"}})
+    photo = b"JPEG" * 1000
+    sha = hashlib.sha256(photo).hexdigest()
+    put = lambda **q: client.put("/api/sync/blob", params={"scope": "home", "path": "recipe_photos/a.jpg", **q},  # noqa: E731
+                                 content=photo)
+    assert put(sha="0" * 64, expect="").status_code == 422
+    assert put(sha=sha, expect="stale").status_code == 409
+    assert put(sha=sha, expect="").status_code == 200 and (home / "recipe_photos" / "a.jpg").read_bytes() == photo
+    assert client.get("/api/sync/blob", params={"scope": "home", "path": "recipe_photos/a.jpg"}).content == photo
+    assert client.get("/api/sync/manifest").json()["files"]["home"]["recipe_photos/a.jpg"][0] == sha
+    for bad in ("recipe_photos/../../config.json", "nowhere/a.jpg", "recipe_photos/.hidden"):
+        assert client.get("/api/sync/blob", params={"scope": "home", "path": bad}).status_code == 400
+    assert client.delete("/api/sync/blob", params={"scope": "home", "path": "recipe_photos/a.jpg",
+                                                   "expect": "stale"}).status_code == 409
+    assert client.delete("/api/sync/blob", params={"scope": "home", "path": "recipe_photos/a.jpg",
+                                                   "expect": sha}).status_code == 200
+    assert not (home / "recipe_photos" / "a.jpg").exists()
+
+
+# ------------------------------------------------------------------ photos, conversations, the private journal
+
+
+def test_photos_and_files_go_both_ways_and_deletes_follow(phone):
+    pc = PretendPC()
+    photo = phone.dirs["home"] / "recipe_photos" / "chili.jpg"
+    photo.parent.mkdir()
+    photo.write_bytes(b"JPEG-chili")
+    pc.blobs["mine"]["my_files/Taxes/2025.pdf"] = b"%PDF-taxes"
+    done = sync.sync_now(phone, call=pc)
+    assert pc.blobs["home"]["recipe_photos/chili.jpg"] == b"JPEG-chili"
+    assert (phone.dirs["mine"] / "my_files" / "Taxes" / "2025.pdf").read_bytes() == b"%PDF-taxes"
+    assert done["pushed"] >= 1 and done["pulled"] >= 1
+
+    photo.unlink()  # deleted on the phone: deleted on the PC
+    del pc.blobs["mine"]["my_files/Taxes/2025.pdf"]  # deleted on the PC: deleted on the phone
+    sync.sync_now(phone, call=pc)
+    assert "recipe_photos/chili.jpg" not in pc.blobs["home"]
+    assert not (phone.dirs["mine"] / "my_files" / "Taxes" / "2025.pdf").exists()
+
+
+def test_a_file_changed_on_both_keeps_both(phone):
+    pc = PretendPC()
+    note = phone.dirs["mine"] / "my_files" / "list.txt"
+    note.parent.mkdir()
+    note.write_bytes(b"phone version")
+    pc.blobs["mine"]["my_files/list.txt"] = b"computer version"
+    sync.sync_now(phone, call=pc)
+    assert note.read_bytes() == b"phone version"
+    assert (note.parent / "list (2).txt").read_bytes() == b"computer version"
+    sync.sync_now(phone, call=pc)
+    assert pc.blobs["mine"] == {"my_files/list.txt": b"phone version", "my_files/list (2).txt": b"computer version"}
+    again = sync.sync_now(phone, call=pc)
+    assert (again["pushed"], again["pulled"], again["merged"]) == (0, 0, 0)
+
+
+def test_conversation_messages_from_both_devices_merge_in_time_order():
+    def convo(*messages):
+        return json.dumps([{"conversation_id": "c1", "title": "Chat",
+                            "messages": [{"role": r, "content": c, "timestamp": t} for r, c, t in messages]}]).encode()
+
+    base = convo(("user", "hi", "2026-10-18T09:00:00"))
+    phone = convo(("user", "hi", "2026-10-18T09:00:00"), ("user", "from the phone", "2026-10-18T09:05:00"))
+    pc = convo(("user", "hi", "2026-10-18T09:00:00"), ("user", "at the desk", "2026-10-18T09:02:00"))
+    merged = json.loads(merge_file("conversations.json", base, phone, pc, True))
+    assert [m["content"] for m in merged[0]["messages"]] == ["hi", "at the desk", "from the phone"]
+
+
+def test_journal_entries_merge_whole_never_field_by_field():
+    def entries(*rows):
+        return json.dumps({"version": 1, "entries": [{"entry_id": i, "updated_at": u, "key": k, "data": d}
+                                                     for i, u, k, d in rows]}).encode()
+
+    base = entries(("e1", "2026-10-01", "K1", "D1"))
+    phone = entries(("e1", "2026-10-03", "K2", "D2"), ("e2", "2026-10-03", "K", "D"))
+    pc = entries(("e1", "2026-10-02", "K3", "D3"), ("e3", "2026-10-02", "K", "D"))
+    got = json.loads(merge_file("private_journal.json", base, phone, pc, False))["entries"]
+    assert [(e["entry_id"], e["key"], e["data"]) for e in got] == [("e1", "K2", "D2"), ("e2", "K", "D"), ("e3", "K", "D")]
+
+
+def test_two_different_private_journals_dont_sync(phone):
+    pc = PretendPC()
+    (phone.dirs["mine"] / "private_journal_keys.json").write_text(json.dumps({"public_key": "PHONE-KEY"}))
+    (phone.dirs["mine"] / "private_journal.json").write_text(json.dumps({"version": 1, "entries": []}))
+    pc.files["mine"]["private_journal_keys.json"] = json.dumps({"public_key": "PC-KEY"}).encode()
+    pc.journal_key = sync.journal_key(None) or "something else"
+    done = sync.sync_now(phone, call=pc)
+    assert "private_journal.json" not in pc.files["mine"] and "isn't syncing" in done["note"]
+    assert json.loads((phone.dirs["mine"] / "private_journal_keys.json").read_text())["public_key"] == "PHONE-KEY"
+
+
+def test_the_same_private_journal_syncs(phone):
+    pc = PretendPC()
+    keys = json.dumps({"public_key": "SAME-KEY"})
+    (phone.dirs["mine"] / "private_journal_keys.json").write_text(keys)
+    (phone.dirs["mine"] / "private_journal.json").write_text(
+        json.dumps({"version": 1, "entries": [{"entry_id": "e1", "updated_at": "1", "key": "k", "data": "d"}]}))
+    pc.journal_key = sync.journal_key(phone.dirs["mine"])
+    done = sync.sync_now(phone, call=pc)
+    assert json.loads(pc.files["mine"]["private_journal.json"])["entries"][0]["entry_id"] == "e1" and not done["note"]

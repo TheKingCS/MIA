@@ -144,6 +144,13 @@
       "page": "expeditions.html"
     },
     {
+      "id": "vault",
+      "name": "Memory Vault",
+      "icon": "🗄",
+      "tagline": "Your photos, kept safe.",
+      "page": "vault.html"
+    },
+    {
       "id": "files",
       "name": "Files",
       "icon": "🗂",

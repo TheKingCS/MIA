@@ -64,21 +64,24 @@ swapped without touching the others.
 | Capability | Status | What exists |
 |---|---|---|
 | Uploads from the phone (photos, videos, files) | ✅ | Expedition media (`core/expedition_media.py`, up to 200 MB a file), My Files (`core/my_files.py`, kept inside the person's MIA folder), music uploads, Share to MIA |
-| Attach media to life history | 🟡 | Expedition galleries, recipe photos, trip photos. No general "photo ↔ life event" link yet (`core/links.py` can hold it) |
-| Automatic transfer to the PC, resume, no duplicates | ⬜ | Needs the phone↔PC link from DEC-0022 first. Design: content-hash (SHA-256) records, so resuming and re-sending are no-ops |
-| **Verify before offering to delete from the phone** | ⬜ | Hash checked on the PC before the phone may offer removal. It's always an offer the person confirms, never automatic |
-| Exact duplicates | ⬜ | SHA-256 (cheap; same pass as above) |
-| Near-identical shots, bursts | ⬜ | Perceptual hash + capture-time window (pure Python on thumbnails) |
-| Quality ranking (focus, light, composition) | ⬜ | Sharpness and exposure measures are cheap. Composition needs the vision model on the PC (later). **Never auto-deletes**; it only suggests "best of the group" |
-| Organize by date, event, expedition, project, place | 🟡 | EXIF date and GPS need reading. Expeditions, projects and life events already exist to file into |
+| Attach media to life history | ✅ | 2026-10-18: the vault shows each day's photos with what happened that day (the history) and the expedition they were taken on; the Chronicle counts each week's photos (`core/memory_vault.py`) |
+| Automatic transfer to the PC, resume, no duplicates | ✅ | 2026-10-18: SHA-256 per file, 8 MB pieces that resume where they stopped, Wi-Fi only by default; re-sending is a no-op (`core/memory_vault.py`, VaultLoop) |
+| **Verify before offering to delete from the phone** | ✅ | 2026-10-18: the PC reads each file again right before the offer; only confirmed ones are offered, older than `vault.keep_days` (30). Android's own Trash dialog asks; MIA never deletes |
+| Exact duplicates | ✅ | 2026-10-18: one memory, several copies; the extra copies can go (one stays) |
+| Near-identical shots, bursts | 🟡 | 2026-10-18: bursts by capture time (2 s). Perceptual near-duplicates not yet |
+| Quality ranking (focus, light, composition) | 🟡 | 2026-10-18: sharpness and exposure on the PC (Pillow) mark the best of a burst; a suggestion only. Composition waits for the vision model |
+| Organize by date, event, expedition, project, place | 🟡 | 2026-10-18: EXIF date and GPS read; by month and day, with the day's events and expedition. Projects and place search not yet |
 | Search, natural language | ⬜ | Metadata search first; captions from the vision model later |
-| Previews on the phone, originals on demand | ⬜ | Thumbnails are generated on the PC and the original is fetched when opened |
+| Previews on the phone, originals on demand | ✅ | 2026-10-18: the photo's own EXIF preview on the phone, Pillow previews on the PC; a freed photo opens from the PC |
 | Large videos, storage-heavy content | ⬜ | The size report is easy once the archive exists |
 | Second backup destination | 📐 | `core/backup_manager.py` exists for data. The vault would add a mirror target |
 
-**Blocked by:** the phone↔PC connection (DEC-0022 / Tailscale) and the PC
-being set up as MIA's server. Android background upload needs a
-foreground service and the person's permission for each folder.
+**Built (2026-10-18, phase E):** `core/memory_vault.py`, the Memory Vault
+screen (`web/vault.html`), the phone app's bridge (`Gallery.kt`), guide in
+`docs/MEMORY_VAULT.md`. **Still to do:** copying while MIA is closed
+(an Android foreground service; today it copies while MIA runs), perceptual
+near-duplicates, search, captions from the vision model on the PC, and a
+second backup of the vault.
 
 ## 4. Crafting recipes and workshop inventory
 

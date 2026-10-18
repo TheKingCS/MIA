@@ -7,6 +7,14 @@
          I'm Here, location quests: DEC-0028). Checked on the phone, never sent off it. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- The memory vault (DEC-0030 E): reading the camera roll once you switch
+         it on and allow it, to copy your photos to your own home computer.
+         Removing any is Android's own Trash dialog, asked each time. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
     <!-- allowBackup=false: MIA's data stays on this phone (export comes later).
          The network security config allows plain http to 127.0.0.1 only:

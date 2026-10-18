@@ -25,10 +25,12 @@ everything else (facts, actions, memory); only the model's wording moves.
 from __future__ import annotations
 
 import json
+import shutil
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Optional
 
 from core.logger import get_logger
@@ -41,7 +43,12 @@ REACH_TIMEOUT = 2.5  # a quick look: is the computer there at all?
 
 
 class HomeLinkError(RuntimeError):
-    pass
+    """Something a person can act on. `code` is the computer's HTTP answer
+    (409: it changed there since), 0 when it couldn't be reached."""
+
+    def __init__(self, message: str, code: int = 0) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 def clean_url(raw: str) -> str:
@@ -176,10 +183,12 @@ def linked(context) -> bool:
 
 
 def home_call(context, path: str, payload: Optional[dict] = None, timeout: float = 6.0, method: str = "",
-              raw: bool = False, body: Optional[bytes] = None, headers: Optional[dict] = None):
+              raw: bool = False, body=None, headers: Optional[dict] = None, save_to: Optional[Path] = None):
     """Ask MIA on the home computer (with this device's link key): JSON
-    back, or the raw bytes (a camera picture). Raises HomeLinkError with
-    something a person can act on."""
+    back, or the raw bytes (a camera picture). `body` may be an open file
+    (a photo going to the PC, with its Content-Length in `headers`), and
+    `save_to` streams the answer into a file instead of memory (a photo
+    coming back). Raises HomeLinkError with something a person can act on."""
     config = context.config
     url, token = config.get("home_pc.url", ""), config.get("home_pc.token", "")
     if not (url and token):
@@ -193,13 +202,18 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
                                      method=method or ("POST" if data is not None else "GET"))
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
+            if save_to is not None:
+                save_to.parent.mkdir(parents=True, exist_ok=True)
+                with open(save_to, "wb") as out:
+                    shutil.copyfileobj(response, out, 1 << 20)
+                return save_to
             body = response.read()
     except urllib.error.HTTPError as exc:
         try:
             detail = json.loads(exc.read().decode("utf-8") or "{}").get("detail")
         except (ValueError, OSError):
             detail = None
-        raise HomeLinkError(detail or f"The home computer said {exc.code}.") from exc
+        raise HomeLinkError(detail or f"The home computer said {exc.code}.", exc.code) from exc
     except (urllib.error.URLError, OSError) as exc:
         raise HomeLinkError("Can't reach the home computer right now (is it on, and is Tailscale on here?).") from exc
     return body if raw else json.loads(body.decode("utf-8") or "{}")

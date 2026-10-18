@@ -241,6 +241,11 @@
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
     security: () => read("/api/security", "security"),
+    // The memory vault (core/memory_vault.py): one month of photos at a time.
+    vault: (month) => read("/api/vault" + (month ? "?month=" + encodeURIComponent(month) : ""), "vault"),
+    vaultFreePlan: (what) => demo ? demoOnly() : call("POST", "/api/vault/free/plan", { what }),
+    vaultFreeDone: (paths, what) => demo ? demoOnly() : call("POST", "/api/vault/free/done", { paths, what }),
+    vaultNow: () => demo ? demoOnly() : call("POST", "/api/vault/now"),
     saveCamera: (camera) => demo ? demoOnly() : call("POST", "/api/security/camera", camera),
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),

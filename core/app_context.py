@@ -107,6 +107,7 @@ if TYPE_CHECKING:
     from core.boss_battles import BossBook
     from core.questlines import QuestBook
     from core.world_map import WorldMap
+    from core.memory_vault import MemoryVault
     from core.places import Places
     from core.personal_data import PersonalData
     from core.phone_server import PhoneServer
@@ -240,6 +241,7 @@ class AppContext:
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
     quest_book: Optional["QuestBook"] = field(default=None, repr=False)  # DEC-0028 questlines
     world_map: Optional["WorldMap"] = field(default=None, repr=False)  # DEC-0028 fog of war
+    memory_vault: Optional["MemoryVault"] = field(default=None, repr=False)  # DEC-0030 E: the phone's photos, kept on the PC
     places: Optional["Places"] = field(default=None, repr=False)  # DEC-0028 location quests
     craft_recipes: Optional["CraftRecipeBook"] = field(default=None, repr=False)  # DEC-0030 crafting recipes
     business: Optional["BusinessBook"] = field(default=None, repr=False)  # DEC-0030 quotes, customers, orders

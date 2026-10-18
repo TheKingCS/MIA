@@ -39,6 +39,7 @@ class Setting:
     high: int = 0
     options: tuple = field(default=())  # ((value, label), ...) for a choice
     child_ok: bool = True
+    own_screen: bool = False  # changed on its app's own screen (the vault asks Android first), not in Settings
 
 
 def _currency_options() -> tuple:
@@ -75,6 +76,13 @@ SETTINGS: tuple[Setting, ...] = (
     # Location quests (DEC-0028 #13, core/places.py): checked on this device only, while MIA is open.
     Setting("places.watch", "Location quests", "Notice when I arrive at my places", "toggle", False,
             "While MIA is open, this device checks where you are against your places. Where you are never leaves it."),
+    Setting("vault.on", "Memory vault", "Keep my photos safe on the home computer", "toggle", False,
+            "MIA copies this phone's photos and videos to your home computer, so the phone can let them go. "
+            "MIA never deletes: it only offers, and Android asks you itself.", child_ok=False, own_screen=True),
+    Setting("vault.wifi_only", "Memory vault", "Copy only on Wi-Fi", "toggle", True,
+            "Off: it copies on mobile data too.", child_ok=False, own_screen=True),
+    Setting("vault.keep_days", "Memory vault", "Keep recent photos on the phone (days)", "number", 30,
+            "MIA only offers to free photos older than this.", low=0, high=365, child_ok=False, own_screen=True),
 )
 SETTINGS_BY_KEY = {s.key: s for s in SETTINGS}
 
@@ -181,7 +189,7 @@ def settings_page(context) -> dict:
     child = bool(is_child(context))
     groups: dict[str, list] = {}
     for setting in SETTINGS:
-        if child and not setting.child_ok:
+        if (child and not setting.child_ok) or setting.own_screen:
             continue
         groups.setdefault(setting.group, []).append({
             "key": setting.key, "label": setting.label, "kind": setting.kind, "help": setting.help,

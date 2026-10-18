@@ -17,9 +17,14 @@ phone's account and the PC's have different ids):
 - `mine`: the person's own folder (data/profiles/<id>/);
 - `home`: their household's folder (data/ for the device's first one).
 In each, the JSON data files directly in it (SYNC_SUFFIXES), minus what
-belongs to one device only (NEVER_SYNC: camera logins, logs, the private
-journal's keys...). Photos and other files in subfolders don't sync yet.
-And the account's game numbers (XP, credits, prestige, unlocked rewards).
+belongs to one device only (NEVER_SYNC: camera logins, logs...); the
+photos and files MIA keeps (FILE_FOLDERS: My Files, recipe photos, build
+photos, documents on things, trip and expedition photos); and the
+account's game numbers (XP, credits, prestige, unlocked rewards).
+Talk conversations merge by conversation, their messages by time. The
+private journal syncs only between devices holding the same journal
+(the same key, whatever passphrase guards it on each): its entries stay
+encrypted the whole way and merge whole, the newer one winning.
 
 **How a file syncs.** The phone keeps a copy of each file as it was at
 the last sync (the *base*, in data/.sync/). Changed on one side only:
@@ -29,6 +34,13 @@ missions both stay; the same record changed on both sides keeps each
 side's changed fields, and when both changed the same field the newer
 file wins. The history (life_events.jsonl) is merged line by line by
 event id. XP and credits add up what each side earned since the base.
+
+**A photo or file** is matched by its place in its folder and its
+fingerprint (SHA-256); the base is only its fingerprint. Changed or
+added on one side: copied over. Deleted on one side and untouched on the
+other: deleted there too. Changed on both: both kept (the other side's
+as "name (2).jpg"), never one lost. Big files stream, never whole in memory,
+and the PC checks each one's fingerprint before keeping it.
 
 **Safety.** The PC only takes a file when it's still the version the
 phone saw (`expect`), so two phones can't overwrite each other; every
@@ -40,10 +52,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import threading
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from core.logger import get_logger
 
@@ -53,9 +66,14 @@ SYNC_SUFFIXES = (".json", ".jsonl")
 NEVER_SYNC = frozenset({
     "security_cameras.json", "security_logins.json",  # the cameras belong to the computer they're on
     "activity_log.json", "communication_log.json",  # what this device did
-    "private_journal.json", "private_journal_keys.json",  # encrypted with keys that must move together; later
-    "model_bench_cases.json", "push_subscriptions.json", "conversations.json",  # per device / shipped
+    "model_bench_cases.json", "push_subscriptions.json",  # per device / shipped
+    "memory_vault.json",  # what's on this phone's camera roll (core/memory_vault.py has its own transfer)
 })
+JOURNAL_KEYS, JOURNAL_ENTRIES = "private_journal_keys.json", "private_journal.json"
+WHOLE_FILE = frozenset({JOURNAL_KEYS})  # never merged field by field: the newer one, whole
+MAX_FILE_BYTES = 500 * 1024 * 1024
+JOURNAL_APART = ("Your private journal isn't syncing: the phone and the computer each started their own, "
+                 "so each stays on its device, safe and locked.")
 SCOPES = ("mine", "home")
 ID_HINTS = ("id",)
 GAME_ADD = ("total_xp", "total_credits")
@@ -145,10 +163,46 @@ def _merge_list(base, local: list, remote: list, prefer_local: bool) -> list:
         return out
     # No ids: both only added to the end (a log), keep both additions.
     if base is not _MISSING and local[:len(base)] == base and remote[:len(base)] == base:
-        return base + local[len(base):] + [i for i in remote[len(base):] if i not in local[len(base):]]
+        return _in_time_order(base + local[len(base):] + [i for i in remote[len(base):] if i not in local[len(base):]])
     if base is _MISSING and all(isinstance(i, (str, int, float)) for i in local + remote):
         return local + [i for i in remote if i not in local]
+    if base is _MISSING and all(isinstance(i, dict) and i.get("timestamp") for i in local + remote):
+        return _in_time_order(local + [i for i in remote if i not in local])  # a conversation's messages
     return local if prefer_local else remote
+
+
+def _in_time_order(items: list) -> list:
+    """Messages from two devices, oldest first (a stable sort: same-moment ones keep their order)."""
+    if items and all(isinstance(i, dict) and isinstance(i.get("timestamp"), str) and i["timestamp"] for i in items):
+        return sorted(items, key=lambda i: i["timestamp"])
+    return items
+
+
+def merge_whole_records(base: Any, local: list, remote: list, key: str, stamp: str) -> list:
+    """Pure logic. Records that must never be mixed field by field (an
+    encrypted journal entry: its key and its text belong together): each
+    one whole, the side with the later `stamp` winning; removed on one
+    side and untouched on the other stays removed."""
+    b = {r.get(key): r for r in base} if isinstance(base, list) else {}
+    lmap, rmap = {r.get(key): r for r in local}, {r.get(key): r for r in remote}
+    out = []
+    for ident in [r.get(key) for r in local] + [r.get(key) for r in remote if r.get(key) not in lmap]:
+        lv, rv, bv = lmap.get(ident), rmap.get(ident), b.get(ident)
+        if lv is None:
+            if bv is not None and rv == bv:
+                continue
+            out.append(rv)
+        elif rv is None:
+            if bv is not None and lv == bv:
+                continue
+            out.append(lv)
+        elif lv == rv or rv == bv:
+            out.append(lv)
+        elif lv == bv:
+            out.append(rv)
+        else:
+            out.append(lv if str(lv.get(stamp) or "") >= str(rv.get(stamp) or "") else rv)
+    return out
 
 
 def merge_lines(base: str, local: str, remote: str) -> str:
@@ -174,6 +228,8 @@ def merge_lines(base: str, local: str, remote: str) -> str:
 
 
 def merge_file(name: str, base: Optional[bytes], local: bytes, remote: bytes, prefer_local: bool) -> bytes:
+    if name in WHOLE_FILE:
+        return local if prefer_local else remote
     if name.endswith(".jsonl"):
         return merge_lines((base or b"").decode("utf-8", "replace"), local.decode("utf-8", "replace"),
                            remote.decode("utf-8", "replace")).encode("utf-8")
@@ -182,6 +238,11 @@ def merge_file(name: str, base: Optional[bytes], local: bytes, remote: bytes, pr
         bv = json.loads(base.decode("utf-8") or "null") if base is not None else _MISSING
     except ValueError:
         return local if prefer_local else remote  # not JSON we can read: the newer one
+    if name == JOURNAL_ENTRIES and isinstance(lv, dict) and isinstance(rv, dict):
+        entries = merge_whole_records((bv if isinstance(bv, dict) else {}).get("entries"),
+                                      list(lv.get("entries") or []), list(rv.get("entries") or []),
+                                      "entry_id", "updated_at")
+        return json.dumps({**(lv if prefer_local else rv), "entries": entries}, indent=2).encode("utf-8")
     return json.dumps(merge_json(bv, lv, rv, prefer_local), indent=2, ensure_ascii=False).encode("utf-8")
 
 
@@ -234,7 +295,19 @@ def manifest(context, profile_id: str) -> dict:
                     files[path.name] = [digest(data), path.stat().st_mtime]
         out[scope] = files
     out["game"] = game_numbers(context, profile_id)
+    out["files"] = file_manifest(context, profile_id)
+    out["journal_key"] = journal_key(folders(context, profile_id).get("mine"))
     return out
+
+
+def journal_key(folder: Optional[Path]) -> str:
+    """Which private journal a device holds: a fingerprint of its public
+    key ("" for none). A new passphrase on one device keeps the same key."""
+    try:
+        keys = json.loads((folder / JOURNAL_KEYS).read_text(encoding="utf-8"))
+        return hashlib.sha256(str(keys["public_key"]).strip().encode("utf-8")).hexdigest()
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return ""
 
 
 def game_numbers(context, profile_id: str) -> dict:
@@ -255,6 +328,129 @@ def set_game_numbers(context, profile_id: str, values: dict) -> None:
             record[key] = values[key]
     config.set(f"profiles.{profile_id}", record)
     config.save()  # profiles are read from the config each time: nothing to reload
+
+
+# ------------------------------------------------------------------ photos and files
+
+
+def file_folders(context, profile_id: str) -> dict[str, dict[str, Path]]:
+    """{scope: {label: folder}}: the folders of photos and files MIA keeps,
+    named the same on every device (the folders themselves may differ)."""
+    here = folders(context, profile_id)
+    out: dict[str, dict[str, Path]] = {}
+    if "mine" in here:
+        out["mine"] = {"my_files": here["mine"] / "my_files"}
+    home = here.get("home")
+    if home is not None:
+        out["home"] = {"recipe_photos": home / "recipe_photos", "workshop_media": home / "workshop_media"}
+        personal = getattr(context, "personal_data", None)
+        if personal is not None and Path(home) == Path(personal.shared_dir):
+            # Kept beside data/ rather than in it: only the device's first household has them.
+            from core.maintenance_manager import _DOCUMENT_ROOT
+
+            trips = getattr(context, "trips", None)
+            out["home"]["maintenance_documents"] = _DOCUMENT_ROOT
+            if trips is not None:
+                out["home"]["trip_photos"] = Path(trips.photo_root)
+    return out
+
+
+class Fingerprints:
+    """SHA-256 of files, worked out once per version of a file (its size and
+    time), so a sync every few seconds doesn't read every photo again."""
+
+    def __init__(self) -> None:
+        self._known: dict[str, tuple[int, int, str]] = {}
+        self._lock = threading.Lock()
+
+    def of(self, path: Path) -> str:
+        st = path.stat()
+        key = str(path)
+        with self._lock:
+            hit = self._known.get(key)
+        if hit and hit[0] == st.st_size and hit[1] == st.st_mtime_ns:
+            return hit[2]
+        value = file_digest(path)
+        with self._lock:
+            self._known[key] = (st.st_size, st.st_mtime_ns, value)
+        return value
+
+
+def file_digest(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+FINGERPRINTS = Fingerprints()
+
+
+def _wanted_file(rel: Path) -> bool:
+    return not any(part.startswith(".") for part in rel.parts) and not rel.name.endswith((".part", ".tmp"))
+
+
+def file_manifest(context, profile_id: str) -> dict:
+    """{scope: {"label/path": [fingerprint, mtime, size]}}."""
+    out: dict[str, dict] = {}
+    for scope, labels in file_folders(context, profile_id).items():
+        files = {}
+        for label, root in labels.items():
+            if not root.is_dir():
+                continue
+            for path in sorted(root.rglob("*")):
+                rel = path.relative_to(root)
+                if path.is_file() and _wanted_file(rel):
+                    try:
+                        st = path.stat()
+                        if st.st_size <= MAX_FILE_BYTES:
+                            files[f"{label}/{rel.as_posix()}"] = [FINGERPRINTS.of(path), st.st_mtime, st.st_size]
+                    except OSError:
+                        continue
+        out[scope] = files
+    return out
+
+
+def file_path_for(context, profile_id: str, scope: str, ref: str) -> Path:
+    """The file "label/path" means here, never anywhere outside its folder."""
+    label, _, rest = str(ref).partition("/")
+    root = file_folders(context, profile_id).get(scope, {}).get(label)
+    rel = Path(rest)
+    if root is None or not rest or rel.is_absolute() or ".." in rel.parts or not _wanted_file(rel) or "\\" in rest:
+        raise ValueError("That isn't a file MIA syncs.")
+    path = (root / rel).resolve()
+    if root.resolve() not in path.parents:
+        raise ValueError("That isn't a file MIA syncs.")
+    return path
+
+
+def receive_file(path: Path, chunks, expect_sha: str) -> None:
+    """Write a file from `chunks` beside its place, check its fingerprint,
+    then put it there. Raises ValueError when it arrived damaged."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.part")
+    h = hashlib.sha256()
+    try:
+        with open(tmp, "wb") as out:
+            for chunk in chunks:
+                h.update(chunk)
+                out.write(chunk)
+        if expect_sha and h.hexdigest() != expect_sha:
+            raise ValueError("The file arrived damaged; it's sent again next time.")
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def _other_copy(path: Path) -> Path:
+    n = 2
+    while True:
+        candidate = path.with_name(f"{path.stem} ({n}){path.suffix}")
+        if not candidate.exists():
+            return candidate
+        n += 1
 
 
 def path_for(context, profile_id: str, scope: str, name: str) -> Path:
@@ -296,6 +492,18 @@ class SyncState:
         tmp = path.with_name(path.name + ".tmp")
         tmp.write_bytes(data)
         tmp.replace(path)
+
+    def file_bases(self) -> dict:
+        try:
+            return json.loads((self.root / "files.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+
+    def set_file_bases(self, values: dict) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        tmp = self.root / "files.json.tmp"
+        tmp.write_text(json.dumps(values), encoding="utf-8")
+        tmp.replace(self.root / "files.json")
 
     def game(self) -> dict:
         try:
@@ -346,9 +554,14 @@ def sync_now(context, call=None, lock=None) -> dict:
     if pid is None:
         raise ValueError("No account on this device to sync.")
     state = state_for(context)
-    remote = call(context, "/api/sync/manifest", timeout=10)
+    remote = call(context, "/api/sync/manifest", timeout=30)
     done = {"pushed": 0, "pulled": 0, "merged": 0, "files": 0}
+    notes = []
     here = folders(context, pid)
+    mine_key, their_key = journal_key(here.get("mine")), str(remote.get("journal_key") or "")
+    journal_apart = bool(mine_key and their_key and mine_key != their_key)
+    if journal_apart:
+        notes.append(JOURNAL_APART)
     for scope in SCOPES:
         folder = here.get(scope)
         if folder is None:
@@ -357,6 +570,8 @@ def sync_now(context, call=None, lock=None) -> dict:
         names = set(theirs)
         if folder.is_dir():
             names |= {p.name for p in folder.iterdir() if p.is_file() and syncable(p.name)}
+        if journal_apart and scope == "mine":
+            names -= {JOURNAL_KEYS, JOURNAL_ENTRIES}
         for name in sorted(n for n in names if syncable(n)):
             done["files"] += 1
             path = folder / name
@@ -403,9 +618,120 @@ def sync_now(context, call=None, lock=None) -> dict:
         if any(merged.get(k) != theirs.get(k) for k in merged):
             call(context, "/api/sync/game", merged, timeout=10)
         state.set_game(merged)
+    if "files" in remote:  # an older MIA on the computer doesn't sync photos yet
+        _sync_files(context, call, pid, state, remote.get("files") or {}, done, notes, lock)
     done["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-    state.set_status(last=done["at"], **{k: done[k] for k in ("pushed", "pulled", "merged", "files")}, problem="")
+    done["note"] = " ".join(notes)
+    state.set_status(last=done["at"], **{k: done[k] for k in ("pushed", "pulled", "merged", "files")},
+                     problem="", note=done["note"])
     return done
+
+
+def _sync_files(context, call, pid: str, state: SyncState, theirs_all: dict, done: dict, notes: list,
+                lock) -> None:
+    """Photos and files, by fingerprint (the module docstring has the rules)."""
+    from core import live
+    from core.home_link import HomeLinkError
+
+    bases = state.file_bases()
+    mine_all = file_manifest(context, pid)
+    moved = False
+    for scope in SCOPES:
+        if scope not in mine_all:
+            continue
+        mine, theirs = mine_all.get(scope) or {}, theirs_all.get(scope) or {}
+        base = bases.setdefault(scope, {})
+        for ref in sorted(set(mine) | set(theirs) | set(base)):
+            try:
+                path = file_path_for(context, pid, scope, ref)
+            except ValueError:
+                continue
+            lhash = (mine.get(ref) or [""])[0]
+            rhash = (theirs.get(ref) or [""])[0]
+            if ref not in mine and ref not in theirs:
+                base.pop(ref, None)
+                continue
+            if ref in theirs and len(theirs[ref]) > 2 and int(theirs[ref][2] or 0) > MAX_FILE_BYTES:
+                continue
+            done["files"] += 1
+            bhash = base.get(ref, "")
+            if lhash == rhash:
+                base[ref] = lhash
+                continue
+            local_changed, remote_changed = lhash != bhash, rhash != bhash
+            q = f"scope={scope}&path={_quote(ref)}"
+            try:
+                if local_changed and not remote_changed:
+                    if lhash:
+                        _send_file(context, call, q, path, lhash, rhash)
+                    else:
+                        call(context, f"/api/sync/blob?{q}&expect={rhash}", timeout=30, method="DELETE")
+                    done["pushed"] += 1
+                    base[ref] = lhash
+                elif remote_changed and not local_changed:
+                    with lock:
+                        if rhash:
+                            _fetch_file(context, call, q, path, rhash)
+                        elif path.is_file():
+                            path.unlink()
+                    done["pulled"] += 1
+                    base[ref] = rhash
+                    moved = True
+                elif not lhash:  # deleted here, changed there: the changed one comes back
+                    with lock:
+                        _fetch_file(context, call, q, path, rhash)
+                    done["pulled"] += 1
+                    base[ref] = rhash
+                    moved = True
+                elif not rhash:  # changed here, deleted there: it goes back
+                    _send_file(context, call, q, path, lhash, "")
+                    done["pushed"] += 1
+                    base[ref] = lhash
+                else:  # different on both: keep both, the other one as "name (2)"
+                    with lock:
+                        _fetch_file(context, call, q, _other_copy(path), rhash)
+                        _send_file(context, call, q, path, lhash, rhash)
+                    done["merged"] += 1
+                    base[ref] = lhash
+                    moved = True
+            except HomeLinkError as problem:
+                if not getattr(problem, "code", 0):  # the computer is out of reach: stop here
+                    state.set_file_bases(bases)
+                    raise
+                notes.append(f"{Path(ref).name}: {problem}")
+            except (OSError, ValueError) as problem:
+                notes.append(f"{Path(ref).name}: {problem}")
+        state.set_file_bases(bases)
+    if moved:
+        live.bump()
+
+
+def _quote(text: str) -> str:
+    import urllib.parse
+
+    return urllib.parse.quote(text, safe="")
+
+
+def _send_file(context, call, q: str, path: Path, sha: str, expect: str) -> None:
+    size = path.stat().st_size
+    with open(path, "rb") as body:
+        call(context, f"/api/sync/blob?{q}&sha={sha}&expect={expect}", timeout=max(60, size / 250_000),
+             method="PUT", body=body, headers={"Content-Type": "application/octet-stream",
+                                               "Content-Length": str(size)})
+
+
+def _fetch_file(context, call, q: str, path: Path, sha: str) -> None:
+    """The computer's copy into `path`, checked against its fingerprint first."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.part")
+    try:
+        call(context, f"/api/sync/blob?{q}", timeout=600, raw=True, save_to=tmp)
+        if file_digest(tmp) != sha:
+            raise ValueError("it arrived damaged; it comes again next time")
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
 
 
 def _push(context, call, scope: str, name: str, data: bytes, expect: str) -> None:
@@ -478,4 +804,5 @@ def status(context) -> dict:
 
     s = state_for(context).status()
     return {"linked": linked(context), "last": s.get("last", ""), "problem": s.get("problem", ""),
+            "note": s.get("note", ""),
             "pushed": s.get("pushed", 0), "pulled": s.get("pulled", 0), "merged": s.get("merged", 0)}

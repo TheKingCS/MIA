@@ -94,7 +94,8 @@
     };
     const syncInfo = h.linked ? [
       el("p", {}, "🔄 Sync: " + (s.problem ? "⚠ " + s.problem : "last synced " + ago(s.last)) +
-        ". Changes on this phone and the computer show up on both, by themselves."),
+        ". Changes on this phone and the computer show up on both, by themselves, photos and files too."),
+      s.note ? el("p", { class: "dim" }, "⚠ " + s.note) : "",
       el("p", { class: "dim" }, "When this phone can't, the computer reads your photos and receipts, hears you, and speaks for MIA."),
     ] : [];
     return section("Home Computer", status, ...syncInfo, el("div", { class: "acct-actions" },

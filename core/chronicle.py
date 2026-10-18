@@ -186,4 +186,8 @@ def chronicle_page(context, today: Optional[date] = None) -> dict:
     years = [year_edition(items, today.year, today)]
     if any(d < f"{today.year}-01-01" for d, _t, _h in items):
         years.append(year_edition(items, today.year - 1, today))
+    from core.memory_vault import photos_between
+
+    for chapter in [this_week, *weeks, *years]:
+        chapter["photos"] = photos_between(context, chapter["start"], chapter["end"])  # the memory vault's
     return {"available": True, "as_of": today.isoformat(), "this_week": this_week, "weeks": weeks, "years": years}

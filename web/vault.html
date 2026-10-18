@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Memory Vault — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="vault" class="mod-vault">
+  <!--
+    Memory Vault (claude, 2026-10-18, DEC-0030 phase E): the phone's photos
+    and videos, kept safe on the home computer. MIA.vault()
+    (core/memory_vault.py). Freeing space is only ever an offer: Android
+    asks the person itself and moves the photos to its Trash.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">🗄</span> <span id="hero-name">Memory Vault</span></h1>
+        <p class="tagline" id="hero-tagline">Your photos, kept safe.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="vault.js"></script>
+</body>
+</html>

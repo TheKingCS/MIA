@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-18 (Security cameras, DEC-0033), by claude.*
+session. Last updated: 2026-10-18 (Memory Vault, sync for photos and files), by claude.*
 
 ## Phase
 
@@ -64,6 +64,8 @@ every push). Anything that needs the PC waits.
 - The glasses client: on Q-0003 (platform and access).
 
 ## Recent changes (newest first)
+
+- 2026-10-18 · claude · **Memory Vault, and sync for photos, files, conversations and the journal (DEC-0030 E, DEC-0022; Zac: "Lets start one 1 and 2").** **Sync** now also carries the photos and files MIA keeps (My Files, recipe and build photos, documents on things, trip photos) by fingerprint, streamed and checked. A delete carries over; a file changed on both sides keeps both copies, never losing one. Talk conversations merge message by message, and the private journal syncs only between devices holding the same journal, its entries whole and still encrypted. **The Memory Vault** (Apps → Memory Vault, grown-ups only): once switched on and allowed by Android, the phone's photos and videos go to the home computer on Wi-Fi, oldest first, in 8 MB pieces that resume after a cut. The PC checks each file's fingerprint before keeping it (`vault/<year>/<month>/` in the person's folder), and sending again moves nothing. **Free Up Space** is only ever an offer: photos older than 30 days that the PC just re-read and confirmed; then Android's own Trash dialog asks (30 days to change your mind). Also: exact copies (one stays) and bursts with the best shot marked (sharpness and exposure on the PC). Each day shows what happened then and its expedition, the Chronicle counts each week's photos, and a freed photo opens from the PC. Tested with two MIAs here: 5 photos copied by themselves on the first round, the burst scored, 5 files freed and opened again from the PC byte for byte, a recipe photo and a My Files document synced both ways, a delete carried over. Not yet: copying while MIA is closed (an Android foreground service), near-duplicates, search. `core/memory_vault.py`, `core/sync.py`, `web/vault.*`, `Gallery.kt`, `docs/MEMORY_VAULT.md`; Pillow added for the PC.
 
 - 2026-10-18 · claude · **Two-way sync and heavy jobs on the PC (DEC-0022, Zac: "Do 1 and 2").** A phone linked to the PC now keeps in step with it: about 15 s after any change (or every 2 minutes), and on **Sync Now** (Settings → Home Computer, which also says when it last synced). The person's own folder and their household's, every JSON data file but device-only ones, merged record by record (both sides' new missions stay; one record changed on both keeps each side's changed fields; the newer file wins a field both changed; the history merges by event; XP and credits add up what each side earned). The PC only takes a file still at the version the phone saw. Tested with two MIAs here (one as the PC): missions, the grocery list, a mission completed on the PC, XP earned on both (755 + 20 + 15 = 790 on both), and the background sync (13 s, no button). **Heavy jobs:** when the phone has no engine of its own, the PC reads photos and receipts (the phone's runtime now has the OCR queue), hears you and speaks for MIA; the PC isn't asked again for a minute after a failure. Not yet synced: photos and other files in subfolders, conversations, the private journal. `core/sync.py`, `core/heavy_jobs.py`, `/api/sync/*`, `/api/heavy/*`.
 

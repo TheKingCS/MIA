@@ -39,6 +39,13 @@ pywebpush>=2.5,<3.0
 # wheel" integration decisions). Has prebuilt wheels for aarch64 (Pi 5).
 libzim>=3.7,<4.0
 
+# The memory vault on the home computer (core/memory_vault.py, DEC-0030 E):
+# small previews of the phone's photos and which shot of a burst is the
+# sharpest. Decoding JPEG has no stdlib equivalent. Optional at run time:
+# without it MIA uses each photo's own built-in preview and the largest
+# file as the best shot. Not on the phone build (it doesn't need it).
+Pillow>=10,<14
+
 # Voice interface (core/voice_manager.py, v0.5 milestone 5.3) — offline
 # STT/TTS, no stdlib equivalent. Vosk (Kaldi-based) and Piper (ONNX-based,
 # developed by the Rhasspy project specifically targeting Raspberry Pi)

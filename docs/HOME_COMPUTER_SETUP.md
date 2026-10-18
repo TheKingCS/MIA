@@ -76,10 +76,16 @@ Run the check again any time: `.venv\Scripts\python tools\pc_check.py`.
 - **Talk** uses the computer's bigger model (HOME PC), and the phone's
   own when it can't reach it.
 - **Everything stays in step:** a change on the phone or the computer
-  (missions, the kitchen, money, quests, the journal, your XP and
-  credits) shows up on the other one, by itself, about every 15 seconds
-  after a change while they can reach each other. Settings → Home
-  Computer says when it last synced; **Sync Now** does it right away.
+  (missions, the kitchen, money, quests, the journal, Talk conversations,
+  your XP and credits, recipe and build photos, documents and My Files)
+  shows up on the other one, by itself, about every 15 seconds after a
+  change while they can reach each other. The private journal syncs too
+  and stays encrypted the whole way. Settings → Home Computer says when
+  it last synced; **Sync Now** does it right away.
+- **Memory Vault:** turn it on in Apps → Memory Vault and the phone's
+  photos and videos copy to the computer on Wi-Fi. Then MIA can offer to
+  free space on the phone. It never deletes anything itself: Android asks
+  you every time (`docs/MEMORY_VAULT.md`).
 - **Heavy jobs:** the computer reads photos and receipts, hears you, and
   speaks for MIA whenever the phone can't do it itself.
 
@@ -122,8 +128,16 @@ In PowerShell, in the MIA folder: `git pull`, then double-click
   three-way merge by record id, field by field, the newer file winning a
   field both changed; the history merges line by line; XP and credits
   add what each side earned. The PC only takes a file that's still the
-  version the phone saw (409 otherwise). Not yet: photos and other files
-  in subfolders, conversations, the private journal.
+  version the phone saw (409 otherwise). Photos and files (`FILE_FOLDERS`:
+  My Files, recipe and build photos, documents on things, trip photos) go
+  by fingerprint and stream (`/api/sync/blob`). A file changed on both
+  sides keeps both copies ("name (2)"), and a delete carries over.
+  Conversations merge message by message, in time order. The private
+  journal syncs only between devices holding the same journal key; its
+  entries move whole and encrypted.
+- Memory vault (`core/memory_vault.py`, `/api/vault/*`): the phone's camera
+  roll to `vault/` in the person's folder on the PC, in resumable pieces,
+  checked there; `docs/MEMORY_VAULT.md`.
 - Heavy jobs (`core/heavy_jobs.py`, `/api/heavy/ocr|transcribe|speak`):
   the phone's own engine first, the PC when it has none; after a
   failure the PC isn't asked for a minute.

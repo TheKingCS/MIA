@@ -137,6 +137,15 @@ class SyncFileRequest(BaseModel):
     data: str  # base64
 
 
+class VaultShasRequest(BaseModel):
+    shas: list[str]
+
+
+class VaultFreeRequest(BaseModel):
+    what: str = ""  # "old" | "copies" | "burst:<id>"
+    paths: list[str] = []
+
+
 class CameraRequest(BaseModel):
     camera_id: Optional[str] = None
     name: str
@@ -465,15 +474,20 @@ def create_app(context: AppContext) -> FastAPI:
 
     # Two-way sync with the home computer (core/sync.py): a linked device keeps at it in the background.
     def _start_sync() -> None:
+        from core.memory_vault import VaultLoop
         from core.sync import SyncLoop
 
         app.state.sync_loop = SyncLoop(context, app.state.turn_lock)
         app.state.sync_loop.start()
+        # The memory vault (core/memory_vault.py): the phone's photos to the PC, when it's switched on.
+        app.state.vault_loop = VaultLoop(context, app.state.turn_lock)
+        app.state.vault_loop.start()
 
     def _stop_sync() -> None:
-        loop = getattr(app.state, "sync_loop", None)
-        if loop is not None:
-            loop.stop()
+        for name in ("sync_loop", "vault_loop"):
+            loop = getattr(app.state, name, None)
+            if loop is not None:
+                loop.stop()
 
     app.router.on_startup.append(_start_sync)
     app.router.on_shutdown.append(_stop_sync)
@@ -1378,6 +1392,204 @@ def create_app(context: AppContext) -> FastAPI:
             write_file(context, path, data)
         return {"ok": True}
 
+    def _sync_blob_path(profile_id: str, scope: str, path: str) -> Path:
+        from core.sync import file_path_for
+
+        try:
+            return file_path_for(context, _sync_person(profile_id), scope, path)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.get("/api/sync/blob")
+    def sync_blob(scope: str, path: str, profile_id: str = Depends(require_profile_id)):
+        """A photo or file, streamed (core/sync.py: FILE_FOLDERS)."""
+        from fastapi.responses import FileResponse
+
+        here = _sync_blob_path(profile_id, scope, path)
+        if not here.is_file():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't here.")
+        return FileResponse(here, media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
+
+    @app.put("/api/sync/blob")
+    async def sync_blob_put(request: Request, scope: str, path: str, sha: str, expect: str = "",
+                            profile_id: str = Depends(require_profile_id)) -> dict:
+        """Take a photo or file from the phone: streamed to the side, its
+        fingerprint checked, then put in place only if what's here is still
+        the version the phone saw."""
+        import hashlib
+        import os
+
+        from core import live
+        from core.sync import FINGERPRINTS, MAX_FILE_BYTES
+
+        here = _sync_blob_path(profile_id, scope, path)
+        here.parent.mkdir(parents=True, exist_ok=True)
+        tmp = here.with_name(f".{here.name}.{secrets.token_hex(4)}.part")
+        h, size = hashlib.sha256(), 0
+        try:
+            with open(tmp, "wb") as out:
+                async for chunk in request.stream():
+                    size += len(chunk)
+                    if size > MAX_FILE_BYTES:
+                        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is too big to sync.")
+                    h.update(chunk)
+                    out.write(chunk)
+            if h.hexdigest() != sha:
+                raise HTTPException(422, "The file arrived damaged; send it again.")
+            with app.state.turn_lock:
+                current = FINGERPRINTS.of(here) if here.is_file() else ""
+                if current != expect:
+                    raise HTTPException(status.HTTP_409_CONFLICT, "It changed here since; sync again.")
+                os.replace(tmp, here)
+        finally:
+            if tmp.exists():
+                tmp.unlink()
+        live.bump()
+        return {"ok": True}
+
+    @app.delete("/api/sync/blob")
+    def sync_blob_delete(scope: str, path: str, expect: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core import live
+        from core.sync import FINGERPRINTS
+
+        here = _sync_blob_path(profile_id, scope, path)
+        with app.state.turn_lock:
+            if here.is_file():
+                if FINGERPRINTS.of(here) != expect:
+                    raise HTTPException(status.HTTP_409_CONFLICT, "It changed here since; sync again.")
+                here.unlink()
+        live.bump()
+        return {"ok": True}
+
+    # ------------------------------------------------------------ Memory vault (core/memory_vault.py)
+    # The phone's own screen:
+    @app.get("/api/vault")
+    def web_vault(month: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.memory_vault import vault_page
+
+        return _screen(profile_id, "vault", lambda view: vault_page(view, month))
+
+    @app.get("/api/vault/photo/{sha}")
+    def vault_photo(sha: str, full: int = 0, profile_id: str = Depends(require_profile_id)):
+        """A photo from the vault, small (full=0) or as it is: from this phone
+        when it's still here, else from the home computer."""
+        from fastapi.responses import FileResponse, Response
+
+        from core.home_link import HomeLinkError, home_call
+        from core.memory_vault import _clean_sha, thumbnail
+
+        view = view_for(context, profile_id)
+        vault = _screen(profile_id, "vault", lambda v: v.memory_vault)
+        try:
+            sha = _clean_sha(sha)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        item = vault.items.get(sha) if vault is not None else None
+        if item is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That photo isn't in your vault.")
+        here = vault.file_of(sha)
+        if here is not None:
+            if full or item.get("kind") != "photo":
+                return FileResponse(here, headers={"Cache-Control": "no-store"})
+            data, kind = thumbnail(here)
+            return Response(data, media_type=kind, headers={"Cache-Control": "no-store"})
+        try:
+            data = home_call(view, f"/api/vault/blob/{sha}?thumb={0 if full else 1}", timeout=60, raw=True)
+        except HomeLinkError as problem:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"It's on the home computer: {problem}") from None
+        return Response(data, media_type="image/jpeg" if not full else "application/octet-stream",
+                        headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/vault/free/plan")
+    def vault_free_plan(body: VaultFreeRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Exactly what Android will be asked to move to its Trash, after the
+        home computer has read each of those files again, now."""
+        from core.home_link import HomeLinkError
+        from core.memory_vault import free_plan
+
+        view = view_for(context, profile_id)
+        vault = _screen(profile_id, "vault", lambda v: v.memory_vault)
+        try:
+            return free_plan(view, vault, body.what)
+        except (HomeLinkError, ValueError) as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/vault/free/done")
+    def vault_free_done(body: VaultFreeRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.memory_vault import _size, note_freed
+
+        view = view_for(context, profile_id)
+        vault = _screen(profile_id, "vault", lambda v: v.memory_vault)
+        done = note_freed(view, vault, body.paths, lock=app.state.turn_lock)
+        where = "One copy of each stays on the phone." if body.what == "copies" else "They're safe on the home computer."
+        return {**done, "message": f"Freed {_size(done['bytes'])} on this phone. {where}" if done["count"]
+                else "Nothing was removed."}
+
+    @app.post("/api/vault/now")
+    def vault_now(profile_id: str = Depends(require_profile_id)) -> dict:
+        _screen(profile_id, "vault", lambda v: None)
+        loop = getattr(app.state, "vault_loop", None)
+        if loop is not None:
+            loop.poke()
+        return {"message": "Looking for new photos and copying them now."}
+
+    # The home computer's side (the phone asks with its link key):
+    def _shelf(profile_id: str):
+        from core.memory_vault import shelf_for
+
+        return shelf_for(context, _sync_person(profile_id))
+
+    @app.post("/api/vault/have")
+    def vault_have(body: VaultShasRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        try:
+            return {"have": _shelf(profile_id).have(body.shas)}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.put("/api/vault/blob/{sha}")
+    async def vault_blob_put(sha: str, request: Request, offset: int = 0, size: int = 0, name: str = "",
+                             taken_at: str = "", kind: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.memory_vault import CHUNK_BYTES
+
+        data = await request.body()
+        if len(data) > CHUNK_BYTES * 2:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Send it in smaller pieces.")
+        try:
+            return _shelf(profile_id).receive(sha, offset, data, size, name, taken_at, kind)
+        except ValueError as problem:
+            raise HTTPException(422, str(problem)) from None
+
+    @app.get("/api/vault/blob/{sha}")
+    def vault_blob(sha: str, thumb: int = 0, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse, Response
+
+        from core.memory_vault import _clean_sha, thumbnail
+
+        try:
+            path = _shelf(profile_id).path_of(_clean_sha(sha))
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That photo isn't on this computer.")
+        if thumb:
+            data, kind = thumbnail(path)
+            return Response(data, media_type=kind, headers={"Cache-Control": "no-store"})
+        return FileResponse(path, headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/vault/verify")
+    def vault_verify(body: VaultShasRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        try:
+            return {"ok": _shelf(profile_id).verify(body.shas)}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/vault/scores")
+    def vault_scores(body: VaultShasRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        try:
+            return {"scores": _shelf(profile_id).scores(body.shas)}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
     @app.post("/api/sync/game")
     def sync_game(values: dict, profile_id: str = Depends(require_profile_id)) -> dict:
         from core.sync import set_game_numbers
@@ -1405,8 +1617,9 @@ def create_app(context: AppContext) -> FastAPI:
             state_for(context).set_status(problem=str(problem))
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(problem)) from None
         changed = done["pushed"] + done["pulled"] + done["merged"]
-        return {"message": "Up to date with the home computer." if not changed else
-                f"Synced: {done['pulled']} from the computer, {done['pushed']} to it, {done['merged']} merged.", **done}
+        said = ("Up to date with the home computer." if not changed else
+                f"Synced: {done['pulled']} from the computer, {done['pushed']} to it, {done['merged']} merged.")
+        return {"message": f"{said} {done['note']}".strip(), **done}
 
     # ------------------------------------------------------------ Security (DEC-0033, core/security_cams.py)
     @app.get("/api/security")

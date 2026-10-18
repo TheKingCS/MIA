@@ -32,6 +32,10 @@ class MainActivity : Activity() {
     // A screen asked where the phone is (World Map's I'm Here, location
     // quests, DEC-0028): answered once Android's own permission is.
     private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
+    // The memory vault's door to the camera roll (Gallery.kt), window.MIAAndroid on MIA's screens.
+    private val gallery = Gallery(this)
+
+    fun webView(): WebView? = web
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +152,7 @@ class MainActivity : Activity() {
                     }
                 }
             }
+            addJavascriptInterface(gallery, "MIAAndroid")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
@@ -159,10 +164,18 @@ class MainActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == Gallery.GALLERY_REQUEST) { gallery.accessChanged(); return }
         if (requestCode != GEO_REQUEST) return
         val ask = geoAsk ?: return
         geoAsk = null
         ask.second.invoke(ask.first, grantResults.any { it == PackageManager.PERMISSION_GRANTED }, false)
+    }
+
+    @Deprecated("Activity.onActivityResult is fine for this spike")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        // Android's own Trash dialog (the memory vault's Free Up Space) closed.
+        if (requestCode == Gallery.TRASH_REQUEST) gallery.done(resultCode == RESULT_OK)
     }
 
     @Deprecated("Activity.onBackPressed is fine for this spike")

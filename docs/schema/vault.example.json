@@ -1,0 +1,149 @@
+{
+  "available": true,
+  "on": true,
+  "linked": true,
+  "wifi_only": true,
+  "keep_days": 30,
+  "state": "sending",
+  "state_words": "Copying to the home computer…",
+  "summary": {
+    "photos": 9,
+    "videos": 0,
+    "on_pc": 8,
+    "on_phone": 9,
+    "waiting": 1,
+    "waiting_size": "4.1 MB",
+    "size": "38.6 MB",
+    "last_sent": "2026-10-18T09:40:00",
+    "scanned_at": "2026-10-18T10:16:00"
+  },
+  "free": {
+    "count": 4,
+    "size": "15.2 MB",
+    "older_than_days": 30
+  },
+  "copies": {
+    "count": 0,
+    "size": "0 bytes"
+  },
+  "bursts": [
+    {
+      "id": "a0fbf353797e",
+      "day": "2026-08-14",
+      "count": 3,
+      "best": "ae274496c1ab0c2b3b09105b97ac320c5d5b5b5660ecc65413c8083ec3dd381d",
+      "scored": false,
+      "others": [
+        "a0fbf353797eda3bd83a03845f38a149e8bbf5e40d221e20ce58f18257c32f16",
+        "3b65c8c000545ef8f44024edcbc95ea56e1579a26b20791e0453e47dbe5325dd"
+      ],
+      "others_on_phone": 2,
+      "others_safe": true,
+      "bytes": 8178892,
+      "size": "7.8 MB"
+    }
+  ],
+  "freed": [],
+  "months": [
+    {
+      "month": "2026-10",
+      "label": "October 2026",
+      "count": 5
+    },
+    {
+      "month": "2026-08",
+      "label": "August 2026",
+      "count": 4
+    }
+  ],
+  "month": "2026-10",
+  "days": [
+    {
+      "day": "2026-10-18",
+      "label": "Sunday, October 18, 2026",
+      "items": [
+        {
+          "sha": "b9d10f3e7aee3c46a328a0bdb9d1498c1081bf25075278fd1f780c6d9f8c1987",
+          "kind": "photo",
+          "name": "IMG_20261018_101530.jpg",
+          "on_pc": false,
+          "on_phone": true,
+          "copies": 1,
+          "burst": "",
+          "best": false,
+          "time": "10:15"
+        }
+      ],
+      "happened": [],
+      "trip": ""
+    },
+    {
+      "day": "2026-10-17",
+      "label": "Saturday, October 17, 2026",
+      "items": [
+        {
+          "sha": "9359799c80d138617d798f9a46a7ac7f2eb8a44e3f9abe11e6c7a2f8d519f39e",
+          "kind": "photo",
+          "name": "IMG_20261017_184500.jpg",
+          "on_pc": true,
+          "on_phone": true,
+          "copies": 1,
+          "burst": "",
+          "best": false,
+          "time": "18:45"
+        }
+      ],
+      "happened": [],
+      "trip": ""
+    },
+    {
+      "day": "2026-10-12",
+      "label": "Monday, October 12, 2026",
+      "items": [
+        {
+          "sha": "755bd2fc69aef810e6a4b73bfb5fc46336345aa02e6845957b30a44003c23801",
+          "kind": "photo",
+          "name": "IMG_20261012_142000.jpg",
+          "on_pc": true,
+          "on_phone": true,
+          "copies": 1,
+          "burst": "",
+          "best": false,
+          "time": "14:20"
+        }
+      ],
+      "happened": [],
+      "trip": ""
+    },
+    {
+      "day": "2026-10-03",
+      "label": "Saturday, October 3, 2026",
+      "items": [
+        {
+          "sha": "03014eab6fb2d60ccf9ca1eeaa5c37447e06d4f6a78d44a523a25465c6636d21",
+          "kind": "photo",
+          "name": "IMG_20261003_090500.jpg",
+          "on_pc": true,
+          "on_phone": true,
+          "copies": 1,
+          "burst": "",
+          "best": false,
+          "time": "09:05"
+        },
+        {
+          "sha": "e854b17c0cfc96058b4f041379b76834fd55e768dbdc27a7820eb8bf5d316719",
+          "kind": "photo",
+          "name": "IMG_20261003_090000.jpg",
+          "on_pc": true,
+          "on_phone": true,
+          "copies": 1,
+          "burst": "",
+          "best": false,
+          "time": "09:00"
+        }
+      ],
+      "happened": [],
+      "trip": ""
+    }
+  ]
+}

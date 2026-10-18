@@ -229,6 +229,20 @@
           "ask": "Quiz me on chapter 2.",
           "tools": [],
           "favorite": false
+        },
+        {
+          "id": "vault",
+          "name": "Memory Vault",
+          "icon": "🗄",
+          "tagline": "Your photos, kept safe.",
+          "description": "Your phone's photos and videos, kept safe on your home computer, so the phone can let them go (DEC-0030).",
+          "page": "vault.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Are my photos backed up?",
+          "tools": [],
+          "favorite": false
         }
       ]
     },
@@ -669,8 +683,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 36,
-    "on_web": 17,
+    "apps": 37,
+    "on_web": 18,
     "tools": 32
   }
 }

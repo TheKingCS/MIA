@@ -1576,3 +1576,24 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .place-arrival h3 { margin: 0 0 6px; font-size: var(--text-md); }
 .place-arrival p { margin: 0 0 12px; color: var(--text-dim); }
 .cam-hint { margin: 0 0 10px; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Memory Vault (DEC-0030 E, 2026-10-18) */
+.vault-state { margin: 0 0 10px; font-size: var(--text-sm); }
+.vault-month { margin: 0 0 10px; }
+.vault-month select { min-height: 40px; }
+.vault-happened { margin: 0 0 8px; font-size: var(--text-sm); }
+.vault-marks { position: absolute; left: 4px; bottom: 4px; display: flex; gap: 3px; flex-wrap: wrap; }
+.vault-mark { padding: 1px 5px; border-radius: 6px; font-family: var(--font-mono); font-size: var(--text-xs);
+  background: rgba(var(--rgb-bg), 0.78); color: var(--text-dim); }
+.vault-mark.ok { color: rgb(var(--rgb-ok)); }
+.vault-mark.wait { color: var(--soon); }
+.vault-mark.best { color: var(--accent); }
+.vault-burst { align-items: center; }
+.vault-best { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; display: block;
+  border: 1px solid rgba(var(--rgb-accent), 0.4); }
+.vault-view { max-width: 96vw; }
+.vault-full { display: grid; place-items: center; min-height: 120px; }
+.vault-media { max-width: 92vw; max-height: 74vh; display: block; border-radius: 8px; }
+.chron-photos { display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; color: var(--accent); text-decoration: none;
+  font-size: var(--text-sm); }
+.chron-photos .vault-best { width: 48px; height: 48px; }

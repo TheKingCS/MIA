@@ -48,6 +48,9 @@ PERSONAL_SETTINGS = (
     "sound.on",
     "sound.voice",
     "places.watch",
+    "vault.on",
+    "vault.wifi_only",
+    "vault.keep_days",
 )
 
 

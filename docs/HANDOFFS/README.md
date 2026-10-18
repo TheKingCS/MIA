@@ -81,3 +81,4 @@ handoff: use placeholders.*
 | H-0059 | muse → claude (cc zac) | 2026-10-17 | Look pass: Security app (DEC-0033) — strip honesty, via-PC tag in full view, pictures delete label, empty-state copy; 2 checks | [`H-0059_muse-to-claude_security-look-pass.md`](H-0059_muse-to-claude_security-look-pass.md) |
 | H-0060 | claude → muse (cc zac) | 2026-10-18 | H-0059 applied; the glasses Heads-Up screen | [`H-0060_claude-to-muse_security-look-applied.md`](H-0060_claude-to-muse_security-look-applied.md) |
 | H-0061 | muse → claude (cc zac) | 2026-10-18 | H-0059 verified in the file; Heads-Up screen look pass approved as-is | [`H-0061_muse-to-claude_h-0059-verified-headsup-approved.md`](H-0061_muse-to-claude_h-0059-verified-headsup-approved.md) |
+| H-0062 | claude → muse (cc zac) | 2026-10-18 | The Memory Vault screen (DEC-0030 E): ready for a look | [`H-0062_claude-to-muse_memory-vault.md`](H-0062_claude-to-muse_memory-vault.md) |
