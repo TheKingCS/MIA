@@ -34,6 +34,7 @@
     household: '<path d="M4 10h16l-1.6 9.5a1.5 1.5 0 0 1-1.5 1.2H7.1a1.5 1.5 0 0 1-1.5-1.2Z"/><path d="M8 10l3-6M16 10l-3-6M9 14v3M15 14v3M12 14v3"/>',
     workshop: '<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6Z"/>',
     reward_shop: '<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20.5h14v-8M12 8.5v12"/><path d="M12 8.5C10.5 5 7.5 4.5 7 6.5s3 2 5 2c2 0 5.5-.5 5-2s-3.5-1.5-5 2Z"/>',
+    security: '<path d="M12 2.5 4.5 5.5v6c0 4.6 3.1 8.6 7.5 10 4.4-1.4 7.5-5.4 7.5-10v-6Z"/><circle cx="12" cy="11" r="2.6"/><path d="M12 8.4V7M12 15v-1.4"/>',
     business: '<path d="M6 2.5h12v19l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5Z"/><path d="M9 7.5h6M9 11h6M9 14.5h4"/>',
     power: '<rect x="3" y="7.5" width="16" height="9" rx="1.5"/><path d="M21 10.5v3M7 10v4M10.5 10v4"/>',
     observations: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',

@@ -1,0 +1,113 @@
+{
+  "available": true,
+  "cameras": [
+    {
+      "id": "demo-front",
+      "name": "Front Door",
+      "location": "Front Door",
+      "brand": "Reolink",
+      "host": "192.168.1.40",
+      "path": "",
+      "user": "admin",
+      "has_password": true,
+      "problem": "",
+      "frame": "",
+      "needs_ffmpeg": false
+    },
+    {
+      "id": "demo-drive",
+      "name": "Driveway",
+      "location": "Driveway",
+      "brand": "Amcrest / Dahua",
+      "host": "192.168.1.41",
+      "path": "",
+      "user": "admin",
+      "has_password": true,
+      "problem": "",
+      "frame": "",
+      "needs_ffmpeg": false
+    },
+    {
+      "id": "demo-yard",
+      "name": "Backyard",
+      "location": "Backyard",
+      "brand": "Hikvision / Annke",
+      "host": "192.168.1.42",
+      "path": "",
+      "user": "admin",
+      "has_password": true,
+      "problem": "",
+      "frame": "",
+      "needs_ffmpeg": false
+    },
+    {
+      "id": "demo-shop",
+      "name": "Shop",
+      "location": "Shop",
+      "brand": "Tapo",
+      "host": "192.168.1.43",
+      "path": "",
+      "user": "me",
+      "has_password": true,
+      "problem": "",
+      "frame": "",
+      "needs_ffmpeg": false
+    }
+  ],
+  "pictures": [],
+  "counts": {
+    "cameras": 4,
+    "pictures": 0
+  },
+  "brands": [
+    {
+      "name": "Reolink",
+      "help": "Works out of the box.",
+      "kind": "picture"
+    },
+    {
+      "name": "Amcrest / Dahua",
+      "help": "Works out of the box.",
+      "kind": "picture"
+    },
+    {
+      "name": "Hikvision / Annke",
+      "help": "Works out of the box.",
+      "kind": "picture"
+    },
+    {
+      "name": "Tapo",
+      "help": "Make a camera account in the Tapo app (Camera Settings → Advanced → Camera Account).",
+      "kind": "stream"
+    },
+    {
+      "name": "Wyze (RTSP firmware)",
+      "help": "Needs Wyze's RTSP firmware; use the address it shows.",
+      "kind": "stream"
+    },
+    {
+      "name": "Other: picture address",
+      "help": "Type the path to the camera's still picture (e.g. /snapshot.jpg).",
+      "kind": "picture"
+    },
+    {
+      "name": "Other: RTSP stream",
+      "help": "Type the stream path (e.g. /stream1).",
+      "kind": "stream"
+    }
+  ],
+  "locations": [
+    "Front Door",
+    "Driveway",
+    "Backyard",
+    "Garage",
+    "Side Yard",
+    "Porch",
+    "Living Room",
+    "Shop",
+    "Barn",
+    "Greenhouse",
+    "Other"
+  ],
+  "ffmpeg": true
+}

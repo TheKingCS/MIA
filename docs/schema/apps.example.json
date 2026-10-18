@@ -388,6 +388,20 @@
           "favorite": false
         },
         {
+          "id": "security",
+          "name": "Security",
+          "icon": "🛡️",
+          "tagline": "Your cameras, at home.",
+          "description": "Your home cameras, watched live from MIA over your own network, no cloud (DEC-0033).",
+          "page": "security.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Show me the front door.",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "power",
           "name": "Power",
           "icon": "🔋",
@@ -655,8 +669,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 35,
-    "on_web": 16,
+    "apps": 36,
+    "on_web": 17,
     "tools": 32
   }
 }

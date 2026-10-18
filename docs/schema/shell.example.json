@@ -95,6 +95,13 @@
       "page": "business.html"
     },
     {
+      "id": "security",
+      "name": "Security",
+      "icon": "🛡️",
+      "tagline": "Your cameras, at home.",
+      "page": "security.html"
+    },
+    {
       "id": "character",
       "name": "Character",
       "icon": "👤",

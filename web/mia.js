@@ -231,6 +231,8 @@
     worldmap: () => read("/api/worldmap", "worldmap"),
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
+    security: () => read("/api/security", "security"),
+    saveCamera: (camera) => demo ? demoOnly() : call("POST", "/api/security/camera", camera),
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),
     homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),

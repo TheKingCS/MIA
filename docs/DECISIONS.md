@@ -563,3 +563,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   person switches it on, and arriving asks before doing anything.
   Notes: `docs/GAME_LAYER.md`.
 - Related: DEC-0014, DEC-0028
+
+### DEC-0033: A Security app for home cameras, local network only
+- Status: APPROVED
+- Proposed by: zac, 2026-10-18 ("an app for Security or Smart Home where i can monitor camera feeds") · Approved by: zac, 2026-10-18 (no cameras yet; "Cameras first, no HA")
+- Decision: a Security app (grown-ups only) shows home cameras live:
+  a still picture from the camera's own address where the brand has one,
+  else one frame at a time from its RTSP stream through ffmpeg. MIA only
+  ever talks to addresses inside the home network; camera passwords stay
+  on the device and are never shown again or put in an action's record.
+  Cameras are bought to fit: local-stream brands (Reolink first), not
+  cloud-only ones. Lights, locks and the thermostat come later through a
+  local Home Assistant. Notes: `docs/SECURITY_CAMERAS.md`.
+- Related: DEC-0015, DEC-0022
+

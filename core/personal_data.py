@@ -86,6 +86,7 @@ from core.reward_shop import RewardShop
 from core.craft_recipes import CraftRecipeBook
 from core.business_book import BusinessBook
 from core.grow_lab import GrowLab
+from core.security_cams import SecurityBook
 from core.boss_battles import BossBook
 from core.questlines import QuestBook
 from core.world_map import WorldMap
@@ -158,6 +159,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("craft_recipes", CraftRecipeBook),
     ("business", BusinessBook),
     ("grow_lab", GrowLab),
+    ("security", SecurityBook),
     ("waypoints", WaypointManager),
     ("scripts", ScriptLibraryManager),
     ("expeditions", ExpeditionManager),

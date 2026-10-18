@@ -322,6 +322,9 @@ class MIAApplication:
         from core.grow_lab import GrowLab
 
         self.context.grow_lab = GrowLab(self.context)  # the grow lab (DEC-0030)
+        from core.security_cams import SecurityBook
+
+        self.context.security = SecurityBook(self.context)  # cameras (DEC-0033)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the

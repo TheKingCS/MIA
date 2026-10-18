@@ -130,6 +130,17 @@ class ProposeRequest(BaseModel):
     params: dict = {}
 
 
+class CameraRequest(BaseModel):
+    camera_id: Optional[str] = None
+    name: str
+    location: str = "Other"
+    brand: str
+    host: str
+    path: str = ""
+    user: str = ""
+    password: Optional[str] = None  # None keeps the one saved
+
+
 class HomeLinkRequest(BaseModel):
     url: str
     who: str
@@ -1217,6 +1228,66 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import character_page
 
         return _screen(profile_id, "character", character_page)
+
+    # ------------------------------------------------------------ Security (DEC-0033, core/security_cams.py)
+    @app.get("/api/security")
+    def web_security(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.security_cams import security_page
+
+        return _screen(profile_id, "security", security_page)
+
+    def _security_book(profile_id: str):
+        from core.child_accounts import ASK_A_PARENT, app_allowed
+
+        view = view_for(context, profile_id)
+        if not app_allowed(view, "security"):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+        book = getattr(view, "security", None)
+        if book is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Security isn't set up on this MIA.")
+        return book
+
+    @app.post("/api/security/camera")
+    def web_security_camera(body: CameraRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Add or change a camera with its login (the password never goes
+        through an action's record, and never comes back to a screen)."""
+        from core.security_cams import CameraError
+
+        book = _security_book(profile_id)
+        try:
+            with app.state.turn_lock:
+                cam = book.save_camera(body.camera_id, body.name, body.location, body.brand, body.host, body.path,
+                                       body.user, body.password)
+        except CameraError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"{cam.name} is saved.", "camera_id": cam.camera_id}
+
+    @app.get("/api/security/cameras/{camera_id}/frame")
+    def web_security_frame(camera_id: str, profile_id: str = Depends(require_profile_id)):
+        """The camera's picture now (outside the turn lock: a slow camera never holds MIA up)."""
+        from fastapi.responses import Response
+
+        from core.security_cams import CameraError
+
+        book = _security_book(profile_id)
+        try:
+            data = book.frame(camera_id)
+        except CameraError as problem:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(problem)) from None
+        return Response(data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+    @app.get("/api/security/pictures/{name}")
+    def web_security_picture(name: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.security_cams import CameraError
+
+        book = _security_book(profile_id)
+        try:
+            path = book.picture_path(name)
+        except CameraError as problem:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+        return FileResponse(path, filename=path.name, headers={"Cache-Control": "private, max-age=86400"})
 
     @app.get("/api/places")
     def web_places(profile_id: str = Depends(require_profile_id)) -> dict:

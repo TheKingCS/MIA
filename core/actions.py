@@ -323,6 +323,7 @@ import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0
 import core.craft_actions  # noqa: E402,F401  (crafting recipes and builds, DEC-0030)
 import core.business_actions  # noqa: E402,F401  (quotes, customers, orders, portfolio, DEC-0030)
 import core.grow_actions  # noqa: E402,F401  (the grow lab, DEC-0030)
+import core.security_actions  # noqa: E402,F401  (Security cameras, DEC-0033)
 
 
 # ------------------------------------------------------------------ the five steps
