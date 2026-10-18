@@ -485,6 +485,11 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
+- **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future
+  features that automate life and save money, each written up the same
+  way. First one: an insurance check-up (compare and save). Zac adds to
+  it over time; nothing there is approved until he picks it.
+
 
 ## 4. Known loose ends
 
