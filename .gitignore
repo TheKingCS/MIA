@@ -113,3 +113,4 @@ android/local.properties
 
 # A person's exported Life State (tools/export_state.py): real personal data.
 *.state.json
+pc-check/

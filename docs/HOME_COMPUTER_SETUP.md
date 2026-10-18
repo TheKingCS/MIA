@@ -1,46 +1,92 @@
-# Your home computer as MIA's brain (DEC-0022)
+# PC day: your home computer as MIA's home base (DEC-0022, DEC-0033)
 
 *For the new computer (Ryzen 7 9800X3D, Radeon RX 7900 XTX 24 GB).
-When the phone can reach it, Talk uses the computer's bigger model; when
-it can't, the phone's own model answers, mid-conversation if needed, and
-each reply says which one did (HOME PC or PHONE). Your data stays on
-your devices: the phone sends only the conversation turn, and only to
-MIA on your own computer, through your own Tailscale network.*
+Once this is done, the phone (and the glasses) use the computer's bigger
+model whenever they can reach it, from home or anywhere through
+Tailscale, and the phone's own model when they can't. The cameras live
+on the computer's Wi-Fi and you watch them from the phone. Your data
+stays on your devices.*
 
-## On the computer (once)
+**Time:** about an hour, most of it downloads. Two scripts do almost all
+of it; this page is the order.
 
-1. **Install MIA**: `docs/SETUP_GUIDE.md` (🪟 Windows: `install.bat`).
-2. **Install Ollama for Windows** (ollama.com). It runs on the 7900 XTX
-   by itself (AMD ROCm support is built in). Then, in a terminal:
-   ```
-   ollama pull qwen2.5:14b
-   ```
-   About 9 GB, fast on your card. (`qwen2.5:32b`, about 19 GB, also fits
-   in 24 GB; Claude will compare the two on MIA's own test questions.)
-3. **Tell MIA to use it:** in `config/config.json`, under `"llm"`, set
-   `"model": "qwen2.5:14b"` (leave `base_url` as `http://localhost:11434`).
-4. **Give your profile a password** (MIA → Settings) if it has none.
-5. **Turn on Phone Access:** Settings → Phone Access → **Let my phone
-   reach MIA**.
-6. **Install Tailscale for Windows**, sign in, then in a terminal:
-   ```
-   tailscale serve --bg http://127.0.0.1:8765
-   tailscale serve status
-   ```
-   Write down the address it prints, like
-   `https://your-computer.your-tailnet.ts.net`. Only your own devices
-   on your Tailscale account can open it.
+## 1. The computer itself (15 minutes)
 
-## On the phone (once)
+- [ ] Plug in the Cat 8 cable, sign in to Windows, and run **Windows
+      Update** until it says you're up to date.
+- [ ] Update the **AMD graphics driver** (AMD Software: Adrenalin
+      Edition, from amd.com, or the AMD app if it's already there). Ollama
+      uses the Radeon through this driver; an old one makes it fall back
+      to the much slower processor.
+- [ ] Install **Git for Windows** (git-scm.com, the defaults are fine).
 
-1. Install **Tailscale**, sign in with the same account, turn it on.
-2. In the MIA app: ⚙ → **Settings** → **Home Computer** → **Link**.
-   Put in the address from step 6, your name or email, and your
-   password. MIA links and says which model it found.
+## 2. MIA (20 minutes)
 
-That's it. In Talk, each answer is marked **HOME PC** or **PHONE**.
-**Unlink** (same place) stops it and removes the phone's key from the
-computer.
+In **PowerShell** (Start → type PowerShell):
+
+```
+cd ~
+git clone https://github.com/TheKingCS/MIA.git
+```
+
+GitHub asks you to sign in the first time (it's your private repo).
+Then in File Explorer open the new **MIA** folder and double-click
+**install.bat**. It installs Python, Ollama, Tesseract, MIA's packages
+and the voices, makes a MIA shortcut, and ends with a setup check.
+
+- [ ] Open MIA from the shortcut and **sign in** (or make your account).
+- [ ] **Settings → Change Password** if your account has none. The
+      phone links with it.
+
+## 3. The home base (30 minutes, mostly downloads)
+
+In the MIA folder, double-click **setup_home_pc.bat**. It asks before
+each step:
+
+1. the brain: Ollama with **qwen2.5:14b** (and qwen2.5:32b to compare);
+2. MIA's settings: that model, and Phone Access on (it only listens on
+   this computer itself; the phone comes in through Tailscale);
+3. **ffmpeg** (only for Tapo / Wyze cameras);
+4. **Tailscale**: a browser opens to sign in, then it serves MIA to
+   your own devices only, and prints **the phone's address for MIA**,
+   like `https://your-pc.your-tailnet.ts.net` (also saved in
+   `pc-check\tailscale.txt`);
+5. MIA **starts when you sign in** to Windows, and the computer **doesn't
+   sleep** while plugged in, so the phone and the cameras always find it;
+6. the **model comparison** (optional, 30-60 minutes): MIA's own test
+   questions on each model, on your graphics card. It recommends one and
+   offers to switch, and the results go in `pc-check\models.md`;
+7. the **readiness check**: every line `[ok]`, or exactly what to do.
+
+Then **close and reopen MIA** (so Phone Access starts).
+
+Run the check again any time: `.venv\Scripts\python tools\pc_check.py`.
+
+## 4. The phone (5 minutes)
+
+- [ ] Install **Tailscale** from the Play Store, sign in with the **same
+      account**, and turn it on.
+- [ ] MIA app: ⚙ → **Settings** → **Home Computer** → **Link**. Put in the
+      address from step 3, your name or email, and your password. MIA
+      says which model it found.
+- [ ] Ask Talk something. The answer is marked **HOME PC**.
+
+## 5. Tell Claude
+
+Say "the PC is up", and either paste `pc-check\models.md` or just say
+the comparison ran. Claude then picks the model (DEC-0022), and goes on
+to the next steps: heavy jobs on the PC (voice, reading photos, email,
+bank sync), then two-way sync between the phone and the PC.
+
+## Cameras (when you have them)
+
+Put them on the **computer's Wi-Fi**, then from the phone: **Security →
+Add A Camera** → "On the home computer's Wi-Fi" (`docs/SECURITY_CAMERAS.md`).
+
+## Updating MIA on the PC later
+
+In PowerShell, in the MIA folder: `git pull`, then double-click
+**install.bat** again (it only adds what's new).
 
 ## How it works (for the team)
 
@@ -49,6 +95,11 @@ computer.
   (`home_link.devices` in its config), so the link survives a restart.
 - Each turn, the phone's MIA builds the whole request (facts, memories,
   tools) itself and sends just the model call to `/api/model/chat`; any
-  action still runs on the phone, approved there.
+  action still runs on the phone, approved there. The same link reaches
+  the PC's cameras (`core/home_link.home_call`).
+- MIA's server listens on 127.0.0.1 only; `tailscale serve` is the only
+  way in, and only for devices on your tailnet.
 - The phone checks the computer at most every 30 seconds, so away from
   home it doesn't wait on it. `core/home_link.py`, `core/llm_manager.py`.
+- The kit: `setup_home_pc.ps1` (CI dry-runs it on Windows every push),
+  `tools/pc_check.py`, `tools/pc_model_check.py`.
