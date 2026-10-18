@@ -48,7 +48,7 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: just don't remember */ } },
   };
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
-  let view = "home";         // home | cards | menu | panel | confirm | result | reward
+  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud
   let showingAll = false;    // browsing the apps that aren't pinned
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false;
@@ -239,7 +239,9 @@
   }
 
   function show(v) {
+    if (view === "hud" && v !== "hud") hudStop();
     view = v;
+    document.body.classList.toggle("hud-on", v === "hud");  // nothing on screen but the card
     home.hidden = v !== "home";
     screen.hidden = v === "home";
     if (v !== "home") render();
@@ -329,9 +331,64 @@
       parts.push(kicker(a ? a.name : "MIA"), body, hint("continue"));
     } else if (view === "reward") {
       parts.push(rewardScreen(reward), hint("continue"));
+    } else if (view === "hud") {
+      parts.push(hudScreen());
     }
     screen.replaceChildren(...parts);
   }
+
+  // ------------------------------------------------------------ Heads-Up (Zac, 2026-10-18)
+  // Blank (see-through on the Display) until something happens anywhere:
+  // a card slides in ("Mission Complete", "+50 XP", "Debt Payment"), stays
+  // HUD_SHOW_MS, and the view clears again. Cards come from
+  // MIA.glassesFeed (core/glasses_feed.py) with a cursor, so each shows once.
+  // Swipe down on the orb (or wait HUD_IDLE_MS on it) to enter; any input leaves.
+  const HUD_POLL_MS = 4000, HUD_SHOW_MS = 6000, HUD_IDLE_MS = 60000;
+  let hudCursor = null, hudQueue = [], hudCard = null, hudPoll = null, hudTimer = null, lastInput = Date.now();
+
+  function hudScreen() {
+    const wrap = el("div", "hud");
+    wrap.append(el("i", "hud-dot"));  // a faint mark: Heads-Up is on
+    if (hudCard) {
+      const c = el("div", "hud-card" + (hudCard.level === "warning" || hudCard.level === "critical" ? " attn" : ""));
+      ["tl", "tr", "bl", "br"].forEach((k) => c.append(el("i", "rc " + k)));
+      c.append(el("p", "h-icon", esc(hudCard.icon || "✦")), el("p", "h-head", esc(hudCard.headline || "")));
+      if (hudCard.xp) c.append(el("p", "h-xp", "+" + esc(hudCard.xp) + " XP"));
+      if (hudCard.text) c.append(el("p", "h-text", esc(hudCard.text)));
+      wrap.append(c);
+    }
+    return wrap;
+  }
+  function hudNext() {
+    clearTimeout(hudTimer);
+    hudCard = hudQueue.shift() || null;
+    if (view === "hud") render();
+    if (!hudCard) return;
+    if (window.MIASound) MIASound.play(/level/i.test(hudCard.headline) ? "fanfare" : /mission|quest/i.test(hudCard.headline) ? "quest" : "chime");
+    hudTimer = setTimeout(() => { hudCard = null; if (view === "hud") render(); hudTimer = setTimeout(hudNext, 600); }, HUD_SHOW_MS);
+  }
+  async function hudFetch() {
+    try {
+      const got = await MIA.glassesFeed(hudCursor);
+      hudCursor = got.now || hudCursor;
+      if ((got.items || []).length) {
+        hudQueue.push(...got.items);
+        if (!hudCard) hudNext();
+      }
+    } catch (e) { /* off-line for a moment: try again next time */ }
+  }
+  async function hudStart() {
+    hudCard = null; hudQueue = [];
+    show("hud");
+    await hudFetch();  // the first call only sets the cursor: nothing old is replayed
+    clearInterval(hudPoll);
+    hudPoll = setInterval(hudFetch, HUD_POLL_MS);
+  }
+  function hudStop() { clearInterval(hudPoll); clearTimeout(hudTimer); hudPoll = null; hudCard = null; hudQueue = []; }
+  setInterval(() => {  // the orb, left alone: fade to Heads-Up
+    if (view === "home" && voiceState === "idle" && Date.now() - lastInput > HUD_IDLE_MS) hudStart();
+  }, 5000);
+  ["keydown", "pointerdown"].forEach((t) => addEventListener(t, () => { lastInput = Date.now(); }, true));
 
   // The reward (Zac's concept, 2026-10-16): "Objective Complete ☆ +30 XP
   // ✓ Quest Complete" in a HUD frame. From the engine's proposal.reward
@@ -398,6 +455,7 @@
 
   function move(dir) {
     if (busy) return;
+    if (view === "hud") { show("home"); return; }
     if (view === "home") {
       if (voiceState === "listening" || voiceState === "thinking") stopListening();
       const list = cards();
@@ -436,6 +494,7 @@
   }
   async function doSelect() {
     const a = app();
+    if (view === "hud") { show("home"); return; }
     if (view === "home") { listen(); return; }
     if (view === "cards") {
       if (!a) return;
@@ -543,7 +602,12 @@
 
   function back() {
     if (busy) return;
-    if (view === "home") { if (voiceState === "answered") orbState("idle"); return; }
+    if (view === "hud") { show("home"); return; }
+    if (view === "home") {
+      if (voiceState === "answered") { orbState("idle"); return; }
+      hudStart();  // swipe down on the orb: Heads-Up
+      return;
+    }
     if (view === "confirm") { cancel(); return; }
     if (view === "result" || view === "reward") { clearTimeout(rewardTimer); leaveResult(); return; }
     if (view === "recipe") { show("panel"); return; }

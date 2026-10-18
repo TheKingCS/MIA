@@ -728,6 +728,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return glasses_apps(view_for(context, profile_id), mission_id=mission or None)
 
+    @app.get("/api/glasses/feed")
+    def glasses_feed(since: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Heads-Up screen: what's new since the glasses last asked (core/glasses_feed.py)."""
+        from core.glasses_feed import feed
+
+        with app.state.turn_lock:
+            return feed(view_for(context, profile_id), since or None)
+
     @app.get("/api/glasses/{app_id}/{item_id}")
     def glasses_item(app_id: str, item_id: str, mission: str = "",
                      profile_id: str = Depends(require_profile_id)) -> dict:

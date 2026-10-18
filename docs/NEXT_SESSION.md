@@ -311,7 +311,7 @@ Talk uses it with the phone's 1.5B as fallback, and the shell shows the
 level (PHONE / HOME PC / ONLINE, Muse's H-0035 §5). Then presence-page
 frame and the dashboard saying card as a readout (H-0035 §3).
 
-**Glasses quick action menus (2026-10-16, H-0042)** work in the preview
+**Glasses Heads-Up screen (2026-10-18):** swipe down on the orb; clear until a win or notification, then a card for 6 s. **Glasses quick action menus (2026-10-16, H-0042)** work in the preview
 for every app (`core/glasses.py`); pins are the person's favorites
 (DEC-0024); Household, People and Inbox panels and line icons are in
 (H-0045). Then: Muse's look pass on the cards, Phase 3 voice ("open

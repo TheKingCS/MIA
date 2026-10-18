@@ -172,6 +172,15 @@
       ? read("", "glasses_panels").then((all) => all[app + "/" + item] || Promise.reject(new MiaError(404, "No such menu item.")))
       : call("GET", "/api/glasses/" + encodeURIComponent(app) + "/" + encodeURIComponent(item) +
              (mission ? "?mission=" + encodeURIComponent(mission) : "")),
+    // The Heads-Up screen's new cards since `since` (core/glasses_feed.py). In the
+    // demo, the example's cards arrive once, a few seconds after it starts.
+    glassesFeed: (since) => demo
+      ? read("", "glasses_feed").then((ex) => {
+          const first = !since || MIA._feedShown;
+          MIA._feedShown = MIA._feedShown || !!since;
+          return { now: ex.now, items: first ? [] : ex.items };
+        })
+      : call("GET", "/api/glasses/feed" + (since ? "?since=" + encodeURIComponent(since) : "")),
     kitchen: () => read("/api/kitchen", "kitchen"),
     recipe: (id) => read("/api/kitchen/recipe/" + encodeURIComponent(id), "recipe"),
     fitness: () => read("/api/fitness", "fitness"),

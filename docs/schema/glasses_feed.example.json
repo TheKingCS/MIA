@@ -1,0 +1,8 @@
+{
+  "now": "2026-10-18T09:00:00",
+  "items": [
+    {"id": "n:demo1", "icon": "🎉", "headline": "Mission Complete", "text": "\"Clean the gutters\" is complete! That's a real achievement — what's next?", "level": "info", "source": "missions"},
+    {"id": "e:demo2", "icon": "💳", "headline": "Debt Payment", "text": "Paid $300.00 on Car loan", "level": "win", "source": "debt_payment", "xp": null},
+    {"id": "n:demo3", "icon": "⭐", "headline": "Level Up", "text": "You reached level 8.", "level": "info", "source": "profiles"}
+  ]
+}
