@@ -44,6 +44,14 @@
     el("label", { for: "s-" + s.key.replace(/\./g, "-") }, s.label), control(s),
     s.help ? el("p", { class: "help" }, s.help) : "");
 
+  // Hear each tune without earning a win first (Muse, H-0057).
+  function soundCheck() {
+    if (!window.MIASound) return "";
+    const tunes = [["chime", "Objective"], ["quest", "Mission"], ["fanfare", "Level Up"], ["tick", "XP"]];
+    return el("div", { class: "acct-actions" }, tunes.map(([name, label]) =>
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => MIASound.preview(name) }, "▶ " + label)));
+  }
+
   function breaks() {
     if (!page.breaks.length) return "";
     return section("Taking a break from",
@@ -79,7 +87,7 @@
 
   function draw() {
     $("panel").replaceChildren(
-      ...page.groups.map((g) => section(g.title, ...g.settings.map(setting))),
+      ...page.groups.map((g) => section(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : "")),
       breaks(),
       page.home_link ? homeLink(page.home_link) : "",
       page.model_test ? section("MIA's model on this phone",

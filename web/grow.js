@@ -103,7 +103,7 @@
       s.readings.length ? el("ul", { class: "craft-needs grow-readings" }, s.readings.map((r) => el("li", { class: r.side ? "missing" : "" },
         el("span", {}, r.label + ": ", el("strong", {}, r.value == null ? "—" : r.value + (r.unit ? " " + r.unit : "")),
           r.side ? " " : "", r.side ? chip(r.side === "high" ? "High" : "Low", "chip-bad") : null),
-        spark(r.trend),
+        spark(r.trend) || el("span", { "aria-hidden": "true" }),  // keep the 70px slot so the rows line up (H-0057)
         el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => range(s.id, r) },
           (r.low != null ? r.low : "–") + " to " + (r.high != null ? r.high : "–") + (r.mine ? "" : " (starter)")))))
         : el("p", { class: "dim" }, "No readings yet."));

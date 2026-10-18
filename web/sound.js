@@ -76,9 +76,12 @@
     speak(reward.say);
   }
 
+  // A sound check (Settings → Sound): plays even while sounds are off.
+  function preview(name) { try { if (TUNES[name]) TUNES[name](); } catch (e) { /* fine */ } }
+
   window.MIASound = {
     configure: (s) => { if (s) settings = { on: s.on !== false, voice: !!s.voice }; },
-    play, speak, celebrate,
+    play, speak, celebrate, preview,
     get settings() { return Object.assign({}, settings); },
   };
 })();

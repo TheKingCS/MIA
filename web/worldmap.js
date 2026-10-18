@@ -75,8 +75,11 @@
         g.fillStyle = rgba("--rgb-win", 0.18); g.strokeStyle = rgba("--rgb-win", 0.8);
         g.beginPath(); g.arc(x, y, size * 0.55, 0, Math.PI * 2); g.fill(); g.stroke();
         g.fillStyle = rgba("--rgb-win", 1); g.font = "700 " + Math.round(size * 0.7) + "px sans-serif"; g.fillText("?", x, y + 1);
-      } else {
-        g.font = size + "px sans-serif"; g.fillText(PIN[p.kind] || "•", x, y - size * 0.3);
+      } else {  // a dark disc and a thin light ring behind the glyph, so it reads on fog and on cleared ground (Muse, H-0057)
+        const cy = y - size * 0.3;
+        g.fillStyle = rgba("--rgb-panel", 0.85); g.strokeStyle = rgba("--rgb-line", 0.7); g.lineWidth = 1;
+        g.beginPath(); g.arc(x, cy, size * 0.62, 0, Math.PI * 2); g.fill(); g.stroke();
+        g.font = Math.round(size * 0.8) + "px sans-serif"; g.fillText(PIN[p.kind] || "•", x, cy + 1);
       }
     });
     return pins;

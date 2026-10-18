@@ -36,8 +36,10 @@
     const dialog = document.createElement("dialog");
     dialog.className = "confirm place-arrival";
     dialog.setAttribute("aria-label", "You're at " + place.name);
+    const head = document.createElement("h3");
+    head.textContent = "📍 " + place.name;
     const text = document.createElement("p");
-    text.textContent = place.say;
+    text.textContent = place.say.replace(/^📍 You're at [^.]*\.\s*/, "") || "You're here.";
     const row = document.createElement("div");
     row.className = "confirm-actions";
     const go = document.createElement("button");
@@ -45,7 +47,7 @@
     const no = document.createElement("button");
     no.type = "button"; no.className = "btn btn-ghost"; no.textContent = "Not Now";
     row.append(go, no);
-    dialog.append(text, row);
+    dialog.append(head, text, row);
     const close = () => { dialog.close(); dialog.remove(); asking = false; };
     no.onclick = close;
     dialog.oncancel = (e) => { e.preventDefault(); close(); };

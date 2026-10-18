@@ -1519,7 +1519,7 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   transition: width var(--dur-slow, 600ms) ease-out; }
 .tour-bar.hp > span { background: rgb(var(--rgb-bad)); box-shadow: 0 0 8px rgba(var(--rgb-bad), 0.6); }
 .tour-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.tour-list li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(60px, 1fr) auto; gap: 10px; align-items: center; }
+.tour-list li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(80px, 1fr) auto; gap: 10px; align-items: center; }
 .tour-list li.tone-soon .tour-bar > span { background: rgb(var(--rgb-amber)); }
 .tour-list li.tone-bad .tour-bar > span { background: rgb(var(--rgb-bad)); }
 .tour-boss { display: grid; gap: 6px; padding: 10px; border: 1px solid rgba(var(--rgb-win), 0.5); border-radius: 12px; }
@@ -1569,3 +1569,9 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .cam-brands { margin: 0; padding-left: 18px; font-size: var(--text-sm); }
 .cam-brands li { margin: 4px 0; }
 .media-tile .cam-del { position: absolute; right: 4px; top: 4px; }
+
+/* The location-quest arrival card (H-0057): a MIA card, not a bare prompt. */
+.place-arrival { max-width: min(92vw, 380px); border: 1px solid rgba(var(--rgb-accent), 0.45);
+  box-shadow: 0 0 24px rgba(var(--rgb-accent), 0.18); }
+.place-arrival h3 { margin: 0 0 6px; font-size: var(--text-md); }
+.place-arrival p { margin: 0 0 12px; color: var(--text-dim); }

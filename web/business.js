@@ -68,7 +68,7 @@
       o.open ? buttons(o.left_value > 0 ? btn("Payment", "btn-green btn-small", () => pay(o)) : null,
         o.has_recipe && !o.build ? btn("Start Build", "btn-amber btn-small", () => act({ kind: "order.build", params: { order_id: o.id } })) : null,
         o.status !== "Ready" ? btn("Ready", "btn-ghost btn-small", () => status(o, "Ready")) : null,
-        btn("Delivered", "btn-ghost btn-small", () => status(o, "Delivered")),
+        o.status === "Ready" ? btn("Delivered", "btn-ghost btn-small", () => status(o, "Delivered")) : null,  // after Ready only (Muse, H-0057)
         btn("Edit", "btn-ghost btn-small", () => edit("order", o, o.title)),
         btn("Cancel Order", "btn-ghost btn-small", () => status(o, "Cancelled"))) : null);
   }
