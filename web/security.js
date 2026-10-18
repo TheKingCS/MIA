@@ -64,7 +64,8 @@
     const status = el("span", { class: "cam-status" }, page.demo ? "Demo" : "Connecting…");
     const tile = el("button", { type: "button", class: "glass cam-tile", "aria-label": "Open " + cam.name, onclick: () => openFull(cam) },
       el("div", { class: "cam-frame" }, img, status),
-      el("div", { class: "cam-caption" }, el("strong", {}, cam.name), cam.location !== cam.name ? el("span", { class: "dim" }, cam.location) : null));
+      el("div", { class: "cam-caption" }, el("strong", {}, cam.name),
+        el("span", { class: "dim" }, [cam.location !== cam.name ? cam.location : null, cam.on_pc ? "via PC" : null].filter(Boolean).join(" · "))));
     if (!page.demo) live(cam, img, status, GRID_MS);
     return tile;
   }
@@ -101,11 +102,18 @@
       { name: "password", label: cam && cam.has_password ? "Camera password (leave empty to keep it)" : "Camera password", type: "password", required: false, options: [], default: null },
     ];
   }
+  const ON_PC = "On the home computer's Wi-Fi", HERE = "On this device's Wi-Fi";
   async function editCamera(cam) {
-    const v = await form(cam ? "Change " + cam.name : "Add A Camera", fields(cam),
+    // Linked to the home computer: a new camera lives there by default, so the phone sees it from anywhere.
+    const ask = !cam && page.home && page.home.linked;
+    const list = (ask ? [{ name: "where", label: "Where the camera is", type: "choice", required: true, options: [ON_PC, HERE], default: ON_PC }] : [])
+      .concat(fields(cam));
+    const v = await form(cam ? "Change " + cam.name : "Add A Camera", list,
       cam ? { name: cam.name, location: cam.location, brand: cam.brand, host: cam.host, path: cam.path, user: cam.user } : {});
     if (!v) return;
-    const body = Object.assign({}, v, { camera_id: cam ? cam.id : null });
+    const onPc = cam ? !!cam.on_pc : v.where === ON_PC;
+    delete v.where;
+    const body = Object.assign({}, v, { camera_id: cam ? cam.id : null, on_pc: onPc });
     if (cam && !v.password) body.password = null;
     try {
       MIAShell.say((await MIA.saveCamera(body)).message);
@@ -113,13 +121,23 @@
     } catch (e) { MIAShell.say(e.message); }
   }
 
+  // The home computer: cameras on its Wi-Fi come through it, from anywhere (core/home_link.py).
+  function homeNote() {
+    const h = page.home || {};
+    if (h.linked && !h.reachable) return section("Home Computer", null,
+      el("p", { class: "dim" }, "⚠ " + (h.problem || "Can't reach the home computer right now.") + " Its cameras show here again as soon as it answers."));
+    if (!h.linked && !page.demo) return el("p", { class: "dim cam-hint" },
+      "Cameras on your PC's Wi-Fi: link this phone in Settings → Home Computer and you can watch them from anywhere.");
+    return null;
+  }
+
   // ------------------------------------------------------------ views
   const VIEWS = {
-    cameras: () => page.cameras.length
+    cameras: () => [homeNote(), page.cameras.length
       ? section("Cameras", btn("Add Camera", "btn-ghost btn-small", () => editCamera(null)),
           el("div", { class: "cam-grid" }, page.cameras.map(camTile)))
       : section("Cameras", null, el("p", { class: "empty" }, "No cameras yet. Set one up: any camera that streams on your home network (Reolink, Amcrest, Hikvision, Tapo...)."),
-          el("div", { class: "row-buttons" }, btn("Add A Camera", "btn-amber", () => editCamera(null)))),
+          el("div", { class: "row-buttons" }, btn("Add A Camera", "btn-amber", () => editCamera(null))))].filter(Boolean),
     pictures: () => section("Saved Pictures", null, page.pictures.length
       ? el("div", { class: "media-grid" }, page.pictures.map((p) => {
           const img = el("img", { alt: p.camera + ", " + when(p.at), loading: "lazy" });

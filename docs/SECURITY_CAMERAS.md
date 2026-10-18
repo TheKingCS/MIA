@@ -21,6 +21,27 @@ or an RTSP video stream on your network. These work out of the box:
 **Ring, Nest, Blink and Arlo** only stream through their own cloud, so
 MIA can't show them.
 
+## The setup: cameras at home, watched from anywhere
+
+The cameras stay on the **same Wi-Fi as your PC**, and MIA on the PC
+talks to them. Your phone reaches the PC through the link you already
+use for Talk (Settings → Home Computer, `docs/HOME_COMPUTER_SETUP.md`):
+
+- at home: over the Wi-Fi;
+- away (another Wi-Fi, or mobile data): through **Tailscale**, which
+  has to be on on both the PC and the phone.
+
+The phone shows the PC's cameras with a **via PC** tag; their pictures
+come through the PC. Nothing about the cameras is ever opened to the
+internet; only your own devices on your own Tailscale can reach the PC,
+and only with your sign-in. If the PC is off or unreachable, Security
+says so, and the cameras come back as soon as it answers.
+
+Add cameras from the phone or at the PC: with the home computer linked,
+**Add A Camera** on the phone asks where the camera is and defaults to
+**On the home computer's Wi-Fi** (MIA saves it on the PC). Saved
+pictures from the phone are kept on the phone.
+
 ## Adding one
 
 1. Set the camera up with its own app and connect it to your Wi-Fi.
@@ -38,8 +59,8 @@ shown again, and never goes into the repo.
 ## Stream-only cameras (RTSP): ffmpeg
 
 On the PC: `winget install ffmpeg` in a terminal, then restart MIA.
-The phone app can't read RTSP streams yet; still-picture cameras work
-there.
+Cameras added on the PC's Wi-Fi are read by the PC, so a phone watching
+them through the PC never needs ffmpeg itself.
 
 ## What's next
 

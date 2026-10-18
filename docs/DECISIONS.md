@@ -575,5 +575,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Cameras are bought to fit: local-stream brands (Reolink first), not
   cloud-only ones. Lights, locks and the thermostat come later through a
   local Home Assistant. Notes: `docs/SECURITY_CAMERAS.md`.
+  Amended 2026-10-18 (Zac: "the cameras … stay on the wifi that the pc
+  is connected to and then still be able to remotely access it all from
+  the phone"): the PC owns the cameras; a phone linked to it (DEC-0022's
+  link, Tailscale when away) shows them through the PC, and can add,
+  change and remove them there.
 - Related: DEC-0015, DEC-0022
-

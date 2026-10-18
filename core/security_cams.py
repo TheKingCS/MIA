@@ -22,6 +22,14 @@ comes later through a local Home Assistant (docs/ROADMAP.md).
 - **Pictures**: Save Picture keeps the frame in the household's
   `security/pictures/` folder.
 
+**From anywhere (Zac, 2026-10-18).** The cameras stay on the home
+computer's network; MIA on the PC talks to them. A phone linked to that
+PC (Settings → Home Computer, core/home_link.py: same Wi-Fi, or anywhere
+through Tailscale) shows the PC's cameras too: their ids carry REMOTE
+("pc-…"), and their pictures come through the PC with the phone's link
+key. Adding, changing and removing a PC camera from the phone is done
+on the PC. The cameras themselves are never opened to the internet.
+
 `SecurityBook` is the household's (a household store); camera records
 write through atomic_write_text, so removing one can be undone.
 """
@@ -54,6 +62,7 @@ _LOGINS = "security_logins.json"
 TIMEOUT_S = 6
 FRESH_S = 0.8  # a frame this new is shared instead of asking the camera again
 MAX_BYTES = 8 * 1024 * 1024
+REMOTE = "pc-"  # a camera on the linked home computer
 
 # brand: (still-picture path or None, RTSP path or None, help)
 BRANDS = {
@@ -157,6 +166,8 @@ class SecurityBook:
         self.cameras: list[Camera] = []
         self._frames: dict[str, tuple[float, bytes]] = {}
         self.last_error: dict[str, str] = {}
+        self.remote_names: dict[str, str] = {}  # the home computer's cameras, as last seen
+        self.home_down_until = 0.0  # the computer didn't answer: don't wait on it again until then
         self._load()
 
     def _load(self) -> None:
@@ -238,18 +249,32 @@ class SecurityBook:
     def frame(self, camera_id: str) -> bytes:
         """The camera's picture right now (JPEG). Raises CameraError."""
         cam = self.get(camera_id)
-        if cam is None:
+        if cam is None and not camera_id.startswith(REMOTE):
             raise CameraError("That camera isn't set up anymore.")
         cached = self._frames.get(camera_id)
         if cached and time.monotonic() - cached[0] < FRESH_S:
             return cached[1]
         try:
-            data = self._grab(cam)
+            data = self._grab(cam) if cam is not None else self._from_home(camera_id[len(REMOTE):])
         except CameraError as problem:
             self.last_error[camera_id] = str(problem)
             raise
         self._frames[camera_id] = (time.monotonic(), data)
         self.last_error.pop(camera_id, None)
+        return data
+
+    def _from_home(self, remote_id: str) -> bytes:
+        """A picture from one of the home computer's cameras, through MIA there."""
+        from core.home_link import HomeLinkError, home_call
+
+        if not re.fullmatch(r"[0-9a-f]{10}", remote_id):
+            raise CameraError("That camera isn't set up anymore.")
+        try:
+            data = home_call(self.context, f"/api/security/cameras/{remote_id}/frame", timeout=TIMEOUT_S + 6, raw=True)
+        except HomeLinkError as problem:
+            raise CameraError(str(problem)) from None
+        if not data.startswith(b"\xff\xd8"):
+            raise CameraError("The home computer didn't send a picture.")
         return data
 
     def _grab(self, cam: Camera) -> bytes:
@@ -271,17 +296,16 @@ class SecurityBook:
         return self.data_dir / "security" / "pictures"
 
     def save_picture(self, camera_id: str) -> str:
-        cam = self.get(camera_id)
         data = self.frame(camera_id)
         folder = self.pictures_dir()
         folder.mkdir(parents=True, exist_ok=True)
-        name = f"{datetime.now():%Y%m%d-%H%M%S}_{camera_id}.jpg"
+        name = f"{datetime.now():%Y%m%d-%H%M%S}_{camera_id.removeprefix(REMOTE)}.jpg"
         (folder / name).write_bytes(data)
-        return name if cam else name
+        return name
 
     def pictures(self) -> list[dict]:
         folder = self.pictures_dir()
-        names = {c.camera_id: c.name for c in self.cameras}
+        names = {**self.remote_names, **{c.camera_id: c.name for c in self.cameras}}
         out = []
         if folder.is_dir():
             for p in sorted(folder.glob("*.jpg"), reverse=True)[:200]:
@@ -351,6 +375,32 @@ def _rtsp_picture(url: str) -> bytes:
 # ------------------------------------------------------------------ the screen
 
 
+def _home_cameras(context, book) -> dict:
+    """The linked home computer's cameras (core/home_link.py): ready to
+    show here, their pictures coming through the PC."""
+    from core.home_link import HomeLinkError, home_call, linked
+
+    if not linked(context):
+        return {"linked": False, "reachable": False, "problem": "", "cameras": []}
+    if time.monotonic() < book.home_down_until:
+        return {"linked": True, "reachable": False, "problem": "Can't reach the home computer right now.", "cameras": []}
+    try:
+        there = home_call(context, "/api/security", timeout=4)
+    except HomeLinkError as problem:
+        book.home_down_until = time.monotonic() + 30
+        return {"linked": True, "reachable": False, "problem": str(problem), "cameras": []}
+    cams = []
+    for c in there.get("cameras") or []:
+        if c.get("on_pc") or not re.fullmatch(r"[0-9a-f]{10}", str(c.get("id") or "")):
+            continue  # only the computer's own cameras, never a chain
+        book.remote_names[c["id"]] = c.get("name") or "A camera"
+        cams.append({**{k: c.get(k) for k in ("name", "location", "brand", "host", "path", "user", "has_password",
+                                                "problem", "needs_ffmpeg")},
+                     "id": REMOTE + c["id"], "on_pc": True,
+                     "frame": f"/api/security/cameras/{REMOTE}{c['id']}/frame"})
+    return {"linked": True, "reachable": True, "problem": "", "cameras": cams}
+
+
 def security_page(context) -> dict:
     book = getattr(context, "security", None)
     if book is None:
@@ -363,10 +413,12 @@ def security_page(context) -> dict:
                      "problem": book.last_error.get(c.camera_id, ""),
                      "frame": f"/api/security/cameras/{c.camera_id}/frame",
                      "needs_ffmpeg": picture_url(c.brand, c.host, c.path) is None and shutil.which("ffmpeg") is None})
+    home = _home_cameras(context, book)
+    cams += home.pop("cameras")
     order = {loc: i for i, loc in enumerate(LOCATIONS)}
     cams.sort(key=lambda c: (order.get(c["location"], 99), c["name"].lower()))
     pictures = book.pictures()
-    return {"available": True, "cameras": cams, "pictures": pictures[:60],
+    return {"available": True, "cameras": cams, "pictures": pictures[:60], "home": home,
             "counts": {"cameras": len(cams), "pictures": len(pictures)},
             "brands": [{"name": b, "help": h, "kind": "picture" if s is not None else "stream"}
                        for b, (s, _r, h) in BRANDS.items()],

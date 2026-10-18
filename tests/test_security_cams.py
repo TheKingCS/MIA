@@ -93,3 +93,74 @@ def test_grown_ups_only(world):
     from core.actions import ACTION_TYPES
 
     assert not any(ACTION_TYPES[k].child_ok for k in ("camera.remove", "security.save_picture", "security.picture_delete"))
+
+
+# ------------------------------------------------------------------ cameras on the home computer, from the phone
+
+
+@pytest.fixture
+def phone_and_pc(tmp_path, monkeypatch):
+    """A phone linked to a home computer: home_call answers like MIA on the PC would."""
+    import core.home_link as hl
+    import core.security_cams as sc
+    from core.home_link import HomeLinkError
+
+    pc = build_world(tmp_path / "pc", monkeypatch)
+    pc.security = SecurityBook(pc, data_dir=pc.home_dir)
+    phone = build_world(tmp_path / "phone", monkeypatch)
+    phone.actions = ActionCenter()
+    phone.security = SecurityBook(phone, data_dir=phone.home_dir)
+    phone.config.set("home_pc.url", "http://100.64.0.9:8765")
+    phone.config.set("home_pc.token", "device-key")
+    monkeypatch.setattr(sc, "_http_picture", lambda url, u, p: JPEG)
+    state = {"up": True}
+
+    def home_call(context, path, payload=None, timeout=6.0, method="", raw=False):
+        if not state["up"]:
+            raise HomeLinkError("Can't reach the home computer right now.")
+        if path == "/api/security":
+            return security_page(pc)
+        if path.endswith("/frame"):
+            return pc.security.frame(path.split("/")[-2])
+        if path == "/api/security/camera":
+            cam = pc.security.save_camera(payload["camera_id"], payload["name"], payload["location"], payload["brand"],
+                                          payload["host"], payload["path"], payload["user"], payload["password"])
+            return {"message": f"{cam.name} is saved."}
+        if method == "DELETE":
+            pc.security.remove(path.split("/")[-1])
+            return {"message": "Removed."}
+        raise AssertionError(path)
+
+    monkeypatch.setattr(hl, "home_call", home_call)
+    return phone, pc, state
+
+
+def test_the_phone_watches_the_pcs_cameras(phone_and_pc):
+    phone, pc, state = phone_and_pc
+    cam = pc.security.save_camera(None, "Barn", "Barn", "Reolink", "192.168.1.50", "", "admin", "pw")
+    page = security_page(phone)
+    assert page["home"]["reachable"]
+    [remote] = page["cameras"]
+    assert remote["id"] == "pc-" + cam.camera_id and remote["on_pc"] and "pw" not in str(page)
+    assert phone.security.frame(remote["id"]) == JPEG
+    p = phone.actions.propose(phone, "security.save_picture", {"camera_id": remote["id"]})
+    assert "kept on this phone" in p.summary
+    phone.actions.approve(phone, p.proposal_id)
+    assert security_page(phone)["pictures"][0]["camera"] == "Barn"
+    p = phone.actions.propose(phone, "camera.remove", {"camera_id": remote["id"]})
+    assert "home computer" in p.summary
+    phone.actions.approve(phone, p.proposal_id)
+    assert pc.security.cameras == []
+
+
+def test_when_the_pc_is_away(phone_and_pc):
+    phone, pc, state = phone_and_pc
+    pc.security.save_camera(None, "Barn", "Barn", "Reolink", "192.168.1.50", "", "admin", "pw")
+    state["up"] = False
+    page = security_page(phone)
+    assert page["home"] == {"linked": True, "reachable": False, "problem": "Can't reach the home computer right now."}
+    assert page["cameras"] == []
+    with pytest.raises(CameraError, match="home computer"):
+        phone.security.frame("pc-0123456789")
+    with pytest.raises(CameraError):
+        phone.security.frame("pc-../../etc")

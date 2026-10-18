@@ -169,6 +169,42 @@ def link(context) -> None:
     llm.use_home(HomeBackend(url, token) if url and token else None)
 
 
+def linked(context) -> bool:
+    """True when this device is linked to MIA on the home computer."""
+    config = getattr(context, "config", None)
+    return bool(config is not None and config.get("home_pc.url", "") and config.get("home_pc.token", ""))
+
+
+def home_call(context, path: str, payload: Optional[dict] = None, timeout: float = 6.0, method: str = "",
+              raw: bool = False):
+    """Ask MIA on the home computer (with this device's link key): JSON
+    back, or the raw bytes (a camera picture). Raises HomeLinkError with
+    something a person can act on."""
+    config = context.config
+    url, token = config.get("home_pc.url", ""), config.get("home_pc.token", "")
+    if not (url and token):
+        raise HomeLinkError("Link the home computer first (Settings → Home Computer).")
+    headers = {"Authorization": f"Bearer {token}"}
+    data = None
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(url.rstrip("/") + path, data=data, headers=headers,
+                                     method=method or ("POST" if data is not None else "GET"))
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = response.read()
+    except urllib.error.HTTPError as exc:
+        try:
+            detail = json.loads(exc.read().decode("utf-8") or "{}").get("detail")
+        except (ValueError, OSError):
+            detail = None
+        raise HomeLinkError(detail or f"The home computer said {exc.code}.") from exc
+    except (urllib.error.URLError, OSError) as exc:
+        raise HomeLinkError("Can't reach the home computer right now (is it on, and is Tailscale on here?).") from exc
+    return body if raw else json.loads(body.decode("utf-8") or "{}")
+
+
 def status(context) -> dict:
     llm = getattr(context, "llm", None)
     home = getattr(llm, "home", None)

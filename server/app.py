@@ -139,6 +139,7 @@ class CameraRequest(BaseModel):
     path: str = ""
     user: str = ""
     password: Optional[str] = None  # None keeps the one saved
+    on_pc: bool = False  # a phone setting up a camera on the linked home computer
 
 
 class HomeLinkRequest(BaseModel):
@@ -1254,6 +1255,15 @@ def create_app(context: AppContext) -> FastAPI:
         from core.security_cams import CameraError
 
         book = _security_book(profile_id)
+        if body.on_pc or (body.camera_id or "").startswith("pc-"):  # the camera lives on the home computer
+            from core.home_link import HomeLinkError, home_call
+
+            payload = body.model_dump(exclude={"on_pc"})
+            payload["camera_id"] = (body.camera_id or "").removeprefix("pc-") or None
+            try:
+                return home_call(view_for(context, profile_id), "/api/security/camera", payload, timeout=15)
+            except HomeLinkError as problem:
+                raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(problem)) from None
         try:
             with app.state.turn_lock:
                 cam = book.save_camera(body.camera_id, body.name, body.location, body.brand, body.host, body.path,
@@ -1261,6 +1271,17 @@ def create_app(context: AppContext) -> FastAPI:
         except CameraError as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {"message": f"{cam.name} is saved.", "camera_id": cam.camera_id}
+
+    @app.delete("/api/security/camera/{camera_id}")
+    def web_security_camera_remove(camera_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Remove a camera here (a linked phone asking this computer)."""
+        book = _security_book(profile_id)
+        cam = book.get(camera_id)
+        if cam is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That camera isn't set up anymore.")
+        with app.state.turn_lock:
+            book.remove(camera_id)
+        return {"message": f"Removed {cam.name}."}
 
     @app.get("/api/security/cameras/{camera_id}/frame")
     def web_security_frame(camera_id: str, profile_id: str = Depends(require_profile_id)):

@@ -1575,3 +1575,4 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   box-shadow: 0 0 24px rgba(var(--rgb-accent), 0.18); }
 .place-arrival h3 { margin: 0 0 6px; font-size: var(--text-md); }
 .place-arrival p { margin: 0 0 12px; color: var(--text-dim); }
+.cam-hint { margin: 0 0 10px; font-size: var(--text-sm); }
