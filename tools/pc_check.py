@@ -112,7 +112,17 @@ def checks(config) -> list[tuple[str, str, str, str]]:
     return out
 
 
+def _plain_console() -> None:
+    """Windows' console is cp1252 by default: print what it can't show as "?", never crash."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main() -> int:
+    _plain_console()
     from core.app_context import AppContext
     from core.config_manager import ConfigManager
     from core.event_bus import EventBus
