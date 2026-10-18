@@ -16,9 +16,16 @@
   const GRID_MS = 3000, FULL_MS = 1000;
   let page = null, loops = [], full = null;
   const answering = new Map();  // camera id → answering right now (the strip's count)
+  // The Cameras cell says the worst camera state: ok while all answer, soon when any doesn't (Muse, H-0059).
+  function camerasTone() {
+    const down = page.cameras.some((c) => c.problem || answering.get(c.id) === false) || (page.home && page.home.linked && !page.home.reachable);
+    return down ? "soon" : "ok";
+  }
   function countAnswering() {
     const n = $("answering");
     if (n) n.textContent = String([...answering.values()].filter(Boolean).length);
+    const cell = $("cams-cell");
+    if (cell) cell.className = "cell " + camerasTone();
   }
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "cameras";
 
@@ -78,7 +85,8 @@
     let stop = null;
     const close = () => { if (stop) stop(); dialog.close(); dialog.remove(); full = null; };
     dialog.append(
-      el("div", { class: "sect" }, el("h3", {}, cam.name), el("span", { class: "dim" }, cam.location)),
+      el("div", { class: "sect" }, el("h3", {}, cam.name),
+        el("span", { class: "dim" }, [cam.location, cam.on_pc ? "via PC" : null].filter(Boolean).join(" · "))),
       el("div", { class: "cam-frame big" }, img, status),
       el("div", { class: "confirm-actions" },
         btn("Save Picture", "btn-amber", () => act({ kind: "security.save_picture", params: { camera_id: cam.id } })),
@@ -136,14 +144,15 @@
     cameras: () => [homeNote(), page.cameras.length
       ? section("Cameras", btn("Add Camera", "btn-ghost btn-small", () => editCamera(null)),
           el("div", { class: "cam-grid" }, page.cameras.map(camTile)))
-      : section("Cameras", null, el("p", { class: "empty" }, "No cameras yet. Set one up: any camera that streams on your home network (Reolink, Amcrest, Hikvision, Tapo...)."),
+      : section("Cameras", null, el("p", { class: "empty" }, "No cameras yet. MIA shows cameras that stream on your home network: see which ones work in Set Up → Which Cameras Work."),
           el("div", { class: "row-buttons" }, btn("Add A Camera", "btn-amber", () => editCamera(null))))].filter(Boolean),
     pictures: () => section("Saved Pictures", null, page.pictures.length
       ? el("div", { class: "media-grid" }, page.pictures.map((p) => {
           const img = el("img", { alt: p.camera + ", " + when(p.at), loading: "lazy" });
           MIA.image("/api/security/pictures/" + encodeURIComponent(p.name)).then((src) => { if (src) img.src = src; });
           return el("div", { class: "media-tile kind-image" }, img, el("span", { class: "craft-tag" }, p.camera + " · " + when(p.at)),
-            btn("✕", "btn-ghost btn-small cam-del", () => act({ kind: "security.picture_delete", params: { name: p.name } })));
+            el("button", { type: "button", class: "btn btn-ghost btn-small cam-del", "aria-label": "Delete this picture",
+              onclick: () => act({ kind: "security.picture_delete", params: { name: p.name } }) }, "✕"));
         }))
       : el("p", { class: "empty" }, "Nothing saved. Open a camera and press Save Picture.")),
     setup: () => [
@@ -167,7 +176,7 @@
     stopAll();
     const c = page.counts;
     $("strip").replaceChildren(
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.cameras), el("span", { class: "t" }, "Cameras")),
+      el("div", { class: "cell " + camerasTone(), id: "cams-cell" }, el("span", { class: "n" }, c.cameras), el("span", { class: "t" }, "Cameras")),
       el("div", { class: "cell ok" }, el("span", { class: "n", id: "answering" },
         page.demo ? page.cameras.length : [...answering.values()].filter(Boolean).length), el("span", { class: "t" }, "Answering")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.pictures), el("span", { class: "t" }, "Saved Pictures")));
