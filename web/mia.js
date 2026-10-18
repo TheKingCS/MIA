@@ -246,6 +246,7 @@
     thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),
     homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),
     homeDisconnect: () => demo ? demoOnly() : call("POST", "/api/home_pc/disconnect"),
+    syncNow: () => demo ? demoOnly() : call("POST", "/api/sync/now"),
     newChat: () => demo ? Promise.resolve({ reset: true }) : call("POST", "/api/voice/reset"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),

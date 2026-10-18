@@ -203,10 +203,12 @@ def _home_link(context) -> dict:
     from core.home_link import status
 
     try:
-        return status(context)
+        from core.sync import status as sync_status
+
+        return {**status(context), "sync": sync_status(context)}  # two-way sync (core/sync.py)
     except Exception:
         log.exception("Settings: home link status failed")
-        return {"linked": False, "url": "", "who": "", "reachable": False, "model": "", "level": ""}
+        return {"linked": False, "url": "", "who": "", "reachable": False, "model": "", "level": "", "sync": None}
 
 
 def find_interest(context, name: str) -> Optional[str]:

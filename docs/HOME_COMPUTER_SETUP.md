@@ -71,6 +71,18 @@ Run the check again any time: `.venv\Scripts\python tools\pc_check.py`.
       says which model it found.
 - [ ] Ask Talk something. The answer is marked **HOME PC**.
 
+## What the link does (once it's set)
+
+- **Talk** uses the computer's bigger model (HOME PC), and the phone's
+  own when it can't reach it.
+- **Everything stays in step:** a change on the phone or the computer
+  (missions, the kitchen, money, quests, the journal, your XP and
+  credits) shows up on the other one, by itself, about every 15 seconds
+  after a change while they can reach each other. Settings → Home
+  Computer says when it last synced; **Sync Now** does it right away.
+- **Heavy jobs:** the computer reads photos and receipts, hears you, and
+  speaks for MIA whenever the phone can't do it itself.
+
 ## 5. Tell Claude
 
 Say "the PC is up", and either paste `pc-check\models.md` or just say
@@ -101,5 +113,20 @@ In PowerShell, in the MIA folder: `git pull`, then double-click
   way in, and only for devices on your tailnet.
 - The phone checks the computer at most every 30 seconds, so away from
   home it doesn't wait on it. `core/home_link.py`, `core/llm_manager.py`.
+- Two-way sync (`core/sync.py`): the phone drives it, the PC answers
+  `/api/sync/*` with the person's link key. Two folders, matched by
+  meaning (the phone's account and the PC's have different ids): the
+  person's own and their household's, every JSON data file directly in
+  them except device-only ones (`NEVER_SYNC`: camera logins, logs, the
+  private journal for now). The phone keeps each file as of the last
+  sync (`data/.sync/`): changed on one side, that side wins; on both, a
+  three-way merge by record id, field by field, the newer file winning a
+  field both changed; the history merges line by line; XP and credits
+  add what each side earned. The PC only takes a file that's still the
+  version the phone saw (409 otherwise). Not yet: photos and other files
+  in subfolders, conversations, the private journal.
+- Heavy jobs (`core/heavy_jobs.py`, `/api/heavy/ocr|transcribe|speak`):
+  the phone's own engine first, the PC when it has none; after a
+  failure the PC isn't asked for a minute.
 - The kit: `setup_home_pc.ps1` (CI dry-runs it on Windows every push),
   `tools/pc_check.py`, `tools/pc_model_check.py`.

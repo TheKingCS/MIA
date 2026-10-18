@@ -80,8 +80,26 @@
     const disconnect = async () => {
       try { MIAShell.say((await MIA.homeDisconnect()).message); page = await MIA.settings(); draw(); } catch (e) { MIAShell.say(e.message); }
     };
-    return section("Home Computer", status, el("div", { class: "acct-actions" },
+    // Two-way sync (core/sync.py) and the heavy jobs the computer takes (core/heavy_jobs.py).
+    const s = h.sync || {};
+    const ago = (iso) => {
+      if (!iso) return "not yet";
+      const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+      return min < 1 ? "just now" : min < 60 ? min + " min ago" : new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    };
+    const syncNow = async () => {
+      MIAShell.say("Syncing with the home computer…");
+      try { MIAShell.say((await MIA.syncNow()).message); page = await MIA.settings(); draw(); }
+      catch (e) { MIAShell.say(e.message); }
+    };
+    const syncInfo = h.linked ? [
+      el("p", {}, "🔄 Sync: " + (s.problem ? "⚠ " + s.problem : "last synced " + ago(s.last)) +
+        ". Changes on this phone and the computer show up on both, by themselves."),
+      el("p", { class: "dim" }, "When this phone can't, the computer reads your photos and receipts, hears you, and speaks for MIA."),
+    ] : [];
+    return section("Home Computer", status, ...syncInfo, el("div", { class: "acct-actions" },
       el("button", { type: "button", class: "btn btn-amber", onclick: connect }, h.linked ? "Link Again" : "Link"),
+      h.linked ? el("button", { type: "button", class: "btn btn-ghost", onclick: syncNow }, "Sync Now") : "",
       h.linked ? el("button", { type: "button", class: "btn btn-ghost", onclick: disconnect }, "Unlink") : ""));
   }
 

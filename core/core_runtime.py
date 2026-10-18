@@ -162,6 +162,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.connectivity = ConnectivityMonitor(context)
     context.connectivity.refresh_async()
     context.voice = VoiceManager(context)
+    from core.ocr import OcrQueue
+
+    context.ocr = OcrQueue(context)  # Tesseract here, or the linked home computer's (core/heavy_jobs.py)
     context.waypoints = WaypointManager(context)
     context.power = PowerManager(context)
     # Expeditions/Trips referenced by Missions (trip_duration_hours

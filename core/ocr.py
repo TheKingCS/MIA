@@ -253,7 +253,12 @@ class OcrQueue:
 
     @property
     def available(self) -> bool:
-        return available(self.context.config) if self._engine == self._tesseract_engine else True
+        if self._engine != self._tesseract_engine:
+            return True
+        from core.heavy_jobs import can_use_home
+
+        # This device's Tesseract, or the linked home computer's (core/heavy_jobs.py).
+        return available(self.context.config) or can_use_home(self.context)
 
     # -- asking ---------------------------------------------------------
 
@@ -333,6 +338,12 @@ class OcrQueue:
     def _tesseract_engine(self, job: OcrJob, on_page, should_stop) -> list[str]:
         exe = tesseract_path(self.context.config)
         if exe is None:
+            from core.heavy_jobs import can_use_home, read_document
+
+            if can_use_home(self.context):  # no Tesseract here: the home computer reads it
+                pages = read_document(self.context, job.source)
+                on_page(pages, len(pages))
+                return pages
             raise OcrError(f"Tesseract isn't installed; {INSTALL_HINT}.")
         language = str(self.context.config.get("ocr.language", "eng") or "eng")
         if job.source.suffix.lower() in IMAGE_SUFFIXES:

@@ -289,7 +289,7 @@ Android geofencing; today it's only while MIA is open). **ALICE picks built (DEC
 one conversation everywhere, the voice guide. **Expansion audit**
 (`docs/EXPANSION_AUDIT.md`, DEC-0030 approved): phase B crafting is
 built (Workshop → Recipes / Builds). DEC-0030 approved (2026-10-17). Built since: the phone side of DEC-0022 (`docs/HOME_COMPUTER_SETUP.md`), phase C Orders & Quotes, phase D Grow Lab, and show-off mode (DEC-0031). Next:
-DEC-0022 on the real PC (model comparison), then phase C (quotes from a recipe, customers and orders, a portfolio page),
+DEC-0022 on the real PC (model comparison; two-way sync and heavy jobs are built, 2026-10-18), then phase C (quotes from a recipe, customers and orders, a portfolio page),
 D (grow lab), E (memory vault, after DEC-0022's phone↔PC link). Receiving
 from a scanned receipt into a recipe's materials is a small follow-up.
 

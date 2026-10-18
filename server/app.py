@@ -130,6 +130,13 @@ class ProposeRequest(BaseModel):
     params: dict = {}
 
 
+class SyncFileRequest(BaseModel):
+    scope: str
+    name: str
+    expect: str = ""
+    data: str  # base64
+
+
 class CameraRequest(BaseModel):
     camera_id: Optional[str] = None
     name: str
@@ -456,6 +463,21 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.fresh_talk: set[str] = set()  # "New chat" asked for: the next turn starts one
     app.state.turn_lock = threading.Lock()
 
+    # Two-way sync with the home computer (core/sync.py): a linked device keeps at it in the background.
+    def _start_sync() -> None:
+        from core.sync import SyncLoop
+
+        app.state.sync_loop = SyncLoop(context, app.state.turn_lock)
+        app.state.sync_loop.start()
+
+    def _stop_sync() -> None:
+        loop = getattr(app.state, "sync_loop", None)
+        if loop is not None:
+            loop.stop()
+
+    app.router.on_startup.append(_start_sync)
+    app.router.on_shutdown.append(_stop_sync)
+
     def conversation_for(profile_id: str, view=None) -> Conversation:
         """2026-09-28: phone conversations are saved with the desktop's
         (the Assistant's History, titled "📱 ..."), so a drive-home chat
@@ -503,8 +525,12 @@ def create_app(context: AppContext) -> FastAPI:
         publish_on_main_thread(context, "conversation.updated", conversation_id=conversation.conversation_id)
 
     def speak_to_base64(text: str) -> Optional[str]:
-        if context.voice is None or not text:
+        if not text:
             return None
+        if context.voice is None or not context.voice.is_tts_available():
+            from core.heavy_jobs import can_use_home, speak
+
+            return speak(context, text) if can_use_home(context) else None  # the home computer's voice
         with tempfile.TemporaryDirectory() as tmp:
             synthesized = context.voice.synthesize(text, Path(tmp) / "reply.wav")
             if synthesized is None:
@@ -563,8 +589,10 @@ def create_app(context: AppContext) -> FastAPI:
         }
 
     def transcribe_bytes(audio: bytes) -> Optional[str]:
-        if context.voice is None:
-            return None
+        if context.voice is None or not context.voice.is_stt_available():
+            from core.heavy_jobs import can_use_home, transcribe
+
+            return transcribe(context, audio) if can_use_home(context) else None  # heard on the home computer
         with tempfile.TemporaryDirectory() as tmp:
             wav_path = Path(tmp) / "utterance.wav"
             wav_path.write_bytes(audio)
@@ -612,9 +640,12 @@ def create_app(context: AppContext) -> FastAPI:
     @app.get("/api/voice/status")
     def voice_status(profile_id: str = Depends(require_profile_id)) -> dict:
         voice = context.voice
+        from core.heavy_jobs import can_use_home
+
+        home = can_use_home(context)
         return {
-            "speech_to_text": bool(voice and voice.is_stt_available()),
-            "text_to_speech": bool(voice and voice.is_tts_available()),
+            "speech_to_text": bool(voice and voice.is_stt_available()) or home,
+            "text_to_speech": bool(voice and voice.is_tts_available()) or home,
             "assistant": bool(context.llm and context.llm.is_available()),
         }
 
@@ -1237,6 +1268,145 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import character_page
 
         return _screen(profile_id, "character", character_page)
+
+    # ------------------------------------------------------------ Heavy jobs (core/heavy_jobs.py): a linked phone asks
+    # This computer's own engines only: a job sent here never goes anywhere else.
+    @app.post("/api/heavy/ocr")
+    async def heavy_ocr(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.heavy_jobs import MAX_UPLOAD
+        from core.ocr import IMAGE_SUFFIXES, OcrError, ocr_image, ocr_pdf, tesseract_path
+
+        data = await request.body()
+        if len(data) > MAX_UPLOAD:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is over 60 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "page.jpg"))).name or "page.jpg"
+        exe = tesseract_path(context.config)
+        if exe is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Tesseract isn't installed on the home computer.")
+        language = str(context.config.get("ocr.language", "eng") or "eng")
+
+        def read() -> list[str]:
+            with tempfile.TemporaryDirectory() as tmp:
+                source = Path(tmp) / name
+                source.write_bytes(data)
+                if source.suffix.lower() in IMAGE_SUFFIXES:
+                    return [ocr_image(exe, source, language)]
+                return ocr_pdf(exe, source, language)
+
+        try:
+            return {"pages": await run_in_threadpool(read)}
+        except OcrError as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem)) from None
+
+    @app.post("/api/heavy/transcribe")
+    async def heavy_transcribe(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        audio = await request.body()
+        if len(audio) > MAX_VOICE_UPLOAD_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Recording too long.")
+        voice = context.voice
+        if voice is None or not voice.is_stt_available():
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Speech-to-text isn't set up on the home computer.")
+
+        def hear() -> Optional[str]:
+            with tempfile.TemporaryDirectory() as tmp:
+                wav_path = Path(tmp) / "utterance.wav"
+                wav_path.write_bytes(audio)
+                return voice.transcribe(wav_path)
+
+        return {"text": (await run_in_threadpool(hear)) or ""}
+
+    @app.post("/api/heavy/speak")
+    def heavy_speak(body: VoiceTextRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        voice = context.voice
+        if voice is None or not voice.is_tts_available() or not body.text.strip():
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "There's no voice on the home computer.")
+        with tempfile.TemporaryDirectory() as tmp:
+            made = voice.synthesize(body.text.strip()[:2000], Path(tmp) / "say.wav")
+            if made is None:
+                raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The voice couldn't say that.")
+            return {"audio_wav_base64": base64.b64encode(Path(made).read_bytes()).decode("ascii")}
+
+    # ------------------------------------------------------------ Sync (core/sync.py): the PC answers, the phone asks
+    def _sync_person(profile_id: str) -> str:
+        from core.child_accounts import is_child
+
+        if is_child(view_for(context, profile_id)):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Sync is for grown-ups' devices for now.")
+        return profile_id
+
+    @app.get("/api/sync/manifest")
+    def sync_manifest(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.sync import manifest
+
+        with app.state.turn_lock:
+            return manifest(context, _sync_person(profile_id))
+
+    @app.get("/api/sync/file")
+    def sync_file(scope: str, name: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import Response
+
+        from core.sync import path_for
+
+        try:
+            path = path_for(context, _sync_person(profile_id), scope, name)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        if not path.is_file():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't here.")
+        with app.state.turn_lock:
+            data = path.read_bytes()
+        return Response(data, media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/sync/file")
+    def sync_put(body: SyncFileRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Take a file from the phone, only if it's still the version the phone saw."""
+        import base64
+        import binascii
+
+        from core.sync import digest, path_for, write_file
+
+        try:
+            path = path_for(context, _sync_person(profile_id), body.scope, body.name)
+            data = base64.b64decode(body.data.encode("ascii"), validate=True)
+            data.decode("utf-8")
+        except (ValueError, binascii.Error, UnicodeDecodeError) as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem) or "That file can't be read.") from None
+        with app.state.turn_lock:
+            current = path.read_bytes() if path.is_file() else None
+            if digest(current) != body.expect:
+                raise HTTPException(status.HTTP_409_CONFLICT, "It changed here since; sync again.")
+            write_file(context, path, data)
+        return {"ok": True}
+
+    @app.post("/api/sync/game")
+    def sync_game(values: dict, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.sync import set_game_numbers
+
+        with app.state.turn_lock:
+            set_game_numbers(context, _sync_person(profile_id), values)
+        return {"ok": True}
+
+    @app.get("/api/sync/status")
+    def sync_status(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.sync import status as sync_state
+
+        return sync_state(context)
+
+    @app.post("/api/sync/now")
+    def sync_now_endpoint(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The phone: sync with the linked home computer right now."""
+        from core.home_link import HomeLinkError
+        from core.sync import state_for, sync_now
+
+        _sync_person(profile_id)
+        try:
+            done = sync_now(context, lock=app.state.turn_lock)
+        except (HomeLinkError, ValueError, OSError) as problem:
+            state_for(context).set_status(problem=str(problem))
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(problem)) from None
+        changed = done["pushed"] + done["pulled"] + done["merged"]
+        return {"message": "Up to date with the home computer." if not changed else
+                f"Synced: {done['pulled']} from the computer, {done['pushed']} to it, {done['merged']} merged.", **done}
 
     # ------------------------------------------------------------ Security (DEC-0033, core/security_cams.py)
     @app.get("/api/security")

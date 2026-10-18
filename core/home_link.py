@@ -176,7 +176,7 @@ def linked(context) -> bool:
 
 
 def home_call(context, path: str, payload: Optional[dict] = None, timeout: float = 6.0, method: str = "",
-              raw: bool = False):
+              raw: bool = False, body: Optional[bytes] = None, headers: Optional[dict] = None):
     """Ask MIA on the home computer (with this device's link key): JSON
     back, or the raw bytes (a camera picture). Raises HomeLinkError with
     something a person can act on."""
@@ -184,12 +184,12 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
     url, token = config.get("home_pc.url", ""), config.get("home_pc.token", "")
     if not (url and token):
         raise HomeLinkError("Link the home computer first (Settings → Home Computer).")
-    headers = {"Authorization": f"Bearer {token}"}
-    data = None
+    sent = {"Authorization": f"Bearer {token}", **(headers or {})}
+    data = body
     if payload is not None:
-        headers["Content-Type"] = "application/json"
+        sent["Content-Type"] = "application/json"
         data = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url.rstrip("/") + path, data=data, headers=headers,
+    request = urllib.request.Request(url.rstrip("/") + path, data=data, headers=sent,
                                      method=method or ("POST" if data is not None else "GET"))
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -208,7 +208,7 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
 def status(context) -> dict:
     llm = getattr(context, "llm", None)
     home = getattr(llm, "home", None)
-    return {"linked": home is not None, "url": context.config.get("home_pc.url", ""),
+    return {"linked": home is not None or linked(context), "url": context.config.get("home_pc.url", ""),
             "who": context.config.get("home_pc.who", ""),
             "reachable": bool(home is not None and llm.home_reach.up()),
             "model": getattr(home, "model", "") if home is not None else "",
