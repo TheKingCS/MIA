@@ -68,6 +68,11 @@ def test_xp_and_credits_add_up_what_each_side_earned():
     assert got == {"total_xp": 180, "total_credits": 25, "prestige_tier": 1, "unlocked_reward_ids": ["r1", "r2"]}
 
 
+def test_line_endings_dont_count_as_a_change():
+    assert digest(b'[\r\n  {"id": "a"}\r\n]') == digest(b'[\n  {"id": "a"}\n]')
+    assert digest(b"") != digest(None)
+
+
 def test_never_syncs_device_only_files():
     assert sync.syncable("missions.json") and sync.syncable("life_events.jsonl")
     assert not sync.syncable("security_logins.json") and not sync.syncable("foods.tsv")
@@ -139,7 +144,8 @@ def test_a_full_sync_both_ways(phone):
     assert ids == ["pc1", "phone2", "pc3"]
     assert json.loads(pc.files["home"]["missions.json"]) == json.loads((phone.dirs["home"] / "missions.json").read_text())
 
-    # Nothing changed: nothing moves.
+    # Nothing changed: nothing moves, even when the PC saves Windows line endings.
+    pc.files["home"] = {n: d.replace(b"\n", b"\r\n") for n, d in pc.files["home"].items()}
     again = sync.sync_now(phone, call=pc)
     assert (again["pushed"], again["pulled"], again["merged"]) == (0, 0, 0)
 

@@ -69,7 +69,10 @@ _MISSING = object()
 
 
 def digest(data: Optional[bytes]) -> str:
-    return hashlib.sha256(data).hexdigest() if data is not None else ""
+    """A file's fingerprint, the same whatever line endings the device
+    writes (MIA on Windows saves "\r\n", the phone "\n"; caught by the
+    Windows CI run: without this the two would trade the file forever)."""
+    return hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest() if data is not None else ""
 
 
 def _id_key(items: list) -> Optional[str]:

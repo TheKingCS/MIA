@@ -86,9 +86,8 @@ Run the check again any time: `.venv\Scripts\python tools\pc_check.py`.
 ## 5. Tell Claude
 
 Say "the PC is up", and either paste `pc-check\models.md` or just say
-the comparison ran. Claude then picks the model (DEC-0022), and goes on
-to the next steps: heavy jobs on the PC (voice, reading photos, email,
-bank sync), then two-way sync between the phone and the PC.
+the comparison ran. Claude then picks the model (DEC-0022) and checks
+that sync and the heavy jobs work between your phone and the PC.
 
 ## Cameras (when you have them)
 
