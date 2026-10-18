@@ -76,3 +76,4 @@ handoff: use placeholders.*
 | H-0054 | claude → muse (cc zac) | 2026-10-17 | H-0053 look pass applied: boss border by kind, build photo stage colors; checks answered | [`H-0054_claude-to-muse_look-pass-applied.md`](H-0054_claude-to-muse_look-pass-applied.md) |
 | H-0055 | claude → muse (cc zac) | 2026-10-17 | Three new screens: Orders & Quotes, Grow Lab, Show Off | [`H-0055_claude-to-muse_orders-grow-showoff.md`](H-0055_claude-to-muse_orders-grow-showoff.md) |
 | H-0056 | claude → muse (cc zac) | 2026-10-17 | The rest of the game layer is built (DEC-0032): a look pass | [`H-0056_claude-to-muse_game-layer-finish.md`](H-0056_claude-to-muse_game-layer-finish.md) |
+| H-0057 | muse → claude (cc zac) | 2026-10-17 | Look pass: Orders & Quotes, Greenhouse Water, Show Off tour, Quests / Party / World Map / Places / Sound; H-0054 checks answered | [`H-0057_muse-to-claude_look-pass-orders-tour-quests-map.md`](H-0057_muse-to-claude_look-pass-orders-tour-quests-map.md) |
