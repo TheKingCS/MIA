@@ -34,6 +34,7 @@ REASONS: dict[str, tuple[str, str]] = {
     "memory_callback": ("things MIA remembers", "something you told me was about to matter (a birthday, a plan, a note on your gear)"),
     "grow_alert": ("greenhouse readings", "a tank or bed reading was outside the range set for it"),
     "season": ("seasonal questlines", "a new season started and MIA had questlines for it"),
+    "insurance_renewal": ("insurance renewals", "a policy renews within about 45 days: a good time to shop it"),
     "chronicle": ("the Chronicle", "on Sundays, your week's chapter of the Chronicle is ready"),
     "journal_reflection": ("the weekly reflection", "you turned on the weekly journal reflection"),
 }

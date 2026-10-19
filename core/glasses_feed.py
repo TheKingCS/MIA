@@ -39,6 +39,7 @@ SAME_MOMENT = timedelta(seconds=10)
 EVENT_CARDS = {
     "mission_completed": ("🎉", "Mission Complete"),  # also when notifications are switched off
     "debt_payment": ("💳", "Debt Payment"),
+    "insurance_switched": ("☂️", "Insurance Switched"),
     "bill_paid": ("🧾", "Bill Paid"),
     "income_received": ("💵", "Income"),
     "rent_received": ("🏠", "Rent Received"),

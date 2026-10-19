@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Insurance — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="insurance" class="mod-insurance">
+  <!--
+    Insurance (claude, 2026-10-19, DEC-0034): your policies, what's worth a
+    look, and quotes side by side. MIA.insurance() (core/insurance.py).
+    MIA drafts quote requests; you press Send. She never shops for you.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">☂️</span> <span id="hero-name">Insurance</span></h1>
+        <p class="tagline" id="hero-tagline">Covered, for less.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="insurance.js"></script>
+</body>
+</html>

@@ -80,17 +80,18 @@ TYPES = {
     "harvest": "harvests",
     "questline_finished": "questlines finished",
     "explored": "new ground explored",
+    "insurance_switched": "insurance switched (money saved)",
     "safety_escalation": "safety alerts",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
 AUDIT_ONLY = frozenset({"safety_escalation"})
 # Money: never shown to a child account (core/child_accounts.py).
 MONEY_TYPES = frozenset({"bill_paid", "income_received", "expense_added", "income_added", "debt_payment",
-                         "rent_received", "property_expense", "imported"})
+                         "rent_received", "property_expense", "imported", "insurance_switched"})
 # What counts as getting something done ("what did I get done?").
 WINS = ("bill_paid", "debt_payment", "mission_completed", "workout_logged", "maintenance_done", "task_done",
         "project_completed", "rent_received", "income_received", "meal_logged", "build_finished", "harvest",
-        "questline_finished")
+        "questline_finished", "insurance_switched")
 
 _lock = threading.Lock()
 _local = threading.local()

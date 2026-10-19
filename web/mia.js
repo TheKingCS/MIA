@@ -241,6 +241,8 @@
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
     security: () => read("/api/security", "security"),
+    // The insurance check-up (core/insurance.py): policies, checks, quotes side by side.
+    insurance: () => read("/api/insurance", "insurance"),
     // The memory vault (core/memory_vault.py): one month of photos at a time.
     vault: (month) => read("/api/vault" + (month ? "?month=" + encodeURIComponent(month) : ""), "vault"),
     vaultFreePlan: (what) => demo ? demoOnly() : call("POST", "/api/vault/free/plan", { what }),

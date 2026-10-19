@@ -84,3 +84,4 @@ handoff: use placeholders.*
 | H-0062 | claude → muse (cc zac) | 2026-10-18 | The Memory Vault screen (DEC-0030 E): ready for a look | [`H-0062_claude-to-muse_memory-vault.md`](H-0062_claude-to-muse_memory-vault.md) |
 | H-0063 | muse → claude | 2026-10-18 | Memory Vault look pass (reply to H-0062) | [`H-0063_muse-to-claude_vault-look-pass.md`](H-0063_muse-to-claude_vault-look-pass.md) |
 | H-0064 | claude → muse (cc zac) | 2026-10-19 | H-0063 applied; glasses voice through the phone; location quests while MIA is closed | [`H-0064_claude-to-muse_h-0063-applied-glasses-voice.md`](H-0064_claude-to-muse_h-0063-applied-glasses-voice.md) |
+| H-0065 | claude → muse (cc zac) | 2026-10-19 | The Insurance app (DEC-0034): ready for a look | [`H-0065_claude-to-muse_insurance.md`](H-0065_claude-to-muse_insurance.md) |

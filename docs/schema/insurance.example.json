@@ -1,0 +1,540 @@
+{
+  "available": true,
+  "policies": [
+    {
+      "policy_id": "d155bde2c5",
+      "kind": "Car",
+      "insurer": "Placeholder Mutual",
+      "premium": 642.0,
+      "every": "6 Months",
+      "renews": "2026-11-20",
+      "deductible": 500.0,
+      "coverage": "Bodily injury: 100,000/300,000\nProperty damage: 100,000\nUninsured motorist: 100,000/300,000\nCollision: $500 deductible\nComprehensive: $250 deductible\nRental: none",
+      "asset_id": "381d2bdacc",
+      "policy_number": "",
+      "agent_email": "agent@example.com",
+      "last_premium": 561.0,
+      "note": "",
+      "name": "Truck insurance",
+      "created_at": "2026-10-19T18:10:19",
+      "updated_at": "2026-10-19T18:10:19",
+      "chosen_quote_id": "",
+      "id": "d155bde2c5",
+      "icon": "🚗",
+      "per_year": 1284.0,
+      "covers": "2012 Placeholder Pickup",
+      "coverage_lines": [
+        {
+          "name": "Bodily injury",
+          "key": "bodily injury",
+          "limit": "100,000/300,000",
+          "amounts": [
+            100000.0,
+            300000.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Property damage",
+          "key": "property damage",
+          "limit": "100,000",
+          "amounts": [
+            100000.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Uninsured motorist",
+          "key": "uninsured motorist",
+          "limit": "100,000/300,000",
+          "amounts": [
+            100000.0,
+            300000.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Collision",
+          "key": "collision",
+          "limit": "$500 deductible",
+          "amounts": [
+            500.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Comprehensive",
+          "key": "comprehensive",
+          "limit": "$250 deductible",
+          "amounts": [
+            250.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Rental",
+          "key": "rental reimbursement",
+          "limit": "none",
+          "amounts": [],
+          "included": false
+        }
+      ],
+      "checks": [
+        {
+          "tone": "soon",
+          "text": "Renews in 32 days: a good time to get a couple of quotes."
+        },
+        {
+          "tone": "soon",
+          "text": "Up 14% since last term ($162.00 more a year): worth shopping."
+        },
+        {
+          "tone": "info",
+          "text": "Collision and comprehensive on a 2012 vehicle: compare what they cost with what it's worth now. Dropping them can save a lot on an older car."
+        },
+        {
+          "tone": "info",
+          "text": "A $500.00 deductible: if your savings could cover $1,000.00, ask for a quote with that too. A higher deductible usually costs less."
+        },
+        {
+          "tone": "info",
+          "text": "Your car and home are with different insurers: ask each for a bundle quote."
+        }
+      ],
+      "compare": {
+        "per_year": 1284.0,
+        "rows": [
+          {
+            "key": "bodily injury",
+            "name": "Bodily injury",
+            "current": "100,000/300,000",
+            "quotes": [
+              "100,000/300,000",
+              "50,000/100,000"
+            ]
+          },
+          {
+            "key": "property damage",
+            "name": "Property damage",
+            "current": "100,000",
+            "quotes": [
+              "100,000",
+              "50,000"
+            ]
+          },
+          {
+            "key": "uninsured motorist",
+            "name": "Uninsured motorist",
+            "current": "100,000/300,000",
+            "quotes": [
+              "100,000/300,000",
+              "—"
+            ]
+          },
+          {
+            "key": "collision",
+            "name": "Collision",
+            "current": "$500 deductible",
+            "quotes": [
+              "$500 deductible",
+              "$1,000 deductible"
+            ]
+          },
+          {
+            "key": "comprehensive",
+            "name": "Comprehensive",
+            "current": "$250 deductible",
+            "quotes": [
+              "$250 deductible",
+              "—"
+            ]
+          },
+          {
+            "key": "rental reimbursement",
+            "name": "Rental",
+            "current": "none",
+            "quotes": [
+              "none",
+              "—"
+            ]
+          }
+        ],
+        "quotes": [
+          {
+            "id": "26598c8066",
+            "insurer": "Example Auto",
+            "per_year": 1096.0,
+            "saves": 188.0,
+            "covers_less": [],
+            "same_coverage": true,
+            "unknown_coverage": false,
+            "received": "2026-10-15",
+            "deductible": 500.0,
+            "note": "",
+            "coverage": {
+              "bodily injury": "100,000/300,000",
+              "property damage": "100,000",
+              "uninsured motorist": "100,000/300,000",
+              "collision": "$500 deductible",
+              "comprehensive": "$250 deductible",
+              "rental reimbursement": "none"
+            },
+            "chosen": false
+          },
+          {
+            "id": "9329d42be5",
+            "insurer": "Demo Direct",
+            "per_year": 910.0,
+            "saves": 374.0,
+            "covers_less": [
+              "lower Bodily injury (50,000/100,000 vs 100,000/300,000)",
+              "lower Property damage (50,000 vs 100,000)",
+              "no Uninsured motorist",
+              "no Comprehensive",
+              "higher deductible ($1,000.00 vs $500.00)"
+            ],
+            "same_coverage": false,
+            "unknown_coverage": false,
+            "received": "2026-10-16",
+            "deductible": 1000.0,
+            "note": "",
+            "coverage": {
+              "bodily injury": "50,000/100,000",
+              "property damage": "50,000",
+              "collision": "$1,000 deductible"
+            },
+            "chosen": false
+          }
+        ],
+        "best": "26598c8066",
+        "best_saves": 188.0
+      },
+      "checklist": [
+        "Each driver's name, birth date and license number",
+        "Each vehicle's year, make, model and VIN",
+        "Where it's parked overnight and about how many miles a year",
+        "Accidents or tickets in the last 5 years",
+        "Your current declarations page (same limits make the quotes comparable)"
+      ]
+    },
+    {
+      "policy_id": "d7fc3f225c",
+      "kind": "Renters",
+      "insurer": "Sample Home Co",
+      "premium": 16.0,
+      "every": "Month",
+      "renews": "2027-03-01",
+      "deductible": 500.0,
+      "coverage": "Personal property: 30,000\nPersonal liability: 300,000\nLoss of use: 9,000",
+      "asset_id": "",
+      "policy_number": "",
+      "agent_email": "",
+      "last_premium": 0.0,
+      "note": "",
+      "name": "Renters insurance",
+      "created_at": "2026-10-19T18:10:19",
+      "updated_at": "2026-10-19T18:10:19",
+      "chosen_quote_id": "",
+      "id": "d7fc3f225c",
+      "icon": "🔑",
+      "per_year": 192.0,
+      "covers": "",
+      "coverage_lines": [
+        {
+          "name": "Personal property",
+          "key": "personal property",
+          "limit": "30,000",
+          "amounts": [
+            30000.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Personal liability",
+          "key": "personal liability",
+          "limit": "300,000",
+          "amounts": [
+            300000.0
+          ],
+          "included": true
+        },
+        {
+          "name": "Loss of use",
+          "key": "loss of use",
+          "limit": "9,000",
+          "amounts": [
+            9000.0
+          ],
+          "included": true
+        }
+      ],
+      "checks": [
+        {
+          "tone": "info",
+          "text": "A $500.00 deductible: if your savings could cover $1,000.00, ask for a quote with that too. A higher deductible usually costs less."
+        }
+      ],
+      "compare": {
+        "per_year": 192.0,
+        "rows": [
+          {
+            "key": "personal property",
+            "name": "Personal property",
+            "current": "30,000",
+            "quotes": []
+          },
+          {
+            "key": "personal liability",
+            "name": "Personal liability",
+            "current": "300,000",
+            "quotes": []
+          },
+          {
+            "key": "loss of use",
+            "name": "Loss of use",
+            "current": "9,000",
+            "quotes": []
+          }
+        ],
+        "quotes": [],
+        "best": "",
+        "best_saves": 0.0
+      },
+      "checklist": [
+        "The address and how much your things are worth",
+        "Claims in the last 5 years",
+        "Your current declarations page"
+      ]
+    }
+  ],
+  "summary": {
+    "policies": 2,
+    "per_year": 1476.0,
+    "renewing_soon": 1,
+    "could_save": 188.0,
+    "currency_symbol": "$"
+  },
+  "forms": {
+    "policy": {
+      "noun": "policy",
+      "id_param": "policy_id",
+      "fields": [
+        {
+          "name": "kind",
+          "label": "Kind",
+          "type": "choice",
+          "required": true,
+          "options": [
+            "Car",
+            "Home",
+            "Renters",
+            "Health",
+            "Life",
+            "Umbrella",
+            "Other"
+          ],
+          "default": "Car"
+        },
+        {
+          "name": "insurer",
+          "label": "Insurer",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "premium",
+          "label": "Premium",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "every",
+          "label": "Paid every",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Month",
+            "Quarter",
+            "6 Months",
+            "Year"
+          ],
+          "default": "6 Months"
+        },
+        {
+          "name": "renews",
+          "label": "Renews on",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "deductible",
+          "label": "Deductible",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "coverage",
+          "label": "Coverage, one per line (Bodily injury: 100,000/300,000)",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "asset_id",
+          "label": "What it covers (optional)",
+          "type": "asset",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "name",
+          "label": "Name (like Truck insurance)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "last_premium",
+          "label": "Last term's premium (to see the change)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "policy_number",
+          "label": "Policy number",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "agent_email",
+          "label": "Agent's email (for quote requests)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "note",
+          "label": "Note",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "quote": {
+      "noun": "quote",
+      "id_param": "quote_id",
+      "fields": [
+        {
+          "name": "policy_id",
+          "label": "For which policy",
+          "type": "pick",
+          "required": true,
+          "options": [
+            "policies"
+          ],
+          "default": null
+        },
+        {
+          "name": "insurer",
+          "label": "Insurer",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "premium",
+          "label": "Premium",
+          "type": "money",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "every",
+          "label": "Paid every",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Month",
+            "Quarter",
+            "6 Months",
+            "Year"
+          ],
+          "default": "6 Months"
+        },
+        {
+          "name": "deductible",
+          "label": "Deductible",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "coverage",
+          "label": "Coverage, one per line (Bodily injury: 100,000/300,000)",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "received",
+          "label": "Received on",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "note",
+          "label": "Note",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "kinds": [
+    "Car",
+    "Home",
+    "Renters",
+    "Health",
+    "Life",
+    "Umbrella",
+    "Other"
+  ],
+  "every": [
+    "Month",
+    "Quarter",
+    "6 Months",
+    "Year"
+  ],
+  "assets": [
+    {
+      "id": "381d2bdacc",
+      "name": "2012 Placeholder Pickup"
+    }
+  ]
+}

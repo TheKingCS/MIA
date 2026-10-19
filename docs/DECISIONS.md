@@ -581,3 +581,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   link, Tailscale when away) shows them through the PC, and can add,
   change and remove them there.
 - Related: DEC-0015, DEC-0022
+
+### DEC-0034: The insurance check-up
+- Status: APPROVED
+- Proposed by: zac, 2026-10-18 (`docs/future/IDEAS.md` #1: "compare my insurance and help me save with a better plan") · Approved by: zac, 2026-10-19 ("then do 5")
+- Decision: an Insurance app (grown-ups only, household data): your
+  policies with their premium, renewal date, deductible and coverage
+  (typed in, or read from the policy's PDF or a photo, for you to check);
+  what's worth a look, said as questions (a renewal coming, a price that
+  rose, full coverage on an older car, a low deductible, no bundle); a
+  heads-up about 45 days before each renewal through the communication
+  gate; quote requests MIA drafts for you to send; the quotes you get back
+  compared line by line against what you have, so a cheaper quote that
+  covers less says so; switching as a mission (no gap in coverage) and the
+  saving recorded as a money win. MIA never sends, never fills in an
+  insurer's website, never pulls prices from anywhere, and isn't a
+  licensed agent: it compares what you collect and you decide.
+- Related: core/insurance.py, core/insurance_actions.py, web/insurance.*,
+  `docs/future/IDEAS.md`

@@ -1481,6 +1481,56 @@ def create_app(context: AppContext) -> FastAPI:
         live.bump()
         return {"ok": True}
 
+    # ------------------------------------------------------------ Insurance check-up (core/insurance.py, DEC-0034)
+    @app.get("/api/insurance")
+    def web_insurance(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.insurance import insurance_page
+
+        return _screen(profile_id, "insurance", insurance_page)
+
+    @app.post("/api/insurance/read")
+    async def insurance_read(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A policy's PDF or a photo of its declarations page: what it says, for
+        the Add form (the person checks it; nothing is saved here)."""
+        from core.document_text import extract
+        from core.insurance import read_policy
+
+        _screen(profile_id, "insurance", lambda v: None)
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No file received.")
+        if len(data) > MAX_DOCUMENT_UPLOAD_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is over 25 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "policy.pdf"))).name.strip() or "policy.pdf"
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / name
+            path.write_bytes(data)
+            doc = await run_in_threadpool(extract, path)
+            text = doc.text if doc.readable else ""
+            if not text and doc.needs_ocr:
+                text = await run_in_threadpool(_ocr_text, path)
+        if not text.strip():
+            raise HTTPException(422, "MIA couldn't read any text in that. Type the policy in instead.")
+        found = read_policy(text)
+        return {"values": found, "message": f"Read {len(found)} things from {name}. Check them before you save."
+                if found else "MIA read it but found no policy details. Type them in instead."}
+
+    def _ocr_text(path: Path) -> str:
+        """A photo or scan: Tesseract here, else the home computer (core/heavy_jobs.py)."""
+        from core.ocr import OcrError, ocr_image, ocr_pdf, tesseract_path
+
+        exe = tesseract_path(context.config)
+        try:
+            if exe:
+                if path.suffix.lower() == ".pdf":
+                    return "\n".join(ocr_pdf(exe, path))
+                return ocr_image(exe, path)
+            from core.heavy_jobs import can_use_home, read_document
+
+            return "\n".join(read_document(context, path)) if can_use_home(context) else ""
+        except (OcrError, OSError, ValueError, ImportError):  # ImportError: no PDF renderer on the phone
+            return ""
+
     # ------------------------------------------------------------ Memory vault (core/memory_vault.py)
     # The phone's own screen:
     @app.get("/api/vault")

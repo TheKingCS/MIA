@@ -15,7 +15,9 @@ that it builds on, what it needs from outside, and its status
 
 ## Money
 
-### 1. Insurance check-up: compare and save 💡
+### 1. Insurance check-up: compare and save ✅
+
+*Built 2026-10-19 (DEC-0034): Apps → Insurance.*
 
 *Zac, 2026-10-18.* MIA keeps track of your insurance (car, home or
 renters, health, life, umbrella) and helps you find a better plan.

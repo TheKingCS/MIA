@@ -339,6 +339,20 @@
           "ask": "What's waiting in my inbox?",
           "tools": [],
           "favorite": false
+        },
+        {
+          "id": "insurance",
+          "name": "Insurance",
+          "icon": "☂️",
+          "tagline": "Covered, for less.",
+          "description": "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).",
+          "page": "insurance.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "When does my car insurance renew?",
+          "tools": [],
+          "favorite": false
         }
       ]
     },
@@ -683,8 +697,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 37,
-    "on_web": 18,
+    "apps": 38,
+    "on_web": 19,
     "tools": 32
   }
 }

@@ -325,6 +325,9 @@ class MIAApplication:
         from core.security_cams import SecurityBook
 
         self.context.security = SecurityBook(self.context)  # cameras (DEC-0033)
+        from core.insurance import InsuranceBook
+
+        self.context.insurance = InsuranceBook(self.context)  # the insurance check-up (DEC-0034)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the
@@ -670,6 +673,7 @@ class MIAApplication:
             ("memory_callback", self._check_memory_callbacks),
             ("grow_alert", self._check_grow_alerts),
             ("season", self._check_season),
+            ("insurance_renewal", self._check_insurance),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -829,6 +833,19 @@ class MIAApplication:
         self._offer(topic="season", title=title, message=message, urgency=AMBIENT, source="system",
                     fingerprint=fingerprint)
         person_settings.put(self.context, "system.last_season_note", fingerprint)
+
+    def _check_insurance(self, now: datetime, today_iso: str) -> None:
+        """A policy renews in about 45 days (core/insurance.py): once per
+        renewal, through the gate (its fingerprint drops a repeat)."""
+        if getattr(self.context, "insurance", None) is None:
+            return
+        from core.insurance import renewal_notes
+
+        for title, message, fingerprint in renewal_notes(self.context, now.date()):
+            if not self.context.insurance.note_given(fingerprint):
+                continue
+            self._offer(topic="insurance_renewal", title=title, message=message, urgency=AMBIENT, source="system",
+                        fingerprint=fingerprint)
 
     def _check_memory_callbacks(self, now: datetime, today_iso: str) -> None:
         """Remembering at the right moment (DEC-0029): each callback once,

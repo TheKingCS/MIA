@@ -95,6 +95,13 @@
       "page": "business.html"
     },
     {
+      "id": "insurance",
+      "name": "Insurance",
+      "icon": "☂️",
+      "tagline": "Covered, for less.",
+      "page": "insurance.html"
+    },
+    {
       "id": "security",
       "name": "Security",
       "icon": "🛡️",

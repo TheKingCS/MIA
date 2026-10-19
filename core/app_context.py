@@ -104,6 +104,7 @@ if TYPE_CHECKING:
     from core.business_book import BusinessBook
     from core.grow_lab import GrowLab
     from core.security_cams import SecurityBook
+    from core.insurance import InsuranceBook
     from core.boss_battles import BossBook
     from core.questlines import QuestBook
     from core.world_map import WorldMap
@@ -247,6 +248,7 @@ class AppContext:
     business: Optional["BusinessBook"] = field(default=None, repr=False)  # DEC-0030 quotes, customers, orders
     grow_lab: Optional["GrowLab"] = field(default=None, repr=False)  # DEC-0030 the grow lab
     security: Optional["SecurityBook"] = field(default=None, repr=False)  # DEC-0033 cameras
+    insurance: Optional["InsuranceBook"] = field(default=None, repr=False)  # DEC-0034 the insurance check-up
     # Each person's own stores (core/personal_data.py): conversations,
     # memories, journal, notes, reasons, message log, online reminders.
     personal_data: Optional["PersonalData"] = field(default=None, repr=False)
