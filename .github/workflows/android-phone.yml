@@ -119,8 +119,15 @@ jobs:
         run: |
           cp android-phone/app/build/outputs/apk/debug/app-debug.apk MIA-Phone-Test.apk
           gh release delete phone-spike --yes --cleanup-tag || true
-          gh release create phone-spike MIA-Phone-Test.apk \
-            --target "$GITHUB_SHA" \
-            --prerelease \
-            --title "MIA on the phone: test build ${GITHUB_RUN_NUMBER}" \
-            --notes "MIA running entirely on the phone, no computer (DEC-0019 spike). Installs beside the companion app. Built from ${GITHUB_SHA::7}."
+          # A hiccup between deleting and creating left no download at all once
+          # (2026-10-19): try a few times, a little apart (the tag's removal settles).
+          for try in 1 2 3 4; do
+            sleep $((try * 5))
+            gh release create phone-spike MIA-Phone-Test.apk \
+              --target "$GITHUB_SHA" \
+              --prerelease \
+              --title "MIA on the phone: test build ${GITHUB_RUN_NUMBER}" \
+              --notes "MIA running entirely on the phone, no computer (DEC-0019 spike). Installs beside the companion app. Built from ${GITHUB_SHA::7}." && exit 0
+            gh release delete phone-spike --yes --cleanup-tag || true
+          done
+          exit 1
