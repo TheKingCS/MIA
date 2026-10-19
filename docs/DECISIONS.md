@@ -414,6 +414,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0001, DEC-0002, DEC-0015, DEC-0019, docs/PHONE_FIRST_PLAN.md
 
 
+- Model picked (claude, 2026-10-19, from Zac's PC: MIA's 213 test
+  questions on the Radeon RX 7900 XTX): **qwen2.5:14b**, 95.8% right, a
+  typical answer in 2.8 s, 13 s to load, all on the graphics card.
+  qwen2.5:32b got 98.1% but takes 9.0 s an answer and 61 s to load, and
+  doesn't fit wholly on the card (92%). 2.3 points aren't worth three
+  times the wait on every turn (the rule: the faster one when within
+  3 points). Most of 14b's misses are questions it answered without a
+  tool ("add a note", "what do I need to do", a new recipe, chores):
+  routing hints and code answers can close those.
 ### DEC-0023: MIA's look becomes a Stark-inspired engineering interface
 - Status: APPROVED
 - Proposed by: zac, 2026-10-15 (his brief, in the session) · Approved by: zac, 2026-10-15
