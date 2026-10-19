@@ -26,11 +26,26 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      # Windows PowerShell 5.1, like double-clicking install.bat (pwsh 7 hid
+      # a 5.1-only stop: the Microsoft Store's "python" placeholder, 2026-10-19).
+      - name: Finding Python survives the Microsoft Store placeholder
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $fake = Join-Path $env:RUNNER_TEMP "store-python"
+          New-Item -ItemType Directory -Force $fake | Out-Null
+          Set-Content (Join-Path $fake "python.bat") "@echo Python was not found; run without arguments to install from the Microsoft Store 1>&2`r`n@exit /b 9009"
+          $env:Path = "$fake;$env:Path"
+          . ./deploy/find_python.ps1
+          if (Test-Python "python") { throw "the placeholder counted as Python" }
+          $found = Find-Python
+          Write-Host "Found: $found"
+          if (-not $found) { throw "the real Python wasn't found" }
       - name: Run the installer (no Ollama, voice models or Tesseract downloads)
-        shell: pwsh
+        shell: powershell
         run: ./install.ps1 -Yes -NoOllama -NoVoice -NoTesseract
       - name: Home-PC setup, dry run (setup_home_pc.ps1 says what it would do)
-        shell: pwsh
+        shell: powershell
         run: ./setup_home_pc.ps1 -DryRun
       - name: Home-PC readiness check runs (it reports what's missing here)
         shell: pwsh

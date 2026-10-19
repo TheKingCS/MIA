@@ -50,19 +50,18 @@ Write-Host "Folder: $MiaDir"
 
 # ------------------------------------------------------------ 1. tools
 Step "1/4 Python, Ollama and Tesseract"
-$python = $null
-foreach ($candidate in @("py", "python")) {
-    if (Have $candidate) {
-        $version = & $candidate -c "import sys; print(sys.version_info >= (3, 10))" 2>$null
-        if ($version -eq "True") { $python = $candidate; break }
-    }
-}
+. (Join-Path $MiaDir "deploy\find_python.ps1")  # Find-Python: safe with the Microsoft Store's "python" placeholder
+$python = Find-Python
 if (-not $python) {
     if (Ask "Python 3.10 or newer isn't installed. Install Python 3.12?") {
         Winget-Install "Python.Python.3.12" "Python 3.12 (python.org)" | Out-Null
-        foreach ($candidate in @("py", "python")) { if (Have $candidate) { $python = $candidate; break } }
+        $python = Find-Python
     }
-    if (-not $python) { Write-Host "MIA needs Python. Install it from python.org, then run this again."; exit 1 }
+    if (-not $python) {
+        Write-Host "MIA needs Python. Close this window, open a new one and run install.bat again (Windows needs a fresh window to see a new install)."
+        Write-Host "If that doesn't work: install Python 3.12 from python.org (tick 'Add python.exe to PATH'), then run this again."
+        exit 1
+    }
 }
 Note "Python: $python"
 
