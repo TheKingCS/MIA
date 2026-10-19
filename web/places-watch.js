@@ -30,6 +30,17 @@
     return Date.now() - at < QUIET_HOURS * 3600 * 1000;
   }
 
+  // Yes to a place: record the arrival and open its screen.
+  async function arrive(place) {
+    try {
+      const p = await MIA.propose("place.arrive", { place_id: place.id });
+      await MIA.approve(p.proposal_id);  // the person just said yes
+      if (window.MIASound) MIASound.play("chime");
+    } catch (e) { /* the screen still opens */ }
+    if (window.MIAPlaces.onArrive) window.MIAPlaces.onArrive(place);  // the glasses show it in place
+    else if (place.open) location.href = place.open;
+  }
+
   function ask(place) {
     asking = true;
     store.set("mia.place." + place.id, String(Date.now()));
@@ -51,16 +62,7 @@
     const close = () => { dialog.close(); dialog.remove(); asking = false; };
     no.onclick = close;
     dialog.oncancel = (e) => { e.preventDefault(); close(); };
-    go.onclick = async () => {
-      close();
-      try {
-        const p = await MIA.propose("place.arrive", { place_id: place.id });
-        await MIA.approve(p.proposal_id);  // the person just said yes
-        if (window.MIASound) MIASound.play("chime");
-      } catch (e) { /* the screen still opens */ }
-      if (window.MIAPlaces.onArrive) window.MIAPlaces.onArrive(place);  // the glasses show it in place
-      else if (place.open) location.href = place.open;
-    };
+    go.onclick = () => { close(); arrive(place); };
     document.body.append(dialog);
     dialog.showModal();
     go.focus();
@@ -75,8 +77,30 @@
     if (here) ask(here);
   }
 
+  // The phone app watches them while MIA is closed too (Places.kt): Android's
+  // own alerts, a notification on arrival; tapping it opens ?arrive=<id>.
+  const native = window.MIAPhonePlaces || null;
+  function handOver() {
+    if (!native) return;
+    try {
+      native.watch(JSON.stringify(places.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lon: p.lon,
+        radius: p.radius, say: p.say }))));
+    } catch (e) { /* an older app: only while open */ }
+  }
+  function arrivedFromNotification() {
+    const id = new URLSearchParams(location.search).get("arrive");
+    if (!id) return;
+    history.replaceState(null, "", location.pathname + location.hash);
+    const place = places.find((p) => p.id === id);
+    if (!place) return;
+    store.set("mia.place." + place.id, String(Date.now()));
+    arrive(place);  // they tapped "You're at Gym": that's their yes
+  }
+
   function configure(list) {
     places = Array.isArray(list) ? list : [];
+    handOver();
+    arrivedFromNotification();
     if (!places.length || !navigator.geolocation) {
       if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
       return;
@@ -86,5 +110,11 @@
     }
   }
 
-  window.MIAPlaces = { configure, meters, onArrive: null };
+  // "on" | "notify" | "foreground" | "off" (Places.kt), or "" off the phone app.
+  function background() {
+    try { return native ? String(native.background()) : ""; } catch (e) { return ""; }
+  }
+  function askBackground() { if (native) native.askBackground(); }
+
+  window.MIAPlaces = { configure, meters, onArrive: null, background, askBackground, backgroundChanged: null };
 })();

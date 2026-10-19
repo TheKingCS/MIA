@@ -31,6 +31,7 @@ of the Android app.
 
 - **PC day (Cat 8 cable on the way):** follow `docs/HOME_COMPUTER_SETUP.md` top to bottom: Windows Update + AMD driver + Git, `git clone` MIA, **install.bat**, set your password, **setup_home_pc.bat** (Ollama + qwen2.5:14b, Phone Access, ffmpeg, Tailscale, starts with Windows, no sleep, the model comparison, the readiness check), then on the phone Tailscale + Settings → Home Computer → Link. Then tell Claude "the PC is up" (and paste `pc-check\models.md`).
 
+- [ ] **New in the next phone build (2026-10-19):** (1) **Talk to MIA through your glasses:** pull down Quick Settings → edit (✎) → drag **Talk to MIA** in, or long-press MIA's icon → Talk to MIA. With the glasses connected over Bluetooth, say "open Kitchen", "I weigh 182", or ask anything; she answers in your ear, and the glasses' screen switches to the app (once the glasses app is set up, ~Nov 16). Works with the phone alone too. (2) **Location quests while MIA is closed:** Settings → My Places → Allow All The Time (Android opens its settings: choose "Allow all the time"), then Allow Notifications. Arriving at a place then shows a notification; tap it.
 - [ ] **After PC day, the Memory Vault (DEC-0030 E):** on the phone, Apps → **Memory Vault** → Turn On The Vault, allow all photos. Leave MIA open on Wi-Fi a while; the strip counts what's safe on the PC. Then Free Up Space (Android asks you each time; its Trash keeps them 30 days). `docs/MEMORY_VAULT.md`.
 - [ ] **Cameras (DEC-0033):** when you pick cameras, get local-stream ones (Reolink is easiest; `docs/SECURITY_CAMERAS.md`) and put them on the PC's Wi-Fi. With the phone linked to the PC (Settings → Home Computer) and Tailscale on both, add them from the phone: Security → Add A Camera → "On the home computer's Wi-Fi". They then work from anywhere. Next for Claude after that: smoother live video, motion alerts, cameras on the glasses, then lights/locks via a local Home Assistant.
 - [ ] **Try the new game layer on the phone (DEC-0032):** Missions → **Quests** (start Ready For Winter; finish chapter 1 and watch chapter 2 open), the **Party** link there (start a raid; Join the leaderboard), Expeditions → **World Map** (press I'm Here; the phone asks for location once), Settings → **My Places** (Add Where I Am at the gym or store, Turn On, and next time you arrive MIA asks), a recipe → **I Made This** (the pantry goes down), and listen for the chime when you finish an objective (Settings → Sound to turn MIA's spoken lines on).
@@ -285,8 +286,8 @@ except the watch HUD (waits for the watch): Reward Shop, gear bars,
 bosses, stats, buffs, the Chronicle, and (DEC-0032) questlines, kitchen
 blueprints, world map, party, sound, location quests. Possible next
 steps there: more seasonal starters, a basemap under the world map
-(offline tiles), location quests in the background (needs native
-Android geofencing; today it's only while MIA is open). **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
+(offline tiles). Location quests in the background are built
+(2026-10-19, `Places.kt`). **ALICE picks built (DEC-0029):** What I Used, MIA Remembers,
 one conversation everywhere, the voice guide. **Expansion audit**
 (`docs/EXPANSION_AUDIT.md`, DEC-0030 approved): phase B crafting is
 built (Workshop → Recipes / Builds). DEC-0030 approved (2026-10-17). Built since: the phone side of DEC-0022 (`docs/HOME_COMPUTER_SETUP.md`), phase C Orders & Quotes, phase D Grow Lab, and show-off mode (DEC-0031). Next:
@@ -315,8 +316,7 @@ frame and the dashboard saying card as a readout (H-0035 §3).
 **Glasses Heads-Up screen (2026-10-18):** swipe down on the orb; clear until a win or notification, then a card for 6 s. **Glasses quick action menus (2026-10-16, H-0042)** work in the preview
 for every app (`core/glasses.py`); pins are the person's favorites
 (DEC-0024); Household, People and Inbox panels and line icons are in
-(H-0045). Then: Muse's look pass on the cards, Phase 3 voice ("open
-Kitchen", "log lunch" through the Android companion), Phase 4 on-device
+(H-0045). Phase 3 voice is built (2026-10-19, `core/glasses_voice.py`, `Voice.kt`: the phone listens through the glasses as a Bluetooth headset). Then: Phase 4 on-device
 test when the Display arrives (~Nov 16: Funnel URL, revocable
 glasses-only link limited to `/api/glasses` and `GLASSES_KINDS`).
 

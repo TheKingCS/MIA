@@ -781,6 +781,26 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return feed(view_for(context, profile_id), since or None)
 
+    @app.post("/api/glasses/voice")
+    def glasses_voice(body: VoiceTextRequest, background: BackgroundTasks,
+                      profile_id: str = Depends(require_profile_id)) -> dict:
+        """Words heard through the glasses (the phone app listens through
+        them: core/glasses_voice.py). A phone linked to the home computer
+        sends them there first, where the glasses' screen is served from."""
+        from core.glasses_voice import handle
+        from core.home_link import HomeLinkError, home_call, linked
+
+        text = body.text.strip()
+        if not text:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Say something first.")
+        if linked(context):
+            try:
+                return {**home_call(context, "/api/glasses/voice", {"text": text}, timeout=90), "where": "home_pc"}
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        view = view_for(context, profile_id)
+        return {**handle(view, profile_id, text, lambda words: respond(profile_id, words, background)), "where": "here"}
+
     @app.get("/api/glasses/{app_id}/{item_id}")
     def glasses_item(app_id: str, item_id: str, mission: str = "",
                      profile_id: str = Depends(require_profile_id)) -> dict:

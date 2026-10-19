@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Talking to MIA (Voice.kt): the app shortcut and the Quick Settings tile. -->
+    <string name="talk_short">Talk to MIA</string>
+    <string name="talk_long">Talk to MIA through your glasses</string>
+</resources>

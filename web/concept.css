@@ -1588,7 +1588,13 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .vault-mark.ok { color: rgb(var(--rgb-ok)); }
 .vault-mark.wait { color: var(--soon); }
 .vault-mark.best { color: var(--accent); }
-.vault-burst { align-items: center; }
+.vault-burst { align-items: center; flex-wrap: wrap; row-gap: 8px; }  /* the button drops below on a phone (H-0063 §3) */
+.vault-burst > div:first-child { flex: 1 1 200px; }
+.vault-legend { margin: 0 0 12px; font-size: var(--text-sm); }
+.vault-day { padding: 14px 0; border-top: 1px solid rgba(var(--rgb-accent), 0.18); }
+.vault-legend + .vault-day { border-top: 0; }
+.vault-day-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 0 0 6px; }
+.vault-day-head h2 { margin: 0; font-size: var(--text-md); }
 .vault-best { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; display: block;
   border: 1px solid rgba(var(--rgb-accent), 0.4); }
 .vault-view { max-width: 96vw; }

@@ -44,6 +44,19 @@
     act({ kind: "place.add", params: Object.assign(where ? { lat: where.latitude, lon: where.longitude } : {}, v) });
   }
 
+  // In the phone app: also while MIA is closed (Places.kt), once Android allows
+  // "all the time" and notifications. Each tap asks Android for the next thing missing.
+  function closedNote() {
+    const state = window.MIAPlaces ? MIAPlaces.background() : "";
+    if (!state || !page.watching) return null;
+    if (state === "on") return el("p", { class: "dim" }, "✓ Also while MIA is closed: Android tells MIA when you arrive, and a notification asks.");
+    const words = { off: "Allow Location", foreground: "Allow All The Time", notify: "Allow Notifications" }[state] || "Allow";
+    return el("div", {}, el("p", { class: "dim" }, "Also while MIA is closed: Android needs to allow location all the time, and notifications. " +
+      (state === "foreground" ? "Android opens its settings: choose Allow All The Time." : "")),
+      el("div", { class: "row-buttons" }, btn(words, "btn-ghost btn-small", () => MIAPlaces.askBackground())));
+  }
+  if (window.MIAPlaces) MIAPlaces.backgroundChanged = () => { if (page) draw(); };
+
   function draw() {
     const watch = btn(page.watching ? "Turn Off" : "Turn On", page.watching ? "btn-ghost btn-small" : "btn-amber btn-small",
       () => act({ kind: "setting.set", params: { key: "places.watch", value: !page.watching } }));
@@ -53,7 +66,8 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.places.reduce((n, p) => n + p.arrivals, 0)), el("span", { class: "t" }, "Arrivals")));
     $("panel").replaceChildren(
       section("Noticing When I Arrive", watch,
-        el("p", { class: "dim" }, "While MIA is open, this device checks where you are against your places, and asks before doing anything. Where you are never leaves it.")),
+        el("p", { class: "dim" }, "While MIA is open, this device checks where you are against your places, and asks before doing anything. Where you are never leaves it."),
+        closedNote()),
       section("My Places", el("div", { class: "row-buttons" }, btn("Add Where I Am", "btn-amber", () => add(true)), btn("Type One In", "btn-ghost", () => add(false))),
         page.places.length ? el("div", { class: "rows" }, page.places.map((p) => el("div", { class: "row money-row" },
           el("div", {}, el("div", { class: "row-title" }, "📍 " + p.name),

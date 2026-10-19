@@ -80,6 +80,10 @@ class Gallery(private val activity: MainActivity) {
         }
     }
 
+    /** Talk to MIA out loud (Voice.kt): through the glasses when they're connected. */
+    @JavascriptInterface
+    fun listen() = activity.listen()
+
     /** Tell the screen how Android's dialog ended. */
     fun done(ok: Boolean) = answer("onTrashed", ok.toString())
 

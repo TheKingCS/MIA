@@ -82,8 +82,11 @@
       item.best ? el("span", { class: "vault-mark best", title: "Best of the burst" }, "★") : null,
       item.copies > 1 ? el("span", { class: "vault-mark", title: "On the phone " + item.copies + " times" }, "×" + item.copies) : null,
     ].filter(Boolean);
+    // The marks' meaning for a screen reader too (Muse, H-0063 §4).
+    const status = [!item.on_phone ? "only on the home computer now" : item.on_pc ? "safe on the home computer" : "not on the home computer yet",
+      item.best ? "best of the burst" : "", item.copies > 1 ? "on the phone " + item.copies + " times" : ""].filter(Boolean).join(", ");
     const t = el("button", { type: "button", class: "media-tile vault-tile kind-" + (item.kind === "video" ? "video" : "image"),
-      "aria-label": (item.kind === "video" ? "Video " : "Photo ") + item.name, onclick: () => view(item) },
+      "aria-label": (item.kind === "video" ? "Video " : "Photo ") + item.name + ", " + status, onclick: () => view(item) },
       item.kind === "video" ? el("span", { class: "media-ico", "aria-hidden": "true" }, "▶") : img,
       el("span", { class: "vault-marks" }, ...marks));
     if (item.kind !== "video") seen.observe(img);
@@ -127,7 +130,12 @@
     const pick = el("select", { "aria-label": "Month", onchange: async (e) => { month = e.target.value; MIAShell.refresh(); } },
       page.months.map((m) => el("option", { value: m.month, selected: m.month === page.month ? true : null }, m.label + " · " + m.count)));
     parts.push(el("div", { class: "vault-month" }, pick));
-    page.days.forEach((d) => parts.push(section(d.label, d.trip ? el("span", { class: "craft-tag" }, "🏕 " + d.trip) : null,
+    // What the marks mean, once: there's no hover on a phone (Muse, H-0063 §1).
+    parts.push(el("p", { class: "dim vault-legend" },
+      "✓ PC safe on the home computer · ⏳ not yet copied · ★ best of the burst · ×2 on the phone twice · PC only freed from the phone"));
+    // Days are plain, a hairline between them; cards stay for the sections with actions (H-0063 §2).
+    page.days.forEach((d) => parts.push(el("section", { class: "vault-day", "aria-label": d.label },
+      el("div", { class: "vault-day-head" }, el("h2", {}, d.label), d.trip ? el("span", { class: "craft-tag" }, "🏕 " + d.trip) : null),
       d.happened.length ? el("p", { class: "dim vault-happened" }, "That day: " + d.happened.join(" · ")) : null,
       el("div", { class: "media-grid" }, d.items.map(tile)))));
     return parts.filter(Boolean);

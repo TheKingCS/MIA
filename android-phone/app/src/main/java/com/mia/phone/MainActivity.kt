@@ -6,6 +6,7 @@ import android.app.ActivityManager
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -34,8 +35,27 @@ class MainActivity : Activity() {
     private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
     // The memory vault's door to the camera roll (Gallery.kt), window.MIAAndroid on MIA's screens.
     private val gallery = Gallery(this)
+    // Talking through the glasses (Voice.kt) and location quests while MIA is closed (Places.kt).
+    private val voice by lazy { Voice(this) }
+    private val placesBridge = PlacesBridge(this)
 
     fun webView(): WebView? = web
+
+    /** Listen now (the tile, the shortcut, a headset's button, or a screen asking). */
+    fun listen() {
+        val token = started?.optString("token") ?: return
+        runOnUiThread { voice.start(token) }
+    }
+
+    /** Where to open: a place just arrived at (its notification), a share, or Home. */
+    private fun startPage(opened: Intent?, shared: Boolean): String {
+        val arrive = opened?.getStringExtra("arrive")
+        return when {
+            arrive != null -> "index.html?arrive=" + Uri.encode(arrive)
+            shared -> "inbox.html"
+            else -> "index.html"
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +67,7 @@ class MainActivity : Activity() {
             setPadding(48, 48, 48, 48)
         }
         setContentView(status)
+        Places.register(applicationContext)  // the watched places' alerts (after an update, too)
         Thread {
             try {
                 // Once per app process: Android can recreate this screen while MIA
@@ -70,7 +91,10 @@ class MainActivity : Activity() {
                 Log.d(TAG, "token=${result.optString("token")}")
                 // Opened from another app's Share menu: into the inbox, then show it.
                 val shared = if (Share.isShare(intent)) saveShare(intent) else false
-                runOnUiThread { show(result.optString("token"), if (shared) "inbox.html" else "index.html") }
+                runOnUiThread {
+                    show(result.optString("token"), startPage(intent, shared))
+                    if (Voice.wanted(intent)) voice.start(result.optString("token"))
+                }
             } catch (e: Throwable) {
                 Log.e(TAG, "failed", e)
                 runOnUiThread { status.text = "MIA couldn't start on this phone:\n\n${e.message}" }
@@ -97,8 +121,10 @@ class MainActivity : Activity() {
     override fun onNewIntent(newIntent: Intent) {
         super.onNewIntent(newIntent)
         setIntent(newIntent)
-        if (!Share.isShare(newIntent)) return
         val token = started?.optString("token") ?: return  // still starting: onCreate's thread takes it
+        if (Voice.wanted(newIntent)) { voice.start(token); return }
+        if (newIntent.getStringExtra("arrive") != null) { web?.loadUrl(page(startPage(newIntent, false), token)); return }
+        if (!Share.isShare(newIntent)) return
         Thread {
             if (saveShare(newIntent)) runOnUiThread { web?.loadUrl(page("inbox.html", token)) }
         }.start()
@@ -153,6 +179,7 @@ class MainActivity : Activity() {
                 }
             }
             addJavascriptInterface(gallery, "MIAAndroid")
+            addJavascriptInterface(placesBridge, "MIAPhonePlaces")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
@@ -165,10 +192,27 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == Gallery.GALLERY_REQUEST) { gallery.accessChanged(); return }
+        if (requestCode == Voice.VOICE_REQUEST) { voice.permissionAnswered(grantResults.any { it == PackageManager.PERMISSION_GRANTED }); return }
+        if (requestCode == PlacesBridge.PLACES_REQUEST) { placesBridge.answered(); return }
         if (requestCode != GEO_REQUEST) return
         val ask = geoAsk ?: return
         geoAsk = null
         ask.second.invoke(ask.first, grantResults.any { it == PackageManager.PERMISSION_GRANTED }, false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Places.onScreen = true  // the screen's own watch asks while MIA is showing
+    }
+
+    override fun onPause() {
+        Places.onScreen = false
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        voice.close()
+        super.onDestroy()
     }
 
     @Deprecated("Activity.onActivityResult is fine for this spike")

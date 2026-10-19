@@ -10,8 +10,9 @@
 
    Home is her orb alone. Select it and she listens (rings like
    Saturn's); her answer shows under her for a moment, then she's alone
-   again. "Hey MIA" will start the same listening through the phone
-   companion (H-0041 Phase 3): it calls MIAGlasses.listen().
+   again. Talking through the glasses themselves goes through the phone
+   (core/glasses_voice.py): the phone hears you and speaks her answer, and
+   this screen opens the app you named or shows the answer (the feed).
 
    From the orb, move to your pinned apps (your favorites), then "All
    apps". Select an app for its quick actions (core/glasses.py). A change
@@ -344,7 +345,7 @@
   // MIA.glassesFeed (core/glasses_feed.py) with a cursor, so each shows once.
   // Swipe down on the orb (or wait HUD_IDLE_MS on it) to enter; any input leaves.
   const HUD_POLL_MS = 4000, HUD_SHOW_MS = 6000, HUD_IDLE_MS = 60000;
-  let hudCursor = null, hudQueue = [], hudCard = null, hudPoll = null, hudTimer = null, lastInput = Date.now();
+  let hudCursor = null, hudQueue = [], hudCard = null, hudTimer = null, lastInput = Date.now();
 
   function hudScreen() {
     const wrap = el("div", "hud");
@@ -367,24 +368,48 @@
     if (window.MIASound) MIASound.play(/level/i.test(hudCard.headline) ? "fanfare" : /mission|quest/i.test(hudCard.headline) ? "quest" : "chime");
     hudTimer = setTimeout(() => { hudCard = null; if (view === "hud") render(); hudTimer = setTimeout(hudNext, 600); }, HUD_SHOW_MS);
   }
+  // One feed for every view, polled all the time: Heads-Up shows its
+  // cards, and talking to MIA through the phone (core/glasses_voice.py)
+  // reaches whatever's on screen. The first call only sets the cursor
+  // (nothing old is replayed); ids are remembered so a card never shows twice.
+  const seen = new Set();
   async function hudFetch() {
     try {
+      const first = hudCursor === null;
       const got = await MIA.glassesFeed(hudCursor);
       hudCursor = got.now || hudCursor;
-      if ((got.items || []).length) {
-        hudQueue.push(...got.items);
-        if (!hudCard) hudNext();
+      const fresh = (got.items || []).filter((c) => !seen.has(c.id));
+      fresh.forEach((c) => seen.add(c.id));
+      if (first) return;
+      for (const c of fresh) {
+        if (c.level === "voice") { heard(c); continue; }
+        if (view === "hud") hudQueue.push(c);
       }
+      if (view === "hud" && hudQueue.length && !hudCard) hudNext();
     } catch (e) { /* off-line for a moment: try again next time */ }
+  }
+  // What you said through the glasses (the phone heard it): open the app you
+  // named, or show MIA's answer under her orb. Her voice is already in your ear.
+  function heard(c) {
+    lastInput = Date.now();
+    if (c.open !== undefined) {
+      if (!c.open) { show("home"); answer(c.text, 5); return; }
+      let i = (data && data.apps || []).findIndex((a) => a.id === c.open);
+      showingAll = i < 0;
+      if (showingAll) i = (data && data.others || []).findIndex((a) => a.id === c.open);
+      if (i >= 0) { appIndex = i; menuIndex = 0; row = 0; panel = null; show("menu"); return; }
+    }
+    if (view === "hud") { hudQueue.push(c); if (!hudCard) hudNext(); return; }
+    show("home");
+    answer(c.text, 9);
+    load();  // a change you asked for shows on the cards
   }
   async function hudStart() {
     hudCard = null; hudQueue = [];
     show("hud");
-    await hudFetch();  // the first call only sets the cursor: nothing old is replayed
-    clearInterval(hudPoll);
-    hudPoll = setInterval(hudFetch, HUD_POLL_MS);
   }
-  function hudStop() { clearInterval(hudPoll); clearTimeout(hudTimer); hudPoll = null; hudCard = null; hudQueue = []; }
+  function hudStop() { clearTimeout(hudTimer); hudCard = null; hudQueue = []; }
+  setInterval(hudFetch, HUD_POLL_MS);
   setInterval(() => {  // the orb, left alone: fade to Heads-Up
     if (view === "home" && voiceState === "idle" && Date.now() - lastInput > HUD_IDLE_MS) hudStart();
   }, 5000);
@@ -654,5 +679,6 @@
   (async () => {
     await load();
     show("home");
+    if (!demo) hudFetch();  // the feed's cursor: from now on
   })();
 })();

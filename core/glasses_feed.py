@@ -16,12 +16,18 @@ Two sources, newest last:
   thing (a "Mission complete!" notification and the mission_completed
   win) is shown once. Money never reaches a child (MONEY_TYPES).
 
+Third, **what you said to MIA through the glasses** (core/glasses_voice.py,
+`said()`): your words and her answer, and the app to open. Kept in memory
+only, a few minutes, never written anywhere.
+
 The glasses keep a cursor (`since`, an ISO time from the engine), so a
 card is shown once and nothing old is replayed when they start.
 """
 
 from __future__ import annotations
 
+import threading
+from collections import deque
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -47,6 +53,30 @@ EVENT_CARDS = {
     "project_completed": ("✅", "Project Finished"),
 }
 LEVEL_ICONS = {"warning": "⚠️", "critical": "🚨"}
+VOICE_KEEP = timedelta(minutes=5)
+_voice: deque = deque(maxlen=50)  # (when, profile id, card): what was said through the glasses
+_voice_lock = threading.Lock()
+_voice_n = 0
+
+
+def said(profile_id: str, turn: dict, now: Optional[datetime] = None) -> dict:
+    """Tell the glasses about a voice turn: {"heard", "say", "open"?}."""
+    global _voice_n
+    now = now or datetime.now()
+    with _voice_lock:
+        _voice_n += 1
+        card = {"id": f"v:{_voice_n}", "icon": "🎙", "headline": "MIA", "text": _short(turn.get("say", "")),
+                "heard": _short(turn.get("heard", "")), "level": "voice", "source": "voice"}
+        if "open" in turn:
+            card["open"] = turn["open"]
+        _voice.append((now, profile_id, card))
+    return card
+
+
+def _voice_cards(profile_id: Optional[str], start: datetime, now: datetime) -> list[tuple[datetime, dict]]:
+    with _voice_lock:
+        return [(at, card) for at, pid, card in _voice
+                if pid == profile_id and start < at <= now and now - at <= VOICE_KEEP]
 
 
 def _short(text: str) -> str:
@@ -118,5 +148,8 @@ def feed(context, since: Optional[str] = None, now: Optional[datetime] = None) -
         cards.append((at, {"id": "e:" + e.event_id, "icon": icon, "headline": headline, "text": _short(e.summary),
                            "level": "win", "source": e.type, "xp": xp or None}))
 
+    from core.person_settings import person_id
+
+    cards += _voice_cards(person_id(context), start, now)
     cards.sort(key=lambda c: c[0])
     return {"now": cursor, "items": [c for _at_, c in cards[-MAX_ITEMS:]]}
