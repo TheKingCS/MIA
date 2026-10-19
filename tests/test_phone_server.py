@@ -157,3 +157,28 @@ def test_settings_page_shows_the_switch(ctx, monkeypatch):
     module._phone_checkbox.setChecked(False)
     assert not ctx.phone_server.running
     widget.deleteLater()
+
+
+def test_starts_without_a_console(ctx, monkeypatch):
+    """The desktop shortcut runs MIA with pythonw.exe: no console, so
+    sys.stdout and sys.stderr are None. uvicorn's own log setup asked the
+    console whether it was a terminal and crashed MIA as she opened (Zac's
+    PC, 2026-10-19, as soon as Phone Access was on)."""
+    import sys
+
+    monkeypatch.setattr(sys, "stdout", None)
+    monkeypatch.setattr(sys, "stderr", None)
+    assert ctx.phone_server.set_enabled(True)
+    assert login(ctx.phone_server.port)
+
+
+def test_mia_gives_herself_a_console_when_there_is_none(monkeypatch):
+    import sys
+
+    from core.application import _console_or_nothing
+
+    monkeypatch.setattr(sys, "stdout", None)
+    monkeypatch.setattr(sys, "stderr", None)
+    _console_or_nothing()
+    print("goes nowhere")  # no crash
+    assert sys.stdout.isatty() is False and sys.stderr is not None

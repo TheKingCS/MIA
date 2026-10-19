@@ -193,8 +193,17 @@ class PhoneServer:
             self.last_error = f"Port {port} is already in use (is another copy of MIA running?)."
             log.warning("Phone server: %s", self.last_error)
             return False
-        self._app = create_app(self.context)
-        self._server = uvicorn.Server(uvicorn.Config(self._app, host=host, port=port, log_level="warning"))
+        try:
+            self._app = create_app(self.context)
+            # log_config=None: MIA's own logging (logs/mia.log). uvicorn's would ask the
+            # console whether it's a terminal, and the desktop shortcut (pythonw.exe) has no
+            # console at all: that crashed MIA as she opened (2026-10-19).
+            self._server = uvicorn.Server(uvicorn.Config(self._app, host=host, port=port, log_level="warning",
+                                                         log_config=None))
+        except Exception as problem:  # never take the desktop down with it
+            self.last_error = f"The phone server couldn't start: {problem}"
+            log.exception("Phone server: couldn't start")
+            return False
         self._thread = threading.Thread(target=self._server.run, daemon=True, name="mia-mobile-server")
         self._thread.start()
         deadline = time.monotonic() + _START_WAIT_SECONDS

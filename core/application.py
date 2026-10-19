@@ -243,10 +243,23 @@ class MainThreadInvoker(QObject):
         except Exception:
             log.exception("A function handed to the GUI thread failed.")
 
+def _console_or_nothing() -> None:
+    """Started from the desktop shortcut (pythonw.exe on Windows) there's no
+    console, so sys.stdout and sys.stderr are None and any library writing
+    to them crashes MIA. Give them somewhere harmless to go; what matters
+    is in logs/mia.log anyway."""
+    import os
+
+    for name in ("stdout", "stderr"):
+        if getattr(sys, name) is None:
+            setattr(sys, name, open(os.devnull, "w", encoding="utf-8"))
+
+
 class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
     def __init__(self) -> None:
+        _console_or_nothing()
         self.qt_app = QApplication(sys.argv)
         self.qt_app.setApplicationName("MIA")
         icon_path = Path(__file__).resolve().parent.parent / "assets" / "mia_icon.png"
