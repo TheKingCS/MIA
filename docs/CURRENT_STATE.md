@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-19 (the insurance check-up, DEC-0034), by claude.*
+session. Last updated: 2026-10-19 (the PC model's misses caught in code: 213/213), by claude.*
 
 ## Phase
 
@@ -64,6 +64,8 @@ every push). Anything that needs the PC waits.
 - The glasses client: on Q-0003 (platform and access).
 
 ## Recent changes (newest first)
+
+- 2026-10-19 · claude (on Zac's PC) · **The 14b's misses are caught by MIA's own code: 204/213 → 213/213.** All nine missed questions named exactly one tool in their own words ("Add a note that says buy milk", "Which debt should I pay off first?", "How much of the mower can I write off?"), yet the model asked back ("what title?"), picked another lookup, or called two at once. Now `AssistantActionRegistry.named_action()` finds that tool (a lookup only for a question; a change only when the message starts with its phrase; the message must name its subject) and `settle_on_named_tool()` (`core/assistant_chat.py`) keeps just that call or asks the model once more offering only it. Used by Talk (phone, web, voice), the desktop Assistant and the model test. Actions can declare `subjects` ("chore", "write off", "need to do"), so "What chores are left today?" is answered in code. Measured on the PC: 213/213; plain answers 2.6 s. Found on the way: llama3.2 was also loaded on the graphics card forever (keep_alive -1, loaded by something earlier today with the default config), slowing answers to ~3.8 s; unloaded.
 
 - 2026-10-19 · claude · **The PC's model: qwen2.5:14b (DEC-0022).** On Zac's PC: 95.8% of MIA's 213 test questions right, 2.8 s a typical answer, all on the graphics card; 32b was 98.1% but 9 s an answer, 61 s to load and spilling off the card. Also fixed: MIA crashed when opened from the desktop shortcut (pythonw has no console; the phone server's own logging asked it whether it was a terminal), and the installer stopped on the Microsoft Store's "python" placeholder.
 

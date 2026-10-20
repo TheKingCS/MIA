@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-18*
+*Last updated: 2026-10-19*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -31,10 +31,9 @@ Ollama (qwen2.5:14b on the RX 7900 XTX) and the linked phone. On the PC:
 `git pull` before starting, and commit and push after each piece (the
 cloud sessions and Muse work from GitHub). Real data lives in `data\` and
 `config\config.json`: gitignored, never committed, never pasted (DEC-0002).
-First jobs, in order: (1) the 14b's misses from `pc-check\models.md`
-(questions it answered without a tool: add a note, "what do I need to
-do", a new recipe, chores, trip summary, the payoff plan) caught by MIA's
-own code, then run `tools\pc_model_check.py` again to measure; (2) a real
+First jobs, in order: (1) ~~the 14b's misses caught by MIA's own code~~
+**done 2026-10-19: 213/213** (`settle_on_named_tool`, `core/assistant_chat.py`);
+(2) a real
 test of glasses voice, location quests while closed, the memory vault
 and sync with the linked phone; (3) the voices (install.bat again);
 (4) finishing modules without a web screen (`docs/WEB_PARITY.md`).
@@ -508,6 +507,19 @@ it, and went with Claude's recommendations. The plan, in order:
 
 
 ## 4. Known loose ends
+
+- **On Zac's PC (2026-10-19):** some test re-saves the real
+  `config\config.json` during `pytest` (it stayed intact, but tests
+  should never write it: find it and give it a temp config). Two tests
+  fail only here, on unchanged code too: `test_ocr.py::test_unavailable_without_tesseract`
+  (Tesseract really is installed) and
+  `test_phone_server.py::test_mia_gives_herself_a_console_when_there_is_none`
+  (stdout is Windows' `nul`, which says it's a terminal). Something loaded
+  llama3.2 onto the graphics card forever earlier that day (the default
+  config's model with keep_alive -1), costing ~1 s an answer; it was
+  unloaded, and `ollama ps` should show only qwen2.5:14b. Git on the PC
+  has no name/email set (Claude commits with `-c user.name=Claude -c
+  user.email=noreply@anthropic.com`) and no auto-push hook.
 
 - Cloud sessions have no auto-push git hook: Claude pushes manually
   after each commit (working as intended).
