@@ -11,8 +11,8 @@
 #      Sysinternals Autologon: you type your Windows password into it once,
 #      and it keeps it encrypted), so MIA starts a minute after any restart.
 #
-# Run by setup_home_pc.ps1 (step 6), or on its own: right-click -> Run with
-# PowerShell. Windows asks for permission (it changes system settings).
+# Run by setup_home_pc.ps1 (step 6), or on its own: double-click
+# pc_stay_up.bat. Windows asks for permission (it changes system settings).
 # Options: -Yes (don't ask), -DryRun (say what would happen; change nothing)
 
 param(
