@@ -26,7 +26,9 @@ encrypted Private Journal, off the record, and the safety floor. **Slices B ("Re
 of the Android app.
 
 **Claude on Zac's PC (2026-10-20).** Claude Code now runs on Zac's PC
-(`claude remote-control` in `C:\Users\zacrh\MIA`), next to the real MIA,
+(`claude remote-control` in `C:\Users\zacrh\MIA`, started at sign-in in
+auto mode by `pc_remote_control.bat`; the PC signs in by itself after a
+restart, 2026-10-20), next to the real MIA,
 Ollama (qwen2.5:14b on the RX 7900 XTX) and the linked phone. On the PC:
 `git pull` before starting, and commit and push after each piece (the
 cloud sessions and Muse work from GitHub). Real data lives in `data\` and

@@ -11,6 +11,7 @@ env/
 
 # --- M.I.A. runtime / user data (never commit personal data) ---
 config/config.json
+config/config.json.before_cleanup
 data/*
 !data/.gitkeep
 # "My Hero's Path" skill taxonomy (core/skill_manager.py) — a seed data
