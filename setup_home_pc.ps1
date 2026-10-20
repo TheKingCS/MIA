@@ -13,7 +13,9 @@
 #   4. ffmpeg, for cameras that only stream video (Tapo, Wyze).
 #   5. Tailscale: sign in, then serve MIA to your own devices only.
 #   6. MIA starts when you sign in to Windows; the computer doesn't sleep
-#      while plugged in (so the phone and the cameras always find it).
+#      while plugged in (so the phone and the cameras always find it), and
+#      after a Windows Update restart it signs in and MIA comes back
+#      (pc_stay_up.ps1).
 #   7. The model comparison (optional, 30-60 minutes): which model MIA's
 #      home computer should run.
 #   8. The readiness check.
@@ -155,6 +157,10 @@ if (Ask "Start MIA when you sign in to Windows?") {
 if (Ask "Keep this computer awake while it's plugged in? (the screen can still turn off)") {
     Do-It "powercfg: never sleep on AC power" { powercfg /change standby-timeout-ac 0; Note "It won't sleep while plugged in." }
 }
+$stayUpArgs = @()
+if ($Yes) { $stayUpArgs += "-Yes" }
+if ($DryRun) { $stayUpArgs += "-DryRun" }
+& (Join-Path $MiaDir "pc_stay_up.ps1") @stayUpArgs
 
 # ------------------------------------------------------------ 7. which model
 Step "7/8 Which model is best here (optional, 30-60 minutes)"

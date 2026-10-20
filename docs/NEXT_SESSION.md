@@ -512,10 +512,13 @@ it, and went with Claude's recommendations. The plan, in order:
   `config\config.json`: one run left 49 test profiles (Alex, Faith) and
   made a Faith the active one. Fixed in `tests/conftest.py` (a temp
   config, and the end-of-run guard now covers config.json too); the
-  leftover profiles still need removing with MIA closed. Windows Update
-  restarted the PC overnight (12:22 to 3:01 AM) and MIA only starts at
-  sign-in, so it stayed down until Zac signed in: Zac to pick a fix
-  (no restart while signed in, or start MIA at boot). Two tests
+  leftover profiles are removed. Windows Update restarted the PC
+  overnight (12:22 to 3:01 AM) and MIA only starts at sign-in, so it
+  stayed down until Zac signed in. Fix (Zac chose both):
+  `pc_stay_up.ps1` (also setup step 6): no restart while signed in or
+  6 AM to midnight, and Windows signs in by itself (Sysinternals
+  Autologon). **Zac runs it once at the PC** (UAC prompt, types his
+  Windows password into Autologon). Two tests
   fail only here, on unchanged code too: `test_ocr.py::test_unavailable_without_tesseract`
   (Tesseract really is installed) and
   `test_phone_server.py::test_mia_gives_herself_a_console_when_there_is_none`
