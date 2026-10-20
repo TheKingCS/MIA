@@ -1627,3 +1627,18 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .ins-same { margin: 0; color: rgb(var(--rgb-ok)); }
 .ins-list summary { cursor: pointer; color: var(--accent); font-size: var(--text-sm); }
 .ins-list ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Passwords (DEC-0035, 2026-10-20) */
+.pw-tools { align-items: center; margin: 0 0 10px; }
+.pw-search { flex: 1 1 180px; min-height: 40px; }
+.pw-row { align-items: center; flex-wrap: wrap; row-gap: 6px; }
+.pw-main { flex: 1 1 200px; min-width: 0; }
+.pw-secret { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-dim);
+  word-break: break-all; }
+.pw-secret.open { color: var(--accent); }
+.pw-flag { margin-left: 8px; padding: 1px 6px; border-radius: 999px; font-size: var(--text-xs); color: var(--soon);
+  border: 1px solid var(--soon); }
+.pw-health { margin: 0 0 10px; font-size: var(--text-sm); color: var(--soon); }
+.pw-code { font-family: var(--font-mono); font-size: var(--text-lg); letter-spacing: 0.08em; color: var(--accent);
+  text-align: center; padding: 10px; border: 1px dashed rgba(var(--rgb-accent), 0.5); border-radius: var(--radius); }
+.pw-offscreen { position: fixed; left: -9999px; top: 0; }

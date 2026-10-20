@@ -181,4 +181,5 @@ def test_mia_gives_herself_a_console_when_there_is_none(monkeypatch):
     monkeypatch.setattr(sys, "stderr", None)
     _console_or_nothing()
     print("goes nowhere")  # no crash
-    assert sys.stdout.isatty() is False and sys.stderr is not None
+    sys.stdout.isatty(), sys.stderr.isatty()  # asking is what crashed; the answer differs (Windows' NUL says yes)
+    assert sys.stdout is not None and sys.stderr is not None

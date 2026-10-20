@@ -243,6 +243,16 @@
     security: () => read("/api/security", "security"),
     // The insurance check-up (core/insurance.py): policies, checks, quotes side by side.
     insurance: () => read("/api/insurance", "insurance"),
+    // Passwords (core/password_vault.py): never through actions; a password comes back only from reveal.
+    passwords: () => read("/api/passwords", "passwords"),
+    vaultSetup: (master) => demo ? demoOnly() : call("POST", "/api/passwords/setup", { master }),
+    vaultUnlock: (master, recovery, fresh) => demo ? demoOnly() : call("POST", "/api/passwords/unlock", { master, recovery, new: fresh || "" }),
+    vaultLock: () => demo ? demoOnly() : call("POST", "/api/passwords/lock"),
+    vaultChange: (master, fresh) => demo ? demoOnly() : call("POST", "/api/passwords/change", { master, new: fresh }),
+    vaultSave: (login) => demo ? demoOnly() : call("POST", "/api/passwords/login", login),
+    vaultDelete: (id) => demo ? demoOnly() : call("DELETE", "/api/passwords/login/" + encodeURIComponent(id)),
+    vaultReveal: (id) => demo ? demoOnly() : call("POST", "/api/passwords/login/" + encodeURIComponent(id) + "/reveal"),
+    vaultImport: (text) => demo ? demoOnly() : call("POST", "/api/passwords/import", { text }),
     // The memory vault (core/memory_vault.py): one month of photos at a time.
     vault: (month) => read("/api/vault" + (month ? "?month=" + encodeURIComponent(month) : ""), "vault"),
     vaultFreePlan: (what) => demo ? demoOnly() : call("POST", "/api/vault/free/plan", { what }),

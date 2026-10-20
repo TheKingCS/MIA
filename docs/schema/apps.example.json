@@ -686,6 +686,20 @@
           "ask": "Make the text bigger.",
           "tools": [],
           "favorite": false
+        },
+        {
+          "id": "passwords",
+          "name": "Passwords",
+          "icon": "🔐",
+          "tagline": "Every login, locked.",
+          "description": "Your logins in a vault only your master password opens; MIA's assistant never sees them (DEC-0035).",
+          "page": "passwords.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "",
+          "tools": [],
+          "favorite": false
         }
       ]
     }
@@ -697,8 +711,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 38,
-    "on_web": 19,
+    "apps": 39,
+    "on_web": 20,
     "tools": 32
   }
 }

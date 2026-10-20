@@ -92,6 +92,7 @@ from core.boss_battles import BossBook
 from core.questlines import QuestBook
 from core.world_map import WorldMap
 from core.memory_vault import MemoryVault
+from core.password_vault import PasswordVault
 from core.places import Places
 from core.plaid_manager import PlaidManager
 from core.private_journal import PrivateJournalManager
@@ -138,6 +139,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),
+    ("passwords", PasswordVault),
     ("places", Places),
     ("workout", WorkoutManager),
     ("fitness", FitnessManager),

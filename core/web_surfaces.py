@@ -147,6 +147,9 @@ APPS: tuple[App, ...] = (
     App("field_kit", "Field Kit", "🛠", "Devices and scripts.", None,
         "Detect and manage connected devices; run your own scripts.", KNOW, ("field_kit", "security"),
         "What devices are connected?"),
+    App("passwords", "Passwords", "🔐", "Every login, locked.", "passwords.html",
+        "Your logins in a vault only your master password opens; MIA's assistant never sees them (DEC-0035).", KNOW,
+        (), ""),
     App("files", "Files", "🗂", "Your files.", "files.html", "Browse and manage local files and data.", KNOW, ()),
     App("music", "Music", "🎵", "Your music.", "music.html", "Local audio library, playlists, and playback.", KNOW,
         ("music",), "Play something relaxing."),
@@ -162,7 +165,7 @@ APPS: tuple[App, ...] = (
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
-WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance"})
+WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords"})
 # Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because
