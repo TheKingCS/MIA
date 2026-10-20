@@ -508,9 +508,14 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 4. Known loose ends
 
-- **On Zac's PC (2026-10-19):** some test re-saves the real
-  `config\config.json` during `pytest` (it stayed intact, but tests
-  should never write it: find it and give it a temp config). Two tests
+- **On Zac's PC (2026-10-20):** `pytest` used to save into the real
+  `config\config.json`: one run left 49 test profiles (Alex, Faith) and
+  made a Faith the active one. Fixed in `tests/conftest.py` (a temp
+  config, and the end-of-run guard now covers config.json too); the
+  leftover profiles still need removing with MIA closed. Windows Update
+  restarted the PC overnight (12:22 to 3:01 AM) and MIA only starts at
+  sign-in, so it stayed down until Zac signed in: Zac to pick a fix
+  (no restart while signed in, or start MIA at boot). Two tests
   fail only here, on unchanged code too: `test_ocr.py::test_unavailable_without_tesseract`
   (Tesseract really is installed) and
   `test_phone_server.py::test_mia_gives_herself_a_console_when_there_is_none`

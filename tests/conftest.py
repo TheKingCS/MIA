@@ -49,6 +49,7 @@ import tempfile
 from pathlib import Path
 
 import core.component_manager as component_manager_module
+import core.config_manager as config_manager_module
 import core.connectivity as connectivity_module
 import core.inventory_manager as inventory_manager_module
 import core.material_manager as material_manager_module
@@ -78,6 +79,17 @@ _TEST_USAGE_DIR = Path(tempfile.mkdtemp(prefix="mia_test_usage_"))
 usage_tracker_module._DATA_DIR = _TEST_USAGE_DIR
 usage_tracker_module._USAGE_FILE = _TEST_USAGE_DIR / "module_usage.json"
 
+# 2026-10-20: most tests build `ConfigManager()` with no path, which read
+# and saved the real config/config.json. On Zac's PC one `pytest` run
+# left 49 test profiles ("Alex", "Faith") there and made one of them the
+# active profile, so MIA started as "Faith". The session shares one temp
+# config instead (the same thing CI has always had: no config.json at the
+# start); the versioned defaults stay the real ones.
+_TEST_CONFIG_DIR = Path(tempfile.mkdtemp(prefix="mia_test_config_"))
+config_manager_module._CONFIG_DIR = _TEST_CONFIG_DIR
+config_manager_module._CONFIG_FILE = _TEST_CONFIG_DIR / "config.json"
+
+
 # core.connectivity's background probe (2026-09-27) would otherwise make a
 # real network connection whenever a test builds a full context. Tests
 # that exercise the monitor inject their own connect function.
@@ -105,15 +117,19 @@ skill_manager_module._SKILL_PROGRESS_FILE = _TEST_RUNTIME_DIR / "skill_progress.
 # it at session start and fail the run, naming the files, if anything was
 # added or changed by the end.
 _REAL_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_REAL_CONFIG_FILE = Path(__file__).resolve().parent.parent / "config" / "config.json"
 
 
 def _data_snapshot() -> dict[str, float]:
-    if not _REAL_DATA_DIR.exists():
-        return {}
-    return {
-        str(p.relative_to(_REAL_DATA_DIR)): p.stat().st_mtime
-        for p in _REAL_DATA_DIR.rglob("*")
-    }
+    snapshot = {}
+    if _REAL_DATA_DIR.exists():
+        snapshot = {
+            str(p.relative_to(_REAL_DATA_DIR)): p.stat().st_mtime
+            for p in _REAL_DATA_DIR.rglob("*")
+        }
+    if _REAL_CONFIG_FILE.exists():
+        snapshot["../config/config.json"] = _REAL_CONFIG_FILE.stat().st_mtime
+    return snapshot
 
 
 def pytest_sessionstart(session):
@@ -128,7 +144,7 @@ def pytest_sessionfinish(session, exitstatus):
     touched = sorted(name for name, mtime in after.items() if before.get(name) != mtime)
     if touched:
         reporter = session.config.pluginmanager.get_plugin("terminalreporter")
-        message = "Tests wrote into the real data/ folder: " + ", ".join(touched)
+        message = "Tests wrote into the real data/ folder or config: " + ", ".join(touched)
         if reporter is not None:
             reporter.write_line(message, red=True)
         session.exitstatus = 1
