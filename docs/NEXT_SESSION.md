@@ -517,8 +517,8 @@ it, and went with Claude's recommendations. The plan, in order:
   stayed down until Zac signed in. Fix (Zac chose both):
   `pc_stay_up.ps1` (also setup step 6): no restart while signed in or
   6 AM to midnight, and Windows signs in by itself (Sysinternals
-  Autologon). **Zac runs it once at the PC** (UAC prompt, types his
-  Windows password into Autologon). Two tests
+  Autologon). Done 2026-10-20: zacrh is now a local account (it was
+  a Microsoft account Zac doesn't use) and signs in by itself. Two tests
   fail only here, on unchanged code too: `test_ocr.py::test_unavailable_without_tesseract`
   (Tesseract really is installed) and
   `test_phone_server.py::test_mia_gives_herself_a_console_when_there_is_none`
