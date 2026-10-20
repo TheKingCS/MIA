@@ -49,12 +49,16 @@ class ChatWorker(QThread):
 
     result_ready = Signal(object)  # Optional[ChatReply]
 
-    def __init__(self, llm: LLMManager, messages: list[dict], tools: list[dict]) -> None:
+    def __init__(self, llm: LLMManager, messages: list[dict], tools: list[dict], named: Optional[str] = None) -> None:
         super().__init__()
         self._llm = llm
         self._messages = messages
         self._tools = tools
+        self._named = named  # the tool the message names (core/assistant_chat.settle_on_named_tool)
 
     def run(self) -> None:
+        from core.assistant_chat import settle_on_named_tool
+
         reply: Optional[ChatReply] = self._llm.chat_with_tools(self._messages, self._tools)
+        reply = settle_on_named_tool(self._named, self._messages, self._tools, reply, self._llm.chat_with_tools)
         self.result_ready.emit(reply)

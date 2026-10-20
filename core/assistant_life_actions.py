@@ -609,6 +609,7 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         description="Today's/this week's household routines (laundry, dishes, chores): progress and streaks.",
         parameters=_NO_PARAMS, handler=_action_list_household_routines,
         trigger_phrases=("my chores", "household routines", "chores today", "what chores", "routines today"),
+        subjects=("chore",),
     ))
     registry.register(AssistantAction(
         name="log_household_routine", domain="household",

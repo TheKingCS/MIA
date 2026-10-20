@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from core.app_context import AppContext
-from core.assistant_chat import build_chat_request, split_safe_tool_calls
+from core.assistant_chat import build_chat_request, named_tool, settle_on_named_tool, split_safe_tool_calls
 from core.conversation_manager import Conversation, ConversationMessage
 from core.logger import get_logger
 from core.talk_it_out import Followup, after_fixed_reply, apply_followup, plan_followup, pre_turn, with_offer
@@ -113,6 +113,7 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     messages, tools = build_chat_request(context, conversation, prompt)
     used = memories_used(context, prompt, messages)
     reply = context.llm.chat_with_tools(messages, tools)
+    reply = settle_on_named_tool(named_tool(context, prompt, tools), messages, tools, reply, context.llm.chat_with_tools)
     if reply is None:
         return AssistantTurn(replies=notices, llm_available=False)
 

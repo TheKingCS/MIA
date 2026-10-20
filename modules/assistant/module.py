@@ -141,6 +141,7 @@ from core.assistant_chat import (
     build_title_generation_prompt,
     clean_generated_title,
     format_chat_line,
+    named_tool,
     parse_extracted_memories,
     split_safe_tool_calls,
 )
@@ -424,7 +425,7 @@ class AssistantModule(ModuleBase):
 
         messages, tools = build_chat_request(self.context, self._conversation, prompt)
 
-        self._worker = ChatWorker(self.context.llm, messages, tools)
+        self._worker = ChatWorker(self.context.llm, messages, tools, named_tool(self.context, prompt, tools))
         self._worker.result_ready.connect(self._on_reply)
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()

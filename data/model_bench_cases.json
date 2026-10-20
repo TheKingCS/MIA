@@ -16,6 +16,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What can you tell me about Honda Civics?",
    "tools": []
   },
@@ -34,6 +35,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What does the Notes module do?",
    "tools": []
   },
@@ -52,6 +54,7 @@
      "role": "user"
     }
    ],
+   "named": "open_module",
    "prompt": "Open the notes module for me",
    "tools": [
     {
@@ -264,6 +267,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Set an alarm called Wake Up for 07:00",
    "tools": [
     {
@@ -338,6 +342,7 @@
      "role": "user"
     }
    ],
+   "named": "list_alarms",
    "prompt": "List my alarms",
    "tools": [
     {
@@ -412,6 +417,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete my Wake Up alarm",
    "tools": [
     {
@@ -486,6 +492,7 @@
      "role": "user"
     }
    ],
+   "named": "add_note",
    "prompt": "Add a note that says buy milk",
    "tools": [
     {
@@ -564,6 +571,7 @@
      "role": "user"
     }
    ],
+   "named": "list_notes",
    "prompt": "List my notes",
    "tools": [
     {
@@ -642,6 +650,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the note called Groceries",
    "tools": [
     {
@@ -720,6 +729,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "How many M3 bolts do I have?",
    "tools": [
     {
@@ -921,6 +931,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Remove M3 bolts from inventory",
    "tools": [
     {
@@ -1122,6 +1133,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I used 5 M3 bolts",
    "tools": [
     {
@@ -1323,6 +1335,7 @@
      "role": "user"
     }
    ],
+   "named": "list_waypoints",
    "prompt": "List my waypoints",
    "tools": [
     {
@@ -1454,6 +1467,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's the distance from Home to Cabin?",
    "tools": [
     {
@@ -1585,6 +1599,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the Cabin waypoint",
    "tools": [
     {
@@ -1716,6 +1731,7 @@
      "role": "user"
     }
    ],
+   "named": "get_system_health",
    "prompt": "What's my system health?",
    "tools": [
     {
@@ -1928,6 +1944,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What have I been doing recently?",
    "tools": [
     {
@@ -2140,6 +2157,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "This is alarming news about the economy",
    "tools": []
   },
@@ -2158,6 +2176,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I used to live in Ohio",
    "tools": [
     {
@@ -2260,6 +2279,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Save a waypoint here called Ridge Camp at latitude 44.0 longitude -110.1",
    "tools": [
     {
@@ -2391,6 +2411,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Start a new expedition called Field Season",
    "tools": [
     {
@@ -2652,6 +2673,7 @@
      "role": "user"
     }
    ],
+   "named": "list_expeditions",
    "prompt": "List my expeditions",
    "tools": [
     {
@@ -2913,6 +2935,7 @@
      "role": "user"
     }
    ],
+   "named": "add_trip",
    "prompt": "Add a trip called Day 1 to my Field Season expedition",
    "tools": [
     {
@@ -3174,6 +3197,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What trips do I have?",
    "tools": [
     {
@@ -3518,6 +3542,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add a tent to the gear list for my Day 1 trip",
    "tools": [
     {
@@ -3779,6 +3804,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Log to my trip journal that I reached camp, conditions were clear and 15 degrees",
    "tools": [
     {
@@ -4040,6 +4066,7 @@
      "role": "user"
     }
    ],
+   "named": "add_note",
    "prompt": "Add a note that says buy milk",
    "tools": [
     {
@@ -4118,6 +4145,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the expedition called Field Season",
    "tools": [
     {
@@ -4379,6 +4407,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the trip called Day 1",
    "tools": [
     {
@@ -4640,6 +4669,7 @@
      "role": "user"
     }
    ],
+   "named": "toggle_gear_packed",
    "prompt": "I packed my First aid kit for my Day 1 trip",
    "tools": [
     {
@@ -4901,6 +4931,7 @@
      "role": "user"
     }
    ],
+   "named": "get_trip_summary",
    "prompt": "How far did I go on my Day 1 trip?",
    "tools": [
     {
@@ -5162,6 +5193,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What time does the sun set at my Cabin waypoint?",
    "tools": [
     {
@@ -5293,6 +5325,7 @@
      "role": "user"
     }
    ],
+   "named": "get_sun_moon_info",
    "prompt": "What's the moon phase at Cabin tonight?",
    "tools": [
     {
@@ -5424,6 +5457,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Convert 5 miles to kilometers",
    "tools": [
     {
@@ -5503,6 +5537,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What is 100 fahrenheit in celsius?",
    "tools": [
     {
@@ -5582,6 +5617,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I have 2 amps through a 10 ohm resistor, what's the voltage?",
    "tools": [
     {
@@ -5760,6 +5796,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "The stadium was packed for the game",
    "tools": []
   },
@@ -5778,6 +5815,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I'm trying to convert my garage into a workshop",
    "tools": []
   },
@@ -5796,6 +5834,7 @@
      "role": "user"
     }
    ],
+   "named": "get_device_profile",
    "prompt": "What device profile is this running?",
    "tools": [
     {
@@ -6008,6 +6047,7 @@
      "role": "user"
     }
    ],
+   "named": "set_theme",
    "prompt": "Change the theme to low energy",
    "tools": [
     {
@@ -6220,6 +6260,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Switch to the Anime Monochrome theme",
    "tools": [
     {
@@ -6432,6 +6473,7 @@
      "role": "user"
     }
    ],
+   "named": "set_birthday",
    "prompt": "My birthday is March 3rd, 1990",
    "tools": [
     {
@@ -6839,6 +6881,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "That trip to the store took forever",
    "tools": []
   },
@@ -6857,6 +6900,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I need to log off for the night",
    "tools": []
   },
@@ -6875,6 +6919,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add an event called Dentist on 2026-09-01 at 14:00",
    "tools": [
     {
@@ -6961,6 +7006,7 @@
      "role": "user"
     }
    ],
+   "named": "list_calendar_events",
    "prompt": "What's on my calendar?",
    "tools": [
     {
@@ -7047,6 +7093,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete my Doctor Appointment event",
    "tools": [
     {
@@ -7133,6 +7180,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's my battery level?",
    "tools": [
     {
@@ -7357,6 +7405,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add a component called 10k resistor",
    "tools": [
     {
@@ -7475,6 +7524,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What components do I have?",
    "tools": [
     {
@@ -7676,6 +7726,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the M3 bolts component",
    "tools": [
     {
@@ -7794,6 +7845,7 @@
      "role": "user"
     }
    ],
+   "named": "list_connected_devices",
    "prompt": "What devices are connected right now?",
    "tools": [
     {
@@ -7842,6 +7894,7 @@
      "role": "user"
     }
    ],
+   "named": "list_scripts",
    "prompt": "List my scripts",
    "tools": [
     {
@@ -7890,6 +7943,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "This was an eventful week at work",
    "tools": []
   },
@@ -7908,6 +7962,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What user profiles do I have set up?",
    "tools": [
     {
@@ -8203,6 +8258,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Show my profiles on this MIA device",
    "tools": [
     {
@@ -8415,6 +8471,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What hash format is this: $2b$12$abcdefghijklmnopqrstuv",
    "tools": [
     {
@@ -8510,6 +8567,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "How strong is this password: hunter2",
    "tools": [
     {
@@ -8605,6 +8663,7 @@
      "role": "user"
     }
    ],
+   "named": "calculate_subnet",
    "prompt": "Calculate this subnet: 192.168.1.0/24",
    "tools": [
     {
@@ -8700,6 +8759,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Scan 192.168.1.1 for open ports",
    "tools": [
     {
@@ -8988,6 +9048,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Scan 10.0.0.1 for open ports",
    "tools": [
     {
@@ -9276,6 +9337,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Start a new project called Kitchen Remodel",
    "tools": [
     {
@@ -9440,6 +9502,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What projects do I have?",
    "tools": [
     {
@@ -9687,6 +9750,7 @@
      "role": "user"
     }
    ],
+   "named": "add_task",
    "prompt": "Add a task called Buy fuse box to my Garage Rewire project",
    "tools": [
     {
@@ -10004,6 +10068,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What tasks do I have?",
    "tools": [
     {
@@ -10251,6 +10316,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "This project is taking forever",
    "tools": []
   },
@@ -10269,6 +10335,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the project called Garage Rewire",
    "tools": [
     {
@@ -10586,6 +10653,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the task called Buy fuse box",
    "tools": [
     {
@@ -10750,6 +10818,7 @@
      "role": "user"
     }
    ],
+   "named": "mark_task_done",
    "prompt": "Mark the task called Buy fuse box as done",
    "tools": [
     {
@@ -10914,6 +10983,7 @@
      "role": "user"
     }
    ],
+   "named": "recall_expedition",
    "prompt": "Tell me about the expedition called Field Season",
    "tools": [
     {
@@ -11175,6 +11245,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Tell me about my last expedition",
    "tools": [
     {
@@ -11704,6 +11775,7 @@
      "role": "user"
     }
    ],
+   "named": "recall_expedition",
    "prompt": "Can you describe my expedition to me",
    "tools": [
     {
@@ -11965,6 +12037,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Start a new mission called Kayak Explorer",
    "tools": [
     {
@@ -12117,6 +12190,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What missions do I have?",
    "tools": [
     {
@@ -12352,6 +12426,7 @@
      "role": "user"
     }
    ],
+   "named": "list_missions",
    "prompt": "What is my current mission?",
    "tools": [
     {
@@ -12504,6 +12579,7 @@
      "role": "user"
     }
    ],
+   "named": "add_objective",
    "prompt": "Add an objective to my Master Angler mission: catch 5 fish, target 5",
    "tools": [
     {
@@ -12656,6 +12732,7 @@
      "role": "user"
     }
    ],
+   "named": "log_mission_progress",
    "prompt": "Log a catch for my Master Angler mission",
    "tools": [
     {
@@ -12808,6 +12885,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the mission called Master Angler",
    "tools": [
     {
@@ -12960,6 +13038,7 @@
      "role": "user"
     }
    ],
+   "named": "complete_mission",
    "prompt": "Complete the mission called Master Angler",
    "tools": [
     {
@@ -13112,6 +13191,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Our company's mission is customer satisfaction",
    "tools": []
   },
@@ -13130,6 +13210,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Do I have anything on my calendar today?",
    "tools": [
     {
@@ -13299,6 +13380,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What do I have going on this week?",
    "tools": [
     {
@@ -13468,6 +13550,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What parts do I have in my workshop?",
    "tools": [
     {
@@ -13669,6 +13752,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What am I currently working on?",
    "tools": [
     {
@@ -13833,6 +13917,7 @@
      "role": "user"
     }
    ],
+   "named": "list_tasks",
    "prompt": "What do I need to do?",
    "tools": [
     {
@@ -13997,6 +14082,7 @@
      "role": "user"
     }
    ],
+   "named": "list_alarms",
    "prompt": "When is my next alarm?",
    "tools": [
     {
@@ -14071,6 +14157,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Am I plugged in right now?",
    "tools": [
     {
@@ -14102,6 +14189,7 @@
      "role": "user"
     }
    ],
+   "named": "get_power_status",
    "prompt": "What is my power percentage?",
    "tools": [
     {
@@ -14133,6 +14221,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "This new drill has a lot more power than my old one",
    "tools": []
   },
@@ -14151,6 +14240,7 @@
      "role": "user"
     }
    ],
+   "named": "list_expeditions",
    "prompt": "How many expeditions have I been on?",
    "tools": [
     {
@@ -14412,6 +14502,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What locations have I saved?",
    "tools": [
     {
@@ -14543,6 +14634,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Is there anything I wrote down recently?",
    "tools": [
     {
@@ -14621,6 +14713,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Is everything running okay on this device?",
    "tools": [
     {
@@ -14833,6 +14926,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Hey, is everything ok with you today?",
    "tools": [
     {
@@ -15045,6 +15139,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I just plugged in my new keyboard.",
    "tools": [
     {
@@ -15076,6 +15171,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I've been working on my patience lately.",
    "tools": []
   },
@@ -15094,6 +15190,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What did I write down about the trip?",
    "tools": [
     {
@@ -15172,6 +15269,7 @@
      "role": "user"
     }
    ],
+   "named": "add_material",
    "prompt": "Add a material called Aluminum Rod",
    "tools": [
     {
@@ -15302,6 +15400,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What materials do I have?",
    "tools": [
     {
@@ -15515,6 +15614,7 @@
      "role": "user"
     }
    ],
+   "named": "add_product",
    "prompt": "Add a product called Bookshelf",
    "tools": [
     {
@@ -15602,6 +15702,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What products do I have?",
    "tools": [
     {
@@ -15772,6 +15873,7 @@
      "role": "user"
     }
    ],
+   "named": "add_job",
    "prompt": "Start a new job called Bookshelf Batch",
    "tools": [
     {
@@ -15884,6 +15986,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What jobs do I have?",
    "tools": [
     {
@@ -16079,6 +16182,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "My Birdhouse Batch job used 4 sheets of Plywood",
    "tools": [
     {
@@ -16370,6 +16474,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "My Birdhouse Batch job produced 3 Birdhouses",
    "tools": [
     {
@@ -16550,6 +16655,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I sold 2 Birdhouses for $50",
    "tools": [
     {
@@ -16678,6 +16784,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's my net profit so far?",
    "tools": [
     {
@@ -16738,6 +16845,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I love my new job at the bakery",
    "tools": []
   },
@@ -16756,6 +16864,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "This shirt is made of a soft material",
    "tools": []
   },
@@ -16774,6 +16883,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What trail maps do I have?",
    "tools": [
     {
@@ -16945,6 +17055,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add a trail map for Red River Gorge in Kentucky from https://example.com/rrg.pdf",
    "tools": [
     {
@@ -17033,6 +17144,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete my trail map for Mammoth Cave",
    "tools": [
     {
@@ -17121,6 +17233,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I can't map out my whole week right now",
    "tools": []
   },
@@ -17139,6 +17252,7 @@
      "role": "user"
     }
    ],
+   "named": "add_maintenance_asset",
    "prompt": "Track my Truck as a vehicle in Maintenance",
    "tools": [
     {
@@ -17426,6 +17540,7 @@
      "role": "user"
     }
    ],
+   "named": "list_maintenance_assets",
    "prompt": "What vehicles and equipment am I tracking in Maintenance?",
    "tools": [
     {
@@ -17713,6 +17828,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Stop tracking my Truck in Maintenance",
    "tools": [
     {
@@ -18000,6 +18116,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Remind me to change my Truck's oil every 180 days",
    "tools": [
     {
@@ -18342,6 +18459,7 @@
      "role": "user"
     }
    ],
+   "named": "list_maintenance_tasks",
    "prompt": "What maintenance is due on my Truck?",
    "tools": [
     {
@@ -18629,6 +18747,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Is anything overdue for maintenance?",
    "tools": [
     {
@@ -19167,6 +19286,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I renewed the tags on my Truck",
    "tools": [
     {
@@ -19454,6 +19574,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Log a reading of 46000 miles for the Oil Change on my Truck",
    "tools": [
     {
@@ -19870,6 +19991,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Log 46000 miles for the Oil Change on my Truck",
    "tools": [
     {
@@ -20223,6 +20345,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Delete the Renew Tags maintenance task",
    "tools": [
     {
@@ -20510,6 +20633,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I volunteered to do community service this weekend",
    "tools": []
   },
@@ -20528,6 +20652,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What tasks do I have?",
    "tools": [
     {
@@ -20775,6 +20900,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Log a reading of 65 for soil moisture",
    "tools": [
     {
@@ -21125,6 +21251,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Log a reading of 12.4 volts for my multimeter test",
    "tools": [
     {
@@ -21475,6 +21602,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Log a reading of 47000 miles for the Oil Change on my Truck",
    "tools": [
     {
@@ -21891,6 +22019,7 @@
      "role": "user"
     }
    ],
+   "named": "list_lab_series",
    "prompt": "What data series am I logging in the Lab?",
    "tools": [
     {
@@ -21973,6 +22102,7 @@
      "role": "user"
     }
    ],
+   "named": "list_lab_readings",
    "prompt": "Show me the readings for Soil Moisture",
    "tools": [
     {
@@ -22055,6 +22185,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I'm reading a really good book right now",
    "tools": []
   },
@@ -22073,6 +22204,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I just finished watching a great TV series",
    "tools": []
   },
@@ -22091,6 +22223,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add a monthly electric bill for $120, due 2026-09-01",
    "tools": [
     {
@@ -22361,6 +22494,7 @@
      "role": "user"
     }
    ],
+   "named": "add_bill",
    "prompt": "Add a bill called Internet for $80 due on the 1st of every month",
    "tools": [
     {
@@ -22824,6 +22958,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Remind me to change my Truck's oil every 180 days",
    "tools": [
     {
@@ -23166,6 +23301,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What bills do I have?",
    "tools": [
     {
@@ -23519,6 +23655,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Is anything overdue?",
    "tools": [
     {
@@ -24057,6 +24194,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I paid my Electric bill",
    "tools": [
     {
@@ -24327,6 +24465,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I got paid $3000 for my paycheck",
    "tools": [
     {
@@ -24597,6 +24736,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Record $1500 of rental income",
    "tools": [
     {
@@ -24867,6 +25007,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I spent $85 on groceries",
    "tools": [
     {
@@ -25137,6 +25278,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's my net cash flow this month?",
    "tools": [
     {
@@ -25407,6 +25549,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Can you bill me for that later, just kidding",
    "tools": [
     {
@@ -25677,6 +25820,7 @@
      "role": "user"
     }
    ],
+   "named": "add_income_source",
    "prompt": "Add my paycheck as an income source — $2400 every two weeks starting 2026-09-08",
    "tools": [
     {
@@ -25947,6 +26091,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Track my rental income of $1500 a month starting 2026-09-01",
    "tools": [
     {
@@ -26485,6 +26630,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I got paid $3000 today",
    "tools": [
     {
@@ -26755,6 +26901,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "My paycheck came in",
    "tools": [
     {
@@ -27025,6 +27172,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "How are we doing financially?",
    "tools": [
     {
@@ -27295,6 +27443,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Are we on budget this month?",
    "tools": [
     {
@@ -27565,6 +27714,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's a good way to budget my paycheck?",
    "tools": []
   },
@@ -27583,6 +27733,7 @@
      "role": "user"
     }
    ],
+   "named": "add_property",
    "prompt": "Add a rental property called 123 Main St",
    "tools": [
     {
@@ -27692,6 +27843,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What properties do I have?",
    "tools": [
     {
@@ -27884,6 +28036,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Record rental income of $1800 for 123 Main St",
    "tools": [
     {
@@ -28154,6 +28307,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Record $1500 of rental income",
    "tools": [
     {
@@ -28424,6 +28578,7 @@
      "role": "user"
     }
    ],
+   "named": "get_property_summary",
    "prompt": "How is my 123 Main St property doing?",
    "tools": [
     {
@@ -28533,6 +28688,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "That's a really useful property of this material",
    "tools": []
   },
@@ -28551,6 +28707,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Teach me how missions work",
    "tools": []
   },
@@ -28569,6 +28726,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Teach me how to add a mission",
    "tools": []
   },
@@ -28590,6 +28748,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I just put 120 hours on the mower",
    "tools": [
     {
@@ -28879,6 +29038,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Sharpened the mower blades this morning",
    "tools": [
     {
@@ -29168,6 +29328,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I watered the tomatoes",
    "tools": [
     {
@@ -29458,6 +29619,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "My mower is a John Deere Z315E",
    "tools": [
     {
@@ -29747,6 +29909,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Tell me about my mower",
    "tools": [
     {
@@ -30036,6 +30199,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Note that the peppers are starting to flower",
    "tools": [
     {
@@ -30325,6 +30489,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add the lettuce bed to the greenhouse",
    "tools": [
     {
@@ -30614,6 +30779,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Remind me to water the pepper plants every 3 days",
    "tools": [
     {
@@ -30956,6 +31122,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's due in the greenhouse?",
    "tools": [
     {
@@ -31497,6 +31664,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I owe $5,100 on my Capital One card at 27.49 percent",
    "tools": [
     {
@@ -31659,6 +31827,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I paid $200 toward my Chase card",
    "tools": [
     {
@@ -31818,6 +31987,7 @@
      "role": "user"
     }
    ],
+   "named": "get_debt_payoff_plan",
    "prompt": "Which debt should I pay off first?",
    "tools": [
     {
@@ -31977,6 +32147,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "How much do I owe in total?",
    "tools": [
     {
@@ -32138,6 +32309,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Set my grocery budget to $600 a month",
    "tools": [
     {
@@ -32410,6 +32582,7 @@
      "role": "user"
     }
    ],
+   "named": "add_recipe",
    "prompt": "Add a recipe for garden salsa",
    "tools": [
     {
@@ -32523,6 +32696,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What can I make with what I have?",
    "tools": [
     {
@@ -32638,6 +32812,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I made the venison chili tonight",
    "tools": [
     {
@@ -32753,6 +32928,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add milk and coffee to the grocery list",
    "tools": [
     {
@@ -32920,6 +33096,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I bought the eggs",
    "tools": [
     {
@@ -33241,6 +33418,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "We're out of flour",
    "tools": [
     {
@@ -33406,6 +33584,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Add what I need for the venison chili to the grocery list",
    "tools": [
     {
@@ -33667,6 +33846,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I used two 10k resistors",
    "tools": [
     {
@@ -33871,6 +34051,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I bought 4 more sheets of plywood",
    "tools": [
     {
@@ -34156,6 +34337,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Plywood costs $42 a sheet now",
    "tools": [
     {
@@ -34288,6 +34470,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I made 5 more cutting boards",
    "tools": [
     {
@@ -34375,6 +34558,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "How do I add a bill?",
    "tools": []
   },
@@ -34393,6 +34577,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "How do I track my mower?",
    "tools": []
   },
@@ -34411,6 +34596,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I was driving the truck home and it felt great",
    "tools": [
     {
@@ -34698,6 +34884,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Tell me a story about a mower",
    "tools": [
     {
@@ -34987,6 +35174,7 @@
      "role": "user"
     }
    ],
+   "named": "log_workout",
    "prompt": "Log my workout: 3x10 squats at 185",
    "tools": [
     {
@@ -35073,6 +35261,7 @@
      "role": "user"
     }
    ],
+   "named": "get_personal_record",
    "prompt": "What's my personal record on the squat?",
    "tools": [
     {
@@ -35160,6 +35349,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Sarah would love a new cast iron skillet",
    "tools": [
     {
@@ -35374,6 +35564,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "My friend Jake's birthday is May 9",
    "tools": [
     {
@@ -35781,6 +35972,7 @@
      "role": "user"
     }
    ],
+   "named": "list_upcoming_birthdays",
    "prompt": "Any birthdays coming up?",
    "tools": [
     {
@@ -35998,6 +36190,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Biscuit went to the vet for his rabies shot today",
    "tools": [
     {
@@ -36214,6 +36407,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I did a load of laundry",
    "tools": [
     {
@@ -36283,7 +36477,7 @@
   {
    "arguments": null,
    "description": "chores status",
-   "direct": null,
+   "direct": "list_household_routines",
    "expected": "list_household_routines",
    "messages": [
     {
@@ -36295,6 +36489,7 @@
      "role": "user"
     }
    ],
+   "named": "list_household_routines",
    "prompt": "What chores are left today?",
    "tools": [
     {
@@ -36378,6 +36573,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I finished the lesson on circuit breakers",
    "tools": [
     {
@@ -36523,6 +36719,7 @@
      "role": "user"
     }
    ],
+   "named": "get_learning_progress",
    "prompt": "What am I learning right now?",
    "tools": [
     {
@@ -36668,6 +36865,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Of course, that makes sense",
    "tools": []
   },
@@ -36689,6 +36887,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I spent $240 on lumber for the greenhouse",
    "tools": [
     {
@@ -37494,6 +37693,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I just bought a chainsaw for $329",
    "tools": [
     {
@@ -37666,6 +37866,7 @@
      "role": "user"
     }
    ],
+   "named": "get_tool_costs",
    "prompt": "What has the chainsaw cost me so far?",
    "tools": [
     {
@@ -37840,6 +38041,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "I mowed the Maple duplex for 2 hours with the mower",
    "tools": [
     {
@@ -38193,6 +38395,7 @@
      "role": "user"
     }
    ],
+   "named": "get_business_use",
    "prompt": "How much of the mower can I write off this year?",
    "tools": [
     {
@@ -38546,6 +38749,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What didn't you tell me today?",
    "tools": [
     {
@@ -38650,6 +38854,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Only message me 3 times a day",
    "tools": [
     {
@@ -38752,6 +38957,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What textbooks do I have?",
    "tools": [
     {
@@ -38908,6 +39114,7 @@
      "role": "user"
     }
    ],
+   "named": "search_textbook",
    "prompt": "What does my wiring textbook say about GFCI outlets?",
    "tools": [
     {
@@ -38979,6 +39186,7 @@
      "role": "user"
     }
    ],
+   "named": "list_inbox",
    "prompt": "Anything new in my inbox?",
    "tools": [
     {
@@ -39058,6 +39266,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "File the Lowe's receipt under the greenhouse",
    "tools": [
     {
@@ -39403,6 +39612,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "Remind me to sync the bank when we're back online",
    "tools": [
     {
@@ -39670,6 +39880,7 @@
      "role": "user"
     }
    ],
+   "named": "list_untagged_charges",
    "prompt": "Which bank charges still need a business?",
    "tools": [
     {
@@ -39727,6 +39938,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "The Shell charge was for lawn care",
    "tools": [
     {
@@ -39848,6 +40060,7 @@
      "role": "user"
     }
    ],
+   "named": null,
    "prompt": "What's a good name for a dog?",
    "tools": []
   }

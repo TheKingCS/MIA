@@ -157,9 +157,13 @@ def test_direct_answers_are_scored_without_the_model():
 
 
 def test_the_lookups_subject_must_be_in_the_question():
-    from core.assistant_actions import _names_its_subject, looks_like_question
+    from core.assistant_actions import AssistantAction, _names_its_subject, looks_like_question
 
-    assert _names_its_subject("list_alarms", "When is my next alarm?")
-    assert not _names_its_subject("list_inventory", "What user profiles do I have set up?")
-    assert not _names_its_subject("get_system_health", "Is everything ok with you today?")
+    def action(name, subjects=()):
+        return AssistantAction(name=name, description="", parameters={}, handler=lambda c, a: "", subjects=subjects)
+
+    assert _names_its_subject(action("list_alarms"), "When is my next alarm?")
+    assert not _names_its_subject(action("list_inventory"), "What user profiles do I have set up?")
+    assert not _names_its_subject(action("get_system_health"), "Is everything ok with you today?")
+    assert _names_its_subject(action("list_household_routines", ("chore",)), "What chores are left today?")
     assert looks_like_question("what bills do I have") and not looks_like_question("Add milk to the list")

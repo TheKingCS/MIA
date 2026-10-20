@@ -2504,6 +2504,7 @@ class MIAApplication:
                 # nothing at all (no tool call).
                 "what do i need to do", "what do i have to do",
             ),
+            subjects=("need to do", "have to do", "to-do", "todo"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_project",

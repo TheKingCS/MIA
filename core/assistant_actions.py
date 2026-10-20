@@ -117,6 +117,9 @@ class AssistantAction:
     # truth instead of two lists that can drift, same lesson as
     # trigger_phrases/gating_keywords in milestone 5.9.
     destructive: bool = False
+    # Words that say what the action is about, beyond its own name ("chore"
+    # for list_household_routines): see _names_its_subject().
+    subjects: tuple[str, ...] = ()
 
     def to_ollama_tool(self) -> dict:
         return {
@@ -254,7 +257,7 @@ class AssistantActionRegistry:
         # one of them (its own trigger phrases or keywords matched the
         # "system" domain above), and then all together, so the old
         # collision pairs (open_module/set_theme, ...) still travel as one.
-        # A child is never offered grown-up tools (core/child_accounts.py). is never offered grown-up tools (core/child_accounts.py).
+        # A child is never offered grown-up tools (core/child_accounts.py).
         from core.child_accounts import tool_allowed
 
         return [action for action in self._actions.values()
@@ -280,8 +283,28 @@ class AssistantActionRegistry:
         # pick it out), and never the journals: their answers stay out of the
         # chat history, which only the model's path handles.
         lookups = [a for a in matched if not ((a.parameters or {}).get("properties"))
-                   and "journal" not in a.name and "journal" not in a.domain and _names_its_subject(a.name, prompt)]
+                   and "journal" not in a.name and "journal" not in a.domain and _names_its_subject(a, prompt)]
         return lookups[0] if len(lookups) == 1 and len(matched) == 1 else None
+
+    def named_action(self, prompt: str, offered: Iterable[str]) -> Optional[str]:
+        """The one tool the message names in its own words, for when the
+        model doesn't use it (2026-10-19, the PC model's misses: "Add a note
+        that says buy milk" answered with "what title?"). Exactly one offered
+        action's trigger phrase matches and it isn't destructive; a lookup
+        only for a question, one that changes records only when the message
+        starts with that phrase ("Add a recipe for...", never "do I have a
+        recipe for chili?"). And the message says what it's about ("do I
+        have" alone never names list_inventory). Else None."""
+        lowered = f" {prompt.lower().strip()} "
+        offered = set(offered)
+        matched = [a for a in self._actions.values() if a.name in offered and any(p in lowered for p in a.trigger_phrases)]
+        if len(matched) != 1 or matched[0].destructive or not _names_its_subject(matched[0], prompt):
+            return None
+        action = matched[0]
+        if not changes_records(action.name):
+            return action.name if looks_like_question(prompt) else None
+        request = _POLITE_START.sub("", prompt.lower().strip())
+        return action.name if any(request.startswith(p.strip()) for p in action.trigger_phrases) else None
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:
         """
@@ -324,6 +347,8 @@ class AssistantActionRegistry:
         return result
 
 
+_POLITE_START = re.compile(r"^((hey |ok |okay )?mia[,:]?\s+|please\s+|(can|could|would|will) you\s+(please\s+)?)+")
+
 _QUESTION_STARTS = ("what", "when", "which", "who", "where", "how many", "how much", "how's", "how is", "do i", "did i",
                     "have i", "am i", "is there", "are there", "any ", "show me", "list ")
 
@@ -332,13 +357,15 @@ def _singular(word: str) -> str:
     return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
 
 
-def _names_its_subject(action_name: str, prompt: str) -> bool:
+def _names_its_subject(action: AssistantAction, prompt: str) -> bool:
     """Pure logic. The question says what the lookup is about: "alarm" for
-    list_alarms, "bill" for list_bills (a generic phrase like "do I have"
-    alone never decides)."""
-    said = {_singular(w) for w in re.findall(r"[a-z]+", prompt.lower())}
-    subject = [_singular(w) for w in action_name.split("_")[1:] if len(w) > 2 and w not in ("my", "the", "all")]
-    return bool(subject) and any(w in said for w in subject)
+    list_alarms, "bill" for list_bills, or one of the action's own
+    `subjects` ("chore" for list_household_routines). A generic phrase like
+    "do I have" alone never decides."""
+    lowered = prompt.lower()
+    said = {_singular(w) for w in re.findall(r"[a-z]+", lowered)}
+    subject = [_singular(w) for w in action.name.split("_")[1:] if len(w) > 2 and w not in ("my", "the", "all")]
+    return any(w in said for w in subject) or any(s in lowered for s in action.subjects)
 
 
 def looks_like_question(prompt: str) -> bool:

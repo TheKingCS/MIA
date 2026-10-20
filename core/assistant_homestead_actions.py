@@ -348,6 +348,7 @@ def register_homestead_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_get_business_use,
         trigger_phrases=("write off", "write-off", "writeoff", "deduct", "deduction", "business use", "business percentage",
                          "business share"),
+        subjects=("write off", "write-off", "writeoff", "deduct"),
     ))
     registry.register(AssistantAction(
         name="log_build_expense", domain="homestead_costs",

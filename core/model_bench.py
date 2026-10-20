@@ -81,6 +81,7 @@ def run(backend, bench: dict, count: Optional[int] = None, timeout: float = 300.
         progress: Optional[Callable[[dict], None]] = None, should_stop: Callable[[], bool] = lambda: False) -> dict:
     """Runs the cases through `backend` (core.llm_manager's LLMBackend).
     Calls `progress(summary)` after each case. Returns the summary."""
+    from core.assistant_chat import settle_on_named_tool
     from core.llm_manager import LLMUnavailableError, _looks_like_malformed_tool_call
 
     cases = pick(bench["cases"], count)
@@ -109,6 +110,9 @@ def run(backend, bench: dict, count: Optional[int] = None, timeout: float = 300.
             reply = backend.chat(case["messages"], case["tools"], timeout)
             if not reply.tool_calls and _looks_like_malformed_tool_call(reply.content):
                 reply = backend.chat(case["messages"], [], timeout)  # what MIA does too
+            # And settles on the tool the message names, as Talk does (core/assistant_chat.py).
+            reply = settle_on_named_tool(case.get("named"), case["messages"], case["tools"], reply,
+                                         lambda messages, tools: backend.chat(messages, tools, timeout))
             called = [call.name for call in reply.tool_calls]
             arguments = reply.tool_calls[0].arguments if reply.tool_calls else None
             ok, detail = score(case, called, arguments, destructive)

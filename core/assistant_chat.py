@@ -47,7 +47,7 @@ from __future__ import annotations
 import re
 
 from datetime import date
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Callable, Iterable, Optional
 
 from core.connectivity import connectivity_prompt_block
 from core.conversation_modes import (
@@ -71,7 +71,8 @@ NO_WHY_YET_INSTRUCTION = (
     "off debt is so I can control my own time.'"
 )
 from core.device_help_manager import GROUNDING_INSTRUCTION
-from core.llm_manager import ToolCall
+from core.llm_manager import ChatReply, ToolCall
+from core.main_thread import changes_records
 from core.user_memory_manager import MEMORY_CATEGORIES
 
 if TYPE_CHECKING:
@@ -214,6 +215,49 @@ def split_safe_tool_calls(tool_calls: list[ToolCall], assistant_actions) -> tupl
     kept = [tc for tc in tool_calls if not assistant_actions.is_destructive(tc.name)]
     skipped = [tc for tc in tool_calls if assistant_actions.is_destructive(tc.name)]
     return kept, skipped
+
+
+_NAMED_TOOL_NUDGE = ("The person asked for exactly this. Call {name} now with what they said. "
+                     "Don't ask for details they didn't give; leave those out.")
+
+
+def named_tool(context, prompt: str, tools: list[dict]) -> Optional[str]:
+    """The offered tool `prompt` names in its own words, if exactly one (see settle_on_named_tool)."""
+    registry = getattr(context, "assistant_actions", None)
+    if registry is None:
+        return None
+    return registry.named_action(prompt, [t.get("function", {}).get("name") for t in tools])
+
+
+def settle_on_named_tool(named: Optional[str], messages: list[dict], tools: list[dict], reply: Optional[ChatReply],
+                         ask: Callable[[list[dict], list[dict]], Optional[ChatReply]]) -> Optional[ChatReply]:
+    """When the message names one tool in its own words (`named`, from
+    AssistantActionRegistry.named_action) and the model didn't simply call
+    it (2026-10-19: qwen2.5:14b asked "what title?", listed debts for "which
+    debt should I pay off first?", or called two lookups at once). Called it
+    among others: just that call. Asked back, or picked other lookups: one
+    more try (`ask`) offered only that tool, kept if it calls it with every
+    required detail. A different change the model chose stays its choice."""
+    if reply is None or not named:
+        return reply
+    called = [call.name for call in reply.tool_calls]
+    if called == [named]:
+        return reply
+    if named in called:
+        return ChatReply(content=reply.content, tool_calls=[next(c for c in reply.tool_calls if c.name == named)])
+    if any(changes_records(name) for name in called):
+        return reply
+    tool = next((t for t in tools if t.get("function", {}).get("name") == named), None)
+    if tool is None:
+        return reply
+    retry = ask(messages + [{"role": "system", "content": _NAMED_TOOL_NUDGE.format(name=named)}], [tool])
+    if retry is None or [call.name for call in retry.tool_calls] != [named]:
+        return reply
+    arguments = retry.tool_calls[0].arguments or {}
+    required = tool["function"].get("parameters", {}).get("required", [])
+    if any(not str(arguments.get(key) or "").strip() for key in required):
+        return reply
+    return retry
 
 
 def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUEST_KEYWORDS) -> bool:

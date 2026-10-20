@@ -44,7 +44,10 @@ def build() -> dict:
         if not looks_like_how_to_question(prompt) and not looks_like_teaching_request(prompt):
             hit = context.assistant_actions.direct_lookup(prompt, context)
             direct = hit.name if hit is not None else None
+        from core.assistant_chat import named_tool
+
         cases.append({"description": description, "prompt": prompt, "expected": expected, "direct": direct,
+                      "named": named_tool(context, prompt, tools),
                       "arguments": expected_args[0] if expected_args else None,
                       "messages": messages, "tools": tools})
     return {"about": "MIA's golden set for the model test (tools/make_model_bench.py). Placeholder data only.",
