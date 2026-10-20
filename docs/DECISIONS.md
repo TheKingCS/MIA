@@ -608,3 +608,27 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   licensed agent: it compares what you collect and you decide.
 - Related: core/insurance.py, core/insurance_actions.py, web/insurance.*,
   `docs/future/IDEAS.md`
+
+### DEC-0035: Passwords: a vault only your master password opens
+- Status: APPROVED
+- Proposed by: zac, 2026-10-20 ("a password/login manager as a feature for MIA too for all my different login details") · Approved by: zac, 2026-10-20 (the same request)
+- Decision: a Passwords app (grown-ups only, the person's own data) with
+  its own master password, separate from the MIA sign-in. One random
+  vault key, kept twice: sealed (AES-256-GCM) with a key made from the
+  master password and with one made from a recovery code shown once
+  (scrypt for both). Each login is encrypted on its own, title included.
+  Unlocked only in memory, it locks itself after 5 minutes unused; wrong
+  guesses make you wait longer each time. MIA's assistant never sees a
+  password: no tool reads one, and none ever appear in an action's
+  record, the history, the undo log, Life State, the glasses or the logs;
+  a password leaves MIA only on Show or Copy, one at a time. Phone and PC
+  sync it still encrypted, only when they hold the same vault. Import
+  from Chrome, Edge, Firefox, Bitwarden, 1Password, LastPass; a strong-
+  password generator; reused and weak passwords pointed out.
+- Honest limits: home-built on standard parts (the `cryptography`
+  library), not independently audited like Bitwarden or KeePass; no
+  autofill in other apps yet (an Android autofill service is the next
+  step). Forgetting both the master password and the recovery code
+  loses the vault: by design, nobody can get in.
+- Related: core/password_vault.py, web/passwords.*, server/app.py
+  (`/api/passwords/*`), core/sync.py (`password_vault.json`)

@@ -70,8 +70,11 @@ NEVER_SYNC = frozenset({
     "memory_vault.json",  # what's on this phone's camera roll (core/memory_vault.py has its own transfer)
 })
 JOURNAL_KEYS, JOURNAL_ENTRIES = "private_journal_keys.json", "private_journal.json"
+PASSWORD_VAULT = "password_vault.json"  # core/password_vault.py: encrypted login by login
 WHOLE_FILE = frozenset({JOURNAL_KEYS})  # never merged field by field: the newer one, whole
 MAX_FILE_BYTES = 500 * 1024 * 1024
+VAULTS_APART = ("Your passwords aren't syncing: the phone and the computer each made their own vault, "
+                "so each stays on its device, locked.")
 JOURNAL_APART = ("Your private journal isn't syncing: the phone and the computer each started their own, "
                  "so each stays on its device, safe and locked.")
 SCOPES = ("mine", "home")
@@ -238,6 +241,12 @@ def merge_file(name: str, base: Optional[bytes], local: bytes, remote: bytes, pr
         bv = json.loads(base.decode("utf-8") or "null") if base is not None else _MISSING
     except ValueError:
         return local if prefer_local else remote  # not JSON we can read: the newer one
+    if name == PASSWORD_VAULT and isinstance(lv, dict) and isinstance(rv, dict):
+        entries = merge_whole_records((bv if isinstance(bv, dict) else {}).get("entries"),
+                                      list(lv.get("entries") or []), list(rv.get("entries") or []),
+                                      "entry_id", "updated_at")
+        header = (lv if prefer_local else rv).get("header") or {}  # a new master password: the newer one, whole
+        return json.dumps({"version": 1, "header": header, "entries": entries}, indent=1).encode("utf-8")
     if name == JOURNAL_ENTRIES and isinstance(lv, dict) and isinstance(rv, dict):
         entries = merge_whole_records((bv if isinstance(bv, dict) else {}).get("entries"),
                                       list(lv.get("entries") or []), list(rv.get("entries") or []),
@@ -297,7 +306,16 @@ def manifest(context, profile_id: str) -> dict:
     out["game"] = game_numbers(context, profile_id)
     out["files"] = file_manifest(context, profile_id)
     out["journal_key"] = journal_key(folders(context, profile_id).get("mine"))
+    out["vault_id"] = vault_id(folders(context, profile_id).get("mine"))
     return out
+
+
+def vault_id(folder: Optional[Path]) -> str:
+    """Which password vault a device holds ("" for none)."""
+    try:
+        return str(json.loads((folder / PASSWORD_VAULT).read_text(encoding="utf-8"))["header"]["vault_id"])
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return ""
 
 
 def journal_key(folder: Optional[Path]) -> str:
@@ -562,6 +580,10 @@ def sync_now(context, call=None, lock=None) -> dict:
     journal_apart = bool(mine_key and their_key and mine_key != their_key)
     if journal_apart:
         notes.append(JOURNAL_APART)
+    mine_vault, their_vault = vault_id(here.get("mine")), str(remote.get("vault_id") or "")
+    vaults_apart = bool(mine_vault and their_vault and mine_vault != their_vault)
+    if vaults_apart:
+        notes.append(VAULTS_APART)
     for scope in SCOPES:
         folder = here.get(scope)
         if folder is None:
@@ -572,6 +594,8 @@ def sync_now(context, call=None, lock=None) -> dict:
             names |= {p.name for p in folder.iterdir() if p.is_file() and syncable(p.name)}
         if journal_apart and scope == "mine":
             names -= {JOURNAL_KEYS, JOURNAL_ENTRIES}
+        if vaults_apart and scope == "mine":
+            names -= {PASSWORD_VAULT}
         for name in sorted(n for n in names if syncable(n)):
             done["files"] += 1
             path = folder / name

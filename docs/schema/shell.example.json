@@ -158,6 +158,13 @@
       "page": "vault.html"
     },
     {
+      "id": "passwords",
+      "name": "Passwords",
+      "icon": "🔐",
+      "tagline": "Every login, locked.",
+      "page": "passwords.html"
+    },
+    {
       "id": "files",
       "name": "Files",
       "icon": "🗂",

@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-19 (the insurance check-up, DEC-0034), by claude.*
+session. Last updated: 2026-10-20 (Passwords, DEC-0035), by claude.*
 
 ## Phase
 
@@ -64,6 +64,8 @@ every push). Anything that needs the PC waits.
 - The glasses client: on Q-0003 (platform and access).
 
 ## Recent changes (newest first)
+
+- 2026-10-20 · claude · **Passwords (DEC-0035, Zac).** Apps → **Passwords** (grown-ups only, each person's own): a vault with its own master password and a recovery code shown once; every login encrypted on its own (AES-256-GCM, keys from scrypt), titles too, so a locked vault shows only a count. It locks itself after 5 minutes unused; wrong guesses wait longer each time. Search, Show and Copy (the clipboard clears after 30 s), add and change with a strong-password generator, reused and weak passwords pointed out, import from Chrome, Edge, Firefox, Bitwarden, 1Password and LastPass exports, change the master password. MIA's assistant never sees a password: it never goes through the action contract and never appears in the history, the undo log, Life State, the glasses or the logs (a test looks through every file MIA wrote). Phone and PC sync the vault still encrypted, login by login, only when they hold the same vault. Not yet: autofill in other apps (an Android autofill service). `core/password_vault.py`, `/api/passwords/*`, `web/passwords.*`.
 
 - 2026-10-19 · claude · **The PC's model: qwen2.5:14b (DEC-0022).** On Zac's PC: 95.8% of MIA's 213 test questions right, 2.8 s a typical answer, all on the graphics card; 32b was 98.1% but 9 s an answer, 61 s to load and spilling off the card. Also fixed: MIA crashed when opened from the desktop shortcut (pythonw has no console; the phone server's own logging asked it whether it was a terminal), and the installer stopped on the Microsoft Store's "python" placeholder.
 

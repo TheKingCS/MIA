@@ -137,6 +137,27 @@ class SyncFileRequest(BaseModel):
     data: str  # base64
 
 
+class PasswordVaultRequest(BaseModel):
+    master: str = ""
+    recovery: str = ""
+    new: str = ""
+
+
+class VaultLoginRequest(BaseModel):  # a login in the password vault (not signing in to MIA: LoginRequest)
+    entry_id: str = ""
+    title: str = ""
+    username: str = ""
+    password: str = ""
+    url: str = ""
+    note: str = ""
+    folder: str = ""
+    keep_password: bool = False
+
+
+class CsvRequest(BaseModel):
+    text: str
+
+
 class VaultShasRequest(BaseModel):
     shas: list[str]
 
@@ -1480,6 +1501,86 @@ def create_app(context: AppContext) -> FastAPI:
                 here.unlink()
         live.bump()
         return {"ok": True}
+
+    # ------------------------------------------------------------ Passwords (core/password_vault.py, DEC-0035)
+    # Never through the action contract: a password must never sit in an action's record.
+    # Every answer is no-store, and only reveal() ever sends a password, one at a time.
+    def _vault(profile_id: str):
+        vault = _screen(profile_id, "passwords", lambda v: v.passwords)
+        if vault is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Passwords aren't set up on this MIA.")
+        return vault
+
+    def _vault_answer(body: dict):
+        from fastapi.responses import JSONResponse
+
+        return JSONResponse(body, headers={"Cache-Control": "no-store"})
+
+    def _vault_call(profile_id: str, work):
+        from core.password_vault import VaultError, VaultLocked
+
+        vault = _vault(profile_id)
+        try:
+            with app.state.turn_lock:
+                return _vault_answer(work(vault) or {})
+        except VaultLocked as problem:
+            raise HTTPException(423, str(problem)) from None
+        except VaultError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.get("/api/passwords")
+    def passwords_page(profile_id: str = Depends(require_profile_id)):
+        from core.password_vault import vault_page
+
+        return _vault_answer(_screen(profile_id, "passwords", vault_page))
+
+    @app.post("/api/passwords/setup")
+    def passwords_setup(body: PasswordVaultRequest, profile_id: str = Depends(require_profile_id)):
+        return _vault_call(profile_id, lambda v: {
+            "recovery_code": v.setup(body.master),
+            "message": "Your vault is made and open. Write the recovery code down now: it's shown once."})
+
+    @app.post("/api/passwords/unlock")
+    def passwords_unlock(body: PasswordVaultRequest, profile_id: str = Depends(require_profile_id)):
+        def work(v):
+            v.unlock(master=body.master, recovery=body.recovery)
+            if body.recovery and body.new:
+                v.reset_master(body.new)
+                return {"message": "Unlocked, with your new master password."}
+            return {"message": "Unlocked."}
+        return _vault_call(profile_id, work)
+
+    @app.post("/api/passwords/lock")
+    def passwords_lock(profile_id: str = Depends(require_profile_id)):
+        return _vault_call(profile_id, lambda v: (v.lock(), {"message": "Locked."})[1])
+
+    @app.post("/api/passwords/change")
+    def passwords_change(body: PasswordVaultRequest, profile_id: str = Depends(require_profile_id)):
+        return _vault_call(profile_id, lambda v: (v.change_master(body.master, body.new),
+                                                  {"message": "Your master password is changed."})[1])
+
+    @app.post("/api/passwords/login")
+    def passwords_save(body: VaultLoginRequest, profile_id: str = Depends(require_profile_id)):
+        def work(v):
+            login = v.save(body.title, body.username, body.password, body.url, body.note, body.folder,
+                           entry_id=body.entry_id, keep_password=body.keep_password)
+            return {"message": f"Saved {login.title}.", "entry_id": login.entry_id}
+        return _vault_call(profile_id, work)
+
+    @app.delete("/api/passwords/login/{entry_id}")
+    def passwords_delete(entry_id: str, profile_id: str = Depends(require_profile_id)):
+        return _vault_call(profile_id, lambda v: (v.delete(entry_id), {"message": "Deleted."})[1])
+
+    @app.post("/api/passwords/login/{entry_id}/reveal")
+    def passwords_reveal(entry_id: str, profile_id: str = Depends(require_profile_id)):
+        return _vault_call(profile_id, lambda v: {"password": v.get(entry_id).password})
+
+    @app.post("/api/passwords/import")
+    def passwords_import(body: CsvRequest, profile_id: str = Depends(require_profile_id)):
+        if len(body.text) > 5_000_000:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is too big.")
+        return _vault_call(profile_id, lambda v: {"message": f"Brought in {v.import_csv(body.text)} logins. "
+                                                             "Now delete the export file: it isn't encrypted."})
 
     # ------------------------------------------------------------ Insurance check-up (core/insurance.py, DEC-0034)
     @app.get("/api/insurance")
