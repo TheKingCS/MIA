@@ -65,6 +65,8 @@ Write-Host "MIA: setting up this computer as MIA's home base"
 Write-Host "Folder: $MiaDir"
 if ($DryRun) { Write-Host "Dry run: nothing will be installed or changed." -ForegroundColor Yellow }
 $venvPython = Join-Path $MiaDir ".venv\Scripts\python.exe"
+# The comparison already ran here, so the model is picked: skip the 32b and the comparison.
+$compared = Test-Path (Join-Path $MiaDir "pc-check\models.json")
 
 # ------------------------------------------------------------ 1. MIA
 Step "1/8 MIA"
@@ -87,7 +89,7 @@ elseif (Ask "Install Ollama? (it runs the model on your Radeon; nothing leaves t
 if (Have "ollama") {
     Note "Getting $Model (about 9 GB, one time)..."
     Do-It "ollama pull $Model" { ollama pull $Model }
-    if (Ask "Also get $BigModel (about 19 GB) so MIA can compare the two?") {
+    if (-not $compared -and (Ask "Also get $BigModel (about 19 GB) so MIA can compare the two?")) {
         Do-It "ollama pull $BigModel" { ollama pull $BigModel }
     }
 } elseif (-not $DryRun) { Note "Ollama isn't on this computer yet; run this again after installing it." }
@@ -164,7 +166,8 @@ if ($DryRun) { $stayUpArgs += "-DryRun" }
 
 # ------------------------------------------------------------ 7. which model
 Step "7/8 Which model is best here (optional, 30-60 minutes)"
-if ((Test-Path $venvPython) -and (Have "ollama") -and (Ask "Run the model comparison now? (MIA's test questions on each model)")) {
+if ($compared) { Note "Already done (pc-check\models.md); MIA uses $Model." }
+elseif ((Test-Path $venvPython) -and (Have "ollama") -and (Ask "Run the model comparison now? (MIA's test questions on each model)")) {
     Do-It "tools\pc_model_check.py" {
         & $venvPython tools\pc_model_check.py
         $result = Join-Path $MiaDir "pc-check\models.json"
