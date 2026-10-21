@@ -97,8 +97,10 @@ Center's Kentucky cottage food summary.
 
 ## What's next (not built yet)
 
-- Saying it: "sold 3 jars of honey", "I baked 2 banana breads" (the
-  Assistant's tools, with the live check kept at 213/213).
+- ~~Saying it~~ **built 2026-10-21** (`core/assistant_goods_actions.py`): "How many eggs
+  this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves
+  of banana bread", "What's due for taxes?", "How close am I to freedom?". Still to
+  add: "I baked 2 banana breads" (a batch by voice).
 - MIA's morning plan from what's low and what usually sells ("craft 12
   cookies, bake 2 banana breads").
 - A harvest from the Grow Lab going straight into Materials.

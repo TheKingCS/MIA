@@ -82,8 +82,22 @@ def build(root: Path = DOCS) -> list[Passage]:
         kind = ("history" if name in HISTORY else "spec" if "/specs/" in rel else "help" if "/user_help/" in rel
                 else "doc")
         for chunk in split_into_chunks(text, rel):
-            passages.append(Passage(rel, chunk.heading, chunk.text, kind))
+            passages.extend(_bullets(Passage(rel, chunk.heading, chunk.text, kind)))
     return passages
+
+
+def _bullets(p: Passage, longest: int = 1500) -> list[Passage]:
+    """Pure logic. A very long section that's a list ("Recent changes") as
+    one passage per top-level bullet, so one entry is found, not the
+    whole list because it mentions everything."""
+    items = re.split(r"\n(?=- )", p.text)
+    if len(p.text) <= longest or len(items) < 3:
+        return [p]
+    out = []
+    for item in items[1:]:
+        first = re.sub(r"[*`]", "", item[2:].split("\n", 1)[0])[:80].strip()
+        out.append(Passage(p.file, f"{p.heading}: {first}", item.strip(), p.kind))
+    return out
 
 
 class SelfDocs:
@@ -112,7 +126,7 @@ class SelfDocs:
         stems = {_stem(w) for w in content}
         scored = []
         for p in self._fresh():
-            base = score_chunk(words, p.chunk)
+            base = score_chunk(content, p.chunk)  # on the subject, not the asking words
             if not base:
                 continue
             # A passage matching more of the question beats a long one matching one word often.

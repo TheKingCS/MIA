@@ -24,6 +24,14 @@ CORPUS: list[tuple[str, str]] = [
     ("What can you do?", "what_can_you_do"),
     ("Can you track my chickens?", "get_capability"),
     ("What did we decide about eggs?", "get_mia_docs"),
+    # ---- Homestead by voice (core/assistant_goods_actions.py, 2026-10-21) -
+    ("How many eggs this week?", "get_eggs"),
+    ("I collected 9 eggs", "log_eggs"),
+    ("What goods do I have on hand?", "list_goods_on_hand"),
+    ("Sold 3 loaves of banana bread", "sell_goods"),
+    ("How close am I to freedom?", "get_freedom_progress"),
+    ("When can I work from home?", "get_freedom_progress"),
+    ("What's due for taxes?", "get_deadlines"),
     # ---- Each person's Apps screen (core/focus_presets.py) --------------
     ("Switch me to student mode", "set_app_focus"),
     ("Set my apps up for my business", "set_app_focus"),

@@ -120,10 +120,11 @@ def amount_text(quantity: float, unit: str) -> str:
     u = str(unit or "").strip()
     if not u or canonical(u) == "each":
         return q_text
-    if q != 1 and canonical(u) == "cup":
-        u = "cups"
-    elif q != 1 and canonical(u) not in _MASS and canonical(u) not in _VOLUME and u == canonical(u) and kind(u) == u:
-        u = _plural(u)
+    c = canonical(u)
+    if c == "cup":
+        u = "cup" if q == 1 else "cups"
+    elif kind(u) == c and c != "dozen":  # a named count, said as "1 loaf", "3 loaves" however it was typed
+        u = c if q == 1 else _plural(c)
     return f"{q_text} {u}"
 
 
