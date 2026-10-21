@@ -22,7 +22,7 @@ check-in, and push to the phone. What's missing falls into five pieces:
 | **B. Remember Why** | "Remind me why I'm doing this" answered from your real numbers and goals, and updated when your reasons change | Your goals entered as a chain of reasons (5 minutes, by talking) |
 | **C. Know when to speak** | One gate that every proactive message passes through: quiet hours, a daily limit, no repeats, your mode | Nothing. Should land before D |
 | **D. Contextual Presence** | Welcome Home, "you're at Lowe's, want the materials list?" | The native Android app (build queue #2) and slice C |
-| **E. Life Runway** | "Your current chapter" progress view | Slice B's data |
+| **E. Life Runway** | "Your current chapter" progress view (**built 2026-10-21 as Freedom, DEC-0038**) | Slice B's data |
 
 **Recommendation: A, then B, then C, then D after the Android app,
 then E.** A is what you asked for directly, and its safety floor

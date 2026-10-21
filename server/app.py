@@ -1582,6 +1582,13 @@ def create_app(context: AppContext) -> FastAPI:
         return _vault_call(profile_id, lambda v: {"message": f"Brought in {v.import_csv(body.text)} logins. "
                                                              "Now delete the export file: it isn't encrypted."})
 
+    # ------------------------------------------------------------ Freedom (core/freedom.py, DEC-0038)
+    @app.get("/api/freedom")
+    def web_freedom(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.freedom import freedom_page
+
+        return _screen(profile_id, "freedom", freedom_page)
+
     # ------------------------------------------------------------ Chickens (core/web_flock.py, DEC-0037)
     @app.get("/api/flock")
     def web_flock(profile_id: str = Depends(require_profile_id)) -> dict:

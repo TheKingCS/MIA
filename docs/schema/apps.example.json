@@ -250,6 +250,20 @@
       "name": "Money & business",
       "apps": [
         {
+          "id": "freedom",
+          "name": "Freedom",
+          "icon": "🌄",
+          "tagline": "Your way out, in numbers.",
+          "description": "What you're saving toward, how far along you are, and the day it's within reach (DEC-0038).",
+          "page": "freedom.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "When can I work from home?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "real_estate",
           "name": "Real Estate",
           "icon": "🏘",

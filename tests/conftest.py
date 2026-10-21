@@ -48,20 +48,24 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import core.component_manager as component_manager_module
-import core.config_manager as config_manager_module
-import core.connectivity as connectivity_module
-import core.inventory_manager as inventory_manager_module
-import core.material_manager as material_manager_module
-import core.product_manager as product_manager_module
-import core.skill_manager as skill_manager_module
+# The log first (2026-10-21): any core module calls get_logger() when it's
+# imported, which opens the log file then. Redirected after the other
+# imports, the suite was still writing into the real logs/mia.log.
 import core.logger as logger_module
-import core.profile_manager as profile_manager_module
-import core.usage_tracker as usage_tracker_module
 
 _TEST_LOG_DIR = Path(tempfile.mkdtemp(prefix="mia_test_logs_"))
 logger_module._LOG_DIR = _TEST_LOG_DIR
 logger_module._LOG_FILE = _TEST_LOG_DIR / "mia.log"
+
+import core.component_manager as component_manager_module  # noqa: E402
+import core.config_manager as config_manager_module  # noqa: E402
+import core.connectivity as connectivity_module  # noqa: E402
+import core.inventory_manager as inventory_manager_module  # noqa: E402
+import core.material_manager as material_manager_module  # noqa: E402
+import core.product_manager as product_manager_module  # noqa: E402
+import core.skill_manager as skill_manager_module  # noqa: E402
+import core.profile_manager as profile_manager_module  # noqa: E402
+import core.usage_tracker as usage_tracker_module  # noqa: E402
 
 _TEST_PROFILES_DIR = Path(tempfile.mkdtemp(prefix="mia_test_profiles_"))
 profile_manager_module._DATA_PROFILES_DIR = _TEST_PROFILES_DIR

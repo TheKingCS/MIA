@@ -74,8 +74,10 @@ to Plaid for real.
 5. Check with Claude: Expenses and Income categories, the Debts tab
    (APRs, minimums; add promo APR end dates by hand), nothing doubled
    on a second sync, the Summary's totals.
-6. Then let MIA manage: bills, the budget, which debt to pay first,
-   business tags for the homestead goods.
+6. Then open **Freedom** (DEC-0038): with the bank synced it fills in by
+   itself (spending, saved, the pace). Tag build spending to its build in
+   Money so the builds count down. Then: bills, the budget, which debt
+   to pay first, business tags for the homestead goods.
 
 **Claude, at that session:** start here. Tail `logs\mia.log` while Zac
 links; fix any failure before the next login (a failed login can still
@@ -97,6 +99,8 @@ tokens.
 - [ ] **Homestead goods (DEC-0036, 2026-10-21):** in MIA (PC or phone) → Workshop → Recipes → Add Recipe: one real thing you make in batches (materials in your own units, "One batch makes", the price each, how many days it keeps). Add its materials under Materials, Begin Crafting, Finish, then the **Goods** tab: Label Info (your business name, address and Kentucky's statement), print a label, and try a market day. Zac's line stays within Kentucky's home-based processor rules (banana bread, cookies, breads, honey; `docs/HOMESTEAD_GOODS.md`). Tell Claude what's clumsy.
 
 - [ ] **Chickens, greenhouse goods and starters (DEC-0037, 2026-10-21):** Workshop → Recipes → **From A Starter** → Eggs (set your price and how many days they keep). Apps → **Chickens** → Add A Flock (pick Eggs for the cartons), tap the eggs in each day, log feed when you buy it, and put a dozen Into Cartons. In the Grow Lab, harvest a batch "Also into stock". Tell Claude what's clumsy.
+
+- [ ] **Freedom (DEC-0038, 2026-10-21), from the phone now:** Apps → **Freedom** → **Your Plan**: what a month of living takes, saved so far, about what you save a month, your take-home an hour and your shift length. Then **Add A Build** for each: greenhouse, chicken coop, solar, root cellar (about what each costs). Tell MIA your reasons ("remind me why") so they show at the bottom. Once Plaid is linked, the numbers fill in by themselves.
 
 ### From your phone, now (you're phone-only for the moment)
 

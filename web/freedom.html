@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Freedom — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="freedom" class="mod-freedom">
+  <!--
+    Freedom (claude, 2026-10-21, DEC-0038; Life Runway, slice E): the fund
+    that covers the gap between a month of living and what the homestead
+    earns, plus the builds; how far along, the estimated day, progress
+    today / this week / this month, what a shift buys, the builds, six
+    months of history and the person's own reasons. MIA.freedom()
+    (core/freedom.py); actions in core/freedom_actions.py. Glanceable on a
+    phone on a break: the big numbers first.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">🌄</span> <span id="hero-name">Freedom</span></h1>
+        <p class="tagline" id="hero-tagline">Your way out, in numbers.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="freedom.js"></script>
+</body>
+</html>

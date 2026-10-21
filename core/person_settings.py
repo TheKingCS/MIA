@@ -51,6 +51,13 @@ PERSONAL_SETTINGS = (
     "vault.on",
     "vault.wifi_only",
     "vault.keep_days",
+    # DEC-0038: the person's own freedom plan (core/freedom.py)
+    "freedom.monthly_needs",
+    "freedom.cushion_months",
+    "freedom.saved",
+    "freedom.monthly_saving",
+    "freedom.hourly",
+    "freedom.shift_hours",
 )
 
 

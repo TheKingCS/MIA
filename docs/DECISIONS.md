@@ -681,3 +681,25 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   person's notes and never says what's legal.
 - Related: core/goods_actions.py, core/flock.py, core/grow_actions.py,
   core/goods_starters.py, web/flock.*, docs/HOMESTEAD_GOODS.md
+
+### DEC-0038: Freedom: the way out, in numbers (Life Runway, slice E)
+- Status: APPROVED
+- Proposed by: zac, 2026-10-21 ("I need my finances monitored and a clear view of my daily/weekly/monthly progress in saving towards getting out of this factory ... a quick viewable display that helps me get through these shitty nights at work and even helps me estimate when I can reasonably work from home selling my homestead goods full time") · Approved by: zac, 2026-10-21 (the same request)
+- Decision: a Freedom app (grown-ups only, the person's own plan): what a
+  month of living needs (their number, else their spending's 3-month
+  average), what the homestead earns a month (the business's profit,
+  3-month average), the gap between them, and the freedom fund that
+  covers the gap for a cushion of months plus the homestead builds still
+  to pay for (Projects with a budget: greenhouse, coop, solar, root
+  cellar). Saved so far (bank cash from Plaid, else their own number),
+  the saving pace, and the estimated day it's reached; what moves the
+  day (more saved a month, more homestead profit). Progress today, this
+  week, this month. A shift readout (what tonight's shift buys: days of
+  living, the step toward the fund). Their own reasons ("remember why",
+  slice B) on the same screen. Every number says where it came from;
+  the date is an estimate and says so.
+- Honest limits: transfers between your own accounts can look like
+  spending until the bank sync sorts them; the estimate assumes the last
+  three months' pace continues; MIA isn't a financial adviser.
+- Related: core/freedom.py, web/freedom.*, core/why_graph.py,
+  core/homestead_costs.py, docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice E)

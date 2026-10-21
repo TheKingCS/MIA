@@ -1,0 +1,230 @@
+{
+  "available": true,
+  "as_of": "2026-10-21",
+  "plan": {
+    "gap": 2665.0,
+    "cushion": 15990.0,
+    "builds_left": 24750.0,
+    "goal": 40740.0,
+    "saved": 9400.0,
+    "covered": 0.1,
+    "progress": 0.2307,
+    "left": 31340.0,
+    "months": 25.3,
+    "date": "2028-11-29",
+    "days": 770,
+    "ready": false,
+    "levers": [
+      {
+        "what": "save more a month",
+        "amount": 100.0,
+        "days_sooner": 58
+      },
+      {
+        "what": "homestead profit a month",
+        "amount": 100.0,
+        "days_sooner": 71
+      }
+    ],
+    "why_no_date": "",
+    "text": {
+      "needs": "$2,960.00",
+      "homestead": "$295.00",
+      "saved": "$9,400.00",
+      "goal": "$40,740.00",
+      "gap": "$2,665.00",
+      "left": "$31,340.00",
+      "pace": "$1,240.00",
+      "cushion": "$15,990.00",
+      "builds_left": "$24,750.00"
+    },
+    "covered_pct": 10,
+    "progress_pct": 23.1
+  },
+  "sources": {
+    "needs": "your spending, 3-month average",
+    "homestead": "the business's books, 3-month average",
+    "saved": "your number",
+    "pace": "your income minus spending, 3-month average"
+  },
+  "cushion_months": 6,
+  "periods": [
+    {
+      "id": "today",
+      "label": "Today",
+      "saved": -180.0,
+      "homestead": 64.0,
+      "total": -116.0,
+      "total_text": "−$116.00",
+      "saved_text": "−$180.00",
+      "homestead_text": "+$64.00"
+    },
+    {
+      "id": "week",
+      "label": "This Week",
+      "saved": 1920.0,
+      "homestead": 64.0,
+      "total": 1984.0,
+      "total_text": "+$1,984.00",
+      "saved_text": "+$1,920.00",
+      "homestead_text": "+$64.00"
+    },
+    {
+      "id": "month",
+      "label": "This Month",
+      "saved": 1920.0,
+      "homestead": 64.0,
+      "total": 1984.0,
+      "total_text": "+$1,984.00",
+      "saved_text": "+$1,920.00",
+      "homestead_text": "+$64.00"
+    }
+  ],
+  "shift": {
+    "pay": 210.0,
+    "days_of_living": 2.2,
+    "of_goal": 0.0052,
+    "per_hour": 21.0,
+    "hours": 10.0,
+    "pay_text": "$210.00"
+  },
+  "builds": [
+    {
+      "id": "a435404106",
+      "name": "Greenhouse",
+      "budget": 8000.0,
+      "spent": 1250.0,
+      "left": 6750.0,
+      "status": "Planning",
+      "budget_text": "$8,000.00",
+      "spent_text": "$1,250.00",
+      "left_text": "$6,750.00"
+    },
+    {
+      "id": "53816923bc",
+      "name": "Chicken coop",
+      "budget": 1500.0,
+      "spent": 0.0,
+      "left": 1500.0,
+      "status": "Planning",
+      "budget_text": "$1,500.00",
+      "spent_text": "$0.00",
+      "left_text": "$1,500.00"
+    },
+    {
+      "id": "487be29503",
+      "name": "Solar",
+      "budget": 12000.0,
+      "spent": 0.0,
+      "left": 12000.0,
+      "status": "Planning",
+      "budget_text": "$12,000.00",
+      "spent_text": "$0.00",
+      "left_text": "$12,000.00"
+    },
+    {
+      "id": "ea2b00e076",
+      "name": "Root cellar",
+      "budget": 4500.0,
+      "spent": 0.0,
+      "left": 4500.0,
+      "status": "Planning",
+      "budget_text": "$4,500.00",
+      "spent_text": "$0.00",
+      "left_text": "$4,500.00"
+    }
+  ],
+  "history": [
+    {
+      "month": "2026-04",
+      "label": "Apr",
+      "spent": 2900.0,
+      "income": 4200.0,
+      "saved": 1300.0,
+      "homestead": 75.0
+    },
+    {
+      "month": "2026-05",
+      "label": "May",
+      "spent": 2960.0,
+      "income": 4200.0,
+      "saved": 1240.0,
+      "homestead": 130.0
+    },
+    {
+      "month": "2026-06",
+      "label": "Jun",
+      "spent": 3020.0,
+      "income": 4200.0,
+      "saved": 1180.0,
+      "homestead": 185.0
+    },
+    {
+      "month": "2026-07",
+      "label": "Jul",
+      "spent": 2900.0,
+      "income": 4200.0,
+      "saved": 1300.0,
+      "homestead": 240.0
+    },
+    {
+      "month": "2026-08",
+      "label": "Aug",
+      "spent": 2960.0,
+      "income": 4200.0,
+      "saved": 1240.0,
+      "homestead": 295.0
+    },
+    {
+      "month": "2026-09",
+      "label": "Sep",
+      "spent": 3020.0,
+      "income": 4200.0,
+      "saved": 1180.0,
+      "homestead": 350.0
+    }
+  ],
+  "levers": [
+    {
+      "what": "save more a month",
+      "amount": 100.0,
+      "days_sooner": 58,
+      "amount_text": "$100.00"
+    },
+    {
+      "what": "homestead profit a month",
+      "amount": 100.0,
+      "days_sooner": 71,
+      "amount_text": "$100.00"
+    }
+  ],
+  "why": [
+    [
+      {
+        "name": "Night shifts",
+        "reason": "Every shift fills the fund",
+        "done": false
+      },
+      {
+        "name": "Out of the job",
+        "reason": "So the days are mine",
+        "done": false
+      },
+      {
+        "name": "Time back on the homestead",
+        "reason": "",
+        "done": false
+      }
+    ]
+  ],
+  "wins": [],
+  "settings": {
+    "freedom.monthly_needs": 0.0,
+    "freedom.cushion_months": 6,
+    "freedom.saved": 9400.0,
+    "freedom.monthly_saving": 0.0,
+    "freedom.hourly": 21.0,
+    "freedom.shift_hours": 10.0
+  },
+  "bank_connected": false
+}

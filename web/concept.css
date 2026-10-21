@@ -1490,6 +1490,43 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .goods-lot.keeps { border-left-color: var(--line-strong); }
 .market-taps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; }
 .market-tap { display: grid; gap: 8px; padding: 10px; border-radius: 10px; }
+/* Freedom (DEC-0038): the ring, the big number, how the fund adds up */
+.free-hero { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 16px; }
+@media (max-width: 520px) { .free-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+.free-ring-wrap { position: relative; width: 148px; height: 148px; }
+.free-ring { width: 100%; height: 100%; }
+.free-ring circle { fill: none; stroke-width: 10; }
+.free-ring .track { stroke: rgba(var(--rgb-line), 0.14); }
+.free-ring .fill { stroke: var(--accent); stroke-linecap: round; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+.free-ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.free-ring-label strong { font-size: 1.8rem; }
+.free-big { font-size: clamp(2rem, 7vw, 3rem); font-weight: 700; color: var(--accent-soft); line-height: 1.1; }
+.free-hero-text p { margin: 6px 0; }
+.free-cover { display: grid; gap: 4px; margin-top: 8px; }
+.free-cover-bar { height: 8px; border-radius: 4px; background: rgba(var(--rgb-line), 0.14); overflow: hidden; }
+.free-cover-bar span { display: block; height: 100%; background: rgb(var(--rgb-ok)); border-radius: 4px; }
+.free-small { font-size: var(--text-xs); }
+.mod-freedom .fact-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mod-freedom .fact-tiles .nw-tile { padding: 10px; min-width: 0; }
+.mod-freedom .fact-tiles strong { font-size: clamp(0.95rem, 4vw, 1.4rem); overflow-wrap: anywhere; }
+.free-shift { padding: 14px 16px; display: grid; gap: 4px; }
+.free-shift-line { font-size: 1.3rem; }
+.free-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.free-line strong { white-space: nowrap; }
+.free-line.sum, .free-line.total { border-top: 1px solid var(--line-strong); }
+.free-line.total strong { color: var(--accent-soft); font-size: 1.15rem; }
+.free-src { font-size: var(--text-xs); }
+.free-levers { margin-top: 8px; }
+.free-build { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.free-bars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; height: 120px; align-items: end; }
+.free-month { display: grid; grid-template-rows: 1fr auto; height: 100%; text-align: center; gap: 4px; }
+.free-cols { display: flex; gap: 3px; align-items: end; justify-content: center; height: 100%; }
+.free-cols .col { display: block; width: 40%; min-height: 2px; border-radius: 3px 3px 0 0; }
+.free-cols .col.saved { background: var(--accent); }
+.free-cols .col.saved.neg { background: rgb(var(--rgb-bad)); }
+.free-cols .col.home { background: rgb(var(--rgb-ok)); }
+.free-why { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 4px; }
+.free-why li.done { opacity: 0.6; text-decoration: line-through; }
 /* Chickens (DEC-0037): one tap per count, two weeks of eggs as bars */
 .egg-taps { display: flex; flex-wrap: wrap; gap: 6px; }
 .egg-taps .btn { min-width: 48px; min-height: 44px; }

@@ -18,6 +18,13 @@
       "page": "index.html"
     },
     {
+      "id": "freedom",
+      "name": "Freedom",
+      "icon": "🌄",
+      "tagline": "Your way out, in numbers.",
+      "page": "freedom.html"
+    },
+    {
       "id": "calendar",
       "name": "Calendar",
       "icon": "📅",
