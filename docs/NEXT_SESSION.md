@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-19*
+*Last updated: 2026-10-21*
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,
@@ -33,12 +33,54 @@ Ollama (qwen2.5:14b on the RX 7900 XTX) and the linked phone. On the PC:
 `git pull` before starting, and commit and push after each piece (the
 cloud sessions and Muse work from GitHub). Real data lives in `data\` and
 `config\config.json`: gitignored, never committed, never pasted (DEC-0002).
-First jobs, in order: (1) ~~the 14b's misses caught by MIA's own code~~
+**Top priority for the next PC session: Plaid, all cards linked (see the ⭐ section below).** First jobs, in order: (1) ~~the 14b's misses caught by MIA's own code~~
 **done 2026-10-19: 213/213** (`settle_on_named_tool`, `core/assistant_chat.py`);
 (2) a real
 test of glasses voice, location quests while closed, the memory vault
 and sync with the linked phone; (3) the voices (install.bat again);
 (4) finishing modules without a web screen (`docs/WEB_PARITY.md`).
+
+---
+
+## ⭐ NEXT PC SESSION'S PRIORITY (Zac, 2026-10-21): every card and bank linked with Plaid
+
+Zac wants MIA managing his finances: before anything else at the PC,
+get all his cards and accounts connected through Plaid. Guide:
+`docs/PLAID_SETUP.md`. State on 2026-10-21: Plaid isn't set up on the PC
+yet (no `data\plaid_vault.enc`), and MIA's bank code has never talked
+to Plaid for real.
+
+**Zac, before you sit down:**
+- [ ] A list of every bank and card company to link. The Trial plan
+      allows **10 logins** (one login covering checking + savings + a
+      card at the same bank counts once). Over 10? Pick the 10 that
+      matter most, or ask Plaid about the next plan.
+- [ ] Your phone nearby: banks send a verification code.
+- [ ] Your Plaid dashboard login (Developers → Keys: client_id, the
+      **Sandbox** secret and the **Production** secret). Never paste
+      them into a chat.
+- [ ] A vault passphrase saved in your password manager (MIA's
+      Passwords app works) before you type it into MIA: it can't be
+      recovered.
+
+**The session, in order (Claude watches the logs and fixes as you go):**
+1. `git pull`; open MIA → Budget → **Bank Sync**.
+2. **A 10-minute sandbox test first** (Parts 3-4: Plaid's fake bank,
+   `user_good` / `pass_good`). It costs no connections and catches any
+   bug before a real login counts against the 10.
+3. **Reset Plaid Setup** (clears the fake data), then **Set Up Plaid**
+   with the **Production** secret (Part 6).
+4. **Connect a Bank** for each login on the list; **Sync Now**.
+5. Check with Claude: Expenses and Income categories, the Debts tab
+   (APRs, minimums; add promo APR end dates by hand), nothing doubled
+   on a second sync, the Summary's totals.
+6. Then let MIA manage: bills, the budget, which debt to pay first,
+   business tags for the homestead goods.
+
+**Claude, at that session:** start here. Tail `logs\mia.log` while Zac
+links; fix any failure before the next login (a failed login can still
+use up a connection). Never read or print the vault, keys or access
+tokens.
 
 ---
 
